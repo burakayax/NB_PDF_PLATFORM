@@ -37,7 +37,7 @@ const rawEnvSchema = z
     SMTP_USER: z.string().min(1).optional(),
     SMTP_PASS: z.string().min(1).optional(),
     SMTP_FROM_EMAIL: z.string().email().optional(),
-    SMTP_FROM_NAME: z.string().min(1).default("NB PDF TOOLS"),
+    SMTP_FROM_NAME: z.string().min(1).default("NB PDF PLARTFORM"),
     /** Yönetici bildirimleri ve iletişim formu için gelen kutusu adresi. */
     ADMIN_EMAIL: z.string().email(),
     /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: nbglobalstudio@gmail.com). */

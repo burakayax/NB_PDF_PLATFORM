@@ -273,12 +273,11 @@ export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN"
       <aside className="flex w-[260px] shrink-0 flex-col border-r border-white/[0.08] bg-[#080d18] md:w-[280px]">
         <div className="border-b border-white/[0.08] px-4 py-4">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300/90">Yönetim paneli</p>
-          <p className="mt-1 text-base font-semibold text-white">NB PDF TOOLS</p>
-          <p className="mt-2 text-[11px] leading-snug text-slate-500">Kod bilgisi gerekmez; alanların altındaki açıklamalara bakın.</p>
+          <p className="mt-1 text-base font-semibold text-white">NB PDF PLARTFORM</p>
         </div>
         <AdminSidebarNav groups={NAV_GROUPS} activeId={tab} onSelect={(id) => setTab(id as AdminTabId)} />
         <div className="border-t border-white/[0.08] px-3 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Görünüm</p>
+          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-slate-500">Görünüm</p>
           <div className="mt-2 flex rounded-xl border border-white/[0.1] bg-black/35 p-0.5">
             <button
               type="button"
@@ -299,7 +298,7 @@ export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN"
               Gelişmiş
             </button>
           </div>
-          <p className="mt-2 text-[10px] leading-snug text-slate-500">
+          <p className="mt-2 text-[12px] leading-snug text-slate-500">
             {uiMode === "simple" ? "Yalnız temel alanlar; çoğu iş için yeterli." : "Tüm alanlar ve teknik seçenekler."}
           </p>
         </div>
@@ -325,7 +324,7 @@ export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN"
         <header className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 md:px-8">
           <div>
             <h1 className="text-lg font-semibold text-white">{adminTabLabel(tab)}</h1>
-            <p className="mt-0.5 text-[12px] text-slate-500">Değişiklikler kaydedildiğinde site birkaç saniye içinde güncellenir.</p>
+            <p className="mt-0.5 text-[14px] text-slate-500">Değişiklikler kaydedildiğinde site birkaç saniye içinde güncellenir.</p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
             <span

@@ -1,14 +1,14 @@
 """
 Registration helpers + optional FastAPI example routes for free-trial abuse prevention.
 
-Calistirmak icin: pip install sqlalchemy fastapi (projede zorunlu degil; referans moduldur).
+Calıştırmak için: pip install sqlalchemy fastapi (projede zorunlu değil; referans modüldür).
 
-Gercek uygulamada:
+Gerçek uygulamada:
 - `register_user_example` ile Gmail-normalize + benzersiz e-posta.
-- `begin_trial_registration` / `verify_email_and_maybe_grant_trial` ile deneme suresi
-  yalnizca dogrulama ve abuse kurallarindan sonra (user_id'ye bagli olmadan identity uzerinden).
+- `begin_trial_registration` / `verify_email_and_maybe_grant_trial` ile deneme süresi
+  yalnızca doğrulama ve abuse kurallarından sonra (user_id'ye bağlı olmadan identity üzerinden).
 
-Ornek router'ı acmak icin `main.py` icinde:
+Örnek router'ı açmak için `main.py` içinde:
     from app.auth.registration_workflow_example import example_router
     app.include_router(example_router, prefix="/api")
 """
@@ -50,10 +50,10 @@ def register_user_example(
     password_hash: str,
 ) -> Any:
     """
-    Ornek kayit adimlari:
+    Örnek kayıt adımları:
     1) normalize_email_for_storage
     2) assert_email_unique_sqlalchemy -> EmailAlreadyRegisteredError
-    3) ORM nesnesi olustur
+    3) ORM nesnesi oluştur
     """
     normalized = normalize_email_for_storage(raw_email)
     assert_email_unique_sqlalchemy(session, user_model, normalized)
@@ -62,7 +62,7 @@ def register_user_example(
     return user
 
 
-# --- SQLAlchemy 2.0 declarative ornek (ayri bir models.py'ye tasinabilir) ---
+# --- SQLAlchemy 2.0 declarative örnek (ayrı bir models.py'ye taşınabilir) ---
 """
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import String
