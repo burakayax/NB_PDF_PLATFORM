@@ -11,7 +11,7 @@ type AuthPageProps = {
   language: Language;
   submitting: boolean;
   serverError: string;
-  /** KayÄ±t sonrasÄ± giriÅŸ sekmesinde gÃ¶sterilen API baÅŸarÄ± metni */
+  /** Kayıt sonrası giriş sekmesinde gösterilen API başarı metni */
   registrationSuccessBanner?: string | null;
   onDismissRegistrationSuccess?: () => void;
   onBack: () => void;
@@ -125,7 +125,7 @@ export function AuthPage({
         return;
       }
     } else if (password.length < 8) {
-      setLocalError(language === "tr" ? "Åifre en az 8 karakter olmalÄ±dÄ±r." : "Password must be at least 8 characters.");
+      setLocalError(language === "tr" ? "Şifre en az 8 karakter olmalıdır." : "Password must be at least 8 characters.");
       return;
     }
 
@@ -142,7 +142,7 @@ export function AuthPage({
         await onSubmit({ email, password });
       }
     } catch {
-      /* Hata Ã¼st bileÅŸende authError ile gÃ¶sterilir; kayÄ±tta alanlar korunur */
+      /* Hata üst bileşende authError ile gösterilir; kayıtta alanlar korunur */
     }
   }
 
@@ -159,12 +159,12 @@ export function AuthPage({
           onClick={onBack}
           className="group mb-10 inline-flex min-h-11 w-fit items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 text-sm font-semibold text-nb-text shadow-sm transition duration-200 ease-out hover:border-nb-primary/30 hover:bg-white/[0.08] hover:text-white"
         >
-          <span className="mr-1 transition group-hover:-translate-x-0.5">â†</span>
+          <span className="mr-1 transition group-hover:-translate-x-0.5">↩️</span>
           {copy.shared.backToLanding}
         </button>
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB Global Studio</p>
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB PDF PLARTFORM</p>
           <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">{copy.screen.title}</h1>
           <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">{copy.screen.description}</p>
 
@@ -213,9 +213,9 @@ export function AuthPage({
           {mode === "login" && urlEmailVerifiedNotice ? (
             <div className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.12] px-4 py-3 text-sm text-emerald-50">
               <p>
-                <span className="font-semibold">{language === "tr" ? "E-posta doÄŸrulandÄ±. " : "Email verified. "}</span>
+                <span className="font-semibold">{language === "tr" ? "E-posta doğrulandı. " : "Email verified. "}</span>
                 {language === "tr"
-                  ? "ArtÄ±k e-posta adresiniz ve ÅŸifrenizle giriÅŸ yapabilirsiniz."
+                  ? "Artık e-posta adresiniz ve şifrenizle giriş yapabilirsiniz."
                   : "You can now sign in with your email and password."}
               </p>
             </div>
@@ -226,7 +226,7 @@ export function AuthPage({
               <div className="flex items-start justify-between gap-3">
                 <p>
                   <span className="font-semibold">
-                    {language === "tr" ? "KayÄ±t baÅŸarÄ±lÄ± â€” " : "Registration successful â€” "}
+                    {language === "tr" ? "Kayıt işlemi tamamlandı ✅ " : "Registration successful ✅” "}
                   </span>
                   {registrationSuccessBanner}
                 </p>
@@ -261,7 +261,7 @@ export function AuthPage({
                     value={firstName}
                     onChange={(event) => setFirstName(event.target.value)}
                     className={inputClassName}
-                    placeholder={language === "tr" ? "AdÄ±nÄ±z" : "Jane"}
+                    placeholder={language === "tr" ? "Adınız" : "Jane"}
                   />
                 </label>
                 <label className="block">
@@ -273,7 +273,7 @@ export function AuthPage({
                     value={lastName}
                     onChange={(event) => setLastName(event.target.value)}
                     className={inputClassName}
-                    placeholder={language === "tr" ? "SoyadÄ±nÄ±z" : "Doe"}
+                    placeholder={language === "tr" ? "Soyadınız" : "Doe"}
                   />
                 </label>
               </div>
@@ -310,7 +310,7 @@ export function AuthPage({
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className={inputClassName}
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                placeholder="••••••••••••••"
               />
             </label>
 
@@ -325,10 +325,10 @@ export function AuthPage({
                     className="h-[1.125rem] w-[1.125rem] shrink-0 animate-spin rounded-full border-2 border-white/25 border-t-white"
                     aria-hidden
                   />
-                  <span>{language === "tr" ? "YÃ¼kleniyor..." : "Loading..."}</span>
+                  <span>{language === "tr" ? "Yükleniyor..." : "Loading..."}</span>
                 </>
               ) : submitting ? (
-                <span>{language === "tr" ? "Ä°ÅŸleniyor..." : "Processing..."}</span>
+                <span>{language === "tr" ? "İşleniyor..." : "Processing..."}</span>
               ) : (
                 copy.screen.submit
               )}
@@ -348,10 +348,10 @@ export function AuthPage({
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
             <button type="button" onClick={onOpenTerms} className="transition duration-200 hover:text-nb-text">
-              {language === "tr" ? "Hizmet ÅartlarÄ±" : "Terms of Service"}
+              {language === "tr" ? "Hizmet Şartları" : "Terms of Service"}
             </button>
             <button type="button" onClick={onOpenPrivacy} className="transition duration-200 hover:text-nb-text">
-              {language === "tr" ? "Gizlilik PolitikasÄ±" : "Privacy Policy"}
+              {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
             </button>
           </div>
         </div>

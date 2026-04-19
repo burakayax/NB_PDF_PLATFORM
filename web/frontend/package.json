@@ -7,7 +7,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
     "dev:fullstack": "npm run dev --prefix ../..",
     "build": "tsc && vite build",

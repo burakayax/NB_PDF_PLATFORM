@@ -1,4 +1,4 @@
-"""Erisim JWT dogrulama (Node jsonwebtoken / HS256 ile uyumlu)."""
+"""Erişim JWT doğrulama (Node jsonwebtoken / HS256 ile uyumlu)."""
 
 from __future__ import annotations
 

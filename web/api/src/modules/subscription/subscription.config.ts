@@ -44,7 +44,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   },
   BUSINESS: {
     name: "BUSINESS",
-    displayName: "Basic",
+    displayName: "Business",
     description: "Unlimited operations and full toolkit for individual productivity (Basic tier).",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],

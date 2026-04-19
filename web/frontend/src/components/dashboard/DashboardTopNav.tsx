@@ -80,9 +80,9 @@ export function DashboardTopNav({
         </span>
         <span className="hidden sm:block">
           <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">NB Global Studio</span>
-          <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">NB PDF TOOLS</span>
+          <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">NB PDF PLARTFORM</span>
         </span>
-        <span className="max-w-[140px] truncate sm:hidden text-sm font-semibold tracking-wide text-nb-text">NB PDF TOOLS</span>
+        <span className="max-w-[140px] truncate sm:hidden text-sm font-semibold tracking-wide text-nb-text">NB PDF PLARTFORM</span>
       </button>
 
       {subscriptionStatus ? (

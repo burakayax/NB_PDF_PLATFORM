@@ -114,7 +114,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
           onClick={onBackToLogin}
           className="group mb-10 inline-flex min-h-11 w-fit items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 text-sm font-semibold text-nb-text shadow-sm transition duration-200 ease-out hover:border-nb-primary/30 hover:bg-white/[0.08] hover:text-white"
         >
-          <span className="mr-1 transition group-hover:-translate-x-0.5">â†</span>
+          <span className="mr-1 transition group-hover:-translate-x-0.5">↩️</span>
           {copy.backToLogin}
         </button>
 
@@ -150,7 +150,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
                 disabled={submitting}
                 className="inline-flex min-h-[3.25rem] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-6 text-base font-semibold text-slate-950 shadow-[0_16px_40px_-12px_rgba(34,211,238,0.45)] transition duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? (language === "tr" ? "GÃ¶nderiliyorâ€¦" : "Sendingâ€¦") : copy.sendCode}
+                {submitting ? (language === "tr" ? "Gönderiliyor 🔄" : "Sending 🔄") : copy.sendCode}
               </button>
             </form>
           ) : null}
@@ -175,7 +175,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
                 disabled={submitting}
                 className="inline-flex min-h-[3.25rem] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-6 text-base font-semibold text-slate-950 shadow-[0_16px_40px_-12px_rgba(34,211,238,0.45)] transition duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? (language === "tr" ? "Kontrolâ€¦" : "Checkingâ€¦") : copy.verifyCode}
+                {submitting ? (language === "tr" ? "Kontrol 🔄" : "Checking 🔄") : copy.verifyCode}
               </button>
             </form>
           ) : null}
@@ -190,7 +190,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className={inputClassName}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••••••••"
                 />
               </label>
               <label className="block">
@@ -201,7 +201,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={inputClassName}
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="••••••••••••••"
                 />
               </label>
               <button
@@ -209,7 +209,7 @@ export function ForgotPasswordPage({ language, onBackToLogin, onCompleted }: For
                 disabled={submitting}
                 className="inline-flex min-h-[3.25rem] w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-6 text-base font-semibold text-slate-950 shadow-[0_16px_40px_-12px_rgba(34,211,238,0.45)] transition duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {submitting ? (language === "tr" ? "Kaydediliyorâ€¦" : "Savingâ€¦") : copy.savePassword}
+                {submitting ? (language === "tr" ? "Kaydediliyor 🔄" : "Saving 🔄") : copy.savePassword}
               </button>
             </form>
           ) : null}

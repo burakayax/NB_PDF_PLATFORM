@@ -90,29 +90,31 @@ export function LandingPage({
   // If a CMS asset exists, `screenshot1Url` / `screenshot2Url` above can override
   // the `landing.ts` values before this mapping runs.
   const showcaseFeatures = useMemo(() => {
-    const [firstShot, secondShot] = copy.screenshots.items;
+    const screenshots = copy.screenshots?.items ?? [];
+    const firstShot = screenshots[0];
+    const secondShot = screenshots[1];
     const localizedContent =
       language === "tr"
         ? {
             convert: {
-              title: "Dosyalari tek akista donusturun",
-              description: "Word, Excel, PowerPoint ve gorselleri temiz bir arayuzle saniyeler icinde PDF'e cevirin.",
-              eyebrow: "Akilli donusum",
+              title: "Dosyaları tek akışta dönüştürün",
+              description: "Word, Excel, PowerPoint ve görselleri temiz bir arayüzle saniyeler içinde PDF'e çevirin.",
+              eyebrow: "Akıllı dönüşüm",
             },
             compress: {
-              title: "Kaliteyi koruyarak boyutu kucultun",
-              description: "Paylasim ve arsivleme icin dosya agirligini dusurun, onizleme netligini premium seviyede tutun.",
-              eyebrow: "Verimli sikistirma",
+              title: "Kaliteyi koruyarak boyutu küçültün",
+              description: "Paylaşım ve arşivleme için dosya ağırlığını düşürün, onizleme netliğini premium seviyede tutun.",
+              eyebrow: "Verimli sıkıştırma",
             },
             merge: {
-              title: "Birden fazla dosyayi tek teslimata toplayin",
-              description: "Surukle-birak akisi ile sayfalari hizalayin, belgeleri duzenleyin ve tek PDF olarak cikti alin.",
-              eyebrow: "Duzenli birlestirme",
+              title: "Birden fazla dosyayı tek bir PDF'de birleştirin",
+              description: "Sürükle-bırak akışı ile sayfaları hizalayın, belgeleri düzenleyin ve tek PDF olarak çıktı alın.",
+              eyebrow: "Düzenli birleştirme",
             },
             sign: {
-              title: "Imza surecini daha hizli tamamlayin",
-              description: "Sozlesmeleri tek panelde hazirlayin, imza alanlarini yerlestirin ve profesyonel bir teslim deneyimi sunun.",
-              eyebrow: "Guvenli imza",
+              title: "İmza sürecini daha hızlı tamamlayın",
+              description: "Sözleşmeleri tek panelde hazırlayın, imza alanlarını yerleştirin ve profesyonel bir teslim deneyimi sunun.",
+              eyebrow: "Güvenli imza",
             },
           }
         : {
@@ -312,6 +314,7 @@ export function LandingPage({
 
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300">
+              
                 {copy.navbar.platformTag}
               </span>
 
@@ -425,7 +428,10 @@ export function LandingPage({
       </span>
     ))}
     </div>
-
+    <br />🔥 Trusted by 1,000+ users
+    <p className="mt-4 text-sm text-slate-500">
+        No credit card required • Free plan available • Cancel anytime
+      </p>
     {/* Butonlar - Premium Işıltılı */}
     <div data-nb-preview="hero-buttons" className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
       <button
@@ -444,6 +450,9 @@ export function LandingPage({
       >
         {copy.hero.secondaryCta}
       </a>
+      <p className="mt-4 text-sm text-slate-500">
+        No credit card required • Free plan available • Cancel anytime
+      </p>
     </div>
   </div>
 </section>
@@ -469,7 +478,7 @@ export function LandingPage({
 
         <section data-nb-preview="features" className="relative pt-16 pb-8 px-6 overflow-hidden">
           <div className="relative z-10 mx-auto max-w-6xl rounded-[48px] border border-white/5 bg-slate-900/20 p-12 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">
-            <div className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/20 blur-[140px] opacity-50 animate-pulse" />
+            <div className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px] opacity-30" />
             <div className="absolute -left-[10%] top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px] opacity-30" />
 
            <div className="relative z-10 mb-12 max-w-3xl">
@@ -558,108 +567,40 @@ export function LandingPage({
 
 {/* --- BÖLÜM SONU --- */}
 
-<section data-nb-preview="screenshots" className="relative py-28 overflow-hidden">
+{/* ---- EKRAN ALINTILARI BÖLÜMÜ ---- */}
+<section className="py-28 space-y-32">
+  {showcaseFeatures.map((item, index) => {
+    const isReversed = index % 2 === 1;
 
-  {/* BACKGROUND GLOW */}
-  <div className="absolute inset-0 -z-10">
-    <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/10 blur-[140px]" />
-  </div>
+    return (
+      <div
+        key={item.key}
+        className="grid lg:grid-cols-2 gap-12 items-center"
+      >
+        
+        {/* TEXT */}
+        <div className={`space-y-4 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
+          <p className="text-xs uppercase tracking-[0.3em] text-cyan-400">
+            {item.eyebrow}
+          </p>
 
-  <div className="mx-auto max-w-6xl text-center">
+          <h3 className="text-3xl font-bold text-white">
+            {item.title}
+          </h3>
 
-    {/* HEADER */}
-    <div className="mb-20">
-      <p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-400/90">
-        {copy.screenshots.kicker}
-      </p>
-      <h3 className="mt-4 text-5xl font-black text-white tracking-tight">
-        {copy.screenshots.title}
-      </h3>
-      <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
-        {copy.screenshots.description}
-      </p>
-    </div>
-
-    {/* MAIN PREVIEW */}
-    <div className="relative mb-14">
-      <div className="relative mx-auto max-w-4xl overflow-hidden rounded-[28px] border border-white/10 bg-slate-950 shadow-[0_40px_120px_-20px_rgba(0,0,0,0.9)]">
-
-        <div
-          className={`transition-all duration-500 ${
-            isShowcaseTransitioning
-              ? "opacity-0 scale-[0.98]"
-              : "opacity-100 scale-100"
-          }`}
-        >
-          {showcaseFeatures
-            .filter((_, i) => i === visibleShowcaseIndex)
-            .map((feature) => (
-              <div key={feature.key} className="relative">
-
-                <img
-                  src={feature.src}
-                  alt={feature.title}
-                  className="w-full object-cover"
-                />
-
-                {/* OVERLAY */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                <div className="absolute bottom-6 left-6 text-left">
-                  <p className="text-xs text-cyan-300 uppercase tracking-widest">
-                    {feature.eyebrow}
-                  </p>
-                  <h4 className="text-2xl font-bold text-white mt-1">
-                    {feature.title}
-                  </h4>
-                </div>
-
-              </div>
-            ))}
+          <p className="text-slate-400 leading-relaxed">
+            {item.description}
+          </p>
         </div>
+
+        {/* IMAGE */}
+        <div className={`rounded-2xl overflow-hidden border border-white/10 shadow-2xl ${isReversed ? "lg:order-1" : "lg:order-2"}`}>
+          <img src={item.src} className="w-full h-auto" />
+        </div>
+
       </div>
-    </div>
-
-    {/* STACKED CARDS */}
-    <div className="relative flex justify-center gap-4 flex-wrap">
-
-      {showcaseFeatures.map((feature, index) => {
-        const isActive = index === activeShowcaseIndex;
-
-        return (
-          <button
-            key={feature.key}
-            onClick={() => setActiveShowcaseIndex(index)}
-            className={`relative w-[220px] text-left rounded-2xl border p-4 transition-all duration-500 ${
-              isActive
-                ? "bg-white text-black scale-105 shadow-[0_20px_60px_-10px_rgba(255,255,255,0.4)] z-10"
-                : "bg-white/5 text-white border-white/10 opacity-70 hover:opacity-100 hover:scale-[1.03]"
-            }`}
-          >
-            {/* SMALL PREVIEW */}
-            <div className="mb-3 overflow-hidden rounded-lg">
-              <img src={feature.src} alt="" className="h-24 w-full object-cover" />
-            </div>
-
-            <p className="text-xs uppercase tracking-widest opacity-70">
-              {feature.label}
-            </p>
-
-            <p className="mt-1 text-sm font-semibold">
-              {feature.title}
-            </p>
-
-            {/* ACTIVE GLOW */}
-            {isActive && (
-              <div className="absolute inset-0 rounded-2xl border border-cyan-300/40 pointer-events-none" />
-            )}
-          </button>
-        );
-      })}
-
-    </div>
-
-  </div>
+    );
+  })}
 </section>
 
         <LandingPricingSection

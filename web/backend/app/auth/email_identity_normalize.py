@@ -1,7 +1,7 @@
 """
-E-posta kimligi normallestirme (Gmail / Googlemail).
+E-posta kimliği normalleştirme (Gmail / Googlemail).
 
-src/modules/email_identity_normalize.py ile ayni mantik; FastAPI `app` paketinden import edilir.
+src/modules/email_identity_normalize.py ile aynı mantık; FastAPI `app` paketinden import edilir.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ _GMAIL_FAMILY = frozenset({"gmail.com", "googlemail.com"})
 
 
 class EmailAlreadyRegisteredError(ValueError):
-    """Veritabaninda ayni normalize edilmis e-posta zaten var."""
+    """Veritabaninda aynı normalize edilmiş e-posta zaten var."""
 
 
 def normalize_email_for_storage(email: str) -> str:

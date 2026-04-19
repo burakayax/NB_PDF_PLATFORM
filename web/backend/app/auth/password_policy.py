@@ -1,4 +1,4 @@
-"""Yeni sifre kurallari (Node API ile ayni politika)."""
+"""Yeni şifre kuralları (Node API ile aynı politika)."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ NEW_PASSWORD_MAX_LEN = 128
 
 
 def new_password_strength_violation(password: str) -> str | None:
-    """Guclu sifre degilse Ingilizce hata metni, aksi halde None."""
+    """Güçlü şifre değilse İngilizce hata mesajı, aksi halde None."""
     if len(password) < NEW_PASSWORD_MIN_LEN:
         return "Password must be at least 10 characters."
     if len(password) > NEW_PASSWORD_MAX_LEN:

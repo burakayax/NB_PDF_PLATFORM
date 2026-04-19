@@ -1,4 +1,4 @@
-# NB PDF TOOLS — Birlikte çalıştırma (kök `npm` betikleri)
+# NB PDF PLARTFORM — Birlikte çalıştırma (kök `npm` betikleri)
 
 Bu dosya **proje kökündeki** `package.json` içindeki komutların ne işe yaradığını Türkçe açıklar.
 

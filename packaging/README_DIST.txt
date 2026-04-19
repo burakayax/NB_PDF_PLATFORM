@@ -1,4 +1,4 @@
-NB PDF TOOLS — Windows distribution checklist
+NB PDF PLARTFORM — Windows distribution checklist
 ==============================================
 
 1) Version bump
