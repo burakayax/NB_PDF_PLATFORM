@@ -89,14 +89,22 @@ export function LandingPage({
   //
   // If a CMS asset exists, `screenshot1Url` / `screenshot2Url` above can override
   // the `landing.ts` values before this mapping runs.
-  const showcaseFeatures = useMemo(() => {
+      //Trusted için dil desteği ekliyoruz.
+    const trustedText =
+      language === "tr"
+        ? "1.000'den fazla kullanıcı tarafından güveniliyor" : "Trusted by 1,000+ users";
+
+    // Fotoğrafların göründüğü yer için dil desteği ekliyoruz.
+    const showcaseFeatures = useMemo(() => {
     const screenshots = copy.screenshots?.items ?? [];
     const firstShot = screenshots[0];
     const secondShot = screenshots[1];
+
+
     const localizedContent =
       language === "tr"
         ? {
-            convert: {
+              convert: {
               title: "Dosyaları tek akışta dönüştürün",
               description: "Word, Excel, PowerPoint ve görselleri temiz bir arayüzle saniyeler içinde PDF'e çevirin.",
               eyebrow: "Akıllı dönüşüm",
@@ -178,6 +186,7 @@ export function LandingPage({
   const [contactError, setContactError] = useState("");
   const [contactSuccess, setContactSuccess] = useState("");
   const [contactSubmitting, setContactSubmitting] = useState(false);
+  const [isLangOpen, setIsLangOpen] = useState(false);
 
   // Auto-rotate the passive showcase every 3.6s.
   // Hover pauses the cycle on desktop via `isShowcasePaused`.
@@ -297,7 +306,7 @@ export function LandingPage({
 
       <main className="relative mx-auto flex w-full max-w-7xl flex-col px-6 pb-16 pt-3 sm:px-8 lg:px-12">
         <section className="mb-12 rounded-[28px] border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-5 py-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md xl:px-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col items-center text-center gap-6 lg:flex-row lg:text-left lg:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/35 bg-gradient-to-br from-cyan-500/18 to-indigo-500/12 shadow-[0_0_48px_rgba(34,211,238,0.2)]">
                 <img
@@ -312,33 +321,67 @@ export function LandingPage({
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300">
               
                 {copy.navbar.platformTag}
               </span>
 
-              <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-2 py-1">
-                <span className="px-2 text-xs font-medium uppercase tracking-[0.16em] text-slate-400">{copy.navbar.languageLabel}</span>
-                <button
-                  type="button"
-                  onClick={() => onLanguageChange("tr")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    language === "tr" ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  TR
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onLanguageChange("en")}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    language === "en" ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  EN
-                </button>
-              </div>
+{/* DİL SEÇİMİ KONTEYNER */}
+<div 
+  className="relative" 
+  onMouseEnter={() => setIsLangOpen(true)} 
+  onMouseLeave={() => setIsLangOpen(false)}
+>
+  {/* Tetikleyici Buton */}
+  <button
+    type="button"
+    onClick={() => setIsLangOpen(!isLangOpen)}
+    className="flex h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 text-xs font-semibold text-slate-300 transition-all hover:bg-white/10 outline-none"
+  >
+    <span className="text-[10px] text-slate-500 uppercase tracking-widest">LNG</span>
+    <span className="w-[20px] text-cyan-400 uppercase">{language}</span>
+    <svg className={`h-3 w-3 text-slate-500 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+    </svg>
+  </button>
+
+  {/* Aşağı Açılan Menü */}
+  {isLangOpen && (
+    <div className="absolute left-1/2 top-full z-[100] mt-2 w-40 -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200">
+      {/* Görünmez Köprü (Mouse kayarken kapanmaması için) */}
+      <div className="absolute -top-2 left-0 h-2 w-full" /> 
+      
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0f172a] p-1.5 shadow-2xl backdrop-blur-3xl">
+        <button
+          onClick={() => {
+            onLanguageChange("tr");
+            setIsLangOpen(false); // SEÇİNCE KAPATIR
+          }}
+          className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-[11px] font-medium transition ${
+            language === "tr" ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
+          }`}
+        >
+          <span>Türkçe</span>
+          <span className="text-[9px] opacity-50">TR</span>
+        </button>
+        
+        <button
+          onClick={() => {
+            onLanguageChange("en");
+            setIsLangOpen(false); // SEÇİNCE KAPATIR
+          }}
+          className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-[11px] font-medium transition ${
+            language === "en" ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
+          }`}
+        >
+          <span>English</span>
+          <span className="text-[9px] opacity-50">EN</span>
+        </button>
+      </div>
+    </div>
+  )}
+</div>
 
               {contactFormEnabled ? (
                 <a
@@ -428,9 +471,16 @@ export function LandingPage({
       </span>
     ))}
     </div>
-    <br />🔥 Trusted by 1,000+ users
-    <p className="mt-4 text-sm text-slate-500">
-        No credit card required • Free plan available • Cancel anytime
+    {/* Dil desteğini yukarıda ekledik. Trusted yazısını çekiyoruz. */}
+    <div className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-slate-400">
+      {/* Üst Satır: Ateşli Trusted Yazısı */}
+      <br />
+      🔥 {copy.trustedText.trusted}
+    </div>
+    
+       {/* Alt Satır: Bilgilendirme Metinleri */}
+      <p className="mt-2 text-sm text-slate-500">
+        {copy.trustedText.payment} • {copy.trustedText.freePlan} • {copy.trustedText.cancel}
       </p>
     {/* Butonlar - Premium Işıltılı */}
     <div data-nb-preview="hero-buttons" className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -450,15 +500,12 @@ export function LandingPage({
       >
         {copy.hero.secondaryCta}
       </a>
-      <p className="mt-4 text-sm text-slate-500">
-        No credit card required • Free plan available • Cancel anytime
-      </p>
     </div>
   </div>
 </section>
         {/* Hap Bilgi Barı - Taşıdığımız 3 Kutucuk */}
-        <section className="-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-8 py-6 shadow-2xl backdrop-blur-2xl">
-          <div className="grid gap-6 md:grid-cols-3">
+        <section className="-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-9 -py-10 shadow-2xl backdrop-blur-2xl flex items-center justfy-center">
+          <div className=" mt-2 grid gap-6 md:grid-cols-3">
             {copy.hero.highlights.map((item, index) => (
               <div key={item.label} className="flex min-h-[80px] items-start gap-4 p-2 transition-all hover:scale-[1.03]">
                 <div className={`mt-1.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-cyan-500/20 ${index === 0 ? "bg-cyan-500/10 text-cyan-400" : index === 1 ? "bg-indigo-500/10 text-indigo-400" : "bg-blue-500/10 text-blue-400"}`}>
@@ -473,7 +520,7 @@ export function LandingPage({
           </div>
         </section>
 
-        <Marquee />
+        <Marquee language={language} />
         
 
         <section data-nb-preview="features" className="relative pt-16 pb-8 px-6 overflow-hidden">

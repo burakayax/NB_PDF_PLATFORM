@@ -1,18 +1,17 @@
-export function Marquee() {
-  const items = [
-    "PDF Birleştirme",
-    "PDF Ayırma",
-    "PDF Şifreleme",
-    "PDF İmzalama",
-    "Word → PDF",
-    "Excel → PDF",
-    "PowerPoint → PDF",
-    "PDF Sıkıştırma",
-    "PDF Düzenleme",
-    "PDF Dönüştürme",
-  ];
+import { landingTranslations, type Language } from "../../i18n/landing";
 
-  const text = items.join(" · ") + " · ";
+type MarqueeProps = {
+  language: Language;
+};
+
+export function Marquee({ language }: MarqueeProps) {
+  const copy = landingTranslations[language];
+
+  if (!copy?.marqueeItems) {
+    return null;
+  }
+
+  const text = copy.marqueeItems.items.join(" · ") + " · ";
 
   return (
     <div className="w-full overflow-hidden py-6 -mt-16">
