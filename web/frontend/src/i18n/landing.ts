@@ -156,6 +156,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         },
       ],
     },
+    trustedText: {
+      trusted: "Trusted by 1,000+ users",
+      payment: "No credit card required",
+      cancel: "Cancel anytime",
+      freePlan: "Free Plan Available",
+    },
     features: {
       kicker: "Business Benefits",
       title: "Built around document speed, accuracy, and control.",
@@ -290,7 +296,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       },
       honeypotLabel: "Leave this field empty",
     },
-    marqueeItems: {
+  marqueeItems: {
       items: [
         "PDF Merge",
         "PDF Split",
@@ -344,6 +350,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           description: "Korumalı dosyaları iş odaklı şifreleme ve kontrol ile yönetin.",
         },
       ],
+    },
+    trustedText: {
+      trusted: "1.000'den fazla kullanıcı tarafından güveniliyor",
+      payment: "Güvenli ödeme sistemi",
+      cancel: "İstediğin zaman iptal et",
+      freePlan: "Ücretisiz plan mevcut",
     },
     features: {
       kicker: "İş Faydası",
