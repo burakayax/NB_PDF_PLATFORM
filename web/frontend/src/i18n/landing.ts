@@ -113,6 +113,12 @@ export type LandingTranslation = {
   marqueeItems: {
     items: string[];
   };
+  trustedText: {
+    trusted: string;
+    payment: string;
+    cancel: string;
+    freePlan: string;
+  };
 };
 
 export const landingTranslations: Record<Language, LandingTranslation> = {
