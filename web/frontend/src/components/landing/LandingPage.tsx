@@ -304,13 +304,13 @@ export function LandingPage({
     <div className="min-h-screen overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(720px,85vh)] bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,211,238,0.35),transparent_65%),radial-gradient(circle_at_85%_15%,rgba(129,140,232,0.08),transparent_35%)]" />
 
-      <main className="relative mx-auto flex w-full max-w-7xl flex-col px-6 pb-16 pt-3 sm:px-8 lg:px-12">
+      <main className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-8 lg:px-12 pb-16 pt-3 overflow-hidden">
         <section className="mb-12 rounded-[28px] border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-5 py-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md xl:px-8">
         <div className="flex flex-col items-center text-center gap-6 lg:flex-row lg:text-left lg:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/35 bg-gradient-to-br from-cyan-500/18 to-indigo-500/12 shadow-[0_0_48px_rgba(34,211,238,0.2)]">
                 <img
-                  src={logoSrc ?? "/nb_pdf_PLARTFORM_icon.png"}
+                  src={logoSrc ?? "/logo.png"}
                   alt="NB PDF PLARTFORM"
                   className="h-8 w-8 rounded-xl object-cover"
                 />
@@ -448,9 +448,10 @@ export function LandingPage({
     </div>
 
     {/* Ana Başlık - Boyutu düşürdük, font ağırlığını azalttık, satır aralığını açtık */}
-    <h2 className="mx-auto min-h-[120px] sm:min-h-[160px] max-w-4xl bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-4xl font-semibold tracking-tight text-transparent sm:text-6xl lg:text-7xl leading-[1.15]">
-      {copy.hero.headline}
-    </h2>
+{/* Ana Başlık - Mobil için text-3xl'e çektik ve min-h sildik */}
+<h2 className="mx-auto max-w-4xl bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-6xl lg:text-7xl leading-[1.2] sm:leading-[1.15]">
+  {copy.hero.headline}
+</h2>
 
     {/* Alt Açıklama - İtalikliği kaldırdık, daha kurumsal yaptık */}
     <p className="mx-auto mt-6 min-h-[60px] max-w-2xl text-base font-normal leading-relaxed text-slate-400">
@@ -504,7 +505,7 @@ export function LandingPage({
   </div>
 </section>
         {/* Hap Bilgi Barı - Taşıdığımız 3 Kutucuk */}
-        <section className="-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-9 -py-10 shadow-2xl backdrop-blur-2xl flex items-center justfy-center">
+        <section className="mt-8 md:-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-6 md:px-9 py-8 shadow-2xl backdrop-blur-2xl flex items-center justify-center">
           <div className=" mt-2 grid gap-6 md:grid-cols-3">
             {copy.hero.highlights.map((item, index) => (
               <div key={item.label} className="flex min-h-[80px] items-start gap-4 p-2 transition-all hover:scale-[1.03]">
@@ -524,8 +525,7 @@ export function LandingPage({
         
 
         <section data-nb-preview="features" className="relative pt-16 pb-8 px-6 overflow-hidden">
-          <div className="relative z-10 mx-auto max-w-6xl rounded-[48px] border border-white/5 bg-slate-900/20 p-12 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">
-            <div className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px] opacity-30" />
+        <div className="relative z-10 mx-auto max-w-6xl rounded-[48px] border border-white/5 bg-slate-900/20 p-6 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">            <div className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px] opacity-30" />
             <div className="absolute -left-[10%] top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px] opacity-30" />
 
            <div className="relative z-10 mb-12 max-w-3xl">
@@ -620,10 +620,10 @@ export function LandingPage({
     const isReversed = index % 2 === 1;
 
     return (
-      <div
-        key={item.key}
-        className="grid lg:grid-cols-2 gap-12 items-center"
-      >
+<div
+  key={item.key}
+  className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center px-4"
+>
         
         {/* TEXT */}
         <div className={`space-y-4 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
