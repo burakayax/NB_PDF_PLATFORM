@@ -362,7 +362,7 @@ export function LandingPage({
             language === "tr" ? "bg-white text-slate-950" : "text-slate-300 hover:bg-white/10"
           }`}
         >
-          <span>Türkçe</span>
+          <span>DenemeTr</span>
           <span className="text-[9px] opacity-50">TR</span>
         </button>
         
