@@ -58,6 +58,12 @@ model User {
   toolUsageCountsJson      String         @default("{}") @map("tool_usage_counts_json")
   /// Gecikme sonrası veya kayıt yanıtında kaç kez yükseltme CTA gösterildi (dönüşüm).
   totalUpgradeCtaImpressionsCount Int     @default(0) @map("total_upgrade_cta_impressions_count")
+  /// Prepaid credit balance; decremented atomically when a tool is used without an active subscription.
+  credit_balance       Int     @default(0) @map("credit_balance")
+  /// Payment provider subscription status; app-layer union: none | active | past_due | canceled | incomplete.
+  subscription_status  String  @default("none") @map("subscription_status")
+  /// Stripe customer id (nullable; populated on first Stripe interaction).
+  stripe_customer_id   String? @unique @map("stripe_customer_id")
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   refreshTokens RefreshToken[]

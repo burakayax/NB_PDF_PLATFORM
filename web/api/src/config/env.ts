@@ -68,6 +68,18 @@ const rawEnvSchema = z
     DEFAULT_FREE_DESKTOP_MAX_FILE_MB: z.coerce.number().int().min(1).max(5000).default(15),
     /** Ters proxy arkasında doğru istemci IP için (örn. 1 veya sayı). Boş = güvenme. */
     TRUST_PROXY: z.string().optional().default(""),
+    /**
+     * Ödeme sağlayıcı seçim bayrağı — ŞU AN DORMANT.
+     *
+     * Ödemeler sistem genelinde DEVRE DIŞI: `/api/payment` rotası `paymentsDisabledRouter`
+     * tarafından handle ediliyor (503 + JSON) ve bu bayrak routing kararlarında kullanılmıyor.
+     *
+     * iyzico modülü (`modules/payment/**`) ve Stripe modülü (`modules/payment/stripe/**`)
+     * diskte library-only modda durur; ikisinin de router'ı mount edilmez. Bayrak schema'da
+     * korunuyor çünkü Phase 3'te provider seçimi için (routing yeniden aktifleştirildiğinde)
+     * kullanılacak. Varsayılan değer geriye dönük uyumluluk için `iyzico` olarak bırakıldı.
+     */
+    PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe"]).default("iyzico"),
     /** iyzico API (boşsa POST /api/payment/create 503 döner). */
     IYZICO_API_KEY: z.string().optional().default(""),
     IYZICO_SECRET_KEY: z.string().optional().default(""),

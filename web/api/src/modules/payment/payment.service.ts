@@ -1,3 +1,7 @@
+/**
+ * @deprecated — feature-flagged via `PAYMENTS_PROVIDER=iyzico`; Stripe replaces this in Phase 3.
+ * Do not add new features here. See `.cursor/plans/stripe-phase-1-systemmap_*.plan.md`.
+ */
 import { randomUUID } from "node:crypto";
 import type { User } from "@prisma/client";
 import { env } from "../../config/env.js";
