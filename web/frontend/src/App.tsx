@@ -3,21 +3,26 @@
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  compressToResult,
   createMergeJob,
   downloadFromApi,
   downloadMergeJob,
+  downloadResult,
   fetchMergeJob,
+  fetchResultThumbnailBlobUrl,
   inspectPdf,
   type MergeJobStatus,
 } from "./api";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
+import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
+import type { SaaSGating } from "./lib/saasGating";
 import { DashboardSidebar, DashboardSidebarMobileRail, type SidebarToolId } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { AdminPanel } from "./admin/AdminPanel";
-import { DelayConversionBanner } from "./components/dashboard/DelayConversionBanner";
+import { ConversionPopup } from "./components/dashboard/ConversionPopup";
 import { ConversionUpgradeModal } from "./components/dashboard/ConversionUpgradeModal";
 import { UpgradeModal } from "./components/dashboard/UpgradeModal";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
@@ -27,34 +32,49 @@ import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
 import { LoginSuccessPage } from "./components/auth/LoginSuccessPage";
 import { LandingPage } from "./components/landing/LandingPage";
 import { LegalPage } from "./components/legal/LegalPage";
-import { createPaymentCheckout } from "./api/payment";
 import {
   fetchSubscriptionStatus,
   fetchSubscriptionSummary,
   type FeatureKey,
-  type PlanDefinition,
-  type SubscriptionStatus,
-  type SaasFrictionPayload,
   type SubscriptionSummary,
 } from "./api/subscription";
 import {
+  fetchCreditTransactions,
+  fetchUserBalance,
+  type CreditTransaction,
+  type UserBalance,
+} from "./api/entitlement";
+import {
+  buyCreditsInstant,
+  confirmFakeCheckout,
+  PAYMENT_CHECKOUT_NOT_FOUND,
+  resolveFakePaymentRedirect,
+  startFakeCheckout,
+  type FakePaymentProduct,
+} from "./api/fakePayment";
+import { CreditDashboard } from "./components/dashboard/CreditDashboard";
+import {
   canAutoShowConversionModal,
-  conversionModalAutoQualifies,
   conversionModalClickThroughRate,
-  CONV_MODAL_HEAVY_DELAY_MS,
   CONV_MODAL_SNOOZE_MS,
   CONV_MODAL_SNOOZE_UNTIL_KEY,
-  HEAVY_CONVERSION_FEATURES,
   pushConversionModalAnalytics,
   recordConversionModalDismiss,
   recordConversionModalPrimaryClick,
   recordConversionModalShown,
-  type ConversionFrictionSignal,
 } from "./lib/conversionModalTriggers";
-import { translateAuthApiMessage } from "./i18n/auth";
-import { localizedPlanDescription, localizedPlanDisplayName } from "./i18n/plans";
 import {
-  computeUpgradeNudgeTierWeb,
+  clearLowCreditSnoozeIfRecovered,
+  getLowCreditPopupSnoozeUntil,
+  hasShownFirstToolFailurePopup,
+  hasShownFirstUpgradeOpPopup,
+  markFirstToolFailurePopupShown,
+  markFirstUpgradeOpPopupShown,
+  snoozeLowCreditPopup,
+} from "./lib/conversionPopupTriggers";
+import type { ConversionPopupVariant } from "./i18n/conversionPopup";
+import { translateAuthApiMessage } from "./i18n/auth";
+import {
   featureCopy,
   sidebarToolLabel,
   validatePagesFormat,
@@ -66,7 +86,7 @@ import { buildWorkspaceFeaturesFromCms, type WorkspaceFeatureUi } from "./lib/wo
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import { formatRegionalPlanPrice } from "./lib/formatRegionalPrice";
+import { isCreditPackProduct } from "./lib/creditPacks";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
@@ -156,9 +176,9 @@ function genericToolPhaseLabel(
   percent: number,
   indeterminate: boolean,
   W: ReturnType<typeof ws>,
-  freeQueuePhase: boolean,
+  standardLanePhase: boolean,
 ): string {
-  if (freeQueuePhase) {
+  if (standardLanePhase) {
     if (indeterminate) {
       return W.toolProgressPhaseQueueFree;
     }
@@ -383,6 +403,8 @@ function getInitialViewFromLocation(): AppView {
       return "privacy";
     case "/workspace":
       return "web";
+    case "/fake-payment/success":
+      return "web";
     case "/admin":
       return "admin";
     default:
@@ -422,7 +444,7 @@ function App() {
     refreshSession,
   } = useAuthSession();
   const { hasConsent, isReady: isCookieConsentReady, acceptConsent } = useCookieConsent();
-  const { cms, site, plans, TOOLSPublic, flags, pricing } = useSettings();
+  const { cms, site, TOOLSPublic, flags } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
   const [legalBackView, setLegalBackView] = useState<NonLegalView>("landing");
   const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>("split");
@@ -433,7 +455,6 @@ function App() {
   const [authError, setAuthError] = useState("");
   const [registrationSuccessBanner, setRegistrationSuccessBanner] = useState<string | null>(null);
   const [subscriptionSummary, setSubscriptionSummary] = useState<SubscriptionSummary | null>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [password, setPassword] = useState("");
@@ -451,6 +472,23 @@ function App() {
     filename: string;
     featureTitle: string;
     replay?: () => void;
+    /**
+     * Access-gated preview (compress pilot). When present, the success
+     * banner renders a preview card (thumbnail if available) and the
+     * action button performs the gated download via
+     * `downloadResult` instead of re-triggering a blob replay.
+     */
+    gatedDownload?: {
+      resultId: string;
+      fallbackName: string;
+      thumbnailBlobUrl: string | null;
+      /**
+       * Entitlement decision from the Node entitlement engine. When present,
+       * `SaasGatedPreview` renders the blur/lock/upgrade UX; when absent, the
+       * card falls back to the legacy 402-driven flow.
+       */
+      saasGating?: SaaSGating | null;
+    };
   } | null>(null);
   const toolProgressDisposeRef = useRef<(() => void) | null>(null);
   const [mergePointerDraggingId, setMergePointerDraggingId] = useState<string | null>(null);
@@ -476,16 +514,45 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [conversionUpgradeModalOpen, setConversionUpgradeModalOpen] = useState(false);
-  const [delayConversionFriction, setDelayConversionFriction] = useState<SaasFrictionPayload | null>(null);
-  const conversionFrictionSignalRef = useRef<ConversionFrictionSignal | null>(null);
+  /** Lightweight conversion surfaces (insufficient credits / first failure / first upgrade moment). */
+  const [conversionPopupOpen, setConversionPopupOpen] = useState(false);
+  const [conversionPopupVariant, setConversionPopupVariant] = useState<ConversionPopupVariant | null>(null);
   const conversionModalShowSourceRef = useRef<"auto" | "manual">("manual");
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] = useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] = useState(false);
   const [postRunUpgradeHintVisible, setPostRunUpgradeHintVisible] = useState(false);
   const [postRunUpgradeHintDismissed, setPostRunUpgradeHintDismissed] = useState(false);
-  const frictionConversionFollowUpRef = useRef(false);
+  /**
+   * Credit balance + plan snapshot served by `/api/entitlement/balance`.
+   * This is the ONLY source of truth for remaining-runs UI — we intentionally
+   * do not derive it from `SubscriptionSummary.usage.*` (those fields belonged
+   * to legacy subscription usage fields and have been removed from the wire
+   * contract on purpose).
+   */
+  const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
+  /**
+   * Recent `CreditTransaction` rows for the credit dashboard's "recent
+   * activity" list. Kept in sync with `userBalance` so the two panels can
+   * never disagree about what just happened — both refresh after any
+   * successful tool run, grant, or fake-payment confirm.
+   */
+  const [creditTransactions, setCreditTransactions] = useState<
+    CreditTransaction[] | null
+  >(null);
+  const [creditTransactionsLoading, setCreditTransactionsLoading] =
+    useState(false);
+  /** Tracks which credit-pack SKU is currently in checkout+confirm (instant flow). */
+  const [buyingCreditProduct, setBuyingCreditProduct] = useState<FakePaymentProduct | null>(null);
   const subscriptionSummaryRef = useRef<SubscriptionSummary | null>(null);
+  const userBalanceRef = useRef<UserBalance | null>(null);
   const userRef = useRef(user);
+  const conversionPopupOpenRef = useRef(false);
+  const conversionPopupVariantRef = useRef<ConversionPopupVariant | null>(null);
+  const upgradeModalOpenRef = useRef(false);
+  const conversionUpgradeModalOpenRef = useRef(false);
+  const tryShowConversionPopupRef = useRef<
+    (variant: ConversionPopupVariant, trigger?: "balance" | "download") => void
+  >(() => {});
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactMessage, setContactMessage] = useState("");
@@ -497,6 +564,24 @@ function App() {
   const inspectRunRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
   const contactSubmitInFlightRef = useRef(false);
+  /** Ensures `/fake-payment/success` confirm runs once per navigation to that path. */
+  const fakePaymentSuccessHandledRef = useRef(false);
+  /**
+   * After `saasGating.reason === "insufficient_credits"` (or download 402), blocks
+   * `submitCurrentFeature` until balance rises above the snapshot or the preview is dismissed.
+   */
+  const insufficientCreditsToolRunBlockRef = useRef(false);
+  const insufficientCreditsBarrierCreditSnapshotRef = useRef<number | null>(null);
+
+  function armInsufficientCreditsToolBarrier() {
+    insufficientCreditsToolRunBlockRef.current = true;
+    insufficientCreditsBarrierCreditSnapshotRef.current = userBalanceRef.current?.creditBalance ?? 0;
+  }
+
+  function clearInsufficientCreditsToolBarrier() {
+    insufficientCreditsToolRunBlockRef.current = false;
+    insufficientCreditsBarrierCreditSnapshotRef.current = null;
+  }
 
   const navigateToDashboardAfterOAuth = useCallback(() => {
     const url = new URL(window.location.href);
@@ -556,9 +641,6 @@ function App() {
     [workspaceFeatures, language],
   );
 
-  const proTryLine = useMemo(() => formatRegionalPlanPrice(pricing, "proMonthly", language), [pricing, language]);
-  const businessTryLine = useMemo(() => formatRegionalPlanPrice(pricing, "basicMonthly", language), [pricing, language]);
-  const proAnnualLine = useMemo(() => formatRegionalPlanPrice(pricing, "proAnnual", language), [pricing, language]);
 
   const primaryUpload = uploads[0] ?? null;
   const currentPdfIsEncrypted = Boolean(primaryUpload?.encrypted);
@@ -591,10 +673,6 @@ function App() {
       setActiveSidebar(first);
     }
   }, [workspaceFeatures, selectedFeatureId]);
-
-  useEffect(() => {
-    setDelayConversionFriction(null);
-  }, [selectedFeatureId]);
 
   useAnalyticsTracking({
     enabled: hasConsent,
@@ -639,6 +717,7 @@ function App() {
   const disposeToolProgressSuccess = useCallback(() => {
     toolProgressDisposeRef.current?.();
     toolProgressDisposeRef.current = null;
+    clearInsufficientCreditsToolBarrier();
     setToolProgressSuccess(null);
   }, []);
 
@@ -888,31 +967,62 @@ function App() {
       return;
     }
 
-    const [summary, status] = await Promise.all([
-      fetchSubscriptionSummary(accessToken),
-      fetchSubscriptionStatus(accessToken),
-    ]);
+    const summary = await fetchSubscriptionSummary(accessToken);
     setSubscriptionSummary(summary);
-    setSubscriptionStatus(status);
   }, [accessToken, isAuthenticated]);
+
+  /**
+   * Pilot access-gated download (compress). Uses the shared result store
+   * + Node checkAccess bridge. On 402 we show a minimal alert as agreed;
+   * the full upgrade modal comes in a later phase.
+   */
+  const runGatedDownload = useCallback(
+    async (resultId: string, fallbackName: string) => {
+      try {
+        const outcome = await downloadResult(resultId, fallbackName, accessToken);
+        if (outcome.status === "payment_required") {
+          armInsufficientCreditsToolBarrier();
+          tryShowConversionPopupRef.current("insufficient_credits", "download");
+          return;
+        }
+        if (outcome.status === "forbidden") {
+          window.alert(
+            language === "tr"
+              ? "Bu dosyaya erişim yetkiniz yok."
+              : "You don't have access to this file.",
+          );
+          return;
+        }
+        showToast(
+          "success",
+          language === "tr" ? "İndirme tamamlandı" : "Download complete",
+          fallbackName,
+        );
+        void refreshSubscriptionState();
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        showToast(
+          "error",
+          language === "tr" ? "İndirme başarısız" : "Download failed",
+          detail,
+        );
+      }
+    },
+    [accessToken, language, refreshSubscriptionState, showToast],
+  );
 
   const openConversionUpgradeModalManual = useCallback(() => {
     conversionModalShowSourceRef.current = "manual";
     setConversionUpgradeModalOpen(true);
   }, []);
 
-  const applySaasFriction = useCallback((friction: SaasFrictionPayload, featureId: FeatureKey) => {
-    frictionConversionFollowUpRef.current = true;
-    setDelayConversionFriction(friction);
-    const dm = friction.delayMs ?? 0;
-    if (dm >= CONV_MODAL_HEAVY_DELAY_MS || HEAVY_CONVERSION_FEATURES.has(featureId)) {
-      conversionFrictionSignalRef.current = { at: Date.now(), featureId, delayMs: dm };
-    }
-  }, []);
-
   useEffect(() => {
     const path = window.location.pathname.replace(/\/$/, "") || "/";
     if (path === "/login-error") {
+      return;
+    }
+    /** Fake PSP return URL: confirm flow runs in a dedicated effect; do not strip `sessionId` early. */
+    if (path === "/fake-payment/success") {
       return;
     }
     /** OAuth tamamlandıktan sonra view=web iken /login-success’ten /workspace’e geçişe izin ver. */
@@ -1013,26 +1123,58 @@ function App() {
   }, [subscriptionSummary]);
 
   useEffect(() => {
+    userBalanceRef.current = userBalance;
+  }, [userBalance]);
+
+  useEffect(() => {
     userRef.current = user;
   }, [user]);
 
-  const offerPostRunMonetizationHintAfterSuccess = useCallback(() => {
-    const sum = subscriptionSummaryRef.current;
-    const ur = userRef.current;
-    if (!sum || ur?.role === "ADMIN" || sum.currentPlan.name !== "FREE") {
-      frictionConversionFollowUpRef.current = false;
-      return;
-    }
-    const u = sum.usage;
-    const usageFrictionActive = Boolean(u.conversionTracking?.freeLimitExceeded);
-    const fq = usageFrictionActive || u.usedToday >= (u.softFrictionAfterOps ?? 5);
-    const hadFriction = frictionConversionFollowUpRef.current;
-    frictionConversionFollowUpRef.current = false;
-    if (hadFriction || fq) {
-      setPostRunUpgradeHintVisible(true);
-      setPostRunUpgradeHintDismissed(false);
-    }
-  }, []);
+  useEffect(() => {
+    conversionPopupOpenRef.current = conversionPopupOpen;
+  }, [conversionPopupOpen]);
+
+  useEffect(() => {
+    conversionPopupVariantRef.current = conversionPopupVariant;
+  }, [conversionPopupVariant]);
+
+  useEffect(() => {
+    upgradeModalOpenRef.current = upgradeModalOpen;
+  }, [upgradeModalOpen]);
+
+  useEffect(() => {
+    conversionUpgradeModalOpenRef.current = conversionUpgradeModalOpen;
+  }, [conversionUpgradeModalOpen]);
+
+  /**
+   * Post-run upgrade hint trigger. The legacy implementation fired this
+   * based on legacy server-side friction signals that no longer exist;
+   * that dataset no longer exists. We now show the hint when a FREE user
+   * finishes a run and either (a) their credit balance hit zero or (b) the
+   * just-returned engine decision predicted that zero state. Both fields
+   * come exclusively from the entitlement engine.
+   */
+  const offerPostRunMonetizationHintAfterSuccess = useCallback(
+    (gating?: SaaSGating | null) => {
+      const ur = userRef.current;
+      const sum = subscriptionSummaryRef.current;
+      if (!sum || ur?.role === "ADMIN" || sum.currentPlan.name !== "FREE") {
+        return;
+      }
+      const creditsAfter =
+        typeof gating?.creditsAfter === "number" ? gating.creditsAfter : null;
+      const balance = userBalanceRef.current?.creditBalance ?? null;
+      const exhausted =
+        (creditsAfter !== null && creditsAfter <= 0) ||
+        (balance !== null && balance <= 0);
+      if (exhausted) {
+        setPostRunUpgradeHintVisible(true);
+        setPostRunUpgradeHintDismissed(false);
+      }
+      queueMicrotask(() => tryShowConversionPopupRef.current("pro_unlock"));
+    },
+    [],
+  );
 
   useEffect(() => {
     if (selectedFeatureId !== "merge" || !mergeJob?.id || mergeJob.id === MERGE_JOB_PENDING_ID) {
@@ -1060,8 +1202,8 @@ function App() {
         setMergeJob(nextStatus);
 
         if (nextStatus.status === "failed") {
-          frictionConversionFollowUpRef.current = false;
           showToast("error", M.mergeToastFailedTitle, nextStatus.error || M.mergeToastFailedGeneric);
+          tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
           mergePollHandledRef.current = true;
           return;
@@ -1088,16 +1230,16 @@ function App() {
               featureTitle: selectedFeature.title,
               replay: dl.replay,
             });
-            offerPostRunMonetizationHintAfterSuccess();
+            offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
           } catch (downloadErr) {
             if (!active) {
               return;
             }
-            frictionConversionFollowUpRef.current = false;
             setSubmitting(false);
             const detail =
               downloadErr instanceof Error ? downloadErr.message : M.mergeToastPollErrorDetail;
             showToast("error", M.mergeToastDownloadErrorTitle, detail);
+            tryShowConversionPopupRef.current("buy_credits");
             return;
           }
         }
@@ -1106,8 +1248,8 @@ function App() {
           return;
         }
         const detail = error instanceof Error ? error.message : M.mergeToastPollErrorDetail;
-        frictionConversionFollowUpRef.current = false;
         showToast("error", M.mergeToastPollErrorTitle, detail);
+        tryShowConversionPopupRef.current("buy_credits");
         setSubmitting(false);
         mergePollHandledRef.current = true;
       } finally {
@@ -1204,7 +1346,6 @@ function App() {
     if (open && !prevConversionModalOpenRef.current) {
       const source = conversionModalShowSourceRef.current;
       const stats = recordConversionModalShown(source);
-      conversionFrictionSignalRef.current = null;
       pushConversionModalAnalytics("nb_conversion_modal_shown", {
         source,
         shown_total: stats.shownTotal,
@@ -1216,22 +1357,27 @@ function App() {
     prevConversionModalOpenRef.current = open;
   }, [conversionUpgradeModalOpen]);
 
+  /**
+   * Auto-open the conversion upgrade modal once after a FREE-plan user hits
+   * zero credits. `canAutoShowConversionModal` caps how often this fires.
+   */
   useEffect(() => {
     if (view !== "web" || !isAuthenticated || subscriptionLoading || !subscriptionSummary) {
       return;
     }
-    if (subscriptionSummary.currentPlan.name !== "FREE") {
+    if (subscriptionSummary.currentPlan.name !== "FREE" || user?.role === "ADMIN") {
       return;
     }
-    if (conversionUpgradeModalOpen || upgradeModalOpen) {
+    if (conversionUpgradeModalOpen || upgradeModalOpen || conversionPopupOpen) {
       return;
     }
-    const now = Date.now();
-    const signal = conversionFrictionSignalRef.current;
-    if (!conversionModalAutoQualifies(subscriptionSummary, signal, now)) {
+    if (!userBalance || userBalance.hasActiveSubscription) {
       return;
     }
-    if (!canAutoShowConversionModal(now)) {
+    if (userBalance.creditBalance > 0) {
+      return;
+    }
+    if (!canAutoShowConversionModal(Date.now())) {
       return;
     }
     conversionModalShowSourceRef.current = "auto";
@@ -1243,13 +1389,107 @@ function App() {
     subscriptionSummary,
     conversionUpgradeModalOpen,
     upgradeModalOpen,
-    delayConversionFriction,
+    conversionPopupOpen,
+    user?.role,
+    userBalance,
   ]);
+
+  /**
+   * Completes redirect-based fake checkout: user lands on
+   * `/fake-payment/success?sessionId=...`, we confirm server-side, refresh
+   * balance, then normalize the URL to `/workspace`.
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const path = window.location.pathname.replace(/\/$/, "") || "/";
+    if (path !== "/fake-payment/success") {
+      fakePaymentSuccessHandledRef.current = false;
+      return;
+    }
+    if (!isAuthenticated || !accessToken || isRestoring || !user) {
+      return;
+    }
+    if (fakePaymentSuccessHandledRef.current) {
+      return;
+    }
+    const sessionId = new URLSearchParams(window.location.search).get("sessionId");
+    if (!sessionId) {
+      fakePaymentSuccessHandledRef.current = true;
+      showToast(
+        "error",
+        language === "tr" ? "Oturum bilgisi eksik" : "Missing session",
+        language === "tr" ? "Geçersiz ödeme dönüş adresi." : "Invalid payment return URL.",
+      );
+      window.history.replaceState({}, "", "/workspace");
+      return;
+    }
+    fakePaymentSuccessHandledRef.current = true;
+    void (async () => {
+      try {
+        const result = await confirmFakeCheckout(accessToken, sessionId);
+        if (
+          "creditsGranted" in result &&
+          (result.product === "PRO" || result.product === "BUSINESS")
+        ) {
+          await refreshSession().catch(() => null);
+          await refreshSubscriptionState();
+        }
+        if (
+          "creditsGranted" in result &&
+          result.product !== "PRO" &&
+          result.product !== "BUSINESS"
+        ) {
+          setUserBalance((prev) =>
+            prev ? { ...prev, creditBalance: result.creditsAfter } : null,
+          );
+        }
+        const balanceCtx = {
+          userId: user.id,
+          role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+        };
+        const [nextBalance, nextTransactions] = await Promise.all([
+          fetchUserBalance(accessToken, balanceCtx).catch(() => null),
+          fetchCreditTransactions(accessToken, 10).catch(() => null),
+        ]);
+        if (nextBalance) {
+          setUserBalance(nextBalance);
+        }
+        if (nextTransactions) {
+          setCreditTransactions(nextTransactions);
+        }
+        const Wloc = ws(language);
+        if ("alreadyConfirmed" in result && result.alreadyConfirmed) {
+          showToast(
+            "success",
+            language === "tr" ? "Zaten onaylandı" : "Already confirmed",
+            language === "tr" ? "Bu ödeme daha önce tamamlandı." : "This payment was already completed.",
+          );
+        } else if ("creditsGranted" in result) {
+          showToast(
+            "success",
+            language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
+            Wloc.creditDashboardBuyCreditsSuccess(result.creditsGranted),
+          );
+        }
+      } catch (error) {
+        showToast(
+          "error",
+          language === "tr" ? "Onay başarısız" : "Confirm failed",
+          error instanceof Error ? error.message : "",
+        );
+      } finally {
+        window.history.replaceState({}, "", "/workspace");
+      }
+    })();
+  }, [isAuthenticated, accessToken, isRestoring, language, refreshSession, refreshSubscriptionState, user]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) {
       setSubscriptionSummary(null);
-      setSubscriptionStatus(null);
+      setUserBalance(null);
+      setCreditTransactions(null);
       return;
     }
 
@@ -1261,16 +1501,28 @@ function App() {
 
     async function loadSubscriptionBlock() {
       setSubscriptionLoading(true);
+      setCreditTransactionsLoading(true);
       try {
-        const [summary, status] = await Promise.all([
+        const balanceCtx = {
+          userId: authUser.id,
+          role: authUser.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+        };
+        const [summary, status, balance, transactions] = await Promise.all([
           fetchSubscriptionSummary(authToken),
           fetchSubscriptionStatus(authToken),
+          fetchUserBalance(authToken, balanceCtx).catch(() => null),
+          fetchCreditTransactions(authToken, 10).catch(() => null),
         ]);
         if (cancelled) {
           return;
         }
         setSubscriptionSummary(summary);
-        setSubscriptionStatus(status);
+        if (balance) {
+          setUserBalance(balance);
+        }
+        if (transactions) {
+          setCreditTransactions(transactions);
+        }
 
         const adminProNavbar = authUser.role === "ADMIN" && status.plan === "PRO";
         const needsJwtRefresh =
@@ -1280,13 +1532,21 @@ function App() {
           if (cancelled || !refreshed) {
             return;
           }
-          const [nextSummary, nextStatus] = await Promise.all([
-            fetchSubscriptionSummary(refreshed.accessToken),
-            fetchSubscriptionStatus(refreshed.accessToken),
-          ]);
+          const [nextSummary, nextStatus, nextBalance, nextTransactions] =
+            await Promise.all([
+              fetchSubscriptionSummary(refreshed.accessToken),
+              fetchSubscriptionStatus(refreshed.accessToken),
+              fetchUserBalance(refreshed.accessToken, balanceCtx).catch(() => null),
+              fetchCreditTransactions(refreshed.accessToken, 10).catch(() => null),
+            ]);
           if (!cancelled) {
             setSubscriptionSummary(nextSummary);
-            setSubscriptionStatus(nextStatus);
+            if (nextBalance) {
+              setUserBalance(nextBalance);
+            }
+            if (nextTransactions) {
+              setCreditTransactions(nextTransactions);
+            }
           }
         }
       } catch (error) {
@@ -1300,6 +1560,7 @@ function App() {
       } finally {
         if (!cancelled) {
           setSubscriptionLoading(false);
+          setCreditTransactionsLoading(false);
         }
       }
     }
@@ -1317,35 +1578,12 @@ function App() {
     };
   }, [accessToken, isAuthenticated, refreshSession, user?.id, user?.plan, user?.role]);
 
-  useEffect(() => {
-    if (!subscriptionSummary?.usage) return;
-    const u = subscriptionSummary.usage;
-
-    const code = u.usageWarningCode;
-    const strong = u.strongUsageWarning;
-    const soft = u.softUsageWarning;
-    if (!code || (!strong && !soft)) return;
-
-    if (typeof sessionStorage === "undefined") return;
-
-    const k = `nb-usage-toast-${u.date}-${code}`;
-    if (sessionStorage.getItem(k)) return;
-    sessionStorage.setItem(k, "1");
-
-    const detail = (strong ?? soft) as string;
-    const isStrong = Boolean(strong);
-    showToastRef.current(
-      "info",
-      language === "tr"
-        ? isStrong
-          ? "Günlük ücretsiz kota"
-          : "Kota uyarısı"
-        : isStrong
-          ? "Free daily limit"
-          : "Usage reminder",
-      detail,
-    );
-  }, [subscriptionSummary, language]);
+  /*
+   * The usage-warning toast (`usageWarningCode` / `strongUsageWarning` /
+   * `softUsageWarning`) was driven by a retired quota system.
+   * Credit state is surfaced via the balance chip instead; denial is
+   * surfaced by the entitlement engine's 402 response on the next run.
+   */
 
   const W = ws(language);
   const splitModeDescription =
@@ -1369,21 +1607,43 @@ function App() {
     uploads.length > 0 &&
     uploads.some((u) => u.inspecting) &&
     pdfInspectionFeatures.includes(selectedFeatureId);
-  const showUsageQuota =
-    user?.role !== "ADMIN" && subscriptionSummary && subscriptionSummary.currentPlan.name === "FREE";
-  const usageFrictionActive = Boolean(subscriptionSummary?.usage.conversionTracking?.freeLimitExceeded);
-  const freeQueueLikely =
-    Boolean(showUsageQuota && subscriptionSummary) &&
-    (usageFrictionActive ||
-      subscriptionSummary!.usage.usedToday >= (subscriptionSummary!.usage.softFrictionAfterOps ?? 5));
+  /**
+   * Credit/workspace chrome (sidebar chip, mobile pill, in-tool hints) for
+   * signed-in non-admin users once balance is loaded.
+   */
+  const showCreditWorkspaceChrome = user?.role !== "ADMIN" && Boolean(userBalance);
+  /**
+   * Credit depletion replaces the old "friction active" signal. `userBalance`
+   * is the authoritative source; `subscriptionSummary` no longer carries any
+   * usage data. A null balance (load failure / pre-boot) is treated as
+   * "not yet depleted" to avoid flashing the upgrade banner during refresh.
+   */
+  const creditsExhausted =
+    userBalance !== null &&
+    !userBalance.hasActiveSubscription &&
+    userBalance.role !== "ADMIN" &&
+    userBalance.creditBalance <= 0;
+  const creditsRunningLow = Boolean(
+    userBalance &&
+      !userBalance.hasActiveSubscription &&
+      userBalance.role !== "ADMIN" &&
+      userBalance.creditBalance > 0 &&
+      userBalance.creditBalance < 5,
+  );
+  /**
+   * Paid lane (PRO / BUSINESS / admin bypass). The engine treats these as
+   * "active_subscription" / "admin_bypass" — UI uses the same predicate so
+   * the progress hint matches what the engine will allow.
+   */
   const premiumProcessingLane = Boolean(
     user?.role === "ADMIN" ||
+      userBalance?.hasActiveSubscription ||
       (subscriptionSummary &&
-        (subscriptionSummary.usage.processingTier === "premium" ||
-          subscriptionSummary.usage.priorityProcessing === true ||
-          subscriptionSummary.currentPlan.name === "PRO" ||
+        (subscriptionSummary.currentPlan.name === "PRO" ||
           subscriptionSummary.currentPlan.name === "BUSINESS")),
   );
+  /** Standard (non-priority) processing lane — not subscription / admin. */
+  const creditStandardLaneQueue = showCreditWorkspaceChrome && !premiumProcessingLane;
 
   const mergeProgressActive =
     Boolean(mergeJob && selectedFeatureId === "merge" && mergeJob.status !== "completed");
@@ -1392,10 +1652,9 @@ function App() {
   const TOOLSuccessBarActive = Boolean(toolProgressSuccess && view === "web" && contentPanel === "tool");
   const bottomToolProgressActive =
     mergeProgressActive || genericToolProgressActive || TOOLSuccessBarActive;
-  /** Free tier: in-flight strip when no server friction banner (avoids duplicate copy with DelayConversionBanner). */
-  const freeDuringProcessingMonetization = Boolean(
-    showUsageQuota &&
-      !delayConversionFriction &&
+  const standardLaneProcessingUpsell = Boolean(
+    showCreditWorkspaceChrome &&
+      !premiumProcessingLane &&
       (submitting || mergeProgressActive || genericToolProgressActive),
   );
   const mergeProgressIndeterminate = Boolean(
@@ -1457,27 +1716,23 @@ function App() {
   );
   const genericProgressIndeterminate =
     genericToolProgressActive &&
-    (freeQueueLikely
-      ? genericToolElapsedSec < 20 || genericToolPercent < 14
-      : premiumProcessingLane
-        ? genericToolElapsedSec < 4 || genericToolPercent < 5
-        : genericToolElapsedSec < 5 || genericToolPercent < 6);
+    (premiumProcessingLane
+      ? genericToolElapsedSec < 4 || genericToolPercent < 5
+      : genericToolElapsedSec < 5 || genericToolPercent < 6);
 
-  const upgradeNudgeTier = useMemo(() => {
-    if (!subscriptionSummary || user?.role === "ADMIN" || subscriptionSummary.currentPlan.name !== "FREE") {
-      return 0 as const;
+  /** Inline nudge after success when credits are depleted (non-subscriber). */
+  const upgradeNudgeTier: 0 | 1 = useMemo(() => {
+    if (user?.role === "ADMIN") {
+      return 0;
     }
-    const u = subscriptionSummary.usage;
-    return computeUpgradeNudgeTierWeb({
-      planIsFree: true,
-      softFrictionAfterOps: u.softFrictionAfterOps ?? 5,
-      usedToday: u.usedToday,
-      throttleEventsToday:
-        u.postLimitThrottleEventsToday ?? u.conversionTracking?.postLimitThrottleEventsToday ?? 0,
-      lifetimeThrottleEvents: u.behaviorMonetization?.totalThrottleEventsLifetime,
-      lifetimeTotalOps: u.behaviorMonetization?.totalOperationsLifetime,
-    });
-  }, [subscriptionSummary, user?.role]);
+    if (!subscriptionSummary || subscriptionSummary.currentPlan.name !== "FREE") {
+      return 0;
+    }
+    if (!userBalance || userBalance.hasActiveSubscription) {
+      return 0;
+    }
+    return userBalance.creditBalance <= 0 ? 1 : 0;
+  }, [subscriptionSummary, user?.role, userBalance]);
 
   useEffect(() => {
     if (submitting) {
@@ -1494,7 +1749,8 @@ function App() {
   const showUpgradeNudgeOnLoading =
     upgradeNudgeTier >= 1 &&
     !upgradeNudgeLoadingHidden &&
-    showUsageQuota &&
+    showCreditWorkspaceChrome &&
+    !premiumProcessingLane &&
     (genericToolProgressActive ||
       (mergeProgressActive && mergeJob && mergeJob.status !== "failed"));
 
@@ -1527,52 +1783,226 @@ function App() {
     setContactModalOpen(false);
   }
 
-  async function handleUpgradeCheckout(plan: "PRO" | "BUSINESS" = "PRO", billing: "monthly" | "annual" = "monthly") {
+  /** Opens the credit-pack modal (instant checkout from there). */
+  function handleBuyCredits() {
     if (!accessToken) {
       showToast(
         "error",
         language === "tr" ? "Oturum gerekli" : "Sign-in required",
-        language === "tr" ? "Ödeme için giriş yapın." : "Please sign in to continue to payment.",
+        language === "tr" ? "Kredi satın almak için giriş yapın." : "Please sign in to buy credits.",
       );
       return;
     }
+    setUpgradeModalOpen(true);
+  }
 
-    try {
-      const session = await createPaymentCheckout(accessToken, plan, plan === "PRO" ? billing : "monthly");
-      if (session.paymentPageUrl) {
-        window.location.href = session.paymentPageUrl;
-        return;
-      }
-      if (session.checkoutFormContent) {
-        const w = window.open("", "_blank", "noopener,noreferrer");
-        if (!w) {
-          showToast(
-            "error",
-            language === "tr" ? "Açılır pencere engellendi" : "Popup blocked",
-            language === "tr"
-              ? "Ödeme formu için tarayıcıda açılır pencerelere izin verin."
-              : "Allow pop-ups for this site to open the payment form.",
-          );
-          return;
-        }
-        w.document.open();
-        w.document.write(session.checkoutFormContent);
-        w.document.close();
-        return;
-      }
-      showToast(
-        "error",
-        language === "tr" ? "Ödeme başlatılamadı" : "Could not start payment",
-        language === "tr" ? "Sunucu yanıtı geçersiz." : "Invalid response from server.",
-      );
-    } catch (error) {
-      showToast(
-        "error",
-        language === "tr" ? "Ödeme başlatılamadı" : "Could not start payment",
-        error instanceof Error ? error.message : language === "tr" ? "Bilinmeyen hata." : "Unknown error.",
-      );
+  async function refreshEntitlementAfterPurchase() {
+    if (!accessToken || !user) {
+      return;
+    }
+    const balanceCtx = {
+      userId: user.id,
+      role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+    };
+    const [nextBalance, nextTransactions] = await Promise.all([
+      fetchUserBalance(accessToken, balanceCtx).catch(() => null),
+      fetchCreditTransactions(accessToken, 10).catch(() => null),
+    ]);
+    if (nextBalance) {
+      setUserBalance(nextBalance);
+    }
+    if (nextTransactions) {
+      setCreditTransactions(nextTransactions);
     }
   }
+
+  async function handleBuyCreditPack(product: FakePaymentProduct) {
+    if (!isCreditPackProduct(product)) {
+      return;
+    }
+    if (!accessToken || !user) {
+      showToast(
+        "error",
+        language === "tr" ? "Oturum gerekli" : "Sign-in required",
+        language === "tr" ? "Kredi satın almak için giriş yapın." : "Please sign in to buy credits.",
+      );
+      return;
+    }
+    if (buyingCreditProduct) {
+      return;
+    }
+    setBuyingCreditProduct(product);
+    const Wloc = ws(language);
+    try {
+      const result = await buyCreditsInstant(accessToken, product);
+      await refreshEntitlementAfterPurchase();
+      setUpgradeModalOpen(false);
+      if ("alreadyConfirmed" in result && result.alreadyConfirmed) {
+        showToast(
+          "success",
+          language === "tr" ? "Zaten onaylandı" : "Already confirmed",
+          language === "tr" ? "Bu ödeme daha önce tamamlandı." : "This payment was already completed.",
+        );
+      } else if ("creditsGranted" in result) {
+        showToast(
+          "success",
+          language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
+          Wloc.creditDashboardBuyCreditsSuccess(result.creditsGranted),
+        );
+      }
+    } catch (error) {
+      const payment404 = error instanceof Error && error.message === PAYMENT_CHECKOUT_NOT_FOUND;
+      showToast(
+        "error",
+        payment404
+          ? language === "tr"
+            ? "Ödeme kullanılamıyor"
+            : "Payment unavailable"
+          : language === "tr"
+            ? "Kredi satın alınamadı"
+            : "Purchase failed",
+        payment404
+          ? language === "tr"
+            ? "Ödeme sistemi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
+            : "Payment system not available. Please try again later."
+          : error instanceof Error
+            ? error.message
+            : Wloc.creditDashboardBuyCreditsError,
+      );
+    } finally {
+      setBuyingCreditProduct(null);
+    }
+  }
+
+  const closeConversionPopup = useCallback((snoozeInsufficientCredits: boolean) => {
+    if (conversionPopupVariantRef.current === "insufficient_credits" && snoozeInsufficientCredits) {
+      snoozeLowCreditPopup();
+    }
+    setConversionPopupOpen(false);
+    setConversionPopupVariant(null);
+  }, []);
+
+  const dismissConversionPopup = useCallback(() => {
+    closeConversionPopup(conversionPopupVariantRef.current === "insufficient_credits");
+  }, [closeConversionPopup]);
+
+  const onConversionPopupPrimary = useCallback(() => {
+    const v = conversionPopupVariantRef.current;
+    const snooze = v === "insufficient_credits";
+    closeConversionPopup(snooze);
+    if (v === "insufficient_credits" || v === "buy_credits") {
+      setUpgradeModalOpen(true);
+    } else if (v === "pro_unlock") {
+      setUpgradeModalOpen(true);
+    }
+  }, [closeConversionPopup]);
+
+  const onConversionPopupSecondary = useCallback(() => {
+    const v = conversionPopupVariantRef.current;
+    if (v === "insufficient_credits") {
+      closeConversionPopup(true);
+      setUpgradeModalOpen(true);
+      return;
+    }
+    closeConversionPopup(false);
+  }, [closeConversionPopup]);
+
+  const tryShowConversionPopup = useCallback((variant: ConversionPopupVariant, trigger?: "balance" | "download") => {
+    if (view !== "web" || !isAuthenticated) {
+      return;
+    }
+    if (user?.role === "ADMIN") {
+      return;
+    }
+    const insuffDownload = variant === "insufficient_credits" && trigger === "download";
+    if (!insuffDownload && conversionPopupOpenRef.current) {
+      return;
+    }
+    if (!insuffDownload && (upgradeModalOpenRef.current || conversionUpgradeModalOpenRef.current)) {
+      return;
+    }
+
+    if (variant === "insufficient_credits" && trigger !== "download") {
+      const ub = userBalanceRef.current;
+      if (!ub || ub.hasActiveSubscription) {
+        return;
+      }
+      if (ub.creditBalance >= 3) {
+        return;
+      }
+      if (Date.now() < getLowCreditPopupSnoozeUntil()) {
+        return;
+      }
+    }
+
+    if (variant === "buy_credits" && hasShownFirstToolFailurePopup()) {
+      return;
+    }
+
+    if (variant === "pro_unlock") {
+      if (hasShownFirstUpgradeOpPopup()) {
+        return;
+      }
+      const sum = subscriptionSummaryRef.current;
+      const ub = userBalanceRef.current;
+      if (!sum || sum.currentPlan.name !== "FREE") {
+        return;
+      }
+      if (ub?.hasActiveSubscription) {
+        return;
+      }
+    }
+
+    if (variant === "buy_credits") {
+      markFirstToolFailurePopupShown();
+    }
+    if (variant === "pro_unlock") {
+      markFirstUpgradeOpPopupShown();
+    }
+
+    setConversionPopupVariant(variant);
+    setConversionPopupOpen(true);
+  }, [view, isAuthenticated, user?.role]);
+
+  useEffect(() => {
+    tryShowConversionPopupRef.current = tryShowConversionPopup;
+  }, [tryShowConversionPopup]);
+
+  useEffect(() => {
+    const n = userBalance?.creditBalance;
+    if (typeof n === "number") {
+      clearLowCreditSnoozeIfRecovered(n);
+    }
+  }, [userBalance?.creditBalance]);
+
+  useEffect(() => {
+    if (!insufficientCreditsToolRunBlockRef.current) {
+      return;
+    }
+    const snap = insufficientCreditsBarrierCreditSnapshotRef.current;
+    if (snap === null) {
+      return;
+    }
+    const b = userBalance?.creditBalance;
+    if (typeof b === "number" && b > snap) {
+      clearInsufficientCreditsToolBarrier();
+    }
+  }, [userBalance?.creditBalance]);
+
+  useEffect(() => {
+    if (view !== "web" || !isAuthenticated || subscriptionLoading || user?.role === "ADMIN") {
+      return;
+    }
+    tryShowConversionPopup("insufficient_credits", "balance");
+  }, [
+    view,
+    isAuthenticated,
+    subscriptionLoading,
+    user?.role,
+    userBalance?.creditBalance,
+    userBalance?.hasActiveSubscription,
+    tryShowConversionPopup,
+  ]);
 
   async function handleContactModalSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1827,13 +2257,22 @@ function App() {
       return;
     }
 
+    if (insufficientCreditsToolRunBlockRef.current) {
+      showToast(
+        "error",
+        language === "tr" ? "Önce kredi ekleyin veya yükseltin" : "Add credits or upgrade first",
+        language === "tr"
+          ? "Yetersiz kredi nedeniyle yeni işlem başlatılamıyor. Kredi satın alın, planı yükseltin veya önizlemeyi kapatın."
+          : "You can’t start another run while credits are insufficient. Buy credits, upgrade, or dismiss the preview.",
+      );
+      return;
+    }
+
     try {
       disposeToolProgressSuccess();
       setSubmitting(true);
       clearToast();
-      setDelayConversionFriction(null);
       setPostRunUpgradeHintVisible(false);
-      conversionFrictionSignalRef.current = null;
       if (selectedFeature.id !== "merge") {
         setToolRunStartedAt(Date.now());
         setToolRunFileBytes(uploads[0]?.file.size ?? 0);
@@ -1863,16 +2302,7 @@ function App() {
         });
         try {
           const mergeRes = await createMergeJob(formData, accessToken);
-          const { job_id, saasFriction } = mergeRes;
-          if (
-            saasFriction &&
-            ((saasFriction.delayMs ?? 0) > 0 ||
-              saasFriction.upgradeCta ||
-              (typeof saasFriction.message === "string" && saasFriction.message.trim()) ||
-              (typeof saasFriction.usageSummary === "string" && saasFriction.usageSummary.trim()))
-          ) {
-            applySaasFriction(saasFriction, "merge");
-          }
+          const { job_id } = mergeRes;
           setMergeJob((prev) =>
             prev && prev.id === MERGE_JOB_PENDING_ID ? { ...prev, id: job_id, message: "Sıraya alındı." } : prev,
           );
@@ -1884,6 +2314,7 @@ function App() {
             language === "tr" ? "Birleştirme başlatılamadı" : "Could not start merge",
             error instanceof Error ? error.message : language === "tr" ? "İstek gönderilemedi." : "Request failed.",
           );
+          tryShowConversionPopupRef.current("buy_credits");
         }
         return;
       }
@@ -1910,16 +2341,57 @@ function App() {
           break;
       }
 
-      const dl = await downloadFromApi(selectedFeature.endpoint, formData, selectedFeature.fallbackFilename, accessToken);
-      if (
-        dl.saasFriction &&
-        ((dl.saasFriction.delayMs ?? 0) > 0 ||
-          dl.saasFriction.upgradeCta ||
-          (typeof dl.saasFriction.message === "string" && dl.saasFriction.message.trim()) ||
-          (typeof dl.saasFriction.usageSummary === "string" && dl.saasFriction.usageSummary.trim()))
-      ) {
-        applySaasFriction(dl.saasFriction, selectedFeature.id);
+      // Compress pilots the new result-store flow: the POST returns a
+      // handle (no blob), we show a preview, and the download itself is
+      // deferred to a gated GET /pdf/result/{id}/download request that
+      // the user triggers from the preview card.
+      if (selectedFeature.id === "compress") {
+        const compressed = await compressToResult(formData, accessToken);
+
+        let thumbnailBlobUrl: string | null = null;
+        if (compressed.has_thumbnail) {
+          try {
+            thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(compressed.result_id, accessToken);
+          } catch {
+            // Thumbnail is optional; the card falls back to a generic view.
+            thumbnailBlobUrl = null;
+          }
+        }
+
+        disposeToolProgressSuccess();
+        toolProgressDisposeRef.current = thumbnailBlobUrl
+          ? () => URL.revokeObjectURL(thumbnailBlobUrl)
+          : null;
+        setToolProgressSuccess({
+          filename: compressed.filename || selectedFeature.fallbackFilename,
+          featureTitle: selectedFeature.title,
+          gatedDownload: {
+            resultId: compressed.result_id,
+            fallbackName: compressed.filename || selectedFeature.fallbackFilename,
+            thumbnailBlobUrl,
+            saasGating: compressed.saasGating ?? null,
+          },
+        });
+        showToast(
+          "success",
+          language === "tr" ? "Önizleme hazır" : "Preview ready",
+          language === "tr"
+            ? "Dosyayı indirmek için İndir düğmesine basın."
+            : "Press Download to get your file.",
+        );
+        resetForm(true);
+        offerPostRunMonetizationHintAfterSuccess(compressed.saasGating ?? null);
+        void refreshSubscriptionState();
+        if (compressed.saasGating?.reason === "insufficient_credits") {
+          armInsufficientCreditsToolBarrier();
+          queueMicrotask(() => {
+            tryShowConversionPopupRef.current("insufficient_credits", "download");
+          });
+        }
+        return;
       }
+
+      const dl = await downloadFromApi(selectedFeature.endpoint, formData, selectedFeature.fallbackFilename, accessToken);
       showToast("success", "İşlem tamamlandı", "Çıktı dosyası başarıyla indirildi.");
       resetForm(true);
       disposeToolProgressSuccess();
@@ -1931,12 +2403,12 @@ function App() {
         featureTitle: selectedFeature.title,
         replay: dl.replay,
       });
-      offerPostRunMonetizationHintAfterSuccess();
+      offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
       void refreshSubscriptionState();
     } catch (error) {
-      frictionConversionFollowUpRef.current = false;
       const detail = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
       showToast("error", "İşlem başarısız", detail);
+      tryShowConversionPopupRef.current("buy_credits");
     } finally {
       if (selectedFeature.id !== "merge") {
         setSubmitting(false);
@@ -2063,7 +2535,6 @@ function App() {
         <SystemNotificationBanner language={language} />
         <LandingPage
           language={language}
-          pricing={pricing}
           onLanguageChange={handleLanguageChange}
           onUseWebApp={openWorkspace}
           isAuthenticated={isAuthenticated}
@@ -2337,19 +2808,17 @@ function App() {
         open={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         language={language}
-        pricing={pricing}
-        onSelectBasic={() => {
-          setUpgradeModalOpen(false);
-          void handleUpgradeCheckout("BUSINESS");
-        }}
-        onSelectPro={() => {
-          setUpgradeModalOpen(false);
-          void handleUpgradeCheckout("PRO", "monthly");
-        }}
-        onSelectProAnnual={() => {
-          setUpgradeModalOpen(false);
-          void handleUpgradeCheckout("PRO", "annual");
-        }}
+        buyingProduct={buyingCreditProduct}
+        onBuyPack={(product) => void handleBuyCreditPack(product)}
+      />
+
+      <ConversionPopup
+        open={conversionPopupOpen}
+        variant={conversionPopupVariant}
+        language={language}
+        onDismiss={dismissConversionPopup}
+        onPrimary={onConversionPopupPrimary}
+        onSecondary={onConversionPopupSecondary}
       />
 
       <ConversionUpgradeModal
@@ -2363,11 +2832,11 @@ function App() {
             ctr_pct: conversionModalClickThroughRate(stats),
           });
           setConversionUpgradeModalOpen(false);
-          void handleUpgradeCheckout("PRO");
+          setUpgradeModalOpen(true);
         }}
         onMaybeLater={snoozeConversionUpgradeModal}
         language={language}
-        operationsToday={subscriptionSummary?.usage.usedToday ?? 0}
+        operationsToday={userBalance?.creditBalance ?? 0}
       />
 
       {toast ? (
@@ -2380,18 +2849,14 @@ function App() {
       <DashboardTopNav
         user={user}
         language={language}
-        subscriptionStatus={subscriptionStatus}
+        creditBalance={userBalance?.creditBalance ?? null}
+        creditBalanceLoading={subscriptionLoading && !userBalance}
+        hasActiveSubscription={userBalance?.hasActiveSubscription}
         onLogoClick={handleDashboardLogoClick}
         onProfile={handleNavProfile}
         onPassword={handleNavPassword}
         onLogout={() => void handleLogout()}
-        onUpgradeClick={() => {
-          if (!subscriptionSummary || subscriptionSummary.currentPlan.name === "FREE") {
-            openConversionUpgradeModalManual();
-          } else {
-            setUpgradeModalOpen(true);
-          }
-        }}
+        onUpgradeClick={() => setUpgradeModalOpen(true)}
         showAdminEntry={user?.role === "ADMIN"}
         onOpenAdmin={() => {
           setView("admin");
@@ -2418,14 +2883,10 @@ function App() {
         onGoHome={goToLandingFromDashboard}
         lockedFeatures={lockedFeatures}
         subscriptionSummary={subscriptionSummary}
+        userBalance={userBalance}
         userRole={user?.role}
-        onUsageUpgradeClick={() => {
-          if (!subscriptionSummary || subscriptionSummary.currentPlan.name === "FREE") {
-            openConversionUpgradeModalManual();
-          } else {
-            setUpgradeModalOpen(true);
-          }
-        }}
+        onUsageUpgradeClick={() => setUpgradeModalOpen(true)}
+        onBuyCredits={() => handleBuyCredits()}
         enabledToolIds={enabledToolIds}
         resolveToolLabel={resolveToolLabel}
         onOpenAdminDashboard={
@@ -2437,60 +2898,38 @@ function App() {
             : undefined
         }
       />
-      {showUsageQuota && !bottomToolProgressActive ? (
+      {showCreditWorkspaceChrome && !bottomToolProgressActive && userBalance ? (
         <div className="pointer-events-none fixed bottom-4 left-4 z-30 max-w-[calc(100vw-2rem)] md:hidden">
           <div
-            className={`pointer-events-auto rounded-xl border px-3 py-2.5 text-xs shadow-lg backdrop-blur-md ${
-              usageFrictionActive
+            className={`pointer-events-auto rounded-xl border px-3 py-3 text-xs shadow-lg backdrop-blur-md ${
+              creditsExhausted || creditsRunningLow
                 ? "border-amber-500/45 bg-gradient-to-b from-amber-950/50 to-nb-bg-elevated/98"
                 : "border-white/[0.1] bg-nb-bg-elevated/95"
             }`}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">{W.usageDailyHeading}</p>
-            <p className="mt-1 text-[13px] font-semibold leading-snug text-nb-text">
-              {subscriptionSummary!.usage.dailyLimit != null
-                ? W.usageUsedTodayLine(subscriptionSummary!.usage.usedToday, subscriptionSummary!.usage.dailyLimit)
-                : W.usageSoftTierLine(
-                    subscriptionSummary!.usage.usedToday,
-                    subscriptionSummary!.usage.softFrictionAfterOps ?? 5,
-                  )}
-            </p>
-            <p
-              className={`mt-0.5 text-[11px] font-semibold tabular-nums ${
-                usageFrictionActive ? "text-amber-200" : "text-cyan-300/95"
-              }`}
-            >
-              {subscriptionSummary!.usage.dailyLimit != null
-                ? W.usageRemainingLine(subscriptionSummary!.usage.remainingToday ?? 0)
-                : W.usageNoDailyCapLine}
-            </p>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/35">
-              <div
-                className={`h-full rounded-full ${
-                  usageFrictionActive
-                    ? "bg-gradient-to-r from-amber-600 to-amber-400"
-                    : "bg-gradient-to-r from-nb-primary to-nb-secondary"
-                }`}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    subscriptionSummary!.usage.dailyLimit != null &&
-                      (subscriptionSummary!.usage.dailyLimit ?? 0) > 0
-                      ? (subscriptionSummary!.usage.usedToday / (subscriptionSummary!.usage.dailyLimit ?? 1)) * 100
-                      : ((subscriptionSummary!.usage.softFrictionAfterOps ?? 5) > 0
-                          ? subscriptionSummary!.usage.usedToday / (subscriptionSummary!.usage.softFrictionAfterOps ?? 5)
-                          : 0) * 100,
-                  )}%`,
-                }}
-              />
+            <div className="flex items-end justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">{W.creditBalanceHeading}</p>
+                <p className="mt-0.5 text-2xl font-black tabular-nums leading-none text-nb-text">
+                  {userBalance.hasActiveSubscription ? W.usageUnlimited : userBalance.creditBalance}
+                </p>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => openConversionUpgradeModalManual()}
-              className="nb-transition mt-2.5 w-full rounded-lg border border-amber-400/45 bg-amber-500/15 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.05em] text-amber-50 hover:bg-amber-500/25"
-            >
-              {W.usageUpgradeCta}
-            </button>
+            {creditsRunningLow ? (
+              <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">{W.creditRunningOutBanner}</p>
+            ) : null}
+            {creditsExhausted ? (
+              <p className="mt-2 text-[11px] leading-snug text-amber-200/90">{W.creditBalanceExhaustedHint}</p>
+            ) : null}
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleBuyCredits()}
+                className="nb-transition w-full rounded-lg border border-nb-primary/45 bg-nb-primary/12 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.05em] text-nb-accent hover:bg-nb-primary/18"
+              >
+                {W.creditDashboardBuyCreditsCta}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -2518,289 +2957,17 @@ function App() {
         />
         <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
           {contentPanel === "subscription" ? (
-        <section className="subscription-card">
-          <div className="subscription-card__header">
-            <div>
-              <p className="section-kicker">{language === "tr" ? "ABONELİK DURUMU" : "SUBSCRIPTION"}</p>
-              <h2>
-                {language === "tr"
-                  ? "Planınızı ve kullanım hakkınızı buradan yönetin."
-                  : "Manage your plan and daily usage here."}
-              </h2>
-            </div>
-            {subscriptionSummary ? (
-              <div className="subscription-badge-group">
-                <span className="subscription-badge subscription-badge--active">
-                  {localizedPlanDisplayName(subscriptionSummary.currentPlan.name, language)}
-                </span>
-                <span className="subscription-badge">
-                  {subscriptionSummary.usage.dailyLimit === null
-                    ? language === "tr"
-                      ? "Sınırsız kullanım"
-                      : "Unlimited"
-                    : language === "tr"
-                      ? `${subscriptionSummary.usage.usedToday}/${subscriptionSummary.usage.dailyLimit} işlem`
-                      : `${subscriptionSummary.usage.usedToday}/${subscriptionSummary.usage.dailyLimit} ops`}
-                </span>
-              </div>
-            ) : null}
-          </div>
-
-          {subscriptionLoading ? (
-            <p className="muted-text">{language === "tr" ? "Abonelik bilgileri yükleniyor..." : "Loading subscription..."}</p>
-          ) : subscriptionSummary ? (
-            <>
-              <div className="subscription-stats">
-                <div className="subscription-stat">
-                  <span>{language === "tr" ? "Aktif plan" : "Active plan"}</span>
-                  <strong>{localizedPlanDisplayName(subscriptionSummary.currentPlan.name, language)}</strong>
-                </div>
-                <div className="subscription-stat">
-                  <span>{W.usageDailyHeading}</span>
-                  <strong className="tabular-nums">
-                    {subscriptionSummary.usage.dailyLimit === null
-                      ? W.usageUnlimited
-                      : W.usageCountOfLimit(
-                          subscriptionSummary.usage.usedToday,
-                          subscriptionSummary.usage.dailyLimit,
-                        )}
-                  </strong>
-                </div>
-                <div className="subscription-stat">
-                  <span>{language === "tr" ? "Kalan hak" : "Remaining"}</span>
-                  <strong className="tabular-nums">
-                    {subscriptionSummary.usage.remainingToday === null
-                      ? W.usageUnlimited
-                      : subscriptionSummary.usage.remainingToday}
-                  </strong>
-                </div>
-              </div>
-
-              {subscriptionSummary.usage.usedToday === 0 ? (
-                <div className="mt-4">
-                  <EmptyState
-                    compact
-                    title={language === "tr" ? "Bugün kullanım yok" : "No usage today"}
-                    hint={
-                      language === "tr"
-                        ? "Bugün henüz bir PDF işlemi çalıştırmadınız. Sol menüden araç seçerek başlayabilirsiniz."
-                        : "You have not run a PDF operation today. Pick a tool from the menu to get started."
-                    }
-                  />
-                </div>
-              ) : null}
-
-              <section className="pro-value-card" aria-labelledby="pro-value-title">
-                <p className="pro-value-card__kicker">{W.proBenefitsKicker}</p>
-                <h3 id="pro-value-title" className="pro-value-card__title">
-                  {W.proBenefitsTitle}
-                </h3>
-                <p className="pro-value-card__intro">{W.proBenefitsIntro}</p>
-                <ul className="pro-value-card__list">
-                  <li className="pro-value-card__item">
-                    <span className="pro-value-card__check" aria-hidden>
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                    <div className="pro-value-card__body">
-                      <span className="pro-value-card__tag pro-value-card__tag--speed">{W.proBenefitTagSpeed}</span>
-                      <p className="pro-value-card__text">{W.proBenefitSpeed}</p>
-                    </div>
-                  </li>
-                  <li className="pro-value-card__item">
-                    <span className="pro-value-card__check" aria-hidden>
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                    <div className="pro-value-card__body">
-                      <span className="pro-value-card__tag pro-value-card__tag--quality">{W.proBenefitTagQuality}</span>
-                      <p className="pro-value-card__text">{W.proBenefitQuality}</p>
-                    </div>
-                  </li>
-                  <li className="pro-value-card__item">
-                    <span className="pro-value-card__check" aria-hidden>
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                    <div className="pro-value-card__body">
-                      <span className="pro-value-card__tag pro-value-card__tag--unlimited">{W.proBenefitTagUnlimited}</span>
-                      <p className="pro-value-card__text">{W.proBenefitUnlimited}</p>
-                    </div>
-                  </li>
-                  <li className="pro-value-card__item">
-                    <span className="pro-value-card__check" aria-hidden>
-                      <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </span>
-                    <div className="pro-value-card__body">
-                      <span className="pro-value-card__tag">{W.proBenefitTagAccess}</span>
-                      <p className="pro-value-card__text">{W.proBenefitFullAccess}</p>
-                    </div>
-                  </li>
-                </ul>
-              </section>
-
-              <div className="subscription-plan-grid">
-                {plans.map((plan) => {
-                  const isCurrent = subscriptionSummary.currentPlan.name === plan.name;
-                  return (
-                    <article key={plan.name} className={`subscription-plan ${isCurrent ? "subscription-plan--active" : ""}`}>
-                      <div className="subscription-plan__top">
-                        <div>
-                          <h3>{localizedPlanDisplayName(plan.name, language)}</h3>
-                          <p>{localizedPlanDescription(plan.name, language)}</p>
-                        </div>
-                        {isCurrent ? (
-                          <span className="subscription-badge subscription-badge--active">{language === "tr" ? "Aktif" : "Current"}</span>
-                        ) : null}
-                      </div>
-                      <div className="subscription-plan__meta">
-                        <span>
-                          {plan.dailyLimit === null
-                            ? language === "tr"
-                              ? "Limitsiz işlem"
-                              : "Unlimited operations"
-                            : language === "tr"
-                              ? `Günlük ${plan.dailyLimit} işlem`
-                              : `${plan.dailyLimit} ops/day`}
-                        </span>
-                        <span>
-                          {plan.multiUser
-                            ? language === "tr"
-                              ? "Çok kullanıcılı yapı"
-                              : "Multi-user"
-                            : language === "tr"
-                              ? "Tek kullanıcı"
-                              : "Single user"}
-                        </span>
-                      </div>
-                      <p className="subscription-plan__note muted-text text-sm">
-                        {isCurrent
-                          ? language === "tr"
-                            ? "Mevcut planınız."
-                            : "Your current plan."
-                          : language === "tr"
-                            ? "Plan değişikliği yalnızca ödeme veya satış ekibi üzerinden yapılır; buradan seçilemez."
-                            : "Plan changes are handled via billing or sales; not selectable here."}
-                      </p>
-                    </article>
-                  );
-                })}
-              </div>
-
-              {subscriptionSummary.currentPlan.name === "FREE" ? (
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("BUSINESS")}
-                  >
-                    {language === "tr"
-                      ? businessTryLine
-                        ? `Basic (${businessTryLine})`
-                        : "Basic"
-                      : businessTryLine
-                        ? `Basic (${businessTryLine})`
-                        : "Basic"}
-                  </button>
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("PRO", "monthly")}
-                  >
-                    {language === "tr"
-                      ? proTryLine
-                        ? `Pro (${proTryLine})`
-                        : "Pro"
-                      : proTryLine
-                        ? `Pro (${proTryLine})`
-                        : "Pro"}
-                  </button>
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("PRO", "annual")}
-                  >
-                    {language === "tr"
-                      ? proAnnualLine
-                        ? `Pro yıllık (${proAnnualLine})`
-                        : "Pro yıllık"
-                      : proAnnualLine
-                        ? `Pro annual (${proAnnualLine})`
-                        : "Pro annual"}
-                  </button>
-                  <span className="text-sm text-nb-muted">
-                    {language === "tr"
-                      ? "Ödeme TRY üzerinden güvenli ödeme ortağında işlenir. Tüm planları yükseltme penceresinden de görebilirsiniz."
-                      : "Checkout is in TRY via our payment partner. Open the upgrade modal to compare all plans."}
-                  </span>
-                </div>
-              ) : null}
-
-              {subscriptionSummary.currentPlan.name === "BUSINESS" ? (
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("PRO", "monthly")}
-                  >
-                    {language === "tr"
-                      ? proTryLine
-                        ? `Pro'ya yükselt (${proTryLine})`
-                        : "Pro'ya yükselt"
-                      : proTryLine
-                        ? `Upgrade to Pro (${proTryLine})`
-                        : "Upgrade to Pro"}
-                  </button>
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("PRO", "annual")}
-                  >
-                    {language === "tr"
-                      ? proAnnualLine
-                        ? `Pro yıllık (${proAnnualLine})`
-                        : "Pro yıllık"
-                      : proAnnualLine
-                        ? `Pro annual (${proAnnualLine})`
-                        : "Pro annual"}
-                  </button>
-                </div>
-              ) : null}
-
-              {subscriptionSummary.currentPlan.name === "PRO" ? (
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-                  <button
-                    type="button"
-                    className="subscription-plan__action subscription-plan__action--upgrade"
-                    onClick={() => void handleUpgradeCheckout("BUSINESS")}
-                  >
-                    {language === "tr"
-                      ? businessTryLine
-                        ? `Basic'e geç (${businessTryLine})`
-                        : "Basic'e geç"
-                      : businessTryLine
-                        ? `Switch to Basic (${businessTryLine})`
-                        : "Switch to Basic"}
-                  </button>
-                  <span className="text-sm text-nb-muted">
-                    {language === "tr"
-                      ? "Ek lisans veya kurumsal teklif için iletişim formundan da yazabilirsiniz."
-                      : "For extra licenses or enterprise quotes, you can also use the contact form."}
-                  </span>
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <p className="muted-text">
-              {language === "tr" ? "Abonelik özeti henüz yüklenemedi." : "Subscription summary could not be loaded."}
-            </p>
-          )}
-        </section>
+            <section className="subscription-card">
+              <CreditDashboard
+                language={language}
+                balance={userBalance}
+                balanceLoading={subscriptionLoading}
+                transactions={creditTransactions}
+                transactionsLoading={creditTransactionsLoading}
+                onBuyPack={(product) => void handleBuyCreditPack(product)}
+                buyingProduct={buyingCreditProduct}
+              />
+            </section>
           ) : null}
 
           {contentPanel === "profile" ? (
@@ -2824,38 +2991,37 @@ function App() {
             </div>
           </div>
 
-          {showUsageQuota && subscriptionSummary && usageFrictionActive ? (
+          {showCreditWorkspaceChrome && creditsExhausted ? (
             <div className="border-b border-amber-500/25 bg-gradient-to-r from-amber-950/45 via-amber-950/25 to-transparent px-4 py-3 md:px-6">
-              <p className="text-sm font-medium leading-snug text-amber-50/95">
-                {subscriptionSummary.usage.dailyLimit != null
-                  ? W.usageQuotaExhaustedBanner
-                  : W.usageSoftFrictionBanner}
-              </p>
-              <button
-                type="button"
-                onClick={() => openConversionUpgradeModalManual()}
-                className="nb-transition mt-3 inline-flex min-h-[40px] items-center justify-center rounded-xl border border-amber-400/45 bg-amber-500/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-amber-50 shadow-[0_0_24px_-10px_rgba(245,158,11,0.5)] hover:bg-amber-500/25"
-              >
-                {W.usageUpgradeCta}
-              </button>
+              <p className="text-sm font-medium leading-snug text-amber-50/95">{W.creditBalanceExhaustedHint}</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleBuyCredits()}
+                  className="nb-transition inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-nb-primary/45 bg-nb-primary/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/25"
+                >
+                  {W.creditDashboardBuyCreditsCta}
+                </button>
+              </div>
             </div>
           ) : null}
 
-          {delayConversionFriction ? (
-            <div className="border-b border-cyan-500/15 px-4 pb-4 pt-2 md:px-6">
-              <DelayConversionBanner
-                language={language}
-                friction={delayConversionFriction}
-                onDismiss={() => setDelayConversionFriction(null)}
-                onUpgradeClick={() => {
-                  openConversionUpgradeModalManual();
-                  setDelayConversionFriction(null);
-                }}
-              />
+          {showCreditWorkspaceChrome && creditsRunningLow ? (
+            <div className="border-b border-amber-500/30 bg-gradient-to-r from-amber-950/35 via-amber-950/15 to-transparent px-4 py-3 md:px-6">
+              <p className="text-sm font-semibold text-amber-50/95">{W.creditRunningOutBanner}</p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => handleBuyCredits()}
+                  className="nb-transition inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-nb-primary/45 bg-nb-primary/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/25"
+                >
+                  {W.creditDashboardBuyCreditsCta}
+                </button>
+              </div>
             </div>
           ) : null}
 
-          {freeDuringProcessingMonetization ? (
+          {standardLaneProcessingUpsell ? (
             <div
               className="border-b border-indigo-500/20 bg-gradient-to-r from-cyan-950/35 via-nb-panel/40 to-indigo-950/25 px-4 py-3 md:px-6"
               role="status"
@@ -3214,7 +3380,7 @@ function App() {
 
             <button className="primary-action" type="submit" disabled={submitDisabled}>
               {submitting
-                ? freeQueueLikely
+                ? creditStandardLaneQueue
                   ? W.processingQueued
                   : premiumProcessingLane
                     ? W.processingPremium
@@ -3263,7 +3429,7 @@ function App() {
               >
                 <div className="progress-bar__fill progress-bar__fill--success" style={{ width: "100%" }} />
               </div>
-              {showUsageQuota && postRunUpgradeHintVisible && !postRunUpgradeHintDismissed ? (
+              {showCreditWorkspaceChrome && postRunUpgradeHintVisible && !postRunUpgradeHintDismissed ? (
                 <div className="mt-3 flex flex-col gap-2 rounded-xl border border-indigo-500/20 bg-indigo-950/20 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-[12px] leading-relaxed text-slate-400">{W.delayMonetizationAfterHint}</p>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -3284,7 +3450,7 @@ function App() {
                   </div>
                 </div>
               ) : null}
-              {upgradeNudgeTier >= 1 && showUsageQuota && !upgradeNudgePostSuccessHidden ? (
+              {upgradeNudgeTier >= 1 && showCreditWorkspaceChrome && !upgradeNudgePostSuccessHidden ? (
                 <UpgradeNudgeInline
                   tier={upgradeNudgeTier as 1 | 2 | 3}
                   W={W}
@@ -3295,22 +3461,59 @@ function App() {
                   }}
                 />
               ) : null}
-              <div className="merge-progress-fixed__success-actions">
-                {toolProgressSuccess.replay ? (
-                  <button
-                    type="button"
-                    className="merge-progress-fixed__download"
-                    onClick={() => toolProgressSuccess.replay?.()}
-                  >
-                    {W.toolDownloadAgain}
+              {toolProgressSuccess.gatedDownload ? (
+                <SaasGatedPreview
+                  gating={toolProgressSuccess.gatedDownload.saasGating ?? null}
+                  language={language}
+                  filename={toolProgressSuccess.filename}
+                  thumbnailUrl={toolProgressSuccess.gatedDownload.thumbnailBlobUrl}
+                  onDownload={() => {
+                    const gd = toolProgressSuccess.gatedDownload;
+                    if (gd) {
+                      void runGatedDownload(gd.resultId, gd.fallbackName);
+                    }
+                  }}
+                  onUpgrade={() => openConversionUpgradeModalManual()}
+                  onInsufficientCredits={() => {
+                    armInsufficientCreditsToolBarrier();
+                    tryShowConversionPopupRef.current("insufficient_credits", "download");
+                  }}
+                  onRetry={
+                    toolProgressSuccess.gatedDownload?.saasGating?.reason === "insufficient_credits"
+                      ? undefined
+                      : () => {
+                          const gd = toolProgressSuccess.gatedDownload;
+                          if (gd) {
+                            void runGatedDownload(gd.resultId, gd.fallbackName);
+                          }
+                        }
+                  }
+                  onDismiss={disposeToolProgressSuccess}
+                  dismissLabel={W.toolProgressDismiss}
+                  legacyPreviewHint={
+                    language === "tr"
+                      ? "Önizleme hazır. Dosyayı indirmek için aşağıdaki düğmeye basın."
+                      : "Preview ready. Press the button below to download."
+                  }
+                />
+              ) : (
+                <div className="merge-progress-fixed__success-actions">
+                  {toolProgressSuccess.replay ? (
+                    <button
+                      type="button"
+                      className="merge-progress-fixed__download"
+                      onClick={() => toolProgressSuccess.replay?.()}
+                    >
+                      {W.toolDownloadAgain}
+                    </button>
+                  ) : (
+                    <p className="merge-progress-fixed__native-hint">{W.toolProgressNativeDownloadHint}</p>
+                  )}
+                  <button type="button" className="merge-progress-fixed__dismiss" onClick={disposeToolProgressSuccess}>
+                    {W.toolProgressDismiss}
                   </button>
-                ) : (
-                  <p className="merge-progress-fixed__native-hint">{W.toolProgressNativeDownloadHint}</p>
-                )}
-                <button type="button" className="merge-progress-fixed__dismiss" onClick={disposeToolProgressSuccess}>
-                  {W.toolProgressDismiss}
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         ) : null}
@@ -3329,7 +3532,7 @@ function App() {
                   {mergeJob.status !== "failed" ? (
                     <p className="merge-progress-fixed__phase">
                       {mergeJob.id === MERGE_JOB_PENDING_ID
-                        ? freeQueueLikely
+                        ? creditStandardLaneQueue
                           ? W.mergeProgressQueueFree
                           : premiumProcessingLane
                             ? W.mergeProgressQueuePremium
@@ -3401,7 +3604,7 @@ function App() {
                       genericToolPercent,
                       genericProgressIndeterminate,
                       W,
-                      freeQueueLikely,
+                      creditStandardLaneQueue,
                     )}
                   </p>
                 </div>
@@ -3420,7 +3623,7 @@ function App() {
                   genericToolPercent,
                   genericProgressIndeterminate,
                   W,
-                  freeQueueLikely,
+                  creditStandardLaneQueue,
                 )}
               >
                 {genericProgressIndeterminate ? (
@@ -3434,7 +3637,7 @@ function App() {
               </div>
               <div className="merge-progress-fixed__meta merge-progress-fixed__meta--generic">
                 <span>
-                  {freeQueueLikely
+                  {creditStandardLaneQueue
                     ? W.toolProgressSubQueueFree
                     : premiumProcessingLane
                       ? W.toolProgressSubPremium

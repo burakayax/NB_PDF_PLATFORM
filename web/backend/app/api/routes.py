@@ -1,16 +1,20 @@
 """Tarayıcıdan gelen istekleri PDF motoruna bağlayan web API rotaları.
 
-Plan ve kota doğrulaması Node SaaS API üzerinden yapılır; istemci yalnızca UI.
+Gating kararları Node SaaS API'deki entitlement engine üzerinden yapılır:
+``POST /api/entitlement/check`` pre-check, ``POST /api/entitlement/consume``
+atomic decrement + journal. Legacy daily-limit helpers (assert-feature /
+record-usage) kaldırılmıştır.
 """
 
 from __future__ import annotations
 
-from typing import Annotated
+import logging
+from typing import Annotated, Any
 
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from app.api.pdf_auth import extract_bearer_header_only, extract_pdf_access_token
 from app.core.operations import (
@@ -28,11 +32,71 @@ from app.core.operations import (
     save_upload,
 )
 from app.core.jobs import cleanup_job, create_merge_job, get_job_download, get_job_status
-from app.core.saas_gate import saas_assert_feature, saas_record_usage, saas_session_ok
+from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail
+from app.core.result_store import (
+    get_result,
+    read_meta_only,
+    save_result,
+)
+from app.core.saas_gate import (
+    entitlement_check,
+    entitlement_consume,
+    saas_check_access,
+    saas_current_user_id,
+    saas_session_ok,
+)
 from app.limiter import limiter
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS"])
 engine = get_engine()
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+
+async def _gate_or_402(token: str, tool_id: str) -> dict[str, Any]:
+    """Run a pre-check; translate a denied decision into an HTTP 402.
+
+    On ``allowed=true`` returns the decision dict unchanged so the caller can
+    embed it as ``saasGating`` in the tool response.
+    """
+    decision = await entitlement_check(token, tool_id)
+    if not decision.get("allowed"):
+        raise HTTPException(
+            status_code=402,
+            detail={"error": "payment_required", "saasGating": decision},
+        )
+    return decision
+
+
+async def _consume_post_run(token: str, tool_id: str) -> None:
+    """Run the atomic decrement after a successful tool run.
+
+    The tool's output is already in hand when we call this; a ``denied``
+    response here (almost always ``race_lost``) cannot undo the work. We log
+    the anomaly and return the file anyway — the user loses no output, and
+    the ledger stays consistent with what happened.
+    """
+    try:
+        result = await entitlement_consume(token, tool_id)
+    except HTTPException:
+        logger.warning("entitlement consume raised for tool=%s", tool_id, exc_info=True)
+        return
+    if result.get("status") == "denied":
+        logger.warning(
+            "entitlement consume denied post-run: tool=%s reason=%s",
+            tool_id,
+            result.get("reason"),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Health / capabilities
+# ---------------------------------------------------------------------------
 
 
 @router.get("/health")
@@ -46,6 +110,11 @@ def capabilities():
     return operation_capabilities()
 
 
+# ---------------------------------------------------------------------------
+# Tool routes
+# ---------------------------------------------------------------------------
+
+
 @router.post("/merge")
 async def merge_pdfs(
     token: Annotated[str, Depends(extract_pdf_access_token)],
@@ -55,6 +124,11 @@ async def merge_pdfs(
     if len(files) < 2:
         raise HTTPException(status_code=400, detail="Birleştirme için en az iki PDF seçin.")
 
+    # Merge is a long-running job: pre-check happens here, consume is fired
+    # by the worker (see app/core/jobs.py) when the job completes so a
+    # failed merge never spends a credit.
+    decision = await _gate_or_402(token, "merge")
+
     workdir = create_workdir()
     try:
         saved_paths: list[Path] = []
@@ -63,9 +137,6 @@ async def merge_pdfs(
             unique_name = f"{idx:04d}__{orig_name}"
             saved = await save_upload(upload, workdir, filename=unique_name)
             saved_paths.append(saved)
-
-        total_bytes = sum(p.stat().st_size for p in saved_paths if p.is_file())
-        _reduced, merge_friction, merge_tier = await saas_assert_feature(token, "merge", total_size_bytes=total_bytes)
 
         passwords: dict[str, str] = {}
         if passwords_json.strip():
@@ -92,10 +163,7 @@ async def merge_pdfs(
 
         output_name = "birleştirilmiş.pdf"
         job_id = create_merge_job(saved_paths, passwords, workdir, output_name, saas_token=token)
-        out: dict = {"job_id": job_id, "processingTier": merge_tier}
-        if merge_friction:
-            out["saasFriction"] = merge_friction
-        return out
+        return {"job_id": job_id, "saasGating": decision}
     except Exception as error:
         cleanup_and_raise(workdir, error)
 
@@ -126,6 +194,7 @@ async def inspect_pdf(
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    # Inspection is a free read-only call — no entitlement charge.
     await saas_session_ok(token)
 
     workdir = create_workdir()
@@ -167,12 +236,11 @@ async def split_pdf(
     mode: str = Form(default="single"),
     password: str = Form(default=""),
 ):
+    decision = await _gate_or_402(token, "split")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _reduced, split_friction, split_tier = await saas_assert_feature(
-            token, "split", total_size_bytes=saved_file.stat().st_size
-        )
         password = password.strip() or None
         if engine.is_pdf_encrypted(str(saved_file)) and not password:
             raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
@@ -183,15 +251,14 @@ async def split_pdf(
             output_name = format_split_single_filename(file.filename or saved_file.name, pages)
             output_path = workdir / output_name
             engine.extract_pages(str(saved_file), pages, str(output_path), password=password)
-            await saas_record_usage(token, "split")
+            await _consume_post_run(token, "split")
             return download_response(
                 output_path,
                 output_path.name,
                 "application/pdf",
                 background_tasks,
                 workdir,
-                saas_friction=split_friction,
-                processing_tier=split_tier,
+                saas_gating=decision,
             )
 
         output_folder = workdir / "separate-pages"
@@ -205,15 +272,14 @@ async def split_pdf(
             renamed_paths.append(renamed)
         zip_name = format_split_zip_filename(file.filename or saved_file.name, pages)
         zip_path = create_zip_archive(workdir / zip_name, renamed_paths)
-        await saas_record_usage(token, "split")
+        await _consume_post_run(token, "split")
         return download_response(
             zip_path,
             zip_path.name,
             "application/zip",
             background_tasks,
             workdir,
-            saas_friction=split_friction,
-            processing_tier=split_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -226,28 +292,26 @@ async def pdf_to_word(
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    decision = await _gate_or_402(token, "pdf-to-word")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        reduced_quality, word_friction, word_tier = await saas_assert_feature(
-            token, "pdf-to-word", total_size_bytes=saved_file.stat().st_size
-        )
         pwd = password.strip() or None
         if engine.is_pdf_encrypted(str(saved_file)) and not pwd:
             raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
 
         output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
         output_path = workdir / output_name
-        engine.pdf_to_word(str(saved_file), str(output_path), password=pwd, reduced_quality=reduced_quality)
-        await saas_record_usage(token, "pdf-to-word")
+        engine.pdf_to_word(str(saved_file), str(output_path), password=pwd)
+        await _consume_post_run(token, "pdf-to-word")
         return download_response(
             output_path,
             output_path.name,
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             background_tasks,
             workdir,
-            saas_friction=word_friction,
-            processing_tier=word_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -259,24 +323,22 @@ async def word_to_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
 ):
+    decision = await _gate_or_402(token, "word-to-pdf")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _r, wtp_friction, wtp_tier = await saas_assert_feature(
-            token, "word-to-pdf", total_size_bytes=saved_file.stat().st_size
-        )
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
         engine.word_to_pdf(str(saved_file), str(output_path))
-        await saas_record_usage(token, "word-to-pdf")
+        await _consume_post_run(token, "word-to-pdf")
         return download_response(
             output_path,
             output_path.name,
             "application/pdf",
             background_tasks,
             workdir,
-            saas_friction=wtp_friction,
-            processing_tier=wtp_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -288,24 +350,22 @@ async def excel_to_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
 ):
+    decision = await _gate_or_402(token, "excel-to-pdf")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _r, etp_friction, etp_tier = await saas_assert_feature(
-            token, "excel-to-pdf", total_size_bytes=saved_file.stat().st_size
-        )
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
         engine.excel_to_pdf(str(saved_file), str(output_path))
-        await saas_record_usage(token, "excel-to-pdf")
+        await _consume_post_run(token, "excel-to-pdf")
         return download_response(
             output_path,
             output_path.name,
             "application/pdf",
             background_tasks,
             workdir,
-            saas_friction=etp_friction,
-            processing_tier=etp_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -318,12 +378,11 @@ async def pdf_to_excel(
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    decision = await _gate_or_402(token, "pdf-to-excel")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _r, pte_friction, pte_tier = await saas_assert_feature(
-            token, "pdf-to-excel", total_size_bytes=saved_file.stat().st_size
-        )
         output_name = format_derived_filename(file.filename or saved_file.name, "Excel", "xlsx")
         output_path = workdir / output_name
         engine.pdf_text_to_excel(
@@ -332,15 +391,14 @@ async def pdf_to_excel(
             preserve_tables=True,
             password=password.strip() or None,
         )
-        await saas_record_usage(token, "pdf-to-excel")
+        await _consume_post_run(token, "pdf-to-excel")
         return download_response(
             output_path,
             output_path.name,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             background_tasks,
             workdir,
-            saas_friction=pte_friction,
-            processing_tier=pte_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -348,32 +406,52 @@ async def pdf_to_excel(
 
 @router.post("/compress")
 async def compress_pdf(
-    background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    """Pilot result-store flow: persist the compressed PDF to the result
+    store and return a handle. The client renders a preview and then hits
+    the gated download endpoint (``/api/pdf/result/{id}/download``).
+    """
+    decision = await _gate_or_402(token, "compress")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _r, comp_friction, comp_tier = await saas_assert_feature(
-            token, "compress", total_size_bytes=saved_file.stat().st_size
-        )
         output_name = format_derived_filename(file.filename or saved_file.name, "Sıkıştırılmış", "pdf")
         output_path = workdir / output_name
         engine.compress_pdf(str(saved_file), str(output_path), password=password.strip() or None)
-        await saas_record_usage(token, "compress")
-        return download_response(
-            output_path,
+        await _consume_post_run(token, "compress")
+
+        payload_bytes = output_path.read_bytes()
+        thumbnail_png = generate_blurred_pdf_thumbnail(payload_bytes)
+
+        user_id = await saas_current_user_id(token)
+        handle = save_result(
+            payload_bytes,
             output_path.name,
             "application/pdf",
-            background_tasks,
-            workdir,
-            saas_friction=comp_friction,
-            processing_tier=comp_tier,
+            user_id=user_id,
+            thumbnail_png=thumbnail_png,
         )
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": decision,
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        # Payload now lives in the result store; the working copy is redundant.
+        if workdir.exists():
+            from app.core.operations import cleanup_path
+
+            cleanup_path(workdir)
 
 
 @router.post("/encrypt")
@@ -388,12 +466,11 @@ async def encrypt_pdf(
     if not user_password:
         raise HTTPException(status_code=400, detail="Cikti PDF icin parola girmek zorunludur.")
 
+    decision = await _gate_or_402(token, "encrypt")
+
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
-        _r, enc_friction, enc_tier = await saas_assert_feature(
-            token, "encrypt", total_size_bytes=saved_file.stat().st_size
-        )
         output_name = format_derived_filename(file.filename or saved_file.name, "Şifreli", "pdf")
         output_path = workdir / output_name
         engine.encrypt_pdf(
@@ -402,15 +479,85 @@ async def encrypt_pdf(
             user_password=user_password,
             input_password=input_password.strip() or None,
         )
-        await saas_record_usage(token, "encrypt")
+        await _consume_post_run(token, "encrypt")
         return download_response(
             output_path,
             output_path.name,
             "application/pdf",
             background_tasks,
             workdir,
-            saas_friction=enc_friction,
-            processing_tier=enc_tier,
+            saas_gating=decision,
         )
     except Exception as error:
         cleanup_and_raise(workdir, error)
+
+
+# ---------------------------------------------------------------------------
+# Result store: preview (FREE) and download (access-gated).
+# ---------------------------------------------------------------------------
+
+
+@router.get("/pdf/result/{result_id}/preview")
+async def preview_result(
+    result_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Preview metadata for a processed result. FREE — does NOT call
+    ``saas_check_access``. Ownership is still enforced so one user cannot
+    enumerate another user's results.
+    """
+    user_id = await saas_current_user_id(token)
+    read = get_result(result_id, user_id)
+    thumbnail_url = (
+        f"/api/pdf/result/{result_id}/preview/thumbnail" if read.thumbnail_path else None
+    )
+    return {
+        "result_id": result_id,
+        "filename": read.filename,
+        "mime": read.mime,
+        "size_bytes": read.size_bytes,
+        "has_thumbnail": read.thumbnail_path is not None,
+        "thumbnail_url": thumbnail_url,
+    }
+
+
+@router.get("/pdf/result/{result_id}/preview/thumbnail")
+async def preview_result_thumbnail(
+    result_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Serve the blurred preview PNG. FREE — no ``saas_check_access``."""
+    user_id = await saas_current_user_id(token)
+    read = get_result(result_id, user_id)
+    if read.thumbnail_path is None:
+        raise HTTPException(status_code=404, detail="Thumbnail not available.")
+    return FileResponse(path=str(read.thumbnail_path), media_type="image/png")
+
+
+@router.get("/pdf/result/{result_id}/download")
+async def download_result(
+    result_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Download a processed result. Ownership enforced; access re-gated via
+    Node ``/api/access/check`` (legacy download gate — not the same surface
+    as the entitlement engine used by the tool endpoints)."""
+    user_id = await saas_current_user_id(token)
+
+    meta = read_meta_only(result_id)
+    if meta.get("user_id") != user_id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    try:
+        await saas_check_access(token)
+    except HTTPException as exc:
+        if exc.status_code == 402:
+            return JSONResponse(status_code=402, content={"error": "payment_required"})
+        raise
+
+    read = get_result(result_id, user_id)
+    return FileResponse(
+        path=str(read.payload_path),
+        filename=read.filename,
+        media_type=read.mime,
+    )

@@ -1,7 +1,8 @@
 import type { FeatureKey } from "../../api/subscription";
+import type { SubscriptionSummary } from "../../api/subscription";
+import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
 import { SIDEBAR_TOOL_ORDER, sidebarToolLabel, ws } from "../../i18n/workspace";
-import type { SubscriptionSummary } from "../../api/subscription";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -23,9 +24,13 @@ type DashboardSidebarProps = {
   onGoHome: () => void;
   lockedFeatures: Set<FeatureKey>;
   subscriptionSummary?: SubscriptionSummary | null;
+  /** Credit balance + plan from `/api/entitlement/balance`. */
+  userBalance?: UserBalance | null;
   userRole?: string;
-  /** Kota CTA: yükseltme modali (yoksa abonelik sayfasına gider). */
+  /** @deprecated Use `onUpgradePlan`; kept for one call site compatibility. */
   onUsageUpgradeClick?: () => void;
+  onBuyCredits?: () => void;
+  onUpgradePlan?: () => void;
   /** Yalnızca ADMIN: istatistik modali. */
   onOpenAdminDashboard?: () => void;
   /** Sunucu `TOOLS.config.disabledFeatures` sonrası görünen araçlar; verilmezse tam liste. */
@@ -42,8 +47,11 @@ export function DashboardSidebar({
   onGoHome,
   lockedFeatures,
   subscriptionSummary,
+  userBalance,
   userRole,
   onUsageUpgradeClick,
+  onBuyCredits,
+  onUpgradePlan,
   onOpenAdminDashboard,
   enabledToolIds,
   resolveToolLabel,
@@ -51,9 +59,19 @@ export function DashboardSidebar({
   const L = ws(language);
   const toolOrder = enabledToolIds?.length ? enabledToolIds : SIDEBAR_TOOL_ORDER;
   const labelForTool = resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
-  const showUsageChip =
-    userRole !== "ADMIN" && subscriptionSummary && subscriptionSummary.currentPlan.name === "FREE";
-  const usageFrictionActive = Boolean(subscriptionSummary?.usage.conversionTracking?.freeLimitExceeded);
+  const showCreditCard = userRole !== "ADMIN" && Boolean(userBalance);
+  const creditBalance = userBalance?.creditBalance ?? 0;
+  const creditsExhausted = Boolean(
+    userBalance && !userBalance.hasActiveSubscription && userBalance.role !== "ADMIN" && creditBalance <= 0,
+  );
+  const creditsRunningLow = Boolean(
+    userBalance &&
+      !userBalance.hasActiveSubscription &&
+      userBalance.role !== "ADMIN" &&
+      creditBalance > 0 &&
+      creditBalance < 5,
+  );
+  const buyHandler = onBuyCredits ?? onUsageUpgradeClick;
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 md:flex">
@@ -117,7 +135,7 @@ export function DashboardSidebar({
                     className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
                     aria-hidden
                   >
-                    Pro
+                    {L.featureLockedBadge}
                   </span>
                 ) : null}
               </span>
@@ -139,63 +157,48 @@ export function DashboardSidebar({
         </button>
       </nav>
 
-      {showUsageChip ? (
+      {showCreditCard && userBalance ? (
         <div className="border-t border-white/[0.06] px-3 py-3">
-          <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-nb-muted">{L.usageDailyHeading}</p>
+          <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-nb-muted">
+            {L.creditBalanceHeading}
+          </p>
           <div
             className={`rounded-2xl border px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm ${
-              usageFrictionActive
+              creditsExhausted || creditsRunningLow
                 ? "border-amber-500/40 bg-gradient-to-b from-amber-950/40 to-nb-panel/70"
                 : "border-white/[0.1] bg-nb-panel/55"
             }`}
           >
-            <p className="text-[13px] font-semibold leading-snug text-nb-text">
-              {subscriptionSummary!.usage.dailyLimit != null
-                ? L.usageUsedTodayLine(
-                    subscriptionSummary!.usage.usedToday,
-                    subscriptionSummary!.usage.dailyLimit,
-                  )
-                : L.usageSoftTierLine(
-                    subscriptionSummary!.usage.usedToday,
-                    subscriptionSummary!.usage.softFrictionAfterOps ?? 5,
-                  )}
-            </p>
-            <p
-              className={`mt-1 text-xs font-semibold tabular-nums ${
-                usageFrictionActive ? "text-amber-200/95" : "text-cyan-300/95"
-              }`}
-            >
-              {subscriptionSummary!.usage.dailyLimit != null
-                ? L.usageRemainingLine(subscriptionSummary!.usage.remainingToday ?? 0)
-                : L.usageNoDailyCapLine}
-            </p>
-            <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-black/35">
-              <div
-                className={`h-full rounded-full transition-[width] duration-300 ${
-                  usageFrictionActive
-                    ? "bg-gradient-to-r from-amber-600 to-amber-400"
-                    : "bg-gradient-to-r from-nb-primary to-nb-secondary"
-                }`}
-                style={{
-                  width: `${Math.min(
-                    100,
-                    subscriptionSummary!.usage.dailyLimit != null &&
-                      (subscriptionSummary!.usage.dailyLimit ?? 0) > 0
-                      ? (subscriptionSummary!.usage.usedToday / (subscriptionSummary!.usage.dailyLimit ?? 1)) * 100
-                      : ((subscriptionSummary!.usage.softFrictionAfterOps ?? 5) > 0
-                          ? subscriptionSummary!.usage.usedToday / (subscriptionSummary!.usage.softFrictionAfterOps ?? 5)
-                          : 0) * 100,
-                  )}%`,
-                }}
-              />
+            <div className="flex items-end justify-between gap-2">
+              <p className="text-3xl font-black tabular-nums leading-none text-nb-text">
+                {userBalance.hasActiveSubscription ? L.usageUnlimited : creditBalance.toLocaleString()}
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => (onUsageUpgradeClick ? onUsageUpgradeClick() : onSelect("subscription"))}
-              className="nb-transition mt-3 w-full rounded-xl border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-amber-600/10 px-3 py-2.5 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-amber-100 shadow-[0_0_22px_-10px_rgba(245,158,11,0.55)] hover:brightness-110"
-            >
-              {L.usageUpgradeCta}
-            </button>
+            {creditsRunningLow ? (
+              <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">{L.creditRunningOutBanner}</p>
+            ) : null}
+            {creditsExhausted ? (
+              <p className="mt-2 text-xs font-semibold tabular-nums text-amber-200/95">{L.creditBalanceExhaustedHint}</p>
+            ) : null}
+            <div className="mt-3 flex flex-col gap-2">
+              {buyHandler ? (
+                <button
+                  type="button"
+                  onClick={() => buyHandler()}
+                  className="nb-transition w-full rounded-xl border border-nb-primary/45 bg-nb-primary/12 px-3 py-2.5 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/20"
+                >
+                  {L.creditDashboardBuyCreditsCta}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onSelect("subscription")}
+                  className="nb-transition w-full rounded-xl border border-nb-primary/45 bg-nb-primary/12 px-3 py-2.5 text-center text-[11px] font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/20"
+                >
+                  {L.creditDashboardBuyCreditsCta}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       ) : null}
