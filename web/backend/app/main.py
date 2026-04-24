@@ -13,6 +13,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.auth_routes import router as auth_router
 from app.api.routes import router
+from app.core.result_store import start_ttl_sweeper
 
 # Trial abuse reference routes (disabled by default; see app.auth.registration_workflow_example):
 # from app.auth.registration_workflow_example import example_router
@@ -77,3 +78,9 @@ async def attach_nb_device_id(request: Request, call_next):
 app.include_router(router)
 app.include_router(auth_router, prefix="/api")
 # app.include_router(example_router, prefix="/api")
+
+
+@app.on_event("startup")
+async def _launch_result_store_sweeper() -> None:
+    """Start the result-store TTL sweeper once per process (idempotent)."""
+    start_ttl_sweeper()
