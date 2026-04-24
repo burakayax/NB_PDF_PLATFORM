@@ -1,24 +1,19 @@
-import type { FeatureKey, SubscriptionSummary } from "../api/subscription";
+/**
+ * Local-storage-backed frequency caps for the upgrade CTA modal.
+ *
+ * Historically this module also computed *who* should see the modal by
+ * reading `subscriptionSummary.usage.postLimitThrottleEventsToday`,
+ * `behaviorMonetization`, and a freshly-received server-side "friction
+ * signal". That entire signal pipeline belonged to the retired daily-limit
+ * system. The modal is now driven purely by the credit-based entitlement
+ * engine: the UI opens it when the user hits a 402 or when their credit
+ * balance is zero, and this module only keeps the "don't spam" frequency
+ * caps and the stats counters used for analytics.
+ */
 
-/** Minimum minutes between auto (or any) modal presentations — frequency cap. */
 export const CONV_MODAL_MIN_MINUTES_BETWEEN = 45;
 
-/** Hard cap on how many times the conversion modal may appear per local calendar day. */
 export const CONV_MODAL_MAX_SHOWS_PER_DAY = 3;
-
-/** Fresh friction signal window for “heavy operation delay” (ms). */
-export const CONV_MODAL_FRICTION_SIGNAL_TTL_MS = 3 * 60 * 1000;
-
-/** Server-reported delay at or above this counts as a strong delay signal. */
-export const CONV_MODAL_HEAVY_DELAY_MS = 1500;
-
-/** Avoid treating brand-new users as conversion targets. */
-export const CONV_MODAL_MIN_LIFETIME_OPS = 2;
-
-export const CONV_MODAL_MIN_USED_TODAY = 2;
-
-/** “Repeated tool usage” — operations completed today. */
-export const CONV_MODAL_REPEATED_USAGE_TODAY = 5;
 
 const STATS_KEY = "nb_conv_modal_stats_v2";
 const LEGACY_STATS_KEY = "nb_conv_modal_stats_v1";
@@ -27,8 +22,6 @@ export const CONV_MODAL_SNOOZE_UNTIL_KEY = "nb_conv_upgrade_snooze_until";
 
 /** “Maybe later” — additional backoff beyond minute/daily caps. */
 export const CONV_MODAL_SNOOZE_MS = 24 * 60 * 60 * 1000;
-
-export const HEAVY_CONVERSION_FEATURES = new Set<FeatureKey>(["merge", "compress", "pdf-to-word", "pdf-to-excel"]);
 
 function localDateKey(d = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -208,54 +201,6 @@ export function canAutoShowConversionModal(nowMs: number = Date.now()): boolean 
     return false;
   }
   return true;
-}
-
-export type ConversionFrictionSignal = {
-  at: number;
-  featureId: FeatureKey;
-  delayMs: number;
-};
-
-export function isFrictionSignalFresh(signal: ConversionFrictionSignal | null, nowMs: number): boolean {
-  if (!signal) {
-    return false;
-  }
-  return nowMs - signal.at < CONV_MODAL_FRICTION_SIGNAL_TTL_MS;
-}
-
-/**
- * FREE-only. Requires past “first use” (lifetime or today).
- * - 2nd+ delayed request today (throttle count).
- * - Recent heavy-tool or long-delay friction (see signal).
- * - Repeated tool usage (ops today).
- */
-export function conversionModalAutoQualifies(
-  summary: SubscriptionSummary,
-  frictionSignal: ConversionFrictionSignal | null,
-  nowMs: number = Date.now(),
-): boolean {
-  if (summary.currentPlan.name !== "FREE") {
-    return false;
-  }
-  const u = summary.usage;
-  const lifetime = u.behaviorMonetization?.totalOperationsLifetime ?? 0;
-  const used = u.usedToday;
-  if (lifetime < CONV_MODAL_MIN_LIFETIME_OPS && used < CONV_MODAL_MIN_USED_TODAY) {
-    return false;
-  }
-
-  const delays = u.postLimitThrottleEventsToday ?? u.conversionTracking?.postLimitThrottleEventsToday ?? 0;
-  const secondOrLaterDelay = delays >= 2;
-
-  const fresh = isFrictionSignalFresh(frictionSignal, nowMs);
-  const heavyOpDelay =
-    fresh &&
-    frictionSignal != null &&
-    (frictionSignal.delayMs >= CONV_MODAL_HEAVY_DELAY_MS || HEAVY_CONVERSION_FEATURES.has(frictionSignal.featureId));
-
-  const repeatedUsage = used >= CONV_MODAL_REPEATED_USAGE_TODAY;
-
-  return secondOrLaterDelay || heavyOpDelay || repeatedUsage;
 }
 
 export function pushConversionModalAnalytics(event: string, payload: Record<string, unknown>) {

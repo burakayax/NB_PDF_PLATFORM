@@ -72,7 +72,7 @@ export function ConversionUpgradeModal({
         <div className="conv-upgrade-modal__accent" aria-hidden />
         <div className="conv-upgrade-modal__head">
           <p className="conv-upgrade-modal__eyebrow" aria-hidden>
-            {language === "tr" ? "Hız farkı" : "Speed"}
+            {C.eyebrow}
           </p>
           <button type="button" className="conv-upgrade-modal__close" onClick={onClose} aria-label={C.close}>
             ×

@@ -76,6 +76,24 @@ export const adminRollbackBodySchema = z.object({
   revisionId: z.string().min(1),
 });
 
+/**
+ * `POST /api/admin/credits/grant` body.
+ *
+ * `amount` is a positive integer of credits to add (the engine rejects
+ * non-integer and non-positive values defensively, we mirror that at the
+ * edge so the client gets a 400 instead of a 500).
+ *
+ * `reason` is a short free-text justification the admin types in the UI.
+ * It's persisted to `AdminAuditLog` — not to `CreditTransaction`, which
+ * only carries the `admin_add` type + amount. Surfaces looking for "why
+ * was this granted" join against the audit log by `transactionId`.
+ */
+export const adminGrantCreditsSchema = z.object({
+  userId: z.string().min(1).max(200),
+  amount: z.number().int().positive().max(1_000_000),
+  reason: z.string().trim().min(1).max(500),
+});
+
 export const adminResetBodySchema = z.object({
   scopes: z.array(z.string().min(1).max(120)).min(1).max(16),
   confirm: z.literal("RESET"),

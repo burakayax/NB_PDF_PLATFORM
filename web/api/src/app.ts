@@ -12,9 +12,11 @@ import { asyncHandler } from "./lib/async-handler.js";
 import { HttpError } from "./lib/http-error.js";
 import { enforceHttpsMiddleware } from "./middleware/https-enforce.middleware.js";
 import { abuseBlockMiddleware, globalApiLimiter } from "./middleware/api-security.middleware.js";
+import { requireAuth } from "./middleware/auth.middleware.js";
 import { verifyEmailController } from "./modules/auth/auth.controller.js";
 import { submitContactController } from "./modules/contact/contact.controller.js";
 import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
+import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { apiRouter } from "./routes/index.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
@@ -108,11 +110,25 @@ app.use(
       callback(null, false);
     },
     credentials: true,
-    exposedHeaders: ["X-NB-Processing-Tier", "X-NB-Priority-Processing", "X-NB-SaaS-Friction"],
+    // ``X-SaaS-Gating`` carries the entitlement engine's decision on
+    // streamed tool responses (JSON responses embed the same data under
+    // ``saasGating``). The legacy ``X-NB-Processing-Tier`` /
+    // ``X-NB-SaaS-Friction`` / ``X-NB-Priority-Processing`` headers were
+    // retired together with the daily-limit system.
+    exposedHeaders: ["X-SaaS-Gating"],
   }),
 );
 app.use(express.json());
 app.use(cookieParser());
+
+/** Fake PSP: JWT + same abuse/rate limits as `/api`; mounted here so paths are explicit in `app`. */
+app.use(
+  "/api/fake-payment",
+  abuseBlockMiddleware,
+  globalApiLimiter,
+  requireAuth,
+  fakePaymentRouter,
+);
 
 app.get("/verify-email", (request, response, next) => {
   void verifyEmailController(request, response).catch(next);

@@ -4,7 +4,14 @@ import { appendLogLine } from "./file-log.js";
 // kind alanı tüketicilerin satırı sınıflandırmasını sağlar; şema değişince arama panelleri güncellenmelidir.
 // Dosya günlüğü env ile kapatılırsa bu fonksiyonlar sessizce no-op olur (file-log katmanında).
 
-type LogKind = "login_attempt" | "register_attempt" | "google_oauth" | "error" | "api_failure" | "security";
+type LogKind =
+  | "login_attempt"
+  | "register_attempt"
+  | "google_oauth"
+  | "error"
+  | "api_failure"
+  | "security"
+  | "fake_payment";
 
 function write(kind: LogKind, payload: Record<string, unknown>): void {
   const line = JSON.stringify({ ts: new Date().toISOString(), kind, ...payload });
@@ -85,4 +92,18 @@ export function logSuspiciousActivity(payload: {
   userAgent?: string;
 }): void {
   write("security", payload as Record<string, unknown>);
+}
+
+/** Mock checkout / confirm — no external PSP; complements NDJSON audit. */
+export function logFakePaymentEvent(payload: {
+  event: "checkout_created" | "payment_confirmed";
+  sessionId: string;
+  userId: string;
+  product: string;
+  amount?: number;
+  credits?: number;
+  creditsGranted?: number;
+  transactionId?: string;
+}): void {
+  write("fake_payment", payload as Record<string, unknown>);
 }

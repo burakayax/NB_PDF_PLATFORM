@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from app.core.operations import cleanup_path, get_engine
-from app.core.saas_gate import saas_record_usage_sync
+from app.core.saas_gate import entitlement_consume_sync
 
 engine = get_engine()
 _jobs: dict[str, dict] = {}
@@ -83,8 +83,12 @@ def create_merge_job(
                 return True
 
             engine.merge_pdfs([str(p) for p in saved_paths], str(output_path), progress_callback=progress_cb, passwords=passwords)
+            # Consume AFTER the merge succeeds — if the job fails we must
+            # not charge. A race-lost / denied response here is logged by
+            # entitlement_consume_sync and does not fail the job because
+            # the output is already on disk for the user.
             if saas_token:
-                saas_record_usage_sync(saas_token, "merge")
+                entitlement_consume_sync(saas_token, "merge")
             with _lock:
                 job["status"] = "completed"
                 job["message"] = "Birleştirme tamamlandı."

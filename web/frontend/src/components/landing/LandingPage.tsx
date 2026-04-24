@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { submitContactForm } from "../../api/contact";
-import type { PublicPricingPayload } from "../../api/public";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import {
@@ -16,7 +15,6 @@ import { Marquee } from "../ui/marquee";
 
 type LandingPageProps = {
   language: Language;
-  pricing: PublicPricingPayload;
   onLanguageChange: (language: Language) => void;
   onUseWebApp: () => void;
   isAuthenticated: boolean;
@@ -31,7 +29,6 @@ type LandingPageProps = {
 
 export function LandingPage({
   language,
-  pricing,
   onLanguageChange,
   onUseWebApp,
   isAuthenticated,
@@ -652,7 +649,6 @@ export function LandingPage({
 
         <LandingPricingSection
           language={language}
-          pricing={pricing}
           kicker={copy.pricing.kicker}
           title={copy.pricing.title}
           description={copy.pricing.description}

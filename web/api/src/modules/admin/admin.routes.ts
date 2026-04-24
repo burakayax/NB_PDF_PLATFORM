@@ -10,6 +10,7 @@ import {
   adminDeleteUserController,
   adminGetCmsController,
   adminGetSettingsController,
+  adminGrantCreditsController,
   adminListBlockedEmailsController,
   adminListMediaController,
   adminListUsersController,
@@ -86,3 +87,5 @@ adminRouter.put("/TOOLS/config", asyncHandler(adminPutTOOLSController));
 
 adminRouter.get("/reports/usage-series", asyncHandler(adminUsageSeriesController));
 adminRouter.get("/reports/usage-export", asyncHandler(adminUsageExportController));
+
+adminRouter.post("/credits/grant", asyncHandler(adminGrantCreditsController));
