@@ -164,9 +164,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     trustedText: {
       trusted: "Trusted by 1,000+ users",
-      payment: "No credit card required",
-      cancel: "Cancel anytime",
-      freePlan: "Free Plan Available",
+      payment: "Secure checkout",
+      cancel: "e.g. Split PDF 2 credits · merge 3 credits",
+      freePlan: "Pay as you go — credit-based",
     },
     features: {
       kicker: "Business Benefits",
@@ -261,9 +261,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     pricing: {
       kicker: "Pricing",
-      title: "Simple plans for individuals and power users worldwide.",
+      title: "Buy credits when you need them.",
       description:
-        "Regional pricing in TRY or USD. Checkout runs in TRY through our payment partner; international cards may show a converted amount.",
+        "No subscription — you choose a pack, tools spend credits per run. Checkout in TRY through our payment partner.",
       plans: [],
     },
     finalCta: {
@@ -359,9 +359,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     trustedText: {
       trusted: "1.000'den fazla kullanıcı tarafından güveniliyor",
-      payment: "Güvenli ödeme sistemi",
-      cancel: "İstediğin zaman iptal et",
-      freePlan: "Ücretisiz plan mevcut",
+      payment: "Güvenli ödeme",
+      cancel: "Örnek: PDF bölme 2 kredi · birleştirme 3 kredi",
+      freePlan: "Kullandığın kadar öde — kredi sistemi",
     },
     features: {
       kicker: "İş Faydası",
@@ -451,9 +451,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     pricing: {
       kicker: "Fiyatlandırma",
-      title: "Bireyler ve yoğun kullanıcılar için net planlar.",
+      title: "İhtiyaç duyduğunuzda kredi alın.",
       description:
-        "Bölgenize göre TRY veya USD gösterimi. Ödeme güvenli ödeme ortağı üzerinden TRY ile alınır; yurtdışı kartlarda bankanız dönüştürülmüş tutar gösterebilir.",
+        "Abonelik yok — paket seçersiniz, araçlar her çalıştırmada kredi harcar. Ödeme güvenli ortak üzerinden TRY ile yapılır.",
       plans: [],
     },
     finalCta: {

@@ -173,6 +173,27 @@ def get_result(result_id: str, user_id: str) -> ResultRead:
     )
 
 
+def read_meta_only(result_id: str) -> dict:
+    """Return the parsed ``meta.json`` for ``result_id`` (ownership-check fast path).
+
+    Use this — not :func:`get_result` — when the caller must distinguish a
+    foreign owner from a missing entry (e.g. to return 403 vs. 404). It
+    never touches the payload and has no side effects.
+
+    Raises ``HTTPException(404)`` for missing or expired entries. The
+    expired branch also lazily deletes the directory, matching
+    :func:`get_result`.
+    """
+    entry = _entry_dir(result_id)
+    if not entry.is_dir():
+        raise HTTPException(status_code=404, detail="Result not found.")
+    meta = _read_meta(entry)
+    if _is_expired(meta):
+        _delete_entry(entry)
+        raise HTTPException(status_code=404, detail="Result not found.")
+    return meta
+
+
 def delete_result(result_id: str) -> None:
     """Delete an entry by id. Safe to call repeatedly / on missing ids."""
     try:

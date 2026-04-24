@@ -1,9 +1,11 @@
 import { Router } from "express";
+import { accessRouter } from "../modules/access/access.routes.js";
 import { adminRouter } from "../modules/admin/admin.routes.js";
 import { analyticsRouter } from "../modules/analytics/analytics.routes.js";
 import { authRouter } from "../modules/auth/auth.routes.js";
 import { contactRouter } from "../modules/contact/contact.routes.js";
 import { deviceRouter } from "../modules/device/device.routes.js";
+import { entitlementRouter } from "../modules/entitlement/entitlement.routes.js";
 import { licenseRouter } from "../modules/license/license.routes.js";
 import { monitoringRouter } from "../modules/monitoring/monitoring.routes.js";
 import { paymentsDisabledRouter } from "../modules/payment/no-op.routes.js";
@@ -31,11 +33,13 @@ apiRouter.get("/health", (_request, response) => {
 });
 
 apiRouter.use("/public", publicRouter);
+apiRouter.use("/access", accessRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/contact", contactRouter);
 apiRouter.use("/device", deviceRouter);
+apiRouter.use("/entitlement", entitlementRouter);
 apiRouter.use("/errors", monitoringRouter);
 // Payments are globally DISABLED. Hiçbir sağlayıcı (iyzico / stripe) mount edilmez;
 // `/api/payment/*` altındaki tüm istekler `paymentsDisabledRouter` tarafından 503 +

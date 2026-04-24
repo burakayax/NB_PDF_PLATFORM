@@ -4,10 +4,12 @@ import https from "node:https";
 import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { ensureDefaultAdminUser } from "./lib/ensure-default-admin.js";
+import { ensureToolRegistry } from "./lib/ensure-tool-registry.js";
 import { prepareLogFile } from "./lib/file-log.js";
 
 await prepareLogFile();
 await ensureDefaultAdminUser();
+await ensureToolRegistry();
 
 const keyPath = env.HTTPS_KEY_PATH;
 const certPath = env.HTTPS_CERT_PATH;

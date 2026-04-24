@@ -28,6 +28,14 @@ enum AuthProvider {
   google
 }
 
+enum SubscriptionStatus {
+  none
+  active
+  past_due
+  canceled
+  incomplete
+}
+
 model User {
   id           String         @id @default(cuid())
   email        String         @unique
@@ -59,11 +67,11 @@ model User {
   /// Gecikme sonrası veya kayıt yanıtında kaç kez yükseltme CTA gösterildi (dönüşüm).
   totalUpgradeCtaImpressionsCount Int     @default(0) @map("total_upgrade_cta_impressions_count")
   /// Prepaid credit balance; decremented atomically when a tool is used without an active subscription.
-  credit_balance       Int     @default(0) @map("credit_balance")
+  credit_balance       Int     @default(0)
   /// Payment provider subscription status; app-layer union: none | active | past_due | canceled | incomplete.
-  subscription_status  String  @default("none") @map("subscription_status")
+  subscription_status SubscriptionStatus @default(none)
   /// Stripe customer id (nullable; populated on first Stripe interaction).
-  stripe_customer_id   String? @unique @map("stripe_customer_id")
+  stripe_customer_id   String? @unique
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
   refreshTokens RefreshToken[]
@@ -74,6 +82,10 @@ model User {
   desktopDevices DesktopDevice[]
   paymentCheckouts PaymentCheckout[]
   passwordResetCodes PasswordResetCode[]
+  creditTransactions CreditTransaction[]
+  entitlement        UserEntitlement?
+
+  @@index([stripe_customer_id])
 }
 
 /// E-posta ile gönderilen 6 haneli şifre sıfırlama kodu (hash saklanır).
@@ -98,6 +110,7 @@ model PaymentCheckout {
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan             Plan
   status           String    @default("pending")
+  /// priceTry ileride eklenecek provider, stripeSessionId, stripeEventId
   priceTry         String
   /// Subscription length applied on successful payment (30 = monthly, 365 = annual).
   subscriptionDays Int       @default(30) @map("subscription_days")
@@ -253,4 +266,36 @@ model SettingRevision {
 
   @@index([scope, createdAt])
   @@map("setting_revisions")
+}
+
+model CreditTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // consume | refund | bonus | admin_add
+  amount    Int
+  toolId    String?
+  createdAt DateTime @default(now())
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserEntitlement {
+  id        String @id @default(cuid())
+  userId    String @unique
+
+  canUseTools Boolean @default(false)
+  canExport   Boolean @default(false)
+  maxCredits  Int
+
+  updatedAt DateTime @updatedAt
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ToolRegistry {
+  id        String @id
+  strategy  String
+  cost      Int
 }

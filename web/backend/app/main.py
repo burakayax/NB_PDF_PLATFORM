@@ -51,7 +51,7 @@ if _cors_origins:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-NB-SaaS-Friction", "X-NB-Processing-Tier"],
+        expose_headers=["X-SaaS-Gating"],
     )
 else:
     app.add_middleware(
@@ -60,7 +60,7 @@ else:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
-        expose_headers=["X-NB-SaaS-Friction", "X-NB-Processing-Tier"],
+        expose_headers=["X-SaaS-Gating"],
     )
 
 app.add_middleware(SlowAPIMiddleware)

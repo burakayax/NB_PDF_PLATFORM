@@ -1,12 +1,6 @@
-import { z } from "zod";
-import { featureCatalog } from "./subscription.config.js";
-
-export const recordUsageSchema = z.object({
-  featureKey: z.enum(featureCatalog),
-});
-
-/** POST /subscription/assert-feature — optional payload size for post-limit delay weighting. */
-export const assertFeatureSchema = z.object({
-  featureKey: z.enum(featureCatalog),
-  totalSizeBytes: z.coerce.number().int().nonnegative().optional(),
-});
+/*
+ * Schemas for the removed ``/assert-feature`` and ``/record-usage`` endpoints
+ * used to live here. Both endpoints (and their daily-quota semantics) were
+ * retired when tool gating moved to the entitlement engine.
+ */
+export {};
