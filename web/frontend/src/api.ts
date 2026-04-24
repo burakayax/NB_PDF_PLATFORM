@@ -1,19 +1,18 @@
 import { envHttpUrlIsLoopback, isNonLocalDeployedHost } from "./lib/runtimeApiOrigin";
-import type { SaasFrictionPayload } from "./api/subscription";
+import type { SaaSGating } from "./lib/saasGating";
 
-function parseProcessingTierFromResponse(response: Response): "premium" | "standard" | null {
-  const t = (response.headers.get("X-NB-Processing-Tier") ?? "").trim().toLowerCase();
-  if (t === "premium") {
-    return "premium";
-  }
-  if (t === "standard") {
-    return "standard";
-  }
-  return null;
-}
-
-function parseSaasFrictionFromResponse(response: Response): SaasFrictionPayload | null {
-  const raw = response.headers.get("X-NB-SaaS-Friction");
+/**
+ * Streaming PDF responses cannot embed JSON bodies, so the Python backend
+ * relays the entitlement decision as a base64-encoded JSON header named
+ * `X-SaaS-Gating`. We decode it here and hand the structured object back to
+ * the caller. Non-200 responses omit the header.
+ *
+ * The legacy `X-NB-SaaS-Friction` / `X-NB-Processing-Tier` headers (daily-
+ * limit system) are no longer parsed — the backend stopped emitting them
+ * when tool gating moved to the credit-based engine.
+ */
+function parseSaasGatingFromResponse(response: Response): SaaSGating | null {
+  const raw = response.headers.get("X-SaaS-Gating");
   if (!raw?.trim()) {
     return null;
   }
@@ -24,7 +23,7 @@ function parseSaasFrictionFromResponse(response: Response): SaasFrictionPayload 
       bytes[i] = binary.charCodeAt(i);
     }
     const text = new TextDecoder("utf-8").decode(bytes);
-    return JSON.parse(text) as SaasFrictionPayload;
+    return normaliseSaasGating(JSON.parse(text));
   } catch {
     return null;
   }
@@ -528,10 +527,13 @@ export type ToolDownloadResult = {
   replay?: () => void;
   /** Bellekteki object URL’yi serbest bırakır; panel kapanırken çağrılmalı. */
   dispose?: () => void;
-  /** Ücretsiz gecikme sonrası Node’dan iletilen yükseltme CTA + mesaj (PDF API yanıt başlığı). */
-  saasFriction?: SaasFrictionPayload | null;
-  /** PDF API: Node assert-feature öncelik hattı (premium = Pro/Business). */
-  processingTier?: "premium" | "standard" | null;
+  /**
+   * Entitlement decision the Node engine produced for this run, relayed by
+   * the Python backend via the `X-SaaS-Gating` response header. `null` when
+   * the header is absent (older backends, third-party-origin responses that
+   * strip custom headers, or anonymous flows).
+   */
+  saasGating?: SaaSGating | null;
 };
 
 async function triggerDownloadFromResponse(
@@ -539,8 +541,7 @@ async function triggerDownloadFromResponse(
   fallbackName: string,
   options?: { retainBlob?: boolean },
 ): Promise<ToolDownloadResult> {
-  const saasFriction = parseSaasFrictionFromResponse(response);
-  const processingTier = parseProcessingTierFromResponse(response);
+  const saasGating = parseSaasGatingFromResponse(response);
   let blob: Blob;
   try {
     blob = await response.blob();
@@ -570,7 +571,7 @@ async function triggerDownloadFromResponse(
 
   if (!options?.retainBlob) {
     URL.revokeObjectURL(blobUrl);
-    return { saasFriction, processingTier };
+    return { saasGating };
   }
 
   const replay = () => {
@@ -583,7 +584,7 @@ async function triggerDownloadFromResponse(
     a.remove();
   };
   const dispose = () => URL.revokeObjectURL(blobUrl);
-  return { replay, dispose, saasFriction, processingTier };
+  return { replay, dispose, saasGating };
 }
 
 export async function fetchCapabilities() {
@@ -621,11 +622,14 @@ export async function createMergeJob(formData: FormData, accessToken?: string | 
     headers: saasAuthHeaders(accessToken),
   });
   await ensureOk(response, "Birleştirme başlatılamadı.");
-  return response.json() as Promise<{
+  const raw = (await response.json()) as {
     job_id: string;
-    saasFriction?: SaasFrictionPayload;
-    processingTier?: string;
-  }>;
+    saasGating?: unknown;
+  };
+  return {
+    job_id: raw.job_id,
+    saasGating: normaliseSaasGating(raw.saasGating),
+  };
 }
 
 export async function fetchMergeJob(jobId: string, accessToken?: string | null) {
@@ -750,6 +754,164 @@ export async function downloadFromApi(
   });
   await ensureOk(response, "İşlem başarısız oldu.");
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+}
+
+// ---------------------------------------------------------------------------
+// Result-store pilot (compress only).
+//
+// Flow: POST /api/compress -> { result_id, ... }
+//       GET  /api/pdf/result/{id}/preview            (FREE)
+//       GET  /api/pdf/result/{id}/preview/thumbnail  (FREE)
+//       GET  /api/pdf/result/{id}/download           (402 on deny, 403 on foreign owner)
+// ---------------------------------------------------------------------------
+
+export type CompressResult = {
+  result_id: string;
+  filename: string;
+  mime: string;
+  size_bytes: number;
+  has_thumbnail: boolean;
+  /**
+   * Entitlement decision produced by the Node-side entitlement engine and
+   * relayed to the client verbatim. Optional so older backends that have not
+   * been rolled forward yet keep returning a valid payload; the UI falls back
+   * to the 402/403 gating on the download endpoint in that case.
+   */
+  saasGating?: SaaSGating | null;
+};
+
+export type ResultPreview = {
+  result_id: string;
+  filename: string;
+  mime: string;
+  size_bytes: number;
+  has_thumbnail: boolean;
+  thumbnail_url: string | null;
+};
+
+/** POST /api/compress — returns a result_id; no blob in this response. */
+export async function compressToResult(
+  formData: FormData,
+  accessToken?: string | null,
+): Promise<CompressResult> {
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetch(`${API_BASE}/api/compress`, {
+    method: "POST",
+    body: formData,
+    headers: saasAuthHeaders(accessToken),
+  });
+  await ensureOk(response, "Sıkıştırma başarısız oldu.");
+  const data = (await response.json()) as CompressResult;
+  return {
+    result_id: data.result_id,
+    filename: data.filename,
+    mime: data.mime,
+    size_bytes: data.size_bytes,
+    has_thumbnail: data.has_thumbnail,
+    saasGating: normaliseSaasGating(data.saasGating),
+  };
+}
+
+/**
+ * Shallow-validate an entitlement payload coming off the wire. Guards against
+ * fields being absent (partial rollout) without leaking `undefined` into the
+ * rest of the UI layer.
+ */
+function normaliseSaasGating(raw: unknown): SaaSGating | null {
+  if (!raw || typeof raw !== "object") return null;
+  const candidate = raw as Partial<SaaSGating>;
+  if (typeof candidate.allowed !== "boolean" || typeof candidate.reason !== "string") {
+    return null;
+  }
+  return {
+    allowed: candidate.allowed,
+    reason: candidate.reason as SaaSGating["reason"],
+    cost: typeof candidate.cost === "number" ? candidate.cost : 0,
+    creditsBefore: typeof candidate.creditsBefore === "number" ? candidate.creditsBefore : 0,
+    creditsAfter: typeof candidate.creditsAfter === "number" ? candidate.creditsAfter : 0,
+  };
+}
+
+/** GET /api/pdf/result/{id}/preview — JSON metadata. Does not call checkAccess. */
+export async function fetchResultPreview(
+  resultId: string,
+  accessToken?: string | null,
+): Promise<ResultPreview> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+  });
+  await ensureOk(response, "Önizleme okunamadı.");
+  return (await response.json()) as ResultPreview;
+}
+
+/**
+ * GET /api/pdf/result/{id}/preview/thumbnail — returns an object URL for the
+ * blurred PNG. Same-origin Bearer headers can't be attached to a plain
+ * `<img src>`, so we fetch the image and wrap it in a blob URL. The caller
+ * is responsible for revoking the URL with `URL.revokeObjectURL`.
+ */
+export async function fetchResultThumbnailBlobUrl(
+  resultId: string,
+  accessToken?: string | null,
+): Promise<string> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview/thumbnail`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+  });
+  await ensureOk(response, "Önizleme görseli okunamadı.");
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+export type DownloadResultOutcome =
+  | { status: "ok"; download: ToolDownloadResult }
+  | { status: "payment_required" }
+  | { status: "forbidden" };
+
+/**
+ * GET /api/pdf/result/{id}/download — the first access-gated call in the
+ * product. We handle the three outcomes the gate can produce and let the
+ * caller translate them into UI (alert, modal, upgrade CTA, etc.).
+ *
+ *   200 → file stream, triggers a browser download.
+ *   402 → access denied; UI shows `alert("Upgrade required")` for now.
+ *   403 → foreign owner (or server-side ownership mismatch); UI alerts.
+ */
+export async function downloadResult(
+  resultId: string,
+  fallbackName: string,
+  accessToken?: string | null,
+): Promise<DownloadResultOutcome> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/download`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+  });
+  if (response.status === 402) {
+    // Drain the body so the connection can be reused.
+    try {
+      await response.text();
+    } catch {
+      /* ignore */
+    }
+    return { status: "payment_required" };
+  }
+  if (response.status === 403) {
+    try {
+      await response.text();
+    } catch {
+      /* ignore */
+    }
+    return { status: "forbidden" };
+  }
+  await ensureOk(response, "Dosya indirilemedi.");
+  const download = await triggerDownloadFromResponse(response, fallbackName, {
+    retainBlob: true,
+  });
+  return { status: "ok", download };
 }
 
 export type { MergeJobStatus };

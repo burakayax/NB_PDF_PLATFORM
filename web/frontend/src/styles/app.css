@@ -1214,6 +1214,189 @@ textarea {
   text-align: left;
 }
 
+/* ---------------------------------------------------------------------------
+ * SaaS UI gating layer
+ *
+ * These rules style the `SaasGatedPreview` component. They only handle the
+ * visual lock (blur + overlay), the locked button state, and the credit pill.
+ * Business rules live in `src/lib/saasGating.ts`; this file just paints them.
+ * ------------------------------------------------------------------------- */
+
+.saas-gated-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saas-gated-preview__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0 4px;
+}
+
+.saas-gated-preview__status {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+
+.saas-gated-preview__status--unlocked {
+  color: rgba(167, 243, 208, 0.95);
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.saas-gated-preview__status--locked {
+  color: rgba(252, 211, 77, 0.95);
+  background: rgba(234, 179, 8, 0.14);
+  border-color: rgba(234, 179, 8, 0.35);
+}
+
+.saas-credit-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.saas-credit-pill__label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(148, 163, 184, 0.9);
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.saas-credit-pill__delta {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.saas-gated-preview__thumb-wrap {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+  /* When blurred, child <img> scales up by 5% to hide edge bleed.  */
+  isolation: isolate;
+}
+
+.saas-gated-preview__thumb {
+  transition: filter 160ms ease-out;
+}
+
+.saas-gated-preview__thumb-wrap--locked .saas-gated-preview__thumb {
+  /* Extra belt-and-braces in case `filter` inline is stripped. */
+  filter: blur(18px);
+  transform: scale(1.05);
+}
+
+.saas-gated-preview__lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.55) 0%,
+    rgba(15, 23, 42, 0.7) 100%
+  );
+  color: rgba(248, 250, 252, 0.95);
+  pointer-events: none;
+}
+
+.saas-gated-preview__lock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(234, 179, 8, 0.9);
+  color: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.saas-gated-preview__lock-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.saas-gated-preview__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.saas-gated-preview__body-copy {
+  font-size: 13px;
+  line-height: 1.4;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.saas-gated-preview__meta {
+  margin: 0;
+  display: inline-flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.saas-gated-preview__filename {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saas-gated-preview__dot {
+  opacity: 0.6;
+}
+
+.merge-progress-fixed__download--locked {
+  border-color: rgba(234, 179, 8, 0.55) !important;
+  background: linear-gradient(
+    180deg,
+    rgba(234, 179, 8, 0.95) 0%,
+    rgba(202, 138, 4, 0.95) 100%
+  ) !important;
+  color: rgba(15, 23, 42, 0.95) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 8px 20px -10px rgba(234, 179, 8, 0.55) !important;
+}
+
+.merge-progress-fixed__download--locked:hover {
+  filter: brightness(1.05);
+  transform: translateY(-1px) scale(1.02);
+}
+
+.merge-progress-fixed__download--locked:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(15, 23, 42, 0.95),
+    0 0 0 4px rgba(234, 179, 8, 0.55) !important;
+}
+
 .file-picker-row {
   display: flex;
   align-items: center;
@@ -2120,6 +2303,22 @@ textarea {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.upgrade-modal__plans--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .upgrade-modal__plans--three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .upgrade-modal__plans--three {
+    grid-template-columns: 1fr;
+  }
+}
+
 .upgrade-modal--regional .upgrade-modal__plan--pro {
   transform: none;
 }
@@ -2531,6 +2730,166 @@ textarea {
   }
 
   .conv-upgrade-modal__title {
+    font-size: 1.2rem;
+  }
+}
+
+/* Lightweight conversion popups (low credits, first failure, first upgrade) */
+.conversion-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 12040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: rgba(8, 10, 18, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.conversion-popup {
+  position: relative;
+  width: min(420px, 100%);
+  max-height: min(88vh, 520px);
+  overflow: auto;
+  padding: 22px 20px 20px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(165deg, rgba(30, 34, 52, 0.98) 0%, rgba(18, 20, 32, 0.99) 100%);
+  box-shadow:
+    0 24px 64px -24px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.conversion-popup__accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 20px 20px 0 0;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+  opacity: 0.9;
+}
+
+.conversion-popup__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.conversion-popup__eyebrow {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(148, 163, 184, 0.85);
+}
+
+.conversion-popup__close {
+  margin: -6px -6px 0 0;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  font-size: 22px;
+  line-height: 1;
+  color: rgba(226, 232, 240, 0.85);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.conversion-popup__close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.conversion-popup__title {
+  margin: 0 0 10px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: rgba(248, 250, 252, 0.98);
+}
+
+.conversion-popup__subtitle {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(203, 213, 225, 0.88);
+}
+
+.conversion-popup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.conversion-popup__cta-primary {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #0f172a;
+  background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 45%, #a5b4fc 100%);
+  cursor: pointer;
+  box-shadow: 0 10px 28px -12px rgba(99, 102, 241, 0.55);
+  transition:
+    filter 0.15s ease,
+    transform 0.12s ease;
+}
+
+.conversion-popup__cta-primary:hover {
+  filter: brightness(1.06);
+}
+
+.conversion-popup__cta-primary:active {
+  transform: scale(0.99);
+}
+
+.conversion-popup__cta-secondary {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(203, 213, 225, 0.95);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.conversion-popup__cta-secondary:hover {
+  background: rgba(129, 140, 232, 0.1);
+  border-color: rgba(129, 140, 232, 0.38);
+  color: rgba(224, 231, 255, 0.98);
+}
+
+@media (max-width: 380px) {
+  .conversion-popup {
+    padding: 18px 16px 16px;
+    border-radius: 18px;
+  }
+
+  .conversion-popup__title {
     font-size: 1.2rem;
   }
 }

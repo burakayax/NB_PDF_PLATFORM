@@ -30,7 +30,7 @@ export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
 export function ws(lang: Language) {
   const tr = lang === "tr";
   return {
-    planNav: tr ? "Planım" : "My plan",
+    planNav: tr ? "Kredilerim" : "Credits",
     homeNav: tr ? "Ana Sayfa" : "Home",
     langSection: tr ? "Dil" : "Language",
     emptyStateTitle: tr ? "Henüz işlem yapılmadı" : "Nothing here yet",
@@ -41,14 +41,16 @@ export function ws(lang: Language) {
       ? "Dosya satırını sürükleyerek sırayı değiştirin veya okları kullanın. Liste uzunsa sürüklerken kenara yaklaştığınızda liste kayar. Birleştirme bu sıraya göre yapılır."
       : "Drag a file row to reorder, or use the arrows. Near the top or bottom edge of the list, the list scrolls while you drag. Merge follows this order.",
     mergeDragHandle: tr ? "Sırayı değiştirmek için sürükleyin" : "Drag to reorder",
-    proGateTitle: tr ? "Ücretli plan özelliği" : "Paid plan feature",
+    proGateTitle: tr ? "Bu araç için yeterli kredi yok" : "Not enough credits for this tool",
     proGateBody: tr
-      ? "Bu sayfa yalnızca Basic veya Pro üyeler içindir. Planınızı yükseltmek için devam edin."
-      : "This tool is available on Basic or Pro plans. Upgrade to unlock it.",
-    proGateCta: tr ? "Plan değiştir" : "Change plan",
+      ? "Bu aracı kullanmak için kredi gerekir. Kredi satın alarak devam edebilirsiniz."
+      : "This tool needs credits. Buy a pack to unlock it.",
+    proGateCta: tr ? "Kredi satın al" : "Buy credits",
+    featureLockedBadge: tr ? "Kilit" : "Locked",
+    navbarCreditsLabel: tr ? "Kredi" : "Credits",
     lockedFeatureTooltip: tr
-      ? "Bu araç mevcut aboneliğinizde kapalıdır"
-      : "This tool is not included in your current subscription",
+      ? "Bu araç şu an kredinizle kullanılamıyor"
+      : "This tool isn’t available with your current balance",
     filePick: tr ? "Dosya Seç" : "Choose file",
     fileAdd: tr ? "Dosya Ekle" : "Add file",
     selectedFiles: tr ? "Seçilen dosyalar" : "Selected files",
@@ -82,56 +84,119 @@ export function ws(lang: Language) {
       ? "Girdiğiniz parola bu PDF için geçerli değildir. Lütfen dosya sahibi tarafından tanımlanan parolayı kontrol edin."
       : "The password entered is not valid for this PDF. Please check the document password and try again.",
     mergePasswordOk: tr ? "Parola doğrulandı" : "Password verified",
-    usageRemainingShort: tr ? "Kalan günlük işlem" : "Daily operations left",
-    usageUnlimited: tr ? "Sınırsız" : "Unlimited",
-    usageDailyHeading: tr ? "Günlük kullanım" : "Daily usage",
+    usageRemainingShort: tr ? "Kalan kredi" : "Credits left",
+    usageUnlimited: tr ? "—" : "—",
+    usageDailyHeading: tr ? "Kullanım özeti" : "Usage summary",
+    /**
+     * Credit-balance chip copy. Plural vs singular is folded into a single
+     * line to avoid the UI having to reason about language-specific
+     * pluralisation rules — the engine is the source of truth for the
+     * number itself.
+     */
+    creditBalanceHeading: tr ? "Kullanılabilir kredi" : "Available credits",
+    creditBalanceLine: (n: number) =>
+      tr ? `${n} kredi kaldı` : `${n} credit${n === 1 ? "" : "s"} left`,
+    creditBalanceExhaustedHint: tr
+      ? "Krediniz tükendi. Devam etmek için kredi satın alın."
+      : "You're out of credits. Buy a credit pack to continue.",
+    /*
+     * Credit-dashboard copy. Dashboard is driven entirely by the
+     * entitlement engine output: balance + plan + recent ledger rows.
+     * Strings here must NEVER reference "daily usage", "limit reached"
+     * or any other relic of the retired daily-quota system.
+     */
+    creditDashboardKicker: tr ? "HESABINIZ" : "YOUR ACCOUNT",
+    creditDashboardHeading: tr ? "Kredi Bakiyen" : "Your credits",
+    creditDashboardBalanceLabel: tr ? "Kalan krediniz" : "Credits remaining",
+    creditRemainingFormatted: (n: string) => (tr ? `Kalan Krediniz: ${n}` : `Your credits: ${n}`),
+    creditDashboardBalanceFootnote: tr
+      ? "Her araç çalıştırmada kredi düşer; bakiyeniz güncel kullanımınızı yansıtır."
+      : "Each tool run spends credits; your balance reflects current usage.",
+    creditDashboardPlanLabel: tr ? "Plan" : "Plan",
+    creditDashboardSubscriptionLabel: tr ? "Abonelik" : "Subscription",
+    creditDashboardSubscriptionActive: tr ? "Aktif" : "Active",
+    creditDashboardSubscriptionFree: tr ? "Ücretsiz" : "Free",
+    creditDashboardUnlimitedPlanNote: tr ? "" : "",
+    creditDashboardRecentHeading: tr ? "Son 10 hareket" : "Recent activity (last 10)",
+    creditDashboardRecentEmpty: tr
+      ? "Henüz kredi hareketi yok. Bir araç çalıştırdıkça bu liste dolacak."
+      : "No credit activity yet. Run a tool and it'll show up here.",
+    creditDashboardRecentLoading: tr ? "Hareketler yükleniyor..." : "Loading activity...",
+    creditDashboardTopUpHeading: tr ? "Kredi paketleri" : "Credit packs",
+    creditDashboardTopUpBody: tr
+      ? "İhtiyacınız kadar kredi yükleyin."
+      : "Top up with the bundle that fits your workload.",
+    creditDashboardPacksHeading: tr ? "Kredi satın al" : "Buy credits",
+    creditDashboardPacksBody: tr
+      ? "Paket seçin; ödeme sonrası krediler hesabınıza eklenir."
+      : "Pick a pack; credits are added after checkout completes.",
+    creditPackLine: (c: number) => (tr ? `${c} kredi` : `${c} credits`),
+    creditPackBuyCta: tr ? "Satın Al" : "Buy",
+    creditDashboardBuyCreditsCta: tr ? "Kredi paketleri" : "Credit packs",
+    creditDashboardUpgradePlanCta: tr ? "Kredi paketleri" : "Credit packs",
+    creditDashboardBuyingCredits: tr ? "Satın alınıyor..." : "Purchasing...",
+    creditDashboardBuyCreditsSuccess: (n: number) =>
+      tr
+        ? `${n} kredi hesabınıza eklendi.`
+        : `${n} credits added to your account.`,
+    creditDashboardBuyCreditsError: tr
+      ? "Kredi satın alınamadı. Lütfen tekrar deneyin."
+      : "Couldn't buy credits. Please try again.",
+    /** Shown when 0 < credits < 5 (credit-based workspace). */
+    creditRunningOutBanner: tr ? "Kredileriniz azalıyor" : "You are running out of credits",
+    /** Ledger-row labels; `amount` is signed so we don't re-add + here. */
+    creditTxTypeConsume: tr ? "Kullanım" : "Use",
+    creditTxTypeBonus: tr ? "Bonus" : "Bonus",
+    creditTxTypeAdminAdd: tr ? "Yönetici ekledi" : "Admin grant",
+    creditTxTypeRefund: tr ? "İade" : "Refund",
+    creditTxToolLabel: (toolId: string) =>
+      tr ? `Araç: ${toolId}` : `Tool: ${toolId}`,
     usageUsedTodayLine: (used: number, limit: number) =>
-      tr ? `Bugün kullanılan: ${used} / ${limit} işlem` : `Used today: ${used} / ${limit} operations`,
-    /** Free plan without a hard daily cap (soft friction after `fastRuns` fast operations). */
+      tr ? `İşlem: ${used} / ${limit}` : `Operations: ${used} / ${limit}`,
     usageSoftTierLine: (used: number, fastRuns: number) =>
       tr
-        ? `Bugün: ${used} işlem (ilk ${fastRuns} işlem en hızlı)`
-        : `Today: ${used} operations (first ${fastRuns} are fastest)`,
+        ? `İşlem: ${used} (ilk ${fastRuns} öncelikli)`
+        : `Operations: ${used} (first ${fastRuns} prioritized)`,
     usageCountOfLimit: (used: number, limit: number) =>
       tr ? `${used} / ${limit} işlem` : `${used} / ${limit} ops`,
-    usageRemainingLine: (n: number) => (tr ? `Kalan işlem: ${n}` : `Remaining: ${n}`),
-    usageNoDailyCapLine: tr ? "Günlük işlem üst sınırı yok" : "No daily operation cap",
-    usageUpgradeCta: tr ? "Sınırsız kullanım için PRO'ya geç" : "Upgrade to PRO for unlimited usage",
+    usageRemainingLine: (n: number) => (tr ? `Kalan: ${n}` : `Remaining: ${n}`),
+    usageNoDailyCapLine: tr ? "Kota sınırı yok" : "No quota cap",
+    usageUpgradeCta: tr ? "Kredi satın al" : "Buy credits",
     /** Üst menüdeki kısa yükseltme düğmesi */
-    navbarUpgrade: tr ? "Yükselt" : "Upgrade",
-    usageLimitReachedTitle: tr ? "Günlük limit doldu" : "Daily limit reached",
+    navbarUpgrade: tr ? "Kredi al" : "Get credits",
+    usageLimitReachedTitle: tr ? "Kredi gerekli" : "Credits required",
     usageLimitReachedDetail: tr
-      ? "Abonelik sayfası açıldı. Sınırsız kullanım için PRO planına geçebilirsiniz."
-      : "The subscription page is open. Upgrade to PRO for unlimited usage.",
+      ? "Krediler sayfasına giderek paket satın alabilirsiniz."
+      : "Open Credits in the sidebar to buy a pack.",
     usageQuotaExhaustedBanner: tr
-      ? "Bugünkü ücretsiz işlem hakkınızı kullandınız. Devam etmek için plan yükseltin."
-      : "You've used your free daily operations for today. Upgrade to continue.",
+      ? "Krediniz bitti. Devam etmek için kredi satın alın."
+      : "You're out of credits. Buy a pack to continue.",
     usageSoftFrictionBanner: tr
-      ? "Ücretsiz planda ek işlemler kısa bir bekleme ile devam eder. Anında işlem ve öncelik için PRO'ya geçin."
-      : "Additional runs on Free may include a short wait. Upgrade to Pro for instant, priority processing.",
-    proBenefitsKicker: tr ? "PRO değer önerisi" : "PRO value",
+      ? "Kredi ekleyerek işlemlerinize devam edin."
+      : "Add credits to keep processing documents.",
+    proBenefitsKicker: tr ? "Kredi sistemi" : "Credit system",
     proBenefitsTitle: tr
-      ? "Daha hızlı işlem, tutarlı kalite, sınırsız kullanım"
-      : "Faster processing, dependable quality, unlimited usage",
+      ? "Kullandığın kadar öde"
+      : "Pay for what you use",
     proBenefitsIntro: tr
-      ? "Ücretsiz plan denemek ve hafif kullanım için uygundur. Belge hacmi arttığında veya tüm araçlara ihtiyaç duyduğunuzda PRO, üretkenliği sürdürülebilir kılan doğal yükseltmedir."
-      : "Free is great for trying the product and light workloads. When volume grows or you need the full toolkit, PRO is the natural upgrade to keep productivity sustainable.",
-    proBenefitTagSpeed: tr ? "Hız" : "Speed",
+      ? "Her işlem kredi harcar; bakiyeniz panelden takip edilir. İhtiyaç duydukça paket alırsınız — aylık plan yoktur."
+      : "Every run spends credits; your balance is always visible. Buy packs when you need them — no monthly subscription tiers.",
+    proBenefitTagSpeed: tr ? "Şeffaf" : "Transparent",
     proBenefitSpeed: tr
-      ? "Öncelikli işlem ve daha akıcı çalışma — kuyrukta daha az bekleme, yoğun saatlerde daha öngörülebilir süreler."
-      : "Priority handling and smoother runs — less queue friction and more predictable turnaround when it matters.",
-    proBenefitTagQuality: tr ? "Kalite" : "Quality",
+      ? "Araç başına maliyet net; harcama geçmişiniz kayıt altındadır."
+      : "Per-tool costs are clear; your ledger shows every change.",
+    proBenefitTagQuality: tr ? "Esnek" : "Flexible",
     proBenefitQuality: tr
-      ? "Tam PDF araç seti ve tutarlı çıktı — dönüştürme, birleştirme, sıkıştırma ve şifrelemede profesyonel sonuçlar."
-      : "The full PDF toolkit with dependable output across convert, merge, compress, and protect workflows.",
-    proBenefitTagUnlimited: tr ? "Sınırsız" : "Unlimited",
+      ? "Küçük paketle başlayıp ihtiyaca göre büyütebilirsiniz."
+      : "Start with a small pack and scale up as volume grows.",
+    proBenefitTagUnlimited: tr ? "Anında" : "Instant",
     proBenefitUnlimited: tr
-      ? "Günlük kota üst sınırı yok — limit dolunca durmak yerine aynı gün içinde işinize devam edersiniz."
-      : "No daily quota ceiling — keep working through busy days instead of stopping when a counter hits zero.",
-    proBenefitTagAccess: tr ? "Tam erişim" : "Full access",
+      ? "Ödeme onayından sonra krediler hesabınıza eklenir."
+      : "Credits appear in your account right after purchase completes.",
+    proBenefitTagAccess: tr ? "Kontrol" : "Control",
     proBenefitFullAccess: tr
-      ? "Ücretsiz planda yalnızca Pro ile sunulan ileri modüllere tam erişim — tek abonelikte tüm yetenekler."
-      : "Full access to advanced modules that remain gated on Free — one subscription, every capability unlocked.",
+      ? "Bakiyeniz bitmeden tüm uygun araçları kullanmaya devam edersiniz."
+      : "Keep using every tool your balance covers — no separate “plan gates”.",
     validationPagesNeedPassword: tr
       ? "Sayfa sınırını doğrulamak için önce PDF parolasını girin."
       : "Enter the PDF password first to validate page numbers against the document.",
@@ -157,8 +222,8 @@ export function ws(lang: Language) {
     processingQueued: tr ? "SIRA / İŞLEM…" : "QUEUED / WORKING…",
     processingPremium: tr ? "ÖNCELİKLİ İŞLEM…" : "PRIORITY PROCESSING…",
     subscriptionWarn: tr
-      ? "Bu modül mevcut planınızda yok. Plan yükselterek kullanabilirsiniz."
-      : "This tool is not on your current plan. Upgrade to use it.",
+      ? "Bu araç için yeterli krediniz yok. Kredi ekleyerek kullanabilirsiniz."
+      : "You don’t have enough credits for this tool. Add credits to use it.",
     mergeProgressPreparing: tr ? "Dosyalar hazırlanıyor…" : "Preparing files…",
     mergeProgressStarting: tr ? "İstek gönderiliyor…" : "Sending request…",
     mergeProgressQueueFree: tr
@@ -169,11 +234,11 @@ export function ws(lang: Language) {
       : "Priority lane — starting merge…",
     toolProgressSub: tr ? "Tamamlanınca dosya indirilecek." : "The file will download when ready.",
     toolProgressSubQueueFree: tr
-      ? "Ücretsiz planda sıra ve işlem süresi dosya boyutuna ve araç türüne göre değişir."
-      : "On Free, queue and processing time vary by file size and tool type.",
+      ? "Standart işlem hattında sıra ve süre dosya boyutuna ve araç türüne göre değişir."
+      : "On the standard lane, queue and processing time vary by file size and tool type.",
     toolProgressSubPremium: tr
-      ? "Basic/Pro: ücretli planda öncelikli işlem ve tam kalite; ücretsiz sıra gecikmesi yok."
-      : "Basic/Pro: priority processing and full quality on paid plans — no free-tier queue delays.",
+      ? "Öncelikli hat: daha hızlı işlem ve tam kalite."
+      : "Priority lane: faster processing and full quality.",
     toolProgressPhaseQueueFree: tr
       ? "Sırada / sunucuya bağlanılıyor…"
       : "In queue / connecting to server…",
@@ -239,80 +304,54 @@ export function ws(lang: Language) {
     filePickNoteSingle: tr ? "Tek dosya seçerek devam edin." : "Select a single file to continue.",
     filePickNoteMulti: tr ? "Birden fazla dosya seçebilirsiniz." : "You can select multiple files.",
     filePickNoteAppend: tr ? "Yeni seçilen dosyalar listenin sonuna eklenir." : "New files are appended to the list.",
-    upgradeNudgeAria: tr ? "Plan yükseltme önerisi" : "Upgrade suggestion",
+    upgradeNudgeAria: tr ? "Kredi önerisi" : "Credits suggestion",
     /** Behavioral nudges after soft limit (1), repeated use (2), multiple queued delays (3). */
     upgradeNudgeTierBody: (tier: 1 | 2 | 3) => {
       if (tier === 1) {
         return tr
-          ? "Ücretsiz limit doldu. İşlem daha yavaş sürebilir."
-          : "Free limit reached. Processing may be slower.";
+          ? "Kredi bakiyeniz düşük. Devam etmek için paket satın alabilirsiniz."
+          : "Your credit balance is low. Buy a pack to keep going.";
       }
       if (tier === 2) {
         return tr
-          ? "Bu aracı sık kullanıyorsunuz. Premium kullanıcılar anında sonuç alır."
-          : "You are using this tool frequently. Premium users get instant results.";
+          ? "Bu aracı sık kullanıyorsunuz. Bakiyenizi yükseltmek için kredi paketi alın."
+          : "You use this tool often. Top up with a credit pack when you need more runs.";
       }
       return tr
-        ? "Beklemeyi kaldırmak ve tam hıza geçmek için yükseltin."
-        : "Upgrade to remove waiting and unlock full speed.";
+        ? "Daha hızlı sonuç ve tam erişim için kredi ekleyin veya öncelikli hattı tercih edin."
+        : "Add credits or use the priority lane for faster results and full access.";
     },
     upgradeNudgeContinueFree: tr ? "Beklemeden devam et" : "Continue without waiting",
-    upgradeNudgeUpgradeInstant: tr ? "Anında işlem için yükselt" : "Upgrade for instant processing",
+    upgradeNudgeUpgradeInstant: tr ? "Kredi paketlerini aç" : "Open credit packs",
     /** Shown while a free-tier job is in progress (queue / server delay monetization). */
     delayMonetizationDuringBody: tr
-      ? "Ücretsiz planda işlemler daha yavaş sürebilir."
-      : "Free users may experience slower processing.",
-    delayMonetizationInstantCta: tr ? "Anında işlem için yükselt" : "Upgrade for instant processing",
+      ? "Standart işlem hattında yoğunluğa bağlı kısa gecikmeler olabilir. Öncelik veya ek kredi için paketlere göz atın."
+      : "The standard lane may slow briefly when busy. Browse packs for priority or extra credits.",
+    delayMonetizationInstantCta: tr ? "Kredi paketlerini gör" : "See credit packs",
     /** Subtle reminder after a run that used free-tier queue / delay. */
     delayMonetizationAfterHint: tr
-      ? "Sonraki işlemlerde beklemeden devam etmek ister misiniz? Öncelikli hattı açın."
-      : "Want instant processing on your next run? Unlock the priority lane.",
+      ? "Sonraki işlemlerde öncelik ve daha hızlı sonuç için kredi ekleyin."
+      : "For priority and faster runs next time, add credits.",
     delayMonetizationAfterDismiss: tr ? "Gizle" : "Hide",
   };
 }
 
 export type UpgradeNudgeTierWeb = 0 | 1 | 2 | 3;
 
-/** Free tier: 0 = none, 1 = past soft ops, 2 = repeated daily use, 3 = multiple server delays today. */
-export function computeUpgradeNudgeTierWeb(input: {
-  planIsFree: boolean;
-  softFrictionAfterOps: number;
-  usedToday: number;
-  throttleEventsToday: number;
-  /** Account lifetime delayed asserts (stronger nudges for heavy friction users). */
+/**
+ * Legacy export retained for compatibility. Nudges are driven by credit
+ * balance in `App.tsx`; this always returns 0.
+ */
+export function computeUpgradeNudgeTierWeb(_input: {
+  planIsFree?: boolean;
+  softFrictionAfterOps?: number;
+  usedToday?: number;
+  throttleEventsToday?: number;
   lifetimeThrottleEvents?: number;
-  /** Account lifetime completed ops. */
   lifetimeTotalOps?: number;
 }): UpgradeNudgeTierWeb {
-  if (!input.planIsFree) {
-    return 0;
-  }
-  const soft = Math.max(1, Math.floor(input.softFrictionAfterOps));
-  const lt = input.lifetimeThrottleEvents ?? 0;
-  const lo = input.lifetimeTotalOps ?? 0;
-
-  let tier: UpgradeNudgeTierWeb = 0;
-  if (input.usedToday < soft) {
-    tier = 0;
-  } else if (input.throttleEventsToday >= 2) {
-    tier = 3;
-  } else if (input.usedToday >= soft + 3) {
-    tier = 2;
-  } else {
-    tier = 1;
-  }
-
-  if (tier === 0 && (lt >= 12 || lo >= 80)) {
-    tier = 1;
-  }
-  if (lt >= 12) {
-    tier = Math.max(tier, 2) as UpgradeNudgeTierWeb;
-  }
-  if (lt >= 22 || lo >= 160) {
-    tier = Math.max(tier, 3) as UpgradeNudgeTierWeb;
-  }
-
-  return Math.min(3, tier) as UpgradeNudgeTierWeb;
+  void _input;
+  return 0;
 }
 
 export function featureCopy(id: FeatureKey, lang: Language): { title: string; description: string; button: string } {

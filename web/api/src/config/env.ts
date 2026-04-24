@@ -1,9 +1,25 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import { z } from "zod";
 import { assertEnvFileExists } from "./ensure-env-file.js";
 
+/**
+ * Path to `web/api/.env`, resolved from this file's location so it cannot
+ * drift based on `process.cwd()`.
+ *
+ * Without this anchor, `dotenv.config()` loads from cwd and any ancestor
+ * `.env` (e.g. a repo-root `.env` with a relative `DATABASE_URL`) can win,
+ * producing a different SQLite file than the one Prisma's CLI wrote the
+ * schema to. That is the class of bug behind "column does not exist"
+ * errors when `prisma db push` reports in-sync.
+ */
+const configDir = path.dirname(fileURLToPath(import.meta.url));
+const packageRoot = path.resolve(configDir, "..", "..");
+const envPath = path.join(packageRoot, ".env");
+
 assertEnvFileExists();
-dotenv.config();
+dotenv.config({ path: envPath });
 
 const rawEnvSchema = z
   .object({

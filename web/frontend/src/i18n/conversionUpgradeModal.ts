@@ -1,32 +1,35 @@
 import type { Language } from "./landing";
 
-/** High-conversion upgrade popup — speed-first copy (EN + TR). */
+/** Delay / friction modal — credit-first copy (EN + TR). */
 export function conversionUpgradeModalCopy(lang: Language) {
   const tr = lang === "tr";
   return {
-    title: tr ? "Beklemeyi bırakın. Anında sonuç alın." : "Stop waiting. Get instant results.",
+    eyebrow: tr ? "Kredi modeli" : "Credits",
+    title: tr ? "İşlem sırasında kısa bir bekleme" : "A short wait during processing",
     subtitle: tr
-      ? "Ücretsiz kullanım eşiğine ulaştınız. Premium kullanıcılar tam kalitede anında işler."
-      : "You've reached the free usage threshold. Premium users process instantly with full quality.",
+      ? "Yoğunluk olduğunda sıra oluşabilir. Kredi bakiyenizle işlemlerinize devam edersiniz."
+      : "When it’s busy, jobs may queue. Your credit balance keeps you moving.",
     speedStrip: tr
-      ? "Ücretsiz: sıra ve gecikme · Premium: öncelikli, anında işlem"
-      : "Free: queue & delays · Premium: priority, instant processing",
+      ? "Kredi sistemi: her araç çalıştırma bakiyenizden düşer."
+      : "Credit system: each tool run draws from your balance.",
     features: tr
       ? [
-          "Anında işlem (bekleme yok)",
-          "Tam kalite çıktı",
-          "Sınırsız kullanım",
-          "Öncelikli performans",
+          "Kullandığın kadar öde",
+          "Bakiyeni panelden izle",
+          "Paketleri istediğin zaman al",
+          "Hareket geçmişi şeffaf",
         ]
       : [
-          "Instant processing (no waiting)",
-          "Full quality output",
-          "Unlimited usage",
-          "Priority performance",
+          "Pay only for what you use",
+          "Track balance in the dashboard",
+          "Buy packs whenever you need",
+          "Full ledger of credit changes",
         ],
-    usageLine: (n: number) =>
-      tr ? `Bugün ${n} işlem kullandınız.` : `You've used ${n} operations today.`,
-    ctaPrimary: tr ? "Beklemeden devam et" : "Continue without waiting",
+    usageLine: (credits: number) =>
+      tr
+        ? `Kalan kredi: ${credits}. Paket alarak devam edebilirsiniz.`
+        : `Credits left: ${credits}. Buy a pack to top up.`,
+    ctaPrimary: tr ? "Kredi paketlerini gör" : "See credit packs",
     ctaSecondary: tr ? "Belki sonra" : "Maybe later",
     close: tr ? "Kapat" : "Close",
   };

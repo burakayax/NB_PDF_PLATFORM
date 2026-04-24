@@ -7,6 +7,7 @@ import {
   adminBlockedEmailQuerySchema,
   adminCreateUserSchema,
   adminDeleteUserQuerySchema,
+  adminGrantCreditsSchema,
   adminListUsersQuerySchema,
   adminPatchSettingsSchema,
   adminPaymentPricesBodySchema,
@@ -17,6 +18,7 @@ import {
   adminUsageExportQuerySchema,
   adminUsageSeriesQuerySchema,
 } from "./admin.schema.js";
+import { grantCredits } from "../subscription/entitlement.engine.js";
 import {
   adminAddBlockedEmailRaw,
   adminListBlockedEmails,
@@ -330,4 +332,58 @@ export async function adminUsageExportController(request: Request, response: Res
   response.setHeader("Content-Type", "text/csv; charset=utf-8");
   response.setHeader("Content-Disposition", `attachment; filename="usage-${parsed.data.from}-${parsed.data.to}.csv"`);
   response.send("\uFEFF" + csv);
+}
+
+/**
+ * Manual admin top-up: credits are added through the entitlement engine
+ * (`grantCredits` with `type: "admin_add"`) so the `CreditTransaction`
+ * journal stays the single ledger. The admin's `reason` free-text is
+ * persisted to `AdminAuditLog` (linked via the returned `transactionId`)
+ * — not to `CreditTransaction`, which stores only structured fields.
+ *
+ * The `requireAdmin` middleware on the admin router enforces the ADMIN
+ * role; this controller assumes it has run.
+ */
+export async function adminGrantCreditsController(request: Request, response: Response) {
+  const parsed = adminGrantCreditsSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { userId, amount, reason } = parsed.data;
+  const actor = adminActor(request);
+
+  let result;
+  try {
+    result = await grantCredits(userId, amount, "admin_add");
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("user not found")) {
+      throw new HttpError(404, "User not found.");
+    }
+    throw new HttpError(400, message);
+  }
+
+  await logAdminAudit(
+    actor,
+    "credits.grant",
+    userId,
+    `Admin granted ${amount} credits (reason: ${reason})`,
+    {
+      amount,
+      reason,
+      transactionId: result.transactionId,
+      creditsBefore: result.creditsBefore,
+      creditsAfter: result.creditsAfter,
+    },
+  );
+
+  response.status(200).json({
+    ok: true,
+    userId,
+    amount,
+    reason,
+    transactionId: result.transactionId,
+    creditsBefore: result.creditsBefore,
+    creditsAfter: result.creditsAfter,
+  });
 }

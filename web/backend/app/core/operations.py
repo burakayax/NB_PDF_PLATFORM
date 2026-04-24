@@ -75,27 +75,30 @@ def cleanup_and_raise(workdir: Path, error: Exception) -> None:
     raise HTTPException(status_code=400, detail=detail) from error
 
 
-def saas_friction_http_headers(friction: dict[str, Any] | None) -> dict[str, str] | None:
-    """Node assert-feature gecikme yanıtı: istemci base64 JSON ile CTA + mesaj alır."""
-    if not friction:
+def saas_gating_http_headers(gating: dict[str, Any] | None) -> dict[str, str] | None:
+    """Expose the entitlement engine's decision on streaming responses.
+
+    Non-JSON responses cannot carry the decision in the body. We serialise it
+    as base64-encoded JSON in ``X-SaaS-Gating`` so browser clients can read
+    it without reparsing the stream. JSON responses SHOULD embed the decision
+    directly as ``saasGating`` and skip this header.
+    """
+    if not gating:
         return None
-    raw = json.dumps(friction, ensure_ascii=False).encode("utf-8")
+    raw = json.dumps(gating, ensure_ascii=False).encode("utf-8")
     payload = base64.b64encode(raw).decode("ascii")
-    return {"X-NB-SaaS-Friction": payload}
+    return {"X-SaaS-Gating": payload}
 
 
 def build_pdf_download_headers(
-    friction: dict[str, Any] | None,
     *,
-    processing_tier: str | None = None,
+    saas_gating: dict[str, Any] | None = None,
 ) -> dict[str, str] | None:
-    """İndirme yanıtı: dönüşüm (FREE) + öncelik hattı (premium | standard)."""
+    """Extra headers to ship alongside streamed tool output."""
     headers: dict[str, str] = {}
-    fr = saas_friction_http_headers(friction)
-    if fr:
-        headers.update(fr)
-    if processing_tier:
-        headers["X-NB-Processing-Tier"] = processing_tier
+    gating_headers = saas_gating_http_headers(saas_gating)
+    if gating_headers:
+        headers.update(gating_headers)
     return headers if headers else None
 
 
@@ -106,12 +109,11 @@ def download_response(
     background_tasks: BackgroundTasks,
     cleanup_target: Path,
     *,
-    saas_friction: dict[str, Any] | None = None,
-    processing_tier: str | None = None,
+    saas_gating: dict[str, Any] | None = None,
 ):
-    """Tek çıktı dosyasını stream ederken iş bitince geçici klasörü temizler."""
+    """Stream a single output file and clean up the temp dir when done."""
     background_tasks.add_task(cleanup_path, cleanup_target)
-    hdrs = build_pdf_download_headers(saas_friction, processing_tier=processing_tier)
+    hdrs = build_pdf_download_headers(saas_gating=saas_gating)
     return FileResponse(path=path, filename=filename, media_type=media_type, headers=hdrs)
 
 

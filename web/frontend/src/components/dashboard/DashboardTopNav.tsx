@@ -1,5 +1,4 @@
 import type { AuthUser } from "../../api/auth";
-import type { PlanName, SubscriptionStatus } from "../../api/subscription";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
@@ -11,46 +10,25 @@ import { UserMenu } from "./UserMenu";
 type DashboardTopNavProps = {
   user: AuthUser;
   language: Language;
-  subscriptionStatus: SubscriptionStatus | null;
+  /** Credit snapshot for navbar chip; omit for ADMIN or before balance loads. */
+  creditBalance?: number | null;
+  creditBalanceLoading?: boolean;
+  hasActiveSubscription?: boolean;
   onLogoClick: () => void;
   onProfile: () => void;
   onPassword: () => void;
   onLogout: () => void;
-  /** FREE / PRO için plan yükseltme (ör. ücretlendirme modalı) */
   onUpgradeClick?: () => void;
   showAdminEntry?: boolean;
   onOpenAdmin?: () => void;
 };
 
-function planNameFromApi(plan: string): PlanName {
-  if (plan === "PRO" || plan === "BUSINESS" || plan === "FREE") {
-    return plan;
-  }
-  return "FREE";
-}
-
-function subscriptionNavbarLabel(status: SubscriptionStatus, language: Language): string {
-  const tier = planNameFromApi(status.plan);
-  if (tier === "FREE") {
-    return language === "tr" ? "Ücretsiz Plan" : "Free Plan";
-  }
-  const tierUpper = tier === "PRO" ? "PRO" : "BUSINESS";
-  if (status.remaining_days === null) {
-    return tierUpper;
-  }
-  const suffix =
-    language === "tr" ? `${status.remaining_days} gün kaldı` : `${status.remaining_days} days left`;
-  return `${tierUpper} • ${suffix}`;
-}
-
-function showNavbarUpgrade(plan: PlanName): boolean {
-  return plan === "FREE" || plan === "PRO";
-}
-
 export function DashboardTopNav({
   user,
   language,
-  subscriptionStatus,
+  creditBalance,
+  creditBalanceLoading,
+  hasActiveSubscription,
   onLogoClick,
   onProfile,
   onPassword,
@@ -65,8 +43,9 @@ export function DashboardTopNav({
     const assets = cms?.assets as { logoUrl?: string } | undefined;
     return resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ?? "/nb_pdf_TOOLS_icon.png";
   }, [cms]);
-  const plan = subscriptionStatus ? planNameFromApi(subscriptionStatus.plan) : null;
-  const upgradeVisible = Boolean(onUpgradeClick && plan && showNavbarUpgrade(plan));
+  const showCreditsCenter =
+    user.role !== "ADMIN" && (creditBalanceLoading || typeof creditBalance === "number");
+  const upgradeVisible = Boolean(onUpgradeClick && showCreditsCenter);
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between border-b border-white/[0.1] bg-gradient-to-r from-nb-bg/90 via-nb-bg-elevated/92 to-nb-bg/90 px-3 shadow-[0_4px_28px_-6px_rgba(0,0,0,0.5)] backdrop-blur-xl backdrop-saturate-150 md:px-6">
@@ -85,14 +64,15 @@ export function DashboardTopNav({
         <span className="max-w-[140px] truncate sm:hidden text-sm font-semibold tracking-wide text-nb-text">NB PDF PLARTFORM</span>
       </button>
 
-      {subscriptionStatus ? (
+      {showCreditsCenter ? (
         <div className="flex min-w-0 flex-1 items-center justify-center gap-1.5 px-0.5 sm:gap-2 sm:px-2">
-          <div
-            className="min-w-0 flex-1 flex justify-center"
-            title={language === "tr" ? "Sunucu hesaplı kalan süre" : "Remaining time (server-calculated)"}
-          >
+          <div className="min-w-0 flex-1 flex justify-center">
             <span className="max-w-[min(100%,min(260px,100vw-10rem))] truncate rounded-full border border-white/[0.08] bg-nb-panel/60 px-2 py-1 text-center text-[10px] font-semibold leading-snug tracking-wide text-cyan-200/95 sm:max-w-[min(100%,min(320px,100vw-12rem))] sm:px-3 sm:text-[11px]">
-              {subscriptionNavbarLabel(subscriptionStatus, language)}
+              {creditBalanceLoading
+                ? "…"
+                : hasActiveSubscription
+                  ? W.usageUnlimited
+                  : `${W.navbarCreditsLabel}: ${(creditBalance ?? 0).toLocaleString(language === "tr" ? "tr-TR" : "en-US")}`}
             </span>
           </div>
           {upgradeVisible ? (
