@@ -292,7 +292,7 @@ export async function consumeTool(
   userId: string,
   toolId: string,
 ): Promise<ConsumeResult> {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const decision = await evaluate(tx, userId, toolId);
 
     if (!decision.allowed) {
@@ -360,6 +360,13 @@ export async function consumeTool(
       creditsAfter: after?.credit_balance ?? decision.creditsBefore - cost,
     };
   });
+
+  if (result.status === "ok" && result.reason === "credit_available") {
+    void import("../marketing/email-automation.js").then((m) =>
+      m.queueLowCreditNudgeAfterConsume(userId, result.creditsAfter),
+    );
+  }
+  return result;
 }
 
 /**
@@ -418,7 +425,7 @@ export async function getUserBalance(userId: string): Promise<UserBalance> {
  */
 export type CreditTransactionRecord = {
   id: string;
-  type: "consume" | "bonus" | "admin_add" | "refund";
+  type: "consume" | "bonus" | "admin_add" | "admin_subtract" | "refund";
   amount: number;
   toolId: string | null;
   createdAt: string;
@@ -511,6 +518,49 @@ export async function grantCredits(
       transactionId: row.id,
       creditsBefore: before.credit_balance,
       creditsAfter: updated.credit_balance,
+    };
+  });
+}
+
+/**
+ * Remove up to `amount` credits from the user (balance floored at 0).
+ * Journals a row with `type: "admin_subtract"` and `amount` = credits actually removed.
+ */
+export async function subtractCreditsByAdmin(userId: string, amount: number): Promise<GrantResult> {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error(
+      `subtractCreditsByAdmin: amount must be a positive integer, got ${amount}`,
+    );
+  }
+  return prisma.$transaction(async (tx) => {
+    const before = await tx.user.findUnique({
+      where: { id: userId },
+      select: { credit_balance: true },
+    });
+    if (!before) {
+      throw new Error(`subtractCreditsByAdmin: user not found: ${userId}`);
+    }
+    const creditsAfter = Math.max(0, before.credit_balance - amount);
+    const removed = before.credit_balance - creditsAfter;
+    await tx.user.update({
+      where: { id: userId },
+      data: { credit_balance: creditsAfter },
+    });
+    if (removed <= 0) {
+      return {
+        transactionId: "",
+        creditsBefore: before.credit_balance,
+        creditsAfter,
+      };
+    }
+    const row = await tx.creditTransaction.create({
+      data: { userId, type: "admin_subtract", amount: removed, toolId: null },
+      select: { id: true },
+    });
+    return {
+      transactionId: row.id,
+      creditsBefore: before.credit_balance,
+      creditsAfter,
     };
   });
 }

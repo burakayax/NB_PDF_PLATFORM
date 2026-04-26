@@ -87,6 +87,9 @@ async function pdfFetch(url: string, init?: RequestInit): Promise<Response> {
   try {
     return await fetch(url, init);
   } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      throw e;
+    }
     const baseHint =
       API_BASE === ""
         ? import.meta.env.DEV
@@ -127,6 +130,12 @@ async function pdfFetchWithRetry(
           ...init,
         });
       } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") {
+          throw e;
+        }
+        if (init?.signal?.aborted) {
+          throw e;
+        }
         last = e;
         if (attempt < retries - 1) {
           await new Promise((r) => setTimeout(r, baseDelayMs * (attempt + 1)));
@@ -137,9 +146,17 @@ async function pdfFetchWithRetry(
   throw last;
 }
 
-type MergeJobStatus = {
+/** Sunucu yeniden başlayınca veya süre dolunca job kaybolabilir — `fetchMergeJob` 404 atar. */
+export class MergeJobNotFoundError extends Error {
+  constructor() {
+    super("merge_job_not_found");
+    this.name = "MergeJobNotFoundError";
+  }
+}
+
+export type MergeJobStatus = {
   id: string;
-  status: "queued" | "running" | "completed" | "failed";
+  status: "queued" | "running" | "completed" | "failed" | "cancelled";
   message: string;
   where: string;
   current: number;
@@ -539,7 +556,7 @@ export type ToolDownloadResult = {
 async function triggerDownloadFromResponse(
   response: Response,
   fallbackName: string,
-  options?: { retainBlob?: boolean },
+  options?: { retainBlob?: boolean; clientDownloadName?: string },
 ): Promise<ToolDownloadResult> {
   const saasGating = parseSaasGatingFromResponse(response);
   let blob: Blob;
@@ -560,7 +577,9 @@ async function triggerDownloadFromResponse(
       throw new Error(msg);
     }
   }
-  const filename = extractFilename(response, fallbackName);
+  const filename = options?.clientDownloadName?.trim()
+    ? options.clientDownloadName.trim()
+    : extractFilename(response, fallbackName);
   const blobUrl = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = blobUrl;
@@ -577,7 +596,7 @@ async function triggerDownloadFromResponse(
   const replay = () => {
     const a = document.createElement("a");
     a.href = blobUrl;
-    a.download = filename;
+    a.download = filename; // same resolved name (includes client override for first run)
     a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
@@ -593,7 +612,12 @@ export async function fetchCapabilities() {
   return response.json();
 }
 
-export async function inspectPdf(file: File, password?: string, accessToken?: string | null) {
+export async function inspectPdf(
+  file: File,
+  password?: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+) {
   const formData = new FormData();
   formData.append("file", file);
   if (password?.trim()) {
@@ -604,6 +628,7 @@ export async function inspectPdf(file: File, password?: string, accessToken?: st
     method: "POST",
     body: formData,
     headers: saasAuthHeaders(accessToken),
+    signal: options?.signal,
   });
   await ensureOk(response, "PDF bilgisi okunamadı.");
   return response.json() as Promise<{
@@ -614,12 +639,17 @@ export async function inspectPdf(file: File, password?: string, accessToken?: st
   }>;
 }
 
-export async function createMergeJob(formData: FormData, accessToken?: string | null) {
+export async function createMergeJob(
+  formData: FormData,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+) {
   appendSaasAccessToken(formData, accessToken);
   const response = await pdfFetch(`${API_BASE}/api/merge`, {
     method: "POST",
     body: formData,
     headers: saasAuthHeaders(accessToken),
+    signal: options?.signal,
   });
   await ensureOk(response, "Birleştirme başlatılamadı.");
   const raw = (await response.json()) as {
@@ -632,15 +662,48 @@ export async function createMergeJob(formData: FormData, accessToken?: string | 
   };
 }
 
-export async function fetchMergeJob(jobId: string, accessToken?: string | null) {
+export async function fetchMergeJob(
+  jobId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+) {
+  const id = encodeURIComponent(jobId);
   const response = await pdfFetchWithRetry(
-    `${API_BASE}/api/jobs/${jobId}`,
-    { headers: saasAuthHeaders(accessToken), cache: "no-store" },
+    `${API_BASE}/api/jobs/${id}`,
+    { headers: saasAuthHeaders(accessToken), cache: "no-store", signal: options?.signal },
     5,
     320,
   );
+  if (response.status === 404) {
+    try {
+      await response.text();
+    } catch {
+      /* ignore */
+    }
+    throw new MergeJobNotFoundError();
+  }
   await ensureOk(response, "İşlem durumu okunamadı.");
   return response.json() as Promise<MergeJobStatus>;
+}
+
+/** İstemci merge işlemini bırakınca sunucu tarafında işi kooperatif iptal eder. */
+export async function requestMergeJobCancel(
+  jobId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<void> {
+  const id = encodeURIComponent(jobId);
+  const base = API_BASE.replace(/\/$/, "");
+  const path = base === "" ? `/api/jobs/${id}/cancel` : `${base}/api/jobs/${id}/cancel`;
+  const response = await pdfFetch(path, {
+    method: "POST",
+    headers: { ...saasAuthHeaders(accessToken) },
+    signal: options?.signal,
+  });
+  if (response.status === 404) {
+    return;
+  }
+  await ensureOk(response, "İptal isteği gönderilemedi.");
 }
 
 function mergeJobDownloadUrl(jobId: string): string {
@@ -674,16 +737,30 @@ export async function downloadMergeJob(
   jobId: string,
   fallbackName = "birleştirilmiş.pdf",
   accessToken?: string | null,
+  options?: { signal?: AbortSignal },
 ): Promise<ToolDownloadResult> {
+  if (options?.signal?.aborted) {
+    throw new DOMException("The operation was aborted.", "AbortError");
+  }
   const href = mergeJobDownloadUrl(jobId);
+  const fetchInit: RequestInit = {
+    cache: "no-store",
+    signal: options?.signal,
+  };
 
   if (accessToken?.trim()) {
-    const response = await pdfFetchWithRetry(href, { headers: saasAuthHeaders(accessToken), cache: "no-store" }, 8, 450);
+    const response = await pdfFetchWithRetry(
+      href,
+      { headers: saasAuthHeaders(accessToken), ...fetchInit },
+      8,
+      450,
+    );
+    await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
     return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
   }
 
-  if (shouldUseNativeMergeDownload(href)) {
+  if (shouldUseNativeMergeDownload(href) && !options?.signal) {
     const a = document.createElement("a");
     a.href = href;
     a.download = fallbackName;
@@ -695,7 +772,8 @@ export async function downloadMergeJob(
     return {};
   }
 
-  const response = await pdfFetchWithRetry(href, undefined, 8, 450);
+  const response = await pdfFetchWithRetry(href, fetchInit, 8, 450);
+  await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
 }
@@ -716,7 +794,11 @@ export async function downloadFromApi(
   formData: FormData,
   fallbackName: string,
   accessToken?: string | null,
+  options?: { signal?: AbortSignal },
 ): Promise<ToolDownloadResult> {
+  if (options?.signal?.aborted) {
+    throw new DOMException("The operation was aborted.", "AbortError");
+  }
   appendSaasAccessToken(formData, accessToken);
   const url = buildToolApiUrl(endpoint);
   const upload = getPrimaryUploadFile(formData);
@@ -732,12 +814,14 @@ export async function downloadFromApi(
       method: "POST",
       body: formData,
       ...authInit,
+      signal: options?.signal,
     });
+    await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "İşlem başarısız oldu.");
     return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
   }
 
-  if (shouldUseBrowserNativeDownload(url)) {
+  if (shouldUseBrowserNativeDownload(url) && !options?.signal) {
     try {
       await postFormDataForFileDownload(url, formData);
     } catch (e) {
@@ -751,18 +835,16 @@ export async function downloadFromApi(
     method: "POST",
     body: formData,
     ...authInit,
+    signal: options?.signal,
   });
+  await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "İşlem başarısız oldu.");
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
 }
 
 // ---------------------------------------------------------------------------
-// Result-store pilot (compress only).
-//
-// Flow: POST /api/compress -> { result_id, ... }
-//       GET  /api/pdf/result/{id}/preview            (FREE)
-//       GET  /api/pdf/result/{id}/preview/thumbnail  (FREE)
-//       GET  /api/pdf/result/{id}/download           (402 on deny, 403 on foreign owner)
+// Result store: compress, split, … — POST returns result_id; download consumes credit.
+// GET /api/pdf/result/{id}/preview, thumbnail, download
 // ---------------------------------------------------------------------------
 
 export type CompressResult = {
@@ -787,20 +869,60 @@ export type ResultPreview = {
   size_bytes: number;
   has_thumbnail: boolean;
   thumbnail_url: string | null;
+  /** @deprecated Ham epoch — tercihen `created_at_iso` */
+  created_at?: number;
+  created_at_iso?: string | null;
 };
 
 /** POST /api/compress — returns a result_id; no blob in this response. */
 export async function compressToResult(
   formData: FormData,
   accessToken?: string | null,
+  options?: { signal?: AbortSignal },
 ): Promise<CompressResult> {
   appendSaasAccessToken(formData, accessToken);
-  const response = await pdfFetch(`${API_BASE}/api/compress`, {
-    method: "POST",
-    body: formData,
-    headers: saasAuthHeaders(accessToken),
-  });
+  const response = await pdfFetchWithRetry(
+    `${API_BASE}/api/compress`,
+    {
+      method: "POST",
+      body: formData,
+      headers: saasAuthHeaders(accessToken),
+      signal: options?.signal,
+    },
+    4,
+    350,
+  );
   await ensureOk(response, "Sıkıştırma başarısız oldu.");
+  const data = (await response.json()) as CompressResult;
+  return {
+    result_id: data.result_id,
+    filename: data.filename,
+    mime: data.mime,
+    size_bytes: data.size_bytes,
+    has_thumbnail: data.has_thumbnail,
+    saasGating: normaliseSaasGating(data.saasGating),
+  };
+}
+
+/** POST /api/split — same result-store shape as compress. */
+export async function splitToResult(
+  formData: FormData,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<CompressResult> {
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetchWithRetry(
+    `${API_BASE}/api/split`,
+    {
+      method: "POST",
+      body: formData,
+      headers: saasAuthHeaders(accessToken),
+      signal: options?.signal,
+    },
+    4,
+    400,
+  );
+  await ensureOk(response, "PDF ayıklama başarısız oldu.");
   const data = (await response.json()) as CompressResult;
   return {
     result_id: data.result_id,
@@ -832,15 +954,43 @@ function normaliseSaasGating(raw: unknown): SaaSGating | null {
   };
 }
 
+/** 402 with JSON body from the PDF worker (entitlement engine relay). */
+export class EntitlementPaymentRequiredError extends Error {
+  readonly saasGating: SaaSGating | null;
+
+  constructor(saasGating: SaaSGating | null) {
+    super("payment_required");
+    this.name = "EntitlementPaymentRequiredError";
+    this.saasGating = saasGating;
+  }
+}
+
+/** PDF worker returns 402 + JSON; map to a typed error for the workspace UI. */
+async function throwIfEntitlementPaymentRequired(response: Response): Promise<void> {
+  if (response.status !== 402) {
+    return;
+  }
+  let g: SaaSGating | null = null;
+  try {
+    const j = (await response.json()) as { saasGating?: unknown };
+    g = normaliseSaasGating(j.saasGating);
+  } catch {
+    /* ignore */
+  }
+  throw new EntitlementPaymentRequiredError(g);
+}
+
 /** GET /api/pdf/result/{id}/preview — JSON metadata. Does not call checkAccess. */
 export async function fetchResultPreview(
   resultId: string,
   accessToken?: string | null,
+  options?: { signal?: AbortSignal },
 ): Promise<ResultPreview> {
   const id = encodeURIComponent(resultId);
   const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview`, {
     headers: saasAuthHeaders(accessToken),
     cache: "no-store",
+    signal: options?.signal,
   });
   await ensureOk(response, "Önizleme okunamadı.");
   return (await response.json()) as ResultPreview;
@@ -855,11 +1005,13 @@ export async function fetchResultPreview(
 export async function fetchResultThumbnailBlobUrl(
   resultId: string,
   accessToken?: string | null,
+  options?: { signal?: AbortSignal },
 ): Promise<string> {
   const id = encodeURIComponent(resultId);
   const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview/thumbnail`, {
     headers: saasAuthHeaders(accessToken),
     cache: "no-store",
+    signal: options?.signal,
   });
   await ensureOk(response, "Önizleme görseli okunamadı.");
   const blob = await response.blob();
@@ -868,7 +1020,7 @@ export async function fetchResultThumbnailBlobUrl(
 
 export type DownloadResultOutcome =
   | { status: "ok"; download: ToolDownloadResult }
-  | { status: "payment_required" }
+  | { status: "payment_required"; saasGating?: SaaSGating | null }
   | { status: "forbidden" };
 
 /**
@@ -884,20 +1036,28 @@ export async function downloadResult(
   resultId: string,
   fallbackName: string,
   accessToken?: string | null,
+  options?: { signal?: AbortSignal; clientDownloadName?: string },
 ): Promise<DownloadResultOutcome> {
   const id = encodeURIComponent(resultId);
-  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/download`, {
-    headers: saasAuthHeaders(accessToken),
-    cache: "no-store",
-  });
+  const response = await pdfFetchWithRetry(
+    `${API_BASE}/api/pdf/result/${id}/download`,
+    {
+      headers: saasAuthHeaders(accessToken),
+      cache: "no-store",
+      signal: options?.signal,
+    },
+    4,
+    350,
+  );
   if (response.status === 402) {
-    // Drain the body so the connection can be reused.
+    let g: SaaSGating | null = null;
     try {
-      await response.text();
+      const j = (await response.json()) as { saasGating?: unknown };
+      g = normaliseSaasGating(j.saasGating);
     } catch {
       /* ignore */
     }
-    return { status: "payment_required" };
+    return { status: "payment_required", saasGating: g };
   }
   if (response.status === 403) {
     try {
@@ -910,8 +1070,7 @@ export async function downloadResult(
   await ensureOk(response, "Dosya indirilemedi.");
   const download = await triggerDownloadFromResponse(response, fallbackName, {
     retainBlob: true,
+    clientDownloadName: options?.clientDownloadName,
   });
   return { status: "ok", download };
 }
-
-export type { MergeJobStatus };

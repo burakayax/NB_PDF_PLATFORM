@@ -87,6 +87,10 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
   const { state, copy } = useSaaSGating(gating, language);
   const { isLocked, isDownloadDisabled, action, blurLevel, source, reason } = state;
 
+  const showWatermarkPreview = Boolean(
+    isLocked && reason === "insufficient_credits" && thumbnailUrl,
+  );
+
   const handlePrimary = () => {
     if (action === "upgrade" && reason === "insufficient_credits" && onInsufficientCredits) {
       onInsufficientCredits();
@@ -140,6 +144,16 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
           margin: source ? "6px 0 2px" : "10px 0 2px",
         }}
       >
+        {showWatermarkPreview ? (
+          <div className="saas-gated-preview__watermark-hero" aria-hidden>
+            <div className="saas-gated-preview__watermark-hero-frame">
+              <img src={thumbnailUrl!} alt="" className="saas-gated-preview__watermark-hero-img" />
+              <div className="saas-gated-preview__watermark-ribbon" aria-hidden>
+                NB PDF PLARTFORM - ÖNİZLEME
+              </div>
+            </div>
+          </div>
+        ) : (
         <div
           className={`saas-gated-preview__thumb-wrap${
             isLocked ? " saas-gated-preview__thumb-wrap--locked" : ""
@@ -169,7 +183,6 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
               aria-hidden="true"
             >
               <span className="saas-gated-preview__lock-icon" aria-hidden="true">
-                {/* Simple inline SVG — no icon library coupling. */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="4" y="10" width="16" height="10" rx="2" />
                   <path d="M8 10V7a4 4 0 0 1 8 0v3" />
@@ -181,6 +194,7 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
             </div>
           ) : null}
         </div>
+        )}
 
         <div className="saas-gated-preview__text">
           {source ? (

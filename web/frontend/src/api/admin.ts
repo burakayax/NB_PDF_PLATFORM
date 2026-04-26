@@ -53,6 +53,11 @@ export type AdminOverview = {
   registeredUsersActiveNow: number;
   anonymousSessionsActiveNow: number;
   mostUsedTOOLSAllTimeFallback: boolean;
+  geo: {
+    usersWithCountry: number;
+    usersWithCity: number;
+    topCountries: Array<{ country: string; count: number }>;
+  };
 };
 
 export type AdminUserRow = {
@@ -70,6 +75,9 @@ export type AdminUserRow = {
   createdAt: string;
   freeLimitFirstExceededAt: string | null;
   _count: { dailyUsages: number };
+  creditBalance: number;
+  country: string | null;
+  city: string | null;
   usageToday: {
     operationsCount: number;
     postLimitExtraOps: number;
@@ -87,7 +95,15 @@ export async function fetchAdminOverview(accessToken: string): Promise<AdminOver
 
 export async function fetchAdminUsers(
   accessToken: string,
-  params: { q?: string; page?: number; pageSize?: number; sort?: string; dir?: string },
+  params: {
+    q?: string;
+    page?: number;
+    pageSize?: number;
+    sort?: string;
+    dir?: string;
+    plan?: "FREE" | "PRO" | "BUSINESS" | "all";
+    verified?: "all" | "yes" | "no";
+  },
 ): Promise<{ total: number; page: number; pageSize: number; items: AdminUserRow[] }> {
   const sp = new URLSearchParams();
   if (params.q) sp.set("q", params.q);
@@ -95,6 +111,8 @@ export async function fetchAdminUsers(
   if (params.pageSize) sp.set("pageSize", String(params.pageSize));
   if (params.sort) sp.set("sort", params.sort);
   if (params.dir) sp.set("dir", params.dir);
+  if (params.plan && params.plan !== "all") sp.set("plan", params.plan);
+  if (params.verified && params.verified !== "all") sp.set("verified", params.verified);
   const r = await adminFetch(accessToken, `/users?${sp.toString()}`);
   if (!r.ok) {
     throw new Error(await r.text());
@@ -391,4 +409,225 @@ export async function postAdminSystemReset(accessToken: string, scopes: string[]
     throw new Error(await r.text());
   }
   return r.json() as Promise<{ ok: boolean; scopes: string[] }>;
+}
+
+export type ToolRegistryRow = {
+  id: string;
+  toolId: string;
+  strategy: string;
+  creditCost: number;
+  isVisible: boolean;
+  isMaintenanceMode: boolean;
+  updatedAt: string;
+};
+
+export async function fetchAdminToolRegistry(accessToken: string): Promise<ToolRegistryRow[]> {
+  const r = await adminFetch(accessToken, "/tool-registry");
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  const j = (await r.json()) as { items: ToolRegistryRow[] };
+  return j.items;
+}
+
+export async function putAdminToolRegistry(
+  accessToken: string,
+  toolId: string,
+  body: { cost?: number; isVisible?: boolean; isMaintenanceMode?: boolean },
+): Promise<ToolRegistryRow> {
+  const r = await adminFetch(accessToken, `/tool-registry/${encodeURIComponent(toolId)}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<ToolRegistryRow>;
+}
+
+export type AppSettingsPayload = {
+  id: number;
+  siteName: string;
+  logoUrl: string | null;
+  globalMaintenanceMode: boolean;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  seoKeywords: string | null;
+  updatedAt: string;
+};
+
+export async function fetchAdminAppSettings(accessToken: string): Promise<AppSettingsPayload> {
+  const r = await adminFetch(accessToken, "/app-settings");
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<AppSettingsPayload>;
+}
+
+export async function putAdminAppSettings(
+  accessToken: string,
+  body: Partial<{
+    siteName: string;
+    logoUrl: string | null;
+    globalMaintenanceMode: boolean;
+    seoTitle: string | null;
+    seoDescription: string | null;
+    seoKeywords: string | null;
+  }>,
+): Promise<AppSettingsPayload> {
+  const r = await adminFetch(accessToken, "/app-settings", {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<AppSettingsPayload>;
+}
+
+export async function postAdminAdjustCredits(
+  accessToken: string,
+  userId: string,
+  amount: number,
+  reason: string,
+): Promise<{
+  ok: boolean;
+  creditsBefore: number;
+  creditsAfter: number;
+  transactionId: string | null;
+}> {
+  const r = await adminFetch(accessToken, "/credits/adjust", {
+    method: "POST",
+    body: JSON.stringify({ userId, amount, reason }),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{
+    ok: boolean;
+    creditsBefore: number;
+    creditsAfter: number;
+    transactionId: string | null;
+  }>;
+}
+
+export type EmailAutomationConfig = {
+  lowCreditEnabled: boolean;
+  welcomeEnabled: boolean;
+  lowCreditThreshold: number;
+  lowCreditCooldownDays: number;
+  discountCtaUrl: string;
+};
+
+export async function fetchAdminMarketing(
+  accessToken: string,
+): Promise<{ automation: EmailAutomationConfig }> {
+  const r = await adminFetch(accessToken, "/marketing");
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{ automation: EmailAutomationConfig }>;
+}
+
+export async function putAdminEmailAutomation(
+  accessToken: string,
+  body: Partial<EmailAutomationConfig>,
+): Promise<{ ok: boolean; automation: EmailAutomationConfig }> {
+  const r = await adminFetch(accessToken, "/marketing/automation", { method: "PUT", body: JSON.stringify(body) });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{ ok: boolean; automation: EmailAutomationConfig }>;
+}
+
+export async function postAdminMarketingBroadcast(
+  accessToken: string,
+  body: { subject: string; html: string; batchSize?: number },
+): Promise<{ ok: boolean; sent: number; failedCount: number; failedSample: string[] }> {
+  const r = await adminFetch(accessToken, "/marketing/broadcast", { method: "POST", body: JSON.stringify(body) });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{ ok: boolean; sent: number; failedCount: number; failedSample: string[] }>;
+}
+
+export type AdminCouponRow = {
+  id: string;
+  code: string;
+  discountPercent: number;
+  isActive: boolean;
+  usageLimitPerUser: number;
+  totalUses: number;
+  createdAt: string;
+};
+
+export async function fetchAdminCoupons(accessToken: string): Promise<{ items: AdminCouponRow[] }> {
+  const r = await adminFetch(accessToken, "/coupons");
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{ items: AdminCouponRow[] }>;
+}
+
+export async function postAdminCoupon(
+  accessToken: string,
+  body: { code: string; discountPercent: number; isActive?: boolean; usageLimitPerUser?: number },
+): Promise<AdminCouponRow> {
+  const r = await adminFetch(accessToken, "/coupons", { method: "POST", body: JSON.stringify(body) });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<AdminCouponRow>;
+}
+
+export async function patchAdminCoupon(
+  accessToken: string,
+  id: string,
+  body: Partial<Pick<AdminCouponRow, "isActive" | "discountPercent" | "usageLimitPerUser">>,
+): Promise<AdminCouponRow> {
+  const r = await adminFetch(accessToken, `/coupons/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<AdminCouponRow>;
+}
+
+export type AdminDownloadLogRow = {
+  id: string;
+  userId: string;
+  userEmail: string;
+  resultId: string | null;
+  toolId: string;
+  clientIp: string | null;
+  userAgent: string | null;
+  status: "PENDING" | "SUCCESS" | "FAILED";
+  ackedAt: string | null;
+  createdAt: string;
+};
+
+export async function fetchAdminDownloadLogs(accessToken: string, limit = 200): Promise<{ items: AdminDownloadLogRow[] }> {
+  const r = await adminFetch(accessToken, `/download-logs?limit=${encodeURIComponent(String(limit))}`);
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<{ items: AdminDownloadLogRow[] }>;
+}
+
+export async function downloadAdminDownloadLogProof(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/download-logs/${encodeURIComponent(id)}/proof`);
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  const blob = await r.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `download-proof-${id}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }

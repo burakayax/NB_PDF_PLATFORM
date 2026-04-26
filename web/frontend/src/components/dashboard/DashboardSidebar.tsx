@@ -2,7 +2,7 @@ import type { FeatureKey } from "../../api/subscription";
 import type { SubscriptionSummary } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
-import { SIDEBAR_TOOL_ORDER, sidebarToolLabel, ws } from "../../i18n/workspace";
+import { SIDEBAR_TOOL_ORDER, sidebarToolCreditLine, sidebarToolLabel, ws } from "../../i18n/workspace";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -61,16 +61,6 @@ export function DashboardSidebar({
   const labelForTool = resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
   const showCreditCard = userRole !== "ADMIN" && Boolean(userBalance);
   const creditBalance = userBalance?.creditBalance ?? 0;
-  const creditsExhausted = Boolean(
-    userBalance && !userBalance.hasActiveSubscription && userBalance.role !== "ADMIN" && creditBalance <= 0,
-  );
-  const creditsRunningLow = Boolean(
-    userBalance &&
-      !userBalance.hasActiveSubscription &&
-      userBalance.role !== "ADMIN" &&
-      creditBalance > 0 &&
-      creditBalance < 5,
-  );
   const buyHandler = onBuyCredits ?? onUsageUpgradeClick;
 
   return (
@@ -128,8 +118,9 @@ export function DashboardSidebar({
                   <span className="w-5 text-center text-xs font-bold opacity-80">•</span>
                 )}
               </span>
-              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                <span className="truncate">{label}</span>
+              <span className="flex min-w-0 flex-1 flex-col items-stretch justify-center gap-0.5 text-left">
+                <span className="flex min-w-0 items-center justify-between gap-2">
+                  <span className="truncate">{label}</span>
                 {locked ? (
                   <span
                     className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
@@ -138,23 +129,31 @@ export function DashboardSidebar({
                     {L.featureLockedBadge}
                   </span>
                 ) : null}
+                </span>
+                {locked ? null : (
+                  <span className="pl-0 text-[10px] font-medium leading-tight text-nb-muted/80">
+                    {sidebarToolCreditLine(id, language)}
+                  </span>
+                )}
               </span>
             </button>
           );
         })}
 
-        <button
-          type="button"
-          onClick={() => onSelect("subscription")}
-          className={`nb-transition mt-1 flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${
-            active === "subscription"
-              ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_28px_-8px_rgba(59,130,246,0.45)]"
-              : "border border-transparent text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
-          }`}
-        >
-          <span className={active === "subscription" ? "text-nb-primary-mid" : "text-nb-muted"}>{planIcon}</span>
-          {L.planNav}
-        </button>
+        {userRole !== "ADMIN" ? (
+          <button
+            type="button"
+            onClick={() => onSelect("subscription")}
+            className={`nb-transition mt-1 flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${
+              active === "subscription"
+                ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_28px_-8px_rgba(59,130,246,0.45)]"
+                : "border border-transparent text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+            }`}
+          >
+            <span className={active === "subscription" ? "text-nb-primary-mid" : "text-nb-muted"}>{planIcon}</span>
+            {L.planNav}
+          </button>
+        ) : null}
       </nav>
 
       {showCreditCard && userBalance ? (
@@ -163,23 +162,13 @@ export function DashboardSidebar({
             {L.creditBalanceHeading}
           </p>
           <div
-            className={`rounded-2xl border px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm ${
-              creditsExhausted || creditsRunningLow
-                ? "border-amber-500/40 bg-gradient-to-b from-amber-950/40 to-nb-panel/70"
-                : "border-white/[0.1] bg-nb-panel/55"
-            }`}
+            className="rounded-2xl border border-white/[0.1] bg-nb-panel/55 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm"
           >
             <div className="flex items-end justify-between gap-2">
               <p className="text-3xl font-black tabular-nums leading-none text-nb-text">
                 {userBalance.hasActiveSubscription ? L.usageUnlimited : creditBalance.toLocaleString()}
               </p>
             </div>
-            {creditsRunningLow ? (
-              <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">{L.creditRunningOutBanner}</p>
-            ) : null}
-            {creditsExhausted ? (
-              <p className="mt-2 text-xs font-semibold tabular-nums text-amber-200/95">{L.creditBalanceExhaustedHint}</p>
-            ) : null}
             <div className="mt-3 flex flex-col gap-2">
               {buyHandler ? (
                 <button
@@ -296,17 +285,19 @@ export function DashboardSidebarMobileRail({
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={() => onSelect("subscription")}
-          className={`nb-transition shrink-0 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold whitespace-nowrap ${
-            active === "subscription"
-              ? "border-nb-primary/45 bg-nb-primary/15 text-nb-accent"
-              : "border-white/[0.08] bg-nb-panel/60 text-nb-muted"
-          }`}
-        >
-          {L.planNav}
-        </button>
+        {userRole !== "ADMIN" ? (
+          <button
+            type="button"
+            onClick={() => onSelect("subscription")}
+            className={`nb-transition shrink-0 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold whitespace-nowrap ${
+              active === "subscription"
+                ? "border-nb-primary/45 bg-nb-primary/15 text-nb-accent"
+                : "border-white/[0.08] bg-nb-panel/60 text-nb-muted"
+            }`}
+          >
+            {L.planNav}
+          </button>
+        ) : null}
       </div>
       <div className="flex items-center justify-center gap-2 border-t border-white/[0.04] px-3 py-2">
         <button

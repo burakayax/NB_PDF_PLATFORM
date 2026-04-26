@@ -61,7 +61,7 @@ export type SubscriptionStatusPayload = {
   plan: Plan;
   remaining_days: number | null;
   plan_downgraded?: boolean;
-  /** PRO/Business (and admin-as-PRO): no server throttle lane. */
+  /** Kept for API compatibility; no longer differentiated — full-speed queue for all. */
   processingTier: "premium" | "standard";
   priorityProcessing: boolean;
 };
@@ -71,10 +71,9 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
   const { user, downgraded } = await ensurePaidSubscriptionActiveOrDowngrade(userId);
   const base = downgraded ? { plan_downgraded: true as const } : {};
 
-  const premium = isAdminUser(user) || user.plan === "PRO" || user.plan === "BUSINESS";
   const lane = {
-    processingTier: premium ? ("premium" as const) : ("standard" as const),
-    priorityProcessing: premium,
+    processingTier: "premium" as const,
+    priorityProcessing: true,
   };
 
   if (isAdminUser(user)) {
@@ -220,8 +219,6 @@ export async function getSubscriptionSummary(userId: string) {
         }
       : null;
 
-  const premiumExperience = user.plan === "PRO" || user.plan === "BUSINESS";
-
   return {
     currentPlan: {
       ...plan,
@@ -236,17 +233,9 @@ export async function getSubscriptionSummary(userId: string) {
         : {}),
       conversionTracking: conversionTrackingFree,
       behaviorMonetization,
-      ...(premiumExperience
-        ? {
-            processingTier: "premium" as const,
-            priorityProcessing: true,
-            serverThrottleApplies: false,
-          }
-        : {
-            processingTier: "standard" as const,
-            priorityProcessing: false,
-            serverThrottleApplies: TOOLSCfg.postLimitThrottle.delaysEnabled,
-          }),
+      processingTier: "premium" as const,
+      priorityProcessing: true,
+      serverThrottleApplies: false,
     },
     allowedFeatures: plan.allowedFeatures,
   };

@@ -2,6 +2,9 @@ import { randomBytes } from "node:crypto";
 
 import { logFakePaymentEvent } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
+import { recordCreditPackPurchaseMeta } from "../credit-checkout/credit-checkout.post-purchase.js";
+import { CREDIT_PACK_CATALOG, isCreditPackSku } from "../credit-checkout/credit-pack-pricing.js";
+import type { CreditPricingPayload } from "../credit-checkout/pricing-token.js";
 import { grantCredits } from "../subscription/entitlement.engine.js";
 import type { FakePaymentProduct } from "./fake-payment.schema.js";
 
@@ -39,6 +42,8 @@ type FakePaymentSession = {
   updatesSubscription: boolean;
   createdAt: number;
   confirmedAt: number | null;
+  /** Fiyat + kupon doğrulaması imzalı akışta dolar. */
+  creditPackMeta?: { couponId: string | null; exitIntentApplied: boolean };
 };
 
 const sessions = new Map<string, FakePaymentSession>();
@@ -106,6 +111,50 @@ export function createFakeCheckoutSession(params: {
   };
 }
 
+/**
+ * Kredi paketi: imzalı fiyat; kupon/çıkış niyeti onayda `recordCreditPackPurchaseMeta` ile kapanır.
+ */
+export function createPricedCreditPackFakeSession(params: {
+  userId: string;
+  payload: CreditPricingPayload;
+}): FakeCheckoutResult {
+  const p = params.payload;
+  if (!isCreditPackSku(p.product)) {
+    throw new Error("createPricedCreditPackFakeSession: invalid product");
+  }
+  const cat = CREDIT_PACK_CATALOG[p.product];
+  if (cat.credits !== p.credits || p.basePrice !== cat.amountTry.toFixed(2)) {
+    throw new Error("createPricedCreditPackFakeSession: price/credits mismatch");
+  }
+  const now = Date.now();
+  pruneExpired(now);
+  const sessionId = newSessionId();
+  const amountTry = Number.parseFloat(p.finalPrice);
+  const session: FakePaymentSession = {
+    sessionId,
+    userId: params.userId,
+    product: p.product,
+    amountTry,
+    credits: p.credits,
+    subscriptionDays: 0,
+    updatesSubscription: false,
+    createdAt: now,
+    confirmedAt: null,
+    creditPackMeta: { couponId: p.couponId, exitIntentApplied: p.exitIntent },
+  };
+  sessions.set(sessionId, session);
+  const redirectUrl = `/fake-payment/success?sessionId=${encodeURIComponent(sessionId)}`;
+  logFakePaymentEvent({
+    event: "checkout_created",
+    sessionId,
+    userId: params.userId,
+    product: p.product,
+    amount: amountTry,
+    credits: p.credits,
+  });
+  return { sessionId, amount: amountTry, credits: p.credits, redirectUrl };
+}
+
 export type FakeConfirmResult =
   | {
       status: "confirmed";
@@ -163,6 +212,14 @@ export async function confirmFakePayment(params: {
         subscription_status: "active",
         subscriptionExpiry: expiry,
       },
+    });
+  }
+
+  if (session.creditPackMeta) {
+    await recordCreditPackPurchaseMeta({
+      userId: session.userId,
+      couponId: session.creditPackMeta.couponId,
+      exitIntentApplied: session.creditPackMeta.exitIntentApplied,
     });
   }
 

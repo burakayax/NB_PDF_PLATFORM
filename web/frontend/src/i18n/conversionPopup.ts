@@ -7,10 +7,11 @@ export function conversionPopupCopy(language: Language) {
   return {
     insufficientCreditsTitle: tr ? "Yeterli krediniz yok" : "You don't have enough credits",
     insufficientCreditsBody: tr
-      ? "İndirmeye veya yeni işlemlere devam etmek için kredi satın alın."
-      : "Buy credits to keep downloading and running tools.",
-    insufficientCreditsPrimary: tr ? "Kredi satın al" : "Buy Credits",
-    insufficientCreditsSecondary: tr ? "Kredi paketlerini aç" : "View packs",
+      ? "İndirmeye veya yeni işlemlere devam etmek için kredi ekleyin."
+      : "Add credits to keep downloading and running tools.",
+    /** Tek CTA: checkout / paket listesi */
+    insufficientCreditsPrimary: tr ? "Kredi Paketlerini Gör" : "View credit packs",
+    insufficientCreditsSecondary: tr ? "Kapat" : "Close",
 
     proUnlockTitle: tr ? "Kredi ile devam edin" : "Continue with credits",
     proUnlockBody: tr

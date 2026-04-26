@@ -1339,6 +1339,50 @@ textarea {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
+.saas-gated-preview__watermark-hero {
+  flex-shrink: 0;
+}
+
+.saas-gated-preview__watermark-hero-frame {
+  position: relative;
+  width: min(220px, 36vw);
+  min-height: 120px;
+  max-height: 200px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saas-gated-preview__watermark-hero-img {
+  max-width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+  filter: contrast(0.95) brightness(0.95);
+}
+
+.saas-gated-preview__watermark-ribbon {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 140%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%) rotate(-32deg);
+  pointer-events: none;
+  user-select: none;
+}
+
 .saas-gated-preview__text {
   display: flex;
   flex-direction: column;
@@ -1995,6 +2039,146 @@ textarea {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   animation: upgrade-backdrop-in 0.38s ease forwards;
+}
+
+/* Credit pack payment summary (on top of upgrade modal) */
+.payment-summary-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 6, 14, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: upgrade-backdrop-in 0.32s ease forwards;
+}
+
+.payment-summary-modal {
+  width: min(440px, 100%);
+  max-height: min(90vh, 720px);
+  overflow: auto;
+  padding: 24px 24px 28px;
+  border-radius: 20px;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  background: linear-gradient(180deg, #0c1426 0%, #080d16 100%);
+  box-shadow: 0 32px 80px -24px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  animation: upgrade-modal-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.payment-summary-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.payment-summary-modal__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.payment-summary-modal__close {
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.payment-summary-modal__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.payment-summary-modal__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 10px 0;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.payment-summary-modal__row--discount {
+  border-bottom-color: rgba(52, 211, 153, 0.2);
+}
+
+.payment-summary-modal__exit-offer {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(234, 88, 12, 0.12));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  color: #fef3c7;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.payment-summary-modal__loading {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 12px 0;
+}
+
+.payment-summary-modal__promo-label {
+  display: block;
+  margin-top: 16px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.payment-summary-modal__promo-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.payment-summary-modal__input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f8fafc;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+}
+
+.payment-summary-modal__apply {
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.12);
+  color: #ecfeff;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.payment-summary-modal__apply:hover {
+  background: rgba(34, 211, 238, 0.2);
+}
+
+.payment-summary-modal__err {
+  color: #f87171;
+  font-size: 0.85rem;
+  margin: 8px 0 0;
+}
+
+.payment-summary-modal__pay {
+  margin-top: 20px;
 }
 
 @keyframes upgrade-backdrop-in {
@@ -2738,13 +2922,14 @@ textarea {
 .conversion-popup-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 12040;
+  z-index: 12050;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px 16px;
-  background: rgba(8, 10, 18, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(6, 8, 14, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .conversion-popup {
@@ -2757,8 +2942,9 @@ textarea {
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(165deg, rgba(30, 34, 52, 0.98) 0%, rgba(18, 20, 32, 0.99) 100%);
   box-shadow:
-    0 24px 64px -24px rgba(0, 0, 0, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 28px 80px -28px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(99, 102, 241, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .conversion-popup__accent {
@@ -3218,4 +3404,33 @@ textarea {
   display: flex;
   min-width: max-content;
   animation: marquee 550s linear infinite;
+}
+
+/* Admin: borderless Mosaic-style tables (slate on slate) */
+.masonic-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.masonic-table thead th {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(148 163 184);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  padding: 0.65rem 1rem;
+  background: rgba(15, 23, 42, 0.35);
+}
+.masonic-table tbody tr {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+  background: transparent;
+  transition: background 0.12s var(--nb-ease, ease);
+}
+.masonic-table tbody tr:hover {
+  background: rgba(51, 65, 85, 0.25);
+}
+.masonic-table tbody td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+  color: rgb(226 232 240);
 }

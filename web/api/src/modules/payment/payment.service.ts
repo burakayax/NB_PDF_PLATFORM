@@ -8,6 +8,9 @@ import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import { logSuspiciousActivity } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
+import { recordCreditPackPurchaseMeta } from "../credit-checkout/credit-checkout.post-purchase.js";
+import type { CreditPricingPayload } from "../credit-checkout/pricing-token.js";
+import { grantCredits } from "../subscription/entitlement.engine.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -300,6 +303,135 @@ export async function createPaymentCheckoutSession(params: {
   };
 }
 
+/** Kredi paketi — `finalPrice` iyzico’ya paidPrice olarak gider. */
+export async function createCreditPackIyzicoSession(params: {
+  userId: string;
+  clientIp: string;
+  payload: CreditPricingPayload;
+}): Promise<{
+  mode: "iyzico";
+  token: string;
+  checkoutFormContent: string;
+  paymentPageUrl?: string;
+  conversationId: string;
+}> {
+  const p = params.payload;
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+  });
+  if (!user) {
+    throw new HttpError(404, "User account could not be found.");
+  }
+  if (!user.isVerified) {
+    throw new HttpError(403, "Please verify your email before purchasing credits.");
+  }
+
+  const conversationId = randomUUID();
+  const basketId = `nbpdf-credits-${conversationId.slice(0, 8)}`;
+  const price = p.finalPrice;
+  const { name, surname } = splitBuyerName(user);
+  const fmtIyziDate = (d: Date) => d.toISOString().slice(0, 19).replace("T", " ");
+  const callbackBase = env.APP_BASE_URL.replace(/\/$/, "");
+  const callbackUrl = `${callbackBase}/api/payment/callback`;
+
+  await prisma.creditPackCheckout.create({
+    data: {
+      conversationId,
+      userId: user.id,
+      product: p.product,
+      basePriceTry: p.basePrice,
+      finalPriceTry: p.finalPrice,
+      credits: p.credits,
+      status: "pending",
+      couponId: p.couponId,
+      exitIntentApplied: p.exitIntent,
+    },
+  });
+
+  const iyzipay = getIyzipay();
+  const buyerId = user.id.slice(0, 20);
+
+  const request = {
+    locale: Iyzipay.LOCALE.TR,
+    conversationId,
+    price,
+    paidPrice: price,
+    currency: Iyzipay.CURRENCY.TRY,
+    basketId,
+    paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
+    callbackUrl,
+    enabledInstallments: [1],
+    buyer: {
+      id: buyerId,
+      name,
+      surname,
+      gsmNumber: env.IYZICO_BUYER_GSM,
+      email: user.email,
+      identityNumber: env.IYZICO_BUYER_IDENTITY_NUMBER,
+      lastLoginDate: fmtIyziDate(new Date()),
+      registrationDate: fmtIyziDate(user.createdAt),
+      registrationAddress: "Turkey",
+      ip: params.clientIp || "127.0.0.1",
+      city: "Istanbul",
+      country: "Turkey",
+      zipCode: "34000",
+    },
+    shippingAddress: {
+      contactName: `${name} ${surname}`,
+      city: "Istanbul",
+      country: "Turkey",
+      address: "Dijital ürün teslimatı — adres gerekmez.",
+      zipCode: "34000",
+    },
+    billingAddress: {
+      contactName: `${name} ${surname}`,
+      city: "Istanbul",
+      country: "Turkey",
+      address: "Dijital ürün teslimatı — adres gerekmez.",
+      zipCode: "34000",
+    },
+    basketItems: [
+      {
+        id: p.product,
+        name: `NB PDF credits pack (${p.credits} credits)`,
+        category1: "Credits",
+        category2: "Software",
+        itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
+        price,
+      },
+    ],
+  };
+
+  let result: IyzicoInitResult;
+  try {
+    result = await promisifyInit(iyzipay, request);
+  } catch (e) {
+    await prisma.creditPackCheckout.updateMany({
+      where: { conversationId, status: "pending" },
+      data: { status: "failed" },
+    });
+    throw e instanceof HttpError ? e : new HttpError(502, "Payment provider request failed.");
+  }
+
+  if (result.status !== "success" || !result.token || !result.conversationId) {
+    await prisma.creditPackCheckout.updateMany({
+      where: { conversationId, status: "pending" },
+      data: { status: "failed" },
+    });
+    throw new HttpError(502, result.errorMessage ?? "Could not start payment session.");
+  }
+
+  verifyInitSignature(result.conversationId, result.token, result.signature, env.IYZICO_SECRET_KEY);
+
+  return {
+    mode: "iyzico",
+    token: result.token,
+    checkoutFormContent: result.checkoutFormContent ?? "",
+    paymentPageUrl: result.paymentPageUrl,
+    conversationId: result.conversationId,
+  };
+}
+
 function buildRedirectHtml(success: boolean): string {
   const target = new URL("/", env.FRONTEND_ORIGIN);
   target.searchParams.set("payment", success ? "success" : "failed");
@@ -354,6 +486,41 @@ export async function processPaymentCallback(token: string): Promise<string> {
   const conversationId = result.conversationId;
   if (!conversationId) {
     return buildRedirectHtml(false);
+  }
+
+  const creditPending = await prisma.creditPackCheckout.findUnique({
+    where: { conversationId: String(conversationId) },
+  });
+  if (creditPending) {
+    if (creditPending.status === "completed") {
+      return buildRedirectHtml(true);
+    }
+    if (result.paidPrice != null && String(result.paidPrice) !== String(creditPending.finalPriceTry)) {
+      logSuspiciousActivity({
+        type: "iyzico_price_mismatch",
+        detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
+      });
+      return buildRedirectHtml(false);
+    }
+    try {
+      await grantCredits(creditPending.userId, creditPending.credits, "bonus");
+    } catch {
+      return buildRedirectHtml(false);
+    }
+    try {
+      await recordCreditPackPurchaseMeta({
+        userId: creditPending.userId,
+        couponId: creditPending.couponId,
+        exitIntentApplied: creditPending.exitIntentApplied,
+      });
+    } catch {
+      // kupon satırı çakışması vb.; ödeme alındı, krediler yine verildi
+    }
+    await prisma.creditPackCheckout.update({
+      where: { conversationId: creditPending.conversationId },
+      data: { status: "completed", completedAt: new Date() },
+    });
+    return buildRedirectHtml(true);
   }
 
   const pending = await prisma.paymentCheckout.findUnique({

@@ -18,6 +18,7 @@ removed together with the daily-limit system they fed.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import Any
@@ -30,6 +31,33 @@ logger = logging.getLogger(__name__)
 
 def saas_api_base() -> str:
     return os.getenv("NB_SAAS_API_BASE", "http://127.0.0.1:4000").rstrip("/")
+
+
+async def _httpx_post_json_with_retry(
+    url: str,
+    *,
+    headers: dict[str, str],
+    json_body: dict[str, Any] | None,
+    timeout: float = 30.0,
+    attempts: int = 3,
+) -> httpx.Response:
+    """Retry on transport failure or 5xx from the Node worker."""
+    last_err: Exception | None = None
+    for i in range(attempts):
+        try:
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                r = await client.post(url, headers=headers, json=json_body)
+            if r.status_code >= 500 and i < attempts - 1:
+                await asyncio.sleep(0.35 * (i + 1))
+                continue
+            return r
+        except (httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout, httpx.RemoteProtocolError) as exc:
+            last_err = exc
+            if i < attempts - 1:
+                await asyncio.sleep(0.35 * (i + 1))
+    if last_err:
+        raise last_err
+    raise HTTPException(status_code=502, detail="SaaS isteği tekrar denemelerine rağmen başarısız.")
 
 
 def _detail_from_response(r: httpx.Response) -> str:
@@ -101,37 +129,6 @@ async def saas_current_user_id(token: str) -> str:
         return user_id
 
 
-async def saas_check_access(token: str) -> dict[str, Any]:
-    """Delegate the download-gate decision to Node ``POST /api/access/check``.
-
-    Currently used only by the result-store download endpoint. Returns the
-    parsed 200 body (``{allowed, reason, creditsAfter?}``) on success. On 402
-    raises ``HTTPException(402, detail={"error": "payment_required"})``.
-    """
-    base = saas_api_base()
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.post(
-            f"{base}/api/access/check",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        if r.status_code == 200:
-            try:
-                data = r.json()
-                if isinstance(data, dict):
-                    return data
-            except Exception:
-                logger.debug("access/check 200 body parse skipped", exc_info=True)
-            return {"allowed": True}
-        if r.status_code == 402:
-            raise HTTPException(status_code=402, detail={"error": "payment_required"})
-        if r.status_code == 401:
-            raise HTTPException(status_code=401, detail=_detail_from_response(r))
-        raise HTTPException(
-            status_code=502,
-            detail=f"Erişim doğrulaması başarısız: {_detail_from_response(r)}",
-        )
-
-
 # ---------------------------------------------------------------------------
 # Entitlement engine bridge
 # ---------------------------------------------------------------------------
@@ -187,24 +184,23 @@ async def entitlement_check(token: str, tool_id: str) -> dict[str, Any]:
     reject the request (typically ``allowed=false`` → 402).
     """
     base = saas_api_base()
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.post(
-            f"{base}/api/entitlement/check",
-            headers={"Authorization": f"Bearer {token}"},
-            json={"toolId": tool_id},
+    r = await _httpx_post_json_with_retry(
+        f"{base}/api/entitlement/check",
+        headers={"Authorization": f"Bearer {token}"},
+        json_body={"toolId": tool_id},
+    )
+    if r.status_code == 401:
+        raise HTTPException(status_code=401, detail=_detail_from_response(r))
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Entitlement check failed: {_detail_from_response(r)}",
         )
-        if r.status_code == 401:
-            raise HTTPException(status_code=401, detail=_detail_from_response(r))
-        if r.status_code != 200:
-            raise HTTPException(
-                status_code=502,
-                detail=f"Entitlement check failed: {_detail_from_response(r)}",
-            )
-        try:
-            data = r.json()
-        except Exception as exc:
-            raise HTTPException(status_code=502, detail="Entitlement response unreadable.") from exc
-        return _validate_decision(data)
+    try:
+        data = r.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Entitlement response unreadable.") from exc
+    return _validate_decision(data)
 
 
 async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
@@ -215,60 +211,22 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     (rare; normally only happens on ``race_lost`` after a successful check).
     """
     base = saas_api_base()
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.post(
-            f"{base}/api/entitlement/consume",
-            headers={"Authorization": f"Bearer {token}"},
-            json={"toolId": tool_id},
+    r = await _httpx_post_json_with_retry(
+        f"{base}/api/entitlement/consume",
+        headers={"Authorization": f"Bearer {token}"},
+        json_body={"toolId": tool_id},
+    )
+    if r.status_code == 401:
+        raise HTTPException(status_code=401, detail=_detail_from_response(r))
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Entitlement consume failed: {_detail_from_response(r)}",
         )
-        if r.status_code == 401:
-            raise HTTPException(status_code=401, detail=_detail_from_response(r))
-        if r.status_code != 200:
-            raise HTTPException(
-                status_code=502,
-                detail=f"Entitlement consume failed: {_detail_from_response(r)}",
-            )
-        try:
-            data = r.json()
-        except Exception as exc:
-            raise HTTPException(status_code=502, detail="Entitlement consume unreadable.") from exc
-        return _validate_consume(data)
-
-
-def entitlement_consume_sync(token: str, tool_id: str) -> dict[str, Any] | None:
-    """Blocking variant for background threads (merge worker).
-
-    Swallows all errors — the worker has already produced the output and we
-    cannot roll that back, so a failed consume only needs to be logged.
-    Returns the parsed body on success, ``None`` otherwise.
-    """
-    base = saas_api_base()
     try:
-        with httpx.Client(timeout=60.0) as client:
-            r = client.post(
-                f"{base}/api/entitlement/consume",
-                headers={"Authorization": f"Bearer {token}"},
-                json={"toolId": tool_id},
-            )
-            if r.status_code != 200:
-                logger.warning(
-                    "entitlement consume sync non-200: tool=%s status=%s",
-                    tool_id,
-                    r.status_code,
-                )
-                return None
-            try:
-                data = r.json()
-            except Exception:
-                logger.warning("entitlement consume sync body parse failed", exc_info=True)
-                return None
-            if isinstance(data, dict) and data.get("status") == "denied":
-                logger.warning(
-                    "entitlement consume sync denied: tool=%s reason=%s",
-                    tool_id,
-                    data.get("reason"),
-                )
-            return data if isinstance(data, dict) else None
+        data = r.json()
     except Exception as exc:
-        logger.warning("entitlement consume sync error: tool=%s err=%s", tool_id, exc)
-        return None
+        raise HTTPException(status_code=502, detail="Entitlement consume unreadable.") from exc
+    return _validate_consume(data)
+
+
