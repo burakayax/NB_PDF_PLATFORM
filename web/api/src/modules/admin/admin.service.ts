@@ -67,6 +67,12 @@ export type AdminOverview = {
   anonymousSessionsActiveNow: number;
   /** Araç sıralaması son 30 günde veri yoksa tüm zamanlara düşüldü. */
   mostUsedTOOLSAllTimeFallback: boolean;
+  /** Geo fields on `User` (optional; filled over time for CRM / analytics). */
+  geo: {
+    usersWithCountry: number;
+    usersWithCity: number;
+    topCountries: Array<{ country: string; count: number }>;
+  };
 };
 
 export async function getAdminOverview(): Promise<AdminOverview> {
@@ -212,6 +218,25 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   }
   const pageViewsTodayByHourUtc = hourCounts.map((count, hour) => ({ hour, count }));
 
+  const [usersWithCountry, usersWithCity, countryGroupRows] = await Promise.all([
+    prisma.user.count({
+      where: { AND: [{ country: { not: null } }, { country: { not: "" } }] },
+    }),
+    prisma.user.count({
+      where: { AND: [{ city: { not: null } }, { city: { not: "" } }] },
+    }),
+    prisma.user.groupBy({
+      by: ["country"],
+      where: { AND: [{ country: { not: null } }, { country: { not: "" } }] },
+      _count: { _all: true },
+    }),
+  ]);
+  const topCountries = countryGroupRows
+    .filter((r) => r.country != null && r.country.length > 0)
+    .map((r) => ({ country: r.country as string, count: r._count?._all ?? 0 }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
   return {
     generatedAt: new Date().toISOString(),
     usageDateUtc: today,
@@ -245,6 +270,11 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     registeredUsersActiveNow,
     anonymousSessionsActiveNow,
     mostUsedTOOLSAllTimeFallback,
+    geo: {
+      usersWithCountry,
+      usersWithCity,
+      topCountries,
+    },
   };
 }
 
@@ -254,20 +284,32 @@ export async function listUsersForAdmin(params: {
   pageSize: number;
   sort: "createdAt" | "email" | "plan";
   dir: "asc" | "desc";
+  plan?: "FREE" | "PRO" | "BUSINESS" | "all";
+  verified?: "all" | "yes" | "no";
 }) {
-  const { q, page, pageSize, sort, dir } = params;
+  const { q, page, pageSize, sort, dir, plan: planFilter, verified: verifiedFilter } = params;
   const skip = (page - 1) * pageSize;
 
-  const where: Prisma.UserWhereInput | undefined = q?.trim()
-    ? {
-        OR: [
-          { email: { contains: q.trim() } },
-          { firstName: { contains: q.trim() } },
-          { lastName: { contains: q.trim() } },
-          { name: { contains: q.trim() } },
-        ],
-      }
-    : undefined;
+  const parts: Prisma.UserWhereInput[] = [];
+  if (q?.trim()) {
+    parts.push({
+      OR: [
+        { email: { contains: q.trim() } },
+        { firstName: { contains: q.trim() } },
+        { lastName: { contains: q.trim() } },
+        { name: { contains: q.trim() } },
+      ],
+    });
+  }
+  if (planFilter && planFilter !== "all") {
+    parts.push({ plan: planFilter });
+  }
+  if (verifiedFilter === "yes") {
+    parts.push({ isVerified: true });
+  } else if (verifiedFilter === "no") {
+    parts.push({ isVerified: false });
+  }
+  const where: Prisma.UserWhereInput | undefined = parts.length > 0 ? { AND: parts } : undefined;
 
   const orderBy: Prisma.UserOrderByWithRelationInput =
     sort === "email"
@@ -297,6 +339,9 @@ export async function listUsersForAdmin(params: {
         preferredLanguage: true,
         createdAt: true,
         freeLimitFirstExceededAt: true,
+        credit_balance: true,
+        country: true,
+        city: true,
         _count: { select: { dailyUsages: true } },
       },
     }),
@@ -316,10 +361,23 @@ export async function listUsersForAdmin(params: {
   const items = rows.map((u) => {
     const d = todayByUser.get(u.id);
     return {
-      ...u,
-      createdAt: u.createdAt.toISOString(),
+      id: u.id,
+      email: u.email,
+      firstName: u.firstName,
+      lastName: u.lastName,
+      name: u.name,
+      plan: u.plan,
+      role: u.role,
+      isVerified: u.isVerified,
+      authProvider: u.authProvider,
       subscriptionExpiry: u.subscriptionExpiry?.toISOString() ?? null,
+      preferredLanguage: u.preferredLanguage,
+      createdAt: u.createdAt.toISOString(),
       freeLimitFirstExceededAt: u.freeLimitFirstExceededAt?.toISOString() ?? null,
+      creditBalance: u.credit_balance,
+      country: u.country,
+      city: u.city,
+      _count: u._count,
       usageToday: d
         ? {
             operationsCount: d.operationsCount,
@@ -721,6 +779,115 @@ export async function buildUsageExportCsv(from: string, to: string): Promise<str
     lines.push(cells.join(","));
   }
   return lines.join("\n");
+}
+
+const APP_SETTINGS_SINGLETON_ID = 1;
+
+export async function listToolRegistryForAdmin() {
+  const rows = await prisma.toolRegistry.findMany({ orderBy: { id: "asc" } });
+  return rows.map((r) => ({
+    id: r.id,
+    toolId: r.id,
+    strategy: r.strategy,
+    creditCost: r.cost,
+    cost: r.cost,
+    isVisible: r.isVisible,
+    isMaintenanceMode: r.isMaintenanceMode,
+    updatedAt: r.updatedAt.toISOString(),
+  }));
+}
+
+export async function updateToolRegistryForAdmin(
+  id: string,
+  data: { cost?: number; isVisible?: boolean; isMaintenanceMode?: boolean },
+  actor: AdminActor,
+) {
+  const row = await prisma.toolRegistry.findUnique({ where: { id } });
+  if (!row) {
+    throw new HttpError(404, "Tool not found.");
+  }
+  const next = await prisma.toolRegistry.update({
+    where: { id },
+    data: {
+      ...(data.cost !== undefined ? { cost: data.cost } : {}),
+      ...(data.isVisible !== undefined ? { isVisible: data.isVisible } : {}),
+      ...(data.isMaintenanceMode !== undefined ? { isMaintenanceMode: data.isMaintenanceMode } : {}),
+    },
+  });
+  await logAdminAudit(actor, "tool_registry.update", id, `Tool ${id} configuration updated.`, { ...data });
+  return {
+    id: next.id,
+    toolId: next.id,
+    strategy: next.strategy,
+    creditCost: next.cost,
+    isVisible: next.isVisible,
+    isMaintenanceMode: next.isMaintenanceMode,
+    updatedAt: next.updatedAt.toISOString(),
+  };
+}
+
+export async function getAppSettingsForAdmin() {
+  const row = await prisma.appSettings.upsert({
+    where: { id: APP_SETTINGS_SINGLETON_ID },
+    create: { id: APP_SETTINGS_SINGLETON_ID },
+    update: {},
+  });
+  return {
+    id: row.id,
+    siteName: row.siteName,
+    logoUrl: row.logoUrl,
+    globalMaintenanceMode: row.globalMaintenanceMode,
+    seoTitle: row.seoTitle,
+    seoDescription: row.seoDescription,
+    seoKeywords: row.seoKeywords,
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+export async function updateAppSettingsForAdmin(
+  data: {
+    siteName?: string;
+    logoUrl?: string | null;
+    globalMaintenanceMode?: boolean;
+    seoTitle?: string | null;
+    seoDescription?: string | null;
+    seoKeywords?: string | null;
+  },
+  actor: AdminActor,
+) {
+  const next = await prisma.appSettings.upsert({
+    where: { id: APP_SETTINGS_SINGLETON_ID },
+    create: {
+      id: APP_SETTINGS_SINGLETON_ID,
+      ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
+      ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
+      ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
+      ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
+      ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
+    },
+    update: {
+      ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
+      ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
+      ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
+      ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
+      ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
+    },
+  });
+  await logAdminAudit(actor, "app_settings.update", "app_settings", "AppSettings singleton updated.", {
+    fields: Object.keys(data),
+  });
+  return {
+    id: next.id,
+    siteName: next.siteName,
+    logoUrl: next.logoUrl,
+    globalMaintenanceMode: next.globalMaintenanceMode,
+    seoTitle: next.seoTitle,
+    seoDescription: next.seoDescription,
+    seoKeywords: next.seoKeywords,
+    updatedAt: next.updatedAt.toISOString(),
+  };
 }
 
 /** @deprecated use getAdminOverview */

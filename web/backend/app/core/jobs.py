@@ -10,7 +10,6 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from app.core.operations import cleanup_path, get_engine
-from app.core.saas_gate import entitlement_consume_sync
 
 engine = get_engine()
 _jobs: dict[str, dict] = {}
@@ -45,8 +44,6 @@ def create_merge_job(
     passwords: dict[str, str],
     workdir: Path,
     output_name: str,
-    *,
-    saas_token: str | None = None,
 ) -> str:
     """PDF birlestirmeyi arka planda calistirip ilerleme bilgisini hafizada tutar."""
     job_id = uuid.uuid4().hex
@@ -64,18 +61,32 @@ def create_merge_job(
         "workdir": workdir,
         "output_path": output_path,
         "output_name": output_name,
+        "cancelled": False,
     }
     with _lock:
         _jobs[job_id] = job
 
     def worker():
+        workdir_path = workdir
         try:
             with _lock:
-                job["status"] = "running"
-                job["message"] = "PDF dosyaları birleştiriliyor..."
+                if job.get("cancelled"):
+                    job["status"] = "cancelled"
+                    job["message"] = "İptal edildi."
+                    job["finished_at"] = _now()
+                else:
+                    job["status"] = "running"
+                    job["message"] = "PDF dosyaları birleştiriliyor..."
+
+            with _lock:
+                if job["status"] == "cancelled":
+                    cleanup_path(workdir_path)
+                    return
 
             def progress_cb(current: int, total: int, where_text: str):
                 with _lock:
+                    if job.get("cancelled"):
+                        return False
                     job["current"] = current
                     job["total"] = total
                     job["where"] = where_text
@@ -83,23 +94,33 @@ def create_merge_job(
                 return True
 
             engine.merge_pdfs([str(p) for p in saved_paths], str(output_path), progress_callback=progress_cb, passwords=passwords)
-            # Consume AFTER the merge succeeds — if the job fails we must
-            # not charge. A race-lost / denied response here is logged by
-            # entitlement_consume_sync and does not fail the job because
-            # the output is already on disk for the user.
-            if saas_token:
-                entitlement_consume_sync(saas_token, "merge")
             with _lock:
-                job["status"] = "completed"
-                job["message"] = "Birleştirme tamamlandı."
+                if job.get("cancelled"):
+                    job["status"] = "cancelled"
+                    job["message"] = "İptal edildi."
+                else:
+                    job["status"] = "completed"
+                    job["message"] = "Birleştirme tamamlandı."
                 job["current"] = job["total"]
                 job["finished_at"] = _now()
         except Exception as exc:
+            err_t = str(exc)
+            is_cancel = "iptal" in err_t.lower() or "cancel" in err_t.lower() or "İşlem iptal" in err_t
             with _lock:
-                job["status"] = "failed"
-                job["error"] = str(exc)
-                job["message"] = "Birleştirme başarısız oldu."
+                if is_cancel or job.get("cancelled"):
+                    job["status"] = "cancelled"
+                    job["message"] = "İptal edildi."
+                    job["error"] = None
+                else:
+                    job["status"] = "failed"
+                    job["error"] = err_t
+                    job["message"] = "Birleştirme başarısız oldu."
                 job["finished_at"] = _now()
+        finally:
+            with _lock:
+                st = job.get("status")
+            if st == "cancelled":
+                cleanup_path(workdir_path)
 
     threading.Thread(target=worker, daemon=True).start()
     return job_id
@@ -117,8 +138,22 @@ def get_job_status(job_id: str) -> dict:
     return _serialize(get_job(job_id))
 
 
+def request_cancel_merge_job(job_id: str) -> bool:
+    """Request cooperative cancellation. Returns False if job is missing or already terminal."""
+    with _lock:
+        job = _jobs.get(job_id)
+        if not job:
+            return False
+        if job["status"] in ("completed", "failed", "cancelled"):
+            return False
+        job["cancelled"] = True
+        return True
+
+
 def get_job_download(job_id: str) -> tuple[Path, str, Path]:
     job = get_job(job_id)
+    if job["status"] == "cancelled":
+        raise HTTPException(status_code=409, detail="Birleştirme işlemi iptal edildi.")
     if job["status"] != "completed":
         raise HTTPException(status_code=409, detail="İndirme için işlem henüz tamamlanmadı.")
     output_path = Path(job["output_path"])

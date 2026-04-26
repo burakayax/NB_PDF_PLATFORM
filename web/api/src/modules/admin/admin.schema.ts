@@ -9,6 +9,10 @@ export const adminListUsersQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
   sort: z.enum(["createdAt", "email", "plan"]).default("createdAt"),
   dir: z.enum(["asc", "desc"]).default("desc"),
+  /** Boş / all = tüm planlar. */
+  plan: z.enum(["FREE", "PRO", "BUSINESS", "all"]).optional().default("all"),
+  /** E-posta doğrulama filtresi. */
+  verified: z.enum(["all", "yes", "no"]).optional().default("all"),
 });
 
 export const adminCreateUserSchema = z.object({
@@ -97,4 +101,68 @@ export const adminGrantCreditsSchema = z.object({
 export const adminResetBodySchema = z.object({
   scopes: z.array(z.string().min(1).max(120)).min(1).max(16),
   confirm: z.literal("RESET"),
+});
+
+const optionalUrlOrEmpty = z
+  .union([z.string().url().max(2000), z.literal(""), z.null()])
+  .optional()
+  .transform((v) => (v === "" ? null : v));
+
+export const adminAppSettingsPutSchema = z.object({
+  siteName: z.string().min(1).max(200).optional(),
+  logoUrl: optionalUrlOrEmpty,
+  globalMaintenanceMode: z.boolean().optional(),
+  seoTitle: z.union([z.string().max(500), z.literal(""), z.null()]).optional().transform((v) => (v === "" ? null : v)),
+  seoDescription: z.union([z.string().max(2000), z.literal(""), z.null()]).optional().transform((v) => (v === "" ? null : v)),
+  seoKeywords: z.union([z.string().max(500), z.literal(""), z.null()]).optional().transform((v) => (v === "" ? null : v)),
+});
+
+export const adminToolRegistryPutSchema = z
+  .object({
+    cost: z.number().int().min(0).max(10_000).optional(),
+    isVisible: z.boolean().optional(),
+    isMaintenanceMode: z.boolean().optional(),
+  })
+  .refine((d) => d.cost !== undefined || d.isVisible !== undefined || d.isMaintenanceMode !== undefined, {
+    message: "At least one of cost, isVisible, isMaintenanceMode is required.",
+  });
+
+/**
+ * Non-zero credit adjustment: positive = grant (`admin_add`), negative = take (`admin_subtract` up to balance).
+ */
+export const adminAdjustCreditsBodySchema = z.object({
+  userId: z.string().min(1).max(200),
+  amount: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, "Amount must be non-zero.")
+    .refine((n) => n >= -1_000_000 && n <= 1_000_000, "Amount out of range."),
+  reason: z.string().trim().min(1).max(500),
+});
+
+export const emailAutomationBodySchema = z.object({
+  lowCreditEnabled: z.boolean().optional(),
+  welcomeEnabled: z.boolean().optional(),
+  lowCreditThreshold: z.coerce.number().int().min(0).max(1000).optional(),
+  lowCreditCooldownDays: z.coerce.number().int().min(1).max(30).optional(),
+  discountCtaUrl: z.string().max(2000).optional(),
+});
+
+export const marketingBroadcastBodySchema = z.object({
+  subject: z.string().min(1).max(200),
+  html: z.string().min(1).max(200_000),
+  batchSize: z.coerce.number().int().min(5).max(80).optional().default(40),
+});
+
+export const adminCouponCreateSchema = z.object({
+  code: z.string().min(2).max(40),
+  discountPercent: z.coerce.number().int().min(1).max(100),
+  isActive: z.boolean().optional(),
+  usageLimitPerUser: z.coerce.number().int().min(1).max(1000).optional(),
+});
+
+export const adminCouponPatchSchema = z.object({
+  isActive: z.boolean().optional(),
+  discountPercent: z.coerce.number().int().min(1).max(100).optional(),
+  usageLimitPerUser: z.coerce.number().int().min(1).max(1000).optional(),
 });

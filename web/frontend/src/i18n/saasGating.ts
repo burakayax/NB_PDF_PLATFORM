@@ -70,7 +70,7 @@ const REASON_COPY: Record<SaaSGatingReason, { title: Dict; body: Dict }> = {
 
 const ACTION_LABELS: Record<SaaSGatingActionKind, Dict> = {
   download: { tr: "İndir", en: "Download" },
-  upgrade: { tr: "Kredi satın al", en: "Buy credits" },
+  upgrade: { tr: "Kredi Paketlerini Gör", en: "View credit packs" },
   retry: { tr: "Yeniden dene", en: "Try again" },
   contact: { tr: "Destek ile iletişime geç", en: "Contact support" },
 };
@@ -124,9 +124,17 @@ export function saasGatingCopy(
       ? pick(CREDIT_STRINGS.costSpent(state.cost), language)
       : pick(CREDIT_STRINGS.costFree, language);
 
+  let body = pick(reasonCopy.body, language);
+  if (reason === "insufficient_credits" && state.cost > 0) {
+    body =
+      language === "tr"
+        ? `Bu işlemi tamamlamak için ${state.cost} krediye ihtiyacınız var.`
+        : `You need ${state.cost} credit${state.cost === 1 ? "" : "s"} to complete this action.`;
+  }
+
   return {
     title: pick(reasonCopy.title, language),
-    body: pick(reasonCopy.body, language),
+    body,
     primaryActionLabel: actionLabel,
     creditPillHeader: pick(CREDIT_STRINGS.headerPrefix, language),
     creditPillBefore: state.creditsBefore,

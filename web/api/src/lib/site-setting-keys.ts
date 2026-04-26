@@ -17,6 +17,8 @@ export const SITE_SETTING_KEYS = {
   PACKAGES_MARKETING_LEGACY: "packages.marketing",
   /** @deprecated */
   PAYMENT_PRICES_LEGACY: "payment.prices",
+  /** Email marketing automation: JSON { lowCreditEnabled, welcomeEnabled, lowCreditThreshold, ... } */
+  EMAIL_AUTOMATION: "email.automation",
 } as const;
 
 export type SiteSettingKey = (typeof SITE_SETTING_KEYS)[keyof typeof SITE_SETTING_KEYS];

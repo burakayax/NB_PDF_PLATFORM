@@ -2,6 +2,8 @@ import { Router } from "express";
 
 import { asyncHandler } from "../../lib/async-handler.js";
 import {
+  downloadLogAckController,
+  downloadLogCreateController,
   entitlementBalanceController,
   entitlementCheckController,
   entitlementConsumeController,
@@ -19,3 +21,5 @@ entitlementRouter.get("/balance", asyncHandler(entitlementBalanceController));
 entitlementRouter.get("/transactions", asyncHandler(entitlementTransactionsController));
 entitlementRouter.post("/check", asyncHandler(entitlementCheckController));
 entitlementRouter.post("/consume", asyncHandler(entitlementConsumeController));
+entitlementRouter.post("/download-log", asyncHandler(downloadLogCreateController));
+entitlementRouter.post("/download-log/:id/ack", asyncHandler(downloadLogAckController));

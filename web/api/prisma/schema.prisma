@@ -23,6 +23,13 @@ enum UserRole {
   ADMIN
 }
 
+/// İndirme kanıtı: SUCCESS yalnızca tarayıcı ACK sonrası.
+enum DownloadLogStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
 enum AuthProvider {
   local
   google
@@ -66,6 +73,13 @@ model User {
   toolUsageCountsJson      String         @default("{}") @map("tool_usage_counts_json")
   /// Gecikme sonrası veya kayıt yanıtında kaç kez yükseltme CTA gösterildi (dönüşüm).
   totalUpgradeCtaImpressionsCount Int     @default(0) @map("total_upgrade_cta_impressions_count")
+  /// Coarse geo fields for admin analytics (optional; may be set from IP / profile).
+  country      String?
+  city         String?
+  /// Throttle for automated low-credit marketing email (nudge at most per cooldown).
+  lowCreditNudgeAt DateTime? @map("low_credit_nudge_at")
+  /// Son “çıkış niyeti” %10 kredi indiriminin uygulandığı zaman (30 gün cooldown).
+  lastExitIntentCreditDiscountAt DateTime? @map("last_exit_intent_credit_discount_at")
   /// Prepaid credit balance; decremented atomically when a tool is used without an active subscription.
   credit_balance       Int     @default(0)
   /// Payment provider subscription status; app-layer union: none | active | past_due | canceled | incomplete.
@@ -81,11 +95,17 @@ model User {
   clientErrorLogs ClientErrorLog[]
   desktopDevices DesktopDevice[]
   paymentCheckouts PaymentCheckout[]
+  creditPackCheckouts CreditPackCheckout[]
   passwordResetCodes PasswordResetCode[]
   creditTransactions CreditTransaction[]
+  downloadLogs     DownloadLog[]
+  couponUses       CouponUse[]
   entitlement        UserEntitlement?
+  /// Admin actions logged to AdminAuditLog; userId on log row references this user when the actor is known.
+  adminAuditLogs     AdminAuditLog[] @relation("AdminAuditActor")
 
   @@index([stripe_customer_id])
+  @@index([country])
 }
 
 /// E-posta ile gönderilen 6 haneli şifre sıfırlama kodu (hash saklanır).
@@ -149,6 +169,58 @@ model DailyUsage {
 
   @@unique([userId, usageDate])
   @@index([userId])
+}
+
+/// Özel indirim kodu (hızlı kredi satın alma).
+model Coupon {
+  id                String   @id @default(cuid())
+  /// Büyük harf normalize, benzersiz.
+  code              String   @unique
+  discountPercent   Int
+  isActive          Boolean  @default(true)
+  /// Kullanıcı başına maks. kullanım.
+  usageLimitPerUser Int      @default(1)
+  createdAt         DateTime @default(now()) @map("created_at")
+  uses              CouponUse[]
+  creditCheckouts  CreditPackCheckout[]
+
+  @@map("coupons")
+}
+
+/// Kullanım kaydı: limit sayımı için.
+model CouponUse {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  couponId  String   @map("coupon_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([userId, couponId])
+  @@index([couponId])
+  @@map("coupon_uses")
+}
+
+/// Kredi paketi: sahte ödeme veya iyzico (conversationId) ile eşleşir.
+model CreditPackCheckout {
+  id                String    @id @default(cuid())
+  conversationId    String    @unique
+  userId            String
+  product           String
+  basePriceTry      String    @map("base_price_try")
+  finalPriceTry     String    @map("final_price_try")
+  credits           Int
+  status            String    @default("pending")
+  couponId          String?   @map("coupon_id")
+  exitIntentApplied Boolean   @default(false) @map("exit_intent_applied")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  completedAt       DateTime? @map("completed_at")
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon            Coupon?   @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@map("credit_pack_checkouts")
 }
 
 model EmailVerificationToken {
@@ -227,6 +299,22 @@ model SiteSetting {
   updatedAt DateTime @updatedAt
 }
 
+/// Typed global site configuration (singleton row: id = 1). Complements `SiteSetting` key/value for admin UI.
+/// Fields: site name, logo, global maintenance, SEO. Managed from Admin; no code deploy required for copy changes.
+model AppSettings {
+  id                    Int     @id @default(1)
+  siteName              String  @default("NB PDF") @map("site_name")
+  logoUrl               String? @map("logo_url")
+  globalMaintenanceMode Boolean @default(false) @map("global_maintenance_mode")
+  seoTitle              String? @map("seo_title")
+  seoDescription        String? @map("seo_description")
+  seoKeywords           String? @map("seo_keywords")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
 /// Files uploaded from the admin panel; served from `/api/media/files/:storageKey`.
 model MediaAsset {
   id           String   @id @default(cuid())
@@ -239,7 +327,7 @@ model MediaAsset {
   @@index([createdAt])
 }
 
-/// Admin actions (who changed what).
+/// Admin actions (who changed what). `userId` is the admin user id (equivalent to product term "adminId").
 model AdminAuditLog {
   id         String   @id @default(cuid())
   createdAt  DateTime @default(now()) @map("created_at")
@@ -249,8 +337,10 @@ model AdminAuditLog {
   targetKey  String?  @map("target_key")
   summary    String
   metaJson   String?  @map("meta_json")
+  adminActor User?    @relation("AdminAuditActor", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+  @@index([userId])
   @@map("admin_audit_logs")
 }
 
@@ -294,8 +384,34 @@ model UserEntitlement {
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+/// Tool configuration (id = toolId). `cost` is the credit cost per use (UI may label it "creditCost").
+/// Flags support per-tool maintenance and catalog visibility without redeploying code.
 model ToolRegistry {
   id        String @id
   strategy  String
   cost      Int
+  isVisible         Boolean  @default(true) @map("is_visible")
+  isMaintenanceMode Boolean  @default(false) @map("is_maintenance_mode")
+  /// Default for existing rows on migrate; then auto-updated on tool config changes.
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+/// Uygulama katmanı indirme denemesi: IP/UA ve araç; başarı sadece client ACK ile.
+/// Operasyonel tutma: sorgularda createdAt &gt; now - 1y (arşiv/cron ayrı).
+model DownloadLog {
+  id         String            @id @default(cuid())
+  userId     String            @map("user_id")
+  resultId   String?           @map("result_id")
+  toolId     String            @map("tool_id")
+  clientIp   String?           @map("client_ip")
+  userAgent  String?           @map("user_agent")
+  status     DownloadLogStatus @default(PENDING)
+  ackedAt    DateTime?         @map("acked_at")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("download_logs")
 }

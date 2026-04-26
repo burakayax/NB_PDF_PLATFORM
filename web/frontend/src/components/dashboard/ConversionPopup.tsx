@@ -119,13 +119,19 @@ export function ConversionPopup({
           <button type="button" className="conversion-popup__cta-primary" onClick={onPrimary}>
             {primaryLabels[variant]}
           </button>
-          <button
-            type="button"
-            className="conversion-popup__cta-secondary"
-            onClick={onSecondary ?? onDismiss}
-          >
-            {secondaryLabels[variant]}
-          </button>
+          {variant === "insufficient_credits" ? (
+            <button type="button" className="conversion-popup__cta-secondary" onClick={onDismiss}>
+              {secondaryLabels[variant]}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="conversion-popup__cta-secondary"
+              onClick={onSecondary ?? onDismiss}
+            >
+              {secondaryLabels[variant]}
+            </button>
+          )}
         </div>
       </div>
     </div>

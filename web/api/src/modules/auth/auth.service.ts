@@ -291,6 +291,22 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
     });
   }
 
+  void import("../marketing/email-automation.js")
+    .then((m) =>
+      m.trySendWelcomeAfterRegistration({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: user.name,
+        role: user.role,
+        credit_balance: user.credit_balance,
+      }),
+    )
+    .catch(() => {
+      /* optional marketing email */
+    });
+
   return {
     message: "Verification email sent. Please verify your email before signing in.",
     verificationRequired: true,
@@ -583,6 +599,20 @@ export async function signInWithGoogle(params: {
       error: String(error),
     });
   }
+
+  void import("../marketing/email-automation.js")
+    .then((m) =>
+      m.trySendWelcomeAfterRegistration({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: user.name,
+        role: user.role,
+        credit_balance: user.credit_balance,
+      }),
+    )
+    .catch(() => {});
 
   const session = await createSession(user);
   logGoogleOAuthSessionIssued(session, "google-register");

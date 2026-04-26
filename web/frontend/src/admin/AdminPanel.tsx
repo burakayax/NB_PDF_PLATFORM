@@ -1,30 +1,34 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+﻿import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
-  createAdminUser,
-  deleteAdminBlockedEmail,
-  deleteAdminUser,
-  fetchAdminBlockedEmails,
+  fetchAdminAppSettings,
   fetchAdminCms,
+  fetchAdminCoupons,
+  fetchAdminMarketing,
   fetchAdminMediaList,
   fetchAdminOverview,
   fetchAdminPlans,
   fetchAdminSettings,
+  fetchAdminToolRegistry,
   fetchAdminTOOLS,
+  downloadAdminDownloadLogProof,
+  fetchAdminDownloadLogs,
   fetchAdminUsageSeries,
-  fetchAdminUsers,
-  patchAdminUser,
-  postAdminBlockedEmail,
+  type AdminDownloadLogRow,
+  postAdminMarketingBroadcast,
   putAdminCms,
+  putAdminEmailAutomation,
   putAdminPackagesMarketing,
   putAdminPlanPricing,
   putAdminPlansOverride,
   putAdminSettingsPatches,
   putAdminTOOLSConfig,
   uploadAdminMedia,
+  type AdminCouponRow,
   type AdminMediaItem,
   type AdminOverview,
-  type AdminUserRow,
-  type BlockedEmailRow,
+  type AppSettingsPayload,
+  type EmailAutomationConfig,
+  type ToolRegistryRow,
 } from "../api/admin";
 import { saasAuthorizedFetch } from "../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../api/auth";
@@ -33,23 +37,41 @@ import { CMS_PREVIEW_QUERY, postAdminPreviewHighlight, writeCmsPreviewDraft } fr
 import { WORKSPACE_TOOL_IDS } from "../lib/workspaceFeatures";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
+import { SiteForm } from "./command/centerParts";
+import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
+import { AdminCouponManager } from "./coupons/AdminCouponManager";
+import { AdminUserManagement } from "./users/AdminUserManagement";
+import { AdminToolCatalog } from "./tools/AdminToolCatalog";
+import { pdfToolLabelTr } from "./lib/pdfToolLabels";
+import type { AdminUiMode } from "./adminTypes";
+export type { AdminUiMode } from "./adminTypes";
 import {
   AdminField,
   AdminImpactCard,
   AdminMutedBox,
   AdminSaveStrip,
   AdminSection,
-  AdminSidebarNav,
+  AdminToggle,
   ConfirmModal,
   adminInputClass,
   type AdminSaveStripState,
-} from "./AdminUi";
-import type { NavGroup } from "./AdminUi";
+} from "./mosaic/adminPrimitives";
+import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
 import { SystemControlTab } from "./SystemControlTab";
 
-type AdminTabId = "dashboard" | "users" | "packages" | "TOOLS" | "content" | "media" | "settings" | "analytics";
-
-export type AdminUiMode = "simple" | "advanced";
+type AdminTabId =
+  | "dashboard"
+  | "users"
+  | "cmd-tools"
+  | "cmd-site"
+  | "cmd-mkt"
+  | "cmd-coupons"
+  | "packages"
+  | "TOOLS"
+  | "content"
+  | "media"
+  | "settings"
+  | "analytics";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
 
@@ -64,26 +86,42 @@ function readStoredAdminUiMode(): AdminUiMode {
   }
 }
 
-const NAV_GROUPS: NavGroup[] = [
+const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
   {
-    title: "Panel",
+    title: "Genel",
     items: [
-      { id: "dashboard", label: "Genel bakış", hint: "Özet istatistikler" },
-      { id: "users", label: "Kullanıcılar", hint: "Hesaplar" },
-      { id: "packages", label: "Paketler", hint: "Fiyat ve planlar" },
-      { id: "TOOLS", label: "Araçlar", hint: "Araçlar · monetizasyon (SiteSetting)" },
-      { id: "content", label: "İçerik", hint: "Sayfa metinleri ve görseller" },
-      { id: "media", label: "Medya", hint: "Görseller" },
-      { id: "settings", label: "Ayarlar", hint: "Site, güvenlik, sistem" },
-      { id: "analytics", label: "Analitik", hint: "Raporlar ve dışa aktarma" },
+      { id: "dashboard", label: "Kontrol paneli" },
+      { id: "users", label: "Kullanıcılar" },
     ],
   },
-];
+  {
+    title: "Büyüme",
+    items: [
+      { id: "cmd-tools", label: "Araç kataloğu" },
+      { id: "cmd-site", label: "Uygulama & SEO" },
+      { id: "cmd-mkt", label: "Pazarlama" },
+      { id: "cmd-coupons", label: "Kuponlar" },
+    ],
+  },
+  {
+    title: "Platform",
+    items: [
+      { id: "packages", label: "Paket & fiyat" },
+      { id: "TOOLS", label: "Monetizasyon" },
+      { id: "content", label: "İçerik" },
+      { id: "media", label: "Medya" },
+      { id: "settings", label: "Ayarlar" },
+      { id: "analytics", label: "Analitik" },
+    ],
+  },
+]);
 
 function adminTabLabel(id: AdminTabId): string {
   for (const g of NAV_GROUPS) {
     const f = g.items.find((i) => i.id === id);
-    if (f) return f.label;
+    if (f) {
+      return f.label;
+    }
   }
   return id;
 }
@@ -170,21 +208,6 @@ function HourBarTrend({ data, h = 72 }: { data: { hour: number; count: number }[
   );
 }
 
-const PDF_TOOL_LABELS_TR: Record<string, string> = {
-  split: "Sayfa ayır",
-  merge: "PDF birleştir",
-  "pdf-to-word": "PDF → Word",
-  "word-to-pdf": "Word → PDF",
-  "excel-to-pdf": "Excel → PDF",
-  "pdf-to-excel": "PDF → Excel",
-  compress: "Sıkıştır",
-  encrypt: "Şifrele",
-};
-
-function pdfToolLabelTr(featureKey: string): string {
-  return PDF_TOOL_LABELS_TR[featureKey] ?? featureKey;
-}
-
 const DEFAULT_SITE_SETTINGS = {
   theme: "dark",
   defaultLanguage: "en",
@@ -197,7 +220,7 @@ type AdminPanelProps = {
   accessToken: string;
   onExit: () => void;
   onLogout: () => void;
-  /** İleride moderatör rolü için; şimdilik yalnızca tam yönetici paneli. */
+  userEmail: string;
   viewerRole?: "ADMIN" | "STAFF";
 };
 
@@ -220,7 +243,13 @@ function CmsPreviewAnchor({
   );
 }
 
-export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN" }: AdminPanelProps) {
+export function AdminPanel({
+  accessToken,
+  onExit,
+  onLogout,
+  userEmail,
+  viewerRole = "ADMIN",
+}: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTabId>("dashboard");
   const [uiMode, setUiMode] = useState<AdminUiMode>(() => readStoredAdminUiMode());
   const [overview, setOverview] = useState<AdminOverview | null>(null);
@@ -229,6 +258,17 @@ export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN"
     slot: CmsMediaBindSlot;
     url: string;
   } | null>(null);
+  const [cmdTools, setCmdTools] = useState<ToolRegistryRow[] | null>(null);
+  const [cmdSite, setCmdSite] = useState<AppSettingsPayload | null>(null);
+  const [cmdMkt, setCmdMkt] = useState<EmailAutomationConfig | null>(null);
+  const [cmdCoupons, setCmdCoupons] = useState<AdminCouponRow[] | null>(null);
+  const [cmdSaving, setCmdSaving] = useState(false);
+  const [bSubj, setBSubj] = useState("News from NB PDF");
+  const [bHtml, setBHtml] = useState("<p>Hi {{name}}, you have <strong>{{credits}}</strong> credits.</p>");
+  const [bBatch, setBBatch] = useState(40);
+  const [bBusy, setBBusy] = useState(false);
+  const [cBusy, setCBusy] = useState(false);
+  const [cmdErr, setCmdErr] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -268,632 +308,258 @@ export function AdminPanel({ accessToken, onExit, onLogout, viewerRole = "ADMIN"
     return () => window.clearInterval(id);
   }, [tab, loadOverview]);
 
-  return (
-    <div className="admin-shell fixed inset-0 z-[60] flex bg-[#070b14] text-slate-100">
-      <aside className="flex w-[260px] shrink-0 flex-col border-r border-white/[0.08] bg-[#080d18] md:w-[280px]">
-        <div className="border-b border-white/[0.08] px-4 py-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-300/90">Yönetim paneli</p>
-          <p className="mt-1 text-base font-semibold text-white">NB PDF PLARTFORM</p>
-        </div>
-        <AdminSidebarNav groups={NAV_GROUPS} activeId={tab} onSelect={(id) => setTab(id as AdminTabId)} />
-        <div className="border-t border-white/[0.08] px-3 py-3">
-          <p className="text-center text-[12px] font-bold uppercase tracking-wide text-slate-500">Görünüm</p>
-          <div className="mt-2 flex rounded-xl border border-white/[0.1] bg-black/35 p-0.5">
-            <button
-              type="button"
-              onClick={() => setUiMode("simple")}
-              className={`flex-1 rounded-lg px-2 py-2 text-center text-[11px] font-semibold transition-colors ${
-                uiMode === "simple" ? "bg-violet-500/35 text-violet-50 shadow-sm" : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              Basit
-            </button>
-            <button
-              type="button"
-              onClick={() => setUiMode("advanced")}
-              className={`flex-1 rounded-lg px-2 py-2 text-center text-[11px] font-semibold transition-colors ${
-                uiMode === "advanced" ? "bg-violet-500/35 text-violet-50 shadow-sm" : "text-slate-400 hover:text-slate-200"
-              }`}
-            >
-              Gelişmiş
-            </button>
-          </div>
-          <p className="mt-2 text-[12px] leading-snug text-slate-500">
-            {uiMode === "simple" ? "Yalnız temel alanlar; çoğu iş için yeterli." : "Tüm alanlar ve teknik seçenekler."}
-          </p>
-        </div>
-        <div className="border-t border-white/[0.08] p-3 space-y-2">
-          <button
-            type="button"
-            onClick={onExit}
-            className="w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-white/[0.08]"
-          >
-            Uygulamaya dön
-          </button>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="w-full rounded-xl border border-red-500/35 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 hover:bg-red-500/20"
-          >
-            Çıkış yap
-          </button>
-        </div>
-      </aside>
-
-      <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 md:px-8">
-          <div>
-            <h1 className="text-lg font-semibold text-white">{adminTabLabel(tab)}</h1>
-            <p className="mt-0.5 text-[14px] text-slate-500">Değişiklikler kaydedildiğinde site birkaç saniye içinde güncellenir.</p>
-          </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
-            <span
-              className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${
-                uiMode === "simple"
-                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-100"
-                  : "border-amber-500/35 bg-amber-500/10 text-amber-100"
-              }`}
-            >
-              {uiMode === "simple" ? "Basit mod" : "Gelişmiş mod"}
-            </span>
-            <span className="rounded-full border border-violet-500/30 bg-violet-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-violet-200">
-              Yönetici
-            </span>
-          </div>
-        </header>
-        <div className="flex-1 overflow-y-auto px-4 py-6 md:px-8">
-          {loadErr && tab === "dashboard" ? (
-            <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{loadErr}</p>
-          ) : null}
-
-          {tab === "dashboard" ? <DashboardTab overview={overview} uiMode={uiMode} /> : null}
-          {tab === "users" ? <UsersTab accessToken={accessToken} uiMode={uiMode} /> : null}
-          {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
-          {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}
-          {tab === "content" ? (
-            <ContentTab
-              accessToken={accessToken}
-              uiMode={uiMode}
-              pendingMediaBind={pendingCmsMediaBind}
-              onConsumePendingMediaBind={clearPendingCmsMediaBind}
-              onOpenMediaLibrary={() => setTab("media")}
-            />
-          ) : null}
-          {tab === "media" ? <MediaTab accessToken={accessToken} onBindToCms={queueCmsMediaBind} /> : null}
-          {tab === "settings" ? (
-            <SettingsTab accessToken={accessToken} uiMode={uiMode} showSystemTOOLS={viewerRole === "ADMIN"} />
-          ) : null}
-          {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
-        </div>
-      </main>
-    </div>
-  );
-}
-
-function StatCard({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-white/[0.08] bg-[#0c1222]/90 p-4 shadow-inner">
-      <h3 className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-300">{title}</h3>
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
-
-function DashboardTab({ overview, uiMode }: { overview: AdminOverview | null; uiMode: AdminUiMode }) {
-  if (!overview) {
-    return <p className="text-slate-500">Özet yükleniyor…</p>;
-  }
-  const advanced = uiMode === "advanced";
-  const updatedAt = new Date(overview.generatedAt).toLocaleString("tr-TR", {
-    dateStyle: "short",
-    timeStyle: "medium",
-  });
-  return (
-    <div className="space-y-6">
-      {advanced ? (
-        <AdminImpactCard title="Bu sekmede ne değişir?">
-          <p>
-            Özet kartları ve grafikler <strong className="text-slate-100">salt okunur</strong> istatistiktir; kullanıcı davranışını veya site metnini buradan değiştirmezsiniz. Metin ve görseller için{" "}
-            <strong className="text-slate-100">İçerik</strong> / <strong className="text-slate-100">Ayarlar</strong> / <strong className="text-slate-100">Araçlar</strong> sekmelerini kullanın.
-          </p>
-        </AdminImpactCard>
-      ) : (
-        <AdminMutedBox>Bu sayfa özet sayılar gösterir; düzenleme yapılmaz. Metin ve görseller için <strong className="text-slate-200">İçerik</strong> sekmesine gidin.</AdminMutedBox>
-      )}
-      <p className="rounded-xl border border-cyan-500/20 bg-cyan-500/[0.08] px-4 py-3 text-sm text-slate-200">
-        <span className="font-semibold text-cyan-100">Bilgi:</span> Veriler yaklaşık 12 saniyede bir yenilenir.{" "}
-        <span className="font-mono text-[13px] font-semibold text-white">Son güncelleme: {updatedAt}</span>
-      </p>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <StatCard title="Kayıtlı kullanıcılar">
-          <p className="text-3xl font-bold tabular-nums text-white">{overview.totalUsers}</p>
-        </StatCard>
-        <StatCard title="Bugün işlem yapan kullanıcı">
-          <p className="text-3xl font-bold tabular-nums text-cyan-300">{overview.activeUsersToday}</p>
-          <p className="mt-1 text-[12px] text-slate-400">Bugün en az bir PDF işlemi yapan hesap sayısı</p>
-        </StatCard>
-        <StatCard title="Bugün toplam işlem">
-          <p className="text-3xl font-bold tabular-nums text-cyan-300/90">{overview.todayTotalOperations}</p>
-          <p className="mt-1 text-[12px] text-slate-400">UTC güne göre tüm kullanıcılar</p>
-        </StatCard>
-        <StatCard title={`Şu an sitede (son ${overview.presenceWindowMinutes} dk)`}>
-          <p className="text-3xl font-bold tabular-nums text-violet-200">{overview.distinctSessionsActiveNow}</p>
-          {advanced ? (
-            <>
-              <p className="mt-1 text-[11px] text-slate-500">Benzersiz tarayıcı oturumu (sayfa görüntülemesi)</p>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[12px] font-medium text-slate-300">
-                <span>Kayıtlı hesap: {overview.registeredUsersActiveNow}</span>
-                <span>Ziyaretçi oturumu: {overview.anonymousSessionsActiveNow}</span>
-              </div>
-            </>
-          ) : (
-            <p className="mt-1 text-[12px] text-slate-400">Aktif oturum sayısı</p>
-          )}
-        </StatCard>
-        <StatCard title="Ziyaretçi oturumları (anonim, bugün)">
-          <p className="text-3xl font-bold tabular-nums text-amber-200/90">{overview.anonymousSessionsToday}</p>
-        </StatCard>
-        <StatCard title="Kayıtlı oturumlar (bugün)">
-          <p className="text-3xl font-bold tabular-nums text-emerald-300/90">{overview.registeredSessionsToday}</p>
-        </StatCard>
-      </div>
-      {advanced ? (
-      <div className="grid gap-4 lg:grid-cols-2">
-        <StatCard title="Paket dağılımı">
-          <ul className="space-y-2 text-sm">
-            {overview.usagePerPackage.map((p) => (
-              <li key={p.plan} className="flex justify-between border-b border-white/[0.06] border-dashed py-1">
-                <span>{p.plan}</span>
-                <span className="font-mono text-cyan-300">{p.userCount}</span>
-              </li>
-            ))}
-            <li className="flex justify-between pt-2 text-xs font-medium text-slate-400">
-              <span>Tamamlanan ödemeler (tüm zamanlar)</span>
-              <span>{overview.checkoutsCompleted}</span>
-            </li>
-            <li className="flex justify-between text-xs font-medium text-slate-400">
-              <span>Bekleyen ödemeler</span>
-              <span>{overview.checkoutsPending}</span>
-            </li>
-          </ul>
-        </StatCard>
-        <StatCard title="En çok kullanılan araçlar">
-          <p className="mb-2 text-[12px] leading-relaxed text-slate-400">
-            {overview.mostUsedTOOLSAllTimeFallback
-              ? "Son 30 günde veri yok; tüm zamanların toplamı gösteriliyor. İşlem sayısı günlük satırlarındaki son araç alanına göre dağıtılır."
-              : "Son 30 gün, günlük kullanım kayıtlarına göre (işlem sayısı o günkü son araç alanına yazılır)."}
-          </p>
-          {overview.mostUsedTOOLS.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Henüz araç kullanımı yok veya <code className="text-slate-400">lastFeatureKey</code> dolu kayıt bulunmuyor. PDF işlemi yaptıktan sonra burası dolacaktır.
-            </p>
-          ) : (
-            <ul className="max-h-48 space-y-1 overflow-y-auto text-sm">
-              {overview.mostUsedTOOLS.map((t) => (
-                <li key={t.featureKey} className="flex justify-between gap-2">
-                  <span className="min-w-0 truncate">
-                    <span className="text-slate-200">{pdfToolLabelTr(t.featureKey)}</span>
-                    <span className="ml-1 text-[10px] text-slate-600">({t.featureKey})</span>
-                  </span>
-                  <span className="shrink-0 font-mono text-xs text-slate-400" title={`${t.userDayRows} kullanıcı-gün satırı`}>
-                    {t.operationsAttributed}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </StatCard>
-      </div>
-      ) : null}
-      {advanced ? (
-      <StatCard title="Günlük işlemler (son 30 gün, UTC)">
-        <BarTrend data={overview.usageByDay} h={120} />
-      </StatCard>
-      ) : null}
-      {advanced ? (
-      <p className="rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2 text-[12px] leading-relaxed text-slate-300">
-        Anonim sayfa görüntülemeleri (bugün: <span className="font-mono font-semibold text-white">{overview.anonymousPageViewsToday}</span>) ve ödeme akışı. Tam dışa aktarma:{" "}
-        <strong className="text-cyan-200">Analitik</strong> sekmesinde.
-      </p>
-      ) : null}
-    </div>
-  );
-}
-
-function UsersTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
-  const [q, setQ] = useState("");
-  const [page, setPage] = useState(1);
-  const [rows, setRows] = useState<AdminUserRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newFirst, setNewFirst] = useState("");
-  const [newLast, setNewLast] = useState("");
-  const [blocked, setBlocked] = useState<BlockedEmailRow[]>([]);
-  const [blockEmailInput, setBlockEmailInput] = useState("");
-  const [blockReasonInput, setBlockReasonInput] = useState("");
-  const [confirmDlg, setConfirmDlg] = useState<{
-    title: string;
-    message: string;
-    action: () => Promise<void>;
-    confirmLabel?: string;
-  } | null>(null);
-  const [confirmBusy, setConfirmBusy] = useState(false);
-  const advanced = uiMode === "advanced";
-
-  const requestDangerConfirm = useCallback(
-    (opts: { title: string; message: string; confirmLabel?: string; action: () => Promise<void> }) => {
-      setConfirmDlg(opts);
-    },
-    [],
-  );
-
-  const loadBlocked = useCallback(async () => {
-    try {
-      setBlocked(await fetchAdminBlockedEmails(accessToken));
-    } catch {
-      /* ignore list errors — table still usable */
+  useEffect(() => {
+    if (tab !== "cmd-tools") {
+      return;
     }
-  }, [accessToken]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await fetchAdminUsers(accessToken, { q, page, pageSize: 20, sort: "createdAt", dir: "desc" });
-      setRows(res.items);
-      setTotal(res.total);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "İstek başarısız");
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken, q, page]);
+    setCmdErr(null);
+    void (async () => {
+      try {
+        setCmdTools(await fetchAdminToolRegistry(accessToken));
+      } catch (e) {
+        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
+      }
+    })();
+  }, [tab, accessToken]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (tab !== "cmd-site") {
+      return;
+    }
+    setCmdErr(null);
+    void (async () => {
+      try {
+        setCmdSite(await fetchAdminAppSettings(accessToken));
+      } catch (e) {
+        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
+      }
+    })();
+  }, [tab, accessToken]);
 
   useEffect(() => {
-    void loadBlocked();
-  }, [loadBlocked]);
+    if (tab !== "cmd-mkt") {
+      return;
+    }
+    setCmdErr(null);
+    void (async () => {
+      try {
+        const r = await fetchAdminMarketing(accessToken);
+        setCmdMkt(r.automation);
+      } catch (e) {
+        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
+      }
+    })();
+  }, [tab, accessToken]);
+
+  useEffect(() => {
+    if (tab !== "cmd-coupons") {
+      return;
+    }
+    setCmdErr(null);
+    void (async () => {
+      try {
+        const r = await fetchAdminCoupons(accessToken);
+        setCmdCoupons(r.items);
+      } catch (e) {
+        setCmdErr(e instanceof Error ? e.message : "Yüklenemedi");
+      }
+    })();
+  }, [tab, accessToken]);
 
   return (
-    <div className="space-y-6">
-      <ConfirmModal
-        open={!!confirmDlg}
-        title={confirmDlg?.title ?? ""}
-        message={confirmDlg?.message ?? ""}
-        confirmLabel={confirmDlg?.confirmLabel ?? "Onayla"}
-        cancelLabel="Vazgeç"
-        variant="danger"
-        busy={confirmBusy}
-        onClose={() => {
-          if (!confirmBusy) setConfirmDlg(null);
-        }}
-        onConfirm={async () => {
-          if (!confirmDlg) return;
-          setConfirmBusy(true);
-          try {
-            await confirmDlg.action();
-            setConfirmDlg(null);
-          } finally {
-            setConfirmBusy(false);
-          }
-        }}
-      />
-      {advanced ? (
-        <AdminImpactCard title="Bu sekmede ne değişir?">
-          <p>
-            Plan ve rol güncellemeleri <strong className="text-slate-100">hemen</strong> ilgili kullanıcının oturumunda geçerli olur (bir sonraki API çağrısında). Silme ve e-posta engeli{" "}
-            <strong className="text-slate-100">kalıcıdır</strong>; engelli adresle yeni kayıt açılamaz.
-          </p>
-        </AdminImpactCard>
-      ) : (
-        <AdminMutedBox>Kullanıcı planını veya rolünü değiştirip Kaydet’e basın. Silme işlemi geri alınamaz.</AdminMutedBox>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <input
-          value={q}
-          onChange={(e) => {
-            setPage(1);
-            setQ(e.target.value);
-          }}
-          placeholder="E-posta, ad ara…"
-          className="min-w-[200px] flex-1 rounded-xl border border-white/[0.1] bg-black/30 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500/35"
-        />
-        <button type="button" onClick={() => void load()} className="rounded-xl bg-white/[0.08] px-4 py-2 text-xs font-semibold">
-          Ara
-        </button>
-        <button type="button" onClick={() => setCreateOpen((v) => !v)} className="rounded-xl bg-violet-500/20 px-4 py-2 text-xs font-semibold text-violet-100">
-          {createOpen ? "Formu kapat" : "Kullanıcı ekle"}
-        </button>
-      </div>
-      {createOpen ? (
-        <AdminSection title="Yeni kullanıcı" description="Test veya davet için hesap oluşturur; e-posta bu panelde otomatik doğrulanmış sayılır.">
-          <form
-            className="grid gap-5 sm:grid-cols-2"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              try {
-                await createAdminUser(accessToken, {
-                  email: newEmail,
-                  password: newPassword,
-                  firstName: newFirst,
-                  lastName: newLast,
-                  plan: "FREE",
-                  skipEmailVerification: true,
-                });
-                setNewEmail("");
-                setNewPassword("");
-                setCreateOpen(false);
-                void load();
-              } catch (er) {
-                setErr(er instanceof Error ? er.message : "Oluşturma başarısız");
-              }
+    <MosaicLayout
+      navGroups={NAV_GROUPS}
+      activeId={tab}
+      onNavigate={(id) => setTab(id as AdminTabId)}
+      pageTitle={adminTabLabel(tab)}
+      pageSubtitle="NB PDF · yönetici konsolu"
+      userEmail={userEmail}
+      onExit={onExit}
+      onLogout={onLogout}
+      simpleMode={uiMode === "simple"}
+      onSimpleMode={(v) => setUiMode(v ? "simple" : "advanced")}
+    >
+      <div className="px-4 py-6 md:px-8">
+        {cmdErr && ["cmd-tools", "cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
+          <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{cmdErr}</p>
+        ) : null}
+        {loadErr && tab === "dashboard" ? (
+          <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{loadErr}</p>
+        ) : null}
+
+        {tab === "dashboard" ? (
+          overview ? (
+            <AdminDashboardHome overview={overview} uiMode={uiMode} />
+          ) : (
+            <p className="text-slate-500">Özet yükleniyor…</p>
+          )
+        ) : null}
+        {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
+
+        {tab === "cmd-tools" ? (
+          <AdminToolCatalog
+            tools={cmdTools}
+            accessToken={accessToken}
+            onUpdated={(next) => {
+              setCmdTools((cur) => (cur ? cur.map((t) => (t.id === next.id ? { ...t, ...next } : t)) : cur));
             }}
-          >
-            <AdminField label="E-posta" description="Girişte kullanılacak benzersiz adres.">
-              <input required type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className={adminInputClass} />
-            </AdminField>
-            <AdminField label="Şifre" description="En az 8 karakter; kullanıcıya güvenli kanaldan iletin.">
-              <input required type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={adminInputClass} />
-            </AdminField>
-            <AdminField label="Ad">
-              <input value={newFirst} onChange={(e) => setNewFirst(e.target.value)} className={adminInputClass} />
-            </AdminField>
-            <AdminField label="Soyad">
-              <input value={newLast} onChange={(e) => setNewLast(e.target.value)} className={adminInputClass} />
-            </AdminField>
-            <button type="submit" className="sm:col-span-2 rounded-xl bg-violet-600/80 py-2.5 text-sm font-semibold text-white">
-              Kullanıcıyı oluştur
-            </button>
-          </form>
-        </AdminSection>
-      ) : null}
-      {err ? <p className="text-sm text-red-300">{err}</p> : null}
-      <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
-        <table className="w-full min-w-[880px] text-left text-xs">
-          <thead className="border-b border-white/[0.08] bg-white/[0.03] text-[10px] uppercase tracking-wider text-slate-500">
-            <tr>
-              <th className="px-3 py-2">E-posta</th>
-              <th className="px-3 py-2">Plan</th>
-              <th className="px-3 py-2">Rol</th>
-              <th className="px-3 py-2">Bugün</th>
-              <th className="px-3 py-2">Doğrulandı</th>
-              <th className="px-3 py-2">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan={6} className="px-3 py-8 text-center text-slate-500">
-                  Yükleniyor…
-                </td>
-              </tr>
-            ) : (
-              rows.map((u) => (
-                <UserRow
-                  key={u.id}
-                  u={u}
-                  accessToken={accessToken}
-                  onSaved={load}
-                  onBlockedListChange={loadBlocked}
-                  requestDangerConfirm={requestDangerConfirm}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      <div className="flex justify-between text-xs text-slate-500">
-        <span>
-          {total} kullanıcı · sayfa {page}
-        </span>
-        <div className="flex gap-2">
-          <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg border border-white/[0.1] px-2 py-1 disabled:opacity-30">
-            Önceki
-          </button>
-          <button type="button" disabled={page * 20 >= total} onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-white/[0.1] px-2 py-1 disabled:opacity-30">
-            Sonraki
-          </button>
-        </div>
-      </div>
-      {advanced ? (
-      <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.06] p-4">
-        <p className="text-sm font-semibold text-amber-100/95">Engelli e-postalar (yeni kayıt / Google ile hesap yok)</p>
-        <p className="mt-1 text-[11px] text-slate-500">
-          Listede olan normalize adreslerle sistemde hesap oluşturulamaz. Kullanıcıyı silip aynı anda engellemek için satırdaki «Sil + engelle» kullanın.
-        </p>
-        <form
-          className="mt-3 flex flex-wrap items-end gap-2"
-          onSubmit={async (e) => {
-            e.preventDefault();
-            if (!blockEmailInput.trim()) return;
-            setErr(null);
-            try {
-              await postAdminBlockedEmail(accessToken, { email: blockEmailInput.trim(), reason: blockReasonInput.trim() || undefined });
-              setBlockEmailInput("");
-              setBlockReasonInput("");
-              await loadBlocked();
-            } catch (er) {
-              setErr(er instanceof Error ? er.message : "Engel eklenemedi");
-            }
-          }}
-        >
-          <input
-            type="email"
-            required
-            placeholder="E-posta ekle"
-            value={blockEmailInput}
-            onChange={(e) => setBlockEmailInput(e.target.value)}
-            className="min-w-[200px] flex-1 rounded-lg border border-white/[0.1] bg-black/40 px-3 py-2 text-sm"
+            onError={setCmdErr}
           />
-          <input
-            placeholder="Not (isteğe bağlı)"
-            value={blockReasonInput}
-            onChange={(e) => setBlockReasonInput(e.target.value)}
-            className="min-w-[160px] flex-1 rounded-lg border border-white/[0.1] bg-black/40 px-3 py-2 text-sm"
+        ) : null}
+
+        {tab === "cmd-site" ? (
+          <SiteForm
+            site={cmdSite}
+            accessToken={accessToken}
+            saving={cmdSaving}
+            setSaving={setCmdSaving}
+            onLoaded={setCmdSite}
+            onError={setCmdErr}
           />
-          <button type="submit" className="rounded-xl bg-amber-500/25 px-4 py-2 text-xs font-semibold text-amber-50">
-            Listeye ekle
-          </button>
-        </form>
-        <ul className="mt-3 max-h-40 space-y-1 overflow-y-auto text-[11px]">
-          {blocked.length === 0 ? <li className="text-slate-500">Liste boş.</li> : null}
-          {blocked.map((b) => (
-            <li key={b.email} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/[0.06] bg-black/25 px-2 py-1.5">
-              <span className="font-mono text-slate-200">{b.email}</span>
-              <span className="text-slate-500">{b.reason ?? "—"}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  requestDangerConfirm({
-                    title: "Engeli kaldır",
-                    message: `${b.email} adresi engelli listeden çıkarılacak; bu adresle yeni kayıt tekrar mümkün olur.`,
-                    confirmLabel: "Engeli kaldır",
-                    action: async () => {
-                      setErr(null);
-                      try {
-                        await deleteAdminBlockedEmail(accessToken, b.email);
-                        await loadBlocked();
-                      } catch (er) {
-                        setErr(er instanceof Error ? er.message : "Kaldırılamadı");
+        ) : null}
+
+        {tab === "cmd-mkt" && cmdMkt ? (
+          <div className="max-w-5xl space-y-6">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                <h2 className="text-sm font-semibold tracking-tight text-white">E-posta otomasyonu</h2>
+                <p className="mt-1 text-xs text-slate-500">Hoş geldin ve düşük kredi tetikleyicileri</p>
+                <div className="mt-5 space-y-4">
+                  <AdminToggle
+                    id="mkt-welcome"
+                    label="Hoş geldin e-postası"
+                    description="Yeni hesaplara otomatik mesaj"
+                    checked={cmdMkt.welcomeEnabled}
+                    onChange={(welcomeEnabled) => setCmdMkt({ ...cmdMkt, welcomeEnabled })}
+                  />
+                  <AdminToggle
+                    id="mkt-low"
+                    label="Düşük kredi uyarısı"
+                    description="Eşiğin altında hatırlatma"
+                    checked={cmdMkt.lowCreditEnabled}
+                    onChange={(lowCreditEnabled) => setCmdMkt({ ...cmdMkt, lowCreditEnabled })}
+                  />
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <AdminField label="Eşik" description="Kalan kredi bu değerin altına düşünce uyar.">
+                    <input
+                      className={adminInputClass}
+                      type="number"
+                      value={cmdMkt.lowCreditThreshold}
+                      onChange={(e) =>
+                        setCmdMkt({ ...cmdMkt, lowCreditThreshold: Math.max(0, Number(e.target.value) || 0) })
                       }
-                    },
-                  });
-                }}
-                className="rounded-md border border-white/[0.12] px-2 py-0.5 text-[10px] text-slate-300 hover:bg-white/[0.06]"
-              >
-                Engeli kaldır
-              </button>
-            </li>
-          ))}
-        </ul>
+                    />
+                  </AdminField>
+                  <AdminField label="Bekleme (gün)" description="Aynı kullanıcıya tekrar aralığı">
+                    <input
+                      className={adminInputClass}
+                      type="number"
+                      value={cmdMkt.lowCreditCooldownDays}
+                      onChange={(e) =>
+                        setCmdMkt({ ...cmdMkt, lowCreditCooldownDays: Math.max(1, Number(e.target.value) || 1) })
+                      }
+                    />
+                  </AdminField>
+                </div>
+                <div className="mt-2">
+                  <AdminField label="CTA URL" description="Düşük kredi e-postasındaki buton hedefi">
+                    <input
+                      className={adminInputClass}
+                      value={cmdMkt.discountCtaUrl}
+                      onChange={(e) => setCmdMkt({ ...cmdMkt, discountCtaUrl: e.target.value })}
+                    />
+                  </AdminField>
+                </div>
+                <button
+                  type="button"
+                  className="mt-4 w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-500"
+                  onClick={() =>
+                    void putAdminEmailAutomation(accessToken, cmdMkt)
+                      .then((r) => setCmdMkt(r.automation))
+                      .catch((e: Error) => setCmdErr(e.message))
+                  }
+                >
+                  Otomasyonu kaydet
+                </button>
+              </div>
+              <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-950/40 to-slate-900/30 p-5 shadow-[inset_0_1px_0_rgba(252,211,77,0.12)]">
+                <h2 className="text-sm font-semibold text-amber-100">Kampanya yayını</h2>
+                <p className="mt-1 text-xs text-amber-200/50">Toplu e-posta — dikkatli kullanın</p>
+                <input
+                  className={`${adminInputClass} mt-4`}
+                  value={bSubj}
+                  onChange={(e) => setBSubj(e.target.value)}
+                  placeholder="Konu"
+                />
+                <textarea
+                  className={`${adminInputClass} mt-2 min-h-[120px] font-mono text-xs`}
+                  value={bHtml}
+                  onChange={(e) => setBHtml(e.target.value)}
+                />
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-amber-200/60">Parti boyutu</span>
+                  <input
+                    className={`${adminInputClass} w-24`}
+                    type="number"
+                    value={bBatch}
+                    onChange={(e) => setBBatch(Math.min(80, Math.max(5, Number(e.target.value) || 40)))}
+                  />
+                </div>
+                <button
+                  type="button"
+                  disabled={bBusy}
+                  className="mt-4 w-full rounded-xl border border-amber-500/40 bg-amber-500/20 px-4 py-2.5 text-sm font-semibold text-amber-50 shadow-sm transition hover:bg-amber-500/30 disabled:opacity-40"
+                  onClick={() => {
+                    if (!window.confirm("Tüm kullanıcılara gönderilsin mi?")) {
+                      return;
+                    }
+                    setBBusy(true);
+                    setCmdErr(null);
+                    void postAdminMarketingBroadcast(accessToken, { subject: bSubj, html: bHtml, batchSize: bBatch })
+                      .then((r) => window.alert(`Gönderildi: ${r.sent}, hata: ${r.failedCount}`))
+                      .catch((e: Error) => setCmdErr(e.message))
+                      .finally(() => setBBusy(false));
+                  }}
+                >
+                  {bBusy ? "Gönderiliyor…" : "Gönder"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : tab === "cmd-mkt" ? (
+          <p className="text-slate-500">Yükleniyor…</p>
+        ) : null}
+
+        {tab === "cmd-coupons" ? (
+          <AdminCouponManager
+            accessToken={accessToken}
+            items={cmdCoupons}
+            onUpdateList={setCmdCoupons}
+            onError={setCmdErr}
+            busy={cBusy}
+            onBusy={setCBusy}
+          />
+        ) : null}
+
+        {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
+        {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}
+        {tab === "content" ? (
+          <ContentTab
+            accessToken={accessToken}
+            uiMode={uiMode}
+            pendingMediaBind={pendingCmsMediaBind}
+            onConsumePendingMediaBind={clearPendingCmsMediaBind}
+            onOpenMediaLibrary={() => setTab("media")}
+          />
+        ) : null}
+        {tab === "media" ? <MediaTab accessToken={accessToken} onBindToCms={queueCmsMediaBind} /> : null}
+        {tab === "settings" ? (
+          <SettingsTab accessToken={accessToken} uiMode={uiMode} showSystemTOOLS={viewerRole === "ADMIN"} />
+        ) : null}
+        {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
       </div>
-      ) : null}
-
-      {advanced ? (
-      <p className="text-[11px] text-slate-500">
-        “Yönetici” API erişimi yapılandırılmış yönetici e-posta kuralına bağlıdır; JWT rolü e-postadan türetilir. Veritabanındaki rol kayıt içindir—e-posta tabanlı yönetici denetimleri politika uyumlu olana kadar bunu aşmaz.
-      </p>
-      ) : null}
-    </div>
-  );
-}
-
-function UserRow({
-  u,
-  accessToken,
-  onSaved,
-  onBlockedListChange,
-  requestDangerConfirm,
-}: {
-  u: AdminUserRow;
-  accessToken: string;
-  onSaved: () => void;
-  onBlockedListChange: () => void;
-  requestDangerConfirm: (opts: { title: string; message: string; confirmLabel?: string; action: () => Promise<void> }) => void;
-}) {
-  const [plan, setPlan] = useState(u.plan);
-  const [role, setRole] = useState(u.role);
-  const [saving, setSaving] = useState(false);
-
-  return (
-    <tr className="border-b border-white/[0.05] hover:bg-white/[0.02]">
-      <td className="px-3 py-2 font-medium text-slate-200">{u.email}</td>
-      <td className="px-3 py-2">
-        <select value={plan} onChange={(e) => setPlan(e.target.value)} className="rounded border border-white/[0.1] bg-black/40 px-1 py-1 text-[11px]">
-          <option value="FREE">FREE</option>
-          <option value="PRO">PRO</option>
-          <option value="BUSINESS">BUSINESS</option>
-        </select>
-      </td>
-      <td className="px-3 py-2">
-        <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded border border-white/[0.1] bg-black/40 px-1 py-1 text-[11px]">
-          <option value="USER">USER</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-      </td>
-      <td className="px-3 py-2 font-mono text-[11px] text-slate-400">
-        {u.usageToday ? `${u.usageToday.operationsCount} (+${u.usageToday.postLimitExtraOps} kota sonrası)` : "—"}
-      </td>
-      <td className="px-3 py-2">{u.isVerified ? "Evet" : "Hayır"}</td>
-      <td className="px-3 py-2">
-        <div className="flex flex-wrap gap-1">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={async () => {
-              setSaving(true);
-              try {
-                await patchAdminUser(accessToken, u.id, { plan, role });
-                await onSaved();
-              } finally {
-                setSaving(false);
-              }
-            }}
-            className="rounded-lg bg-cyan-500/20 px-2 py-1 text-[11px] font-semibold text-cyan-100"
-          >
-            Kaydet
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() =>
-              requestDangerConfirm({
-                title: "Kullanıcıyı sil",
-                message: `${u.email} kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
-                confirmLabel: "Evet, sil",
-                action: async () => {
-                  setSaving(true);
-                  try {
-                    await deleteAdminUser(accessToken, u.id, false);
-                    await onSaved();
-                  } catch (e) {
-                    window.alert(e instanceof Error ? e.message : "Silinemedi");
-                  } finally {
-                    setSaving(false);
-                  }
-                },
-              })
-            }
-            className="rounded-lg border border-white/[0.12] px-2 py-1 text-[11px] text-slate-300 hover:bg-white/[0.04]"
-          >
-            Sil
-          </button>
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() =>
-              requestDangerConfirm({
-                title: "Sil ve engelle",
-                message: `${u.email} hesabı silinecek ve bu e-posta kara listeye eklenecek; aynı adresle yeni kayıt açılamaz.`,
-                confirmLabel: "Sil ve engelle",
-                action: async () => {
-                  setSaving(true);
-                  try {
-                    await deleteAdminUser(accessToken, u.id, true);
-                    await onSaved();
-                    onBlockedListChange();
-                  } catch (e) {
-                    window.alert(e instanceof Error ? e.message : "İşlem başarısız");
-                  } finally {
-                    setSaving(false);
-                  }
-                },
-              })
-            }
-            className="rounded-lg border border-rose-500/35 bg-rose-500/15 px-2 py-1 text-[11px] font-semibold text-rose-100 hover:bg-rose-500/25"
-          >
-            Sil + engelle
-          </button>
-        </div>
-      </td>
-    </tr>
+    </MosaicLayout>
   );
 }
 
@@ -3029,6 +2695,7 @@ function AnalyticsTab({
   uiMode: AdminUiMode;
 }) {
   const [series, setSeries] = useState<{ date: string; totalOperations: number }[]>([]);
+  const [downloadLogs, setDownloadLogs] = useState<AdminDownloadLogRow[]>([]);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const advanced = uiMode === "advanced";
@@ -3048,6 +2715,20 @@ function AnalyticsTab({
     void (async () => {
       const { series: s } = await fetchAdminUsageSeries(accessToken, 30);
       setSeries(s);
+    })();
+  }, [accessToken, advanced]);
+
+  useEffect(() => {
+    if (!advanced) {
+      return;
+    }
+    void (async () => {
+      try {
+        const { items } = await fetchAdminDownloadLogs(accessToken, 200);
+        setDownloadLogs(items);
+      } catch {
+        setDownloadLogs([]);
+      }
     })();
   }, [accessToken, advanced]);
 
@@ -3104,6 +2785,50 @@ function AnalyticsTab({
         <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-200">Kullanım serisi (API)</h3>
         <BarTrend data={series} />
       </section>
+      ) : null}
+      {advanced ? (
+        <section className="rounded-2xl border border-white/[0.08] p-4">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">İndirme kayıtları (son 1 yıl)</h3>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Kanıt: SUCCESS yalnızca istemcinin indirme sonrası ACK göndermesiyle oluşur.
+          </p>
+          {downloadLogs.length === 0 ? (
+            <p className="mt-2 text-xs text-slate-500">Henüz kayıt yok veya yüklenemedi.</p>
+          ) : (
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[640px] border-collapse text-left text-[11px] text-slate-300">
+                <thead>
+                  <tr className="border-b border-white/10 text-slate-500">
+                    <th className="py-1.5 pr-2 font-semibold">Oluştu (UTC)</th>
+                    <th className="py-1.5 pr-2 font-semibold">Araç</th>
+                    <th className="py-1.5 pr-2 font-semibold">E-posta</th>
+                    <th className="py-1.5 pr-2 font-semibold">Durum</th>
+                    <th className="py-1.5 font-semibold">Kanıt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {downloadLogs.map((row) => (
+                    <tr key={row.id} className="border-b border-white/[0.04]">
+                      <td className="py-1.5 pr-2 font-mono text-[10px] text-slate-400">{row.createdAt.slice(0, 19)}Z</td>
+                      <td className="py-1.5 pr-2">{row.toolId}</td>
+                      <td className="max-w-[180px] truncate py-1.5 pr-2">{row.userEmail}</td>
+                      <td className="py-1.5 pr-2">{row.status}</td>
+                      <td className="py-1.5">
+                        <button
+                          type="button"
+                          className="rounded bg-slate-700/80 px-2 py-0.5 text-[10px] font-semibold text-slate-200 hover:bg-slate-600"
+                          onClick={() => void downloadAdminDownloadLogProof(accessToken, row.id)}
+                        >
+                          Download Proof
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       ) : null}
       {advanced ? (
       <section className="rounded-2xl border border-white/[0.08] p-4">

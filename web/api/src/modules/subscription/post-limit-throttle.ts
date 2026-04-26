@@ -156,77 +156,10 @@ export function computePostLimitThrottle(params: {
   throttleRuntime: PostLimitThrottleRuntime;
   conversionMessaging?: ConversionMessagingThresholds;
 }): PostLimitThrottle | null {
-  const {
-    userPlan,
-    usedToday,
-    dailyLimit,
-    featureKey,
-    totalSizeBytes,
-    postLimitExtraOps = 0,
-    throttleOpNumber,
-    behaviorStressMultiplier = 1,
-    lifetimeThrottleEvents,
-    lifetimeTotalOps,
-    conversionCtaOverrides,
-    throttleRuntime: rt,
-    conversionMessaging = DEFAULT_CONVERSION_MESSAGING_THRESHOLDS,
-  } = params;
-  if (userPlan !== "FREE") {
-    return null;
-  }
-
-  if (!rt.delaysEnabled) {
-    return null;
-  }
-
-  const nextOp = usedToday + 1;
-  const { min, max } = tierBaseRangeMs(nextOp, rt);
-  if (max <= 0) {
-    return null;
-  }
-
-  const base = randomInclusiveMs(min, max);
-  const loadFactor = rt.featureWeights[featureKey] ?? 1;
-  const sizeF = fileSizeDelayFactor(totalSizeBytes ?? undefined, rt);
-  const depthF = usageDepthMultiplier(nextOp, rt);
-  const behaviorF = Math.min(1.45, Math.max(1, behaviorStressMultiplier));
-  const combined = base * loadFactor * sizeF * depthF * behaviorF;
-  const delayMs = finalizeSmartDelayMs(combined, rt);
-
-  const { message, upgradeCta } = buildThrottleConversionCopy(
-    {
-      usedToday,
-      dailyLimit,
-      freeOpsBeforeThrottle: rt.freeOpsBeforeThrottle,
-      postLimitExtraOps,
-      throttleEventNumber: throttleOpNumber,
-      lifetimeThrottleEvents,
-      lifetimeTotalOps,
-    },
-    conversionCtaOverrides,
-    conversionMessaging,
-  );
-
-  return {
-    delayMs,
-    message,
-    usageSummary:
-      dailyLimit !== null
-        ? formatFreeUsageLine(usedToday + 1, dailyLimit)
-        : `Operation ${nextOp} today (Free tier may add wait time).`,
-    reducedOutputQuality: true,
-    priorityProcessing: false,
-    upgradeCta,
-    conversionTracking: {
-      freeLimitExceeded: true,
-      softFrictionActive: true,
-      operationsToday: usedToday,
-      dailyLimit,
-      softFrictionAfterOps: rt.freeOpsBeforeThrottle,
-      postLimitExtraOps,
-      postLimitThrottleEventsToday: throttleOpNumber,
-    },
-  };
+  // Legacy FREE-tier artificial delays (progressive throttling) removed — all users
+  // at full server speed. Usage analytics / CTA still live in subscription.service.
+  void params;
+  return null;
 }
 
 export function sleepMs(ms: number): Promise<void> {

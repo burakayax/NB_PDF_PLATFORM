@@ -1,11 +1,19 @@
 import type { Request, Response } from "express";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
+import { prisma } from "../../lib/prisma.js";
+import { normalizeCouponCode } from "../coupon/coupon.service.js";
 import {
+  adminAdjustCreditsBodySchema,
+  adminAppSettingsPutSchema,
+  emailAutomationBodySchema,
+  marketingBroadcastBodySchema,
   adminAuditQuerySchema,
   adminBlockedEmailBodySchema,
   adminBlockedEmailQuerySchema,
   adminCreateUserSchema,
+  adminCouponCreateSchema,
+  adminCouponPatchSchema,
   adminDeleteUserQuerySchema,
   adminGrantCreditsSchema,
   adminListUsersQuerySchema,
@@ -14,11 +22,12 @@ import {
   adminResetBodySchema,
   adminRevisionsQuerySchema,
   adminRollbackBodySchema,
+  adminToolRegistryPutSchema,
   adminUpdateUserSchema,
   adminUsageExportQuerySchema,
   adminUsageSeriesQuerySchema,
 } from "./admin.schema.js";
-import { grantCredits } from "../subscription/entitlement.engine.js";
+import { grantCredits, subtractCreditsByAdmin } from "../subscription/entitlement.engine.js";
 import {
   adminAddBlockedEmailRaw,
   adminListBlockedEmails,
@@ -29,18 +38,28 @@ import {
   deleteUserForAdmin,
   getAdminOverview,
   getAllSiteSettings,
+  getAppSettingsForAdmin,
   getCmsContent,
   getPlansAdminPayload,
   getTOOLSAdminPayload,
   getUsageSeries,
+  listToolRegistryForAdmin,
   listUsersForAdmin,
   patchSiteSettings,
   putCmsContent,
   putPackagesMarketing,
   putPlansOverride,
   putTOOLSConfig,
+  updateAppSettingsForAdmin,
+  updateToolRegistryForAdmin,
   updateUserForAdmin,
 } from "./admin.service.js";
+import {
+  broadcastCampaignToAllUsers,
+  getMarketingAdminPayload,
+  putMarketingAutomation,
+} from "./marketing-admin.service.js";
+import { readEmailAutomationConfig } from "../marketing/email-automation.js";
 import { buildPublicMediaUrl, listMediaAssets, persistMediaUpload } from "./media.service.js";
 import {
   listAdminAuditLogs,
@@ -386,4 +405,269 @@ export async function adminGrantCreditsController(request: Request, response: Re
     creditsBefore: result.creditsBefore,
     creditsAfter: result.creditsAfter,
   });
+}
+
+export async function adminListToolRegistryController(_request: Request, response: Response) {
+  const items = await listToolRegistryForAdmin();
+  response.json({ items });
+}
+
+export async function adminPutToolRegistryController(request: Request, response: Response) {
+  const raw = request.params.id;
+  const id = Array.isArray(raw) ? raw[0] : raw;
+  if (!id) {
+    throw new HttpError(400, "Tool id is required.");
+  }
+  const parsed = adminToolRegistryPutSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const updated = await updateToolRegistryForAdmin(id, parsed.data, adminActor(request));
+  response.json(updated);
+}
+
+export async function adminGetAppSettingsController(_request: Request, response: Response) {
+  const row = await getAppSettingsForAdmin();
+  response.json(row);
+}
+
+export async function adminPutAppSettingsController(request: Request, response: Response) {
+  const parsed = adminAppSettingsPutSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  if (Object.keys(parsed.data).length === 0) {
+    throw new HttpError(400, "At least one field is required.");
+  }
+  const updated = await updateAppSettingsForAdmin(parsed.data, adminActor(request));
+  response.json(updated);
+}
+
+/**
+ * Non-zero signed adjustment: positive top-up (`admin_add`), negative removal (`admin_subtract`).
+ */
+export async function adminAdjustCreditsController(request: Request, response: Response) {
+  const parsed = adminAdjustCreditsBodySchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { userId, amount, reason } = parsed.data;
+  const actor = adminActor(request);
+
+  try {
+    if (amount > 0) {
+      const result = await grantCredits(userId, amount, "admin_add");
+      await logAdminAudit(actor, "credits.grant", userId, `Admin adjusted +${amount} credits (reason: ${reason})`, {
+        amount,
+        reason,
+        transactionId: result.transactionId,
+        creditsBefore: result.creditsBefore,
+        creditsAfter: result.creditsAfter,
+      });
+      return response.status(200).json({
+        ok: true,
+        userId,
+        amount,
+        reason,
+        transactionId: result.transactionId,
+        creditsBefore: result.creditsBefore,
+        creditsAfter: result.creditsAfter,
+      });
+    }
+    const result = await subtractCreditsByAdmin(userId, Math.abs(amount));
+    await logAdminAudit(
+      actor,
+      "credits.subtract",
+      userId,
+      `Admin adjusted ${amount} credits (reason: ${reason})`,
+      {
+        amount,
+        reason,
+        transactionId: result.transactionId || null,
+        creditsBefore: result.creditsBefore,
+        creditsAfter: result.creditsAfter,
+      },
+    );
+    return response.status(200).json({
+      ok: true,
+      userId,
+      amount,
+      reason,
+      transactionId: result.transactionId || null,
+      creditsBefore: result.creditsBefore,
+      creditsAfter: result.creditsAfter,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("user not found")) {
+      throw new HttpError(404, "User not found.");
+    }
+    throw new HttpError(400, message);
+  }
+}
+
+export async function adminGetMarketingController(_request: Request, response: Response) {
+  const payload = await getMarketingAdminPayload();
+  response.json(payload);
+}
+
+export async function adminPutMarketingAutomationController(request: Request, response: Response) {
+  const parsed = emailAutomationBodySchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const current = await readEmailAutomationConfig();
+  const next = { ...current, ...parsed.data };
+  await putMarketingAutomation(next, adminActor(request));
+  response.json({ ok: true, automation: next });
+}
+
+export async function adminPostMarketingBroadcastController(request: Request, response: Response) {
+  const parsed = marketingBroadcastBodySchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { subject, html, batchSize } = parsed.data;
+  const result = await broadcastCampaignToAllUsers(subject, html, batchSize, adminActor(request));
+  response.json({ ok: true, ...result });
+}
+
+export async function adminListCouponsController(_request: Request, response: Response) {
+  const items = await prisma.coupon.findMany({
+    orderBy: { createdAt: "desc" },
+    include: { _count: { select: { uses: true } } },
+  });
+  response.json({
+    items: items.map((c) => ({
+      id: c.id,
+      code: c.code,
+      discountPercent: c.discountPercent,
+      isActive: c.isActive,
+      usageLimitPerUser: c.usageLimitPerUser,
+      totalUses: c._count.uses,
+      createdAt: c.createdAt.toISOString(),
+    })),
+  });
+}
+
+export async function adminCreateCouponController(request: Request, response: Response) {
+  const parsed = adminCouponCreateSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const code = normalizeCouponCode(parsed.data.code);
+  try {
+    const created = await prisma.coupon.create({
+      data: {
+        code,
+        discountPercent: parsed.data.discountPercent,
+        isActive: parsed.data.isActive ?? true,
+        usageLimitPerUser: parsed.data.usageLimitPerUser ?? 1,
+      },
+    });
+    response.status(201).json({
+      id: created.id,
+      code: created.code,
+      discountPercent: created.discountPercent,
+      isActive: created.isActive,
+      usageLimitPerUser: created.usageLimitPerUser,
+      totalUses: 0,
+      createdAt: created.createdAt.toISOString(),
+    });
+  } catch (e) {
+    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+      throw new HttpError(409, "A coupon with this code already exists.");
+    }
+    throw e;
+  }
+}
+
+export async function adminPatchCouponController(request: Request, response: Response) {
+  const paramId = request.params["id"];
+  const id = typeof paramId === "string" ? paramId : "";
+  if (!id) {
+    throw new HttpError(400, "Missing coupon id.");
+  }
+  const parsed = adminCouponPatchSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  if (Object.keys(parsed.data).length === 0) {
+    throw new HttpError(400, "No fields to update.");
+  }
+  const updated = await prisma.coupon.update({
+    where: { id },
+    data: parsed.data,
+  });
+  const totalUses = await prisma.couponUse.count({ where: { couponId: id } });
+  response.json({
+    id: updated.id,
+    code: updated.code,
+    discountPercent: updated.discountPercent,
+    isActive: updated.isActive,
+    usageLimitPerUser: updated.usageLimitPerUser,
+    totalUses,
+    createdAt: updated.createdAt.toISOString(),
+  });
+}
+
+/** Son 1 yıllık indirme denemeleri; yönetim listesi. */
+export async function adminListDownloadLogsController(request: Request, response: Response) {
+  const rawLimit = request.query["limit"];
+  const parsedLimit = typeof rawLimit === "string" ? Number.parseInt(rawLimit, 10) : 100;
+  const take = Math.min(Math.max(1, Number.isFinite(parsedLimit) ? parsedLimit : 100), 500);
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  const rows = await prisma.downloadLog.findMany({
+    where: { createdAt: { gte: oneYearAgo } },
+    orderBy: { createdAt: "desc" },
+    take,
+    include: { user: { select: { email: true } } },
+  });
+  response.json({
+    items: rows.map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      userEmail: r.user.email,
+      resultId: r.resultId,
+      toolId: r.toolId,
+      clientIp: r.clientIp,
+      userAgent: r.userAgent,
+      status: r.status,
+      ackedAt: r.ackedAt?.toISOString() ?? null,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  });
+}
+
+export async function adminDownloadLogProofController(request: Request, response: Response) {
+  const id = typeof request.params["id"] === "string" ? request.params["id"] : "";
+  if (!id) {
+    throw new HttpError(400, "Missing id.");
+  }
+  const row = await prisma.downloadLog.findUnique({
+    where: { id },
+    include: { user: { select: { email: true } } },
+  });
+  if (!row) {
+    throw new HttpError(404, "Not found.");
+  }
+  const text =
+    `NB PDF PLARTFORM — Download technical record\n` +
+    `Record ID: ${row.id}\n` +
+    `Created (UTC): ${row.createdAt.toISOString()}\n` +
+    `User ID: ${row.userId}\n` +
+    `User email: ${row.user.email}\n` +
+    `Tool: ${row.toolId}\n` +
+    `Result ID: ${row.resultId ?? "(none)"}\n` +
+    `Client IP (request time): ${row.clientIp ?? "(unknown)"}\n` +
+    `User-Agent: ${row.userAgent ?? "(unknown)"}\n` +
+    `Status: ${row.status}\n` +
+    `Acknowledged (UTC): ${row.ackedAt?.toISOString() ?? "(pending)"}\n` +
+    `\n` +
+    `This document is generated for dispute resolution. ` +
+    `SUCCESS means the client sent an ACK after the file stream completed in the browser.\n`;
+  response.setHeader("Content-Type", "text/plain; charset=utf-8");
+  response.setHeader("Content-Disposition", `attachment; filename="download-proof-${row.id}.txt"`);
+  response.send(text);
 }

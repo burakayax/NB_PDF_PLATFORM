@@ -12,6 +12,23 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "encrypt",
 ];
 
+/** UI hint only; server `ToolRegistry.cost` is authoritative at runtime. */
+export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
+  split: 2,
+  merge: 3,
+  "pdf-to-word": 3,
+  compress: 2,
+  "word-to-pdf": 3,
+  "excel-to-pdf": 3,
+  "pdf-to-excel": 3,
+  encrypt: 2,
+};
+
+export function sidebarToolCreditLine(id: FeatureKey, lang: Language): string {
+  const n = SIDEBAR_TOOL_CREDIT_COST[id];
+  return lang === "tr" ? `${n} Kredi` : `${n} credit${n === 1 ? "" : "s"}`;
+}
+
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
   split: { tr: "PDF Ayır", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
@@ -62,6 +79,10 @@ export function ws(lang: Language) {
     splitModeLabel: tr ? "Ayırma modu" : "Split mode",
     splitModeSingle: tr ? "Tek PDF'de birleştir" : "Single merged PDF",
     splitModeSeparate: tr ? "Ayrı ayrı kaydet (ZIP)" : "Separate files (ZIP)",
+    splitPickerOpen: tr ? "Görsel seçici" : "Visual picker",
+    splitPickerWaitHint: tr
+      ? "PDF yükleyip sayfa bilgisinin gelmesini bekleyin."
+      : "Upload a PDF and wait for page metadata to load.",
     sourcePassword: tr ? "Kaynak PDF şifresi" : "Source PDF password",
     sourcePasswordHint: tr
       ? "PDF şifreliyse açmak için parola gerekir."
@@ -283,6 +304,31 @@ export function ws(lang: Language) {
     mergeToastPollErrorTitle: tr ? "İlerleme bilgisi alınamadı" : "Could not read progress",
     mergeToastPollErrorDetail: tr ? "Birleştirme durumu alınamadı." : "Merge status could not be loaded.",
     mergeToastDownloadErrorTitle: tr ? "İndirme tamamlanamadı" : "Download failed",
+    toolRunCancel: tr ? "İptal" : "Cancel",
+    toolRunCancelledInfo: tr ? "İşlem iptal edildi veya sunucu isteği kesti." : "The operation was cancelled or aborted.",
+    mergeJobSessionLostTitle: tr ? "Birleştirme oturumu bulunamadı" : "Merge session not found",
+    mergeJobSessionLostDetail: tr
+      ? "Sunucu yeniden başlamış veya oturum süresi dolmuş olabilir. Lütfen tekrar deneyin."
+      : "The server may have restarted or the session may have expired. Please try again.",
+    mergeFileProgress: (cur: number, tot: number, name: string) => {
+      const a = Math.max(1, cur);
+      const b = Math.max(1, tot);
+      const n = name.trim();
+      if (tr) {
+        return n ? `Dosya ${a}/${b}: ${n}` : `Dosya ${a}/${b}`;
+      }
+      return n ? `File ${a}/${b}: ${n}` : `File ${a}/${b}`;
+    },
+    resultCreatedUtc: (s: string) => (tr ? `Oluşturulma (UTC): ${s}` : `Created (UTC): ${s}`),
+    lowCreditBanner: (n: number) =>
+      tr
+        ? `Kredi bakiyeniz düşük (${n}). Paket tüketmeden önce yüklemenizi öneririz.`
+        : `Your credit balance is low (${n}). Consider topping up before you run out.`,
+    pdfExcelWarningTitle: tr ? "Tablo yapısı uyarısı" : "Table structure notice",
+    pdfExcelWarningBody: tr
+      ? "PDF’inizde net bir tablo yapısı yoksa Excel çıktısı dağınık olabilir. Bu işlem kredi tüketir. Devam etmek istiyor musunuz?"
+      : "If your PDF has no clear table structure, the Excel file may be messy. This action will use credits. Continue?",
+    pdfExcelWarningConfirm: tr ? "Evet, devam" : "Yes, continue",
     mergeButtonHintInspecting: tr
       ? "Ön kontrol tamamlanana kadar birleştirme kapalı — tüm satırlarda Hazır görün."
       : "Merge unlocks after the quick check — every row should show Ready.",
@@ -412,6 +458,69 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
 }
 
 /** Boş veya sadece format; max sayfa sınırı ayrı kontrol edilir. */
+/** Selected 1-based page indices → comma / range string (e.g. 1-3,5,7-9). */
+export function formatPageSelection(pages: number[]): string {
+  const sorted = [...new Set(pages)]
+    .filter((n) => n >= 1)
+    .sort((a, b) => a - b);
+  if (sorted.length === 0) {
+    return "";
+  }
+  const parts: string[] = [];
+  let i = 0;
+  while (i < sorted.length) {
+    let j = i;
+    while (j + 1 < sorted.length && sorted[j + 1] === sorted[j] + 1) {
+      j += 1;
+    }
+    if (i === j) {
+      parts.push(String(sorted[i]));
+    } else {
+      parts.push(`${sorted[i]}-${sorted[j]}`);
+    }
+    i = j + 1;
+  }
+  return parts.join(",");
+}
+
+/**
+ * Parse page string into a sorted unique list. Returns null if invalid or out of range.
+ */
+export function expandPagesString(value: string, maxPage: number, lang: Language): number[] | null {
+  const raw = value.trim();
+  if (!raw) {
+    return [];
+  }
+  if (validatePagesFormat(value, lang)) {
+    return null;
+  }
+  if (validatePagesMax(value, maxPage, lang)) {
+    return null;
+  }
+  const out: number[] = [];
+  for (const token of raw
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean)) {
+    if (token.includes("-")) {
+      const [a, b] = token.split("-", 2).map((x) => x.trim());
+      const s = Number(a);
+      const e = Number(b);
+      for (let p = s; p <= e; p++) {
+        if (p >= 1 && p <= maxPage) {
+          out.push(p);
+        }
+      }
+    } else {
+      const p = Number(token);
+      if (p >= 1 && p <= maxPage) {
+        out.push(p);
+      }
+    }
+  }
+  return [...new Set(out)].sort((a, b) => a - b);
+}
+
 export function validatePagesFormat(value: string, lang: Language): string {
   const raw = value.trim();
   const L = ws(lang);

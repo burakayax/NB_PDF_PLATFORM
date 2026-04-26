@@ -16,7 +16,9 @@ import { requireAuth } from "./middleware/auth.middleware.js";
 import { verifyEmailController } from "./modules/auth/auth.controller.js";
 import { submitContactController } from "./modules/contact/contact.controller.js";
 import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
+import { creditCheckoutRouter } from "./modules/credit-checkout/credit-checkout.routes.js";
 import { fakePaymentRouter } from "./modules/fake-payment/index.js";
+import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
@@ -129,6 +131,19 @@ app.use(
   requireAuth,
   fakePaymentRouter,
 );
+
+app.use(
+  "/api/credit-checkout",
+  abuseBlockMiddleware,
+  globalApiLimiter,
+  requireAuth,
+  creditCheckoutRouter,
+);
+
+/** iyzico form POST — abonelik ve kredi paketi callback’i; JWT yok. `/api` router’daki 503’ten önce kayıtlı olmalı. */
+if (env.iyzicoEnabled) {
+  app.post("/api/payment/callback", paymentCallbackUrlencoded, asyncHandler(paymentCallbackController));
+}
 
 app.get("/verify-email", (request, response, next) => {
   void verifyEmailController(request, response).catch(next);

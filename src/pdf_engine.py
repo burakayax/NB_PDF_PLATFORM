@@ -10,6 +10,7 @@ import PyPDF2
 import io
 import os
 import re
+import shutil
 import statistics
 import sys
 import tempfile
@@ -1439,6 +1440,14 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             pass
         except Exception:
             # pikepdf çıktısı yine de kullanılabilir
+            pass
+        # Asla orijinalden büyük dosya dönme: yeniden paketleme şişerse kopyayı orijinale düş.
+        try:
+            in_sz = os.path.getsize(input_path)
+            out_sz = os.path.getsize(output_path)
+            if out_sz > in_sz:
+                shutil.copy2(input_path, output_path)
+        except OSError:
             pass
         if progress_callback:
             progress_callback(2, 2, "Tamamlandı")

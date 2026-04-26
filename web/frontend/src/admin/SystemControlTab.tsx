@@ -12,7 +12,7 @@ import {
   type AdminRevisionRow,
 } from "../api/admin";
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
-import { AdminField, AdminImpactCard, AdminMutedBox, AdminSection, ConfirmModal, adminInputClass } from "./AdminUi";
+import { AdminField, AdminImpactCard, AdminMutedBox, AdminSection, ConfirmModal, adminInputClass } from "./mosaic/adminPrimitives";
 
 const REVISION_SCOPE_OPTIONS = [
   { value: "site.settings", label: "Site ayarları (tema, dil, API güvenliği)" },

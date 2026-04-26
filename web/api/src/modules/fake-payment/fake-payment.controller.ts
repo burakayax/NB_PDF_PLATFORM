@@ -30,6 +30,13 @@ export async function fakePaymentCheckoutController(
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
   }
 
+  if (String(parsed.data.plan).startsWith("CREDITS_")) {
+    throw new HttpError(
+      400,
+      "Credit packs must use POST /api/credit-checkout (pricing + signed checkout).",
+    );
+  }
+
   const result = createFakeCheckoutSession({
     userId,
     product: parsed.data.plan,

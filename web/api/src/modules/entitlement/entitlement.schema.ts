@@ -14,3 +14,8 @@ export const entitlementBodySchema = z.object({
 });
 
 export type EntitlementBody = z.infer<typeof entitlementBodySchema>;
+
+export const downloadLogCreateSchema = z.object({
+  resultId: z.union([z.string().min(1).max(128), z.null()]).optional(),
+  toolId: z.string().min(1).max(64),
+});

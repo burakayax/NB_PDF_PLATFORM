@@ -55,6 +55,25 @@ export async function logAdminAudit(
   });
 }
 
+/** System / automation (no user JWT) — e.g. scheduled or trigger emails. */
+export async function logAutomationEmailAudit(
+  action: string,
+  targetKey: string | null,
+  summary: string,
+  meta?: Record<string, unknown>,
+) {
+  await prisma.adminAuditLog.create({
+    data: {
+      userId: null,
+      userEmail: "automation@system",
+      action,
+      targetKey,
+      summary: summary.slice(0, 2000),
+      metaJson: meta ? JSON.stringify(meta).slice(0, 8000) : null,
+    },
+  });
+}
+
 export async function recordSettingRevision(
   scope: string,
   previousValue: unknown,

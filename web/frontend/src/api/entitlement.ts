@@ -122,3 +122,43 @@ export async function fetchCreditTransactions(
   const data = (await response.json()) as unknown;
   return Array.isArray(data) ? (data as CreditTransaction[]) : [];
 }
+
+export type DownloadLogCreateBody = { resultId?: string | null; toolId: string };
+
+export async function createDownloadLog(accessToken: string, body: DownloadLogCreateBody): Promise<{ id: string; status: string }> {
+  const token = readLatestAccessToken(accessToken);
+  const response = await saasAuthorizedFetch(token, (t) =>
+    fetch(`${getSaasApiBase()}/api/entitlement/download-log`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        resultId: body.resultId ?? null,
+        toolId: body.toolId,
+      }),
+    }),
+  );
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Download log create failed (${response.status}).`);
+  }
+  return (await response.json()) as { id: string; status: string };
+}
+
+export async function ackDownloadLog(accessToken: string, logId: string): Promise<void> {
+  const token = readLatestAccessToken(accessToken);
+  const response = await saasAuthorizedFetch(token, (t) =>
+    fetch(`${getSaasApiBase()}/api/entitlement/download-log/${encodeURIComponent(logId)}/ack`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${t}` },
+      credentials: "include",
+    }),
+  );
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `ACK failed (${response.status}).`);
+  }
+}

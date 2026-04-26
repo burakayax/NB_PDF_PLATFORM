@@ -79,11 +79,14 @@ def save_result(
     *,
     user_id: str,
     thumbnail_png: Optional[bytes] = None,
+    tool: str = "compress",
 ) -> ResultHandle:
     """Persist ``payload`` and return a handle the client can later redeem.
 
     ``user_id`` is stored in ``meta.json`` so :func:`get_result` can enforce
     ownership without consulting a database.
+    ``tool`` names the entitlement key used on
+    :func:`download_result` (``entitlement_consume``).
     """
     result_id = uuid.uuid4().hex
     entry = _root_dir() / result_id
@@ -105,6 +108,7 @@ def save_result(
         "user_id": user_id,
         "created_at": time.time(),
         "has_thumbnail": has_thumbnail,
+        "tool": tool,
     }
     (entry / _META_FILENAME).write_text(json.dumps(meta), encoding="utf-8")
 

@@ -124,6 +124,16 @@ const rawEnvSchema = z
     /** MinIO / custom endpoint; leave empty for AWS. */
     S3_ENDPOINT: z.string().optional().default(""),
     S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).optional().default("false"),
+    /**
+     * Kredi paketi checkout: gerçek iyzico çağrısı yerine anında sahte ödeme oturumu.
+     * (Örn. staging testi; üretimde açık bırakmayın.)
+     */
+    CREDIT_CHECKOUT_USE_FAKE: z.enum(["true", "false"]).optional().default("false"),
+    /**
+     * Yalnız development: `true` iken IYZICO anahtarları dolu olsa bile kredi checkout iyzico kullanır.
+     * Aksi halde dev ortamda varsayılan sahte (anında onay) akışı kullanılır.
+     */
+    CREDIT_CHECKOUT_IYZICO_IN_DEV: z.enum(["true", "false"]).optional().default("false"),
   })
   .superRefine((data, ctx) => {
     const smtpOk = Boolean(data.SMTP_USER && data.SMTP_PASS);
@@ -139,6 +149,15 @@ const rawEnvSchema = z
   });
 
 const raw = rawEnvSchema.parse(process.env);
+
+const iyzicoKeysOk = Boolean(
+  raw.IYZICO_API_KEY?.trim() && raw.IYZICO_SECRET_KEY?.trim() && raw.IYZICO_URI?.trim(),
+);
+/** Kredi paketi: iyzico yerine anında onay (fake) — dev varsayılanı, veya açık bayrak, veya anahtar eksik. */
+const creditCheckoutUseFake =
+  raw.CREDIT_CHECKOUT_USE_FAKE === "true" ||
+  !iyzicoKeysOk ||
+  (raw.NODE_ENV === "development" && raw.CREDIT_CHECKOUT_IYZICO_IN_DEV !== "true");
 
 const smtpUser = raw.SMTP_USER ?? raw.EMAIL_USER;
 const smtpPass = raw.SMTP_PASS ?? raw.EMAIL_PASS;
@@ -156,7 +175,8 @@ export const env = {
   forceHttps: raw.FORCE_HTTPS === "true",
   HTTPS_KEY_PATH: raw.HTTPS_KEY_PATH?.trim() ?? "",
   HTTPS_CERT_PATH: raw.HTTPS_CERT_PATH?.trim() ?? "",
-  iyzicoEnabled: Boolean(raw.IYZICO_API_KEY?.trim() && raw.IYZICO_SECRET_KEY?.trim() && raw.IYZICO_URI?.trim()),
+  iyzicoEnabled: iyzicoKeysOk,
+  creditCheckoutUseFake,
   SMTP_USER: smtpUser,
   SMTP_PASS: smtpPass,
   SMTP_FROM_EMAIL: smtpFromEmail,

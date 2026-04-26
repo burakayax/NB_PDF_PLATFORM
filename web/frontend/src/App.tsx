@@ -8,13 +8,18 @@ import {
   downloadFromApi,
   downloadMergeJob,
   downloadResult,
+  EntitlementPaymentRequiredError,
   fetchMergeJob,
   fetchResultThumbnailBlobUrl,
   inspectPdf,
+  MergeJobNotFoundError,
+  requestMergeJobCancel,
+  splitToResult,
   type MergeJobStatus,
 } from "./api";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
+import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
@@ -24,6 +29,7 @@ import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal"
 import { AdminPanel } from "./admin/AdminPanel";
 import { ConversionPopup } from "./components/dashboard/ConversionPopup";
 import { ConversionUpgradeModal } from "./components/dashboard/ConversionUpgradeModal";
+import { PaymentSummaryModal } from "./components/dashboard/PaymentSummaryModal";
 import { UpgradeModal } from "./components/dashboard/UpgradeModal";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
@@ -40,12 +46,13 @@ import {
 } from "./api/subscription";
 import {
   fetchCreditTransactions,
+  ackDownloadLog,
+  createDownloadLog,
   fetchUserBalance,
   type CreditTransaction,
   type UserBalance,
 } from "./api/entitlement";
 import {
-  buyCreditsInstant,
   confirmFakeCheckout,
   PAYMENT_CHECKOUT_NOT_FOUND,
   resolveFakePaymentRedirect,
@@ -86,10 +93,11 @@ import { buildWorkspaceFeaturesFromCms, type WorkspaceFeatureUi } from "./lib/wo
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import { isCreditPackProduct } from "./lib/creditPacks";
+import { isCreditPackProduct, type CreditPackProduct } from "./lib/creditPacks";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
+import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 
 type FeatureId = FeatureKey;
 
@@ -240,7 +248,7 @@ function UpgradeNudgeInline({
 }
 
 function mergeToolPhaseLabel(job: MergeJobStatus, indeterminate: boolean, W: ReturnType<typeof ws>): string {
-  if (job.status === "failed") {
+  if (job.status === "failed" || job.status === "cancelled") {
     return "";
   }
   if (indeterminate) {
@@ -276,6 +284,16 @@ function formatElapsed(seconds: number) {
   const minutes = Math.floor(total / 60);
   const remainder = total % 60;
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
+}
+
+function isUserAbortError(e: unknown): boolean {
+  if (e instanceof DOMException && e.name === "AbortError") {
+    return true;
+  }
+  if (e instanceof Error && e.name === "AbortError") {
+    return true;
+  }
+  return false;
 }
 
 /** Birleştirme listesinde imleç Y konumuna göre hedef satır indeksi (yer değiştirme önizlemesi için). */
@@ -381,7 +399,6 @@ function getTrackedPath(view: AppView) {
   }
 }
 
-/** İlk paint'te URL ile aynı ekranı göstermek için (ör. /login, /workspace, ?view=register). */
 function getInitialViewFromLocation(): AppView {
   if (typeof window === "undefined") {
     return "landing";
@@ -406,6 +423,7 @@ function getInitialViewFromLocation(): AppView {
     case "/fake-payment/success":
       return "web";
     case "/admin":
+    case "/admin/dashboard":
       return "admin";
     default:
       break;
@@ -462,6 +480,46 @@ function App() {
   const [pagesText, setPagesText] = useState("");
   const [pagesError, setPagesError] = useState("");
   const [splitMode, setSplitMode] = useState("single");
+  const splitDraftStorageKey = useMemo(() => {
+    const f = uploads[0]?.file;
+    if (!f) {
+      return null;
+    }
+    return `nb_pdf_workspace_split::${f.name}::${f.size}`;
+  }, [uploads[0]?.file.name, uploads[0]?.file.size]);
+
+  useEffect(() => {
+    if (selectedFeatureId !== "split" || !splitDraftStorageKey) {
+      return;
+    }
+    try {
+      const raw = localStorage.getItem(splitDraftStorageKey);
+      if (!raw) {
+        return;
+      }
+      const p = JSON.parse(raw) as { pagesText?: string; splitMode?: string };
+      if (typeof p.pagesText === "string") {
+        setPagesText(p.pagesText);
+      }
+      if (p.splitMode === "single" || p.splitMode === "separate") {
+        setSplitMode(p.splitMode);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [selectedFeatureId, splitDraftStorageKey]);
+
+  useEffect(() => {
+    if (selectedFeatureId !== "split" || !splitDraftStorageKey) {
+      return;
+    }
+    try {
+      localStorage.setItem(splitDraftStorageKey, JSON.stringify({ pagesText, splitMode, v: 1 }));
+    } catch {
+      /* ignore */
+    }
+  }, [pagesText, splitMode, selectedFeatureId, splitDraftStorageKey]);
+
   const [outputPassword, setOutputPassword] = useState("");
   const [mergeJob, setMergeJob] = useState<MergeJobStatus | null>(null);
   /** Birleştirme dışı araçlarda ETA / süre göstergesi için başlangıç zamanı ve dosya boyutu. */
@@ -491,6 +549,8 @@ function App() {
     };
   } | null>(null);
   const toolProgressDisposeRef = useRef<(() => void) | null>(null);
+  const toolRunAbortRef = useRef<AbortController | null>(null);
+  const mergeFlowAbortRef = useRef<AbortController | null>(null);
   const [mergePointerDraggingId, setMergePointerDraggingId] = useState<string | null>(null);
   const [mergeDragOverIndex, setMergeDragOverIndex] = useState<number | null>(null);
   const [mergeDragSlotPx, setMergeDragSlotPx] = useState(140);
@@ -542,7 +602,7 @@ function App() {
   const [creditTransactionsLoading, setCreditTransactionsLoading] =
     useState(false);
   /** Tracks which credit-pack SKU is currently in checkout+confirm (instant flow). */
-  const [buyingCreditProduct, setBuyingCreditProduct] = useState<FakePaymentProduct | null>(null);
+  const [paymentSummaryProduct, setPaymentSummaryProduct] = useState<CreditPackProduct | null>(null);
   const subscriptionSummaryRef = useRef<SubscriptionSummary | null>(null);
   const userBalanceRef = useRef<UserBalance | null>(null);
   const userRef = useRef(user);
@@ -572,6 +632,10 @@ function App() {
    */
   const insufficientCreditsToolRunBlockRef = useRef(false);
   const insufficientCreditsBarrierCreditSnapshotRef = useRef<number | null>(null);
+  /** One-shot: user acknowledged PDF→Excel table-structure warning. */
+  const excelConfirmRef = useRef(false);
+  const [excelDialogOpen, setExcelDialogOpen] = useState(false);
+  const [splitPickerOpen, setSplitPickerOpen] = useState(false);
 
   function armInsufficientCreditsToolBarrier() {
     insufficientCreditsToolRunBlockRef.current = true;
@@ -972,15 +1036,30 @@ function App() {
   }, [accessToken, isAuthenticated]);
 
   /**
-   * Pilot access-gated download (compress). Uses the shared result store
-   * + Node checkAccess bridge. On 402 we show a minimal alert as agreed;
-   * the full upgrade modal comes in a later phase.
+   * Gated indirme: sunucu dosya adı + tarayıcı ``Save As`` (download attribute) ile
+   * ``GET /api/pdf/result/{id}/download``; indirme kanıtı için log + başarılı akışta ACK.
    */
-  const runGatedDownload = useCallback(
-    async (resultId: string, fallbackName: string) => {
+  const runGatedDownloadWithFilename = useCallback(
+    async (resultId: string, serverFallbackName: string, clientFileName: string, toolId: FeatureKey) => {
+      let logId: string | null = null;
+      if (accessToken) {
+        try {
+          const created = await createDownloadLog(accessToken, { resultId, toolId });
+          logId = created.id;
+        } catch {
+          /* kanıt isteğe bağlı; indirmeyi engellememeli */
+        }
+      }
       try {
-        const outcome = await downloadResult(resultId, fallbackName, accessToken);
+        const outcome = await downloadResult(resultId, serverFallbackName, accessToken, {
+          clientDownloadName: clientFileName,
+        });
         if (outcome.status === "payment_required") {
+          if (outcome.saasGating) {
+            setUserBalance((prev) =>
+              prev ? { ...prev, creditBalance: outcome.saasGating!.creditsAfter } : prev,
+            );
+          }
           armInsufficientCreditsToolBarrier();
           tryShowConversionPopupRef.current("insufficient_credits", "download");
           return;
@@ -993,12 +1072,25 @@ function App() {
           );
           return;
         }
+        if (logId && accessToken) {
+          void ackDownloadLog(accessToken, logId).catch(() => {});
+        }
         showToast(
           "success",
           language === "tr" ? "İndirme tamamlandı" : "Download complete",
-          fallbackName,
+          clientFileName,
         );
         void refreshSubscriptionState();
+        if (accessToken && user) {
+          const balanceCtx = {
+            userId: user.id,
+            role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+          };
+          const next = await fetchUserBalance(accessToken, balanceCtx).catch(() => null);
+          if (next) {
+            setUserBalance(next);
+          }
+        }
       } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         showToast(
@@ -1008,7 +1100,15 @@ function App() {
         );
       }
     },
-    [accessToken, language, refreshSubscriptionState, showToast],
+    [accessToken, language, refreshSubscriptionState, showToast, user],
+  );
+
+  const queueGatedDownload = useCallback(
+    (resultId: string, fallbackName: string, toolId: FeatureKey) => {
+      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
+      void runGatedDownloadWithFilename(resultId, fallbackName, name, toolId);
+    },
+    [runGatedDownloadWithFilename],
   );
 
   const openConversionUpgradeModalManual = useCallback(() => {
@@ -1109,6 +1209,10 @@ function App() {
   }, [view]);
 
   useEffect(() => {
+    toolRunAbortRef.current?.abort();
+    toolRunAbortRef.current = null;
+    mergeFlowAbortRef.current?.abort();
+    mergeFlowAbortRef.current = null;
     resetForm(true);
     setMergeJob(null);
     setSubmitting(false);
@@ -1192,9 +1296,10 @@ function App() {
       }
 
       const M = ws(language);
+      const pollSignal = mergeFlowAbortRef.current?.signal;
       mergePollInFlightRef.current = true;
       try {
-        const nextStatus = await fetchMergeJob(jobId, accessToken);
+        const nextStatus = await fetchMergeJob(jobId, accessToken, { signal: pollSignal });
         if (!active || mergePollHandledRef.current) {
           return;
         }
@@ -1209,14 +1314,33 @@ function App() {
           return;
         }
 
+        if (nextStatus.status === "cancelled") {
+          mergePollHandledRef.current = true;
+          setMergeJob(null);
+          setSubmitting(false);
+          showToast("info", M.toolRunCancel, M.toolRunCancelledInfo);
+          return;
+        }
+
         if (nextStatus.status === "completed") {
           mergePollHandledRef.current = true;
           try {
-            const dl = await downloadMergeJob(jobId, fallbackName, accessToken);
+            const dl = await downloadMergeJob(jobId, fallbackName, accessToken, { signal: pollSignal });
             if (!active) {
               return;
             }
             void refreshSubscriptionState();
+            if (accessToken && user) {
+              const balanceCtx = {
+                userId: user.id,
+                role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+              };
+              void fetchUserBalance(accessToken, balanceCtx).then((b) => {
+                if (b) {
+                  setUserBalance(b);
+                }
+              });
+            }
             showToast("success", M.mergeToastSuccessTitle, M.mergeToastSuccessBody);
             resetForm(true);
             setSubmitting(false);
@@ -1236,6 +1360,22 @@ function App() {
               return;
             }
             setSubmitting(false);
+            if (isUserAbortError(downloadErr)) {
+              setMergeJob(null);
+              return;
+            }
+            if (downloadErr instanceof EntitlementPaymentRequiredError) {
+              if (downloadErr.saasGating) {
+                setUserBalance((prev) =>
+                  prev && downloadErr.saasGating
+                    ? { ...prev, creditBalance: downloadErr.saasGating.creditsAfter }
+                    : prev,
+                );
+              }
+              armInsufficientCreditsToolBarrier();
+              tryShowConversionPopupRef.current("insufficient_credits", "download");
+              return;
+            }
             const detail =
               downloadErr instanceof Error ? downloadErr.message : M.mergeToastPollErrorDetail;
             showToast("error", M.mergeToastDownloadErrorTitle, detail);
@@ -1245,6 +1385,19 @@ function App() {
         }
       } catch (error) {
         if (!active) {
+          return;
+        }
+        if (isUserAbortError(error)) {
+          setSubmitting(false);
+          mergePollHandledRef.current = true;
+          setMergeJob(null);
+          return;
+        }
+        if (error instanceof MergeJobNotFoundError) {
+          setSubmitting(false);
+          mergePollHandledRef.current = true;
+          setMergeJob(null);
+          showToast("info", M.mergeJobSessionLostTitle, M.mergeJobSessionLostDetail);
           return;
         }
         const detail = error instanceof Error ? error.message : M.mergeToastPollErrorDetail;
@@ -1275,6 +1428,7 @@ function App() {
     disposeToolProgressSuccess,
     accessToken,
     offerPostRunMonetizationHintAfterSuccess,
+    user,
   ]);
 
   useEffect(() => {
@@ -1630,6 +1784,14 @@ function App() {
       userBalance.creditBalance > 0 &&
       userBalance.creditBalance < 5,
   );
+  /** 5–14 credits: “moderate low” strip (5+ already covered by `creditsRunningLow`). */
+  const creditsModerateLow = Boolean(
+    userBalance &&
+      !userBalance.hasActiveSubscription &&
+      userBalance.role !== "ADMIN" &&
+      userBalance.creditBalance >= 5 &&
+      userBalance.creditBalance < 15,
+  );
   /**
    * Paid lane (PRO / BUSINESS / admin bypass). The engine treats these as
    * "active_subscription" / "admin_bypass" — UI uses the same predicate so
@@ -1645,11 +1807,19 @@ function App() {
   /** Standard (non-priority) processing lane — not subscription / admin. */
   const creditStandardLaneQueue = showCreditWorkspaceChrome && !premiumProcessingLane;
 
-  const mergeProgressActive =
-    Boolean(mergeJob && selectedFeatureId === "merge" && mergeJob.status !== "completed");
+  const mergeProgressActive = Boolean(
+    mergeJob && selectedFeatureId === "merge" && mergeJob.status !== "completed" && mergeJob.status !== "cancelled",
+  );
   const genericToolProgressActive =
     submitting && selectedFeatureId !== "merge" && view === "web" && contentPanel === "tool";
+  const showToolCancelButton = Boolean(
+    view === "web" &&
+      contentPanel === "tool" &&
+      ((mergeProgressActive && mergeJob && mergeJob.status !== "failed") || genericToolProgressActive),
+  );
   const TOOLSuccessBarActive = Boolean(toolProgressSuccess && view === "web" && contentPanel === "tool");
+  const hideMonetizationHintsForInsufficientGate =
+    toolProgressSuccess?.gatedDownload?.saasGating?.reason === "insufficient_credits";
   const bottomToolProgressActive =
     mergeProgressActive || genericToolProgressActive || TOOLSuccessBarActive;
   const standardLaneProcessingUpsell = Boolean(
@@ -1816,62 +1986,37 @@ function App() {
     }
   }
 
-  async function handleBuyCreditPack(product: FakePaymentProduct) {
-    if (!isCreditPackProduct(product)) {
-      return;
-    }
-    if (!accessToken || !user) {
-      showToast(
-        "error",
-        language === "tr" ? "Oturum gerekli" : "Sign-in required",
-        language === "tr" ? "Kredi satın almak için giriş yapın." : "Please sign in to buy credits.",
-      );
-      return;
-    }
-    if (buyingCreditProduct) {
-      return;
-    }
-    setBuyingCreditProduct(product);
-    const Wloc = ws(language);
-    try {
-      const result = await buyCreditsInstant(accessToken, product);
-      await refreshEntitlementAfterPurchase();
-      setUpgradeModalOpen(false);
-      if ("alreadyConfirmed" in result && result.alreadyConfirmed) {
-        showToast(
-          "success",
-          language === "tr" ? "Zaten onaylandı" : "Already confirmed",
-          language === "tr" ? "Bu ödeme daha önce tamamlandı." : "This payment was already completed.",
-        );
-      } else if ("creditsGranted" in result) {
-        showToast(
-          "success",
-          language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
-          Wloc.creditDashboardBuyCreditsSuccess(result.creditsGranted),
-        );
+  const handleSelectCreditPackForPayment = useCallback(
+    (product: FakePaymentProduct) => {
+      if (!isCreditPackProduct(product)) {
+        return;
       }
-    } catch (error) {
-      const payment404 = error instanceof Error && error.message === PAYMENT_CHECKOUT_NOT_FOUND;
-      showToast(
-        "error",
-        payment404
-          ? language === "tr"
-            ? "Ödeme kullanılamıyor"
-            : "Payment unavailable"
-          : language === "tr"
-            ? "Kredi satın alınamadı"
-            : "Purchase failed",
-        payment404
-          ? language === "tr"
-            ? "Ödeme sistemi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
-            : "Payment system not available. Please try again later."
-          : error instanceof Error
-            ? error.message
-            : Wloc.creditDashboardBuyCreditsError,
-      );
-    } finally {
-      setBuyingCreditProduct(null);
+      if (!accessToken || !user) {
+        showToast(
+          "error",
+          language === "tr" ? "Oturum gerekli" : "Sign-in required",
+          language === "tr" ? "Kredi satın almak için giriş yapın." : "Please sign in to buy credits.",
+        );
+        return;
+      }
+      setPaymentSummaryProduct(product);
+    },
+    [accessToken, user, language, showToast],
+  );
+
+  async function handleCreditPackPurchaseSuccess() {
+    try {
+      await refreshEntitlementAfterPurchase();
+    } catch {
+      /* still toast */
     }
+    setPaymentSummaryProduct(null);
+    setUpgradeModalOpen(false);
+    showToast(
+      "success",
+      language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
+      language === "tr" ? "Krediler hesabınıza eklendi." : "Credits have been added to your account.",
+    );
   }
 
   const closeConversionPopup = useCallback((snoozeInsufficientCredits: boolean) => {
@@ -1923,16 +2068,7 @@ function App() {
     }
 
     if (variant === "insufficient_credits" && trigger !== "download") {
-      const ub = userBalanceRef.current;
-      if (!ub || ub.hasActiveSubscription) {
-        return;
-      }
-      if (ub.creditBalance >= 3) {
-        return;
-      }
-      if (Date.now() < getLowCreditPopupSnoozeUntil()) {
-        return;
-      }
+      return;
     }
 
     if (variant === "buy_credits" && hasShownFirstToolFailurePopup()) {
@@ -1988,21 +2124,6 @@ function App() {
       clearInsufficientCreditsToolBarrier();
     }
   }, [userBalance?.creditBalance]);
-
-  useEffect(() => {
-    if (view !== "web" || !isAuthenticated || subscriptionLoading || user?.role === "ADMIN") {
-      return;
-    }
-    tryShowConversionPopup("insufficient_credits", "balance");
-  }, [
-    view,
-    isAuthenticated,
-    subscriptionLoading,
-    user?.role,
-    userBalance?.creditBalance,
-    userBalance?.hasActiveSubscription,
-    tryShowConversionPopup,
-  ]);
 
   async function handleContactModalSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -2194,6 +2315,25 @@ function App() {
     setActiveSidebar("subscription");
   }
 
+  function handleCancelCurrentOperation() {
+    const M = ws(language);
+    if (selectedFeatureId === "merge" && mergeJob) {
+      const id = mergeJob.id;
+      if (id && id !== MERGE_JOB_PENDING_ID) {
+        void requestMergeJobCancel(id, accessToken, {}).catch(() => {});
+      }
+      mergeFlowAbortRef.current?.abort();
+      setMergeJob(null);
+      setSubmitting(false);
+      showToast("info", M.toolRunCancel, M.toolRunCancelledInfo);
+      return;
+    }
+    if (selectedFeatureId !== "merge" && submitting) {
+      toolRunAbortRef.current?.abort();
+      showToast("info", M.toolRunCancel, M.toolRunCancelledInfo);
+    }
+  }
+
   async function submitCurrentFeature(event: React.FormEvent<HTMLFormElement>) {
     // Seçili PDF özelliği için gönderimi işler; istemci doğrulaması, kota ve doğru API çağrısını birleştirir.
     // Tüm modüllerin tek submit boru hattı olması bakım ve hata ayıklamayı sadeleştirir.
@@ -2268,18 +2408,24 @@ function App() {
       return;
     }
 
+    if (selectedFeature.id === "pdf-to-excel" && !excelConfirmRef.current) {
+      setExcelDialogOpen(true);
+      return;
+    }
+    if (selectedFeature.id === "pdf-to-excel") {
+      excelConfirmRef.current = false;
+    }
+
     try {
       disposeToolProgressSuccess();
-      setSubmitting(true);
       clearToast();
       setPostRunUpgradeHintVisible(false);
-      if (selectedFeature.id !== "merge") {
-        setToolRunStartedAt(Date.now());
-        setToolRunFileBytes(uploads[0]?.file.size ?? 0);
-        setToolRunClock(0);
-      }
 
       if (selectedFeature.id === "merge") {
+        mergeFlowAbortRef.current?.abort();
+        mergeFlowAbortRef.current = new AbortController();
+        const mergeSignal = mergeFlowAbortRef.current.signal;
+
         const formData = new FormData();
         const passwordList: string[] = [];
         uploads.forEach((item) => {
@@ -2288,6 +2434,7 @@ function App() {
         });
         formData.append("passwords_json", JSON.stringify(passwordList));
 
+        setSubmitting(true);
         setMergeJob({
           id: MERGE_JOB_PENDING_ID,
           status: "queued",
@@ -2301,7 +2448,7 @@ function App() {
           ready: false,
         });
         try {
-          const mergeRes = await createMergeJob(formData, accessToken);
+          const mergeRes = await createMergeJob(formData, accessToken, { signal: mergeSignal });
           const { job_id } = mergeRes;
           setMergeJob((prev) =>
             prev && prev.id === MERGE_JOB_PENDING_ID ? { ...prev, id: job_id, message: "Sıraya alındı." } : prev,
@@ -2309,6 +2456,9 @@ function App() {
         } catch (error) {
           setMergeJob(null);
           setSubmitting(false);
+          if (isUserAbortError(error)) {
+            return;
+          }
           showToast(
             "error",
             language === "tr" ? "Birleştirme başlatılamadı" : "Could not start merge",
@@ -2318,6 +2468,15 @@ function App() {
         }
         return;
       }
+
+      toolRunAbortRef.current?.abort();
+      toolRunAbortRef.current = new AbortController();
+      const toolSignal = toolRunAbortRef.current.signal;
+
+      setSubmitting(true);
+      setToolRunStartedAt(Date.now());
+      setToolRunFileBytes(uploads[0]?.file.size ?? 0);
+      setToolRunClock(0);
 
       const formData = new FormData();
       formData.append("file", uploads[0].file);
@@ -2341,19 +2500,20 @@ function App() {
           break;
       }
 
-      // Compress pilots the new result-store flow: the POST returns a
-      // handle (no blob), we show a preview, and the download itself is
-      // deferred to a gated GET /pdf/result/{id}/download request that
-      // the user triggers from the preview card.
-      if (selectedFeature.id === "compress") {
-        const compressed = await compressToResult(formData, accessToken);
+      // Result-store tools: POST returns result_id; download consumes credits.
+      if (selectedFeature.id === "compress" || selectedFeature.id === "split") {
+        const res =
+          selectedFeature.id === "compress"
+            ? await compressToResult(formData, accessToken, { signal: toolSignal })
+            : await splitToResult(formData, accessToken, { signal: toolSignal });
 
         let thumbnailBlobUrl: string | null = null;
-        if (compressed.has_thumbnail) {
+        if (res.has_thumbnail) {
           try {
-            thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(compressed.result_id, accessToken);
+            thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(res.result_id, accessToken, {
+              signal: toolSignal,
+            });
           } catch {
-            // Thumbnail is optional; the card falls back to a generic view.
             thumbnailBlobUrl = null;
           }
         }
@@ -2363,35 +2523,33 @@ function App() {
           ? () => URL.revokeObjectURL(thumbnailBlobUrl)
           : null;
         setToolProgressSuccess({
-          filename: compressed.filename || selectedFeature.fallbackFilename,
+          filename: res.filename || selectedFeature.fallbackFilename,
           featureTitle: selectedFeature.title,
           gatedDownload: {
-            resultId: compressed.result_id,
-            fallbackName: compressed.filename || selectedFeature.fallbackFilename,
+            resultId: res.result_id,
+            fallbackName: res.filename || selectedFeature.fallbackFilename,
             thumbnailBlobUrl,
-            saasGating: compressed.saasGating ?? null,
+            saasGating: res.saasGating ?? null,
           },
         });
         showToast(
           "success",
-          language === "tr" ? "Önizleme hazır" : "Preview ready",
-          language === "tr"
-            ? "Dosyayı indirmek için İndir düğmesine basın."
-            : "Press Download to get your file.",
+          language === "tr" ? "İşlem tamamlandı" : "Process complete",
+          language === "tr" ? "İndirmek için aşağıdaki düğmeyi kullanın." : "Use the button below to download.",
         );
         resetForm(true);
-        offerPostRunMonetizationHintAfterSuccess(compressed.saasGating ?? null);
+        offerPostRunMonetizationHintAfterSuccess(res.saasGating ?? null);
         void refreshSubscriptionState();
-        if (compressed.saasGating?.reason === "insufficient_credits") {
-          armInsufficientCreditsToolBarrier();
-          queueMicrotask(() => {
-            tryShowConversionPopupRef.current("insufficient_credits", "download");
-          });
-        }
         return;
       }
 
-      const dl = await downloadFromApi(selectedFeature.endpoint, formData, selectedFeature.fallbackFilename, accessToken);
+      const dl = await downloadFromApi(
+        selectedFeature.endpoint,
+        formData,
+        selectedFeature.fallbackFilename,
+        accessToken,
+        { signal: toolSignal },
+      );
       showToast("success", "İşlem tamamlandı", "Çıktı dosyası başarıyla indirildi.");
       resetForm(true);
       disposeToolProgressSuccess();
@@ -2406,6 +2564,21 @@ function App() {
       offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
       void refreshSubscriptionState();
     } catch (error) {
+      if (isUserAbortError(error)) {
+        return;
+      }
+      if (error instanceof EntitlementPaymentRequiredError) {
+        if (error.saasGating) {
+          setUserBalance((prev) =>
+            prev && error.saasGating
+              ? { ...prev, creditBalance: error.saasGating.creditsAfter }
+              : prev,
+          );
+        }
+        armInsufficientCreditsToolBarrier();
+        tryShowConversionPopupRef.current("insufficient_credits", "download");
+        return;
+      }
       const detail = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
       showToast("error", "İşlem başarısız", detail);
       tryShowConversionPopupRef.current("buy_credits");
@@ -2713,6 +2886,7 @@ function App() {
         />
         <AdminPanel
           accessToken={accessToken}
+          userEmail={user?.email ?? "admin"}
           onExit={() => {
             setView("web");
             window.history.replaceState({}, "", "/workspace");
@@ -2808,9 +2982,34 @@ function App() {
         open={upgradeModalOpen}
         onClose={() => setUpgradeModalOpen(false)}
         language={language}
-        buyingProduct={buyingCreditProduct}
-        onBuyPack={(product) => void handleBuyCreditPack(product)}
+        buyingProduct={null}
+        onBuyPack={(product) => void handleSelectCreditPackForPayment(product)}
       />
+
+      {paymentSummaryProduct && accessToken ? (
+        <PaymentSummaryModal
+          open
+          product={paymentSummaryProduct}
+          accessToken={accessToken}
+          language={language}
+          onClose={() => setPaymentSummaryProduct(null)}
+          onPurchaseSuccess={() => void handleCreditPackPurchaseSuccess()}
+        />
+      ) : null}
+
+      {uploads[0] && selectedFeatureId === "split" ? (
+        <SplitPagePickerModal
+          open={splitPickerOpen}
+          onClose={() => setSplitPickerOpen(false)}
+          file={uploads[0].file}
+          password={password}
+          maxPage={uploads[0].pageCount}
+          pagesText={pagesText}
+          onPagesTextChange={setPagesText}
+          onPagesErrorClear={() => setPagesError("")}
+          language={language}
+        />
+      ) : null}
 
       <ConversionPopup
         open={conversionPopupOpen}
@@ -2838,6 +3037,47 @@ function App() {
         language={language}
         operationsToday={userBalance?.creditBalance ?? 0}
       />
+
+      {excelDialogOpen ? (
+        <div
+          className="fixed inset-0 z-[11500] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              setExcelDialogOpen(false);
+            }
+          }}
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/98 to-slate-950/98 p-6 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+          >
+            <h2 className="text-lg font-semibold text-slate-50">{W.pdfExcelWarningTitle}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-300">{W.pdfExcelWarningBody}</p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className="rounded-lg border border-white/12 bg-white/5 px-4 py-2 text-sm text-slate-200 hover:bg-white/10"
+                onClick={() => setExcelDialogOpen(false)}
+              >
+                {W.toolProgressDismiss}
+              </button>
+              <button
+                type="button"
+                className="rounded-lg border border-amber-500/35 bg-amber-500/15 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/25"
+                onClick={() => {
+                  excelConfirmRef.current = true;
+                  setExcelDialogOpen(false);
+                  (document.getElementById("nb-workspace-tool-form") as HTMLFormElement | null)?.requestSubmit();
+                }}
+              >
+                {W.pdfExcelWarningConfirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {toast ? (
         <div className={`toast toast--${toast.type}`}>
@@ -2964,8 +3204,8 @@ function App() {
                 balanceLoading={subscriptionLoading}
                 transactions={creditTransactions}
                 transactionsLoading={creditTransactionsLoading}
-                onBuyPack={(product) => void handleBuyCreditPack(product)}
-                buyingProduct={buyingCreditProduct}
+                onBuyPack={(product) => void handleSelectCreditPackForPayment(product)}
+                buyingProduct={null}
               />
             </section>
           ) : null}
@@ -3021,6 +3261,12 @@ function App() {
             </div>
           ) : null}
 
+          {showCreditWorkspaceChrome && creditsModerateLow && !creditsRunningLow ? (
+            <div className="border-b border-cyan-500/20 bg-gradient-to-r from-cyan-950/30 via-slate-900/40 to-transparent px-4 py-2.5 md:px-6">
+              <p className="text-[13px] font-medium text-cyan-100/90">{W.lowCreditBanner(userBalance?.creditBalance ?? 0)}</p>
+            </div>
+          ) : null}
+
           {standardLaneProcessingUpsell ? (
             <div
               className="border-b border-indigo-500/20 bg-gradient-to-r from-cyan-950/35 via-nb-panel/40 to-indigo-950/25 px-4 py-3 md:px-6"
@@ -3048,7 +3294,7 @@ function App() {
                   : undefined
               }
             >
-              <form className="tool-form" onSubmit={submitCurrentFeature}>
+              <form id="nb-workspace-tool-form" className="tool-form" onSubmit={submitCurrentFeature}>
             <label className="field">
               <span>{W.filePick}</span>
               <div className="file-picker-row flex-wrap">
@@ -3123,6 +3369,19 @@ function App() {
                   />
                   {pagesError ? <span className="field-error">{pagesError}</span> : null}
                 </label>
+
+                {uploads[0]?.file.type === "application/pdf" && (uploads[0].pageCount ?? 0) > 0 ? (
+                  <div className="field">
+                    <button type="button" className="primary-action w-full sm:w-auto" onClick={() => setSplitPickerOpen(true)}>
+                      {W.splitPickerOpen}
+                    </button>
+                    <span className="field-hint block mt-1.5">
+                      {language === "tr"
+                        ? "Görsel ızgarada sayfa seçin; metin alanı ile eşzamanlıdır."
+                        : "Pick pages in the grid; the text field updates with your selection."}
+                    </span>
+                  </div>
+                ) : null}
 
                 <label className="field">
                   <span>{W.splitModeLabel}</span>
@@ -3429,7 +3688,10 @@ function App() {
               >
                 <div className="progress-bar__fill progress-bar__fill--success" style={{ width: "100%" }} />
               </div>
-              {showCreditWorkspaceChrome && postRunUpgradeHintVisible && !postRunUpgradeHintDismissed ? (
+              {showCreditWorkspaceChrome &&
+              postRunUpgradeHintVisible &&
+              !postRunUpgradeHintDismissed &&
+              !hideMonetizationHintsForInsufficientGate ? (
                 <div className="mt-3 flex flex-col gap-2 rounded-xl border border-indigo-500/20 bg-indigo-950/20 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-[12px] leading-relaxed text-slate-400">{W.delayMonetizationAfterHint}</p>
                   <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -3450,7 +3712,10 @@ function App() {
                   </div>
                 </div>
               ) : null}
-              {upgradeNudgeTier >= 1 && showCreditWorkspaceChrome && !upgradeNudgePostSuccessHidden ? (
+              {upgradeNudgeTier >= 1 &&
+              showCreditWorkspaceChrome &&
+              !upgradeNudgePostSuccessHidden &&
+              !hideMonetizationHintsForInsufficientGate ? (
                 <UpgradeNudgeInline
                   tier={upgradeNudgeTier as 1 | 2 | 3}
                   W={W}
@@ -3470,7 +3735,7 @@ function App() {
                   onDownload={() => {
                     const gd = toolProgressSuccess.gatedDownload;
                     if (gd) {
-                      void runGatedDownload(gd.resultId, gd.fallbackName);
+                      queueGatedDownload(gd.resultId, gd.fallbackName, selectedFeatureId);
                     }
                   }}
                   onUpgrade={() => openConversionUpgradeModalManual()}
@@ -3484,17 +3749,12 @@ function App() {
                       : () => {
                           const gd = toolProgressSuccess.gatedDownload;
                           if (gd) {
-                            void runGatedDownload(gd.resultId, gd.fallbackName);
+                            queueGatedDownload(gd.resultId, gd.fallbackName, selectedFeatureId);
                           }
                         }
                   }
                   onDismiss={disposeToolProgressSuccess}
                   dismissLabel={W.toolProgressDismiss}
-                  legacyPreviewHint={
-                    language === "tr"
-                      ? "Önizleme hazır. Dosyayı indirmek için aşağıdaki düğmeye basın."
-                      : "Preview ready. Press the button below to download."
-                  }
                 />
               ) : (
                 <div className="merge-progress-fixed__success-actions">
@@ -3541,6 +3801,15 @@ function App() {
                     </p>
                   ) : null}
                 </div>
+                {showToolCancelButton ? (
+                  <button
+                    type="button"
+                    className="nb-transition shrink-0 rounded-lg border border-white/14 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/30 hover:text-cyan-100"
+                    onClick={handleCancelCurrentOperation}
+                  >
+                    {W.toolRunCancel}
+                  </button>
+                ) : null}
                 <span className="merge-progress-fixed__pct">
                   {mergeProgressIndeterminate ? "…" : `%${mergeJob.percent}`}
                 </span>
@@ -3568,8 +3837,11 @@ function App() {
               </div>
               <div className="merge-progress-fixed__meta">
                 <span>
-                  {W.mergeStatus}: {mergeJob.current}/{mergeJob.total}
-                  {mergeJob.where ? ` · ${mergeJob.where}` : ""}
+                  {mergeJob.total > 1
+                    ? W.mergeFileProgress(mergeJob.current, mergeJob.total, mergeJob.where)
+                    : `${W.mergeStatus}: ${mergeJob.current}/${mergeJob.total}${
+                        mergeJob.where ? ` · ${mergeJob.where}` : ""
+                      }`}
                 </span>
                 {mergeEtaSeconds !== null && mergeJob.status === "running" && !mergeProgressIndeterminate ? (
                   <span className="merge-progress-fixed__eta">{W.mergeEtaLine(mergeEtaSeconds)}</span>
@@ -3608,6 +3880,15 @@ function App() {
                     )}
                   </p>
                 </div>
+                {showToolCancelButton ? (
+                  <button
+                    type="button"
+                    className="nb-transition shrink-0 rounded-lg border border-white/14 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/30 hover:text-cyan-100"
+                    onClick={handleCancelCurrentOperation}
+                  >
+                    {W.toolRunCancel}
+                  </button>
+                ) : null}
                 <span className="merge-progress-fixed__pct">
                   {genericProgressIndeterminate ? "…" : `%${genericToolPercent}`}
                 </span>
