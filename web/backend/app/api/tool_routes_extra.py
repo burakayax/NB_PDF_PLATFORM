@@ -1,0 +1,515 @@
+"""Ek PDF araç uç noktaları (result-store + doğrudan indirme). routes.py ile döngüsel import yok."""
+
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+from typing import Annotated, Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
+
+from app.api.pdf_auth import extract_pdf_access_token
+from app.core import operations
+from app.core.operations import (
+    cleanup_and_raise,
+    cleanup_path,
+    create_workdir,
+    download_response,
+    format_derived_filename,
+    parse_pages_text,
+    save_upload,
+)
+from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail
+from app.core.result_store import save_result
+from app.core.thread_pool import run_cpu_bound
+from app.core.saas_gate import (
+    entitlement_check,
+    entitlement_consume,
+    saas_current_user_id,
+)
+from src import pdf_toolkit_extra as ptx
+
+logger = logging.getLogger(__name__)
+
+engine = operations.get_engine()
+
+router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS-extras"])
+
+
+def _g_check(d: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "allowed": bool(d.get("allowed")),
+        "reason": str(d.get("reason", "")),
+        "cost": int(d.get("cost") or 0),
+        "creditsBefore": int(d.get("creditsBefore") or 0),
+        "creditsAfter": int(d.get("creditsAfter") or 0),
+    }
+
+
+def _g_con(d: dict[str, Any]) -> dict[str, Any]:
+    if d.get("status") == "ok":
+        return {
+            "allowed": True,
+            "reason": str(d.get("reason", "")),
+            "cost": int(d.get("cost") or 0),
+            "creditsBefore": int(d.get("creditsBefore") or 0),
+            "creditsAfter": int(d.get("creditsAfter") or 0),
+        }
+    return {
+        "allowed": False,
+        "reason": str(d.get("reason", "")),
+        "cost": int(d.get("cost") or 0),
+        "creditsBefore": int(d.get("creditsBefore") or 0),
+        "creditsAfter": int(d.get("creditsAfter") or 0),
+    }
+
+
+# --- result-store: önizleme + kredi indirmede
+
+
+def _pack_pdf_result_bytes(data: bytes, out_filename: str, user_id: str, tool: str) -> dict[str, Any]:
+    thumb = generate_blurred_pdf_thumbnail(data)
+    h = save_result(
+        data,
+        out_filename,
+        "application/pdf",
+        user_id=user_id,
+        thumbnail_png=thumb,
+        tool=tool,
+    )
+    return {
+        "result_id": h.result_id,
+        "filename": h.filename,
+        "mime": h.mime,
+        "size_bytes": h.size_bytes,
+        "has_thumbnail": h.has_thumbnail,
+    }
+
+
+@router.post("/delete-pages")
+async def tool_delete_pages(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    pages_to_delete: str = Form(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "delete-pages")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
+        to_del = parse_pages_text(pages_to_delete, max_page=n)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Silinmis", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.delete_pages_pdf(sp, str(out_p), to_del, password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        data = out_p.read_bytes()
+        body = _pack_pdf_result_bytes(data, out_n, user_id, "delete-pages")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/rotate-pdf")
+async def tool_rotate_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    degrees: int = Form(90),
+    pages: str = Form(""),
+    password: str = Form(""),
+):
+    if degrees not in (90, 180, 270):
+        raise HTTPException(status_code=400, detail="Açı 90, 180 veya 270 olmalı.")
+    decision = await entitlement_check(token, "rotate-pdf")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
+        pages_l = None
+        if (pages or "").strip():
+            pages_l = parse_pages_text(pages, max_page=n)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Dondurulmus", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.rotate_pdf(sp, str(out_p), int(degrees), pages_l, password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "rotate-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/organize-pdf")
+async def tool_organize_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    page_order: str = Form(...),
+    password: str = Form(""),
+):
+    """Virgülle 1 tabanlı yeni sıra, örn: 3,1,2,4"""
+    decision = await entitlement_check(token, "organize-pdf")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
+        raw = [int(x.strip()) for x in page_order.split(",") if x.strip().isdigit()]
+        if len(raw) != n:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Tam {n} sayfa numarası verin (virgülle, örn. 2,1,3).",
+            )
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Duzenlendi", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.organize_pdf(sp, str(out_p), raw, password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "organize-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/unlock-pdf")
+async def tool_unlock_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(...),
+):
+    decision = await entitlement_check(token, "unlock-pdf")
+    if not (password or "").strip():
+        raise HTTPException(status_code=400, detail="PDF parolası gerekli.")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Acik", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.unlock_pdf_pikepdf(sp, str(out_p), password)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "unlock-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/watermark")
+async def tool_watermark(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    watermark_text: str = Form(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "watermark")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Filigran", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.add_watermark_text(sp, str(out_p), watermark_text, opacity=0.15, password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "watermark")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/page-numbers")
+async def tool_page_numbers(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    start_at: int = Form(1),
+    position: str = Form("footer"),
+    password: str = Form(""),
+):
+    if position not in ("footer", "header"):
+        position = "footer"
+    decision = await entitlement_check(token, "page-numbers")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Numarali", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "page-numbers")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/repair-pdf")
+async def tool_repair_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "repair-pdf")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Onarilmis", "pdf")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.repair_pdf(sp, str(out_p), password=pwd)
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "repair-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/pdf-to-ppt")
+async def tool_pdf_to_ppt(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+    dpi: int = Form(120),
+):
+    decision = await entitlement_check(token, "pdf-to-ppt")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+        out_n = format_derived_filename(file.filename or saved.name, "Sunum", "pptx")
+        out_p = workdir / out_n
+
+        def _run():
+            ptx.pdf_to_pptx(sp, str(out_p), password=pwd, dpi=min(200, max(72, int(dpi))))
+            return out_p
+
+        await run_cpu_bound(_run)
+        data = out_p.read_bytes()
+        try:
+            thumb = generate_blurred_pdf_thumbnail(Path(sp).read_bytes())
+        except OSError:
+            thumb = None
+        h = save_result(
+            data,
+            out_n,
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            user_id=user_id,
+            thumbnail_png=thumb,
+            tool="pdf-to-ppt",
+        )
+        return {
+            "result_id": h.result_id,
+            "filename": h.filename,
+            "mime": h.mime,
+            "size_bytes": h.size_bytes,
+            "has_thumbnail": h.has_thumbnail,
+            "saasGating": _g_check(decision),
+        }
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/ppt-to-pdf")
+async def tool_ppt_to_pdf(
+    background_tasks: BackgroundTasks,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+):
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        sp = str(saved)
+        if not (saved.suffix.lower() in (".ppt", ".pptx")):
+            raise HTTPException(status_code=400, detail="PPT veya PPTX yükleyin.")
+        out_n = format_derived_filename(file.filename or saved.name, "PDF", "pdf")
+        out_p = workdir / out_n
+        await run_cpu_bound(ptx.pptx_to_pdf, sp, str(out_p))
+        cons = await entitlement_consume(token, "ppt-to-pdf")
+        if cons.get("status") != "ok":
+            cleanup_path(workdir)
+            return JSONResponse(status_code=402, content={"error": "payment_required", "saasGating": _g_con(cons)})
+        return download_response(out_p, out_p.name, "application/pdf", background_tasks, workdir, saas_gating=_g_con(cons))
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+
+
+@router.post("/pdf-to-image")
+async def tool_pdf_to_image(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    image_format: str = Form("jpg"),
+    dpi: int = Form(150),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "pdf-to-image")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+
+        def _zip():
+            zpath = ptx.pdf_to_images_zip(sp, str(workdir), image_format=image_format, dpi=min(300, max(72, int(dpi))), password=pwd)
+            return Path(zpath)
+
+        zip_p = await run_cpu_bound(_zip)
+        data = zip_p.read_bytes()
+        h = save_result(
+            data,
+            "sayfalar.zip",
+            "application/zip",
+            user_id=user_id,
+            thumbnail_png=None,
+            tool="pdf-to-image",
+        )
+        return {
+            "result_id": h.result_id,
+            "filename": h.filename,
+            "mime": h.mime,
+            "size_bytes": h.size_bytes,
+            "has_thumbnail": False,
+            "saasGating": _g_check(decision),
+        }
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/image-to-pdf")
+async def tool_image_to_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    files: list[UploadFile] = File(...),
+):
+    if not files or len(files) < 1:
+        raise HTTPException(status_code=400, detail="En az bir görüntü seçin.")
+    decision = await entitlement_check(token, "image-to-pdf")
+    workdir = create_workdir()
+    try:
+        paths: list[str] = []
+        for i, up in enumerate(files):
+            p = await save_upload(up, workdir, filename=f"{i:04d}_{Path(up.filename or 'img').name}")
+            paths.append(str(p))
+        user_id = await saas_current_user_id(token)
+        out_p = workdir / "fotograflar.pdf"
+
+        def _run():
+            ptx.images_to_pdf(paths, str(out_p))
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), "fotograflar.pdf", user_id, "image-to-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/html-to-pdf")
+async def tool_html_to_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    source_url: str = Form(""),
+    html: str = Form(""),
+):
+    if not (source_url or "").strip() and not (html or "").strip():
+        raise HTTPException(status_code=400, detail="URL veya HTML metni gerekli.")
+    decision = await entitlement_check(token, "html-to-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        out_p = workdir / "web.pdf"
+
+        def _run():
+            u = (source_url or "").strip()
+            if u:
+                ptx.html_url_to_pdf(u, str(out_p))
+            else:
+                ptx.html_to_pdf_file(html or "<html><body><p>Boş</p></body></html>", str(out_p))
+            return out_p
+
+        await run_cpu_bound(_run)
+        body = _pack_pdf_result_bytes(out_p.read_bytes(), "web.pdf", user_id, "html-to-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)

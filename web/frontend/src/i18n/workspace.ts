@@ -4,11 +4,23 @@ import type { Language } from "./landing";
 export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "split",
   "merge",
-  "pdf-to-word",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
   "compress",
+  "pdf-to-word",
   "word-to-pdf",
   "excel-to-pdf",
   "pdf-to-excel",
+  "pdf-to-ppt",
+  "ppt-to-pdf",
+  "pdf-to-image",
+  "image-to-pdf",
+  "html-to-pdf",
+  "unlock-pdf",
+  "watermark",
+  "page-numbers",
+  "repair-pdf",
   "encrypt",
 ];
 
@@ -22,6 +34,18 @@ export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
   "excel-to-pdf": 3,
   "pdf-to-excel": 3,
   encrypt: 2,
+  "delete-pages": 2,
+  "rotate-pdf": 2,
+  "organize-pdf": 2,
+  "unlock-pdf": 2,
+  watermark: 2,
+  "page-numbers": 2,
+  "repair-pdf": 2,
+  "pdf-to-ppt": 4,
+  "ppt-to-pdf": 3,
+  "pdf-to-image": 3,
+  "image-to-pdf": 3,
+  "html-to-pdf": 3,
 };
 
 export function sidebarToolCreditLine(id: FeatureKey, lang: Language): string {
@@ -38,6 +62,18 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "pdf-to-excel": { tr: "PDF → Excel", en: "PDF → Excel" },
   compress: { tr: "PDF Sıkıştır", en: "Compress PDF" },
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
+  "delete-pages": { tr: "Sayfa Sil", en: "Delete pages" },
+  "rotate-pdf": { tr: "PDF Döndür", en: "Rotate PDF" },
+  "organize-pdf": { tr: "Sayfa Sırala", en: "Organize pages" },
+  "unlock-pdf": { tr: "PDF Şifre Çöz", en: "Unlock PDF" },
+  watermark: { tr: "Filigran Ekle", en: "Add watermark" },
+  "page-numbers": { tr: "Sayfa Numarası", en: "Page numbers" },
+  "repair-pdf": { tr: "PDF Onar", en: "Repair PDF" },
+  "pdf-to-ppt": { tr: "PDF → PowerPoint", en: "PDF → PowerPoint" },
+  "ppt-to-pdf": { tr: "PowerPoint → PDF", en: "PowerPoint → PDF" },
+  "pdf-to-image": { tr: "PDF → Görüntü", en: "PDF to image" },
+  "image-to-pdf": { tr: "Görüntü → PDF", en: "Image to PDF" },
+  "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
 };
 
 export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
@@ -452,6 +488,82 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
       title: tr ? "PDF ŞİFRELE" : "ENCRYPT PDF",
       description: tr ? "PDF dosyasına güvenli bir açılış parolası uygular." : "Apply an open password to protect the PDF.",
       button: tr ? "ŞİFRELİ PDF İNDİR" : "DOWNLOAD ENCRYPTED PDF",
+    },
+    "delete-pages": {
+      title: tr ? "SAYFA SİL" : "DELETE PAGES",
+      description: tr
+        ? "Belirttiğiniz sayfaları PDF’den kaldırır, geri kalanı yeni dosya olarak verir."
+        : "Remove the pages you specify and output the rest as a new file.",
+      button: tr ? "SAYFALARI SİL" : "DELETE PAGES",
+    },
+    "rotate-pdf": {
+      title: tr ? "PDF DÖNDÜR" : "ROTATE PDF",
+      description: tr
+        ? "Seçili veya tüm sayfalarda 90° / 180° / 270° dönüş uygular."
+        : "Rotate selected or all pages by 90°, 180°, or 270°.",
+      button: tr ? "DÖNDÜRÜLMÜŞ PDF AL" : "GET ROTATED PDF",
+    },
+    "organize-pdf": {
+      title: tr ? "SAYFA SIRALA" : "ORGANIZE PAGES",
+      description: tr
+        ? "Sayfa sırasını virgülle (ör. 3,1,2,4) belirterek yeniden düzenler."
+        : "Reorder pages by listing the new 1-based order (e.g. 3,1,2,4).",
+      button: tr ? "SIRALANMIŞ PDF AL" : "GET REORDERED PDF",
+    },
+    "unlock-pdf": {
+      title: tr ? "PDF ŞİFRE ÇÖZ" : "UNLOCK PDF",
+      description: tr
+        ? "Bilinen açılış parolası ile korumayı kaldırır; yalnızca yetkili belgeler için."
+        : "Remove open-password protection if you supply the correct password.",
+      button: tr ? "AÇIK PDF AL" : "GET UNLOCKED PDF",
+    },
+    watermark: {
+      title: tr ? "FİLİGRAN EKLE" : "ADD WATERMARK",
+      description: tr ? "Tüm sayfalara metin filigranı ekler." : "Add a text watermark on every page.",
+      button: tr ? "FİLİGRANLI PDF AL" : "GET WATERMARKED PDF",
+    },
+    "page-numbers": {
+      title: tr ? "SAYFA NUMARASI" : "PAGE NUMBERS",
+      description: tr ? "Alt veya üst bilgiye otomatik sayfa numarası basar." : "Add automatic page numbers in the header or footer.",
+      button: tr ? "NUMARALI PDF AL" : "GET NUMBERED PDF",
+    },
+    "repair-pdf": {
+      title: tr ? "PDF ONAR" : "REPAIR PDF",
+      description: tr
+        ? "Bozuk veya açılması zor dosyalarda temel kurtarma dener."
+        : "Basic recovery for damaged or hard-to-open PDFs.",
+      button: tr ? "ONARILMIŞ PDF AL" : "GET REPAIRED PDF",
+    },
+    "pdf-to-ppt": {
+      title: tr ? "PDF → POWERPOINT" : "PDF → POWERPOINT",
+      description: tr
+        ? "Sayfaları slayt görsellerine dönüştürerek PPTX üretir."
+        : "Render pages as slide images and build a PPTX.",
+      button: tr ? "PPTX İNDİR" : "DOWNLOAD PPTX",
+    },
+    "ppt-to-pdf": {
+      title: tr ? "POWERPOINT → PDF" : "POWERPOINT → PDF",
+      description: tr
+        ? "Sunumu PDF’e aktarır (Windows + PowerPoint ortamında en iyi sonuç)."
+        : "Convert a presentation to PDF (best on Windows with PowerPoint).",
+      button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
+    },
+    "pdf-to-image": {
+      title: tr ? "PDF → GÖRÜNTÜ" : "PDF TO IMAGE",
+      description: tr ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır." : "Export each page as JPG/PNG in a ZIP file.",
+      button: tr ? "ZIP İNDİR" : "DOWNLOAD ZIP",
+    },
+    "image-to-pdf": {
+      title: tr ? "GÖRÜNTÜ → PDF" : "IMAGE TO PDF",
+      description: tr ? "Birden çok görüntüyü tek PDF’e birleştirir." : "Combine multiple images into one PDF.",
+      button: tr ? "PDF AL" : "GET PDF",
+    },
+    "html-to-pdf": {
+      title: tr ? "HTML → PDF" : "HTML TO PDF",
+      description: tr
+        ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
+        : "Turn a web URL or HTML snippet into a PDF.",
+      button: tr ? "PDF OLUŞTUR" : "CREATE PDF",
     },
   };
   return map[id];

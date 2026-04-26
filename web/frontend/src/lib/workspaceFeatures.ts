@@ -12,6 +12,8 @@ export type WorkspaceFeatureUi = {
   buttonText: string;
   accept: string;
   multiple?: boolean;
+  /** false: URL/HTML gibi dosya yok; varsayılan true */
+  requiresUpload?: boolean;
   fallbackFilename: string;
 };
 
@@ -30,6 +32,34 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     accept: ".pdf,application/pdf",
     multiple: true,
     fallbackFilename: "birleştirilmiş.pdf",
+  },
+  {
+    id: "delete-pages",
+    icon: "🗑",
+    endpoint: "delete-pages",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "silinmiş-sayfalar.pdf",
+  },
+  {
+    id: "rotate-pdf",
+    icon: "🔄",
+    endpoint: "rotate-pdf",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "döndürülmüş.pdf",
+  },
+  {
+    id: "organize-pdf",
+    icon: "↕",
+    endpoint: "organize-pdf",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "sıralanmış.pdf",
+  },
+  {
+    id: "compress",
+    icon: "🗜",
+    endpoint: "compress",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "sıkıştırılmış.pdf",
   },
   {
     id: "pdf-to-word",
@@ -60,11 +90,69 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     fallbackFilename: "çıktı.xlsx",
   },
   {
-    id: "compress",
-    icon: "🗜",
-    endpoint: "compress",
+    id: "pdf-to-ppt",
+    icon: "📽",
+    endpoint: "pdf-to-ppt",
     accept: ".pdf,application/pdf",
-    fallbackFilename: "sıkıştırılmış.pdf",
+    fallbackFilename: "sunum.pptx",
+  },
+  {
+    id: "ppt-to-pdf",
+    icon: "📊",
+    endpoint: "ppt-to-pdf",
+    accept: ".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    fallbackFilename: "çıktı.pdf",
+  },
+  {
+    id: "pdf-to-image",
+    icon: "🖼",
+    endpoint: "pdf-to-image",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "sayfalar.zip",
+  },
+  {
+    id: "image-to-pdf",
+    icon: "🖼",
+    endpoint: "image-to-pdf",
+    accept: "image/png,image/jpeg,image/jpg,image/webp",
+    multiple: true,
+    fallbackFilename: "fotograflar.pdf",
+  },
+  {
+    id: "html-to-pdf",
+    icon: "🌐",
+    endpoint: "html-to-pdf",
+    accept: "",
+    requiresUpload: false,
+    fallbackFilename: "web.pdf",
+  },
+  {
+    id: "unlock-pdf",
+    icon: "🔓",
+    endpoint: "unlock-pdf",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "açık.pdf",
+  },
+  {
+    id: "watermark",
+    icon: "💧",
+    endpoint: "watermark",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "filigranlı.pdf",
+  },
+  {
+    id: "page-numbers",
+    icon: "#",
+    endpoint: "page-numbers",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "numaralı.pdf",
+  },
+  {
+    id: "repair-pdf",
+    icon: "🩹",
+    endpoint: "repair-pdf",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "onarılmış.pdf",
   },
   {
     id: "encrypt",
@@ -74,6 +162,27 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     fallbackFilename: "şifreli.pdf",
   },
 ];
+
+/** POST sonucu result_id dönen (önizleme + indirmede tüketim) araçlar */
+export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
+  "split",
+  "compress",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "watermark",
+  "page-numbers",
+  "repair-pdf",
+  "pdf-to-ppt",
+  "pdf-to-image",
+  "image-to-pdf",
+  "html-to-pdf",
+];
+
+export function isResultStoreTool(id: FeatureKey): boolean {
+  return RESULT_STORE_TOOL_IDS.includes(id);
+}
 
 export const WORKSPACE_TOOL_IDS: FeatureKey[] = REGISTRY.map((r) => r.id);
 
@@ -102,6 +211,7 @@ export function buildWorkspaceFeaturesFromCms(
           : fb.button;
     return {
       ...r,
+      requiresUpload: r.requiresUpload !== false,
       title: typeof ov?.title === "string" && ov.title.trim() ? ov.title.trim() : fb.title,
       description: typeof ov?.description === "string" && ov.description.trim() ? ov.description.trim() : fb.description,
       buttonText: btn,

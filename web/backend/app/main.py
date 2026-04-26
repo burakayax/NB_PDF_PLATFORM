@@ -31,6 +31,7 @@ from slowapi.middleware import SlowAPIMiddleware
 
 from app.api.auth_routes import router as auth_router
 from app.api.routes import router
+from app.api.tool_routes_extra import router as tool_routes_extra
 from app.core.result_store import start_ttl_sweeper
 
 # Trial abuse reference routes (disabled by default; see app.auth.registration_workflow_example):
@@ -94,6 +95,7 @@ async def attach_nb_device_id(request: Request, call_next):
 
 
 app.include_router(router)
+app.include_router(tool_routes_extra)
 app.include_router(auth_router, prefix="/api")
 # app.include_router(example_router, prefix="/api")
 

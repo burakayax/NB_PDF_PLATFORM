@@ -22,3 +22,6 @@ pdf2image
 openpyxl
 reportlab
 pdfplumber
+python-pptx
+xhtml2pdf
+img2pdf

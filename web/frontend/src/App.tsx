@@ -3,9 +3,9 @@
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  compressToResult,
   createMergeJob,
   downloadFromApi,
+  postToolToResult,
   downloadMergeJob,
   downloadResult,
   EntitlementPaymentRequiredError,
@@ -14,7 +14,6 @@ import {
   inspectPdf,
   MergeJobNotFoundError,
   requestMergeJobCancel,
-  splitToResult,
   type MergeJobStatus,
 } from "./api";
 import { submitContactForm } from "./api/contact";
@@ -89,7 +88,11 @@ import {
   ws,
 } from "./i18n/workspace";
 import { getCmsWorkspaceBanner } from "./lib/landingCmsMerge";
-import { buildWorkspaceFeaturesFromCms, type WorkspaceFeatureUi } from "./lib/workspaceFeatures";
+import {
+  buildWorkspaceFeaturesFromCms,
+  isResultStoreTool,
+  type WorkspaceFeatureUi,
+} from "./lib/workspaceFeatures";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
@@ -130,7 +133,23 @@ type Feature = WorkspaceFeatureUi;
 // PDF ön incelemesi (şifreli mi) gerektiren modül kimlikleri; inspect isteği bu listeye göre tetiklenir.
 // Parola alanlarının görünürlüğü modül bazında olduğundan hangi işlemlerin inceleme istediği açıkça seçilmelidir.
 // Liste backend veya UI ile senkron bozulursa şifreli dosyada parola alanı çıkmaz veya gereksiz istek atılır.
-const pdfInspectionFeatures: FeatureId[] = ["split", "merge", "pdf-to-word", "pdf-to-excel", "compress", "encrypt"];
+const pdfInspectionFeatures: FeatureId[] = [
+  "split",
+  "merge",
+  "pdf-to-word",
+  "pdf-to-excel",
+  "compress",
+  "encrypt",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "watermark",
+  "page-numbers",
+  "repair-pdf",
+  "pdf-to-ppt",
+  "pdf-to-image",
+];
 
 function EmptyStateIllustration() {
   return (
@@ -521,6 +540,21 @@ function App() {
   }, [pagesText, splitMode, selectedFeatureId, splitDraftStorageKey]);
 
   const [outputPassword, setOutputPassword] = useState("");
+  const [deletePagesText, setDeletePagesText] = useState("");
+  const [deletePagesError, setDeletePagesError] = useState("");
+  const [rotateDeg, setRotateDeg] = useState("90");
+  const [rotatePagesOnly, setRotatePagesOnly] = useState("");
+  const [organizeOrder, setOrganizeOrder] = useState("");
+  const [unlockOpenPassword, setUnlockOpenPassword] = useState("");
+  const [watermarkPhrase, setWatermarkPhrase] = useState("TASLAK");
+  const [pageNumStart, setPageNumStart] = useState("1");
+  const [pageNumPos, setPageNumPos] = useState<"footer" | "header">("footer");
+  const [pdfToPptDpi, setPdfToPptDpi] = useState("150");
+  const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
+  const [pdfToImgDpi, setPdfToImgDpi] = useState("150");
+  const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
+  const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("https://");
+  const [htmlToPdfRaw, setHtmlToPdfRaw] = useState("<html><body><p>Merhaba</p></body></html>");
   const [mergeJob, setMergeJob] = useState<MergeJobStatus | null>(null);
   /** Birleştirme dışı araçlarda ETA / süre göstergesi için başlangıç zamanı ve dosya boyutu. */
   const [toolRunStartedAt, setToolRunStartedAt] = useState<number | null>(null);
@@ -679,6 +713,7 @@ function App() {
       endpoint: selectedFeatureId,
       buttonText: fb.button,
       accept: ".pdf,application/pdf",
+      requiresUpload: true,
       fallbackFilename: "çıktı.pdf",
     };
   }, [workspaceFeatures, selectedFeatureId, language]);
@@ -794,6 +829,21 @@ function App() {
     setInputPassword("");
     setPagesText("");
     setPagesError("");
+    setDeletePagesText("");
+    setDeletePagesError("");
+    setRotateDeg("90");
+    setRotatePagesOnly("");
+    setOrganizeOrder("");
+    setUnlockOpenPassword("");
+    setWatermarkPhrase("TASLAK");
+    setPageNumStart("1");
+    setPageNumPos("footer");
+    setPdfToPptDpi("150");
+    setPdfToImgFmt("jpg");
+    setPdfToImgDpi("150");
+    setHtmlToPdfMode("url");
+    setHtmlToPdfUrl("https://");
+    setHtmlToPdfRaw("<html><body><p>Merhaba</p></body></html>");
     setSplitMode("single");
     setOutputPassword("");
     setMergePointerDraggingId(null);
@@ -1750,9 +1800,23 @@ function App() {
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
 
   const showSplitPasswordField =
-    ["split", "pdf-to-word", "pdf-to-excel", "compress"].includes(selectedFeature.id) &&
+    [
+      "split",
+      "pdf-to-word",
+      "pdf-to-excel",
+      "compress",
+      "delete-pages",
+      "rotate-pdf",
+      "organize-pdf",
+      "watermark",
+      "page-numbers",
+      "repair-pdf",
+      "pdf-to-ppt",
+      "pdf-to-image",
+    ].includes(selectedFeature.id) &&
     uploads.length > 0 &&
     currentPdfIsEncrypted;
+  const showUnlockPasswordField = selectedFeature.id === "unlock-pdf" && uploads.length > 0;
   const showEncryptSourcePasswordField = selectedFeature.id === "encrypt" && uploads.length > 0 && currentPdfIsEncrypted;
   const mergeHasMissingPasswords =
     selectedFeature.id === "merge" &&
@@ -1925,11 +1989,18 @@ function App() {
       (mergeProgressActive && mergeJob && mergeJob.status !== "failed"));
 
   const splitInputDisabled = uploads.length === 0;
+  const toolNeedsUpload = selectedFeature.requiresUpload !== false;
   const submitDisabled =
     submitting ||
-    uploads.length === 0 ||
+    (toolNeedsUpload && uploads.length === 0) ||
     !selectedFeatureAllowed ||
     (selectedFeature.id === "split" && (!!pagesError || !pagesText.trim())) ||
+    (selectedFeature.id === "delete-pages" && (!!deletePagesError || !deletePagesText.trim())) ||
+    (selectedFeature.id === "organize-pdf" && !organizeOrder.trim()) ||
+    (showUnlockPasswordField && !unlockOpenPassword.trim()) ||
+    (selectedFeature.id === "watermark" && !watermarkPhrase.trim()) ||
+    (selectedFeature.id === "html-to-pdf" && htmlToPdfMode === "url" && !htmlToPdfUrl.trim()) ||
+    (selectedFeature.id === "html-to-pdf" && htmlToPdfMode === "html" && !htmlToPdfRaw.trim()) ||
     (showSplitPasswordField && !password.trim()) ||
     (showEncryptSourcePasswordField && !inputPassword.trim()) ||
     (selectedFeature.id === "encrypt" && (!outputPassword.trim() || uploads.length === 0)) ||
@@ -2340,7 +2411,12 @@ function App() {
     // Bu akış bölünürse kota veya dosya kontrolü atlanırsa sunucu hataları veya tutarsız UX oluşur.
     event.preventDefault();
 
-    if (uploads.length === 0) {
+    if (selectedFeature.id === "html-to-pdf") {
+      // dosya yok
+    } else if (selectedFeature.id === "image-to-pdf" && uploads.length === 0) {
+      showToast("error", "Dosya seçilmedi", "Lütfen en az bir görüntü seçin.");
+      return;
+    } else if (selectedFeature.id !== "merge" && uploads.length === 0) {
       showToast("error", "Dosya seçilmedi", "Lütfen önce işlenecek dosyayı seçin.");
       return;
     }
@@ -2366,6 +2442,21 @@ function App() {
       }
     }
 
+    if (selectedFeature.id === "delete-pages") {
+      const fmt = validatePagesFormat(deletePagesText, language);
+      const maxP = uploads[0]?.pageCount ?? null;
+      let over = validatePagesMax(deletePagesText, maxP, language);
+      if (!fmt && !over && Boolean(uploads[0]?.encrypted) && maxP === null && deletePagesText.trim()) {
+        over = W.validationPagesNeedPassword;
+      }
+      const pageValidation = fmt || over || (!deletePagesText.trim() ? W.validationPagesRequired : "");
+      setDeletePagesError(pageValidation);
+      if (pageValidation) {
+        showToast("error", language === "tr" ? "Sayfa listesi geçersiz" : "Invalid page list", pageValidation);
+        return;
+      }
+    }
+
     if (showSplitPasswordField && !password.trim()) {
       showToast("error", "Kaynak PDF şifresi gerekli", "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor.");
       return;
@@ -2373,6 +2464,11 @@ function App() {
 
     if (showEncryptSourcePasswordField && !inputPassword.trim()) {
       showToast("error", "Kaynak PDF şifresi gerekli", "Seçilen PDF şifreli olduğu için kaynak PDF şifresini girin.");
+      return;
+    }
+
+    if (showUnlockPasswordField && !unlockOpenPassword.trim()) {
+      showToast("error", "Parola gerekli", "PDF’yi açmak için mevcut parolayı girin.");
       return;
     }
 
@@ -2475,37 +2571,113 @@ function App() {
 
       setSubmitting(true);
       setToolRunStartedAt(Date.now());
-      setToolRunFileBytes(uploads[0]?.file.size ?? 0);
+      const runBytes =
+        selectedFeature.id === "html-to-pdf"
+          ? 0
+          : selectedFeature.id === "image-to-pdf"
+            ? uploads.reduce((a, u) => a + u.file.size, 0)
+            : uploads[0]?.file.size ?? 0;
+      setToolRunFileBytes(runBytes);
       setToolRunClock(0);
 
       const formData = new FormData();
-      formData.append("file", uploads[0].file);
+      const fid = selectedFeature.id;
 
-      switch (selectedFeature.id) {
-        case "split":
-          formData.append("pages_text", pagesText.trim());
-          formData.append("mode", splitMode);
-          formData.append("password", password.trim());
-          break;
-        case "pdf-to-word":
-        case "pdf-to-excel":
-        case "compress":
-          formData.append("password", password.trim());
-          break;
-        case "encrypt":
-          formData.append("input_password", inputPassword.trim());
-          formData.append("user_password", outputPassword.trim());
-          break;
-        default:
-          break;
+      if (fid === "html-to-pdf") {
+        if (htmlToPdfMode === "url") {
+          formData.append("source_url", htmlToPdfUrl.trim());
+        } else {
+          formData.append("html", htmlToPdfRaw);
+        }
+      } else if (fid === "image-to-pdf") {
+        for (const u of uploads) {
+          formData.append("files", u.file);
+        }
+      } else {
+        formData.append("file", uploads[0]!.file);
+        switch (fid) {
+          case "split":
+            formData.append("pages_text", pagesText.trim());
+            formData.append("mode", splitMode);
+            formData.append("password", password.trim());
+            break;
+          case "pdf-to-word":
+          case "pdf-to-excel":
+          case "compress":
+            formData.append("password", password.trim());
+            break;
+          case "delete-pages":
+            formData.append("pages_to_delete", deletePagesText.trim());
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "rotate-pdf": {
+            formData.append("degrees", rotateDeg);
+            if (rotatePagesOnly.trim()) {
+              formData.append("pages", rotatePagesOnly.trim());
+            }
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          }
+          case "organize-pdf":
+            formData.append("page_order", organizeOrder.trim());
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "unlock-pdf":
+            formData.append("password", unlockOpenPassword.trim());
+            break;
+          case "watermark":
+            formData.append("watermark_text", watermarkPhrase.trim());
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "page-numbers":
+            formData.append("start_at", pageNumStart.trim() || "1");
+            formData.append("position", pageNumPos);
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "repair-pdf":
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "pdf-to-ppt":
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            formData.append("dpi", pdfToPptDpi.trim() || "150");
+            break;
+          case "pdf-to-image":
+            formData.append("image_format", pdfToImgFmt);
+            formData.append("dpi", pdfToImgDpi.trim() || "150");
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "encrypt":
+            formData.append("input_password", inputPassword.trim());
+            formData.append("user_password", outputPassword.trim());
+            break;
+          default:
+            break;
+        }
       }
 
-      // Result-store tools: POST returns result_id; download consumes credits.
-      if (selectedFeature.id === "compress" || selectedFeature.id === "split") {
-        const res =
-          selectedFeature.id === "compress"
-            ? await compressToResult(formData, accessToken, { signal: toolSignal })
-            : await splitToResult(formData, accessToken, { signal: toolSignal });
+      if (isResultStoreTool(fid)) {
+        const res = await postToolToResult(
+          selectedFeature.endpoint,
+          formData,
+          accessToken,
+          { signal: toolSignal, errorMessage: language === "tr" ? "İşlem başarısız oldu." : "The operation failed." },
+        );
 
         let thumbnailBlobUrl: string | null = null;
         if (res.has_thumbnail) {
@@ -3295,6 +3467,49 @@ function App() {
               }
             >
               <form id="nb-workspace-tool-form" className="tool-form" onSubmit={submitCurrentFeature}>
+            {selectedFeature.id === "html-to-pdf" ? (
+              <div className="field field--full">
+                <span>{language === "tr" ? "HTML → PDF" : "HTML → PDF"}</span>
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${htmlToPdfMode === "url" ? "bg-nb-primary/25 text-nb-accent" : "bg-white/5 text-nb-muted"}`}
+                    onClick={() => setHtmlToPdfMode("url")}
+                  >
+                    URL
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${htmlToPdfMode === "html" ? "bg-nb-primary/25 text-nb-accent" : "bg-white/5 text-nb-muted"}`}
+                    onClick={() => setHtmlToPdfMode("html")}
+                  >
+                    HTML
+                  </button>
+                </div>
+                {htmlToPdfMode === "url" ? (
+                  <input
+                    type="url"
+                    className="w-full"
+                    value={htmlToPdfUrl}
+                    onChange={(e) => setHtmlToPdfUrl(e.target.value)}
+                    placeholder="https://"
+                  />
+                ) : (
+                  <textarea
+                    className="min-h-[140px] w-full font-mono text-sm"
+                    value={htmlToPdfRaw}
+                    onChange={(e) => setHtmlToPdfRaw(e.target.value)}
+                  />
+                )}
+                <span className="field-hint">
+                  {language === "tr"
+                    ? "Bir sayfa adresi veya ham HTML verin. İşlem sunucu üzerinde yapılır."
+                    : "Provide a page URL or raw HTML. Processing runs on the server."}
+                </span>
+              </div>
+            ) : null}
+
+            {toolNeedsUpload ? (
             <label className="field">
               <span>{W.filePick}</span>
               <div className="file-picker-row flex-wrap">
@@ -3314,11 +3529,12 @@ function App() {
                 ref={fileInputRef}
                 className="hidden-file-input"
                 type="file"
-                accept={selectedFeature.accept}
+                accept={selectedFeature.accept || "*"}
                 multiple={Boolean(selectedFeature.multiple)}
                 onChange={onFilesChange}
               />
             </label>
+            ) : null}
 
             {selectedFeature.id === "split" ? (
               <>
@@ -3394,6 +3610,128 @@ function App() {
               </>
             ) : null}
 
+            {selectedFeature.id === "delete-pages" ? (
+              <label className="field">
+                <span>{language === "tr" ? "Silinecek sayfalar" : "Pages to remove"}</span>
+                <input
+                  type="text"
+                  value={deletePagesText}
+                  disabled={splitInputDisabled}
+                  onChange={(event) => {
+                    const v = event.target.value.replace(/[^\d,\-\s]/g, "");
+                    setDeletePagesText(v);
+                    const fmt = validatePagesFormat(v, language);
+                    const maxP = uploads[0]?.pageCount ?? null;
+                    setDeletePagesError(fmt || validatePagesMax(v, maxP, language));
+                  }}
+                  placeholder={W.pagesPlaceholder}
+                />
+                {deletePagesError ? <span className="field-error">{deletePagesError}</span> : null}
+              </label>
+            ) : null}
+
+            {selectedFeature.id === "rotate-pdf" ? (
+              <>
+                <label className="field">
+                  <span>{language === "tr" ? "Dönüş açısı" : "Rotation"}</span>
+                  <select value={rotateDeg} onChange={(e) => setRotateDeg(e.target.value)}>
+                    <option value="90">90°</option>
+                    <option value="180">180°</option>
+                    <option value="270">270°</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>{language === "tr" ? "Sadece belirli sayfalar (isteğe bağlı)" : "Only certain pages (optional)"}</span>
+                  <input
+                    type="text"
+                    value={rotatePagesOnly}
+                    onChange={(e) => setRotatePagesOnly(e.target.value.replace(/[^\d,\-\s]/g, ""))}
+                    placeholder={language === "tr" ? "Boş: tüm sayfalar" : "Empty: all pages"}
+                  />
+                </label>
+              </>
+            ) : null}
+
+            {selectedFeature.id === "organize-pdf" ? (
+              <label className="field">
+                <span>{language === "tr" ? "Yeni sıra (1 tabanlı, virgülle)" : "New order (1-based, comma-separated)"}</span>
+                <input
+                  type="text"
+                  value={organizeOrder}
+                  onChange={(e) => setOrganizeOrder(e.target.value.replace(/[^\d,\s]/g, ""))}
+                  placeholder="3,1,2,4"
+                />
+                <span className="field-hint">
+                  {language === "tr"
+                    ? "Toplam sayfa adedi kadar ve her sayfayı bir kez içermelidir."
+                    : "Must list every page exactly once, in the new order."}
+                </span>
+              </label>
+            ) : null}
+
+            {showUnlockPasswordField ? (
+              <label className="field">
+                <span>{language === "tr" ? "Mevcut PDF parolası" : "Current PDF password"}</span>
+                <input
+                  type="password"
+                  value={unlockOpenPassword}
+                  onChange={(event) => setUnlockOpenPassword(event.target.value)}
+                  placeholder={language === "tr" ? "Belgeyi açan parola" : "Password that opens the file"}
+                />
+              </label>
+            ) : null}
+
+            {selectedFeature.id === "watermark" ? (
+              <label className="field">
+                <span>{language === "tr" ? "Filigran metni" : "Watermark text"}</span>
+                <input
+                  type="text"
+                  value={watermarkPhrase}
+                  onChange={(e) => setWatermarkPhrase(e.target.value)}
+                  maxLength={120}
+                />
+              </label>
+            ) : null}
+
+            {selectedFeature.id === "page-numbers" ? (
+              <>
+                <label className="field">
+                  <span>{language === "tr" ? "Numaraya başlama" : "Start number"}</span>
+                  <input type="number" min={1} value={pageNumStart} onChange={(e) => setPageNumStart(e.target.value)} />
+                </label>
+                <label className="field">
+                  <span>{language === "tr" ? "Konum" : "Position"}</span>
+                  <select value={pageNumPos} onChange={(e) => setPageNumPos(e.target.value as "footer" | "header")}>
+                    <option value="footer">{language === "tr" ? "Alt bilgi" : "Footer"}</option>
+                    <option value="header">{language === "tr" ? "Üst bilgi" : "Header"}</option>
+                  </select>
+                </label>
+              </>
+            ) : null}
+
+            {selectedFeature.id === "pdf-to-ppt" ? (
+              <label className="field">
+                <span>DPI</span>
+                <input type="number" min={72} max={200} value={pdfToPptDpi} onChange={(e) => setPdfToPptDpi(e.target.value)} />
+              </label>
+            ) : null}
+
+            {selectedFeature.id === "pdf-to-image" ? (
+              <>
+                <label className="field">
+                  <span>{language === "tr" ? "Görüntü biçimi" : "Image format"}</span>
+                  <select value={pdfToImgFmt} onChange={(e) => setPdfToImgFmt(e.target.value)}>
+                    <option value="jpg">JPG</option>
+                    <option value="png">PNG</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>DPI</span>
+                  <input type="number" min={72} max={300} value={pdfToImgDpi} onChange={(e) => setPdfToImgDpi(e.target.value)} />
+                </label>
+              </>
+            ) : null}
+
             {showSplitPasswordField ? (
               <label className="field">
                 <span>{W.sourcePassword}</span>
@@ -3405,6 +3743,17 @@ function App() {
                 />
                 <span className="field-hint">{W.sourcePasswordHint}</span>
               </label>
+            ) : null}
+
+            {selectedFeature.id === "ppt-to-pdf" && language === "en" ? (
+              <p className="text-xs text-amber-200/80">
+                Best on Windows with Microsoft PowerPoint installed. Other environments may not support conversion.
+              </p>
+            ) : null}
+            {selectedFeature.id === "ppt-to-pdf" && language === "tr" ? (
+              <p className="text-xs text-amber-200/80">
+                Windows ve yüklü Microsoft PowerPoint ile en iyi sonuç alınır; diğer ortamlarda dönüşüm desteklenmeyebilir.
+              </p>
             ) : null}
 
             {selectedFeature.id === "encrypt" ? (
@@ -3435,6 +3784,7 @@ function App() {
               </>
             ) : null}
 
+            {toolNeedsUpload ? (
             <div className="selected-files">
               <div className="selected-files__header">
                 <div className="selected-files__title-row">
@@ -3453,7 +3803,13 @@ function App() {
                   <span className="selected-files__info">{W.mergeReorderHint}</span>
                 ) : null}
               </div>
-              {uploads.length === 0 ? (
+              {uploads.length === 0 && selectedFeature.id === "html-to-pdf" ? (
+                <p className="px-1 py-4 text-sm text-nb-muted">
+                  {language === "tr"
+                    ? "Dosya gerekmez; yukarıdaki URL veya HTML alanını doldurun."
+                    : "No file needed — fill in the URL or HTML field above."}
+                </p>
+              ) : uploads.length === 0 ? (
                 <EmptyState title={W.emptyStateTitle} hint={W.emptyStateHint} />
               ) : (
                 <div ref={mergeListScrollRef} className="selected-files__list">
@@ -3627,6 +3983,7 @@ function App() {
                 </div>
               )}
             </div>
+            ) : null}
 
             {selectedFeature.id === "merge" && uploads.length > 0 && (toolFilesStillInspecting || mergeHasMissingPasswords) ? (
               <div className="merge-hint-banner" role="note">

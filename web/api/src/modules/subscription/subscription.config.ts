@@ -12,6 +12,18 @@ export const featureCatalog = [
   "pdf-to-excel",
   "compress",
   "encrypt",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "watermark",
+  "page-numbers",
+  "repair-pdf",
+  "pdf-to-ppt",
+  "ppt-to-pdf",
+  "pdf-to-image",
+  "image-to-pdf",
+  "html-to-pdf",
 ] as const;
 
 export type FeatureKey = (typeof featureCatalog)[number];
