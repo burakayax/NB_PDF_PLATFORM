@@ -17,6 +17,18 @@ const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string; cost: numb
   { id: "word-to-pdf", strategy: "per_run", cost: 3 },
   { id: "excel-to-pdf", strategy: "per_run", cost: 3 },
   { id: "pdf-to-excel", strategy: "per_run", cost: 3 },
+  { id: "delete-pages", strategy: "per_run", cost: 2 },
+  { id: "rotate-pdf", strategy: "per_run", cost: 2 },
+  { id: "organize-pdf", strategy: "per_run", cost: 2 },
+  { id: "unlock-pdf", strategy: "per_run", cost: 2 },
+  { id: "watermark", strategy: "per_run", cost: 2 },
+  { id: "page-numbers", strategy: "per_run", cost: 2 },
+  { id: "repair-pdf", strategy: "per_run", cost: 2 },
+  { id: "pdf-to-ppt", strategy: "per_run", cost: 4 },
+  { id: "ppt-to-pdf", strategy: "per_run", cost: 3 },
+  { id: "pdf-to-image", strategy: "per_run", cost: 3 },
+  { id: "image-to-pdf", strategy: "per_run", cost: 3 },
+  { id: "html-to-pdf", strategy: "per_run", cost: 3 },
 ];
 
 export async function ensureToolRegistry(): Promise<void> {

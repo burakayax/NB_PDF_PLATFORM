@@ -3,6 +3,7 @@ import type { SubscriptionSummary } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
 import { SIDEBAR_TOOL_ORDER, sidebarToolCreditLine, sidebarToolLabel, ws } from "../../i18n/workspace";
+import { SidebarToolGlyph } from "./sidebarToolLucide";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -115,7 +116,7 @@ export function DashboardSidebar({
                     />
                   </svg>
                 ) : (
-                  <span className="w-5 text-center text-xs font-bold opacity-80">•</span>
+                  <SidebarToolGlyph id={id} className="h-5 w-5" active={isActive} />
                 )}
               </span>
               <span className="flex min-w-0 flex-1 flex-col items-stretch justify-center gap-0.5 text-left">

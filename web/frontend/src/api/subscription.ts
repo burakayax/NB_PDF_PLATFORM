@@ -45,7 +45,19 @@ export type FeatureKey =
   | "excel-to-pdf"
   | "pdf-to-excel"
   | "compress"
-  | "encrypt";
+  | "encrypt"
+  | "delete-pages"
+  | "rotate-pdf"
+  | "organize-pdf"
+  | "unlock-pdf"
+  | "watermark"
+  | "page-numbers"
+  | "repair-pdf"
+  | "pdf-to-ppt"
+  | "ppt-to-pdf"
+  | "pdf-to-image"
+  | "image-to-pdf"
+  | "html-to-pdf";
 
 /*
  * The monetisation surface returned by `/api/subscription/plans` and

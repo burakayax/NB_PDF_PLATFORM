@@ -880,28 +880,10 @@ export async function compressToResult(
   accessToken?: string | null,
   options?: { signal?: AbortSignal },
 ): Promise<CompressResult> {
-  appendSaasAccessToken(formData, accessToken);
-  const response = await pdfFetchWithRetry(
-    `${API_BASE}/api/compress`,
-    {
-      method: "POST",
-      body: formData,
-      headers: saasAuthHeaders(accessToken),
-      signal: options?.signal,
-    },
-    4,
-    350,
-  );
-  await ensureOk(response, "Sıkıştırma başarısız oldu.");
-  const data = (await response.json()) as CompressResult;
-  return {
-    result_id: data.result_id,
-    filename: data.filename,
-    mime: data.mime,
-    size_bytes: data.size_bytes,
-    has_thumbnail: data.has_thumbnail,
-    saasGating: normaliseSaasGating(data.saasGating),
-  };
+  return postToolToResult("compress", formData, accessToken, {
+    ...options,
+    errorMessage: "Sıkıştırma başarısız oldu.",
+  });
 }
 
 /** POST /api/split — same result-store shape as compress. */
@@ -910,9 +892,26 @@ export async function splitToResult(
   accessToken?: string | null,
   options?: { signal?: AbortSignal },
 ): Promise<CompressResult> {
+  return postToolToResult("split", formData, accessToken, {
+    ...options,
+    errorMessage: "PDF ayıklama başarısız oldu.",
+  });
+}
+
+/**
+ * Result-store JSON uç noktaları (`/api/{tool}`) — yanıt `result_id` taşır;
+ * kredi indirimi indirme anında uygulanır.
+ */
+export async function postToolToResult(
+  endpoint: string,
+  formData: FormData,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal; errorMessage?: string },
+): Promise<CompressResult> {
+  const path = endpoint.replace(/^\//, "");
   appendSaasAccessToken(formData, accessToken);
   const response = await pdfFetchWithRetry(
-    `${API_BASE}/api/split`,
+    `${API_BASE}/api/${path}`,
     {
       method: "POST",
       body: formData,
@@ -922,7 +921,7 @@ export async function splitToResult(
     4,
     400,
   );
-  await ensureOk(response, "PDF ayıklama başarısız oldu.");
+  await ensureOk(response, options?.errorMessage ?? "İşlem başarısız oldu.");
   const data = (await response.json()) as CompressResult;
   return {
     result_id: data.result_id,
