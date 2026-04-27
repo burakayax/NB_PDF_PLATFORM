@@ -18,7 +18,9 @@ import {
 } from "./api";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
+import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
+import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
@@ -27,9 +29,7 @@ import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { AdminPanel } from "./admin/AdminPanel";
 import { ConversionPopup } from "./components/dashboard/ConversionPopup";
-import { ConversionUpgradeModal } from "./components/dashboard/ConversionUpgradeModal";
 import { PaymentSummaryModal } from "./components/dashboard/PaymentSummaryModal";
-import { UpgradeModal } from "./components/dashboard/UpgradeModal";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
 import { AuthPage } from "./components/auth/AuthPage";
@@ -59,16 +59,7 @@ import {
   type FakePaymentProduct,
 } from "./api/fakePayment";
 import { CreditDashboard } from "./components/dashboard/CreditDashboard";
-import {
-  canAutoShowConversionModal,
-  conversionModalClickThroughRate,
-  CONV_MODAL_SNOOZE_MS,
-  CONV_MODAL_SNOOZE_UNTIL_KEY,
-  pushConversionModalAnalytics,
-  recordConversionModalDismiss,
-  recordConversionModalPrimaryClick,
-  recordConversionModalShown,
-} from "./lib/conversionModalTriggers";
+import { canAutoShowConversionModal } from "./lib/conversionModalTriggers";
 import {
   clearLowCreditSnoozeIfRecovered,
   getLowCreditPopupSnoozeUntil,
@@ -96,7 +87,8 @@ import {
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import { isCreditPackProduct, type CreditPackProduct } from "./lib/creditPacks";
+import { CREDIT_PACKS, isCreditPackProduct, type CreditPackProduct } from "./lib/creditPacks";
+import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
@@ -549,9 +541,7 @@ function App() {
   const [watermarkPhrase, setWatermarkPhrase] = useState("TASLAK");
   const [pageNumStart, setPageNumStart] = useState("1");
   const [pageNumPos, setPageNumPos] = useState<"footer" | "header">("footer");
-  const [pdfToPptDpi, setPdfToPptDpi] = useState("150");
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
-  const [pdfToImgDpi, setPdfToImgDpi] = useState("150");
   const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
   const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("https://");
   const [htmlToPdfRaw, setHtmlToPdfRaw] = useState("<html><body><p>Merhaba</p></body></html>");
@@ -606,16 +596,12 @@ function App() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [conversionUpgradeModalOpen, setConversionUpgradeModalOpen] = useState(false);
   /** Lightweight conversion surfaces (insufficient credits / first failure / first upgrade moment). */
   const [conversionPopupOpen, setConversionPopupOpen] = useState(false);
   const [conversionPopupVariant, setConversionPopupVariant] = useState<ConversionPopupVariant | null>(null);
   const conversionModalShowSourceRef = useRef<"auto" | "manual">("manual");
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] = useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] = useState(false);
-  const [postRunUpgradeHintVisible, setPostRunUpgradeHintVisible] = useState(false);
-  const [postRunUpgradeHintDismissed, setPostRunUpgradeHintDismissed] = useState(false);
   /**
    * Credit balance + plan snapshot served by `/api/entitlement/balance`.
    * This is the ONLY source of truth for remaining-runs UI — we intentionally
@@ -642,8 +628,7 @@ function App() {
   const userRef = useRef(user);
   const conversionPopupOpenRef = useRef(false);
   const conversionPopupVariantRef = useRef<ConversionPopupVariant | null>(null);
-  const upgradeModalOpenRef = useRef(false);
-  const conversionUpgradeModalOpenRef = useRef(false);
+  const paymentSummaryOpenRef = useRef(false);
   const tryShowConversionPopupRef = useRef<
     (variant: ConversionPopupVariant, trigger?: "balance" | "download") => void
   >(() => {});
@@ -669,7 +654,82 @@ function App() {
   /** One-shot: user acknowledged PDF→Excel table-structure warning. */
   const excelConfirmRef = useRef(false);
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
-  const [splitPickerOpen, setSplitPickerOpen] = useState(false);
+  const [pageVisualModalOpen, setPageVisualModalOpen] = useState(false);
+  const [pageVisualMode, setPageVisualMode] = useState<PdfPageVisualMode>("split");
+  const [rotatePageRotations, setRotatePageRotations] = useState<Record<number, number>>({});
+  const [organizePageOrder, setOrganizePageOrder] = useState<number[]>([]);
+  const splitVisualAutoOpenedForUploadId = useRef<string | null>(null);
+  const selectedFeatureIdEffectDidMountRef = useRef(false);
+  const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
+  const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const id = uploads[0]?.id;
+    const n = uploads[0]?.pageCount;
+    if (selectedFeatureId !== "split" || !id || !n) {
+      return;
+    }
+    if (splitVisualAutoOpenedForUploadId.current === id) {
+      return;
+    }
+    splitVisualAutoOpenedForUploadId.current = id;
+    setPageVisualMode("split");
+    setPageVisualModalOpen(true);
+  }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
+
+  useEffect(() => {
+    setRotatePageRotations({});
+  }, [uploads[0]?.id]);
+
+  useEffect(() => {
+    const n = uploads[0]?.pageCount;
+    if (selectedFeatureId !== "organize-pdf" || !n) {
+      return;
+    }
+    setOrganizePageOrder((prev) => {
+      if (prev.length === n && new Set(prev).size === n) {
+        return prev;
+      }
+      return Array.from({ length: n }, (_, i) => i + 1);
+    });
+  }, [uploads[0]?.id, uploads[0]?.pageCount, selectedFeatureId]);
+
+  useEffect(() => {
+    if (!selectedFeatureIdEffectDidMountRef.current) {
+      selectedFeatureIdEffectDidMountRef.current = true;
+      return;
+    }
+    setPageVisualModalOpen(false);
+    if (selectedFeatureId !== "split") {
+      splitVisualAutoOpenedForUploadId.current = null;
+    }
+  }, [selectedFeatureId]);
+
+  const resetVisualPagePicker = useCallback(() => {
+    const n = uploads[0]?.pageCount ?? 0;
+    switch (pageVisualMode) {
+      case "split":
+        setPagesText("");
+        setPagesError("");
+        break;
+      case "delete":
+        setDeletePagesText("");
+        setDeletePagesError("");
+        break;
+      case "rotate":
+        setRotatePageRotations({});
+        break;
+      case "organize":
+        if (n > 0) {
+          const order = Array.from({ length: n }, (_, i) => i + 1);
+          setOrganizePageOrder(order);
+          setOrganizeOrder(order.join(","));
+        }
+        break;
+      default:
+        break;
+    }
+  }, [pageVisualMode, uploads[0]?.pageCount]);
 
   function armInsufficientCreditsToolBarrier() {
     insufficientCreditsToolRunBlockRef.current = true;
@@ -813,6 +873,42 @@ function App() {
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
 
+  useEffect(() => {
+    if (view !== "web" || !isAuthenticated) {
+      return;
+    }
+    const IDLE_MS = 30 * 60 * 1000;
+    let timeoutId = 0;
+    const arm = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        clearSession();
+        setPaymentSummaryProduct(null);
+        setView("landing");
+        window.history.replaceState({}, "", "/");
+        showToastRef.current(
+          "info",
+          language === "tr" ? "Oturum sonlandı" : "Session ended",
+          language === "tr"
+            ? "Uzun süre işlem yapılmadığı için güvenlik nedeniyle çıkış yapıldı."
+            : "You were signed out after a period of inactivity.",
+        );
+      }, IDLE_MS);
+    };
+    arm();
+    const events = ["pointerdown", "keydown", "scroll", "click", "touchstart"] as const;
+    const opts: AddEventListenerOptions = { passive: true };
+    for (const e of events) {
+      window.addEventListener(e, arm, opts);
+    }
+    return () => {
+      window.clearTimeout(timeoutId);
+      for (const e of events) {
+        window.removeEventListener(e, arm);
+      }
+    };
+  }, [view, isAuthenticated, clearSession, language]);
+
   const disposeToolProgressSuccess = useCallback(() => {
     toolProgressDisposeRef.current?.();
     toolProgressDisposeRef.current = null;
@@ -834,13 +930,15 @@ function App() {
     setRotateDeg("90");
     setRotatePagesOnly("");
     setOrganizeOrder("");
+    setOrganizePageOrder([]);
+    setRotatePageRotations({});
+    setPageVisualModalOpen(false);
+    splitVisualAutoOpenedForUploadId.current = null;
     setUnlockOpenPassword("");
     setWatermarkPhrase("TASLAK");
     setPageNumStart("1");
     setPageNumPos("footer");
-    setPdfToPptDpi("150");
     setPdfToImgFmt("jpg");
-    setPdfToImgDpi("150");
     setHtmlToPdfMode("url");
     setHtmlToPdfUrl("https://");
     setHtmlToPdfRaw("<html><body><p>Merhaba</p></body></html>");
@@ -892,12 +990,12 @@ function App() {
       if (!ok) {
         showToast("error", language === "tr" ? "Parola doğrulanamadı" : "Invalid password", L.mergePasswordWrong);
       }
-    } catch (err) {
+    } catch {
       setUploads((cur) => cur.map((u) => (u.id === itemId ? { ...u, mergePasswordVerified: false } : u)));
       showToast(
         "error",
         language === "tr" ? "Parola doğrulanamadı" : "Invalid password",
-        err instanceof Error ? err.message : L.mergePasswordWrong,
+        friendlyOperationFailedMessage(language),
       );
     } finally {
       setMergeVerifyingId(null);
@@ -1122,6 +1220,7 @@ function App() {
           );
           return;
         }
+        disposeToolProgressSuccess();
         if (logId && accessToken) {
           void ackDownloadLog(accessToken, logId).catch(() => {});
         }
@@ -1141,16 +1240,15 @@ function App() {
             setUserBalance(next);
           }
         }
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
+      } catch {
         showToast(
           "error",
           language === "tr" ? "İndirme başarısız" : "Download failed",
-          detail,
+          friendlyOperationFailedMessage(language),
         );
       }
     },
-    [accessToken, language, refreshSubscriptionState, showToast, user],
+    [accessToken, disposeToolProgressSuccess, language, refreshSubscriptionState, showToast, user],
   );
 
   const queueGatedDownload = useCallback(
@@ -1163,7 +1261,7 @@ function App() {
 
   const openConversionUpgradeModalManual = useCallback(() => {
     conversionModalShowSourceRef.current = "manual";
-    setConversionUpgradeModalOpen(true);
+    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
   }, []);
 
   useEffect(() => {
@@ -1293,42 +1391,12 @@ function App() {
   }, [conversionPopupVariant]);
 
   useEffect(() => {
-    upgradeModalOpenRef.current = upgradeModalOpen;
-  }, [upgradeModalOpen]);
+    paymentSummaryOpenRef.current = paymentSummaryProduct != null;
+  }, [paymentSummaryProduct]);
 
-  useEffect(() => {
-    conversionUpgradeModalOpenRef.current = conversionUpgradeModalOpen;
-  }, [conversionUpgradeModalOpen]);
-
-  /**
-   * Post-run upgrade hint trigger. The legacy implementation fired this
-   * based on legacy server-side friction signals that no longer exist;
-   * that dataset no longer exists. We now show the hint when a FREE user
-   * finishes a run and either (a) their credit balance hit zero or (b) the
-   * just-returned engine decision predicted that zero state. Both fields
-   * come exclusively from the entitlement engine.
-   */
-  const offerPostRunMonetizationHintAfterSuccess = useCallback(
-    (gating?: SaaSGating | null) => {
-      const ur = userRef.current;
-      const sum = subscriptionSummaryRef.current;
-      if (!sum || ur?.role === "ADMIN" || sum.currentPlan.name !== "FREE") {
-        return;
-      }
-      const creditsAfter =
-        typeof gating?.creditsAfter === "number" ? gating.creditsAfter : null;
-      const balance = userBalanceRef.current?.creditBalance ?? null;
-      const exhausted =
-        (creditsAfter !== null && creditsAfter <= 0) ||
-        (balance !== null && balance <= 0);
-      if (exhausted) {
-        setPostRunUpgradeHintVisible(true);
-        setPostRunUpgradeHintDismissed(false);
-      }
-      queueMicrotask(() => tryShowConversionPopupRef.current("pro_unlock"));
-    },
-    [],
-  );
+  const offerPostRunMonetizationHintAfterSuccess = useCallback((_gating?: SaaSGating | null) => {
+    queueMicrotask(() => tryShowConversionPopupRef.current("pro_unlock"));
+  }, []);
 
   useEffect(() => {
     if (selectedFeatureId !== "merge" || !mergeJob?.id || mergeJob.id === MERGE_JOB_PENDING_ID) {
@@ -1357,7 +1425,7 @@ function App() {
         setMergeJob(nextStatus);
 
         if (nextStatus.status === "failed") {
-          showToast("error", M.mergeToastFailedTitle, nextStatus.error || M.mergeToastFailedGeneric);
+          showToast("error", M.mergeToastFailedTitle, friendlyOperationFailedMessage(language));
           tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
           mergePollHandledRef.current = true;
@@ -1379,6 +1447,7 @@ function App() {
             if (!active) {
               return;
             }
+            disposeToolProgressSuccess();
             void refreshSubscriptionState();
             if (accessToken && user) {
               const balanceCtx = {
@@ -1395,15 +1464,9 @@ function App() {
             resetForm(true);
             setSubmitting(false);
             setMergeJob(null);
-            disposeToolProgressSuccess();
             if (dl.dispose) {
               toolProgressDisposeRef.current = dl.dispose;
             }
-            setToolProgressSuccess({
-              filename: fallbackName,
-              featureTitle: selectedFeature.title,
-              replay: dl.replay,
-            });
             offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
           } catch (downloadErr) {
             if (!active) {
@@ -1426,9 +1489,7 @@ function App() {
               tryShowConversionPopupRef.current("insufficient_credits", "download");
               return;
             }
-            const detail =
-              downloadErr instanceof Error ? downloadErr.message : M.mergeToastPollErrorDetail;
-            showToast("error", M.mergeToastDownloadErrorTitle, detail);
+            showToast("error", M.mergeToastDownloadErrorTitle, friendlyOperationFailedMessage(language));
             tryShowConversionPopupRef.current("buy_credits");
             return;
           }
@@ -1450,8 +1511,7 @@ function App() {
           showToast("info", M.mergeJobSessionLostTitle, M.mergeJobSessionLostDetail);
           return;
         }
-        const detail = error instanceof Error ? error.message : M.mergeToastPollErrorDetail;
-        showToast("error", M.mergeToastPollErrorTitle, detail);
+        showToast("error", M.mergeToastPollErrorTitle, friendlyOperationFailedMessage(language));
         tryShowConversionPopupRef.current("buy_credits");
         setSubmitting(false);
         mergePollHandledRef.current = true;
@@ -1525,41 +1585,8 @@ function App() {
   }, [isAuthenticated, isRestoring, view]);
 
   useEffect(() => {
-    setUpgradeModalOpen(false);
-    setConversionUpgradeModalOpen(false);
+    setPaymentSummaryProduct(null);
   }, [view]);
-
-  const dismissConversionUpgradeModal = useCallback(() => {
-    recordConversionModalDismiss();
-    setConversionUpgradeModalOpen(false);
-  }, []);
-
-  const snoozeConversionUpgradeModal = useCallback(() => {
-    recordConversionModalDismiss();
-    try {
-      localStorage.setItem(CONV_MODAL_SNOOZE_UNTIL_KEY, String(Date.now() + CONV_MODAL_SNOOZE_MS));
-    } catch {
-      /* private mode */
-    }
-    setConversionUpgradeModalOpen(false);
-  }, []);
-
-  const prevConversionModalOpenRef = useRef(false);
-  useEffect(() => {
-    const open = conversionUpgradeModalOpen;
-    if (open && !prevConversionModalOpenRef.current) {
-      const source = conversionModalShowSourceRef.current;
-      const stats = recordConversionModalShown(source);
-      pushConversionModalAnalytics("nb_conversion_modal_shown", {
-        source,
-        shown_total: stats.shownTotal,
-        auto_shows_today: stats.autoShowsToday,
-        dismiss_total: stats.dismissTotal,
-        ctr_pct: conversionModalClickThroughRate(stats),
-      });
-    }
-    prevConversionModalOpenRef.current = open;
-  }, [conversionUpgradeModalOpen]);
 
   /**
    * Auto-open the conversion upgrade modal once after a FREE-plan user hits
@@ -1572,7 +1599,7 @@ function App() {
     if (subscriptionSummary.currentPlan.name !== "FREE" || user?.role === "ADMIN") {
       return;
     }
-    if (conversionUpgradeModalOpen || upgradeModalOpen || conversionPopupOpen) {
+    if (paymentSummaryProduct != null || conversionPopupOpen) {
       return;
     }
     if (!userBalance || userBalance.hasActiveSubscription) {
@@ -1585,14 +1612,13 @@ function App() {
       return;
     }
     conversionModalShowSourceRef.current = "auto";
-    setConversionUpgradeModalOpen(true);
+    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
   }, [
     view,
     isAuthenticated,
     subscriptionLoading,
     subscriptionSummary,
-    conversionUpgradeModalOpen,
-    upgradeModalOpen,
+    paymentSummaryProduct,
     conversionPopupOpen,
     user?.role,
     userBalance,
@@ -1862,14 +1888,14 @@ function App() {
    * the progress hint matches what the engine will allow.
    */
   const premiumProcessingLane = Boolean(
-    user?.role === "ADMIN" ||
+    showCreditWorkspaceChrome ||
+      user?.role === "ADMIN" ||
       userBalance?.hasActiveSubscription ||
       (subscriptionSummary &&
         (subscriptionSummary.currentPlan.name === "PRO" ||
           subscriptionSummary.currentPlan.name === "BUSINESS")),
   );
-  /** Standard (non-priority) processing lane — not subscription / admin. */
-  const creditStandardLaneQueue = showCreditWorkspaceChrome && !premiumProcessingLane;
+  const creditStandardLaneQueue = false;
 
   const mergeProgressActive = Boolean(
     mergeJob && selectedFeatureId === "merge" && mergeJob.status !== "completed" && mergeJob.status !== "cancelled",
@@ -1886,11 +1912,6 @@ function App() {
     toolProgressSuccess?.gatedDownload?.saasGating?.reason === "insufficient_credits";
   const bottomToolProgressActive =
     mergeProgressActive || genericToolProgressActive || TOOLSuccessBarActive;
-  const standardLaneProcessingUpsell = Boolean(
-    showCreditWorkspaceChrome &&
-      !premiumProcessingLane &&
-      (submitting || mergeProgressActive || genericToolProgressActive),
-  );
   const mergeProgressIndeterminate = Boolean(
     mergeJob &&
       (mergeJob.id === MERGE_JOB_PENDING_ID ||
@@ -1980,13 +2001,7 @@ function App() {
     }
   }, [toolProgressSuccess]);
 
-  const showUpgradeNudgeOnLoading =
-    upgradeNudgeTier >= 1 &&
-    !upgradeNudgeLoadingHidden &&
-    showCreditWorkspaceChrome &&
-    !premiumProcessingLane &&
-    (genericToolProgressActive ||
-      (mergeProgressActive && mergeJob && mergeJob.status !== "failed"));
+  const showUpgradeNudgeOnLoading = false;
 
   const splitInputDisabled = uploads.length === 0;
   const toolNeedsUpload = selectedFeature.requiresUpload !== false;
@@ -2034,7 +2049,7 @@ function App() {
       );
       return;
     }
-    setUpgradeModalOpen(true);
+    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
   }
 
   async function refreshEntitlementAfterPurchase() {
@@ -2082,7 +2097,6 @@ function App() {
       /* still toast */
     }
     setPaymentSummaryProduct(null);
-    setUpgradeModalOpen(false);
     showToast(
       "success",
       language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
@@ -2106,10 +2120,8 @@ function App() {
     const v = conversionPopupVariantRef.current;
     const snooze = v === "insufficient_credits";
     closeConversionPopup(snooze);
-    if (v === "insufficient_credits" || v === "buy_credits") {
-      setUpgradeModalOpen(true);
-    } else if (v === "pro_unlock") {
-      setUpgradeModalOpen(true);
+    if (v === "insufficient_credits" || v === "buy_credits" || v === "pro_unlock") {
+      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
     }
   }, [closeConversionPopup]);
 
@@ -2117,7 +2129,7 @@ function App() {
     const v = conversionPopupVariantRef.current;
     if (v === "insufficient_credits") {
       closeConversionPopup(true);
-      setUpgradeModalOpen(true);
+      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
       return;
     }
     closeConversionPopup(false);
@@ -2134,7 +2146,7 @@ function App() {
     if (!insuffDownload && conversionPopupOpenRef.current) {
       return;
     }
-    if (!insuffDownload && (upgradeModalOpenRef.current || conversionUpgradeModalOpenRef.current)) {
+    if (!insuffDownload && paymentSummaryOpenRef.current) {
       return;
     }
 
@@ -2276,7 +2288,7 @@ function App() {
 
   function handleSidebarSelect(id: SidebarToolId) {
     if (id !== "subscription" && lockedFeatures.has(id)) {
-      setUpgradeModalOpen(true);
+      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
       return;
     }
     setActiveSidebar(id);
@@ -2515,7 +2527,6 @@ function App() {
     try {
       disposeToolProgressSuccess();
       clearToast();
-      setPostRunUpgradeHintVisible(false);
 
       if (selectedFeature.id === "merge") {
         mergeFlowAbortRef.current?.abort();
@@ -2613,9 +2624,19 @@ function App() {
             }
             break;
           case "rotate-pdf": {
-            formData.append("degrees", rotateDeg);
-            if (rotatePagesOnly.trim()) {
-              formData.append("pages", rotatePagesOnly.trim());
+            const rotObj: Record<string, number> = {};
+            for (const [k, d] of Object.entries(rotatePageRotations)) {
+              if (d && d !== 0) {
+                rotObj[k] = d;
+              }
+            }
+            if (Object.keys(rotObj).length > 0) {
+              formData.append("pages_rotation_json", JSON.stringify(rotObj));
+            } else {
+              formData.append("degrees", rotateDeg);
+              if (rotatePagesOnly.trim()) {
+                formData.append("pages", rotatePagesOnly.trim());
+              }
             }
             if (password.trim()) {
               formData.append("password", password.trim());
@@ -2653,11 +2674,9 @@ function App() {
             if (password.trim()) {
               formData.append("password", password.trim());
             }
-            formData.append("dpi", pdfToPptDpi.trim() || "150");
             break;
           case "pdf-to-image":
             formData.append("image_format", pdfToImgFmt);
-            formData.append("dpi", pdfToImgDpi.trim() || "150");
             if (password.trim()) {
               formData.append("password", password.trim());
             }
@@ -2751,8 +2770,7 @@ function App() {
         tryShowConversionPopupRef.current("insufficient_credits", "download");
         return;
       }
-      const detail = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu.";
-      showToast("error", "İşlem başarısız", detail);
+      showToast("error", "İşlem başarısız", friendlyOperationFailedMessage(language));
       tryShowConversionPopupRef.current("buy_credits");
     } finally {
       if (selectedFeature.id !== "merge") {
@@ -2816,7 +2834,7 @@ function App() {
           };
         } catch (err) {
           const L2 = ws(language);
-          showToast("error", L2.inspectFailedTitle, err instanceof Error ? err.message : L2.inspectFailedDetail);
+          showToast("error", L2.inspectFailedTitle, friendlyOperationFailedMessage(language));
           return {
             ...item,
             encrypted: false,
@@ -3150,14 +3168,6 @@ function App() {
         showToast={showToast}
       />
 
-      <UpgradeModal
-        open={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-        language={language}
-        buyingProduct={null}
-        onBuyPack={(product) => void handleSelectCreditPackForPayment(product)}
-      />
-
       {paymentSummaryProduct && accessToken ? (
         <PaymentSummaryModal
           open
@@ -3166,22 +3176,67 @@ function App() {
           language={language}
           onClose={() => setPaymentSummaryProduct(null)}
           onPurchaseSuccess={() => void handleCreditPackPurchaseSuccess()}
+          onChangeProduct={(p) => setPaymentSummaryProduct(p)}
         />
       ) : null}
 
-      {uploads[0] && selectedFeatureId === "split" ? (
+      {uploads[0] &&
+      (selectedFeatureId === "split" ||
+        selectedFeatureId === "delete-pages" ||
+        selectedFeatureId === "rotate-pdf" ||
+        selectedFeatureId === "organize-pdf") ? (
         <SplitPagePickerModal
-          open={splitPickerOpen}
-          onClose={() => setSplitPickerOpen(false)}
+          open={pageVisualModalOpen}
+          onClose={() => setPageVisualModalOpen(false)}
+          onReset={resetVisualPagePicker}
           file={uploads[0].file}
           password={password}
           maxPage={uploads[0].pageCount}
-          pagesText={pagesText}
-          onPagesTextChange={setPagesText}
-          onPagesErrorClear={() => setPagesError("")}
           language={language}
+          mode={pageVisualMode}
+          pagesText={
+            pageVisualMode === "split"
+              ? pagesText
+              : pageVisualMode === "delete"
+                ? deletePagesText
+                : pageVisualMode === "organize"
+                  ? organizeOrder
+                  : ""
+          }
+          onPagesTextChange={
+            pageVisualMode === "split"
+              ? setPagesText
+              : pageVisualMode === "delete"
+                ? setDeletePagesText
+                : pageVisualMode === "organize"
+                  ? setOrganizeOrder
+                  : () => {}
+          }
+          onPagesErrorClear={
+            pageVisualMode === "split"
+              ? () => setPagesError("")
+              : pageVisualMode === "delete"
+                ? () => setDeletePagesError("")
+                : () => {}
+          }
+          pageRotations={rotatePageRotations}
+          onPageRotationsChange={setRotatePageRotations}
+          pageOrder={organizePageOrder}
+          onPageOrderChange={setOrganizePageOrder}
         />
       ) : null}
+
+      <GatedResultPreviewModal
+        open={gatedHeroModalOpen}
+        onClose={() => {
+          setGatedHeroModalOpen(false);
+          setGatedHeroResultId(null);
+        }}
+        resultId={gatedHeroResultId}
+        accessToken={accessToken}
+        filename={toolProgressSuccess?.filename ?? ""}
+        language={language}
+      />
 
       <ConversionPopup
         open={conversionPopupOpen}
@@ -3190,24 +3245,6 @@ function App() {
         onDismiss={dismissConversionPopup}
         onPrimary={onConversionPopupPrimary}
         onSecondary={onConversionPopupSecondary}
-      />
-
-      <ConversionUpgradeModal
-        open={conversionUpgradeModalOpen}
-        onClose={dismissConversionUpgradeModal}
-        onContinueWithoutWaiting={() => {
-          const stats = recordConversionModalPrimaryClick();
-          pushConversionModalAnalytics("nb_conversion_modal_primary_click", {
-            shown_total: stats.shownTotal,
-            primary_total: stats.primaryClicksTotal,
-            ctr_pct: conversionModalClickThroughRate(stats),
-          });
-          setConversionUpgradeModalOpen(false);
-          setUpgradeModalOpen(true);
-        }}
-        onMaybeLater={snoozeConversionUpgradeModal}
-        language={language}
-        operationsToday={userBalance?.creditBalance ?? 0}
       />
 
       {excelDialogOpen ? (
@@ -3268,7 +3305,7 @@ function App() {
         onProfile={handleNavProfile}
         onPassword={handleNavPassword}
         onLogout={() => void handleLogout()}
-        onUpgradeClick={() => setUpgradeModalOpen(true)}
+        onUpgradeClick={() => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
         showAdminEntry={user?.role === "ADMIN"}
         onOpenAdmin={() => {
           setView("admin");
@@ -3297,7 +3334,7 @@ function App() {
         subscriptionSummary={subscriptionSummary}
         userBalance={userBalance}
         userRole={user?.role}
-        onUsageUpgradeClick={() => setUpgradeModalOpen(true)}
+        onUsageUpgradeClick={() => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
         onBuyCredits={() => handleBuyCredits()}
         enabledToolIds={enabledToolIds}
         resolveToolLabel={resolveToolLabel}
@@ -3439,25 +3476,6 @@ function App() {
             </div>
           ) : null}
 
-          {standardLaneProcessingUpsell ? (
-            <div
-              className="border-b border-indigo-500/20 bg-gradient-to-r from-cyan-950/35 via-nb-panel/40 to-indigo-950/25 px-4 py-3 md:px-6"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-                <p className="min-w-0 text-sm font-medium leading-snug text-slate-200">{W.delayMonetizationDuringBody}</p>
-                <button
-                  type="button"
-                  className="nb-transition shrink-0 rounded-xl bg-gradient-to-b from-cyan-400 to-cyan-500 px-4 py-2 text-center text-xs font-bold uppercase tracking-wide text-slate-950 shadow-[0_8px_24px_-10px_rgba(34,211,238,0.45)] hover:brightness-105"
-                  onClick={() => openConversionUpgradeModalManual()}
-                >
-                  {W.delayMonetizationInstantCta}
-                </button>
-              </div>
-            </div>
-          ) : null}
-
           <div className="relative min-h-[280px]">
             <div
               className={
@@ -3588,7 +3606,14 @@ function App() {
 
                 {uploads[0]?.file.type === "application/pdf" && (uploads[0].pageCount ?? 0) > 0 ? (
                   <div className="field">
-                    <button type="button" className="primary-action w-full sm:w-auto" onClick={() => setSplitPickerOpen(true)}>
+                    <button
+                      type="button"
+                      className="primary-action w-full sm:w-auto"
+                      onClick={() => {
+                        setPageVisualMode("split");
+                        setPageVisualModalOpen(true);
+                      }}
+                    >
                       {W.splitPickerOpen}
                     </button>
                     <span className="field-hint block mt-1.5">
@@ -3611,29 +3636,64 @@ function App() {
             ) : null}
 
             {selectedFeature.id === "delete-pages" ? (
-              <label className="field">
-                <span>{language === "tr" ? "Silinecek sayfalar" : "Pages to remove"}</span>
-                <input
-                  type="text"
-                  value={deletePagesText}
-                  disabled={splitInputDisabled}
-                  onChange={(event) => {
-                    const v = event.target.value.replace(/[^\d,\-\s]/g, "");
-                    setDeletePagesText(v);
-                    const fmt = validatePagesFormat(v, language);
-                    const maxP = uploads[0]?.pageCount ?? null;
-                    setDeletePagesError(fmt || validatePagesMax(v, maxP, language));
-                  }}
-                  placeholder={W.pagesPlaceholder}
-                />
-                {deletePagesError ? <span className="field-error">{deletePagesError}</span> : null}
-              </label>
+              <>
+                <label className="field">
+                  <span>{language === "tr" ? "Silinecek sayfalar" : "Pages to remove"}</span>
+                  <input
+                    type="text"
+                    value={deletePagesText}
+                    disabled={splitInputDisabled}
+                    onChange={(event) => {
+                      const v = event.target.value.replace(/[^\d,\-\s]/g, "");
+                      setDeletePagesText(v);
+                      const fmt = validatePagesFormat(v, language);
+                      const maxP = uploads[0]?.pageCount ?? null;
+                      setDeletePagesError(fmt || validatePagesMax(v, maxP, language));
+                    }}
+                    placeholder={W.pagesPlaceholder}
+                  />
+                  {deletePagesError ? <span className="field-error">{deletePagesError}</span> : null}
+                </label>
+                {uploads[0]?.file.type === "application/pdf" && (uploads[0].pageCount ?? 0) > 0 ? (
+                  <div className="field">
+                    <button
+                      type="button"
+                      className="primary-action w-full sm:w-auto"
+                      onClick={() => {
+                        setPageVisualMode("delete");
+                        setPageVisualModalOpen(true);
+                      }}
+                    >
+                      {W.splitPickerOpen}
+                    </button>
+                  </div>
+                ) : null}
+              </>
             ) : null}
 
             {selectedFeature.id === "rotate-pdf" ? (
               <>
+                <p className="field-hint mb-2 text-sm text-nb-muted">
+                  {language === "tr"
+                    ? "Görsel modda her sayfaya ayrı açı uygulayın; aksi halde aşağıdaki toplu açı kullanılır."
+                    : "Use visual mode for per-page rotation, or the bulk angle below for all pages."}
+                </p>
+                {uploads[0]?.file.type === "application/pdf" && (uploads[0].pageCount ?? 0) > 0 ? (
+                  <div className="field">
+                    <button
+                      type="button"
+                      className="primary-action w-full sm:w-auto"
+                      onClick={() => {
+                        setPageVisualMode("rotate");
+                        setPageVisualModalOpen(true);
+                      }}
+                    >
+                      {W.splitPickerOpen}
+                    </button>
+                  </div>
+                ) : null}
                 <label className="field">
-                  <span>{language === "tr" ? "Dönüş açısı" : "Rotation"}</span>
+                  <span>{language === "tr" ? "Dönüş açısı (toplu)" : "Rotation (bulk)"}</span>
                   <select value={rotateDeg} onChange={(e) => setRotateDeg(e.target.value)}>
                     <option value="90">90°</option>
                     <option value="180">180°</option>
@@ -3653,20 +3713,36 @@ function App() {
             ) : null}
 
             {selectedFeature.id === "organize-pdf" ? (
-              <label className="field">
-                <span>{language === "tr" ? "Yeni sıra (1 tabanlı, virgülle)" : "New order (1-based, comma-separated)"}</span>
-                <input
-                  type="text"
-                  value={organizeOrder}
-                  onChange={(e) => setOrganizeOrder(e.target.value.replace(/[^\d,\s]/g, ""))}
-                  placeholder="3,1,2,4"
-                />
-                <span className="field-hint">
-                  {language === "tr"
-                    ? "Toplam sayfa adedi kadar ve her sayfayı bir kez içermelidir."
-                    : "Must list every page exactly once, in the new order."}
-                </span>
-              </label>
+              <>
+                <label className="field">
+                  <span>{language === "tr" ? "Yeni sıra (1 tabanlı, virgülle)" : "New order (1-based, comma-separated)"}</span>
+                  <input
+                    type="text"
+                    value={organizeOrder}
+                    onChange={(e) => setOrganizeOrder(e.target.value.replace(/[^\d,\s]/g, ""))}
+                    placeholder="3,1,2,4"
+                  />
+                  <span className="field-hint">
+                    {language === "tr"
+                      ? "Toplam sayfa adedi kadar ve her sayfayı bir kez içermelidir."
+                      : "Must list every page exactly once, in the new order."}
+                  </span>
+                </label>
+                {uploads[0]?.file.type === "application/pdf" && (uploads[0].pageCount ?? 0) > 0 ? (
+                  <div className="field">
+                    <button
+                      type="button"
+                      className="primary-action w-full sm:w-auto"
+                      onClick={() => {
+                        setPageVisualMode("organize");
+                        setPageVisualModalOpen(true);
+                      }}
+                    >
+                      {W.splitPickerOpen}
+                    </button>
+                  </div>
+                ) : null}
+              </>
             ) : null}
 
             {showUnlockPasswordField ? (
@@ -3709,27 +3785,14 @@ function App() {
               </>
             ) : null}
 
-            {selectedFeature.id === "pdf-to-ppt" ? (
-              <label className="field">
-                <span>DPI</span>
-                <input type="number" min={72} max={200} value={pdfToPptDpi} onChange={(e) => setPdfToPptDpi(e.target.value)} />
-              </label>
-            ) : null}
-
             {selectedFeature.id === "pdf-to-image" ? (
-              <>
-                <label className="field">
-                  <span>{language === "tr" ? "Görüntü biçimi" : "Image format"}</span>
-                  <select value={pdfToImgFmt} onChange={(e) => setPdfToImgFmt(e.target.value)}>
-                    <option value="jpg">JPG</option>
-                    <option value="png">PNG</option>
-                  </select>
-                </label>
-                <label className="field">
-                  <span>DPI</span>
-                  <input type="number" min={72} max={300} value={pdfToImgDpi} onChange={(e) => setPdfToImgDpi(e.target.value)} />
-                </label>
-              </>
+              <label className="field">
+                <span>{language === "tr" ? "Görüntü biçimi" : "Image format"}</span>
+                <select value={pdfToImgFmt} onChange={(e) => setPdfToImgFmt(e.target.value)}>
+                  <option value="jpg">JPG</option>
+                  <option value="png">PNG</option>
+                </select>
+              </label>
             ) : null}
 
             {showSplitPasswordField ? (
@@ -4009,7 +4072,11 @@ function App() {
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-nb-bg/70 px-5 text-center backdrop-blur-sm">
                 <p className="text-base font-semibold text-nb-text">{W.proGateTitle}</p>
                 <p className="mt-2 max-w-sm text-sm leading-relaxed text-nb-muted">{W.proGateBody}</p>
-                <button type="button" className="primary-action mt-5" onClick={() => setUpgradeModalOpen(true)}>
+                <button
+                  type="button"
+                  className="primary-action mt-5"
+                  onClick={() => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
+                >
                   {W.proGateCta}
                 </button>
               </div>
@@ -4045,30 +4112,6 @@ function App() {
               >
                 <div className="progress-bar__fill progress-bar__fill--success" style={{ width: "100%" }} />
               </div>
-              {showCreditWorkspaceChrome &&
-              postRunUpgradeHintVisible &&
-              !postRunUpgradeHintDismissed &&
-              !hideMonetizationHintsForInsufficientGate ? (
-                <div className="mt-3 flex flex-col gap-2 rounded-xl border border-indigo-500/20 bg-indigo-950/20 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-[12px] leading-relaxed text-slate-400">{W.delayMonetizationAfterHint}</p>
-                  <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      className="nb-transition text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
-                      onClick={() => openConversionUpgradeModalManual()}
-                    >
-                      {W.delayMonetizationInstantCta}
-                    </button>
-                    <button
-                      type="button"
-                      className="nb-transition text-[11px] text-slate-500 hover:text-slate-400"
-                      onClick={() => setPostRunUpgradeHintDismissed(true)}
-                    >
-                      {W.delayMonetizationAfterDismiss}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
               {upgradeNudgeTier >= 1 &&
               showCreditWorkspaceChrome &&
               !upgradeNudgePostSuccessHidden &&
@@ -4089,6 +4132,13 @@ function App() {
                   language={language}
                   filename={toolProgressSuccess.filename}
                   thumbnailUrl={toolProgressSuccess.gatedDownload.thumbnailBlobUrl}
+                  onOpenFullPreview={() => {
+                    const rid = toolProgressSuccess.gatedDownload?.resultId;
+                    if (rid) {
+                      setGatedHeroResultId(rid);
+                      setGatedHeroModalOpen(true);
+                    }
+                  }}
                   onDownload={() => {
                     const gd = toolProgressSuccess.gatedDownload;
                     if (gd) {
@@ -4215,8 +4265,8 @@ function App() {
                   }}
                 />
               ) : null}
-              {mergeJob.status === "failed" && mergeJob.error ? (
-                <p className="merge-progress-fixed__err">{mergeJob.error}</p>
+              {mergeJob.status === "failed" ? (
+                <p className="merge-progress-fixed__err">{friendlyOperationFailedMessage(language)}</p>
               ) : null}
             </div>
           </div>
