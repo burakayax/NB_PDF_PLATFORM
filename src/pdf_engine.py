@@ -9,12 +9,22 @@ from PIL import Image, ImageOps
 import PyPDF2
 import io
 import os
+import platform
 import re
 import shutil
 import statistics
+import subprocess
 import sys
 import tempfile
 from typing import List, Dict, Any, Tuple, Optional
+
+try:
+    from pypdf.errors import PdfReadError as _PdfReadError
+except ImportError:  # pragma: no cover
+    try:
+        from PyPDF2.errors import PdfReadError as _PdfReadError
+    except ImportError:  # pragma: no cover
+        _PdfReadError = Exception  # type: ignore[misc,assignment]
 
 # --- YOLLAR ---
 # Tesseract'in yolu: sisteminizde farklıysa burayı güncelleyin
@@ -27,29 +37,74 @@ poppler_bin_path = os.path.join(base_dir, "..", "Library", "bin")
 _TESSERACT_CONFIG = r"--oem 3 --psm 3"
 
 
-def _open_pdf_reader(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem") -> PyPDF2.PdfReader:
-    """PDF okuyucu oluşturur; parola verilmişse şifre çözümü yapar.
-    Tüm sayfa işlemleri ortak açılış ve hata mesajı üretmek için buradan geçer.
-    Parola politikası gevşetilirse şifreli dosyalar sessizce başarısız olabilir."""
+def _pdf_open_user_message(where: str, exc: BaseException, basename: str) -> str:
+    """Dosya yolu sızdırmadan kısa teknik özet (istemci/tool_errors ile uyumlu)."""
+    ename = type(exc).__name__
+    msg = (str(exc) or "").strip().replace("\n", " ")
+    if len(msg) > 200:
+        msg = msg[:197] + "..."
+    return f"[{ename}] {where} ({basename}): {msg}"
+
+
+def _pymupdf_page_count(pdf_path: str, password: Optional[str] = None) -> int:
+    """pypdf başarısız olursa sayfa sayısı için PyMuPDF yedek."""
+    import fitz
+
+    doc = fitz.open(pdf_path)
     try:
-        reader = PyPDF2.PdfReader(pdf_path)
+        if doc.needs_pass:
+            pwd = (password or "").strip()
+            if doc.authenticate(pwd):
+                pass
+            elif doc.authenticate(""):
+                pass
+            else:
+                raise Exception("PyMuPDF: PDF parolası gerekli veya hatalı.")
+        return doc.page_count
+    finally:
+        doc.close()
+
+
+def _open_pdf_reader(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem") -> PyPDF2.PdfReader:
+    """PDF okuyucu: her zaman rb akışı; boş kullanıcı parolası için decrypt(''); açıklamalı hatalar."""
+    basename = os.path.basename(pdf_path)
+    reader: PyPDF2.PdfReader
+    try:
+        with open(pdf_path, "rb") as fh:
+            reader = PyPDF2.PdfReader(fh, strict=False)
+    except _PdfReadError as e:
+        raise Exception(_pdf_open_user_message("pypdf.PdfReader", e, basename)) from e
+    except OSError as e:
+        raise Exception(_pdf_open_user_message("dosya okuma", e, basename)) from e
+    except Exception as e:
+        raise Exception(_pdf_open_user_message("pypdf.PdfReader", e, basename)) from e
+
+    try:
         if reader.is_encrypted:
-            if not password:
-                raise Exception(
-                    f"{context} için seçtiğiniz dosya şifreli: {os.path.basename(pdf_path)}\n"
-                    "Lütfen dosya için şifre girin."
-                )
-            decrypt_result = reader.decrypt(password)
-            if not decrypt_result:
-                raise Exception(
-                    f"{context} için girilen şifre hatalı: {os.path.basename(pdf_path)}"
-                )
+            pwd = (password or "").strip()
+            decrypted = 0
+            if pwd:
+                decrypted = reader.decrypt(pwd)
+            if not decrypted:
+                decrypted = reader.decrypt("")
+            if not decrypted:
+                if not pwd:
+                    raise Exception(
+                        f"{context} için seçtiğiniz dosya şifreli: {basename}\n"
+                        "Lütfen dosya için şifre girin."
+                    )
+                raise Exception(f"{context} için girilen şifre hatalı: {basename}")
         return reader
     except Exception as e:
-        err_text = str(e)
-        if "şifreli" in err_text.lower() or "şifre" in err_text.lower():
+        err_text = str(e).lower()
+        if (
+            "şifreli" in err_text
+            or "girilen şifre hatalı" in err_text
+            or "girilen pdf parolası hatalı" in err_text
+            or "lütfen dosya için şifre" in err_text
+        ):
             raise
-        raise Exception(f"PDF dosyası kontrol edilemedi: {e}") from e
+        raise Exception(_pdf_open_user_message("PDF şifre çözümü", e, basename)) from e
 
 
 def _apply_output_pdf_password(output_path: str, output_password: Optional[str]) -> None:
@@ -88,39 +143,51 @@ def _apply_output_pdf_password(output_path: str, output_password: Optional[str])
 
 
 def is_pdf_encrypted(pdf_path: str) -> bool:
-    """Verilen PDF şifreliyse True döndürür.
-    Arayüzde parola alanını göstermek için hızlı kontrol sağlar.
-    Dosya bozuksa veya okunamazsa istisna yükseltilir."""
+    """Kullanıcıdan parola istenmesi gerekiyorsa True.
+    Yalnızca boş kullanıcı parolası ile açılan /Encrypt PDF'ler False (şifresiz gibi)."""
+    basename = os.path.basename(pdf_path)
     try:
         with open(pdf_path, "rb") as fh:
-            reader = PyPDF2.PdfReader(fh)
-            return bool(reader.is_encrypted)
+            reader = PyPDF2.PdfReader(fh, strict=False)
+            if not reader.is_encrypted:
+                return False
+            if reader.decrypt(""):
+                return False
+            return True
+    except _PdfReadError as e:
+        raise Exception(_pdf_open_user_message("is_pdf_encrypted pypdf", e, basename)) from e
     except Exception as e:
-        raise Exception(f"PDF dosyası kontrol edilemedi: {e}") from e
+        raise Exception(_pdf_open_user_message("is_pdf_encrypted", e, basename)) from e
 
 
 def validate_pdf_password(pdf_path: str, password: str) -> bool:
     """Parola PDF'i açabiliyorsa True döndürür; şifresiz dosyada her zaman True.
-    Şifreli dosyada yanlış parola False üretir.
-    Okuma hatalarında açıklamalı istisna fırlatılır."""
+    Şifreli dosyada yalnızca verilen parola denenir (yanlış girişte boş parolaya düşülmez)."""
+    basename = os.path.basename(pdf_path)
     try:
-        reader = PyPDF2.PdfReader(pdf_path)
-        if not reader.is_encrypted:
-            return True
-        return bool(reader.decrypt(password or ""))
+        with open(pdf_path, "rb") as fh:
+            reader = PyPDF2.PdfReader(fh, strict=False)
+            if not reader.is_encrypted:
+                return True
+            return bool(reader.decrypt((password or "").strip()))
     except Exception as e:
-        raise Exception(f"PDF şifresi doğrulanamadı: {e}") from e
+        raise Exception(_pdf_open_user_message("validate_pdf_password", e, basename)) from e
 
 
 def get_num_pages(pdf_path: str, password: Optional[str] = None) -> int:
     """PDF içindeki sayfa sayısını döndürür; şifreliyse parola ile açar.
     Bölme ve önizleme akışları sayfa sınırı bilmek zorundadır.
-    Parola eksik veya hatalıysa _open_pdf_reader üzerinden anlamlı hata verilir."""
+    pypdf başarısız olursa PyMuPDF ile sayfa sayısı denenir."""
     try:
         reader = _open_pdf_reader(pdf_path, password=password, context="Sayfa bilgisi okuma")
         return len(reader.pages)
     except Exception as e:
-        raise Exception(f"PDF sayfa sayısı okunamadı: {e}")
+        try:
+            return _pymupdf_page_count(pdf_path, password=password)
+        except Exception as e2:
+            raise Exception(
+                f"PDF sayfa sayısı okunamadı — pypdf: {e} | PyMuPDF: {e2}",
+            ) from e2
 
 
 def _word_to_pdf_win32com(docx_path: str, pdf_path: str) -> None:
@@ -924,49 +991,77 @@ def _append_layout_block_to_document(doc: Document, block: Dict[str, Any]) -> No
         return
 
 
+def _fitz_open_for_tool(pdf_path: str, password: Optional[str] = None, context: str = "Bu işlem"):
+    """PyMuPDF ile aç; boş kullanıcı parolası olan PDF'ler authenticate('') ile açılır."""
+    import fitz
+
+    basename = os.path.basename(pdf_path)
+    doc = fitz.open(pdf_path)
+    if doc.needs_pass:
+        pwd = (password or "").strip()
+        ok = False
+        if pwd:
+            ok = doc.authenticate(pwd)
+        if not ok:
+            ok = doc.authenticate("")
+        if not ok:
+            doc.close()
+            if pwd:
+                raise Exception(f"{context}: girilen PDF parolası hatalı ({basename}).")
+            raise Exception(
+                f"{context} için seçtiğiniz dosya şifreli: {basename}\n"
+                "Lütfen dosya için şifre girin."
+            )
+    return doc
+
+
 # --- 2. PDF BİRLEŞTİRME ---
 def merge_pdfs(pdf_list: List[str], output_path: str, progress_callback=None, passwords: Optional[Dict[str, str]] = None) -> bool:
     """
     Birden fazla PDF dosyasını tek çıktıda birleştirir.
 
-    İsteğe bağlı progress_callback çağrı biçimi:
-        progress_callback(current: int, total: int, where_text: str) -> bool|None
-    False dönerse birleştirme iptal edilir.
+    PyMuPDF ile sırayla insert_pdf: tüm sayfaları bellekte tutmaz (1000+ sayfa daha stabil).
     """
-    try:
-        writer = PyPDF2.PdfWriter()
-        readers = []
-        total_pages = 0
+    import fitz
 
-        # Önce toplam sayfa sayısını toplayıp ilerleme çubuğunu dosya yerine sayfa bazlı akıtıyoruz.
+    try:
+        total_pages = 0
         for pdf in pdf_list:
             if not os.path.isfile(pdf):
                 raise FileNotFoundError(f"Birleştirilecek dosya bulunamadı: {pdf}")
-            reader = _open_pdf_reader(pdf, password=(passwords or {}).get(pdf), context="PDF birleştirme")
-            readers.append((pdf, reader))
-            total_pages += len(reader.pages)
+            doc = _fitz_open_for_tool(pdf, (passwords or {}).get(pdf), context="PDF birleştirme")
+            try:
+                total_pages += doc.page_count
+            finally:
+                doc.close()
 
-        current_page = 0
-        total = max(1, total_pages + 1)
-        for pdf, reader in readers:
-            base_name = os.path.basename(pdf)
-            page_count = len(reader.pages)
-            for page_idx, page in enumerate(reader.pages, start=1):
-                current_page += 1
-                writer.add_page(page)
-                if progress_callback:
-                    res = progress_callback(
-                        current_page,
-                        total,
-                        f"{base_name} | Sayfa {page_idx}/{page_count}",
-                    )
-                    if res is False:
-                        raise Exception("İşlem iptal edildi.")
-
-        if progress_callback:
-            progress_callback(total, total, "PDF yazılıyor...")
-        with open(output_path, "wb") as out_file:
-            writer.write(out_file)
+        merged = fitz.open()
+        try:
+            current_page = 0
+            total = max(1, total_pages + 1)
+            for pdf in pdf_list:
+                src = _fitz_open_for_tool(pdf, (passwords or {}).get(pdf), context="PDF birleştirme")
+                try:
+                    base_name = os.path.basename(pdf)
+                    n = src.page_count
+                    merged.insert_pdf(src)
+                    for page_idx in range(1, n + 1):
+                        current_page += 1
+                        if progress_callback:
+                            res = progress_callback(
+                                current_page,
+                                total,
+                                f"{base_name} | Sayfa {page_idx}/{n}",
+                            )
+                            if res is False:
+                                raise Exception("İşlem iptal edildi.")
+                finally:
+                    src.close()
+            if progress_callback:
+                progress_callback(total, total, "PDF yazılıyor...")
+            merged.save(output_path, garbage=4, deflate=True, linear=False)
+        finally:
+            merged.close()
         return True
     except Exception as e:
         err_text = str(e)
@@ -988,30 +1083,32 @@ def extract_pages(
 ) -> bool:
     """
     pdf_path içinden verilen sayfaları (1 tabanlı liste) alır ve tek PDF olarak output_path'e yazar.
-    Geçersiz sayfa numaralarında ValueError, diğer hatalarda Exception yükseltilir.
-    Çıktı parolası isteniyorsa yazım sonrası _apply_output_pdf_password uygulanır.
+    PyMuPDF ile tek kaynak açılır; büyük belgelerde bellek kullanımı daha kontrollüdür.
     """
+    import fitz
+
     try:
-        reader = _open_pdf_reader(pdf_path, password=password, context="Sayfa ayıklama")
-        num_pages = len(reader.pages)
+        doc = _fitz_open_for_tool(pdf_path, password, context="Sayfa ayıklama")
+        try:
+            num_pages = doc.page_count
+            normalized = []
+            for p in pages:
+                if not isinstance(p, int):
+                    raise ValueError(f"Sayfa numarası tam sayı olmalıdır: {p}")
+                if p < 1 or p > num_pages:
+                    raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
+                normalized.append(p)
 
-        # Sayfa numaralarını doğrular (1 tabanlı indeks beklenir).
-        normalized = []
-        for p in pages:
-            if not isinstance(p, int):
-                raise ValueError(f"Sayfa numarası tam sayı olmalıdır: {p}")
-            if p < 1 or p > num_pages:
-                raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
-            normalized.append(p)
-
-        writer = PyPDF2.PdfWriter()
-        for p in normalized:
-            writer.add_page(reader.pages[p - 1])
-
-        with open(output_path, "wb") as f:
-            writer.write(f)
+            out = fitz.open()
+            try:
+                for p in normalized:
+                    out.insert_pdf(doc, from_page=p - 1, to_page=p - 1)
+                out.save(output_path, garbage=4, deflate=True, linear=False)
+            finally:
+                out.close()
+        finally:
+            doc.close()
         _apply_output_pdf_password(output_path, output_password)
-
         return True
     except Exception as e:
         raise Exception(f"Ayıklama Hatası: {e}")
@@ -1027,38 +1124,43 @@ def extract_pages_separate(
 ) -> List[str]:
     """
     Verilen sayfaları (1 tabanlı) ayırır; her birini output_folder içinde ayrı PDF olarak kaydeder.
-    Oluşan dosya yollarının listesini döndürür; hata durumunda istisna fırlatır.
-    Klasör yoksa FileNotFoundError ile erken çıkış yapılır.
+    Kaynak tek kez açılır; çok sayfalı dosyalarda daha verimlidir.
     """
+    import fitz
+
     try:
         if not os.path.isdir(output_folder):
             raise FileNotFoundError(f"Hedef klasör bulunamadı: {output_folder}")
 
-        reader = _open_pdf_reader(pdf_path, password=password, context="Sayfa ayıklama")
-        num_pages = len(reader.pages)
+        doc = _fitz_open_for_tool(pdf_path, password, context="Sayfa ayıklama")
+        try:
+            num_pages = doc.page_count
+            normalized = []
+            for p in pages:
+                if not isinstance(p, int):
+                    raise ValueError(f"Sayfa numarası tam sayı olmalıdır: {p}")
+                if p < 1 or p > num_pages:
+                    raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
+                normalized.append(p)
 
-        normalized = []
-        for p in pages:
-            if not isinstance(p, int):
-                raise ValueError(f"Sayfa numarası tam sayı olmalıdır: {p}")
-            if p < 1 or p > num_pages:
-                raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
-            normalized.append(p)
+            base_name = os.path.splitext(os.path.basename(pdf_path))[0]
+            output_paths: List[str] = []
 
-        base_name = os.path.splitext(os.path.basename(pdf_path))[0]
-        output_paths = []
+            for p in normalized:
+                one = fitz.open()
+                try:
+                    one.insert_pdf(doc, from_page=p - 1, to_page=p - 1)
+                    out_name = f"{base_name}_page_{p}.pdf"
+                    out_path = os.path.join(output_folder, out_name)
+                    one.save(out_path, garbage=4, deflate=True, linear=False)
+                finally:
+                    one.close()
+                _apply_output_pdf_password(out_path, output_password)
+                output_paths.append(out_path)
 
-        for p in normalized:
-            writer = PyPDF2.PdfWriter()
-            writer.add_page(reader.pages[p - 1])
-            out_name = f"{base_name}_page_{p}.pdf"
-            out_path = os.path.join(output_folder, out_name)
-            with open(out_path, "wb") as f:
-                writer.write(f)
-            _apply_output_pdf_password(out_path, output_password)
-            output_paths.append(out_path)
-
-        return output_paths
+            return output_paths
+        finally:
+            doc.close()
 
     except Exception as e:
         raise Exception(f"Ayrı Ayırma Hatası: {e}")
@@ -1367,27 +1469,104 @@ def excel_to_pdf(xlsx_path: str, pdf_path: str, progress_callback=None) -> bool:
     return True
 
 
-# --- 7. PDF SIKIŞTIRMA ---
-def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
-    """pikepdf ile akışları yeniden sıkıştırarak dosya boyutunu düşürmeye çalışır."""
-    try:
-        import pikepdf
-    except ImportError as e:
-        raise Exception("PDF sıkıştırma için 'pikepdf' gerekli.") from e
+def _tool_subprocess_timeout_sec() -> int:
+    return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "300")))
 
+
+def _resolve_ghostscript_executable() -> Optional[str]:
+    """Windows'ta önce ``gswin64c``; ortam: ``NB_GHOSTSCRIPT_EXE`` tam yol."""
+    override = (os.environ.get("NB_GHOSTSCRIPT_EXE") or "").strip()
+    if override and os.path.isfile(override):
+        return override
+    if platform.system() == "Windows":
+        for cand in (shutil.which("gswin64c"), shutil.which("gswin32c"), shutil.which("gs")):
+            if cand:
+                return cand
+        for pf_key in ("ProgramFiles", "ProgramFiles(x86)"):
+            pf = os.environ.get(pf_key, "")
+            if not pf:
+                continue
+            gs_root = os.path.join(pf, "gs")
+            if not os.path.isdir(gs_root):
+                continue
+            for ver in sorted(os.listdir(gs_root), reverse=True):
+                for exe_name in ("gswin64c.exe", "gswin32c.exe"):
+                    p = os.path.join(gs_root, ver, "bin", exe_name)
+                    if os.path.isfile(p):
+                        return p
+    w = shutil.which("gs")
+    return w
+
+
+def _ghostscript_compress_to_path(
+    input_path: str,
+    output_path: str,
+    *,
+    pdfsettings: str,
+    password: str,
+    timeout_sec: int,
+) -> bool:
+    """Ghostscript pdfwrite ile sıkıştırma; başarıda ``output_path`` yazar."""
+    exe = _resolve_ghostscript_executable()
+    if not exe:
+        return False
+    src_abs = os.path.abspath(input_path)
+    out_abs = os.path.abspath(output_path)
+    out_dir = os.path.dirname(out_abs) or "."
+    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+    os.close(fd)
+    tmp_keep: Optional[str] = tmp_out
     try:
-        if progress_callback:
-            progress_callback(0, 2, "PDF yeniden paketleniyor...")
-        if is_pdf_encrypted(input_path) and not password:
-            raise Exception(f"PDF sıkıştırma için şifre gerekli: {os.path.basename(input_path)}")
-        # pikepdf yeni sürümlerde password=None desteklenmez; boş dize kullanılmalı.
-        open_password = (password or "").strip()
-        target_path = output_path
-        temp_output_path = None
-        if os.path.abspath(input_path) == os.path.abspath(output_path):
-            fd, temp_output_path = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(output_path) or None)
-            os.close(fd)
-            target_path = temp_output_path
+        cmd: List[str] = [
+            exe,
+            "-sDEVICE=pdfwrite",
+            "-dNOPAUSE",
+            "-dBATCH",
+            "-dQUIET",
+            "-dSAFER",
+            "-dCompatibilityLevel=1.4",
+            f"-dPDFSETTINGS={pdfsettings}",
+            "-dDetectDuplicateImages=true",
+            "-dCompressFonts=true",
+            "-dSubsetFonts=true",
+            "-dDownsampleColorImages=true",
+            "-dColorImageResolution=120",
+            "-dGrayImageResolution=120",
+            "-dMonoImageResolution=300",
+            f"-sOutputFile={tmp_out}",
+            src_abs,
+        ]
+        if (password or "").strip():
+            cmd.insert(1, f"-sPDFPassword={password.strip()}")
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec)
+        if r.returncode != 0 or not os.path.isfile(tmp_out) or os.path.getsize(tmp_out) < 64:
+            return False
+        os.replace(tmp_out, out_abs)
+        tmp_keep = None
+        return True
+    except (subprocess.TimeoutExpired, OSError):
+        return False
+    finally:
+        if tmp_keep and os.path.isfile(tmp_keep):
+            try:
+                os.remove(tmp_keep)
+            except OSError:
+                pass
+
+
+def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
+    """pikepdf + PyMuPDF yedek boru hattı (Ghostscript yok / başarısız)."""
+    import pikepdf
+
+    import fitz
+
+    target_path = output_path
+    temp_output_path: Optional[str] = None
+    if os.path.abspath(input_path) == os.path.abspath(output_path):
+        fd, temp_output_path = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(output_path) or None)
+        os.close(fd)
+        target_path = temp_output_path
+    try:
         with pikepdf.open(input_path, password=open_password) as pdf:
             pdf.save(
                 target_path,
@@ -1399,49 +1578,104 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             )
         if temp_output_path:
             os.replace(temp_output_path, output_path)
-        # İkinci geçiş: PyMuPDF ile gömülü görselleri ve akışları yeniden sıkıştırır (genelde daha küçük dosya).
+            temp_output_path = None
+        out_dir = os.path.dirname(output_path) or None
+        fd2, tmp_mupdf = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+        os.close(fd2)
         try:
-            import fitz
-
-            out_dir = os.path.dirname(output_path) or None
-            fd, tmp_mupdf = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
-            os.close(fd)
+            doc = fitz.open(output_path)
             try:
-                doc = fitz.open(output_path)
+                doc.save(
+                    tmp_mupdf,
+                    garbage=4,
+                    clean=True,
+                    deflate=True,
+                    deflate_images=True,
+                    deflate_fonts=True,
+                    linear=False,
+                    use_objstms=1,
+                )
+            finally:
+                doc.close()
+            old_sz = os.path.getsize(output_path)
+            new_sz = os.path.getsize(tmp_mupdf)
+            if new_sz < old_sz:
+                os.replace(tmp_mupdf, output_path)
+            else:
                 try:
-                    doc.save(
-                        tmp_mupdf,
-                        garbage=4,
-                        clean=True,
-                        deflate=True,
-                        deflate_images=True,
-                        deflate_fonts=True,
-                        linear=True,
-                        use_objstms=1,
-                    )
-                finally:
-                    doc.close()
-                old_sz = os.path.getsize(output_path)
-                new_sz = os.path.getsize(tmp_mupdf)
-                if new_sz < old_sz:
-                    os.replace(tmp_mupdf, output_path)
-                else:
-                    try:
-                        os.remove(tmp_mupdf)
-                    except OSError:
-                        pass
-            except Exception:
-                if os.path.isfile(tmp_mupdf):
-                    try:
-                        os.remove(tmp_mupdf)
-                    except OSError:
-                        pass
-        except ImportError:
-            pass
+                    os.remove(tmp_mupdf)
+                except OSError:
+                    pass
         except Exception:
-            # pikepdf çıktısı yine de kullanılabilir
-            pass
-        # Asla orijinalden büyük dosya dönme: yeniden paketleme şişerse kopyayı orijinale düş.
+            if os.path.isfile(tmp_mupdf):
+                try:
+                    os.remove(tmp_mupdf)
+                except OSError:
+                    pass
+    finally:
+        if temp_output_path and os.path.isfile(temp_output_path):
+            try:
+                os.remove(temp_output_path)
+            except OSError:
+                pass
+
+
+# --- 7. PDF SIKIŞTIRMA ---
+def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
+    """Önce Ghostscript (/ebook → /screen), yoksa veya küçültmezse pikepdf + PyMuPDF."""
+    work_tmp: Optional[str] = None
+    try:
+        import pikepdf  # noqa: F401
+    except ImportError as e:
+        raise Exception("PDF sıkıştırma için 'pikepdf' gerekli.") from e
+
+    try:
+        if progress_callback:
+            progress_callback(0, 2, "PDF sıkıştırılıyor...")
+        if is_pdf_encrypted(input_path) and not password:
+            raise Exception(f"PDF sıkıştırma için şifre gerekli: {os.path.basename(input_path)}")
+        open_password = (password or "").strip()
+        timeout_sec = _tool_subprocess_timeout_sec()
+
+        work_out = output_path
+        work_tmp = None
+        if os.path.abspath(input_path) == os.path.abspath(output_path):
+            fd, work_tmp = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(output_path) or None)
+            os.close(fd)
+            work_out = work_tmp
+
+        gs_ok = False
+        for preset in ("/ebook", "/screen"):
+            if os.path.isfile(work_out):
+                try:
+                    os.remove(work_out)
+                except OSError:
+                    pass
+            if _ghostscript_compress_to_path(
+                input_path,
+                work_out,
+                pdfsettings=preset,
+                password=open_password,
+                timeout_sec=timeout_sec,
+            ):
+                try:
+                    if os.path.getsize(work_out) < os.path.getsize(input_path):
+                        gs_ok = True
+                        break
+                except OSError:
+                    gs_ok = True
+                    break
+
+        if not gs_ok:
+            if os.path.isfile(work_out):
+                try:
+                    os.remove(work_out)
+                except OSError:
+                    pass
+            _legacy_compress_pipeline(input_path, work_out, open_password)
+        if work_tmp:
+            os.replace(work_out, output_path)
+
         try:
             in_sz = os.path.getsize(input_path)
             out_sz = os.path.getsize(output_path)
@@ -1455,9 +1689,9 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
     except Exception as e:
         raise Exception(f"PDF Sıkıştırma Hatası: {e}")
     finally:
-        if "temp_output_path" in locals() and temp_output_path and os.path.exists(temp_output_path):
+        if work_tmp and os.path.isfile(work_tmp):
             try:
-                os.remove(temp_output_path)
+                os.remove(work_tmp)
             except Exception:
                 pass
 

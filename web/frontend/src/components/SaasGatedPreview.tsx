@@ -43,6 +43,8 @@ export type SaasGatedPreviewProps = {
   dismissLabel?: string;
   /** Copy shown below the thumbnail when no gating payload is attached. */
   legacyPreviewHint?: string;
+  /** Opens full-screen high-quality watermarked preview modal. */
+  onOpenFullPreview?: () => void;
 };
 
 const THUMB_STYLE: CSSProperties = {
@@ -82,14 +84,11 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
     onDismiss,
     dismissLabel,
     legacyPreviewHint,
+    onOpenFullPreview,
   } = props;
 
   const { state, copy } = useSaaSGating(gating, language);
   const { isLocked, isDownloadDisabled, action, blurLevel, source, reason } = state;
-
-  const showWatermarkPreview = Boolean(
-    isLocked && reason === "insufficient_credits" && thumbnailUrl,
-  );
 
   const handlePrimary = () => {
     if (action === "upgrade" && reason === "insufficient_credits" && onInsufficientCredits) {
@@ -144,16 +143,6 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
           margin: source ? "6px 0 2px" : "10px 0 2px",
         }}
       >
-        {showWatermarkPreview ? (
-          <div className="saas-gated-preview__watermark-hero" aria-hidden>
-            <div className="saas-gated-preview__watermark-hero-frame">
-              <img src={thumbnailUrl!} alt="" className="saas-gated-preview__watermark-hero-img" />
-              <div className="saas-gated-preview__watermark-ribbon" aria-hidden>
-                NB PDF PLARTFORM - ÖNİZLEME
-              </div>
-            </div>
-          </div>
-        ) : (
         <div
           className={`saas-gated-preview__thumb-wrap${
             isLocked ? " saas-gated-preview__thumb-wrap--locked" : ""
@@ -194,7 +183,6 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
             </div>
           ) : null}
         </div>
-        )}
 
         <div className="saas-gated-preview__text">
           {source ? (
@@ -219,6 +207,15 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
       </div>
 
       <div className="merge-progress-fixed__success-actions">
+        {onOpenFullPreview ? (
+          <button
+            type="button"
+            className="merge-progress-fixed__download merge-progress-fixed__download--secondary"
+            onClick={onOpenFullPreview}
+          >
+            {language === "tr" ? "Tam önizleme" : "Full preview"}
+          </button>
+        ) : null}
         {/*
          * The button stays clickable even when downloads are locked — its
          * action simply changes (upgrade / retry / contact). We therefore do

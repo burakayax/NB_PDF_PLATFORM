@@ -25,6 +25,10 @@ _configure_third_party_logging()
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse
+
+from app.core.tool_errors import GENERIC_TOOL_FAILURE_TR
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -92,6 +96,21 @@ async def attach_nb_device_id(request: Request, call_next):
     raw = request.headers.get("X-NB-Device-Id") or request.headers.get("x-nb-device-id")
     request.state.nb_device_id = raw.strip() if raw and raw.strip() else None
     return await call_next(request)
+
+
+@app.middleware("http")
+async def unhandled_exception_safety_net(request: Request, call_next):
+    """En dış katman: yakalanmamış istisnalarda ham yığın / yol sızdırmaz."""
+    try:
+        return await call_next(request)
+    except StarletteHTTPException:
+        raise
+    except Exception:
+        logger.exception("unhandled_request_failure path=%s", request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": GENERIC_TOOL_FAILURE_TR},
+        )
 
 
 app.include_router(router)

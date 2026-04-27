@@ -1185,6 +1185,22 @@ textarea {
     0 0 0 4px rgba(52, 211, 153, 0.45);
 }
 
+.merge-progress-fixed__download--secondary {
+  border-color: rgba(34, 211, 238, 0.45);
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.22) 0%, rgba(8, 145, 178, 0.38) 100%);
+  color: #ecfeff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 6px 18px -8px rgba(34, 211, 238, 0.35);
+}
+
+.merge-progress-fixed__download--secondary:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 24px -10px rgba(34, 211, 238, 0.45);
+}
+
 .merge-progress-fixed__dismiss {
   min-height: 40px;
   padding: 0 14px;

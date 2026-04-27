@@ -136,7 +136,7 @@ export async function createDownloadLog(accessToken: string, body: DownloadLogCr
       },
       credentials: "include",
       body: JSON.stringify({
-        resultId: body.resultId ?? null,
+        resultId: body.resultId?.trim() ? body.resultId.trim() : null,
         toolId: body.toolId,
       }),
     }),

@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import shutil
 import threading
 import time
 import uuid
@@ -117,6 +118,50 @@ def save_result(
         filename=filename,
         mime=mime,
         size_bytes=len(payload),
+        has_thumbnail=has_thumbnail,
+    )
+
+
+def save_result_from_file(
+    payload_path: Path,
+    filename: str,
+    mime: str,
+    *,
+    user_id: str,
+    thumbnail_png: Optional[bytes] = None,
+    tool: str = "compress",
+) -> ResultHandle:
+    """Persist a file from disk without loading the whole payload into RAM."""
+    result_id = uuid.uuid4().hex
+    entry = _root_dir() / result_id
+    entry.mkdir(parents=True, exist_ok=False)
+
+    dest = entry / _PAYLOAD_FILENAME
+    shutil.copyfile(payload_path, dest)
+    size_bytes = dest.stat().st_size
+
+    has_thumbnail = False
+    if thumbnail_png:
+        (entry / _THUMBNAIL_FILENAME).write_bytes(thumbnail_png)
+        has_thumbnail = True
+
+    meta = {
+        "result_id": result_id,
+        "filename": filename,
+        "mime": mime,
+        "size_bytes": size_bytes,
+        "user_id": user_id,
+        "created_at": time.time(),
+        "has_thumbnail": has_thumbnail,
+        "tool": tool,
+    }
+    (entry / _META_FILENAME).write_text(json.dumps(meta), encoding="utf-8")
+
+    return ResultHandle(
+        result_id=result_id,
+        filename=filename,
+        mime=mime,
+        size_bytes=size_bytes,
         has_thumbnail=has_thumbnail,
     )
 

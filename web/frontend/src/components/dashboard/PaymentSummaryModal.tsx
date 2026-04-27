@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react
 import type { Language } from "../../i18n/landing";
 import { postCreditCheckoutPreview, postCreditCheckoutStart, type CreditPreviewResponse } from "../../api/creditCheckout";
 import type { CreditPackProduct } from "../../lib/creditPacks";
-import { confirmFakeCheckout } from "../../api/fakePayment";
+import { buyCreditsInstant, confirmFakeCheckout } from "../../api/fakePayment";
 import { CREDIT_PACKS } from "../../lib/creditPacks";
 
 type Props = {
@@ -12,7 +12,24 @@ type Props = {
   language: Language;
   onClose: () => void;
   onPurchaseSuccess: () => void;
+  onChangeProduct?: (product: CreditPackProduct) => void;
 };
+
+function localFallbackPreview(p: CreditPackProduct): CreditPreviewResponse {
+  const row = CREDIT_PACKS.find((x) => x.product === p) ?? CREDIT_PACKS[0]!;
+  const s = row.priceTry.toFixed(2);
+  return {
+    product: row.product,
+    basePriceTry: s,
+    finalPriceTry: s,
+    credits: row.credits,
+    couponId: null,
+    exitIntentApplied: false,
+    exitOfferEligible: false,
+    discountPercent: null,
+    pricingToken: "",
+  };
+}
 
 function launchIyzicoCheckout(r: {
   checkoutFormContent: string;
@@ -38,6 +55,12 @@ function launchIyzicoCheckout(r: {
   });
 }
 
+function payErrorMessage(language: Language): string {
+  return language === "tr"
+    ? "Ödeme başlatılamadı. Daha sonra tekrar deneyin."
+    : "Payment could not start. Please try again later.";
+}
+
 export function PaymentSummaryModal({
   open,
   product,
@@ -45,11 +68,11 @@ export function PaymentSummaryModal({
   language,
   onClose,
   onPurchaseSuccess,
+  onChangeProduct,
 }: Props) {
   const [preview, setPreview] = useState<CreditPreviewResponse | null>(null);
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [exitOfferShown, setExitOfferShown] = useState(false);
@@ -62,7 +85,6 @@ export function PaymentSummaryModal({
     async (opts: { couponCode?: string | null; applyExitIntent?: boolean } = {}) => {
       setLoading(true);
       setPromoError(null);
-      setLoadError(null);
       const couponCode = Object.prototype.hasOwnProperty.call(opts, "couponCode")
         ? opts.couponCode
         : (promoInput.trim() || null);
@@ -75,20 +97,17 @@ export function PaymentSummaryModal({
           applyExitIntent,
         });
         setPreview(r);
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : "Preview failed.";
+      } catch {
         if (isPromoRevalidate) {
-          setPromoError(msg);
+          setPromoError(language === "tr" ? "Promosyon kodu geçersiz." : "Invalid promo code.");
         } else {
-          setPreview(null);
-          setLoadError(msg);
-          setPromoError(msg);
+          setPreview(localFallbackPreview(product));
         }
       } finally {
         setLoading(false);
       }
     },
-    [accessToken, product, promoInput],
+    [accessToken, product, promoInput, language],
   );
 
   useEffect(() => {
@@ -96,7 +115,6 @@ export function PaymentSummaryModal({
       setPreview(null);
       setPromoInput("");
       setPromoError(null);
-      setLoadError(null);
       setExitOfferShown(false);
       setSuccessCredits(null);
       if (successCloseTimer.current) {
@@ -138,6 +156,16 @@ export function PaymentSummaryModal({
     void loadPreview({ couponCode: promoInput.trim() || null, applyExitIntent: Boolean(preview?.exitIntentApplied) });
   }, [loadPreview, promoInput, preview?.exitIntentApplied]);
 
+  const scheduleSuccessClose = useCallback(() => {
+    if (successCloseTimer.current) {
+      clearTimeout(successCloseTimer.current);
+    }
+    successCloseTimer.current = setTimeout(() => {
+      successCloseTimer.current = null;
+      onPurchaseSuccess();
+    }, 2200);
+  }, [onPurchaseSuccess]);
+
   const handlePay = useCallback(async () => {
     if (!preview) {
       return;
@@ -145,6 +173,22 @@ export function PaymentSummaryModal({
     setPaying(true);
     setPromoError(null);
     try {
+      if (!preview.pricingToken?.trim()) {
+        const result = await buyCreditsInstant(accessToken, product);
+        let granted = preview.credits;
+        if (result.ok) {
+          if ("alreadyConfirmed" in result && result.alreadyConfirmed) {
+            granted = preview.credits;
+          } else if ("creditsGranted" in result) {
+            granted = result.creditsGranted;
+          }
+        }
+        setSuccessCredits(granted);
+        setPaying(false);
+        scheduleSuccessClose();
+        return;
+      }
+
       const start = await postCreditCheckoutStart(accessToken, preview.pricingToken);
       if (start.mode === "fake") {
         const result = await confirmFakeCheckout(accessToken, start.sessionId);
@@ -158,22 +202,16 @@ export function PaymentSummaryModal({
         }
         setSuccessCredits(granted);
         setPaying(false);
-        if (successCloseTimer.current) {
-          clearTimeout(successCloseTimer.current);
-        }
-        successCloseTimer.current = setTimeout(() => {
-          successCloseTimer.current = null;
-          onPurchaseSuccess();
-        }, 2200);
+        scheduleSuccessClose();
         return;
       }
       launchIyzicoCheckout(start);
       setPaying(false);
-    } catch (e) {
+    } catch {
       setPaying(false);
-      setPromoError(e instanceof Error ? e.message : "Payment could not start.");
+      setPromoError(payErrorMessage(language));
     }
-  }, [accessToken, preview, onPurchaseSuccess]);
+  }, [accessToken, preview, product, language, scheduleSuccessClose]);
 
   const tryExitIntent = useCallback(() => {
     if (!preview?.exitOfferEligible || exitOfferShown) {
@@ -220,6 +258,8 @@ export function PaymentSummaryModal({
     return null;
   }
 
+  const usingOfflinePricing = Boolean(preview && !preview.pricingToken?.trim());
+
   return (
     <div
       className="payment-summary-backdrop"
@@ -252,6 +292,25 @@ export function PaymentSummaryModal({
           </button>
         </div>
 
+        {onChangeProduct ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {CREDIT_PACKS.map((pk) => (
+              <button
+                key={pk.product}
+                type="button"
+                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                  pk.product === product
+                    ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-100"
+                    : "border-white/10 bg-white/[0.04] text-nb-muted hover:border-white/20"
+                }`}
+                onClick={() => onChangeProduct(pk.product)}
+              >
+                {pk.credits} {tr ? "kr" : "cr"} · ₺{pk.priceTry}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         {exitOfferShown && preview?.exitIntentApplied ? (
           <div className="payment-summary-modal__exit-offer" role="status">
             {tr
@@ -266,6 +325,14 @@ export function PaymentSummaryModal({
             {pack.credits} {tr ? "kredi" : "credits"}
           </strong>
         </div>
+
+        {usingOfflinePricing && preview ? (
+          <p className="mt-2 text-[11px] leading-snug text-nb-muted">
+            {tr
+              ? "Canlı fiyat özeti şu an kullanılamıyor; yerel paket fiyatı gösteriliyor."
+              : "Live pricing is unavailable; showing local pack price."}
+          </p>
+        ) : null}
 
         {successCredits != null ? (
           <div
@@ -285,18 +352,7 @@ export function PaymentSummaryModal({
         ) : loading ? (
           <p className="payment-summary-modal__loading">{tr ? "Yükleniyor…" : "Loading…"}</p>
         ) : !preview ? (
-          <div className="mt-2 space-y-3">
-            <p className="payment-summary-modal__err">
-              {loadError ?? (tr ? "Özet yüklenemedi." : "Could not load summary.")}
-            </p>
-            <button
-              type="button"
-              className="payment-summary-modal__pay primary-action w-full"
-              onClick={() => void loadPreview({ couponCode: promoInput.trim() || null, applyExitIntent: false })}
-            >
-              {tr ? "Yeniden dene" : "Try again"}
-            </button>
-          </div>
+          <p className="payment-summary-modal__loading">{tr ? "Yükleniyor…" : "Loading…"}</p>
         ) : (
           <>
             <div className="payment-summary-modal__row">
@@ -315,32 +371,36 @@ export function PaymentSummaryModal({
               </div>
             )}
 
-            <label className="payment-summary-modal__promo-label">
-              {tr ? "Promosyon kodunuz var mı?" : "Have a promo code?"}
-            </label>
-            <div className="payment-summary-modal__promo-row">
-              <input
-                type="text"
-                className="payment-summary-modal__input"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                placeholder="CODE"
-                autoComplete="off"
-              />
-              <button
-                type="button"
-                className="payment-summary-modal__apply"
-                disabled={loading}
-                onClick={() => void handleApplyPromo()}
-              >
-                {tr ? "Uygula" : "Apply"}
-              </button>
-            </div>
-            {promoError && preview ? <p className="payment-summary-modal__err">{promoError}</p> : null}
+            {!usingOfflinePricing ? (
+              <>
+                <label className="payment-summary-modal__promo-label">
+                  {tr ? "Promosyon kodunuz var mı?" : "Have a promo code?"}
+                </label>
+                <div className="payment-summary-modal__promo-row">
+                  <input
+                    type="text"
+                    className="payment-summary-modal__input"
+                    value={promoInput}
+                    onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                    placeholder="CODE"
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    className="payment-summary-modal__apply"
+                    disabled={loading}
+                    onClick={() => void handleApplyPromo()}
+                  >
+                    {tr ? "Uygula" : "Apply"}
+                  </button>
+                </div>
+              </>
+            ) : null}
+            {promoError ? <p className="payment-summary-modal__err">{promoError}</p> : null}
 
             <button
               type="button"
-              className="payment-summary-modal__pay primary-action w-full"
+              className="payment-summary-modal__pay primary-action mt-3 w-full"
               disabled={paying || loading}
               onClick={() => void handlePay()}
             >
