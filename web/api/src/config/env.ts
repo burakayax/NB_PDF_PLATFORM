@@ -47,6 +47,11 @@ const rawEnvSchema = z
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
     EMAIL_VERIFICATION_TTL_HOURS: z.coerce.number().int().positive().default(24),
+    /**
+     * İsteğe bağlı çerez Domain (çoğu zaman BOŞ bırakın = host-only).
+     * SPA farklı alanda (Vercel) API başka alanda (Render) ise `.frontend.app` yazmak çerezin reddine yol açar — OAuth state/session için kullanılmamalı.
+     * Yalnızca API ve SPA ortak üst alan paylaşıyorsa (ör. `.yourcompany.com`) kullanın ve APP_BASE_URL hostname ile uyumlu olduğundan emin olun.
+     */
     COOKIE_DOMAIN: z.string().optional(),
     /**
      * SMTP_USER / SMTP_PASS boşken Nodemailer kimlik doğrulaması olarak kullanılır.
