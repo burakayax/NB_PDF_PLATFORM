@@ -151,6 +151,12 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/payment/callback" && method === "POST") {
     return true;
   }
+  if (p === "/payments/callback" && method === "POST") {
+    return true;
+  }
+  if (p === "/payments/pricing" && method === "GET") {
+    return true;
+  }
   return false;
 }
 

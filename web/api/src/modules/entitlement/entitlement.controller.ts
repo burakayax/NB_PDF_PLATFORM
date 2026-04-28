@@ -154,7 +154,7 @@ export async function downloadLogCreateController(request: Request, response: Re
   const row = await prisma.downloadLog.create({
     data: {
       userId,
-      resultId: body.resultId ?? null,
+      resultId: body.resultId,
       toolId: body.toolId,
       clientIp: clientIpFromRequest(request),
       userAgent: typeof ua === "string" ? ua.slice(0, 1024) : null,

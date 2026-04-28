@@ -20,6 +20,7 @@
     "concurrently": "^9.1.2"
   },
   "dependencies": {
+    "all": "^0.0.0",
     "framer-motion": "^12.38.0",
     "postinstall": "^0.11.2",
     "predev": "^1.0.12"

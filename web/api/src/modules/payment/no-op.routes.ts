@@ -40,5 +40,6 @@ function respondPaymentsDisabled(_request: Request, response: Response): void {
 
 paymentsDisabledRouter.post("/create", respondPaymentsDisabled);
 paymentsDisabledRouter.post("/callback", respondPaymentsDisabled);
+paymentsDisabledRouter.post("/initialize", respondPaymentsDisabled);
 // Catch-all: `/api/payment/*` altında tanımsız her path aynı NO-OP yanıtı verir.
 paymentsDisabledRouter.use(respondPaymentsDisabled);

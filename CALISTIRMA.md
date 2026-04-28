@@ -137,4 +137,10 @@ Tarayıcı: **http://localhost:5173**
 | `api` başlamıyor | `web/api/.env` eksik veya hatalı; `JWT_*` en az 32 karakter, `ADMIN_EMAIL` dolu olsun. |
 | Port meşgul | 8000, 4000 veya 5173 kullanan uygulamayı kapatın veya ilgili projede portu değiştirin. |
 
+### Büyük PDF’ler ve zaman aşımı
+
+- **PDF API (Uvicorn):** Uzun süren işlemler ve yavaş istemciler için `PDF_UVICORN_TIMEOUT_KEEP_ALIVE` ortam değişkeni ile `--timeout-keep-alive` ayarlanır (varsayılan **120** saniye). Örnek: `PDF_UVICORN_TIMEOUT_KEEP_ALIVE=300`.
+- **Ters vekil (Nginx vb.):** Üretimde `proxy_read_timeout` / `proxy_send_timeout` değerlerini (ör. **600s**) büyük dosyalar ve sıkıştırma süresine göre yükseltin; aksi halde 502/504 görülebilir.
+- **Ghostscript:** Daha agresif sıkıştırma için sistemde `gs` veya Windows’ta `gswin64c` kurulu olmalıdır; yoksa pikepdf + PyMuPDF yolu kullanılmaya devam eder.
+
 Daha genel kurulum için bkz. **SETUP.md** ve **web/README.md**.

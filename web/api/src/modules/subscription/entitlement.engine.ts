@@ -297,7 +297,7 @@ export async function consumeTool(
 
     if (!decision.allowed) {
       return {
-        status: "denied",
+        status: "denied" as const,
         reason: decision.reason,
         transactionId: null,
         cost: decision.cost,
@@ -315,7 +315,7 @@ export async function consumeTool(
         select: { id: true },
       });
       return {
-        status: "ok",
+        status: "ok" as const,
         reason: decision.reason,
         transactionId: row.id,
         cost: 0,
@@ -332,8 +332,8 @@ export async function consumeTool(
 
     if (updated.count !== 1) {
       return {
-        status: "denied",
-        reason: "race_lost",
+        status: "denied" as const,
+        reason: "race_lost" as const,
         transactionId: null,
         cost,
         creditsBefore: decision.creditsBefore,
@@ -352,8 +352,8 @@ export async function consumeTool(
     });
 
     return {
-      status: "ok",
-      reason: "credit_available",
+      status: "ok" as const,
+      reason: "credit_available" as const,
       transactionId: row.id,
       cost,
       creditsBefore: decision.creditsBefore,

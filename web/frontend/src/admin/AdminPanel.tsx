@@ -107,7 +107,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
     title: "Platform",
     items: [
       { id: "packages", label: "Paket & fiyat" },
-      { id: "TOOLS", label: "Monetizasyon" },
+      { id: "TOOLS", label: "Araçlar" },
       { id: "content", label: "İçerik" },
       { id: "media", label: "Medya" },
       { id: "settings", label: "Ayarlar" },
@@ -1168,124 +1168,19 @@ function mergeTOOLSQuickForm(
   };
 }
 
-type DelayTierEditorRow = { minNextOp: number; maxNextOp: number; minMs: number; maxMs: number };
-
-const MONETIZATION_DELAY_TIER_DEFAULTS: DelayTierEditorRow[] = [
-  { minNextOp: 6, maxNextOp: 6, minMs: 2000, maxMs: 4000 },
-  { minNextOp: 7, maxNextOp: 7, minMs: 4000, maxMs: 7000 },
-  { minNextOp: 8, maxNextOp: 999_999, minMs: 8000, maxMs: 15000 },
-];
-
-function monetizationNum(v: unknown, fallback: number): number {
-  return typeof v === "number" && Number.isFinite(v) ? v : fallback;
-}
-
-type MonetizationEditorState = {
-  delaysEnabled: boolean;
-  freeOpsBeforeThrottle: number;
-  delayCapMs: number;
-  delayFloorMs: number;
-  delayTiers: DelayTierEditorRow[];
-  strongThrottleMessageMinEvents: number;
-  strongRecordMessageMinThrottle: number;
-  strongRecordMessageMinPostLimitExtra: number;
-};
-
-function loadMonetizationFromTOOLSRoot(o: Record<string, unknown>): MonetizationEditorState {
-  let delaysEnabled = true;
-  let freeOpsBeforeThrottle = 5;
-  let delayCapMs = 30_000;
-  let delayFloorMs = 900;
-  let delayTiers = MONETIZATION_DELAY_TIER_DEFAULTS.map((r) => ({ ...r }));
-
-  const plt = o.postLimitThrottle;
-  if (plt != null && typeof plt === "object" && !Array.isArray(plt)) {
-    const p = plt as Record<string, unknown>;
-    delaysEnabled = p.delaysEnabled !== false;
-    if (typeof p.freeOpsBeforeThrottle === "number" && Number.isFinite(p.freeOpsBeforeThrottle)) {
-      freeOpsBeforeThrottle = Math.max(0, Math.floor(p.freeOpsBeforeThrottle));
-    }
-    if (typeof p.delayCapMs === "number" && Number.isFinite(p.delayCapMs)) {
-      delayCapMs = Math.max(100, Math.floor(p.delayCapMs));
-    }
-    if (typeof p.delayFloorMs === "number" && Number.isFinite(p.delayFloorMs)) {
-      delayFloorMs = Math.max(0, Math.floor(p.delayFloorMs));
-    }
-    const rawTiers = p.delayTiers;
-    if (Array.isArray(rawTiers) && rawTiers.length > 0) {
-      const parsed: DelayTierEditorRow[] = [];
-      for (const row of rawTiers) {
-        if (row == null || typeof row !== "object" || Array.isArray(row)) {
-          continue;
-        }
-        const t = row as Record<string, unknown>;
-        parsed.push({
-          minNextOp: Math.floor(monetizationNum(t.minNextOp, 0)),
-          maxNextOp: Math.floor(monetizationNum(t.maxNextOp, 0)),
-          minMs: Math.max(0, Math.floor(monetizationNum(t.minMs, 0))),
-          maxMs: Math.max(0, Math.floor(monetizationNum(t.maxMs, 0))),
-        });
-      }
-      if (parsed.length > 0) {
-        delayTiers = parsed;
-      }
-    }
-  }
-
-  let strongThrottleMessageMinEvents = 2;
-  let strongRecordMessageMinThrottle = 2;
-  let strongRecordMessageMinPostLimitExtra = 2;
-  const cm = o.conversionMessaging;
-  if (cm != null && typeof cm === "object" && !Array.isArray(cm)) {
-    const c = cm as Record<string, unknown>;
-    const pickN = (raw: unknown, d: number) =>
-      typeof raw === "number" && Number.isFinite(raw) ? Math.min(1000, Math.max(1, Math.floor(raw))) : d;
-    strongThrottleMessageMinEvents = pickN(c.strongThrottleMessageMinEvents, strongThrottleMessageMinEvents);
-    strongRecordMessageMinThrottle = pickN(c.strongRecordMessageMinThrottle, strongRecordMessageMinThrottle);
-    strongRecordMessageMinPostLimitExtra = pickN(c.strongRecordMessageMinPostLimitExtra, strongRecordMessageMinPostLimitExtra);
-  }
-
-  return {
-    delaysEnabled,
-    freeOpsBeforeThrottle,
-    delayCapMs,
-    delayFloorMs,
-    delayTiers,
-    strongThrottleMessageMinEvents,
-    strongRecordMessageMinThrottle,
-    strongRecordMessageMinPostLimitExtra,
-  };
-}
-
-function mergeMonetizationIntoTOOLSConfig(
-  base: Record<string, unknown>,
-  mon: MonetizationEditorState,
-): Record<string, unknown> {
+/** Persisted config may contain legacy FREE delay tiers; we always disable server-side throttling on save. */
+function disableLegacyFreeThrottleInTOOLSConfig(base: Record<string, unknown>): Record<string, unknown> {
   const prevPlt =
     base.postLimitThrottle != null && typeof base.postLimitThrottle === "object" && !Array.isArray(base.postLimitThrottle)
       ? { ...(base.postLimitThrottle as Record<string, unknown>) }
       : {};
-  const nextPlt: Record<string, unknown> = {
-    ...prevPlt,
-    delaysEnabled: mon.delaysEnabled,
-    freeOpsBeforeThrottle: mon.freeOpsBeforeThrottle,
-    delayCapMs: mon.delayCapMs,
-    delayFloorMs: mon.delayFloorMs,
-    delayTiers: mon.delayTiers.map((r) => ({ ...r })),
+  return {
+    ...base,
+    postLimitThrottle: {
+      ...prevPlt,
+      delaysEnabled: false,
+    },
   };
-  const prevCm =
-    base.conversionMessaging != null &&
-    typeof base.conversionMessaging === "object" &&
-    !Array.isArray(base.conversionMessaging)
-      ? { ...(base.conversionMessaging as Record<string, unknown>) }
-      : {};
-  const nextCm: Record<string, unknown> = {
-    ...prevCm,
-    strongThrottleMessageMinEvents: mon.strongThrottleMessageMinEvents,
-    strongRecordMessageMinThrottle: mon.strongRecordMessageMinThrottle,
-    strongRecordMessageMinPostLimitExtra: mon.strongRecordMessageMinPostLimitExtra,
-  };
-  return { ...base, postLimitThrottle: nextPlt, conversionMessaging: nextCm };
 }
 
 function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
@@ -1297,7 +1192,6 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
   const [planDefinitions, setPlanDefinitions] = useState<AdminTOOLSApiPayload["planDefinitions"]>([]);
   const [usageByTool, setUsageByTool] = useState<Record<string, { rows: number; operations: number }>>({});
   const [postLimitNote, setPostLimitNote] = useState<string | null>(null);
-  const [monetization, setMonetization] = useState<MonetizationEditorState>(() => loadMonetizationFromTOOLSRoot({}));
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -1308,7 +1202,6 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       const d = (await fetchAdminTOOLS(accessToken)) as AdminTOOLSApiPayload;
       const o = d.overrides && typeof d.overrides === "object" ? { ...(d.overrides as Record<string, unknown>) } : { notes: "" };
       setFull(o);
-      setMonetization(loadMonetizationFromTOOLSRoot(o));
       setNotes(String(o.notes ?? ""));
       const conv = readConversion(o);
       setCtaLabel(String(conv.upgradeCtaLabel ?? ""));
@@ -1352,250 +1245,6 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       <AdminMutedBox>
         Hangi aracın hangi planda açık olduğu <strong className="text-slate-200">Paketler</strong> sekmesindedir; burada bakım için araç kapatma, yükseltme mesajları ve kullanım özeti yönetilir.
       </AdminMutedBox>
-
-      <AdminSection
-        title="Monetizasyon (FREE gecikme)"
-        description="Kayıt: SiteSetting `TOOLS.config` — kod değişikliği gerekmez. Ücretsiz planda sunucu gecikmesi, yumuşak kota eşiği ve mesaj eşikleri buradan yönetilir."
-        variant="emerald"
-      >
-        <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-200">
-          <input
-            type="checkbox"
-            checked={monetization.delaysEnabled}
-            onChange={() => setMonetization((m) => ({ ...m, delaysEnabled: !m.delaysEnabled }))}
-            className="h-4 w-4 rounded border-white/30"
-          />
-          FREE sunucu gecikme sistemi açık (kapalıyken bekleme uygulanmaz; kota kuralları Paketler’den devam eder)
-        </label>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <AdminField
-            label="Yumuşak limit (gecikmesiz işlem sayısı)"
-            description="Bugünkü işlem numarası bu değere kadar (dahil) sunucu gecikmesi uygulanmaz; sonrası delayTiers devreye girer."
-          >
-            <input
-              type="number"
-              min={0}
-              className={adminInputClass}
-              value={monetization.freeOpsBeforeThrottle}
-              onChange={(e) =>
-                setMonetization((m) => ({
-                  ...m,
-                  freeOpsBeforeThrottle: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                }))
-              }
-            />
-          </AdminField>
-          <AdminField
-            label="Gecikme tabanı / tavan (ms)"
-            description="Rastgele gecikme bu aralığa sıkıştırılır (sunucu hesabı)."
-          >
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="number"
-                min={0}
-                className={`${adminInputClass} min-w-[120px]`}
-                placeholder="Taban"
-                value={monetization.delayFloorMs}
-                onChange={(e) =>
-                  setMonetization((m) => ({
-                    ...m,
-                    delayFloorMs: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                  }))
-                }
-              />
-              <input
-                type="number"
-                min={100}
-                className={`${adminInputClass} min-w-[120px]`}
-                placeholder="Tavan"
-                value={monetization.delayCapMs}
-                onChange={(e) =>
-                  setMonetization((m) => ({
-                    ...m,
-                    delayCapMs: Math.max(100, Math.floor(Number(e.target.value) || 100)),
-                  }))
-                }
-              />
-            </div>
-          </AdminField>
-        </div>
-        <div className="mt-4">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Gecikme aralıkları (işlem #)</h4>
-            <button
-              type="button"
-              className="rounded-lg border border-white/[0.12] px-2 py-1 text-[11px] text-slate-300 hover:bg-white/[0.05]"
-              onClick={() =>
-                setMonetization((m) => ({
-                  ...m,
-                  delayTiers: [...m.delayTiers, { minNextOp: 1, maxNextOp: 1, minMs: 1000, maxMs: 2000 }],
-                }))
-              }
-            >
-              Satır ekle
-            </button>
-            <button
-              type="button"
-              className="rounded-lg border border-white/[0.12] px-2 py-1 text-[11px] text-slate-300 hover:bg-white/[0.05]"
-              onClick={() => setMonetization((m) => ({ ...m, delayTiers: MONETIZATION_DELAY_TIER_DEFAULTS.map((r) => ({ ...r })) }))}
-            >
-              Varsayılan sıralamaya dön
-            </button>
-          </div>
-          <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
-            <table className="w-full min-w-[520px] text-left text-xs">
-              <thead className="border-b border-white/[0.08] text-slate-500">
-                <tr>
-                  <th className="px-2 py-2">min işlem #</th>
-                  <th className="px-2 py-2">max işlem #</th>
-                  <th className="px-2 py-2">min ms</th>
-                  <th className="px-2 py-2">max ms</th>
-                  <th className="px-2 py-2 w-16" />
-                </tr>
-              </thead>
-              <tbody>
-                {monetization.delayTiers.map((row, idx) => (
-                  <tr key={idx} className="border-b border-white/[0.04]">
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        className={adminInputClass}
-                        value={row.minNextOp}
-                        onChange={(e) => {
-                          const v = Math.floor(Number(e.target.value) || 0);
-                          setMonetization((m) => {
-                            const next = [...m.delayTiers];
-                            next[idx] = { ...next[idx]!, minNextOp: v };
-                            return { ...m, delayTiers: next };
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        className={adminInputClass}
-                        value={row.maxNextOp}
-                        onChange={(e) => {
-                          const v = Math.floor(Number(e.target.value) || 0);
-                          setMonetization((m) => {
-                            const next = [...m.delayTiers];
-                            next[idx] = { ...next[idx]!, maxNextOp: v };
-                            return { ...m, delayTiers: next };
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        className={adminInputClass}
-                        value={row.minMs}
-                        onChange={(e) => {
-                          const v = Math.max(0, Math.floor(Number(e.target.value) || 0));
-                          setMonetization((m) => {
-                            const next = [...m.delayTiers];
-                            next[idx] = { ...next[idx]!, minMs: v };
-                            return { ...m, delayTiers: next };
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <input
-                        type="number"
-                        className={adminInputClass}
-                        value={row.maxMs}
-                        onChange={(e) => {
-                          const v = Math.max(0, Math.floor(Number(e.target.value) || 0));
-                          setMonetization((m) => {
-                            const next = [...m.delayTiers];
-                            next[idx] = { ...next[idx]!, maxMs: v };
-                            return { ...m, delayTiers: next };
-                          });
-                        }}
-                      />
-                    </td>
-                    <td className="px-2 py-1">
-                      <button
-                        type="button"
-                        className="text-red-300 hover:underline"
-                        onClick={() =>
-                          setMonetization((m) => ({
-                            ...m,
-                            delayTiers: m.delayTiers.filter((_, i) => i !== idx),
-                          }))
-                        }
-                      >
-                        Sil
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <AdminField
-            label="Güçlü throttle metni (kaç gecikmeden sonra)"
-            description="Aynı gün bu kadar gecikmeli istekten sonra daha sert metin."
-          >
-            <input
-              type="number"
-              min={1}
-              max={1000}
-              className={adminInputClass}
-              value={monetization.strongThrottleMessageMinEvents}
-              onChange={(e) =>
-                setMonetization((m) => ({
-                  ...m,
-                  strongThrottleMessageMinEvents: Math.min(1000, Math.max(1, Math.floor(Number(e.target.value) || 1))),
-                }))
-              }
-            />
-          </AdminField>
-          <AdminField
-            label="Güçlü kayıt metni — gecikme sayısı"
-            description="Gün içi gecikme olayı bu eşiğe ulaşınca kayıt sonrası mesaj sertleşir."
-          >
-            <input
-              type="number"
-              min={1}
-              max={1000}
-              className={adminInputClass}
-              value={monetization.strongRecordMessageMinThrottle}
-              onChange={(e) =>
-                setMonetization((m) => ({
-                  ...m,
-                  strongRecordMessageMinThrottle: Math.min(1000, Math.max(1, Math.floor(Number(e.target.value) || 1))),
-                }))
-              }
-            />
-          </AdminField>
-          <AdminField
-            label="Güçlü kayıt metni — kota sonrası işlem"
-            description="Günlük kota sonrası tamamlanan işlem sayısı bu eşiğe ulaşınca sert mesaj."
-          >
-            <input
-              type="number"
-              min={1}
-              max={1000}
-              className={adminInputClass}
-              value={monetization.strongRecordMessageMinPostLimitExtra}
-              onChange={(e) =>
-                setMonetization((m) => ({
-                  ...m,
-                  strongRecordMessageMinPostLimitExtra: Math.min(1000, Math.max(1, Math.floor(Number(e.target.value) || 1))),
-                }))
-              }
-            />
-          </AdminField>
-        </div>
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-          Yükseltme düğmesi metinleri aşağıdaki «Yükseltme mesajları» bölümündedir; kayıt için aynı «Araç ayarlarını kaydet» düğmesini kullanın.
-        </p>
-      </AdminSection>
 
       {loadErr ? <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">{loadErr}</p> : null}
 
@@ -1721,7 +1370,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
 
       <AdminSection
         title="Yükseltme mesajları ve yönetici notu"
-        description="Kota dolduğunda veya gecikmeli işlemde API’nin döndürdüğü düğme etiketi ve alt satır (TOOLS.config.conversion). Güçlü metin eşikleri yukarıdaki Monetizasyon bölümündedir."
+        description="Kota dolduğunda API’nin döndürdüğü yükseltme düğmesi etiketi ve alt satır (TOOLS.config.conversion)."
         variant="violet"
       >
         {advanced ? (
@@ -1748,13 +1397,8 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
             setBusy(true);
             setMsg(null);
             try {
-              if (monetization.delayTiers.length === 0) {
-                setMsg("Monetizasyon: en az bir gecikme aralığı satırı gerekli.");
-                return;
-              }
-              const next = mergeMonetizationIntoTOOLSConfig(
+              const next = disableLegacyFreeThrottleInTOOLSConfig(
                 mergeTOOLSQuickForm(full, notes, ctaLabel, ctaSubtitle),
-                monetization,
               );
               await putAdminTOOLSConfig(accessToken, next);
               setFull(next);
@@ -2719,9 +2363,6 @@ function AnalyticsTab({
   }, [accessToken, advanced]);
 
   useEffect(() => {
-    if (!advanced) {
-      return;
-    }
     void (async () => {
       try {
         const { items } = await fetchAdminDownloadLogs(accessToken, 200);
@@ -2730,7 +2371,7 @@ function AnalyticsTab({
         setDownloadLogs([]);
       }
     })();
-  }, [accessToken, advanced]);
+  }, [accessToken]);
 
   const pvDay = overview?.pageViewsByDay ?? [];
   const pvHour = overview?.pageViewsTodayByHourUtc ?? [];
@@ -2786,50 +2427,48 @@ function AnalyticsTab({
         <BarTrend data={series} />
       </section>
       ) : null}
-      {advanced ? (
-        <section className="rounded-2xl border border-white/[0.08] p-4">
-          <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">İndirme kayıtları (son 1 yıl)</h3>
-          <p className="mt-1 text-[11px] text-slate-500">
-            Kanıt: SUCCESS yalnızca istemcinin indirme sonrası ACK göndermesiyle oluşur.
-          </p>
-          {downloadLogs.length === 0 ? (
-            <p className="mt-2 text-xs text-slate-500">Henüz kayıt yok veya yüklenemedi.</p>
-          ) : (
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-left text-[11px] text-slate-300">
-                <thead>
-                  <tr className="border-b border-white/10 text-slate-500">
-                    <th className="py-1.5 pr-2 font-semibold">Oluştu (UTC)</th>
-                    <th className="py-1.5 pr-2 font-semibold">Araç</th>
-                    <th className="py-1.5 pr-2 font-semibold">E-posta</th>
-                    <th className="py-1.5 pr-2 font-semibold">Durum</th>
-                    <th className="py-1.5 font-semibold">Kanıt</th>
+      <section className="rounded-2xl border border-white/[0.08] p-4">
+        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">İndirme kayıtları (son 1 yıl)</h3>
+        <p className="mt-1 text-[11px] text-slate-500">
+          Kanıt: SUCCESS yalnızca istemcinin indirme sonrası ACK göndermesiyle oluşur. Liste tüm yönetici modlarında yüklenir.
+        </p>
+        {downloadLogs.length === 0 ? (
+          <p className="mt-2 text-xs text-slate-500">Henüz kayıt yok veya yüklenemedi.</p>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full min-w-[640px] border-collapse text-left text-[11px] text-slate-300">
+              <thead>
+                <tr className="border-b border-white/10 text-slate-500">
+                  <th className="py-1.5 pr-2 font-semibold">Oluştu (UTC)</th>
+                  <th className="py-1.5 pr-2 font-semibold">Araç</th>
+                  <th className="py-1.5 pr-2 font-semibold">E-posta</th>
+                  <th className="py-1.5 pr-2 font-semibold">Durum</th>
+                  <th className="py-1.5 font-semibold">Kanıt</th>
+                </tr>
+              </thead>
+              <tbody>
+                {downloadLogs.map((row) => (
+                  <tr key={row.id} className="border-b border-white/[0.04]">
+                    <td className="py-1.5 pr-2 font-mono text-[10px] text-slate-400">{row.createdAt.slice(0, 19)}Z</td>
+                    <td className="py-1.5 pr-2">{row.toolId}</td>
+                    <td className="max-w-[180px] truncate py-1.5 pr-2">{row.userEmail}</td>
+                    <td className="py-1.5 pr-2">{row.status}</td>
+                    <td className="py-1.5">
+                      <button
+                        type="button"
+                        className="rounded bg-slate-700/80 px-2 py-0.5 text-[10px] font-semibold text-slate-200 hover:bg-slate-600"
+                        onClick={() => void downloadAdminDownloadLogProof(accessToken, row.id)}
+                      >
+                        Download Proof
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {downloadLogs.map((row) => (
-                    <tr key={row.id} className="border-b border-white/[0.04]">
-                      <td className="py-1.5 pr-2 font-mono text-[10px] text-slate-400">{row.createdAt.slice(0, 19)}Z</td>
-                      <td className="py-1.5 pr-2">{row.toolId}</td>
-                      <td className="max-w-[180px] truncate py-1.5 pr-2">{row.userEmail}</td>
-                      <td className="py-1.5 pr-2">{row.status}</td>
-                      <td className="py-1.5">
-                        <button
-                          type="button"
-                          className="rounded bg-slate-700/80 px-2 py-0.5 text-[10px] font-semibold text-slate-200 hover:bg-slate-600"
-                          onClick={() => void downloadAdminDownloadLogProof(accessToken, row.id)}
-                        >
-                          Download Proof
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      ) : null}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
       {advanced ? (
       <section className="rounded-2xl border border-white/[0.08] p-4">
         <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">CSV dışa aktarma</h3>

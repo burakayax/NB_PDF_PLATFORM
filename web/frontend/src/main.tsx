@@ -4,6 +4,7 @@ import App from "./App";
 import { BackToTopButton } from "./components/common/BackToTopButton";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards } from "./lib/productionGuards";
+import "react-phone-number-input/style.css";
 import "./styles/app.css";
 
 installProductionGuards();

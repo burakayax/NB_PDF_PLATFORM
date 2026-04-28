@@ -90,6 +90,9 @@ export function apiRateLimitForRequest(request: Request, cfg: ApiSecurityResolve
   if (path.startsWith("/payment")) {
     return cfg.paymentPerMinute;
   }
+  if (path.startsWith("/payments")) {
+    return cfg.paymentPerMinute;
+  }
   if (path.startsWith("/auth/forgot-password")) {
     return cfg.forgotPasswordPerMinute;
   }
@@ -141,6 +144,12 @@ export function rateLimitCountsTowardAbuseBlock(request: Request): boolean {
     return false;
   }
   if (p === "/payment/callback") {
+    return false;
+  }
+  if (p === "/payments/callback") {
+    return false;
+  }
+  if (p === "/payments/pricing" && m === "GET") {
     return false;
   }
   if (p === "/auth/change-password" && m === "POST") {

@@ -12,6 +12,7 @@ const previewBodySchema = z.object({
   product: z.string().min(1),
   couponCode: z.string().optional().nullable(),
   applyExitIntent: z.boolean().optional(),
+  currency: z.enum(["TRY", "USD", "EUR"]).optional(),
 });
 
 const startBodySchema = z.object({
@@ -36,6 +37,7 @@ export async function creditCheckoutPreviewController(request: Request, response
     product: parsed.data.product,
     couponCode: parsed.data.couponCode,
     applyExitIntent: parsed.data.applyExitIntent,
+    currency: parsed.data.currency,
   });
   response.status(200).json(result);
 }

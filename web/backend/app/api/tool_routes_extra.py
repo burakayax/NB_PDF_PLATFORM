@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import Annotated, Any
@@ -20,8 +21,8 @@ from app.core.operations import (
     parse_pages_text,
     save_upload,
 )
-from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail
-from app.core.result_store import save_result
+from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail_from_path
+from app.core.result_store import save_result_from_file
 from app.core.thread_pool import run_cpu_bound
 from app.core.saas_gate import (
     entitlement_check,
@@ -68,10 +69,10 @@ def _g_con(d: dict[str, Any]) -> dict[str, Any]:
 # --- result-store: önizleme + kredi indirmede
 
 
-def _pack_pdf_result_bytes(data: bytes, out_filename: str, user_id: str, tool: str) -> dict[str, Any]:
-    thumb = generate_blurred_pdf_thumbnail(data)
-    h = save_result(
-        data,
+def _pack_pdf_result_file(out_p: Path, out_filename: str, user_id: str, tool: str) -> dict[str, Any]:
+    thumb = generate_blurred_pdf_thumbnail_from_path(out_p)
+    h = save_result_from_file(
+        out_p,
         out_filename,
         "application/pdf",
         user_id=user_id,
@@ -111,8 +112,7 @@ async def tool_delete_pages(
             return out_p
 
         await run_cpu_bound(_run)
-        data = out_p.read_bytes()
-        body = _pack_pdf_result_bytes(data, out_n, user_id, "delete-pages")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "delete-pages")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -129,9 +129,8 @@ async def tool_rotate_pdf(
     degrees: int = Form(90),
     pages: str = Form(""),
     password: str = Form(""),
+    pages_rotation_json: str = Form(""),
 ):
-    if degrees not in (90, 180, 270):
-        raise HTTPException(status_code=400, detail="Açı 90, 180 veya 270 olmalı.")
     decision = await entitlement_check(token, "rotate-pdf")
     workdir = create_workdir()
     try:
@@ -139,19 +138,51 @@ async def tool_rotate_pdf(
         pwd = password.strip() or None
         sp = str(saved)
         n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
+        per_page: dict[int, int] | None = None
+        raw_rot = (pages_rotation_json or "").strip()
+        if raw_rot:
+            try:
+                parsed = json.loads(raw_rot)
+                if not isinstance(parsed, dict):
+                    raise ValueError("not an object")
+                per_page = {}
+                for k, v in parsed.items():
+                    pi = int(k)
+                    deg = int(v)
+                    if deg != 0 and deg not in (90, 180, 270):
+                        raise HTTPException(
+                            status_code=400,
+                            detail="pages_rotation_json değerleri 0, 90, 180 veya 270 olmalı.",
+                        )
+                    if deg != 0:
+                        per_page[pi] = deg
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=400, detail="pages_rotation_json geçersiz.") from None
         pages_l = None
-        if (pages or "").strip():
-            pages_l = parse_pages_text(pages, max_page=n)
+        if per_page is None:
+            if degrees not in (90, 180, 270):
+                raise HTTPException(status_code=400, detail="Açı 90, 180 veya 270 olmalı.")
+            if (pages or "").strip():
+                pages_l = parse_pages_text(pages, max_page=n)
         user_id = await saas_current_user_id(token)
         out_n = format_derived_filename(file.filename or saved.name, "Dondurulmus", "pdf")
         out_p = workdir / out_n
 
         def _run():
-            ptx.rotate_pdf(sp, str(out_p), int(degrees), pages_l, password=pwd)
+            ptx.rotate_pdf(
+                sp,
+                str(out_p),
+                int(degrees),
+                pages_l,
+                password=pwd,
+                per_page_degrees=per_page,
+            )
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "rotate-pdf")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "rotate-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -191,7 +222,7 @@ async def tool_organize_pdf(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "organize-pdf")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "organize-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -223,7 +254,7 @@ async def tool_unlock_pdf(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "unlock-pdf")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "unlock-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -255,7 +286,7 @@ async def tool_watermark(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "watermark")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "watermark")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -290,7 +321,7 @@ async def tool_page_numbers(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "page-numbers")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "page-numbers")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -321,7 +352,7 @@ async def tool_repair_pdf(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), out_n, user_id, "repair-pdf")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "repair-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -336,7 +367,6 @@ async def tool_pdf_to_ppt(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     password: str = Form(""),
-    dpi: int = Form(120),
 ):
     decision = await entitlement_check(token, "pdf-to-ppt")
     workdir = create_workdir()
@@ -349,17 +379,16 @@ async def tool_pdf_to_ppt(
         out_p = workdir / out_n
 
         def _run():
-            ptx.pdf_to_pptx(sp, str(out_p), password=pwd, dpi=min(200, max(72, int(dpi))))
+            ptx.pdf_to_pptx(sp, str(out_p), password=pwd, dpi=int(ptx.PDF_EXPORT_DPI_WEB))
             return out_p
 
         await run_cpu_bound(_run)
-        data = out_p.read_bytes()
         try:
-            thumb = generate_blurred_pdf_thumbnail(Path(sp).read_bytes())
+            thumb = generate_blurred_pdf_thumbnail_from_path(Path(sp))
         except OSError:
             thumb = None
-        h = save_result(
-            data,
+        h = save_result_from_file(
+            out_p,
             out_n,
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
             user_id=user_id,
@@ -410,7 +439,6 @@ async def tool_pdf_to_image(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     image_format: str = Form("jpg"),
-    dpi: int = Form(150),
     password: str = Form(""),
 ):
     decision = await entitlement_check(token, "pdf-to-image")
@@ -422,13 +450,18 @@ async def tool_pdf_to_image(
         user_id = await saas_current_user_id(token)
 
         def _zip():
-            zpath = ptx.pdf_to_images_zip(sp, str(workdir), image_format=image_format, dpi=min(300, max(72, int(dpi))), password=pwd)
+            zpath = ptx.pdf_to_images_zip(
+                sp,
+                str(workdir),
+                image_format=image_format,
+                dpi=int(ptx.PDF_EXPORT_DPI_WEB),
+                password=pwd,
+            )
             return Path(zpath)
 
         zip_p = await run_cpu_bound(_zip)
-        data = zip_p.read_bytes()
-        h = save_result(
-            data,
+        h = save_result_from_file(
+            zip_p,
             "sayfalar.zip",
             "application/zip",
             user_id=user_id,
@@ -472,7 +505,7 @@ async def tool_image_to_pdf(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), "fotograflar.pdf", user_id, "image-to-pdf")
+        body = _pack_pdf_result_file(out_p, "fotograflar.pdf", user_id, "image-to-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
@@ -505,7 +538,7 @@ async def tool_html_to_pdf(
             return out_p
 
         await run_cpu_bound(_run)
-        body = _pack_pdf_result_bytes(out_p.read_bytes(), "web.pdf", user_id, "html-to-pdf")
+        body = _pack_pdf_result_file(out_p, "web.pdf", user_id, "html-to-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:

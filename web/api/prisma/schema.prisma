@@ -76,6 +76,10 @@ model User {
   /// Coarse geo fields for admin analytics (optional; may be set from IP / profile).
   country      String?
   city         String?
+  /// Billing / checkout (iyzico): set from ProfileCompletionModal before payment.
+  phone                String?  @map("phone")
+  billingAddressLine   String?  @map("billing_address_line")
+  billingPostalCode    String?  @map("billing_postal_code")
   /// Throttle for automated low-credit marketing email (nudge at most per cooldown).
   lowCreditNudgeAt DateTime? @map("low_credit_nudge_at")
   /// Son “çıkış niyeti” %10 kredi indiriminin uygulandığı zaman (30 gün cooldown).
@@ -126,12 +130,16 @@ model PasswordResetCode {
 model PaymentCheckout {
   id               String    @id @default(cuid())
   conversationId   String    @unique
+  /// SHA-256(iyzico checkout `token`) after initialize — used when retrieve omits conversationId.
+  iyzicoTokenHash  String?   @unique @map("iyzico_token_hash")
   userId           String
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan             Plan
   status           String    @default("pending")
   /// priceTry ileride eklenecek provider, stripeSessionId, stripeEventId
   priceTry         String
+  /// ISO 4217: TRY | USD | EUR — hangi para birimiyle tahsil edildi (muhasebe).
+  paymentCurrency  String         @default("TRY") @map("payment_currency")
   /// Subscription length applied on successful payment (30 = monthly, 365 = annual).
   subscriptionDays Int       @default(30) @map("subscription_days")
   createdAt        DateTime  @default(now())
@@ -205,10 +213,14 @@ model CouponUse {
 model CreditPackCheckout {
   id                String    @id @default(cuid())
   conversationId    String    @unique
+  /// SHA-256(iyzico checkout `token`) after initialize — used when retrieve omits conversationId.
+  iyzicoTokenHash   String?   @unique @map("iyzico_token_hash")
   userId            String
   product           String
   basePriceTry      String    @map("base_price_try")
   finalPriceTry     String    @map("final_price_try")
+  /// TRY | USD | EUR — tahsilat para birimi (price alanları bu birimdeki tutar stringleri).
+  paymentCurrency   String     @default("TRY") @map("payment_currency")
   credits           Int
   status            String    @default("pending")
   couponId          String?   @map("coupon_id")

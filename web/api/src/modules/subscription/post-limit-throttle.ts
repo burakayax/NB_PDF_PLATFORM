@@ -31,7 +31,7 @@ export type PostLimitThrottleRuntime = {
 };
 
 export const DEFAULT_POST_LIMIT_THROTTLE_RUNTIME: PostLimitThrottleRuntime = {
-  delaysEnabled: true,
+  delaysEnabled: false,
   freeOpsBeforeThrottle: 5,
   delayCapMs: 30_000,
   delayFloorMs: 900,

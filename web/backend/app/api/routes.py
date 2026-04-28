@@ -15,7 +15,7 @@ from typing import Annotated, Any
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from app.api.pdf_auth import extract_bearer_header_only, extract_pdf_access_token
 from app.core.operations import (
@@ -42,12 +42,13 @@ from app.core.jobs import (
     request_cancel_merge_job,
 )
 from app.core.thread_pool import run_cpu_bound
-from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail
+from app.core.preview_gate import generate_hero_watermarked_preview_png_queued
+from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail_from_path
 from app.core.result_store import (
     delete_result,
     get_result,
     read_meta_only,
-    save_result,
+    save_result_from_file,
 )
 from app.core.saas_gate import (
     entitlement_check,
@@ -463,11 +464,11 @@ async def compress_pdf(
 
         def _compress_and_store() -> Any:
             engine.compress_pdf(sp, out_str, password=pwd)
-            payload = Path(out_str).read_bytes()
-            thumb = generate_blurred_pdf_thumbnail(payload)
-            return save_result(
-                payload,
-                Path(out_str).name,
+            outp = Path(out_str)
+            thumb = generate_blurred_pdf_thumbnail_from_path(outp)
+            return save_result_from_file(
+                outp,
+                outp.name,
                 "application/pdf",
                 user_id=user_id,
                 thumbnail_png=thumb,
@@ -507,10 +508,9 @@ def _split_to_result_store(
         output_name = format_split_single_filename(file_base_name, pages)
         output_path = workdir / output_name
         engine.extract_pages(sp, pages, str(output_path), password=password)
-        payload = P(str(output_path)).read_bytes()
-        thumb = generate_blurred_pdf_thumbnail(payload)
-        return save_result(
-            payload,
+        thumb = generate_blurred_pdf_thumbnail_from_path(output_path)
+        return save_result_from_file(
+            output_path,
             output_path.name,
             "application/pdf",
             user_id=user_id,
@@ -529,14 +529,12 @@ def _split_to_result_store(
         renamed_paths.append(renamed)
     zip_name = format_split_zip_filename(file_base_name, pages)
     zip_path = create_zip_archive(workdir / zip_name, renamed_paths)
-    payload = P(str(zip_path)).read_bytes()
     try:
-        src = P(str(sp)).read_bytes()
-        thumb = generate_blurred_pdf_thumbnail(src)
+        thumb = generate_blurred_pdf_thumbnail_from_path(P(str(sp)))
     except OSError:
         thumb = None
-    return save_result(
-        payload,
+    return save_result_from_file(
+        zip_path,
         zip_path.name,
         "application/zip",
         user_id=user_id,
@@ -595,6 +593,7 @@ async def encrypt_pdf(
 
 
 @router.get("/pdf/result/{result_id}/preview")
+@limiter.exempt
 async def preview_result(
     result_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
@@ -626,6 +625,7 @@ async def preview_result(
 
 
 @router.get("/pdf/result/{result_id}/preview/thumbnail")
+@limiter.exempt
 async def preview_result_thumbnail(
     result_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
@@ -636,6 +636,25 @@ async def preview_result_thumbnail(
     if read.thumbnail_path is None:
         raise HTTPException(status_code=404, detail="Thumbnail not available.")
     return FileResponse(path=str(read.thumbnail_path), media_type="image/png")
+
+
+@router.get("/pdf/result/{result_id}/preview/hero")
+@limiter.exempt
+async def preview_result_hero(
+    result_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Large watermarked first-page preview for gated-download modal (FREE, owner-only)."""
+    user_id = await saas_current_user_id(token)
+    read = get_result(result_id, user_id)
+    try:
+        pdf_bytes = await run_cpu_bound(read.payload_path.read_bytes)
+    except OSError:
+        raise HTTPException(status_code=404, detail="Preview not available.") from None
+    png = await generate_hero_watermarked_preview_png_queued(pdf_bytes)
+    if not png:
+        raise HTTPException(status_code=404, detail="Preview could not be generated.")
+    return Response(content=png, media_type="image/png")
 
 
 @router.get("/pdf/result/{result_id}/download")

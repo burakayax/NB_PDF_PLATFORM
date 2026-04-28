@@ -11,6 +11,8 @@ import {
   updateAuthPreferredLanguage,
   updateAuthProfile,
   type AuthUser,
+  type RegisterAuthPayload,
+  type UpdateProfileInput,
 } from "../api/auth";
 import { registerSaasSessionSync } from "../api/subscription";
 import type { Language } from "../i18n/landing";
@@ -127,12 +129,9 @@ export function useAuthSession() {
     [persistSession],
   );
 
-  const register = useCallback(
-    async (firstName: string, lastName: string, email: string, password: string, preferredLanguage: Language) => {
-      return registerAuthUser(firstName, lastName, email, password, preferredLanguage);
-    },
-    [],
-  );
+  const register = useCallback(async (payload: RegisterAuthPayload) => {
+    return registerAuthUser(payload);
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -156,12 +155,12 @@ export function useAuthSession() {
   );
 
   const updateProfile = useCallback(
-    async (firstName: string, lastName: string) => {
+    async (input: UpdateProfileInput) => {
       if (!accessToken) {
         return null;
       }
 
-      const nextUser = await updateAuthProfile(accessToken, { firstName, lastName });
+      const nextUser = await updateAuthProfile(accessToken, input);
       setUser(nextUser);
       return nextUser;
     },

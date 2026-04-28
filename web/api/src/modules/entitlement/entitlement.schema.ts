@@ -16,6 +16,13 @@ export const entitlementBodySchema = z.object({
 export type EntitlementBody = z.infer<typeof entitlementBodySchema>;
 
 export const downloadLogCreateSchema = z.object({
-  resultId: z.union([z.string().min(1).max(128), z.null()]).optional(),
+  resultId: z.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) return null;
+      const s = String(val).trim();
+      return s.length ? s : null;
+    },
+    z.union([z.string().min(1).max(256), z.null()]),
+  ),
   toolId: z.string().min(1).max(64),
 });
