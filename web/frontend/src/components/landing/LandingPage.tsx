@@ -25,6 +25,7 @@ type LandingPageProps = {
   onRegister: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onOpenKvkk: () => void;
 };
 
 export function LandingPage({
@@ -37,6 +38,7 @@ export function LandingPage({
   onRegister,
   onOpenTerms,
   onOpenPrivacy,
+  onOpenKvkk,
 }: LandingPageProps) {
   const { cms: cmsContent, flags: runtimeFlags } = useSettings();
   const contactFormEnabled = runtimeFlags.featureFlags?.contactForm !== false;
@@ -792,6 +794,13 @@ export function LandingPage({
               className="text-slate-200 transition hover:text-white"
             >
               {copy.footer.privacyLabel}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenKvkk}
+              className="text-slate-200 transition hover:text-white"
+            >
+              {copy.footer.kvkkLabel}
             </button>
             {contactFormEnabled ? (
               <a href="#contact" className="text-slate-200 transition hover:text-white">

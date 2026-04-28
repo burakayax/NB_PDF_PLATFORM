@@ -1,5 +1,5 @@
 import type { FeatureKey } from "../modules/subscription/subscription.config.js";
-import { getResolvedTOOLSBusinessConfig } from "../modules/subscription/TOOLS-config-runtime.js";
+import { getResolvedTOOLSBusinessConfig } from "../modules/subscription/tools-config-runtime.js";
 
 /**
  * `TOOLS.config.disabledFeatures` — tüm kullanıcılar için geçici kapatılan araçlar (SiteSetting, önbellekli).

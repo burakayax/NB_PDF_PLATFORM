@@ -1,10 +1,22 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { isValidPhoneNumber } from "libphonenumber-js";
 import { getGoogleOAuthStartUrl } from "../../api/auth";
+import { NbPhoneInput } from "../common/NbPhoneInput";
+import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
 import type { Language } from "../../i18n/landing";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 
 type AuthMode = "login" | "register";
+
+type AuthSubmitPayload = {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  city?: string;
+};
 
 type AuthPageProps = {
   mode: AuthMode;
@@ -16,10 +28,11 @@ type AuthPageProps = {
   onDismissRegistrationSuccess?: () => void;
   onBack: () => void;
   onModeChange: (mode: AuthMode) => void;
-  onSubmit: (payload: { email: string; password: string; firstName?: string; lastName?: string }) => Promise<void>;
+  onSubmit: (payload: AuthSubmitPayload) => Promise<void>;
   onForgotPassword?: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
+  onOpenKvkk: () => void;
 };
 
 const inputClassName =
@@ -61,12 +74,15 @@ export function AuthPage({
   onForgotPassword,
   onOpenTerms,
   onOpenPrivacy,
+  onOpenKvkk,
 }: AuthPageProps) {
   const copy = useMemo(() => getAuthCopy(language, mode), [language, mode]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [registerPhone, setRegisterPhone] = useState("");
+  const [registerCity, setRegisterCity] = useState("");
   const [localError, setLocalError] = useState("");
   const [urlAuthError, setUrlAuthError] = useState("");
   const [urlEmailVerifiedNotice, setUrlEmailVerifiedNotice] = useState(false);
@@ -115,6 +131,10 @@ export function AuthPage({
     }
 
     if (mode === "register") {
+      if (registerPhone.trim() && !isValidPhoneNumber(registerPhone.trim())) {
+        setLocalError(language === "tr" ? "Geçerli bir cep telefonu girin veya alanı boş bırakın." : "Enter a valid mobile number or leave the field empty.");
+        return;
+      }
       const policy = validateNewPasswordPolicy(password);
       if (!policy.ok) {
         const msg =
@@ -133,9 +153,18 @@ export function AuthPage({
     const wasRegister = mode === "register";
     try {
       if (wasRegister) {
-        await onSubmit({ firstName: firstName.trim(), lastName: lastName.trim(), email, password });
+        await onSubmit({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          email,
+          password,
+          phone: registerPhone.trim() || undefined,
+          city: registerCity.trim() || undefined,
+        });
         setFirstName("");
         setLastName("");
+        setRegisterPhone("");
+        setRegisterCity("");
         setEmail("");
         setPassword("");
       } else {
@@ -279,6 +308,44 @@ export function AuthPage({
               </div>
             ) : null}
 
+            {mode === "register" ? (
+              <>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-nb-muted">
+                    {language === "tr" ? "Cep telefonu" : "Mobile phone"}{" "}
+                    <span className="font-normal opacity-75">
+                      ({language === "tr" ? "isteğe bağlı, +90" : "optional, +90"})
+                    </span>
+                  </span>
+                  <NbPhoneInput
+                    className="[&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-white/[0.08] [&_.PhoneInput]:bg-nb-bg-soft/95 [&_.PhoneInputInput]:rounded-r-xl [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:py-3.5 [&_.PhoneInputInput]:text-[15px] [&_.PhoneInputInput]:text-nb-text"
+                    value={registerPhone}
+                    onChange={(v) => setRegisterPhone(v)}
+                    disabled={submitting}
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium text-nb-muted">
+                    {language === "tr" ? "Şehir" : "City"}{" "}
+                    <span className="font-normal opacity-75">({language === "tr" ? "isteğe bağlı" : "optional"})</span>
+                  </span>
+                  <select
+                    value={registerCity}
+                    onChange={(event) => setRegisterCity(event.target.value)}
+                    className={inputClassName}
+                    disabled={submitting}
+                  >
+                    <option value="">{language === "tr" ? "— seçin —" : "— choose —"}</option>
+                    {TURKISH_PROVINCES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : null}
+
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-nb-muted">{copy.shared.emailLabel}</span>
               <input
@@ -352,6 +419,9 @@ export function AuthPage({
             </button>
             <button type="button" onClick={onOpenPrivacy} className="transition duration-200 hover:text-nb-text">
               {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
+            </button>
+            <button type="button" onClick={onOpenKvkk} className="transition duration-200 hover:text-nb-text">
+              {language === "tr" ? "KVKK aydınlatma" : "KVKK disclosure"}
             </button>
           </div>
         </div>

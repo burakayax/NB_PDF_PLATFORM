@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import type { Language } from "../../i18n/landing";
 import { creditShopModalCopy } from "../../i18n/creditShopModal";
-import type { FakePaymentProduct } from "../../api/fakePayment";
+import type { CreditPackProduct } from "../../lib/creditPacks";
 import { CREDIT_PACKS } from "../../lib/creditPacks";
 
 type UpgradeModalProps = {
   open: boolean;
   onClose: () => void;
   language: Language;
-  buyingProduct: FakePaymentProduct | null;
-  onBuyPack: (product: FakePaymentProduct) => void;
+  buyingProduct: CreditPackProduct | null;
+  onBuyPack: (product: CreditPackProduct) => void;
 };
 
 export function UpgradeModal({ open, onClose, language, buyingProduct, onBuyPack }: UpgradeModalProps) {
@@ -82,14 +82,16 @@ export function UpgradeModal({ open, onClose, language, buyingProduct, onBuyPack
         <div className="upgrade-modal__plans upgrade-modal__plans--three">
           {CREDIT_PACKS.map((pack, i) => {
             const busy = buyingProduct === pack.product;
+            const tierName = language === "tr" ? pack.nameTr : pack.nameEn;
             return (
               <article
                 key={pack.product}
                 className={`upgrade-modal__plan ${i === 1 ? "upgrade-modal__plan--pro" : ""}`}
               >
                 {i === 1 ? <span className="upgrade-modal__ribbon upgrade-modal__ribbon--popular">{C.popular}</span> : null}
-                <h3 className="upgrade-modal__plan-name">{C.packCredits(pack.credits)}</h3>
-                <p className="upgrade-modal__plan-price upgrade-modal__plan-price--sm">{C.packPriceTry(pack.priceTry)}</p>
+                <h3 className="upgrade-modal__plan-name">{tierName}</h3>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-white/55">{C.packContent(pack.credits, pack.subscription)}</p>
+                <p className="upgrade-modal__plan-price upgrade-modal__plan-price--sm">{C.packPriceTry(pack.priceTry, pack.subscription)}</p>
                 <p className="mt-2 text-sm leading-relaxed text-nb-muted">{C.packHint}</p>
                 <button
                   type="button"

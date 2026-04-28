@@ -8,9 +8,21 @@ import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import { logSuspiciousActivity } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
+import { hashToken } from "../../lib/token.js";
 import { recordCreditPackPurchaseMeta } from "../credit-checkout/credit-checkout.post-purchase.js";
+import {
+  CREDIT_PACK_CATALOG,
+  eqIyzicoMoney,
+  formatTry2,
+  normalizeIyzicoMoneyString,
+} from "../credit-checkout/credit-pack-pricing.js";
 import type { CreditPricingPayload } from "../credit-checkout/pricing-token.js";
+import {
+  createFakeCheckoutSession,
+  createPricedCreditPackFakeSession,
+} from "../fake-payment/fake-payment.service.js";
 import { grantCredits } from "../subscription/entitlement.engine.js";
+import { formatMoney2, getTierOneTimePrice, getUnlimitedProPrice, type CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -26,12 +38,31 @@ type IyzipayCtor = {
     };
   };
   LOCALE: { TR: string; EN: string };
-  CURRENCY: { TRY: string };
+  CURRENCY: { TRY: string; USD: string; EUR: string };
   PAYMENT_GROUP: { PRODUCT: string };
   BASKET_ITEM_TYPE: { VIRTUAL: string };
 };
 
 const Iyzipay = IyzipayImport as unknown as IyzipayCtor;
+
+/** Sandbox-safe dummy postal addresses required by Checkout Form validator. */
+const BUYER_DUMMY_STREET = "Çamlıca Mah. Teknokent Bulvarı No:42 Daire:7 Üsküdar İstanbul";
+
+function getCheckoutFormCallbackUrl(): string {
+  const base = env.PAYMENT_CALLBACK_BASE_URL.replace(/\/$/, "");
+  return `${base}/api/payments/callback`;
+}
+
+function normalizeCheckoutPrice(raw: string | undefined): string {
+  if (!raw?.trim()) {
+    throw new HttpError(500, "Checkout price missing.");
+  }
+  try {
+    return normalizeIyzicoMoneyString(raw.trim());
+  } catch {
+    throw new HttpError(500, "Checkout price normalization failed.");
+  }
+}
 const iyziUtils = iyziUtilsImport as {
   calculateHmacSHA256Signature: (params: string[], secretKey: string) => string;
 };
@@ -45,6 +76,21 @@ function getIyzipay() {
     secretKey: env.IYZICO_SECRET_KEY,
     uri: env.IYZICO_URI.trim(),
   });
+}
+
+function iyzicoFx(c: CheckoutCurrency): string {
+  switch (c) {
+    case "TRY":
+      return Iyzipay.CURRENCY.TRY;
+    case "USD":
+      return Iyzipay.CURRENCY.USD;
+    case "EUR":
+      return Iyzipay.CURRENCY.EUR;
+    default: {
+      const _e: never = c;
+      return _e;
+    }
+  }
 }
 
 type IyzicoInitResult = {
@@ -68,12 +114,34 @@ type IyzicoRetrieveResult = {
   currency?: string;
   basketId?: string;
   conversationId?: string;
-  paidPrice?: string;
-  price?: string;
+  paidPrice?: string | number;
+  price?: string | number;
   token?: string;
   signature?: string;
   fraudStatus?: number;
 };
+
+/** SDK / API may return camelCase or snake_case; normalized before signature + DB lookups. */
+function extractConversationIdFromRetrieve(raw: unknown): string | undefined {
+  if (!raw || typeof raw !== "object") {
+    return undefined;
+  }
+  const o = raw as Record<string, unknown>;
+  const candidates = [o.conversationId, o.conversation_id, o.ConversationId, (o as { rawResult?: unknown }).rawResult];
+  for (const c of candidates) {
+    if (typeof c === "string" && c.trim()) {
+      return c.trim();
+    }
+  }
+  const nested = (o.rawResult ?? o.RawResult) as Record<string, unknown> | undefined;
+  if (nested && typeof nested === "object") {
+    const n = nested.conversationId ?? nested.conversation_id;
+    if (typeof n === "string" && n.trim()) {
+      return n.trim();
+    }
+  }
+  return undefined;
+}
 
 function verifyInitSignature(conversationId: string, token: string, signature: string | undefined, secretKey: string) {
   if (!signature) {
@@ -87,6 +155,25 @@ function verifyInitSignature(conversationId: string, token: string, signature: s
     });
     throw new HttpError(502, "Payment response could not be verified.");
   }
+}
+
+/**
+ * CF retrieve response signature uses `paidPrice` / `price` with iyzico "trailing zero" canonicalization
+ * (see Response Signature Validation — same numeric form as Number.parseFloat).
+ */
+function normalizeMoneyFieldForRetrieveSignature(raw: unknown): string {
+  if (raw === undefined || raw === null) {
+    return "";
+  }
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return String(raw);
+  }
+  const s = String(raw).trim().replace(",", ".");
+  if (!s) {
+    return "";
+  }
+  const n = Number.parseFloat(s);
+  return Number.isFinite(n) ? String(n) : s;
 }
 
 function verifyRetrieveSignature(result: IyzicoRetrieveResult, secretKey: string) {
@@ -106,8 +193,8 @@ function verifyRetrieveSignature(result: IyzicoRetrieveResult, secretKey: string
   const currencyStr = String(currency ?? "");
   const basketIdStr = String(basketId ?? "");
   const conversationIdStr = String(conversationId ?? "");
-  const paidPriceStr = String(paidPrice ?? "");
-  const priceStr = String(price ?? "");
+  const paidPriceStr = normalizeMoneyFieldForRetrieveSignature(paidPrice);
+  const priceStr = normalizeMoneyFieldForRetrieveSignature(price);
   const tokenStr = String(token ?? "");
   if (!signature) {
     throw new HttpError(502, "Missing payment provider signature.");
@@ -139,6 +226,46 @@ function splitBuyerName(user: User): { name: string; surname: string } {
   return { name: full, surname: "User" };
 }
 
+function gsmNumberForCheckout(user: User): string {
+  const raw = user.phone?.trim();
+  if (!raw) {
+    return env.IYZICO_BUYER_GSM;
+  }
+  if (raw.startsWith("+")) {
+    const digits = raw.slice(1).replace(/\D/g, "");
+    return digits.length >= 10 ? `+${digits}` : env.IYZICO_BUYER_GSM;
+  }
+  const digitsOnly = raw.replace(/\D/g, "");
+  if (digitsOnly.length === 11 && digitsOnly.startsWith("0")) {
+    return `+90${digitsOnly.slice(1)}`;
+  }
+  if (digitsOnly.length === 10) {
+    return `+90${digitsOnly}`;
+  }
+  return digitsOnly.length >= 10 ? `+${digitsOnly}` : env.IYZICO_BUYER_GSM;
+}
+
+/** Prefer verified billing/profile rows when initializing Checkout Form (sandbox-safe placeholders fallback). */
+function buyerVenueFromUser(user: User): {
+  street: string;
+  city: string;
+  country: string;
+  zipCode: string;
+  gsmNumber: string;
+} {
+  const street = user.billingAddressLine?.trim() || BUYER_DUMMY_STREET;
+  const city = user.city?.trim() || "Istanbul";
+  const country = user.country?.trim() || "Turkey";
+  const zipCode = user.billingPostalCode?.trim() || "34696";
+  return {
+    street,
+    city,
+    country,
+    zipCode,
+    gsmNumber: gsmNumberForCheckout(user),
+  };
+}
+
 function promisifyInit(
   iyzipay: ReturnType<typeof getIyzipay>,
   request: Record<string, unknown>,
@@ -154,7 +281,10 @@ function promisifyInit(
   });
 }
 
-function promisifyRetrieve(iyzipay: ReturnType<typeof getIyzipay>, request: Record<string, unknown>): Promise<IyzicoRetrieveResult> {
+function promisifyRetrieve(
+  iyzipay: ReturnType<typeof getIyzipay>,
+  request: Record<string, unknown>,
+): Promise<IyzicoRetrieveResult> {
   return new Promise((resolve, reject) => {
     iyzipay.checkoutForm.retrieve(request, (err: Error | null, result: IyzicoRetrieveResult) => {
       if (err) {
@@ -171,6 +301,13 @@ export async function createPaymentCheckoutSession(params: {
   plan: "PRO" | "BUSINESS";
   billing: "monthly" | "annual";
   clientIp: string;
+  /** Override list + paid price string (two decimals) in `checkoutCurrency` when tier pricing applies. */
+  priceTryOverride?: string;
+  /** When `priceTryOverride` is set (matrix / tier); admin DB prices remain TRY. */
+  checkoutCurrency?: CheckoutCurrency;
+  subscriptionDaysOverride?: number;
+  /** Cart line label on iyzico basket. */
+  basketItemName?: string;
 }): Promise<{
   token: string;
   checkoutFormContent: string;
@@ -179,9 +316,15 @@ export async function createPaymentCheckoutSession(params: {
 }> {
   const prices = await getPaymentPricesTry();
   const isAnnualPro = params.plan === "PRO" && params.billing === "annual";
-  const subscriptionDays = isAnnualPro ? 365 : 30;
-  const price =
-    params.plan === "BUSINESS" ? prices.BUSINESS : isAnnualPro ? prices.PRO_ANNUAL : prices.PRO;
+  const subscriptionDays = params.subscriptionDaysOverride ?? (isAnnualPro ? 365 : 30);
+  const rawFromCatalog =
+    params.priceTryOverride ??
+    (params.plan === "BUSINESS" ? prices.BUSINESS : isAnnualPro ? prices.PRO_ANNUAL : prices.PRO);
+  const price = normalizeCheckoutPrice(rawFromCatalog);
+  const settlementCurrency: CheckoutCurrency =
+    params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
+  const iyziCurrency = iyzicoFx(settlementCurrency);
+
   const user = await prisma.user.findUnique({
     where: { id: params.userId },
   });
@@ -197,9 +340,9 @@ export async function createPaymentCheckoutSession(params: {
   const conversationId = randomUUID();
   const basketId = `nbpdf-${params.plan.toLowerCase()}-${conversationId.slice(0, 8)}`;
   const { name, surname } = splitBuyerName(user);
+  const venue = buyerVenueFromUser(user);
   const fmtIyziDate = (d: Date) => d.toISOString().slice(0, 19).replace("T", " ");
-  const callbackBase = env.APP_BASE_URL.replace(/\/$/, "");
-  const callbackUrl = `${callbackBase}/api/payment/callback`;
+  const callbackUrl = getCheckoutFormCallbackUrl();
 
   await prisma.paymentCheckout.create({
     data: {
@@ -208,6 +351,7 @@ export async function createPaymentCheckoutSession(params: {
       plan: params.plan,
       status: "pending",
       priceTry: price,
+      paymentCurrency: settlementCurrency,
       subscriptionDays,
     },
   });
@@ -220,7 +364,7 @@ export async function createPaymentCheckoutSession(params: {
     conversationId,
     price,
     paidPrice: price,
-    currency: Iyzipay.CURRENCY.TRY,
+    currency: iyziCurrency,
     basketId,
     paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
     callbackUrl,
@@ -229,40 +373,41 @@ export async function createPaymentCheckoutSession(params: {
       id: buyerId,
       name,
       surname,
-      gsmNumber: env.IYZICO_BUYER_GSM,
+      gsmNumber: venue.gsmNumber,
       email: user.email,
       identityNumber: env.IYZICO_BUYER_IDENTITY_NUMBER,
       lastLoginDate: fmtIyziDate(new Date()),
       registrationDate: fmtIyziDate(user.createdAt),
-      registrationAddress: "Turkey",
+      registrationAddress: venue.street,
       ip: params.clientIp || "127.0.0.1",
-      city: "Istanbul",
-      country: "Turkey",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      zipCode: venue.zipCode,
     },
     shippingAddress: {
       contactName: `${name} ${surname}`,
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Dijital ürün teslimatı — adres gerekmez.",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      address: venue.street,
+      zipCode: venue.zipCode,
     },
     billingAddress: {
       contactName: `${name} ${surname}`,
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Dijital ürün teslimatı — adres gerekmez.",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      address: venue.street,
+      zipCode: venue.zipCode,
     },
     basketItems: [
       {
         id: params.plan,
         name:
-          params.plan === "BUSINESS"
+          params.basketItemName ??
+          (params.plan === "BUSINESS"
             ? "NB PDF PLARTFORM Bas (1 ay)"
             : isAnnualPro
               ? "NB PDF PLARTFORM PRO (1 yıl)"
-              : "NB PDF PLARTFORM PRO (1 ay)",
+              : "NB PDF PLARTFORM PRO (1 ay)"),
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -295,11 +440,110 @@ export async function createPaymentCheckoutSession(params: {
 
   verifyInitSignature(result.conversationId, result.token, result.signature, env.IYZICO_SECRET_KEY);
 
+  await prisma.paymentCheckout.update({
+    where: { conversationId },
+    data: { iyzicoTokenHash: hashToken(result.token) },
+  });
+
   return {
     token: result.token,
     checkoutFormContent: result.checkoutFormContent ?? "",
     paymentPageUrl: result.paymentPageUrl,
     conversationId: result.conversationId,
+  };
+}
+
+export type PricingTierId = "starter" | "professional" | "unlimited_pro";
+
+const ONE_TIME_TIER_SKU: Record<"starter" | "professional", "TIER_STARTER" | "TIER_PROFESSIONAL"> = {
+  starter: "TIER_STARTER",
+  professional: "TIER_PROFESSIONAL",
+};
+
+export type TierCheckoutInitResult =
+  | {
+      mode: "iyzico";
+      token: string;
+      checkoutFormContent: string;
+      paymentPageUrl?: string;
+      conversationId: string;
+    }
+  | {
+      mode: "fake";
+      sessionId: string;
+      amount: number;
+      credits: number;
+      redirectUrl: string;
+    };
+
+/** Public pricing tiers: two one-time credit bundles + monthly Unlimited Pro (iyzico checkout form). */
+export async function initializeTierCheckout(params: {
+  userId: string;
+  tier: PricingTierId;
+  clientIp: string;
+  currency: CheckoutCurrency;
+}): Promise<TierCheckoutInitResult> {
+  if (params.tier === "unlimited_pro") {
+    if (!env.creditCheckoutUseFake) {
+      const priceStr = formatMoney2(params.currency, getUnlimitedProPrice(params.currency));
+      const s = await createPaymentCheckoutSession({
+        userId: params.userId,
+        plan: "PRO",
+        billing: "monthly",
+        clientIp: params.clientIp,
+        priceTryOverride: priceStr,
+        checkoutCurrency: params.currency,
+        subscriptionDaysOverride: 30,
+        basketItemName: "NB PDF PLARTFORM Limitsiz Pro (aylık)",
+      });
+      return {
+        mode: "iyzico" as const,
+        token: s.token,
+        checkoutFormContent: s.checkoutFormContent,
+        paymentPageUrl: s.paymentPageUrl,
+        conversationId: s.conversationId,
+      };
+    }
+    return {
+      mode: "fake",
+      ...createFakeCheckoutSession({ userId: params.userId, product: "PRO" }),
+    };
+  }
+
+  const sku = ONE_TIME_TIER_SKU[params.tier];
+  const cat = CREDIT_PACK_CATALOG[sku];
+  const baseMoney = getTierOneTimePrice(sku, params.currency);
+  const base = formatMoney2(params.currency, baseMoney);
+  const payload: CreditPricingPayload = {
+    v: 2,
+    sub: params.userId,
+    currency: params.currency,
+    product: sku,
+    basePrice: base,
+    finalPrice: base,
+    credits: cat.credits,
+    couponId: null,
+    exitIntent: false,
+  };
+
+  if (!env.creditCheckoutUseFake) {
+    const s = await createCreditPackIyzicoSession({
+      userId: params.userId,
+      clientIp: params.clientIp,
+      payload,
+    });
+    return {
+      mode: "iyzico" as const,
+      token: s.token,
+      checkoutFormContent: s.checkoutFormContent,
+      paymentPageUrl: s.paymentPageUrl,
+      conversationId: s.conversationId,
+    };
+  }
+
+  return {
+    mode: "fake",
+    ...createPricedCreditPackFakeSession({ userId: params.userId, payload }),
   };
 }
 
@@ -328,19 +572,21 @@ export async function createCreditPackIyzicoSession(params: {
 
   const conversationId = randomUUID();
   const basketId = `nbpdf-credits-${conversationId.slice(0, 8)}`;
-  const price = p.finalPrice;
+  const price = normalizeCheckoutPrice(p.finalPrice);
+  const baseNormalized = normalizeCheckoutPrice(p.basePrice);
   const { name, surname } = splitBuyerName(user);
+  const venue = buyerVenueFromUser(user);
   const fmtIyziDate = (d: Date) => d.toISOString().slice(0, 19).replace("T", " ");
-  const callbackBase = env.APP_BASE_URL.replace(/\/$/, "");
-  const callbackUrl = `${callbackBase}/api/payment/callback`;
+  const callbackUrl = getCheckoutFormCallbackUrl();
 
   await prisma.creditPackCheckout.create({
     data: {
       conversationId,
       userId: user.id,
       product: p.product,
-      basePriceTry: p.basePrice,
-      finalPriceTry: p.finalPrice,
+      basePriceTry: baseNormalized,
+      finalPriceTry: price,
+      paymentCurrency: p.currency,
       credits: p.credits,
       status: "pending",
       couponId: p.couponId,
@@ -350,13 +596,14 @@ export async function createCreditPackIyzicoSession(params: {
 
   const iyzipay = getIyzipay();
   const buyerId = user.id.slice(0, 20);
+  const packIyziCurrency = iyzicoFx(p.currency);
 
   const request = {
     locale: Iyzipay.LOCALE.TR,
     conversationId,
     price,
     paidPrice: price,
-    currency: Iyzipay.CURRENCY.TRY,
+    currency: packIyziCurrency,
     basketId,
     paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
     callbackUrl,
@@ -365,30 +612,30 @@ export async function createCreditPackIyzicoSession(params: {
       id: buyerId,
       name,
       surname,
-      gsmNumber: env.IYZICO_BUYER_GSM,
+      gsmNumber: venue.gsmNumber,
       email: user.email,
       identityNumber: env.IYZICO_BUYER_IDENTITY_NUMBER,
       lastLoginDate: fmtIyziDate(new Date()),
       registrationDate: fmtIyziDate(user.createdAt),
-      registrationAddress: "Turkey",
+      registrationAddress: venue.street,
       ip: params.clientIp || "127.0.0.1",
-      city: "Istanbul",
-      country: "Turkey",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      zipCode: venue.zipCode,
     },
     shippingAddress: {
       contactName: `${name} ${surname}`,
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Dijital ürün teslimatı — adres gerekmez.",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      address: venue.street,
+      zipCode: venue.zipCode,
     },
     billingAddress: {
       contactName: `${name} ${surname}`,
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Dijital ürün teslimatı — adres gerekmez.",
-      zipCode: "34000",
+      city: venue.city,
+      country: venue.country,
+      address: venue.street,
+      zipCode: venue.zipCode,
     },
     basketItems: [
       {
@@ -423,6 +670,11 @@ export async function createCreditPackIyzicoSession(params: {
 
   verifyInitSignature(result.conversationId, result.token, result.signature, env.IYZICO_SECRET_KEY);
 
+  await prisma.creditPackCheckout.update({
+    where: { conversationId },
+    data: { iyzicoTokenHash: hashToken(result.token) },
+  });
+
   return {
     mode: "iyzico",
     token: result.token,
@@ -433,9 +685,8 @@ export async function createCreditPackIyzicoSession(params: {
 }
 
 function buildRedirectHtml(success: boolean): string {
-  const target = new URL("/", env.FRONTEND_ORIGIN);
-  target.searchParams.set("payment", success ? "success" : "failed");
-  const url = target.toString();
+  const origin = env.FRONTEND_ORIGIN.replace(/\/+$/, "");
+  const url = `${origin}/workspace?payment=${success ? "success" : "failed"}`;
   return `<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -450,132 +701,277 @@ function buildRedirectHtml(success: boolean): string {
 </html>`;
 }
 
+export type ProcessPaymentCallbackOpts = {
+  /** Some iyzico redirects include this; optional second field for `checkoutForm.retrieve` alongside `token`. */
+  conversationIdFromRedirect?: string;
+  /** Posted form field names (for diagnostics). */
+  rawCallbackKeys?: string[];
+};
+
+const PC_LOG = "[iyzico/processPaymentCallback]";
+
+async function resolveConversationIdFromToken(token: string, result: IyzicoRetrieveResult): Promise<string | undefined> {
+  const fromApi = extractConversationIdFromRetrieve(result)?.trim() ?? String(result.conversationId ?? "").trim();
+  const h = hashToken(token.trim());
+  const [creditRow, paymentRow] = await Promise.all([
+    prisma.creditPackCheckout.findFirst({
+      where: { iyzicoTokenHash: h },
+    }),
+    prisma.paymentCheckout.findFirst({
+      where: { iyzicoTokenHash: h },
+    }),
+  ]);
+
+  let fromDb: string | undefined;
+  if (creditRow && !paymentRow) {
+    fromDb = creditRow.conversationId;
+  } else if (paymentRow && !creditRow) {
+    fromDb = paymentRow.conversationId;
+  } else if (creditRow && paymentRow) {
+    const b = String(result.basketId ?? "").toLowerCase();
+    const creditsBasket = b.includes("nbpdf-credits") || b.includes("credit");
+    console.warn(`${PC_LOG} matched both checkout rows by token hash — using basketId hint`, {
+      basketId: result.basketId,
+      picked: creditsBasket ? "credit_pack" : "subscription",
+    });
+    fromDb = creditsBasket ? creditRow.conversationId : paymentRow.conversationId;
+  }
+
+  if (fromDb) {
+    if (fromApi && fromApi !== fromDb) {
+      console.warn(`${PC_LOG} conversationId from retrieve differs from DB row for this token — using DB`, {
+        fromApi,
+        fromDb,
+      });
+    }
+    return fromDb;
+  }
+
+  return fromApi || undefined;
+}
+
 /**
- * iyzico callback: token ile ödeme sonucunu çeker, imzayı doğrular, başarılıysa planı 30 gün uzatır.
+ * iyzico Checkout Form callback — posted `token`, then server calls `checkoutForm.retrieve` (NOT `threedsPayment.create`,
+ * which is for direct `/payment/3dsecure/*` APIs). On success we grant credits or extend subscription.
  */
-export async function processPaymentCallback(token: string): Promise<string> {
-  if (!token?.trim()) {
-    return buildRedirectHtml(false);
-  }
+export async function processPaymentCallback(token: string, opts?: ProcessPaymentCallbackOpts): Promise<string> {
+  console.log(`${PC_LOG} start`, {
+    tokenPresent: Boolean(token?.trim()),
+    tokenLen: token?.trim()?.length ?? 0,
+    keys: opts?.rawCallbackKeys,
+    conversationIdFromRedirect: opts?.conversationIdFromRedirect ?? null,
+  });
 
-  if (!env.iyzicoEnabled) {
-    return buildRedirectHtml(false);
-  }
-
-  const iyzipay = getIyzipay();
-  let result: IyzicoRetrieveResult;
   try {
-    result = await promisifyRetrieve(iyzipay, {
+    if (opts?.rawCallbackKeys?.some((k) => /conversationData/i.test(k))) {
+      console.warn(
+        `${PC_LOG} body contains conversationData-like field — typical of non–Checkout Form 3DS redirect; CF finalize uses POST token + checkoutForm.retrieve only.`,
+      );
+    }
+
+    if (!token?.trim()) {
+      console.warn(`${PC_LOG} abort: empty token`);
+      return buildRedirectHtml(false);
+    }
+
+    if (!env.iyzicoEnabled) {
+      console.warn(`${PC_LOG} abort: iyzico not configured`);
+      return buildRedirectHtml(false);
+    }
+
+    const iyzipay = getIyzipay();
+    const retrieveRequest: Record<string, unknown> = {
       locale: Iyzipay.LOCALE.TR,
       token: token.trim(),
+    };
+    if (opts?.conversationIdFromRedirect?.trim()) {
+      retrieveRequest.conversationId = opts.conversationIdFromRedirect.trim();
+    }
+
+    console.log(`${PC_LOG} calling checkoutForm.retrieve`, {
+      hasConversationIdInRequest: Boolean(retrieveRequest.conversationId),
     });
-  } catch {
-    return buildRedirectHtml(false);
-  }
 
-  if (result.status !== "success") {
-    return buildRedirectHtml(false);
-  }
+    let result: IyzicoRetrieveResult;
+    try {
+      result = await promisifyRetrieve(iyzipay, retrieveRequest);
+    } catch (e) {
+      console.error(`${PC_LOG} checkoutForm.retrieve threw`, e instanceof Error ? e.message : e);
+      return buildRedirectHtml(false);
+    }
 
-  verifyRetrieveSignature(result, env.IYZICO_SECRET_KEY);
+    try {
+      console.log("[DEBUG] Full Iyzico Retrieve Response:", JSON.stringify(result));
+    } catch {
+      console.log("[DEBUG] Full Iyzico Retrieve Response: (stringify failed)", result);
+    }
 
-  if (result.paymentStatus !== "SUCCESS") {
-    return buildRedirectHtml(false);
-  }
+    const extractedConv = extractConversationIdFromRetrieve(result);
+    if (extractedConv) {
+      result = { ...result, conversationId: extractedConv };
+    }
 
-  const conversationId = result.conversationId;
-  if (!conversationId) {
-    return buildRedirectHtml(false);
-  }
+    console.log(`${PC_LOG} retrieve raw`, {
+      status: result.status,
+      errorCode: result.errorCode,
+      errorMessage: result.errorMessage,
+      paymentStatus: result.paymentStatus,
+      paymentId: result.paymentId,
+      conversationId: result.conversationId,
+      fraudStatus: result.fraudStatus,
+      paidPrice: result.paidPrice,
+      price: result.price,
+      currency: result.currency,
+      basketId: result.basketId,
+      hasSignature: Boolean(result.signature),
+    });
 
-  const creditPending = await prisma.creditPackCheckout.findUnique({
-    where: { conversationId: String(conversationId) },
-  });
-  if (creditPending) {
-    if (creditPending.status === "completed") {
+    if (result.status !== "success") {
+      console.warn(`${PC_LOG} retrieve status !== success`);
+      return buildRedirectHtml(false);
+    }
+
+    try {
+      verifyRetrieveSignature(result, env.IYZICO_SECRET_KEY);
+      console.log(`${PC_LOG} retrieve signature OK`);
+    } catch (verifyErr) {
+      console.error(
+        `${PC_LOG} retrieve signature verification failed`,
+        verifyErr instanceof Error ? verifyErr.message : verifyErr,
+      );
+      return buildRedirectHtml(false);
+    }
+
+    if (result.paymentStatus !== "SUCCESS") {
+      console.warn(`${PC_LOG} payment not SUCCESS; paymentStatus=${String(result.paymentStatus)}`);
+      return buildRedirectHtml(false);
+    }
+
+    const conversationId = await resolveConversationIdFromToken(token, result);
+    if (!conversationId) {
+      console.warn(`${PC_LOG} missing conversationId on retrieve result (and no DB row matched token hash)`);
+      return buildRedirectHtml(false);
+    }
+    console.log(`${PC_LOG} conversationId resolved for fulfillment`, {
+      conversationId,
+    });
+
+    const creditPending = await prisma.creditPackCheckout.findUnique({
+      where: { conversationId: String(conversationId) },
+    });
+    if (creditPending) {
+      console.log(`${PC_LOG} matched creditPackCheckout row`, {
+        conversationId: creditPending.conversationId,
+        status: creditPending.status,
+        credits: creditPending.credits,
+        userId: creditPending.userId,
+      });
+      if (creditPending.status === "completed") {
+        console.log(`${PC_LOG} credit pack already completed — idempotent success`);
+        return buildRedirectHtml(true);
+      }
+      if (result.paidPrice != null && !eqIyzicoMoney(result.paidPrice, creditPending.finalPriceTry)) {
+        logSuspiciousActivity({
+          type: "iyzico_price_mismatch",
+          detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
+        });
+        console.warn(`${PC_LOG} credit pack price mismatch`);
+        return buildRedirectHtml(false);
+      }
+      try {
+        console.log(`${PC_LOG} granting credits`, creditPending.credits, "to user", creditPending.userId);
+        await grantCredits(creditPending.userId, creditPending.credits, "bonus");
+        console.log(`${PC_LOG} grantCredits OK`);
+      } catch (grantErr) {
+        console.error(`${PC_LOG} grantCredits failed`, grantErr instanceof Error ? grantErr.message : grantErr);
+        return buildRedirectHtml(false);
+      }
+      try {
+        await recordCreditPackPurchaseMeta({
+          userId: creditPending.userId,
+          couponId: creditPending.couponId,
+          exitIntentApplied: creditPending.exitIntentApplied,
+        });
+      } catch {
+        // kupon satırı çakışması vb.; ödeme alındı, krediler yine verildi
+      }
+      await prisma.creditPackCheckout.update({
+        where: { conversationId: creditPending.conversationId },
+        data: { status: "completed", completedAt: new Date() },
+      });
+      console.log(`${PC_LOG} creditPackCheckout marked completed`);
       return buildRedirectHtml(true);
     }
-    if (result.paidPrice != null && String(result.paidPrice) !== String(creditPending.finalPriceTry)) {
+
+    const pending = await prisma.paymentCheckout.findUnique({
+      where: { conversationId: String(conversationId) },
+    });
+
+    if (!pending) {
+      logSuspiciousActivity({
+        type: "iyzico_unknown_conversation",
+        detail: conversationId,
+      });
+      console.warn(`${PC_LOG} no paymentCheckout or creditPackCheckout for conversationId`, conversationId);
+      return buildRedirectHtml(false);
+    }
+
+    console.log(`${PC_LOG} matched paymentCheckout (subscription)`, {
+      conversationId: pending.conversationId,
+      status: pending.status,
+      plan: pending.plan,
+      userId: pending.userId,
+    });
+
+    if (pending.status === "completed") {
+      console.log(`${PC_LOG} subscription checkout already completed — idempotent success`);
+      return buildRedirectHtml(true);
+    }
+
+    const expectedPrice = pending.priceTry;
+    if (result.paidPrice != null && !eqIyzicoMoney(result.paidPrice, expectedPrice)) {
       logSuspiciousActivity({
         type: "iyzico_price_mismatch",
-        detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
+        detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
       });
+      console.warn(`${PC_LOG} subscription price mismatch`);
       return buildRedirectHtml(false);
     }
-    try {
-      await grantCredits(creditPending.userId, creditPending.credits, "bonus");
-    } catch {
-      return buildRedirectHtml(false);
-    }
-    try {
-      await recordCreditPackPurchaseMeta({
-        userId: creditPending.userId,
-        couponId: creditPending.couponId,
-        exitIntentApplied: creditPending.exitIntentApplied,
+
+    const subscriptionDays = pending.subscriptionDays ?? 30;
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + subscriptionDays);
+
+    await prisma.$transaction(async (tx) => {
+      const current = await tx.paymentCheckout.findUnique({
+        where: { conversationId },
       });
-    } catch {
-      // kupon satırı çakışması vb.; ödeme alındı, krediler yine verildi
-    }
-    await prisma.creditPackCheckout.update({
-      where: { conversationId: creditPending.conversationId },
-      data: { status: "completed", completedAt: new Date() },
+      if (!current || current.status === "completed") {
+        return;
+      }
+
+      await tx.user.update({
+        where: { id: current.userId },
+        data: {
+          plan: current.plan,
+          subscription_status: "active",
+          subscriptionExpiry: expiry,
+        },
+      });
+
+      await tx.paymentCheckout.update({
+        where: { conversationId },
+        data: {
+          status: "completed",
+          completedAt: new Date(),
+        },
+      });
     });
+
+    console.log(`${PC_LOG} subscription updated; done`);
     return buildRedirectHtml(true);
-  }
-
-  const pending = await prisma.paymentCheckout.findUnique({
-    where: { conversationId: String(conversationId) },
-  });
-
-  if (!pending) {
-    logSuspiciousActivity({
-      type: "iyzico_unknown_conversation",
-      detail: conversationId,
-    });
+  } catch (unexpected) {
+    console.error(`${PC_LOG} unexpected error`, unexpected instanceof Error ? unexpected.stack ?? unexpected.message : unexpected);
     return buildRedirectHtml(false);
   }
-
-  if (pending.status === "completed") {
-    return buildRedirectHtml(true);
-  }
-
-  const expectedPrice = pending.priceTry;
-  if (result.paidPrice != null && String(result.paidPrice) !== String(expectedPrice)) {
-    logSuspiciousActivity({
-      type: "iyzico_price_mismatch",
-      detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
-    });
-    return buildRedirectHtml(false);
-  }
-
-  const subscriptionDays = pending.subscriptionDays ?? 30;
-  const expiry = new Date();
-  expiry.setDate(expiry.getDate() + subscriptionDays);
-
-  await prisma.$transaction(async (tx) => {
-    const current = await tx.paymentCheckout.findUnique({
-      where: { conversationId },
-    });
-    if (!current || current.status === "completed") {
-      return;
-    }
-
-    await tx.user.update({
-      where: { id: current.userId },
-      data: {
-        plan: current.plan,
-        subscriptionExpiry: expiry,
-      },
-    });
-
-    await tx.paymentCheckout.update({
-      where: { conversationId },
-      data: {
-        status: "completed",
-        completedAt: new Date(),
-      },
-    });
-  });
-
-  return buildRedirectHtml(true);
 }

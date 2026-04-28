@@ -88,6 +88,7 @@ export type LandingTranslation = {
     contact: string;
     termsLabel: string;
     privacyLabel: string;
+    kvkkLabel: string;
   };
   contactSection: {
     kicker: string;
@@ -261,9 +262,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     pricing: {
       kicker: "Pricing",
-      title: "Buy credits when you need them.",
+      title: "Buy credits or subscribe when you need them.",
       description:
-        "No subscription — you choose a pack, tools spend credits per run. Checkout in TRY through our payment partner.",
+        "Starter and Gold are one-time credit packs. Unlimited Pro is a monthly subscription with unlimited operations. Checkout in TRY via our payment partner.",
       plans: [],
     },
     finalCta: {
@@ -280,6 +281,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       contact: "Contact",
       termsLabel: "Terms of Service",
       privacyLabel: "Privacy Policy",
+      kvkkLabel: "KVKK disclosure",
     },
     contactSection: {
       kicker: "Contact",
@@ -451,9 +453,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
     pricing: {
       kicker: "Fiyatlandırma",
-      title: "İhtiyaç duyduğunuzda kredi alın.",
+      title: "İhtiyaç duyduğunuzda kredi veya abonelik alın.",
       description:
-        "Abonelik yok — paket seçersiniz, araçlar her çalıştırmada kredi harcar. Ödeme güvenli ortak üzerinden TRY ile yapılır.",
+        "Bronz ve Altın tek seferlik kredi paketleridir; Limitsiz Pro aylık aboneliktir. Ödeme güvenli ortak üzerinden TRY ile yapılır.",
       plans: [],
     },
     finalCta: {
@@ -470,6 +472,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       contact: "İletişim",
       termsLabel: "Hizmet Şartları",
       privacyLabel: "Gizlilik Politikası",
+      kvkkLabel: "KVKK aydınlatma",
     },
     contactSection: {
       kicker: "İletişim",

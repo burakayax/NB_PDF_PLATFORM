@@ -4,7 +4,7 @@ import { getSettingDirect, setSettingFromAdminPatch } from "../../lib/site-confi
 import { PACKAGES_RELATED_KEYS, SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { HttpError } from "../../lib/http-error.js";
 import { invalidatePlanRuntimeCache } from "../subscription/plan-runtime.js";
-import { invalidateTOOLSConfigCache } from "../subscription/TOOLS-config-runtime.js";
+import { invalidateTOOLSConfigCache } from "../subscription/tools-config-runtime.js";
 
 export type AdminActor = { userId: string; email: string };
 

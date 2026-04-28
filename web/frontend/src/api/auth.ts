@@ -21,6 +21,23 @@ export type AuthUser = {
   /** From API; when absent, local accounts are treated as having a password. */
   hasPassword?: boolean;
   createdAt: string;
+  /** Billing — optional until collected before checkout. */
+  phone?: string | null;
+  billingAddressLine?: string | null;
+  billingPostalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
+};
+
+/** PATCH /api/auth/profile and PATCH /api/user/profile (same backend handler). */
+export type UpdateProfileInput = {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  billingAddressLine?: string;
+  billingPostalCode?: string;
+  city?: string;
+  country?: string;
 };
 
 /** True if the user can use email/password (has a password or is a legacy local account). */
@@ -113,13 +130,19 @@ async function ensureOk(response: Response, defaultMessage: string) {
   throw new Error(message || defaultMessage);
 }
 
-type RegisterPayload = {
+export type RegisterAuthPayload = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
   preferredLanguage: Language;
+  /** E.164 from `NbPhoneInput`, optional at sign-up */
+  phone?: string;
+  /** Optional at sign-up; Turkish province name when set */
+  city?: string;
 };
+
+type RegisterPayload = RegisterAuthPayload;
 
 async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<string, string>): Promise<T | null> {
   const url = `${getSaasApiBase()}/api/auth${path}`;
@@ -138,24 +161,31 @@ async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<
   return response.json() as Promise<T>;
 }
 
-export async function registerAuthUser(
-  firstName: string,
-  lastName: string,
-  email: string,
-  password: string,
-  preferredLanguage: Language,
-) {
-  const payload: RegisterPayload = {
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: email.trim().toLowerCase(),
-    password,
-    preferredLanguage,
+export async function registerAuthUser(payload: RegisterAuthPayload) {
+  const body: Record<string, string | Language> = {
+    firstName: payload.firstName.trim(),
+    lastName: payload.lastName.trim(),
+    email: payload.email.trim().toLowerCase(),
+    password: payload.password,
+    preferredLanguage: payload.preferredLanguage,
   };
-  if (import.meta.env.DEV) {
-    console.info("[auth] POST /api/auth/register", { email: payload.email, preferredLanguage: payload.preferredLanguage });
+  const pt = payload.phone?.trim();
+  if (pt) {
+    body.phone = pt;
   }
-  const response = await sendAuthRequest<RegisterResponse>("/register", payload);
+  const ct = payload.city?.trim();
+  if (ct) {
+    body.city = ct;
+  }
+  if (import.meta.env.DEV) {
+    console.info("[auth] POST /api/auth/register", {
+      email: body.email,
+      preferredLanguage: body.preferredLanguage,
+      hasPhone: Boolean(body.phone?.trim()),
+      hasCity: Boolean(body.city?.trim()),
+    });
+  }
+  const response = await sendAuthRequest<RegisterResponse>("/register", body);
   if (!response) {
     throw new Error("Registration response was empty.");
   }
@@ -220,7 +250,27 @@ export function getGoogleOAuthStartUrl(language: Language) {
   return `${getSaasApiBase()}/api/auth/google?lang=${lang}`;
 }
 
-export async function updateAuthProfile(accessToken: string, body: { firstName: string; lastName: string }) {
+export async function updateAuthProfile(accessToken: string, body: UpdateProfileInput) {
+  const payloadBody: Record<string, string> = {
+    firstName: body.firstName.trim(),
+    lastName: body.lastName.trim(),
+  };
+  if (body.phone !== undefined) {
+    payloadBody.phone = body.phone.trim();
+  }
+  if (body.billingAddressLine !== undefined) {
+    payloadBody.billingAddressLine = body.billingAddressLine.trim();
+  }
+  if (body.billingPostalCode !== undefined) {
+    payloadBody.billingPostalCode = body.billingPostalCode.trim();
+  }
+  if (body.city !== undefined) {
+    payloadBody.city = body.city.trim();
+  }
+  if (body.country !== undefined) {
+    payloadBody.country = body.country.trim();
+  }
+
   const response = await authFetch(`${getSaasApiBase()}/api/auth/profile`, {
     method: "PATCH",
     headers: {
@@ -228,10 +278,7 @@ export async function updateAuthProfile(accessToken: string, body: { firstName: 
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({
-      firstName: body.firstName.trim(),
-      lastName: body.lastName.trim(),
-    }),
+    body: JSON.stringify(payloadBody),
   });
 
   await ensureOk(response, "Profile could not be updated.");

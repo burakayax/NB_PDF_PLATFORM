@@ -8,11 +8,11 @@ import {
   type PostLimitThrottle,
 } from "./post-limit-throttle.js";
 import { buildRecordPastLimitCopy, buildSummaryUpgradeHint } from "./conversion-upgrade.js";
-import { getResolvedTOOLSBusinessConfig } from "./TOOLS-config-runtime.js";
+import { getResolvedTOOLSBusinessConfig } from "./tools-config-runtime.js";
 import { computeUsageSoftWarnings, mergeUsageSoftWarnings } from "./usage-soft-warnings.js";
 import type { FeatureKey } from "./subscription.config.js";
 import { getPaymentPricesTry } from "../payment/payment-pricing.js";
-import { isFeatureGloballyDisabled } from "../../lib/TOOLS-feature-policy.js";
+import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "./plan-runtime.js";
 import {
   computeBehaviorStressMultiplier,
