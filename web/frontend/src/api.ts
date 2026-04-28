@@ -1017,6 +1017,23 @@ export async function fetchResultThumbnailBlobUrl(
   return URL.createObjectURL(blob);
 }
 
+/** Large watermarked first-page PNG for gated-download preview modal. */
+export async function fetchResultHeroPreviewBlobUrl(
+  resultId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<string> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview/hero`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await ensureOk(response, "Önizleme yüklenemedi.");
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
 export type DownloadResultOutcome =
   | { status: "ok"; download: ToolDownloadResult }
   | { status: "payment_required"; saasGating?: SaaSGating | null }

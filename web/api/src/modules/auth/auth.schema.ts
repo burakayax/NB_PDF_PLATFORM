@@ -49,16 +49,25 @@ export const registerSchema = z.object({
   email: emailField,
   password: strongNewPasswordField,
   preferredLanguage: z.enum(["tr", "en"]).optional(),
+  /** Client should send E.164; server normalizes again. */
+  phone: z.string().optional(),
+  city: z.string().trim().max(80, "City name is too long.").optional(),
 });
 
 export const preferredLanguageSchema = z.object({
   preferredLanguage: z.enum(["tr", "en"]),
 });
 
-/** PATCH /api/auth/profile */
+/** PATCH /api/auth/profile | PATCH /api/user/profile — name + optional billing fields for checkout. */
 export const updateProfileSchema = z.object({
   firstName: firstNameField,
   lastName: lastNameField,
+  /** E.164 (+…); server normalizes and validates. */
+  phone: z.string().trim().max(20, "Phone is too long.").optional(),
+  billingAddressLine: z.string().trim().max(300, "Address is too long.").optional(),
+  billingPostalCode: z.string().trim().max(16, "Postal code is too long.").optional(),
+  city: z.string().trim().max(80, "City is too long.").optional(),
+  country: z.string().trim().max(80, "Country is too long.").optional(),
 });
 
 /** PATCH /api/auth/password */

@@ -7,7 +7,7 @@ import { buildSummaryUpgradeHint, buildUpgradeCta } from "../subscription/conver
 import {
   getResolvedTOOLSBusinessConfig,
   type ResolvedTOOLSBusinessConfig,
-} from "../subscription/TOOLS-config-runtime.js";
+} from "../subscription/tools-config-runtime.js";
 import {
   ensurePaidSubscriptionActiveOrDowngrade,
   incrementPostLimitThrottleCount,
@@ -21,7 +21,7 @@ import {
 import { mergeUsageSoftWarnings } from "../subscription/usage-soft-warnings.js";
 import type { PlanDefinition } from "../subscription/subscription.config.js";
 import type { FeatureKey } from "../subscription/subscription.config.js";
-import { isFeatureGloballyDisabled } from "../../lib/TOOLS-feature-policy.js";
+import { isFeatureGloballyDisabled } from "../../lib/tools-feature-policy.js";
 import { getPlanDefinitionsResolved } from "../subscription/plan-runtime.js";
 import type { DesktopAuthorizeInput } from "./license.schema.js";
 

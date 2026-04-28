@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
 import shutil
 import sys
@@ -18,6 +19,10 @@ from typing import Any, Iterable
 
 from fastapi import BackgroundTasks, HTTPException, UploadFile
 from fastapi.responses import FileResponse
+
+from app.core.tool_errors import public_message_for_exception
+
+logger = logging.getLogger(__name__)
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 if str(REPO_ROOT) not in sys.path:
@@ -65,14 +70,11 @@ def cleanup_and_raise(workdir: Path, error: Exception) -> None:
     cleanup_path(workdir)
     if isinstance(error, HTTPException):
         raise error
-    detail = str(error)
-    if "girilen şifre hatalı:" in detail:
-        prefix, filename = detail.rsplit(":", 1)
-        detail = f"{prefix}: Dosya adı: {filename.strip()}"
-    elif "şifre gerekli:" in detail:
-        prefix, filename = detail.rsplit(":", 1)
-        detail = f"{prefix}: Dosya adı: {filename.strip()}"
-    raise HTTPException(status_code=400, detail=detail) from error
+    logger.warning("pdf_tool_route_failed", exc_info=error)
+    raise HTTPException(
+        status_code=400,
+        detail=public_message_for_exception(error, log_full=False),
+    ) from error
 
 
 def saas_gating_http_headers(gating: dict[str, Any] | None) -> dict[str, str] | None:

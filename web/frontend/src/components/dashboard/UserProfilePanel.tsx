@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { userEffectiveHasPassword, type AuthUser } from "../../api/auth";
+import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput } from "../../api/auth";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 import type { PlanName } from "../../api/subscription";
 import { localizedPlanDisplayName } from "../../i18n/plans";
@@ -10,7 +10,7 @@ type ToastType = "success" | "error" | "loading" | "info";
 type UserProfilePanelProps = {
   user: AuthUser;
   language: Language;
-  updateProfile: (firstName: string, lastName: string) => Promise<AuthUser | null>;
+  updateProfile: (input: UpdateProfileInput) => Promise<AuthUser | null>;
   showToast: (type: ToastType, title: string, detail: string) => void;
   onOpenChangePassword: () => void;
   setInitialPassword: (newPassword: string) => Promise<AuthUser | null>;
@@ -123,7 +123,10 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
     setProfileSubmitting(true);
     try {
-      const next = await updateProfile(firstName.trim(), lastName.trim());
+      const next = await updateProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
       if (next) {
         showToast(
           "success",

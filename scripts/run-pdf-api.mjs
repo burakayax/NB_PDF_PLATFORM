@@ -47,9 +47,24 @@ if (importCheck.status !== 0) {
 }
 
 const noReload =
-  process.env.PDF_API_NO_RELOAD === "1" || process.env.PDF_API_NO_RELOAD === "true";
+  process.env.PDF_API_NO_RELOAD === "1" ||
+  process.env.PDF_API_NO_RELOAD === "true";
 const port = (process.env.PDF_API_PORT || "8000").trim() || "8000";
-const args = ["-m", "uvicorn", "app.main:app", "--app-dir", "backend", "--host", "127.0.0.1", "--port", port];
+const args = [
+  "-m",
+  "uvicorn",
+  "app.main:app",
+  "--app-dir",
+  "backend",
+  "--host",
+  "127.0.0.1",
+  "--port",
+  port,
+];
+const keepAlive = (process.env.PDF_UVICORN_TIMEOUT_KEEP_ALIVE || "300").trim();
+if (keepAlive && keepAlive !== "0") {
+  args.push("--timeout-keep-alive", keepAlive);
+}
 if (!prod && !noReload) {
   args.push("--reload");
 }

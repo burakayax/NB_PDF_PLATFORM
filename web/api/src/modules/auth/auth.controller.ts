@@ -504,6 +504,8 @@ export async function googleOAuthCallbackController(request: Request, response: 
       email: profile.email,
       googleId: profile.googleId,
       name: profile.name,
+      givenName: profile.givenName,
+      familyName: profile.familyName,
       avatar: profile.avatar,
       preferredLanguage,
     });

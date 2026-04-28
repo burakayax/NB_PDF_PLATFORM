@@ -24,4 +24,5 @@ reportlab
 pdfplumber
 python-pptx
 xhtml2pdf
+pdfkit
 img2pdf

@@ -3,12 +3,19 @@ import type { Language } from "./landing";
 export function landingPricingCreditsCopy(lang: Language) {
   const tr = lang === "tr";
   return {
-    popular: tr ? "Çok satan" : "Popular",
-    packLabel: tr ? "Kredi paketi" : "Credit pack",
-    creditsLine: (n: number) => (tr ? `${n} kredi` : `${n} credits`),
-    packBlurb: tr
-      ? "Ödeme sonrası krediler hesabınıza eklenir; araçlar her kullanımda kredi harcar."
-      : "After checkout, credits are added to your account. Each tool run spends credits.",
+    popular: tr ? "En Popüler" : "Most popular",
+    packContentLine: (credits: number | null, subscription: boolean) => {
+      if (subscription || credits == null) {
+        return tr ? "SINIRSIZ İŞLEM" : "Unlimited operations";
+      }
+      return tr ? `${credits} kredi` : `${credits} credits`;
+    },
+    packBlurbOneTime: tr
+      ? "Tek seferlik ödeme; ödeme sonrası krediler hesabınıza eklenir."
+      : "One-time payment; credits are added after checkout.",
+    packBlurbSubscription: tr
+      ? "Aylık abonelik; Limitsiz Pro ile ödeme sayfasından güvenli şekilde başlatılır."
+      : "Monthly subscription; Unlimited Pro checkout starts on our secure payment page.",
     ctaBuy: tr ? "Satın Al" : "Buy",
     examplesLead: tr
       ? "Örnek maliyetler (araç başına kredi):"

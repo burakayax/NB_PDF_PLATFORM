@@ -168,6 +168,7 @@ export default defineConfig(({ command, mode }) => {
     "subscription",
     "payment",
     "fake-payment",
+    "credit-checkout",
     "entitlement",
     "access",
     "contact",

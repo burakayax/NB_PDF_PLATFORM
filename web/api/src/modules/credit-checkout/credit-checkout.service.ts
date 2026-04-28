@@ -2,6 +2,12 @@ import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import { env } from "../../config/env.js";
 import { createCreditPackIyzicoSession } from "../payment/payment.service.js";
+import {
+  formatMoney2,
+  getTierOneTimePrice,
+  isCheckoutCurrency,
+  type CheckoutCurrency,
+} from "../payment/pricing-matrix.js";
 import { createPricedCreditPackFakeSession } from "../fake-payment/fake-payment.service.js";
 import { validateCouponForUser } from "../coupon/coupon.service.js";
 import {
@@ -43,15 +49,41 @@ function computeLinePrices(params: {
   return { finalAmount: Math.max(p, 0.01), exitApplied };
 }
 
+function catalogBaseMoney(product: CreditPackSku, currency: CheckoutCurrency): number {
+  if (product === "TIER_STARTER" || product === "TIER_PROFESSIONAL") {
+    return getTierOneTimePrice(product, currency);
+  }
+  if (currency !== "TRY") {
+    throw new HttpError(400, "Small credit packs are only sold in TRY.");
+  }
+  return CREDIT_PACK_CATALOG[product].amountTry;
+}
+
+function checkoutCurrencyForProduct(product: CreditPackSku, requested: unknown): CheckoutCurrency {
+  const tier = product === "TIER_STARTER" || product === "TIER_PROFESSIONAL";
+  if (!tier) {
+    return "TRY";
+  }
+  if (requested === undefined || requested === null) {
+    return "TRY";
+  }
+  if (typeof requested === "string" && isCheckoutCurrency(requested)) {
+    return requested;
+  }
+  throw new HttpError(400, "Invalid currency.");
+}
+
 export type CreditPreviewResult = {
   product: CreditPackSku;
-  basePriceTry: string;
-  finalPriceTry: string;
+  currency: CheckoutCurrency;
+  /** List price (same currency). */
+  baseAmount: string;
+  /** Payable amount after coupon / exit intent (same currency). */
+  finalAmount: string;
   credits: number;
   couponId: string | null;
   exitIntentApplied: boolean;
   exitOfferEligible: boolean;
-  /** Yalnızca kupon uygulandıysa dolu. */
   discountPercent: number | null;
   pricingToken: string;
 };
@@ -61,6 +93,8 @@ export async function previewCreditPackCheckout(params: {
   product: string;
   couponCode?: string | null;
   applyExitIntent?: boolean;
+  /** Required for TIER_* packs; ignored (TRY) for legacy credit SKUs. */
+  currency?: string;
 }): Promise<CreditPreviewResult> {
   if (!isCreditPackSku(params.product)) {
     throw new HttpError(400, "Invalid credit pack product.");
@@ -74,9 +108,11 @@ export async function previewCreditPackCheckout(params: {
     throw new HttpError(404, "User not found.");
   }
 
-  const base = CREDIT_PACK_CATALOG[product].amountTry;
   const credits = CREDIT_PACK_CATALOG[product].credits;
-  const baseStr = formatTry2(base);
+  const currency = checkoutCurrencyForProduct(product, params.currency);
+
+  const baseMoney = catalogBaseMoney(product, currency);
+  const baseStr = formatMoney2(currency, baseMoney);
 
   let couponId: string | null = null;
   let discountPercent: number | null = null;
@@ -94,16 +130,17 @@ export async function previewCreditPackCheckout(params: {
 
   const exitOfferEligible = isExitIntentEligible(row.lastExitIntentCreditDiscountAt);
   const { finalAmount, exitApplied } = computeLinePrices({
-    baseAmount: base,
+    baseAmount: baseMoney,
     discountPercent,
     applyExitIntent: Boolean(params.applyExitIntent),
     exitIntentEligible: exitOfferEligible,
   });
-  const finalStr = formatTry2(finalAmount);
+  const finalStr = currency === "TRY" ? formatTry2(finalAmount) : formatMoney2(currency, finalAmount);
 
   const tokenPayload: CreditPricingPayload = {
-    v: 1,
+    v: 2,
     sub: params.userId,
+    currency,
     product,
     basePrice: baseStr,
     finalPrice: finalStr,
@@ -113,8 +150,9 @@ export async function previewCreditPackCheckout(params: {
   };
   return {
     product,
-    basePriceTry: baseStr,
-    finalPriceTry: finalStr,
+    currency,
+    baseAmount: baseStr,
+    finalAmount: finalStr,
     credits,
     couponId,
     exitIntentApplied: exitApplied,

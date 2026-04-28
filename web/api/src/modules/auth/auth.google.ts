@@ -139,6 +139,8 @@ type GoogleUserInfo = {
   email?: string;
   verified_email?: boolean;
   name?: string;
+  given_name?: string;
+  family_name?: string;
   picture?: string;
 };
 
@@ -147,6 +149,8 @@ export async function fetchGoogleProfile(accessToken: string): Promise<{
   emailVerified: boolean;
   googleId: string;
   name: string | null;
+  givenName: string | null;
+  familyName: string | null;
   avatar: string | null;
 }> {
   let response: Response;
@@ -238,6 +242,10 @@ export async function fetchGoogleProfile(accessToken: string): Promise<{
 
   const name = typeof profile.name === "string" && profile.name.trim() ? profile.name.trim() : null;
   const avatar = typeof profile.picture === "string" && profile.picture.trim() ? profile.picture.trim() : null;
+  const givenName =
+    typeof profile.given_name === "string" && profile.given_name.trim() ? profile.given_name.trim() : null;
+  const familyName =
+    typeof profile.family_name === "string" && profile.family_name.trim() ? profile.family_name.trim() : null;
 
-  return { email, emailVerified: true, googleId, name, avatar };
+  return { email, emailVerified: true, googleId, name, givenName, familyName, avatar };
 }

@@ -8,7 +8,7 @@ from __future__ import annotations
 __version__ = "1.0.0"
 
 PRODUCT_NAME = "NB PDF PLARTFORM"
-INTERNAL_NAME = "NB_PDF_TOOLS"
+INTERNAL_NAME = "NB_PDF_PLATFORM"
 COMPANY_NAME = "NB Global Studio"
 COPYRIGHT = "Copyright © NB Global Studio"
 FILE_DESCRIPTION = "NB PDF PLARTFORM — PDF suite for Windows"

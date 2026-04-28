@@ -101,6 +101,9 @@ export function ws(lang: Language) {
     proGateCta: tr ? "Kredi satın al" : "Buy credits",
     featureLockedBadge: tr ? "Kilit" : "Locked",
     navbarCreditsLabel: tr ? "Kredi" : "Credits",
+    /** Limitsiz Pro — navbar / compact surfaces. */
+    unlimitedSidebarBadge: tr ? "∞ LİMİTSİZ" : "∞ UNLIMITED",
+    unlimitedAccessActive: tr ? "Limitsiz Erişim Aktif" : "Unlimited access active",
     lockedFeatureTooltip: tr
       ? "Bu araç şu an kredinizle kullanılamıyor"
       : "This tool isn’t available with your current balance",
@@ -187,7 +190,14 @@ export function ws(lang: Language) {
     creditDashboardPacksBody: tr
       ? "Paket seçin; ödeme sonrası krediler hesabınıza eklenir."
       : "Pick a pack; credits are added after checkout completes.",
-    creditPackLine: (c: number) => (tr ? `${c} kredi` : `${c} credits`),
+    creditPackContentLine: (credits: number | null, subscription: boolean) =>
+      subscription || credits == null
+        ? tr
+          ? "SINIRSIZ İŞLEM"
+          : "Unlimited operations"
+        : tr
+          ? `${credits} kredi`
+          : `${credits} credits`,
     creditPackBuyCta: tr ? "Satın Al" : "Buy",
     creditDashboardBuyCreditsCta: tr ? "Kredi paketleri" : "Credit packs",
     creditDashboardUpgradePlanCta: tr ? "Kredi paketleri" : "Credit packs",
@@ -236,8 +246,8 @@ export function ws(lang: Language) {
       ? "Kullandığın kadar öde"
       : "Pay for what you use",
     proBenefitsIntro: tr
-      ? "Her işlem kredi harcar; bakiyeniz panelden takip edilir. İhtiyaç duydukça paket alırsınız — aylık plan yoktur."
-      : "Every run spends credits; your balance is always visible. Buy packs when you need them — no monthly subscription tiers.",
+      ? "Her işlem kredi harcar veya Limitsiz Pro ile sınırsız devam edersiniz; bakiyenizi panelden takip edin. Tek seferlik paketler ve aylık abonelik mevcuttur."
+      : "Each run spends credits, or use Unlimited Pro for unlimited usage—your balance stays visible in the panel. One-time packs and a monthly subscription are available.",
     proBenefitTagSpeed: tr ? "Şeffaf" : "Transparent",
     proBenefitSpeed: tr
       ? "Araç başına maliyet net; harcama geçmişiniz kayıt altındadır."
@@ -276,29 +286,23 @@ export function ws(lang: Language) {
     tesseract: tr ? "Tesseract" : "Tesseract",
     notConfigured: tr ? "yapılandırılmadı" : "not configured",
     processing: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
-    processingQueued: tr ? "SIRA / İŞLEM…" : "QUEUED / WORKING…",
-    processingPremium: tr ? "ÖNCELİKLİ İŞLEM…" : "PRIORITY PROCESSING…",
+    processingQueued: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
+    processingPremium: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
     subscriptionWarn: tr
       ? "Bu araç için yeterli krediniz yok. Kredi ekleyerek kullanabilirsiniz."
       : "You don’t have enough credits for this tool. Add credits to use it.",
     mergeProgressPreparing: tr ? "Dosyalar hazırlanıyor…" : "Preparing files…",
     mergeProgressStarting: tr ? "İstek gönderiliyor…" : "Sending request…",
-    mergeProgressQueueFree: tr
-      ? "Sıra ve sunucu onayı — yoğun kullanımda kısa sürebilir…"
-      : "Queue and server check — may take a moment when busy…",
-    mergeProgressQueuePremium: tr
-      ? "Öncelikli hat — birleştirme başlatılıyor…"
-      : "Priority lane — starting merge…",
+    mergeProgressQueueFree: tr ? "Birleştirme hazırlanıyor…" : "Preparing merge…",
+    mergeProgressQueuePremium: tr ? "Birleştirme hazırlanıyor…" : "Preparing merge…",
     toolProgressSub: tr ? "Tamamlanınca dosya indirilecek." : "The file will download when ready.",
     toolProgressSubQueueFree: tr
-      ? "Standart işlem hattında sıra ve süre dosya boyutuna ve araç türüne göre değişir."
-      : "On the standard lane, queue and processing time vary by file size and tool type.",
+      ? "Tamamlanınca dosya indirilecek."
+      : "The file will download when ready.",
     toolProgressSubPremium: tr
-      ? "Öncelikli hat: daha hızlı işlem ve tam kalite."
-      : "Priority lane: faster processing and full quality.",
-    toolProgressPhaseQueueFree: tr
-      ? "Sırada / sunucuya bağlanılıyor…"
-      : "In queue / connecting to server…",
+      ? "Tamamlanınca dosya indirilecek."
+      : "The file will download when ready.",
+    toolProgressPhaseQueueFree: tr ? "İşlem sunucuda başlatılıyor…" : "Starting work on the server…",
     toolProgressPhaseHandoff: tr ? "İşlem sunucuda başlatılıyor…" : "Starting work on the server…",
     toolProgressPhaseAnalyzing: tr ? "Dosya analiz ediliyor…" : "Analyzing file…",
     toolProgressPhaseCompressing: tr ? "Sıkıştırma uygulanıyor…" : "Applying compression…",
@@ -407,13 +411,13 @@ export function ws(lang: Language) {
     upgradeNudgeUpgradeInstant: tr ? "Kredi paketlerini aç" : "Open credit packs",
     /** Shown while a free-tier job is in progress (queue / server delay monetization). */
     delayMonetizationDuringBody: tr
-      ? "Standart işlem hattında yoğunluğa bağlı kısa gecikmeler olabilir. Öncelik veya ek kredi için paketlere göz atın."
-      : "The standard lane may slow briefly when busy. Browse packs for priority or extra credits.",
-    delayMonetizationInstantCta: tr ? "Kredi paketlerini gör" : "See credit packs",
-    /** Subtle reminder after a run that used free-tier queue / delay. */
+      ? "Kredi bakiyeniz düşükse paket satın alarak devam edebilirsiniz."
+      : "If your balance is low, buy a credit pack to keep going.",
+    delayMonetizationInstantCta: tr ? "Kredi satın al" : "Buy credits",
+    /** Subtle reminder after a run (credit-based product). */
     delayMonetizationAfterHint: tr
-      ? "Sonraki işlemlerde öncelik ve daha hızlı sonuç için kredi ekleyin."
-      : "For priority and faster runs next time, add credits.",
+      ? "İhtiyaç duyduğunuzda kredi paketi alabilirsiniz."
+      : "You can buy a credit pack whenever you need more runs.",
     delayMonetizationAfterDismiss: tr ? "Gizle" : "Hide",
   };
 }

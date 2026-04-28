@@ -29,9 +29,63 @@ export async function createPaymentController(request: Request, response: Respon
 /** iyzico form POST (application/x-www-form-urlencoded); token ile ödeme sonucu alınır. */
 export const paymentCallbackUrlencoded = express.urlencoded({ extended: true });
 
+const IYZICO_CB_LOG = "[iyzico/callback]";
+
+function summarizeCallbackBody(body: Record<string, unknown>): Record<string, string | undefined> {
+  const out: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(body)) {
+    if (typeof v !== "string" || !v.length) {
+      continue;
+    }
+    if (k === "token") {
+      out[k] = v.length <= 8 ? `${v.slice(0, 4)}…` : `${v.slice(0, 6)}…${v.slice(-4)} (${v.length} chars)`;
+      continue;
+    }
+    if (k === "conversationData" || k.includes("data")) {
+      out[k] = `${v.slice(0, 24)}… (${v.length} chars)`;
+      continue;
+    }
+    out[k] = v.length > 160 ? `${v.slice(0, 160)}…` : v;
+  }
+  return out;
+}
+
+function pickFirstString(raw: Record<string, unknown>, keys: string[]): string | undefined {
+  for (const k of keys) {
+    const v = raw[k];
+    if (typeof v === "string" && v.trim()) {
+      return v.trim();
+    }
+  }
+  return undefined;
+}
+
 export async function paymentCallbackController(request: Request, response: Response) {
   const raw = request.body as Record<string, unknown>;
-  const token = typeof raw.token === "string" ? raw.token : "";
-  const html = await processPaymentCallback(token);
+  console.log(`${IYZICO_CB_LOG} POST received (keys=${Object.keys(raw).join(",")})`, summarizeCallbackBody(raw));
+
+  const token =
+    typeof raw.token === "string"
+      ? raw.token
+      : typeof raw.Token === "string"
+        ? raw.Token
+        : "";
+
+  const conversationIdFromPost = pickFirstString(raw, [
+    "conversationId",
+    "ConversationId",
+    "conversation_id",
+    "paymentConversationId",
+    "payment_conversation_id",
+  ]);
+
+  console.log(`${IYZICO_CB_LOG} extracted token=${token ? `"len=${token.length}"` : "MISSING"}, conversationIdFromPost=${conversationIdFromPost ?? "none"}`);
+
+  const html = await processPaymentCallback(token, {
+    conversationIdFromRedirect: conversationIdFromPost,
+    rawCallbackKeys: Object.keys(raw),
+  });
+
+  console.log(`${IYZICO_CB_LOG} response: HTML redirect page sent (200)`);
   response.status(200).type("html").send(html);
 }
