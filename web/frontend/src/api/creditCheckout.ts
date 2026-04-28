@@ -1,6 +1,7 @@
 import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
+import type { CheckoutCurrency } from "../lib/pricingMatrix";
 
 function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
@@ -9,12 +10,11 @@ function readLatestAccessToken(fallback: string): string {
   return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
 }
 
-export type CreditPackProduct = "CREDITS_50" | "CREDITS_100" | "CREDITS_120" | "CREDITS_300";
-
 export type CreditPreviewResponse = {
-  product: CreditPackProduct;
-  basePriceTry: string;
-  finalPriceTry: string;
+  product: string;
+  currency: CheckoutCurrency;
+  baseAmount: string;
+  finalAmount: string;
   credits: number;
   couponId: string | null;
   exitIntentApplied: boolean;
@@ -35,7 +35,7 @@ export type CreditStartResponse =
 
 export async function postCreditCheckoutPreview(
   accessToken: string,
-  body: { product: string; couponCode?: string | null; applyExitIntent?: boolean },
+  body: { product: string; couponCode?: string | null; applyExitIntent?: boolean; currency?: CheckoutCurrency },
 ): Promise<CreditPreviewResponse> {
   const token = readLatestAccessToken(accessToken);
   const response = await saasAuthorizedFetch(token, (t) =>

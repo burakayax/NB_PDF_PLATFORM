@@ -101,6 +101,9 @@ export function ws(lang: Language) {
     proGateCta: tr ? "Kredi satın al" : "Buy credits",
     featureLockedBadge: tr ? "Kilit" : "Locked",
     navbarCreditsLabel: tr ? "Kredi" : "Credits",
+    /** Limitsiz Pro — navbar / compact surfaces. */
+    unlimitedSidebarBadge: tr ? "∞ LİMİTSİZ" : "∞ UNLIMITED",
+    unlimitedAccessActive: tr ? "Limitsiz Erişim Aktif" : "Unlimited access active",
     lockedFeatureTooltip: tr
       ? "Bu araç şu an kredinizle kullanılamıyor"
       : "This tool isn’t available with your current balance",
@@ -187,7 +190,14 @@ export function ws(lang: Language) {
     creditDashboardPacksBody: tr
       ? "Paket seçin; ödeme sonrası krediler hesabınıza eklenir."
       : "Pick a pack; credits are added after checkout completes.",
-    creditPackLine: (c: number) => (tr ? `${c} kredi` : `${c} credits`),
+    creditPackContentLine: (credits: number | null, subscription: boolean) =>
+      subscription || credits == null
+        ? tr
+          ? "SINIRSIZ İŞLEM"
+          : "Unlimited operations"
+        : tr
+          ? `${credits} kredi`
+          : `${credits} credits`,
     creditPackBuyCta: tr ? "Satın Al" : "Buy",
     creditDashboardBuyCreditsCta: tr ? "Kredi paketleri" : "Credit packs",
     creditDashboardUpgradePlanCta: tr ? "Kredi paketleri" : "Credit packs",
@@ -236,8 +246,8 @@ export function ws(lang: Language) {
       ? "Kullandığın kadar öde"
       : "Pay for what you use",
     proBenefitsIntro: tr
-      ? "Her işlem kredi harcar; bakiyeniz panelden takip edilir. İhtiyaç duydukça paket alırsınız — aylık plan yoktur."
-      : "Every run spends credits; your balance is always visible. Buy packs when you need them — no monthly subscription tiers.",
+      ? "Her işlem kredi harcar veya Limitsiz Pro ile sınırsız devam edersiniz; bakiyenizi panelden takip edin. Tek seferlik paketler ve aylık abonelik mevcuttur."
+      : "Each run spends credits, or use Unlimited Pro for unlimited usage—your balance stays visible in the panel. One-time packs and a monthly subscription are available.",
     proBenefitTagSpeed: tr ? "Şeffaf" : "Transparent",
     proBenefitSpeed: tr
       ? "Araç başına maliyet net; harcama geçmişiniz kayıt altındadır."

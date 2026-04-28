@@ -20,7 +20,10 @@ type CookieNoticeCopy = {
   learnMore: string;
 };
 
-export const legalDocuments: Record<Language, { terms: LegalDocument; privacy: LegalDocument; cookieNotice: CookieNoticeCopy }> = {
+export const legalDocuments: Record<
+  Language,
+  { terms: LegalDocument; privacy: LegalDocument; kvkk: LegalDocument; cookieNotice: CookieNoticeCopy }
+> = {
   en: {
     terms: {
       title: "Terms of Service",
@@ -194,6 +197,34 @@ export const legalDocuments: Record<Language, { terms: LegalDocument; privacy: L
           title: "12. Contact",
           paragraphs: [
             "Privacy inquiries: nbglobalstudio@gmail.com.",
+          ],
+        },
+      ],
+    },
+    kvkk: {
+      title: "Privacy disclosure per Turkish Law No. 6698 (KVKK)",
+      summary:
+        "This notice summarizes how NB Global Studio processes personal data in NB PDF PLARTFORM checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "24 March 2026",
+      sections: [
+        {
+          title: "1. Processing grounds",
+          paragraphs: [
+            "Purchasing bundles/subscriptions requires identity-ish fields (name, address, mobile) for fraud prevention, statutory invoicing obligations where applicable, and to satisfy payment-provider contractual controls.",
+            "We store such fields with your account profile and transmit only what İyzico requires to render its hosted checkout form; card credentials never touch our servers.",
+          ],
+        },
+        {
+          title: "2. Legal bases",
+          paragraphs: [
+            "Processing relies on contract performance (supplying paid tools), legitimate interests (security/anti-abuse—balanced against your rights), and—to the extent consent is collected explicitly—your freely given approval at checkout.",
+          ],
+        },
+        {
+          title: "3. Rights & contact",
+          paragraphs: [
+            "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: nbglobalstudio@gmail.com.",
           ],
         },
       ],
@@ -379,6 +410,34 @@ export const legalDocuments: Record<Language, { terms: LegalDocument; privacy: L
           title: "12. İletişim",
           paragraphs: [
             "Gizlilik soruları: nbglobalstudio@gmail.com.",
+          ],
+        },
+      ],
+    },
+    kvkk: {
+      title: "KVKK Kapsamında Aydınlatma Metni",
+      summary:
+        "Bu metin, NB PDF PLARTFORM üzerinden sunulan ödeme süreçleri kapsamında işlenen kişisel veriler için 6698 sayılı Kişisel Verilerin Korunması Kanunu uyarınca veri sorumlusunun aydınlatma yükümlülüğünün yerine getirilmesine yönelik özet bilgi sunar; Hizmet Şartları veya Gizlilik Politikası yerine geçmez.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "24 Mart 2026",
+      sections: [
+        {
+          title: "1. Veri sorumlusu ve işleme amaçları",
+          paragraphs: [
+            "Veri sorumlusu NB Global Studio’dur. Ödeme öncesi toplanan ad, soyad, adres, posta kodu, şehir, ülke ve cep telefonu bilgileri; sözleşmenin yerine getirilmesi, güvenli tahsilat, dolandırıcılığın önlenmesi ve kanuni yükümlülüklerin yerine getirilmesi amacıyla işlenir.",
+            "Ödeme kuruluşu olarak İyzico’nun barındırdığı ödeme sayfasına yalnızca işlem için gerekli teknik öğeler iletilir; kart bilgileriniz sistemimizde saklanmaz.",
+          ],
+        },
+        {
+          title: "2. Hukuki sebepler ve aktarım",
+          paragraphs: [
+            "Kişisel verileriniz KVKK’nın 5 ve 6. maddelerinde öngörülen şartlar kapsamında; açık rıza gereken hallerde kutucuk işaretlenerek alınan onayla işlenebilir.",
+          ],
+        },
+        {
+          title: "3. Haklarınız ve iletişim",
+          paragraphs: [
+            "Kanun’un 11. maddesi uyarınca haklarınızı kullanmak için nbglobalstudio@gmail.com adresine başvurabilirsiniz; kimlik teyidi gerekebilir.",
           ],
         },
       ],

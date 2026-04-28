@@ -1,22 +1,48 @@
-import type { FakePaymentProduct } from "../api/fakePayment";
-
-/** Credit-only SKUs shown in dashboard, upgrade modal, and landing. */
-export const CREDIT_PACK_PRODUCTS = ["CREDITS_50", "CREDITS_120", "CREDITS_300"] as const;
+/**
+ * Workspace checkout catalog — Bronz / Altın / Limitsiz Pro.
+ * `TIER_*` match `web/api/.../credit-pack-pricing.ts`; `UNLIMITED_PRO` opens subscription checkout (`/api/payments/initialize`).
+ */
+export const CREDIT_PACK_PRODUCTS = ["TIER_STARTER", "TIER_PROFESSIONAL", "UNLIMITED_PRO"] as const;
 
 export type CreditPackProduct = (typeof CREDIT_PACK_PRODUCTS)[number];
 
 export type CreditPackDefinition = {
   product: CreditPackProduct;
-  credits: number;
+  /** One-time credit amount; `null` = subscription. */
+  credits: number | null;
   priceTry: number;
+  subscription: boolean;
+  nameTr: string;
+  nameEn: string;
 };
 
 export const CREDIT_PACKS: readonly CreditPackDefinition[] = [
-  { product: "CREDITS_50", credits: 50, priceTry: 29 },
-  { product: "CREDITS_120", credits: 120, priceTry: 59 },
-  { product: "CREDITS_300", credits: 300, priceTry: 129 },
+  {
+    product: "TIER_STARTER",
+    credits: 100,
+    priceTry: 149,
+    subscription: false,
+    nameTr: "Bronz Paket (Giriş)",
+    nameEn: "Bronze Pack (Entry)",
+  },
+  {
+    product: "TIER_PROFESSIONAL",
+    credits: 500,
+    priceTry: 399,
+    subscription: false,
+    nameTr: "Altın Paket",
+    nameEn: "Gold Pack",
+  },
+  {
+    product: "UNLIMITED_PRO",
+    credits: null,
+    priceTry: 699,
+    subscription: true,
+    nameTr: "Limitsiz Pro",
+    nameEn: "Unlimited Pro",
+  },
 ] as const;
 
-export function isCreditPackProduct(p: FakePaymentProduct): p is CreditPackProduct {
-  return (CREDIT_PACK_PRODUCTS as readonly string[]).includes(p);
+export function isCreditPackProduct(p: unknown): p is CreditPackProduct {
+  return (CREDIT_PACK_PRODUCTS as readonly string[]).includes(String(p));
 }

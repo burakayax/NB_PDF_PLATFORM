@@ -5,6 +5,7 @@ import { prisma } from "../../lib/prisma.js";
 import { recordCreditPackPurchaseMeta } from "../credit-checkout/credit-checkout.post-purchase.js";
 import { CREDIT_PACK_CATALOG, isCreditPackSku } from "../credit-checkout/credit-pack-pricing.js";
 import type { CreditPricingPayload } from "../credit-checkout/pricing-token.js";
+import { formatMoney2, getTierOneTimePrice } from "../payment/pricing-matrix.js";
 import { grantCredits } from "../subscription/entitlement.engine.js";
 import type { FakePaymentProduct } from "./fake-payment.schema.js";
 
@@ -35,7 +36,7 @@ const SESSION_TTL_MS = 30 * 60 * 1000;
 type FakePaymentSession = {
   sessionId: string;
   userId: string;
-  product: FakePaymentProduct;
+  product: FakePaymentProduct | "TIER_STARTER" | "TIER_PROFESSIONAL";
   amountTry: number;
   credits: number;
   subscriptionDays: number;
@@ -123,8 +124,21 @@ export function createPricedCreditPackFakeSession(params: {
     throw new Error("createPricedCreditPackFakeSession: invalid product");
   }
   const cat = CREDIT_PACK_CATALOG[p.product];
-  if (cat.credits !== p.credits || p.basePrice !== cat.amountTry.toFixed(2)) {
-    throw new Error("createPricedCreditPackFakeSession: price/credits mismatch");
+  if (cat.credits !== p.credits) {
+    throw new Error("createPricedCreditPackFakeSession: credits mismatch");
+  }
+  if (p.product === "TIER_STARTER" || p.product === "TIER_PROFESSIONAL") {
+    const list = formatMoney2(p.currency, getTierOneTimePrice(p.product, p.currency));
+    if (p.basePrice !== list) {
+      throw new Error("createPricedCreditPackFakeSession: list price mismatch");
+    }
+  } else {
+    if (p.currency !== "TRY") {
+      throw new Error("createPricedCreditPackFakeSession: non-tier packs are TRY only");
+    }
+    if (p.basePrice !== cat.amountTry.toFixed(2)) {
+      throw new Error("createPricedCreditPackFakeSession: list price mismatch");
+    }
   }
   const now = Date.now();
   pruneExpired(now);
@@ -159,7 +173,7 @@ export type FakeConfirmResult =
   | {
       status: "confirmed";
       sessionId: string;
-      product: FakePaymentProduct;
+      product: FakePaymentProduct | "TIER_STARTER" | "TIER_PROFESSIONAL";
       creditsGranted: number;
       creditsBefore: number;
       creditsAfter: number;
@@ -169,7 +183,7 @@ export type FakeConfirmResult =
   | { status: "not_found" }
   | { status: "expired" }
   | { status: "forbidden" }
-  | { status: "already_confirmed"; sessionId: string; product: FakePaymentProduct };
+  | { status: "already_confirmed"; sessionId: string; product: FakePaymentProduct | "TIER_STARTER" | "TIER_PROFESSIONAL" };
 
 export async function confirmFakePayment(params: {
   userId: string;

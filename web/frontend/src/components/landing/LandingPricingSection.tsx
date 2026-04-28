@@ -10,11 +10,24 @@ type Props = {
   onUseWebApp: () => void;
 };
 
+function fmtTry(priceTry: number, lang: Language, subscription: boolean) {
+  const n = priceTry.toLocaleString(lang === "tr" ? "tr-TR" : "en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  const tl = `${n} TL`;
+  if (subscription) {
+    return lang === "tr" ? `${tl} / ay` : `${tl} / mo`;
+  }
+  return tl;
+}
+
 /**
- * Landing pricing: credit packs only (no subscription tiers).
+ * Landing pricing: Bronz / Altın (tek seferlik kredi) + Limitsiz Pro (abonelik).
  */
 export function LandingPricingSection({ language, kicker, title, description, onUseWebApp }: Props) {
   const P = landingPricingCreditsCopy(language);
+  const tr = language === "tr";
 
   return (
     <section className="py-10" data-nb-preview="pricing">
@@ -32,43 +45,60 @@ export function LandingPricingSection({ language, kicker, title, description, on
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-        {CREDIT_PACKS.map((pack, i) => (
-          <article
-            key={pack.product}
-            className={`group flex flex-col rounded-[24px] border p-5 md:p-7 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:rounded-[30px] ${
-              i === 1
-                ? "border-cyan-400/40 bg-gradient-to-br from-cyan-500/[0.12] to-indigo-500/[0.1] shadow-[0_28px_80px_-16px_rgba(34,211,238,0.22)] ring-1 ring-cyan-400/25"
-                : "border-white/10 bg-white/[0.045] hover:bg-white/[0.07]"
-            }`}
-          >
-            <div className="flex-1 text-left">
-              {i === 1 ? (
-                <span className="mb-2 inline-block rounded-full border border-cyan-400/45 bg-cyan-500/20 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
-                  {P.popular}
-                </span>
-              ) : null}
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 group-hover:text-cyan-400 transition-colors">
-                {P.packLabel}
-              </p>
-              <h4 className="mt-3 text-2xl font-semibold tracking-tight text-white md:text-3xl">
-                {P.creditsLine(pack.credits)}
-              </h4>
-              <p className="mt-2 text-3xl font-black tabular-nums text-cyan-200">₺{pack.priceTry}</p>
-              <p className="mt-4 text-sm leading-6 text-slate-300">{P.packBlurb}</p>
-            </div>
-            <button
-              type="button"
-              onClick={onUseWebApp}
-              className={`mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 text-sm font-semibold transition-all ${
-                i === 1
-                  ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300 hover:scale-[1.02]"
-                  : "border border-white/[0.1] bg-white/[0.05] text-white hover:bg-white/10 hover:scale-[1.02]"
+        {CREDIT_PACKS.map((pack, i) => {
+          const popular = i === 1;
+          const titleStr = tr ? pack.nameTr : pack.nameEn;
+          const priceStr = fmtTry(pack.priceTry, language, pack.subscription);
+          return (
+            <article
+              key={pack.product}
+              className={`group flex flex-col rounded-[24px] border p-5 md:p-7 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] md:rounded-[30px] ${
+                popular
+                  ? "border-cyan-400/40 bg-gradient-to-br from-cyan-500/[0.12] to-indigo-500/[0.1] shadow-[0_28px_80px_-16px_rgba(34,211,238,0.22)] ring-1 ring-cyan-400/25"
+                  : "border-white/10 bg-white/[0.045] hover:bg-white/[0.07]"
               }`}
             >
-              {P.ctaBuy}
-            </button>
-          </article>
-        ))}
+              <div className="flex-1 text-left">
+                {popular ? (
+                  <span className="mb-2 inline-block rounded-full border border-cyan-400/45 bg-cyan-500/20 px-2 py-0.5 text-[9px] font-bold uppercase text-white">
+                    {P.popular}
+                  </span>
+                ) : null}
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {tr ? "Paket" : "Plan"}
+                </p>
+                <h4 className="mt-3 text-xl font-semibold tracking-tight text-white md:text-2xl">{titleStr}</h4>
+                <p className="mt-3 text-lg font-semibold tracking-tight text-cyan-100/95 md:text-xl">
+                  {P.packContentLine(pack.credits, pack.subscription)}
+                </p>
+                <p className="mt-2 text-3xl font-black tabular-nums text-cyan-200">{priceStr}</p>
+                <p className="mt-1 text-xs font-medium text-slate-500">
+                  {pack.subscription
+                    ? tr
+                      ? "Aylık abonelik"
+                      : "Monthly subscription"
+                    : tr
+                      ? "Tek seferlik"
+                      : "One-time"}
+                </p>
+                <p className="mt-4 text-sm leading-6 text-slate-300">
+                  {pack.subscription ? P.packBlurbSubscription : P.packBlurbOneTime}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onUseWebApp}
+                className={`mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 text-sm font-semibold transition-all ${
+                  popular
+                    ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300 hover:scale-[1.02]"
+                    : "border border-white/[0.1] bg-white/[0.05] text-white hover:bg-white/10 hover:scale-[1.02]"
+                }`}
+              >
+                {P.ctaBuy}
+              </button>
+            </article>
+          );
+        })}
       </div>
 
       <div className="mt-10 flex flex-col items-center gap-3">

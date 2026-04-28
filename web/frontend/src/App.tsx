@@ -30,6 +30,7 @@ import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal"
 import { AdminPanel } from "./admin/AdminPanel";
 import { ConversionPopup } from "./components/dashboard/ConversionPopup";
 import { PaymentSummaryModal } from "./components/dashboard/PaymentSummaryModal";
+import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
 import { AuthPage } from "./components/auth/AuthPage";
@@ -55,10 +56,9 @@ import {
   confirmFakeCheckout,
   PAYMENT_CHECKOUT_NOT_FOUND,
   resolveFakePaymentRedirect,
-  startFakeCheckout,
-  type FakePaymentProduct,
 } from "./api/fakePayment";
 import { CreditDashboard } from "./components/dashboard/CreditDashboard";
+import { PricingPage } from "./components/pricing/PricingPage";
 import { canAutoShowConversionModal } from "./lib/conversionModalTriggers";
 import {
   clearLowCreditSnoozeIfRecovered,
@@ -93,15 +93,14 @@ import { useCookieConsent } from "./hooks/useCookieConsent";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
-
-type FeatureId = FeatureKey;
+import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
 
 type NonLegalView = "landing" | "login" | "register" | "forgot_password" | "web" | "admin";
-type LegalView = "terms" | "privacy";
+type LegalView = "terms" | "privacy" | "kvkk";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
 
-type ContentPanel = "tool" | "subscription" | "profile";
+type ContentPanel = "tool" | "subscription" | "profile" | "pricing";
 
 type ToastState = {
   type: ToastType;
@@ -121,6 +120,7 @@ type UploadItem = {
 };
 
 type Feature = WorkspaceFeatureUi;
+type FeatureId = FeatureKey;
 
 // PDF ön incelemesi (şifreli mi) gerektiren modül kimlikleri; inspect isteği bu listeye göre tetiklenir.
 // Parola alanlarının görünürlüğü modül bazında olduğundan hangi işlemlerin inceleme istediği açıkça seçilmelidir.
@@ -378,6 +378,8 @@ function getTrackedViewName(view: AppView) {
       return "legal-terms";
     case "privacy":
       return "legal-privacy";
+    case "kvkk":
+      return "legal-kvkk";
     case "web":
       return "workspace";
     case "admin":
@@ -401,6 +403,8 @@ function getTrackedPath(view: AppView) {
       return "/terms";
     case "privacy":
       return "/privacy";
+    case "kvkk":
+      return "/kvkk";
     case "web":
       return "/workspace";
     case "admin":
@@ -429,6 +433,8 @@ function getInitialViewFromLocation(): AppView {
       return "terms";
     case "/privacy":
       return "privacy";
+    case "/kvkk":
+      return "kvkk";
     case "/workspace":
       return "web";
     case "/fake-payment/success":
@@ -447,7 +453,8 @@ function getInitialViewFromLocation(): AppView {
     requestedView === "web" ||
     requestedView === "admin" ||
     requestedView === "terms" ||
-    requestedView === "privacy"
+    requestedView === "privacy" ||
+    requestedView === "kvkk"
   ) {
     return requestedView;
   }
@@ -1856,6 +1863,7 @@ function App() {
    * signed-in non-admin users once balance is loaded.
    */
   const showCreditWorkspaceChrome = user?.role !== "ADMIN" && Boolean(userBalance);
+  const limitsizProActive = useMemo(() => isLimitsizProUnlimited(userBalance), [userBalance]);
   /**
    * Credit depletion replaces the old "friction active" signal. `userBalance`
    * is the authoritative source; `subscriptionSummary` no longer carries any
@@ -2024,7 +2032,13 @@ function App() {
   const pickerButtonText = selectedFeature.multiple && uploads.length > 0 ? W.fileAdd : W.filePick;
 
   function openLegalPage(target: LegalView) {
-    if (view === "landing" || view === "login" || view === "register" || view === "web") {
+    if (
+      view === "landing" ||
+      view === "login" ||
+      view === "register" ||
+      view === "forgot_password" ||
+      view === "web"
+    ) {
       setLegalBackView(view);
     }
     setView(target);
@@ -2041,6 +2055,9 @@ function App() {
 
   /** Opens the credit-pack modal (instant checkout from there). */
   function handleBuyCredits() {
+    if (limitsizProActive) {
+      return;
+    }
     if (!accessToken) {
       showToast(
         "error",
@@ -2073,7 +2090,7 @@ function App() {
   }
 
   const handleSelectCreditPackForPayment = useCallback(
-    (product: FakePaymentProduct) => {
+    (product: CreditPackProduct) => {
       if (!isCreditPackProduct(product)) {
         return;
       }
@@ -2306,9 +2323,13 @@ function App() {
       window.history.replaceState({}, "", "/workspace");
       return;
     }
-    setContentPanel("tool");
-    setActiveSidebar("split");
-    setSelectedFeatureId("split");
+    setView("landing");
+    window.history.replaceState({}, "", "/");
+  }
+
+  function openCreditsWorkspaceFromNav() {
+    setContentPanel("subscription");
+    setActiveSidebar("subscription");
   }
 
   function handleNavProfile() {
@@ -2319,7 +2340,14 @@ function App() {
     setChangePasswordModalOpen(true);
   }
 
-  async function handleAuthSubmit(payload: { email: string; password: string; firstName?: string; lastName?: string }) {
+  async function handleAuthSubmit(payload: {
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    city?: string;
+  }) {
     try {
       setAuthSubmitting(true);
       setAuthError("");
@@ -2332,7 +2360,15 @@ function App() {
           setAuthError(msg);
           throw new Error(msg);
         }
-        const registerResult = await register(firstName, lastName, payload.email, payload.password, language);
+        const registerResult = await register({
+          firstName,
+          lastName,
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+          preferredLanguage: language,
+          phone: payload.phone?.trim() || undefined,
+          city: payload.city?.trim() || undefined,
+        });
         setRegistrationSuccessBanner(
           language === "tr"
             ? "Güvenliğiniz için bir doğrulama e-postası gönderdik. Hesabınızı kullanmaya başlamak için lütfen e-posta adresinizi onaylayın."
@@ -2912,6 +2948,7 @@ function App() {
           }}
           onOpenTerms={() => openLegalPage("terms")}
           onOpenPrivacy={() => openLegalPage("privacy")}
+          onOpenKvkk={() => openLegalPage("kvkk")}
         />
         <CookieNotice
           language={language}
@@ -2950,6 +2987,7 @@ function App() {
           }}
           onOpenTerms={() => openLegalPage("terms")}
           onOpenPrivacy={() => openLegalPage("privacy")}
+          onOpenKvkk={() => openLegalPage("kvkk")}
         />
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
@@ -2967,7 +3005,7 @@ function App() {
     );
   }
 
-  if (view === "terms" || view === "privacy") {
+  if (view === "terms" || view === "privacy" || view === "kvkk") {
     return (
       <>
         <SystemNotificationBanner language={language} />
@@ -3088,6 +3126,7 @@ function App() {
   }
 
   return (
+    <CheckoutCurrencyProvider>
     <div className="app-shell">
       <SystemNotificationBanner language={language} />
       {contactModalOpen ? (
@@ -3298,14 +3337,17 @@ function App() {
       <DashboardTopNav
         user={user}
         language={language}
+        onLanguageChange={(lang) => void handleLanguageChange(lang)}
         creditBalance={userBalance?.creditBalance ?? null}
         creditBalanceLoading={subscriptionLoading && !userBalance}
         hasActiveSubscription={userBalance?.hasActiveSubscription}
+        limitsizProActive={limitsizProActive}
         onLogoClick={handleDashboardLogoClick}
         onProfile={handleNavProfile}
         onPassword={handleNavPassword}
         onLogout={() => void handleLogout()}
-        onUpgradeClick={() => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
+        onUpgradeClick={limitsizProActive ? undefined : () => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
+        onOpenCreditsPanel={user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined}
         showAdminEntry={user?.role === "ADMIN"}
         onOpenAdmin={() => {
           setView("admin");
@@ -3328,57 +3370,53 @@ function App() {
         active={activeSidebar}
         onSelect={handleSidebarSelect}
         language={language}
-        onLanguageChange={(lang) => void handleLanguageChange(lang)}
-        onGoHome={goToLandingFromDashboard}
         lockedFeatures={lockedFeatures}
-        subscriptionSummary={subscriptionSummary}
         userBalance={userBalance}
         userRole={user?.role}
-        onUsageUpgradeClick={() => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
-        onBuyCredits={() => handleBuyCredits()}
         enabledToolIds={enabledToolIds}
         resolveToolLabel={resolveToolLabel}
-        onOpenAdminDashboard={
-          user?.role === "ADMIN"
-            ? () => {
-                setView("admin");
-                window.history.replaceState({}, "", "/admin");
-              }
-            : undefined
-        }
+        limitsizProActive={limitsizProActive}
       />
       {showCreditWorkspaceChrome && !bottomToolProgressActive && userBalance ? (
         <div className="pointer-events-none fixed bottom-4 left-4 z-30 max-w-[calc(100vw-2rem)] md:hidden">
           <div
             className={`pointer-events-auto rounded-xl border px-3 py-3 text-xs shadow-lg backdrop-blur-md ${
-              creditsExhausted || creditsRunningLow
+              !limitsizProActive && (creditsExhausted || creditsRunningLow)
                 ? "border-amber-500/45 bg-gradient-to-b from-amber-950/50 to-nb-bg-elevated/98"
-                : "border-white/[0.1] bg-nb-bg-elevated/95"
+                : limitsizProActive
+                  ? "border-amber-400/35 bg-gradient-to-b from-amber-950/40 to-nb-bg-elevated/98"
+                  : "border-white/[0.1] bg-nb-bg-elevated/95"
             }`}
           >
             <div className="flex items-end justify-between gap-2">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">{W.creditBalanceHeading}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">
+                  {limitsizProActive ? W.unlimitedAccessActive : W.creditBalanceHeading}
+                </p>
                 <p className="mt-0.5 text-2xl font-black tabular-nums leading-none text-nb-text">
-                  {userBalance.hasActiveSubscription ? W.usageUnlimited : userBalance.creditBalance}
+                  {limitsizProActive ? W.unlimitedSidebarBadge : userBalance.hasActiveSubscription ? W.usageUnlimited : userBalance.creditBalance}
                 </p>
               </div>
             </div>
-            {creditsRunningLow ? (
-              <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">{W.creditRunningOutBanner}</p>
+            {!limitsizProActive ? (
+              <>
+                {creditsRunningLow ? (
+                  <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">{W.creditRunningOutBanner}</p>
+                ) : null}
+                {creditsExhausted ? (
+                  <p className="mt-2 text-[11px] leading-snug text-amber-200/90">{W.creditBalanceExhaustedHint}</p>
+                ) : null}
+                <div className="mt-2.5 flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleBuyCredits()}
+                    className="nb-transition w-full rounded-lg border border-nb-primary/45 bg-nb-primary/12 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.05em] text-nb-accent hover:bg-nb-primary/18"
+                  >
+                    {W.creditDashboardBuyCreditsCta}
+                  </button>
+                </div>
+              </>
             ) : null}
-            {creditsExhausted ? (
-              <p className="mt-2 text-[11px] leading-snug text-amber-200/90">{W.creditBalanceExhaustedHint}</p>
-            ) : null}
-            <div className="mt-2.5 flex flex-col gap-1.5">
-              <button
-                type="button"
-                onClick={() => handleBuyCredits()}
-                className="nb-transition w-full rounded-lg border border-nb-primary/45 bg-nb-primary/12 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.05em] text-nb-accent hover:bg-nb-primary/18"
-              >
-                {W.creditDashboardBuyCreditsCta}
-              </button>
-            </div>
           </div>
         </div>
       ) : null}
@@ -3389,20 +3427,10 @@ function App() {
           active={activeSidebar}
           onSelect={handleSidebarSelect}
           language={language}
-          onLanguageChange={(lang) => void handleLanguageChange(lang)}
-          onGoHome={goToLandingFromDashboard}
           lockedFeatures={lockedFeatures}
           userRole={user?.role}
           enabledToolIds={enabledToolIds}
           resolveToolLabel={resolveToolLabel}
-          onOpenAdminDashboard={
-            user?.role === "ADMIN"
-              ? () => {
-                  setView("admin");
-                  window.history.replaceState({}, "", "/admin");
-                }
-              : undefined
-          }
         />
         <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
           {contentPanel === "subscription" ? (
@@ -3415,8 +3443,30 @@ function App() {
                 transactionsLoading={creditTransactionsLoading}
                 onBuyPack={(product) => void handleSelectCreditPackForPayment(product)}
                 buyingProduct={null}
+                limitsizProActive={limitsizProActive}
+                onOpenPlansPage={
+                  limitsizProActive
+                    ? undefined
+                    : () => {
+                        setActiveSidebar("subscription");
+                        setContentPanel("pricing");
+                      }
+                }
               />
             </section>
+          ) : null}
+
+          {contentPanel === "pricing" && accessToken && user ? (
+            <PricingPage
+              language={language}
+              accessToken={accessToken}
+              user={user}
+              updateProfile={updateProfile}
+              onBack={() => setContentPanel("subscription")}
+              showToast={showToast}
+              onOpenTerms={() => openLegalPage("terms")}
+              onOpenKvkk={() => openLegalPage("kvkk")}
+            />
           ) : null}
 
           {contentPanel === "profile" ? (
@@ -3440,7 +3490,7 @@ function App() {
             </div>
           </div>
 
-          {showCreditWorkspaceChrome && creditsExhausted ? (
+          {showCreditWorkspaceChrome && !limitsizProActive && creditsExhausted ? (
             <div className="border-b border-amber-500/25 bg-gradient-to-r from-amber-950/45 via-amber-950/25 to-transparent px-4 py-3 md:px-6">
               <p className="text-sm font-medium leading-snug text-amber-50/95">{W.creditBalanceExhaustedHint}</p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -3455,7 +3505,7 @@ function App() {
             </div>
           ) : null}
 
-          {showCreditWorkspaceChrome && creditsRunningLow ? (
+          {showCreditWorkspaceChrome && !limitsizProActive && creditsRunningLow ? (
             <div className="border-b border-amber-500/30 bg-gradient-to-r from-amber-950/35 via-amber-950/15 to-transparent px-4 py-3 md:px-6">
               <p className="text-sm font-semibold text-amber-50/95">{W.creditRunningOutBanner}</p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -4368,6 +4418,9 @@ function App() {
           <button type="button" onClick={() => openLegalPage("privacy")}>
             {language === "tr" ? "GİZLİLİK POLİTİKASI" : "PRIVACY POLICY"}
           </button>
+          <button type="button" onClick={() => openLegalPage("kvkk")}>
+            {language === "tr" ? "KVKK" : "KVKK DISCLOSURE"}
+          </button>
           <button type="button" onClick={openContactModal}>
             {language === "tr" ? "İLETİŞİM" : "CONTACT"}
           </button>
@@ -4381,6 +4434,7 @@ function App() {
         onOpenPrivacy={() => openLegalPage("privacy")}
       />
     </div>
+    </CheckoutCurrencyProvider>
   );
 }
 

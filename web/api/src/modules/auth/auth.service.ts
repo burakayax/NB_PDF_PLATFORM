@@ -11,6 +11,7 @@ import { resolveRoleFromEmail } from "../../lib/role-policy.js";
 import { isAdminUser } from "../../lib/user-role.js";
 import { ensureDesktopDeviceAccess } from "../device/device.service.js";
 import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
+import { normalizeToE164 } from "../../lib/phone-e164.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
 import { createAdminNotificationEmailTemplate, createVerificationEmailTemplate } from "./auth.email.js";
 import type { AuthCredentialsInput, ChangePasswordInput, RegisterInput, UpdateProfileInput } from "./auth.schema.js";
@@ -32,6 +33,12 @@ type PublicUser = {
   /** False when the account has no bcrypt password (e.g. Google-only). */
   hasPassword: boolean;
   createdAt: string;
+  /** Billing — used for iyzico checkout inline flow (optional until collected). */
+  phone: string | null;
+  billingAddressLine: string | null;
+  billingPostalCode: string | null;
+  city: string | null;
+  country: string | null;
 };
 
 type EmailVerificationTokenWithUser = EmailVerificationToken & {
@@ -79,6 +86,11 @@ function toPublicUser(user: User): PublicUser {
     authProvider: user.authProvider,
     hasPassword: Boolean(user.passwordHash),
     createdAt: user.createdAt.toISOString(),
+    phone: user.phone ?? null,
+    billingAddressLine: user.billingAddressLine ?? null,
+    billingPostalCode: user.billingPostalCode ?? null,
+    city: user.city ?? null,
+    country: user.country ?? null,
   };
 }
 
@@ -214,6 +226,44 @@ async function revokeRefreshToken(token: string) {
   });
 }
 
+/** Prefer Google given_name/family_name; else split display name. */
+function deriveGoogleFirstLast(parts: {
+  givenName: string | null;
+  familyName: string | null;
+  displayName: string | null;
+}): { firstName: string | null; lastName: string | null } {
+  let fn = parts.givenName?.trim() || null;
+  let ln = parts.familyName?.trim() || null;
+  if (fn && ln) {
+    return { firstName: fn, lastName: ln };
+  }
+
+  const full = parts.displayName?.trim();
+  if (full && fn && !ln) {
+    if (full.startsWith(fn)) {
+      const rest = full.slice(fn.length).trim();
+      return { firstName: fn, lastName: rest || null };
+    }
+    const idx = full.indexOf(fn);
+    if (idx >= 0) {
+      const rest = full.slice(idx + fn.length).trim();
+      if (rest) {
+        return { firstName: fn, lastName: rest };
+      }
+    }
+  }
+
+  if (!fn && !ln && full) {
+    const p = full.split(/\s+/).filter(Boolean);
+    if (p.length >= 2) {
+      return { firstName: p[0]!, lastName: p.slice(1).join(" ") };
+    }
+    return { firstName: full, lastName: null };
+  }
+
+  return { firstName: fn, lastName: ln };
+}
+
 export async function registerUser(input: RegisterInput): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
@@ -233,6 +283,16 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
   const lastName = input.lastName.trim();
   const displayName = `${firstName} ${lastName}`.trim() || null;
 
+  let phoneE164: string | null = null;
+  if (input.phone?.trim()) {
+    try {
+      phoneE164 = normalizeToE164(input.phone);
+    } catch (e) {
+      throw new HttpError(400, e instanceof Error ? e.message : "Invalid phone number.");
+    }
+  }
+  const cityTrim = input.city?.trim() ?? "";
+
   const passwordHash = await hashPassword(input.password);
   const user = await prisma.user.create({
     data: {
@@ -240,6 +300,8 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
       firstName,
       lastName,
       name: displayName,
+      phone: phoneE164,
+      ...(cityTrim ? { city: cityTrim, country: "Turkey" } : {}),
       passwordHash,
       authProvider: "local",
       role: resolveRoleFromEmail(input.email),
@@ -426,13 +488,53 @@ export async function updateUserProfile(userId: string, input: UpdateProfileInpu
   const lastName = input.lastName.trim();
   const displayName = `${firstName} ${lastName}`.trim() || null;
 
+  const data: {
+    firstName: string;
+    lastName: string;
+    name: string | null;
+    phone?: string | null;
+    billingAddressLine?: string | null;
+    billingPostalCode?: string | null;
+    city?: string | null;
+    country?: string | null;
+  } = {
+    firstName,
+    lastName,
+    name: displayName,
+  };
+
+  if (input.phone !== undefined) {
+    const trimmed = input.phone.trim();
+    if (trimmed.length === 0) {
+      data.phone = null;
+    } else {
+      try {
+        data.phone = normalizeToE164(trimmed);
+      } catch (e) {
+        throw new HttpError(400, e instanceof Error ? e.message : "Invalid phone number.");
+      }
+    }
+  }
+  if (input.billingAddressLine !== undefined) {
+    const v = input.billingAddressLine.trim();
+    data.billingAddressLine = v.length > 0 ? v : null;
+  }
+  if (input.billingPostalCode !== undefined) {
+    const v = input.billingPostalCode.trim();
+    data.billingPostalCode = v.length > 0 ? v : null;
+  }
+  if (input.city !== undefined) {
+    const v = input.city.trim();
+    data.city = v.length > 0 ? v : null;
+  }
+  if (input.country !== undefined) {
+    const v = input.country.trim();
+    data.country = v.length > 0 ? v : null;
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
-    data: {
-      firstName,
-      lastName,
-      name: displayName,
-    },
+    data,
   });
 
   return toPublicUser(user);
@@ -510,12 +612,26 @@ export async function signInWithGoogle(params: {
   email: string;
   googleId: string;
   name: string | null;
+  givenName: string | null;
+  familyName: string | null;
   avatar: string | null;
   preferredLanguage: Language;
 }): Promise<AuthSessionResult> {
   const email = normalizeEmailForStorage(params.email);
   const googleId = params.googleId.trim();
-  console.log(`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, { email, name: params.name ?? null, googleId });
+  const derived = deriveGoogleFirstLast({
+    givenName: params.givenName,
+    familyName: params.familyName,
+    displayName: params.name,
+  });
+
+  console.log(`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, {
+    email,
+    name: params.name ?? null,
+    googleId,
+    firstName: derived.firstName,
+    lastName: derived.lastName,
+  });
 
   const existing = await prisma.user.findUnique({
     where: { email },
@@ -541,6 +657,8 @@ export async function signInWithGoogle(params: {
         name: params.name,
         avatar: params.avatar,
         role: resolveRoleFromEmail(email),
+        ...(derived.firstName != null ? { firstName: derived.firstName } : {}),
+        ...(derived.lastName != null ? { lastName: derived.lastName } : {}),
         ...(existing.isVerified
           ? {}
           : {
@@ -571,6 +689,8 @@ export async function signInWithGoogle(params: {
     data: {
       email,
       googleId,
+      firstName: derived.firstName,
+      lastName: derived.lastName,
       name: params.name,
       avatar: params.avatar,
       passwordHash: null,

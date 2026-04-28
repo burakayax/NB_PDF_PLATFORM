@@ -26,6 +26,19 @@ const rawEnvSchema = z
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     PORT: z.coerce.number().int().positive().default(4000),
     FRONTEND_ORIGIN: z.string().url().default("http://localhost:5173"),
+    /** Public API origin (emails, OAuth, payment callback fallback). */
+    APP_BASE_URL: z.string().url().default("http://localhost:4000"),
+    /**
+     * Optional public origin where the PSP POSTs callbacks (e.g. ngrok). When unset or empty,
+     * iyzico `callbackUrl` is derived from APP_BASE_URL.
+     */
+    PAYMENT_CALLBACK_BASE_URL: z.preprocess((v) => {
+      if (v === undefined || v === null) {
+        return undefined;
+      }
+      const s = String(v).trim();
+      return s === "" ? undefined : s;
+    }, z.string().url().optional()),
     /** Google OAuth sonrası tarayıcı yönlendirmesi (varsayılan: FRONTEND_ORIGIN). Örn. http://localhost:5173 */
     OAUTH_FRONTEND_REDIRECT_ORIGIN: z.string().url().optional(),
     DATABASE_URL: z.string().min(1),
@@ -35,9 +48,7 @@ const rawEnvSchema = z
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
     EMAIL_VERIFICATION_TTL_HOURS: z.coerce.number().int().positive().default(24),
     COOKIE_DOMAIN: z.string().optional(),
-    APP_BASE_URL: z.string().url().default("http://localhost:4000"),
     /**
-     * Birincil e-posta kimlik bilgileri (Gmail: normal şifre yerine Uygulama Şifresi kullanın).
      * SMTP_USER / SMTP_PASS boşken Nodemailer kimlik doğrulaması olarak kullanılır.
      * Eksik veya hatalı olursa doğrulama ve bildirim e-postaları gönderilemez.
      */
@@ -101,6 +112,8 @@ const rawEnvSchema = z
     IYZICO_SECRET_KEY: z.string().optional().default(""),
     /** Örn. https://sandbox-api.iyzipay.com veya üretim https://api.iyzipay.com */
     IYZICO_URI: z.string().optional().default(""),
+    /** Alias for `IYZICO_URI` (e.g. sandbox `https://sandbox-api.iyzipay.com`). */
+    IYZICO_BASE_URL: z.string().optional().default(""),
     /** Sandbox / test alıcı T.C. kimlik no (11 hane). */
     IYZICO_BUYER_IDENTITY_NUMBER: z.string().length(11).optional().default("74300864791"),
     /** Alıcı GSM; iyzico formatı (+90...) */
@@ -150,8 +163,10 @@ const rawEnvSchema = z
 
 const raw = rawEnvSchema.parse(process.env);
 
+const iyzicoUriMerged = raw.IYZICO_URI?.trim() || raw.IYZICO_BASE_URL?.trim() || "";
+
 const iyzicoKeysOk = Boolean(
-  raw.IYZICO_API_KEY?.trim() && raw.IYZICO_SECRET_KEY?.trim() && raw.IYZICO_URI?.trim(),
+  raw.IYZICO_API_KEY?.trim() && raw.IYZICO_SECRET_KEY?.trim() && iyzicoUriMerged,
 );
 /** Kredi paketi: iyzico yerine anında onay (fake) — dev varsayılanı, veya açık bayrak, veya anahtar eksik. */
 const creditCheckoutUseFake =
@@ -169,8 +184,19 @@ const smtpFromEmail = raw.SMTP_FROM_EMAIL ?? raw.EMAIL_USER ?? smtpUser;
 
 const oauthRedirectOrigin = (raw.OAUTH_FRONTEND_REDIRECT_ORIGIN ?? raw.FRONTEND_ORIGIN).replace(/\/$/, "");
 
+/** iyzico `callbackUrl`: must match reachable POST /api/payments/callback. */
+const paymentCallbackRaw = raw.PAYMENT_CALLBACK_BASE_URL?.trim() ?? "";
+const paymentCallbackBase = /^https?:\/\/.+/i.test(paymentCallbackRaw)
+  ? paymentCallbackRaw.replace(/\/$/, "")
+  : raw.APP_BASE_URL.trim().replace(/\/$/, "");
+
 export const env = {
   ...raw,
+  /** Normalized API origin (from raw). */
+  APP_BASE_URL: raw.APP_BASE_URL.trim().replace(/\/$/, ""),
+  IYZICO_URI: iyzicoUriMerged,
+  /** Effective origin for iyzico checkout callback (raw PAYMENT_CALLBACK_BASE_URL or APP_BASE_URL). */
+  PAYMENT_CALLBACK_BASE_URL: paymentCallbackBase,
   TRUST_PROXY: raw.TRUST_PROXY?.trim() ?? "",
   forceHttps: raw.FORCE_HTTPS === "true",
   HTTPS_KEY_PATH: raw.HTTPS_KEY_PATH?.trim() ?? "",
