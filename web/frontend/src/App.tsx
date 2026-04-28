@@ -16,9 +16,10 @@ import {
   requestMergeJobCancel,
   type MergeJobStatus,
 } from "./api";
-import type { AuthUser } from "./api/auth";
+import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
+import { MaintenancePage, MaintenanceTabTitle } from "./components/common/MaintenancePage";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
@@ -129,6 +130,19 @@ type FeatureId = FeatureKey;
 // PDF ön incelemesi (şifreli mi) gerektiren modül kimlikleri; inspect isteği bu listeye göre tetiklenir.
 // Parola alanlarının görünürlüğü modül bazında olduğundan hangi işlemlerin inceleme istediği açıkça seçilmelidir.
 // Liste backend veya UI ile senkron bozulursa şifreli dosyada parola alanı çıkmaz veya gereksiz istek atılır.
+function isPathAllowedDuringMaintenance(pathname: string): boolean {
+  if (pathname === "/login-success" || pathname === "/login-error") {
+    return true;
+  }
+  if (pathname === "/admin-login") {
+    return true;
+  }
+  if (pathname.startsWith("/fake-payment")) {
+    return true;
+  }
+  return false;
+}
+
 const pdfInspectionFeatures: FeatureId[] = [
   "split",
   "merge",
@@ -910,7 +924,7 @@ function App() {
   showToastRef.current = showToast;
 
   const navigateToDashboardAfterOAuth = useCallback(
-    (loggedInUser: AuthUser) => {
+    async (loggedInUser: AuthUser) => {
       const raw =
         typeof sessionStorage !== "undefined" ? sessionStorage.getItem(SESSION_POST_OAUTH_REDIRECT_KEY) : null;
       if (typeof sessionStorage !== "undefined") {
@@ -929,13 +943,14 @@ function App() {
       }
 
       if (raw === SESSION_POST_OAUTH_ADMIN_VALUE && loggedInUser.role !== "ADMIN") {
-        showToast(
-          "error",
-          language === "tr" ? "Erişim reddedildi" : "Access denied",
-          language === "tr"
-            ? "Bu hesap yönetici paneline erişemez."
-            : "This account is not authorized for the admin panel.",
-        );
+        await logout();
+        url.pathname = "/";
+        window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`);
+        setSelectedFeatureId("split");
+        setActiveSidebar("split");
+        setContentPanel("tool");
+        setView("landing");
+        return;
       }
 
       url.pathname = workspacePathForFeature("split");
@@ -945,7 +960,7 @@ function App() {
       setContentPanel("tool");
       setView("web");
     },
-    [language, showToast],
+    [logout],
   );
 
   useEffect(() => {
@@ -1808,16 +1823,19 @@ function App() {
       window.history.replaceState({}, "", "/admin");
       return;
     }
-    showToast(
-      "error",
-      language === "tr" ? "Erişim reddedildi" : "Access denied",
-      language === "tr"
-        ? "Bu hesap yönetici paneline erişemez."
-        : "This account is not authorized for the admin panel.",
-    );
-    setView("web");
-    window.history.replaceState({}, "", workspacePathForFeature("split"));
-  }, [view, isRestoring, isAuthenticated, user, language]);
+    let cancelled = false;
+    void (async () => {
+      await logout();
+      if (cancelled) {
+        return;
+      }
+      setView("landing");
+      window.history.replaceState({}, "", "/");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [view, isRestoring, isAuthenticated, user, logout]);
 
   useEffect(() => {
     const onPopState = () => {
@@ -1902,11 +1920,9 @@ function App() {
         }
       } catch (error) {
         if (!cancelled) {
-          showToast(
-            "error",
-            "Abonelik bilgisi alınamadı",
-            error instanceof Error ? error.message : "Plan bilgileri yüklenemedi.",
-          );
+          if (import.meta.env.DEV) {
+            console.warn("[subscription] load failed (will retry on next poll)", error);
+          }
         }
       } finally {
         if (!cancelled) {
@@ -1927,7 +1943,7 @@ function App() {
         window.clearInterval(intervalId);
       }
     };
-  }, [accessToken, isAuthenticated, refreshSession, user?.id, user?.plan, user?.role]);
+  }, [accessToken, isAuthenticated, refreshSession, user?.id]);
 
   /*
    * The usage-warning toast (`usageWarningCode` / `strongUsageWarning` /
@@ -2507,18 +2523,9 @@ function App() {
           window.history.replaceState({}, "", "/admin");
           return;
         }
-        showToast(
-          "error",
-          language === "tr" ? "Erişim reddedildi" : "Access denied",
-          language === "tr"
-            ? "Bu hesap yönetici paneline erişemez."
-            : "This account is not authorized for the admin panel.",
-        );
-        setSelectedFeatureId("split");
-        setActiveSidebar("split");
-        setContentPanel("tool");
-        setView("web");
-        window.history.replaceState({}, "", workspacePathForFeature("split"));
+        await logout();
+        setView("landing");
+        window.history.replaceState({}, "", "/");
         return;
       }
 
@@ -3045,6 +3052,51 @@ function App() {
     );
   }
 
+  const maintenanceActive = flags.maintenanceMode === true;
+  const maintenanceBypass = user?.role === "ADMIN";
+
+  if (
+    !isLoginSuccessRoute &&
+    maintenanceActive &&
+    !maintenanceBypass &&
+    !isPathAllowedDuringMaintenance(pathname)
+  ) {
+    const tokenPending =
+      typeof window !== "undefined" ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) : null;
+    if (isRestoring && tokenPending) {
+      return (
+        <>
+          <MaintenanceTabTitle />
+          <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
+            <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">NB PDF PLARTFORM</p>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Oturum doğrulanıyor</h1>
+              <p className="mt-4 text-base leading-8 text-nb-muted">Güvenli erişim bilgileriniz kontrol ediliyor. Lütfen bekleyin.</p>
+            </div>
+          </div>
+          <CookieNotice
+            language={language}
+            visible={shouldShowCookieNotice}
+            onAccept={acceptConsent}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+          />
+        </>
+      );
+    }
+
+    return (
+      <>
+        <MaintenancePage />
+        <CookieNotice
+          language={language}
+          visible={shouldShowCookieNotice}
+          onAccept={acceptConsent}
+          onOpenPrivacy={() => openLegalPage("privacy")}
+        />
+      </>
+    );
+  }
+
   if (view === "forgot_password") {
     return (
       <>
@@ -3537,13 +3589,6 @@ function App() {
       {workspaceBanner.enabled ? (
         <div className="border-b border-cyan-500/30 bg-cyan-950/50 px-4 py-2 text-center text-xs font-medium text-cyan-100 md:text-sm">
           {workspaceBanner.text}
-        </div>
-      ) : null}
-      {flags.maintenanceMode ? (
-        <div className="border-b border-amber-500/35 bg-amber-950/55 px-4 py-2 text-center text-xs font-medium text-amber-100 md:text-sm">
-          {language === "tr"
-            ? "Bakım modu etkin — işlemler kısıtlanabilir. Yönetim panelinden kapatılabilir."
-            : "Maintenance mode is on — some actions may be limited. Disable it from the admin panel."}
         </div>
       ) : null}
       <DashboardSidebar
