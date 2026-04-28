@@ -16,6 +16,7 @@ import {
   requestMergeJobCancel,
   type MergeJobStatus,
 } from "./api";
+import type { AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
@@ -59,7 +60,6 @@ import {
 } from "./api/fakePayment";
 import { CreditDashboard } from "./components/dashboard/CreditDashboard";
 import { PricingPage } from "./components/pricing/PricingPage";
-import { canAutoShowConversionModal } from "./lib/conversionModalTriggers";
 import {
   clearLowCreditSnoozeIfRecovered,
   getLowCreditPopupSnoozeUntil,
@@ -94,8 +94,12 @@ import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
+import { SESSION_POST_OAUTH_ADMIN_VALUE, SESSION_POST_OAUTH_REDIRECT_KEY } from "./lib/oauthRedirect";
+import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
+import { applyWorkspaceToolMeta, resetWorkspaceHeadSeo } from "./lib/toolPageMeta";
+import { getGaMeasurementId, initializeGA, trackGAPageView } from "./lib/analytics";
 
-type NonLegalView = "landing" | "login" | "register" | "forgot_password" | "web" | "admin";
+type NonLegalView = "landing" | "login" | "register" | "forgot_password" | "web" | "admin" | "admin_login";
 type LegalView = "terms" | "privacy" | "kvkk";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
@@ -361,6 +365,17 @@ function getReorderPreviewOffset(index: number, from: number, to: number, slot: 
   return 0;
 }
 
+function readInitialWorkspaceFeatureId(): FeatureKey {
+  if (typeof window === "undefined") {
+    return "split";
+  }
+  return parseWorkspaceToolPath(window.location.pathname) ?? "split";
+}
+
+function workspacePathForFeature(featureId: FeatureKey): string {
+  return `/tools/${toolSlugForFeature(featureId)}`;
+}
+
 /** createMergeJob yanıtı gelene kadar UI’da anında gösterilen yer tutucu iş kimliği. */
 const MERGE_JOB_PENDING_ID = "__merge_pending__";
 
@@ -372,6 +387,8 @@ function getTrackedViewName(view: AppView) {
       return "auth-login";
     case "register":
       return "auth-register";
+    case "admin_login":
+      return "admin-login";
     case "forgot_password":
       return "auth-forgot-password";
     case "terms":
@@ -407,6 +424,8 @@ function getTrackedPath(view: AppView) {
       return "/kvkk";
     case "web":
       return "/workspace";
+    case "admin_login":
+      return "/admin-login";
     case "admin":
       return "/admin";
     default:
@@ -419,6 +438,9 @@ function getInitialViewFromLocation(): AppView {
     return "landing";
   }
   const rawPath = window.location.pathname.replace(/\/$/, "") || "/";
+  if (parseWorkspaceToolPath(rawPath)) {
+    return "web";
+  }
   if (rawPath === "/login-success" || rawPath === "/login-error") {
     return "landing";
   }
@@ -437,6 +459,8 @@ function getInitialViewFromLocation(): AppView {
       return "kvkk";
     case "/workspace":
       return "web";
+    case "/admin-login":
+      return "admin_login";
     case "/fake-payment/success":
       return "web";
     case "/admin":
@@ -452,6 +476,7 @@ function getInitialViewFromLocation(): AppView {
     requestedView === "forgot_password" ||
     requestedView === "web" ||
     requestedView === "admin" ||
+    requestedView === "admin_login" ||
     requestedView === "terms" ||
     requestedView === "privacy" ||
     requestedView === "kvkk"
@@ -483,7 +508,7 @@ function App() {
   const { cms, site, TOOLSPublic, flags } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
   const [legalBackView, setLegalBackView] = useState<NonLegalView>("landing");
-  const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>("split");
+  const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>(() => readInitialWorkspaceFeatureId());
   const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>("split");
   const [submitting, setSubmitting] = useState(false);
@@ -748,18 +773,6 @@ function App() {
     insufficientCreditsBarrierCreditSnapshotRef.current = null;
   }
 
-  const navigateToDashboardAfterOAuth = useCallback(() => {
-    const url = new URL(window.location.href);
-    url.pathname = "/workspace";
-    url.searchParams.delete("token");
-    const qs = url.searchParams.toString();
-    window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`);
-    setSelectedFeatureId("split");
-    setActiveSidebar("split");
-    setContentPanel("tool");
-    setView("web");
-  }, []);
-
   const workspaceFeatures = useMemo(
     () => buildWorkspaceFeaturesFromCms(language, cms, TOOLSPublic.disabledFeatures),
     [language, cms, TOOLSPublic.disabledFeatures],
@@ -825,7 +838,8 @@ function App() {
   }, [isAuthenticated, subscriptionLoading, subscriptionSummary, selectedFeatureId]);
   const shouldShowCookieNotice = isCookieConsentReady && !hasConsent;
   const trackedView = getTrackedViewName(view);
-  const trackedPath = getTrackedPath(view);
+  const trackedPath =
+    view === "web" ? workspacePathForFeature(selectedFeatureId) : getTrackedPath(view);
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
 
@@ -848,6 +862,21 @@ function App() {
     language,
     accessToken,
   });
+
+  /** GA4: SPA içinde /tools/<slug> dahil rota/sorgu değişiminde page_view. */
+  useEffect(() => {
+    if (!hasConsent || !isCookieConsentReady) {
+      return;
+    }
+    if (!getGaMeasurementId()) {
+      return;
+    }
+    initializeGA();
+    const tick = window.requestAnimationFrame(() => {
+      trackGAPageView(`${window.location.pathname}${window.location.search}`, document.title);
+    });
+    return () => window.cancelAnimationFrame(tick);
+  }, [hasConsent, isCookieConsentReady, view, trackedPath, language]);
 
   useErrorLogging({
     language,
@@ -879,6 +908,45 @@ function App() {
 
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
+
+  const navigateToDashboardAfterOAuth = useCallback(
+    (loggedInUser: AuthUser) => {
+      const raw =
+        typeof sessionStorage !== "undefined" ? sessionStorage.getItem(SESSION_POST_OAUTH_REDIRECT_KEY) : null;
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem(SESSION_POST_OAUTH_REDIRECT_KEY);
+      }
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("token");
+      const qs = url.searchParams.toString();
+
+      if (raw === SESSION_POST_OAUTH_ADMIN_VALUE && loggedInUser.role === "ADMIN") {
+        url.pathname = "/admin";
+        window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`);
+        setView("admin");
+        return;
+      }
+
+      if (raw === SESSION_POST_OAUTH_ADMIN_VALUE && loggedInUser.role !== "ADMIN") {
+        showToast(
+          "error",
+          language === "tr" ? "Erişim reddedildi" : "Access denied",
+          language === "tr"
+            ? "Bu hesap yönetici paneline erişemez."
+            : "This account is not authorized for the admin panel.",
+        );
+      }
+
+      url.pathname = workspacePathForFeature("split");
+      window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`);
+      setSelectedFeatureId("split");
+      setActiveSidebar("split");
+      setContentPanel("tool");
+      setView("web");
+    },
+    [language, showToast],
+  );
 
   useEffect(() => {
     if (view !== "web" || !isAuthenticated) {
@@ -1280,8 +1348,7 @@ function App() {
     if (path === "/fake-payment/success") {
       return;
     }
-    /** OAuth tamamlandıktan sonra view=web iken /login-success’ten /workspace’e geçişe izin ver. */
-    if (path === "/login-success" && view !== "web") {
+    if (path === "/login-success") {
       return;
     }
     if (view === "web" && (!isAuthenticated || isRestoring)) {
@@ -1290,13 +1357,25 @@ function App() {
     if (view === "admin" && (!isAuthenticated || isRestoring || user?.role !== "ADMIN")) {
       return;
     }
-    const next = view === "admin" ? "/admin" : getTrackedPath(view);
+    if (view === "admin_login" && isAuthenticated && !isRestoring) {
+      return;
+    }
+    let next: string;
+    if (view === "admin") {
+      next = "/admin";
+    } else if (view === "web") {
+      next = workspacePathForFeature(selectedFeatureId);
+    } else if (view === "admin_login") {
+      next = "/admin-login";
+    } else {
+      next = getTrackedPath(view);
+    }
     const current = path;
     const normalizedNext = next.replace(/\/$/, "") || "/";
     if (current !== normalizedNext) {
       const sp = new URLSearchParams(window.location.search);
       const keep = new URLSearchParams();
-      for (const key of ["payment", "oauth_error", "email_verified"] as const) {
+      for (const key of ["payment", "oauth_error", "email_verified", "lang"] as const) {
         const v = sp.get(key);
         if (v !== null) {
           keep.set(key, v);
@@ -1309,7 +1388,7 @@ function App() {
         `${next}${qs ? `?${qs}` : ""}${window.location.hash}`,
       );
     }
-  }, [view, isAuthenticated, isRestoring, user?.role]);
+  }, [view, isAuthenticated, isRestoring, user?.role, selectedFeatureId]);
 
   useEffect(() => {
     if (view !== "admin" || isRestoring || !isAuthenticated) {
@@ -1317,9 +1396,9 @@ function App() {
     }
     if (user?.role !== "ADMIN") {
       setView("web");
-      window.history.replaceState({}, "", "/workspace");
+      window.history.replaceState({}, "", workspacePathForFeature(selectedFeatureId));
     }
-  }, [view, isRestoring, isAuthenticated, user?.role]);
+  }, [view, isRestoring, isAuthenticated, user?.role, selectedFeatureId]);
 
   useEffect(() => {
     if (!isAuthenticated || isRestoring || !accessToken) {
@@ -1596,45 +1675,9 @@ function App() {
   }, [view]);
 
   /**
-   * Auto-open the conversion upgrade modal once after a FREE-plan user hits
-   * zero credits. `canAutoShowConversionModal` caps how often this fires.
-   */
-  useEffect(() => {
-    if (view !== "web" || !isAuthenticated || subscriptionLoading || !subscriptionSummary) {
-      return;
-    }
-    if (subscriptionSummary.currentPlan.name !== "FREE" || user?.role === "ADMIN") {
-      return;
-    }
-    if (paymentSummaryProduct != null || conversionPopupOpen) {
-      return;
-    }
-    if (!userBalance || userBalance.hasActiveSubscription) {
-      return;
-    }
-    if (userBalance.creditBalance > 0) {
-      return;
-    }
-    if (!canAutoShowConversionModal(Date.now())) {
-      return;
-    }
-    conversionModalShowSourceRef.current = "auto";
-    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
-  }, [
-    view,
-    isAuthenticated,
-    subscriptionLoading,
-    subscriptionSummary,
-    paymentSummaryProduct,
-    conversionPopupOpen,
-    user?.role,
-    userBalance,
-  ]);
-
-  /**
    * Completes redirect-based fake checkout: user lands on
    * `/fake-payment/success?sessionId=...`, we confirm server-side, refresh
-   * balance, then normalize the URL to `/workspace`.
+   * balance, then normalize the URL to `/tools/…`.
    */
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1659,7 +1702,7 @@ function App() {
         language === "tr" ? "Oturum bilgisi eksik" : "Missing session",
         language === "tr" ? "Geçersiz ödeme dönüş adresi." : "Invalid payment return URL.",
       );
-      window.history.replaceState({}, "", "/workspace");
+      window.history.replaceState({}, "", workspacePathForFeature("split"));
       return;
     }
     fakePaymentSuccessHandledRef.current = true;
@@ -1717,10 +1760,81 @@ function App() {
           error instanceof Error ? error.message : "",
         );
       } finally {
-        window.history.replaceState({}, "", "/workspace");
+        window.history.replaceState({}, "", workspacePathForFeature("split"));
       }
     })();
   }, [isAuthenticated, accessToken, isRestoring, language, refreshSession, refreshSubscriptionState, user]);
+
+  useEffect(() => {
+    if (view !== "web") {
+      return;
+    }
+    applyWorkspaceToolMeta(selectedFeatureId, language);
+  }, [view, selectedFeatureId, language]);
+
+  useEffect(() => {
+    if (view === "web") {
+      return;
+    }
+    resetWorkspaceHeadSeo();
+    document.title = "NB PDF PLARTFORM";
+  }, [view]);
+
+  useEffect(() => {
+    if (view !== "web") {
+      return;
+    }
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get("lang") !== language) {
+        u.searchParams.set("lang", language);
+        window.history.replaceState(
+          {},
+          "",
+          `${u.pathname}${u.search ? `?${u.searchParams.toString()}` : ""}${u.hash}`,
+        );
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [view, language, selectedFeatureId]);
+
+  useEffect(() => {
+    if (view !== "admin_login" || isRestoring || !isAuthenticated || !user) {
+      return;
+    }
+    if (user.role === "ADMIN") {
+      setView("admin");
+      window.history.replaceState({}, "", "/admin");
+      return;
+    }
+    showToast(
+      "error",
+      language === "tr" ? "Erişim reddedildi" : "Access denied",
+      language === "tr"
+        ? "Bu hesap yönetici paneline erişemez."
+        : "This account is not authorized for the admin panel.",
+    );
+    setView("web");
+    window.history.replaceState({}, "", workspacePathForFeature("split"));
+  }, [view, isRestoring, isAuthenticated, user, language]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+      const next = parseWorkspaceToolPath(window.location.pathname);
+      if (next) {
+        setSelectedFeatureId(next);
+        setActiveSidebar(next);
+        setContentPanel("tool");
+        setView("web");
+      }
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) {
@@ -2036,6 +2150,7 @@ function App() {
       view === "landing" ||
       view === "login" ||
       view === "register" ||
+      view === "admin_login" ||
       view === "forgot_password" ||
       view === "web"
     ) {
@@ -2320,7 +2435,7 @@ function App() {
   function handleDashboardLogoClick() {
     if (view === "admin") {
       setView("web");
-      window.history.replaceState({}, "", "/workspace");
+      window.history.replaceState({}, "", workspacePathForFeature("split"));
       return;
     }
     setView("landing");
@@ -2382,10 +2497,36 @@ function App() {
       if (loggedInUser.preferredLanguage && loggedInUser.preferredLanguage !== language) {
         setLanguage(loggedInUser.preferredLanguage);
       }
+
+      if (view === "admin_login") {
+        if (loggedInUser.role === "ADMIN") {
+          setSelectedFeatureId("split");
+          setActiveSidebar("split");
+          setContentPanel("tool");
+          setView("admin");
+          window.history.replaceState({}, "", "/admin");
+          return;
+        }
+        showToast(
+          "error",
+          language === "tr" ? "Erişim reddedildi" : "Access denied",
+          language === "tr"
+            ? "Bu hesap yönetici paneline erişemez."
+            : "This account is not authorized for the admin panel.",
+        );
+        setSelectedFeatureId("split");
+        setActiveSidebar("split");
+        setContentPanel("tool");
+        setView("web");
+        window.history.replaceState({}, "", workspacePathForFeature("split"));
+        return;
+      }
+
       setSelectedFeatureId("split");
       setActiveSidebar("split");
       setContentPanel("tool");
       setView("web");
+      window.history.replaceState({}, "", workspacePathForFeature("split"));
     } catch (error) {
       const fallback =
         language === "tr" ? "Kimlik doğrulama işlemi başarısız oldu." : "Authentication failed.";
@@ -2960,6 +3101,49 @@ function App() {
     );
   }
 
+  if (view === "admin_login") {
+    return (
+      <>
+        <SystemNotificationBanner language={language} />
+        <AuthPage
+          mode="login"
+          purpose="admin"
+          language={language}
+          submitting={authSubmitting || isRestoring}
+          serverError={authError}
+          registrationSuccessBanner={null}
+          onDismissRegistrationSuccess={undefined}
+          onBack={() => {
+            setAuthError("");
+            setView("landing");
+            window.history.replaceState({}, "", "/");
+          }}
+          onModeChange={() => {}}
+          onSubmit={handleAuthSubmit}
+          onForgotPassword={() => {
+            setAuthError("");
+            setView("forgot_password");
+          }}
+          onOpenTerms={() => openLegalPage("terms")}
+          onOpenPrivacy={() => openLegalPage("privacy")}
+          onOpenKvkk={() => openLegalPage("kvkk")}
+        />
+        {toast ? (
+          <div className={`toast toast--${toast.type}`}>
+            <div className="toast__title">{toast.title}</div>
+            <div className="toast__detail">{toast.detail}</div>
+          </div>
+        ) : null}
+        <CookieNotice
+          language={language}
+          visible={shouldShowCookieNotice}
+          onAccept={acceptConsent}
+          onOpenPrivacy={() => openLegalPage("privacy")}
+        />
+      </>
+    );
+  }
+
   if (view === "login" || view === "register") {
     return (
       <>
@@ -3117,7 +3301,7 @@ function App() {
           userEmail={user?.email ?? "admin"}
           onExit={() => {
             setView("web");
-            window.history.replaceState({}, "", "/workspace");
+            window.history.replaceState({}, "", workspacePathForFeature("split"));
           }}
           onLogout={() => void handleLogout()}
         />
@@ -3348,11 +3532,7 @@ function App() {
         onLogout={() => void handleLogout()}
         onUpgradeClick={limitsizProActive ? undefined : () => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)}
         onOpenCreditsPanel={user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined}
-        showAdminEntry={user?.role === "ADMIN"}
-        onOpenAdmin={() => {
-          setView("admin");
-          window.history.replaceState({}, "", "/admin");
-        }}
+        showAdminEntry={false}
       />
       {workspaceBanner.enabled ? (
         <div className="border-b border-cyan-500/30 bg-cyan-950/50 px-4 py-2 text-center text-xs font-medium text-cyan-100 md:text-sm">
@@ -3485,8 +3665,8 @@ function App() {
               <section className="workspace-card relative overflow-x-hidden">
           <div className="workspace-card__header">
             <div>
-              <p className="section-kicker">{selectedFeature.title}</p>
-              <h2>{selectedFeature.description}</h2>
+              <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">{selectedFeature.title}</h1>
+              <h2 className="mt-2 text-base font-normal leading-relaxed text-nb-muted md:text-lg">{selectedFeature.description}</h2>
             </div>
           </div>
 
