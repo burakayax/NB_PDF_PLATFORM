@@ -15,23 +15,28 @@ export function MaintenanceTabTitle() {
 }
 
 /**
- * Full-screen maintenance experience (no navigation, auth, or admin hints).
+ * Full-screen maintenance layer — opaque, above all app chrome (z-[9999]).
+ * No navigation, auth, or admin hints.
  */
 export function MaintenancePage() {
   return (
     <>
       <MaintenanceTabTitle />
-      <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-[#05080f] px-6 py-16 font-sans text-slate-100 antialiased">
+      <div
+        className="fixed inset-0 z-[9999] flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-[#05080f] px-6 py-16 font-sans text-slate-100 antialiased shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
+        role="status"
+        aria-live="polite"
+      >
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
+          className="pointer-events-none absolute inset-0 opacity-90"
           aria-hidden
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,211,238,0.22), transparent 55%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(99,102,241,0.12), transparent 50%)",
+              "radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34,211,238,0.16), transparent 55%), radial-gradient(ellipse 60% 40% at 100% 50%, rgba(99,102,241,0.09), transparent 50%)",
           }}
         />
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
           aria-hidden
         />
 

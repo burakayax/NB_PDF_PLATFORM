@@ -20,6 +20,7 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { MaintenancePage, MaintenanceTabTitle } from "./components/common/MaintenancePage";
+import { RuntimeBootstrapSplash } from "./components/common/RuntimeBootstrapSplash";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
@@ -96,6 +97,7 @@ import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
 import { SESSION_POST_OAUTH_ADMIN_VALUE, SESSION_POST_OAUTH_REDIRECT_KEY } from "./lib/oauthRedirect";
+import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
 import { applyWorkspaceToolMeta, resetWorkspaceHeadSeo } from "./lib/toolPageMeta";
 import { getGaMeasurementId, initializeGA, trackGAPageView } from "./lib/analytics";
@@ -519,7 +521,7 @@ function App() {
     refreshSession,
   } = useAuthSession();
   const { hasConsent, isReady: isCookieConsentReady, acceptConsent } = useCookieConsent();
-  const { cms, site, TOOLSPublic, flags } = useSettings();
+  const { cms, site, TOOLSPublic, flags, runtimeHydrated } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
   const [legalBackView, setLegalBackView] = useState<NonLegalView>("landing");
   const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>(() => readInitialWorkspaceFeatureId());
@@ -3040,6 +3042,39 @@ function App() {
   }
 
   const pathname = typeof window !== "undefined" ? window.location.pathname.replace(/\/$/, "") || "/" : "/";
+  const bootstrapFastRoutes =
+    pathname === "/login-success" ||
+    pathname === "/login-error" ||
+    pathname.startsWith("/fake-payment");
+
+  /** Until runtime JSON is known, avoid mounting landing/workspace (prevents maintenance flicker on reload). */
+  if (!bootstrapFastRoutes && !runtimeHydrated) {
+    if (user?.role !== "ADMIN" && readMaintenanceHint() === true) {
+      return (
+        <>
+          <MaintenancePage />
+          <CookieNotice
+            language={language}
+            visible={shouldShowCookieNotice}
+            onAccept={acceptConsent}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+          />
+        </>
+      );
+    }
+    return (
+      <>
+        <RuntimeBootstrapSplash />
+        <CookieNotice
+          language={language}
+          visible={shouldShowCookieNotice}
+          onAccept={acceptConsent}
+          onOpenPrivacy={() => openLegalPage("privacy")}
+        />
+      </>
+    );
+  }
+
   const isLoginSuccessRoute = pathname === "/login-success";
 
   if (isLoginSuccessRoute) {
@@ -3067,7 +3102,7 @@ function App() {
       return (
         <>
           <MaintenanceTabTitle />
-          <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
+          <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-6 py-12 font-sans text-nb-text antialiased">
             <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">NB PDF PLARTFORM</p>
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Oturum doğrulanıyor</h1>
