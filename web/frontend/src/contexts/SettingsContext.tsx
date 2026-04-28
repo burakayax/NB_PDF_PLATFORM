@@ -6,6 +6,7 @@ import {
   type SystemNotificationsPayload,
 } from "../api/public";
 import { isCmsPreviewActive, readCmsPreviewDraft } from "../lib/cmsPreview";
+import { persistMaintenanceHint } from "../lib/maintenanceHint";
 import { RUNTIME_REFRESH_BROADCAST, RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
 
 const defaultNotifications: SystemNotificationsPayload = {
@@ -55,6 +56,8 @@ type SettingsContextValue = PublicRuntimePayload & {
   error: string | null;
   revision: number;
   refresh: () => Promise<void>;
+  /** First successful fetchPublicRuntime completion (any revision). Until true, maintenance flag is not authoritative for UI gating. */
+  runtimeHydrated: boolean;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -64,6 +67,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
+  const [runtimeHydrated, setRuntimeHydrated] = useState(false);
   const initialFetchCompletedRef = useRef(false);
 
   const load = useCallback(async () => {
@@ -75,10 +79,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       const data = await fetchPublicRuntime();
       setPayload(data);
+      persistMaintenanceHint(data.flags.maintenanceMode === true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Runtime config failed");
       setPayload(defaultPayload);
     } finally {
+      setRuntimeHydrated(true);
       if (showBlockingSpinner) {
         setLoading(false);
         initialFetchCompletedRef.current = true;
@@ -140,8 +146,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       error,
       revision,
       refresh,
+      runtimeHydrated,
     };
-  }, [payload, loading, error, revision, refresh]);
+  }, [payload, loading, error, revision, refresh, runtimeHydrated]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }
