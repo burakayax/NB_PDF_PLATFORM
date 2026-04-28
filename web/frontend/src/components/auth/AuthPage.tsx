@@ -6,6 +6,10 @@ import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
 import type { Language } from "../../i18n/landing";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
+import {
+  SESSION_POST_OAUTH_ADMIN_VALUE,
+  SESSION_POST_OAUTH_REDIRECT_KEY,
+} from "../../lib/oauthRedirect";
 
 type AuthMode = "login" | "register";
 
@@ -20,6 +24,8 @@ type AuthSubmitPayload = {
 
 type AuthPageProps = {
   mode: AuthMode;
+  /** Admin-only login route (`/admin-login`): hides registration UI and tags OAuth redirect. */
+  purpose?: "default" | "admin";
   language: Language;
   submitting: boolean;
   serverError: string;
@@ -63,6 +69,7 @@ function GoogleMark() {
 
 export function AuthPage({
   mode,
+  purpose = "default",
   language,
   submitting,
   serverError,
@@ -76,6 +83,7 @@ export function AuthPage({
   onOpenPrivacy,
   onOpenKvkk,
 }: AuthPageProps) {
+  const adminPortal = purpose === "admin";
   const copy = useMemo(() => getAuthCopy(language, mode), [language, mode]);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -194,11 +202,31 @@ export function AuthPage({
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB PDF PLARTFORM</p>
-          <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">{copy.screen.title}</h1>
-          <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">{copy.screen.description}</p>
+          {adminPortal ? (
+            <>
+              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
+                {language === "tr" ? "Yönetici girişi" : "Administrator sign-in"}
+              </h1>
+              <p className="mx-auto mt-3 max-w-[380px] text-center text-sm leading-relaxed text-nb-muted">
+                {language === "tr"
+                  ? "Bu sayfa yalnızca yetkili yönetici hesapları içindir. Oturum açtıktan sonra yönetim paneline yönlendirilirsiniz."
+                  : "This page is for authorized administrator accounts only. After signing in you will be taken to the admin panel."}
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">{copy.screen.title}</h1>
+              <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">{copy.screen.description}</p>
+            </>
+          )}
 
           <a
             href={getGoogleOAuthStartUrl(language)}
+            onClick={() => {
+              if (adminPortal) {
+                sessionStorage.setItem(SESSION_POST_OAUTH_REDIRECT_KEY, SESSION_POST_OAUTH_ADMIN_VALUE);
+              }
+            }}
             className="mt-8 flex min-h-[3.25rem] w-full items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-white/[0.06] px-4 text-base font-semibold text-white shadow-sm transition duration-200 hover:border-white/20 hover:bg-white/[0.09]"
           >
             <GoogleMark />
@@ -214,6 +242,7 @@ export function AuthPage({
             </div>
           </div>
 
+          {adminPortal ? null : (
           <div className="flex rounded-xl border border-white/[0.08] bg-nb-bg-soft/50 p-1">
             <button
               type="button"
@@ -238,6 +267,7 @@ export function AuthPage({
               {getAuthCopy(language, "register").screen.submit}
             </button>
           </div>
+          )}
 
           {mode === "login" && urlEmailVerifiedNotice ? (
             <div className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.12] px-4 py-3 text-sm text-emerald-50">
@@ -402,6 +432,7 @@ export function AuthPage({
             </button>
           </form>
 
+          {!adminPortal ? (
           <p className="mt-8 text-center text-sm text-nb-muted">
             {copy.screen.alternatePrompt}{" "}
             <button
@@ -412,6 +443,7 @@ export function AuthPage({
               {copy.screen.alternateAction}
             </button>
           </p>
+          ) : null}
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
             <button type="button" onClick={onOpenTerms} className="transition duration-200 hover:text-nb-text">
