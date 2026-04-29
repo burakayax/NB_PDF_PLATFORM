@@ -186,6 +186,7 @@ export default defineConfig(({ command, mode }) => {
   const disableObfuscation = env.VITE_DISABLE_OBFUSCATION === "true";
 
   return {
+    envPrefix: ["VITE_", "NEXT_PUBLIC_"],
     plugins: [
       react(),
       tailwindcss(),

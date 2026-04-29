@@ -8,6 +8,16 @@ function detectInitialLanguage(): Language {
     return "en";
   }
 
+  try {
+    const url = new URL(window.location.href);
+    const fromQuery = url.searchParams.get("lang");
+    if (fromQuery === "tr" || fromQuery === "en") {
+      return fromQuery;
+    }
+  } catch {
+    /* ignore */
+  }
+
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored === "tr" || stored === "en") {
     return stored;

@@ -1,6 +1,16 @@
 import { envHttpUrlIsLoopback, isNonLocalDeployedHost } from "../lib/runtimeApiOrigin";
 
 /**
+ * SaaS (Express) API tabanı: önce `NEXT_PUBLIC_API_URL` (.env.local / üretim),
+ * yoksa `VITE_SAAS_API_BASE` (geriye dönük uyumluluk).
+ */
+function readSaasApiBaseFromEnv(): string {
+  const next = typeof import.meta.env.NEXT_PUBLIC_API_URL === "string" ? import.meta.env.NEXT_PUBLIC_API_URL.trim() : "";
+  const vite = typeof import.meta.env.VITE_SAAS_API_BASE === "string" ? import.meta.env.VITE_SAAS_API_BASE.trim() : "";
+  return next || vite;
+}
+
+/**
  * Kimlik ve SaaS API (Express, varsayılan :4000) kök adresi.
  * - Geliştirmede `http://localhost:4000` / `127.0.0.1:4000` gibi yerel adresler yok sayılır → göreli `/api/...` (Vite proxy).
  *   Aksi halde tarayıcı doğrudan :4000’e gider; UI API’den önce açılınca sıkça ERR_CONNECTION_REFUSED olur.
@@ -22,8 +32,7 @@ function isLocalhostSaasDevUrl(trimmed: string): boolean {
 }
 
 export function getSaasApiBase(): string {
-  const raw = import.meta.env.VITE_SAAS_API_BASE;
-  const trimmed = typeof raw === "string" ? raw.trim() : "";
+  const trimmed = readSaasApiBaseFromEnv();
 
   if (import.meta.env.DEV && (trimmed === "" || isLocalhostSaasDevUrl(trimmed))) {
     return "";

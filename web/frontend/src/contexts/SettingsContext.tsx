@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   fetchPublicRuntime,
   type PublicPricingPayload,
@@ -6,7 +6,8 @@ import {
   type SystemNotificationsPayload,
 } from "../api/public";
 import { isCmsPreviewActive, readCmsPreviewDraft } from "../lib/cmsPreview";
-import { RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
+import { persistMaintenanceHint } from "../lib/maintenanceHint";
+import { RUNTIME_REFRESH_BROADCAST, RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
 
 const defaultNotifications: SystemNotificationsPayload = {
   enabled: false,
@@ -55,6 +56,8 @@ type SettingsContextValue = PublicRuntimePayload & {
   error: string | null;
   revision: number;
   refresh: () => Promise<void>;
+  /** First successful fetchPublicRuntime completion (any revision). Until true, maintenance flag is not authoritative for UI gating. */
+  runtimeHydrated: boolean;
 };
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -64,18 +67,28 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
+  const [runtimeHydrated, setRuntimeHydrated] = useState(false);
+  const initialFetchCompletedRef = useRef(false);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    const showBlockingSpinner = !initialFetchCompletedRef.current;
+    if (showBlockingSpinner) {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await fetchPublicRuntime();
       setPayload(data);
+      persistMaintenanceHint(data.flags.maintenanceMode === true);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Runtime config failed");
       setPayload(defaultPayload);
     } finally {
-      setLoading(false);
+      setRuntimeHydrated(true);
+      if (showBlockingSpinner) {
+        setLoading(false);
+        initialFetchCompletedRef.current = true;
+      }
     }
   }, []);
 
@@ -84,9 +97,34 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [load, revision]);
 
   useEffect(() => {
-    const onRefresh = () => setRevision((r) => r + 1);
-    window.addEventListener(RUNTIME_REFRESH_EVENT, onRefresh);
-    return () => window.removeEventListener(RUNTIME_REFRESH_EVENT, onRefresh);
+    const bumpRevision = () => setRevision((r) => r + 1);
+
+    window.addEventListener(RUNTIME_REFRESH_EVENT, bumpRevision);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel(RUNTIME_REFRESH_BROADCAST);
+      bc.onmessage = bumpRevision;
+    } catch {
+      /* unsupported */
+    }
+
+    let visibilityTimer: number | undefined;
+    const onVisibility = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+      window.clearTimeout(visibilityTimer);
+      visibilityTimer = window.setTimeout(() => bumpRevision(), 750);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      window.removeEventListener(RUNTIME_REFRESH_EVENT, bumpRevision);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearTimeout(visibilityTimer);
+      bc?.close();
+    };
   }, []);
 
   const refresh = useCallback(async () => {
@@ -108,8 +146,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       error,
       revision,
       refresh,
+      runtimeHydrated,
     };
-  }, [payload, loading, error, revision, refresh]);
+  }, [payload, loading, error, revision, refresh, runtimeHydrated]);
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
 }

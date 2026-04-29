@@ -71,9 +71,23 @@ export type PublicRuntimePayload = {
 
 export async function fetchPublicRuntime(): Promise<PublicRuntimePayload> {
   const base = getSaasApiBase().replace(/\/$/, "");
-  const r = await fetch(`${base}/api/public/runtime`, { credentials: "include" });
-  if (!r.ok) {
-    throw new Error(await r.text());
+  /** Bypass intermediary caches (CDN / SW) so maintenance toggles apply immediately after notifyRuntimeRefresh. */
+  const cacheBust = `_=${Date.now()}`;
+  const r = await fetch(`${base}/api/public/runtime?${cacheBust}`, {
+    credentials: "include",
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
+  });
+  const text = await r.text();
+  let data: PublicRuntimePayload;
+  try {
+    data = JSON.parse(text) as PublicRuntimePayload;
+  } catch {
+    throw new Error(text || "Runtime config failed");
   }
-  return r.json() as Promise<PublicRuntimePayload>;
+  /** Maintenance returns 503 + JSON so crawlers see Service Unavailable while the SPA still parses flags. */
+  if (!r.ok && r.status !== 503) {
+    throw new Error(text || "Runtime config failed");
+  }
+  return data;
 }

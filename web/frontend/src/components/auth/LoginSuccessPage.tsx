@@ -6,7 +6,7 @@ type Phase = "loading" | "redirecting" | "error";
 type LoginSuccessPageProps = {
   completeOAuthLogin: (token: string) => Promise<AuthUser>;
   clearSession: () => void;
-  onNavigateToDashboard: () => void;
+  onNavigateToDashboard: (user: AuthUser) => void;
 };
 
 /**
@@ -44,7 +44,7 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
           console.info("[LoginSuccessPage] session stored in localStorage, redirecting", { userId: user.id });
         }
         setPhase("redirecting");
-        onNavigateToDashboard();
+        onNavigateToDashboard(user);
       })
       .catch((error: unknown) => {
         if (cancelled) {

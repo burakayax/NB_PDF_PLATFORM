@@ -1,5 +1,5 @@
 import type { Language } from "../i18n/landing";
-import { getSaasApiBase } from "./saasBase";
+import { buildSaasApiUrl, saasFetch } from "./saasHttp";
 
 /** useAuthSession ile aynı anahtar; yenileme sonrası güncel jetonu paylaşmak için dışa açık. */
 export const AUTH_ACCESS_TOKEN_STORAGE_KEY = "nbpdf-access-token";
@@ -55,35 +55,6 @@ export type RegisterResponse = {
   verificationRequired: true;
   user: AuthUser;
 };
-
-function authNetworkFailureMessage(): string {
-  return import.meta.env.DEV
-    ? "Kimlik API (port 4000) yanıt vermiyor. Proje kökünde veya `web/api` içinde API’yi başlatın. Geliştirmede `web/frontend/.env` içinde VITE_SAAS_API_BASE’i boş bırakın (Vite proxy kullanılır)."
-    : "API sunucusuna ulaşılamıyor. VITE_SAAS_API_BASE ve dağıtım adresini kontrol edin.";
-}
-
-async function authFetch(input: string, init?: RequestInit): Promise<Response> {
-  const attempts = import.meta.env.DEV ? 10 : 1;
-  const delayMs = 320;
-  let last: unknown;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fetch(input, init);
-    } catch (e) {
-      last = e;
-      const retryable = e instanceof TypeError && import.meta.env.DEV && i < attempts - 1;
-      if (retryable) {
-        await new Promise((r) => setTimeout(r, delayMs));
-        continue;
-      }
-      if (e instanceof TypeError) {
-        throw new Error(authNetworkFailureMessage());
-      }
-      throw e;
-    }
-  }
-  throw last instanceof Error ? last : new Error(authNetworkFailureMessage());
-}
 
 function messageFromErrorPayload(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") {
@@ -145,11 +116,9 @@ export type RegisterAuthPayload = {
 type RegisterPayload = RegisterAuthPayload;
 
 async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<string, string>): Promise<T | null> {
-  const url = `${getSaasApiBase()}/api/auth${path}`;
-  const response = await authFetch(url, {
+  const response = await saasFetch(`/api/auth${path}`, {
     method: "POST",
     headers: body ? { "Content-Type": "application/json" } : undefined,
-    credentials: "include",
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -209,10 +178,8 @@ export async function loginAuthUser(email: string, password: string) {
  * Çerez yoksa veya oturum geçersizse 401 beklenir; bu normaldir (misafir veya süresi dolmuş oturum) — konsola uyarı yazılmaz.
  */
 export async function refreshAuthSession(): Promise<AuthResponse | null> {
-  const url = `${getSaasApiBase()}/api/auth/refresh`;
-  const response = await authFetch(url, {
+  const response = await saasFetch(`/api/auth/refresh`, {
     method: "POST",
-    credentials: "include",
   });
   if (response.status === 401) {
     return null;
@@ -229,11 +196,10 @@ export async function fetchAuthenticatedUser(
   accessToken: string,
   options?: { silentUnauthorized?: boolean },
 ) {
-  const response = await authFetch(`${getSaasApiBase()}/api/auth/me`, {
+  const response = await saasFetch(`/api/auth/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
-    credentials: "include",
   });
 
   if (!response.ok && options?.silentUnauthorized && response.status === 401) {
@@ -247,7 +213,7 @@ export async function fetchAuthenticatedUser(
 
 export function getGoogleOAuthStartUrl(language: Language) {
   const lang = language === "tr" ? "tr" : "en";
-  return `${getSaasApiBase()}/api/auth/google?lang=${lang}`;
+  return buildSaasApiUrl(`/api/auth/google?lang=${encodeURIComponent(lang)}`);
 }
 
 export async function updateAuthProfile(accessToken: string, body: UpdateProfileInput) {
@@ -271,13 +237,12 @@ export async function updateAuthProfile(accessToken: string, body: UpdateProfile
     payloadBody.country = body.country.trim();
   }
 
-  const response = await authFetch(`${getSaasApiBase()}/api/auth/profile`, {
+  const response = await saasFetch(`/api/auth/profile`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(payloadBody),
   });
 
@@ -287,13 +252,12 @@ export async function updateAuthProfile(accessToken: string, body: UpdateProfile
 }
 
 export async function changeAuthPassword(accessToken: string, body: { currentPassword: string; newPassword: string }) {
-  const response = await authFetch(`${getSaasApiBase()}/api/auth/change-password`, {
+  const response = await saasFetch(`/api/auth/change-password`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify({
       current_password: body.currentPassword,
       new_password: body.newPassword,
@@ -306,13 +270,12 @@ export async function changeAuthPassword(accessToken: string, body: { currentPas
 }
 
 export async function setInitialAuthPassword(accessToken: string, newPassword: string) {
-  const response = await authFetch(`${getSaasApiBase()}/api/auth/set-password`, {
+  const response = await saasFetch(`/api/auth/set-password`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify({
       new_password: newPassword,
     }),
@@ -324,13 +287,12 @@ export async function setInitialAuthPassword(accessToken: string, newPassword: s
 }
 
 export async function updateAuthPreferredLanguage(accessToken: string, preferredLanguage: Language) {
-  const response = await authFetch(`${getSaasApiBase()}/api/auth/preferences/language`, {
+  const response = await saasFetch(`/api/auth/preferences/language`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify({ preferredLanguage }),
   });
 
@@ -340,11 +302,9 @@ export async function updateAuthPreferredLanguage(accessToken: string, preferred
 }
 
 export async function requestPasswordReset(email: string, preferredLanguage: Language): Promise<{ message: string }> {
-  const url = `${getSaasApiBase()}/api/auth/forgot-password/request`;
-  const response = await authFetch(url, {
+  const response = await saasFetch(`/api/auth/forgot-password/request`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ email: email.trim().toLowerCase(), preferredLanguage }),
   });
   await ensureOk(response, "Could not send reset code.");
@@ -352,11 +312,9 @@ export async function requestPasswordReset(email: string, preferredLanguage: Lan
 }
 
 export async function verifyPasswordResetCodeApi(email: string, code: string): Promise<{ resetToken: string }> {
-  const url = `${getSaasApiBase()}/api/auth/forgot-password/verify-code`;
-  const response = await authFetch(url, {
+  const response = await saasFetch(`/api/auth/forgot-password/verify-code`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() }),
   });
   await ensureOk(response, "Code verification failed.");
@@ -364,11 +322,9 @@ export async function verifyPasswordResetCodeApi(email: string, code: string): P
 }
 
 export async function completePasswordResetApi(resetToken: string, newPassword: string): Promise<{ message: string }> {
-  const url = `${getSaasApiBase()}/api/auth/forgot-password/reset`;
-  const response = await authFetch(url, {
+  const response = await saasFetch(`/api/auth/forgot-password/reset`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include",
     body: JSON.stringify({ resetToken, newPassword }),
   });
   await ensureOk(response, "Password could not be reset.");

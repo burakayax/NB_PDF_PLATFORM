@@ -47,6 +47,11 @@ const rawEnvSchema = z
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
     EMAIL_VERIFICATION_TTL_HOURS: z.coerce.number().int().positive().default(24),
+    /**
+     * İsteğe bağlı çerez Domain (çoğu zaman BOŞ bırakın = host-only).
+     * SPA farklı alanda (Vercel) API başka alanda (Render) ise `.frontend.app` yazmak çerezin reddine yol açar — OAuth state/session için kullanılmamalı.
+     * Yalnızca API ve SPA ortak üst alan paylaşıyorsa (ör. `.yourcompany.com`) kullanın ve APP_BASE_URL hostname ile uyumlu olduğundan emin olun.
+     */
     COOKIE_DOMAIN: z.string().optional(),
     /**
      * SMTP_USER / SMTP_PASS boşken Nodemailer kimlik doğrulaması olarak kullanılır.
@@ -147,6 +152,9 @@ const rawEnvSchema = z
      * Aksi halde dev ortamda varsayılan sahte (anında onay) akışı kullanılır.
      */
     CREDIT_CHECKOUT_IYZICO_IN_DEV: z.enum(["true", "false"]).optional().default("false"),
+    /** Yeni kayıt (e-posta doğrulaması sonrası) ve Google ile ilk kayıtta verilen hoş geldin kredisi aralığı (dahil). */
+    WELCOME_CREDITS_MIN: z.coerce.number().int().min(0).max(500).default(5),
+    WELCOME_CREDITS_MAX: z.coerce.number().int().min(0).max(500).default(10),
   })
   .superRefine((data, ctx) => {
     const smtpOk = Boolean(data.SMTP_USER && data.SMTP_PASS);
@@ -159,9 +167,19 @@ const rawEnvSchema = z
         path: ["EMAIL_USER"],
       });
     }
+    if (data.WELCOME_CREDITS_MIN > data.WELCOME_CREDITS_MAX) {
+      ctx.addIssue({
+        code: "custom",
+        message: "WELCOME_CREDITS_MIN must be less than or equal to WELCOME_CREDITS_MAX.",
+        path: ["WELCOME_CREDITS_MIN"],
+      });
+    }
   });
 
 const raw = rawEnvSchema.parse(process.env);
+
+const welcomeCreditsMin = Math.min(raw.WELCOME_CREDITS_MIN, raw.WELCOME_CREDITS_MAX);
+const welcomeCreditsMax = Math.max(raw.WELCOME_CREDITS_MIN, raw.WELCOME_CREDITS_MAX);
 
 const iyzicoUriMerged = raw.IYZICO_URI?.trim() || raw.IYZICO_BASE_URL?.trim() || "";
 
@@ -192,6 +210,8 @@ const paymentCallbackBase = /^https?:\/\/.+/i.test(paymentCallbackRaw)
 
 export const env = {
   ...raw,
+  welcomeCreditsMin,
+  welcomeCreditsMax,
   /** Normalized API origin (from raw). */
   APP_BASE_URL: raw.APP_BASE_URL.trim().replace(/\/$/, ""),
   IYZICO_URI: iyzicoUriMerged,
