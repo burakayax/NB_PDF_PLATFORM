@@ -172,11 +172,14 @@ async def merge_pdfs(
 
 
 @router.get("/jobs/{job_id}")
+@limiter.exempt
 def job_status(job_id: str, _token: Annotated[str, Depends(extract_bearer_header_only)]):
+    """İstemci sık aralıklarla durum sorar; @limiter.exempt ile genel dakikalık kota merge akışını kesmez."""
     return get_job_status(job_id)
 
 
 @router.post("/jobs/{job_id}/cancel")
+@limiter.exempt
 async def cancel_merge_job(
     job_id: str,
     _token: Annotated[str, Depends(extract_bearer_header_only)],
@@ -191,6 +194,7 @@ async def cancel_merge_job(
 
 
 @router.get("/jobs/{job_id}/download")
+@limiter.exempt
 async def download_job_output(
     job_id: str,
     background_tasks: BackgroundTasks,
@@ -213,13 +217,19 @@ async def download_job_output(
 
 
 @router.post("/inspect-pdf")
+@limiter.exempt
 async def inspect_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
     # Inspection is a free read-only call — no entitlement charge.
+    logger.info(
+        "inspect_pdf incoming filename=%s bytes_hint=n/a",
+        file.filename,
+    )
     await saas_session_ok(token)
+    logger.info("inspect_pdf saas_session_ok done filename=%s", file.filename)
 
     workdir = create_workdir()
     try:

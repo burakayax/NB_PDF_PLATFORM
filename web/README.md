@@ -34,23 +34,15 @@ Bu servis varsayılan olarak `http://localhost:8000` adresinde açılır.
 2. Paketleri yükle:
    `npm install`
 3. Ortam dosyasını oluştur:
-   `.env.example` dosyasını `.env` olarak kopyala
+   `.env.example` dosyasını `.env` olarak kopyala (varsayılan `DATABASE_URL=file:./dev.db` — ek kurulum gerekmez).
 4. Gerekirse `.env` içindeki değerleri düzenle:
    - `PORT=4000`
    - `FRONTEND_ORIGIN=http://localhost:5173`
    - `DATABASE_URL="file:./dev.db"`
-   - `JWT_ACCESS_SECRET=...`
-   - `JWT_REFRESH_SECRET=...`
-   - `EMAIL_VERIFICATION_TTL_HOURS=24`
    - `APP_BASE_URL=http://localhost:4000`
-   - `SMTP_HOST=smtp.gmail.com`
-   - `SMTP_PORT=587`
-   - `SMTP_SECURE=false`
-   - `SMTP_USER=...`
-   - `SMTP_PASS=...`
-   - `SMTP_FROM_EMAIL=...`
-   - `SMTP_FROM_NAME=NB PDF PLARTFORM`
-   - `ADMIN_EMAIL=admin@example.com` (kendi yönetici gelen kutunuz)
+   - `PAYMENT_CALLBACK_BASE_URL=http://localhost:4000`
+   - `JWT_ACCESS_SECRET=...` ve `JWT_REFRESH_SECRET=...` (en az 32 karakter)
+   - SMTP ve `ADMIN_EMAIL` (örnekler `.env.example` içinde)
 5. Prisma istemcisini üret:
    `npm run prisma:generate`
 6. Veritabanını hazırla:
@@ -90,8 +82,8 @@ Arayüz varsayılan olarak `http://localhost:5173` adresinde açılır.
 
 ## Frontend ortam değişkenleri
 
-- `VITE_API_BASE=http://localhost:8000`
-- `VITE_SAAS_API_BASE=http://localhost:4000`
+- `VITE_API_BASE=http://127.0.0.1:8000` — FastAPI PDF servisi (geliştirmede `localhost` yerine `127.0.0.1` önerilir).
+- SaaS/Kimlik API istekleri Vite proxy ile `127.0.0.1:4000` üzerinden gider; `NEXT_PUBLIC_API_URL` ve `VITE_SAAS_API_BASE` yerelde boş bırakın (bkz. `.env.example`).
 
 ## Auth sistemi özeti
 
@@ -166,4 +158,4 @@ Not:
 - `backend` servisi mevcut `src/pdf_engine.py` dosyasını yeniden kullanır.
 - `Word -> PDF` ve `Excel -> PDF` web sunucusunda en iyi sonucu Windows + Office kurulu ortamda verir.
 - `PDF -> Word` tarafında yalnızca düzenlenebilir yapıyı korumaya çalışan dönüşüm aktif tutuldu.
-- `api` servisi şu anda yerel geliştirme için SQLite kullanır. Üretim ortamında PostgreSQL'e geçilmesi önerilir.
+- `api` servisi SQLite kullanır (`DATABASE_URL=file:./dev.db`).

@@ -28,9 +28,58 @@ from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
+# Node SaaS API (Express :4000). Açık zaman aşımı + bağlantı süresi — Windows’ta sonsuz beklemeyi önler.
+_SAAS_HTTP_TIMEOUT = httpx.Timeout(30.0, connect=5.0, read=25.0)
+_SAAS_QUICK_GET_TIMEOUT = httpx.Timeout(15.0, connect=3.0, read=10.0)
+
+
+def _is_production_like_environment() -> bool:
+    """Hosted / prod — ``saas_session_ok`` bypass must NEVER run (SaaS revenue / auth)."""
+    vercel = os.getenv("VERCEL", "").strip().lower()
+    if vercel in ("1", "true", "yes"):
+        return True
+    env = (os.getenv("ENV") or os.getenv("ENVIRONMENT") or "").strip().lower()
+    if env == "production":
+        return True
+    node_env = os.getenv("NODE_ENV", "").strip().lower()
+    if node_env == "production":
+        return True
+    railway = os.getenv("RAILWAY_ENVIRONMENT", "").strip().lower()
+    if railway == "production":
+        return True
+    return False
+
+
+def _saas_session_ok_dev_bypass_enabled() -> bool:
+    """Yerel geliştirme: Node'a GET /api/subscription/status gitmeden inspect devam eder.
+
+    Üretimde (Vercel vb.) veya ``NB_PDF_FORCE_SAAS_SESSION`` ile asla aktif olmaz.
+    """
+    if _is_production_like_environment():
+        return False
+    force = os.getenv("NB_PDF_FORCE_SAAS_SESSION", "").strip().lower()
+    if force in ("1", "true", "yes"):
+        return False
+    env = (os.getenv("ENV") or os.getenv("ENVIRONMENT") or "").strip().lower()
+    if env == "development":
+        return True
+    debug = os.getenv("DEBUG", "").strip().lower()
+    if debug in ("1", "true", "yes"):
+        return True
+    explicit = os.getenv("NB_PDF_DEV_BYPASS_SAAS_SESSION", "").strip().lower()
+    if explicit in ("1", "true", "yes"):
+        return True
+    return False
+
 
 def saas_api_base() -> str:
     return os.getenv("NB_SAAS_API_BASE", "http://127.0.0.1:4000").rstrip("/")
+
+
+def _coerce_httpx_timeout(timeout: httpx.Timeout | float) -> httpx.Timeout:
+    if isinstance(timeout, httpx.Timeout):
+        return timeout
+    return httpx.Timeout(timeout)
 
 
 async def _httpx_post_json_with_retry(
@@ -38,7 +87,7 @@ async def _httpx_post_json_with_retry(
     *,
     headers: dict[str, str],
     json_body: dict[str, Any] | None,
-    timeout: float = 30.0,
+    timeout: httpx.Timeout | float | None = None,
     attempts: int = 3,
 ) -> httpx.Response:
     """Retry on transport failure or 5xx from the Node worker.
@@ -47,16 +96,22 @@ async def _httpx_post_json_with_retry(
     retried POST cannot double-charge credits if the first request committed but the
     response was dropped.
     """
+    effective_timeout = _coerce_httpx_timeout(timeout if timeout is not None else _SAAS_HTTP_TIMEOUT)
     last_err: Exception | None = None
     for i in range(attempts):
         try:
-            async with httpx.AsyncClient(timeout=timeout) as client:
+            async with httpx.AsyncClient(timeout=effective_timeout) as client:
                 r = await client.post(url, headers=headers, json=json_body)
             if r.status_code >= 500 and i < attempts - 1:
                 await asyncio.sleep(0.35 * (i + 1))
                 continue
             return r
-        except (httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout, httpx.RemoteProtocolError) as exc:
+        except (
+            httpx.ConnectError,
+            httpx.TimeoutException,
+            httpx.WriteTimeout,
+            httpx.RemoteProtocolError,
+        ) as exc:
             last_err = exc
             if i < attempts - 1:
                 await asyncio.sleep(0.35 * (i + 1))
@@ -86,21 +141,52 @@ async def saas_session_ok(token: str) -> None:
 
     Used by read-only preview-ish paths (e.g. ``inspect-pdf``) that want to
     reject expired / invalid tokens without triggering an entitlement check.
+
+    Development only (see ``_saas_session_ok_dev_bypass_enabled``): the HTTP
+    call may be skipped so local PDF inspect is not blocked when Node is slow.
+    Production / Vercel: never skipped — subscription check always runs.
     """
-    base = saas_api_base()
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(
-            f"{base}/api/subscription/status",
-            headers={"Authorization": f"Bearer {token}"},
+    if _saas_session_ok_dev_bypass_enabled():
+        logger.debug(
+            "saas_session_ok: development bypass (Node GET /api/subscription/status skipped)",
         )
-        if r.status_code == 200:
-            return
-        if r.status_code == 401:
-            raise HTTPException(status_code=401, detail=_detail_from_response(r))
+        return
+
+    base = saas_api_base()
+    url = f"{base}/api/subscription/status"
+    try:
+        async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
+            r = await client.get(
+                url,
+                headers={"Authorization": f"Bearer {token}"},
+            )
+    except httpx.TimeoutException as exc:
+        logger.warning("saas_session_ok timeout url=%s err=%s", url, exc)
         raise HTTPException(
             status_code=502,
-            detail=f"Abonelik durumu alınamadı: {_detail_from_response(r)}",
-        )
+            detail=(
+                "Kimlik API zaman aşımı (Node :4000). Proje kökünde `npm run dev` ile `[api]` sürecinin "
+                "çalıştığını veya `NB_SAAS_API_BASE` adresini doğrulayın."
+            ),
+        ) from exc
+    except httpx.ConnectError as exc:
+        logger.warning("saas_session_ok connect_error url=%s err=%s", url, exc)
+        raise HTTPException(
+            status_code=502,
+            detail=(
+                "Kimlik API’ye bağlanılamadı (Node :4000). Güvenlik duvarı / `NB_SAAS_API_BASE` "
+                "değerini kontrol edin."
+            ),
+        ) from exc
+
+    if r.status_code == 200:
+        return
+    if r.status_code == 401:
+        raise HTTPException(status_code=401, detail=_detail_from_response(r))
+    raise HTTPException(
+        status_code=502,
+        detail=f"Abonelik durumu alınamadı: {_detail_from_response(r)}",
+    )
 
 
 async def saas_current_user_id(token: str) -> str:
@@ -111,27 +197,42 @@ async def saas_current_user_id(token: str) -> str:
     never decrement another user's credit balance.
     """
     base = saas_api_base()
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(
-            f"{base}/api/auth/me",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-        if r.status_code == 401:
-            raise HTTPException(status_code=401, detail=_detail_from_response(r))
-        if r.status_code != 200:
-            raise HTTPException(
-                status_code=502,
-                detail=f"Kullanıcı bilgisi alınamadı: {_detail_from_response(r)}",
+    url = f"{base}/api/auth/me"
+    try:
+        async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
+            r = await client.get(
+                url,
+                headers={"Authorization": f"Bearer {token}"},
             )
-        try:
-            data = r.json()
-        except Exception as exc:
-            raise HTTPException(status_code=502, detail="Kullanıcı yanıtı okunamadı.") from exc
-        user = data.get("user") if isinstance(data, dict) else None
-        user_id = user.get("id") if isinstance(user, dict) else None
-        if not isinstance(user_id, str) or not user_id:
-            raise HTTPException(status_code=502, detail="Kullanıcı kimliği bulunamadı.")
-        return user_id
+    except httpx.TimeoutException as exc:
+        logger.warning("saas_current_user_id timeout url=%s err=%s", url, exc)
+        raise HTTPException(
+            status_code=502,
+            detail="Kimlik API zaman aşımı (`/api/auth/me`). Node sürecinin ayakta olduğunu doğrulayın.",
+        ) from exc
+    except httpx.ConnectError as exc:
+        logger.warning("saas_current_user_id connect_error url=%s err=%s", url, exc)
+        raise HTTPException(
+            status_code=502,
+            detail="Kimlik API’ye bağlanılamadı (`/api/auth/me`).",
+        ) from exc
+
+    if r.status_code == 401:
+        raise HTTPException(status_code=401, detail=_detail_from_response(r))
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Kullanıcı bilgisi alınamadı: {_detail_from_response(r)}",
+        )
+    try:
+        data = r.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Kullanıcı yanıtı okunamadı.") from exc
+    user = data.get("user") if isinstance(data, dict) else None
+    user_id = user.get("id") if isinstance(user, dict) else None
+    if not isinstance(user_id, str) or not user_id:
+        raise HTTPException(status_code=502, detail="Kullanıcı kimliği bulunamadı.")
+    return user_id
 
 
 # ---------------------------------------------------------------------------

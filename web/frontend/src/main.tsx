@@ -10,6 +10,16 @@ import "./styles/app.css";
 
 installProductionGuards();
 
+if (import.meta.env.VITE_BLOCK_SEARCH_INDEXING === "true") {
+  const tag = document.querySelector('meta[name="robots"]');
+  if (!tag) {
+    const m = document.createElement("meta");
+    m.setAttribute("name", "robots");
+    m.setAttribute("content", "noindex, nofollow");
+    document.head.appendChild(m);
+  }
+}
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <BrowserRouter>
