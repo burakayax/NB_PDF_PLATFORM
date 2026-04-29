@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { CookieOptions, Request, Response } from "express";
 import { logGoogleOAuth, logLoginAttempt, logRegisterAttempt } from "../../lib/app-logger.js";
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
@@ -46,26 +46,78 @@ import { getDesktopDeviceIdFromHeaders, isDesktopClient } from "../device/device
 const REFRESH_COOKIE_NAME = "nbpdf_refresh_token";
 const OAUTH_STATE_COOKIE = "nbpdf_google_oauth";
 
-function getCookieOptions() {
+/** SPA (ör. Vercel) ve API (ör. Render) farklı site ise OAuth/ref oturum çerezleri için SameSite=None + Secure gerekir. */
+function hostsDifferentProduction(): boolean {
+  if (env.NODE_ENV !== "production") {
+    return false;
+  }
+  try {
+    const api = new URL(env.APP_BASE_URL);
+    const fe = new URL(env.OAUTH_FRONTEND_REDIRECT_ORIGIN || env.FRONTEND_ORIGIN);
+    return api.host !== fe.host;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * COOKIE_DOMAIN bazen SPA alanına (pdfplatform.app) yazılı kalır; API başka hosttaysa
+ * Tarayıcı Set-Cookie’yi reddeder. Yalnızca APP_BASE_URL hostnamesinin gerçekten bu Domain ile uyumu halinde kullanılır.
+ */
+function cookieDomainForApiHost(): string | undefined {
+  const raw = env.COOKIE_DOMAIN?.trim();
+  if (!raw) {
+    return undefined;
+  }
+  const cookieHost = raw.startsWith(".") ? raw.slice(1) : raw;
+  try {
+    const apiHostname = new URL(env.APP_BASE_URL).hostname;
+    const matches = apiHostname === cookieHost || apiHostname.endsWith(`.${cookieHost}`);
+    if (!matches) {
+      return undefined;
+    }
+    return raw.startsWith(".") ? raw : `.${cookieHost}`;
+  } catch {
+    return undefined;
+  }
+}
+
+function getCookieOptions(): CookieOptions {
+  const crossSiteSplit = hostsDifferentProduction();
+  const opts: CookieOptions = {
+    httpOnly: true,
+    path: "/api/auth",
+    secure: env.NODE_ENV === "production",
+    sameSite: crossSiteSplit ? "none" : "lax",
+    maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+  };
+  const domain = cookieDomainForApiHost();
+  if (domain) {
+    opts.domain = domain;
+  }
+  return opts;
+}
+
+/**
+ * Google OAuth CSRF state — host-only (Domain yok); API ile SPA farklı origin ise SameSite=None.
+ */
+function getOAuthStateCookieOptions(): CookieOptions {
+  const crossSiteSplit = hostsDifferentProduction();
   return {
     httpOnly: true,
-    sameSite: "lax" as const,
-    secure: env.NODE_ENV === "production",
-    maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
     path: "/api/auth",
-    domain: env.COOKIE_DOMAIN || undefined,
+    secure: env.NODE_ENV === "production",
+    sameSite: crossSiteSplit ? "none" : "lax",
+    maxAge: 10 * 60 * 1000,
   };
 }
 
-function getOAuthStateCookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: "lax" as const,
-    secure: env.NODE_ENV === "production",
-    maxAge: 10 * 60 * 1000,
-    path: "/api/auth",
-    domain: env.COOKIE_DOMAIN || undefined,
-  };
+/** Express: clearCookie ile maxAge/expires geçmek kullanım dışı bırakıldı — silinince çerez özellikleri eşleşmeli. */
+function clearCookieMatching(response: Response, name: string, options: CookieOptions) {
+  const rest = { ...options } as CookieOptions & { maxAge?: number; expires?: Date };
+  delete rest.maxAge;
+  delete rest.expires;
+  response.clearCookie(name, rest);
 }
 
 /** Google OAuth sonrası SPA yönlendirmeleri (JSON yok; yalnızca redirect). */
@@ -254,7 +306,7 @@ export async function logoutController(request: Request, response: Response) {
   const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
   await logoutUser(refreshToken);
 
-  response.clearCookie(REFRESH_COOKIE_NAME, getCookieOptions());
+  clearCookieMatching(response, REFRESH_COOKIE_NAME, getCookieOptions());
   response.status(204).send();
 }
 
@@ -411,7 +463,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
   });
 
   if (oauthErr) {
-    response.clearCookie(OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+    clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
     const desc =
       typeof request.query.error_description === "string" ? request.query.error_description : oauthErr;
     logGoogleOAuth({ outcome: "failure", step: "callback", reason: desc.slice(0, 500), ...meta });
@@ -427,7 +479,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
   }
 
   if (!code || !state) {
-    response.clearCookie(OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+    clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
     logGoogleOAuth({
       outcome: "failure",
       step: "callback",
@@ -442,7 +494,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
   }
 
   const rawCookie = request.cookies[OAUTH_STATE_COOKIE] as string | undefined;
-  response.clearCookie(OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+  clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
 
   if (!rawCookie) {
     logGoogleOAuth({ outcome: "failure", step: "callback", reason: "oauth_cookie_missing", ...meta });

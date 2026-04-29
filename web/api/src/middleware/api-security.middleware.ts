@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import rateLimit from "express-rate-limit";
+import { verifyAccessToken } from "../lib/jwt.js";
 import { logSuspiciousActivity } from "../lib/app-logger.js";
+import { resolveRoleFromEmail } from "../lib/role-policy.js";
 import {
   apiRateLimitForRequest,
   getApiSecurityResolved,
@@ -14,6 +16,24 @@ import { requireAuth } from "./auth.middleware.js";
 export function getClientIp(request: Request): string {
   const raw = request.ip || request.socket?.remoteAddress || "";
   return String(raw).replace(/^::ffff:/, "") || "unknown";
+}
+
+/** Bearer JWT ile gelen gerçek ADMIN istekleri dakikalık limitten muaf (panel / geliştirme). */
+async function requestHasAdminBearer(request: Request): Promise<boolean> {
+  const header = request.headers.authorization ?? "";
+  if (!header.startsWith("Bearer ")) {
+    return false;
+  }
+  const token = header.slice("Bearer ".length).trim();
+  if (!token) {
+    return false;
+  }
+  try {
+    const payload = verifyAccessToken(token);
+    return resolveRoleFromEmail(payload.email) === "ADMIN";
+  } catch {
+    return false;
+  }
 }
 
 const ABUSE_VIOLATION_WINDOW_MS = 60 * 60 * 1000;
@@ -78,6 +98,7 @@ export function abuseBlockMiddleware(request: Request, response: Response, next:
 
 export const globalApiLimiter = rateLimit({
   windowMs: 60 * 1000,
+  skip: async (request) => requestHasAdminBearer(request),
   limit: async (req) => {
     const cfg = await getApiSecurityResolved();
     return apiRateLimitForRequest(req, cfg);

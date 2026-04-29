@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import type { AuthProvider, EmailVerificationToken, Language, Plan, User, UserRole } from "@prisma/client";
 import { isEmailBlocked } from "../../lib/blocked-email.js";
 import { authLog } from "../../lib/auth-log.js";
@@ -16,6 +17,7 @@ import { createUrlSafeToken, hashToken } from "../../lib/token.js";
 import { createAdminNotificationEmailTemplate, createVerificationEmailTemplate } from "./auth.email.js";
 import type { AuthCredentialsInput, ChangePasswordInput, RegisterInput, UpdateProfileInput } from "./auth.schema.js";
 import { GOOGLE_OAUTH_LOG, logGoogleOAuthJwtIssued, previewSecret } from "./google-oauth.console.js";
+import { grantCredits } from "../subscription/entitlement.engine.js";
 
 type PublicUser = {
   id: string;
@@ -264,6 +266,16 @@ function deriveGoogleFirstLast(parts: {
   return { firstName: fn, lastName: ln };
 }
 
+async function grantWelcomeCreditsForNewUser(userId: string): Promise<void> {
+  const lo = env.welcomeCreditsMin;
+  const hi = env.welcomeCreditsMax;
+  if (hi <= 0) {
+    return;
+  }
+  const amount = lo >= hi ? lo : randomInt(lo, hi + 1);
+  await grantCredits(userId, amount, "bonus");
+}
+
 export async function registerUser(input: RegisterInput): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
@@ -344,8 +356,22 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
     throw new HttpError(503, "We could not send the verification email. Please try again later.");
   }
 
+  let persistedUser: User = user;
   try {
-    await sendAdminNotificationEmail(user);
+    await grantWelcomeCreditsForNewUser(user.id);
+    const refetched = await prisma.user.findUnique({ where: { id: user.id } });
+    if (refetched) {
+      persistedUser = refetched;
+    }
+  } catch (error) {
+    authLog.warn("register: welcome credits grant failed (user kept)", {
+      userId: user.id,
+      error: String(error),
+    });
+  }
+
+  try {
+    await sendAdminNotificationEmail(persistedUser);
   } catch (error) {
     authLog.warn("register: admin notification email failed (user kept)", {
       userId: user.id,
@@ -356,13 +382,13 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
   void import("../marketing/email-automation.js")
     .then((m) =>
       m.trySendWelcomeAfterRegistration({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name: user.name,
-        role: user.role,
-        credit_balance: user.credit_balance,
+        id: persistedUser.id,
+        email: persistedUser.email,
+        firstName: persistedUser.firstName,
+        lastName: persistedUser.lastName,
+        name: persistedUser.name,
+        role: persistedUser.role,
+        credit_balance: persistedUser.credit_balance,
       }),
     )
     .catch(() => {
@@ -372,7 +398,7 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
   return {
     message: "Verification email sent. Please verify your email before signing in.",
     verificationRequired: true,
-    user: toPublicUser(user),
+    user: toPublicUser(persistedUser),
   };
 }
 
@@ -685,7 +711,7 @@ export async function signInWithGoogle(params: {
     throw new HttpError(403, "This email address cannot be used to create an account.");
   }
 
-  const user = await prisma.user.create({
+  let persistedGoogleUser: User = await prisma.user.create({
     data: {
       email,
       googleId,
@@ -703,19 +729,35 @@ export async function signInWithGoogle(params: {
   });
 
   console.log(`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
-    userId: user.id,
-    email: user.email,
+    userId: persistedGoogleUser.id,
+    email: persistedGoogleUser.email,
     googleId,
     preferredLanguage: params.preferredLanguage,
   });
-  authLog.info("google register: user created", { userId: user.id, email: user.email });
+  authLog.info("google register: user created", { userId: persistedGoogleUser.id, email: persistedGoogleUser.email });
 
   try {
-    await sendAdminNotificationEmail(user);
+    await grantWelcomeCreditsForNewUser(persistedGoogleUser.id);
+    const refetched = await prisma.user.findUnique({ where: { id: persistedGoogleUser.id } });
+    if (refetched) {
+      persistedGoogleUser = refetched;
+    }
   } catch (error) {
-    console.warn(`${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`, { userId: user.id, error: String(error) });
+    authLog.warn("google register: welcome credits grant failed (user kept)", {
+      userId: persistedGoogleUser.id,
+      error: String(error),
+    });
+  }
+
+  try {
+    await sendAdminNotificationEmail(persistedGoogleUser);
+  } catch (error) {
+    console.warn(`${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`, {
+      userId: persistedGoogleUser.id,
+      error: String(error),
+    });
     authLog.warn("google register: admin notification email failed (user kept)", {
-      userId: user.id,
+      userId: persistedGoogleUser.id,
       error: String(error),
     });
   }
@@ -723,18 +765,18 @@ export async function signInWithGoogle(params: {
   void import("../marketing/email-automation.js")
     .then((m) =>
       m.trySendWelcomeAfterRegistration({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name: user.name,
-        role: user.role,
-        credit_balance: user.credit_balance,
+        id: persistedGoogleUser.id,
+        email: persistedGoogleUser.email,
+        firstName: persistedGoogleUser.firstName,
+        lastName: persistedGoogleUser.lastName,
+        name: persistedGoogleUser.name,
+        role: persistedGoogleUser.role,
+        credit_balance: persistedGoogleUser.credit_balance,
       }),
     )
     .catch(() => {});
 
-  const session = await createSession(user);
+  const session = await createSession(persistedGoogleUser);
   logGoogleOAuthSessionIssued(session, "google-register");
   return session;
 }
