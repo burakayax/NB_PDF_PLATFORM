@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from contextlib import asynccontextmanager
 
 # Nuisance warnings from fontTools / pypdf when PDF font metadata uses odd date encodings
 # (e.g. "created timestamp seems very low; regarding as unix timestamp"). They are safe
@@ -45,10 +46,19 @@ from app.security.headers_middleware import SecurityHeadersMiddleware
 
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def _app_lifespan(app: FastAPI):
+    """TTL sweeper thread; replaces deprecated on_event startup hook."""
+    start_ttl_sweeper()
+    yield
+
+
 app = FastAPI(
     title="NB PDF PLARTFORM Web API",
     version="0.1.0",
     description="Masatüstü PDF aracının web arayüzü için API katmanı.",
+    lifespan=_app_lifespan,
 )
 
 app.state.limiter = limiter
@@ -113,13 +123,24 @@ async def unhandled_exception_safety_net(request: Request, call_next):
         )
 
 
+@app.middleware("http")
+async def log_incoming_pdf_requests(request: Request, call_next):
+    """Son eklenen middleware ilk çalışır — POST /api istekleri hemen loglanır."""
+    if request.method == "POST" and request.url.path.startswith("/api/"):
+        logger.info("pdf_api_incoming %s %s", request.method, request.url.path)
+    return await call_next(request)
+
+
 app.include_router(router)
 app.include_router(tool_routes_extra)
 app.include_router(auth_router, prefix="/api")
 # app.include_router(example_router, prefix="/api")
 
 
-@app.on_event("startup")
-async def _launch_result_store_sweeper() -> None:
-    """Start the result-store TTL sweeper once per process (idempotent)."""
-    start_ttl_sweeper()
+if __name__ == "__main__":
+    """`python -m app.main` çalışır (cwd: web/backend). Üretim: uvicorn CLI veya run-pdf-api.mjs."""
+    import uvicorn
+
+    _host = (os.getenv("PDF_API_HOST") or "127.0.0.1").strip() or "127.0.0.1"
+    _port = int((os.getenv("PDF_API_PORT") or "8000").strip() or "8000")
+    uvicorn.run(app, host=_host, port=_port)

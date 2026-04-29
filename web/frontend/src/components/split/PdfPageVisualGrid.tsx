@@ -33,6 +33,10 @@ const GRID_PAD_X = 6;
 const GRID_PAD_Y = 6;
 const RUBBER_MIN_PX = 5;
 const RENDER_OVERSAMPLE = 1.35;
+/** Sayfa Sil: daha küçük raster — büyük dosyada ana iş parçacığı ve bellek daha az yüklenir. */
+const RENDER_OVERSAMPLE_DELETE = 1.14;
+/** Tek thumb için uzun kenar üst sınırı (px); uç PDF boyutlarında canvas şişmesini keser. */
+const MAX_THUMB_CANVAS_EDGE_PX = 2048;
 /** Sanal satır overscan; hızlı kaydırmada komşu satırların hazır kalması için yüksek tutulur. */
 const VIRTUAL_ROW_OVERSCAN = 22;
 /** Görünür + overscan dışındaki thumb’ları silmeden önce ek sayfa tamponu (satır ≈ overscan ile uyumlu). */
@@ -517,6 +521,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     useEffect(() => {
       let cancelled = false;
+      /** Tam dosya için önce `arrayBuffer()` beklemek yerine blob URL ile pdf.js okumasını kullanır (büyük PDF’lerde daha az bloklar ve daha düzgün akış). */
+      let blobUrl: string | null = null;
       const run = async () => {
         lastGoodVisiblePageRangeRef.current = null;
         const prevSid = thumbSessionIdRef.current;
@@ -533,10 +539,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         docRef.current = null;
         cellWidthIntRef.current = 0;
         pendingThumbRef.current.clear();
-        const buf = await file.arrayBuffer();
         try {
+          blobUrl = URL.createObjectURL(file);
           const task = pdfjsLib.getDocument({
-            data: buf,
+            url: blobUrl,
             password: password.trim() || undefined,
           });
           const pdf = await task.promise;
@@ -573,6 +579,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           void docRef.current.destroy().catch(() => {});
           docRef.current = null;
         }
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+        }
       };
     }, [file, password, effectiveLang, language, strictTurkishUi, mode]);
 
@@ -595,26 +604,38 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         }
         try {
           const page = await doc.getPage(page1);
-          const baseVp = page.getViewport({ scale: 1 });
-          const scale = (cssW / baseVp.width) * RENDER_OVERSAMPLE;
-          const vp = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            return null;
+          try {
+            const baseVp = page.getViewport({ scale: 1 });
+            const oversample = mode === "delete" ? RENDER_OVERSAMPLE_DELETE : RENDER_OVERSAMPLE;
+            let scale = (cssW / Math.max(1e-6, baseVp.width)) * oversample;
+            let vp = page.getViewport({ scale });
+            const maxEdge = MAX_THUMB_CANVAS_EDGE_PX;
+            const mw = vp.width;
+            const mh = vp.height;
+            if (Math.max(mw, mh) > maxEdge) {
+              scale *= maxEdge / Math.max(mw, mh);
+              vp = page.getViewport({ scale });
+            }
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              return null;
+            }
+            canvas.width = Math.max(1, Math.floor(vp.width));
+            canvas.height = Math.max(1, Math.floor(vp.height));
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            if (jobAtStart !== renderJobRef.current) {
+              return null;
+            }
+            return canvas.toDataURL("image/png");
+          } finally {
+            page.cleanup();
           }
-          canvas.width = Math.max(1, Math.floor(vp.width));
-          canvas.height = Math.max(1, Math.floor(vp.height));
-          await page.render({ canvasContext: ctx, viewport: vp }).promise;
-          if (jobAtStart !== renderJobRef.current) {
-            return null;
-          }
-          return canvas.toDataURL("image/png");
         } catch {
           return null;
         }
       },
-      [],
+      [mode],
     );
 
     const requestSinglePageThumb = useCallback(
@@ -770,7 +791,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const scrollMemRef = useRef({ top: 0, scrollHeight: 1, clientH: 400 });
     const prevZoomColsRef = useRef({ z: zoomPercent, c: cols });
 
+    /** İlk çizimde `loading` iken scroll kökü DOM’da yok; `[]` ile bu effect bir daha çalışmayınca dinleyici hiç bağlanmıyordu (Split/Sayfa Sil’de thumb’lar kaydırana dek boş). */
     useEffect(() => {
+      if (loading || loadError) {
+        return;
+      }
       const el = parentRef.current;
       if (!el) {
         return;
@@ -786,7 +811,44 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       el.addEventListener("scroll", onScroll, { passive: true });
       onScroll();
       return () => el.removeEventListener("scroll", onScroll);
-    }, []);
+    }, [loading, loadError, numPages]);
+
+    /** Modal (Framer) + flex `min-h-0` zinciri ilk frame’de scroll alanı yüksekliğini 0 bırakabiliyor; sanallaştırıcı boş kalıyor — teker yoksa thumb gelmez. */
+    useLayoutEffect(() => {
+      if (loading || loadError || numPages === 0) {
+        return;
+      }
+      let cancelled = false;
+      let attempts = 0;
+      const maxAttempts = 40;
+
+      const wake = () => {
+        if (cancelled || attempts++ > maxAttempts) {
+          return;
+        }
+        const scrollEl = parentRef.current;
+        const v = rowVirtualizerRef.current;
+        if (!scrollEl || !v) {
+          requestAnimationFrame(wake);
+          return;
+        }
+        v.measure();
+        v.calculateRange();
+        setRangeRevision((r) => r + 1);
+        const short = scrollEl.clientHeight < 4;
+        if (short) {
+          requestAnimationFrame(wake);
+        }
+      };
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(wake);
+      });
+
+      return () => {
+        cancelled = true;
+      };
+    }, [loading, loadError, numPages, virtualRowCount]);
 
     useLayoutEffect(() => {
       const prev = prevZoomColsRef.current;

@@ -20,6 +20,8 @@ interface ImportMetaEnv {
   readonly VITE_GA_MEASUREMENT_ID?: string;
   /** When true at build-time, maintenance UI is forced on for this SPA bundle only (local .env); combined with API `MAINTENANCE_MODE`. */
   readonly VITE_MAINTENANCE_MODE?: string;
+  /** true: robots.txt Disallow all + noindex meta (dev / preview; set false on production deploy when ready). */
+  readonly VITE_BLOCK_SEARCH_INDEXING?: string;
 }
 
 interface ImportMeta {

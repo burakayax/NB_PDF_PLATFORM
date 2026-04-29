@@ -8,7 +8,7 @@
     "postinstall": "npm install --prefix web/api --no-fund --no-audit && npm install --prefix web/frontend --no-fund --no-audit",
     "predev": "node scripts/ensure-dev-prereqs.mjs",
     "install-all": "npm install && npm install --prefix web/api && npm install --prefix web/frontend && node scripts/install-python-web.mjs && npm run prisma:generate --prefix web/api",
-    "dev": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs\" \"npm run dev --prefix web/api\" \"npm run dev --prefix web/frontend\"",
+    "dev": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs\" \"npm run dev --prefix web/api\" \"node scripts/run-vite-when-ready.mjs\"",
     "prestart": "node scripts/ensure-dev-prereqs.mjs",
     "start": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs --prod\" \"npm run start --prefix web/api\" \"npm run preview --prefix web/frontend -- --host 127.0.0.1\"",
     "build:all": "npm run build --prefix web/api && npm run build --prefix web/frontend",

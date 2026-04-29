@@ -7,7 +7,9 @@ Bu dosya **proje kökündeki** `package.json` içindeki komutların ne işe yara
 - **Node.js** 20+ ve **npm**
 - **Python** 3.11+ (PDF web servisi için; yoksa `npm run dev` sırasında uyarı verilir, kimlik API ve Vite yine çalışabilir)
 
-**Taze klon:** Proje kökünde `npm install` çalıştırdığınızda `postinstall` betiği `web/api` ve `web/frontend` bağımlılıklarını da kurar. `npm run dev` öncesinde `predev` betiği eksik `.env` dosyalarını `.env.example` üzerinden oluşturur, gerekirse `web/.venv` ve SQLite veritabanını hazırlar.
+**Not:** Kimlik API için **PostgreSQL kurulumu gerekmez** — SQLite dosya (`web/api/prisma/dev.db`) kullanılır.
+
+**Taze klon:** Proje kökünde `npm install` çalıştırdığınızda `postinstall` betiği `web/api` ve `web/frontend` bağımlılıklarını da kurar. `npm run dev` öncesinde `predev` betiği eksik `.env` dosyalarını `.env.example` üzerinden oluşturur, gerekirse `web/.venv` oluşturur ve Prisma şemasını veritabanına iter (`prisma db push`).
 
 ---
 

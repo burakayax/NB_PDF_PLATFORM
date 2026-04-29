@@ -7,7 +7,7 @@ import { prisma } from "./prisma.js";
  *
  * **Source of truth:** `cost` / `strategy` here are synced on every API boot
  * (`upsert` update). Change this file to tune per-tool credit prices, then
- * restart the Node API (or Docker) so `ensureToolRegistry()` runs again.
+ * Restart the Node API after edits so `ensureToolRegistry()` runs again.
  * The web sidebar copy in `web/frontend/src/i18n/workspace.ts`
  * (`SIDEBAR_TOOL_CREDIT_COST`) should match these values for consistent UX.
  */

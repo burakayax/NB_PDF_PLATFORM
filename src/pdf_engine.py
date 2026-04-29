@@ -1199,52 +1199,186 @@ def _fitz_open_for_tool(pdf_path: str, password: Optional[str] = None, context: 
 
 
 # --- 2. PDF BİRLEŞTİRME ---
+def _pikepdf_open_for_merge(
+    pdf_path: str,
+    password: Optional[str],
+    *,
+    context: str = "PDF birleştirme",
+):
+    """pikepdf ile aç; PyMuPDF şifre mesajlarıyla uyumlu hatalar."""
+    import pikepdf
+
+    basename = os.path.basename(pdf_path)
+    pwd_raw = (password or "").strip()
+
+    def _raise_bad_password() -> None:
+        raise Exception(f"{context}: girilen PDF parolası hatalı ({basename}).")
+
+    def _raise_need_password() -> None:
+        raise Exception(
+            f"{context} için seçtiğiniz dosya şifreli: {basename}\n"
+            "Lütfen dosya için şifre girin."
+        )
+
+    try:
+        # pikepdf 10+: password must be str; None is rejected (TypeError).
+        return pikepdf.open(pdf_path, password=pwd_raw)
+    except pikepdf.PasswordError:
+        if pwd_raw:
+            _raise_bad_password()
+        try:
+            return pikepdf.open(pdf_path, password="")
+        except pikepdf.PasswordError:
+            _raise_need_password()
+
+
+def _merge_pdfs_pikepdf(
+    pdf_list: List[str],
+    output_path: str,
+    progress_callback,
+    passwords: Optional[Dict[str, str]],
+) -> None:
+    """Çok sayfalı birleştirmede bellek dostu yol: pikepdf sayfa referansları ile birleştirir."""
+    import gc
+    import pikepdf
+
+    passwords = passwords or {}
+    # Birleştirme sırasında aralıklı ilerleme (sayfa başına callback RAM + kilidi şişirmez)
+    page_chunk = int(os.environ.get("NB_MERGE_PAGE_CHUNK", "400"))
+    page_chunk = max(50, min(page_chunk, 2000))
+
+    total_pages = 0
+    for pdf in pdf_list:
+        if not os.path.isfile(pdf):
+            raise FileNotFoundError(f"Birleştirilecek dosya bulunamadı: {pdf}")
+        doc = _pikepdf_open_for_merge(
+            pdf,
+            passwords.get(pdf),
+            context="PDF birleştirme",
+        )
+        try:
+            total_pages += len(doc.pages)
+        finally:
+            doc.close()
+
+    merged = pikepdf.Pdf.new()
+    total = max(1, total_pages + 1)
+    current_page = 0
+
+    try:
+        for pdf in pdf_list:
+            src = _pikepdf_open_for_merge(
+                pdf,
+                passwords.get(pdf),
+                context="PDF birleştirme",
+            )
+            try:
+                base_name = os.path.basename(pdf)
+                n = len(src.pages)
+                pages = src.pages
+                for start in range(0, n, page_chunk):
+                    end = min(start + page_chunk, n)
+                    merged.pages.extend(pages[start:end])
+                    current_page += end - start
+                    if progress_callback:
+                        res = progress_callback(
+                            current_page,
+                            total,
+                            f"{base_name} | Sayfa {end}/{n}",
+                        )
+                        if res is False:
+                            raise Exception("İşlem iptal edildi.")
+            finally:
+                src.close()
+                gc.collect()
+
+        if progress_callback:
+            progress_callback(total, total, "PDF yazılıyor...")
+        merged.save(
+            output_path,
+            compress_streams=True,
+            normalize_content=False,
+            linearize=False,
+        )
+    finally:
+        merged.close()
+
+
+def _merge_pdfs_fitz_throttled(
+    pdf_list: List[str],
+    output_path: str,
+    progress_callback,
+    passwords: Optional[Dict[str, str]],
+) -> None:
+    """pikepdf uyumsuz PDF’ler için PyMuPDF geri dönüşü; ilerleme güncellemesi seyreltildi."""
+    import fitz
+
+    passwords = passwords or {}
+    progress_every = int(os.environ.get("NB_MERGE_FITZ_PROGRESS_EVERY", "96"))
+    progress_every = max(16, min(progress_every, 2000))
+
+    total_pages = 0
+    for pdf in pdf_list:
+        if not os.path.isfile(pdf):
+            raise FileNotFoundError(f"Birleştirilecek dosya bulunamadı: {pdf}")
+        doc = _fitz_open_for_tool(pdf, passwords.get(pdf), context="PDF birleştirme")
+        try:
+            total_pages += doc.page_count
+        finally:
+            doc.close()
+
+    merged = fitz.open()
+    try:
+        current_page = 0
+        total = max(1, total_pages + 1)
+        for pdf in pdf_list:
+            src = _fitz_open_for_tool(pdf, passwords.get(pdf), context="PDF birleştirme")
+            try:
+                base_name = os.path.basename(pdf)
+                n = src.page_count
+                merged.insert_pdf(src)
+                for page_idx in range(1, n + 1):
+                    current_page += 1
+                    at_last = page_idx == n
+                    if progress_callback and (
+                        at_last
+                        or page_idx == 1
+                        or (page_idx % progress_every == 0)
+                    ):
+                        res = progress_callback(
+                            current_page,
+                            total,
+                            f"{base_name} | Sayfa {page_idx}/{n}",
+                        )
+                        if res is False:
+                            raise Exception("İşlem iptal edildi.")
+            finally:
+                src.close()
+        if progress_callback:
+            progress_callback(total, total, "PDF yazılıyor...")
+        merged.save(output_path, garbage=4, deflate=True, linear=False)
+    finally:
+        merged.close()
+
+
 def merge_pdfs(pdf_list: List[str], output_path: str, progress_callback=None, passwords: Optional[Dict[str, str]] = None) -> bool:
     """
     Birden fazla PDF dosyasını tek çıktıda birleştirir.
 
-    PyMuPDF ile sırayla insert_pdf: tüm sayfaları bellekte tutmaz (1000+ sayfa daha stabil).
+    Varsayılan olarak pikepdf kullanılır (on binlerce sayfada PyMuPDF’e göre çok daha düşük tepe bellek).
+    Başarısız olursa PyMuPDF ile yeniden denenir.
     """
-    import fitz
-
     try:
-        total_pages = 0
-        for pdf in pdf_list:
-            if not os.path.isfile(pdf):
-                raise FileNotFoundError(f"Birleştirilecek dosya bulunamadı: {pdf}")
-            doc = _fitz_open_for_tool(pdf, (passwords or {}).get(pdf), context="PDF birleştirme")
-            try:
-                total_pages += doc.page_count
-            finally:
-                doc.close()
-
-        merged = fitz.open()
         try:
-            current_page = 0
-            total = max(1, total_pages + 1)
-            for pdf in pdf_list:
-                src = _fitz_open_for_tool(pdf, (passwords or {}).get(pdf), context="PDF birleştirme")
-                try:
-                    base_name = os.path.basename(pdf)
-                    n = src.page_count
-                    merged.insert_pdf(src)
-                    for page_idx in range(1, n + 1):
-                        current_page += 1
-                        if progress_callback:
-                            res = progress_callback(
-                                current_page,
-                                total,
-                                f"{base_name} | Sayfa {page_idx}/{n}",
-                            )
-                            if res is False:
-                                raise Exception("İşlem iptal edildi.")
-                finally:
-                    src.close()
-            if progress_callback:
-                progress_callback(total, total, "PDF yazılıyor...")
-            merged.save(output_path, garbage=4, deflate=True, linear=False)
-        finally:
-            merged.close()
+            _merge_pdfs_pikepdf(pdf_list, output_path, progress_callback, passwords)
+        except FileNotFoundError:
+            raise
+        except Exception as first:
+            logger.info(
+                "merge_pdfs_pikepdf_failed_trying_fitz",
+                extra={"reason": str(first)},
+            )
+            _merge_pdfs_fitz_throttled(pdf_list, output_path, progress_callback, passwords)
         return True
     except Exception as e:
         err_text = str(e)

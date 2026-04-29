@@ -45,73 +45,92 @@ function productionObfuscatePlugin(): Plugin {
   };
 }
 
-/** Yalnızca `web/frontend` içinde `npm run dev` çalıştırıldığında PDF API kapalı olabilir; terminale net uyarı. */
-function warnIfPdfApiUnreachable(pdfTarget: string): Plugin {
+/**
+ * Kök `npm run dev` pdf/api/ui süreçlerini paralel başlatır; ilk saniyelerde sağlık uçları henüz yanıt vermeyebilir.
+ * Tek deneme kısa zaman aşımıyla yanlış uyarı üretir; bir süre yeniden deneyip yalnızca sürekli başarısızsa uyarı verilir.
+ */
+function warnIfBackendHealthUnreachable(opts: {
+  pluginName: string;
+  label: string;
+  target: string;
+  failureBanner: string;
+}): Plugin {
+  const base = opts.target.replace(/\/$/, "");
+  const url = `${base}/api/health`;
+  const initialDelayMs = 1200;
+  const attemptTimeoutMs = 8000;
+  const retryIntervalMs = 2000;
+  const maxAttempts = 30;
+
   return {
-    name: "nb-warn-pdf-api",
+    name: opts.pluginName,
     configureServer(server) {
       server.httpServer?.once("listening", () => {
-        setTimeout(() => {
-          const url = `${pdfTarget}/api/health`;
+        let attempt = 0;
+
+        const tryOnce = async () => {
+          attempt++;
           const ac = new AbortController();
-          const timer = setTimeout(() => ac.abort(), 2500);
-          fetch(url, { signal: ac.signal })
-            .then((res) => {
-              clearTimeout(timer);
-              if (!res.ok) {
-                console.warn(`[vite] PDF API beklenmiyor: ${url} → HTTP ${res.status}`);
-              }
-            })
-            .catch(() => {
-              clearTimeout(timer);
-              console.warn(
-                "\n[vite] ─────────────────────────────────────────────────────\n" +
-                  "[vite] PDF API'ye ulaşılamıyor (" +
-                  pdfTarget +
-                  "). Bu pencerede yalnızca Vite çalışıyor olabilir.\n" +
-                  "[vite] PDF araçları için: proje kökünde `npm run dev` veya `node scripts/run-pdf-api.mjs`\n" +
-                  "[vite] ─────────────────────────────────────────────────────\n",
-              );
-            });
-        }, 400);
+          const timer = setTimeout(() => ac.abort(), attemptTimeoutMs);
+          try {
+            const res = await fetch(url, { signal: ac.signal });
+            clearTimeout(timer);
+            if (res.ok) {
+              return;
+            }
+            console.warn(`[vite] ${opts.label} beklenmiyor: ${url} → HTTP ${res.status}`);
+          } catch {
+            clearTimeout(timer);
+          }
+
+          if (attempt >= maxAttempts) {
+            console.warn(opts.failureBanner);
+            return;
+          }
+          setTimeout(() => {
+            void tryOnce();
+          }, retryIntervalMs);
+        };
+
+        setTimeout(() => {
+          void tryOnce();
+        }, initialDelayMs);
       });
     },
   };
 }
 
-/** Yalnızca frontend `npm run dev` ise kimlik API (:4000) kapalı olabilir; Google OAuth proxy hatasını önceden açıklar. */
+/** PDF FastAPI (:8000); yalnızca frontend çalışıyorsa veya uvicorn geç açılıyorsa uyarır. */
+function warnIfPdfApiUnreachable(pdfTarget: string): Plugin {
+  return warnIfBackendHealthUnreachable({
+    pluginName: "nb-warn-pdf-api",
+    label: "PDF API",
+    target: pdfTarget,
+    failureBanner:
+      "\n[vite] ─────────────────────────────────────────────────────\n" +
+      "[vite] PDF API'ye ulaşılamıyor (" +
+      pdfTarget +
+      "). Bu pencerede yalnızca Vite çalışıyor olabilir veya `[pdf]` sürecinde Python hatası vardır.\n" +
+      "[vite] PDF araçları için: proje kökünde `npm run dev` veya `node scripts/run-pdf-api.mjs`; `web/.venv` ve `pip install -r web/backend/requirements.txt` kontrol edin.\n" +
+      "[vite] ─────────────────────────────────────────────────────\n",
+  });
+}
+
+/** Kimlik Express API (:4000); paralel başlatmada gecikmeli dinlenebilir. */
 function warnIfSaasApiUnreachable(saasTarget: string): Plugin {
-  return {
-    name: "nb-warn-saas-api",
-    configureServer(server) {
-      server.httpServer?.once("listening", () => {
-        setTimeout(() => {
-          const url = `${saasTarget}/api/health`;
-          const ac = new AbortController();
-          const timer = setTimeout(() => ac.abort(), 2500);
-          fetch(url, { signal: ac.signal })
-            .then((res) => {
-              clearTimeout(timer);
-              if (!res.ok) {
-                console.warn(`[vite] Kimlik API beklenmiyor: ${url} → HTTP ${res.status}`);
-              }
-            })
-            .catch(() => {
-              clearTimeout(timer);
-              console.warn(
-                "\n[vite] ─────────────────────────────────────────────────────\n" +
-                  "[vite] Kimlik API'ye ulaşılamıyor (" +
-                  saasTarget +
-                  ").\n" +
-                  "[vite] `/api/auth/google` ve diğer kimlik istekleri bu yüzden proxy hatası verir.\n" +
-                  "[vite] Çözüm: `web/api` içinde `npm run dev` veya proje kökünde `npm run dev` (api+ui birlikte).\n" +
-                  "[vite] ─────────────────────────────────────────────────────\n",
-              );
-            });
-        }, 400);
-      });
-    },
-  };
+  return warnIfBackendHealthUnreachable({
+    pluginName: "nb-warn-saas-api",
+    label: "Kimlik API",
+    target: saasTarget,
+    failureBanner:
+      "\n[vite] ─────────────────────────────────────────────────────\n" +
+      "[vite] Kimlik API'ye ulaşılamıyor (" +
+      saasTarget +
+      ").\n" +
+      "[vite] `/api/auth/google` ve diğer kimlik istekleri bu yüzden proxy hatası verir.\n" +
+      "[vite] Çözüm: `web/api` içinde `npm run dev` veya proje kökünde `npm run dev` (api+ui birlikte); `[api]` çıktısına bakın.\n" +
+      "[vite] ─────────────────────────────────────────────────────\n",
+  });
 }
 
 function saasProxyOptions(saasProxyTarget: string) {

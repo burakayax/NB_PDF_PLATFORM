@@ -8,7 +8,9 @@
   },
   "scripts": {
     "prebuild": "node scripts/generate-seo-files.mjs",
+    "predev": "node scripts/generate-seo-files.mjs",
     "dev": "vite --host",
+    "dev:with-pdf-api": "concurrently -k -n pdf,ui -c blue,magenta \"node ../../scripts/run-pdf-api.mjs\" \"vite --host\"",
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
     "dev:fullstack": "npm run dev --prefix ../..",
     "build": "tsc && vite build",

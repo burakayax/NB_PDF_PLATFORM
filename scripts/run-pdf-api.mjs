@@ -85,6 +85,17 @@ const pdfApiEnv = { ...process.env };
 if (!pdfApiEnv.NB_SAAS_API_BASE?.trim()) {
   pdfApiEnv.NB_SAAS_API_BASE = "http://127.0.0.1:4000";
 }
+/** Yerel ``npm run dev``: FastAPI ``saas_session_ok`` Node’a takılmadan inspect yapabilsin (saas_gate.py). Üretim ``--prod`` ile ayarlanmaz. */
+if (!prod) {
+  const e = (pdfApiEnv.ENV || pdfApiEnv.ENVIRONMENT || "").trim().toLowerCase();
+  if (!e) {
+    pdfApiEnv.ENV = "development";
+    pdfApiEnv.ENVIRONMENT = "development";
+    console.log(
+      "[run-pdf-api] ENV=development — yerelde inspect-pdf Node oturum kontrolünü atlayabilir (Vercel üretiminde asla).",
+    );
+  }
+}
 
 const child = spawn(python, args, {
   cwd: webDir,

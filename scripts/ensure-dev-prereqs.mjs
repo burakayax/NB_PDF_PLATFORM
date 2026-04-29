@@ -94,10 +94,9 @@ if (hasWebVenv()) {
   const py = webVenvPythonPath();
   const backendReqs = path.join(webDir, "backend", "requirements.txt");
   if (fs.existsSync(py) && fs.existsSync(backendReqs)) {
-    const r = spawnSync(py, ["-m", "pip", "install", "-q", "-r", backendReqs], {
+    const r = spawnSync(py, ["-m", "pip", "install", "-r", backendReqs], {
       cwd: webDir,
-      stdio: "pipe",
-      encoding: "utf8",
+      stdio: "inherit",
     });
     if (r.status !== 0) {
       console.warn(

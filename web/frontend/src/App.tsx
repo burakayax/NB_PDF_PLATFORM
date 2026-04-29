@@ -24,6 +24,7 @@ import {
   MaintenanceTabTitle,
 } from "./components/common/MaintenancePage";
 import { RuntimeBootstrapSplash } from "./components/common/RuntimeBootstrapSplash";
+import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
@@ -456,11 +457,12 @@ function workspacePathForFeature(featureId: FeatureKey): string {
 
 /** createMergeJob yanıtı gelene kadar UI’da anında gösterilen yer tutucu iş kimliği. */
 const MERGE_JOB_PENDING_ID = "__merge_pending__";
-/** İş süresi uyarısı: anket yanıtsız kalırsa (PDF motoru vb.) sıfışma. */
-const MERGE_WATCHDOG_MS = 30_000;
-const PDF_INSPECT_TIMEOUT_MS = 30_000;
-/** postToolToResult / downloadFromApi yanıt beklerken UI (≈97% veya ‘İşleniyor’) kilitlenmesin. */
-const TOOL_PIPELINE_WATCHDOG_MS = 30_000;
+/** Büyük birleştirmeler (10k+ sayfa) dakikalar sürebilir; 30 sn ile iptal etmeyin. */
+const MERGE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
+/** Büyük PDF’lerde /api/inspect-pdf uzun sürebilir; 30 sn ile yükleme iptali yapmayın. */
+const PDF_INSPECT_TIMEOUT_MS = 15 * 60 * 1000;
+/** Result-store (Sayfa Sil, Split, …) sunucu işi uzun sürebilir; merge watchdog ile uyumlu üst sınır. */
+const TOOL_PIPELINE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
 
 function withPdfInspectTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   if (ms <= 0) {
@@ -1326,8 +1328,8 @@ function App() {
           "error",
           language === "tr" ? "PDF denetimi zaman aşımı" : "PDF check timed out",
           language === "tr"
-            ? "30 saniye içinde yanıt alınamadı. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
-            : "No response within 30 seconds. Check your connection or try the file again.",
+            ? "PDF denetimi uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
+            : "PDF check took too long or stalled. Check your connection or try the file again.",
         );
       } else {
         showToast(
@@ -1888,12 +1890,29 @@ function App() {
       void (async () => {
         await refreshSession();
         await refreshSubscriptionState();
+        if (accessToken && user) {
+          const balanceCtx = {
+            userId: user.id,
+            role:
+              user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+          };
+          const [nextBalance, nextTransactions] = await Promise.all([
+            fetchUserBalance(accessToken, balanceCtx).catch(() => null),
+            fetchCreditTransactions(accessToken, 10).catch(() => null),
+          ]);
+          if (nextBalance) {
+            setUserBalance(nextBalance);
+          }
+          if (nextTransactions) {
+            setCreditTransactions(nextTransactions);
+          }
+        }
         showToast(
           "success",
           language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
           language === "tr"
-            ? "Planınız güncellendi."
-            : "Your plan has been updated.",
+            ? "Hesabınız güncellendi."
+            : "Your account has been updated.",
         );
       })();
       return;
@@ -1915,6 +1934,7 @@ function App() {
     refreshSession,
     refreshSubscriptionState,
     language,
+    user,
   ]);
 
   useEffect(() => {
@@ -2020,8 +2040,8 @@ function App() {
               ? "İşlem zaman aşımı"
               : "Operation timed out",
             language === "tr"
-              ? "Birleştirme 30 saniye içinde tamamlanamadı. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
-              : "Merge did not finish within 30 seconds. Check your connection and try again.",
+              ? "Birleştirme çok uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
+              : "The merge took too long or the connection stalled. Check your connection or try again.",
           );
           tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
@@ -2039,10 +2059,17 @@ function App() {
         setMergeJob(nextStatus);
 
         if (nextStatus.status === "failed") {
+          const serverDetail =
+            typeof nextStatus.error === "string"
+              ? nextStatus.error.trim()
+              : "";
           showToast(
             "error",
             M.mergeToastFailedTitle,
-            friendlyOperationFailedMessage(language),
+            serverDetail ||
+              (language === "tr"
+                ? "Birleştirme tamamlanamadı."
+                : "The merge could not be completed."),
           );
           tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
@@ -2112,10 +2139,14 @@ function App() {
           );
           return;
         }
+        const pollFailDetail =
+          error instanceof Error && error.message.trim()
+            ? error.message.trim()
+            : M.mergeToastPollErrorDetail;
         showToast(
           "error",
           M.mergeToastPollErrorTitle,
-          friendlyOperationFailedMessage(language),
+          pollFailDetail,
         );
         tryShowConversionPopupRef.current("buy_credits");
         setSubmitting(false);
@@ -3731,8 +3762,8 @@ function App() {
             "error",
             language === "tr" ? "İşlem zaman aşımı" : "Operation timed out",
             language === "tr"
-              ? "30 saniye içinde sunucu yanıtı alınamadı. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
-              : "No server response within 30 seconds. Check your connection or try again.",
+              ? "Sunucudan uzun süre yanıt gelmedi; bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
+              : "No server response for a long time. Check your connection or try again later.",
           );
           tryShowConversionPopupRef.current("buy_credits");
         }
@@ -3840,8 +3871,8 @@ function App() {
                 ? "PDF denetimi zaman aşımı"
                 : "PDF check timed out",
               language === "tr"
-                ? "30 saniye içinde yanıt alınamadı. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
-                : "No response within 30 seconds. Check your connection or try the file again.",
+                ? "PDF denetimi uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
+                : "PDF check took too long or stalled. Check your connection or try the file again.",
             );
           } else {
             showToast(
@@ -4267,6 +4298,7 @@ function App() {
   return (
     <CheckoutCurrencyProvider>
       <div className="app-shell">
+        <PdfApiOfflineBanner />
         <SystemNotificationBanner language={language} />
         {contactModalOpen ? (
           <div

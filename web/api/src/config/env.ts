@@ -19,28 +19,26 @@ const packageRoot = path.resolve(configDir, "..", "..");
 const envPath = path.join(packageRoot, ".env");
 
 assertEnvFileExists();
-dotenv.config({ path: envPath });
-
 /**
- * Prisma uses a single `provider` (PostgreSQL) in `schema.prisma`; you cannot switch to SQLite in the same
- * schema/migration history without a parallel schema. When `DATABASE_URL` is unset in non-production, we
- * default to the local Docker Postgres from `web/api/docker-compose.yml`. Production must use your
- * managed PostgreSQL `DATABASE_URL` (e.g. Frankfurt); `file:` URLs are rejected in production.
+ * SQLite (`provider = sqlite`). Legacy PostgreSQL URLs are overridden so upgrades don't break startup.
+ * Path `file:./dev.db` is resolved relative to `web/api/prisma/` (see Prisma docs).
  */
-function applyDevPostgresDefaultIfUnset(): void {
-  const nodeEnv = process.env.NODE_ENV ?? "development";
-  if (nodeEnv === "production") {
+function coerceDatabaseUrlForSqlite(): void {
+  const raw = process.env.DATABASE_URL?.trim() ?? "";
+  if (!raw || raw.startsWith("postgresql:") || raw.startsWith("postgres:")) {
+    if (raw.startsWith("postgresql:") || raw.startsWith("postgres:")) {
+      console.warn(
+        "[env] DATABASE_URL was PostgreSQL; schema uses SQLite — using file:./dev.db (remove old DATABASE_URL from web/api/.env if you want to silence this).",
+      );
+    }
+    process.env.DATABASE_URL = "file:./dev.db";
     return;
   }
-  const current = process.env.DATABASE_URL?.trim();
-  if (current) {
-    return;
-  }
-  process.env.DATABASE_URL =
-    "postgresql://postgres:postgres@127.0.0.1:55432/pdf_platform?schema=public";
 }
 
-applyDevPostgresDefaultIfUnset();
+dotenv.config({ path: envPath });
+
+coerceDatabaseUrlForSqlite();
 
 const rawEnvSchema = z
   .object({
@@ -193,18 +191,6 @@ const rawEnvSchema = z
     WELCOME_CREDITS_MAX: z.coerce.number().int().min(0).max(500).default(10),
   })
   .superRefine((data, ctx) => {
-    if (
-      data.NODE_ENV === "production" &&
-      typeof data.DATABASE_URL === "string" &&
-      data.DATABASE_URL.trimStart().startsWith("file:")
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          "Production DATABASE_URL cannot use a SQLite file: URL — use PostgreSQL (e.g. managed Frankfurt instance).",
-        path: ["DATABASE_URL"],
-      });
-    }
     const smtpOk = Boolean(data.SMTP_USER && data.SMTP_PASS);
     const emailOk = Boolean(data.EMAIL_USER && data.EMAIL_PASS);
     if (!smtpOk && !emailOk) {

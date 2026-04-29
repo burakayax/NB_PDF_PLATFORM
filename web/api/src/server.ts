@@ -26,7 +26,7 @@ function attachListenError(server: http.Server | https.Server) {
   server.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
       console.error(
-        `[api] Port ${env.PORT} is already in use (EADDRINUSE). Another API or Docker container may be bound to it.\n` +
+        `[api] Port ${env.PORT} is already in use (EADDRINUSE). Stop the other process using this port or change PORT in web/api/.env.\n` +
           `[api] Fix: stop that process, or set PORT=4001 (or another port) in web/api/.env, then restart.`,
       );
       process.exit(1);

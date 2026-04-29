@@ -205,7 +205,7 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
    - **`SIDEBAR_TOOL_CREDIT_COST`** nesnesinde ilgili araç anahtarı için **aynı sayıyı** kullanın.
 
 3. **Yeniden başlatma:**  
-   - `ensure-tool-registry.ts` veya bu dosyadan türeyen maliyetleri değiştirdiyseniz: **Node API** sürecini yeniden başlatın (ör. geliştirmede `npm run dev` sürecini durdurup yeniden çalıştırma; **Docker** kullanıyorsanız API konteynerini yeniden başlatma).  
+   - `ensure-tool-registry.ts` veya bu dosyadan türeyen maliyetleri değiştirdiyseniz: **Node API** sürecini yeniden başlatın (geliştirmede `web/api` içinde çalışan `npm run dev` sürecini durdurup yeniden çalıştırma).  
    - Sadece `workspace.ts` metnini güncellediyseniz çoğu zaman **ön yüzü yenilemek** yeterlidir; unutmayın, **hesap kesimi** her zaman sunucudaki `ToolRegistry` ile yapılır.
 
 4. **İndirme günlüğü (audit) ve kredi:**  

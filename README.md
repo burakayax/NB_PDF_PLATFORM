@@ -51,7 +51,8 @@ NB PDF PLARTFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler
 | Masaüstü | Python 3.11+, CustomTkinter, PyPDF2, pikepdf, Pillow, Tesseract / Poppler (ortamınıza göre), isteğe bağlı Microsoft Office |
 | Web arayüzü | React, TypeScript, Vite, Tailwind CSS |
 | PDF web API | Python, FastAPI, Uvicorn; mevcut `src/pdf_engine` motorunun yeniden kullanımı |
-| Kimlik / SaaS API | Node.js, Express, Prisma, SQLite (geliştirme), JWT, Nodemailer |
+- `PDF web API` | Python, FastAPI, Uvicorn; mevcut `src/pdf_engine` motorunun yeniden kullanımı |
+| Kimlik / SaaS API | Node.js, Express, Prisma, SQLite (yerel `dev.db`), JWT, Nodemailer |
 | Geliştirme orkestrasyonu | npm, `concurrently` (kök `npm run dev`) |
 
 ### Kurulum (kısa)
