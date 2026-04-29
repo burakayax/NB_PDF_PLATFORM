@@ -2,6 +2,11 @@ import { useEffect, useRef } from "react";
 import { trackPageView } from "../api/analytics";
 import type { Language } from "../i18n/landing";
 
+/**
+ * Sunucuya yapı özeti + path ile sayfa görüntüsü gönderir.
+ * GA4 (gtag): `useGAPageTracking` kullanın — React Router `useLocation` ve yerel SPA history ile her geçişte `page_view` tetiklenir.
+ */
+
 type AnalyticsTrackingOptions = {
   enabled: boolean;
   /** When false, suppresses tracking even if cookie consent is granted (from `site.settings`). */
@@ -48,4 +53,6 @@ export function useAnalyticsTracking({
     });
   }, [accessToken, enabled, language, path, serverAnalyticsEnabled, view]);
 }
+
+export { useGAPageTracking } from "./useGAPageTracking";
 

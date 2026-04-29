@@ -94,6 +94,7 @@ import {
   type WorkspaceFeatureUi,
 } from "./lib/workspaceFeatures";
 import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
+import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
 import {
@@ -117,11 +118,6 @@ import {
   applyWorkspaceToolMeta,
   resetWorkspaceHeadSeo,
 } from "./lib/toolPageMeta";
-import {
-  getGaMeasurementId,
-  initializeGA,
-  trackGAPageView,
-} from "./lib/analytics";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -978,25 +974,10 @@ function App() {
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
 
-  /** GA4: bakım/boot splash'tan önce (hook sırasında) yükle — consent test bayrağı açıksa onay beklenmez. */
-  useEffect(() => {
-    const cookieAllowsGa =
-      GA_TEST_BYPASS_COOKIE_CONSENT || (hasConsent && isCookieConsentReady);
-    if (!cookieAllowsGa) {
-      return;
-    }
-    if (!getGaMeasurementId()) {
-      return;
-    }
-    initializeGA();
-    const tick = window.requestAnimationFrame(() => {
-      trackGAPageView(
-        `${window.location.pathname}${window.location.search}`,
-        document.title,
-      );
-    });
-    return () => window.cancelAnimationFrame(tick);
-  }, [hasConsent, isCookieConsentReady, view, trackedPath, language]);
+  useGAPageTracking({
+    enabled:
+      GA_TEST_BYPASS_COOKIE_CONSENT || (hasConsent && isCookieConsentReady),
+  });
 
   useEffect(() => {
     if (workspaceFeatures.length === 0) {
