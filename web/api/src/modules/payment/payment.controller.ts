@@ -3,7 +3,14 @@ import express from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
-import { createPaymentCheckoutSession, processPaymentCallback } from "./payment.service.js";
+import {
+  createPaymentCheckoutSession,
+  paymentWorkspaceRedirectUrl,
+  processPaymentCallback,
+} from "./payment.service.js";
+
+/** Süre dolunca bile tarayıcıyı SPA’ya gönderiz (iyi/başarısız URL ayrımı güvenilir olmayabilir; ödeme yine PSP tarafında tamamlanmış olabilir). */
+const CALLBACK_MAX_MS = 28_000;
 
 export async function createPaymentController(request: Request, response: Response) {
   const userId = request.authUser?.id;
@@ -81,11 +88,27 @@ export async function paymentCallbackController(request: Request, response: Resp
 
   console.log(`${IYZICO_CB_LOG} extracted token=${token ? `"len=${token.length}"` : "MISSING"}, conversationIdFromPost=${conversationIdFromPost ?? "none"}`);
 
-  const html = await processPaymentCallback(token, {
+  const fulfil = processPaymentCallback(token, {
     conversationIdFromRedirect: conversationIdFromPost,
     rawCallbackKeys: Object.keys(raw),
+  }).then((url) => ({ url, timedOut: false as const }));
+
+  const timedOutFallback = new Promise<{ url: string; timedOut: true }>((resolve) => {
+    setTimeout(
+      () => resolve({ url: paymentWorkspaceRedirectUrl(false), timedOut: true }),
+      CALLBACK_MAX_MS,
+    );
   });
 
-  console.log(`${IYZICO_CB_LOG} response: HTML redirect page sent (200)`);
-  response.status(200).type("html").send(html);
+  const result = await Promise.race([fulfil, timedOutFallback]);
+  if (result.timedOut) {
+    console.warn(`${IYZICO_CB_LOG} processing exceeded ${CALLBACK_MAX_MS}ms → 303 Location (fallback failed state; check logs above)`);
+  }
+
+  const redirectUrl = result.url;
+  console.log(`${IYZICO_CB_LOG} sending 303, empty body, Location=${redirectUrl}`);
+
+  // `res.redirect()` Express bazen küçük bir HTML "Redirecting…" gövdesi ekler — tarayıcı ekranda kalıyormuş gibi görünür; yalnız Location başlığı.
+  response.writeHead(303, { Location: redirectUrl });
+  response.end();
 }

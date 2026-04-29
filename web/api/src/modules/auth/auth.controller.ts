@@ -42,6 +42,10 @@ import {
   verifyEmailToken,
 } from "./auth.service.js";
 import { getDesktopDeviceIdFromHeaders, isDesktopClient } from "../device/device.service.js";
+import {
+  acceptOAuthFrontendOriginFromRequest,
+  resolveOAuthSpaRedirectBase,
+} from "../../lib/oauth-frontend-origin.js";
 
 const REFRESH_COOKIE_NAME = "nbpdf_refresh_token";
 const OAUTH_STATE_COOKIE = "nbpdf_google_oauth";
@@ -120,9 +124,55 @@ function clearCookieMatching(response: Response, name: string, options: CookieOp
   response.clearCookie(name, rest);
 }
 
+/** Cookie: `csrf|lang` | … | `desktop|port` | … | `fe|encodeURIComponent(origin)` */
+function parseOAuthStateCookieValue(rawCookie: string): {
+  csrfToken: string;
+  preferredLanguage: "tr" | "en";
+  desktopLocalPort: number | null;
+  frontendOriginRaw: string | null;
+} {
+  const parts = rawCookie.split("|");
+  const csrfToken = parts[0] ?? "";
+  const preferredLanguage: "tr" | "en" = parts[1] === "tr" ? "tr" : "en";
+  let idx = 2;
+  let desktopLocalPort: number | null = null;
+
+  if (parts[idx] === "desktop" && parts[idx + 1]) {
+    const parsedPort = Number.parseInt(parts[idx + 1] ?? "", 10);
+    if (!Number.isNaN(parsedPort) && parsedPort >= 1024 && parsedPort <= 65_535) {
+      desktopLocalPort = parsedPort;
+    }
+    idx += 2;
+  }
+
+  let frontendOriginRaw: string | null = null;
+  if (parts[idx] === "fe" && parts[idx + 1]) {
+    try {
+      frontendOriginRaw = decodeURIComponent(parts[idx + 1] ?? "");
+    } catch {
+      frontendOriginRaw = null;
+    }
+  }
+
+  return { csrfToken, preferredLanguage, desktopLocalPort, frontendOriginRaw };
+}
+
+function oauthRedirectBaseFromRequestCookie(request: Request): string {
+  const raw = request.cookies[OAUTH_STATE_COOKIE] as string | undefined;
+  if (!raw) {
+    return resolveOAuthSpaRedirectBase(null);
+  }
+  const parsed = parseOAuthStateCookieValue(raw);
+  return resolveOAuthSpaRedirectBase(parsed.frontendOriginRaw);
+}
+
 /** Google OAuth sonrası SPA yönlendirmeleri (JSON yok; yalnızca redirect). */
-function oauthFrontendRedirect(path: "login-success" | "login-error", query?: Record<string, string>) {
-  const base = env.OAUTH_FRONTEND_REDIRECT_ORIGIN.replace(/\/$/, "");
+function oauthFrontendRedirect(
+  path: "login-success" | "login-error",
+  query?: Record<string, string>,
+  redirectOriginBase?: string,
+) {
+  const base = (redirectOriginBase ?? env.OAUTH_FRONTEND_REDIRECT_ORIGIN).replace(/\/$/, "");
   const url = new URL(`${base}/${path}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
@@ -428,11 +478,24 @@ export async function googleOAuthStartController(request: Request, response: Res
       desktopLocalPort = parsed;
     }
   }
+  const frontendOriginQuery =
+    typeof request.query.frontend_origin === "string" ? request.query.frontend_origin.trim() : "";
+  let trustedFrontendOrigin = "";
+  if (frontendOriginQuery && acceptOAuthFrontendOriginFromRequest(frontendOriginQuery)) {
+    trustedFrontendOrigin = frontendOriginQuery.replace(/\/$/, "");
+  } else if (frontendOriginQuery) {
+    authLog.warn("GET /auth/google: ignoring untrusted frontend_origin", {
+      preview: frontendOriginQuery.slice(0, 120),
+    });
+  }
   const state = createSecureToken(24);
-  const oauthCookieValue =
-    desktopLocalPort !== null
-      ? `${state}|${preferredLanguage}|desktop|${desktopLocalPort}`
-      : `${state}|${preferredLanguage}`;
+  let oauthCookieValue = `${state}|${preferredLanguage}`;
+  if (desktopLocalPort !== null) {
+    oauthCookieValue += `|desktop|${desktopLocalPort}`;
+  }
+  if (trustedFrontendOrigin) {
+    oauthCookieValue += `|fe|${encodeURIComponent(trustedFrontendOrigin)}`;
+  }
   response.cookie(OAUTH_STATE_COOKIE, oauthCookieValue, getOAuthStateCookieOptions());
   // Embed desktop port in Google `state` so redirect still works if the OAuth cookie is dropped
   // (browser privacy / cross-site edge cases). CSRF token is the hex prefix before ".d<port>".
@@ -463,6 +526,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
   });
 
   if (oauthErr) {
+    const rdBase = oauthRedirectBaseFromRequestCookie(request);
     clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
     const desc =
       typeof request.query.error_description === "string" ? request.query.error_description : oauthErr;
@@ -472,13 +536,14 @@ export async function googleOAuthCallbackController(request: Request, response: 
       errorDescription: desc.slice(0, 500),
       ...meta,
     });
-    const url = oauthFrontendRedirect("login-error", { reason: desc.slice(0, 500) });
+    const url = oauthFrontendRedirect("login-error", { reason: desc.slice(0, 500) }, rdBase);
     logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
     response.redirect(url);
     return;
   }
 
   if (!code || !state) {
+    const rdBase = oauthRedirectBaseFromRequestCookie(request);
     clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
     logGoogleOAuth({
       outcome: "failure",
@@ -487,7 +552,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
       ...meta,
     });
     console.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, { ...meta });
-    const url = oauthFrontendRedirect("login-error", { reason: "Missing authorization response from Google." });
+    const url = oauthFrontendRedirect("login-error", { reason: "Missing authorization response from Google." }, rdBase);
     logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
     response.redirect(url);
     return;
@@ -505,16 +570,11 @@ export async function googleOAuthCallbackController(request: Request, response: 
     return;
   }
 
-  const parts = rawCookie.split("|");
-  const expectedState = parts[0] ?? "";
-  const preferredLanguage = parts[1] === "tr" ? "tr" : "en";
-  let desktopLocalPort: number | null = null;
-  if (parts[2] === "desktop" && parts[3]) {
-    const parsed = Number.parseInt(parts[3], 10);
-    if (!Number.isNaN(parsed) && parsed >= 1024 && parsed <= 65_535) {
-      desktopLocalPort = parsed;
-    }
-  }
+  const parsedOAuth = parseOAuthStateCookieValue(rawCookie);
+  const oauthSpaRedirectBase = resolveOAuthSpaRedirectBase(parsedOAuth.frontendOriginRaw);
+  const expectedState = parsedOAuth.csrfToken;
+  const preferredLanguage = parsedOAuth.preferredLanguage;
+  let desktopLocalPort = parsedOAuth.desktopLocalPort;
 
   const stateFromQuery = typeof request.query.state === "string" ? request.query.state : "";
   let stateCsrf = stateFromQuery;
@@ -536,7 +596,11 @@ export async function googleOAuthCallbackController(request: Request, response: 
     console.error(`${GOOGLE_OAUTH_LOG} callback: state mismatch (possible CSRF or stale session)`, {
       ...meta,
     });
-    const url = oauthFrontendRedirect("login-error", { reason: "Invalid sign-in state. Please try again." });
+    const url = oauthFrontendRedirect(
+      "login-error",
+      { reason: "Invalid sign-in state. Please try again." },
+      oauthSpaRedirectBase,
+    );
     logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
     response.redirect(url);
     return;
@@ -575,7 +639,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
     const redirectUrl =
       desktopLocalPort !== null
         ? `http://127.0.0.1:${desktopLocalPort}/oauth?token=${encodeURIComponent(session.accessToken)}`
-        : oauthFrontendRedirect("login-success", { token: session.accessToken });
+        : oauthFrontendRedirect("login-success", { token: session.accessToken }, oauthSpaRedirectBase);
     console.log(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
       redirectKind: desktopLocalPort !== null ? "desktop-localhost" : "login-success",
       maskedUrl: maskRedirectUrlForLog(redirectUrl),
@@ -603,7 +667,7 @@ export async function googleOAuthCallbackController(request: Request, response: 
       httpStatus: error instanceof HttpError ? error.statusCode : undefined,
       ...meta,
     });
-    const url = oauthFrontendRedirect("login-error", { reason: message });
+    const url = oauthFrontendRedirect("login-error", { reason: message }, oauthSpaRedirectBase);
     logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
     response.redirect(url);
   }

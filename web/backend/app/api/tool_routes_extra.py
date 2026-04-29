@@ -7,8 +7,7 @@ import logging
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from app.api.pdf_auth import extract_pdf_access_token
 from app.core import operations
@@ -16,7 +15,6 @@ from app.core.operations import (
     cleanup_and_raise,
     cleanup_path,
     create_workdir,
-    download_response,
     format_derived_filename,
     parse_pages_text,
     save_upload,
@@ -26,7 +24,6 @@ from app.core.result_store import save_result_from_file
 from app.core.thread_pool import run_cpu_bound
 from app.core.saas_gate import (
     entitlement_check,
-    entitlement_consume,
     saas_current_user_id,
 )
 from src import pdf_toolkit_extra as ptx
@@ -41,24 +38,6 @@ router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS-extras"])
 def _g_check(d: dict[str, Any]) -> dict[str, Any]:
     return {
         "allowed": bool(d.get("allowed")),
-        "reason": str(d.get("reason", "")),
-        "cost": int(d.get("cost") or 0),
-        "creditsBefore": int(d.get("creditsBefore") or 0),
-        "creditsAfter": int(d.get("creditsAfter") or 0),
-    }
-
-
-def _g_con(d: dict[str, Any]) -> dict[str, Any]:
-    if d.get("status") == "ok":
-        return {
-            "allowed": True,
-            "reason": str(d.get("reason", "")),
-            "cost": int(d.get("cost") or 0),
-            "creditsBefore": int(d.get("creditsBefore") or 0),
-            "creditsAfter": int(d.get("creditsAfter") or 0),
-        }
-    return {
-        "allowed": False,
         "reason": str(d.get("reason", "")),
         "cost": int(d.get("cost") or 0),
         "creditsBefore": int(d.get("creditsBefore") or 0),
@@ -412,10 +391,10 @@ async def tool_pdf_to_ppt(
 
 @router.post("/ppt-to-pdf")
 async def tool_ppt_to_pdf(
-    background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
 ):
+    decision = await entitlement_check(token, "ppt-to-pdf")
     workdir = create_workdir()
     try:
         saved = await save_upload(file, workdir)
@@ -425,13 +404,38 @@ async def tool_ppt_to_pdf(
         out_n = format_derived_filename(file.filename or saved.name, "PDF", "pdf")
         out_p = workdir / out_n
         await run_cpu_bound(ptx.pptx_to_pdf, sp, str(out_p))
-        cons = await entitlement_consume(token, "ppt-to-pdf")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(status_code=402, content={"error": "payment_required", "saasGating": _g_con(cons)})
-        return download_response(out_p, out_p.name, "application/pdf", background_tasks, workdir, saas_gating=_g_con(cons))
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            thumb_png = None
+            try:
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(out_p)
+            except OSError:
+                thumb_png = None
+            return save_result_from_file(
+                out_p,
+                out_p.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb_png,
+                tool="ppt-to-pdf",
+            )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _g_check(decision),
+        }
     except Exception as e:
         cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 @router.post("/pdf-to-image")

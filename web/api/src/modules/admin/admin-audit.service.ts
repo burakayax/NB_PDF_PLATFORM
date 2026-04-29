@@ -1,6 +1,7 @@
+import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
 import { upsertPackagesConfigPartial } from "../../lib/packages-config.service.js";
-import { getSetting, getSettingDirect, setSettingFromAdminPatch } from "../../lib/site-config.service.js";
+import { getSettingDirect, setSettingFromAdminPatch } from "../../lib/site-config.service.js";
 import { PACKAGES_RELATED_KEYS, SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { HttpError } from "../../lib/http-error.js";
 import { invalidatePlanRuntimeCache } from "../subscription/plan-runtime.js";
@@ -92,17 +93,13 @@ export async function recordSettingRevision(
   await trimOldRevisions(scope);
 }
 
+/** Mirrors `MAINTENANCE_MODE` into `AppSettings` for legacy reads; not the source of truth for public API. */
 async function syncGlobalMaintenanceToAppSettingsRow(): Promise<void> {
   try {
-    const raw = await getSetting(SITE_SETTING_KEYS.GLOBAL_FLAGS);
-    let maintenance = false;
-    if (raw != null && typeof raw === "object" && !Array.isArray(raw)) {
-      maintenance = (raw as Record<string, unknown>).maintenanceMode === true;
-    }
     await prisma.appSettings.upsert({
       where: { id: 1 },
-      create: { id: 1, globalMaintenanceMode: maintenance },
-      update: { globalMaintenanceMode: maintenance },
+      create: { id: 1, globalMaintenanceMode: env.maintenanceModeEnabled },
+      update: { globalMaintenanceMode: env.maintenanceModeEnabled },
     });
   } catch (err) {
     console.error("[admin-audit] syncGlobalMaintenanceToAppSettingsRow failed", err);

@@ -224,6 +224,7 @@ async function evaluate(
     };
   }
 
+  // One download / one consume: cost is ToolRegistry only (never pageCount/size). Sync with SIDEBAR_TOOL_CREDIT_COST / ensure-tool-registry.
   const cost = Math.max(0, Math.trunc(tool.cost));
 
   if (user.credit_balance >= cost) {

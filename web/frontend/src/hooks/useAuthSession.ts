@@ -15,6 +15,7 @@ import {
   type UpdateProfileInput,
 } from "../api/auth";
 import { registerSaasSessionSync } from "../api/subscription";
+import { clearPersistedWorkspaceTool } from "../lib/workspaceToolSelection";
 import type { Language } from "../i18n/landing";
 
 export function useAuthSession() {
@@ -32,6 +33,7 @@ export function useAuthSession() {
     setAccessToken(null);
     setUser(null);
     window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    clearPersistedWorkspaceTool();
   }, []);
 
   const completeOAuthLogin = useCallback(async (rawToken: string) => {

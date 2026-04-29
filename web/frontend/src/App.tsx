@@ -86,6 +86,8 @@ import {
   validatePagesFormat,
   validatePagesMax,
   ws,
+  expandPagesString,
+  PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG,
 } from "./i18n/workspace";
 import { getCmsWorkspaceBanner } from "./lib/landingCmsMerge";
 import {
@@ -114,6 +116,13 @@ import {
 } from "./lib/oauthRedirect";
 import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
+import {
+  persistWorkspaceTool,
+  readInitialWorkspaceToolSelection,
+  clearPersistedWorkspaceTool,
+  clearPdfWorkspaceSplitDraftsFromLocalStorage,
+  clearWorkspaceSessionStoragePrefixes,
+} from "./lib/workspaceToolSelection";
 import {
   applyWorkspaceToolMeta,
   resetWorkspaceHeadSeo,
@@ -441,19 +450,38 @@ function getReorderPreviewOffset(
   return 0;
 }
 
-function readInitialWorkspaceFeatureId(): FeatureKey {
-  if (typeof window === "undefined") {
-    return "split";
-  }
-  return parseWorkspaceToolPath(window.location.pathname) ?? "split";
-}
-
 function workspacePathForFeature(featureId: FeatureKey): string {
   return `/tools/${toolSlugForFeature(featureId)}`;
 }
 
 /** createMergeJob yanıtı gelene kadar UI’da anında gösterilen yer tutucu iş kimliği. */
 const MERGE_JOB_PENDING_ID = "__merge_pending__";
+/** İş süresi uyarısı: anket yanıtsız kalırsa (PDF motoru vb.) sıfışma. */
+const MERGE_WATCHDOG_MS = 30_000;
+const PDF_INSPECT_TIMEOUT_MS = 30_000;
+/** postToolToResult / downloadFromApi yanıt beklerken UI (≈97% veya ‘İşleniyor’) kilitlenmesin. */
+const TOOL_PIPELINE_WATCHDOG_MS = 30_000;
+
+function withPdfInspectTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  if (ms <= 0) {
+    return promise;
+  }
+  return new Promise((resolve, reject) => {
+    const t = window.setTimeout(() => {
+      reject(new Error("pdf_inspect_timeout"));
+    }, ms);
+    promise.then(
+      (v) => {
+        window.clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        window.clearTimeout(t);
+        reject(e);
+      },
+    );
+  });
+}
 
 function getTrackedViewName(view: AppView) {
   switch (view) {
@@ -590,7 +618,9 @@ function App() {
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
   const [legalBackView, setLegalBackView] = useState<NonLegalView>("landing");
   const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>(() =>
-    readInitialWorkspaceFeatureId(),
+    typeof window !== "undefined"
+      ? readInitialWorkspaceToolSelection(window.location.pathname)
+      : "split",
   );
   const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>("split");
@@ -603,6 +633,7 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [password, setPassword] = useState("");
   const [inputPassword, setInputPassword] = useState("");
@@ -684,7 +715,12 @@ function App() {
      * `downloadResult` instead of re-triggering a blob replay.
      */
     gatedDownload?: {
-      resultId: string;
+      /** Tool that produced this output — used for `/download-log` & balance refresh; avoids wrong id if user switched sidebar. */
+      toolId: FeatureKey;
+      /** GET `/api/pdf/result/{id}/download`. */
+      resultId?: string;
+      /** GET `/api/jobs/{id}/download` — merge workflow. */
+      mergeJobId?: string;
       fallbackName: string;
       thumbnailBlobUrl: string | null;
       /**
@@ -697,6 +733,8 @@ function App() {
   } | null>(null);
   const toolProgressDisposeRef = useRef<(() => void) | null>(null);
   const toolRunAbortRef = useRef<AbortController | null>(null);
+  /** Watchdog: POST/GET fetch zaman aşımı — `AbortError` ile kullanıcı iptalini ayırt etmek için. */
+  const genericToolStalemateTriggeredRef = useRef(false);
   const mergeFlowAbortRef = useRef<AbortController | null>(null);
   const [mergePointerDraggingId, setMergePointerDraggingId] = useState<
     string | null
@@ -716,8 +754,15 @@ function App() {
   } | null>(null);
   const mergeDragHoverIndexRef = useRef<number | null>(null);
   const mergePollHandledRef = useRef(false);
+  /** Poll effect yeniden işlendiğinde (dil vb.) `handled` sıfırı tekrarlama — aynı `job_id` ise koru (çift başarı bildirimi). */
+  const mergePollingActiveJobIdRef = useRef<string | null>(null);
+  /** Bu oturuma göre yükleme zaman aşımı (yüklenmezse çıkış). */
+  const mergePollingStartedMsRef = useRef(0);
+  const mergeJobLatestRef = useRef<MergeJobStatus | null>(null);
   const mergePollInFlightRef = useRef(false);
   const mergeListScrollRef = useRef<HTMLDivElement | null>(null);
+  /** `createMergeJob` SaaS preview payload — shown on gated merge download bar. */
+  const mergeSaasGatingRef = useRef<SaaSGating | null>(null);
   const [mergeVerifyingId, setMergeVerifyingId] = useState<string | null>(null);
   const [mergeSnapId, setMergeSnapId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -784,6 +829,8 @@ function App() {
   const insufficientCreditsBarrierCreditSnapshotRef = useRef<number | null>(
     null,
   );
+  /** Skips one `persistWorkspaceTool` effect run so a post-download atomic reset isn't overwritten by stale tool id. */
+  const persistWorkspaceSkipRef = useRef(false);
   /** One-shot: user acknowledged PDF→Excel table-structure warning. */
   const excelConfirmRef = useRef(false);
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
@@ -795,6 +842,9 @@ function App() {
   >({});
   const [organizePageOrder, setOrganizePageOrder] = useState<number[]>([]);
   const splitVisualAutoOpenedForUploadId = useRef<string | null>(null);
+  const deleteVisualAutoOpenedForUploadId = useRef<string | null>(null);
+  /** Blocks duplicate `/download` / merge GETs (each charges `entitlement_consume`). */
+  const gatedDownloadInFlightKeysRef = useRef<Set<string>>(new Set());
   const selectedFeatureIdEffectDidMountRef = useRef(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
@@ -812,6 +862,20 @@ function App() {
     }
     splitVisualAutoOpenedForUploadId.current = id;
     setPageVisualMode("split");
+    setPageVisualModalOpen(true);
+  }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
+
+  useEffect(() => {
+    const id = uploads[0]?.id;
+    const n = uploads[0]?.pageCount;
+    if (selectedFeatureId !== "delete-pages" || !id || !n) {
+      return;
+    }
+    if (deleteVisualAutoOpenedForUploadId.current === id) {
+      return;
+    }
+    deleteVisualAutoOpenedForUploadId.current = id;
+    setPageVisualMode("delete");
     setPageVisualModalOpen(true);
   }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
 
@@ -840,6 +904,20 @@ function App() {
     setPageVisualModalOpen(false);
     if (selectedFeatureId !== "split") {
       splitVisualAutoOpenedForUploadId.current = null;
+    }
+    if (selectedFeatureId !== "delete-pages") {
+      deleteVisualAutoOpenedForUploadId.current = null;
+    }
+    if (selectedFeatureId === "split") {
+      setPageVisualMode("split");
+    } else if (selectedFeatureId === "delete-pages") {
+      setPageVisualMode("delete");
+    } else if (selectedFeatureId === "rotate-pdf") {
+      setPageVisualMode("rotate");
+    } else if (selectedFeatureId === "organize-pdf") {
+      setPageVisualMode("organize");
+    } else {
+      setPageVisualMode("split");
     }
   }, [selectedFeatureId]);
 
@@ -990,6 +1068,17 @@ function App() {
     }
   }, [workspaceFeatures, selectedFeatureId]);
 
+  useEffect(() => {
+    if (persistWorkspaceSkipRef.current) {
+      persistWorkspaceSkipRef.current = false;
+      return;
+    }
+    if (view !== "web" || contentPanel !== "tool") {
+      return;
+    }
+    persistWorkspaceTool(selectedFeatureId);
+  }, [view, contentPanel, selectedFeatureId]);
+
   useAnalyticsTracking({
     enabled: GA_TEST_BYPASS_COOKIE_CONSENT || hasConsent,
     serverAnalyticsEnabled,
@@ -1139,7 +1228,7 @@ function App() {
     setToolProgressSuccess(null);
   }, []);
 
-  function resetForm(clearInputValue: boolean) {
+  const resetForm = useCallback((clearInputValue: boolean) => {
     // Modül değişimi veya işlem sonrası dosya listesi, parola ve sayfa metnini tek yerden sıfırlar.
     // Önceki seçimlerin yeni modüle sızmasını önlemek için merkezi sıfırlama gerekir.
     // Alanlar eksik temizlenirse kullanıcı yanlış modülde eski dosya ile gönderim deneyebilir.
@@ -1178,7 +1267,7 @@ function App() {
     if (clearInputValue && fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  }
+  }, []);
 
   function setUploadPassword(targetId: string, value: string) {
     setUploads((current) =>
@@ -1209,7 +1298,10 @@ function App() {
     }
     setMergeVerifyingId(itemId);
     try {
-      const result = await inspectPdf(item.file, pwd, accessToken);
+      const result = await withPdfInspectTimeout(
+        inspectPdf(item.file, pwd, accessToken),
+        PDF_INSPECT_TIMEOUT_MS,
+      );
       const ok = result.page_count !== null && !result.inspect_error;
       setUploads((cur) =>
         cur.map((u) =>
@@ -1223,17 +1315,27 @@ function App() {
           L.mergePasswordWrong,
         );
       }
-    } catch {
+    } catch (err) {
       setUploads((cur) =>
         cur.map((u) =>
           u.id === itemId ? { ...u, mergePasswordVerified: false } : u,
         ),
       );
-      showToast(
-        "error",
-        language === "tr" ? "Parola doğrulanamadı" : "Invalid password",
-        friendlyOperationFailedMessage(language),
-      );
+      if (err instanceof Error && err.message === "pdf_inspect_timeout") {
+        showToast(
+          "error",
+          language === "tr" ? "PDF denetimi zaman aşımı" : "PDF check timed out",
+          language === "tr"
+            ? "30 saniye içinde yanıt alınamadı. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
+            : "No response within 30 seconds. Check your connection or try the file again.",
+        );
+      } else {
+        showToast(
+          "error",
+          language === "tr" ? "Parola doğrulanamadı" : "Invalid password",
+          friendlyOperationFailedMessage(language),
+        );
+      }
     } finally {
       setMergeVerifyingId(null);
     }
@@ -1430,9 +1532,47 @@ function App() {
     setSubscriptionSummary(summary);
   }, [accessToken, isAuthenticated]);
 
+  /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
+  const applyWorkspaceCleanSlateAfterDownload = useCallback(
+    (keepToolId: FeatureKey) => {
+      disposeToolProgressSuccess();
+      persistWorkspaceSkipRef.current = true;
+      clearPersistedWorkspaceTool();
+      clearPdfWorkspaceSplitDraftsFromLocalStorage();
+      clearWorkspaceSessionStoragePrefixes();
+      setSelectedFeatureId(keepToolId);
+      setActiveSidebar(keepToolId);
+      setContentPanel("tool");
+      try {
+        const u = new URL(window.location.href);
+        u.pathname =
+          workspacePathForFeature(keepToolId).replace(/\/$/, "") || "/";
+        window.history.replaceState(
+          {},
+          "",
+          `${u.pathname}${u.search ? `?${u.searchParams.toString()}` : ""}${u.hash}`,
+        );
+      } catch {
+        /* ignore */
+      }
+      resetForm(true);
+      setMergeJob(null);
+      setSubmitting(false);
+      clearInsufficientCreditsToolBarrier();
+      persistWorkspaceTool(keepToolId);
+      setWorkspaceSlateNonce((n) => n + 1);
+    },
+    [disposeToolProgressSuccess, resetForm],
+  );
+
   /**
-   * Gated indirme: sunucu dosya adı + tarayıcı ``Save As`` (download attribute) ile
-   * ``GET /api/pdf/result/{id}/download``; indirme kanıtı için log + başarılı akışta ACK.
+   * Gated indirme: ``GET /api/pdf/result/{id}/download`` → blob tarayıcıda tutulur,
+   * ardından (tercihen Save dialog / yoksa indirme) çalışır. ``download_logs`` satırı
+   * gövde okunmadan hemen önce PENDING oluşturulur; teslimattan sonra ACK.
+   *
+   * Kredi düşümü istemciden yapılmaz — PDF worker tek ``entitlement_consume`` ile Node
+   * ``ToolRegistry.cost`` kullanır. 1 başarılı indirme = 1 kez düşüş (Sidebar’daki maliyet
+   * ile aynı sayıların ``ensure-tool-registry.ts`` ile senkron olması beklenir).
    */
   const runGatedDownloadWithFilename = useCallback(
     async (
@@ -1441,25 +1581,32 @@ function App() {
       clientFileName: string,
       toolId: FeatureKey,
     ) => {
-      let logId: string | null = null;
-      if (accessToken) {
-        try {
-          const created = await createDownloadLog(accessToken, {
-            resultId,
-            toolId,
-          });
-          logId = created.id;
-        } catch {
-          /* kanıt isteğe bağlı; indirmeyi engellememeli */
-        }
+      const flightKey = `r:${resultId}`;
+      if (gatedDownloadInFlightKeysRef.current.has(flightKey)) {
+        return;
       }
+      gatedDownloadInFlightKeysRef.current.add(flightKey);
       try {
+        let pendingLogId: string | null = null;
         const outcome = await downloadResult(
           resultId,
           serverFallbackName,
           accessToken,
           {
             clientDownloadName: clientFileName,
+            onBeforeReadBody: accessToken
+              ? async () => {
+                  try {
+                    const row = await createDownloadLog(accessToken, {
+                      resultId,
+                      toolId,
+                    });
+                    pendingLogId = row.id;
+                  } catch {
+                    /* attribution optional */
+                  }
+                }
+              : undefined,
           },
         );
         if (outcome.status === "payment_required") {
@@ -1482,10 +1629,14 @@ function App() {
           );
           return;
         }
-        disposeToolProgressSuccess();
-        if (logId && accessToken) {
-          void ackDownloadLog(accessToken, logId).catch(() => {});
+        if (accessToken && pendingLogId) {
+          try {
+            await ackDownloadLog(accessToken, pendingLogId);
+          } catch {
+            /* optional */
+          }
         }
+        applyWorkspaceCleanSlateAfterDownload(toolId);
         showToast(
           "success",
           language === "tr" ? "İndirme tamamlandı" : "Download complete",
@@ -1505,17 +1656,22 @@ function App() {
             setUserBalance(next);
           }
         }
-      } catch {
+      } catch (e: unknown) {
+        if (isUserAbortError(e)) {
+          return;
+        }
         showToast(
           "error",
           language === "tr" ? "İndirme başarısız" : "Download failed",
           friendlyOperationFailedMessage(language),
         );
+      } finally {
+        gatedDownloadInFlightKeysRef.current.delete(flightKey);
       }
     },
     [
       accessToken,
-      disposeToolProgressSuccess,
+      applyWorkspaceCleanSlateAfterDownload,
       language,
       refreshSubscriptionState,
       showToast,
@@ -1529,6 +1685,107 @@ function App() {
       void runGatedDownloadWithFilename(resultId, fallbackName, name, toolId);
     },
     [runGatedDownloadWithFilename],
+  );
+
+  /** Merge çıktısı: ``GET /api/jobs/{id}/download`` — tek `consume`/merge ile `ToolRegistry` maliyeti (istemci miktar göndermez; 1 indirme = merge cost kadar). */
+  const runMergeJobGatedDownloadWithFilename = useCallback(
+    async (
+      jobId: string,
+      serverFallbackName: string,
+      clientFileName: string,
+    ) => {
+      const flightKey = `m:${jobId}`;
+      if (gatedDownloadInFlightKeysRef.current.has(flightKey)) {
+        return;
+      }
+      gatedDownloadInFlightKeysRef.current.add(flightKey);
+      try {
+        let pendingLogId: string | null = null;
+        const dl = await downloadMergeJob(jobId, serverFallbackName, accessToken, {
+          onBeforeReadBody: accessToken
+            ? async () => {
+                try {
+                  const row = await createDownloadLog(accessToken, {
+                    resultId: jobId,
+                    toolId: "merge",
+                  });
+                  pendingLogId = row.id;
+                } catch {
+                  /* noop */
+                }
+              }
+            : undefined,
+        });
+        if (accessToken && pendingLogId) {
+          try {
+            await ackDownloadLog(accessToken, pendingLogId);
+          } catch {
+            /* noop */
+          }
+        }
+        applyWorkspaceCleanSlateAfterDownload("merge");
+        showToast(
+          "success",
+          language === "tr" ? "İndirme tamamlandı" : "Download complete",
+          clientFileName,
+        );
+        void refreshSubscriptionState();
+        if (accessToken && user) {
+          const balanceCtx = {
+            userId: user.id,
+            role:
+              user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+          };
+          const next = await fetchUserBalance(accessToken, balanceCtx).catch(
+            () => null,
+          );
+          if (next) {
+            setUserBalance(next);
+          }
+        }
+        dl.dispose?.();
+        toolProgressDisposeRef.current = null;
+      } catch (e: unknown) {
+        if (isUserAbortError(e)) {
+          return;
+        }
+        if (e instanceof EntitlementPaymentRequiredError) {
+          if (e.saasGating) {
+            setUserBalance((prev) =>
+              prev && e.saasGating
+                ? { ...prev, creditBalance: e.saasGating.creditsAfter }
+                : prev,
+            );
+          }
+          armInsufficientCreditsToolBarrier();
+          tryShowConversionPopupRef.current("insufficient_credits", "download");
+          return;
+        }
+        showToast(
+          "error",
+          language === "tr" ? "İndirme başarısız" : "Download failed",
+          friendlyOperationFailedMessage(language),
+        );
+      } finally {
+        gatedDownloadInFlightKeysRef.current.delete(flightKey);
+      }
+    },
+    [
+      accessToken,
+      applyWorkspaceCleanSlateAfterDownload,
+      language,
+      refreshSubscriptionState,
+      showToast,
+      user,
+    ],
+  );
+
+  const queueMergeGatedDownload = useCallback(
+    (jobId: string, fallbackName: string) => {
+      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
+      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, name);
+    },
+    [runMergeJobGatedDownloadWithFilename],
   );
 
   const openConversionUpgradeModalManual = useCallback(() => {
@@ -1712,6 +1969,10 @@ function App() {
   );
 
   useEffect(() => {
+    mergeJobLatestRef.current = mergeJob;
+  }, [mergeJob]);
+
+  useEffect(() => {
     if (
       selectedFeatureId !== "merge" ||
       !mergeJob?.id ||
@@ -1720,9 +1981,15 @@ function App() {
       return;
     }
 
-    let active = true;
-    mergePollHandledRef.current = false;
     const jobId = mergeJob.id;
+
+    if (mergePollingActiveJobIdRef.current !== jobId) {
+      mergePollingActiveJobIdRef.current = jobId;
+      mergePollHandledRef.current = false;
+      mergePollingStartedMsRef.current = Date.now();
+    }
+
+    let active = true;
     const fallbackName = selectedFeature.fallbackFilename;
 
     const tick = async () => {
@@ -1738,6 +2005,30 @@ function App() {
       const pollSignal = mergeFlowAbortRef.current?.signal;
       mergePollInFlightRef.current = true;
       try {
+        const mjSnap = mergeJobLatestRef.current;
+        if (
+          mjSnap &&
+          mjSnap.id === jobId &&
+          !mergePollHandledRef.current &&
+          (mjSnap.status === "queued" || mjSnap.status === "running") &&
+          Date.now() - mergePollingStartedMsRef.current > MERGE_WATCHDOG_MS
+        ) {
+          mergePollHandledRef.current = true;
+          showToast(
+            "error",
+            language === "tr"
+              ? "İşlem zaman aşımı"
+              : "Operation timed out",
+            language === "tr"
+              ? "Birleştirme 30 saniye içinde tamamlanamadı. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
+              : "Merge did not finish within 30 seconds. Check your connection and try again.",
+          );
+          tryShowConversionPopupRef.current("buy_credits");
+          setSubmitting(false);
+          setMergeJob(null);
+          mergePollInFlightRef.current = false;
+          return;
+        }
         const nextStatus = await fetchMergeJob(jobId, accessToken, {
           signal: pollSignal,
         });
@@ -1769,79 +2060,36 @@ function App() {
 
         if (nextStatus.status === "completed") {
           mergePollHandledRef.current = true;
-          try {
-            const dl = await downloadMergeJob(
-              jobId,
-              fallbackName,
-              accessToken,
-              { signal: pollSignal },
-            );
-            if (!active) {
-              return;
-            }
-            disposeToolProgressSuccess();
-            void refreshSubscriptionState();
-            if (accessToken && user) {
-              const balanceCtx = {
-                userId: user.id,
-                role:
-                  user.role === "ADMIN"
-                    ? ("ADMIN" as const)
-                    : ("USER" as const),
-              };
-              void fetchUserBalance(accessToken, balanceCtx).then((b) => {
-                if (b) {
-                  setUserBalance(b);
-                }
-              });
-            }
-            showToast(
-              "success",
-              M.mergeToastSuccessTitle,
-              M.mergeToastSuccessBody,
-            );
-            resetForm(true);
-            setSubmitting(false);
-            setMergeJob(null);
-            if (dl.dispose) {
-              toolProgressDisposeRef.current = dl.dispose;
-            }
-            offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
-          } catch (downloadErr) {
-            if (!active) {
-              return;
-            }
-            setSubmitting(false);
-            if (isUserAbortError(downloadErr)) {
-              setMergeJob(null);
-              return;
-            }
-            if (downloadErr instanceof EntitlementPaymentRequiredError) {
-              if (downloadErr.saasGating) {
-                setUserBalance((prev) =>
-                  prev && downloadErr.saasGating
-                    ? {
-                        ...prev,
-                        creditBalance: downloadErr.saasGating.creditsAfter,
-                      }
-                    : prev,
-                );
-              }
-              armInsufficientCreditsToolBarrier();
-              tryShowConversionPopupRef.current(
-                "insufficient_credits",
-                "download",
-              );
-              return;
-            }
-            showToast(
-              "error",
-              M.mergeToastDownloadErrorTitle,
-              friendlyOperationFailedMessage(language),
-            );
-            tryShowConversionPopupRef.current("buy_credits");
+          if (!active) {
             return;
           }
+          disposeToolProgressSuccess();
+          toolProgressDisposeRef.current = null;
+          resetForm(true);
+          setMergeJob(null);
+          setSubmitting(false);
+          setToolProgressSuccess({
+            filename: fallbackName,
+            featureTitle: selectedFeature.title,
+            gatedDownload: {
+              toolId: "merge",
+              mergeJobId: jobId,
+              fallbackName,
+              thumbnailBlobUrl: null,
+              saasGating: mergeSaasGatingRef.current,
+            },
+          });
+          showToast(
+            "success",
+            language === "tr" ? "İşlem tamamlandı" : "Process complete",
+            language === "tr"
+              ? "İndirmek için aşağıdaki düğmeyi kullanın."
+              : "Use the button below to download.",
+          );
+          offerPostRunMonetizationHintAfterSuccess(
+            mergeSaasGatingRef.current ?? null,
+          );
+          void refreshSubscriptionState();
         }
       } catch (error) {
         if (!active) {
@@ -1893,9 +2141,10 @@ function App() {
     selectedFeature.title,
     language,
     disposeToolProgressSuccess,
-    accessToken,
+    resetForm,
+    showToast,
     offerPostRunMonetizationHintAfterSuccess,
-    user,
+    refreshSubscriptionState,
   ]);
 
   useEffect(() => {
@@ -1920,13 +2169,20 @@ function App() {
       return;
     }
     const timer = window.setTimeout(() => {
-      void inspectPdf(primary.file, pwd, accessToken).then((result) => {
-        setUploads((cur) =>
-          cur.map((u, i) =>
-            i === 0 ? { ...u, pageCount: result.page_count ?? null } : u,
-          ),
-        );
-      });
+      void withPdfInspectTimeout(
+        inspectPdf(primary.file, pwd, accessToken),
+        PDF_INSPECT_TIMEOUT_MS,
+      )
+        .then((result) => {
+          setUploads((cur) =>
+            cur.map((u, i) =>
+              i === 0 ? { ...u, pageCount: result.page_count ?? null } : u,
+            ),
+          );
+        })
+        .catch(() => {
+          /* Parola denemesi / zaman aşımı; sessiz kal — kullanıcı yeni şifre girsin */
+        });
     }, 450);
     return () => window.clearTimeout(timer);
   }, [
@@ -2467,6 +2723,25 @@ function App() {
 
   const showUpgradeNudgeOnLoading = false;
 
+  const deleteWouldRemoveEveryPage = useMemo(() => {
+    if (selectedFeature.id !== "delete-pages") {
+      return false;
+    }
+    const maxP = uploads[0]?.pageCount ?? null;
+    const raw = deletePagesText.trim();
+    if (!maxP || !raw) {
+      return false;
+    }
+    if (validatePagesFormat(deletePagesText, language)) {
+      return false;
+    }
+    if (validatePagesMax(deletePagesText, maxP, language)) {
+      return false;
+    }
+    const exp = expandPagesString(deletePagesText, maxP, language);
+    return exp !== null && exp.length >= maxP;
+  }, [selectedFeature.id, deletePagesText, uploads, language]);
+
   const splitInputDisabled = uploads.length === 0;
   const toolNeedsUpload = selectedFeature.requiresUpload !== false;
   const submitDisabled =
@@ -2490,7 +2765,8 @@ function App() {
     (selectedFeature.id === "encrypt" &&
       (!outputPassword.trim() || uploads.length === 0)) ||
     mergeHasMissingPasswords ||
-    toolFilesStillInspecting;
+    toolFilesStillInspecting ||
+    deleteWouldRemoveEveryPage;
   const pickerButtonText =
     selectedFeature.multiple && uploads.length > 0 ? W.fileAdd : W.filePick;
 
@@ -3060,12 +3336,29 @@ function App() {
         fmt ||
         over ||
         (!deletePagesText.trim() ? W.validationPagesRequired : "");
-      setDeletePagesError(pageValidation);
-      if (pageValidation) {
+
+      let finalPageValidation = pageValidation;
+      if (!finalPageValidation && maxP && deletePagesText.trim()) {
+        const expSafe = expandPagesString(deletePagesText, maxP, language);
+        if (expSafe !== null && expSafe.length >= maxP) {
+          finalPageValidation = PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
+        }
+      }
+
+      setDeletePagesError(finalPageValidation);
+      if (finalPageValidation) {
+        const isDeleteAllViolation =
+          finalPageValidation === PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
         showToast(
           "error",
-          language === "tr" ? "Sayfa listesi geçersiz" : "Invalid page list",
-          pageValidation,
+          isDeleteAllViolation
+            ? language === "tr"
+              ? "Uyarı"
+              : "Warning"
+            : language === "tr"
+              ? "Sayfa listesi geçersiz"
+              : "Invalid page list",
+          finalPageValidation,
         );
         return;
       }
@@ -3074,8 +3367,10 @@ function App() {
     if (showSplitPasswordField && !password.trim()) {
       showToast(
         "error",
-        "Kaynak PDF şifresi gerekli",
-        "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor.",
+        language === "tr" ? "Kaynak PDF şifresi gerekli" : "Source PDF password required",
+        language === "tr"
+          ? "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor."
+          : "Enter the PDF password below to unlock the file.",
       );
       return;
     }
@@ -3146,6 +3441,8 @@ function App() {
       excelConfirmRef.current = false;
     }
 
+    let toolStalemateWatchdogId: number | undefined;
+
     try {
       disposeToolProgressSuccess();
       clearToast();
@@ -3181,6 +3478,7 @@ function App() {
             signal: mergeSignal,
           });
           const { job_id } = mergeRes;
+          mergeSaasGatingRef.current = mergeRes.saasGating ?? null;
           setMergeJob((prev) =>
             prev && prev.id === MERGE_JOB_PENDING_ID
               ? { ...prev, id: job_id, message: "Sıraya alındı." }
@@ -3222,6 +3520,12 @@ function App() {
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
       setToolRunClock(0);
+
+      genericToolStalemateTriggeredRef.current = false;
+      toolStalemateWatchdogId = window.setTimeout(() => {
+        genericToolStalemateTriggeredRef.current = true;
+        toolRunAbortRef.current?.abort();
+      }, TOOL_PIPELINE_WATCHDOG_MS);
 
       const formData = new FormData();
       const fid = selectedFeature.id;
@@ -3359,6 +3663,7 @@ function App() {
           filename: res.filename || selectedFeature.fallbackFilename,
           featureTitle: selectedFeature.title,
           gatedDownload: {
+            toolId: fid,
             resultId: res.result_id,
             fallbackName: res.filename || selectedFeature.fallbackFilename,
             thumbnailBlobUrl,
@@ -3378,32 +3683,59 @@ function App() {
         return;
       }
 
+      let pendingLogId: string | null = null;
       const dl = await downloadFromApi(
         selectedFeature.endpoint,
         formData,
         selectedFeature.fallbackFilename,
         accessToken,
-        { signal: toolSignal },
+        {
+          signal: toolSignal,
+          onBeforeReadBody: accessToken
+            ? async () => {
+                try {
+                  const row = await createDownloadLog(accessToken, {
+                    resultId: null,
+                    toolId: selectedFeature.id,
+                  });
+                  pendingLogId = row.id;
+                } catch {
+                  /* noop */
+                }
+              }
+            : undefined,
+        },
       );
+      if (accessToken && pendingLogId) {
+        try {
+          await ackDownloadLog(accessToken, pendingLogId);
+        } catch {
+          /* noop */
+        }
+      }
+      applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       showToast(
         "success",
         "İşlem tamamlandı",
         "Çıktı dosyası başarıyla indirildi.",
       );
-      resetForm(true);
-      disposeToolProgressSuccess();
-      if (dl.dispose) {
-        toolProgressDisposeRef.current = dl.dispose;
-      }
-      setToolProgressSuccess({
-        filename: selectedFeature.fallbackFilename,
-        featureTitle: selectedFeature.title,
-        replay: dl.replay,
-      });
+      dl.dispose?.();
+      toolProgressDisposeRef.current = null;
       offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
       void refreshSubscriptionState();
     } catch (error) {
       if (isUserAbortError(error)) {
+        if (genericToolStalemateTriggeredRef.current) {
+          genericToolStalemateTriggeredRef.current = false;
+          showToast(
+            "error",
+            language === "tr" ? "İşlem zaman aşımı" : "Operation timed out",
+            language === "tr"
+              ? "30 saniye içinde sunucu yanıtı alınamadı. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
+              : "No server response within 30 seconds. Check your connection or try again.",
+          );
+          tryShowConversionPopupRef.current("buy_credits");
+        }
         return;
       }
       if (error instanceof EntitlementPaymentRequiredError) {
@@ -3425,6 +3757,10 @@ function App() {
       );
       tryShowConversionPopupRef.current("buy_credits");
     } finally {
+      if (toolStalemateWatchdogId !== undefined) {
+        window.clearTimeout(toolStalemateWatchdogId);
+        toolStalemateWatchdogId = undefined;
+      }
       if (selectedFeature.id !== "merge") {
         setSubmitting(false);
         setToolRunStartedAt(null);
@@ -3484,7 +3820,10 @@ function App() {
     const inspectedNewItems = await Promise.all(
       incomingItems.map(async (item) => {
         try {
-          const result = await inspectPdf(item.file, undefined, accessToken);
+          const result = await withPdfInspectTimeout(
+            inspectPdf(item.file, undefined, accessToken),
+            PDF_INSPECT_TIMEOUT_MS,
+          );
           return {
             ...item,
             encrypted: Boolean(result.encrypted),
@@ -3494,11 +3833,23 @@ function App() {
           };
         } catch (err) {
           const L2 = ws(language);
-          showToast(
-            "error",
-            L2.inspectFailedTitle,
-            friendlyOperationFailedMessage(language),
-          );
+          if (err instanceof Error && err.message === "pdf_inspect_timeout") {
+            showToast(
+              "error",
+              language === "tr"
+                ? "PDF denetimi zaman aşımı"
+                : "PDF check timed out",
+              language === "tr"
+                ? "30 saniye içinde yanıt alınamadı. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
+                : "No response within 30 seconds. Check your connection or try the file again.",
+            );
+          } else {
+            showToast(
+              "error",
+              L2.inspectFailedTitle,
+              friendlyOperationFailedMessage(language),
+            );
+          }
           return {
             ...item,
             encrypted: false,
@@ -4066,6 +4417,14 @@ function App() {
             onPageRotationsChange={setRotatePageRotations}
             pageOrder={organizePageOrder}
             onPageOrderChange={setOrganizePageOrder}
+            strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
+            onDeleteWouldRemoveWholeDocument={() =>
+              showToast(
+                "info",
+                "Uyarı",
+                PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG,
+              )
+            }
           />
         ) : null}
 
@@ -4372,6 +4731,7 @@ function App() {
                       }
                     >
                       <form
+                        key={workspaceSlateNonce}
                         id="nb-workspace-tool-form"
                         className="tool-form"
                         onSubmit={submitCurrentFeature}
@@ -4582,9 +4942,28 @@ function App() {
                                   setDeletePagesText(v);
                                   const fmt = validatePagesFormat(v, language);
                                   const maxP = uploads[0]?.pageCount ?? null;
-                                  setDeletePagesError(
-                                    fmt || validatePagesMax(v, maxP, language),
-                                  );
+                                  let combined =
+                                    fmt ||
+                                    validatePagesMax(v, maxP, language);
+                                  if (
+                                    !combined &&
+                                    maxP &&
+                                    v.trim()
+                                  ) {
+                                    const exp = expandPagesString(
+                                      v,
+                                      maxP,
+                                      language,
+                                    );
+                                    if (
+                                      exp !== null &&
+                                      exp.length >= maxP
+                                    ) {
+                                      combined =
+                                        PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
+                                    }
+                                  }
+                                  setDeletePagesError(combined);
                                 }}
                                 placeholder={W.pagesPlaceholder}
                               />
@@ -5309,19 +5688,27 @@ function App() {
                       toolProgressSuccess.gatedDownload.thumbnailBlobUrl
                     }
                     onOpenFullPreview={() => {
-                      const rid = toolProgressSuccess.gatedDownload?.resultId;
-                      if (rid) {
-                        setGatedHeroResultId(rid);
-                        setGatedHeroModalOpen(true);
+                      const gd = toolProgressSuccess.gatedDownload;
+                      if (!gd?.resultId || gd.mergeJobId) {
+                        return;
                       }
+                      setGatedHeroResultId(gd.resultId);
+                      setGatedHeroModalOpen(true);
                     }}
                     onDownload={() => {
                       const gd = toolProgressSuccess.gatedDownload;
-                      if (gd) {
+                      if (!gd) {
+                        return;
+                      }
+                      if (gd.mergeJobId) {
+                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
+                        return;
+                      }
+                      if (gd.resultId) {
                         queueGatedDownload(
                           gd.resultId,
                           gd.fallbackName,
-                          selectedFeatureId,
+                          gd.toolId,
                         );
                       }
                     }}
@@ -5339,11 +5726,18 @@ function App() {
                         ? undefined
                         : () => {
                             const gd = toolProgressSuccess.gatedDownload;
-                            if (gd) {
+                            if (!gd) {
+                              return;
+                            }
+                            if (gd.mergeJobId) {
+                              queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
+                              return;
+                            }
+                            if (gd.resultId) {
                               queueGatedDownload(
                                 gd.resultId,
                                 gd.fallbackName,
-                                selectedFeatureId,
+                                gd.toolId,
                               );
                             }
                           }

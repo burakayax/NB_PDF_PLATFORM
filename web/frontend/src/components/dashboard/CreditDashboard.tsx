@@ -1,8 +1,9 @@
+import { Check } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ws } from "../../i18n/workspace";
 import type { CreditTransaction, CreditTransactionType, UserBalance } from "../../api/entitlement";
 import type { CreditPackProduct } from "../../lib/creditPacks";
-import { CREDIT_PACKS } from "../../lib/creditPacks";
+import { CREDIT_PACK_MARKETING_FEATURES, CREDIT_PACKS } from "../../lib/creditPacks";
 
 /** Credit-based account dashboard: balance hero, purchasable packs, ledger. */
 export type CreditDashboardProps = {
@@ -124,41 +125,93 @@ export function CreditDashboard({
 
       {!hidePurchase ? (
         <section
-          className="credit-dashboard__packs rounded-2xl border border-nb-primary/25 bg-gradient-to-br from-nb-primary/10 via-nb-bg-elevated/60 to-transparent p-5"
+          className="credit-dashboard__packs mx-auto w-full max-w-7xl rounded-3xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] via-nb-bg-elevated/50 to-transparent px-5 py-8 backdrop-blur-sm sm:px-8 lg:px-10"
           aria-labelledby="credit-dashboard-packs-heading"
         >
-          <h3 id="credit-dashboard-packs-heading" className="text-lg font-bold text-nb-text">
+          <div className="mx-auto mb-10 max-w-2xl text-center">
+          <h3 id="credit-dashboard-packs-heading" className="text-2xl font-bold tracking-tight text-white md:text-[1.75rem]">
             {W.creditDashboardPacksHeading}
           </h3>
-          <p className="mt-1 text-sm leading-relaxed text-nb-muted">{W.creditDashboardPacksBody}</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <p className="mt-2 text-[15px] leading-relaxed text-slate-400">{W.creditDashboardPacksBody}</p>
+          </div>
+          <div className="mx-auto mt-10 grid gap-8 sm:gap-10 lg:grid-cols-3">
             {CREDIT_PACKS.map((pack, i) => {
               const busy = buyingProduct === pack.product;
               const tierName = language === "tr" ? pack.nameTr : pack.nameEn;
+              const popular = i === 1;
+              const features = CREDIT_PACK_MARKETING_FEATURES[pack.product][language === "tr" ? "tr" : "en"];
               return (
-                <div
+                <article
                   key={pack.product}
-                  className={`flex flex-col rounded-xl border bg-nb-panel/50 p-4 ${
-                    i === 1 ? "border-cyan-400/40 shadow-[0_0_24px_-8px_rgba(34,211,238,0.35)]" : "border-white/10"
+                  className={`group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 ease-out ${
+                    popular
+                      ? "border-amber-500/35 bg-gradient-to-b from-slate-900/95 via-slate-950/90 to-black/95 shadow-[0_0_0_1px_rgba(251,191,36,0.12),inset_0_1px_0_rgba(255,255,255,0.06),0_32px_64px_-32px_rgba(245,158,11,0.28)] hover:-translate-y-1 hover:shadow-[0_28px_70px_-28px_rgba(251,146,60,0.4)] lg:scale-[1.02]"
+                      : "border-slate-800 bg-slate-950/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] backdrop-blur-xl hover:-translate-y-0.5 hover:border-slate-600 hover:shadow-[0_24px_48px_-28px_rgba(15,23,42,0.65)]"
                   }`}
                 >
-                  {i === 1 ? (
-                    <span className="mb-1 inline-block w-fit rounded-full border border-cyan-400/45 bg-cyan-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-cyan-100">
-                      {language === "tr" ? "En Popüler" : "Most popular"}
-                    </span>
+                  {popular ? (
+                    <div
+                      className="relative flex shrink-0 items-center justify-center bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 px-4 py-2 text-center shadow-[0_12px_32px_-12px_rgba(245,158,11,0.55)]"
+                      aria-hidden
+                    >
+                      <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white drop-shadow-sm">
+                        {language === "tr" ? "En iyi seçim" : "Best value"}
+                      </span>
+                      <span className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                    </div>
                   ) : null}
-                  <p className="text-xs font-semibold uppercase tracking-wide text-nb-muted">{tierName}</p>
-                  <p className="mt-1 text-lg font-bold text-nb-text">{W.creditPackContentLine(pack.credits, pack.subscription)}</p>
-                  <p className="mt-1 text-2xl font-black tabular-nums text-nb-accent">{packPriceDashboard(pack.priceTry, language, pack.subscription)}</p>
+                  <div className="flex flex-1 flex-col px-6 pb-8 pt-7 md:px-7">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.26em] text-slate-500">{tierName}</p>
+                  {pack.subscription ? (
+                    <>
+                      <p className="mt-6 bg-gradient-to-br from-white to-slate-300 bg-clip-text text-[2.875rem] font-black leading-none tracking-tight tabular-nums text-transparent md:text-[3.25rem]">
+                        ∞
+                      </p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-cyan-200/95">
+                        {language === "tr" ? "Sınırsız işlem" : "Unlimited"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mt-6 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-[2.875rem] font-black leading-none tracking-tight tabular-nums text-transparent md:text-[3.25rem]">
+                        {(pack.credits ?? 0).toLocaleString(localeFor(language))}
+                      </p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-cyan-200/95">
+                        {language === "tr" ? "Kredi" : "credits"}
+                      </p>
+                    </>
+                  )}
+                  <div className="mt-8 border-t border-white/[0.07] pt-8">
+                    <p className={`text-[1.875rem] font-black tabular-nums leading-none ${popular ? "text-amber-200" : "text-white"}`}>
+                      {packPriceDashboard(pack.priceTry, language, pack.subscription)}
+                    </p>
+                  </div>
+                  <ul className="mt-7 space-y-3 text-left" role="list">
+                    {features.map((line) => (
+                      <li key={line} className="flex gap-3 text-[13px] leading-snug text-slate-300 md:text-[14px]">
+                        <Check
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${popular ? "text-amber-300" : "text-emerald-400"}`}
+                          strokeWidth={2.75}
+                          aria-hidden
+                        />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <button
                     type="button"
                     disabled={buyingProduct !== null}
                     onClick={() => onBuyPack(pack.product)}
-                    className="nb-transition mt-4 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border border-nb-primary/50 bg-nb-primary/15 px-4 py-2.5 text-sm font-bold uppercase tracking-[0.05em] text-nb-accent hover:bg-nb-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
+                    className={`nb-transition mt-auto inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl px-4 py-3.5 text-sm font-bold uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      popular
+                        ? "border border-white/25 bg-white text-slate-900 shadow-[0_16px_40px_-12px_rgba(255,255,255,0.35)] hover:bg-slate-100"
+                        : "border border-white/12 bg-white/[0.08] text-white hover:bg-white/[0.14]"
+                    }`}
                   >
                     {busy ? W.creditDashboardBuyingCredits : W.creditPackBuyCta}
                   </button>
-                </div>
+                  </div>
+                </article>
               );
             })}
           </div>

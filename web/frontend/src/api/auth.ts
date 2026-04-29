@@ -213,7 +213,11 @@ export async function fetchAuthenticatedUser(
 
 export function getGoogleOAuthStartUrl(language: Language) {
   const lang = language === "tr" ? "tr" : "en";
-  return buildSaasApiUrl(`/api/auth/google?lang=${encodeURIComponent(lang)}`);
+  let url = buildSaasApiUrl(`/api/auth/google?lang=${encodeURIComponent(lang)}`);
+  if (typeof window !== "undefined" && window.location?.origin) {
+    url += `&frontend_origin=${encodeURIComponent(window.location.origin)}`;
+  }
+  return url;
 }
 
 export async function updateAuthProfile(accessToken: string, body: UpdateProfileInput) {

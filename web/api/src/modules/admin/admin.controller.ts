@@ -46,6 +46,7 @@ import {
   listToolRegistryForAdmin,
   listUsersForAdmin,
   patchSiteSettings,
+  sanitizeGlobalFlagsForAdminResponse,
   putCmsContent,
   putPackagesMarketing,
   putPlansOverride,
@@ -182,6 +183,7 @@ export async function adminCreateUserController(request: Request, response: Resp
 
 export async function adminGetSettingsController(_request: Request, response: Response) {
   const settings = await getAllSiteSettings();
+  sanitizeGlobalFlagsForAdminResponse(settings);
   response.json({ settings });
 }
 

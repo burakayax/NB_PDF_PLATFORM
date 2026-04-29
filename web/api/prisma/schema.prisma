@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql" // "sqlite" yazan yeri "postgresql" yap
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -312,7 +312,7 @@ model SiteSetting {
 }
 
 /// Typed global site configuration (singleton row: id = 1). Complements `SiteSetting` key/value for admin UI.
-/// Fields: site name, logo, global maintenance, SEO. Managed from Admin; no code deploy required for copy changes.
+/// Site name, logo, SEO. Public maintenance is governed by MAINTENANCE_MODE (env); this column mirrors env on boot.
 model AppSettings {
   id                    Int     @id @default(1)
   siteName              String  @default("NB PDF") @map("site_name")

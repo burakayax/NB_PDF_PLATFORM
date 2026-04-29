@@ -16,7 +16,10 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import logging
 from typing import List, Dict, Any, Tuple, Optional
+
+logger = logging.getLogger(__name__)
 
 try:
     from pypdf.errors import PdfReadError as _PdfReadError
@@ -142,22 +145,202 @@ def _apply_output_pdf_password(output_path: str, output_password: Optional[str])
                 pass
 
 
-def is_pdf_encrypted(pdf_path: str) -> bool:
-    """Kullanıcıdan parola istenmesi gerekiyorsa True.
-    Yalnızca boş kullanıcı parolası ile açılan /Encrypt PDF'ler False (şifresiz gibi)."""
+def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, Any]]:
+    """
+    (requires_non_empty_password, diagnostics)
+
+    Requires True ise kullanıcı arayüzünde açılış şifresi istenmeli.
+    Bazı PDF'ler Encrypt sözlüğü nedeniyle PyPDF'de `is_encrypted=True` görünürken
+    boş kullanıcı parolasıyla veya görüntüleyici yüzünden parolasız açılabilir;
+    ikinci olarak PyMuPDF ile doğrulanır; PyPDF başarısız olursa yalnızca PyMuPDF denenir.
+    diagnostics: parola sızdırmadan kısa teşhis bilgisi (log / inspect API).
+    """
     basename = os.path.basename(pdf_path)
+    diagnostics: Dict[str, Any] = {"file": basename, "engines": {}}
+
+    def _finalize(requires_pw: bool, reason: str) -> Tuple[bool, Dict[str, Any]]:
+        diagnostics["requires_password"] = requires_pw
+        diagnostics["classification_reason"] = reason
+        log_fn = logger.info if requires_pw else logger.debug
+        log_fn("[pdf-password] %s requires_password=%s %s", basename, requires_pw, diagnostics)
+        return requires_pw, diagnostics
+
+    reader: Optional[PyPDF2.PdfReader] = None
     try:
         with open(pdf_path, "rb") as fh:
             reader = PyPDF2.PdfReader(fh, strict=False)
-            if not reader.is_encrypted:
-                return False
-            if reader.decrypt(""):
-                return False
-            return True
     except _PdfReadError as e:
-        raise Exception(_pdf_open_user_message("is_pdf_encrypted pypdf", e, basename)) from e
+        diagnostics["engines"]["pypdf"] = {
+            "open_ok": False,
+            "detail": _pdf_open_user_message("classify_pdf pypdf", e, basename),
+        }
+        return _finalize(*_fallback_classify_via_pymupdf(pdf_path, diagnostics, pdf_read_error=e))
     except Exception as e:
-        raise Exception(_pdf_open_user_message("is_pdf_encrypted", e, basename)) from e
+        diagnostics["engines"]["pypdf"] = {
+            "open_ok": False,
+            "detail": _pdf_open_user_message("classify_pdf pypdf", e, basename),
+        }
+        return _finalize(*_fallback_classify_via_pymupdf(pdf_path, diagnostics, pdf_read_error=e))
+
+    diagnostics["engines"]["pypdf"] = {
+        "is_encrypted_flag": bool(reader.is_encrypted),
+    }
+
+    if not reader.is_encrypted:
+        diagnostics["engines"]["pypdf"]["note"] = "Encrypt sözlüğü / is_encrypted yok → parola gerekmiyor."
+        return _finalize(False, "pypdf_not_encrypted")
+
+    rc_empty = 0
+    try:
+        rc_empty = reader.decrypt("")
+    except Exception as dex:
+        diagnostics["engines"]["pypdf"]["decrypt_empty_error"] = f"{type(dex).__name__}:{dex}"
+    diagnostics["engines"]["pypdf"]["decrypt_empty_rc"] = rc_empty
+
+    if rc_empty not in (0, False, None):
+        diagnostics["engines"]["pypdf"]["note"] = f"Boş kullanıcı parolasıyla decrypt işlemi döndü: {rc_empty}"
+        return _finalize(False, "pypdf_decrypt_empty_succeeded")
+
+    lazy_ok, lazy_msg = _pypdf_attempt_read_plain_content(reader)
+    diagnostics["engines"]["pypdf"]["lazy_read"] = lazy_msg
+    if lazy_ok:
+        diagnostics["engines"]["pypdf"][
+            "note"
+        ] = "Decrypt boş ile 0 görünse bile içerik okunabildi (şifresiz kullanıcı parolası / metadata)."
+        return _finalize(False, "pypdf_lazy_content_readable")
+
+    pym_needs_pw, pym_meta = pymupdf_requires_non_empty_password(pdf_path)
+    diagnostics["engines"]["pymupdf"] = pym_meta
+
+    if not pym_needs_pw:
+        diagnostics[
+            "note"
+        ] = "PyPDF parola gerektiriyor görünürken PyMuPDF açılış için boş kullanıcı parolası yeterli (veya parola gerekmiyor)."
+        return _finalize(False, "pymupdf_relaxed_false_positive_guard")
+
+    diagnostics["engines"]["note"] = "Her iki katmanda da kullanıcı açılış şifresi gerekiyor kabulü."
+    return _finalize(True, "password_required")
+
+
+def pymupdf_requires_non_empty_password(pdf_path: str) -> Tuple[bool, Dict[str, Any]]:
+    """
+    True ise boş şifreyle açılamıyor, dolayısı kullanıcıdan parola beklenmeli.
+    Fitiz (PyMuPDF) yüklenmezse güvenli tarafta kalınır ve (True, {error:...}) döner.
+    """
+    meta: Dict[str, Any] = {}
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        meta["error"] = "PyMuPDF (fitz) not installed — cannot classify"
+        logger.warning("[pdf-password] pymupdf import failed for %s", os.path.basename(pdf_path))
+        return True, meta
+
+    try:
+        doc = fitz.open(pdf_path)
+    except Exception as e:
+        meta["open_error"] = f"{type(e).__name__}:{e}"
+        return True, meta
+
+    try:
+        meta["needs_pass"] = bool(doc.needs_pass)
+        if not doc.needs_pass:
+            meta["note"] = "needs_pass=false — açılışta parola istemi yok."
+            return False, meta
+
+        auth_attempts = []
+        for candidate in ("", b""):
+            try:
+                ok = bool(doc.authenticate(candidate))
+                auth_attempts.append({"candidate_type": type(candidate).__name__, "ok": ok})
+                if ok:
+                    meta["authenticate"] = "empty_accepted"
+                    meta["attempts"] = auth_attempts
+                    meta[
+                        "note"
+                    ] = "needs_pass olsa bile boş kullanıcı parolası kabul edildi (şifreyi gerektiren arayüz gereksiz)."
+                    return False, meta
+            except Exception as ae:
+                auth_attempts.append(
+                    {"candidate_type": type(candidate).__name__, "error": f"{type(ae).__name__}:{ae}"}
+                )
+        meta["attempts"] = auth_attempts
+
+        probe_ok, probe_msg = _pymupdf_probe_first_page_text(doc)
+        meta["lazy_page_probe"] = probe_msg
+        if probe_ok:
+            meta[
+                "note"
+            ] = "authenticate boş ile başarısız görünse bile ilk sayfa okunuyor → parola zorunluluğu yok varsayılıyor."
+            return False, meta
+
+        meta[
+            "note"
+        ] = "needs_pass ve boş parola reddi — kullanıcı açılış parolası gerekli kabulü."
+        return True, meta
+    finally:
+        doc.close()
+
+
+def _pymupdf_probe_first_page_text(doc: Any) -> Tuple[bool, str]:
+    """İlk sayfadaki metnin okunup okunmadığını dener — taranmış görüntü PDF'lerinde metin olmayabilir (False)."""
+    try:
+        n = getattr(doc, "page_count", 0) or 0
+        if n == 0:
+            return False, "page_count_zero"
+        txt = doc.load_page(0).get_text() or ""
+        stripped = (txt or "").strip()
+        return (len(stripped) > 0), f"non_empty_chars={len(stripped)}"
+    except Exception as exc:
+        return False, f"{type(exc).__name__}:{exc!s}"[:200]
+
+
+def _pypdf_attempt_read_plain_content(reader: PyPDF2.PdfReader) -> Tuple[bool, str]:
+    """Decrypt('') döndüsü başarısız görünürken ilk sayfanın düz metnine erişiliyorsa şifreyi gerektiren arayüz kapansın."""
+    try:
+        n = len(reader.pages)
+        if n == 0:
+            return False, "zero_pages_ambiguous"
+        p0 = reader.pages[0]
+        text = ""
+        extract = getattr(p0, "extract_text", None)
+        if callable(extract):
+            text = extract() or ""
+        stripped = (text or "").strip()
+        snippet = stripped[:240] if stripped else "(empty_extract)"
+        if not stripped:
+            return False, "extract_blank_or_ws_only_under_encrypt_flag"
+        return True, f"extract_text_ok_len_{len(snippet)}:{snippet[:48]!r}"
+
+
+    except Exception as e:
+        return False, f"{type(e).__name__}:{e!s}"[:220]
+
+
+def _fallback_classify_via_pymupdf(
+    pdf_path: str,
+    diagnostics: Dict[str, Any],
+    pdf_read_error: BaseException,
+) -> Tuple[bool, str]:
+    """
+    PyPDF okuyamazsa bile PyMuPDF açabiliyorsa güvenilir sayfa kullanıcıya 'parolasız kullanılabilir' diye bildirilir.
+    """
+    needs, pym = pymupdf_requires_non_empty_password(pdf_path)
+    diagnostics["engines"]["fallback"] = {
+        "from_pypdf_error": True,
+        "pypdf_error_type": type(pdf_read_error).__name__,
+    }
+    diagnostics["engines"]["pymupdf"] = pym
+    if needs:
+        logger.warning("[pdf-password] PyPDF unreadable and pymupdf still locked: %s", diagnostics)
+        return True, "pypdf_failed_pymupdf_locked"
+    logger.info("[pdf-password] PyPDF unreadable ama pymupdf parolasız: %s", diagnostics)
+    return False, "pypdf_fatal_pymupdf_ok"
+
+
+def is_pdf_encrypted(pdf_path: str) -> bool:
+    """Kullanıcıdan (boş olmayan) açılış parolası istenmesi gerekiyorsa True."""
+    req, _ = classify_pdf_password_requirement(pdf_path)
+    return req
 
 
 def validate_pdf_password(pdf_path: str, password: str) -> bool:

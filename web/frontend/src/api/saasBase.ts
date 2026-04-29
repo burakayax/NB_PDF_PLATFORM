@@ -34,6 +34,34 @@ function isLocalhostSaasDevUrl(trimmed: string): boolean {
 export function getSaasApiBase(): string {
   const trimmed = readSaasApiBaseFromEnv();
 
+  const useRemoteSaasInDev = import.meta.env.VITE_USE_REMOTE_SAAS_IN_DEV === "true";
+
+  /**
+   * Yerel UI (localhost) iken frontend .env’de üretim API adresi gömülü olabilir — Google OAuth
+   * zinciri o zaman üretim sunucuya gider ve yönlendirme üretim SPA’ya çıkar (web/api/.env değişse bile).
+   * Varsayılan: dev’de Vite `/api` proxy → yerel kimlik API. Uzaktaki API ile test için açıkça
+   * VITE_USE_REMOTE_SAAS_IN_DEV=true kullanın.
+   */
+  if (
+    import.meta.env.DEV &&
+    !useRemoteSaasInDev &&
+    trimmed !== "" &&
+    !isLocalhostSaasDevUrl(trimmed) &&
+    typeof window !== "undefined"
+  ) {
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") {
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[saasBase] Yerel SPA üzerinden uzaktaki SaaS tabanı yüklü:",
+          trimmed,
+          "→ Yerel kimlik/API için göreli /api kullanılıyor. Üretim API’sine doğrudan erişim için frontend .env’de VITE_USE_REMOTE_SAAS_IN_DEV=true yazın.",
+        );
+      }
+      return "";
+    }
+  }
+
   if (import.meta.env.DEV && (trimmed === "" || isLocalhostSaasDevUrl(trimmed))) {
     return "";
   }

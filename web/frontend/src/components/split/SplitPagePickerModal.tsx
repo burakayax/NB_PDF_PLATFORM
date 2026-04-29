@@ -25,6 +25,9 @@ export type SplitPagePickerModalProps = {
   onPageRotationsChange: (next: Record<number, number>) => void;
   pageOrder: number[];
   onPageOrderChange: (order: number[]) => void;
+  /** Sayfa Sil araç seçiliyken ızgarada zorunlu Türkçe kopya. */
+  strictTurkishForDeleteUi?: boolean;
+  onDeleteWouldRemoveWholeDocument?: () => void;
 };
 
 function modalTitle(mode: PdfPageVisualMode, language: Language): string {
@@ -74,11 +77,15 @@ export function SplitPagePickerModal({
   onPageRotationsChange,
   pageOrder,
   onPageOrderChange,
+  strictTurkishForDeleteUi = false,
+  onDeleteWouldRemoveWholeDocument,
 }: SplitPagePickerModalProps) {
-  const W = ws(language);
-  const title = modalTitle(mode, language);
-  const done = language === "tr" ? "Tamam" : "Done";
-  const resetLabel = language === "tr" ? "Sıfırla" : "Reset";
+  const effectiveModalLang: Language =
+    strictTurkishForDeleteUi && mode === "delete" ? "tr" : language;
+  const W = ws(effectiveModalLang);
+  const title = modalTitle(mode, effectiveModalLang);
+  const done = effectiveModalLang === "tr" ? "Tamam" : "Done";
+  const resetLabel = effectiveModalLang === "tr" ? "Sıfırla" : "Reset";
 
   const gridRef = useRef<PdfPageVisualGridHandle>(null);
   /** Rubber-band sürüklerken tüm diyalogda metin seçimini kapatır. */
@@ -128,7 +135,7 @@ export function SplitPagePickerModal({
         >
           <motion.button
             type="button"
-            aria-label={language === "tr" ? "Kapat" : "Close"}
+            aria-label={effectiveModalLang === "tr" ? "Kapat" : "Close"}
             className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -157,13 +164,13 @@ export function SplitPagePickerModal({
 
               <div className="flex flex-wrap items-center gap-1">
                 <span className="hidden whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-slate-500 sm:inline">
-                  {language === "tr" ? "Yakınlaştır" : "Zoom"}
+                  {effectiveModalLang === "tr" ? "Yakınlaştır" : "Zoom"}
                 </span>
                 <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
                   {ZOOM_LEVELS.map((z) => {
                     const isStandard = z === 25;
                     const label = isStandard
-                      ? language === "tr"
+                      ? effectiveModalLang === "tr"
                         ? "Std"
                         : "0"
                       : `%${z}`;
@@ -172,7 +179,7 @@ export function SplitPagePickerModal({
                         key={z}
                         type="button"
                         title={
-                          language === "tr"
+                          effectiveModalLang === "tr"
                             ? z <= 25
                               ? "Standart görünüm (çok sütun)"
                               : z >= 100
@@ -199,7 +206,7 @@ export function SplitPagePickerModal({
               </div>
 
               <div className="flex flex-wrap items-center gap-1 text-[11px]">
-                <span className="whitespace-nowrap text-slate-500">{language === "tr" ? "Git:" : "Go:"}</span>
+                <span className="whitespace-nowrap text-slate-500">{effectiveModalLang === "tr" ? "Git:" : "Go:"}</span>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -225,11 +232,15 @@ export function SplitPagePickerModal({
 
               <div className="min-w-0 shrink text-[10px] leading-tight whitespace-nowrap text-slate-500 tabular-nums">
                 <span>
-                  {language === "tr" ? "Önizl.:" : "Prv:"}{" "}
+                  {effectiveModalLang === "tr" ? "Önizl.:" : "Prv:"}{" "}
                   {stats.readyPreviews}/{stats.totalPages || totalPages || "—"}
                 </span>
                 <span className="text-slate-600"> · </span>
-                <span className="text-slate-400">Sel: {stats.selectedCount}</span>
+                <span className="text-slate-400">
+                  {strictTurkishForDeleteUi && mode === "delete"
+                    ? `Sil: ${stats.selectedCount}`
+                    : `Sel: ${stats.selectedCount}`}
+                </span>
               </div>
 
               <div className="ml-auto flex shrink-0 items-center gap-1.5">
@@ -271,6 +282,8 @@ export function SplitPagePickerModal({
                   zoomPercent={zoomPercent}
                   onStatsChange={setStats}
                   onRubberBandActiveChange={setRubberBandActive}
+                  strictTurkishUi={strictTurkishForDeleteUi && mode === "delete"}
+                  onDeleteWouldRemoveWholeDocument={onDeleteWouldRemoveWholeDocument}
                 />
               ) : (
                 <p className="text-sm text-slate-400">{W.splitPickerWaitHint}</p>

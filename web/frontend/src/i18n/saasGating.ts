@@ -20,8 +20,8 @@ const REASON_COPY: Record<SaaSGatingReason, { title: Dict; body: Dict }> = {
   credit_available: {
     title: { tr: "İndirmeye hazır", en: "Ready to download" },
     body: {
-      tr: "Kredin düşüldü, dosyanı indirebilirsin.",
-      en: "A credit has been spent — your file is ready.",
+      tr: "Dosyanız hazır.",
+      en: "Your file is ready.",
     },
   },
   active_subscription: {
@@ -119,17 +119,36 @@ export function saasGatingCopy(
     ? `${state.creditsBefore} ${pick(CREDIT_STRINGS.changeArrow, language)} ${state.creditsAfter}`
     : `${state.creditsAfter} ${pick(CREDIT_STRINGS.unchangedSuffix, language)}`;
 
-  const spentLine =
-    state.cost > 0 && state.mode === "unlocked"
-      ? pick(CREDIT_STRINGS.costSpent(state.cost), language)
-      : pick(CREDIT_STRINGS.costFree, language);
-
   let body = pick(reasonCopy.body, language);
+
   if (reason === "insufficient_credits" && state.cost > 0) {
     body =
       language === "tr"
         ? `Bu işlemi tamamlamak için ${state.cost} krediye ihtiyacınız var.`
         : `You need ${state.cost} credit${state.cost === 1 ? "" : "s"} to complete this action.`;
+  } else if (reason === "credit_available" && state.cost > 0 && state.mode === "unlocked") {
+    const remainingAfter = Math.max(0, state.creditsBefore - state.cost);
+    body =
+      language === "tr"
+        ? `Dosyanız hazır! İndirme işlemi tamamlandığında ${state.cost} kredi düşülecektir. Kalan bakiyeniz: ${remainingAfter} olacaktır.`
+        : `Your file is ready! ${state.cost} credit${state.cost === 1 ? "" : "s"} will be deducted once the download finishes. Your remaining balance will be: ${remainingAfter}.`;
+  }
+
+  let spentLine: string;
+  if (
+    reason === "credit_available" &&
+    state.mode === "unlocked" &&
+    state.cost > 0
+  ) {
+    const remainingAfter = Math.max(0, state.creditsBefore - state.cost);
+    spentLine =
+      language === "tr"
+        ? `Mevcut bakiye: ${state.creditsBefore} · Tahmini indirme sonrası: ${remainingAfter}`
+        : `Current balance: ${state.creditsBefore} · Estimated after download: ${remainingAfter}`;
+  } else if (state.cost > 0 && state.mode === "unlocked") {
+    spentLine = pick(CREDIT_STRINGS.costSpent(state.cost), language);
+  } else {
+    spentLine = pick(CREDIT_STRINGS.costFree, language);
   }
 
   return {

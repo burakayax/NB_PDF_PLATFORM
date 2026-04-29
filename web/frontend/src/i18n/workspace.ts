@@ -24,7 +24,11 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "encrypt",
 ];
 
-/** UI hint only; server `ToolRegistry.cost` is authoritative at runtime. */
+/** PDF Sayfa Sil: çıktıda en az bir sayfa zorunludur. */
+export const PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG =
+  "En az bir sayfa kalmalıdır. Tüm sayfaları silemezsiniz.";
+
+/** UI sidebar “N kredi” metni; sunucudaki gerçek düşüm `ToolRegistry.cost` ile aynı tutulmalıdır — bkz. `web/api/src/lib/ensure-tool-registry.ts`. */
 export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
   split: 2,
   merge: 3,
@@ -34,7 +38,7 @@ export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
   "excel-to-pdf": 3,
   "pdf-to-excel": 3,
   encrypt: 2,
-  "delete-pages": 2,
+  "delete-pages": 1,
   "rotate-pdf": 2,
   "organize-pdf": 2,
   "unlock-pdf": 2,
@@ -93,8 +97,12 @@ export function ws(lang: Language) {
     mergeReorderHint: tr
       ? "Dosya satırını sürükleyerek sırayı değiştirin veya okları kullanın. Liste uzunsa sürüklerken kenara yaklaştığınızda liste kayar. Birleştirme bu sıraya göre yapılır."
       : "Drag a file row to reorder, or use the arrows. Near the top or bottom edge of the list, the list scrolls while you drag. Merge follows this order.",
-    mergeDragHandle: tr ? "Sırayı değiştirmek için sürükleyin" : "Drag to reorder",
-    proGateTitle: tr ? "Bu araç için yeterli kredi yok" : "Not enough credits for this tool",
+    mergeDragHandle: tr
+      ? "Sırayı değiştirmek için sürükleyin"
+      : "Drag to reorder",
+    proGateTitle: tr
+      ? "Bu araç için yeterli kredi yok"
+      : "Not enough credits for this tool",
     proGateBody: tr
       ? "Bu aracı kullanmak için kredi gerekir. Kredi satın alarak devam edebilirsiniz."
       : "This tool needs credits. Buy a pack to unlock it.",
@@ -103,7 +111,9 @@ export function ws(lang: Language) {
     navbarCreditsLabel: tr ? "Kredi" : "Credits",
     /** Limitsiz Pro — navbar / compact surfaces. */
     unlimitedSidebarBadge: tr ? "∞ LİMİTSİZ" : "∞ UNLIMITED",
-    unlimitedAccessActive: tr ? "Limitsiz Erişim Aktif" : "Unlimited access active",
+    unlimitedAccessActive: tr
+      ? "Limitsiz Erişim Aktif"
+      : "Unlimited access active",
     lockedFeatureTooltip: tr
       ? "Bu araç şu an kredinizle kullanılamıyor"
       : "This tool isn’t available with your current balance",
@@ -168,7 +178,8 @@ export function ws(lang: Language) {
     creditDashboardKicker: tr ? "HESABINIZ" : "YOUR ACCOUNT",
     creditDashboardHeading: tr ? "Kredi Bakiyen" : "Your credits",
     creditDashboardBalanceLabel: tr ? "Kalan krediniz" : "Credits remaining",
-    creditRemainingFormatted: (n: string) => (tr ? `Kalan Krediniz: ${n}` : `Your credits: ${n}`),
+    creditRemainingFormatted: (n: string) =>
+      tr ? `Kalan Krediniz: ${n}` : `Your credits: ${n}`,
     creditDashboardBalanceFootnote: tr
       ? "Her araç çalıştırmada kredi düşer; bakiyeniz güncel kullanımınızı yansıtır."
       : "Each tool run spends credits; your balance reflects current usage.",
@@ -177,11 +188,15 @@ export function ws(lang: Language) {
     creditDashboardSubscriptionActive: tr ? "Aktif" : "Active",
     creditDashboardSubscriptionFree: tr ? "Ücretsiz" : "Free",
     creditDashboardUnlimitedPlanNote: tr ? "" : "",
-    creditDashboardRecentHeading: tr ? "Son 10 hareket" : "Recent activity (last 10)",
+    creditDashboardRecentHeading: tr
+      ? "Son 10 hareket"
+      : "Recent activity (last 10)",
     creditDashboardRecentEmpty: tr
       ? "Henüz kredi hareketi yok. Bir araç çalıştırdıkça bu liste dolacak."
       : "No credit activity yet. Run a tool and it'll show up here.",
-    creditDashboardRecentLoading: tr ? "Hareketler yükleniyor..." : "Loading activity...",
+    creditDashboardRecentLoading: tr
+      ? "Hareketler yükleniyor..."
+      : "Loading activity...",
     creditDashboardTopUpHeading: tr ? "Kredi paketleri" : "Credit packs",
     creditDashboardTopUpBody: tr
       ? "İhtiyacınız kadar kredi yükleyin."
@@ -210,7 +225,9 @@ export function ws(lang: Language) {
       ? "Kredi satın alınamadı. Lütfen tekrar deneyin."
       : "Couldn't buy credits. Please try again.",
     /** Shown when 0 < credits < 5 (credit-based workspace). */
-    creditRunningOutBanner: tr ? "Kredileriniz azalıyor" : "You are running out of credits",
+    creditRunningOutBanner: tr
+      ? "Kredileriniz azalıyor"
+      : "You are running out of credits",
     /** Ledger-row labels; `amount` is signed so we don't re-add + here. */
     creditTxTypeConsume: tr ? "Kullanım" : "Use",
     creditTxTypeBonus: tr ? "Bonus" : "Bonus",
@@ -242,9 +259,7 @@ export function ws(lang: Language) {
       ? "Kredi ekleyerek işlemlerinize devam edin."
       : "Add credits to keep processing documents.",
     proBenefitsKicker: tr ? "Kredi sistemi" : "Credit system",
-    proBenefitsTitle: tr
-      ? "Kullandığın kadar öde"
-      : "Pay for what you use",
+    proBenefitsTitle: tr ? "Kullandığın kadar öde" : "Pay for what you use",
     proBenefitsIntro: tr
       ? "Her işlem kredi harcar veya Limitsiz Pro ile sınırsız devam edersiniz; bakiyenizi panelden takip edin. Tek seferlik paketler ve aylık abonelik mevcuttur."
       : "Each run spends credits, or use Unlimited Pro for unlimited usage—your balance stays visible in the panel. One-time packs and a monthly subscription are available.",
@@ -293,19 +308,33 @@ export function ws(lang: Language) {
       : "You don’t have enough credits for this tool. Add credits to use it.",
     mergeProgressPreparing: tr ? "Dosyalar hazırlanıyor…" : "Preparing files…",
     mergeProgressStarting: tr ? "İstek gönderiliyor…" : "Sending request…",
-    mergeProgressQueueFree: tr ? "Birleştirme hazırlanıyor…" : "Preparing merge…",
-    mergeProgressQueuePremium: tr ? "Birleştirme hazırlanıyor…" : "Preparing merge…",
-    toolProgressSub: tr ? "Tamamlanınca dosya indirilecek." : "The file will download when ready.",
+    mergeProgressQueueFree: tr
+      ? "Birleştirme hazırlanıyor…"
+      : "Preparing merge…",
+    mergeProgressQueuePremium: tr
+      ? "Birleştirme hazırlanıyor…"
+      : "Preparing merge…",
+    toolProgressSub: tr
+      ? "Tamamlanınca dosya indirilecek."
+      : "The file will download when ready.",
     toolProgressSubQueueFree: tr
       ? "Tamamlanınca dosya indirilecek."
       : "The file will download when ready.",
     toolProgressSubPremium: tr
       ? "Tamamlanınca dosya indirilecek."
       : "The file will download when ready.",
-    toolProgressPhaseQueueFree: tr ? "İşlem sunucuda başlatılıyor…" : "Starting work on the server…",
-    toolProgressPhaseHandoff: tr ? "İşlem sunucuda başlatılıyor…" : "Starting work on the server…",
-    toolProgressPhaseAnalyzing: tr ? "Dosya analiz ediliyor…" : "Analyzing file…",
-    toolProgressPhaseCompressing: tr ? "Sıkıştırma uygulanıyor…" : "Applying compression…",
+    toolProgressPhaseQueueFree: tr
+      ? "İşlem sunucuda başlatılıyor…"
+      : "Starting work on the server…",
+    toolProgressPhaseHandoff: tr
+      ? "İşlem sunucuda başlatılıyor…"
+      : "Starting work on the server…",
+    toolProgressPhaseAnalyzing: tr
+      ? "Dosya analiz ediliyor…"
+      : "Analyzing file…",
+    toolProgressPhaseCompressing: tr
+      ? "Sıkıştırma uygulanıyor…"
+      : "Applying compression…",
     toolProgressPhaseProcessing: tr ? "İşlem uygulanıyor…" : "Processing…",
     toolProgressPhaseFinishing: tr ? "Son işlemler…" : "Finalizing…",
     toolProgressPhaseMerging: tr ? "PDF'ler birleştiriliyor…" : "Merging PDFs…",
@@ -336,17 +365,33 @@ export function ws(lang: Language) {
       return `Tahmini kalan: ~${Math.floor(s / 60)} dk ${s % 60} sn`;
     },
     mergeToastFailedTitle: tr ? "Birleştirme başarısız" : "Merge failed",
-    mergeToastFailedGeneric: tr ? "PDF birleştirme sırasında hata oluştu." : "An error occurred while merging PDFs.",
-    mergeToastQueued: tr ? "Birleştirme sırası oluşturuldu" : "Merge job queued",
+    mergeToastFailedGeneric: tr
+      ? "PDF birleştirme sırasında hata oluştu."
+      : "An error occurred while merging PDFs.",
+    mergeToastQueued: tr
+      ? "Birleştirme sırası oluşturuldu"
+      : "Merge job queued",
     mergeToastRunning: tr ? "Birleştirme sürüyor" : "Merging…",
     mergeToastSuccessTitle: tr ? "İşlem tamamlandı" : "Done",
-    mergeToastSuccessBody: tr ? "Birleştirilen PDF indirildi." : "Merged PDF downloaded.",
-    mergeToastPollErrorTitle: tr ? "İlerleme bilgisi alınamadı" : "Could not read progress",
-    mergeToastPollErrorDetail: tr ? "Birleştirme durumu alınamadı." : "Merge status could not be loaded.",
-    mergeToastDownloadErrorTitle: tr ? "İndirme tamamlanamadı" : "Download failed",
+    mergeToastSuccessBody: tr
+      ? "Birleştirilen PDF indirildi."
+      : "Merged PDF downloaded.",
+    mergeToastPollErrorTitle: tr
+      ? "İlerleme bilgisi alınamadı"
+      : "Could not read progress",
+    mergeToastPollErrorDetail: tr
+      ? "Birleştirme durumu alınamadı."
+      : "Merge status could not be loaded.",
+    mergeToastDownloadErrorTitle: tr
+      ? "İndirme tamamlanamadı"
+      : "Download failed",
     toolRunCancel: tr ? "İptal" : "Cancel",
-    toolRunCancelledInfo: tr ? "İşlem iptal edildi veya sunucu isteği kesti." : "The operation was cancelled or aborted.",
-    mergeJobSessionLostTitle: tr ? "Birleştirme oturumu bulunamadı" : "Merge session not found",
+    toolRunCancelledInfo: tr
+      ? "İşlem iptal edildi veya sunucu isteği kesti."
+      : "The operation was cancelled or aborted.",
+    mergeJobSessionLostTitle: tr
+      ? "Birleştirme oturumu bulunamadı"
+      : "Merge session not found",
     mergeJobSessionLostDetail: tr
       ? "Sunucu yeniden başlamış veya oturum süresi dolmuş olabilir. Lütfen tekrar deneyin."
       : "The server may have restarted or the session may have expired. Please try again.",
@@ -359,12 +404,15 @@ export function ws(lang: Language) {
       }
       return n ? `File ${a}/${b}: ${n}` : `File ${a}/${b}`;
     },
-    resultCreatedUtc: (s: string) => (tr ? `Oluşturulma (UTC): ${s}` : `Created (UTC): ${s}`),
+    resultCreatedUtc: (s: string) =>
+      tr ? `Oluşturulma (UTC): ${s}` : `Created (UTC): ${s}`,
     lowCreditBanner: (n: number) =>
       tr
-        ? `Kredi bakiyeniz düşük (${n}). Paket tüketmeden önce yüklemenizi öneririz.`
-        : `Your credit balance is low (${n}). Consider topping up before you run out.`,
-    pdfExcelWarningTitle: tr ? "Tablo yapısı uyarısı" : "Table structure notice",
+        ? `Kredi bakiyeniz düşük! İşlemlerinizin yarıda kalmaması için kredi yüklemenizi öneririz.`
+        : `Your credit balance is low! Top up now to avoid any interruption to your tasks.`,
+    pdfExcelWarningTitle: tr
+      ? "Tablo yapısı uyarısı"
+      : "Table structure notice",
     pdfExcelWarningBody: tr
       ? "PDF’inizde net bir tablo yapısı yoksa Excel çıktısı dağınık olabilir. Bu işlem kredi tüketir. Devam etmek istiyor musunuz?"
       : "If your PDF has no clear table structure, the Excel file may be messy. This action will use credits. Continue?",
@@ -375,21 +423,33 @@ export function ws(lang: Language) {
     mergeButtonHintPassword: tr
       ? "Şifreli dosyalarda önce Parolayı doğrula — ardından birleştirme açılır."
       : "For locked files, use Verify password first — then merge enables.",
-    validationPagesRequired: tr ? "Sayfa numaralarını girin." : "Enter page numbers.",
-    validationPagesInvalid: tr ? "Geçerli bir sayfa listesi girin." : "Enter a valid page list.",
+    validationPagesRequired: tr
+      ? "Sayfa numaralarını girin."
+      : "Enter page numbers.",
+    validationPagesInvalid: tr
+      ? "Geçerli bir sayfa listesi girin."
+      : "Enter a valid page list.",
     validationRangeInvalid: (token: string) =>
       tr ? `Geçersiz aralık: ${token}` : `Invalid range: ${token}`,
     validationRangeOrder: (token: string) =>
-      tr ? `Başlangıç bitişten büyük olamaz: ${token}` : `Start cannot exceed end: ${token}`,
+      tr
+        ? `Başlangıç bitişten büyük olamaz: ${token}`
+        : `Start cannot exceed end: ${token}`,
     validationPageInvalid: (token: string) =>
       tr ? `Geçersiz sayfa: ${token}` : `Invalid page: ${token}`,
     validationPageTooHigh: (max: number) =>
       tr
         ? `PDF yalnızca ${max} sayfa içeriyor; girdiğiniz sayfalar bu sınırı aşıyor.`
         : `This PDF has only ${max} page(s); your selection exceeds that.`,
-    filePickNoteSingle: tr ? "Tek dosya seçerek devam edin." : "Select a single file to continue.",
-    filePickNoteMulti: tr ? "Birden fazla dosya seçebilirsiniz." : "You can select multiple files.",
-    filePickNoteAppend: tr ? "Yeni seçilen dosyalar listenin sonuna eklenir." : "New files are appended to the list.",
+    filePickNoteSingle: tr
+      ? "Tek dosya seçerek devam edin."
+      : "Select a single file to continue.",
+    filePickNoteMulti: tr
+      ? "Birden fazla dosya seçebilirsiniz."
+      : "You can select multiple files.",
+    filePickNoteAppend: tr
+      ? "Yeni seçilen dosyalar listenin sonuna eklenir."
+      : "New files are appended to the list.",
     upgradeNudgeAria: tr ? "Kredi önerisi" : "Credits suggestion",
     /** Behavioral nudges after soft limit (1), repeated use (2), multiple queued delays (3). */
     upgradeNudgeTierBody: (tier: 1 | 2 | 3) => {
@@ -407,8 +467,12 @@ export function ws(lang: Language) {
         ? "Daha hızlı sonuç ve tam erişim için kredi ekleyin veya öncelikli hattı tercih edin."
         : "Add credits or use the priority lane for faster results and full access.";
     },
-    upgradeNudgeContinueFree: tr ? "Beklemeden devam et" : "Continue without waiting",
-    upgradeNudgeUpgradeInstant: tr ? "Kredi paketlerini aç" : "Open credit packs",
+    upgradeNudgeContinueFree: tr
+      ? "Beklemeden devam et"
+      : "Continue without waiting",
+    upgradeNudgeUpgradeInstant: tr
+      ? "Kredi paketlerini aç"
+      : "Open credit packs",
     /** Shown while a free-tier job is in progress (queue / server delay monetization). */
     delayMonetizationDuringBody: tr
       ? "Kredi bakiyeniz düşükse paket satın alarak devam edebilirsiniz."
@@ -440,9 +504,15 @@ export function computeUpgradeNudgeTierWeb(_input: {
   return 0;
 }
 
-export function featureCopy(id: FeatureKey, lang: Language): { title: string; description: string; button: string } {
+export function featureCopy(
+  id: FeatureKey,
+  lang: Language,
+): { title: string; description: string; button: string } {
   const tr = lang === "tr";
-  const map: Record<FeatureKey, { title: string; description: string; button: string }> = {
+  const map: Record<
+    FeatureKey,
+    { title: string; description: string; button: string }
+  > = {
     split: {
       title: tr ? "SAYFA AYIR" : "SPLIT PAGES",
       description: tr
@@ -466,12 +536,16 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
     },
     "word-to-pdf": {
       title: tr ? "WORD → PDF" : "WORD → PDF",
-      description: tr ? "Word belgesini PDF biçiminde dışa aktarır." : "Export a Word document to PDF.",
+      description: tr
+        ? "Word belgesini PDF biçiminde dışa aktarır."
+        : "Export a Word document to PDF.",
       button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
     },
     "excel-to-pdf": {
       title: tr ? "EXCEL → PDF" : "EXCEL → PDF",
-      description: tr ? "Excel tablolarını PDF biçimine dönüştürür." : "Convert Excel spreadsheets to PDF.",
+      description: tr
+        ? "Excel tablolarını PDF biçimine dönüştürür."
+        : "Convert Excel spreadsheets to PDF.",
       button: tr ? "PDF İNDİR" : "DOWNLOAD PDF",
     },
     "pdf-to-excel": {
@@ -490,7 +564,9 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
     },
     encrypt: {
       title: tr ? "PDF ŞİFRELE" : "ENCRYPT PDF",
-      description: tr ? "PDF dosyasına güvenli bir açılış parolası uygular." : "Apply an open password to protect the PDF.",
+      description: tr
+        ? "PDF dosyasına güvenli bir açılış parolası uygular."
+        : "Apply an open password to protect the PDF.",
       button: tr ? "ŞİFRELİ PDF İNDİR" : "DOWNLOAD ENCRYPTED PDF",
     },
     "delete-pages": {
@@ -523,12 +599,16 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
     },
     watermark: {
       title: tr ? "FİLİGRAN EKLE" : "ADD WATERMARK",
-      description: tr ? "Tüm sayfalara metin filigranı ekler." : "Add a text watermark on every page.",
+      description: tr
+        ? "Tüm sayfalara metin filigranı ekler."
+        : "Add a text watermark on every page.",
       button: tr ? "FİLİGRANLI PDF AL" : "GET WATERMARKED PDF",
     },
     "page-numbers": {
       title: tr ? "SAYFA NUMARASI" : "PAGE NUMBERS",
-      description: tr ? "Alt veya üst bilgiye otomatik sayfa numarası basar." : "Add automatic page numbers in the header or footer.",
+      description: tr
+        ? "Alt veya üst bilgiye otomatik sayfa numarası basar."
+        : "Add automatic page numbers in the header or footer.",
       button: tr ? "NUMARALI PDF AL" : "GET NUMBERED PDF",
     },
     "repair-pdf": {
@@ -554,12 +634,16 @@ export function featureCopy(id: FeatureKey, lang: Language): { title: string; de
     },
     "pdf-to-image": {
       title: tr ? "PDF → GÖRÜNTÜ" : "PDF TO IMAGE",
-      description: tr ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır." : "Export each page as JPG/PNG in a ZIP file.",
+      description: tr
+        ? "Her sayfayı JPG veya PNG olarak ZIP içinde dışa aktarır."
+        : "Export each page as JPG/PNG in a ZIP file.",
       button: tr ? "ZIP İNDİR" : "DOWNLOAD ZIP",
     },
     "image-to-pdf": {
       title: tr ? "GÖRÜNTÜ → PDF" : "IMAGE TO PDF",
-      description: tr ? "Birden çok görüntüyü tek PDF’e birleştirir." : "Combine multiple images into one PDF.",
+      description: tr
+        ? "Birden çok görüntüyü tek PDF’e birleştirir."
+        : "Combine multiple images into one PDF.",
       button: tr ? "PDF AL" : "GET PDF",
     },
     "html-to-pdf": {
@@ -602,7 +686,11 @@ export function formatPageSelection(pages: number[]): string {
 /**
  * Parse page string into a sorted unique list. Returns null if invalid or out of range.
  */
-export function expandPagesString(value: string, maxPage: number, lang: Language): number[] | null {
+export function expandPagesString(
+  value: string,
+  maxPage: number,
+  lang: Language,
+): number[] | null {
   const raw = value.trim();
   if (!raw) {
     return [];
@@ -692,7 +780,11 @@ export function maxPageInSelection(value: string): number | null {
   return maxP || null;
 }
 
-export function validatePagesMax(value: string, maxPage: number | null, lang: Language): string {
+export function validatePagesMax(
+  value: string,
+  maxPage: number | null,
+  lang: Language,
+): string {
   if (!maxPage || maxPage < 1) {
     return "";
   }

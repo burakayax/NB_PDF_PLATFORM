@@ -2046,7 +2046,6 @@ function SettingsTab({
   const [defaultLanguage, setDefaultLanguage] = useState("en");
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
   const [freeDailyLimitDisplay, setFreeDailyLimitDisplay] = useState(5);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [apiDefaultPerMin, setApiDefaultPerMin] = useState(60);
   const [apiAbuseThreshold, setApiAbuseThreshold] = useState(5);
   const [apiAbuseBlockMin, setApiAbuseBlockMin] = useState(60);
@@ -2067,7 +2066,6 @@ function SettingsTab({
       const fr = all["global.flags"];
       flagsRef.current =
         fr && typeof fr === "object" && fr !== null && !Array.isArray(fr) ? { ...(fr as Record<string, unknown>) } : {};
-      setMaintenanceMode(flagsRef.current.maintenanceMode === true);
 
       const cur = all["site.settings"];
       const merged: Record<string, unknown> =
@@ -2178,20 +2176,13 @@ function SettingsTab({
 
       <AdminSection
         title="Bakım modu"
-        description="Açıkken ziyaretçilere bakım uyarısı gösterilir; yönetim panelinden kapatılana kadar açık kalır."
+        description="Site genel bakımı artık yalnızca API ana bilgisayarındaki ortam değişkeni ile açılır: MAINTENANCE_MODE=true ve yeniden dağıtım. Yerelde yalnızca makineniz için VITE_MAINTENANCE_MODE=true kullanın (frontend .env)."
         variant="amber"
       >
-        <AdminField label="Site bakımda" description="Dikkat: canlı kullanıcı deneyimini etkiler.">
-          <label className="flex cursor-pointer items-center gap-3 text-sm text-amber-100">
-            <input
-              type="checkbox"
-              checked={maintenanceMode}
-              onChange={(e) => setMaintenanceMode(e.target.checked)}
-              className="h-4 w-4 rounded border-amber-400/50 bg-black/40"
-            />
-            Bakım modunu aç
-          </label>
-        </AdminField>
+        <p className="text-sm leading-relaxed text-amber-50/95">
+          Veritabanındaki eski &quot;Bakım modu&quot; bayrağı kaldırıldı. Üretimde Vercel / barındırıcı panelinde API için{" "}
+          <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">MAINTENANCE_MODE=true</code> ayarlayıp yeniden dağıtın.
+        </p>
       </AdminSection>
 
       {advanced ? (
@@ -2281,7 +2272,10 @@ function SettingsTab({
               abuseBlockMinutes: apiAbuseBlockMin,
             },
           };
-          const nextFlags = { ...flagsRef.current, maintenanceMode };
+          const { maintenanceMode: _omitMm, ...flagsWithoutMaint } =
+            flagsRef.current as Record<string, unknown>;
+          void _omitMm;
+          const nextFlags = { ...flagsWithoutMaint };
           const globalElements = {
             headerTagline,
             footerNote,

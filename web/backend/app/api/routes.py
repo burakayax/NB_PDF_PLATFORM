@@ -225,7 +225,11 @@ async def inspect_pdf(
     try:
         saved_file = await save_upload(file, workdir)
         p = str(saved_file)
-        encrypted = await run_cpu_bound(engine.is_pdf_encrypted, p)
+        requires_pw, encrypt_diag = await run_cpu_bound(
+            engine.classify_pdf_password_requirement,
+            p,
+        )
+        encrypted = requires_pw
         pwd = password.strip() or None
         page_count = None
         inspect_error = None
@@ -242,6 +246,7 @@ async def inspect_pdf(
             "encrypted": encrypted,
             "page_count": page_count,
             "inspect_error": inspect_error,
+            "inspect_diagnostic": encrypt_diag,
         }
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -309,6 +314,7 @@ async def pdf_to_word(
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    decision = await entitlement_check(token, "pdf-to-word")
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
@@ -320,23 +326,34 @@ async def pdf_to_word(
         output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
         output_path = workdir / output_name
         await run_cpu_bound(engine.pdf_to_word, sp, str(output_path), password=pwd)
-        cons = await entitlement_consume(token, "pdf-to-word")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(
-                status_code=402,
-                content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            outp = Path(str(output_path))
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-word",
             )
-        return download_response(
-            output_path,
-            output_path.name,
-            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            background_tasks,
-            workdir,
-            saas_gating=_saas_gating_from_consume(cons),
-        )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 @router.post("/word-to-pdf")
@@ -345,6 +362,7 @@ async def word_to_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
 ):
+    decision = await entitlement_check(token, "word-to-pdf")
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
@@ -352,23 +370,39 @@ async def word_to_pdf(
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
         await run_cpu_bound(engine.word_to_pdf, sp, str(output_path))
-        cons = await entitlement_consume(token, "word-to-pdf")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(
-                status_code=402,
-                content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            outp = Path(str(output_path))
+            thumb_png = None
+            try:
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb_png = None
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb_png,
+                tool="word-to-pdf",
             )
-        return download_response(
-            output_path,
-            output_path.name,
-            "application/pdf",
-            background_tasks,
-            workdir,
-            saas_gating=_saas_gating_from_consume(cons),
-        )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 @router.post("/excel-to-pdf")
@@ -377,6 +411,7 @@ async def excel_to_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
 ):
+    decision = await entitlement_check(token, "excel-to-pdf")
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
@@ -384,23 +419,39 @@ async def excel_to_pdf(
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
         await run_cpu_bound(engine.excel_to_pdf, sp, str(output_path))
-        cons = await entitlement_consume(token, "excel-to-pdf")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(
-                status_code=402,
-                content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            outp = Path(str(output_path))
+            thumb_png = None
+            try:
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb_png = None
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb_png,
+                tool="excel-to-pdf",
             )
-        return download_response(
-            output_path,
-            output_path.name,
-            "application/pdf",
-            background_tasks,
-            workdir,
-            saas_gating=_saas_gating_from_consume(cons),
-        )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 @router.post("/pdf-to-excel")
@@ -410,6 +461,7 @@ async def pdf_to_excel(
     file: UploadFile = File(...),
     password: str = Form(default=""),
 ):
+    decision = await entitlement_check(token, "pdf-to-excel")
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
@@ -423,23 +475,34 @@ async def pdf_to_excel(
             preserve_tables=True,
             password=password.strip() or None,
         )
-        cons = await entitlement_consume(token, "pdf-to-excel")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(
-                status_code=402,
-                content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            outp = Path(str(output_path))
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-excel",
             )
-        return download_response(
-            output_path,
-            output_path.name,
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            background_tasks,
-            workdir,
-            saas_gating=_saas_gating_from_consume(cons),
-        )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 @router.post("/compress")
@@ -545,7 +608,6 @@ def _split_to_result_store(
 
 @router.post("/encrypt")
 async def encrypt_pdf(
-    background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     user_password: str = Form(...),
@@ -555,6 +617,7 @@ async def encrypt_pdf(
     if not user_password:
         raise HTTPException(status_code=400, detail="Cikti PDF icin parola girmek zorunludur.")
 
+    decision = await entitlement_check(token, "encrypt")
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir)
@@ -568,23 +631,39 @@ async def encrypt_pdf(
             user_password=user_password,
             input_password=input_password.strip() or None,
         )
-        cons = await entitlement_consume(token, "encrypt")
-        if cons.get("status") != "ok":
-            cleanup_path(workdir)
-            return JSONResponse(
-                status_code=402,
-                content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+        user_id = await saas_current_user_id(token)
+
+        def _store():
+            outp = Path(str(output_path))
+            thumb_png = None
+            try:
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb_png = None
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb_png,
+                tool="encrypt",
             )
-        return download_response(
-            output_path,
-            output_path.name,
-            "application/pdf",
-            background_tasks,
-            workdir,
-            saas_gating=_saas_gating_from_consume(cons),
-        )
+
+        handle = await run_cpu_bound(_store)
+
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
     except Exception as error:
         cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
 
 
 # ---------------------------------------------------------------------------
