@@ -1,6 +1,7 @@
 /**
  * Google Analytics 4 (gtag.js) — SPA sayfa görünümleri.
- * Çerez onayı (`useCookieConsent`) verilmeden script yüklenmez.
+ * Varsayılan olarak çerez onayı (`useCookieConsent`) verilmeden script yüklenmez;
+ * `App.tsx` içindeki geçici test bayrağı ile bu kural devre dışı bırakılabilir.
  */
 
 declare global {
@@ -23,7 +24,17 @@ function normalizeMeasurementId(raw: string | undefined): string | null {
   return id;
 }
 
+let loggedGaEnvOnce = false;
+
 export function getGaMeasurementId(): string | null {
+  if (!loggedGaEnvOnce) {
+    loggedGaEnvOnce = true;
+    // Vercel / yerel derlemede VITE_* değişkeninin gerçekten bundle’a dahil olduğunu F12 ile doğrulamak için
+    console.log(
+      "[GA] import.meta.env.VITE_GA_MEASUREMENT_ID",
+      JSON.stringify(import.meta.env.VITE_GA_MEASUREMENT_ID),
+    );
+  }
   return normalizeMeasurementId(import.meta.env.VITE_GA_MEASUREMENT_ID);
 }
 

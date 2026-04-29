@@ -102,6 +102,9 @@ import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
 import { applyWorkspaceToolMeta, resetWorkspaceHeadSeo } from "./lib/toolPageMeta";
 import { getGaMeasurementId, initializeGA, trackGAPageView } from "./lib/analytics";
 
+/** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
+const GA_TEST_BYPASS_COOKIE_CONSENT = true;
+
 type NonLegalView = "landing" | "login" | "register" | "forgot_password" | "web" | "admin" | "admin_login";
 type LegalView = "terms" | "privacy" | "kvkk";
 type AppView = NonLegalView | LegalView;
@@ -852,12 +855,30 @@ function App() {
     }
     return subscriptionSummary.allowedFeatures.includes(selectedFeatureId);
   }, [isAuthenticated, subscriptionLoading, subscriptionSummary, selectedFeatureId]);
-  const shouldShowCookieNotice = isCookieConsentReady && !hasConsent;
+  const shouldShowCookieNotice =
+    !GA_TEST_BYPASS_COOKIE_CONSENT && isCookieConsentReady && !hasConsent;
   const trackedView = getTrackedViewName(view);
   const trackedPath =
     view === "web" ? workspacePathForFeature(selectedFeatureId) : getTrackedPath(view);
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
+
+  /** GA4: bakım/boot splash'tan önce (hook sırasında) yükle — consent test bayrağı açıksa onay beklenmez. */
+  useEffect(() => {
+    const cookieAllowsGa =
+      GA_TEST_BYPASS_COOKIE_CONSENT || (hasConsent && isCookieConsentReady);
+    if (!cookieAllowsGa) {
+      return;
+    }
+    if (!getGaMeasurementId()) {
+      return;
+    }
+    initializeGA();
+    const tick = window.requestAnimationFrame(() => {
+      trackGAPageView(`${window.location.pathname}${window.location.search}`, document.title);
+    });
+    return () => window.cancelAnimationFrame(tick);
+  }, [hasConsent, isCookieConsentReady, view, trackedPath, language]);
 
   useEffect(() => {
     if (workspaceFeatures.length === 0) {
@@ -871,28 +892,13 @@ function App() {
   }, [workspaceFeatures, selectedFeatureId]);
 
   useAnalyticsTracking({
-    enabled: hasConsent,
+    enabled: GA_TEST_BYPASS_COOKIE_CONSENT || hasConsent,
     serverAnalyticsEnabled,
     view: trackedView,
     path: trackedPath,
     language,
     accessToken,
   });
-
-  /** GA4: SPA içinde /tools/<slug> dahil rota/sorgu değişiminde page_view. */
-  useEffect(() => {
-    if (!hasConsent || !isCookieConsentReady) {
-      return;
-    }
-    if (!getGaMeasurementId()) {
-      return;
-    }
-    initializeGA();
-    const tick = window.requestAnimationFrame(() => {
-      trackGAPageView(`${window.location.pathname}${window.location.search}`, document.title);
-    });
-    return () => window.cancelAnimationFrame(tick);
-  }, [hasConsent, isCookieConsentReady, view, trackedPath, language]);
 
   useErrorLogging({
     language,
