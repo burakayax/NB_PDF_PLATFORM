@@ -34,7 +34,7 @@ export function PdfApiOfflineBanner() {
         });
     };
 
-    let intervalId: ReturnType<typeof window.setInterval> | undefined;
+    let intervalId: number | undefined;
 
     /** Kök `npm run dev` ile uvicorn birlikte başlatıldığında ilk saniyelerde hazır olmayabilir; erken uyarıyı önler. */
     const firstWait = window.setTimeout(() => {

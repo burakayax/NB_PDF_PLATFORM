@@ -10,8 +10,6 @@ import {
 } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import { Check, Trash2 } from "lucide-react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import type { VirtualItem } from "@tanstack/virtual-core";
 import type { Language } from "../../i18n/landing";
 import { expandPagesString, formatPageSelection, ws } from "../../i18n/workspace";
 
@@ -37,10 +35,12 @@ const RENDER_OVERSAMPLE = 1.35;
 const RENDER_OVERSAMPLE_DELETE = 1.14;
 /** Tek thumb için uzun kenar üst sınırı (px); uç PDF boyutlarında canvas şişmesini keser. */
 const MAX_THUMB_CANVAS_EDGE_PX = 2048;
-/** Sanal satır overscan; hızlı kaydırmada komşu satırların hazır kalması için yüksek tutulur. */
-const VIRTUAL_ROW_OVERSCAN = 22;
-/** Görünür + overscan dışındaki thumb’ları silmeden önce ek sayfa tamponu (satır ≈ overscan ile uyumlu). */
-const EVICT_BUFFER_ROWS = VIRTUAL_ROW_OVERSCAN;
+/** Kaydırıcı viewport minimum yüksekliği (px); modal içinde kaydırılabilir alanın sıfır görünmesini azaltır. */
+const GRID_SCROLL_MIN_VIEWPORT_PX = 520;
+type RasterThumbCancel =
+  | { mode: "batch"; job: number }
+  | { mode: "thumb"; epoch: number };
+
 /** Aynı oturumda PDF raster’ı bellekte tutar; dosya değişince oturum anahtarı yenilenir. */
 type PersistentThumbEntry = { dataUrl: string; cssW: number };
 const persistentThumbByKey = new Map<string, PersistentThumbEntry>();
@@ -65,6 +65,8 @@ const THUMB_UPGRADE_MIN_RATIO = 1.42;
 /** Raster veya <img> hatası sonrası yeniden deneme aralığı */
 const THUMB_RETRY_DELAY_MS = 2000;
 const THUMB_RETRY_MAX_ATTEMPTS = 40;
+/** pdf.js raster eşzamanlılığı — DOM’daki her hücre mount olunca yüzlerce iş tetiklenmesini keser. */
+const THUMB_MAX_PARALLEL = 3;
 
 export type PdfPageVisualMode = "split" | "delete" | "rotate" | "organize";
 
@@ -126,7 +128,7 @@ function isTypingTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Sanal satırda hücre mount olduğunda tek sayfa raster tetikler (virtualizer ile güvenilir yükleme).
+ * Hücre mount olduğunda tek sayfa raster tetikler (thumb eksikse tamamlar).
  */
 function PageThumbMountTrigger({
   pageIndex,
@@ -163,6 +165,8 @@ function PdfPageCardImage({
       <img
         src={url}
         alt=""
+        loading="eager"
+        decoding="async"
         className={`h-full w-full object-contain object-top transition-[filter] duration-150 ${lowResPlaceholder ? "blur-[0.6px]" : ""}`}
         style={{ transform: rot ? `rotate(${rot}deg)` : undefined }}
         onError={() => onImageFailed(page1)}
@@ -212,7 +216,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const anchorRef = useRef<number | null>(null);
     const docRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
     const parentRef = useRef<HTMLDivElement | null>(null);
-    /** Rubber / AABB ile aynı koordinat düzlemi: sanal liste kökü (satır `top` ile hizalı). */
+    /** Rubber / AABB ile aynı koordinat düzlemi: ızgara kökü (`relative`). */
     const gridContentRef = useRef<HTMLDivElement | null>(null);
     const selectionCanvasRef = useRef<HTMLDivElement | null>(null);
     const rubberCapturePointerIdRef = useRef<number | null>(null);
@@ -220,16 +224,18 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const thumbSessionIdRef = useRef("");
     const [containerWidth, setContainerWidth] = useState(800);
     const renderJobRef = useRef(0);
+    /** Küçük resim iptali — yalnızca `renderJobRef` ile karışmasın (batch her kaydırmada job artırır). */
+    const thumbRasterEpochRef = useRef(0);
     const cellWidthIntRef = useRef(0);
     const pendingThumbRef = useRef<Set<number>>(new Set());
+    const thumbRasterQueueRef = useRef<Array<() => Promise<void>>>([]);
+    const thumbRasterActiveRef = useRef(0);
     const numPagesRef = useRef(0);
     numPagesRef.current = numPages;
     const thumbRetryTimersRef = useRef<Map<number, number>>(new Map());
     const thumbFailureCountRef = useRef<Map<number, number>>(new Map());
     const cellWidthRef = useRef(0);
     const requestSinglePageThumbRef = useRef<(p: number, w: number, o?: { force?: boolean }) => void>(() => {});
-    /** Hızlı kaydırmada getVirtualItems() boş gelirse evict aralığını 1..16’ya düşürüp tüm thumb’ları silmeyi engeller. */
-    const lastGoodVisiblePageRangeRef = useRef<{ low: number; high: number } | null>(null);
     const rubberSelectRafRef = useRef<number | null>(null);
     const rubberLatestContentRef = useRef({ x: 0, y: 0 });
     const scrollStepYRef = useRef(80);
@@ -267,56 +273,101 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       [sequenceLength, cols],
     );
 
-    const estimateRowSize = useCallback(() => cardHeight + ROW_GAP_PX, [cardHeight]);
-
-    const rowVirtualizer = useVirtualizer({
-      count: virtualRowCount,
-      getScrollElement: () => parentRef.current,
-      estimateSize: estimateRowSize,
-      overscan: VIRTUAL_ROW_OVERSCAN,
-      paddingStart: GRID_PAD_Y,
-      paddingEnd: GRID_PAD_Y,
-      isScrollingResetDelay: 0,
-      useScrollendEvent: true,
-      onChange: () => {
-        setRangeRevision((r) => r + 1);
+    const flatIndexToPageNum = useCallback(
+      (flat: number): number => {
+        if (organizeMode) {
+          const v = pageOrder[flat];
+          return v != null && v >= 1 ? v : flat + 1;
+        }
+        return flat + 1;
       },
-    });
+      [organizeMode, pageOrder],
+    );
 
-    const colsRef = useRef(cols);
-    colsRef.current = cols;
+    /** Kaydırıcı + gerçek satır yüksekliği — batch thumb aralığı sanallaştırıcı olmadan hesaplanır. */
+    const getViewportFirstLastRow = useCallback(() => {
+      const rowH = cardHeight + ROW_GAP_PX;
+      const pad = GRID_PAD_Y;
+      const vr = Math.max(1, virtualRowCount);
+      const el = parentRef.current;
+      if (!el || rowH <= 0) {
+        return { firstRow: 0, lastRow: vr - 1 };
+      }
+      const st = el.scrollTop;
+      const ch = Math.max(1, el.clientHeight);
+      const firstRow = Math.max(0, Math.floor(Math.max(0, st - pad) / rowH));
+      const visibleRows = Math.max(1, Math.ceil(ch / rowH)) + 1;
+      const overscan = 8;
+      const fr = Math.max(0, firstRow - overscan);
+      const lr = Math.min(vr - 1, firstRow + visibleRows + overscan);
+      return { firstRow: fr, lastRow: lr };
+    }, [cardHeight, virtualRowCount]);
 
-    const rowVirtualizerRef = useRef(rowVirtualizer);
-    rowVirtualizerRef.current = rowVirtualizer;
+    const computeVisiblePageRange = useCallback(() => {
+      if (numPages === 0) {
+        return { low: 1, high: 0 };
+      }
+      const { firstRow, lastRow } = getViewportFirstLastRow();
+      let minP = numPages + 1;
+      let maxP = 0;
+      for (let r = firstRow; r <= lastRow; r++) {
+        for (let cidx = 0; cidx < cols; cidx++) {
+          const flat = r * cols + cidx;
+          if (flat >= sequenceLength) {
+            continue;
+          }
+          const p = flatIndexToPageNum(flat);
+          if (p >= 1 && p <= numPages) {
+            minP = Math.min(minP, p);
+            maxP = Math.max(maxP, p);
+          }
+        }
+      }
+      if (minP > maxP) {
+        const fallback = Math.min(numPages, Math.max(cols * 4, 12));
+        return { low: 1, high: fallback };
+      }
+      const buf = cols * 3;
+      return {
+        low: Math.max(1, minP - buf),
+        high: Math.min(numPages, maxP + buf),
+      };
+    }, [
+      numPages,
+      cols,
+      sequenceLength,
+      getViewportFirstLastRow,
+      flatIndexToPageNum,
+    ]);
+
+    const getVisiblePagesInViewportOrder = useCallback((): number[] => {
+      const { firstRow, lastRow } = getViewportFirstLastRow();
+      const out: number[] = [];
+      for (let r = firstRow; r <= lastRow; r++) {
+        for (let cidx = 0; cidx < cols; cidx++) {
+          const flat = r * cols + cidx;
+          if (flat >= sequenceLength) {
+            continue;
+          }
+          const page1 = flatIndexToPageNum(flat);
+          if (page1 >= 1 && page1 <= numPages) {
+            out.push(page1);
+          }
+        }
+      }
+      return out;
+    }, [
+      cols,
+      sequenceLength,
+      numPages,
+      getViewportFirstLastRow,
+      flatIndexToPageNum,
+    ]);
 
     const [rangeRevision, setRangeRevision] = useState(0);
     const [rubberLiveSelection, setRubberLiveSelection] = useState<Set<number> | null>(null);
-    /** Modal animasyonu bittikten sonra sanallaştırıcıyı uyandırmak için (500ms gecikme). */
-    const [hasForceRendered, setHasForceRendered] = useState(false);
-    /** İlk 2 saniye içinde getVirtualItems() boşsa ilk satırları zorla çizer. */
-    const [virtualFallbackActive, setVirtualFallbackActive] = useState(false);
 
-    const fallbackVirtualRows = useMemo((): VirtualItem[] => {
-      const rowStride = cardHeight + ROW_GAP_PX;
-      const n = Math.min(10, virtualRowCount);
-      return Array.from({ length: n }, (_, i) => {
-        const start = GRID_PAD_Y + i * rowStride;
-        return {
-          key: `__vf-fallback-${i}`,
-          index: i,
-          start,
-          end: start + rowStride,
-          size: rowStride,
-          lane: 0,
-        };
-      });
-    }, [virtualRowCount, cardHeight]);
-
-    useLayoutEffect(() => {
-      rowVirtualizer.measure();
-    }, [rowVirtualizer, cardHeight, cols, virtualRowCount]);
-
-    /** Ölçüm: kaydırıcı + ızgara (mavi kutu `position:absolute` ile aynı `getBoundingClientRect` düzlemi). */
+    /** Kaydırıcı + ızgara genişliği (rubber-band ile aynı düzlem). Sanal liste yok — tüm satırlar DOM’da. */
     useLayoutEffect(() => {
       const grid = gridContentRef.current;
       const scroll = parentRef.current;
@@ -326,10 +377,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
       const bump = () => {
         setContainerWidth(Math.max(280, grid.clientWidth));
-        requestAnimationFrame(() => {
-          const v = rowVirtualizerRef.current;
-          v.measure();
-          v.calculateRange();
+        queueMicrotask(() => {
           setRangeRevision((r) => r + 1);
         });
       };
@@ -342,32 +390,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
       return () => ro.disconnect();
     }, [loading, loadError, numPages, cols, virtualRowCount, cardHeight]);
-
-    useEffect(() => {
-      if (loading || loadError || numPages === 0) {
-        setVirtualFallbackActive(false);
-        return;
-      }
-      setVirtualFallbackActive(true);
-      const endFallback = window.setTimeout(() => setVirtualFallbackActive(false), 2000);
-      return () => window.clearTimeout(endFallback);
-    }, [loading, loadError, numPages]);
-
-    useEffect(() => {
-      if (loading || loadError || numPages === 0) {
-        setHasForceRendered(false);
-        return;
-      }
-      const t = window.setTimeout(() => {
-        const v = rowVirtualizerRef.current;
-        v.scrollToIndex(0, { align: "start" });
-        v.measure();
-        v.calculateRange();
-        setHasForceRendered(true);
-        setRangeRevision((r) => r + 1);
-      }, 500);
-      return () => window.clearTimeout(t);
-    }, [loading, loadError, numPages, zoomPercent, cols, virtualRowCount]);
 
     const applySelection = useCallback(
       (next: Set<number>) => {
@@ -524,7 +546,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       /** Tam dosya için önce `arrayBuffer()` beklemek yerine blob URL ile pdf.js okumasını kullanır (büyük PDF’lerde daha az bloklar ve daha düzgün akış). */
       let blobUrl: string | null = null;
       const run = async () => {
-        lastGoodVisiblePageRangeRef.current = null;
         const prevSid = thumbSessionIdRef.current;
         if (prevSid) {
           purgeThumbSession(prevSid);
@@ -539,6 +560,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         docRef.current = null;
         cellWidthIntRef.current = 0;
         pendingThumbRef.current.clear();
+        thumbRasterEpochRef.current++;
+        thumbRasterQueueRef.current.length = 0;
+        thumbRasterActiveRef.current = 0;
         try {
           blobUrl = URL.createObjectURL(file);
           const task = pdfjsLib.getDocument({
@@ -594,16 +618,23 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     }, []);
 
     const rasterPageToDataUrl = useCallback(
-      async (page1: number, cssW: number, jobAtStart: number): Promise<string | null> => {
+      async (page1: number, cssW: number, cancel: RasterThumbCancel): Promise<string | null> => {
         const doc = docRef.current;
         if (!doc || page1 < 1 || page1 > numPagesRef.current) {
           return null;
         }
-        if (jobAtStart !== renderJobRef.current) {
+        const stale = (): boolean =>
+          cancel.mode === "batch"
+            ? cancel.job !== renderJobRef.current
+            : cancel.epoch !== thumbRasterEpochRef.current;
+        if (stale()) {
           return null;
         }
         try {
           const page = await doc.getPage(page1);
+          if (stale()) {
+            return null;
+          }
           try {
             const baseVp = page.getViewport({ scale: 1 });
             const oversample = mode === "delete" ? RENDER_OVERSAMPLE_DELETE : RENDER_OVERSAMPLE;
@@ -624,7 +655,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             canvas.width = Math.max(1, Math.floor(vp.width));
             canvas.height = Math.max(1, Math.floor(vp.height));
             await page.render({ canvasContext: ctx, viewport: vp }).promise;
-            if (jobAtStart !== renderJobRef.current) {
+            if (stale()) {
               return null;
             }
             return canvas.toDataURL("image/png");
@@ -637,6 +668,24 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       },
       [mode],
     );
+
+    const enqueueThumbRasterJob = useCallback((exec: () => Promise<void>) => {
+      thumbRasterQueueRef.current.push(exec);
+      const drain = () => {
+        while (
+          thumbRasterActiveRef.current < THUMB_MAX_PARALLEL &&
+          thumbRasterQueueRef.current.length > 0
+        ) {
+          thumbRasterActiveRef.current++;
+          const job = thumbRasterQueueRef.current.shift()!;
+          void job().finally(() => {
+            thumbRasterActiveRef.current--;
+            drain();
+          });
+        }
+      };
+      drain();
+    }, []);
 
     const requestSinglePageThumb = useCallback(
       (page1: number, cssW: number, opts?: { force?: boolean }) => {
@@ -679,13 +728,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           return;
         }
         pendingThumbRef.current.add(page1);
-        const jobAtStart = renderJobRef.current;
-        void (async () => {
+        const epochAt = thumbRasterEpochRef.current;
+        enqueueThumbRasterJob(async () => {
           try {
-            const url = await rasterPageToDataUrl(page1, cssW, jobAtStart);
-            if (jobAtStart !== renderJobRef.current) {
-              return;
-            }
+            const url = await rasterPageToDataUrl(page1, cssW, { mode: "thumb", epoch: epochAt });
             if (url) {
               clearThumbRetryTimer(page1);
               const sidNow = thumbSessionIdRef.current;
@@ -713,9 +759,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           } finally {
             pendingThumbRef.current.delete(page1);
           }
-        })();
+        });
       },
-      [clearThumbRetryTimer, rasterPageToDataUrl],
+      [clearThumbRetryTimer, rasterPageToDataUrl, enqueueThumbRasterJob],
     );
 
     useLayoutEffect(() => {
@@ -742,52 +788,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       [clearThumbRetryTimer],
     );
 
-    const computeVisiblePageRange = useCallback(() => {
-      if (numPages === 0) {
-        return { low: 1, high: 0 };
-      }
-      const items = rowVirtualizer.getVirtualItems();
-      let minP = numPages + 1;
-      let maxP = 0;
-
-      if (items.length === 0) {
-        const prev = lastGoodVisiblePageRangeRef.current;
-        if (prev != null && prev.low <= prev.high) {
-          return prev;
-        }
-        const fallback = Math.min(numPages, Math.max(cols * 4, 16));
-        return { low: 1, high: fallback };
-      }
-
-      for (const vi of items) {
-        const row = vi.index;
-        for (let c = 0; c < cols; c++) {
-          const flat = row * cols + c;
-          if (flat >= sequenceLength) {
-            continue;
-          }
-          const pageNum = organizeMode ? pageOrder[flat]! : flat + 1;
-          if (pageNum >= 1 && pageNum <= numPages) {
-            minP = Math.min(minP, pageNum);
-            maxP = Math.max(maxP, pageNum);
-          }
-        }
-      }
-
-      if (minP > maxP) {
-        const next = { low: 1, high: Math.min(numPages, cols * 4) };
-        lastGoodVisiblePageRangeRef.current = next;
-        return next;
-      }
-
-      const buf = EVICT_BUFFER_ROWS * Math.max(1, cols);
-      const low = Math.max(1, minP - buf);
-      const high = Math.min(numPages, maxP + buf);
-      const next = { low, high };
-      lastGoodVisiblePageRangeRef.current = next;
-      return next;
-    }, [rowVirtualizer, numPages, cols, organizeMode, pageOrder, sequenceLength]);
-
     const scrollMemRef = useRef({ top: 0, scrollHeight: 1, clientH: 400 });
     const prevZoomColsRef = useRef({ z: zoomPercent, c: cols });
 
@@ -812,43 +812,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       onScroll();
       return () => el.removeEventListener("scroll", onScroll);
     }, [loading, loadError, numPages]);
-
-    /** Modal (Framer) + flex `min-h-0` zinciri ilk frame’de scroll alanı yüksekliğini 0 bırakabiliyor; sanallaştırıcı boş kalıyor — teker yoksa thumb gelmez. */
-    useLayoutEffect(() => {
-      if (loading || loadError || numPages === 0) {
-        return;
-      }
-      let cancelled = false;
-      let attempts = 0;
-      const maxAttempts = 40;
-
-      const wake = () => {
-        if (cancelled || attempts++ > maxAttempts) {
-          return;
-        }
-        const scrollEl = parentRef.current;
-        const v = rowVirtualizerRef.current;
-        if (!scrollEl || !v) {
-          requestAnimationFrame(wake);
-          return;
-        }
-        v.measure();
-        v.calculateRange();
-        setRangeRevision((r) => r + 1);
-        const short = scrollEl.clientHeight < 4;
-        if (short) {
-          requestAnimationFrame(wake);
-        }
-      };
-
-      requestAnimationFrame(() => {
-        requestAnimationFrame(wake);
-      });
-
-      return () => {
-        cancelled = true;
-      };
-    }, [loading, loadError, numPages, virtualRowCount]);
 
     useLayoutEffect(() => {
       const prev = prevZoomColsRef.current;
@@ -882,39 +845,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     }, [zoomPercent, cols]);
 
     useEffect(() => {
-      lastGoodVisiblePageRangeRef.current = null;
       setRangeRevision((r) => r + 1);
     }, [zoomPercent, cols, numPages, virtualRowCount]);
 
     /** Kalıcı önbellek kullanıldığı için görünür dışına taşan thumb’lar silinmez. */
     const evictOutsideRange = useCallback((_low: number, _high: number) => {}, []);
-
-    const flatIndexToPageNum = (flat: number): number => {
-      if (organizeMode) {
-        const v = pageOrder[flat];
-        return v != null && v >= 1 ? v : flat + 1;
-      }
-      return flat + 1;
-    };
-
-    const getVisiblePagesInViewportOrder = useCallback((): number[] => {
-      const out: number[] = [];
-      const items = [...rowVirtualizer.getVirtualItems()].sort((a, b) => a.index - b.index);
-      for (const vi of items) {
-        const row = vi.index;
-        for (let cidx = 0; cidx < cols; cidx++) {
-          const flat = row * cols + cidx;
-          if (flat >= sequenceLength) {
-            continue;
-          }
-          const page1 = flatIndexToPageNum(flat);
-          if (page1 >= 1 && page1 <= numPages) {
-            out.push(page1);
-          }
-        }
-      }
-      return out;
-    }, [rowVirtualizer, organizeMode, pageOrder, numPages, cols, sequenceLength]);
 
     const buildThumbLoadQueue = useCallback(
       (low: number, high: number): number[] => {
@@ -983,7 +918,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (pendingThumbRef.current.has(i)) {
             continue;
           }
-          const url = await rasterPageToDataUrl(i, cssW, job);
+          const url = await rasterPageToDataUrl(i, cssW, { mode: "batch", job });
           if (job !== renderJobRef.current) {
             return;
           }
@@ -1054,20 +989,15 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (page1 < 1 || page1 > numPages) {
             return;
           }
-          const c = colsRef.current;
-          let flat0: number;
-          if (organizeMode) {
-            const idx = pageOrder.indexOf(page1);
-            flat0 = idx >= 0 ? idx : 0;
-          } else {
-            flat0 = page1 - 1;
-          }
-          const row = Math.floor(flat0 / c);
-          rowVirtualizer.scrollToIndex(row, { align: "center" });
-          setRangeRevision((r) => r + 1);
+          requestAnimationFrame(() => {
+            const root = gridContentRef.current ?? parentRef.current;
+            const el = root?.querySelector<HTMLElement>(`[data-pdf-thumb-page="${page1}"]`);
+            el?.scrollIntoView({ block: "center", behavior: "smooth" });
+            setRangeRevision((r) => r + 1);
+          });
         },
       }),
-      [rowVirtualizer, numPages, organizeMode, pageOrder],
+      [numPages],
     );
 
     const onThumbClick = (page1: number, e: React.MouseEvent) => {
@@ -1604,12 +1534,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       );
     }
 
-    const rawVirtualItems = rowVirtualizer.getVirtualItems();
-    const virtualItems =
-      rawVirtualItems.length > 0 || !virtualFallbackActive || virtualRowCount === 0
-        ? rawVirtualItems
-        : fallbackVirtualRows;
-
     return (
       <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2">
         <p className="text-[11px] leading-relaxed text-slate-500">{hint}</p>
@@ -1654,9 +1578,14 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col rounded-xl border-2 border-cyan-500/35 bg-slate-950/30 p-1 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.14)] ring-1 ring-cyan-400/25 sm:p-1.5"
           aria-label={effectiveLang === "tr" ? "Aktif seçim alanı" : "Active selection area"}
         >
-          {/* Kaydırma burada; getScrollElement parentRef bu div’e bağlı */}
+          {/* Kaydırma kökü — tüm satırlar DOM’da (sanallaştırma yok). */}
           <div
             ref={parentRef}
+            data-pdf-page-scroll-root
+            style={{
+              minHeight:
+                !loading && !loadError && numPages > 0 ? `${GRID_SCROLL_MIN_VIEWPORT_PX}px` : undefined,
+            }}
             className="min-h-0 min-w-0 w-full flex-1 overflow-auto bg-transparent"
           >
             <div
@@ -1673,7 +1602,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             <div
               ref={gridContentRef}
               style={{
-                height: `${rowVirtualizer.getTotalSize()}px`,
+                paddingTop: GRID_PAD_Y,
+                paddingBottom: GRID_PAD_Y,
                 width: "100%",
                 minWidth: 0,
                 position: "relative",
@@ -1690,38 +1620,20 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                   }}
                 />
               ) : null}
-              {virtualRowCount > 0 && virtualItems.length === 0 ? (
-                <div
-                  className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex flex-col items-center justify-start gap-3 px-4 pt-16"
-                  role="status"
-                  aria-live="polite"
-                  aria-busy="true"
-                >
-                  <span
-                    className="inline-block h-8 w-8 shrink-0 animate-spin rounded-full border-2 border-cyan-400/35 border-t-cyan-300"
-                    aria-hidden
-                  />
-                  <p className="text-center text-sm font-medium text-slate-300">
-                    {effectiveLang === "tr" ? "Yükleniyor…" : "Loading…"}
-                  </p>
-                </div>
-              ) : null}
-              {virtualItems.map((vRow) => {
-                const top = vRow.start;
-                const rowStart = vRow.index * cols;
+              {Array.from({ length: virtualRowCount }, (_, rowIdx) => {
+                const rowStart = rowIdx * cols;
                 const rowEnd = Math.min(rowStart + cols, sequenceLength);
                 const cellsInRow = Math.max(0, rowEnd - rowStart);
 
                 return (
                   <div
-                    key={`row-${vRow.index}`}
-                    className="absolute left-0 w-full min-w-0"
+                    key={`row-${rowIdx}`}
+                    className="w-full min-w-0"
                     style={{
-                      top,
-                      height: cardHeight + ROW_GAP_PX,
                       display: "grid",
                       gridTemplateColumns: `repeat(${cellsInRow}, minmax(0, 1fr))`,
                       columnGap: GAP_PX,
+                      marginBottom: rowIdx < virtualRowCount - 1 ? ROW_GAP_PX : 0,
                     }}
                   >
                     {Array.from({ length: cellsInRow }, (_, k) => {
@@ -1731,7 +1643,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                         return null;
                       }
                       return (
-                        <div key={`p-${page1}`} className="relative min-w-0">
+                        <div
+                          key={`p-${page1}`}
+                          data-pdf-thumb-page={page1}
+                          className="relative min-w-0"
+                        >
                           {organizeMode ? (
                             <div className="absolute right-0 top-0 z-[15] flex flex-col gap-0.5 p-0.5">
                               <button

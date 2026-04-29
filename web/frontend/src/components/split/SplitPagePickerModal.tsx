@@ -266,6 +266,7 @@ export function SplitPagePickerModal({
             <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden px-1 py-1 sm:px-1.5 sm:py-1.5">
               {file.type === "application/pdf" && (maxPage ?? 0) > 0 ? (
                 <PdfPageVisualGrid
+                  key={`pdf-visual-${maxPage}-${file.size}-${file.lastModified}`}
                   ref={gridRef}
                   file={file}
                   password={password}
