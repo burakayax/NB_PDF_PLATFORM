@@ -12,8 +12,8 @@ export type DownloadFilenameModalProps = {
 };
 
 /**
- * Shown before streaming a result download so the user can set the file name
- * in the browser’s Save dialog (the `download` attribute).
+ * Shown before streaming a result download so the user can set the file name.
+ * Chromium also gets a native Save dialog via ``showSaveFilePicker`` when supported.
  */
 export function DownloadFilenameModal({ open, defaultName, language, onCancel, onConfirm }: DownloadFilenameModalProps) {
   const W = ws(language);

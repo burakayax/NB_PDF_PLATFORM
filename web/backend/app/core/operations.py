@@ -96,7 +96,12 @@ def build_pdf_download_headers(
     *,
     saas_gating: dict[str, Any] | None = None,
 ) -> dict[str, str] | None:
-    """Extra headers to ship alongside streamed tool output."""
+    """Extra headers to ship alongside streamed tool output.
+
+    Note: ``FileResponse(..., filename=...)`` already emits
+    ``Content-Disposition: attachment`` with a filename; we only add SaaS
+    gating headers here.
+    """
     headers: dict[str, str] = {}
     gating_headers = saas_gating_http_headers(saas_gating)
     if gating_headers:

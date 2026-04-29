@@ -9,6 +9,7 @@ import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { formatCheckoutMoney, packAmount, type CheckoutCurrency } from "../../lib/pricingMatrix";
 import { LegalDocumentBody } from "../legal/LegalPage";
+import { CheckoutPackSelectionCards } from "./CheckoutPackSelectionCards";
 
 type Props = {
   open: boolean;
@@ -330,13 +331,15 @@ export function PaymentSummaryModal({
   return (
     <>
       <div className="payment-summary-backdrop" role="presentation" onMouseDown={handleBackdropMouseDown}>
-      <div className="payment-summary-modal" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="payment-summary-modal__head">
-          <h2 className="payment-summary-modal__title">{tr ? "Ödeme fişi" : "Payment receipt"}</h2>
+        <div className="payment-summary-modal payment-summary-modal--wide mx-auto flex max-h-[90vh] w-full max-w-[min(1040px,calc(100vw-24px))] flex-col overflow-y-auto rounded-3xl bg-gradient-to-b from-slate-900/98 to-[#070b14] px-5 py-8 text-center shadow-[0_40px_100px_-40px_rgba(0,0,0,0.75)] ring-1 ring-white/[0.07] sm:px-8 sm:py-10" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="relative mb-8">
+          <h2 id="checkout-summary-title" className="payment-summary-modal__title pr-12 text-center text-[1.375rem] font-semibold tracking-tight">
+            {tr ? "Ödeme özeti" : "Checkout"}
+          </h2>
           <button
             type="button"
-            className="payment-summary-modal__close"
-            aria-label="Close"
+            className="payment-summary-modal__close absolute right-0 top-0"
+            aria-label={tr ? "Kapat" : "Close"}
             onClick={() => {
               if (preview?.exitOfferEligible && !exitOfferShown && !isSubscription) {
                 tryExitIntent();
@@ -350,29 +353,13 @@ export function PaymentSummaryModal({
         </div>
 
         {onChangeProduct ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {CREDIT_PACKS.map((pk) => (
-              <button
-                key={pk.product}
-                type="button"
-                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                  pk.product === product
-                    ? "border-cyan-400/50 bg-cyan-500/15 text-cyan-100"
-                    : "border-white/10 bg-white/[0.04] text-nb-muted hover:border-white/20"
-                }`}
-                onClick={() => onChangeProduct(pk.product)}
-              >
-                {pk.subscription
-                  ? (tr ? "Limitsiz · " : "Unl. · ") +
-                    formatCheckoutMoney(packAmount(pk.product, checkoutCurrency), checkoutCurrency, tr ? "tr" : "en") +
-                    (tr ? "/ay" : "/mo")
-                  : `${pk.credits} ${tr ? "kr" : "cr"} · ${formatCheckoutMoney(
-                      packAmount(pk.product, checkoutCurrency),
-                      checkoutCurrency,
-                      tr ? "tr" : "en",
-                    )}`}
-              </button>
-            ))}
+          <div className="mb-8 w-full">
+            <CheckoutPackSelectionCards
+              selected={product}
+              currency={checkoutCurrency}
+              language={language}
+              onSelect={onChangeProduct}
+            />
           </div>
         ) : null}
 
@@ -384,21 +371,19 @@ export function PaymentSummaryModal({
           </div>
         ) : null}
 
-        <div className="payment-summary-modal__row">
-          <span className="text-nb-muted">{tr ? "Paket" : "Pack"}</span>
-          <strong>{tr ? pack.nameTr : pack.nameEn}</strong>
-        </div>
-
-        <div className="payment-summary-modal__row">
-          <span className="text-nb-muted">{tr ? "İçerik" : "Contents"}</span>
-          <strong>
+        <div className="mx-auto max-w-md text-left">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{tr ? "Paket" : "Package"}</p>
+          <p className="mt-1 text-[15px] font-semibold text-slate-100">{tr ? pack.nameTr : pack.nameEn}</p>
+          <p className="mt-2 text-[13px] text-slate-400">
             {pack.subscription
               ? tr
-                ? "SINIRSIZ İŞLEM"
-                : "Unlimited operations"
-              : `${pack.credits} ${tr ? "kredi" : "credits"}`}
-          </strong>
+                ? "Sınırsız işlem • Aylık"
+                : "Unlimited operations • Monthly"
+              : `${pack.credits} ${tr ? "kredi" : "credits"} • ${tr ? "Tek sefer" : "One-time"}`}
+          </p>
         </div>
+
+
 
         {usingOfflinePricing && preview ? (
           <p className="mt-2 text-[11px] leading-snug text-nb-muted">
@@ -425,23 +410,25 @@ export function PaymentSummaryModal({
           <p className="payment-summary-modal__loading">{tr ? "Yükleniyor…" : "Loading…"}</p>
         ) : (
           <>
-            <div className="payment-summary-modal__row">
-              <span className="text-nb-muted">{tr ? "Liste fiyatı" : "List price"}</span>
-              <span>{formatMoneyDisplay(preview.baseAmount, preview.currency as CheckoutCurrency)}</span>
-            </div>
             {preview.baseAmount !== preview.finalAmount ? (
-              <div className="payment-summary-modal__row payment-summary-modal__row--discount">
-                <span className="text-nb-muted">{tr ? "İndirimli" : "You pay"}</span>
-                <span className="font-semibold text-emerald-400">
-                  {formatMoneyDisplay(preview.finalAmount, preview.currency as CheckoutCurrency)}
-                </span>
+              <div className="mx-auto mt-10 max-w-sm space-y-3 text-center">
+                <div className="text-sm text-slate-500 line-through">
+                  {formatMoneyDisplay(preview.baseAmount, preview.currency as CheckoutCurrency)}
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">{tr ? "Ödenecek" : "Total due"}</p>
+                  <p className="mt-3 text-[2.5rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[2.85rem] md:text-[3.15rem]">
+                    {formatMoneyDisplay(preview.finalAmount, preview.currency as CheckoutCurrency)}
+                  </p>
+                  <p className="mt-3 text-[13px] font-medium text-emerald-400/95">{tr ? "İndirim uygulandı" : "Discount applied"}</p>
+                </div>
               </div>
             ) : (
-              <div className="payment-summary-modal__row">
-                <span className="text-nb-muted">{tr ? "Tutar" : "Total"}</span>
-                <span className="font-semibold">
+              <div className="mx-auto mt-10 max-w-sm space-y-2 text-center">
+                <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">{tr ? "Ödenecek" : "Total due"}</p>
+                <p className="text-[2.5rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[2.85rem] md:text-[3.15rem]">
                   {formatMoneyDisplay(preview.finalAmount, preview.currency as CheckoutCurrency)}
-                </span>
+                </p>
               </div>
             )}
 
@@ -465,16 +452,11 @@ export function PaymentSummaryModal({
             ) : null}
             {promoError ? <p className="payment-summary-modal__err">{promoError}</p> : null}
 
-            <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-white/[0.06] pt-4 opacity-95">
-              <span className="text-sm font-bold text-[#00A7E0]">iyzico</span>
-              <span className="text-sm font-black italic tracking-tight text-[#1434CB]">VISA</span>
-              <svg className="h-7 w-10 shrink-0" viewBox="0 0 32 20" aria-hidden>
-                <circle cx="12" cy="10" r="8" fill="#EB001B" />
-                <circle cx="20" cy="10" r="8" fill="#F79E1B" />
-              </svg>
-            </div>
+            <p className="mx-auto mb-10 mt-3 max-w-[20rem] text-center text-[12px] text-slate-500">
+              iyzico · Visa · Mastercard
+            </p>
 
-            <label className="mt-4 flex cursor-pointer gap-3 rounded-xl border border-white/[0.08] bg-nb-bg-soft/40 p-3 text-sm leading-relaxed text-nb-muted">
+            <label className="mx-auto flex max-w-lg cursor-pointer gap-3 rounded-2xl border border-white/[0.07] bg-slate-900/35 p-4 text-left text-sm leading-snug text-slate-400">
               <input
                 type="checkbox"
                 className="mt-1 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
@@ -512,11 +494,11 @@ export function PaymentSummaryModal({
 
             <button
               type="button"
-              className="payment-summary-modal__pay primary-action mt-3 w-full"
+              className="payment-summary-modal__pay-stripe mx-auto mt-8 flex w-full max-w-[28rem] items-center justify-center rounded-xl bg-[#635bff] px-6 py-[1.1rem] text-[17px] font-semibold leading-tight tracking-tight text-white shadow-[0_18px_45px_-12px_rgba(99,91,255,0.65),0_2px_0_rgba(255,255,255,0.12)_inset] ring-1 ring-white/10 transition hover:bg-[#5a52e5] hover:shadow-[0_22px_50px_-10px_rgba(99,91,255,0.72)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#635bff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] disabled:pointer-events-none disabled:opacity-40 sm:py-[1.2rem]"
               disabled={paying || loading || !legalAccepted}
               onClick={() => void handlePay()}
             >
-              {paying ? (tr ? "İşleniyor…" : "Processing…") : tr ? "Öde" : "Pay"}
+              {paying ? (tr ? "İşleniyor…" : "Processing…") : tr ? "Güvenli ödemeye geç" : "Continue to secure payment"}
             </button>
             {isViteDev ? (
               <p className="mt-2 text-center text-[11px] text-nb-muted">

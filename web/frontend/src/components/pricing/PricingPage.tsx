@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ShieldCheck } from "lucide-react";
+import { Check, ShieldCheck } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import type { AuthUser, UpdateProfileInput } from "../../api/auth";
 import { fetchPaymentsPricing, initializeTierPayment, type PublicTierPricingRow } from "../../api/payments";
@@ -123,7 +123,7 @@ export function PricingPage({
 
   return (
     <>
-      <section className="rounded-3xl border border-white/[0.08] bg-gradient-to-br from-nb-bg-elevated/90 via-nb-panel/80 to-nb-bg/95 p-6 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.65)] md:p-8">
+      <section className="mx-auto w-full max-w-[92rem] rounded-3xl border border-white/[0.06] bg-gradient-to-br from-nb-bg-elevated/90 via-nb-panel/75 to-nb-bg/95 p-6 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.65)] md:p-10 lg:p-12">
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
@@ -134,8 +134,8 @@ export function PricingPage({
             </h1>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-nb-muted">
               {tr
-                ? "Bronz ve Altın tek seferlik kredi paketleri; Limitsiz Pro aylık abonelik. Fiyatlar sunucudan yüklenir."
-                : "Bronze and Gold are one-time credit packs; Unlimited Pro is a monthly subscription. Prices load from the server."}
+                ? "Bronz ve Altın tek seferlik kredi paketleri; Limitsiz Pro aylık abonelik. Fiyatlar konumunuza göre otomatik para biriminde sunulur."
+                : "Bronze and Gold are one-time credit packs; Unlimited Pro is a monthly subscription. Prices are shown in your region’s currency."}
             </p>
             {pricingLoading ? (
               <p className="mt-2 text-[11px] font-medium text-cyan-200/75">{tr ? "Fiyatlar yükleniyor…" : "Loading prices…"}</p>
@@ -150,9 +150,10 @@ export function PricingPage({
           </button>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="mx-auto grid max-w-[88rem] gap-10 md:grid-cols-3 md:gap-8 xl:gap-10">
           {PRICING_TIER_CARDS.map((card) => {
             const canonical = tierById.get(card.id);
+            const creditHero = canonical?.credits ?? card.fallbackCredits;
             const amountNum = canonical?.amount ?? card.fallbackPriceTry;
             const cur = (canonical?.currency as CheckoutCurrency | undefined) ?? "TRY";
             const subscription = card.id === "unlimited_pro";
@@ -162,48 +163,86 @@ export function PricingPage({
               : formatted;
             const name = tr ? card.nameTr : card.nameEn;
             const period = tr ? card.periodLabelTr : card.periodLabelEn;
-            const content = tr ? card.contentTr : card.contentEn;
+            const features = tr ? card.featuresTr : card.featuresEn;
             const loading = busyTier === card.id;
             const isPopular = card.highlight === "popular";
             return (
               <article
                 key={card.id}
-                className={`flex flex-col rounded-2xl border border-white/[0.1] bg-gradient-to-b ${
+                style={{ contain: "layout style" }}
+                className={`group relative flex min-h-[480px] flex-col overflow-hidden rounded-2xl border-2 motion-reduce:hover:translate-y-0 motion-reduce:hover:shadow-none motion-reduce:transition-none transition-[transform,box-shadow,border-color,background-color] duration-300 ease-out ${
                   isPopular
-                    ? "from-indigo-500/20 via-nb-panel/70 to-transparent ring-2 ring-indigo-400/30"
-                    : "from-white/[0.06] via-nb-panel/60 to-transparent"
-                } p-5 shadow-inner`}
+                    ? "border-indigo-500/35 bg-gradient-to-b from-indigo-950/50 via-slate-950/80 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.07),0_36px_80px_-40px_rgba(99,102,241,0.55)] backdrop-blur-xl hover:z-10 hover:-translate-y-1 hover:shadow-[0_42px_90px_-40px_rgba(129,140,248,0.45)]"
+                    : "border-slate-800 bg-slate-950/55 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-xl hover:-translate-y-0.5 hover:border-slate-600 hover:shadow-[0_28px_56px_-36px_rgba(15,23,42,0.75)]"
+                }`}
               >
-                <div className="min-h-[1.25rem]">
-                  {isPopular ? (
-                    <span className="inline-block rounded-full border border-cyan-400/45 bg-cyan-500/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-cyan-50">
-                      {tr ? "En Popüler" : "Most popular"}
+                {isPopular ? (
+                  <div
+                    className="relative flex shrink-0 items-center justify-center bg-gradient-to-r from-indigo-500 via-violet-600 to-fuchsia-600 px-4 py-2.5 text-center shadow-[0_14px_40px_-12px_rgba(99,102,241,0.55)]"
+                    aria-hidden
+                  >
+                    <span className="text-[11px] font-black uppercase tracking-[0.22em] text-white drop-shadow">
+                      {tr ? "En çok seçilen" : "Most popular"}
                     </span>
+                  </div>
+                ) : (
+                  <div className="h-[43px] shrink-0" aria-hidden />
+                )}
+                <div className="flex flex-1 flex-col px-7 pb-9 pt-8 md:px-8">
+                  <p className={`text-[11px] font-bold uppercase tracking-[0.28em] ${isPopular ? "text-indigo-200/90" : "text-slate-500"}`}>{name}</p>
+                  {subscription ? (
+                    <>
+                      <p className="mt-8 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-[2.875rem] font-black leading-none tabular-nums text-transparent md:text-[3.125rem]">
+                        ∞
+                      </p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-cyan-200/90">{tr ? "Limitsiz kullanım" : "Unlimited use"}</p>
+                    </>
+                  ) : typeof creditHero === "number" ? (
+                    <>
+                      <p className="mt-8 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-[2.875rem] font-black leading-none tabular-nums text-transparent md:text-[3.125rem]">
+                        {creditHero.toLocaleString(tr ? "tr-TR" : "en-US")}
+                      </p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-slate-400">{tr ? "Ön ödemeli kredi" : "Prepaid credits"}</p>
+                    </>
                   ) : null}
-                </div>
-                <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-200/85">{name}</p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-3xl font-black tabular-nums text-nb-text">{priceFormatted}</span>
-                </div>
-                <p className="text-xs font-medium text-slate-400">
-                  {subscription
-                    ? tr
-                      ? "Aylık abonelik"
-                      : "Monthly subscription"
-                    : tr
-                      ? "Tek seferlik"
-                      : "One-time"}
-                </p>
-                <p className="mt-1 text-xs text-slate-500">{period}</p>
-                <p className="mt-4 flex flex-1 text-left text-base font-semibold leading-snug text-slate-100">{content}</p>
-                <div className="mt-6 flex flex-1 flex-col justify-end">
+                  <div className="mt-10 border-t border-white/[0.07] pt-10">
+                    <p className="text-[13px] font-medium uppercase tracking-wide text-slate-500">
+                      {subscription
+                        ? tr
+                          ? "Aylık abonelik"
+                          : "Monthly subscription"
+                        : tr
+                          ? "Tek seferlik ödeme"
+                          : "One-time payment"}
+                    </p>
+                    <p
+                      className={`mt-6 text-[2.375rem] font-black tabular-nums leading-none tracking-tight md:text-[2.625rem] ${
+                        isPopular ? "text-white" : "text-slate-50"
+                      }`}
+                    >
+                      {priceFormatted}
+                    </p>
+                    <p className="mt-4 text-xs font-medium tracking-wide text-slate-500">{period}</p>
+                  </div>
+                  <ul className="mt-9 flex flex-1 flex-col gap-3.5 text-left" role="list">
+                    {features.map((line) => (
+                      <li key={line} className={`flex gap-3 text-[14px] leading-snug md:text-[15px] ${isPopular ? "text-slate-100" : "text-slate-300"}`}>
+                        <Check className={`mt-0.5 h-5 w-5 shrink-0 ${isPopular ? "text-indigo-300" : "text-emerald-400"}`} strokeWidth={2.75} aria-hidden />
+                        <span>{line}</span>
+                      </li>
+                    ))}
+                  </ul>
                   <button
                     type="button"
                     disabled={loading || busyTier != null}
                     onClick={() => void onRequestTier(card.id)}
-                    className="nb-transition w-full rounded-xl bg-gradient-to-r from-nb-primary to-indigo-600 px-4 py-3 text-sm font-bold uppercase tracking-[0.08em] text-white shadow-[0_8px_28px_-8px_rgba(59,130,246,0.55)] hover:brightness-110 disabled:pointer-events-none disabled:opacity-50"
+                    className={`nb-transition mt-10 inline-flex min-h-[52px] w-full items-center justify-center rounded-2xl px-5 py-4 text-[14px] font-bold uppercase tracking-[0.14em] transition disabled:pointer-events-none disabled:opacity-45 ${
+                      isPopular
+                        ? "border border-white/20 bg-white text-slate-950 shadow-[0_20px_50px_-20px_rgba(255,255,255,0.45)] hover:bg-slate-100"
+                        : "border border-slate-600/70 bg-slate-900/85 text-white hover:bg-slate-800"
+                    }`}
                   >
-                    {loading ? "…" : tr ? "Satın al" : "Checkout"}
+                    {loading ? "…" : tr ? "Devam et" : "Continue"}
                   </button>
                 </div>
               </article>

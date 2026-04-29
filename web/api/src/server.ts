@@ -22,10 +22,28 @@ function listenMessage() {
   console.log(`NB PDF PLARTFORM auth API listening on ${scheme}://0.0.0.0:${env.PORT}`);
 }
 
+function attachListenError(server: http.Server | https.Server) {
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `[api] Port ${env.PORT} is already in use (EADDRINUSE). Another API or Docker container may be bound to it.\n` +
+          `[api] Fix: stop that process, or set PORT=4001 (or another port) in web/api/.env, then restart.`,
+      );
+      process.exit(1);
+      return;
+    }
+    throw err;
+  });
+}
+
 if (useTls) {
   const key = fs.readFileSync(keyPath);
   const cert = fs.readFileSync(certPath);
-  https.createServer({ key, cert }, app).listen(env.PORT, listenMessage);
+  const server = https.createServer({ key, cert }, app);
+  attachListenError(server);
+  server.listen(env.PORT, listenMessage);
 } else {
-  http.createServer(app).listen(env.PORT, listenMessage);
+  const server = http.createServer(app);
+  attachListenError(server);
+  server.listen(env.PORT, listenMessage);
 }

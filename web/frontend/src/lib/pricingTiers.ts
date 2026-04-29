@@ -14,6 +14,8 @@ export type TierCardDef = {
   contentEn: string;
   contentTr: string;
   highlight?: TierHighlight;
+  featuresEn: readonly string[];
+  featuresTr: readonly string[];
 };
 
 export const PRICING_TIER_CARDS: readonly TierCardDef[] = [
@@ -27,6 +29,8 @@ export const PRICING_TIER_CARDS: readonly TierCardDef[] = [
     periodLabelTr: "Tek seferlik",
     contentEn: "100 credits",
     contentTr: "100 Kredi",
+    featuresEn: ["Lifetime usage", "No expiration", "All PDF tools"],
+    featuresTr: ["Ömür boyu kullanım", "Bitiş tarihi yok", "Tüm PDF araçları"],
   },
   {
     id: "professional",
@@ -39,6 +43,8 @@ export const PRICING_TIER_CARDS: readonly TierCardDef[] = [
     contentEn: "500 credits",
     contentTr: "500 Kredi",
     highlight: "popular",
+    featuresEn: ["Best value per credit", "Priority support", "No credit cap rush"],
+    featuresTr: ["En iyi fiyat/kredi", "Öncelikli destek", "Yüksek hacim için"],
   },
   {
     id: "unlimited_pro",
@@ -50,5 +56,7 @@ export const PRICING_TIER_CARDS: readonly TierCardDef[] = [
     periodLabelTr: "ay",
     contentEn: "Unlimited operations",
     contentTr: "SINIRSIZ İŞLEM",
+    featuresEn: ["Unlimited operations", "Priority support", "Cancel anytime"],
+    featuresTr: ["Sınırsız işlem", "Öncelikli destek", "İstediğiniz zaman iptal"],
   },
 ] as const;

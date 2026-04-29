@@ -192,8 +192,14 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
               </p>
               <p className="saas-gated-preview__meta" aria-label={filename}>
                 <span className="saas-gated-preview__filename">{filename}</span>
-                <span className="saas-gated-preview__dot" aria-hidden="true">·</span>
-                <span className="saas-gated-preview__cost">{copy.creditsLeftLabel}</span>
+              {copy.creditsLeftLabel.trim().length > 0 ? (
+                <>
+                  <span className="saas-gated-preview__dot" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="saas-gated-preview__cost">{copy.creditsLeftLabel}</span>
+                </>
+              ) : null}
               </p>
             </>
           ) : (

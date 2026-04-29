@@ -10,7 +10,8 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "backfill:gmail-emails": "tsx scripts/backfill-gmail-canonical-emails.ts"
+    "backfill:gmail-emails": "tsx scripts/backfill-gmail-canonical-emails.ts",
+    "docker:up": "docker compose down --remove-orphans && docker compose up -d --build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",

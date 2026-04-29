@@ -1,0 +1,69 @@
+# Local stack: PostgreSQL + Node entitlement API.
+# From `web/api`:
+#   npm run docker:up
+# or:
+#   docker compose up -d --build
+#
+# Secrets and provider keys (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET, mail, JWT, etc.) are loaded
+# from `web/api/.env` via `env_file`. They are not listed under `environment:` — otherwise Compose
+# would override them with empty or placeholder values (the previous bug).
+#
+# Listed `environment:` keys set Docker-specific values (${VAR:-defaults} resolves from `.env`).
+# Port 4000 in use on the host (EADDRINUSE): set API_HOST_PORT=4001 in `.env`
+# next to this file (Compose reads it for ${...} substitution), then use
+# http://localhost:4001 for the API. Or run `npm run docker:up` — it runs
+# `compose down` first so the previous api container releases the port.
+#
+# If a non-Docker process still holds the port (e.g. local `npm run dev`), stop it.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pdf_platform
+    ports:
+      - "55432:5432"
+    volumes:
+      - pdf_platform_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${API_HOST_PORT:-4000}:4000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Precedence over `env_file`; values use shell / project `.env` substitution when ${VAR:-default}.
+      # Do not duplicate GOOGLE_* here — Google credentials must come only from `.env` (env_file above).
+      # Overrides DATABASE_URL — inside the container Postgres is always the `postgres` service.
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/pdf_platform?schema=public
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-docker-local-development-jwt-access-secret-min-32-characters-xx}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-docker-local-development-jwt-refresh-secret-min-32-chars-xxxxxx}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      # iyzico PSP’ye dönen adres: `getCheckoutFormCallbackUrl` = PAYMENT_CALLBACK_BASE_URL || APP_BASE_URL.
+      # Aynı değişkenleri `.env` içinde ayarlı tutun (ör. `APP_BASE_URL` = tarayıcıdan erişilen API kökü).
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:4000}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+      EMAIL_USER: ${EMAIL_USER:-docker-placeholder@localhost.test}
+      EMAIL_PASS: ${EMAIL_PASS:-docker-placeholder-not-for-real-mail}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-docker-placeholder@localhost.test}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pdf_platform_pgdata:

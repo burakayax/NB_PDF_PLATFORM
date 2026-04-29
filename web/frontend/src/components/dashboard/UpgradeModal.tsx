@@ -1,8 +1,9 @@
+import { Check } from "lucide-react";
 import { useEffect } from "react";
 import type { Language } from "../../i18n/landing";
 import { creditShopModalCopy } from "../../i18n/creditShopModal";
 import type { CreditPackProduct } from "../../lib/creditPacks";
-import { CREDIT_PACKS } from "../../lib/creditPacks";
+import { CREDIT_PACK_MARKETING_FEATURES, CREDIT_PACKS } from "../../lib/creditPacks";
 
 type UpgradeModalProps = {
   open: boolean;
@@ -92,6 +93,14 @@ export function UpgradeModal({ open, onClose, language, buyingProduct, onBuyPack
                 <h3 className="upgrade-modal__plan-name">{tierName}</h3>
                 <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-white/55">{C.packContent(pack.credits, pack.subscription)}</p>
                 <p className="upgrade-modal__plan-price upgrade-modal__plan-price--sm">{C.packPriceTry(pack.priceTry, pack.subscription)}</p>
+                <ul className="upgrade-modal__feat-list mb-4 mt-3 space-y-1.5 text-left" role="list">
+                  {(language === "tr" ? CREDIT_PACK_MARKETING_FEATURES[pack.product].tr : CREDIT_PACK_MARKETING_FEATURES[pack.product].en).map((line) => (
+                    <li key={line} className="flex gap-2 text-[13px] leading-snug text-slate-400">
+                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" strokeWidth={3} aria-hidden />
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
                 <p className="mt-2 text-sm leading-relaxed text-nb-muted">{C.packHint}</p>
                 <button
                   type="button"

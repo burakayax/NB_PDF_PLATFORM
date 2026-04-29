@@ -16,6 +16,25 @@ export type CreditPackDefinition = {
   nameEn: string;
 };
 
+/** Marketing bullets shown on dashboard / upgrade flows (lifetime applies to prepaid credits). */
+export const CREDIT_PACK_MARKETING_FEATURES: Record<
+  CreditPackProduct,
+  { readonly tr: readonly string[]; readonly en: readonly string[] }
+> = {
+  TIER_STARTER: {
+    tr: ["Ömür boyu kullanım", "Bitiş tarihi yok", "Tüm araçlar"],
+    en: ["Lifetime usage", "No expiration", "All PDF tools"],
+  },
+  TIER_PROFESSIONAL: {
+    tr: ["En iyi fiyat / kredi", "Öncelikli destek", "Kurumsal projeler için ideal"],
+    en: ["Best value per credit", "Priority support", "Ideal for power users"],
+  },
+  UNLIMITED_PRO: {
+    tr: ["Sınırsız işlem", "Öncelikli destek", "İstediğiniz zaman iptal"],
+    en: ["Unlimited operations", "Priority support", "Cancel anytime"],
+  },
+};
+
 export const CREDIT_PACKS: readonly CreditPackDefinition[] = [
   {
     product: "TIER_STARTER",

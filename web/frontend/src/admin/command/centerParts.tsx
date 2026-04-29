@@ -121,7 +121,6 @@ export function SiteForm({
             const next = await putAdminAppSettings(accessToken, {
               siteName: form.siteName,
               logoUrl: form.logoUrl,
-              globalMaintenanceMode: form.globalMaintenanceMode,
               seoTitle: form.seoTitle,
               seoDescription: form.seoDescription,
               seoKeywords: form.seoKeywords,
@@ -146,15 +145,15 @@ export function SiteForm({
           onChange={(e) => setK("logoUrl")(e.target.value.trim() === "" ? null : e.target.value)}
         />
       </AdminField>
-      <label className="flex items-center gap-2 text-sm text-slate-200">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-slate-600"
-          checked={form.globalMaintenanceMode}
-          onChange={(e) => setK("globalMaintenanceMode")(e.target.checked)}
-        />
-        Global maintenance
-      </label>
+      <div className="rounded-lg border border-slate-700/80 bg-slate-900/40 px-3 py-2 text-xs text-slate-300">
+        <span className="font-medium text-slate-200">Global maintenance</span> is controlled by the API host env{" "}
+        <code className="rounded bg-black/40 px-1">MAINTENANCE_MODE</code> (redeploy to apply). Displayed value reflects
+        the current API:{" "}
+        <span className={form.globalMaintenanceMode ? "text-amber-300" : "text-emerald-400"}>
+          {form.globalMaintenanceMode ? "on" : "off"}
+        </span>
+        .
+      </div>
       <AdminField label="SEO title">
         <input className={adminInputClass} value={form.seoTitle ?? ""} onChange={(e) => setK("seoTitle")(e.target.value || null)} />
       </AdminField>

@@ -77,7 +77,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     }
     setError(null);
     try {
-      const data = await fetchPublicRuntime();
+      const raw = await fetchPublicRuntime();
+      const viteMaintenance = import.meta.env.VITE_MAINTENANCE_MODE === "true";
+      const data: PublicRuntimePayload = {
+        ...raw,
+        site: {
+          ...raw.site,
+          maintenanceMode: viteMaintenance || raw.site.maintenanceMode === true,
+        },
+        flags: {
+          ...raw.flags,
+          maintenanceMode: viteMaintenance || raw.flags.maintenanceMode === true,
+        },
+      };
       setPayload(data);
       persistMaintenanceHint(data.flags.maintenanceMode === true);
     } catch (e) {

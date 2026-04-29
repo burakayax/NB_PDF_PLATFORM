@@ -191,6 +191,27 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
   Burada planlar (`FREE`, `PRO`, …) ve **`dailyLimit`** gibi değerler tanımlıdır.
 - **Değişiklikten sonra:** API’yi yeniden derleyip sunucuyu yeniden başlatmanız gerekir. Veritabanı şeması değişmediyse sadece yeniden başlatmak yeterli olabilir.
 
+### Kredi maliyetleri — PDF araç başına kaç kredi?
+
+**Özet:** Kullanıcıdan **gerçekten düşen kredi**, tarayıcı metninden değil, **Node API** veritabanındaki `ToolRegistry.cost` değerinden hesaplanır. Kenar çubuğunda gösterilen “N kredi” yazısı **`web/frontend/src/i18n/workspace.ts`** dosyasındaki **`SIDEBAR_TOOL_CREDIT_COST`** ile gelir; bunlar **aynı sayıları** yansıtmalıdır (aksi halde örneğin menüde 3, hesaptan 5 eksilmesi gibi tutarsızlık olur).
+
+1. **Gerçek düşümü değiştirmek (asıl kaynak):**  
+   - Dosya: **`web/api/src/lib/ensure-tool-registry.ts`**  
+   - **`DEFAULT_TOOL_REGISTRY`** içinde her aracın **`id`**, **`strategy`** ve özellikle **`cost`** alanını düzenleyin.  
+   - API açılışında `ensureToolRegistry()` bu değerleri veritabanına **yazar** (günceller).
+
+2. **Kenar çubuğundaki rakamı uyumlu tutmak:**  
+   - Dosya: **`web/frontend/src/i18n/workspace.ts`**  
+   - **`SIDEBAR_TOOL_CREDIT_COST`** nesnesinde ilgili araç anahtarı için **aynı sayıyı** kullanın.
+
+3. **Yeniden başlatma:**  
+   - `ensure-tool-registry.ts` veya bu dosyadan türeyen maliyetleri değiştirdiyseniz: **Node API** sürecini yeniden başlatın (ör. geliştirmede `npm run dev` sürecini durdurup yeniden çalıştırma; **Docker** kullanıyorsanız API konteynerini yeniden başlatma).  
+   - Sadece `workspace.ts` metnini güncellediyseniz çoğu zaman **ön yüzü yenilemek** yeterlidir; unutmayın, **hesap kesimi** her zaman sunucudaki `ToolRegistry` ile yapılır.
+
+4. **İndirme günlüğü (audit) ve kredi:**  
+   - Başarılı indirmede istemci **`POST /api/entitlement/download-log`** ile **tek** bir kayıt oluşturur ve **`POST .../ack`** ile tamamlanmış sayar; bu **izlenebilirlik** içindir.  
+   - **Kredi eksiltmesi** yalnızca PDF worker’ın indirme anında tetiklediği **`entitlement_consume`** ile yapılır — indirme başına **bir kez** `consume` beklenir.
+
 ---
 
 ## 9) Sıfırdan projeyi çalıştırma (adım adım)

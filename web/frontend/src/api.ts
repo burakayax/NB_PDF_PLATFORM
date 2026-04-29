@@ -29,6 +29,28 @@ function parseSaasGatingFromResponse(response: Response): SaaSGating | null {
   }
 }
 
+/** FastAPI PDF sunucusu (yerelde :8000); `VITE_PDF_PROXY_TARGET` ile uyumlu. */
+function defaultPdfBackendOrigin(): string {
+  const raw = import.meta.env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000";
+  return raw.replace(/\/$/, "");
+}
+
+/**
+ * Kimlik Express’i `:4000` ile verilen `VITE_API_BASE`; PDF `/api/pdf/…` için FastAPI gerekir.
+ */
+function looksLikeLocalSsaasApiUrl(trimmed: string): boolean {
+  try {
+    const withProto = trimmed.includes("://") ? trimmed : `http://${trimmed}`;
+    const u = new URL(withProto);
+    if (u.hostname !== "localhost" && u.hostname !== "127.0.0.1") {
+      return false;
+    }
+    return u.port === "4000";
+  } catch {
+    return false;
+  }
+}
+
 /**
  * PDF API kök adresi.
  * - `npm run dev`: boş string → istekler `/api/...` (Vite aynı origin + proxy → :8000). Tarayıcı doğrudan :8000’e gitmez, CORS gerekmez.
@@ -52,6 +74,14 @@ function getPdfApiBase(): string {
     if (isNonLocalDeployedHost() && envHttpUrlIsLoopback(trimmed)) {
       return "";
     }
+    if (looksLikeLocalSsaasApiUrl(trimmed)) {
+      const fb = defaultPdfBackendOrigin();
+      console.warn(
+        "[pdfApi] VITE_API_BASE kimlik API’sine (:4000) benziyor; PDF uçları FastAPI’de (:8000).",
+        `"${trimmed.replace(/\/$/, "")}" → "${fb}"`,
+      );
+      return fb;
+    }
     return trimmed.replace(/\/$/, "");
   }
   return "";
@@ -64,8 +94,7 @@ function devPdfApiDirectOrigin(): string | null {
   if (!import.meta.env.DEV) {
     return null;
   }
-  const raw = import.meta.env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000";
-  return raw.replace(/\/$/, "");
+  return defaultPdfBackendOrigin();
 }
 
 /** Ağ hatası (Failed to fetch) için anlaşılır mesaj üretir. */
@@ -553,6 +582,106 @@ export type ToolDownloadResult = {
   saasGating?: SaaSGating | null;
 };
 
+type ShowSavePickerWindow = Window &
+  typeof globalThis & {
+    showSaveFilePicker?: (options: {
+      suggestedName?: string;
+      types?: Array<{ description: string; accept: Record<string, string[]> }>;
+    }) => Promise<FileSystemFileHandle>;
+  };
+
+function showSavePickerTypesFor(filename: string, blob: Blob) {
+  const extMatch = filename.match(/(\.[a-z0-9]+)$/i);
+  const ext = extMatch?.[1]?.toLowerCase() ?? ".bin";
+  const mime =
+    blob.type?.trim() ||
+    (ext === ".pdf"
+      ? "application/pdf"
+      : ext === ".zip"
+        ? "application/zip"
+        : "application/octet-stream");
+  return [
+    {
+      description: "Download",
+      accept: { [mime]: [ext] },
+    },
+  ];
+}
+
+/**
+ * Delivers a blob to the user: prefers the File System Access API Save dialog
+ * when available (Chromium), otherwise falls back to `URL.createObjectURL` +
+ * `<a download>` (browser default folder; still honors suggested filename).
+ */
+async function deliverBlobAsDownload(
+  blob: Blob,
+  filename: string,
+  retainForReplay: boolean,
+): Promise<Pick<ToolDownloadResult, "replay" | "dispose">> {
+  const w = window as ShowSavePickerWindow;
+  let objectUrl: string | null = null;
+  const storedBlob = blob;
+  const storedName = filename;
+
+  const anchorDownload = () => {
+    const u = URL.createObjectURL(blob);
+    objectUrl = u;
+    const anchor = document.createElement("a");
+    anchor.href = u;
+    anchor.download = filename;
+    anchor.rel = "noopener";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  };
+
+  let usedNativeSave = false;
+  try {
+    if (typeof w.showSaveFilePicker === "function") {
+      const handle = await w.showSaveFilePicker({
+        suggestedName: filename,
+        types: showSavePickerTypesFor(filename, blob),
+      });
+      usedNativeSave = true;
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    }
+  } catch (e: unknown) {
+    const name =
+      e && typeof e === "object" && "name" in e
+        ? String((e as { name: unknown }).name)
+        : "";
+    if (name === "AbortError") {
+      throw e instanceof DOMException
+        ? e
+        : new DOMException("The user aborted a request.", "AbortError");
+    }
+    usedNativeSave = false;
+  }
+
+  if (!usedNativeSave) {
+    anchorDownload();
+  }
+
+  if (!retainForReplay) {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+    return {};
+  }
+
+  const replay = () => {
+    void deliverBlobAsDownload(storedBlob, storedName, false);
+  };
+  const dispose = () => {
+    if (objectUrl) {
+      URL.revokeObjectURL(objectUrl);
+    }
+  };
+  return { replay, dispose };
+}
+
 async function triggerDownloadFromResponse(
   response: Response,
   fallbackName: string,
@@ -580,29 +709,11 @@ async function triggerDownloadFromResponse(
   const filename = options?.clientDownloadName?.trim()
     ? options.clientDownloadName.trim()
     : extractFilename(response, fallbackName);
-  const blobUrl = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = blobUrl;
-  anchor.download = filename;
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-
-  if (!options?.retainBlob) {
-    URL.revokeObjectURL(blobUrl);
+  const retain = !!options?.retainBlob;
+  const { replay, dispose } = await deliverBlobAsDownload(blob, filename, retain);
+  if (!retain) {
     return { saasGating };
   }
-
-  const replay = () => {
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = filename; // same resolved name (includes client override for first run)
-    a.rel = "noopener";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  };
-  const dispose = () => URL.revokeObjectURL(blobUrl);
   return { replay, dispose, saasGating };
 }
 
@@ -631,12 +742,21 @@ export async function inspectPdf(
     signal: options?.signal,
   });
   await ensureOk(response, "PDF bilgisi okunamadı.");
-  return response.json() as Promise<{
+  const data = (await response.json()) as {
     filename: string;
     encrypted: boolean;
     page_count: number | null;
     inspect_error?: string | null;
-  }>;
+    inspect_diagnostic?: Record<string, unknown>;
+  };
+  if (
+    typeof data.inspect_diagnostic !== "undefined" &&
+    typeof console !== "undefined" &&
+    typeof console.debug === "function"
+  ) {
+    console.debug("[inspect-pdf]", data.filename ?? "?", data.inspect_diagnostic);
+  }
+  return data;
 }
 
 export async function createMergeJob(
@@ -732,12 +852,16 @@ function shouldUseNativeMergeDownload(href: string): boolean {
 /**
  * Birleştirilmiş PDF: aynı kökende tarayıcının doğrudan indirmesini kullanır (fetch+blob akışı büyük dosyalarda kesilebiliyor).
  * PDF API farklı kökende ise fetch + blob yedeği kullanılır.
+ * Bearer ile çağrıda yeniden deneme yapılmaz — her yeniden istek işlem sırasında kredi tüketimini yeniler.
  */
 export async function downloadMergeJob(
   jobId: string,
   fallbackName = "birleştirilmiş.pdf",
   accessToken?: string | null,
-  options?: { signal?: AbortSignal },
+  options?: {
+    signal?: AbortSignal;
+    onBeforeReadBody?: () => void | Promise<void>;
+  },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
     throw new DOMException("The operation was aborted.", "AbortError");
@@ -749,14 +873,13 @@ export async function downloadMergeJob(
   };
 
   if (accessToken?.trim()) {
-    const response = await pdfFetchWithRetry(
-      href,
-      { headers: saasAuthHeaders(accessToken), ...fetchInit },
-      8,
-      450,
-    );
+    const response = await pdfFetch(href, {
+      headers: saasAuthHeaders(accessToken),
+      ...fetchInit,
+    });
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
+    await options?.onBeforeReadBody?.();
     return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
   }
 
@@ -772,9 +895,10 @@ export async function downloadMergeJob(
     return {};
   }
 
-  const response = await pdfFetchWithRetry(href, fetchInit, 8, 450);
+  const response = await pdfFetch(href, fetchInit);
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
+  await options?.onBeforeReadBody?.();
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
 }
 
@@ -794,7 +918,10 @@ export async function downloadFromApi(
   formData: FormData,
   fallbackName: string,
   accessToken?: string | null,
-  options?: { signal?: AbortSignal },
+  options?: {
+    signal?: AbortSignal;
+    onBeforeReadBody?: () => void | Promise<void>;
+  },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
     throw new DOMException("The operation was aborted.", "AbortError");
@@ -818,6 +945,7 @@ export async function downloadFromApi(
     });
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "İşlem başarısız oldu.");
+    await options?.onBeforeReadBody?.();
     return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
   }
 
@@ -839,6 +967,7 @@ export async function downloadFromApi(
   });
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "İşlem başarısız oldu.");
+  await options?.onBeforeReadBody?.();
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
 }
 
@@ -1044,6 +1173,9 @@ export type DownloadResultOutcome =
  * product. We handle the three outcomes the gate can produce and let the
  * caller translate them into UI (alert, modal, upgrade CTA, etc.).
  *
+ * Uses a single fetch (no retry): automatic retries would repeat this GET and
+ * bill `entitlement_consume` again on the server.
+ *
  *   200 → file stream, triggers a browser download.
  *   402 → access denied; UI shows `alert("Upgrade required")` for now.
  *   403 → foreign owner (or server-side ownership mismatch); UI alerts.
@@ -1052,19 +1184,19 @@ export async function downloadResult(
   resultId: string,
   fallbackName: string,
   accessToken?: string | null,
-  options?: { signal?: AbortSignal; clientDownloadName?: string },
+  options?: {
+    signal?: AbortSignal;
+    clientDownloadName?: string;
+    /** After 200 OK, before reading the response body — used to create a pending `download_logs` row at stream start. */
+    onBeforeReadBody?: () => void | Promise<void>;
+  },
 ): Promise<DownloadResultOutcome> {
   const id = encodeURIComponent(resultId);
-  const response = await pdfFetchWithRetry(
-    `${API_BASE}/api/pdf/result/${id}/download`,
-    {
-      headers: saasAuthHeaders(accessToken),
-      cache: "no-store",
-      signal: options?.signal,
-    },
-    4,
-    350,
-  );
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/download`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
   if (response.status === 402) {
     let g: SaaSGating | null = null;
     try {
@@ -1084,6 +1216,7 @@ export async function downloadResult(
     return { status: "forbidden" };
   }
   await ensureOk(response, "Dosya indirilemedi.");
+  await options?.onBeforeReadBody?.();
   const download = await triggerDownloadFromResponse(response, fallbackName, {
     retainBlob: true,
     clientDownloadName: options?.clientDownloadName,

@@ -35,7 +35,6 @@ export const DEFAULT_SITE_SETTINGS_PAYLOAD = {
 };
 
 export const DEFAULT_GLOBAL_FLAGS = {
-  maintenanceMode: false,
   betaFeatures: {} as Record<string, boolean>,
   featureFlags: {} as Record<string, boolean>,
 };

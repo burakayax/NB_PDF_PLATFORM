@@ -41,7 +41,12 @@ async def _httpx_post_json_with_retry(
     timeout: float = 30.0,
     attempts: int = 3,
 ) -> httpx.Response:
-    """Retry on transport failure or 5xx from the Node worker."""
+    """Retry on transport failure or 5xx from the Node worker.
+
+    ``attempts=1`` for non-idempotent endpoints (e.g. ``entitlement/consume``) so a
+    retried POST cannot double-charge credits if the first request committed but the
+    response was dropped.
+    """
     last_err: Exception | None = None
     for i in range(attempts):
         try:
@@ -215,6 +220,7 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
         f"{base}/api/entitlement/consume",
         headers={"Authorization": f"Bearer {token}"},
         json_body={"toolId": tool_id},
+        attempts=1,
     )
     if r.status_code == 401:
         raise HTTPException(status_code=401, detail=_detail_from_response(r))

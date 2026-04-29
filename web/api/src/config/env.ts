@@ -21,6 +21,27 @@ const envPath = path.join(packageRoot, ".env");
 assertEnvFileExists();
 dotenv.config({ path: envPath });
 
+/**
+ * Prisma uses a single `provider` (PostgreSQL) in `schema.prisma`; you cannot switch to SQLite in the same
+ * schema/migration history without a parallel schema. When `DATABASE_URL` is unset in non-production, we
+ * default to the local Docker Postgres from `web/api/docker-compose.yml`. Production must use your
+ * managed PostgreSQL `DATABASE_URL` (e.g. Frankfurt); `file:` URLs are rejected in production.
+ */
+function applyDevPostgresDefaultIfUnset(): void {
+  const nodeEnv = process.env.NODE_ENV ?? "development";
+  if (nodeEnv === "production") {
+    return;
+  }
+  const current = process.env.DATABASE_URL?.trim();
+  if (current) {
+    return;
+  }
+  process.env.DATABASE_URL =
+    "postgresql://postgres:postgres@127.0.0.1:55432/pdf_platform?schema=public";
+}
+
+applyDevPostgresDefaultIfUnset();
+
 const rawEnvSchema = z
   .object({
     NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -41,6 +62,21 @@ const rawEnvSchema = z
     }, z.string().url().optional()),
     /** Google OAuth sonrası tarayıcı yönlendirmesi (varsayılan: FRONTEND_ORIGIN). Örn. http://localhost:5173 */
     OAUTH_FRONTEND_REDIRECT_ORIGIN: z.string().url().optional(),
+    /**
+     * Virgül/noktalı virgül ile ayrılmış tam SPA kökleri (OAuth sonrası yönlendirme güvenir listesi).
+     * Örn. staging veya Vercel preview: https://my-app.vercel.app
+     */
+    OAUTH_ALLOWED_REDIRECT_ORIGINS: z.string().optional().default(""),
+    /**
+     * true ise localhost / 127.0.0.1 / ::1 üzerinden http ile her port SPA kökü kabul edilir
+     * (Üretim .env kullanılsa bile localhost testi için; aksi halde yalnızca FRONTEND_ORIGIN veya allowlist ile eşleşen origin).
+     */
+    OAUTH_ALLOW_LOOPBACK_REDIRECTS: z.enum(["true", "false"]).optional().default("false"),
+    /**
+     * Global maintenance (API + `/api/public/runtime`). Set on the API host (e.g. Vercel server env) and
+     * redeploy; not stored in the DB. The SPA may also set `VITE_MAINTENANCE_MODE` (build-time) for local-only UI.
+     */
+    MAINTENANCE_MODE: z.enum(["true", "false"]).optional().default("false"),
     DATABASE_URL: z.string().min(1),
     JWT_ACCESS_SECRET: z.string().min(32),
     JWT_REFRESH_SECRET: z.string().min(32),
@@ -157,6 +193,18 @@ const rawEnvSchema = z
     WELCOME_CREDITS_MAX: z.coerce.number().int().min(0).max(500).default(10),
   })
   .superRefine((data, ctx) => {
+    if (
+      data.NODE_ENV === "production" &&
+      typeof data.DATABASE_URL === "string" &&
+      data.DATABASE_URL.trimStart().startsWith("file:")
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Production DATABASE_URL cannot use a SQLite file: URL — use PostgreSQL (e.g. managed Frankfurt instance).",
+        path: ["DATABASE_URL"],
+      });
+    }
     const smtpOk = Boolean(data.SMTP_USER && data.SMTP_PASS);
     const emailOk = Boolean(data.EMAIL_USER && data.EMAIL_PASS);
     if (!smtpOk && !emailOk) {
@@ -202,6 +250,11 @@ const smtpFromEmail = raw.SMTP_FROM_EMAIL ?? raw.EMAIL_USER ?? smtpUser;
 
 const oauthRedirectOrigin = (raw.OAUTH_FRONTEND_REDIRECT_ORIGIN ?? raw.FRONTEND_ORIGIN).replace(/\/$/, "");
 
+const oauthAllowedRedirectOrigins = raw.OAUTH_ALLOWED_REDIRECT_ORIGINS.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+
+const oauthAllowLoopbackRedirects =
+  raw.OAUTH_ALLOW_LOOPBACK_REDIRECTS === "true" || raw.NODE_ENV === "development";
+
 /** iyzico `callbackUrl`: must match reachable POST /api/payments/callback. */
 const paymentCallbackRaw = raw.PAYMENT_CALLBACK_BASE_URL?.trim() ?? "";
 const paymentCallbackBase = /^https?:\/\/.+/i.test(paymentCallbackRaw)
@@ -231,8 +284,14 @@ export const env = {
   LOG_FILE_ENABLED: raw.LOG_FILE_ENABLED === "true",
   BOOTSTRAP_ADMIN_EMAIL: raw.BOOTSTRAP_ADMIN_EMAIL?.trim() ?? "",
   BOOTSTRAP_ADMIN_PASSWORD: raw.BOOTSTRAP_ADMIN_PASSWORD ?? "",
+  /** Global maintenance (`MAINTENANCE_MODE=true`). */
+  maintenanceModeEnabled: raw.MAINTENANCE_MODE === "true",
   /** Google callback sonrası /login-success ve /login-error adreslerinin kökü */
   OAUTH_FRONTEND_REDIRECT_ORIGIN: oauthRedirectOrigin,
+  /** Tam origin listesi (`OAUTH_ALLOWED_REDIRECT_ORIGINS` ayrıştırılmış). */
+  oauthAllowedRedirectOrigins,
+  /** localhost:any http için SPA OAuth dönüşü (development veya bayrak ile). */
+  oauthAllowLoopbackRedirects,
   mediaStorage: raw.MEDIA_STORAGE,
   mediaS3: {
     bucket: raw.S3_BUCKET?.trim() ?? "",

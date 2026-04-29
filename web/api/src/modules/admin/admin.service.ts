@@ -1,5 +1,6 @@
 import type { Plan, Prisma, UserRole } from "@prisma/client";
 import { listBlockedEmails, removeBlockedEmail, upsertBlockedEmail } from "../../lib/blocked-email.js";
+import { env } from "../../config/env.js";
 import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
 import { HttpError } from "../../lib/http-error.js";
 import { hashPassword } from "../../lib/password.js";
@@ -596,9 +597,28 @@ export async function getAllSiteSettings(): Promise<Record<string, unknown>> {
   return out;
 }
 
+/** Strips deprecated `maintenanceMode` from `global.flags` in admin GET responses — maintenance is env-only. */
+export function sanitizeGlobalFlagsForAdminResponse(settings: Record<string, unknown>): void {
+  const raw = settings[SITE_SETTING_KEYS.GLOBAL_FLAGS];
+  if (raw != null && typeof raw === "object" && !Array.isArray(raw)) {
+    const { maintenanceMode: _omit, ...rest } = raw as Record<string, unknown>;
+    settings[SITE_SETTING_KEYS.GLOBAL_FLAGS] = rest;
+  }
+}
+
 export async function patchSiteSettings(patches: Record<string, unknown>, actor: AdminActor) {
   for (const [key, value] of Object.entries(patches)) {
-    await auditedPatchSetting(key, value, actor, "settings.patch", `Güncellendi: ${key}`);
+    let next = value;
+    if (
+      key === SITE_SETTING_KEYS.GLOBAL_FLAGS &&
+      value != null &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
+      const { maintenanceMode: _omit, ...rest } = value as Record<string, unknown>;
+      next = rest;
+    }
+    await auditedPatchSetting(key, next, actor, "settings.patch", `Güncellendi: ${key}`);
   }
 }
 
@@ -836,7 +856,7 @@ export async function getAppSettingsForAdmin() {
     id: row.id,
     siteName: row.siteName,
     logoUrl: row.logoUrl,
-    globalMaintenanceMode: row.globalMaintenanceMode,
+    globalMaintenanceMode: env.maintenanceModeEnabled,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
     seoKeywords: row.seoKeywords,
@@ -848,6 +868,7 @@ export async function updateAppSettingsForAdmin(
   data: {
     siteName?: string;
     logoUrl?: string | null;
+    /** @deprecated Ignored — set `MAINTENANCE_MODE` on the API host and redeploy. */
     globalMaintenanceMode?: boolean;
     seoTitle?: string | null;
     seoDescription?: string | null;
@@ -861,7 +882,6 @@ export async function updateAppSettingsForAdmin(
       id: APP_SETTINGS_SINGLETON_ID,
       ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
       ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
-      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
       ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
       ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
       ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
@@ -869,7 +889,6 @@ export async function updateAppSettingsForAdmin(
     update: {
       ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
       ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
-      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
       ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
       ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
       ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
@@ -882,7 +901,7 @@ export async function updateAppSettingsForAdmin(
     id: next.id,
     siteName: next.siteName,
     logoUrl: next.logoUrl,
-    globalMaintenanceMode: next.globalMaintenanceMode,
+    globalMaintenanceMode: env.maintenanceModeEnabled,
     seoTitle: next.seoTitle,
     seoDescription: next.seoDescription,
     seoKeywords: next.seoKeywords,

@@ -684,21 +684,10 @@ export async function createCreditPackIyzicoSession(params: {
   };
 }
 
-function buildRedirectHtml(success: boolean): string {
+/** SPA dönüş adresi (iyzico callback sonrası `303` ile gider; inline script kullanmıyoruz — üretimde Helmet CSP `script-src 'none'`.) */
+export function paymentWorkspaceRedirectUrl(success: boolean): string {
   const origin = env.FRONTEND_ORIGIN.replace(/\/+$/, "");
-  const url = `${origin}/workspace?payment=${success ? "success" : "failed"}`;
-  return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ödeme</title>
-</head>
-<body>
-  <p>Yönlendiriliyorsunuz…</p>
-  <script>location.replace(${JSON.stringify(url)});</script>
-</body>
-</html>`;
+  return `${origin}/workspace?payment=${success ? "success" : "failed"}`;
 }
 
 export type ProcessPaymentCallbackOpts = {
@@ -771,12 +760,12 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
 
     if (!token?.trim()) {
       console.warn(`${PC_LOG} abort: empty token`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     if (!env.iyzicoEnabled) {
       console.warn(`${PC_LOG} abort: iyzico not configured`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     const iyzipay = getIyzipay();
@@ -797,7 +786,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
       result = await promisifyRetrieve(iyzipay, retrieveRequest);
     } catch (e) {
       console.error(`${PC_LOG} checkoutForm.retrieve threw`, e instanceof Error ? e.message : e);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     try {
@@ -828,7 +817,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
 
     if (result.status !== "success") {
       console.warn(`${PC_LOG} retrieve status !== success`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     try {
@@ -839,18 +828,18 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         `${PC_LOG} retrieve signature verification failed`,
         verifyErr instanceof Error ? verifyErr.message : verifyErr,
       );
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     if (result.paymentStatus !== "SUCCESS") {
       console.warn(`${PC_LOG} payment not SUCCESS; paymentStatus=${String(result.paymentStatus)}`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     const conversationId = await resolveConversationIdFromToken(token, result);
     if (!conversationId) {
       console.warn(`${PC_LOG} missing conversationId on retrieve result (and no DB row matched token hash)`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
     console.log(`${PC_LOG} conversationId resolved for fulfillment`, {
       conversationId,
@@ -868,7 +857,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
       });
       if (creditPending.status === "completed") {
         console.log(`${PC_LOG} credit pack already completed — idempotent success`);
-        return buildRedirectHtml(true);
+        return paymentWorkspaceRedirectUrl(true);
       }
       if (result.paidPrice != null && !eqIyzicoMoney(result.paidPrice, creditPending.finalPriceTry)) {
         logSuspiciousActivity({
@@ -876,7 +865,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
           detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
         });
         console.warn(`${PC_LOG} credit pack price mismatch`);
-        return buildRedirectHtml(false);
+        return paymentWorkspaceRedirectUrl(false);
       }
       try {
         console.log(`${PC_LOG} granting credits`, creditPending.credits, "to user", creditPending.userId);
@@ -884,7 +873,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         console.log(`${PC_LOG} grantCredits OK`);
       } catch (grantErr) {
         console.error(`${PC_LOG} grantCredits failed`, grantErr instanceof Error ? grantErr.message : grantErr);
-        return buildRedirectHtml(false);
+        return paymentWorkspaceRedirectUrl(false);
       }
       try {
         await recordCreditPackPurchaseMeta({
@@ -900,7 +889,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         data: { status: "completed", completedAt: new Date() },
       });
       console.log(`${PC_LOG} creditPackCheckout marked completed`);
-      return buildRedirectHtml(true);
+      return paymentWorkspaceRedirectUrl(true);
     }
 
     const pending = await prisma.paymentCheckout.findUnique({
@@ -913,7 +902,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         detail: conversationId,
       });
       console.warn(`${PC_LOG} no paymentCheckout or creditPackCheckout for conversationId`, conversationId);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     console.log(`${PC_LOG} matched paymentCheckout (subscription)`, {
@@ -925,7 +914,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
 
     if (pending.status === "completed") {
       console.log(`${PC_LOG} subscription checkout already completed — idempotent success`);
-      return buildRedirectHtml(true);
+      return paymentWorkspaceRedirectUrl(true);
     }
 
     const expectedPrice = pending.priceTry;
@@ -935,7 +924,7 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
       });
       console.warn(`${PC_LOG} subscription price mismatch`);
-      return buildRedirectHtml(false);
+      return paymentWorkspaceRedirectUrl(false);
     }
 
     const subscriptionDays = pending.subscriptionDays ?? 30;
@@ -969,9 +958,9 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
     });
 
     console.log(`${PC_LOG} subscription updated; done`);
-    return buildRedirectHtml(true);
+    return paymentWorkspaceRedirectUrl(true);
   } catch (unexpected) {
     console.error(`${PC_LOG} unexpected error`, unexpected instanceof Error ? unexpected.stack ?? unexpected.message : unexpected);
-    return buildRedirectHtml(false);
+    return paymentWorkspaceRedirectUrl(false);
   }
 }

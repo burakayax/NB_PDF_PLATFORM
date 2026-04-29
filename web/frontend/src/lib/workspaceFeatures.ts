@@ -178,6 +178,12 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "pdf-to-image",
   "image-to-pdf",
   "html-to-pdf",
+  "encrypt",
+  "pdf-to-word",
+  "word-to-pdf",
+  "excel-to-pdf",
+  "pdf-to-excel",
+  "ppt-to-pdf",
 ];
 
 export function isResultStoreTool(id: FeatureKey): boolean {

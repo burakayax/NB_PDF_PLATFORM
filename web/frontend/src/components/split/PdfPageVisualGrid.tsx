@@ -9,7 +9,7 @@ import {
   forwardRef,
 } from "react";
 import * as pdfjsLib from "pdfjs-dist";
-import { Check } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { VirtualItem } from "@tanstack/virtual-core";
 import type { Language } from "../../i18n/landing";
@@ -91,6 +91,10 @@ export type PdfPageVisualGridProps = {
   onStatsChange?: (s: VisualPickerStats) => void;
   /** Rubber-band sürüklemesi sırasında üst modalın user-select kapatması için. */
   onRubberBandActiveChange?: (active: boolean) => void;
+  /** Sayfa Sil görünümünde metinleri zorunlu Türkçe gösterir. */
+  strictTurkishUi?: boolean;
+  /** Seçim tüm sayfaları silmiş olurdu (en az bir sayfa şartı). */
+  onDeleteWouldRemoveWholeDocument?: () => void;
 };
 
 function intersectsAabb(
@@ -184,11 +188,15 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       zoomPercent,
       onStatsChange,
       onRubberBandActiveChange,
+      strictTurkishUi = false,
+      onDeleteWouldRemoveWholeDocument,
     },
     ref,
   ) {
     void _unusedPageRotChange;
-    const W = ws(language);
+    const effectiveLang: Language =
+      strictTurkishUi && mode === "delete" ? "tr" : language;
+    const W = ws(effectiveLang);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [numPages, setNumPages] = useState(0);
@@ -227,7 +235,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const selectionMode = mode === "split" || mode === "delete";
     const organizeMode = mode === "organize";
 
-    const innerWidth = Math.max(280, containerWidth - GRID_PAD_X * 2);
+    /** `gridContentRef.clientWidth` — satır `1fr` matematiği ile aynı iç genişlik (yan çubuk/modal/padding otomatik). */
+    const innerWidth = Math.max(280, containerWidth);
 
     const gridCellMinPx = useMemo(() => {
       const t =
@@ -303,25 +312,32 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       rowVirtualizer.measure();
     }, [rowVirtualizer, cardHeight, cols, virtualRowCount]);
 
-    /** parentRef = overflow-auto kaydırıcı; boyut değişince (modal açılışı) measure + calculateRange. */
+    /** Ölçüm: kaydırıcı + ızgara (mavi kutu `position:absolute` ile aynı `getBoundingClientRect` düzlemi). */
     useLayoutEffect(() => {
-      const el = parentRef.current;
-      if (!el) {
+      const grid = gridContentRef.current;
+      const scroll = parentRef.current;
+      if (!grid || !scroll) {
         return;
       }
-      const ro = new ResizeObserver(() => {
-        setContainerWidth(el.clientWidth);
+
+      const bump = () => {
+        setContainerWidth(Math.max(280, grid.clientWidth));
         requestAnimationFrame(() => {
           const v = rowVirtualizerRef.current;
           v.measure();
           v.calculateRange();
           setRangeRevision((r) => r + 1);
         });
-      });
-      ro.observe(el);
-      setContainerWidth(el.clientWidth);
+      };
+
+      const ro = new ResizeObserver(bump);
+      ro.observe(grid);
+      ro.observe(scroll);
+
+      bump();
+
       return () => ro.disconnect();
-    }, []);
+    }, [loading, loadError, numPages, cols, virtualRowCount, cardHeight]);
 
     useEffect(() => {
       if (loading || loadError || numPages === 0) {
@@ -351,12 +367,40 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     const applySelection = useCallback(
       (next: Set<number>) => {
+        if (mode === "delete" && numPages > 0 && next.size >= numPages) {
+          onDeleteWouldRemoveWholeDocument?.();
+          return;
+        }
         selected.current = next;
         onPagesTextChange(formatPageSelection([...next]));
         onPagesErrorClear();
         bumpSelection();
       },
-      [onPagesErrorClear, onPagesTextChange],
+      [
+        mode,
+        numPages,
+        onDeleteWouldRemoveWholeDocument,
+        onPagesErrorClear,
+        onPagesTextChange,
+      ],
+    );
+
+    /** Yalnızca Sayfa Sil: çöp simgesi ile aynı toggle. */
+    const toggleMarkedPage = useCallback(
+      (page1: number) => {
+        if (mode !== "delete") {
+          return;
+        }
+        const next = new Set(selected.current);
+        if (next.has(page1)) {
+          next.delete(page1);
+        } else {
+          next.add(page1);
+        }
+        anchorRef.current = page1;
+        applySelection(next);
+      },
+      [mode, applySelection],
     );
 
     useEffect(() => {
@@ -365,6 +409,34 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       }
       const onKeyDown = (e: KeyboardEvent) => {
         if (isTypingTarget(e.target)) {
+          return;
+        }
+        if (
+          mode === "delete" &&
+          selectionMode &&
+          (e.key === "Delete" || e.key === "Backspace")
+        ) {
+          e.preventDefault();
+          const rubberPreview =
+            rubberLiveSelection && rubberLiveSelection.size > 0
+              ? [...rubberLiveSelection]
+              : [...selected.current];
+          if (rubberPreview.length === 0) {
+            return;
+          }
+          let next = new Set(selected.current);
+          for (const p of rubberPreview) {
+            if (next.has(p)) {
+              next.delete(p);
+            } else {
+              next.add(p);
+            }
+          }
+          if (numPages > 0 && next.size >= numPages) {
+            onDeleteWouldRemoveWholeDocument?.();
+            return;
+          }
+          applySelection(next);
           return;
         }
         const mod = e.ctrlKey || e.metaKey;
@@ -407,17 +479,30 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       };
       window.addEventListener("keydown", onKeyDown, true);
       return () => window.removeEventListener("keydown", onKeyDown, true);
-    }, [loading, loadError, selectionMode, applySelection, maxP, numPages]);
+    }, [
+      loading,
+      loadError,
+      selectionMode,
+      applySelection,
+      maxP,
+      numPages,
+      mode,
+      rubberLiveSelection,
+      onDeleteWouldRemoveWholeDocument,
+    ]);
 
     useEffect(() => {
       if (!selectionMode || !maxP || numPages === 0) {
         return;
       }
-      const exp = expandPagesString(pagesText, maxP, language);
+      const exp = expandPagesString(pagesText, maxP, effectiveLang);
       if (exp === null) {
         return;
       }
       const next = new Set(exp);
+      if (mode === "delete" && numPages > 0 && next.size >= numPages) {
+        return;
+      }
       const a = Array.from(selected.current)
         .sort((x, y) => x - y)
         .join(",");
@@ -428,7 +513,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         selected.current = next;
         bumpSelection();
       }
-    }, [pagesText, maxP, numPages, language, selectionMode]);
+    }, [pagesText, maxP, numPages, effectiveLang, selectionMode, mode]);
 
     useEffect(() => {
       let cancelled = false;
@@ -469,7 +554,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         } catch (e) {
           if (!cancelled) {
             setLoadError(
-              e instanceof Error ? e.message : language === "tr" ? "PDF açılamadı." : "Could not open PDF.",
+              e instanceof Error ? e.message : effectiveLang === "tr" ? "PDF açılamadı." : "Could not open PDF.",
             );
           }
         } finally {
@@ -489,7 +574,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           docRef.current = null;
         }
       };
-    }, [file, password, language]);
+    }, [file, password, effectiveLang, language, strictTurkishUi, mode]);
 
     const clearThumbRetryTimer = useCallback((page1: number) => {
       const existing = thumbRetryTimersRef.current.get(page1);
@@ -987,7 +1072,17 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const r1 = Math.min(rowCount - 1, Math.floor((by1 - padTop) / rowH));
 
         for (let r = r0; r <= r1; r++) {
-          for (let c = 0; c < cols; c++) {
+          const rowStart = r * cols;
+          const colsInRow = Math.min(cols, Math.max(0, sequenceLength - rowStart));
+          if (colsInRow <= 0) {
+            continue;
+          }
+          const rowCellW =
+            colsInRow > 1
+              ? (innerWidth - (colsInRow - 1) * GAP_PX) / colsInRow
+              : innerWidth;
+
+          for (let c = 0; c < colsInRow; c++) {
             const flat = r * cols + c;
             if (flat >= sequenceLength) {
               continue;
@@ -1002,16 +1097,18 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             if (page1 < 1 || page1 > numPages) {
               continue;
             }
-            const cl = c * (cellWidth + GAP_PX);
+            const cl = c * (rowCellW + GAP_PX);
             const ct = padTop + r * rowH;
-            if (intersectsAabb(bx0, by0, bx1, by1, cl, ct, cellWidth, cardHeight)) {
+            if (
+              intersectsAabb(bx0, by0, bx1, by1, cl, ct, rowCellW, cardHeight)
+            ) {
               hits.add(page1);
             }
           }
         }
         return hits;
       },
-      [numPages, cardHeight, sequenceLength, cols, cellWidth, organizeMode, pageOrder],
+      [numPages, cardHeight, sequenceLength, cols, cellWidth, innerWidth, organizeMode, pageOrder],
     );
 
     const [rubberRect, setRubberRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -1030,24 +1127,19 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     } | null>(null);
 
     /**
-     * Tek referans: parentRef containerRect + scrollLeft/scrollTop; ızgara köşesi aynı formülle,
-     * grid içi yerel koordinat = fark (mousedown ile mousemove birebir aynı eksen).
+     * Mavi seçim kutusu `gridContentRef` içinde `absolute` — fare aynı kutunun
+     * `getBoundingClientRect()` köşesine göre (viewport + scroll birlikte düzelir; offsetParent gerekmez).
      */
     const contentXY = useCallback((e: { clientX: number; clientY: number }) => {
-      const container = parentRef.current;
       const gridRoot = gridContentRef.current;
-      if (!container || !gridRoot) {
+      if (!gridRoot) {
         return { x: 0, y: 0 };
       }
-      const containerRect = container.getBoundingClientRect();
-      const sl = container.scrollLeft;
-      const st = container.scrollTop;
-      const currentX = e.clientX - containerRect.left + sl;
-      const currentY = e.clientY - containerRect.top + st;
-      const gr = gridRoot.getBoundingClientRect();
-      const grid0X = gr.left - containerRect.left + sl;
-      const grid0Y = gr.top - containerRect.top + st;
-      return { x: currentX - grid0X, y: currentY - grid0Y };
+      const r = gridRoot.getBoundingClientRect();
+      return {
+        x: e.clientX - r.left,
+        y: e.clientY - r.top,
+      };
     }, []);
 
     const mergeRubberSelection = useCallback(
@@ -1083,22 +1175,28 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         }
         const hits = collectPagesInBand(ptr.startX, ptr.startY, x, y);
         const merged = mergeRubberSelection(hits, ptr.additive, ptr.initialSelection);
+
         if (opts.preview) {
           setRubberLiveSelection(new Set(merged));
+          if (bw >= RUBBER_MIN_PX || bh >= RUBBER_MIN_PX) {
+            ptr.dragApplied = true;
+          }
+          return;
         }
+
         const w = bw;
         const h = bh;
         if (w >= RUBBER_MIN_PX || h >= RUBBER_MIN_PX) {
           ptr.dragApplied = true;
-          const a = Array.from(selected.current)
-            .sort((n1, n2) => n1 - n2)
-            .join(",");
-          const b = Array.from(merged)
-            .sort((n1, n2) => n1 - n2)
-            .join(",");
-          if (a !== b) {
-            applySelection(merged);
-          }
+        }
+        const a = Array.from(selected.current)
+          .sort((n1, n2) => n1 - n2)
+          .join(",");
+        const b = Array.from(merged)
+          .sort((n1, n2) => n1 - n2)
+          .join(",");
+        if (a !== b) {
+          applySelection(merged);
         }
       };
 
@@ -1258,7 +1356,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         <div
           className={`relative flex min-h-0 w-full flex-col overflow-hidden rounded-md border bg-gradient-to-b from-slate-900/95 to-slate-950/95 text-left shadow-[0_4px_18px_-8px_rgba(0,0,0,0.75)] transition-[border-color,box-shadow] duration-75 ${
             selectionMode && isOn
-              ? "border-cyan-400/85 shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_8px_24px_-10px_rgba(34,211,238,0.25)]"
+              ? mode === "delete"
+                ? "border-rose-400/80 shadow-[0_0_0_1px_rgba(244,63,94,0.42),0_8px_24px_-10px_rgba(244,63,94,0.22)]"
+                : "border-cyan-400/85 shadow-[0_0_0_1px_rgba(34,211,238,0.35),0_8px_24px_-10px_rgba(34,211,238,0.25)]"
               : "border-white/10 hover:border-cyan-500/30"
           }`}
           style={{ width: "100%", height: cardHeight, minHeight: 0 }}
@@ -1268,7 +1368,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               page1={page1}
               url={url}
               rot={mode === "rotate" ? rot : 0}
-              language={language}
+              language={effectiveLang}
               onImageFailed={onThumbImageDecodeFailed}
               lowResPlaceholder={lowResPlaceholder}
             />
@@ -1284,7 +1384,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 aria-hidden
               />
               <p className="shrink-0 text-center text-[11px] font-medium text-slate-300">
-                {language === "tr" ? "Yükleniyor…" : "Loading…"}
+                {effectiveLang === "tr" ? "Yükleniyor…" : "Loading…"}
               </p>
               <div className="h-0.5 w-[88%] max-w-[140px] shrink-0 overflow-hidden rounded-full bg-white/[0.08]">
                 <div
@@ -1296,26 +1396,72 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           )}
 
           {selectionMode && isOn ? (
-            <div
-              className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-cyan-500/[0.12]"
-              aria-hidden
-            >
-              <Check
-                className="h-8 w-8 text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] sm:h-9 sm:w-9"
-                strokeWidth={2.1}
-              />
-            </div>
+            mode === "delete" ? (
+              <div
+                className="pointer-events-none absolute inset-0 z-[1] flex flex-col items-center justify-center bg-slate-950/55"
+                aria-hidden
+              >
+                <span className="rounded border border-white/20 bg-black/55 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-rose-100 shadow-sm">
+                  {strictTurkishUi || effectiveLang === "tr" ? "SİLİNDİ" : "REMOVED"}
+                </span>
+              </div>
+            ) : (
+              <div
+                className="pointer-events-none absolute inset-0 z-[1] flex items-center justify-center bg-cyan-500/[0.12]"
+                aria-hidden
+              >
+                <Check
+                  className="h-8 w-8 text-cyan-200 drop-shadow-[0_0_12px_rgba(34,211,238,0.65)] sm:h-9 sm:w-9"
+                  strokeWidth={2.1}
+                />
+              </div>
+            )
           ) : null}
 
           <div
             className={`pointer-events-none absolute bottom-0 left-0 right-0 z-[2] py-0.5 text-center text-[10px] font-bold tabular-nums leading-tight ${
-              selectionMode && isOn ? "bg-cyan-950/95 text-cyan-100" : "bg-black/60 text-slate-100"
+              selectionMode && isOn
+                ? mode === "delete"
+                  ? "bg-rose-950/93 text-rose-50"
+                  : "bg-cyan-950/95 text-cyan-100"
+                : "bg-black/60 text-slate-100"
             }`}
           >
             {page1}
           </div>
         </div>
       );
+
+      if (selectionMode && mode === "delete") {
+        return (
+          <div className="relative h-full min-h-0 w-full min-w-0" data-page-thumb="">
+            <button
+              type="button"
+              title={`${W.pagesLabel} ${page1}`}
+              onClick={(ev) => onThumbClick(page1, ev)}
+              className="block h-full min-h-0 w-full min-w-0 p-0 text-left"
+            >
+              {cardInner}
+            </button>
+            <button
+              type="button"
+              className="absolute top-1.5 right-1.5 z-20 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-rose-400/45 hover:bg-rose-950/80 hover:text-white"
+              aria-label={
+                effectiveLang === "tr"
+                  ? `Sayfa ${page1}: sil veya geri al`
+                  : `Page ${page1}: remove or restore`
+              }
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleMarkedPage(page1);
+              }}
+            >
+              <Trash2 className="h-4 w-4 shrink-0" aria-hidden strokeWidth={2.2} />
+            </button>
+          </div>
+        );
+      }
 
       if (selectionMode) {
         return (
@@ -1336,24 +1482,26 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     const hint =
       mode === "delete"
-        ? language === "tr"
-          ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
-          : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D to deselect. Ctrl+A all; arrow keys scroll."
+        ? strictTurkishUi
+          ? "Boş alanda sürükleyerek çoklu seçim yapın; Ctrl+tıklama ile tek tek seçin, Shift+tıklama ile aralık seçin. Delete veya Geri Tuşu çöp simgesi ile aynı şekilde işaretler veya geri alır. «Seçimi temizle», Ctrl+D ya da Ctrl+A sonrası gerekirse seçimi sıfırlayın."
+          : language === "tr"
+            ? "Çöp simgesine basarak sayfayı silin veya geri alın; kart veya sürükleyerek seçebilirsiniz; Ctrl ile tekil çoklu, Shift ile aralık. Delete/Backspace çöple aynı. Ctrl+D seçimi temizler; Ctrl+A tümünü seçer."
+            : "Multi-select by dragging on empty space; Ctrl+click toggles pages, Shift+click selects a range. Delete/Backspace mirrors the trash icon. Ctrl+D clears selection; Ctrl+A selects all."
         : mode === "rotate"
-          ? language === "tr"
+          ? effectiveLang === "tr"
             ? "Önizleme; döndürme ana ekrandan yapılır. Ok tuşları kaydırır."
             : "Preview only; rotation is done in the main workflow. Arrow keys scroll."
           : mode === "organize"
-            ? language === "tr"
+            ? effectiveLang === "tr"
               ? "Kart üzerindeki ↑ ↓ ile sırayı değiştirin. Ok tuşları ızgarayı kaydırır."
               : "Use ↑ ↓ on each card to reorder. Arrow keys scroll the grid."
-            : language === "tr"
+            : effectiveLang === "tr"
               ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
               : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
 
     const progressLabel =
       readyPreviews < numPages
-        ? language === "tr"
+        ? effectiveLang === "tr"
           ? `Önizleme: ${readyPreviews} / ${numPages} sayfa hazır — Kalanı yükleniyor...`
           : `Preview: ${readyPreviews} / ${numPages} pages ready — loading the rest...`
         : null;
@@ -1361,12 +1509,16 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const selectedCountDisplay = useMemo(() => selected.current.size, [selectionTick]);
 
     const selectedLabel =
-      language === "tr"
-        ? `Seçilen: ${selectedCountDisplay} sayfa`
-        : `Selected: ${selectedCountDisplay} page(s)`;
+      mode === "delete"
+        ? strictTurkishUi || effectiveLang === "tr"
+          ? `Silinecek: ${selectedCountDisplay} sayfa`
+          : `${selectedCountDisplay} page(s) marked for removal`
+        : effectiveLang === "tr"
+          ? `Seçilen: ${selectedCountDisplay} sayfa`
+          : `Selected: ${selectedCountDisplay} page(s)`;
 
     const previewPlaceholderGhost =
-      language === "tr"
+      effectiveLang === "tr"
         ? "Önizleme: 0000 / 0000 sayfa hazır — Kalanı yükleniyor..."
         : "Preview: 0000 / 0000 pages ready — loading the rest...";
 
@@ -1385,7 +1537,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       return (
         <div className="flex items-center gap-3 py-8 text-sm text-slate-400" role="status">
           <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-cyan-400/40 border-t-cyan-200" />
-          {language === "tr" ? "Belge açılıyor…" : "Opening document…"}
+          {effectiveLang === "tr" ? "Belge açılıyor…" : "Opening document…"}
         </div>
       );
     }
@@ -1430,7 +1582,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 onClick={() => applySelection(new Set())}
                 className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-cyan-500/35 hover:bg-white/10 hover:text-cyan-100"
               >
-                {language === "tr" ? "Seçimi temizle" : "Clear selection"}
+                {effectiveLang === "tr" ? "Seçimi temizle" : "Clear selection"}
               </button>
             ) : null}
           </div>
@@ -1438,7 +1590,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
         <div
           className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col rounded-xl border-2 border-cyan-500/35 bg-slate-950/30 p-1 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.14)] ring-1 ring-cyan-400/25 sm:p-1.5"
-          aria-label={language === "tr" ? "Aktif seçim alanı" : "Active selection area"}
+          aria-label={effectiveLang === "tr" ? "Aktif seçim alanı" : "Active selection area"}
         >
           {/* Kaydırma burada; getScrollElement parentRef bu div’e bağlı */}
           <div
@@ -1488,7 +1640,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                     aria-hidden
                   />
                   <p className="text-center text-sm font-medium text-slate-300">
-                    {language === "tr" ? "Yükleniyor…" : "Loading…"}
+                    {effectiveLang === "tr" ? "Yükleniyor…" : "Loading…"}
                   </p>
                 </div>
               ) : null}
@@ -1523,7 +1675,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                               <button
                                 type="button"
                                 disabled={flat === 0}
-                                title={language === "tr" ? "Önceki sıraya taşı" : "Move earlier"}
+                                title={effectiveLang === "tr" ? "Önceki sıraya taşı" : "Move earlier"}
                                 className="rounded border border-white/15 bg-slate-950/90 px-1 py-0.5 text-[10px] font-semibold text-slate-200 shadow-sm disabled:opacity-25"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1535,7 +1687,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                               <button
                                 type="button"
                                 disabled={flat >= sequenceLength - 1}
-                                title={language === "tr" ? "Sonraki sıraya taşı" : "Move later"}
+                                title={effectiveLang === "tr" ? "Sonraki sıraya taşı" : "Move later"}
                                 className="rounded border border-white/15 bg-slate-950/90 px-1 py-0.5 text-[10px] font-semibold text-slate-200 shadow-sm disabled:opacity-25"
                                 onClick={(e) => {
                                   e.stopPropagation();

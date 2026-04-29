@@ -40,7 +40,7 @@ export async function getPublicSiteConfig() {
         ? flags.freeDailyLimitDisplay
         : FALLBACK_SITE_SETTINGS.freeDailyLimitDisplay;
 
-  const maintenanceMode = flags.maintenanceMode === true;
+  const maintenanceMode = env.maintenanceModeEnabled;
   const betaFeatures =
     (flags.betaFeatures as Record<string, boolean> | undefined) ??
     (site.betaFeatures as Record<string, boolean> | undefined) ??
