@@ -18,27 +18,11 @@ const configDir = path.dirname(fileURLToPath(import.meta.url));
 const packageRoot = path.resolve(configDir, "..", "..");
 const envPath = path.join(packageRoot, ".env");
 
-assertEnvFileExists();
-/**
- * SQLite (`provider = sqlite`). Legacy PostgreSQL URLs are overridden so upgrades don't break startup.
- * Path `file:./dev.db` is resolved relative to `web/api/prisma/` (see Prisma docs).
- */
-function coerceDatabaseUrlForSqlite(): void {
-  const raw = process.env.DATABASE_URL?.trim() ?? "";
-  if (!raw || raw.startsWith("postgresql:") || raw.startsWith("postgres:")) {
-    if (raw.startsWith("postgresql:") || raw.startsWith("postgres:")) {
-      console.warn(
-        "[env] DATABASE_URL was PostgreSQL; schema uses SQLite — using file:./dev.db (remove old DATABASE_URL from web/api/.env if you want to silence this).",
-      );
-    }
-    process.env.DATABASE_URL = "file:./dev.db";
-    return;
-  }
+if (process.env.NODE_ENV !== "production") {
+  assertEnvFileExists();
 }
 
 dotenv.config({ path: envPath });
-
-coerceDatabaseUrlForSqlite();
 
 const rawEnvSchema = z
   .object({
@@ -109,8 +93,8 @@ const rawEnvSchema = z
       .string()
       .optional()
       .transform((value) => value === "true"),
-    SMTP_USER: z.string().min(1).optional(),
-    SMTP_PASS: z.string().min(1).optional(),
+    SMTP_USER: z.string().optional(),
+    SMTP_PASS: z.string().optional(),
     SMTP_FROM_EMAIL: z.string().email().optional(),
     SMTP_FROM_NAME: z.string().min(1).default("NB PDF PLATFORM"),
     /** Yönetici bildirimleri ve iletişim formu için gelen kutusu adresi. */
@@ -242,6 +226,14 @@ const rawEnvSchema = z
 
 const raw = rawEnvSchema.parse(process.env);
 
+const DATABASE_URL = process.env.DATABASE_URL?.trim();
+
+if (!DATABASE_URL) {
+  throw new Error("DATABASE_URL is missing");
+}
+
+process.env.DATABASE_URL = DATABASE_URL;
+
 const welcomeCreditsMin = Math.min(
   raw.WELCOME_CREDITS_MIN,
   raw.WELCOME_CREDITS_MAX,
@@ -280,9 +272,8 @@ const oauthRedirectOrigin = (
   raw.OAUTH_FRONTEND_REDIRECT_ORIGIN ?? raw.FRONTEND_ORIGIN
 ).replace(/\/$/, "");
 
-const oauthAllowedRedirectOrigins = raw.OAUTH_ALLOWED_REDIRECT_ORIGINS.split(
-  /[,;\n]+/,
-)
+const oauthAllowedRedirectOrigins = (raw.OAUTH_ALLOWED_REDIRECT_ORIGINS ?? "")
+  .split(/[,;\n]+/)
   .map((s) => s.trim())
   .filter(Boolean);
 
