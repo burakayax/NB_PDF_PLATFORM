@@ -9,24 +9,40 @@ export type LegalDocumentBodyProps = {
 };
 
 /** Shared body for full-page legal and in-payment nested modal. */
-export function LegalDocumentBody({ language, documentKey }: LegalDocumentBodyProps) {
+export function LegalDocumentBody({
+  language,
+  documentKey,
+}: LegalDocumentBodyProps) {
   const document = legalDocuments[language][documentKey];
 
   return (
     <>
-      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-nb-accent sm:text-sm">NB PDF PLARTFORM</p>
-      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-nb-text sm:text-3xl">{document.title}</h2>
-      <p className="mt-3 text-sm leading-relaxed text-nb-muted sm:text-base">{document.summary}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-nb-accent sm:text-sm">
+        NB PDF PLATFORM
+      </p>
+      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-nb-text sm:text-3xl">
+        {document.title}
+      </h2>
+      <p className="mt-3 text-sm leading-relaxed text-nb-muted sm:text-base">
+        {document.summary}
+      </p>
 
       <div className="mt-4 inline-flex rounded-xl border border-white/10 bg-nb-bg-soft/50 px-3 py-2 text-xs text-nb-muted sm:px-4 sm:py-3 sm:text-sm">
-        <span className="font-semibold text-nb-text">{document.effectiveDateLabel}:</span>
+        <span className="font-semibold text-nb-text">
+          {document.effectiveDateLabel}:
+        </span>
         <span className="ml-2">{document.effectiveDate}</span>
       </div>
 
       <div className="mt-6 space-y-5 sm:mt-8 sm:space-y-6">
         {document.sections.map((section) => (
-          <section key={section.title} className="rounded-2xl border border-white/8 bg-nb-bg-soft/40 p-4 sm:rounded-[28px] sm:p-6">
-            <h3 className="text-lg font-semibold text-nb-text sm:text-xl">{section.title}</h3>
+          <section
+            key={section.title}
+            className="rounded-2xl border border-white/8 bg-nb-bg-soft/40 p-4 sm:rounded-[28px] sm:p-6"
+          >
+            <h3 className="text-lg font-semibold text-nb-text sm:text-xl">
+              {section.title}
+            </h3>
             <div className="mt-3 space-y-3 text-xs leading-relaxed text-nb-muted sm:text-sm sm:leading-7">
               {section.paragraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>

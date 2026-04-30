@@ -1,4 +1,4 @@
-NB PDF PLARTFORM — Windows distribution checklist
+NB PDF PLATFORM — Windows distribution checklist
 ==============================================
 
 1) Version bump

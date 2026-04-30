@@ -19,6 +19,8 @@ type Props = {
   onClose: () => void;
   onPurchaseSuccess: () => void;
   onChangeProduct?: (product: CreditPackProduct) => void;
+  /** PSP / fake redirect öncesi — araç çıktısı localStorage’a yazılır (`NB_RESUME_PROCESS`). */
+  onBeforeExternalCheckout?: () => void;
 };
 
 function localFallbackPreview(p: CreditPackProduct, currency: CheckoutCurrency): CreditPreviewResponse {
@@ -66,6 +68,7 @@ export function PaymentSummaryModal({
   onClose,
   onPurchaseSuccess,
   onChangeProduct,
+  onBeforeExternalCheckout,
 }: Props) {
   const [preview, setPreview] = useState<CreditPreviewResponse | null>(null);
   const [promoInput, setPromoInput] = useState("");
@@ -186,10 +189,12 @@ export function PaymentSummaryModal({
       try {
         const session = await initializeTierPayment(accessToken, "unlimited_pro", checkoutCurrency);
         if (session.mode === "fake") {
+          onBeforeExternalCheckout?.();
           window.location.assign(resolveFakePaymentRedirect(session.redirectUrl));
           setPaying(false);
           return;
         }
+        onBeforeExternalCheckout?.();
         launchIyzicoCheckout({
           checkoutFormContent: session.checkoutFormContent,
           paymentPageUrl: session.paymentPageUrl,
@@ -253,6 +258,7 @@ export function PaymentSummaryModal({
         scheduleSuccessClose();
         return;
       }
+      onBeforeExternalCheckout?.();
       launchIyzicoCheckout(start);
       setPaying(false);
     } catch {
@@ -270,6 +276,7 @@ export function PaymentSummaryModal({
     language,
     scheduleSuccessClose,
     promoInput,
+    onBeforeExternalCheckout,
   ]);
 
   const tryExitIntent = useCallback(() => {
@@ -328,11 +335,18 @@ export function PaymentSummaryModal({
     return formatCheckoutMoney(n, c, tr ? "tr" : "en");
   };
 
+  const showPayBar = Boolean(preview && successCredits == null && !loading);
+
   return (
     <>
       <div className="payment-summary-backdrop" role="presentation" onMouseDown={handleBackdropMouseDown}>
-        <div className="payment-summary-modal payment-summary-modal--wide mx-auto flex max-h-[90vh] w-full max-w-[min(1040px,calc(100vw-24px))] flex-col overflow-y-auto rounded-3xl bg-gradient-to-b from-slate-900/98 to-[#070b14] px-5 py-8 text-center shadow-[0_40px_100px_-40px_rgba(0,0,0,0.75)] ring-1 ring-white/[0.07] sm:px-8 sm:py-10" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="relative mb-8">
+        <div
+          className="payment-summary-modal payment-summary-modal--wide mx-auto flex h-[min(90dvh,860px)] max-h-[90dvh] w-full max-w-[min(1040px,calc(100vw-24px))] flex-col overflow-hidden rounded-3xl bg-gradient-to-b from-slate-900/98 to-[#070b14] px-5 pb-0 pt-8 text-center shadow-[0_40px_100px_-40px_rgba(0,0,0,0.75)] ring-1 ring-white/[0.07] sm:px-8 sm:pt-10"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+        <div className="relative shrink-0 pb-2">
           <h2 id="checkout-summary-title" className="payment-summary-modal__title pr-12 text-center text-[1.375rem] font-semibold tracking-tight">
             {tr ? "Ödeme özeti" : "Checkout"}
           </h2>
@@ -353,7 +367,7 @@ export function PaymentSummaryModal({
         </div>
 
         {onChangeProduct ? (
-          <div className="mb-8 w-full">
+          <div className="mb-5 w-full shrink-0">
             <CheckoutPackSelectionCards
               selected={product}
               currency={checkoutCurrency}
@@ -363,6 +377,7 @@ export function PaymentSummaryModal({
           </div>
         ) : null}
 
+        <div className="payment-summary-modal__scroll flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain px-0 pb-3 [-webkit-overflow-scrolling:touch]">
         {exitOfferShown && preview?.exitIntentApplied ? (
           <div className="payment-summary-modal__exit-offer" role="status">
             {tr
@@ -452,10 +467,15 @@ export function PaymentSummaryModal({
             ) : null}
             {promoError ? <p className="payment-summary-modal__err">{promoError}</p> : null}
 
-            <p className="mx-auto mb-10 mt-3 max-w-[20rem] text-center text-[12px] text-slate-500">
+            <p className="mx-auto mt-3 max-w-[20rem] pb-1 text-center text-[12px] text-slate-500">
               iyzico · Visa · Mastercard
             </p>
+          </>
+        )}
+        </div>
 
+        {showPayBar ? (
+          <div className="shrink-0 border-t border-white/[0.09] bg-gradient-to-t from-[#070b14] via-[#070b14]/98 to-slate-900/95 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-[0_-12px_32px_-8px_rgba(0,0,0,0.45)] sm:px-8">
             <label className="mx-auto flex max-w-lg cursor-pointer gap-3 rounded-2xl border border-white/[0.07] bg-slate-900/35 p-4 text-left text-sm leading-snug text-slate-400">
               <input
                 type="checkbox"
@@ -494,7 +514,7 @@ export function PaymentSummaryModal({
 
             <button
               type="button"
-              className="payment-summary-modal__pay-stripe mx-auto mt-8 flex w-full max-w-[28rem] items-center justify-center rounded-xl bg-[#635bff] px-6 py-[1.1rem] text-[17px] font-semibold leading-tight tracking-tight text-white shadow-[0_18px_45px_-12px_rgba(99,91,255,0.65),0_2px_0_rgba(255,255,255,0.12)_inset] ring-1 ring-white/10 transition hover:bg-[#5a52e5] hover:shadow-[0_22px_50px_-10px_rgba(99,91,255,0.72)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#635bff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] disabled:pointer-events-none disabled:opacity-40 sm:py-[1.2rem]"
+              className="payment-summary-modal__pay-stripe mx-auto mt-4 flex w-full max-w-[28rem] items-center justify-center rounded-xl bg-[#635bff] px-6 py-[1.1rem] text-[17px] font-semibold leading-tight tracking-tight text-white shadow-[0_18px_45px_-12px_rgba(99,91,255,0.65),0_2px_0_rgba(255,255,255,0.12)_inset] ring-1 ring-white/10 transition hover:bg-[#5a52e5] hover:shadow-[0_22px_50px_-10px_rgba(99,91,255,0.72)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#635bff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b14] disabled:pointer-events-none disabled:opacity-40 sm:py-[1.2rem]"
               disabled={paying || loading || !legalAccepted}
               onClick={() => void handlePay()}
             >
@@ -507,8 +527,8 @@ export function PaymentSummaryModal({
                   : "Dev build: when the PSP is off or mock checkout is on, purchase completes instantly."}
               </p>
             ) : null}
-          </>
-        )}
+          </div>
+        ) : null}
       </div>
     </div>
 

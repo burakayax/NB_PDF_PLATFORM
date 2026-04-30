@@ -1,4 +1,4 @@
-# NB PDF PLARTFORM — Birlikte çalıştırma (kök `npm` betikleri)
+# NB PDF PLATFORM — Birlikte çalıştırma (kök `npm` betikleri)
 
 Bu dosya **proje kökündeki** `package.json` içindeki komutların ne işe yaradığını Türkçe açıklar.
 
@@ -54,11 +54,11 @@ Bu dosya **proje kökündeki** `package.json` içindeki komutların ne işe yara
 
 Önce `predev` ile ortam doğrulanır, ardından aynı anda üç süreci başlatır (`concurrently` ile):
 
-| Etiket | Süreç | Varsayılan adres |
-|--------|--------|-------------------|
-| `pdf` | FastAPI + uvicorn (`scripts/run-pdf-api.mjs`, `--reload`) | http://127.0.0.1:8000 |
-| `api` | Node kimlik / abonelik API (`web/api`, `tsx watch`) | http://localhost:4000 |
-| `ui` | Vite geliştirme sunucusu (`web/frontend`) | http://localhost:5173 |
+| Etiket | Süreç                                                     | Varsayılan adres      |
+| ------ | --------------------------------------------------------- | --------------------- |
+| `pdf`  | FastAPI + uvicorn (`scripts/run-pdf-api.mjs`, `--reload`) | http://127.0.0.1:8000 |
+| `api`  | Node kimlik / abonelik API (`web/api`, `tsx watch`)       | http://localhost:4000 |
+| `ui`   | Vite geliştirme sunucusu (`web/frontend`)                 | http://localhost:5173 |
 
 **Neden gerekli?**
 
@@ -74,11 +74,11 @@ Tarayıcıdaki uygulama hem PDF işlemleri hem oturum için bu üç servise bird
 
 Yine üç süreç, **üretime daha yakın** modlarla:
 
-| Etiket | Süreç |
-|--------|--------|
-| `pdf` | uvicorn **reload olmadan** (`--prod` bayrağı) |
-| `api` | `web/api` içinde `npm run start` → derlenmiş `dist/server.js` |
-| `ui` | `vite preview` (önce `build:all` ile derlenmiş `dist` olmalı) |
+| Etiket | Süreç                                                         |
+| ------ | ------------------------------------------------------------- |
+| `pdf`  | uvicorn **reload olmadan** (`--prod` bayrağı)                 |
+| `api`  | `web/api` içinde `npm run start` → derlenmiş `dist/server.js` |
+| `ui`   | `vite preview` (önce `build:all` ile derlenmiş `dist` olmalı) |
 
 **Neden ayrı?**
 
@@ -133,11 +133,11 @@ Tarayıcı: **http://localhost:5173**
 
 ## Olası sorunlar
 
-| Durum | Çözüm |
-|--------|--------|
+| Durum               | Çözüm                                                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `pdf` hemen düşüyor | `web/.venv` ve `npm run install-all` ile Python bağımlılıklarını yükleyin; Tesseract/Poppler yolları için `SETUP_NOTES.txt`. |
-| `api` başlamıyor | `web/api/.env` eksik veya hatalı; `JWT_*` en az 32 karakter, `ADMIN_EMAIL` dolu olsun. |
-| Port meşgul | 8000, 4000 veya 5173 kullanan uygulamayı kapatın veya ilgili projede portu değiştirin. |
+| `api` başlamıyor    | `web/api/.env` eksik veya hatalı; `JWT_*` en az 32 karakter, `ADMIN_EMAIL` dolu olsun.                                       |
+| Port meşgul         | 8000, 4000 veya 5173 kullanan uygulamayı kapatın veya ilgili projede portu değiştirin.                                       |
 
 ### Büyük PDF’ler ve zaman aşımı
 

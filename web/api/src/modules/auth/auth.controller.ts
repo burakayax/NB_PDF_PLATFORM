@@ -1,5 +1,9 @@
 import type { CookieOptions, Request, Response } from "express";
-import { logGoogleOAuth, logLoginAttempt, logRegisterAttempt } from "../../lib/app-logger.js";
+import {
+  logGoogleOAuth,
+  logLoginAttempt,
+  logRegisterAttempt,
+} from "../../lib/app-logger.js";
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
 import { tryNormalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
@@ -41,7 +45,10 @@ import {
   updateUserProfile,
   verifyEmailToken,
 } from "./auth.service.js";
-import { getDesktopDeviceIdFromHeaders, isDesktopClient } from "../device/device.service.js";
+import {
+  getDesktopDeviceIdFromHeaders,
+  isDesktopClient,
+} from "../device/device.service.js";
 import {
   acceptOAuthFrontendOriginFromRequest,
   resolveOAuthSpaRedirectBase,
@@ -57,7 +64,9 @@ function hostsDifferentProduction(): boolean {
   }
   try {
     const api = new URL(env.APP_BASE_URL);
-    const fe = new URL(env.OAUTH_FRONTEND_REDIRECT_ORIGIN || env.FRONTEND_ORIGIN);
+    const fe = new URL(
+      env.OAUTH_FRONTEND_REDIRECT_ORIGIN || env.FRONTEND_ORIGIN,
+    );
     return api.host !== fe.host;
   } catch {
     return false;
@@ -76,7 +85,8 @@ function cookieDomainForApiHost(): string | undefined {
   const cookieHost = raw.startsWith(".") ? raw.slice(1) : raw;
   try {
     const apiHostname = new URL(env.APP_BASE_URL).hostname;
-    const matches = apiHostname === cookieHost || apiHostname.endsWith(`.${cookieHost}`);
+    const matches =
+      apiHostname === cookieHost || apiHostname.endsWith(`.${cookieHost}`);
     if (!matches) {
       return undefined;
     }
@@ -117,8 +127,15 @@ function getOAuthStateCookieOptions(): CookieOptions {
 }
 
 /** Express: clearCookie ile maxAge/expires geçmek kullanım dışı bırakıldı — silinince çerez özellikleri eşleşmeli. */
-function clearCookieMatching(response: Response, name: string, options: CookieOptions) {
-  const rest = { ...options } as CookieOptions & { maxAge?: number; expires?: Date };
+function clearCookieMatching(
+  response: Response,
+  name: string,
+  options: CookieOptions,
+) {
+  const rest = { ...options } as CookieOptions & {
+    maxAge?: number;
+    expires?: Date;
+  };
   delete rest.maxAge;
   delete rest.expires;
   response.clearCookie(name, rest);
@@ -139,7 +156,11 @@ function parseOAuthStateCookieValue(rawCookie: string): {
 
   if (parts[idx] === "desktop" && parts[idx + 1]) {
     const parsedPort = Number.parseInt(parts[idx + 1] ?? "", 10);
-    if (!Number.isNaN(parsedPort) && parsedPort >= 1024 && parsedPort <= 65_535) {
+    if (
+      !Number.isNaN(parsedPort) &&
+      parsedPort >= 1024 &&
+      parsedPort <= 65_535
+    ) {
       desktopLocalPort = parsedPort;
     }
     idx += 2;
@@ -172,7 +193,9 @@ function oauthFrontendRedirect(
   query?: Record<string, string>,
   redirectOriginBase?: string,
 ) {
-  const base = (redirectOriginBase ?? env.OAUTH_FRONTEND_REDIRECT_ORIGIN).replace(/\/$/, "");
+  const base = (
+    redirectOriginBase ?? env.OAUTH_FRONTEND_REDIRECT_ORIGIN
+  ).replace(/\/$/, "");
   const url = new URL(`${base}/${path}`);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
@@ -188,7 +211,10 @@ function userFacingOAuthCallbackError(error: unknown): string {
     return error.message.slice(0, 500);
   }
   if (error instanceof Error) {
-    const prisma = error as Error & { code?: string; meta?: { target?: string[] } };
+    const prisma = error as Error & {
+      code?: string;
+      meta?: { target?: string[] };
+    };
     if (prisma.code === "P2002") {
       return "This Google account may already be linked to another profile, or a unique field conflicted. Try another Google account or contact support.";
     }
@@ -199,7 +225,11 @@ function userFacingOAuthCallbackError(error: unknown): string {
 }
 
 function writeSession(response: Response, session: AuthSessionResult) {
-  response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions());
+  response.cookie(
+    REFRESH_COOKIE_NAME,
+    session.refreshToken,
+    getCookieOptions(),
+  );
   response.json({
     accessToken: session.accessToken,
     user: session.user,
@@ -216,7 +246,11 @@ function clientRequestMeta(request: Request) {
 }
 
 function rawBodyEmail(request: Request) {
-  if (!request.body || typeof request.body !== "object" || !("email" in request.body)) {
+  if (
+    !request.body ||
+    typeof request.body !== "object" ||
+    !("email" in request.body)
+  ) {
     return undefined;
   }
   const v = (request.body as { email?: unknown }).email;
@@ -227,7 +261,11 @@ function rawBodyEmail(request: Request) {
   return tryNormalizeEmailForStorage(trimmed) ?? trimmed.toLowerCase();
 }
 
-function renderVerificationHtml(status: "success" | "error", title: string, detail: string) {
+function renderVerificationHtml(
+  status: "success" | "error",
+  title: string,
+  detail: string,
+) {
   const accent = status === "success" ? "#38bdf8" : "#f87171";
   const accentText = status === "success" ? "#082f49" : "#450a0a";
 
@@ -241,7 +279,7 @@ function renderVerificationHtml(status: "success" | "error", title: string, deta
   <body style="margin:0;min-height:100vh;background:#0f172a;font-family:Arial,Helvetica,sans-serif;color:#e2e8f0;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="width:min(560px,100%);background:#111827;border:1px solid #1f2937;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;">
       <div style="padding:28px 28px 16px;border-bottom:1px solid #1f2937;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;color:#7dd3fc;text-transform:uppercase;">NB PDF PLARTFORM</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;color:#7dd3fc;text-transform:uppercase;">NB PDF PLATFORM</div>
         <h1 style="margin:16px 0 0;font-size:28px;line-height:1.2;color:#f8fafc;">${title}</h1>
       </div>
       <div style="padding:28px;">
@@ -251,7 +289,7 @@ function renderVerificationHtml(status: "success" | "error", title: string, deta
         <p style="margin:18px 0 0;font-size:15px;line-height:1.8;color:#cbd5e1;">${detail}</p>
         <p style="margin:18px 0 0;font-size:14px;line-height:1.8;color:#94a3b8;">You can now return to the application and continue with your account flow.</p>
         <a href="${env.FRONTEND_ORIGIN}/?view=login&email_verified=1" style="display:inline-block;margin-top:24px;padding:12px 18px;border-radius:14px;background:#1e293b;color:#f8fafc;text-decoration:none;font-weight:700;">
-          Open NB PDF PLARTFORM
+          Open NB PDF PLATFORM
         </a>
       </div>
     </div>
@@ -262,23 +300,38 @@ function renderVerificationHtml(status: "success" | "error", title: string, deta
 export async function registerController(request: Request, response: Response) {
   const meta = clientRequestMeta(request);
   authLog.info("POST /api/auth/register: body keys", {
-    keys: request.body && typeof request.body === "object" ? Object.keys(request.body as object) : [],
+    keys:
+      request.body && typeof request.body === "object"
+        ? Object.keys(request.body as object)
+        : [],
   });
   const parsed = registerSchema.safeParse(request.body);
   if (!parsed.success) {
-    authLog.warn("POST /api/auth/register: validation failed", { issues: parsed.error.issues.map((i) => i.message) });
+    authLog.warn("POST /api/auth/register: validation failed", {
+      issues: parsed.error.issues.map((i) => i.message),
+    });
     logRegisterAttempt({
       outcome: "failure",
-      email: typeof request.body === "object" && request.body && "email" in request.body ? String((request.body as { email?: unknown }).email) : null,
+      email:
+        typeof request.body === "object" &&
+        request.body &&
+        "email" in request.body
+          ? String((request.body as { email?: unknown }).email)
+          : null,
       reason: "validation",
       ...meta,
     });
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Registration data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Registration data is invalid.",
+    );
   }
 
   try {
     const result = await registerUser(parsed.data);
-    authLog.info("POST /api/auth/register: created", { userId: result.user.id });
+    authLog.info("POST /api/auth/register: created", {
+      userId: result.user.id,
+    });
     logRegisterAttempt({
       outcome: "success",
       email: result.user.email,
@@ -304,21 +357,31 @@ export async function loginController(request: Request, response: Response) {
   const meta = clientRequestMeta(request);
   authLog.info("POST /auth/login: request", {
     desktop: isDesktopClient(request.headers),
-    keys: request.body && typeof request.body === "object" ? Object.keys(request.body as object) : [],
+    keys:
+      request.body && typeof request.body === "object"
+        ? Object.keys(request.body as object)
+        : [],
   });
   const parsed = authCredentialsSchema.safeParse(request.body);
   if (!parsed.success) {
-    authLog.warn("POST /auth/login: validation failed", { issues: parsed.error.issues.map((i) => i.message) });
+    authLog.warn("POST /auth/login: validation failed", {
+      issues: parsed.error.issues.map((i) => i.message),
+    });
     logLoginAttempt({
       outcome: "failure",
       reason: "validation",
       email: rawBodyEmail(request) ?? null,
       ...meta,
     });
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Login data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Login data is invalid.",
+    );
   }
 
-  const deviceId = isDesktopClient(request.headers) ? getDesktopDeviceIdFromHeaders(request.headers) : "";
+  const deviceId = isDesktopClient(request.headers)
+    ? getDesktopDeviceIdFromHeaders(request.headers)
+    : "";
   try {
     const session = await loginUser(parsed.data, deviceId || undefined);
     logLoginAttempt({
@@ -343,7 +406,9 @@ export async function loginController(request: Request, response: Response) {
 }
 
 export async function refreshController(request: Request, response: Response) {
-  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as
+    | string
+    | undefined;
   if (!refreshToken) {
     throw new HttpError(401, "No active session found.");
   }
@@ -353,7 +418,9 @@ export async function refreshController(request: Request, response: Response) {
 }
 
 export async function logoutController(request: Request, response: Response) {
-  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as
+    | string
+    | undefined;
   await logoutUser(refreshToken);
 
   clearCookieMatching(response, REFRESH_COOKIE_NAME, getCookieOptions());
@@ -369,42 +436,63 @@ export async function meController(request: Request, response: Response) {
   response.json({ user });
 }
 
-export async function updatePreferredLanguageController(request: Request, response: Response) {
+export async function updatePreferredLanguageController(
+  request: Request,
+  response: Response,
+) {
   if (!request.authUser) {
     throw new HttpError(401, "Authentication is required.");
   }
 
   const parsed = preferredLanguageSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Preferred language is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Preferred language is invalid.",
+    );
   }
 
-  const user = await updatePreferredLanguage(request.authUser.id, parsed.data.preferredLanguage);
+  const user = await updatePreferredLanguage(
+    request.authUser.id,
+    parsed.data.preferredLanguage,
+  );
   response.json({ user });
 }
 
-export async function updateProfileController(request: Request, response: Response) {
+export async function updateProfileController(
+  request: Request,
+  response: Response,
+) {
   if (!request.authUser) {
     throw new HttpError(401, "Authentication is required.");
   }
 
   const parsed = updateProfileSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Profile data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Profile data is invalid.",
+    );
   }
 
   const user = await updateUserProfile(request.authUser.id, parsed.data);
   response.json({ user });
 }
 
-export async function changePasswordController(request: Request, response: Response) {
+export async function changePasswordController(
+  request: Request,
+  response: Response,
+) {
   if (!request.authUser) {
     throw new HttpError(401, "Authentication is required.");
   }
 
   const parsed = changePasswordSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Password data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Password data is invalid.",
+    );
   }
 
   const user = await changeUserPassword(request.authUser.id, parsed.data);
@@ -412,14 +500,20 @@ export async function changePasswordController(request: Request, response: Respo
 }
 
 /** POST /api/auth/change-password — JSON body: current_password, new_password */
-export async function changePasswordPostController(request: Request, response: Response) {
+export async function changePasswordPostController(
+  request: Request,
+  response: Response,
+) {
   if (!request.authUser) {
     throw new HttpError(401, "Authentication is required.");
   }
 
   const parsed = changePasswordSnakeSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Password data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Password data is invalid.",
+    );
   }
 
   const user = await changeUserPassword(request.authUser.id, {
@@ -432,45 +526,74 @@ export async function changePasswordPostController(request: Request, response: R
   });
 }
 
-export async function setInitialPasswordPostController(request: Request, response: Response) {
+export async function setInitialPasswordPostController(
+  request: Request,
+  response: Response,
+) {
   if (!request.authUser) {
     throw new HttpError(401, "Authentication is required.");
   }
 
   const parsed = setInitialPasswordSnakeSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Password data is invalid.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Password data is invalid.",
+    );
   }
 
-  const user = await setInitialPasswordForUser(request.authUser.id, parsed.data.new_password);
+  const user = await setInitialPasswordForUser(
+    request.authUser.id,
+    parsed.data.new_password,
+  );
   response.json({
     message: "Password has been set successfully.",
     user,
   });
 }
 
-export async function googleOAuthStartController(request: Request, response: Response) {
+export async function googleOAuthStartController(
+  request: Request,
+  response: Response,
+) {
   const meta = clientRequestMeta(request);
   try {
     assertGoogleOAuthConfigured();
   } catch (error) {
     if (error instanceof HttpError) {
-      logGoogleOAuth({ outcome: "failure", step: "start", reason: error.message, ...meta });
-      console.error(`${GOOGLE_OAUTH_LOG} start FAILED (not configured or misconfigured)`, {
-        message: error.message,
+      logGoogleOAuth({
+        outcome: "failure",
+        step: "start",
+        reason: error.message,
         ...meta,
       });
-      const failUrl = oauthFrontendRedirect("login-error", { reason: error.message });
-      logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(failUrl) });
+      console.error(
+        `${GOOGLE_OAUTH_LOG} start FAILED (not configured or misconfigured)`,
+        {
+          message: error.message,
+          ...meta,
+        },
+      );
+      const failUrl = oauthFrontendRedirect("login-error", {
+        reason: error.message,
+      });
+      logGoogleOAuthRedirect({
+        kind: "login-error",
+        urlMasked: maskRedirectUrlForLog(failUrl),
+      });
       response.redirect(failUrl);
       return;
     }
     throw error;
   }
 
-  const langParam = typeof request.query.lang === "string" ? request.query.lang : "";
+  const langParam =
+    typeof request.query.lang === "string" ? request.query.lang : "";
   const preferredLanguage = langParam === "tr" ? "tr" : "en";
-  const desktopPortRaw = typeof request.query.desktop_port === "string" ? request.query.desktop_port.trim() : "";
+  const desktopPortRaw =
+    typeof request.query.desktop_port === "string"
+      ? request.query.desktop_port.trim()
+      : "";
   let desktopLocalPort: number | null = null;
   if (desktopPortRaw) {
     const parsed = Number.parseInt(desktopPortRaw, 10);
@@ -479,9 +602,14 @@ export async function googleOAuthStartController(request: Request, response: Res
     }
   }
   const frontendOriginQuery =
-    typeof request.query.frontend_origin === "string" ? request.query.frontend_origin.trim() : "";
+    typeof request.query.frontend_origin === "string"
+      ? request.query.frontend_origin.trim()
+      : "";
   let trustedFrontendOrigin = "";
-  if (frontendOriginQuery && acceptOAuthFrontendOriginFromRequest(frontendOriginQuery)) {
+  if (
+    frontendOriginQuery &&
+    acceptOAuthFrontendOriginFromRequest(frontendOriginQuery)
+  ) {
     trustedFrontendOrigin = frontendOriginQuery.replace(/\/$/, "");
   } else if (frontendOriginQuery) {
     authLog.warn("GET /auth/google: ignoring untrusted frontend_origin", {
@@ -496,7 +624,11 @@ export async function googleOAuthStartController(request: Request, response: Res
   if (trustedFrontendOrigin) {
     oauthCookieValue += `|fe|${encodeURIComponent(trustedFrontendOrigin)}`;
   }
-  response.cookie(OAUTH_STATE_COOKIE, oauthCookieValue, getOAuthStateCookieOptions());
+  response.cookie(
+    OAUTH_STATE_COOKIE,
+    oauthCookieValue,
+    getOAuthStateCookieOptions(),
+  );
   // Embed desktop port in Google `state` so redirect still works if the OAuth cookie is dropped
   // (browser privacy / cross-site edge cases). CSRF token is the hex prefix before ".d<port>".
   const stateForGoogle =
@@ -512,11 +644,16 @@ export async function googleOAuthStartController(request: Request, response: Res
   response.redirect(authorizeUrl);
 }
 
-export async function googleOAuthCallbackController(request: Request, response: Response) {
+export async function googleOAuthCallbackController(
+  request: Request,
+  response: Response,
+) {
   const meta = clientRequestMeta(request);
-  const oauthErr = typeof request.query.error === "string" ? request.query.error : "";
+  const oauthErr =
+    typeof request.query.error === "string" ? request.query.error : "";
   const code = typeof request.query.code === "string" ? request.query.code : "";
-  const state = typeof request.query.state === "string" ? request.query.state : "";
+  const state =
+    typeof request.query.state === "string" ? request.query.state : "";
 
   logGoogleCallbackQuery({
     hasError: Boolean(oauthErr),
@@ -527,56 +664,110 @@ export async function googleOAuthCallbackController(request: Request, response: 
 
   if (oauthErr) {
     const rdBase = oauthRedirectBaseFromRequestCookie(request);
-    clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+    clearCookieMatching(
+      response,
+      OAUTH_STATE_COOKIE,
+      getOAuthStateCookieOptions(),
+    );
     const desc =
-      typeof request.query.error_description === "string" ? request.query.error_description : oauthErr;
-    logGoogleOAuth({ outcome: "failure", step: "callback", reason: desc.slice(0, 500), ...meta });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: Google returned error to redirect_uri`, {
-      error: oauthErr,
-      errorDescription: desc.slice(0, 500),
+      typeof request.query.error_description === "string"
+        ? request.query.error_description
+        : oauthErr;
+    logGoogleOAuth({
+      outcome: "failure",
+      step: "callback",
+      reason: desc.slice(0, 500),
       ...meta,
     });
-    const url = oauthFrontendRedirect("login-error", { reason: desc.slice(0, 500) }, rdBase);
-    logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
+    console.error(
+      `${GOOGLE_OAUTH_LOG} callback: Google returned error to redirect_uri`,
+      {
+        error: oauthErr,
+        errorDescription: desc.slice(0, 500),
+        ...meta,
+      },
+    );
+    const url = oauthFrontendRedirect(
+      "login-error",
+      { reason: desc.slice(0, 500) },
+      rdBase,
+    );
+    logGoogleOAuthRedirect({
+      kind: "login-error",
+      urlMasked: maskRedirectUrlForLog(url),
+    });
     response.redirect(url);
     return;
   }
 
   if (!code || !state) {
     const rdBase = oauthRedirectBaseFromRequestCookie(request);
-    clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+    clearCookieMatching(
+      response,
+      OAUTH_STATE_COOKIE,
+      getOAuthStateCookieOptions(),
+    );
     logGoogleOAuth({
       outcome: "failure",
       step: "callback",
       reason: "missing_code_or_state",
       ...meta,
     });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, { ...meta });
-    const url = oauthFrontendRedirect("login-error", { reason: "Missing authorization response from Google." }, rdBase);
-    logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
+    console.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, {
+      ...meta,
+    });
+    const url = oauthFrontendRedirect(
+      "login-error",
+      { reason: "Missing authorization response from Google." },
+      rdBase,
+    );
+    logGoogleOAuthRedirect({
+      kind: "login-error",
+      urlMasked: maskRedirectUrlForLog(url),
+    });
     response.redirect(url);
     return;
   }
 
   const rawCookie = request.cookies[OAUTH_STATE_COOKIE] as string | undefined;
-  clearCookieMatching(response, OAUTH_STATE_COOKIE, getOAuthStateCookieOptions());
+  clearCookieMatching(
+    response,
+    OAUTH_STATE_COOKIE,
+    getOAuthStateCookieOptions(),
+  );
 
   if (!rawCookie) {
-    logGoogleOAuth({ outcome: "failure", step: "callback", reason: "oauth_cookie_missing", ...meta });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: OAuth state cookie missing (expired or blocked)`, { ...meta });
-    const url = oauthFrontendRedirect("login-error", { reason: "Sign-in session expired. Please try again." });
-    logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
+    logGoogleOAuth({
+      outcome: "failure",
+      step: "callback",
+      reason: "oauth_cookie_missing",
+      ...meta,
+    });
+    console.error(
+      `${GOOGLE_OAUTH_LOG} callback: OAuth state cookie missing (expired or blocked)`,
+      { ...meta },
+    );
+    const url = oauthFrontendRedirect("login-error", {
+      reason: "Sign-in session expired. Please try again.",
+    });
+    logGoogleOAuthRedirect({
+      kind: "login-error",
+      urlMasked: maskRedirectUrlForLog(url),
+    });
     response.redirect(url);
     return;
   }
 
   const parsedOAuth = parseOAuthStateCookieValue(rawCookie);
-  const oauthSpaRedirectBase = resolveOAuthSpaRedirectBase(parsedOAuth.frontendOriginRaw);
+  const oauthSpaRedirectBase = resolveOAuthSpaRedirectBase(
+    parsedOAuth.frontendOriginRaw,
+  );
   const expectedState = parsedOAuth.csrfToken;
   const preferredLanguage = parsedOAuth.preferredLanguage;
   let desktopLocalPort = parsedOAuth.desktopLocalPort;
 
-  const stateFromQuery = typeof request.query.state === "string" ? request.query.state : "";
+  const stateFromQuery =
+    typeof request.query.state === "string" ? request.query.state : "";
   let stateCsrf = stateFromQuery;
   let portFromEmbeddedState: number | null = null;
   const embeddedPort = /\.d(\d+)$/.exec(stateFromQuery);
@@ -592,28 +783,44 @@ export async function googleOAuthCallbackController(request: Request, response: 
   }
 
   if (!expectedState || stateCsrf !== expectedState) {
-    logGoogleOAuth({ outcome: "failure", step: "callback", reason: "state_mismatch", ...meta });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: state mismatch (possible CSRF or stale session)`, {
+    logGoogleOAuth({
+      outcome: "failure",
+      step: "callback",
+      reason: "state_mismatch",
       ...meta,
     });
+    console.error(
+      `${GOOGLE_OAUTH_LOG} callback: state mismatch (possible CSRF or stale session)`,
+      {
+        ...meta,
+      },
+    );
     const url = oauthFrontendRedirect(
       "login-error",
       { reason: "Invalid sign-in state. Please try again." },
       oauthSpaRedirectBase,
     );
-    logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
+    logGoogleOAuthRedirect({
+      kind: "login-error",
+      urlMasked: maskRedirectUrlForLog(url),
+    });
     response.redirect(url);
     return;
   }
 
   try {
-    console.log(`${GOOGLE_OAUTH_LOG} callback: exchanging authorization code for tokens`, {
-      codeLength: code.length,
-      statePreview: `${state.slice(0, 8)}…`,
-      preferredLanguage,
-    });
+    console.log(
+      `${GOOGLE_OAUTH_LOG} callback: exchanging authorization code for tokens`,
+      {
+        codeLength: code.length,
+        statePreview: `${state.slice(0, 8)}…`,
+        preferredLanguage,
+      },
+    );
     const googleAccess = await exchangeGoogleAuthorizationCode(code);
-    console.log(`${GOOGLE_OAUTH_LOG} callback: fetching userinfo with access token`);
+    console.log(
+      `${GOOGLE_OAUTH_LOG} callback: fetching userinfo with access token`,
+    );
     const profile = await fetchGoogleProfile(googleAccess);
 
     const session = await signInWithGoogle({
@@ -626,8 +833,15 @@ export async function googleOAuthCallbackController(request: Request, response: 
       preferredLanguage,
     });
 
-    response.cookie(REFRESH_COOKIE_NAME, session.refreshToken, getCookieOptions());
-    authLog.info("GET /auth/google/callback: session issued", { userId: session.user.id, email: session.user.email });
+    response.cookie(
+      REFRESH_COOKIE_NAME,
+      session.refreshToken,
+      getCookieOptions(),
+    );
+    authLog.info("GET /auth/google/callback: session issued", {
+      userId: session.user.id,
+      email: session.user.email,
+    });
     logGoogleOAuth({
       outcome: "success",
       step: "callback",
@@ -639,12 +853,20 @@ export async function googleOAuthCallbackController(request: Request, response: 
     const redirectUrl =
       desktopLocalPort !== null
         ? `http://127.0.0.1:${desktopLocalPort}/oauth?token=${encodeURIComponent(session.accessToken)}`
-        : oauthFrontendRedirect("login-success", { token: session.accessToken }, oauthSpaRedirectBase);
+        : oauthFrontendRedirect(
+            "login-success",
+            { token: session.accessToken },
+            oauthSpaRedirectBase,
+          );
     console.log(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
-      redirectKind: desktopLocalPort !== null ? "desktop-localhost" : "login-success",
+      redirectKind:
+        desktopLocalPort !== null ? "desktop-localhost" : "login-success",
       maskedUrl: maskRedirectUrlForLog(redirectUrl),
     });
-    logGoogleOAuthRedirect({ kind: "login-success", urlMasked: maskRedirectUrlForLog(redirectUrl) });
+    logGoogleOAuthRedirect({
+      kind: "login-success",
+      urlMasked: maskRedirectUrlForLog(redirectUrl),
+    });
     response.redirect(redirectUrl);
   } catch (error) {
     const message = userFacingOAuthCallbackError(error);
@@ -667,17 +889,36 @@ export async function googleOAuthCallbackController(request: Request, response: 
       httpStatus: error instanceof HttpError ? error.statusCode : undefined,
       ...meta,
     });
-    const url = oauthFrontendRedirect("login-error", { reason: message }, oauthSpaRedirectBase);
-    logGoogleOAuthRedirect({ kind: "login-error", urlMasked: maskRedirectUrlForLog(url) });
+    const url = oauthFrontendRedirect(
+      "login-error",
+      { reason: message },
+      oauthSpaRedirectBase,
+    );
+    logGoogleOAuthRedirect({
+      kind: "login-error",
+      urlMasked: maskRedirectUrlForLog(url),
+    });
     response.redirect(url);
   }
 }
 
-export async function verifyEmailController(request: Request, response: Response) {
-  const token = typeof request.query.token === "string" ? request.query.token.trim() : "";
+export async function verifyEmailController(
+  request: Request,
+  response: Response,
+) {
+  const token =
+    typeof request.query.token === "string" ? request.query.token.trim() : "";
   authLog.info("GET /verify-email", { hasToken: Boolean(token) });
   if (!token) {
-    response.status(400).send(renderVerificationHtml("error", "Verification link is invalid", "The verification token is missing or malformed."));
+    response
+      .status(400)
+      .send(
+        renderVerificationHtml(
+          "error",
+          "Verification link is invalid",
+          "The verification token is missing or malformed.",
+        ),
+      );
     return;
   }
 
@@ -694,7 +935,11 @@ export async function verifyEmailController(request: Request, response: Response
       );
   } catch (error) {
     if (error instanceof HttpError) {
-      response.status(error.statusCode).send(renderVerificationHtml("error", "Verification failed", error.message));
+      response
+        .status(error.statusCode)
+        .send(
+          renderVerificationHtml("error", "Verification failed", error.message),
+        );
       return;
     }
     throw error;

@@ -2,11 +2,18 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ShieldCheck } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import type { AuthUser, UpdateProfileInput } from "../../api/auth";
-import { fetchPaymentsPricing, initializeTierPayment, type PublicTierPricingRow } from "../../api/payments";
+import {
+  fetchPaymentsPricing,
+  initializeTierPayment,
+  type PublicTierPricingRow,
+} from "../../api/payments";
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 import { resolveFakePaymentRedirect } from "../../api/fakePayment";
 import { PRICING_TIER_CARDS, type PricingTierId } from "../../lib/pricingTiers";
-import { formatCheckoutMoney, type CheckoutCurrency } from "../../lib/pricingMatrix";
+import {
+  formatCheckoutMoney,
+  type CheckoutCurrency,
+} from "../../lib/pricingMatrix";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { isBillingProfileComplete } from "../../lib/billingProfile";
 import { ProfileCompletionModal } from "./ProfileCompletionModal";
@@ -17,9 +24,15 @@ type PricingPageProps = {
   user: AuthUser;
   updateProfile: (input: UpdateProfileInput) => Promise<AuthUser | null>;
   onBack: () => void;
-  showToast: (type: "success" | "error" | "loading" | "info", title: string, detail: string) => void;
+  showToast: (
+    type: "success" | "error" | "loading" | "info",
+    title: string,
+    detail: string,
+  ) => void;
   onOpenTerms: () => void;
   onOpenKvkk: () => void;
+  /** PSP / fake redirect öncesi — araç çıktısı localStorage’a yazılır (`NB_RESUME_PROCESS`). */
+  onBeforeExternalCheckout?: () => void;
 };
 
 export function PricingPage({
@@ -31,11 +44,15 @@ export function PricingPage({
   showToast,
   onOpenTerms,
   onOpenKvkk,
+  onBeforeExternalCheckout,
 }: PricingPageProps) {
   const [busyTier, setBusyTier] = useState<PricingTierId | null>(null);
-  const [pricingRows, setPricingRows] = useState<PublicTierPricingRow[] | null>(null);
+  const [pricingRows, setPricingRows] = useState<PublicTierPricingRow[] | null>(
+    null,
+  );
   const [pricingLoading, setPricingLoading] = useState(true);
-  const [billingTierPending, setBillingTierPending] = useState<PricingTierId | null>(null);
+  const [billingTierPending, setBillingTierPending] =
+    useState<PricingTierId | null>(null);
   const { currency: checkoutCurrency } = useCheckoutCurrency();
 
   useEffect(() => {
@@ -62,7 +79,10 @@ export function PricingPage({
     };
   }, [checkoutCurrency]);
 
-  const tierById = useMemo(() => new Map(pricingRows?.map((t) => [t.id, t]) ?? []), [pricingRows]);
+  const tierById = useMemo(
+    () => new Map(pricingRows?.map((t) => [t.id, t]) ?? []),
+    [pricingRows],
+  );
   const tr = language === "tr";
 
   const productHint = useMemo(() => {
@@ -73,18 +93,28 @@ export function PricingPage({
     if (!card) {
       return undefined;
     }
-    return tr ? `${card.nameTr} — ${card.periodLabelTr}` : `${card.nameEn} — ${card.periodLabelEn}`;
+    return tr
+      ? `${card.nameTr} — ${card.periodLabelTr}`
+      : `${card.nameEn} — ${card.periodLabelEn}`;
   }, [billingTierPending, tr]);
 
   const runCheckoutInternal = useCallback(
     async (tier: PricingTierId) => {
       setBusyTier(tier);
       try {
-        const session = await initializeTierPayment(accessToken, tier, checkoutCurrency);
+        const session = await initializeTierPayment(
+          accessToken,
+          tier,
+          checkoutCurrency,
+        );
         if (session.mode === "fake") {
-          window.location.assign(resolveFakePaymentRedirect(session.redirectUrl));
+          onBeforeExternalCheckout?.();
+          window.location.assign(
+            resolveFakePaymentRedirect(session.redirectUrl),
+          );
           return;
         }
+        onBeforeExternalCheckout?.();
         launchIyzicoCheckout({
           checkoutFormContent: session.checkoutFormContent,
           paymentPageUrl: session.paymentPageUrl,
@@ -94,13 +124,16 @@ export function PricingPage({
         showToast(
           "error",
           language === "tr" ? "Ödeme başlatılamadı" : "Payment could not start",
-          msg || (language === "tr" ? "Lütfen tekrar deneyin." : "Please try again."),
+          msg ||
+            (language === "tr"
+              ? "Lütfen tekrar deneyin."
+              : "Please try again."),
         );
       } finally {
         setBusyTier(null);
       }
     },
-    [accessToken, checkoutCurrency, language, showToast],
+    [accessToken, checkoutCurrency, language, showToast, onBeforeExternalCheckout],
   );
 
   const onRequestTier = useCallback(
@@ -127,7 +160,7 @@ export function PricingPage({
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              NB PDF PLARTFORM
+              NB PDF PLATFORM
             </p>
             <h1 className="mt-2 text-2xl font-black tracking-tight text-nb-text md:text-3xl">
               {tr ? "Planlar ve fiyatlandırma" : "Plans & pricing"}
@@ -138,7 +171,9 @@ export function PricingPage({
                 : "Bronze and Gold are one-time credit packs; Unlimited Pro is a monthly subscription. Prices are shown in your region’s currency."}
             </p>
             {pricingLoading ? (
-              <p className="mt-2 text-[11px] font-medium text-cyan-200/75">{tr ? "Fiyatlar yükleniyor…" : "Loading prices…"}</p>
+              <p className="mt-2 text-[11px] font-medium text-cyan-200/75">
+                {tr ? "Fiyatlar yükleniyor…" : "Loading prices…"}
+              </p>
             ) : null}
           </div>
           <button
@@ -155,9 +190,14 @@ export function PricingPage({
             const canonical = tierById.get(card.id);
             const creditHero = canonical?.credits ?? card.fallbackCredits;
             const amountNum = canonical?.amount ?? card.fallbackPriceTry;
-            const cur = (canonical?.currency as CheckoutCurrency | undefined) ?? "TRY";
+            const cur =
+              (canonical?.currency as CheckoutCurrency | undefined) ?? "TRY";
             const subscription = card.id === "unlimited_pro";
-            const formatted = formatCheckoutMoney(amountNum, cur, tr ? "tr" : "en");
+            const formatted = formatCheckoutMoney(
+              amountNum,
+              cur,
+              tr ? "tr" : "en",
+            );
             const priceFormatted = subscription
               ? `${formatted}${tr ? " / ay" : " / mo"}`
               : formatted;
@@ -189,20 +229,28 @@ export function PricingPage({
                   <div className="h-[43px] shrink-0" aria-hidden />
                 )}
                 <div className="flex flex-1 flex-col px-7 pb-9 pt-8 md:px-8">
-                  <p className={`text-[11px] font-bold uppercase tracking-[0.28em] ${isPopular ? "text-indigo-200/90" : "text-slate-500"}`}>{name}</p>
+                  <p
+                    className={`text-[11px] font-bold uppercase tracking-[0.28em] ${isPopular ? "text-indigo-200/90" : "text-slate-500"}`}
+                  >
+                    {name}
+                  </p>
                   {subscription ? (
                     <>
                       <p className="mt-8 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-[2.875rem] font-black leading-none tabular-nums text-transparent md:text-[3.125rem]">
                         ∞
                       </p>
-                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-cyan-200/90">{tr ? "Limitsiz kullanım" : "Unlimited use"}</p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-cyan-200/90">
+                        {tr ? "Limitsiz kullanım" : "Unlimited use"}
+                      </p>
                     </>
                   ) : typeof creditHero === "number" ? (
                     <>
                       <p className="mt-8 bg-gradient-to-br from-white to-slate-400 bg-clip-text text-[2.875rem] font-black leading-none tabular-nums text-transparent md:text-[3.125rem]">
                         {creditHero.toLocaleString(tr ? "tr-TR" : "en-US")}
                       </p>
-                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-slate-400">{tr ? "Ön ödemeli kredi" : "Prepaid credits"}</p>
+                      <p className="mt-3 text-[13px] font-semibold uppercase tracking-wide text-slate-400">
+                        {tr ? "Ön ödemeli kredi" : "Prepaid credits"}
+                      </p>
                     </>
                   ) : null}
                   <div className="mt-10 border-t border-white/[0.07] pt-10">
@@ -222,12 +270,24 @@ export function PricingPage({
                     >
                       {priceFormatted}
                     </p>
-                    <p className="mt-4 text-xs font-medium tracking-wide text-slate-500">{period}</p>
+                    <p className="mt-4 text-xs font-medium tracking-wide text-slate-500">
+                      {period}
+                    </p>
                   </div>
-                  <ul className="mt-9 flex flex-1 flex-col gap-3.5 text-left" role="list">
+                  <ul
+                    className="mt-9 flex flex-1 flex-col gap-3.5 text-left"
+                    role="list"
+                  >
                     {features.map((line) => (
-                      <li key={line} className={`flex gap-3 text-[14px] leading-snug md:text-[15px] ${isPopular ? "text-slate-100" : "text-slate-300"}`}>
-                        <Check className={`mt-0.5 h-5 w-5 shrink-0 ${isPopular ? "text-indigo-300" : "text-emerald-400"}`} strokeWidth={2.75} aria-hidden />
+                      <li
+                        key={line}
+                        className={`flex gap-3 text-[14px] leading-snug md:text-[15px] ${isPopular ? "text-slate-100" : "text-slate-300"}`}
+                      >
+                        <Check
+                          className={`mt-0.5 h-5 w-5 shrink-0 ${isPopular ? "text-indigo-300" : "text-emerald-400"}`}
+                          strokeWidth={2.75}
+                          aria-hidden
+                        />
                         <span>{line}</span>
                       </li>
                     ))}
@@ -257,7 +317,10 @@ export function PricingPage({
         </p>
 
         <div className="mt-5 flex items-center justify-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm font-semibold tracking-tight text-slate-200/95">
-          <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-400/90" aria-hidden />
+          <ShieldCheck
+            className="h-5 w-5 shrink-0 text-emerald-400/90"
+            aria-hidden
+          />
           <span>{tr ? "Güvenli ödeme" : "Secure payment"}</span>
         </div>
       </section>

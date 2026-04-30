@@ -17,7 +17,13 @@ def rate_limit_key_func(request):
     return get_remote_address(request)
 
 
+_raw = os.getenv("RATE_LIMIT_DEFAULT")
+_rate_default = (
+    _raw.strip()
+    if _raw is not None and _raw.strip()
+    else "10/minute"
+)
 limiter = Limiter(
     key_func=rate_limit_key_func,
-    default_limits=["10/minute"],
+    default_limits=[_rate_default],
 )

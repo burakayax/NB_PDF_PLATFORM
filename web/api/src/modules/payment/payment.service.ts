@@ -22,7 +22,12 @@ import {
   createPricedCreditPackFakeSession,
 } from "../fake-payment/fake-payment.service.js";
 import { grantCredits } from "../subscription/entitlement.engine.js";
-import { formatMoney2, getTierOneTimePrice, getUnlimitedProPrice, type CheckoutCurrency } from "./pricing-matrix.js";
+import {
+  formatMoney2,
+  getTierOneTimePrice,
+  getUnlimitedProPrice,
+  type CheckoutCurrency,
+} from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -31,10 +36,16 @@ import iyziUtilsImport from "iyzipay/lib/utils.js";
 type IyzipayCtor = {
   new (o: { apiKey: string; secretKey: string; uri: string }): {
     checkoutFormInitialize: {
-      create: (req: Record<string, unknown>, cb: (err: Error | null, result: IyzicoInitResult) => void) => void;
+      create: (
+        req: Record<string, unknown>,
+        cb: (err: Error | null, result: IyzicoInitResult) => void,
+      ) => void;
     };
     checkoutForm: {
-      retrieve: (req: Record<string, unknown>, cb: (err: Error | null, result: IyzicoRetrieveResult) => void) => void;
+      retrieve: (
+        req: Record<string, unknown>,
+        cb: (err: Error | null, result: IyzicoRetrieveResult) => void,
+      ) => void;
     };
   };
   LOCALE: { TR: string; EN: string };
@@ -46,7 +57,8 @@ type IyzipayCtor = {
 const Iyzipay = IyzipayImport as unknown as IyzipayCtor;
 
 /** Sandbox-safe dummy postal addresses required by Checkout Form validator. */
-const BUYER_DUMMY_STREET = "Çamlıca Mah. Teknokent Bulvarı No:42 Daire:7 Üsküdar İstanbul";
+const BUYER_DUMMY_STREET =
+  "Çamlıca Mah. Teknokent Bulvarı No:42 Daire:7 Üsküdar İstanbul";
 
 function getCheckoutFormCallbackUrl(): string {
   const base = env.PAYMENT_CALLBACK_BASE_URL.replace(/\/$/, "");
@@ -127,13 +139,20 @@ function extractConversationIdFromRetrieve(raw: unknown): string | undefined {
     return undefined;
   }
   const o = raw as Record<string, unknown>;
-  const candidates = [o.conversationId, o.conversation_id, o.ConversationId, (o as { rawResult?: unknown }).rawResult];
+  const candidates = [
+    o.conversationId,
+    o.conversation_id,
+    o.ConversationId,
+    (o as { rawResult?: unknown }).rawResult,
+  ];
   for (const c of candidates) {
     if (typeof c === "string" && c.trim()) {
       return c.trim();
     }
   }
-  const nested = (o.rawResult ?? o.RawResult) as Record<string, unknown> | undefined;
+  const nested = (o.rawResult ?? o.RawResult) as
+    | Record<string, unknown>
+    | undefined;
   if (nested && typeof nested === "object") {
     const n = nested.conversationId ?? nested.conversation_id;
     if (typeof n === "string" && n.trim()) {
@@ -143,11 +162,19 @@ function extractConversationIdFromRetrieve(raw: unknown): string | undefined {
   return undefined;
 }
 
-function verifyInitSignature(conversationId: string, token: string, signature: string | undefined, secretKey: string) {
+function verifyInitSignature(
+  conversationId: string,
+  token: string,
+  signature: string | undefined,
+  secretKey: string,
+) {
   if (!signature) {
     throw new HttpError(502, "Missing payment provider signature.");
   }
-  const calculated = iyziUtils.calculateHmacSHA256Signature([conversationId, token], secretKey);
+  const calculated = iyziUtils.calculateHmacSHA256Signature(
+    [conversationId, token],
+    secretKey,
+  );
   if (calculated !== signature) {
     logSuspiciousActivity({
       type: "iyzico_signature_mismatch",
@@ -176,7 +203,10 @@ function normalizeMoneyFieldForRetrieveSignature(raw: unknown): string {
   return Number.isFinite(n) ? String(n) : s;
 }
 
-function verifyRetrieveSignature(result: IyzicoRetrieveResult, secretKey: string) {
+function verifyRetrieveSignature(
+  result: IyzicoRetrieveResult,
+  secretKey: string,
+) {
   const {
     paymentStatus,
     paymentId,
@@ -200,7 +230,16 @@ function verifyRetrieveSignature(result: IyzicoRetrieveResult, secretKey: string
     throw new HttpError(502, "Missing payment provider signature.");
   }
   const calculated = iyziUtils.calculateHmacSHA256Signature(
-    [paymentStatusStr, paymentIdStr, currencyStr, basketIdStr, conversationIdStr, paidPriceStr, priceStr, tokenStr],
+    [
+      paymentStatusStr,
+      paymentIdStr,
+      currencyStr,
+      basketIdStr,
+      conversationIdStr,
+      paidPriceStr,
+      priceStr,
+      tokenStr,
+    ],
     secretKey,
   );
   if (calculated !== signature) {
@@ -271,13 +310,16 @@ function promisifyInit(
   request: Record<string, unknown>,
 ): Promise<IyzicoInitResult> {
   return new Promise((resolve, reject) => {
-    iyzipay.checkoutFormInitialize.create(request, (err: Error | null, result: IyzicoInitResult) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(result);
-    });
+    iyzipay.checkoutFormInitialize.create(
+      request,
+      (err: Error | null, result: IyzicoInitResult) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      },
+    );
   });
 }
 
@@ -286,13 +328,16 @@ function promisifyRetrieve(
   request: Record<string, unknown>,
 ): Promise<IyzicoRetrieveResult> {
   return new Promise((resolve, reject) => {
-    iyzipay.checkoutForm.retrieve(request, (err: Error | null, result: IyzicoRetrieveResult) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-      resolve(result);
-    });
+    iyzipay.checkoutForm.retrieve(
+      request,
+      (err: Error | null, result: IyzicoRetrieveResult) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(result);
+      },
+    );
   });
 }
 
@@ -316,13 +361,20 @@ export async function createPaymentCheckoutSession(params: {
 }> {
   const prices = await getPaymentPricesTry();
   const isAnnualPro = params.plan === "PRO" && params.billing === "annual";
-  const subscriptionDays = params.subscriptionDaysOverride ?? (isAnnualPro ? 365 : 30);
+  const subscriptionDays =
+    params.subscriptionDaysOverride ?? (isAnnualPro ? 365 : 30);
   const rawFromCatalog =
     params.priceTryOverride ??
-    (params.plan === "BUSINESS" ? prices.BUSINESS : isAnnualPro ? prices.PRO_ANNUAL : prices.PRO);
+    (params.plan === "BUSINESS"
+      ? prices.BUSINESS
+      : isAnnualPro
+        ? prices.PRO_ANNUAL
+        : prices.PRO);
   const price = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
-    params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
+    params.priceTryOverride != null
+      ? (params.checkoutCurrency ?? "TRY")
+      : "TRY";
   const iyziCurrency = iyzicoFx(settlementCurrency);
 
   const user = await prisma.user.findUnique({
@@ -334,14 +386,18 @@ export async function createPaymentCheckoutSession(params: {
   }
 
   if (!user.isVerified) {
-    throw new HttpError(403, "Please verify your email before purchasing a subscription.");
+    throw new HttpError(
+      403,
+      "Please verify your email before purchasing a subscription.",
+    );
   }
 
   const conversationId = randomUUID();
   const basketId = `nbpdf-${params.plan.toLowerCase()}-${conversationId.slice(0, 8)}`;
   const { name, surname } = splitBuyerName(user);
   const venue = buyerVenueFromUser(user);
-  const fmtIyziDate = (d: Date) => d.toISOString().slice(0, 19).replace("T", " ");
+  const fmtIyziDate = (d: Date) =>
+    d.toISOString().slice(0, 19).replace("T", " ");
   const callbackUrl = getCheckoutFormCallbackUrl();
 
   await prisma.paymentCheckout.create({
@@ -404,10 +460,10 @@ export async function createPaymentCheckoutSession(params: {
         name:
           params.basketItemName ??
           (params.plan === "BUSINESS"
-            ? "NB PDF PLARTFORM Bas (1 ay)"
+            ? "NB PDF PLATFORM Bas (1 ay)"
             : isAnnualPro
-              ? "NB PDF PLARTFORM PRO (1 yıl)"
-              : "NB PDF PLARTFORM PRO (1 ay)"),
+              ? "NB PDF PLATFORM PRO (1 yıl)"
+              : "NB PDF PLATFORM PRO (1 ay)"),
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -424,7 +480,9 @@ export async function createPaymentCheckoutSession(params: {
       where: { conversationId, status: "pending" },
       data: { status: "failed" },
     });
-    throw e instanceof HttpError ? e : new HttpError(502, "Payment provider request failed.");
+    throw e instanceof HttpError
+      ? e
+      : new HttpError(502, "Payment provider request failed.");
   }
 
   if (result.status !== "success" || !result.token || !result.conversationId) {
@@ -438,7 +496,12 @@ export async function createPaymentCheckoutSession(params: {
     );
   }
 
-  verifyInitSignature(result.conversationId, result.token, result.signature, env.IYZICO_SECRET_KEY);
+  verifyInitSignature(
+    result.conversationId,
+    result.token,
+    result.signature,
+    env.IYZICO_SECRET_KEY,
+  );
 
   await prisma.paymentCheckout.update({
     where: { conversationId },
@@ -455,7 +518,10 @@ export async function createPaymentCheckoutSession(params: {
 
 export type PricingTierId = "starter" | "professional" | "unlimited_pro";
 
-const ONE_TIME_TIER_SKU: Record<"starter" | "professional", "TIER_STARTER" | "TIER_PROFESSIONAL"> = {
+const ONE_TIME_TIER_SKU: Record<
+  "starter" | "professional",
+  "TIER_STARTER" | "TIER_PROFESSIONAL"
+> = {
   starter: "TIER_STARTER",
   professional: "TIER_PROFESSIONAL",
 };
@@ -485,7 +551,10 @@ export async function initializeTierCheckout(params: {
 }): Promise<TierCheckoutInitResult> {
   if (params.tier === "unlimited_pro") {
     if (!env.creditCheckoutUseFake) {
-      const priceStr = formatMoney2(params.currency, getUnlimitedProPrice(params.currency));
+      const priceStr = formatMoney2(
+        params.currency,
+        getUnlimitedProPrice(params.currency),
+      );
       const s = await createPaymentCheckoutSession({
         userId: params.userId,
         plan: "PRO",
@@ -494,7 +563,7 @@ export async function initializeTierCheckout(params: {
         priceTryOverride: priceStr,
         checkoutCurrency: params.currency,
         subscriptionDaysOverride: 30,
-        basketItemName: "NB PDF PLARTFORM Limitsiz Pro (aylık)",
+        basketItemName: "NB PDF PLATFORM Limitsiz Pro (aylık)",
       });
       return {
         mode: "iyzico" as const,
@@ -567,7 +636,10 @@ export async function createCreditPackIyzicoSession(params: {
     throw new HttpError(404, "User account could not be found.");
   }
   if (!user.isVerified) {
-    throw new HttpError(403, "Please verify your email before purchasing credits.");
+    throw new HttpError(
+      403,
+      "Please verify your email before purchasing credits.",
+    );
   }
 
   const conversationId = randomUUID();
@@ -576,7 +648,8 @@ export async function createCreditPackIyzicoSession(params: {
   const baseNormalized = normalizeCheckoutPrice(p.basePrice);
   const { name, surname } = splitBuyerName(user);
   const venue = buyerVenueFromUser(user);
-  const fmtIyziDate = (d: Date) => d.toISOString().slice(0, 19).replace("T", " ");
+  const fmtIyziDate = (d: Date) =>
+    d.toISOString().slice(0, 19).replace("T", " ");
   const callbackUrl = getCheckoutFormCallbackUrl();
 
   await prisma.creditPackCheckout.create({
@@ -657,7 +730,9 @@ export async function createCreditPackIyzicoSession(params: {
       where: { conversationId, status: "pending" },
       data: { status: "failed" },
     });
-    throw e instanceof HttpError ? e : new HttpError(502, "Payment provider request failed.");
+    throw e instanceof HttpError
+      ? e
+      : new HttpError(502, "Payment provider request failed.");
   }
 
   if (result.status !== "success" || !result.token || !result.conversationId) {
@@ -665,10 +740,18 @@ export async function createCreditPackIyzicoSession(params: {
       where: { conversationId, status: "pending" },
       data: { status: "failed" },
     });
-    throw new HttpError(502, result.errorMessage ?? "Could not start payment session.");
+    throw new HttpError(
+      502,
+      result.errorMessage ?? "Could not start payment session.",
+    );
   }
 
-  verifyInitSignature(result.conversationId, result.token, result.signature, env.IYZICO_SECRET_KEY);
+  verifyInitSignature(
+    result.conversationId,
+    result.token,
+    result.signature,
+    env.IYZICO_SECRET_KEY,
+  );
 
   await prisma.creditPackCheckout.update({
     where: { conversationId },
@@ -699,8 +782,13 @@ export type ProcessPaymentCallbackOpts = {
 
 const PC_LOG = "[iyzico/processPaymentCallback]";
 
-async function resolveConversationIdFromToken(token: string, result: IyzicoRetrieveResult): Promise<string | undefined> {
-  const fromApi = extractConversationIdFromRetrieve(result)?.trim() ?? String(result.conversationId ?? "").trim();
+async function resolveConversationIdFromToken(
+  token: string,
+  result: IyzicoRetrieveResult,
+): Promise<string | undefined> {
+  const fromApi =
+    extractConversationIdFromRetrieve(result)?.trim() ??
+    String(result.conversationId ?? "").trim();
   const h = hashToken(token.trim());
   const [creditRow, paymentRow] = await Promise.all([
     prisma.creditPackCheckout.findFirst({
@@ -719,19 +807,27 @@ async function resolveConversationIdFromToken(token: string, result: IyzicoRetri
   } else if (creditRow && paymentRow) {
     const b = String(result.basketId ?? "").toLowerCase();
     const creditsBasket = b.includes("nbpdf-credits") || b.includes("credit");
-    console.warn(`${PC_LOG} matched both checkout rows by token hash — using basketId hint`, {
-      basketId: result.basketId,
-      picked: creditsBasket ? "credit_pack" : "subscription",
-    });
-    fromDb = creditsBasket ? creditRow.conversationId : paymentRow.conversationId;
+    console.warn(
+      `${PC_LOG} matched both checkout rows by token hash — using basketId hint`,
+      {
+        basketId: result.basketId,
+        picked: creditsBasket ? "credit_pack" : "subscription",
+      },
+    );
+    fromDb = creditsBasket
+      ? creditRow.conversationId
+      : paymentRow.conversationId;
   }
 
   if (fromDb) {
     if (fromApi && fromApi !== fromDb) {
-      console.warn(`${PC_LOG} conversationId from retrieve differs from DB row for this token — using DB`, {
-        fromApi,
-        fromDb,
-      });
+      console.warn(
+        `${PC_LOG} conversationId from retrieve differs from DB row for this token — using DB`,
+        {
+          fromApi,
+          fromDb,
+        },
+      );
     }
     return fromDb;
   }
@@ -743,7 +839,10 @@ async function resolveConversationIdFromToken(token: string, result: IyzicoRetri
  * iyzico Checkout Form callback — posted `token`, then server calls `checkoutForm.retrieve` (NOT `threedsPayment.create`,
  * which is for direct `/payment/3dsecure/*` APIs). On success we grant credits or extend subscription.
  */
-export async function processPaymentCallback(token: string, opts?: ProcessPaymentCallbackOpts): Promise<string> {
+export async function processPaymentCallback(
+  token: string,
+  opts?: ProcessPaymentCallbackOpts,
+): Promise<string> {
   console.log(`${PC_LOG} start`, {
     tokenPresent: Boolean(token?.trim()),
     tokenLen: token?.trim()?.length ?? 0,
@@ -785,14 +884,23 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
     try {
       result = await promisifyRetrieve(iyzipay, retrieveRequest);
     } catch (e) {
-      console.error(`${PC_LOG} checkoutForm.retrieve threw`, e instanceof Error ? e.message : e);
+      console.error(
+        `${PC_LOG} checkoutForm.retrieve threw`,
+        e instanceof Error ? e.message : e,
+      );
       return paymentWorkspaceRedirectUrl(false);
     }
 
     try {
-      console.log("[DEBUG] Full Iyzico Retrieve Response:", JSON.stringify(result));
+      console.log(
+        "[DEBUG] Full Iyzico Retrieve Response:",
+        JSON.stringify(result),
+      );
     } catch {
-      console.log("[DEBUG] Full Iyzico Retrieve Response: (stringify failed)", result);
+      console.log(
+        "[DEBUG] Full Iyzico Retrieve Response: (stringify failed)",
+        result,
+      );
     }
 
     const extractedConv = extractConversationIdFromRetrieve(result);
@@ -832,13 +940,17 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
     }
 
     if (result.paymentStatus !== "SUCCESS") {
-      console.warn(`${PC_LOG} payment not SUCCESS; paymentStatus=${String(result.paymentStatus)}`);
+      console.warn(
+        `${PC_LOG} payment not SUCCESS; paymentStatus=${String(result.paymentStatus)}`,
+      );
       return paymentWorkspaceRedirectUrl(false);
     }
 
     const conversationId = await resolveConversationIdFromToken(token, result);
     if (!conversationId) {
-      console.warn(`${PC_LOG} missing conversationId on retrieve result (and no DB row matched token hash)`);
+      console.warn(
+        `${PC_LOG} missing conversationId on retrieve result (and no DB row matched token hash)`,
+      );
       return paymentWorkspaceRedirectUrl(false);
     }
     console.log(`${PC_LOG} conversationId resolved for fulfillment`, {
@@ -856,10 +968,15 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         userId: creditPending.userId,
       });
       if (creditPending.status === "completed") {
-        console.log(`${PC_LOG} credit pack already completed — idempotent success`);
+        console.log(
+          `${PC_LOG} credit pack already completed — idempotent success`,
+        );
         return paymentWorkspaceRedirectUrl(true);
       }
-      if (result.paidPrice != null && !eqIyzicoMoney(result.paidPrice, creditPending.finalPriceTry)) {
+      if (
+        result.paidPrice != null &&
+        !eqIyzicoMoney(result.paidPrice, creditPending.finalPriceTry)
+      ) {
         logSuspiciousActivity({
           type: "iyzico_price_mismatch",
           detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
@@ -868,11 +985,23 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         return paymentWorkspaceRedirectUrl(false);
       }
       try {
-        console.log(`${PC_LOG} granting credits`, creditPending.credits, "to user", creditPending.userId);
-        await grantCredits(creditPending.userId, creditPending.credits, "bonus");
+        console.log(
+          `${PC_LOG} granting credits`,
+          creditPending.credits,
+          "to user",
+          creditPending.userId,
+        );
+        await grantCredits(
+          creditPending.userId,
+          creditPending.credits,
+          "bonus",
+        );
         console.log(`${PC_LOG} grantCredits OK`);
       } catch (grantErr) {
-        console.error(`${PC_LOG} grantCredits failed`, grantErr instanceof Error ? grantErr.message : grantErr);
+        console.error(
+          `${PC_LOG} grantCredits failed`,
+          grantErr instanceof Error ? grantErr.message : grantErr,
+        );
         return paymentWorkspaceRedirectUrl(false);
       }
       try {
@@ -901,7 +1030,10 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
         type: "iyzico_unknown_conversation",
         detail: conversationId,
       });
-      console.warn(`${PC_LOG} no paymentCheckout or creditPackCheckout for conversationId`, conversationId);
+      console.warn(
+        `${PC_LOG} no paymentCheckout or creditPackCheckout for conversationId`,
+        conversationId,
+      );
       return paymentWorkspaceRedirectUrl(false);
     }
 
@@ -913,12 +1045,17 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
     });
 
     if (pending.status === "completed") {
-      console.log(`${PC_LOG} subscription checkout already completed — idempotent success`);
+      console.log(
+        `${PC_LOG} subscription checkout already completed — idempotent success`,
+      );
       return paymentWorkspaceRedirectUrl(true);
     }
 
     const expectedPrice = pending.priceTry;
-    if (result.paidPrice != null && !eqIyzicoMoney(result.paidPrice, expectedPrice)) {
+    if (
+      result.paidPrice != null &&
+      !eqIyzicoMoney(result.paidPrice, expectedPrice)
+    ) {
       logSuspiciousActivity({
         type: "iyzico_price_mismatch",
         detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
@@ -960,7 +1097,12 @@ export async function processPaymentCallback(token: string, opts?: ProcessPaymen
     console.log(`${PC_LOG} subscription updated; done`);
     return paymentWorkspaceRedirectUrl(true);
   } catch (unexpected) {
-    console.error(`${PC_LOG} unexpected error`, unexpected instanceof Error ? unexpected.stack ?? unexpected.message : unexpected);
+    console.error(
+      `${PC_LOG} unexpected error`,
+      unexpected instanceof Error
+        ? (unexpected.stack ?? unexpected.message)
+        : unexpected,
+    );
     return paymentWorkspaceRedirectUrl(false);
   }
 }

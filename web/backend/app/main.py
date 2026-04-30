@@ -1,4 +1,4 @@
-"""NB PDF PLARTFORM web API giris noktasi."""
+"""NB PDF PLATFORM web API giris noktasi."""
 
 from __future__ import annotations
 
@@ -38,6 +38,11 @@ from app.api.auth_routes import router as auth_router
 from app.api.routes import router
 from app.api.tool_routes_extra import router as tool_routes_extra
 from app.core.result_store import start_ttl_sweeper
+from app.core.thread_pool import (
+    CpuCapacityTimeout,
+    init_pdf_thread_pool,
+    shutdown_pdf_thread_pool,
+)
 
 # Trial abuse reference routes (disabled by default; see app.auth.registration_workflow_example):
 # from app.auth.registration_workflow_example import example_router
@@ -49,19 +54,41 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def _app_lifespan(app: FastAPI):
-    """TTL sweeper thread; replaces deprecated on_event startup hook."""
+    """PDF CPU havuzu + TTL sweeper; kapanışta executor düzgün durdurulur."""
+    init_pdf_thread_pool()
     start_ttl_sweeper()
     yield
+    shutdown_pdf_thread_pool(wait=True, cancel_futures=False)
 
 
 app = FastAPI(
-    title="NB PDF PLARTFORM Web API",
+    title="NB PDF PLATFORM Web API",
     version="0.1.0",
     description="Masatüstü PDF aracının web arayüzü için API katmanı.",
     lifespan=_app_lifespan,
 )
 
 app.state.limiter = limiter
+
+
+@app.exception_handler(CpuCapacityTimeout)
+async def cpu_capacity_exception_handler(request: Request, exc: CpuCapacityTimeout):
+    logger.warning(
+        "pdf_cpu_capacity_timeout ip=%s path=%s retry_after=%s",
+        rate_limit_key_func(request),
+        request.url.path,
+        exc.retry_after_sec,
+    )
+    ra = str(exc.retry_after_sec)
+    return JSONResponse(
+        status_code=503,
+        headers={"Retry-After": ra},
+        content={
+            "detail": "Sunucu şu an yoğun; lütfen kısa süre sonra yeniden deneyin.",
+            "error": "server_busy",
+            "retry_after_seconds": exc.retry_after_sec,
+        },
+    )
 
 
 @app.exception_handler(RateLimitExceeded)

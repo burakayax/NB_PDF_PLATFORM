@@ -1,4 +1,4 @@
-# Vercel + Express monorepo (NB PDF PLARTFORM)
+# Vercel + Express monorepo (NB PDF PLATFORM)
 
 This repo builds the **static SPA** from `web/frontend`. The **Express API** (`web/api`) is a separate Node.js server—it is **not** automatically packaged as “Vercel Functions” unless you add a dedicated serverless entry (advanced). The practical fix is:
 
@@ -14,12 +14,12 @@ Then either:
 
 ## 1. Vercel project (frontend)
 
-| Dashboard field | Recommended value |
-|-----------------|-------------------|
-| **Root Directory** | `web/frontend` |
-| **Install Command** | default (`npm install` in Root Directory) |
-| **Build Command** | `npm run build` |
-| **Output Directory** | `dist` |
+| Dashboard field      | Recommended value                         |
+| -------------------- | ----------------------------------------- |
+| **Root Directory**   | `web/frontend`                            |
+| **Install Command**  | default (`npm install` in Root Directory) |
+| **Build Command**    | `npm run build`                           |
+| **Output Directory** | `dist`                                    |
 
 ### `web/frontend/vercel.json`
 
@@ -29,10 +29,10 @@ Place this file **`web/frontend/vercel.json`** (not the repo root) when Root Dir
 
 Environment variables (**Production**):
 
-| Variable | Purpose |
-|---------|---------|
+| Variable             | Purpose                                                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `VITE_SAAS_API_BASE` | Leave **empty** if you rewrite `/api` to the backend on Vercel. If backend is another origin and you skip rewrites, set **`https://your-api-origin.com`** (no trailing slash). |
-| `VITE_API_BASE` | Public URL for the **PDF Python/API** tier if deployed separately (see frontend `.env.example`). |
+| `VITE_API_BASE`      | Public URL for the **PDF Python/API** tier if deployed separately (see frontend `.env.example`).                                                                               |
 
 After changing env vars, **redeploy** so Vite picks them up at build time.
 
@@ -44,12 +44,12 @@ Set **`web/api`** env using `web/api/.env.example` as a checklist.
 
 **Critical URLs (must match your real HTTPS URLs):**
 
-| Variable | Typical production meaning |
-|---------|---------------------------|
-| `APP_BASE_URL` | **Public canonical URL hit by Google OAuth redirect.** If you proxy `/api` from Vercel, use **`https://your-vercel-domain.com`** so **`getGoogleRedirectUri()`** resolves to **`https://your-vercel-domain.com/api/auth/google/callback`**. If the API runs on **`https://api.your-domain.com`** only (no proxy), set **`APP_BASE_URL` to that API origin.** |
-| `FRONTEND_ORIGIN` | SPA origin, e.g. **`https://your-vercel-domain.com`** |
-| `OAUTH_FRONTEND_REDIRECT_ORIGIN` | Defaults to **`FRONTEND_ORIGIN`**; set if OAuth return pages live on another host |
-| `TRUST_PROXY` | **`1`** if behind HTTPS reverse proxy |
+| Variable                         | Typical production meaning                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `APP_BASE_URL`                   | **Public canonical URL hit by Google OAuth redirect.** If you proxy `/api` from Vercel, use **`https://your-vercel-domain.com`** so **`getGoogleRedirectUri()`** resolves to **`https://your-vercel-domain.com/api/auth/google/callback`**. If the API runs on **`https://api.your-domain.com`** only (no proxy), set **`APP_BASE_URL` to that API origin.** |
+| `FRONTEND_ORIGIN`                | SPA origin, e.g. **`https://your-vercel-domain.com`**                                                                                                                                                                                                                                                                                                        |
+| `OAUTH_FRONTEND_REDIRECT_ORIGIN` | Defaults to **`FRONTEND_ORIGIN`**; set if OAuth return pages live on another host                                                                                                                                                                                                                                                                            |
+| `TRUST_PROXY`                    | **`1`** if behind HTTPS reverse proxy                                                                                                                                                                                                                                                                                                                        |
 
 **Database:**
 

@@ -12,7 +12,11 @@ type LoginSuccessPageProps = {
 /**
  * Google OAuth callback sonrası: ?token= JWT okunur, localStorage'a yazılır (hook üzerinden), dashboard'a gidilir.
  */
-export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateToDashboard }: LoginSuccessPageProps) {
+export function LoginSuccessPage({
+  completeOAuthLogin,
+  clearSession,
+  onNavigateToDashboard,
+}: LoginSuccessPageProps) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -24,13 +28,17 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
       if (import.meta.env.DEV) {
         console.warn("[LoginSuccessPage] missing ?token= in URL");
       }
-      setErrorMessage("No sign-in token was provided. Please try Google sign-in again.");
+      setErrorMessage(
+        "No sign-in token was provided. Please try Google sign-in again.",
+      );
       setPhase("error");
       return;
     }
 
     if (import.meta.env.DEV) {
-      console.info("[LoginSuccessPage] validating token and persisting session");
+      console.info(
+        "[LoginSuccessPage] validating token and persisting session",
+      );
     }
 
     let cancelled = false;
@@ -41,7 +49,10 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
           return;
         }
         if (import.meta.env.DEV) {
-          console.info("[LoginSuccessPage] session stored in localStorage, redirecting", { userId: user.id });
+          console.info(
+            "[LoginSuccessPage] session stored in localStorage, redirecting",
+            { userId: user.id },
+          );
         }
         setPhase("redirecting");
         onNavigateToDashboard(user);
@@ -52,7 +63,9 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
         }
         console.error("[LoginSuccessPage] token validation failed:", error);
         clearSession();
-        setErrorMessage("Google sign-in failed. The link may have expired or the token is invalid.");
+        setErrorMessage(
+          "Google sign-in failed. The link may have expired or the token is invalid.",
+        );
         setPhase("error");
       });
 
@@ -66,12 +79,18 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
       <div className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-nb-panel/80 p-8 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
         {phase === "loading" || phase === "redirecting" ? (
           <>
-            <div className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-nb-accent">NB PDF PLARTFORM</div>
+            <div className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-nb-accent">
+              NB PDF PLATFORM
+            </div>
             <h1 className="text-xl font-semibold text-nb-text">
-              {phase === "redirecting" ? "Opening workspace…" : "Signing you in…"}
+              {phase === "redirecting"
+                ? "Opening workspace…"
+                : "Signing you in…"}
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-nb-muted">
-              {phase === "redirecting" ? "Redirecting to your dashboard." : "Verifying your account and saving your session."}
+              {phase === "redirecting"
+                ? "Redirecting to your dashboard."
+                : "Verifying your account and saving your session."}
             </p>
             <div className="mt-6 flex items-center gap-3">
               <span
@@ -83,9 +102,15 @@ export function LoginSuccessPage({ completeOAuthLogin, clearSession, onNavigateT
           </>
         ) : (
           <>
-            <div className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-rose-300">Error</div>
-            <h1 className="text-xl font-semibold text-nb-text">Sign-in could not complete</h1>
-            <p className="mt-3 text-sm leading-relaxed text-nb-muted">{errorMessage}</p>
+            <div className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-rose-300">
+              Error
+            </div>
+            <h1 className="text-xl font-semibold text-nb-text">
+              Sign-in could not complete
+            </h1>
+            <p className="mt-3 text-sm leading-relaxed text-nb-muted">
+              {errorMessage}
+            </p>
             <a
               href="/login"
               className="mt-8 inline-flex items-center justify-center rounded-xl border border-white/[0.1] bg-nb-panel px-4 py-3 text-sm font-semibold text-nb-text transition duration-200 hover:border-nb-primary/35 hover:bg-nb-bg-elevated"

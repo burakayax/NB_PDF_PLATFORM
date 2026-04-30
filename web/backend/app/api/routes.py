@@ -16,7 +16,6 @@ from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
-
 from app.api.pdf_auth import extract_bearer_header_only, extract_pdf_access_token
 from app.core.operations import (
     build_pdf_download_headers,
@@ -60,6 +59,20 @@ from app.limiter import limiter
 
 logger = logging.getLogger(__name__)
 
+
+def _result_payload_looks_like_pdf(mime: str, filename: str, payload_path: Path) -> bool:
+    """Meta bazen yanlış mime ile yazılır; dosya adı veya %PDF imzası ile doğrula."""
+    if "pdf" in (mime or "").lower():
+        return True
+    if (filename or "").lower().strip().endswith(".pdf"):
+        return True
+    try:
+        with payload_path.open("rb") as fh:
+            return fh.read(5).startswith(b"%PDF-")
+    except OSError:
+        return False
+
+
 router = APIRouter(prefix="/api", tags=["nb-pdf-TOOLS"])
 engine = get_engine()
 
@@ -67,7 +80,6 @@ engine = get_engine()
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
-
 
 def _saas_gating_from_check(d: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -128,8 +140,7 @@ async def merge_pdfs(
     if len(files) < 2:
         raise HTTPException(status_code=400, detail="Birleştirme için en az iki PDF seçin.")
 
-    # Merge: pre-check is advisory (preview / job start is always allowed);
-    # credits are charged on GET /jobs/{id}/download when the file is taken.
+    # Merge: kota düşümü indirme GET üzerinden ``entitlement_consume`` ile yapılır.
     decision = await entitlement_check(token, "merge")
 
     workdir = create_workdir()
@@ -200,6 +211,7 @@ async def download_job_output(
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
 ):
+    """Akış başlamadan atomik ``entitlement_consume`` — istemci POST’suna güvenilmez."""
     cons = await entitlement_consume(token, "merge")
     if cons.get("status") != "ok":
         return JSONResponse(
@@ -213,6 +225,40 @@ async def download_job_output(
         filename=output_name,
         media_type="application/pdf",
         headers=build_pdf_download_headers(saas_gating=_saas_gating_from_consume(cons)) or None,
+    )
+
+
+@router.get("/jobs/{job_id}/preview/hero")
+@limiter.exempt
+async def preview_merge_job_hero(
+    job_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
+    await saas_session_ok(token)
+    output_path, _output_name, _workdir = get_job_download(job_id)
+    pdf_bytes = await run_cpu_bound(Path(output_path).read_bytes)
+    png = await generate_hero_watermarked_preview_png_queued(pdf_bytes)
+    if not png:
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
+    return Response(content=png, media_type="image/png")
+
+
+@router.get("/jobs/{job_id}/preview/pdf")
+@limiter.exempt
+async def preview_merge_job_pdf(
+    job_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Tam PDF önizlemesi (inline); kota düşmez — düşüm onaylı indirmede."""
+    await saas_session_ok(token)
+    output_path, output_name, _workdir = get_job_download(job_id)
+    disp_headers = {"Content-Disposition": f'inline; filename="{output_name}"'}
+    return FileResponse(
+        path=str(output_path),
+        filename=output_name,
+        media_type="application/pdf",
+        headers=disp_headers,
     )
 
 
@@ -746,15 +792,39 @@ async def preview_result_hero(
     return Response(content=png, media_type="image/png")
 
 
+@router.get("/pdf/result/{result_id}/preview/pdf")
+@limiter.exempt
+async def preview_result_pdf(
+    result_id: str,
+    token: Annotated[str, Depends(extract_bearer_header_only)],
+):
+    """Sahibine özel tam PDF önizlemesi (inline). Kota düşmez; sonucu silmez."""
+    await saas_session_ok(token)
+    user_id = await saas_current_user_id(token)
+    meta = read_meta_only(result_id)
+    if str(meta.get("user_id")) != str(user_id):
+        raise HTTPException(status_code=403, detail="Forbidden")
+    mime_meta = str(meta.get("mime") or "").lower().strip()
+    read = get_result(result_id, user_id)
+    if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
+        raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
+    disp = {"Content-Disposition": f'inline; filename="{read.filename}"'}
+    return FileResponse(
+        path=str(read.payload_path),
+        filename=read.filename,
+        media_type=read.mime or "application/pdf",
+        headers=disp,
+    )
+
+
 @router.get("/pdf/result/{result_id}/download")
 async def download_result(
     result_id: str,
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
 ):
-    """Stream the file after a successful ``entitlement_consume(tool)`` where
-    ``tool`` is stored in result meta (e.g. ``compress``, ``split``). 402 on
-    insufficient_credits. Deletes the result after 200 (best-effort)."""
+    """``entitlement_consume`` ile kota düşümü; ardından dosya akışı. Sonuç silinir."""
+
     user_id = await saas_current_user_id(token)
     meta = read_meta_only(result_id)
     if meta.get("user_id") != user_id:

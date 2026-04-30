@@ -387,8 +387,8 @@ export function ws(lang: Language) {
       : "Download failed",
     toolRunCancel: tr ? "İptal" : "Cancel",
     toolRunCancelledInfo: tr
-      ? "İşlem iptal edildi veya sunucu isteği kesti."
-      : "The operation was cancelled or aborted.",
+      ? "İşlem iptal edildi."
+      : "The operation was cancelled.",
     mergeJobSessionLostTitle: tr
       ? "Birleştirme oturumu bulunamadı"
       : "Merge session not found",

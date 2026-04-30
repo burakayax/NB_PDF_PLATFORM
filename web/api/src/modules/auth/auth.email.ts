@@ -25,11 +25,11 @@ export function createVerificationEmailTemplate({
   const html = renderBrandedVerificationEmailHtml(verificationUrl);
 
   const text = [
-    "Email Doğrulama — NB PDF PLARTFORM",
+    "Email Doğrulama — NB PDF PLATFORM",
     "",
     "Email Adresinizi Doğrulayın",
     "",
-    "NB PDF PLARTFORM hesabınızı aktifleştirmek için aşağıdaki bağlantıyı tarayıcıda açın:",
+    "NB PDF PLATFORM hesabınızı aktifleştirmek için aşağıdaki bağlantıyı tarayıcıda açın:",
     "",
     verificationUrl,
     "",
@@ -101,10 +101,15 @@ type PasswordResetCodeEmailInput = {
   lang: "tr" | "en";
 };
 
-export function createPasswordResetCodeEmailTemplate({ code, lang }: PasswordResetCodeEmailInput) {
+export function createPasswordResetCodeEmailTemplate({
+  code,
+  lang,
+}: PasswordResetCodeEmailInput) {
   const safeCode = escapeHtml(code);
   const subject =
-    lang === "tr" ? "NB PDF PLARTFORM — Şifre sıfırlama kodunuz" : "NB PDF PLARTFORM — Your password reset code";
+    lang === "tr"
+      ? "NB PDF PLATFORM — Şifre sıfırlama kodunuz"
+      : "NB PDF PLATFORM — Your password reset code";
 
   const title = lang === "tr" ? "Şifre sıfırlama kodu" : "Password reset code";
   const intro =
@@ -128,14 +133,14 @@ export function createPasswordResetCodeEmailTemplate({ code, lang }: PasswordRes
         ${lang === "tr" ? "Bu kod 15 dakika geçerlidir. İsteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz." : "This code expires in 15 minutes. If you did not request a reset, you can ignore this email."}
       </p>
     `,
-    footerText: "NB PDF PLARTFORM — NB Global Studio",
-    productName: "NB PDF PLARTFORM",
+    footerText: "NB PDF PLATFORM — NB Global Studio",
+    productName: "NB PDF PLATFORM",
   });
 
   const text =
     lang === "tr"
       ? [
-          "NB PDF PLARTFORM — Şifre sıfırlama",
+          "NB PDF PLATFORM — Şifre sıfırlama",
           "",
           `Kodunuz: ${code}`,
           "",
@@ -143,7 +148,7 @@ export function createPasswordResetCodeEmailTemplate({ code, lang }: PasswordRes
           "İsteği siz yapmadıysanız bu e-postayı yok sayın.",
         ].join("\n")
       : [
-          "NB PDF PLARTFORM — Password reset",
+          "NB PDF PLATFORM — Password reset",
           "",
           `Your code: ${code}`,
           "",

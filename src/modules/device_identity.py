@@ -29,14 +29,14 @@ def _legacy_machine_bound_id() -> str:
 
 def _identity_path() -> Path:
     root = Path(os.environ.get("APPDATA") or Path.home())
-    d = root / "NB PDF PLARTFORM"
+    d = root / "NB PDF PLATFORM"
     d.mkdir(parents=True, exist_ok=True)
     return d / "device_identity.key"
 
 
 def get_device_id() -> str:
     """
-    Returns a stable id stored under %APPDATA%\\NB PDF PLARTFORM\\device_identity.key.
+    Returns a stable id stored under %APPDATA%\\NB PDF PLATFORM\\device_identity.key.
 
     Default first write uses the legacy machine-bound hash so existing server-side device rows
     remain valid. Set NB_PDF_DEVICE_LEGACY=0 for a new cryptographically random id per install.

@@ -1,0 +1,4 @@
+# Opsiyonel: harici worker kuyruğu (Redis + arq). Şu an PDF API senkron endpoint’lerle çalışır;
+# kuyruğa taşımak için route’ların işi enqueue edip job_id ile poll etmesi gerekir — bu dosya yalnızca paket hazırlığıdır.
+arq>=0.26
+redis[hiredis]>=5

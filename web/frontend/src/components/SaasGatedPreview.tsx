@@ -48,8 +48,8 @@ export type SaasGatedPreviewProps = {
 };
 
 const THUMB_STYLE: CSSProperties = {
-  width: 72,
-  height: 96,
+  width: 88,
+  height: 112,
   objectFit: "cover",
   borderRadius: 6,
   border: "1px solid rgba(148,163,184,0.25)",
@@ -58,8 +58,8 @@ const THUMB_STYLE: CSSProperties = {
 };
 
 const PLACEHOLDER_STYLE: CSSProperties = {
-  width: 72,
-  height: 96,
+  width: 88,
+  height: 112,
   borderRadius: 6,
   border: "1px solid rgba(148,163,184,0.25)",
   display: "flex",
