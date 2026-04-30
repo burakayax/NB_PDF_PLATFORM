@@ -50,6 +50,14 @@ const noReload =
   process.env.PDF_API_NO_RELOAD === "1" ||
   process.env.PDF_API_NO_RELOAD === "true";
 const port = (process.env.PDF_API_PORT || "8000").trim() || "8000";
+const workersRaw = (process.env.PDF_UVICORN_WORKERS || "1").trim();
+let uvicornWorkers = parseInt(workersRaw, 10);
+if (!Number.isFinite(uvicornWorkers) || uvicornWorkers < 1) {
+  uvicornWorkers = 1;
+}
+if (uvicornWorkers > 64) {
+  uvicornWorkers = 64;
+}
 const args = [
   "-m",
   "uvicorn",
@@ -65,8 +73,16 @@ const keepAlive = (process.env.PDF_UVICORN_TIMEOUT_KEEP_ALIVE || "300").trim();
 if (keepAlive && keepAlive !== "0") {
   args.push("--timeout-keep-alive", keepAlive);
 }
-if (!prod && !noReload) {
+if (uvicornWorkers > 1) {
+  args.push("--workers", String(uvicornWorkers));
+}
+const useReload = !prod && !noReload && uvicornWorkers === 1;
+if (useReload) {
   args.push("--reload");
+} else if (!prod && !noReload && uvicornWorkers > 1) {
+  console.warn(
+    "[run-pdf-api] PDF_UVICORN_WORKERS>1 iken --reload kullanılamaz; tek işlemci geliştirme için PDF_UVICORN_WORKERS=1 bırakın.",
+  );
 }
 
 console.log(`[run-pdf-api] ${python}`);

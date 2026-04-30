@@ -24,7 +24,7 @@ _BLUR_RADIUS_PX = 6
 _WATERMARK_TEXT = "PREVIEW"
 _HERO_TARGET_WIDTH_PX = 1400
 _HERO_RENDER_DPI = 200
-_HERO_WATERMARK = "NB PDF PLARTFORM · ÖNİZLEME"
+_HERO_WATERMARK = "NB GLOBAL STUDIO"
 
 
 def _blurred_png_bytes_from_fitz_doc(doc: object) -> Optional[bytes]:

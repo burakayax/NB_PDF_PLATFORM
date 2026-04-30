@@ -115,7 +115,11 @@ export function AuthPage({
     }
     if (changed) {
       const qs = url.searchParams.toString();
-      window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`);
+      window.history.replaceState(
+        {},
+        "",
+        `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`,
+      );
     }
   }, []);
 
@@ -124,23 +128,35 @@ export function AuthPage({
 
     if (mode === "register") {
       if (!firstName.trim()) {
-        setLocalError(language === "tr" ? "Ad gereklidir." : "First name is required.");
+        setLocalError(
+          language === "tr" ? "Ad gereklidir." : "First name is required.",
+        );
         return;
       }
       if (!lastName.trim()) {
-        setLocalError(language === "tr" ? "Soyad gereklidir." : "Last name is required.");
+        setLocalError(
+          language === "tr" ? "Soyad gereklidir." : "Last name is required.",
+        );
         return;
       }
     }
 
     if (!email.trim()) {
-      setLocalError(language === "tr" ? "E-posta adresi gereklidir." : "Email address is required.");
+      setLocalError(
+        language === "tr"
+          ? "E-posta adresi gereklidir."
+          : "Email address is required.",
+      );
       return;
     }
 
     if (mode === "register") {
       if (registerPhone.trim() && !isValidPhoneNumber(registerPhone.trim())) {
-        setLocalError(language === "tr" ? "Geçerli bir cep telefonu girin veya alanı boş bırakın." : "Enter a valid mobile number or leave the field empty.");
+        setLocalError(
+          language === "tr"
+            ? "Geçerli bir cep telefonu girin veya alanı boş bırakın."
+            : "Enter a valid mobile number or leave the field empty.",
+        );
         return;
       }
       const policy = validateNewPasswordPolicy(password);
@@ -153,7 +169,11 @@ export function AuthPage({
         return;
       }
     } else if (password.length < 8) {
-      setLocalError(language === "tr" ? "Şifre en az 8 karakter olmalıdır." : "Password must be at least 8 characters.");
+      setLocalError(
+        language === "tr"
+          ? "Şifre en az 8 karakter olmalıdır."
+          : "Password must be at least 8 characters.",
+      );
       return;
     }
 
@@ -196,16 +216,22 @@ export function AuthPage({
           onClick={onBack}
           className="group mb-10 inline-flex min-h-11 w-fit items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 text-sm font-semibold text-nb-text shadow-sm transition duration-200 ease-out hover:border-nb-primary/30 hover:bg-white/[0.08] hover:text-white"
         >
-          <span className="mr-1 transition group-hover:-translate-x-0.5">↩️</span>
+          <span className="mr-1 transition group-hover:-translate-x-0.5">
+            ↩️
+          </span>
           {copy.shared.backToLanding}
         </button>
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">NB PDF PLARTFORM</p>
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">
+            NB PDF PLATFORM
+          </p>
           {adminPortal ? (
             <>
               <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
-                {language === "tr" ? "Yönetici girişi" : "Administrator sign-in"}
+                {language === "tr"
+                  ? "Yönetici girişi"
+                  : "Administrator sign-in"}
               </h1>
               <p className="mx-auto mt-3 max-w-[380px] text-center text-sm leading-relaxed text-nb-muted">
                 {language === "tr"
@@ -215,8 +241,12 @@ export function AuthPage({
             </>
           ) : (
             <>
-              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">{copy.screen.title}</h1>
-              <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">{copy.screen.description}</p>
+              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
+                {copy.screen.title}
+              </h1>
+              <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">
+                {copy.screen.description}
+              </p>
             </>
           )}
 
@@ -224,7 +254,10 @@ export function AuthPage({
             href={getGoogleOAuthStartUrl(language)}
             onClick={() => {
               if (adminPortal) {
-                sessionStorage.setItem(SESSION_POST_OAUTH_REDIRECT_KEY, SESSION_POST_OAUTH_ADMIN_VALUE);
+                sessionStorage.setItem(
+                  SESSION_POST_OAUTH_REDIRECT_KEY,
+                  SESSION_POST_OAUTH_ADMIN_VALUE,
+                );
               }
             }}
             className="mt-8 flex min-h-[3.25rem] w-full items-center justify-center gap-3 rounded-xl border border-white/[0.12] bg-white/[0.06] px-4 text-base font-semibold text-white shadow-sm transition duration-200 hover:border-white/20 hover:bg-white/[0.09]"
@@ -234,45 +267,54 @@ export function AuthPage({
           </a>
 
           <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div
+              className="absolute inset-0 flex items-center"
+              aria-hidden="true"
+            >
               <div className="w-full border-t border-white/[0.08]" />
             </div>
             <div className="relative flex justify-center text-xs font-medium uppercase tracking-wider">
-              <span className="rounded-md bg-nb-bg-soft/95 px-3 py-0.5 text-nb-muted">{copy.shared.orContinueEmail}</span>
+              <span className="rounded-md bg-nb-bg-soft/95 px-3 py-0.5 text-nb-muted">
+                {copy.shared.orContinueEmail}
+              </span>
             </div>
           </div>
 
           {adminPortal ? null : (
-          <div className="flex rounded-xl border border-white/[0.08] bg-nb-bg-soft/50 p-1">
-            <button
-              type="button"
-              onClick={() => onModeChange("login")}
-              className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition duration-200 ease-out ${
-                mode === "login"
-                  ? "bg-gradient-to-b from-nb-primary-mid to-nb-primary text-slate-950 shadow-[0_8px_24px_-6px_rgba(34,211,238,0.45)]"
-                  : "text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-              }`}
-            >
-              {getAuthCopy(language, "login").screen.submit}
-            </button>
-            <button
-              type="button"
-              onClick={() => onModeChange("register")}
-              className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition duration-200 ease-out ${
-                mode === "register"
-                  ? "bg-gradient-to-b from-nb-primary-mid to-nb-primary text-slate-950 shadow-[0_8px_24px_-6px_rgba(34,211,238,0.45)]"
-                  : "text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-              }`}
-            >
-              {getAuthCopy(language, "register").screen.submit}
-            </button>
-          </div>
+            <div className="flex rounded-xl border border-white/[0.08] bg-nb-bg-soft/50 p-1">
+              <button
+                type="button"
+                onClick={() => onModeChange("login")}
+                className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition duration-200 ease-out ${
+                  mode === "login"
+                    ? "bg-gradient-to-b from-nb-primary-mid to-nb-primary text-slate-950 shadow-[0_8px_24px_-6px_rgba(34,211,238,0.45)]"
+                    : "text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+                }`}
+              >
+                {getAuthCopy(language, "login").screen.submit}
+              </button>
+              <button
+                type="button"
+                onClick={() => onModeChange("register")}
+                className={`flex-1 rounded-lg px-4 py-3 text-sm font-semibold transition duration-200 ease-out ${
+                  mode === "register"
+                    ? "bg-gradient-to-b from-nb-primary-mid to-nb-primary text-slate-950 shadow-[0_8px_24px_-6px_rgba(34,211,238,0.45)]"
+                    : "text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+                }`}
+              >
+                {getAuthCopy(language, "register").screen.submit}
+              </button>
+            </div>
           )}
 
           {mode === "login" && urlEmailVerifiedNotice ? (
             <div className="mt-6 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.12] px-4 py-3 text-sm text-emerald-50">
               <p>
-                <span className="font-semibold">{language === "tr" ? "E-posta doğrulandı. " : "Email verified. "}</span>
+                <span className="font-semibold">
+                  {language === "tr"
+                    ? "E-posta doğrulandı. "
+                    : "Email verified. "}
+                </span>
                 {language === "tr"
                   ? "Artık e-posta adresiniz ve şifrenizle giriş yapabilirsiniz."
                   : "You can now sign in with your email and password."}
@@ -285,7 +327,9 @@ export function AuthPage({
               <div className="flex items-start justify-between gap-3">
                 <p>
                   <span className="font-semibold">
-                    {language === "tr" ? "Kayıt işlemi tamamlandı ✅ " : "Registration successful ✅” "}
+                    {language === "tr"
+                      ? "Kayıt işlemi tamamlandı ✅ "
+                      : "Registration successful ✅” "}
                   </span>
                   {registrationSuccessBanner}
                 </p>
@@ -304,7 +348,8 @@ export function AuthPage({
 
           {activeError ? (
             <div className="mt-6 rounded-xl border border-rose-500/20 bg-rose-500/[0.08] px-4 py-3 text-sm text-rose-100">
-              <span className="font-semibold">{copy.shared.errorPrefix}</span> {activeError}
+              <span className="font-semibold">{copy.shared.errorPrefix}</span>{" "}
+              {activeError}
             </div>
           ) : null}
 
@@ -312,7 +357,9 @@ export function AuthPage({
             {mode === "register" ? (
               <div className="grid gap-5 sm:grid-cols-2">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">{copy.shared.firstNameLabel}</span>
+                  <span className="mb-2 block text-sm font-medium text-nb-muted">
+                    {copy.shared.firstNameLabel}
+                  </span>
                   <input
                     type="text"
                     name="given-name"
@@ -324,7 +371,9 @@ export function AuthPage({
                   />
                 </label>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">{copy.shared.lastNameLabel}</span>
+                  <span className="mb-2 block text-sm font-medium text-nb-muted">
+                    {copy.shared.lastNameLabel}
+                  </span>
                   <input
                     type="text"
                     name="family-name"
@@ -344,7 +393,11 @@ export function AuthPage({
                   <span className="mb-2 block text-sm font-medium text-nb-muted">
                     {language === "tr" ? "Cep telefonu" : "Mobile phone"}{" "}
                     <span className="font-normal opacity-75">
-                      ({language === "tr" ? "isteğe bağlı, +90" : "optional, +90"})
+                      (
+                      {language === "tr"
+                        ? "isteğe bağlı, +90"
+                        : "optional, +90"}
+                      )
                     </span>
                   </span>
                   <NbPhoneInput
@@ -357,7 +410,9 @@ export function AuthPage({
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-nb-muted">
                     {language === "tr" ? "Şehir" : "City"}{" "}
-                    <span className="font-normal opacity-75">({language === "tr" ? "isteğe bağlı" : "optional"})</span>
+                    <span className="font-normal opacity-75">
+                      ({language === "tr" ? "isteğe bağlı" : "optional"})
+                    </span>
                   </span>
                   <select
                     value={registerCity}
@@ -365,7 +420,9 @@ export function AuthPage({
                     className={inputClassName}
                     disabled={submitting}
                   >
-                    <option value="">{language === "tr" ? "— seçin —" : "— choose —"}</option>
+                    <option value="">
+                      {language === "tr" ? "— seçin —" : "— choose —"}
+                    </option>
                     {TURKISH_PROVINCES.map((c) => (
                       <option key={c} value={c}>
                         {c}
@@ -377,7 +434,9 @@ export function AuthPage({
             ) : null}
 
             <label className="block">
-              <span className="mb-2 block text-sm font-medium text-nb-muted">{copy.shared.emailLabel}</span>
+              <span className="mb-2 block text-sm font-medium text-nb-muted">
+                {copy.shared.emailLabel}
+              </span>
               <input
                 type="email"
                 autoComplete="email"
@@ -390,7 +449,9 @@ export function AuthPage({
 
             <label className="block">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="block text-sm font-medium text-nb-muted">{copy.shared.passwordLabel}</span>
+                <span className="block text-sm font-medium text-nb-muted">
+                  {copy.shared.passwordLabel}
+                </span>
                 {mode === "login" && onForgotPassword ? (
                   <button
                     type="button"
@@ -403,7 +464,9 @@ export function AuthPage({
               </div>
               <input
                 type="password"
-                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                autoComplete={
+                  mode === "login" ? "current-password" : "new-password"
+                }
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className={inputClassName}
@@ -422,10 +485,14 @@ export function AuthPage({
                     className="h-[1.125rem] w-[1.125rem] shrink-0 animate-spin rounded-full border-2 border-white/25 border-t-white"
                     aria-hidden
                   />
-                  <span>{language === "tr" ? "Yükleniyor..." : "Loading..."}</span>
+                  <span>
+                    {language === "tr" ? "Yükleniyor..." : "Loading..."}
+                  </span>
                 </>
               ) : submitting ? (
-                <span>{language === "tr" ? "İşleniyor..." : "Processing..."}</span>
+                <span>
+                  {language === "tr" ? "İşleniyor..." : "Processing..."}
+                </span>
               ) : (
                 copy.screen.submit
               )}
@@ -433,36 +500,55 @@ export function AuthPage({
           </form>
 
           {!adminPortal ? (
-          <p className="mt-8 text-center text-sm text-nb-muted">
-            {copy.screen.alternatePrompt}{" "}
-            <button
-              type="button"
-              onClick={() => onModeChange(mode === "login" ? "register" : "login")}
-              className="font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
-            >
-              {copy.screen.alternateAction}
-            </button>
-          </p>
+            <p className="mt-8 text-center text-sm text-nb-muted">
+              {copy.screen.alternatePrompt}{" "}
+              <button
+                type="button"
+                onClick={() =>
+                  onModeChange(mode === "login" ? "register" : "login")
+                }
+                className="font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
+              >
+                {copy.screen.alternateAction}
+              </button>
+            </p>
           ) : null}
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/[0.06] pt-8 text-sm text-nb-muted">
-            <button type="button" onClick={onOpenTerms} className="transition duration-200 hover:text-nb-text">
+            <button
+              type="button"
+              onClick={onOpenTerms}
+              className="transition duration-200 hover:text-nb-text"
+            >
               {language === "tr" ? "Hizmet Şartları" : "Terms of Service"}
             </button>
-            <button type="button" onClick={onOpenPrivacy} className="transition duration-200 hover:text-nb-text">
+            <button
+              type="button"
+              onClick={onOpenPrivacy}
+              className="transition duration-200 hover:text-nb-text"
+            >
               {language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"}
             </button>
-            <button type="button" onClick={onOpenKvkk} className="transition duration-200 hover:text-nb-text">
+            <button
+              type="button"
+              onClick={onOpenKvkk}
+              className="transition duration-200 hover:text-nb-text"
+            >
               {language === "tr" ? "KVKK aydınlatma" : "KVKK disclosure"}
             </button>
           </div>
         </div>
 
         <div className="mx-auto mt-12 max-w-md px-1">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-nb-muted">{copy.shared.trustTitle}</p>
+          <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-nb-muted">
+            {copy.shared.trustTitle}
+          </p>
           <ul className="mt-5 space-y-3">
             {copy.shared.trustPoints.map((point) => (
-              <li key={point} className="flex items-start gap-3 text-sm leading-relaxed text-nb-muted">
+              <li
+                key={point}
+                className="flex items-start gap-3 text-sm leading-relaxed text-nb-muted"
+              >
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400/90" />
                 <span>{point}</span>
               </li>

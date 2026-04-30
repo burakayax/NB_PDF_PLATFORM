@@ -18,12 +18,10 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-/** Zoom %25 = küçük galeri (dar min hücre → çok sütun), %100 = büyük detay (geniş min hücre → az sütun). */
+/** Sabit 10 sütun — satır başına 10 sayfa kutusu. Yakınlaştırma raster çözünürlüğünü değiştirir. */
+const FIXED_GRID_COLS = 10;
 const ZOOM_SLIDER_MIN = 25;
 const ZOOM_SLIDER_MAX = 100;
-/** Hedef minimum kart genişliği (px); auto-fill ile sütun sayısı buna göre belirlenir. */
-const GRID_CELL_MIN_AT_SMALL = 96;
-const GRID_CELL_MIN_AT_LARGE = 188;
 /** Tailwind gap-6 / satır arası ~gap-7 — rubber-band için nötr alan */
 const GAP_PX = 24;
 const ROW_GAP_PX = 28;
@@ -34,26 +32,92 @@ const RENDER_OVERSAMPLE = 1.35;
 /** Sayfa Sil: daha küçük raster — büyük dosyada ana iş parçacığı ve bellek daha az yüklenir. */
 const RENDER_OVERSAMPLE_DELETE = 1.14;
 /** Tek thumb için uzun kenar üst sınırı (px); uç PDF boyutlarında canvas şişmesini keser. */
-const MAX_THUMB_CANVAS_EDGE_PX = 2048;
+const MAX_THUMB_CANVAS_EDGE_PX = 1760;
 /** Kaydırıcı viewport minimum yüksekliği (px); modal içinde kaydırılabilir alanın sıfır görünmesini azaltır. */
 const GRID_SCROLL_MIN_VIEWPORT_PX = 520;
 type RasterThumbCancel =
   | { mode: "batch"; job: number }
   | { mode: "thumb"; epoch: number };
 
+/** Küçük resim LRU üst sınırı (sayfa başına ~1 görsel); aşılınca en eski anahtar düşer. */
+const THUMB_LRU_MAX_ENTRIES = Math.min(
+  1000,
+  Math.max(
+    500,
+    Number.parseInt(String(import.meta.env.VITE_THUMB_LRU_MAX ?? ""), 10) || 750,
+  ),
+);
+
 /** Aynı oturumda PDF raster’ı bellekte tutar; dosya değişince oturum anahtarı yenilenir. */
 type PersistentThumbEntry = { dataUrl: string; cssW: number };
-const persistentThumbByKey = new Map<string, PersistentThumbEntry>();
 
 function thumbCacheKey(sessionId: string, page1: number): string {
   return `${sessionId}::p${page1}`;
 }
 
-function purgeThumbSession(sessionId: string): void {
-  const prefix = `${sessionId}::`;
-  for (const k of persistentThumbByKey.keys()) {
-    if (k.startsWith(prefix)) {
-      persistentThumbByKey.delete(k);
+/**
+ * insertion-order Map = LRU kuyruğu: baş = en eski. peek sırayı bozmaz; touch/getPromote MRU yapar.
+ */
+class ThumbLruCache {
+  private readonly maxEntries: number;
+  private readonly map = new Map<string, PersistentThumbEntry>();
+  private readonly onEvict: (key: string, entry: PersistentThumbEntry) => void;
+
+  constructor(maxEntries: number, onEvict: (key: string, entry: PersistentThumbEntry) => void) {
+    this.maxEntries = maxEntries;
+    this.onEvict = onEvict;
+  }
+
+  peek(key: string): PersistentThumbEntry | undefined {
+    return this.map.get(key);
+  }
+
+  touch(key: string): void {
+    const v = this.map.get(key);
+    if (v === undefined) {
+      return;
+    }
+    this.map.delete(key);
+    this.map.set(key, v);
+  }
+
+  has(key: string): boolean {
+    return this.map.has(key);
+  }
+
+  set(key: string, entry: PersistentThumbEntry): void {
+    if (this.map.has(key)) {
+      this.map.delete(key);
+    }
+    this.map.set(key, entry);
+    while (this.map.size > this.maxEntries) {
+      const oldestKey = this.map.keys().next().value;
+      if (oldestKey === undefined) {
+        break;
+      }
+      const victim = this.map.get(oldestKey);
+      if (victim === undefined) {
+        break;
+      }
+      this.map.delete(oldestKey);
+      this.onEvict(oldestKey, victim);
+    }
+  }
+
+  delete(key: string): void {
+    this.map.delete(key);
+  }
+
+  purgeSessionPrefix(sessionId: string): void {
+    const prefix = `${sessionId}::`;
+    const toRemove: string[] = [];
+    for (const k of this.map.keys()) {
+      if (k.startsWith(prefix)) {
+        toRemove.push(k);
+      }
+    }
+    for (const k of toRemove) {
+      this.map.delete(k);
     }
   }
 }
@@ -65,8 +129,8 @@ const THUMB_UPGRADE_MIN_RATIO = 1.42;
 /** Raster veya <img> hatası sonrası yeniden deneme aralığı */
 const THUMB_RETRY_DELAY_MS = 2000;
 const THUMB_RETRY_MAX_ATTEMPTS = 40;
-/** pdf.js raster eşzamanlılığı — DOM’daki her hücre mount olunca yüzlerce iş tetiklenmesini keser. */
-const THUMB_MAX_PARALLEL = 3;
+/** pdf.js raster eşzamanlılığı — çok düşük olunca küçük resimler sırayla gelir; orta değer ana iş parçacığını korur. */
+const THUMB_MAX_PARALLEL = 6;
 
 export type PdfPageVisualMode = "split" | "delete" | "rotate" | "organize";
 
@@ -132,16 +196,20 @@ function isTypingTarget(target: EventTarget | null): boolean {
  */
 function PageThumbMountTrigger({
   pageIndex,
-  cellWidth,
+  rasterCssW,
   requestThumb,
+  onCellMounted,
 }: {
   pageIndex: number;
-  cellWidth: number;
+  rasterCssW: number;
   requestThumb: (page: number, cssW: number, opts?: { force?: boolean }) => void;
+  /** Görünür hücre LRU’da MRU yapılır (scroll geri gelince önbellek korunur). */
+  onCellMounted?: (page1: number) => void;
 }) {
   useEffect(() => {
-    requestThumb(pageIndex, cellWidth);
-  }, [pageIndex, cellWidth, requestThumb]);
+    onCellMounted?.(pageIndex);
+    requestThumb(pageIndex, rasterCssW);
+  }, [pageIndex, rasterCssW, requestThumb, onCellMounted]);
   return null;
 }
 
@@ -167,7 +235,7 @@ function PdfPageCardImage({
         alt=""
         loading="eager"
         decoding="async"
-        className={`h-full w-full object-contain object-top transition-[filter] duration-150 ${lowResPlaceholder ? "blur-[0.6px]" : ""}`}
+        className={`h-full w-full object-contain object-top transition-[filter] duration-150 ${lowResPlaceholder ? "blur-[0.35px]" : ""}`}
         style={{ transform: rot ? `rotate(${rot}deg)` : undefined }}
         onError={() => onImageFailed(page1)}
       />
@@ -210,6 +278,33 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const [numPages, setNumPages] = useState(0);
     const [thumbs, setThumbs] = useState<(string | null)[]>([]);
     const thumbsRef = useRef<(string | null)[]>([]);
+    const thumbLruEvictRef = useRef<(key: string, _entry: PersistentThumbEntry) => void>(() => {});
+    const thumbLruRef = useRef<ThumbLruCache | null>(null);
+    if (thumbLruRef.current === null) {
+      thumbLruRef.current = new ThumbLruCache(THUMB_LRU_MAX_ENTRIES, (key, entry) => {
+        thumbLruEvictRef.current(key, entry);
+      });
+    }
+    const thumbLru = thumbLruRef.current;
+
+    useLayoutEffect(() => {
+      thumbLruEvictRef.current = (evictedKey) => {
+        const m = evictedKey.match(/::p(\d+)$/);
+        if (!m?.[1]) {
+          return;
+        }
+        const page1 = Number.parseInt(m[1], 10);
+        const idx = page1 - 1;
+        const arr = thumbsRef.current;
+        if (idx >= 0 && idx < arr.length && arr[idx] != null) {
+          arr[idx] = null;
+          setThumbs([...arr]);
+        }
+      };
+    });
+
+    /** PDF oturumu + React liste anahtarı (dosya değişince kart state karışmasın). */
+    const [thumbSessionTag, setThumbSessionTag] = useState("");
     const selected = useRef<Set<number>>(new Set());
     const [selectionTick, setSelectionTick] = useState(0);
     const bumpSelection = () => setSelectionTick((t) => t + 1);
@@ -248,21 +343,19 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     /** `gridContentRef.clientWidth` — satır `1fr` matematiği ile aynı iç genişlik (yan çubuk/modal/padding otomatik). */
     const innerWidth = Math.max(280, containerWidth);
 
-    const gridCellMinPx = useMemo(() => {
-      const t =
-        (Math.min(ZOOM_SLIDER_MAX, Math.max(ZOOM_SLIDER_MIN, zoomPercent)) - ZOOM_SLIDER_MIN) /
-        (ZOOM_SLIDER_MAX - ZOOM_SLIDER_MIN);
-      return GRID_CELL_MIN_AT_SMALL + (GRID_CELL_MIN_AT_LARGE - GRID_CELL_MIN_AT_SMALL) * t;
-    }, [zoomPercent]);
-
-    const { cols, cellWidth, cardHeight } = useMemo(() => {
-      const c = Math.max(1, Math.floor((innerWidth + GAP_PX) / (gridCellMinPx + GAP_PX)));
+    const { cols, cellWidth, cardHeight, thumbRasterCssW } = useMemo(() => {
+      const c = FIXED_GRID_COLS;
       const cw = (innerWidth - (c - 1) * GAP_PX) / c;
       const ch = Math.round(cw * (4 / 3));
-      return { cols: c, cellWidth: cw, cardHeight: ch };
-    }, [innerWidth, gridCellMinPx]);
+      const z =
+        (Math.min(ZOOM_SLIDER_MAX, Math.max(ZOOM_SLIDER_MIN, zoomPercent)) - ZOOM_SLIDER_MIN) /
+        (ZOOM_SLIDER_MAX - ZOOM_SLIDER_MIN);
+      /** En az hücre genişliği kadar raster — düşük yakınlaştırmada bulanık büyütme olmasın. */
+      const rw = Math.min(Math.max(Math.round(cw * (0.98 + z * 0.28)), Math.ceil(cw)), 384);
+      return { cols: c, cellWidth: cw, cardHeight: ch, thumbRasterCssW: rw };
+    }, [innerWidth, zoomPercent]);
 
-    cellWidthRef.current = cellWidth;
+    cellWidthRef.current = thumbRasterCssW;
     scrollStepYRef.current = cardHeight + ROW_GAP_PX;
     scrollStepXRef.current = cellWidth + GAP_PX;
 
@@ -297,7 +390,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       const ch = Math.max(1, el.clientHeight);
       const firstRow = Math.max(0, Math.floor(Math.max(0, st - pad) / rowH));
       const visibleRows = Math.max(1, Math.ceil(ch / rowH)) + 1;
-      const overscan = 8;
+      const overscan = 2;
       const fr = Math.max(0, firstRow - overscan);
       const lr = Math.min(vr - 1, firstRow + visibleRows + overscan);
       return { firstRow: fr, lastRow: lr };
@@ -548,9 +641,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       const run = async () => {
         const prevSid = thumbSessionIdRef.current;
         if (prevSid) {
-          purgeThumbSession(prevSid);
+          thumbLru.purgeSessionPrefix(prevSid);
         }
         thumbSessionIdRef.current = "";
+        setThumbSessionTag("");
         setLoadError(null);
         setLoading(true);
         setThumbs([]);
@@ -577,6 +671,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           docRef.current = pdf;
           const n = pdf.numPages;
           thumbSessionIdRef.current = `pdf-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+          setThumbSessionTag(thumbSessionIdRef.current);
           setNumPages(n);
           const empty = Array.from({ length: n }, () => null);
           thumbsRef.current = empty;
@@ -700,16 +795,19 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         if (opts?.force) {
           clearThumbRetryTimer(page1);
           if (ck) {
-            persistentThumbByKey.delete(ck);
+            thumbLru.delete(ck);
           }
           thumbsRef.current[page1 - 1] = null;
           setThumbs([...thumbsRef.current]);
           thumbFailureCountRef.current.delete(page1);
         }
 
-        const cached = ck ? persistentThumbByKey.get(ck) : undefined;
+        const cached = ck ? thumbLru.peek(ck) : undefined;
 
         if (!opts?.force && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
+          if (ck) {
+            thumbLru.touch(ck);
+          }
           if (!thumbsRef.current[page1 - 1]) {
             thumbsRef.current[page1 - 1] = cached.dataUrl;
             setThumbs([...thumbsRef.current]);
@@ -718,6 +816,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         }
 
         if (!opts?.force && cached && cssW > cached.cssW * THUMB_UPGRADE_MIN_RATIO) {
+          if (ck) {
+            thumbLru.touch(ck);
+          }
           if (!thumbsRef.current[page1 - 1]) {
             thumbsRef.current[page1 - 1] = cached.dataUrl;
             setThumbs([...thumbsRef.current]);
@@ -737,7 +838,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               const sidNow = thumbSessionIdRef.current;
               const ckNow = sidNow ? thumbCacheKey(sidNow, page1) : null;
               if (ckNow) {
-                persistentThumbByKey.set(ckNow, { dataUrl: url, cssW });
+                thumbLru.set(ckNow, { dataUrl: url, cssW });
               }
               thumbsRef.current[page1 - 1] = url;
               setThumbs([...thumbsRef.current]);
@@ -761,7 +862,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           }
         });
       },
-      [clearThumbRetryTimer, rasterPageToDataUrl, enqueueThumbRasterJob],
+      [clearThumbRetryTimer, rasterPageToDataUrl, enqueueThumbRasterJob, thumbLru],
     );
 
     useLayoutEffect(() => {
@@ -774,7 +875,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const sid = thumbSessionIdRef.current;
         const ck = sid ? thumbCacheKey(sid, page1) : null;
         if (ck) {
-          persistentThumbByKey.delete(ck);
+          thumbLru.delete(ck);
         }
         thumbsRef.current[page1 - 1] = null;
         setThumbs([...thumbsRef.current]);
@@ -785,7 +886,18 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           requestSinglePageThumbRef.current(page1, w, { force: true });
         }, THUMB_RETRY_DELAY_MS);
       },
-      [clearThumbRetryTimer],
+      [clearThumbRetryTimer, thumbLru],
+    );
+
+    const onThumbCellMounted = useCallback(
+      (page1: number) => {
+        const sid = thumbSessionIdRef.current;
+        const ck = sid ? thumbCacheKey(sid, page1) : null;
+        if (ck && thumbLru.peek(ck)) {
+          thumbLru.touch(ck);
+        }
+      },
+      [thumbLru],
     );
 
     const scrollMemRef = useRef({ top: 0, scrollHeight: 1, clientH: 400 });
@@ -884,7 +996,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         return;
       }
       evictOutsideRange(low, high);
-      const cssW = cellWidth;
+      const cssW = thumbRasterCssW;
       const job = ++renderJobRef.current;
       void (async () => {
         const doc = docRef.current;
@@ -892,14 +1004,18 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           return;
         }
         const queue = buildThumbLoadQueue(low, high);
-        for (const i of queue) {
+        for (let idx = 0; idx < queue.length; idx++) {
+          const i = queue[idx]!;
           if (job !== renderJobRef.current) {
             return;
           }
           const sid = thumbSessionIdRef.current;
           const ck = sid ? thumbCacheKey(sid, i) : null;
-          const cached = ck ? persistentThumbByKey.get(ck) : undefined;
+          const cached = ck ? thumbLru.peek(ck) : undefined;
           if (!thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
+            if (ck) {
+              thumbLru.touch(ck);
+            }
             thumbsRef.current[i - 1] = cached.dataUrl;
             setThumbs([...thumbsRef.current]);
             continue;
@@ -909,10 +1025,16 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             cached &&
             cssW > cached.cssW * THUMB_UPGRADE_MIN_RATIO
           ) {
+            if (ck) {
+              thumbLru.touch(ck);
+            }
             thumbsRef.current[i - 1] = cached.dataUrl;
             setThumbs([...thumbsRef.current]);
           }
           if (thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
+            if (ck) {
+              thumbLru.touch(ck);
+            }
             continue;
           }
           if (pendingThumbRef.current.has(i)) {
@@ -926,7 +1048,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             const sidNow = thumbSessionIdRef.current;
             const ckNow = sidNow ? thumbCacheKey(sidNow, i) : null;
             if (ckNow) {
-              persistentThumbByKey.set(ckNow, { dataUrl: url, cssW });
+              thumbLru.set(ckNow, { dataUrl: url, cssW });
             }
             thumbsRef.current[i - 1] = url;
             setThumbs([...thumbsRef.current]);
@@ -951,11 +1073,12 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       numPages,
       computeVisiblePageRange,
       evictOutsideRange,
-      cellWidth,
+      thumbRasterCssW,
       rangeRevision,
       rasterPageToDataUrl,
       clearThumbRetryTimer,
       buildThumbLoadQueue,
+      thumbLru,
     ]);
 
     const readyPreviews = useMemo(() => {
@@ -967,12 +1090,12 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       for (let p = 1; p <= numPages; p++) {
         if (thumbs[p - 1]) {
           n++;
-        } else if (sid && persistentThumbByKey.has(thumbCacheKey(sid, p))) {
+        } else if (sid && thumbLru.has(thumbCacheKey(sid, p))) {
           n++;
         }
       }
       return n;
-    }, [thumbs, numPages]);
+    }, [thumbs, numPages, thumbLru]);
 
     useEffect(() => {
       onStatsChange?.({
@@ -1335,10 +1458,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const renderPremiumCard = (page1: number) => {
       const sid = thumbSessionIdRef.current;
       const ck = sid ? thumbCacheKey(sid, page1) : null;
-      const ent = ck ? persistentThumbByKey.get(ck) : undefined;
+      const ent = ck ? thumbLru.peek(ck) : undefined;
       const url = thumbs[page1 - 1] ?? ent?.dataUrl ?? null;
       const targetW = cellWidth;
-      const lowResPlaceholder = !!(url && ent?.dataUrl === url && ent.cssW < targetW * 0.92);
+      const lowResPlaceholder = !!(url && ent?.dataUrl === url && ent.cssW < targetW * 0.78);
       const inLiveRubber = rubberLiveSelection?.has(page1) ?? false;
       const isOn = selectionMode && (selected.current.has(page1) || inLiveRubber);
       const rot = pageRotations[page1] ?? 0;
@@ -1627,7 +1750,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
                 return (
                   <div
-                    key={`row-${rowIdx}`}
+                    key={`row-${thumbSessionTag || "pending"}-${rowIdx}`}
                     className="w-full min-w-0"
                     style={{
                       display: "grid",
@@ -1644,7 +1767,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                       }
                       return (
                         <div
-                          key={`p-${page1}`}
+                          key={`page-${thumbSessionTag || "pending"}-${page1}`}
                           data-pdf-thumb-page={page1}
                           className="relative min-w-0"
                         >
@@ -1678,8 +1801,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                           ) : null}
                           <PageThumbMountTrigger
                             pageIndex={page1}
-                            cellWidth={cellWidth}
+                            rasterCssW={thumbRasterCssW}
                             requestThumb={requestSinglePageThumb}
+                            onCellMounted={onThumbCellMounted}
                           />
                           {renderPremiumCard(page1)}
                         </div>

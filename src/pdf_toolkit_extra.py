@@ -15,7 +15,7 @@ from typing import Dict, List, Optional
 import fitz
 
 # pdf_engine'den parola açma
-from src.pdf_engine import _open_pdf_reader, extract_pages, is_pdf_encrypted, get_num_pages
+from src.pdf_engine import _open_pdf_reader, is_pdf_encrypted, get_num_pages
 
 # Web SaaS: single quality tier (DPI not user-configurable).
 PDF_EXPORT_DPI_WEB = 300
@@ -38,13 +38,21 @@ def delete_pages_pdf(
     pages_to_delete: List[int],
     password: Optional[str] = None,
 ) -> bool:
-    """1 tabanlı sayfa numaralarını listeden çıkarılmış yeni PDF üretir."""
+    """İstenen sayfaları kaynakta silerek tek geçişte kaydeder (büyük PDF’lerde insert_pdf döngüsünden çok daha verimli)."""
     n = get_num_pages(pdf_path, password=password)
-    s = set(pages_to_delete)
-    keep = [p for p in range(1, n + 1) if p not in s]
-    if not keep:
+    to_del = {int(p) for p in pages_to_delete}
+    if any(p < 1 or p > n for p in to_del):
+        raise Exception("Geçersiz sayfa numarası.")
+    if len(to_del) >= n:
         raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
-    return extract_pages(pdf_path, keep, output_path, password=password)
+    doc = _fitz_open(pdf_path, password=password)
+    try:
+        for p in sorted(to_del, reverse=True):
+            doc.delete_page(p - 1)
+        doc.save(output_path, garbage=4, deflate=True, linear=False)
+    finally:
+        doc.close()
+    return True
 
 
 def rotate_pdf(

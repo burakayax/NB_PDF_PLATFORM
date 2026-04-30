@@ -685,7 +685,10 @@ async function deliverBlobAsDownload(
 async function triggerDownloadFromResponse(
   response: Response,
   fallbackName: string,
-  options?: { retainBlob?: boolean; clientDownloadName?: string },
+  options?: {
+    retainBlob?: boolean;
+    clientDownloadName?: string;
+  },
 ): Promise<ToolDownloadResult> {
   const saasGating = parseSaasGatingFromResponse(response);
   let blob: Blob;
@@ -852,7 +855,7 @@ function shouldUseNativeMergeDownload(href: string): boolean {
 /**
  * Birleştirilmiş PDF: aynı kökende tarayıcının doğrudan indirmesini kullanır (fetch+blob akışı büyük dosyalarda kesilebiliyor).
  * PDF API farklı kökende ise fetch + blob yedeği kullanılır.
- * Bearer ile çağrıda yeniden deneme yapılmaz — her yeniden istek işlem sırasında kredi tüketimini yeniler.
+ * Bearer ile çağrıda yeniden deneme yapılmaz — her yeniden istek çift indirme tetikleyebilir.
  */
 export async function downloadMergeJob(
   jobId: string,
@@ -972,8 +975,8 @@ export async function downloadFromApi(
 }
 
 // ---------------------------------------------------------------------------
-// Result store: compress, split, … — POST returns result_id; download consumes credit.
-// GET /api/pdf/result/{id}/preview, thumbnail, download
+// Result store: POST → result_id; kredi düşümü GET /api/pdf/result/{id}/download başında (sunucu).
+// GET /api/pdf/result/{id}/preview/… , thumbnail, hero, pdf
 // ---------------------------------------------------------------------------
 
 export type CompressResult = {
@@ -1136,7 +1139,7 @@ export async function fetchResultThumbnailBlobUrl(
   options?: { signal?: AbortSignal },
 ): Promise<string> {
   const id = encodeURIComponent(resultId);
-  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview/thumbnail`, {
+  const response = await pdfFetchWithRetry(`${API_BASE}/api/pdf/result/${id}/preview/thumbnail`, {
     headers: saasAuthHeaders(accessToken),
     cache: "no-store",
     signal: options?.signal,
@@ -1153,12 +1156,61 @@ export async function fetchResultHeroPreviewBlobUrl(
   options?: { signal?: AbortSignal },
 ): Promise<string> {
   const id = encodeURIComponent(resultId);
-  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/preview/hero`, {
+  const response = await pdfFetchWithRetry(`${API_BASE}/api/pdf/result/${id}/preview/hero`, {
     headers: saasAuthHeaders(accessToken),
     cache: "no-store",
     signal: options?.signal,
   });
   await ensureOk(response, "Önizleme yüklenemedi.");
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+/** Tam çıktı PDF (inline, kota düşmez) — yalnızca PDF mime için; Word/Excel vb. 404 döner. */
+export async function fetchResultPdfBlobUrl(
+  resultId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<string> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetchWithRetry(`${API_BASE}/api/pdf/result/${id}/preview/pdf`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await ensureOk(response, "Önizleme PDF okunamadı.");
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+export async function fetchMergeJobHeroPreviewBlobUrl(
+  jobId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<string> {
+  const id = encodeURIComponent(jobId);
+  const response = await pdfFetchWithRetry(`${API_BASE}/api/jobs/${id}/preview/hero`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await ensureOk(response, "Önizleme görseli okunamadı.");
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+
+export async function fetchMergeJobPdfBlobUrl(
+  jobId: string,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal },
+): Promise<string> {
+  const id = encodeURIComponent(jobId);
+  const response = await pdfFetchWithRetry(`${API_BASE}/api/jobs/${id}/preview/pdf`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await ensureOk(response, "Önizleme PDF okunamadı.");
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
@@ -1173,8 +1225,7 @@ export type DownloadResultOutcome =
  * product. We handle the three outcomes the gate can produce and let the
  * caller translate them into UI (alert, modal, upgrade CTA, etc.).
  *
- * Uses a single fetch (no retry): automatic retries would repeat this GET and
- * bill `entitlement_consume` again on the server.
+ * GET öncesi sunucu ``entitlement_consume`` ile kotayı düşürür.
  *
  *   200 → file stream, triggers a browser download.
  *   402 → access denied; UI shows `alert("Upgrade required")` for now.

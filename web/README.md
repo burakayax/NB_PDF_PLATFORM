@@ -1,4 +1,4 @@
-# NB PDF PLARTFORM Web
+# NB PDF PLATFORM Web
 
 > **Geliştirme:** Üç servisi birlikte başlatmak için çoğu zaman proje **kökünde** `npm run install-all` ve `npm run dev` yeterlidir. Ayrıntılar: kökteki **CALISTIRMA.md**.
 
@@ -133,6 +133,7 @@ Arayüz varsayılan olarak `http://localhost:5173` adresinde açılır.
 - `BUSINESS`: sınırsız kullanım, tüm araçlar, çok kullanıcılı yapı için hazır temel
 
 Not:
+
 - Şu anki plan değiştirme akışı ödeme entegrasyonu olmadan çalışır ve geliştirme amaçlıdır.
 - Stripe / PayTR / iyzico bağlandığında bu endpoint yapısı satın alma akışına bağlanacaktır.
 

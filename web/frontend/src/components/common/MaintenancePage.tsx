@@ -41,10 +41,17 @@ export function MaintenancePage() {
         />
 
         <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">NB PDF PLARTFORM</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
+            NB PDF PLATFORM
+          </p>
 
           <div className="mt-10 flex h-36 w-36 items-center justify-center rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/[0.14] to-indigo-600/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_24px_80px_-28px_rgba(34,211,238,0.35)] ring-1 ring-white/[0.06]">
-            <svg viewBox="0 0 96 96" className="h-24 w-24 text-cyan-200/90" fill="none" aria-hidden>
+            <svg
+              viewBox="0 0 96 96"
+              className="h-24 w-24 text-cyan-200/90"
+              fill="none"
+              aria-hidden
+            >
               <path
                 d="M28 22h28l14 14v38a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6Z"
                 stroke="currentColor"
@@ -66,7 +73,14 @@ export function MaintenancePage() {
                 strokeLinecap="round"
                 opacity="0.55"
               />
-              <circle cx="72" cy="68" r="14" stroke="currentColor" strokeWidth="2" className="text-cyan-400/50" />
+              <circle
+                cx="72"
+                cy="68"
+                r="14"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="text-cyan-400/50"
+              />
               <path
                 d="M66 68h12M72 62v12"
                 stroke="currentColor"
@@ -78,7 +92,8 @@ export function MaintenancePage() {
           </div>
 
           <p className="mt-10 max-w-md text-lg font-medium leading-relaxed tracking-tight text-slate-100 sm:text-xl">
-            Daha iyi bir deneyim için kısa bir mola verdik. Çok yakında buradayız!
+            Daha iyi bir deneyim için kısa bir mola verdik. Çok yakında
+            buradayız!
           </p>
         </div>
       </div>

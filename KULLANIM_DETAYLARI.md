@@ -1,4 +1,4 @@
-# NB PDF PLARTFORM — Kullanım Detayları
+# NB PDF PLATFORM — Kullanım Detayları
 
 Bu dosya, projeyi **kod bilgisi olmayan** biri için de anlaşılır şekilde özetler: klasörler ne işe yarar, metni nereden değiştirirsiniz, ödeme ve e-posta ayarları nerededir, masaüstü uygulaması nasıl derlenir.
 
@@ -28,19 +28,19 @@ Projede kökte tek bir `backend` veya `desktop` klasörü **yoktur**; işlevler 
 
 ### Masaüstü uygulaması — `src/` (Windows .exe)
 
-- **Ne işe yarar:** Bilgisayara kurulan **NB PDF PLARTFORM masaüstü programı** buradaki Python kodlarıdır (CustomTkinter arayüzü).
+- **Ne işe yarar:** Bilgisayara kurulan **NB PDF PLATFORM masaüstü programı** buradaki Python kodlarıdır (CustomTkinter arayüzü).
 - **Ana giriş dosyası:** `src/main.py` veya çalıştırma için `src/__main__.py` (aşağıda “Masaüstü uygulaması” bölümünde).
 - **Kısaca:** “Desktop” dediğimiz parça pratikte **`src/`** klasörüdür; kökte ayrı bir `desktop/` klasörü yoktur.
 
 ### Diğer önemli yerler
 
-| Konum | Açıklama |
-|--------|----------|
-| `src/locales/` | Masaüstü uygulamasında Türkçe / İngilizce metinler (`en.json`, `tr.json`) |
-| `assets/` | Masaüstü ikon vb. |
-| `config/` | Örnek üretim ortamı ayarları |
-| `docs/` | Ek teknik notlar (ör. exe derleme: `docs/MASAUSTU_BUILD.md`) |
-| Kök `package.json` | Web + API’yi birlikte çalıştıran `npm run dev` gibi komutlar |
+| Konum              | Açıklama                                                                  |
+| ------------------ | ------------------------------------------------------------------------- |
+| `src/locales/`     | Masaüstü uygulamasında Türkçe / İngilizce metinler (`en.json`, `tr.json`) |
+| `assets/`          | Masaüstü ikon vb.                                                         |
+| `config/`          | Örnek üretim ortamı ayarları                                              |
+| `docs/`            | Ek teknik notlar (ör. exe derleme: `docs/MASAUSTU_BUILD.md`)              |
+| Kök `package.json` | Web + API’yi birlikte çalıştıran `npm run dev` gibi komutlar              |
 
 ---
 
@@ -87,12 +87,12 @@ IYZICO_URI=https://sandbox-api.iyzipay.com
 
 ### Sunucu tarafı (API)
 
-| Ne | Dosya / klasör |
-|----|----------------|
-| Rotalar (URL yolları) | `web/api/src/modules/auth/auth.routes.ts` |
+| Ne                                | Dosya / klasör                             |
+| --------------------------------- | ------------------------------------------ |
+| Rotalar (URL yolları)             | `web/api/src/modules/auth/auth.routes.ts`  |
 | İş mantığı (login, kayıt, profil) | `web/api/src/modules/auth/auth.service.ts` |
-| İstek doğrulama şemaları | `web/api/src/modules/auth/auth.schema.ts` |
-| Google ile giriş | `web/api/src/modules/auth/auth.google.ts` |
+| İstek doğrulama şemaları          | `web/api/src/modules/auth/auth.schema.ts`  |
+| Google ile giriş                  | `web/api/src/modules/auth/auth.google.ts`  |
 
 **E-posta ile doğrulama metinleri:** `web/api/src/modules/auth/` altında (ör. `auth.email.ts`, `verification-email-branded.ts`) ve e-posta gönderimiyle ilgili kısımlar.
 
@@ -116,7 +116,7 @@ EMAIL_PASS=...
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_FROM_NAME=NB PDF PLARTFORM
+SMTP_FROM_NAME=NB PDF PLATFORM
 ```
 
 - **Gmail kullanıyorsanız:** Normal hesap şifresi çoğu zaman çalışmaz. Google Hesabı → Güvenlik → **2 adımlı doğrulama** açıkken **uygulama şifresi** oluşturup `EMAIL_PASS` alanına yazmanız gerekir (`.env.example` içindeki Türkçe açıklamaya bakın).
@@ -149,7 +149,7 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
 
 ### Masaüstü sunucu adresi
 
-- Masaüstü uygulaması API’ye bağlanmak için **`desktop_auth_config.json`** (proje kökünde veya `%APPDATA%\NB PDF PLARTFORM` altında) kullanabilir; içinde **`api_base_url`** (örn. `http://127.0.0.1:4000/api`) tanımlanır.
+- Masaüstü uygulaması API’ye bağlanmak için **`desktop_auth_config.json`** (proje kökünde veya `%APPDATA%\NB PDF PLATFORM` altında) kullanabilir; içinde **`api_base_url`** (örn. `http://127.0.0.1:4000/api`) tanımlanır.
 
 ---
 
@@ -157,9 +157,9 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
 
 **`.env` nedir?** Sunucunun **şifre, anahtar ve adres** gibi ayarları tuttuğu metin dosyasıdır. Kodun içine yazılmaz; böylece güvenlik ve farklı ortamlar (geliştirme / sunucu) kolayca ayrılır.
 
-| Dosya | Kim kullanır |
-|--------|----------------|
-| **`web/api/.env`** | Kimlik API, veritabanı, JWT, Gmail/ SMTP, **iyzico**, log yolları |
+| Dosya                   | Kim kullanır                                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------------- |
+| **`web/api/.env`**      | Kimlik API, veritabanı, JWT, Gmail/ SMTP, **iyzico**, log yolları                                         |
 | **`web/frontend/.env`** | Tarayıcı uygulamasının hangi adrese bağlanacağı gibi **ön yüz** ayarları (örnekler `.env.example` içinde) |
 
 **İlk kurulum:**
@@ -195,21 +195,21 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
 
 **Özet:** Kullanıcıdan **gerçekten düşen kredi**, tarayıcı metninden değil, **Node API** veritabanındaki `ToolRegistry.cost` değerinden hesaplanır. Kenar çubuğunda gösterilen “N kredi” yazısı **`web/frontend/src/i18n/workspace.ts`** dosyasındaki **`SIDEBAR_TOOL_CREDIT_COST`** ile gelir; bunlar **aynı sayıları** yansıtmalıdır (aksi halde örneğin menüde 3, hesaptan 5 eksilmesi gibi tutarsızlık olur).
 
-1. **Gerçek düşümü değiştirmek (asıl kaynak):**  
-   - Dosya: **`web/api/src/lib/ensure-tool-registry.ts`**  
-   - **`DEFAULT_TOOL_REGISTRY`** içinde her aracın **`id`**, **`strategy`** ve özellikle **`cost`** alanını düzenleyin.  
+1. **Gerçek düşümü değiştirmek (asıl kaynak):**
+   - Dosya: **`web/api/src/lib/ensure-tool-registry.ts`**
+   - **`DEFAULT_TOOL_REGISTRY`** içinde her aracın **`id`**, **`strategy`** ve özellikle **`cost`** alanını düzenleyin.
    - API açılışında `ensureToolRegistry()` bu değerleri veritabanına **yazar** (günceller).
 
-2. **Kenar çubuğundaki rakamı uyumlu tutmak:**  
-   - Dosya: **`web/frontend/src/i18n/workspace.ts`**  
+2. **Kenar çubuğundaki rakamı uyumlu tutmak:**
+   - Dosya: **`web/frontend/src/i18n/workspace.ts`**
    - **`SIDEBAR_TOOL_CREDIT_COST`** nesnesinde ilgili araç anahtarı için **aynı sayıyı** kullanın.
 
-3. **Yeniden başlatma:**  
-   - `ensure-tool-registry.ts` veya bu dosyadan türeyen maliyetleri değiştirdiyseniz: **Node API** sürecini yeniden başlatın (geliştirmede `web/api` içinde çalışan `npm run dev` sürecini durdurup yeniden çalıştırma).  
+3. **Yeniden başlatma:**
+   - `ensure-tool-registry.ts` veya bu dosyadan türeyen maliyetleri değiştirdiyseniz: **Node API** sürecini yeniden başlatın (geliştirmede `web/api` içinde çalışan `npm run dev` sürecini durdurup yeniden çalıştırma).
    - Sadece `workspace.ts` metnini güncellediyseniz çoğu zaman **ön yüzü yenilemek** yeterlidir; unutmayın, **hesap kesimi** her zaman sunucudaki `ToolRegistry` ile yapılır.
 
-4. **İndirme günlüğü (audit) ve kredi:**  
-   - Başarılı indirmede istemci **`POST /api/entitlement/download-log`** ile **tek** bir kayıt oluşturur ve **`POST .../ack`** ile tamamlanmış sayar; bu **izlenebilirlik** içindir.  
+4. **İndirme günlüğü (audit) ve kredi:**
+   - Başarılı indirmede istemci **`POST /api/entitlement/download-log`** ile **tek** bir kayıt oluşturur ve **`POST .../ack`** ile tamamlanmış sayar; bu **izlenebilirlik** içindir.
    - **Kredi eksiltmesi** yalnızca PDF worker’ın indirme anında tetiklediği **`entitlement_consume`** ile yapılır — indirme başına **bir kez** `consume` beklenir.
 
 ---
@@ -293,11 +293,11 @@ Tarayıcıda **`http://localhost:5173`** adresine gidin.
 
 ## Yardımcı dosyalar (İngilizce / teknik)
 
-- **`CALISTIRMA.md`** — Kök `npm` komutlarının Türkçe açıklaması  
-- **`README.md`** — Genel proje özeti  
-- **`docs/MASAUSTU_BUILD.md`** — `.exe` derleme  
-- **`SETUP_NOTES.txt` / `SETUP.md`** — Kurulum notları  
+- **`CALISTIRMA.md`** — Kök `npm` komutlarının Türkçe açıklaması
+- **`README.md`** — Genel proje özeti
+- **`docs/MASAUSTU_BUILD.md`** — `.exe` derleme
+- **`SETUP_NOTES.txt` / `SETUP.md`** — Kurulum notları
 
 ---
 
-*Bu belge proje yapısına göre özetlenmiştir; dosya yolları gelecekteki sürümlerde değişebilir. Şüphede önce `README.md` ve `CALISTIRMA.md` dosyalarını kontrol edin.*
+_Bu belge proje yapısına göre özetlenmiştir; dosya yolları gelecekteki sürümlerde değişebilir. Şüphede önce `README.md` ve `CALISTIRMA.md` dosyalarını kontrol edin._

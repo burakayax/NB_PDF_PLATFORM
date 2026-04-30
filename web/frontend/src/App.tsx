@@ -5,14 +5,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createMergeJob,
   downloadFromApi,
-  postToolToResult,
   downloadMergeJob,
   downloadResult,
   EntitlementPaymentRequiredError,
   fetchMergeJob,
+  fetchMergeJobHeroPreviewBlobUrl,
   fetchResultThumbnailBlobUrl,
   inspectPdf,
   MergeJobNotFoundError,
+  postToolToResult,
   requestMergeJobCancel,
   type MergeJobStatus,
 } from "./api";
@@ -79,6 +80,15 @@ import {
   markFirstUpgradeOpPopupShown,
   snoozeLowCreditPopup,
 } from "./lib/conversionPopupTriggers";
+import {
+  buildResumeDownloadUrl,
+  canResumeAfterPayment,
+  clearNbResumeProcess,
+  isNbResumeStale,
+  readNbResumeProcess,
+  saveNbResumeProcess,
+  type NbResumeProcessV1,
+} from "./lib/nbResumeProcess";
 import type { ConversionPopupVariant } from "./i18n/conversionPopup";
 import { translateAuthApiMessage } from "./i18n/auth";
 import {
@@ -733,6 +743,10 @@ function App() {
       saasGating?: SaaSGating | null;
     };
   } | null>(null);
+  const toolProgressSuccessRef = useRef(toolProgressSuccess);
+  /** When true, the next `selectedFeatureId` change skips `disposeToolProgressSuccess` (payment resume navigation). */
+  const suppressDisposeSuccessOnFeatureChangeRef = useRef(false);
+  const lastRestoredResumeTsRef = useRef(0);
   const toolProgressDisposeRef = useRef<(() => void) | null>(null);
   const toolRunAbortRef = useRef<AbortController | null>(null);
   /** Watchdog: POST/GET fetch zaman aşımı — `AbortError` ile kullanıcı iptalini ayırt etmek için. */
@@ -845,11 +859,14 @@ function App() {
   const [organizePageOrder, setOrganizePageOrder] = useState<number[]>([]);
   const splitVisualAutoOpenedForUploadId = useRef<string | null>(null);
   const deleteVisualAutoOpenedForUploadId = useRef<string | null>(null);
-  /** Blocks duplicate `/download` / merge GETs (each charges `entitlement_consume`). */
+  /** Blocks duplicate `/download` akışları (aynı iş için paralel GET). */
   const gatedDownloadInFlightKeysRef = useRef<Set<string>>(new Set());
   const selectedFeatureIdEffectDidMountRef = useRef(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
+    null,
+  );
+  const [gatedHeroMergeJobId, setGatedHeroMergeJobId] = useState<string | null>(
     null,
   );
 
@@ -1106,7 +1123,7 @@ function App() {
     if (type !== "loading") {
       toastTimerRef.current = window.setTimeout(() => {
         setToast(null);
-      }, 4200);
+      }, 9000);
     }
   }
 
@@ -1190,6 +1207,7 @@ function App() {
     const arm = () => {
       window.clearTimeout(timeoutId);
       timeoutId = window.setTimeout(() => {
+        clearNbResumeProcess();
         clearSession();
         setPaymentSummaryProduct(null);
         setView("landing");
@@ -1229,6 +1247,51 @@ function App() {
     clearInsufficientCreditsToolBarrier();
     setToolProgressSuccess(null);
   }, []);
+
+  const dismissToolSuccessBar = useCallback(() => {
+    clearNbResumeProcess();
+    disposeToolProgressSuccess();
+  }, [disposeToolProgressSuccess]);
+
+  useEffect(() => {
+    toolProgressSuccessRef.current = toolProgressSuccess;
+  }, [toolProgressSuccess]);
+
+  const persistNbResumeSnapshot = useCallback(() => {
+    if (!user?.id) {
+      return;
+    }
+    const s = toolProgressSuccessRef.current;
+    const gd = s?.gatedDownload;
+    if (!gd || (!gd.resultId && !gd.mergeJobId)) {
+      return;
+    }
+    const costRaw = gd.saasGating?.cost;
+    const requiredCredits = Math.max(
+      1,
+      typeof costRaw === "number" && Number.isFinite(costRaw)
+        ? Math.trunc(costRaw)
+        : 1,
+    );
+    const payload: NbResumeProcessV1 = {
+      v: 1,
+      userId: user.id,
+      toolId: gd.toolId,
+      fileName: s.filename,
+      featureTitle: s.featureTitle,
+      fallbackName: gd.fallbackName,
+      resultId: gd.resultId,
+      mergeJobId: gd.mergeJobId,
+      requiredCredits,
+      downloadUrl: buildResumeDownloadUrl(
+        gd.toolId,
+        gd.resultId,
+        gd.mergeJobId,
+      ),
+      timestamp: Date.now(),
+    };
+    saveNbResumeProcess(payload);
+  }, [user?.id]);
 
   const resetForm = useCallback((clearInputValue: boolean) => {
     // Modül değişimi veya işlem sonrası dosya listesi, parola ve sayfa metnini tek yerden sıfırlar.
@@ -1304,19 +1367,49 @@ function App() {
         inspectPdf(item.file, pwd, accessToken),
         PDF_INSPECT_TIMEOUT_MS,
       );
-      const ok = result.page_count !== null && !result.inspect_error;
+      const errRaw = (result.inspect_error ?? "").trim();
+      const looksLikePasswordIssue =
+        item.encrypted &&
+        errRaw.length > 0 &&
+        /password|parola|şifre|incorrect|wrong|authenticate|decrypt|aes|crypt/i.test(
+          errRaw,
+        );
+      const ok =
+        typeof result.page_count === "number" &&
+        result.page_count > 0 &&
+        !errRaw;
+
       setUploads((cur) =>
         cur.map((u) =>
           u.id === itemId ? { ...u, mergePasswordVerified: ok } : u,
         ),
       );
-      if (!ok) {
-        showToast(
-          "error",
-          language === "tr" ? "Parola doğrulanamadı" : "Invalid password",
-          L.mergePasswordWrong,
-        );
+
+      if (ok) {
+        return;
       }
+
+      const serverUnreachableDetail =
+        language === "tr"
+          ? "Sunucudan geçerli yanıt alınamadı. Bağlantıyı kontrol edip yeniden deneyin."
+          : "No valid response from the server. Check your connection and try again.";
+      const detail = looksLikePasswordIssue
+        ? errRaw.length > 280
+          ? `${errRaw.slice(0, 280)}…`
+          : errRaw
+        : errRaw || serverUnreachableDetail;
+
+      showToast(
+        "error",
+        looksLikePasswordIssue
+          ? language === "tr"
+            ? "Parola doğrulanamadı"
+            : "Invalid password"
+          : language === "tr"
+            ? "PDF denetimi başarısız"
+            : "PDF check failed",
+        looksLikePasswordIssue ? L.mergePasswordWrong : detail,
+      );
     } catch (err) {
       setUploads((cur) =>
         cur.map((u) =>
@@ -1326,7 +1419,9 @@ function App() {
       if (err instanceof Error && err.message === "pdf_inspect_timeout") {
         showToast(
           "error",
-          language === "tr" ? "PDF denetimi zaman aşımı" : "PDF check timed out",
+          language === "tr"
+            ? "PDF denetimi zaman aşımı"
+            : "PDF check timed out",
           language === "tr"
             ? "PDF denetimi uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
             : "PDF check took too long or stalled. Check your connection or try the file again.",
@@ -1334,7 +1429,7 @@ function App() {
       } else {
         showToast(
           "error",
-          language === "tr" ? "Parola doğrulanamadı" : "Invalid password",
+          language === "tr" ? "PDF denetimi başarısız" : "PDF check failed",
           friendlyOperationFailedMessage(language),
         );
       }
@@ -1537,6 +1632,7 @@ function App() {
   /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
   const applyWorkspaceCleanSlateAfterDownload = useCallback(
     (keepToolId: FeatureKey) => {
+      clearNbResumeProcess();
       disposeToolProgressSuccess();
       persistWorkspaceSkipRef.current = true;
       clearPersistedWorkspaceTool();
@@ -1568,13 +1664,8 @@ function App() {
   );
 
   /**
-   * Gated indirme: ``GET /api/pdf/result/{id}/download`` → blob tarayıcıda tutulur,
-   * ardından (tercihen Save dialog / yoksa indirme) çalışır. ``download_logs`` satırı
-   * gövde okunmadan hemen önce PENDING oluşturulur; teslimattan sonra ACK.
-   *
-   * Kredi düşümü istemciden yapılmaz — PDF worker tek ``entitlement_consume`` ile Node
-   * ``ToolRegistry.cost`` kullanır. 1 başarılı indirme = 1 kez düşüş (Sidebar’daki maliyet
-   * ile aynı sayıların ``ensure-tool-registry.ts`` ile senkron olması beklenir).
+   * Gated indirme: ``GET /api/pdf/result/{id}/download`` sunucuda ``entitlement_consume`` sonrası blob akışı.
+   * ``download_logs`` satırı gövde okunmadan hemen önce PENDING; teslimattan sonra ACK.
    */
   const runGatedDownloadWithFilename = useCallback(
     async (
@@ -1689,7 +1780,7 @@ function App() {
     [runGatedDownloadWithFilename],
   );
 
-  /** Merge çıktısı: ``GET /api/jobs/{id}/download`` — tek `consume`/merge ile `ToolRegistry` maliyeti (istemci miktar göndermez; 1 indirme = merge cost kadar). */
+  /** Merge indirmesi: GET başında sunucu ``entitlement_consume`` (merge maliyeti). */
   const runMergeJobGatedDownloadWithFilename = useCallback(
     async (
       jobId: string,
@@ -1703,21 +1794,26 @@ function App() {
       gatedDownloadInFlightKeysRef.current.add(flightKey);
       try {
         let pendingLogId: string | null = null;
-        const dl = await downloadMergeJob(jobId, serverFallbackName, accessToken, {
-          onBeforeReadBody: accessToken
-            ? async () => {
-                try {
-                  const row = await createDownloadLog(accessToken, {
-                    resultId: jobId,
-                    toolId: "merge",
-                  });
-                  pendingLogId = row.id;
-                } catch {
-                  /* noop */
+        const dl = await downloadMergeJob(
+          jobId,
+          serverFallbackName,
+          accessToken,
+          {
+            onBeforeReadBody: accessToken
+              ? async () => {
+                  try {
+                    const row = await createDownloadLog(accessToken, {
+                      resultId: jobId,
+                      toolId: "merge",
+                    });
+                    pendingLogId = row.id;
+                  } catch {
+                    /* noop */
+                  }
                 }
-              }
-            : undefined,
-        });
+              : undefined,
+          },
+        );
         if (accessToken && pendingLogId) {
           try {
             await ackDownloadLog(accessToken, pendingLogId);
@@ -1954,7 +2050,11 @@ function App() {
     setToolRunStartedAt(null);
     setToolRunFileBytes(0);
     clearToast();
-    disposeToolProgressSuccess();
+    if (suppressDisposeSuccessOnFeatureChangeRef.current) {
+      suppressDisposeSuccessOnFeatureChangeRef.current = false;
+    } else {
+      disposeToolProgressSuccess();
+    }
   }, [selectedFeatureId, disposeToolProgressSuccess]);
 
   useEffect(() => {
@@ -1968,6 +2068,125 @@ function App() {
   useEffect(() => {
     userRef.current = user;
   }, [user]);
+
+  /** PSP / pricing redirect sonrası: kredi yeterliyse kayıtlı çıktıyı geri yükle ve ilgili araca yönlendir. */
+  useEffect(() => {
+    if (view !== "web" || !isAuthenticated || !user?.id || !accessToken?.trim()) {
+      return;
+    }
+
+    const payload = readNbResumeProcess();
+    if (!payload) {
+      return;
+    }
+    if (payload.userId !== user.id) {
+      clearNbResumeProcess();
+      return;
+    }
+    if (isNbResumeStale(payload)) {
+      clearNbResumeProcess();
+      return;
+    }
+    if (!canResumeAfterPayment(payload, userBalance)) {
+      return;
+    }
+    if (lastRestoredResumeTsRef.current === payload.timestamp) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      disposeToolProgressSuccess();
+
+      let thumbnailBlobUrl: string | null = null;
+      try {
+        if (payload.mergeJobId) {
+          thumbnailBlobUrl = await fetchMergeJobHeroPreviewBlobUrl(
+            payload.mergeJobId,
+            accessToken,
+          );
+        } else if (payload.resultId) {
+          thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(
+            payload.resultId,
+            accessToken,
+          );
+        }
+      } catch {
+        thumbnailBlobUrl = null;
+      }
+
+      if (cancelled) {
+        if (thumbnailBlobUrl) {
+          URL.revokeObjectURL(thumbnailBlobUrl);
+        }
+        return;
+      }
+
+      if (selectedFeatureId !== payload.toolId) {
+        suppressDisposeSuccessOnFeatureChangeRef.current = true;
+        setSelectedFeatureId(payload.toolId);
+      }
+      setActiveSidebar(payload.toolId);
+      setContentPanel("tool");
+
+      try {
+        const u = new URL(window.location.href);
+        u.pathname =
+          workspacePathForFeature(payload.toolId).replace(/\/$/, "") || "/";
+        window.history.replaceState(
+          {},
+          "",
+          `${u.pathname}${u.search ? `?${u.searchParams.toString()}` : ""}${u.hash}`,
+        );
+      } catch {
+        /* ignore */
+      }
+
+      toolProgressDisposeRef.current?.();
+      toolProgressDisposeRef.current = thumbnailBlobUrl
+        ? () => URL.revokeObjectURL(thumbnailBlobUrl as string)
+        : null;
+
+      setToolProgressSuccess({
+        filename: payload.fileName,
+        featureTitle: payload.featureTitle,
+        gatedDownload: {
+          toolId: payload.toolId,
+          resultId: payload.resultId,
+          mergeJobId: payload.mergeJobId,
+          fallbackName: payload.fallbackName,
+          thumbnailBlobUrl,
+          saasGating: null,
+        },
+      });
+
+      lastRestoredResumeTsRef.current = payload.timestamp;
+
+      showToastRef.current(
+        "success",
+        language === "tr"
+          ? "Ödemeniz sonrası indirmeye devam edebilirsiniz"
+          : "Your download is ready — continue below",
+        language === "tr"
+          ? "Dosyanız hazır; aşağıdan indirebilirsiniz."
+          : "Your file is ready to download.",
+      );
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    view,
+    isAuthenticated,
+    user?.id,
+    accessToken,
+    userBalance,
+    language,
+    disposeToolProgressSuccess,
+    selectedFeatureId,
+  ]);
 
   useEffect(() => {
     conversionPopupOpenRef.current = conversionPopupOpen;
@@ -2036,9 +2255,7 @@ function App() {
           mergePollHandledRef.current = true;
           showToast(
             "error",
-            language === "tr"
-              ? "İşlem zaman aşımı"
-              : "Operation timed out",
+            language === "tr" ? "İşlem zaman aşımı" : "Operation timed out",
             language === "tr"
               ? "Birleştirme çok uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
               : "The merge took too long or the connection stalled. Check your connection or try again.",
@@ -2060,9 +2277,7 @@ function App() {
 
         if (nextStatus.status === "failed") {
           const serverDetail =
-            typeof nextStatus.error === "string"
-              ? nextStatus.error.trim()
-              : "";
+            typeof nextStatus.error === "string" ? nextStatus.error.trim() : "";
           showToast(
             "error",
             M.mergeToastFailedTitle,
@@ -2095,6 +2310,25 @@ function App() {
           resetForm(true);
           setMergeJob(null);
           setSubmitting(false);
+
+          let thumbnailBlobUrl: string | null = null;
+          if (accessToken?.trim()) {
+            try {
+              thumbnailBlobUrl = await fetchMergeJobHeroPreviewBlobUrl(
+                jobId,
+                accessToken,
+                { signal: pollSignal },
+              );
+            } catch {
+              thumbnailBlobUrl = null;
+            }
+          }
+          if (thumbnailBlobUrl) {
+            toolProgressDisposeRef.current = () => {
+              URL.revokeObjectURL(thumbnailBlobUrl as string);
+            };
+          }
+
           setToolProgressSuccess({
             filename: fallbackName,
             featureTitle: selectedFeature.title,
@@ -2102,7 +2336,7 @@ function App() {
               toolId: "merge",
               mergeJobId: jobId,
               fallbackName,
-              thumbnailBlobUrl: null,
+              thumbnailBlobUrl,
               saasGating: mergeSaasGatingRef.current,
             },
           });
@@ -2143,11 +2377,7 @@ function App() {
           error instanceof Error && error.message.trim()
             ? error.message.trim()
             : M.mergeToastPollErrorDetail;
-        showToast(
-          "error",
-          M.mergeToastPollErrorTitle,
-          pollFailDetail,
-        );
+        showToast("error", M.mergeToastPollErrorTitle, pollFailDetail);
         tryShowConversionPopupRef.current("buy_credits");
         setSubmitting(false);
         mergePollHandledRef.current = true;
@@ -2176,6 +2406,7 @@ function App() {
     showToast,
     offerPostRunMonetizationHintAfterSuccess,
     refreshSubscriptionState,
+    accessToken,
   ]);
 
   useEffect(() => {
@@ -2358,7 +2589,7 @@ function App() {
       return;
     }
     resetWorkspaceHeadSeo();
-    document.title = "NB PDF PLARTFORM";
+    document.title = "NB PDF PLATFORM";
   }, [view]);
 
   useEffect(() => {
@@ -2796,6 +3027,9 @@ function App() {
     (selectedFeature.id === "encrypt" &&
       (!outputPassword.trim() || uploads.length === 0)) ||
     mergeHasMissingPasswords ||
+    (selectedFeature.id === "merge" && uploads.length < 2) ||
+    (selectedFeature.id === "merge" &&
+      uploads.some((u) => u.pageCount === 0)) ||
     toolFilesStillInspecting ||
     deleteWouldRemoveEveryPage;
   const pickerButtonText =
@@ -3236,6 +3470,7 @@ function App() {
   }
 
   async function handleLogout() {
+    clearNbResumeProcess();
     await logout();
     setAuthError("");
     setLanguage(detectInitialLanguage());
@@ -3398,7 +3633,9 @@ function App() {
     if (showSplitPasswordField && !password.trim()) {
       showToast(
         "error",
-        language === "tr" ? "Kaynak PDF şifresi gerekli" : "Source PDF password required",
+        language === "tr"
+          ? "Kaynak PDF şifresi gerekli"
+          : "Source PDF password required",
         language === "tr"
           ? "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor."
           : "Enter the PDF password below to unlock the file.",
@@ -3475,6 +3712,7 @@ function App() {
     let toolStalemateWatchdogId: number | undefined;
 
     try {
+      clearNbResumeProcess();
       disposeToolProgressSuccess();
       clearToast();
 
@@ -3896,13 +4134,29 @@ function App() {
       return;
     }
 
-    setUploads((current) =>
-      current.map(
+    setUploads((current) => {
+      let mapped = current.map(
         (item) =>
           inspectedNewItems.find((inspected) => inspected.id === item.id) ??
           item,
-      ),
-    );
+      );
+      if (selectedFeature.id === "merge") {
+        const removedIds = new Set(
+          inspectedNewItems.filter((i) => i.pageCount === 0).map((i) => i.id),
+        );
+        if (removedIds.size > 0) {
+          showToast(
+            "info",
+            language === "tr" ? "Geçersiz PDF" : "Invalid PDF",
+            language === "tr"
+              ? "Bu PDF dosyasında sayfa bulunamadı; listeden çıkarıldı."
+              : "This PDF has no pages and was removed from the list.",
+          );
+          mapped = mapped.filter((item) => !removedIds.has(item.id));
+        }
+      }
+      return mapped;
+    });
   }
 
   const pathname =
@@ -3974,7 +4228,7 @@ function App() {
           <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-6 py-12 font-sans text-nb-text antialiased">
             <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-                NB PDF PLARTFORM
+                NB PDF PLATFORM
               </p>
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                 Oturum doğrulanıyor
@@ -4178,7 +4432,7 @@ function App() {
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              NB PDF PLARTFORM
+              NB PDF PLATFORM
             </p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
               Oturum doğrulanıyor
@@ -4225,7 +4479,7 @@ function App() {
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-xl backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              NB PDF PLARTFORM
+              NB PDF PLATFORM
             </p>
             <p className="mt-4 text-base text-nb-muted">
               Oturum bilgileri yükleniyor…
@@ -4403,6 +4657,7 @@ function App() {
             onClose={() => setPaymentSummaryProduct(null)}
             onPurchaseSuccess={() => void handleCreditPackPurchaseSuccess()}
             onChangeProduct={(p) => setPaymentSummaryProduct(p)}
+            onBeforeExternalCheckout={persistNbResumeSnapshot}
           />
         ) : null}
 
@@ -4451,11 +4706,7 @@ function App() {
             onPageOrderChange={setOrganizePageOrder}
             strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
             onDeleteWouldRemoveWholeDocument={() =>
-              showToast(
-                "info",
-                "Uyarı",
-                PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG,
-              )
+              showToast("info", "Uyarı", PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG)
             }
           />
         ) : null}
@@ -4465,8 +4716,10 @@ function App() {
           onClose={() => {
             setGatedHeroModalOpen(false);
             setGatedHeroResultId(null);
+            setGatedHeroMergeJobId(null);
           }}
           resultId={gatedHeroResultId}
+          mergeJobId={gatedHeroMergeJobId}
           accessToken={accessToken}
           filename={toolProgressSuccess?.filename ?? ""}
           language={language}
@@ -4678,6 +4931,7 @@ function App() {
                 showToast={showToast}
                 onOpenTerms={() => openLegalPage("terms")}
                 onOpenKvkk={() => openLegalPage("kvkk")}
+                onBeforeExternalCheckout={persistNbResumeSnapshot}
               />
             ) : null}
 
@@ -4975,22 +5229,14 @@ function App() {
                                   const fmt = validatePagesFormat(v, language);
                                   const maxP = uploads[0]?.pageCount ?? null;
                                   let combined =
-                                    fmt ||
-                                    validatePagesMax(v, maxP, language);
-                                  if (
-                                    !combined &&
-                                    maxP &&
-                                    v.trim()
-                                  ) {
+                                    fmt || validatePagesMax(v, maxP, language);
+                                  if (!combined && maxP && v.trim()) {
                                     const exp = expandPagesString(
                                       v,
                                       maxP,
                                       language,
                                     );
-                                    if (
-                                      exp !== null &&
-                                      exp.length >= maxP
-                                    ) {
+                                    if (exp !== null && exp.length >= maxP) {
                                       combined =
                                         PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
                                     }
@@ -5658,40 +5904,38 @@ function App() {
           </div>
           {TOOLSuccessBarActive && toolProgressSuccess ? (
             <div
-              className="merge-progress-fixed merge-progress-fixed--success"
+              className="merge-progress-fixed merge-progress-fixed--success tool-success-shell"
               role="status"
               aria-live="polite"
             >
-              <div className="merge-progress-fixed__inner">
-                <div className="merge-progress-fixed__head">
-                  <div className="merge-progress-fixed__titles">
-                    <strong className="merge-progress-fixed__title merge-progress-fixed__title--success">
+              <div className="merge-progress-fixed__inner tool-success-shell__card">
+                <div className="tool-success-shell__row">
+                  <div
+                    className="tool-success-shell__mark"
+                    aria-hidden="true"
+                  />
+                  <div className="tool-success-shell__text">
+                    <strong className="tool-success-shell__title">
                       {W.toolProgressSuccessTitle}
                     </strong>
-                    <p className="merge-progress-fixed__phase merge-progress-fixed__phase--success">
+                    <p className="tool-success-shell__subtitle">
                       {toolProgressSuccess.featureTitle} ·{" "}
                       {toolProgressSuccess.filename}
                     </p>
                   </div>
-                  <span
-                    className="merge-progress-fixed__pct merge-progress-fixed__pct--success"
-                    aria-hidden
-                  >
+                  <span className="tool-success-shell__pill" aria-hidden="true">
                     %100
                   </span>
                 </div>
                 <div
-                  className="progress-bar progress-bar--merge progress-bar--success"
+                  className="tool-success-shell__meter"
                   role="progressbar"
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={100}
                   aria-label={W.toolProgressSuccessTitle}
                 >
-                  <div
-                    className="progress-bar__fill progress-bar__fill--success"
-                    style={{ width: "100%" }}
-                  />
+                  <span className="tool-success-shell__meter-fill" />
                 </div>
                 {upgradeNudgeTier >= 1 &&
                 showCreditWorkspaceChrome &&
@@ -5721,11 +5965,20 @@ function App() {
                     }
                     onOpenFullPreview={() => {
                       const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd?.resultId || gd.mergeJobId) {
+                      if (!gd) {
                         return;
                       }
-                      setGatedHeroResultId(gd.resultId);
-                      setGatedHeroModalOpen(true);
+                      if (gd.mergeJobId) {
+                        setGatedHeroResultId(null);
+                        setGatedHeroMergeJobId(gd.mergeJobId);
+                        setGatedHeroModalOpen(true);
+                        return;
+                      }
+                      if (gd.resultId) {
+                        setGatedHeroMergeJobId(null);
+                        setGatedHeroResultId(gd.resultId);
+                        setGatedHeroModalOpen(true);
+                      }
                     }}
                     onDownload={() => {
                       const gd = toolProgressSuccess.gatedDownload;
@@ -5762,7 +6015,10 @@ function App() {
                               return;
                             }
                             if (gd.mergeJobId) {
-                              queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
+                              queueMergeGatedDownload(
+                                gd.mergeJobId,
+                                gd.fallbackName,
+                              );
                               return;
                             }
                             if (gd.resultId) {
@@ -5774,7 +6030,7 @@ function App() {
                             }
                           }
                     }
-                    onDismiss={disposeToolProgressSuccess}
+                    onDismiss={dismissToolSuccessBar}
                     dismissLabel={W.toolProgressDismiss}
                   />
                 ) : (
@@ -5795,7 +6051,7 @@ function App() {
                     <button
                       type="button"
                       className="merge-progress-fixed__dismiss"
-                      onClick={disposeToolProgressSuccess}
+                      onClick={dismissToolSuccessBar}
                     >
                       {W.toolProgressDismiss}
                     </button>
@@ -6024,7 +6280,7 @@ function App() {
         </div>
 
         <footer className="footer-bar">
-          <span>NB PDF PLARTFORM</span>
+          <span>NB PDF PLATFORM</span>
           <span>by NB Global Studio</span>
           <div className="footer-bar__right">
             <span>Web Edition</span>

@@ -44,7 +44,7 @@ export type LandingTranslation = {
     kicker: string;
     headline: string;
     alternatives: string[];
-    description: string;
+    description: string[];
     primaryCta: string;
     secondaryCta: string;
     highlights: Array<{ label: string; value: string }>;
@@ -117,7 +117,6 @@ export type LandingTranslation = {
   trustedText: {
     trusted: string;
     payment: string;
-    cancel: string;
     freePlan: string;
   };
 };
@@ -126,7 +125,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
   en: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "NB PDF PLARTFORM",
+      productLabel: "NB PDF PLATFORM",
       platformTag: "Professional PDF Workflow Platform",
       contact: "Contact",
       languageLabel: "Language",
@@ -136,38 +135,50 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       signedInFallback: "Signed in",
     },
     hero: {
-      audience: ["Office teams", "Tender departments", "Administrative staff", "Operations leads"],
+      audience: [
+        "Office teams",
+        "Tender departments",
+        "Administrative staff",
+        "Operations leads",
+      ],
       kicker: "PDF Management for Business Workflows",
-      headline: "Manage all your PDF workflows in one platform.",
+      headline:
+        "Edit, Convert, Merge and Compress PDFs — All PDF Tools in One Place",
       alternatives: [
         "Fast, Secure PDF Management for Business Workflows",
         "Handle Your PDFs in Seconds, Built for Professionals",
       ],
-      description:
-        "NB PDF is a unified platform for all your PDF needs — convert, edit, compress, merge, split, sign, and secure your documents in one place. No more switching TOOLS. Work faster, safer, and more professionally.",
+      description: [
+        "Do it from one place: PDF editing, conversion, merging, and compression.",
+        "Work fast, securely, and without installation—even with large files—without switching between tools.",
+      ],
       primaryCta: "Start Free",
       secondaryCta: "Download for Windows",
       highlights: [
         { label: "Built for", value: "Business-critical document handling" },
         { label: "Core value", value: "Less manual work, fewer file errors" },
-        { label: "Deployment", value: "Web access and Windows desktop control" },
+        {
+          label: "Deployment",
+          value: "Web access and Windows desktop control",
+        },
       ],
       quickStats: [
         {
           title: "Fast Processing",
-          description: "Streamline repetitive document tasks without breaking workflow quality.",
+          description:
+            "Streamline repetitive document tasks without breaking workflow quality.",
         },
         {
           title: "Secure Handling",
-          description: "Manage protected files with business-focused encryption and control.",
+          description:
+            "Manage protected files with business-focused encryption and control.",
         },
       ],
     },
     trustedText: {
       trusted: "Trusted by 1,000+ users",
       payment: "Secure checkout",
-      cancel: "e.g. Split PDF 2 credits · merge 3 credits",
-      freePlan: "Pay as you go — credit-based",
+      freePlan: "Pay-As-You-Go — Credit System & Monthly Subscription Plans",
     },
     features: {
       kicker: "Business Benefits",
@@ -176,32 +187,38 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           icon: "merge",
           title: "Merge PDFs in seconds",
-          benefit: "Combine reports, attachments, and document sets into one polished file without manual rework.",
+          benefit:
+            "Combine reports, attachments, and document sets into one polished file without manual rework.",
         },
         {
           icon: "split",
           title: "Split large documents instantly",
-          benefit: "Extract only the pages you need for procurement packs, internal reviews, and approvals.",
+          benefit:
+            "Extract only the pages you need for procurement packs, internal reviews, and approvals.",
         },
         {
           icon: "convert",
           title: "Convert files without formatting loss",
-          benefit: "Move between PDF, Word, and Excel with a workflow built for business-ready output.",
+          benefit:
+            "Move between PDF, Word, and Excel with a workflow built for business-ready output.",
         },
         {
           icon: "secure",
           title: "Secure sensitive documents",
-          benefit: "Protect confidential files with encryption and safer handling across daily operations.",
+          benefit:
+            "Protect confidential files with encryption and safer handling across daily operations.",
         },
         {
           icon: "compress",
           title: "Reduce file size for faster delivery",
-          benefit: "Optimize heavy PDFs before sending them to clients, teams, or submission platforms.",
+          benefit:
+            "Optimize heavy PDFs before sending them to clients, teams, or submission platforms.",
         },
         {
           icon: "excel",
           title: "Turn tables into working spreadsheets",
-          benefit: "Convert PDF-based tabular content into Excel for faster editing, reporting, and verification.",
+          benefit:
+            "Convert PDF-based tabular content into Excel for faster editing, reporting, and verification.",
         },
       ],
     },
@@ -219,24 +236,28 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           src: "/app-preview-main.png",
           title: "Unified multi-tool workspace",
-          description: "Core PDF operations are grouped in one interface so teams can complete work without switching TOOLS.",
+          description:
+            "Core PDF operations are grouped in one interface so teams can complete work without switching TOOLS.",
         },
         {
           src: "/app-preview-merge.png",
           title: "Focused processing experience",
-          description: "Clean status handling, structured forms, and progress feedback keep large document jobs under control.",
+          description:
+            "Clean status handling, structured forms, and progress feedback keep large document jobs under control.",
         },
       ],
       sideCards: [
         {
           icon: "shield",
           title: "Operational confidence",
-          description: "Keep sensitive files protected while giving teams a dependable document workflow they can use daily.",
+          description:
+            "Keep sensitive files protected while giving teams a dependable document workflow they can use daily.",
         },
         {
           icon: "speed",
           title: "Faster turnaround",
-          description: "Replace fragmented document steps with one streamlined system for faster handoffs and fewer mistakes.",
+          description:
+            "Replace fragmented document steps with one streamlined system for faster handoffs and fewer mistakes.",
         },
       ],
     },
@@ -248,15 +269,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       points: [
         {
           title: "Your documents never leave your system (Windows app)",
-          description: "The Windows application processes files locally on the device so sensitive business documents stay under your direct control.",
+          description:
+            "The Windows application processes files locally on the device so sensitive business documents stay under your direct control.",
         },
         {
           title: "Secure processing",
-          description: "Document workflows are built with protected handling, access control, and encryption-aware operations for business use.",
+          description:
+            "Document workflows are built with protected handling, access control, and encryption-aware operations for business use.",
         },
         {
           title: "No data retention",
-          description: "We do not keep your processed document contents as part of the core workflow, helping teams minimize exposure and handling risk.",
+          description:
+            "We do not keep your processed document contents as part of the core workflow, helping teams minimize exposure and handling risk.",
         },
       ],
     },
@@ -270,12 +294,14 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     finalCta: {
       kicker: "Start with the right format for your team",
       title: "Start using instantly or download for full control.",
-      description: "Launch the web version for immediate access, or install the Windows app for a dedicated desktop workflow.",
+      description:
+        "Launch the web version for immediate access, or install the Windows app for a dedicated desktop workflow.",
       primaryCta: "Use Web Version",
       secondaryCta: "Download Windows App",
     },
     footer: {
-      description: "Professional PDF management software for business workflows.",
+      description:
+        "Professional PDF management software for business workflows.",
       availability: "Web + Windows availability",
       security: "Secure document operations",
       contact: "Contact",
@@ -286,7 +312,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     contactSection: {
       kicker: "Contact",
       title: "Send a message to our team",
-      description: "Tell us what you need and we will get back to you as soon as possible.",
+      description:
+        "Tell us what you need and we will get back to you as soon as possible.",
       nameLabel: "Name",
       emailLabel: "Email",
       messageLabel: "Message",
@@ -304,7 +331,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       },
       honeypotLabel: "Leave this field empty",
     },
-  marqueeItems: {
+    marqueeItems: {
       items: [
         "PDF Merge",
         "PDF Split",
@@ -318,11 +345,11 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         "PDF Convert",
       ],
     },
-},
+  },
   tr: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "NB PDF PLARTFORM",
+      productLabel: "NB PDF PLATFORM",
       platformTag: "Profesyonel PDF İş Akışı Platformu",
       contact: "İletişim",
       languageLabel: "Dil",
@@ -332,38 +359,57 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       signedInFallback: "Giriş yapıldı",
     },
     hero: {
-      audience: ["Ofis Ekipleri", "İhale Birimleri", "İdari Personel", "Operasyon Yöneticileri"],
+      audience: [
+        "Ofis Ekipleri",
+        "İhale Birimleri",
+        "İdari Personel",
+        "Operasyon Yöneticileri",
+      ],
       kicker: "İş Süreçleri İçin PDF Yönetimi",
-      headline: "Tüm PDF işlemlerinizi tek bir platformda yönetin.",
+      headline:
+        "PDF Düzenle, Dönüştür, Birleştir ve Sıkıştır — Tüm PDF Araçları Tek Platformda",
       alternatives: [
         "İş Süreçleri İçin Hızlı ve Güvenli PDF Yönetimi",
         "PDF İşlemlerinizi Saniyeler İçinde Yönetin, Profesyoneller İçin Tasarlandı",
       ],
-      description:
-        "NB PDF; PDF dosyalarınızı dönüştürme, düzenleme, sıkıştırma, birleştirme, bölme, imzalama ve şifreleme dahil tüm işlemler için tek bir platform sunar. Farklı araçlar arasında geçiş yapmadan belgelerinizi daha hızlı, daha güvenli ve daha profesyonel şekilde yönetin.",
+      description: [
+        "PDF düzenleme, dönüştürme, birleştirme ve sıkıştırma işlemlerini tek yerden yap.",
+        "Büyük dosyalarda bile araçlar arasında geçiş yapmadan hızlı, güvenli ve kurulumsuz şekilde çalış.",
+      ],
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Windows Uygulamasını İndir",
       highlights: [
-        { label: "Tasarlanan kullanım", value: "İş açısından kritik belge yönetimi" },
-        { label: "Ana fayda", value: "Daha az manuel iş, daha az belge hatası" },
-        { label: "Erişim modeli", value: "Web erişimi ve Windows masaüstü kontrolü" },
+        {
+          label: "Tasarlanan kullanım",
+          value: "İş açısından kritik belge yönetimi",
+        },
+        {
+          label: "Ana fayda",
+          value: "Daha az manuel iş, daha az belge hatası",
+        },
+        {
+          label: "Erişim modeli",
+          value: "Web erişimi ve Windows masaüstü kontrolü",
+        },
       ],
       quickStats: [
         {
           title: "Hızlı İşlem",
-          description: "Tekrarlayan belge işlemlerini iş kalitesini bozmadan hızlandırın.",
+          description:
+            "Tekrarlayan belge işlemlerini iş kalitesini bozmadan hızlandırın.",
         },
         {
           title: "Güvenli Kullanım",
-          description: "Korumalı dosyaları iş odaklı şifreleme ve kontrol ile yönetin.",
+          description:
+            "Korumalı dosyaları iş odaklı şifreleme ve kontrol ile yönetin.",
         },
       ],
     },
     trustedText: {
       trusted: "1.000'den fazla kullanıcı tarafından güveniliyor",
-      payment: "Güvenli ödeme",
-      cancel: "Örnek: PDF bölme 2 kredi · birleştirme 3 kredi",
-      freePlan: "Kullandığın kadar öde — kredi sistemi",
+      payment: "Güvenli Ödeme",
+      freePlan:
+        "Kullandığın Kadar Öde — Kredi Sistemi & Aylık Abonelik Sistemi",
     },
     features: {
       kicker: "İş Faydası",
@@ -372,32 +418,38 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           icon: "merge",
           title: "PDF dosyalarını saniyeler içinde birleştirin",
-          benefit: "Raporları, ekleri ve belge setlerini manuel düzenleme yapmadan tek dosyada toplayın.",
+          benefit:
+            "Raporları, ekleri ve belge setlerini manuel düzenleme yapmadan tek dosyada toplayın.",
         },
         {
           icon: "split",
           title: "Büyük dosyaları anında ayırın",
-          benefit: "İhale paketleri, iç incelemeler ve onay süreçleri için sadece gerekli sayfaları alın.",
+          benefit:
+            "İhale paketleri, iç incelemeler ve onay süreçleri için sadece gerekli sayfaları alın.",
         },
         {
           icon: "convert",
           title: "Dosyaları düzeni koruyarak dönüştürün",
-          benefit: "PDF, Word ve Excel arasında iş kullanımına uygun çıktılarla geçiş yapın.",
+          benefit:
+            "PDF, Word ve Excel arasında iş kullanımına uygun çıktılarla geçiş yapın.",
         },
         {
           icon: "secure",
           title: "Hassas belgeleri koruyun",
-          benefit: "Gizli dosyaları şifreleme ve daha güvenli belge akışları ile koruma altına alın.",
+          benefit:
+            "Gizli dosyaları şifreleme ve daha güvenli belge akışları ile koruma altına alın.",
         },
         {
           icon: "compress",
           title: "Dosya boyutlarını düşürün",
-          benefit: "Ağır PDF dosyalarını göndermeden önce optimize ederek paylaşımı hızlandırın.",
+          benefit:
+            "Ağır PDF dosyalarını göndermeden önce optimize ederek paylaşımı hızlandırın.",
         },
         {
           icon: "excel",
           title: "Tabloları çalışılır Excel dosyalarına çevirin",
-          benefit: "PDF içindeki tablo verilerini düzenleme, raporlama ve kontrol için Excel'e aktarın.",
+          benefit:
+            "PDF içindeki tablo verilerini düzenleme, raporlama ve kontrol için Excel'e aktarın.",
         },
       ],
     },
@@ -410,24 +462,28 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           src: "/app-preview-main.png",
           title: "Tüm araçlar tek çalışma alanında",
-          description: "Temel PDF işlemleri tek ekranda bir araya gelir, ekipler farklı araçlar arasında geçiş yapmaz.",
+          description:
+            "Temel PDF işlemleri tek ekranda bir araya gelir, ekipler farklı araçlar arasında geçiş yapmaz.",
         },
         {
           src: "/app-preview-merge.png",
           title: "Odaklı işlem deneyimi",
-          description: "Temiz durum yönetimi, düzenli formlar ve ilerleme görünümü büyük belge işlerini kontrol altında tutar.",
+          description:
+            "Temiz durum yönetimi, düzenli formlar ve ilerleme görünümü büyük belge işlerini kontrol altında tutar.",
         },
       ],
       sideCards: [
         {
           icon: "shield",
           title: "Operasyonel güven",
-          description: "Hassas dosyaları korurken ekiplerin her gün kullanabileceği güvenilir bir belge akışı sunun.",
+          description:
+            "Hassas dosyaları korurken ekiplerin her gün kullanabileceği güvenilir bir belge akışı sunun.",
         },
         {
           icon: "speed",
           title: "Daha hızlı tamamlanma",
-          description: "Parçalanmış belge adımlarını tek sistemde toplayarak teslim sürelerini kısaltın.",
+          description:
+            "Parçalanmış belge adımlarını tek sistemde toplayarak teslim sürelerini kısaltın.",
         },
       ],
     },
@@ -439,15 +495,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       points: [
         {
           title: "Belgeleriniz sisteminizden cikmaz (Windows uygulamasi)",
-          description: "Windows uygulamasi dosyalari cihaz uzerinde yerel olarak isler; boylece hassas is belgeleri dogrudan sizin kontrolunuzde kalir.",
+          description:
+            "Windows uygulamasi dosyalari cihaz uzerinde yerel olarak isler; boylece hassas is belgeleri dogrudan sizin kontrolunuzde kalir.",
         },
         {
           title: "Guvenli isleme",
-          description: "Belge akislarinda korumali isleme, erisim kontrolu ve sifre farkindaligi ile kurumsal kullanim odakli bir yapi sunulur.",
+          description:
+            "Belge akislarinda korumali isleme, erisim kontrolu ve sifre farkindaligi ile kurumsal kullanim odakli bir yapi sunulur.",
         },
         {
           title: "Veri saklama yok",
-          description: "Temel is akisi kapsaminda islenen belge iceriklerini saklamayarak ekiplerin maruziyetini ve veri isleme riskini azaltmaya yardimci oluruz.",
+          description:
+            "Temel is akisi kapsaminda islenen belge iceriklerini saklamayarak ekiplerin maruziyetini ve veri isleme riskini azaltmaya yardimci oluruz.",
         },
       ],
     },
@@ -461,7 +520,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     finalCta: {
       kicker: "Ekibiniz için doğru kullanım modelini seçin",
       title: "Hemen kullanmaya başlayın veya tam kontrol için indirin.",
-      description: "Anında erişim için web sürümünü açın ya da ayrılmış masaüstü deneyimi için Windows sürümünü indirin.",
+      description:
+        "Anında erişim için web sürümünü açın ya da ayrılmış masaüstü deneyimi için Windows sürümünü indirin.",
       primaryCta: "Web Sürümünü Aç",
       secondaryCta: "Windows Uygulamasını İndir",
     },

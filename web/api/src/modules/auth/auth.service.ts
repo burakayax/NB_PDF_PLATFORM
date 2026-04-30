@@ -1,10 +1,21 @@
 import { randomInt } from "node:crypto";
-import type { AuthProvider, EmailVerificationToken, Language, Plan, User, UserRole } from "@prisma/client";
+import type {
+  AuthProvider,
+  EmailVerificationToken,
+  Language,
+  Plan,
+  User,
+  UserRole,
+} from "@prisma/client";
 import { isEmailBlocked } from "../../lib/blocked-email.js";
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../../lib/jwt.js";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../../lib/jwt.js";
 import { sendMail } from "../../lib/mailer.js";
 import { hashPassword, verifyPassword } from "../../lib/password.js";
 import { prisma } from "../../lib/prisma.js";
@@ -14,9 +25,21 @@ import { ensureDesktopDeviceAccess } from "../device/device.service.js";
 import { normalizeEmailForStorage } from "../../lib/email-identity-normalize.js";
 import { normalizeToE164 } from "../../lib/phone-e164.js";
 import { createUrlSafeToken, hashToken } from "../../lib/token.js";
-import { createAdminNotificationEmailTemplate, createVerificationEmailTemplate } from "./auth.email.js";
-import type { AuthCredentialsInput, ChangePasswordInput, RegisterInput, UpdateProfileInput } from "./auth.schema.js";
-import { GOOGLE_OAUTH_LOG, logGoogleOAuthJwtIssued, previewSecret } from "./google-oauth.console.js";
+import {
+  createAdminNotificationEmailTemplate,
+  createVerificationEmailTemplate,
+} from "./auth.email.js";
+import type {
+  AuthCredentialsInput,
+  ChangePasswordInput,
+  RegisterInput,
+  UpdateProfileInput,
+} from "./auth.schema.js";
+import {
+  GOOGLE_OAUTH_LOG,
+  logGoogleOAuthJwtIssued,
+  previewSecret,
+} from "./google-oauth.console.js";
 import { grantCredits } from "../subscription/entitlement.engine.js";
 
 type PublicUser = {
@@ -65,7 +88,11 @@ async function syncUserRoleFromEmail(user: User): Promise<User> {
   if (user.role === expected) {
     return user;
   }
-  authLog.info("user role synced to email policy", { userId: user.id, from: user.role, to: expected });
+  authLog.info("user role synced to email policy", {
+    userId: user.id,
+    from: user.role,
+    to: expected,
+  });
   return prisma.user.update({
     where: { id: user.id },
     data: { role: expected },
@@ -81,7 +108,9 @@ function toPublicUser(user: User): PublicUser {
     name: user.name,
     avatar: user.avatar,
     plan: user.plan,
-    subscription_expiry: user.subscriptionExpiry ? user.subscriptionExpiry.toISOString() : null,
+    subscription_expiry: user.subscriptionExpiry
+      ? user.subscriptionExpiry.toISOString()
+      : null,
     role: user.role,
     preferredLanguage: user.preferredLanguage,
     isVerified: user.isVerified,
@@ -108,7 +137,9 @@ async function createSession(user: User) {
   const refreshToken = signRefreshToken(payload);
   const refreshTokenHash = hashToken(refreshToken);
 
-  const expiresAt = new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
+  );
 
   await prisma.refreshToken.create({
     data: {
@@ -125,7 +156,10 @@ async function createSession(user: User) {
   };
 }
 
-function logGoogleOAuthSessionIssued(session: AuthSessionResult, flow: "google-login" | "google-register") {
+function logGoogleOAuthSessionIssued(
+  session: AuthSessionResult,
+  flow: "google-login" | "google-register",
+) {
   logGoogleOAuthJwtIssued({
     userId: session.user.id,
     email: session.user.email,
@@ -145,7 +179,10 @@ function logGoogleOAuthSessionIssued(session: AuthSessionResult, flow: "google-l
 
 /** E-postadaki tıklanabilir bağlantı: {APP_BASE_URL}/api/auth/verify-email?token=... */
 export function buildEmailVerificationLink(rawToken: string) {
-  const verifyUrl = new URL("/api/auth/verify-email", env.APP_BASE_URL.replace(/\/$/, ""));
+  const verifyUrl = new URL(
+    "/api/auth/verify-email",
+    env.APP_BASE_URL.replace(/\/$/, ""),
+  );
   verifyUrl.searchParams.set("token", rawToken);
   return verifyUrl.toString();
 }
@@ -153,7 +190,9 @@ export function buildEmailVerificationLink(rawToken: string) {
 async function createEmailVerificationToken(userId: string) {
   const rawToken = createUrlSafeToken(32);
   const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + env.EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1000,
+  );
 
   await prisma.emailVerificationToken.create({
     data: {
@@ -170,7 +209,7 @@ async function sendVerificationEmail(user: User, rawToken: string) {
   const verificationUrl = buildEmailVerificationLink(rawToken);
   const emailTemplate = createVerificationEmailTemplate({
     verificationUrl,
-    productName: "NB PDF PLARTFORM",
+    productName: "NB PDF PLATFORM",
     expiresInHours: env.EMAIL_VERIFICATION_TTL_HOURS,
   });
 
@@ -186,7 +225,7 @@ async function sendAdminNotificationEmail(user: User) {
   const notificationTemplate = createAdminNotificationEmailTemplate({
     userEmail: user.email,
     registeredAt: user.createdAt.toISOString(),
-    productName: "NB PDF PLARTFORM",
+    productName: "NB PDF PLATFORM",
   });
 
   await sendMail({
@@ -198,7 +237,9 @@ async function sendAdminNotificationEmail(user: User) {
   });
 }
 
-function ensureVerificationTokenUsable(tokenRecord: EmailVerificationTokenWithUser | null): EmailVerificationTokenWithUser {
+function ensureVerificationTokenUsable(
+  tokenRecord: EmailVerificationTokenWithUser | null,
+): EmailVerificationTokenWithUser {
   if (!tokenRecord) {
     throw new HttpError(400, "Verification token is invalid.");
   }
@@ -276,10 +317,15 @@ async function grantWelcomeCreditsForNewUser(userId: string): Promise<void> {
   await grantCredits(userId, amount, "bonus");
 }
 
-export async function registerUser(input: RegisterInput): Promise<RegistrationResult> {
+export async function registerUser(
+  input: RegisterInput,
+): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
-    throw new HttpError(403, "This email address cannot be used to create an account.");
+    throw new HttpError(
+      403,
+      "This email address cannot be used to create an account.",
+    );
   }
 
   const existingUser = await prisma.user.findUnique({
@@ -287,7 +333,9 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
   });
 
   if (existingUser) {
-    authLog.warn("register rejected: email already exists", { email: input.email });
+    authLog.warn("register rejected: email already exists", {
+      email: input.email,
+    });
     throw new HttpError(409, "An account with this email already exists.");
   }
 
@@ -300,7 +348,10 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
     try {
       phoneE164 = normalizeToE164(input.phone);
     } catch (e) {
-      throw new HttpError(400, e instanceof Error ? e.message : "Invalid phone number.");
+      throw new HttpError(
+        400,
+        e instanceof Error ? e.message : "Invalid phone number.",
+      );
     }
   }
   const cityTrim = input.city?.trim() ?? "";
@@ -353,7 +404,10 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
       error: String(error),
     });
     await prisma.user.delete({ where: { id: user.id } });
-    throw new HttpError(503, "We could not send the verification email. Please try again later.");
+    throw new HttpError(
+      503,
+      "We could not send the verification email. Please try again later.",
+    );
   }
 
   let persistedUser: User = user;
@@ -396,14 +450,21 @@ export async function registerUser(input: RegisterInput): Promise<RegistrationRe
     });
 
   return {
-    message: "Verification email sent. Please verify your email before signing in.",
+    message:
+      "Verification email sent. Please verify your email before signing in.",
     verificationRequired: true,
     user: toPublicUser(persistedUser),
   };
 }
 
-export async function loginUser(input: AuthCredentialsInput, deviceId?: string): Promise<AuthSessionResult> {
-  authLog.info("login: attempt", { email: input.email, desktop: Boolean(deviceId) });
+export async function loginUser(
+  input: AuthCredentialsInput,
+  deviceId?: string,
+): Promise<AuthSessionResult> {
+  authLog.info("login: attempt", {
+    email: input.email,
+    desktop: Boolean(deviceId),
+  });
 
   let user = await prisma.user.findUnique({
     where: { email: input.email },
@@ -415,19 +476,37 @@ export async function loginUser(input: AuthCredentialsInput, deviceId?: string):
   }
 
   if (!user.passwordHash) {
-    authLog.warn("login failed: oauth-only account", { userId: user.id, email: input.email });
-    throw new HttpError(401, "This account uses Google sign-in. Please use Continue with Google.");
+    authLog.warn("login failed: oauth-only account", {
+      userId: user.id,
+      email: input.email,
+    });
+    throw new HttpError(
+      401,
+      "This account uses Google sign-in. Please use Continue with Google.",
+    );
   }
 
-  const passwordMatches = await verifyPassword(input.password, user.passwordHash);
+  const passwordMatches = await verifyPassword(
+    input.password,
+    user.passwordHash,
+  );
   if (!passwordMatches) {
-    authLog.warn("login failed: bad password", { userId: user.id, email: input.email });
+    authLog.warn("login failed: bad password", {
+      userId: user.id,
+      email: input.email,
+    });
     throw new HttpError(401, "Invalid email or password.");
   }
 
   if (!user.isVerified) {
-    authLog.warn("login rejected: email not verified", { userId: user.id, email: input.email });
-    throw new HttpError(403, "Please verify your email address before signing in.");
+    authLog.warn("login rejected: email not verified", {
+      userId: user.id,
+      email: input.email,
+    });
+    throw new HttpError(
+      403,
+      "Please verify your email address before signing in.",
+    );
   }
 
   user = await syncUserRoleFromEmail(user);
@@ -442,7 +521,9 @@ export async function loginUser(input: AuthCredentialsInput, deviceId?: string):
   return createSession(user);
 }
 
-export async function refreshSession(refreshToken: string): Promise<AuthSessionResult> {
+export async function refreshSession(
+  refreshToken: string,
+): Promise<AuthSessionResult> {
   let payload;
   try {
     payload = verifyRefreshToken(refreshToken);
@@ -456,7 +537,11 @@ export async function refreshSession(refreshToken: string): Promise<AuthSessionR
     },
   });
 
-  if (!storedToken || storedToken.revokedAt || storedToken.expiresAt < new Date()) {
+  if (
+    !storedToken ||
+    storedToken.revokedAt ||
+    storedToken.expiresAt < new Date()
+  ) {
     throw new HttpError(401, "Session refresh token has expired.");
   }
 
@@ -469,7 +554,10 @@ export async function refreshSession(refreshToken: string): Promise<AuthSessionR
   }
 
   if (!user.isVerified) {
-    throw new HttpError(403, "Please verify your email address before continuing.");
+    throw new HttpError(
+      403,
+      "Please verify your email address before continuing.",
+    );
   }
 
   user = await syncUserRoleFromEmail(user);
@@ -500,7 +588,10 @@ export async function getUserById(userId: string) {
   return toPublicUser(user);
 }
 
-export async function updatePreferredLanguage(userId: string, preferredLanguage: Language) {
+export async function updatePreferredLanguage(
+  userId: string,
+  preferredLanguage: Language,
+) {
   const user = await prisma.user.update({
     where: { id: userId },
     data: { preferredLanguage },
@@ -509,7 +600,10 @@ export async function updatePreferredLanguage(userId: string, preferredLanguage:
   return toPublicUser(user);
 }
 
-export async function updateUserProfile(userId: string, input: UpdateProfileInput) {
+export async function updateUserProfile(
+  userId: string,
+  input: UpdateProfileInput,
+) {
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
   const displayName = `${firstName} ${lastName}`.trim() || null;
@@ -537,7 +631,10 @@ export async function updateUserProfile(userId: string, input: UpdateProfileInpu
       try {
         data.phone = normalizeToE164(trimmed);
       } catch (e) {
-        throw new HttpError(400, e instanceof Error ? e.message : "Invalid phone number.");
+        throw new HttpError(
+          400,
+          e instanceof Error ? e.message : "Invalid phone number.",
+        );
       }
     }
   }
@@ -566,7 +663,10 @@ export async function updateUserProfile(userId: string, input: UpdateProfileInpu
   return toPublicUser(user);
 }
 
-export async function changeUserPassword(userId: string, input: ChangePasswordInput) {
+export async function changeUserPassword(
+  userId: string,
+  input: ChangePasswordInput,
+) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -582,15 +682,25 @@ export async function changeUserPassword(userId: string, input: ChangePasswordIn
     );
   }
 
-  const currentMatches = await verifyPassword(input.currentPassword, user.passwordHash);
+  const currentMatches = await verifyPassword(
+    input.currentPassword,
+    user.passwordHash,
+  );
   if (!currentMatches) {
-    authLog.warn("password change rejected: wrong current password", { userId: user.id });
+    authLog.warn("password change rejected: wrong current password", {
+      userId: user.id,
+    });
     throw new HttpError(401, "Current password is incorrect.");
   }
 
   if (input.currentPassword === input.newPassword) {
-    authLog.warn("password change rejected: new password same as current", { userId: user.id });
-    throw new HttpError(400, "New password must be different from your current password.");
+    authLog.warn("password change rejected: new password same as current", {
+      userId: user.id,
+    });
+    throw new HttpError(
+      400,
+      "New password must be different from your current password.",
+    );
   }
 
   const passwordHash = await hashPassword(input.newPassword);
@@ -607,7 +717,10 @@ export async function changeUserPassword(userId: string, input: ChangePasswordIn
   return toPublicUser(updated);
 }
 
-export async function setInitialPasswordForUser(userId: string, newPassword: string) {
+export async function setInitialPasswordForUser(
+  userId: string,
+  newPassword: string,
+) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -617,7 +730,10 @@ export async function setInitialPasswordForUser(userId: string, newPassword: str
   }
 
   if (user.passwordHash) {
-    throw new HttpError(400, "A password is already set for this account. Use change password instead.");
+    throw new HttpError(
+      400,
+      "A password is already set for this account. Use change password instead.",
+    );
   }
 
   const passwordHash = await hashPassword(newPassword);
@@ -665,11 +781,16 @@ export async function signInWithGoogle(params: {
 
   if (existing) {
     if (existing.authProvider !== "google") {
-      console.error(`${GOOGLE_OAUTH_LOG} signInWithGoogle ERROR: email already used by local account`, {
+      console.error(
+        `${GOOGLE_OAUTH_LOG} signInWithGoogle ERROR: email already used by local account`,
+        {
+          email,
+          existingAuthProvider: existing.authProvider,
+        },
+      );
+      authLog.warn("google oauth rejected: email registered locally", {
         email,
-        existingAuthProvider: existing.authProvider,
       });
-      authLog.warn("google oauth rejected: email registered locally", { email });
       throw new HttpError(
         409,
         "An account with this email already exists. Sign in with your email and password, or use a different Google account.",
@@ -694,12 +815,18 @@ export async function signInWithGoogle(params: {
       },
     });
 
-    console.log(`${GOOGLE_OAUTH_LOG} user record updated (existing Google user)`, {
+    console.log(
+      `${GOOGLE_OAUTH_LOG} user record updated (existing Google user)`,
+      {
+        userId: user.id,
+        email: user.email,
+        googleId,
+      },
+    );
+    authLog.info("google login: success", {
       userId: user.id,
       email: user.email,
-      googleId,
     });
-    authLog.info("google login: success", { userId: user.id, email: user.email });
     const synced = await syncUserRoleFromEmail(user);
     const session = await createSession(synced);
     logGoogleOAuthSessionIssued(session, "google-login");
@@ -708,7 +835,10 @@ export async function signInWithGoogle(params: {
 
   if (await isEmailBlocked(email)) {
     authLog.warn("google oauth rejected: email blocked", { email });
-    throw new HttpError(403, "This email address cannot be used to create an account.");
+    throw new HttpError(
+      403,
+      "This email address cannot be used to create an account.",
+    );
   }
 
   let persistedGoogleUser: User = await prisma.user.create({
@@ -734,11 +864,16 @@ export async function signInWithGoogle(params: {
     googleId,
     preferredLanguage: params.preferredLanguage,
   });
-  authLog.info("google register: user created", { userId: persistedGoogleUser.id, email: persistedGoogleUser.email });
+  authLog.info("google register: user created", {
+    userId: persistedGoogleUser.id,
+    email: persistedGoogleUser.email,
+  });
 
   try {
     await grantWelcomeCreditsForNewUser(persistedGoogleUser.id);
-    const refetched = await prisma.user.findUnique({ where: { id: persistedGoogleUser.id } });
+    const refetched = await prisma.user.findUnique({
+      where: { id: persistedGoogleUser.id },
+    });
     if (refetched) {
       persistedGoogleUser = refetched;
     }
@@ -752,14 +887,20 @@ export async function signInWithGoogle(params: {
   try {
     await sendAdminNotificationEmail(persistedGoogleUser);
   } catch (error) {
-    console.warn(`${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`, {
-      userId: persistedGoogleUser.id,
-      error: String(error),
-    });
-    authLog.warn("google register: admin notification email failed (user kept)", {
-      userId: persistedGoogleUser.id,
-      error: String(error),
-    });
+    console.warn(
+      `${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`,
+      {
+        userId: persistedGoogleUser.id,
+        error: String(error),
+      },
+    );
+    authLog.warn(
+      "google register: admin notification email failed (user kept)",
+      {
+        userId: persistedGoogleUser.id,
+        error: String(error),
+      },
+    );
   }
 
   void import("../marketing/email-automation.js")
@@ -811,7 +952,10 @@ export async function verifyEmailToken(rawToken: string) {
     }),
   ]);
 
-  authLog.info("verify-email: success", { userId: tokenRecord.userId, email: tokenRecord.user.email });
+  authLog.info("verify-email: success", {
+    userId: tokenRecord.userId,
+    email: tokenRecord.user.email,
+  });
 
   return {
     message: "Your email address has been verified successfully.",

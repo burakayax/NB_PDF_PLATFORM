@@ -42,7 +42,8 @@ function LanguageDropdown({
     };
   }, []);
 
-  const current = LANG_OPTIONS.find((o) => o.code === language) ?? LANG_OPTIONS[0];
+  const current =
+    LANG_OPTIONS.find((o) => o.code === language) ?? LANG_OPTIONS[0];
 
   return (
     <div className="relative" ref={rootRef}>
@@ -56,8 +57,13 @@ function LanguageDropdown({
         <span className="text-base leading-none" aria-hidden>
           {current.flag}
         </span>
-        <span className="font-bold tracking-wide">{current.code.toUpperCase()}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-nb-muted transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        <span className="font-bold tracking-wide">
+          {current.code.toUpperCase()}
+        </span>
+        <ChevronDown
+          className={`h-3.5 w-3.5 shrink-0 text-nb-muted transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
       </button>
       {open ? (
         <ul
@@ -65,7 +71,11 @@ function LanguageDropdown({
           className="absolute right-0 top-[calc(100%+6px)] z-[60] min-w-[11rem] overflow-hidden rounded-xl border border-white/[0.1] bg-nb-bg-elevated py-1 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.55)] backdrop-blur-md"
         >
           {LANG_OPTIONS.map((opt) => (
-            <li key={opt.code} role="option" aria-selected={language === opt.code}>
+            <li
+              key={opt.code}
+              role="option"
+              aria-selected={language === opt.code}
+            >
               <button
                 type="button"
                 className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium transition-colors ${
@@ -82,7 +92,9 @@ function LanguageDropdown({
                   {opt.flag}
                 </span>
                 <span>{opt.label}</span>
-                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-nb-muted">{opt.code}</span>
+                <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-nb-muted">
+                  {opt.code}
+                </span>
               </button>
             </li>
           ))}
@@ -135,11 +147,20 @@ export function DashboardTopNav({
   const { cms } = useSettings();
   const dashboardLogoSrc = useMemo(() => {
     const assets = cms?.assets as { logoUrl?: string } | undefined;
-    return resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ?? "/nb_pdf_TOOLS_icon.png";
+    return (
+      resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ??
+      "/nb_pdf_TOOLS_icon.png"
+    );
   }, [cms]);
-  const showCreditsCenter = user.role !== "ADMIN" && (creditBalanceLoading || typeof creditBalance === "number");
-  const upgradeVisible = Boolean(onUpgradeClick && showCreditsCenter && !limitsizProActive);
-  const creditsPanelVisible = Boolean(onOpenCreditsPanel && user.role !== "ADMIN");
+  const showCreditsCenter =
+    user.role !== "ADMIN" &&
+    (creditBalanceLoading || typeof creditBalance === "number");
+  const upgradeVisible = Boolean(
+    onUpgradeClick && showCreditsCenter && !limitsizProActive,
+  );
+  const creditsPanelVisible = Boolean(
+    onOpenCreditsPanel && user.role !== "ADMIN",
+  );
 
   const centerLabel = () => {
     if (creditBalanceLoading) {
@@ -162,13 +183,23 @@ export function DashboardTopNav({
         className="nb-transition flex min-w-0 items-center gap-2 rounded-2xl px-1 py-1 text-left hover:scale-[1.01] hover:bg-white/[0.06] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45 sm:gap-3"
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-nb-primary/35 bg-gradient-to-br from-nb-primary/20 to-nb-primary/8 shadow-[0_0_28px_rgba(59,130,246,0.28)]">
-          <img src={dashboardLogoSrc} alt="" className="h-5 w-5 rounded-md object-cover" />
+          <img
+            src={dashboardLogoSrc}
+            alt=""
+            className="h-5 w-5 rounded-md object-cover"
+          />
         </span>
         <span className="hidden min-w-0 sm:block">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">NB Global Studio</span>
-          <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">NB PDF PLARTFORM</span>
+          <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">
+            NB Global Studio
+          </span>
+          <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">
+            NB PDF PLATFORM
+          </span>
         </span>
-        <span className="max-w-[140px] truncate text-sm font-semibold tracking-wide text-nb-text sm:hidden">NB PDF</span>
+        <span className="max-w-[140px] truncate text-sm font-semibold tracking-wide text-nb-text sm:hidden">
+          NB PDF
+        </span>
       </button>
 
       <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-4">
@@ -182,18 +213,28 @@ export function DashboardTopNav({
                   className="inline-flex max-w-[min(100%,17rem)] flex-col items-start gap-0.5 rounded-full border border-amber-400/35 bg-gradient-to-r from-amber-500/14 to-emerald-600/12 px-3.5 py-1.5 text-left shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)] transition hover:bg-amber-500/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/35 sm:flex-row sm:items-center sm:gap-2"
                 >
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-amber-200 sm:text-xs">
-                    <Coins className="h-3.5 w-3.5 shrink-0 text-amber-300/95" aria-hidden />
+                    <Coins
+                      className="h-3.5 w-3.5 shrink-0 text-amber-300/95"
+                      aria-hidden
+                    />
                     {W.unlimitedSidebarBadge}
                   </span>
-                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">{W.unlimitedAccessActive}</span>
+                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">
+                    {W.unlimitedAccessActive}
+                  </span>
                 </button>
               ) : (
                 <span className="inline-flex max-w-[min(100%,17rem)] flex-col items-start gap-0.5 rounded-full border border-amber-400/35 bg-gradient-to-r from-amber-500/12 to-emerald-600/10 px-3 py-1.5 text-left shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)] sm:flex-row sm:items-center sm:gap-2">
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-amber-200 sm:text-xs">
-                    <Coins className="h-3.5 w-3.5 shrink-0 text-amber-300/95" aria-hidden />
+                    <Coins
+                      className="h-3.5 w-3.5 shrink-0 text-amber-300/95"
+                      aria-hidden
+                    />
                     {W.unlimitedSidebarBadge}
                   </span>
-                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">{W.unlimitedAccessActive}</span>
+                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">
+                    {W.unlimitedAccessActive}
+                  </span>
                 </span>
               )
             ) : creditsPanelVisible ? (
@@ -201,14 +242,26 @@ export function DashboardTopNav({
                 type="button"
                 onClick={() => onOpenCreditsPanel?.()}
                 className="inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition hover:bg-slate-700/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/35 sm:max-w-[22rem]"
-                aria-label={tr ? `${W.navbarCreditsLabel}: ${centerLabel()}` : `Credits: ${centerLabel()}`}
+                aria-label={
+                  tr
+                    ? `${W.navbarCreditsLabel}: ${centerLabel()}`
+                    : `Credits: ${centerLabel()}`
+                }
               >
-                <Coins className="h-4 w-4 shrink-0 text-amber-300/90" strokeWidth={2.25} aria-hidden />
+                <Coins
+                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </button>
             ) : (
               <span className="inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-[13px] font-semibold tabular-nums text-slate-100 ring-1 ring-black/20 sm:max-w-[22rem]">
-                <Coins className="h-4 w-4 shrink-0 text-amber-300/90" strokeWidth={2.25} aria-hidden />
+                <Coins
+                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  strokeWidth={2.25}
+                  aria-hidden
+                />
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </span>
             )}
@@ -224,7 +277,10 @@ export function DashboardTopNav({
           </>
         ) : null}
 
-        <LanguageDropdown language={language} onLanguageChange={onLanguageChange} />
+        <LanguageDropdown
+          language={language}
+          onLanguageChange={onLanguageChange}
+        />
 
         {showAdminEntry && onOpenAdmin ? (
           <button
@@ -236,7 +292,13 @@ export function DashboardTopNav({
           </button>
         ) : null}
 
-        <UserMenu user={user} language={language} onProfile={onProfile} onPassword={onPassword} onLogout={onLogout} />
+        <UserMenu
+          user={user}
+          language={language}
+          onProfile={onProfile}
+          onPassword={onPassword}
+          onLogout={onLogout}
+        />
       </div>
     </header>
   );

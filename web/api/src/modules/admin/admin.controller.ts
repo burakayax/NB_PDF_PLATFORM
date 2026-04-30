@@ -27,7 +27,10 @@ import {
   adminUsageExportQuerySchema,
   adminUsageSeriesQuerySchema,
 } from "./admin.schema.js";
-import { grantCredits, subtractCreditsByAdmin } from "../subscription/entitlement.engine.js";
+import {
+  grantCredits,
+  subtractCreditsByAdmin,
+} from "../subscription/entitlement.engine.js";
 import {
   adminAddBlockedEmailRaw,
   adminListBlockedEmails,
@@ -61,7 +64,11 @@ import {
   putMarketingAutomation,
 } from "./marketing-admin.service.js";
 import { readEmailAutomationConfig } from "../marketing/email-automation.js";
-import { buildPublicMediaUrl, listMediaAssets, persistMediaUpload } from "./media.service.js";
+import {
+  buildPublicMediaUrl,
+  listMediaAssets,
+  persistMediaUpload,
+} from "./media.service.js";
 import {
   listAdminAuditLogs,
   listSettingRevisions,
@@ -92,21 +99,33 @@ function adminActor(request: Request): AdminActor {
   return { userId: u.id, email: u.email };
 }
 
-export async function adminOverviewController(_request: Request, response: Response) {
+export async function adminOverviewController(
+  _request: Request,
+  response: Response,
+) {
   const stats = await getAdminOverview();
   response.json(stats);
 }
 
-export async function adminListUsersController(request: Request, response: Response) {
+export async function adminListUsersController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminListUsersQuerySchema.safeParse(request.query);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid query.",
+    );
   }
   const result = await listUsersForAdmin(parsed.data);
   response.json(result);
 }
 
-export async function adminUpdateUserController(request: Request, response: Response) {
+export async function adminUpdateUserController(
+  request: Request,
+  response: Response,
+) {
   const raw = request.params.id;
   const userId = Array.isArray(raw) ? raw[0] : raw;
   if (!userId) {
@@ -114,14 +133,20 @@ export async function adminUpdateUserController(request: Request, response: Resp
   }
   const parsed = adminUpdateUserSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const actor = adminActor(request);
   const updated = await updateUserForAdmin(userId, parsed.data, actor);
   response.json(updated);
 }
 
-export async function adminDeleteUserController(request: Request, response: Response) {
+export async function adminDeleteUserController(
+  request: Request,
+  response: Response,
+) {
   const raw = request.params.id;
   const userId = Array.isArray(raw) ? raw[0] : raw;
   if (!userId) {
@@ -134,104 +159,190 @@ export async function adminDeleteUserController(request: Request, response: Resp
   response.json({ ok: true });
 }
 
-export async function adminListBlockedEmailsController(_request: Request, response: Response) {
+export async function adminListBlockedEmailsController(
+  _request: Request,
+  response: Response,
+) {
   const items = await adminListBlockedEmails();
   response.json({ items });
 }
 
-export async function adminAddBlockedEmailController(request: Request, response: Response) {
+export async function adminAddBlockedEmailController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminBlockedEmailBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   await adminAddBlockedEmailRaw(parsed.data.email, parsed.data.reason ?? null);
   const actor = adminActor(request);
-  await logAdminAudit(actor, "blocked_email.add", parsed.data.email, `E-posta engellendi: ${parsed.data.email}`);
+  await logAdminAudit(
+    actor,
+    "blocked_email.add",
+    parsed.data.email,
+    `E-posta engellendi: ${parsed.data.email}`,
+  );
   response.status(201).json({ ok: true });
 }
 
-export async function adminRemoveBlockedEmailController(request: Request, response: Response) {
+export async function adminRemoveBlockedEmailController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminBlockedEmailQuerySchema.safeParse(request.query);
   if (!parsed.success) {
     throw new HttpError(400, "Query parameter email is required.");
   }
   await adminRemoveBlockedEmailRaw(parsed.data.email);
   const actor = adminActor(request);
-  await logAdminAudit(actor, "blocked_email.remove", parsed.data.email, `Engel kaldırıldı: ${parsed.data.email}`);
+  await logAdminAudit(
+    actor,
+    "blocked_email.remove",
+    parsed.data.email,
+    `Engel kaldırıldı: ${parsed.data.email}`,
+  );
   response.json({ ok: true });
 }
 
-export async function adminPutPaymentPricesController(request: Request, response: Response) {
-  const parsed = adminPaymentPricesBodySchema.safeParse(request.body?.prices ?? request.body);
+export async function adminPutPaymentPricesController(
+  request: Request,
+  response: Response,
+) {
+  const parsed = adminPaymentPricesBodySchema.safeParse(
+    request.body?.prices ?? request.body,
+  );
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   await adminPutPaymentPrices(parsed.data, adminActor(request));
   response.json({ ok: true });
 }
 
-export async function adminCreateUserController(request: Request, response: Response) {
+export async function adminCreateUserController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminCreateUserSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const user = await createUserForAdmin(parsed.data);
   const actor = adminActor(request);
-  await logAdminAudit(actor, "user.create", user.id, `Yeni kullanıcı: ${user.email}`);
+  await logAdminAudit(
+    actor,
+    "user.create",
+    user.id,
+    `Yeni kullanıcı: ${user.email}`,
+  );
   response.status(201).json(user);
 }
 
-export async function adminGetSettingsController(_request: Request, response: Response) {
+export async function adminGetSettingsController(
+  _request: Request,
+  response: Response,
+) {
   const settings = await getAllSiteSettings();
   sanitizeGlobalFlagsForAdminResponse(settings);
   response.json({ settings });
 }
 
-export async function adminPatchSettingsController(request: Request, response: Response) {
+export async function adminPatchSettingsController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminPatchSettingsSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   await patchSiteSettings(parsed.data.patches, adminActor(request));
   response.json({ ok: true });
 }
 
-export async function adminGetCmsController(_request: Request, response: Response) {
+export async function adminGetCmsController(
+  _request: Request,
+  response: Response,
+) {
   const content = await getCmsContent();
   response.json({ content });
 }
 
-export async function adminPutCmsController(request: Request, response: Response) {
-  await putCmsContent(request.body?.content ?? request.body, adminActor(request));
+export async function adminPutCmsController(
+  request: Request,
+  response: Response,
+) {
+  await putCmsContent(
+    request.body?.content ?? request.body,
+    adminActor(request),
+  );
   response.json({ ok: true });
 }
 
-export async function adminPlansController(_request: Request, response: Response) {
+export async function adminPlansController(
+  _request: Request,
+  response: Response,
+) {
   const payload = await getPlansAdminPayload();
   response.json(payload);
 }
 
-export async function adminPutPackagesMarketingController(request: Request, response: Response) {
-  await putPackagesMarketing(request.body?.marketing ?? request.body, adminActor(request));
+export async function adminPutPackagesMarketingController(
+  request: Request,
+  response: Response,
+) {
+  await putPackagesMarketing(
+    request.body?.marketing ?? request.body,
+    adminActor(request),
+  );
   response.json({ ok: true });
 }
 
-export async function adminTOOLSController(_request: Request, response: Response) {
+export async function adminTOOLSController(
+  _request: Request,
+  response: Response,
+) {
   const payload = await getTOOLSAdminPayload();
   response.json(payload);
 }
 
-export async function adminPutTOOLSController(request: Request, response: Response) {
-  await putTOOLSConfig(request.body?.config ?? request.body, adminActor(request));
+export async function adminPutTOOLSController(
+  request: Request,
+  response: Response,
+) {
+  await putTOOLSConfig(
+    request.body?.config ?? request.body,
+    adminActor(request),
+  );
   response.json({ ok: true });
 }
 
-export async function adminPutPlansOverrideController(request: Request, response: Response) {
-  await putPlansOverride(request.body?.override ?? request.body, adminActor(request));
+export async function adminPutPlansOverrideController(
+  request: Request,
+  response: Response,
+) {
+  await putPlansOverride(
+    request.body?.override ?? request.body,
+    adminActor(request),
+  );
   response.json({ ok: true });
 }
 
-export async function adminControlMetaController(_request: Request, response: Response) {
+export async function adminControlMetaController(
+  _request: Request,
+  response: Response,
+) {
   response.json({
     featureFlagCatalog: FEATURE_FLAG_CATALOG,
     betaFlagCatalog: BETA_FLAG_CATALOG,
@@ -239,10 +350,16 @@ export async function adminControlMetaController(_request: Request, response: Re
   });
 }
 
-export async function adminAuditLogController(request: Request, response: Response) {
+export async function adminAuditLogController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminAuditQuerySchema.safeParse(request.query);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid query.",
+    );
   }
   const rows = await listAdminAuditLogs(parsed.data.limit);
   response.json({
@@ -259,10 +376,16 @@ export async function adminAuditLogController(request: Request, response: Respon
   });
 }
 
-export async function adminSettingRevisionsController(request: Request, response: Response) {
+export async function adminSettingRevisionsController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminRevisionsQuerySchema.safeParse(request.query);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid query.",
+    );
   }
   const rows = await listSettingRevisions(parsed.data.scope, parsed.data.limit);
   response.json({
@@ -276,32 +399,56 @@ export async function adminSettingRevisionsController(request: Request, response
   });
 }
 
-export async function adminRollbackRevisionController(request: Request, response: Response) {
+export async function adminRollbackRevisionController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminRollbackBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
-  const result = await rollbackSettingRevision(parsed.data.revisionId, adminActor(request));
+  const result = await rollbackSettingRevision(
+    parsed.data.revisionId,
+    adminActor(request),
+  );
   response.json(result);
 }
 
-export async function adminSystemResetController(request: Request, response: Response) {
+export async function adminSystemResetController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminResetBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
-  const result = await resetAdminScopesToDefaults(parsed.data.scopes, adminActor(request));
+  const result = await resetAdminScopesToDefaults(
+    parsed.data.scopes,
+    adminActor(request),
+  );
   response.json(result);
 }
 
-export async function adminUploadMediaController(request: Request, response: Response) {
+export async function adminUploadMediaController(
+  request: Request,
+  response: Response,
+) {
   const file = (request as Request & { file?: Express.Multer.File }).file;
   if (!file) {
     throw new HttpError(400, "No file uploaded.");
   }
   const buf = file.buffer as Buffer | undefined;
   if (!buf) {
-    throw new HttpError(500, "Upload buffer missing; check multer memory storage.");
+    throw new HttpError(
+      500,
+      "Upload buffer missing; check multer memory storage.",
+    );
   }
   const row = await persistMediaUpload({
     buffer: buf,
@@ -320,7 +467,10 @@ export async function adminUploadMediaController(request: Request, response: Res
   });
 }
 
-export async function adminListMediaController(_request: Request, response: Response) {
+export async function adminListMediaController(
+  _request: Request,
+  response: Response,
+) {
   const items = await listMediaAssets();
   response.json({
     items: items.map((a) => ({
@@ -335,23 +485,38 @@ export async function adminListMediaController(_request: Request, response: Resp
   });
 }
 
-export async function adminUsageSeriesController(request: Request, response: Response) {
+export async function adminUsageSeriesController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminUsageSeriesQuerySchema.safeParse(request.query);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid query.",
+    );
   }
   const series = await getUsageSeries(parsed.data.days);
   response.json({ series });
 }
 
-export async function adminUsageExportController(request: Request, response: Response) {
+export async function adminUsageExportController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminUsageExportQuerySchema.safeParse(request.query);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid query.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid query.",
+    );
   }
   const csv = await buildUsageExportCsv(parsed.data.from, parsed.data.to);
   response.setHeader("Content-Type", "text/csv; charset=utf-8");
-  response.setHeader("Content-Disposition", `attachment; filename="usage-${parsed.data.from}-${parsed.data.to}.csv"`);
+  response.setHeader(
+    "Content-Disposition",
+    `attachment; filename="usage-${parsed.data.from}-${parsed.data.to}.csv"`,
+  );
   response.send("\uFEFF" + csv);
 }
 
@@ -365,10 +530,16 @@ export async function adminUsageExportController(request: Request, response: Res
  * The `requireAdmin` middleware on the admin router enforces the ADMIN
  * role; this controller assumes it has run.
  */
-export async function adminGrantCreditsController(request: Request, response: Response) {
+export async function adminGrantCreditsController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminGrantCreditsSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const { userId, amount, reason } = parsed.data;
   const actor = adminActor(request);
@@ -409,12 +580,18 @@ export async function adminGrantCreditsController(request: Request, response: Re
   });
 }
 
-export async function adminListToolRegistryController(_request: Request, response: Response) {
+export async function adminListToolRegistryController(
+  _request: Request,
+  response: Response,
+) {
   const items = await listToolRegistryForAdmin();
   response.json({ items });
 }
 
-export async function adminPutToolRegistryController(request: Request, response: Response) {
+export async function adminPutToolRegistryController(
+  request: Request,
+  response: Response,
+) {
   const raw = request.params.id;
   const id = Array.isArray(raw) ? raw[0] : raw;
   if (!id) {
@@ -422,36 +599,61 @@ export async function adminPutToolRegistryController(request: Request, response:
   }
   const parsed = adminToolRegistryPutSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
-  const updated = await updateToolRegistryForAdmin(id, parsed.data, adminActor(request));
+  const updated = await updateToolRegistryForAdmin(
+    id,
+    parsed.data,
+    adminActor(request),
+  );
   response.json(updated);
 }
 
-export async function adminGetAppSettingsController(_request: Request, response: Response) {
+export async function adminGetAppSettingsController(
+  _request: Request,
+  response: Response,
+) {
   const row = await getAppSettingsForAdmin();
   response.json(row);
 }
 
-export async function adminPutAppSettingsController(request: Request, response: Response) {
+export async function adminPutAppSettingsController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminAppSettingsPutSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   if (Object.keys(parsed.data).length === 0) {
     throw new HttpError(400, "At least one field is required.");
   }
-  const updated = await updateAppSettingsForAdmin(parsed.data, adminActor(request));
+  const updated = await updateAppSettingsForAdmin(
+    parsed.data,
+    adminActor(request),
+  );
   response.json(updated);
 }
 
 /**
  * Non-zero signed adjustment: positive top-up (`admin_add`), negative removal (`admin_subtract`).
  */
-export async function adminAdjustCreditsController(request: Request, response: Response) {
+export async function adminAdjustCreditsController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminAdjustCreditsBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const { userId, amount, reason } = parsed.data;
   const actor = adminActor(request);
@@ -459,13 +661,19 @@ export async function adminAdjustCreditsController(request: Request, response: R
   try {
     if (amount > 0) {
       const result = await grantCredits(userId, amount, "admin_add");
-      await logAdminAudit(actor, "credits.grant", userId, `Admin adjusted +${amount} credits (reason: ${reason})`, {
-        amount,
-        reason,
-        transactionId: result.transactionId,
-        creditsBefore: result.creditsBefore,
-        creditsAfter: result.creditsAfter,
-      });
+      await logAdminAudit(
+        actor,
+        "credits.grant",
+        userId,
+        `Admin adjusted +${amount} credits (reason: ${reason})`,
+        {
+          amount,
+          reason,
+          transactionId: result.transactionId,
+          creditsBefore: result.creditsBefore,
+          creditsAfter: result.creditsAfter,
+        },
+      );
       return response.status(200).json({
         ok: true,
         userId,
@@ -508,15 +716,24 @@ export async function adminAdjustCreditsController(request: Request, response: R
   }
 }
 
-export async function adminGetMarketingController(_request: Request, response: Response) {
+export async function adminGetMarketingController(
+  _request: Request,
+  response: Response,
+) {
   const payload = await getMarketingAdminPayload();
   response.json(payload);
 }
 
-export async function adminPutMarketingAutomationController(request: Request, response: Response) {
+export async function adminPutMarketingAutomationController(
+  request: Request,
+  response: Response,
+) {
   const parsed = emailAutomationBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const current = await readEmailAutomationConfig();
   const next = { ...current, ...parsed.data };
@@ -524,17 +741,31 @@ export async function adminPutMarketingAutomationController(request: Request, re
   response.json({ ok: true, automation: next });
 }
 
-export async function adminPostMarketingBroadcastController(request: Request, response: Response) {
+export async function adminPostMarketingBroadcastController(
+  request: Request,
+  response: Response,
+) {
   const parsed = marketingBroadcastBodySchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const { subject, html, batchSize } = parsed.data;
-  const result = await broadcastCampaignToAllUsers(subject, html, batchSize, adminActor(request));
+  const result = await broadcastCampaignToAllUsers(
+    subject,
+    html,
+    batchSize,
+    adminActor(request),
+  );
   response.json({ ok: true, ...result });
 }
 
-export async function adminListCouponsController(_request: Request, response: Response) {
+export async function adminListCouponsController(
+  _request: Request,
+  response: Response,
+) {
   const items = await prisma.coupon.findMany({
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { uses: true } } },
@@ -552,10 +783,16 @@ export async function adminListCouponsController(_request: Request, response: Re
   });
 }
 
-export async function adminCreateCouponController(request: Request, response: Response) {
+export async function adminCreateCouponController(
+  request: Request,
+  response: Response,
+) {
   const parsed = adminCouponCreateSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   const code = normalizeCouponCode(parsed.data.code);
   try {
@@ -577,14 +814,22 @@ export async function adminCreateCouponController(request: Request, response: Re
       createdAt: created.createdAt.toISOString(),
     });
   } catch (e) {
-    if (e && typeof e === "object" && "code" in e && (e as { code?: string }).code === "P2002") {
+    if (
+      e &&
+      typeof e === "object" &&
+      "code" in e &&
+      (e as { code?: string }).code === "P2002"
+    ) {
       throw new HttpError(409, "A coupon with this code already exists.");
     }
     throw e;
   }
 }
 
-export async function adminPatchCouponController(request: Request, response: Response) {
+export async function adminPatchCouponController(
+  request: Request,
+  response: Response,
+) {
   const paramId = request.params["id"];
   const id = typeof paramId === "string" ? paramId : "";
   if (!id) {
@@ -592,7 +837,10 @@ export async function adminPatchCouponController(request: Request, response: Res
   }
   const parsed = adminCouponPatchSchema.safeParse(request.body);
   if (!parsed.success) {
-    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+    throw new HttpError(
+      400,
+      parsed.error.issues[0]?.message ?? "Invalid body.",
+    );
   }
   if (Object.keys(parsed.data).length === 0) {
     throw new HttpError(400, "No fields to update.");
@@ -614,10 +862,17 @@ export async function adminPatchCouponController(request: Request, response: Res
 }
 
 /** Son 1 yıllık indirme denemeleri; yönetim listesi. */
-export async function adminListDownloadLogsController(request: Request, response: Response) {
+export async function adminListDownloadLogsController(
+  request: Request,
+  response: Response,
+) {
   const rawLimit = request.query["limit"];
-  const parsedLimit = typeof rawLimit === "string" ? Number.parseInt(rawLimit, 10) : 100;
-  const take = Math.min(Math.max(1, Number.isFinite(parsedLimit) ? parsedLimit : 100), 500);
+  const parsedLimit =
+    typeof rawLimit === "string" ? Number.parseInt(rawLimit, 10) : 100;
+  const take = Math.min(
+    Math.max(1, Number.isFinite(parsedLimit) ? parsedLimit : 100),
+    500,
+  );
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   const rows = await prisma.downloadLog.findMany({
@@ -642,8 +897,12 @@ export async function adminListDownloadLogsController(request: Request, response
   });
 }
 
-export async function adminDownloadLogProofController(request: Request, response: Response) {
-  const id = typeof request.params["id"] === "string" ? request.params["id"] : "";
+export async function adminDownloadLogProofController(
+  request: Request,
+  response: Response,
+) {
+  const id =
+    typeof request.params["id"] === "string" ? request.params["id"] : "";
   if (!id) {
     throw new HttpError(400, "Missing id.");
   }
@@ -655,7 +914,7 @@ export async function adminDownloadLogProofController(request: Request, response
     throw new HttpError(404, "Not found.");
   }
   const text =
-    `NB PDF PLARTFORM — Download technical record\n` +
+    `NB PDF PLATFORM — Download technical record\n` +
     `Record ID: ${row.id}\n` +
     `Created (UTC): ${row.createdAt.toISOString()}\n` +
     `User ID: ${row.userId}\n` +
@@ -670,6 +929,9 @@ export async function adminDownloadLogProofController(request: Request, response
     `This document is generated for dispute resolution. ` +
     `SUCCESS means the client sent an ACK after the file stream completed in the browser.\n`;
   response.setHeader("Content-Type", "text/plain; charset=utf-8");
-  response.setHeader("Content-Disposition", `attachment; filename="download-proof-${row.id}.txt"`);
+  response.setHeader(
+    "Content-Disposition",
+    `attachment; filename="download-proof-${row.id}.txt"`,
+  );
   response.send(text);
 }

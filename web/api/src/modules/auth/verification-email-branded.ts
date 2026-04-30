@@ -1,9 +1,11 @@
 import { escapeHtmlAttr } from "../../lib/email-html.js";
 
 /**
- * PLARTFORM — SaaS verification email (icon placeholders included)
+ * PLATFORM — SaaS verification email (icon placeholders included)
  */
-export function renderBrandedVerificationEmailHtml(verificationUrl: string): string {
+export function renderBrandedVerificationEmailHtml(
+  verificationUrl: string,
+): string {
   const href = escapeHtmlAttr(verificationUrl);
 
   return `<!DOCTYPE html>
@@ -12,7 +14,7 @@ export function renderBrandedVerificationEmailHtml(verificationUrl: string): str
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="x-apple-disable-message-reformatting" />
-  <title>NB PDF PLARTFORM</title>
+  <title>NB PDF PLATFORM</title>
 </head>
 
 <body style="margin:0;padding:0;width:100%;background-color:#f8fafc;">
@@ -35,7 +37,7 @@ export function renderBrandedVerificationEmailHtml(verificationUrl: string): str
                 <!-- BURAYA İKON (LOGO) -->
                 <img src="/web/frontend/public/logo.png" width="24" height="24" style="display:inline-block;" />
 
-                PLARTFORM
+                PLATFORM
               </div>
 
             </td>
@@ -49,7 +51,7 @@ export function renderBrandedVerificationEmailHtml(verificationUrl: string): str
               </h1>
 
               <p style="margin:12px 0 0 0;font-family:Arial;font-size:15px;line-height:1.6;color:#334155;">
-                PLARTFORM hesabınızı aktifleştirmek için doğrulamayı tamamlamanız gerekiyor.
+                PLATFORM hesabınızı aktifleştirmek için doğrulamayı tamamlamanız gerekiyor.
               </p>
 
               <p style="margin:10px 0 0 0;font-family:Arial;font-size:13px;color:#64748b;">
@@ -96,7 +98,7 @@ export function renderBrandedVerificationEmailHtml(verificationUrl: string): str
               </p>
 
               <p style="margin:8px 0 0 0;font-family:Arial;font-size:12px;color:#94a3b8;">
-                NB PDF PLARTFORM © 2026
+                NB PDF PLATFORM © 2026
               </p>
             </td>
           </tr>
