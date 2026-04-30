@@ -15,6 +15,7 @@ import { landingTranslations, type Language } from "../../i18n/landing";
 import { LandingIcon } from "./LandingIcon";
 import { LandingPricingSection } from "./LandingPricingSection";
 import { Marquee } from "../ui/marquee";
+import { CrawlableLink } from "../seo/CrawlableLink";
 
 type LandingPageProps = {
   language: Language;
@@ -101,6 +102,14 @@ export function LandingPage({
     language === "tr"
       ? "1.000'den fazla kullanıcı tarafından güveniliyor"
       : "Trusted by 1,000+ users";
+  const seoHeadlineFallback =
+    language === "tr"
+      ? "PDF duzenleme, donusturme ve birlestirme platformu"
+      : "PDF editing, conversion, and merge PDF platform";
+  const seoDescriptionFallback =
+    language === "tr"
+      ? "PDF converter, merge PDF ve compress PDF araclarini tek bir profesyonel akista kullanin."
+      : "Use PDF converter, merge PDF, and compress PDF tools in one professional workflow.";
 
   // Fotoğrafların göründüğü yer için dil desteği ekliyoruz.
   const showcaseFeatures = useMemo(() => {
@@ -340,13 +349,18 @@ export function LandingPage({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(720px,85vh)] bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,211,238,0.35),transparent_65%),radial-gradient(circle_at_85%_15%,rgba(129,140,232,0.08),transparent_35%)]" />
 
       <main className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-8 lg:px-12 pb-16 pt-3 overflow-hidden">
-        <section className="mb-12 rounded-[28px] border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-5 py-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md xl:px-8">
+        <header
+          aria-label="Site header"
+          className="mb-12 rounded-[28px] border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-5 py-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md xl:px-8"
+        >
           <div className="flex flex-col items-center text-center gap-6 lg:flex-row lg:text-left lg:justify-between">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/35 bg-gradient-to-br from-cyan-500/18 to-indigo-500/12 shadow-[0_0_48px_rgba(34,211,238,0.2)]">
                 <img
                   src={logoSrc ?? "/logo.png"}
                   alt="NB PDF PLATFORM"
+                  width={32}
+                  height={32}
                   className="h-8 w-8 rounded-xl object-cover"
                 />
               </div>
@@ -440,12 +454,12 @@ export function LandingPage({
               </div>
 
               {contactFormEnabled ? (
-                <a
+                <CrawlableLink
                   href="#contact"
                   className="rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-white/5"
                 >
                   {copy.navbar.contact}
-                </a>
+                </CrawlableLink>
               ) : null}
 
               {isAuthenticated ? (
@@ -481,11 +495,12 @@ export function LandingPage({
               )}
             </div>
           </div>
-        </section>
+        </header>
 
         {/* --- PREMIUM VE MINIMAL HERO SECTION --- */}
         <section
           data-nb-preview="hero"
+          aria-label="Hero"
           className="-mt-15 relative flex flex-col items-center justify-center pt-0 pb-20 text-center lg:pt-10 lg:pb-24"
         >
           {/* Arka Plandaki Soft Aura - Çok daha rafine bir parlama */}
@@ -506,12 +521,12 @@ export function LandingPage({
             {/* Ana Başlık - Boyutu düşürdük, font ağırlığını azalttık, satır aralığını açtık */}
             {/* Ana Başlık - Mobil için text-3xl'e çektik ve min-h sildik */}
             <h1 className="mx-auto max-w-4xl bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-3xl font-semibold tracking-tight text-transparent sm:text-6xl lg:text-7xl leading-[1.2] sm:leading-[1.15]">
-              {copy.hero.headline}
+              {copy.hero.headline?.trim() || seoHeadlineFallback}
             </h1>
 
             {/* Alt Açıklama - İtalikliği kaldırdık, daha kurumsal yaptık */}
             <p className="mx-auto mt-6 min-h-[60px] max-w-2xl text-base font-normal leading-relaxed text-slate-400">
-              {copy.hero.description}
+              {copy.hero.description?.trim() || seoDescriptionFallback}
             </p>
 
             {/* Hedef Kitle Etiketleri - Başlığın altında, sönük ve elit */}
@@ -552,19 +567,22 @@ export function LandingPage({
                 <span className="relative z-10">{copy.hero.primaryCta}</span>
               </button>
 
-              <a
+              <CrawlableLink
                 href={windowsDownloadUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex h-14 min-w-[190px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-8 text-base font-bold text-white transition-all hover:bg-white/10 hover:border-white/20 active:scale-95"
               >
                 {copy.hero.secondaryCta}
-              </a>
+              </CrawlableLink>
             </div>
           </div>
         </section>
         {/* Hap Bilgi Barı - Taşıdığımız 3 Kutucuk */}
-        <section className="mt-8 md:-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-6 md:px-9 py-8 shadow-2xl backdrop-blur-2xl flex items-center justify-center">
+        <section
+          aria-label="Highlights"
+          className="mt-8 md:-mt-16 mb-16 rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-6 md:px-9 py-8 shadow-2xl backdrop-blur-2xl flex items-center justify-center"
+        >
           <div className=" mt-2 grid gap-6 md:grid-cols-3">
             {copy.hero.highlights.map((item, index) => (
               <div
@@ -597,6 +615,7 @@ export function LandingPage({
 
         <section
           data-nb-preview="features"
+          aria-label="Features"
           className="relative pt-16 pb-8 px-6 overflow-hidden"
         >
           <div className="relative z-10 mx-auto max-w-6xl rounded-[48px] border border-white/5 bg-slate-900/20 p-6 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">
@@ -607,9 +626,9 @@ export function LandingPage({
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-cyan-400/90">
                 {copy.features.kicker}
               </p>
-              <h3 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
+              <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
                 {copy.features.title}
-              </h3>
+              </h2>
             </div>
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
               {copy.features.items.map((item) => (
@@ -623,9 +642,9 @@ export function LandingPage({
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-slate-950 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]">
                       <LandingIcon kind={item.icon} />
                     </div>
-                    <h4 className="mt-8 text-2xl font-bold text-white tracking-tight">
+                    <h3 className="mt-8 text-2xl font-bold text-white tracking-tight">
                       {item.title}
-                    </h4>
+                    </h3>
                     <p className="mt-4 text-base leading-relaxed text-slate-400 group-hover:text-slate-300">
                       {item.benefit}
                     </p>
@@ -637,7 +656,7 @@ export function LandingPage({
         </section>
 
         {/* --- GÜVEN BÖLÜMÜ (PREMIUM AMBİYANS VE MODERN KARTLAR) --- */}
-        <section className="relative pt-8 pb-16 px-6 overflow-hidden">
+        <section aria-label="Trust" className="relative pt-8 pb-16 px-6 overflow-hidden">
           {/* 1. ANA AMBİYANS IŞIĞI (Ekran görüntüsündeki o sağdan vuran derin parıltı efekti) */}
           <div className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/20 blur-[140px] opacity-50 animate-pulse" />
           <div className="absolute -left-[10%] top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px] opacity-30" />
@@ -649,9 +668,9 @@ export function LandingPage({
               <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-400 mb-6 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
                 {copy.trust.kicker}
               </p>
-              <h3 className="text-4xl md:text-6xl font-black tracking-tighter text-white leading-[1.1] mb-8">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white leading-[1.1] mb-8">
                 {copy.trust.title}
-              </h3>
+              </h2>
               <p className="text-lg md:text-xl text-slate-400 font-light leading-relaxed">
                 {copy.trust.description}
               </p>
@@ -673,9 +692,9 @@ export function LandingPage({
                       0{index + 1}
                     </div>
 
-                    <h4 className="text-2xl font-bold tracking-tight text-white mb-4 group-hover:translate-x-1 transition-transform duration-300">
+                    <h3 className="text-2xl font-bold tracking-tight text-white mb-4 group-hover:translate-x-1 transition-transform duration-300">
                       {item.title}
-                    </h4>
+                    </h3>
                     <p className="text-sm leading-relaxed text-slate-500 group-hover:text-slate-400 transition-colors">
                       {item.description}
                     </p>
@@ -692,7 +711,12 @@ export function LandingPage({
         {/* --- BÖLÜM SONU --- */}
 
         {/* ---- EKRAN ALINTILARI BÖLÜMÜ ---- */}
-        <section className="py-28 space-y-32">
+        <section aria-label="Product showcase" className="py-28 space-y-32">
+          <h2 className="sr-only">
+            {language === "tr"
+              ? "PDF duzenleme ozellikleri"
+              : "PDF editing and conversion features"}
+          </h2>
           {showcaseFeatures.map((item, index) => {
             const isReversed = index % 2 === 1;
 
@@ -722,7 +746,15 @@ export function LandingPage({
                 <div
                   className={`rounded-2xl overflow-hidden border border-white/10 shadow-2xl ${isReversed ? "lg:order-1" : "lg:order-2"}`}
                 >
-                  <img src={item.src} className="w-full h-auto" />
+                  <img
+                    src={item.src}
+                    alt={`${item.title} - ${item.description}`}
+                    width={1600}
+                    height={1000}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             );
@@ -738,15 +770,15 @@ export function LandingPage({
         />
 
         {contactFormEnabled ? (
-          <section id="contact" className="scroll-mt-8 py-10">
+          <section id="contact" aria-label="Contact" className="scroll-mt-8 py-10">
             <div className="grid gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
                   {copy.contactSection.kicker}
                 </p>
-                <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                   {copy.contactSection.title}
-                </h3>
+                </h2>
                 <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
                   {copy.contactSection.description}
                 </p>
@@ -838,15 +870,15 @@ export function LandingPage({
           </section>
         ) : null}
 
-        <section data-nb-preview="final-cta" className="py-10">
+        <section data-nb-preview="final-cta" aria-label="Final call to action" className="py-10">
           <div className="rounded-[34px] border border-white/[0.08] bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(15,23,42,0.92),rgba(129,140,232,0.1))] p-9 shadow-[0_36px_100px_-20px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-11 lg:flex lg:items-center lg:justify-between lg:gap-12">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200">
                 {copy.finalCta.kicker}
               </p>
-              <h3 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                 {copy.finalCta.title}
-              </h3>
+              </h2>
               <p className="mt-4 text-base leading-8 text-slate-200/85">
                 {copy.finalCta.description}
               </p>
@@ -860,7 +892,7 @@ export function LandingPage({
               >
                 {copy.finalCta.primaryCta}
               </button>
-              <a
+              <CrawlableLink
                 href={windowsDownloadUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -872,7 +904,7 @@ export function LandingPage({
                 aria-disabled={windowsDownloadUrl === "#"}
               >
                 {copy.finalCta.secondaryCta}
-              </a>
+              </CrawlableLink>
             </div>
           </div>
         </section>
@@ -882,6 +914,14 @@ export function LandingPage({
         data-nb-preview="footer"
         className="relative border-t border-white/[0.06] bg-nb-bg-soft/95"
       >
+        <nav aria-label="SEO internal links" className="sr-only">
+          <CrawlableLink href="/pricing">Pricing</CrawlableLink>
+          <CrawlableLink href="/terms">Terms</CrawlableLink>
+          <CrawlableLink href="/privacy">Privacy</CrawlableLink>
+          <CrawlableLink href="/kvkk">KVKK</CrawlableLink>
+          <CrawlableLink href="/tools/merge-pdf">Merge PDF</CrawlableLink>
+          <CrawlableLink href="/tools/compress">Compress PDF</CrawlableLink>
+        </nav>
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-6 py-8 text-sm text-slate-400 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12">
           <div>
             <p className="font-semibold tracking-[0.18em] text-slate-200">
@@ -914,12 +954,12 @@ export function LandingPage({
               {copy.footer.kvkkLabel}
             </button>
             {contactFormEnabled ? (
-              <a
+              <CrawlableLink
                 href="#contact"
                 className="text-slate-200 transition hover:text-white"
               >
                 {copy.footer.contact}
-              </a>
+              </CrawlableLink>
             ) : null}
           </div>
         </div>

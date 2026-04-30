@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /fake-payment
+Disallow: /api/
 
 Sitemap: https://pdfplatform.app/sitemap.xml
