@@ -44,7 +44,7 @@ export type LandingTranslation = {
     kicker: string;
     headline: string;
     alternatives: string[];
-    description: string[];
+    description: string;
     primaryCta: string;
     secondaryCta: string;
     highlights: Array<{ label: string; value: string }>;
@@ -148,10 +148,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         "Fast, Secure PDF Management for Business Workflows",
         "Handle Your PDFs in Seconds, Built for Professionals",
       ],
-      description: [
-        "Do it from one place: PDF editing, conversion, merging, and compression.",
-        "Work fast, securely, and without installation—even with large files—without switching between tools.",
-      ],
+      description:
+        "Do it from one place: PDF editing, conversion, merging, and compression.Work fast, securely, and without installation—even with large files—without switching between tools.",
       primaryCta: "Start Free",
       secondaryCta: "Download for Windows",
       highlights: [
@@ -372,10 +370,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         "İş Süreçleri İçin Hızlı ve Güvenli PDF Yönetimi",
         "PDF İşlemlerinizi Saniyeler İçinde Yönetin, Profesyoneller İçin Tasarlandı",
       ],
-      description: [
-        "PDF düzenleme, dönüştürme, birleştirme ve sıkıştırma işlemlerini tek yerden yap.",
-        "Büyük dosyalarda bile araçlar arasında geçiş yapmadan hızlı, güvenli ve kurulumsuz şekilde çalış.",
-      ],
+      description:
+        "PDF düzenleme, dönüştürme, birleştirme ve sıkıştırma işlemlerini tek yerden yap. Büyük dosyalarda bile araçlar arasında geçiş yapmadan hızlı, güvenli ve kurulumsuz şekilde çalış.",
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Windows Uygulamasını İndir",
       highlights: [
