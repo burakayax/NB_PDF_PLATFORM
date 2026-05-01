@@ -6,9 +6,24 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pdfplatform.app/admin-login</loc>
+    <loc>https://pdfplatform.app/pricing</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/terms</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/privacy</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/kvkk</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/split-pdf</loc>
