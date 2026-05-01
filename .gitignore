@@ -62,6 +62,9 @@ web/api/node_modules/.prisma/
 # --- Admin uploads (local) ---
 web/api/uploads/
 
+# --- Lokal schema (SQLite development) ---
+schema.sqlite.prisma
+
 # --- IDE ve editör ---
 .idea/
 .vscode/

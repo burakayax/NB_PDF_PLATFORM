@@ -82,7 +82,7 @@ model User {
   billingPostalCode    String?  @map("billing_postal_code")
   /// Throttle for automated low-credit marketing email (nudge at most per cooldown).
   lowCreditNudgeAt DateTime? @map("low_credit_nudge_at")
-  /// Son “çıkış niyeti” %10 kredi indiriminin uygulandığı zaman (30 gün cooldown).
+  /// Son "çıkış niyeti" %10 kredi indiriminin uygulandığı zaman (30 gün cooldown).
   lastExitIntentCreditDiscountAt DateTime? @map("last_exit_intent_credit_discount_at")
   /// Prepaid credit balance; decremented atomically when a tool is used without an active subscription.
   credit_balance       Int     @default(0)
