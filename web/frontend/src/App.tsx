@@ -1,7 +1,7 @@
 // Web uygulamasının kök bileşeni: karşılama, kimlik, yasal sayfalar ve PDF araçları görünümlerini tek state ile yönetir.
 // Oturum, abonelik ve dosya yükleme durumunun modüller arasında paylaşılması için tek React ağacında toplanır.
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createMergeJob,
   downloadFromApi,
@@ -39,17 +39,12 @@ import {
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
-import { AdminPanel } from "./admin/AdminPanel";
 import { ConversionPopup } from "./components/dashboard/ConversionPopup";
 import { PaymentSummaryModal } from "./components/dashboard/PaymentSummaryModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
-import { AuthPage } from "./components/auth/AuthPage";
-import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
-import { LoginSuccessPage } from "./components/auth/LoginSuccessPage";
-import { LandingPage } from "./components/landing/LandingPage";
-import { LegalPage } from "./components/legal/LegalPage";
+import { SeoRouteManager } from "./components/seo/SeoRouteManager";
 import {
   fetchSubscriptionStatus,
   fetchSubscriptionSummary,
@@ -69,8 +64,6 @@ import {
   PAYMENT_CHECKOUT_NOT_FOUND,
   resolveFakePaymentRedirect,
 } from "./api/fakePayment";
-import { CreditDashboard } from "./components/dashboard/CreditDashboard";
-import { PricingPage } from "./components/pricing/PricingPage";
 import {
   clearLowCreditSnoozeIfRecovered,
   getLowCreditPopupSnoozeUntil,
@@ -134,10 +127,6 @@ import {
   clearPdfWorkspaceSplitDraftsFromLocalStorage,
   clearWorkspaceSessionStoragePrefixes,
 } from "./lib/workspaceToolSelection";
-import {
-  applyWorkspaceToolMeta,
-  resetWorkspaceHeadSeo,
-} from "./lib/toolPageMeta";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -153,6 +142,37 @@ type NonLegalView =
 type LegalView = "terms" | "privacy" | "kvkk";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
+
+const AdminPanel = lazy(() =>
+  import("./admin/AdminPanel").then((module) => ({ default: module.AdminPanel })),
+);
+const AuthPage = lazy(() =>
+  import("./components/auth/AuthPage").then((module) => ({ default: module.AuthPage })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("./components/auth/ForgotPasswordPage").then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+);
+const LoginSuccessPage = lazy(() =>
+  import("./components/auth/LoginSuccessPage").then((module) => ({
+    default: module.LoginSuccessPage,
+  })),
+);
+const LandingPage = lazy(() =>
+  import("./components/landing/LandingPage").then((module) => ({ default: module.LandingPage })),
+);
+const LegalPage = lazy(() =>
+  import("./components/legal/LegalPage").then((module) => ({ default: module.LegalPage })),
+);
+const CreditDashboard = lazy(() =>
+  import("./components/dashboard/CreditDashboard").then((module) => ({
+    default: module.CreditDashboard,
+  })),
+);
+const PricingPage = lazy(() =>
+  import("./components/pricing/PricingPage").then((module) => ({ default: module.PricingPage })),
+);
 
 type ContentPanel = "tool" | "subscription" | "profile" | "pricing";
 
@@ -2581,21 +2601,6 @@ function App() {
     if (view !== "web") {
       return;
     }
-    applyWorkspaceToolMeta(selectedFeatureId, language);
-  }, [view, selectedFeatureId, language]);
-
-  useEffect(() => {
-    if (view === "web") {
-      return;
-    }
-    resetWorkspaceHeadSeo();
-    document.title = "NB PDF PLATFORM";
-  }, [view]);
-
-  useEffect(() => {
-    if (view !== "web") {
-      return;
-    }
     try {
       const u = new URL(window.location.href);
       if (u.searchParams.get("lang") !== language) {
@@ -4200,11 +4205,21 @@ function App() {
 
   if (isLoginSuccessRoute) {
     return (
-      <LoginSuccessPage
-        completeOAuthLogin={completeOAuthLogin}
-        clearSession={clearSession}
-        onNavigateToDashboard={navigateToDashboardAfterOAuth}
-      />
+      <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
+        <Suspense fallback={null}>
+          <LoginSuccessPage
+            completeOAuthLogin={completeOAuthLogin}
+            clearSession={clearSession}
+            onNavigateToDashboard={navigateToDashboardAfterOAuth}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -4224,6 +4239,12 @@ function App() {
     if (isRestoring && tokenPending) {
       return (
         <>
+          <SeoRouteManager
+            pathname={pathname}
+            view={view}
+            language={language}
+            selectedFeatureId={selectedFeatureId}
+          />
           <MaintenanceTabTitle />
           <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-6 py-12 font-sans text-nb-text antialiased">
             <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
@@ -4250,6 +4271,12 @@ function App() {
 
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <MaintenancePage />
         <CookieNotice
           language={language}
@@ -4264,23 +4291,31 @@ function App() {
   if (view === "forgot_password") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <ForgotPasswordPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          onBackToLogin={() => {
-            setAuthError("");
-            setView("login");
-          }}
-          onCompleted={(successMessage) => {
-            setAuthError("");
-            setView("login");
-            showToast(
-              "success",
-              language === "tr" ? "Şifre sıfırlandı" : "Password reset",
-              successMessage,
-            );
-          }}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={null}>
+          <ForgotPasswordPage
+            language={language}
+            onBackToLogin={() => {
+              setAuthError("");
+              setView("login");
+            }}
+            onCompleted={(successMessage) => {
+              setAuthError("");
+              setView("login");
+              showToast(
+                "success",
+                language === "tr" ? "Şifre sıfırlandı" : "Password reset",
+                successMessage,
+              );
+            }}
+          />
+        </Suspense>
       </>
     );
   }
@@ -4288,25 +4323,33 @@ function App() {
   if (view === "landing") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <LandingPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          onLanguageChange={handleLanguageChange}
-          onUseWebApp={openWorkspace}
-          isAuthenticated={isAuthenticated}
-          authGreeting={user ? userGreetingLine(user, language) : undefined}
-          onLogin={() => {
-            setAuthError("");
-            setView("login");
-          }}
-          onRegister={() => {
-            setAuthError("");
-            setView("register");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={null}>
+          <LandingPage
+            language={language}
+            onLanguageChange={handleLanguageChange}
+            onUseWebApp={openWorkspace}
+            isAuthenticated={isAuthenticated}
+            authGreeting={user ? userGreetingLine(user, language) : undefined}
+            onLogin={() => {
+              setAuthError("");
+              setView("login");
+            }}
+            onRegister={() => {
+              setAuthError("");
+              setView("register");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+          />
+        </Suspense>
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
@@ -4320,30 +4363,38 @@ function App() {
   if (view === "admin_login") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <AuthPage
-          mode="login"
-          purpose="admin"
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          submitting={authSubmitting || isRestoring}
-          serverError={authError}
-          registrationSuccessBanner={null}
-          onDismissRegistrationSuccess={undefined}
-          onBack={() => {
-            setAuthError("");
-            setView("landing");
-            window.history.replaceState({}, "", "/");
-          }}
-          onModeChange={() => {}}
-          onSubmit={handleAuthSubmit}
-          onForgotPassword={() => {
-            setAuthError("");
-            setView("forgot_password");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={null}>
+          <AuthPage
+            mode="login"
+            purpose="admin"
+            language={language}
+            submitting={authSubmitting || isRestoring}
+            serverError={authError}
+            registrationSuccessBanner={null}
+            onDismissRegistrationSuccess={undefined}
+            onBack={() => {
+              setAuthError("");
+              setView("landing");
+              window.history.replaceState({}, "", "/");
+            }}
+            onModeChange={() => {}}
+            onSubmit={handleAuthSubmit}
+            onForgotPassword={() => {
+              setAuthError("");
+              setView("forgot_password");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+          />
+        </Suspense>
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
             <div className="toast__title">{toast.title}</div>
@@ -4363,34 +4414,42 @@ function App() {
   if (view === "login" || view === "register") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <AuthPage
-          mode={view}
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          submitting={authSubmitting || isRestoring}
-          serverError={authError}
-          registrationSuccessBanner={registrationSuccessBanner}
-          onDismissRegistrationSuccess={() =>
-            setRegistrationSuccessBanner(null)
-          }
-          onBack={() => {
-            setAuthError("");
-            setRegistrationSuccessBanner(null);
-            setView("landing");
-          }}
-          onModeChange={(nextMode) => {
-            setAuthError("");
-            setView(nextMode);
-          }}
-          onSubmit={handleAuthSubmit}
-          onForgotPassword={() => {
-            setAuthError("");
-            setView("forgot_password");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={null}>
+          <AuthPage
+            mode={view}
+            language={language}
+            submitting={authSubmitting || isRestoring}
+            serverError={authError}
+            registrationSuccessBanner={registrationSuccessBanner}
+            onDismissRegistrationSuccess={() =>
+              setRegistrationSuccessBanner(null)
+            }
+            onBack={() => {
+              setAuthError("");
+              setRegistrationSuccessBanner(null);
+              setView("landing");
+            }}
+            onModeChange={(nextMode) => {
+              setAuthError("");
+              setView(nextMode);
+            }}
+            onSubmit={handleAuthSubmit}
+            onForgotPassword={() => {
+              setAuthError("");
+              setView("forgot_password");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+          />
+        </Suspense>
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
             <div className="toast__title">{toast.title}</div>
@@ -4410,12 +4469,20 @@ function App() {
   if (view === "terms" || view === "privacy" || view === "kvkk") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <LegalPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          documentKey={view}
-          onBack={closeLegalPage}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={null}>
+          <LegalPage
+            language={language}
+            documentKey={view}
+            onBack={closeLegalPage}
+          />
+        </Suspense>
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
@@ -4429,6 +4496,12 @@ function App() {
   if (isRestoring) {
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
@@ -4500,6 +4573,12 @@ function App() {
     if (user.role !== "ADMIN" || !accessToken) {
       return (
         <>
+          <SeoRouteManager
+            pathname={pathname}
+            view={view}
+            language={language}
+            selectedFeatureId={selectedFeatureId}
+          />
           <div className="min-h-screen bg-nb-bg px-6 py-16 text-center text-nb-muted">
             <p className="text-lg font-semibold text-nb-text">
               Yönetici erişimi gerekli
@@ -4519,6 +4598,12 @@ function App() {
     }
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <SystemNotificationBanner language={language} />
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
@@ -4532,25 +4617,33 @@ function App() {
           onAccept={acceptConsent}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
-        <AdminPanel
-          accessToken={accessToken}
-          userEmail={user?.email ?? "admin"}
-          onExit={() => {
-            setView("web");
-            window.history.replaceState(
-              {},
-              "",
-              workspacePathForFeature("split"),
-            );
-          }}
-          onLogout={() => void handleLogout()}
-        />
+        <Suspense fallback={null}>
+          <AdminPanel
+            accessToken={accessToken}
+            userEmail={user?.email ?? "admin"}
+            onExit={() => {
+              setView("web");
+              window.history.replaceState(
+                {},
+                "",
+                workspacePathForFeature("split"),
+              );
+            }}
+            onLogout={() => void handleLogout()}
+          />
+        </Suspense>
       </>
     );
   }
 
   return (
     <CheckoutCurrencyProvider>
+      <SeoRouteManager
+        pathname={pathname}
+        view={view}
+        language={language}
+        selectedFeatureId={selectedFeatureId}
+      />
       <div className="app-shell">
         <PdfApiOfflineBanner />
         <SystemNotificationBanner language={language} />
@@ -4898,41 +4991,45 @@ function App() {
           <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
             {contentPanel === "subscription" ? (
               <section className="subscription-card">
-                <CreditDashboard
-                  language={language}
-                  balance={userBalance}
-                  balanceLoading={subscriptionLoading}
-                  transactions={creditTransactions}
-                  transactionsLoading={creditTransactionsLoading}
-                  onBuyPack={(product) =>
-                    void handleSelectCreditPackForPayment(product)
-                  }
-                  buyingProduct={null}
-                  limitsizProActive={limitsizProActive}
-                  onOpenPlansPage={
-                    limitsizProActive
-                      ? undefined
-                      : () => {
-                          setActiveSidebar("subscription");
-                          setContentPanel("pricing");
-                        }
-                  }
-                />
+                <Suspense fallback={null}>
+                  <CreditDashboard
+                    language={language}
+                    balance={userBalance}
+                    balanceLoading={subscriptionLoading}
+                    transactions={creditTransactions}
+                    transactionsLoading={creditTransactionsLoading}
+                    onBuyPack={(product) =>
+                      void handleSelectCreditPackForPayment(product)
+                    }
+                    buyingProduct={null}
+                    limitsizProActive={limitsizProActive}
+                    onOpenPlansPage={
+                      limitsizProActive
+                        ? undefined
+                        : () => {
+                            setActiveSidebar("subscription");
+                            setContentPanel("pricing");
+                          }
+                    }
+                  />
+                </Suspense>
               </section>
             ) : null}
 
             {contentPanel === "pricing" && accessToken && user ? (
-              <PricingPage
-                language={language}
-                accessToken={accessToken}
-                user={user}
-                updateProfile={updateProfile}
-                onBack={() => setContentPanel("subscription")}
-                showToast={showToast}
-                onOpenTerms={() => openLegalPage("terms")}
-                onOpenKvkk={() => openLegalPage("kvkk")}
-                onBeforeExternalCheckout={persistNbResumeSnapshot}
-              />
+              <Suspense fallback={null}>
+                <PricingPage
+                  language={language}
+                  accessToken={accessToken}
+                  user={user}
+                  updateProfile={updateProfile}
+                  onBack={() => setContentPanel("subscription")}
+                  showToast={showToast}
+                  onOpenTerms={() => openLegalPage("terms")}
+                  onOpenKvkk={() => openLegalPage("kvkk")}
+                  onBeforeExternalCheckout={persistNbResumeSnapshot}
+                />
+              </Suspense>
             ) : null}
 
             {contentPanel === "profile" ? (
