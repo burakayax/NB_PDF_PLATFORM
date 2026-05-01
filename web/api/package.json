@@ -1,11 +1,12 @@
 {
-  "name": "nb-pdf-TOOLS-auth-api",
+  "name": "nb-pdf-platform-auth-api",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "postinstall": "prisma generate",
     "dev": "tsx watch src/server.ts",
+    "dev:local": "cross-env DATABASE_URL=file:./dev.db tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
@@ -42,6 +43,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "tsx": "^4.19.3"
   }
 }

@@ -8,6 +8,7 @@ import {
   useState,
   forwardRef,
 } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import * as pdfjsLib from "pdfjs-dist";
 import { Check, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -298,7 +299,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const arr = thumbsRef.current;
         if (idx >= 0 && idx < arr.length && arr[idx] != null) {
           arr[idx] = null;
-          setThumbs([...arr]);
+          scheduleThumbFlush();
         }
       };
     });
@@ -331,6 +332,16 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const thumbFailureCountRef = useRef<Map<number, number>>(new Map());
     const cellWidthRef = useRef(0);
     const requestSinglePageThumbRef = useRef<(p: number, w: number, o?: { force?: boolean }) => void>(() => {});
+    const pendingThumbFlushRef = useRef(false);
+    const scheduleThumbFlush = useCallback(() => {
+      if (!pendingThumbFlushRef.current) {
+        pendingThumbFlushRef.current = true;
+        requestAnimationFrame(() => {
+          pendingThumbFlushRef.current = false;
+          setThumbs([...thumbsRef.current]);
+        });
+      }
+    }, []);
     const rubberSelectRafRef = useRef<number | null>(null);
     const rubberLatestContentRef = useRef({ x: 0, y: 0 });
     const scrollStepYRef = useRef(80);
@@ -365,6 +376,17 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       () => Math.max(1, Math.ceil(Math.max(1, sequenceLength) / cols)),
       [sequenceLength, cols],
     );
+
+    const rowVirtualizer = useVirtualizer({
+      count: virtualRowCount,
+      getScrollElement: () => parentRef.current,
+      estimateSize: () => cardHeight + ROW_GAP_PX,
+      overscan: 3,
+    });
+
+    useEffect(() => {
+      rowVirtualizer.measure();
+    }, [cardHeight, rowVirtualizer]);
 
     const flatIndexToPageNum = useCallback(
       (flat: number): number => {
@@ -798,7 +820,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             thumbLru.delete(ck);
           }
           thumbsRef.current[page1 - 1] = null;
-          setThumbs([...thumbsRef.current]);
+          scheduleThumbFlush();
           thumbFailureCountRef.current.delete(page1);
         }
 
@@ -810,7 +832,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           }
           if (!thumbsRef.current[page1 - 1]) {
             thumbsRef.current[page1 - 1] = cached.dataUrl;
-            setThumbs([...thumbsRef.current]);
+            scheduleThumbFlush();
           }
           return;
         }
@@ -821,7 +843,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           }
           if (!thumbsRef.current[page1 - 1]) {
             thumbsRef.current[page1 - 1] = cached.dataUrl;
-            setThumbs([...thumbsRef.current]);
+            scheduleThumbFlush();
           }
         }
 
@@ -841,7 +863,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                 thumbLru.set(ckNow, { dataUrl: url, cssW });
               }
               thumbsRef.current[page1 - 1] = url;
-              setThumbs([...thumbsRef.current]);
+              scheduleThumbFlush();
               thumbFailureCountRef.current.delete(page1);
             } else {
               const fails = (thumbFailureCountRef.current.get(page1) ?? 0) + 1;
@@ -1017,7 +1039,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               thumbLru.touch(ck);
             }
             thumbsRef.current[i - 1] = cached.dataUrl;
-            setThumbs([...thumbsRef.current]);
+            scheduleThumbFlush();
             continue;
           }
           if (
@@ -1029,7 +1051,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               thumbLru.touch(ck);
             }
             thumbsRef.current[i - 1] = cached.dataUrl;
-            setThumbs([...thumbsRef.current]);
+            scheduleThumbFlush();
           }
           if (thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
             if (ck) {
@@ -1051,7 +1073,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               thumbLru.set(ckNow, { dataUrl: url, cssW });
             }
             thumbsRef.current[i - 1] = url;
-            setThumbs([...thumbsRef.current]);
+            scheduleThumbFlush();
             thumbFailureCountRef.current.delete(i);
           } else {
             const fails = (thumbFailureCountRef.current.get(i) ?? 0) + 1;
@@ -1112,15 +1134,12 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (page1 < 1 || page1 > numPages) {
             return;
           }
-          requestAnimationFrame(() => {
-            const root = gridContentRef.current ?? parentRef.current;
-            const el = root?.querySelector<HTMLElement>(`[data-pdf-thumb-page="${page1}"]`);
-            el?.scrollIntoView({ block: "center", behavior: "smooth" });
-            setRangeRevision((r) => r + 1);
-          });
+          const rowIdx = Math.floor((page1 - 1) / cols);
+          rowVirtualizer.scrollToIndex(rowIdx, { align: "center", behavior: "smooth" });
+          setRangeRevision((r) => r + 1);
         },
       }),
-      [numPages],
+      [numPages, cols, rowVirtualizer],
     );
 
     const onThumbClick = (page1: number, e: React.MouseEvent) => {
@@ -1701,7 +1720,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           className="relative flex min-h-0 min-w-0 w-full flex-1 flex-col rounded-xl border-2 border-cyan-500/35 bg-slate-950/30 p-1 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.14)] ring-1 ring-cyan-400/25 sm:p-1.5"
           aria-label={effectiveLang === "tr" ? "Aktif seçim alanı" : "Active selection area"}
         >
-          {/* Kaydırma kökü — tüm satırlar DOM’da (sanallaştırma yok). */}
+          {/* Kaydırma kökü — row-level virtual scroll (@tanstack/react-virtual). */}
           <div
             ref={parentRef}
             data-pdf-page-scroll-root
@@ -1725,8 +1744,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             <div
               ref={gridContentRef}
               style={{
-                paddingTop: GRID_PAD_Y,
-                paddingBottom: GRID_PAD_Y,
+                height: `${rowVirtualizer.getTotalSize() + GRID_PAD_Y * 2}px`,
                 width: "100%",
                 minWidth: 0,
                 position: "relative",
@@ -1743,7 +1761,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                   }}
                 />
               ) : null}
-              {Array.from({ length: virtualRowCount }, (_, rowIdx) => {
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const rowIdx = virtualRow.index;
+                const rowTop = virtualRow.start + GRID_PAD_Y;
                 const rowStart = rowIdx * cols;
                 const rowEnd = Math.min(rowStart + cols, sequenceLength);
                 const cellsInRow = Math.max(0, rowEnd - rowStart);
@@ -1753,10 +1773,14 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                     key={`row-${thumbSessionTag || "pending"}-${rowIdx}`}
                     className="w-full min-w-0"
                     style={{
+                      position: "absolute",
+                      top: rowTop,
+                      left: 0,
+                      right: 0,
+                      height: cardHeight,
                       display: "grid",
                       gridTemplateColumns: `repeat(${cellsInRow}, minmax(0, 1fr))`,
                       columnGap: GAP_PX,
-                      marginBottom: rowIdx < virtualRowCount - 1 ? ROW_GAP_PX : 0,
                     }}
                   >
                     {Array.from({ length: cellsInRow }, (_, k) => {
