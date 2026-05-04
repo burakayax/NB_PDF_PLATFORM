@@ -91,8 +91,8 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
       availability: "https://schema.org/InStock",
       description:
         input.language === "tr"
-          ? "Ücretsiz plan mevcut. Kredi paketi ve aylık abonelik seçenekleri sunulmaktadır."
-          : "Free plan available. Credit packs and monthly subscription plans offered.",
+          ? "Ücretsiz plan mevcut. Ücretsiz paket ve aylık abonelik seçenekleri sunulmaktadır."
+          : "Free plan available. Free packs and monthly subscription plans offered.",
     },
     brand: {
       "@type": "Brand",

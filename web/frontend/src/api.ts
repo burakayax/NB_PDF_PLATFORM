@@ -935,9 +935,7 @@ export async function downloadFromApi(
   const authInit = { headers: saasAuthHeaders(accessToken) };
   const preferFetch =
     shouldUseBrowserNativeDownload(url) &&
-    upload !== null &&
-    upload.size > 0 &&
-    upload.size <= MAX_SAME_ORIGIN_FETCH_BYTES;
+    (upload === null || (upload.size > 0 && upload.size <= MAX_SAME_ORIGIN_FETCH_BYTES));
 
   if (preferFetch) {
     const response = await pdfFetch(url, {

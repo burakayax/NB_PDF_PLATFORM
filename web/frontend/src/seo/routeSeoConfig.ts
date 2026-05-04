@@ -231,12 +231,12 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     return {
       title:
         context.language === "tr"
-          ? `PDF Araçları Fiyatlandırma — Kredi & Abonelik | ${BRAND}`
-          : `PDF Tools Pricing — Credits & Subscription | ${BRAND}`,
+          ? `PDF Araçları Fiyatlandırma — Ücretsiz & Abonelik | ${BRAND}`
+          : `PDF Tools Pricing — Free & Subscription | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "PDF birleştirme, dönüştürme ve sıkıştırma araçları için plan ve kredi paketlerini inceleyin. Ücretsiz başlayın."
-          : "Explore plans and credit packs for PDF merge, convert, and compress tools. Start free today.",
+          ? "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. Ücretsiz başlayın."
+          : "Explore plans for PDF merge, convert, and compress tools. Start free today.",
       canonicalPath: "/pricing",
       index: true,
       follow: true,

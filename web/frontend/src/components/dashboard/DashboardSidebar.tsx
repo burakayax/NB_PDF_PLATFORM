@@ -3,7 +3,6 @@ import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
 import { SIDEBAR_TOOL_ORDER, sidebarToolCreditLine, sidebarToolLabel, ws } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
-import { QuotaWidget } from "./QuotaWidget";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -103,16 +102,6 @@ export function DashboardSidebar({
           );
         })}
       </nav>
-
-      {!limitsizProActive && (
-        <div className="border-t border-white/[0.06] px-3 py-3">
-          <QuotaWidget
-            language={language}
-            accessToken={accessToken}
-            onUpgrade={onUpgrade}
-          />
-        </div>
-      )}
 
       {showVipStrip ? (
         <div className="border-t border-white/[0.06] px-3 py-3">

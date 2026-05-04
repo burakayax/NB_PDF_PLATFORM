@@ -1,6 +1,6 @@
 import type { Language } from "../../i18n/landing";
 import { landingPricingCreditsCopy } from "../../i18n/landingPricingCredits";
-import { CREDIT_PACKS } from "../../lib/creditPacks";
+import { CREDIT_PACKS, type CreditPackProduct } from "../../lib/creditPacks";
 
 type Props = {
   language: Language;
@@ -8,6 +8,8 @@ type Props = {
   title: string;
   description: string;
   onUseWebApp: () => void;
+  /** Provided in checkout contexts — each pack CTA calls this instead of onUseWebApp. */
+  onBuyPack?: (product: CreditPackProduct) => void;
 };
 
 function fmtTry(priceTry: number, lang: Language, subscription: boolean) {
@@ -25,7 +27,7 @@ function fmtTry(priceTry: number, lang: Language, subscription: boolean) {
 /**
  * Landing pricing: Bronz / Altın (tek seferlik kredi) + Limitsiz Pro (abonelik).
  */
-export function LandingPricingSection({ language, kicker, title, description, onUseWebApp }: Props) {
+export function LandingPricingSection({ language, kicker, title, description, onUseWebApp, onBuyPack }: Props) {
   const P = landingPricingCreditsCopy(language);
   const tr = language === "tr";
 
@@ -87,7 +89,7 @@ export function LandingPricingSection({ language, kicker, title, description, on
               </div>
               <button
                 type="button"
-                onClick={onUseWebApp}
+                onClick={() => onBuyPack ? onBuyPack(pack.product) : onUseWebApp()}
                 className={`mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-5 text-sm font-semibold transition-all ${
                   popular
                     ? "bg-cyan-400 text-slate-950 hover:bg-cyan-300 hover:scale-[1.02]"
