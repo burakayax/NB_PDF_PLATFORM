@@ -61,6 +61,8 @@ import {
 import {
   ackDownloadLog,
   createDownloadLog,
+  fetchUserBalance,
+  type UserBalance,
 } from "./api/entitlement";
 import {
   confirmFakeCheckout,
@@ -663,6 +665,8 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [password, setPassword] = useState("");
@@ -1616,6 +1620,23 @@ function App() {
     const summary = await fetchSubscriptionSummary(accessToken);
     setSubscriptionSummary(summary);
   }, [accessToken, isAuthenticated]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken || !user) {
+      setUserBalance(null);
+      return;
+    }
+    let cancelled = false;
+    setBalanceLoading(true);
+    fetchUserBalance(accessToken, {
+      userId: user.id,
+      role: user.role === "ADMIN" ? "ADMIN" : "USER",
+    })
+      .then((b) => { if (!cancelled) setUserBalance(b); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setBalanceLoading(false); });
+    return () => { cancelled = true; };
+  }, [isAuthenticated, accessToken, user?.id, user?.role]);
 
   /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
   const applyWorkspaceCleanSlateAfterDownload = useCallback(
@@ -4477,6 +4498,9 @@ function App() {
           user={user}
           language={language}
           onLanguageChange={(lang) => void handleLanguageChange(lang)}
+          creditBalance={user?.role !== "ADMIN" ? (userBalance?.creditBalance ?? null) : undefined}
+          creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
+          hasActiveSubscription={userBalance?.hasActiveSubscription}
           limitsizProActive={limitsizProActive}
           onLogoClick={handleDashboardLogoClick}
           onProfile={handleNavProfile}

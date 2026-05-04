@@ -30,37 +30,6 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
 export const PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG =
   "En az bir sayfa kalmalıdır. Tüm sayfaları silemezsiniz.";
 
-/** UI sidebar “N kredi” metni; sunucudaki gerçek düşüm `ToolRegistry.cost` ile aynı tutulmalıdır — bkz. `web/api/src/lib/ensure-tool-registry.ts`. */
-export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
-  split: 2,
-  merge: 3,
-  "pdf-to-word": 3,
-  compress: 2,
-  "word-to-pdf": 3,
-  "excel-to-pdf": 3,
-  "pdf-to-excel": 3,
-  encrypt: 2,
-  "delete-pages": 1,
-  "rotate-pdf": 2,
-  "organize-pdf": 2,
-  "unlock-pdf": 2,
-  watermark: 2,
-  "page-numbers": 2,
-  "repair-pdf": 2,
-  "pdf-to-ppt": 4,
-  "ppt-to-pdf": 3,
-  "pdf-to-image": 3,
-  "image-to-pdf": 3,
-  "html-to-pdf": 3,
-  "pdf-to-text": 1,
-  "flatten-pdf": 2,
-};
-
-export function sidebarToolCreditLine(id: FeatureKey, lang: Language): string {
-  const n = SIDEBAR_TOOL_CREDIT_COST[id];
-  return lang === "tr" ? `${n} Kredi` : `${n} credit${n === 1 ? "" : "s"}`;
-}
-
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
   split: { tr: "PDF Ayır", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
@@ -93,7 +62,6 @@ export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
 export function ws(lang: Language) {
   const tr = lang === "tr";
   return {
-    planNav: tr ? "Kredilerim" : "Credits",
     homeNav: tr ? "Ana Sayfa" : "Home",
     langSection: tr ? "Dil" : "Language",
     emptyStateTitle: tr ? "Henüz işlem yapılmadı" : "Nothing here yet",
@@ -106,23 +74,12 @@ export function ws(lang: Language) {
     mergeDragHandle: tr
       ? "Sırayı değiştirmek için sürükleyin"
       : "Drag to reorder",
-    proGateTitle: tr
-      ? "Bu araç için yeterli kredi yok"
-      : "Not enough credits for this tool",
-    proGateBody: tr
-      ? "Bu aracı kullanmak için kredi gerekir. Kredi satın alarak devam edebilirsiniz."
-      : "This tool needs credits. Buy a pack to unlock it.",
-    proGateCta: tr ? "Kredi satın al" : "Buy credits",
     featureLockedBadge: tr ? "Kilit" : "Locked",
-    navbarCreditsLabel: tr ? "Kredi" : "Credits",
     /** Limitsiz Pro — navbar / compact surfaces. */
     unlimitedSidebarBadge: tr ? "∞ LİMİTSİZ" : "∞ UNLIMITED",
     unlimitedAccessActive: tr
       ? "Limitsiz Erişim Aktif"
       : "Unlimited access active",
-    lockedFeatureTooltip: tr
-      ? "Bu araç şu an kredinizle kullanılamıyor"
-      : "This tool isn’t available with your current balance",
     filePick: tr ? "Dosya Seç" : "Choose file",
     fileAdd: tr ? "Dosya Ekle" : "Add file",
     selectedFiles: tr ? "Seçilen dosyalar" : "Selected files",
@@ -160,35 +117,9 @@ export function ws(lang: Language) {
       ? "Girdiğiniz parola bu PDF için geçerli değildir. Lütfen dosya sahibi tarafından tanımlanan parolayı kontrol edin."
       : "The password entered is not valid for this PDF. Please check the document password and try again.",
     mergePasswordOk: tr ? "Parola doğrulandı" : "Password verified",
-    usageRemainingShort: tr ? "Kalan kredi" : "Credits left",
     usageUnlimited: tr ? "—" : "—",
     usageDailyHeading: tr ? "Kullanım özeti" : "Usage summary",
-    /**
-     * Credit-balance chip copy. Plural vs singular is folded into a single
-     * line to avoid the UI having to reason about language-specific
-     * pluralisation rules — the engine is the source of truth for the
-     * number itself.
-     */
-    creditBalanceHeading: tr ? "Kullanılabilir kredi" : "Available credits",
-    creditBalanceLine: (n: number) =>
-      tr ? `${n} kredi kaldı` : `${n} credit${n === 1 ? "" : "s"} left`,
-    creditBalanceExhaustedHint: tr
-      ? "Krediniz tükendi. Devam etmek için kredi satın alın."
-      : "You're out of credits. Buy a credit pack to continue.",
-    /*
-     * Credit-dashboard copy. Dashboard is driven entirely by the
-     * entitlement engine output: balance + plan + recent ledger rows.
-     * Strings here must NEVER reference "daily usage", "limit reached"
-     * or any other relic of the retired daily-quota system.
-     */
     creditDashboardKicker: tr ? "HESABINIZ" : "YOUR ACCOUNT",
-    creditDashboardHeading: tr ? "Kredi Bakiyen" : "Your credits",
-    creditDashboardBalanceLabel: tr ? "Kalan krediniz" : "Credits remaining",
-    creditRemainingFormatted: (n: string) =>
-      tr ? `Kalan Krediniz: ${n}` : `Your credits: ${n}`,
-    creditDashboardBalanceFootnote: tr
-      ? "Her araç çalıştırmada kredi düşer; bakiyeniz güncel kullanımınızı yansıtır."
-      : "Each tool run spends credits; your balance reflects current usage.",
     creditDashboardPlanLabel: tr ? "Plan" : "Plan",
     creditDashboardSubscriptionLabel: tr ? "Abonelik" : "Subscription",
     creditDashboardSubscriptionActive: tr ? "Aktif" : "Active",
@@ -197,47 +128,13 @@ export function ws(lang: Language) {
     creditDashboardRecentHeading: tr
       ? "Son 10 hareket"
       : "Recent activity (last 10)",
-    creditDashboardRecentEmpty: tr
-      ? "Henüz kredi hareketi yok. Bir araç çalıştırdıkça bu liste dolacak."
-      : "No credit activity yet. Run a tool and it'll show up here.",
     creditDashboardRecentLoading: tr
       ? "Hareketler yükleniyor..."
       : "Loading activity...",
-    creditDashboardTopUpHeading: tr ? "Kredi paketleri" : "Credit packs",
-    creditDashboardTopUpBody: tr
-      ? "İhtiyacınız kadar kredi yükleyin."
-      : "Top up with the bundle that fits your workload.",
-    creditDashboardPacksHeading: tr ? "Kredi satın al" : "Buy credits",
-    creditDashboardPacksBody: tr
-      ? "Paket seçin; ödeme sonrası krediler hesabınıza eklenir."
-      : "Pick a pack; credits are added after checkout completes.",
-    creditPackContentLine: (credits: number | null, subscription: boolean) =>
-      subscription || credits == null
-        ? tr
-          ? "SINIRSIZ İŞLEM"
-          : "Unlimited operations"
-        : tr
-          ? `${credits} kredi`
-          : `${credits} credits`,
     creditPackBuyCta: tr ? "Satın Al" : "Buy",
-    creditDashboardBuyCreditsCta: tr ? "Kredi paketleri" : "Credit packs",
-    creditDashboardUpgradePlanCta: tr ? "Kredi paketleri" : "Credit packs",
     creditDashboardBuyingCredits: tr ? "Satın alınıyor..." : "Purchasing...",
-    creditDashboardBuyCreditsSuccess: (n: number) =>
-      tr
-        ? `${n} kredi hesabınıza eklendi.`
-        : `${n} credits added to your account.`,
-    creditDashboardBuyCreditsError: tr
-      ? "Kredi satın alınamadı. Lütfen tekrar deneyin."
-      : "Couldn't buy credits. Please try again.",
-    /** Shown when 0 < credits < 5 (credit-based workspace). */
-    creditRunningOutBanner: tr
-      ? "Kredileriniz azalıyor"
-      : "You are running out of credits",
-    /** Ledger-row labels; `amount` is signed so we don't re-add + here. */
     creditTxTypeConsume: tr ? "Kullanım" : "Use",
     creditTxTypeBonus: tr ? "Bonus" : "Bonus",
-    creditTxTypeAdminAdd: tr ? "Yönetici ekledi" : "Admin grant",
     creditTxTypeRefund: tr ? "İade" : "Refund",
     creditTxToolLabel: (toolId: string) =>
       tr ? `Araç: ${toolId}` : `Tool: ${toolId}`,
@@ -251,40 +148,10 @@ export function ws(lang: Language) {
       tr ? `${used} / ${limit} işlem` : `${used} / ${limit} ops`,
     usageRemainingLine: (n: number) => (tr ? `Kalan: ${n}` : `Remaining: ${n}`),
     usageNoDailyCapLine: tr ? "Kota sınırı yok" : "No quota cap",
-    usageUpgradeCta: tr ? "Kredi satın al" : "Buy credits",
-    /** Üst menüdeki kısa yükseltme düğmesi */
-    navbarUpgrade: tr ? "Kredi al" : "Get credits",
-    usageLimitReachedTitle: tr ? "Kredi gerekli" : "Credits required",
-    usageLimitReachedDetail: tr
-      ? "Krediler sayfasına giderek paket satın alabilirsiniz."
-      : "Open Credits in the sidebar to buy a pack.",
-    usageQuotaExhaustedBanner: tr
-      ? "Krediniz bitti. Devam etmek için kredi satın alın."
-      : "You're out of credits. Buy a pack to continue.",
-    usageSoftFrictionBanner: tr
-      ? "Kredi ekleyerek işlemlerinize devam edin."
-      : "Add credits to keep processing documents.",
-    proBenefitsKicker: tr ? "Kredi sistemi" : "Credit system",
-    proBenefitsTitle: tr ? "Kullandığın kadar öde" : "Pay for what you use",
-    proBenefitsIntro: tr
-      ? "Her işlem kredi harcar veya Limitsiz Pro ile sınırsız devam edersiniz; bakiyenizi panelden takip edin. Tek seferlik paketler ve aylık abonelik mevcuttur."
-      : "Each run spends credits, or use Unlimited Pro for unlimited usage—your balance stays visible in the panel. One-time packs and a monthly subscription are available.",
-    proBenefitTagSpeed: tr ? "Şeffaf" : "Transparent",
-    proBenefitSpeed: tr
-      ? "Araç başına maliyet net; harcama geçmişiniz kayıt altındadır."
-      : "Per-tool costs are clear; your ledger shows every change.",
-    proBenefitTagQuality: tr ? "Esnek" : "Flexible",
     proBenefitQuality: tr
       ? "Küçük paketle başlayıp ihtiyaca göre büyütebilirsiniz."
       : "Start with a small pack and scale up as volume grows.",
     proBenefitTagUnlimited: tr ? "Anında" : "Instant",
-    proBenefitUnlimited: tr
-      ? "Ödeme onayından sonra krediler hesabınıza eklenir."
-      : "Credits appear in your account right after purchase completes.",
-    proBenefitTagAccess: tr ? "Kontrol" : "Control",
-    proBenefitFullAccess: tr
-      ? "Bakiyeniz bitmeden tüm uygun araçları kullanmaya devam edersiniz."
-      : "Keep using every tool your balance covers — no separate “plan gates”.",
     validationPagesNeedPassword: tr
       ? "Sayfa sınırını doğrulamak için önce PDF parolasını girin."
       : "Enter the PDF password first to validate page numbers against the document.",
@@ -309,9 +176,6 @@ export function ws(lang: Language) {
     processing: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
     processingQueued: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
     processingPremium: tr ? "İŞLEM SÜRÜYOR…" : "PROCESSING…",
-    subscriptionWarn: tr
-      ? "Bu araç için yeterli krediniz yok. Kredi ekleyerek kullanabilirsiniz."
-      : "You don’t have enough credits for this tool. Add credits to use it.",
     mergeProgressPreparing: tr ? "Dosyalar hazırlanıyor…" : "Preparing files…",
     mergeProgressStarting: tr ? "İstek gönderiliyor…" : "Sending request…",
     mergeProgressQueueFree: tr
@@ -347,9 +211,6 @@ export function ws(lang: Language) {
     toolProgressSuccessTitle: tr ? "İşlem tamamlandı" : "Completed",
     toolDownloadAgain: tr ? "Tekrar indir" : "Download again",
     toolProgressDismiss: tr ? "Kapat" : "Dismiss",
-    toolProgressNativeDownloadHint: tr
-      ? "İndirme tarayıcıya bırakıldı; tekrar için indirilenler klasörünü kontrol edin."
-      : "Download was handed off to the browser; check your Downloads folder.",
     toolProgressLargeFileHint: (mb: number) =>
       tr
         ? `Dosya büyük (~${mb.toFixed(1)} MB); sunucuda işlem uzun sürebilir.`
@@ -420,8 +281,8 @@ export function ws(lang: Language) {
       ? "Tablo yapısı uyarısı"
       : "Table structure notice",
     pdfExcelWarningBody: tr
-      ? "PDF’inizde net bir tablo yapısı yoksa Excel çıktısı dağınık olabilir. Bu işlem kredi tüketir. Devam etmek istiyor musunuz?"
-      : "If your PDF has no clear table structure, the Excel file may be messy. This action will use credits. Continue?",
+      ? "PDF’inizde net bir tablo yapısı yoksa Excel çıktısı dağınık olabilir. Devam etmek istiyor musunuz?"
+      : "If your PDF has no clear table structure, the Excel file may be messy. Continue?",
     pdfExcelWarningConfirm: tr ? "Evet, devam" : "Yes, continue",
     mergeButtonHintInspecting: tr
       ? "Ön kontrol tamamlanana kadar birleştirme kapalı — tüm satırlarda Hazır görün."
@@ -456,40 +317,7 @@ export function ws(lang: Language) {
     filePickNoteAppend: tr
       ? "Yeni seçilen dosyalar listenin sonuna eklenir."
       : "New files are appended to the list.",
-    upgradeNudgeAria: tr ? "Kredi önerisi" : "Credits suggestion",
-    /** Behavioral nudges after soft limit (1), repeated use (2), multiple queued delays (3). */
-    upgradeNudgeTierBody: (tier: 1 | 2 | 3) => {
-      if (tier === 1) {
-        return tr
-          ? "Kredi bakiyeniz düşük. Devam etmek için paket satın alabilirsiniz."
-          : "Your credit balance is low. Buy a pack to keep going.";
-      }
-      if (tier === 2) {
-        return tr
-          ? "Bu aracı sık kullanıyorsunuz. Bakiyenizi yükseltmek için kredi paketi alın."
-          : "You use this tool often. Top up with a credit pack when you need more runs.";
-      }
-      return tr
-        ? "Daha hızlı sonuç ve tam erişim için kredi ekleyin veya öncelikli hattı tercih edin."
-        : "Add credits or use the priority lane for faster results and full access.";
-    },
-    upgradeNudgeContinueFree: tr
-      ? "Beklemeden devam et"
-      : "Continue without waiting",
-    upgradeNudgeUpgradeInstant: tr
-      ? "Kredi paketlerini aç"
-      : "Open credit packs",
-    /** Shown while a free-tier job is in progress (queue / server delay monetization). */
-    delayMonetizationDuringBody: tr
-      ? "Kredi bakiyeniz düşükse paket satın alarak devam edebilirsiniz."
-      : "If your balance is low, buy a credit pack to keep going.",
-    delayMonetizationInstantCta: tr ? "Kredi satın al" : "Buy credits",
-    /** Subtle reminder after a run (credit-based product). */
-    delayMonetizationAfterHint: tr
-      ? "İhtiyaç duyduğunuzda kredi paketi alabilirsiniz."
-      : "You can buy a credit pack whenever you need more runs.",
-    delayMonetizationAfterDismiss: tr ? "Gizle" : "Hide",
-  };
+}
 }
 
 export type UpgradeNudgeTierWeb = 0 | 1 | 2 | 3;
