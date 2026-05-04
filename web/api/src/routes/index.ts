@@ -15,6 +15,8 @@ import { paymentsRouter } from "../modules/payment/payments.routes.js";
 import { publicRouter } from "../modules/public/public.routes.js";
 import { subscriptionRouter } from "../modules/subscription/subscription.routes.js";
 import { userRouter } from "../modules/user/user.routes.js";
+import orgRouter from "../modules/organization/organization.routes.js";
+import billingRouter from "../modules/billing/billing.routes.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -55,3 +57,5 @@ if (env.iyzicoEnabled) {
 apiRouter.use("/license", licenseRouter);
 apiRouter.use("/subscription", subscriptionRouter);
 apiRouter.use("/user", userRouter);
+apiRouter.use("/org", orgRouter);
+apiRouter.use("/billing", billingRouter);

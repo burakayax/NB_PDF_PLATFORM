@@ -3614,3 +3614,62 @@ textarea {
   vertical-align: middle;
   color: rgb(226 232 240);
 }
+
+/* ─── Scroll-reveal: sections start hidden, animate in when visible ─── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s ease, transform 0.65s ease;
+}
+[data-reveal="left"] {
+  transform: translateX(-32px);
+}
+[data-reveal="right"] {
+  transform: translateX(32px);
+}
+[data-reveal="scale"] {
+  transform: scale(0.94);
+}
+[data-reveal].nb-revealed {
+  opacity: 1;
+  transform: translateY(0) translateX(0) scale(1);
+}
+/* Stagger children when parent has data-reveal-stagger */
+[data-reveal-stagger] > *:nth-child(1) { transition-delay: 0.05s; }
+[data-reveal-stagger] > *:nth-child(2) { transition-delay: 0.13s; }
+[data-reveal-stagger] > *:nth-child(3) { transition-delay: 0.21s; }
+[data-reveal-stagger] > *:nth-child(4) { transition-delay: 0.29s; }
+[data-reveal-stagger] > *:nth-child(5) { transition-delay: 0.37s; }
+[data-reveal-stagger] > *:nth-child(6) { transition-delay: 0.45s; }
+[data-reveal-stagger] > *:nth-child(n+7) { transition-delay: 0.50s; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ── Landing Page Animations ─────────────────────────────────────────────── */
+@keyframes lp-float {
+  from { transform: translateY(0px) translateX(0px); }
+  to   { transform: translateY(-35px) translateX(25px); }
+}
+@keyframes lp-blob-a {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(50px,-35px) scale(1.09); }
+  66%      { transform: translate(-25px,22px) scale(0.93); }
+}
+@keyframes lp-blob-b {
+  0%,100% { transform: translate(0,0) scale(1); }
+  40%      { transform: translate(-55px,30px) scale(1.12); }
+  75%      { transform: translate(35px,-18px) scale(0.91); }
+}
+@keyframes lp-blob-c {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%      { transform: translate(20px,-42px) scale(1.07); }
+}
+@keyframes lp-ping-slow {
+  0%      { transform: scale(1);   opacity: 0.7; }
+  70%,100%{ transform: scale(1.8); opacity: 0; }
+}

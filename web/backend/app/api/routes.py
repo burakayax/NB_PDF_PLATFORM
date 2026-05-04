@@ -566,6 +566,7 @@ async def compress_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     password: str = Form(default=""),
+    quality: str = Form(default="auto"),
 ):
     """Result-store: build preview; credits are charged on
     ``GET /api/pdf/result/{id}/download`` (not on this POST)."""
@@ -581,8 +582,10 @@ async def compress_pdf(
         pwd = password.strip() or None
         user_id = await saas_current_user_id(token)
 
+        q = quality if quality in ("auto", "low", "medium", "high") else "auto"
+
         def _compress_and_store() -> Any:
-            engine.compress_pdf(sp, out_str, password=pwd)
+            engine.compress_pdf(sp, out_str, password=pwd, quality=q)
             outp = Path(out_str)
             thumb = generate_blurred_pdf_thumbnail_from_path(outp)
             return save_result_from_file(

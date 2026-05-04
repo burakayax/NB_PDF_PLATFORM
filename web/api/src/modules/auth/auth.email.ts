@@ -25,11 +25,11 @@ export function createVerificationEmailTemplate({
   const html = renderBrandedVerificationEmailHtml(verificationUrl);
 
   const text = [
-    "Email Doğrulama — NB PDF PLATFORM",
+    "Email Doğrulama — PDF PLATFORM",
     "",
     "Email Adresinizi Doğrulayın",
     "",
-    "NB PDF PLATFORM hesabınızı aktifleştirmek için aşağıdaki bağlantıyı tarayıcıda açın:",
+    "PDF PLATFORM hesabınızı aktifleştirmek için aşağıdaki bağlantıyı tarayıcıda açın:",
     "",
     verificationUrl,
     "",
@@ -108,8 +108,8 @@ export function createPasswordResetCodeEmailTemplate({
   const safeCode = escapeHtml(code);
   const subject =
     lang === "tr"
-      ? "NB PDF PLATFORM — Şifre sıfırlama kodunuz"
-      : "NB PDF PLATFORM — Your password reset code";
+      ? "PDF PLATFORM — Şifre sıfırlama kodunuz"
+      : "PDF PLATFORM — Your password reset code";
 
   const title = lang === "tr" ? "Şifre sıfırlama kodu" : "Password reset code";
   const intro =
@@ -133,14 +133,14 @@ export function createPasswordResetCodeEmailTemplate({
         ${lang === "tr" ? "Bu kod 15 dakika geçerlidir. İsteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz." : "This code expires in 15 minutes. If you did not request a reset, you can ignore this email."}
       </p>
     `,
-    footerText: "NB PDF PLATFORM — NB Global Studio",
-    productName: "NB PDF PLATFORM",
+    footerText: "PDF PLATFORM — NB Global Studio",
+    productName: "PDF PLATFORM",
   });
 
   const text =
     lang === "tr"
       ? [
-          "NB PDF PLATFORM — Şifre sıfırlama",
+          "PDF PLATFORM — Şifre sıfırlama",
           "",
           `Kodunuz: ${code}`,
           "",
@@ -148,7 +148,7 @@ export function createPasswordResetCodeEmailTemplate({
           "İsteği siz yapmadıysanız bu e-postayı yok sayın.",
         ].join("\n")
       : [
-          "NB PDF PLATFORM — Password reset",
+          "PDF PLATFORM — Password reset",
           "",
           `Your code: ${code}`,
           "",

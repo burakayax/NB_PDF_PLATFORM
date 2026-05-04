@@ -44,6 +44,7 @@ import {
   adminUploadMediaController,
   adminUsageExportController,
   adminUsageSeriesController,
+  adminGetUserDetailController,
 } from "./admin.controller.js";
 const mediaUpload = multer({
   storage: multer.memoryStorage(),
@@ -68,6 +69,7 @@ adminRouter.get("/stats", asyncHandler(adminOverviewController));
 
 adminRouter.get("/users", asyncHandler(adminListUsersController));
 adminRouter.post("/users", asyncHandler(adminCreateUserController));
+adminRouter.get("/users/:id/detail", asyncHandler(adminGetUserDetailController));
 adminRouter.delete("/users/:id", asyncHandler(adminDeleteUserController));
 adminRouter.patch("/users/:id", asyncHandler(adminUpdateUserController));
 

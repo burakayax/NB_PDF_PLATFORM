@@ -3,6 +3,7 @@ import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
 import { SIDEBAR_TOOL_ORDER, sidebarToolCreditLine, sidebarToolLabel, ws } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
+import { QuotaWidget } from "./QuotaWidget";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -18,6 +19,9 @@ type DashboardSidebarProps = {
   resolveToolLabel?: (id: FeatureKey) => string;
   /** Limitsiz Pro — bottom badge only; no purchase chrome in sidebar. */
   limitsizProActive?: boolean;
+  onAdminClick?: () => void;
+  accessToken?: string | null;
+  onUpgrade?: () => void;
 };
 
 /**
@@ -33,6 +37,9 @@ export function DashboardSidebar({
   enabledToolIds,
   resolveToolLabel,
   limitsizProActive,
+  onAdminClick,
+  accessToken,
+  onUpgrade,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length ? enabledToolIds : SIDEBAR_TOOL_ORDER;
@@ -97,12 +104,37 @@ export function DashboardSidebar({
         })}
       </nav>
 
+      {!limitsizProActive && (
+        <div className="border-t border-white/[0.06] px-3 py-3">
+          <QuotaWidget
+            language={language}
+            accessToken={accessToken}
+            onUpgrade={onUpgrade}
+          />
+        </div>
+      )}
+
       {showVipStrip ? (
         <div className="border-t border-white/[0.06] px-3 py-3">
           <div className="rounded-2xl border border-amber-400/35 bg-gradient-to-br from-amber-500/14 via-emerald-600/12 to-nb-panel/55 px-3 py-3 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
             <p className="text-lg font-black tracking-tight text-amber-200">{L.unlimitedSidebarBadge}</p>
             <p className="mt-1 text-[11px] font-medium leading-snug text-emerald-100/90">{L.unlimitedAccessActive}</p>
           </div>
+        </div>
+      ) : null}
+
+      {userRole === "ADMIN" && onAdminClick ? (
+        <div className="border-t border-white/[0.06] px-3 py-3">
+          <button
+            type="button"
+            onClick={onAdminClick}
+            className="nb-transition flex w-full items-center gap-2.5 rounded-2xl border border-violet-500/35 bg-violet-500/10 px-3 py-2.5 text-left text-sm font-semibold text-violet-200 hover:bg-violet-500/20 hover:text-violet-100 hover:shadow-[0_0_20px_-6px_rgba(139,92,246,0.5)]"
+          >
+            <svg className="h-5 w-5 shrink-0 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 11.943c0 6.001 4.448 10.956 10.22 11.944C19.122 22.899 23.57 17.944 23.57 11.943a11.955 11.955 0 00-.598-5.943A11.959 11.959 0 0112 2.714z" />
+            </svg>
+            <span>Admin Paneli</span>
+          </button>
         </div>
       ) : null}
     </aside>

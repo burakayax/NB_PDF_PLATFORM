@@ -11,7 +11,7 @@ const prismaCli = path.join(apiRoot, "node_modules", "prisma", "build", "index.j
 
 const env = { ...process.env, DATABASE_URL: "file:./dev.db" };
 
-const r = spawnSync(process.execPath, [prismaCli, "db", "push"], {
+const r = spawnSync(process.execPath, [prismaCli, "db", "push", "--accept-data-loss"], {
   cwd: apiRoot,
   env,
   stdio: "inherit",

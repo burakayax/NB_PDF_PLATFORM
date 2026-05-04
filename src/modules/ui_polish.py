@@ -174,6 +174,83 @@ def stagger_raise_buttons(app: ctk.CTk, buttons: list[ctk.CTkButton], ui: dict, 
         app.after(delay_ms * i, lift)
 
 
+class ToolTip:
+    """Hover tooltip popup for any Tkinter/CTk widget."""
+
+    _DELAY = 680
+
+    def __init__(self, widget, text: str, ui: dict | None = None):
+        self.widget = widget
+        self.text = text
+        self.ui = ui or {}
+        self._tip: tk.Toplevel | None = None
+        self._after_id: str | None = None
+        self._mx = 0
+        self._my = 0
+        widget.bind("<Enter>", self._on_enter, add="+")
+        widget.bind("<Leave>", self._on_leave, add="+")
+        widget.bind("<Motion>", self._on_motion, add="+")
+        widget.bind("<ButtonPress>", self._on_leave, add="+")
+
+    def _on_enter(self, event):
+        self._mx = event.x_root
+        self._my = event.y_root
+        self._schedule()
+
+    def _on_leave(self, _event=None):
+        self._cancel()
+        self._hide()
+
+    def _on_motion(self, event):
+        self._mx = event.x_root
+        self._my = event.y_root
+
+    def _schedule(self):
+        self._cancel()
+        self._after_id = self.widget.after(self._DELAY, self._show)
+
+    def _cancel(self):
+        if self._after_id:
+            try:
+                self.widget.after_cancel(self._after_id)
+            except Exception:
+                pass
+            self._after_id = None
+
+    def _show(self):
+        if self._tip:
+            return
+        x = self._mx + 16
+        y = self._my + 16
+        self._tip = tk.Toplevel(self.widget)
+        self._tip.wm_overrideredirect(True)
+        self._tip.wm_geometry(f"+{x}+{y}")
+        try:
+            self._tip.attributes("-topmost", True)
+        except Exception:
+            pass
+        bg = self.ui.get("panel", "#1a2035")
+        border_c = self.ui.get("accent", "#6366f1")
+        fg = self.ui.get("text", "#e2e8f0")
+        muted = self.ui.get("muted", "#64748b")
+        outer = tk.Frame(self._tip, bg=border_c, padx=1, pady=1)
+        outer.pack()
+        inner = tk.Frame(outer, bg=bg, padx=11, pady=7)
+        inner.pack()
+        tk.Label(
+            inner, text=self.text, bg=bg, fg=fg,
+            font=("Segoe UI", 10), wraplength=240, justify="left",
+        ).pack()
+
+    def _hide(self):
+        if self._tip:
+            try:
+                self._tip.destroy()
+            except Exception:
+                pass
+            self._tip = None
+
+
 def thin_accent_line(parent, ui: dict, width: int = 520, height: int = 3) -> tk.Label | ctk.CTkFrame:
     """Horizontal gradient hairline (tk.Label + PhotoImage; solid bar fallback on TclError)."""
     left = ui.get("accent", "#2563eb")

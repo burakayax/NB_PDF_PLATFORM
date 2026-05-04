@@ -108,12 +108,17 @@ def badge_colors(tone: str = "neutral"):
 
 def add_footer(
     parent,
-    left_text: str = "NB PDF PLATFORM",
+    left_text: str = "PDF PLATFORM",
     center_text: str | None = None,
     right_text: str | None = None,
     action_text: str | None = None,
     action_command=None,
+    extra_links: list | None = None,
 ):
+    """
+    extra_links: list of (label, command) tuples shown as small link buttons
+    in the center area next to the center text.
+    """
     ui = theme()
     if center_text is None:
         center_text = "by NB Global Studio"
@@ -145,11 +150,11 @@ def add_footer(
     left_frame = ctk.CTkFrame(content, fg_color="transparent")
     left_frame.pack(side="left", fill="y")
 
-    center_frame = ctk.CTkFrame(content, fg_color="transparent")
-    center_frame.pack(side="left", fill="both", expand=True)
-
     right_frame = ctk.CTkFrame(content, fg_color="transparent")
     right_frame.pack(side="right", fill="y")
+
+    center_frame = ctk.CTkFrame(content, fg_color="transparent")
+    center_frame.pack(side="left", fill="both", expand=True)
 
     ctk.CTkLabel(
         left_frame,
@@ -160,6 +165,14 @@ def add_footer(
         fg_color="transparent",
     ).pack(side="left")
 
+    # Center: brand label + link buttons
+    _lnk_kw = dict(
+        height=24, corner_radius=6,
+        fg_color="transparent",
+        hover_color=ui["panel_soft"],
+        text_color=ui["muted"],
+        font=ui["small_font"],
+    )
     ctk.CTkLabel(
         center_frame,
         text=center_text,
@@ -167,7 +180,11 @@ def add_footer(
         text_color=ui["muted"],
         anchor="center",
         fg_color="transparent",
-    ).pack(expand=True)
+    ).pack(side="left", expand=True)
+
+    if extra_links:
+        for lbl, cmd in extra_links:
+            ctk.CTkButton(center_frame, text=lbl, command=cmd, **_lnk_kw).pack(side="left", padx=2)
 
     if action_text and action_command:
         ctk.CTkButton(

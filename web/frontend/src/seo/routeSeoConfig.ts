@@ -26,7 +26,7 @@ export type SeoRouteContext = {
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const BRAND = "NB PDF PLATFORM";
+const BRAND = "PDF PLATFORM";
 
 const LOCALE: Record<Language, string> = {
   tr: "tr_TR",
@@ -252,8 +252,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       title: `${context.language === "tr" ? "Hizmet Şartları" : "Terms of Service"} | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "NB PDF PLATFORM hizmet şartlarını okuyun."
-          : "Read the terms of service for NB PDF PLATFORM.",
+          ? "PDF PLATFORM hizmet şartlarını okuyun."
+          : "Read the terms of service for PDF PLATFORM.",
       canonicalPath: "/terms",
       index: true,
       follow: true,
@@ -268,8 +268,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       title: `${context.language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"} | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "NB PDF PLATFORM gizlilik politikasını okuyun."
-          : "Read the privacy policy for NB PDF PLATFORM.",
+          ? "PDF PLATFORM gizlilik politikasını okuyun."
+          : "Read the privacy policy for PDF PLATFORM.",
       canonicalPath: "/privacy",
       index: true,
       follow: true,
@@ -283,7 +283,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     return {
       title: `KVKK Aydınlatma Metni | ${BRAND}`,
       description:
-        "NB PDF PLATFORM kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
+        "PDF PLATFORM kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
       canonicalPath: "/kvkk",
       index: true,
       follow: true,
@@ -315,7 +315,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   if (pathname === "/admin-login" || context.view === "admin_login") {
     return {
       title: `Admin login | ${BRAND}`,
-      description: "Administrator sign-in for NB PDF PLATFORM operations.",
+      description: "Administrator sign-in for PDF PLATFORM operations.",
       canonicalPath: "/admin-login",
       index: false,
       follow: false,

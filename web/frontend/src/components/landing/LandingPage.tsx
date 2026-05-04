@@ -1,128 +1,1547 @@
-import { useEffect, useMemo, useState } from "react";
-import { submitContactForm } from "../../api/contact";
-import { getSaasApiBase } from "../../api/saasBase";
-import { useSettings } from "../../hooks/useSettings";
-import {
-  getWindowsDownloadUrlFromCms,
-  mergeLandingWithCms,
-  resolveCmsAssetUrl,
-} from "../../lib/landingCmsMerge";
-import {
-  ADMIN_PREVIEW_HIGHLIGHT,
-  isCmsPreviewActive,
-} from "../../lib/cmsPreview";
+/*
+  TO ADD SCREENSHOTS:
+  - Web app:     public/screenshots/web-app.png     (önerilen: 1280×800px)
+  - Desktop app: public/screenshots/desktop-app.png (önerilen: 1280×800px)
+  Dosyalar bu konuma yerleştirildiğinde sayfa otomatik olarak gösterir.
+*/
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
-import { LandingIcon } from "./LandingIcon";
-import { LandingPricingSection } from "./LandingPricingSection";
-import { Marquee } from "../ui/marquee";
+import { getWindowsDownloadUrlFromCms } from "../../lib/landingCmsMerge";
+import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
+import PdfToolsSection from "../ui/pdf-tools-section";
+import PricingSection from "../ui/pricing-section";
 
-// ─── SEO HEAD HELPER ──────────────────────────────────────────────────────────
-// Inject or update a <meta> tag by name/property
-function setMeta(
-  attr: "name" | "property",
-  key: string,
-  content: string,
-): void {
-  if (typeof document === "undefined") return;
-  let el = document.querySelector<HTMLMetaElement>(
-    `meta[${attr}="${key}"]`,
-  );
-  if (!el) {
-    el = document.createElement("meta");
-    el.setAttribute(attr, key);
-    document.head.appendChild(el);
-  }
-  el.setAttribute("content", content);
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-function setLinkTag(rel: string, href: string, attrs?: Record<string, string>): void {
-  if (typeof document === "undefined") return;
-  let el = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
-  if (!el) {
-    el = document.createElement("link");
-    el.setAttribute("rel", rel);
-    document.head.appendChild(el);
-  }
-  el.setAttribute("href", href);
-  if (attrs) {
-    Object.entries(attrs).forEach(([k, v]) => el!.setAttribute(k, v));
-  }
-}
-
-// ─── TYPES ────────────────────────────────────────────────────────────────────
 type LandingPageProps = {
   language: Language;
   onLanguageChange: (language: Language) => void;
   onUseWebApp: () => void;
   isAuthenticated: boolean;
-  /** Giriş yapılmışsa: "Merhaba, Ahmet" / "Hello, Alex" (yalnızca ad). */
   authGreeting?: string;
   onLogin: () => void;
   onRegister: () => void;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
   onOpenKvkk: () => void;
-  /** Canonical URL for SEO (e.g. "https://example.com") */
   canonicalBaseUrl?: string;
-  /** Organisation name for Schema.org */
   organizationName?: string;
+  onSelectPlan?: (planId: "PLUS" | "PRO" | "BUSINESS") => void;
 };
 
-// ─── SCHEMA.ORG JSON-LD ───────────────────────────────────────────────────────
-function buildJsonLd(opts: {
-  orgName: string;
-  description: string;
-  url: string;
-  logoUrl: string;
-  language: string;
-}): string {
-  return JSON.stringify({
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Organization",
-        name: opts.orgName,
-        url: opts.url,
-        logo: {
-          "@type": "ImageObject",
-          url: opts.logoUrl,
-        },
-        description: opts.description,
-        inLanguage: opts.language === "tr" ? "tr-TR" : "en-US",
-      },
-      {
-        "@type": "WebSite",
-        url: opts.url,
-        name: opts.orgName,
-        description: opts.description,
-        inLanguage: opts.language === "tr" ? "tr-TR" : "en-US",
-        potentialAction: {
-          "@type": "SearchAction",
-          target: {
-            "@type": "EntryPoint",
-            urlTemplate: `${opts.url}/search?q={search_term_string}`,
-          },
-          "query-input": "required name=search_term_string",
-        },
-      },
-      {
-        "@type": "SoftwareApplication",
-        name: opts.orgName,
-        applicationCategory: "UtilitiesApplication",
-        operatingSystem: "Web, Windows",
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: opts.language === "tr" ? "TRY" : "USD",
-        },
-        description: opts.description,
-      },
-    ],
-  });
+type ShowcaseTab = "web" | "desktop";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function injectFonts() {
+  if (document.getElementById("nb-lp-fonts")) return;
+  const link = document.createElement("link");
+  link.id = "nb-lp-fonts";
+  link.rel = "stylesheet";
+  link.href =
+    "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
+  document.head.appendChild(link);
 }
 
-// ─── COMPONENT ────────────────────────────────────────────────────────────────
+function useScrolled(threshold = 20) {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > threshold);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [threshold]);
+  return scrolled;
+}
+
+function useInViewOnce(ref: React.RefObject<Element | null>) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [ref]);
+  return inView;
+}
+
+// ─── Animated Background ──────────────────────────────────────────────────────
+
+function AuroraBackground() {
+  return (
+    <div
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
+      aria-hidden="true"
+    >
+      <div
+        className="absolute top-[-15%] left-[5%] w-[700px] h-[700px] rounded-full opacity-[0.15]"
+        style={{
+          background: "radial-gradient(circle,#3b82f6,transparent 70%)",
+          animation: "lp-blob-a 22s ease-in-out infinite",
+        }}
+      />
+      <div
+        className="absolute top-[40%] right-[-8%] w-[520px] h-[520px] rounded-full opacity-[0.11]"
+        style={{
+          background: "radial-gradient(circle,#8b5cf6,transparent 70%)",
+          animation: "lp-float 7s ease-in-out infinite alternate",
+        }}
+      />
+      <div
+        className="absolute bottom-[5%] left-[25%] w-[460px] h-[460px] rounded-full opacity-[0.08]"
+        style={{
+          background: "radial-gradient(circle,#06b6d4,transparent 70%)",
+          animation: "lp-float 9s ease-in-out infinite alternate-reverse",
+        }}
+      />
+      <div
+        className="absolute inset-0 opacity-[0.022]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+    </div>
+  );
+}
+
+// ─── Navbar ───────────────────────────────────────────────────────────────────
+
+function Navbar({
+  language,
+  onLanguageChange,
+  isAuthenticated,
+  authGreeting,
+  onLogin,
+  onRegister,
+  onUseWebApp,
+  windowsDownloadUrl,
+}: {
+  language: Language;
+  onLanguageChange: (l: Language) => void;
+  isAuthenticated: boolean;
+  authGreeting?: string;
+  onLogin: () => void;
+  onRegister: () => void;
+  onUseWebApp: () => void;
+  windowsDownloadUrl: string;
+}) {
+  const scrolled = useScrolled();
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+  const [langOpen, setLangOpen] = useState(false);
+
+  return (
+    <header
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-black/55 backdrop-blur-xl border-b border-white/[0.07]"
+          : "bg-black/20 backdrop-blur-md"
+      }`}
+    >
+      <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Logo */}
+        <button
+          onClick={onUseWebApp}
+          className="flex items-center gap-3 group shrink-0"
+        >
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_28px_rgba(99,102,241,0.7)] transition-shadow">
+            <svg
+              className="w-4 h-4 text-white"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <span className="font-bold text-white tracking-tight hidden sm:block">
+            {copy.navbar.productLabel}
+          </span>
+        </button>
+
+        {/* Nav links */}
+        <nav
+          className="hidden md:flex items-center gap-1"
+          aria-label="Ana navigasyon"
+        >
+          {[
+            ["#showcase", tr ? "Önizleme" : "Preview"],
+            ["#tools", tr ? "Araçlar" : "Tools"],
+            ["#pricing", tr ? "Fiyat" : "Pricing"],
+            ["#faq", "FAQ"],
+          ].map(([href, label]) => (
+            <CrawlableLink
+              key={href}
+              href={href}
+              className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/[0.06]"
+            >
+              {label}
+            </CrawlableLink>
+          ))}
+        </nav>
+
+        {/* Right */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Language */}
+          <div className="relative" onMouseLeave={() => setLangOpen(false)}>
+            <button
+              onClick={() => setLangOpen(!langOpen)}
+              onMouseEnter={() => setLangOpen(true)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-semibold text-gray-300 hover:bg-white/10 transition-all"
+              aria-label={tr ? "Dil seçimi" : "Language"}
+            >
+              <span className="text-cyan-400 uppercase">{language}</span>
+              <svg
+                className={`w-3 h-3 text-gray-500 transition-transform ${langOpen ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {langOpen && (
+              <div className="absolute right-0 top-full mt-1.5 w-32 rounded-xl border border-white/10 bg-[#0f172a] shadow-2xl overflow-hidden">
+                {(["tr", "en"] as Language[]).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => {
+                      onLanguageChange(l);
+                      setLangOpen(false);
+                    }}
+                    className={`w-full px-3 py-2.5 text-xs font-semibold text-left transition-colors ${language === l ? "bg-white/10 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white"}`}
+                  >
+                    {l === "tr" ? "🇹🇷 Türkçe" : "🇬🇧 English"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {isAuthenticated ? (
+            <>
+              <span className="hidden sm:block max-w-[140px] truncate text-sm text-gray-300">
+                {authGreeting}
+              </span>
+              <button
+                onClick={onUseWebApp}
+                className="h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-indigo-500 transition-all"
+              >
+                {copy.navbar.openWorkspace}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onLogin}
+                className="h-9 px-4 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all hidden sm:flex items-center"
+              >
+                {copy.navbar.login}
+              </button>
+              <button
+                onClick={onRegister}
+                className="h-9 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_24px_rgba(59,130,246,0.4)] hover:shadow-[0_0_32px_rgba(99,102,241,0.6)] transition-all"
+              >
+                {copy.navbar.register}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+
+function Hero({
+  language,
+  onUseWebApp,
+  windowsDownloadUrl,
+}: {
+  language: Language;
+  onUseWebApp: () => void;
+  windowsDownloadUrl: string;
+}) {
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+
+  const stagger = (i: number) => ({
+    initial: { opacity: 0, y: 28 },
+    animate: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.55,
+        ease: [0.22, 1, 0.36, 1] as const,
+      },
+    },
+  });
+
+  return (
+    <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Badge */}
+        <motion.div
+          {...stagger(0)}
+          className="mb-8 inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-blue-500/25 bg-blue-500/10 backdrop-blur-sm"
+        >
+          <span className="relative flex h-2 w-2" aria-hidden="true">
+            <span
+              className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"
+              style={{
+                animation: "lp-ping-slow 1.5s cubic-bezier(0,0,0.2,1) infinite",
+              }}
+            />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500" />
+          </span>
+          <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-blue-300">
+            {tr
+              ? "Web + Masaüstü · PDF Araçları Platformu"
+              : "Web + Desktop · PDF Tools Platform"}
+          </span>
+        </motion.div>
+
+        {/* H1 */}
+        <motion.h1
+          {...stagger(1)}
+          className="text-[2.6rem] sm:text-6xl md:text-7xl font-black leading-[1.08] tracking-tight text-white"
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          {tr ? (
+            <>
+              PDF İşlemlerini
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                Hızla ve Güvenle
+              </span>{" "}
+              Tamamla
+            </>
+          ) : (
+            <>
+              Process PDFs
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
+                Faster and Safer
+              </span>{" "}
+              Than Ever
+            </>
+          )}
+        </motion.h1>
+
+        {/* Subheading */}
+        <motion.p
+          {...stagger(2)}
+          className="mt-6 text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed"
+          style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+        >
+          {copy.hero.description}
+        </motion.p>
+
+        {/* CTAs */}
+        <motion.div
+          {...stagger(3)}
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+        >
+          <button
+            onClick={onUseWebApp}
+            className="group relative inline-flex h-13 items-center justify-center px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-base shadow-2xl shadow-blue-500/30 hover:from-blue-500 hover:to-indigo-500 hover:-translate-y-0.5 transition-all overflow-hidden"
+          >
+            <div
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
+              aria-hidden="true"
+            />
+            <span className="relative">
+              {tr
+                ? "Ücretsiz Başla — Kredi Kartı Gerekmez"
+                : "Start Free — No Credit Card"}
+            </span>
+          </button>
+          <CrawlableLink
+            href={windowsDownloadUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base hover:bg-white/10 hover:border-white/25 hover:-translate-y-0.5 transition-all"
+          >
+            <svg
+              className="w-5 h-5 text-blue-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+              />
+            </svg>
+            {copy.hero.secondaryCta}
+          </CrawlableLink>
+        </motion.div>
+
+        {/* Trust bar */}
+        <motion.div
+          {...stagger(4)}
+          className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500"
+        >
+          {[
+            "🔒 SSL " + (tr ? "Şifreli" : "Encrypted"),
+            "⭐ 4.9/5 " + (tr ? "Puan" : "Rating"),
+            "👥 1,000+ " + (tr ? "Kullanıcı" : "Users"),
+            "🔄 99.9% " + (tr ? "Çalışma Süresi" : "Uptime"),
+          ].map((item) => (
+            <span key={item}>{item}</span>
+          ))}
+        </motion.div>
+
+        {/* Audience pills */}
+        <motion.div
+          {...stagger(5)}
+          className="mt-6 flex flex-wrap justify-center gap-2"
+        >
+          {copy.hero.audience.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-blue-500/30 bg-blue-500/10 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-300"
+            >
+              <span
+                className="w-1 h-1 rounded-full bg-blue-400"
+                aria-hidden="true"
+              />
+              {tag}
+            </span>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Stats Bar ────────────────────────────────────────────────────────────────
+
+function StatsBar({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInViewOnce(ref as React.RefObject<Element>);
+
+  const stats = [
+    {
+      value: 1000,
+      suffix: "+",
+      label: tr ? "Aktif Kullanıcı" : "Active Users",
+    },
+    { value: 20, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
+    {
+      value: 99.9,
+      suffix: "%",
+      label: tr ? "Çalışma Süresi" : "Uptime SLA",
+      decimals: 1,
+    },
+    {
+      value: 100,
+      suffix: "%",
+      label: tr ? "Tarayıcı Tabanlı" : "Browser-Based",
+    },
+  ];
+
+  return (
+    <div
+      ref={ref}
+      className="border-y border-white/[0.06] bg-white/[0.015] backdrop-blur-sm py-12"
+    >
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            initial={{ opacity: 0, y: 16 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="flex items-baseline justify-center gap-0.5">
+              {inView ? (
+                <NumberFlow
+                  value={s.value}
+                  format={
+                    s.decimals
+                      ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
+                      : {}
+                  }
+                  className="text-4xl sm:text-5xl font-black text-white"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  transformTiming={{ duration: 800, easing: "ease-out" }}
+                />
+              ) : (
+                <span
+                  className="text-4xl sm:text-5xl font-black text-white"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  0
+                </span>
+              )}
+              <span className="text-2xl font-black text-blue-400">
+                {s.suffix}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">{s.label}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Product Showcase ─────────────────────────────────────────────────────────
+
+const SHOWCASE_PILLS = (tr: boolean) => [
+  {
+    pos: "absolute -top-4 left-[8%] sm:-top-5 sm:left-[5%]",
+    icon: "🔄",
+    label: tr ? "Gerçek Zamanlı" : "Real-time Sync",
+  },
+  {
+    pos: "absolute -top-4 right-[8%] sm:-top-5 sm:right-[5%]",
+    icon: "🔒",
+    label: tr ? "256-bit Şifre" : "256-bit Encryption",
+  },
+  {
+    pos: "absolute -bottom-4 left-[8%] sm:-bottom-5 sm:left-[5%]",
+    icon: "☁️",
+    label: tr ? "Bulut Depolama" : "Cloud Storage",
+  },
+  {
+    pos: "absolute -bottom-4 right-[8%] sm:-bottom-5 sm:right-[5%]",
+    icon: "⚡",
+    label: tr ? "Anında İşlem" : "Instant Processing",
+  },
+];
+
+function BrowserChrome({ screenshot }: { screenshot?: boolean }) {
+  return (
+    <div className="rounded-[16px] overflow-hidden border border-white/[0.1] bg-[#0D1117] shadow-[0_0_80px_rgba(59,130,246,0.15),0_40px_100px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.06)]">
+      {/* Chrome bar */}
+      <div className="flex items-center gap-3 bg-[#111827] border-b border-white/[0.06] px-4 py-3">
+        <div className="flex gap-1.5 shrink-0">
+          <span className="w-3 h-3 rounded-full bg-rose-500/80" />
+          <span className="w-3 h-3 rounded-full bg-amber-400/80" />
+          <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+        </div>
+        <div className="flex-1 flex items-center gap-2 rounded-lg bg-[#0D1117] border border-white/[0.07] px-3 py-1.5">
+          <svg
+            className="w-3 h-3 text-emerald-400 shrink-0"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="text-[11px] text-gray-500 truncate">
+            pdfplatform.app
+          </span>
+        </div>
+        <div className="flex gap-1.5 shrink-0">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-5 h-5 rounded-md bg-white/[0.04] border border-white/[0.05]"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      </div>
+      {/* Viewport */}
+      <div className="relative aspect-video overflow-hidden">
+        {screenshot ? (
+          <img
+            src="/screenshots/web-app.png"
+            alt="PDF PLATFORM web uygulaması"
+            className="w-full h-full object-cover object-top"
+            draggable={false}
+          />
+        ) : (
+          <ScreenshotPlaceholder variant="web" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DesktopChrome({
+  screenshot,
+  name,
+}: {
+  screenshot?: boolean;
+  name: string;
+}) {
+  return (
+    <div className="rounded-[16px] overflow-hidden border border-white/[0.1] bg-[#0D1117] shadow-[0_0_80px_rgba(139,92,246,0.12),0_40px_100px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.06)]">
+      {/* Title bar */}
+      <div className="relative flex items-center bg-[#161B27] border-b border-white/[0.06] px-4 py-3">
+        <div className="flex gap-1.5 shrink-0">
+          <span className="w-3 h-3 rounded-full bg-rose-500/80" />
+          <span className="w-3 h-3 rounded-full bg-amber-400/80" />
+          <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-3.5 h-3.5 text-violet-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span className="text-[12px] font-medium text-gray-400">
+              {name}
+            </span>
+          </div>
+        </div>
+        <div className="ml-auto flex gap-1 shrink-0">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="w-5 h-5 rounded-md bg-white/[0.04] border border-white/[0.05]"
+              aria-hidden="true"
+            />
+          ))}
+        </div>
+      </div>
+      {/* Viewport */}
+      <div className="relative aspect-video overflow-hidden">
+        {screenshot ? (
+          <img
+            src="/screenshots/desktop-app.png"
+            alt="PDF PLATFORM masaüstü uygulaması"
+            className="w-full h-full object-cover object-top"
+            draggable={false}
+          />
+        ) : (
+          <ScreenshotPlaceholder variant="desktop" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ScreenshotPlaceholder({ variant }: { variant: ShowcaseTab }) {
+  return (
+    <div
+      className="w-full h-full flex flex-col items-center justify-center relative"
+      style={{
+        background:
+          variant === "web"
+            ? "linear-gradient(135deg,#0A1628 0%,#0D1F3C 50%,#091322 100%)"
+            : "linear-gradient(135deg,#0A1020 0%,#0C1829 50%,#0A1525 100%)",
+      }}
+    >
+      <div
+        className="absolute inset-0 opacity-[0.055]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <div
+        className="absolute opacity-30 w-[350px] h-[180px] blur-[80px] rounded-full"
+        style={{
+          background:
+            variant === "web"
+              ? "radial-gradient(ellipse,rgba(59,130,246,0.6),transparent 70%)"
+              : "radial-gradient(ellipse,rgba(139,92,246,0.5),transparent 70%)",
+        }}
+      />
+      <div className="relative flex flex-col items-center gap-3">
+        <div
+          className={`w-16 h-16 rounded-2xl flex items-center justify-center ${variant === "web" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-violet-500 to-purple-700"}`}
+        >
+          <svg
+            className="w-8 h-8 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+        </div>
+        <p className="text-gray-400 text-sm font-medium">
+          Screenshot coming soon
+        </p>
+        <p className="text-gray-600 text-xs">
+          {variant === "web"
+            ? "Place web-app.png in /public/screenshots/"
+            : "Place desktop-app.png in /public/screenshots/"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ProductShowcase({
+  language,
+  onUseWebApp,
+  organizationName,
+  windowsDownloadUrl,
+}: {
+  language: Language;
+  onUseWebApp: () => void;
+  organizationName: string;
+  windowsDownloadUrl: string;
+}) {
+  const [activeTab, setActiveTab] = useState<ShowcaseTab>("web");
+  const tr = language === "tr";
+
+  // /screenshots/web-app.png var mı? Vite'da runtime check mümkün değil.
+  // Dosyayı public/screenshots/ altına koyduk — eğer varsa img yüklenecek, yoksa onerror gizler.
+  const [webOk, setWebOk] = useState(true);
+  const [deskOk, setDeskOk] = useState(false);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/screenshots/web-app.png";
+    img.onload = () => setWebOk(true);
+    img.onerror = () => setWebOk(false);
+    const dImg = new Image();
+    dImg.src = "/screenshots/desktop-app.png";
+    dImg.onload = () => setDeskOk(true);
+    dImg.onerror = () => setDeskOk(false);
+  }, []);
+
+  const pills = SHOWCASE_PILLS(tr);
+
+  return (
+    <section
+      id="showcase"
+      className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden"
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.06)_0%,transparent_65%)]" />
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+          className="text-center mb-12"
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[11px] font-bold uppercase tracking-[0.25em] mb-6">
+            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            </span>
+            {tr ? "Ürün Önizlemesi" : "Product Preview"}
+          </span>
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {tr
+              ? "Her PDF İş Akışı,\nTek Platformda"
+              : "Every PDF Workflow,\nOne Platform"}
+          </h2>
+          <p
+            className="text-gray-400 max-w-xl mx-auto"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {tr
+              ? "Güçlü bir web uygulaması ve yerel Windows masaüstü uygulaması — tek ekosistem."
+              : "A powerful web app and a native Windows desktop app — one seamless ecosystem."}
+          </p>
+        </motion.div>
+
+        {/* Tab switcher */}
+        <div className="flex justify-center mb-10">
+          <div
+            role="tablist"
+            aria-label={tr ? "Platform seçimi" : "Platform tabs"}
+            className="inline-flex items-center rounded-[14px] border border-white/[0.07] bg-white/[0.03] p-1 backdrop-blur-md"
+          >
+            {(["web", "desktop"] as ShowcaseTab[]).map((tab) => (
+              <button
+                key={tab}
+                role="tab"
+                aria-selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 ${activeTab === tab ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
+              >
+                {activeTab === tab && (
+                  <motion.div
+                    layoutId="showcase-tab"
+                    className="absolute inset-0 rounded-[10px] border border-indigo-400/20 bg-gradient-to-b from-indigo-500/30 to-indigo-700/20 shadow-[0_0_20px_rgba(99,102,241,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                  />
+                )}
+                <span className="relative" aria-hidden="true">
+                  {tab === "web" ? (
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      />
+                    </svg>
+                  )}
+                </span>
+                <span className="relative">
+                  {tab === "web" ? "Web App" : "Desktop App"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Frame + pills */}
+        <div className="relative px-4 sm:px-8 lg:px-16">
+          {/* Floating pills */}
+          <AnimatePresence mode="popLayout">
+            {pills.map((p, i) => (
+              <motion.div
+                key={`${activeTab}-pill-${i}`}
+                className={`${p.pos} z-20 hidden sm:block`}
+                initial={{ opacity: 0, scale: 0.85, y: 10 }}
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                  y: 0,
+                  transition: {
+                    delay: i * 0.08 + 0.2,
+                    duration: 0.38,
+                    ease: [0.22, 1, 0.36, 1] as const,
+                  },
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.9,
+                  y: -6,
+                  transition: { duration: 0.18 },
+                }}
+              >
+                <div className="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-slate-900/85 px-3 py-2 shadow-xl backdrop-blur-md whitespace-nowrap">
+                  <span className="text-base">{p.icon}</span>
+                  <span className="text-[11px] font-semibold text-gray-200">
+                    {p.label}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Screenshot frame */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                transition: {
+                  duration: 0.35,
+                  ease: [0.22, 1, 0.36, 1] as const,
+                },
+              }}
+              exit={{ opacity: 0, y: -12, transition: { duration: 0.2 } }}
+            >
+              {activeTab === "web" ? (
+                <BrowserChrome screenshot={webOk} />
+              ) : (
+                <DesktopChrome screenshot={deskOk} name={organizationName} />
+              )}
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Glow reflection */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 -translate-x-1/2 h-24 blur-[70px] transition-all duration-500"
+            style={{
+              width: "60%",
+              background:
+                activeTab === "web"
+                  ? "rgba(59,130,246,0.25)"
+                  : "rgba(139,92,246,0.2)",
+            }}
+          />
+        </div>
+
+        {/* CTA strip */}
+        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <button
+            onClick={onUseWebApp}
+            className="group relative inline-flex h-12 min-w-[200px] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 font-semibold text-white shadow-[0_0_50px_-8px_rgba(99,102,241,0.7)] hover:shadow-[0_0_60px_-8px_rgba(99,102,241,1)] hover:scale-[1.03] active:scale-[0.97] transition-all"
+          >
+            <div
+              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
+              aria-hidden="true"
+            />
+            <span className="relative">
+              {tr ? "Ücretsiz Dene" : "Start Free Trial"}
+            </span>
+          </button>
+          <CrawlableLink
+            href={windowsDownloadUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 hover:bg-white/[0.09] hover:text-white hover:border-white/25 transition-all"
+          >
+            {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.8}
+                d="M14 5l7 7m0 0l-7 7m7-7H3"
+              />
+            </svg>
+          </CrawlableLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── How It Works ─────────────────────────────────────────────────────────────
+
+function HowItWorks({ language }: { language: Language }) {
+  const tr = language === "tr";
+
+  const steps = tr
+    ? [
+        {
+          icon: "⚙️",
+          title: "Aracı Seç",
+          desc: "20+ profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.",
+        },
+        {
+          icon: "⬆️",
+          title: "PDF'ini Yükle",
+          desc: "Sürükle-bırak ya da tıkla. Tarayıcıdan anında başla.",
+        },
+        {
+          icon: "⬇️",
+          title: "Sonucu İndir",
+          desc: "Dosyan hazır. Güvenli, gizli bir şekilde indir.",
+        },
+      ]
+    : [
+        {
+          icon: "⬆️",
+          title: "Upload Your PDF",
+          desc: "Drag & drop or click to upload. Start instantly from your browser.",
+        },
+        {
+          icon: "⚙️",
+          title: "Choose Your Tool",
+          desc: "Select from 20+ professional tools. Processing completes in seconds.",
+        },
+        {
+          icon: "⬇️",
+          title: "Download Result",
+          desc: "Your file is ready instantly. Download it securely and privately.",
+        },
+      ];
+
+  return (
+    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+      <div className="max-w-5xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+          className="text-center mb-16"
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium mb-6">
+            ✦ {tr ? "Nasıl Çalışır?" : "How It Works"}
+          </span>
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {tr ? "3 Adımda Tamamla" : "As Simple as 1-2-3"}
+          </h2>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-6 relative">
+          {/* Connector line */}
+          <div
+            className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            aria-hidden="true"
+          />
+
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.15, duration: 0.5 }}
+              className="relative flex flex-col items-center text-center p-7 rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm hover:border-white/[0.14] hover:bg-white/[0.06] transition-all group"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border border-white/10 flex items-center justify-center text-3xl mb-5 group-hover:from-blue-500/30 group-hover:to-indigo-600/30 transition-all">
+                {step.icon}
+              </div>
+              <div className="absolute -top-3 right-5 w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white">
+                {i + 1}
+              </div>
+              <h3
+                className="text-lg font-bold text-white mb-2"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {step.title}
+              </h3>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                {step.desc}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Testimonials ─────────────────────────────────────────────────────────────
+
+const TESTIMONIALS = (tr: boolean) => [
+  {
+    name: tr ? "Ahmet Yılmaz" : "Alex Carter",
+    role: tr
+      ? "İhale Uzmanı, İnşaat A.Ş."
+      : "Procurement Specialist, BuildCorp",
+    initials: tr ? "AY" : "AC",
+    color: "from-blue-600 to-indigo-600",
+    quote: tr
+      ? "İhale dosyalarını birleştirmek için kullandığımız en hızlı araç. Formatlamayı bozmadan anında PDF oluşturuyor."
+      : "The fastest PDF merge tool we've used. Combines tender documents without breaking formatting — instant output.",
+  },
+  {
+    name: tr ? "Neslihan Kaya" : "Sara Mitchell",
+    role: tr ? "Muhasebe Müdürü, FinansLtd." : "Finance Manager, FinGroup Ltd.",
+    initials: tr ? "FK" : "SM",
+    color: "from-violet-600 to-purple-700",
+    quote: tr
+      ? "Excel tablolarını PDF'e çevirmek artık 10 kat hızlı. Biçimlendirme bozulmadan çalışıyor."
+      : "Converting Excel reports to PDF is 10× faster now. Tables stay intact, formatting never breaks.",
+    highlight: true,
+  },
+  {
+    name: tr ? "Murat Demir" : "James Liu",
+    role: tr
+      ? "Operasyon Yöneticisi, LojistikPro"
+      : "Operations Manager, LogiFlow",
+    initials: tr ? "MD" : "JL",
+    color: "from-cyan-600 to-blue-700",
+    quote: tr
+      ? "Windows uygulaması internet bağlantısı olmadan da çalışıyor. Saha ekiplerimiz için çok kritik."
+      : "The Windows app works offline. Critical for our field teams who often lack internet access.",
+  },
+  {
+    name: tr ? "Zeynep Şahin" : "Emily Ross",
+    role: tr ? "Hukuk Asistanı, Hukuk Bürosu" : "Legal Assistant, LexFirm LLP",
+    initials: tr ? "ZŞ" : "ER",
+    color: "from-indigo-600 to-violet-600",
+    quote: tr
+      ? "Toplu PDF sıkıştırma özelliği harika. 200 dosyayı dakikalar içinde işledi, kalite mükemmel."
+      : "Batch compression is excellent. Processed 200 court filings in minutes while preserving quality.",
+  },
+  {
+    name: tr ? "Emre Çelik" : "Daniel Park",
+    role: tr ? "IT Yöneticisi, TechFirm" : "IT Manager, TechStart Inc.",
+    initials: tr ? "EÇ" : "DP",
+    color: "from-emerald-600 to-cyan-700",
+    quote: tr
+      ? "Şifreleme ve filigran özellikleri son derece güvenilir. Kurumsal kullanım için biçilmiş kaftan."
+      : "The encryption and watermark features are rock-solid. Perfect for corporate document security workflows.",
+    highlight: true,
+  },
+  {
+    name: tr ? "Selin Arslan" : "Olivia Bennett",
+    role: tr ? "Proje Koordinatörü, AgencyX" : "Project Coordinator, AgencyX",
+    initials: tr ? "SA" : "OB",
+    color: "from-rose-600 to-pink-700",
+    quote: tr
+      ? "Müşteri sunumlarını PDF'e çevirip birleştirmek hiç bu kadar kolay olmamıştı. Kesinlikle tavsiye ederim."
+      : "Turning client presentations into polished PDFs has never been easier. Highly recommended.",
+  },
+];
+
+function Testimonials({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const testimonials = TESTIMONIALS(tr);
+
+  return (
+    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.06)_0%,transparent_55%)]" />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-14"
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-6">
+            ★ {tr ? "Kullanıcı Yorumları" : "Testimonials"}
+          </span>
+          <h2
+            className="text-3xl sm:text-4xl font-extrabold text-white"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {tr
+              ? "Gerçek Kullanıcılar, Gerçek Sonuçlar"
+              : "Real Users, Real Results"}
+          </h2>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {testimonials.map((t, i) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.07, duration: 0.45 }}
+              className={`flex flex-col p-6 rounded-2xl border transition-all ${
+                t.highlight
+                  ? "border-blue-500/30 bg-gradient-to-b from-blue-950/40 to-slate-950/40 shadow-lg shadow-blue-500/5"
+                  : "border-white/[0.07] bg-white/[0.03] hover:border-white/[0.12] hover:bg-white/[0.05]"
+              }`}
+            >
+              {/* Stars */}
+              <div className="flex gap-0.5 mb-4">
+                {"★★★★★".split("").map((s, k) => (
+                  <span key={k} className="text-amber-400 text-sm">
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <p className="text-gray-300 text-sm leading-relaxed flex-1 mb-5">
+                "{t.quote}"
+              </p>
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-9 h-9 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-xs font-bold text-white shrink-0`}
+                >
+                  {t.initials}
+                </div>
+                <div>
+                  <p className="text-white text-sm font-semibold">{t.name}</p>
+                  <p className="text-gray-500 text-xs">{t.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── FAQ ─────────────────────────────────────────────────────────────────────
+
+function Faq({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+  const [open, setOpen] = useState<number | null>(null);
+
+  const items = copy.faq?.length
+    ? copy.faq
+    : tr
+      ? [
+          {
+            question: "PDF'lerimi yüklediğimde verilerim güvende mi?",
+            answer:
+              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir ve 1 saat sonra otomatik olarak silinir. Windows uygulamasında dosyalar hiç sunucuya gönderilmez.",
+          },
+          {
+            question: "Masaüstü uygulama çevrimdışı çalışıyor mu?",
+            answer:
+              "Evet. Windows masaüstü uygulaması internet bağlantısı olmadan da tam işlevsellikle çalışır.",
+          },
+          {
+            question: "Dosyalarım sunucularda ne kadar süre saklanıyor?",
+            answer:
+              "Web işlemlerinde dosyalar 1 saat sonra kalıcı olarak silinir. Masaüstü uygulamasında hiç sunucuya gönderilmez.",
+          },
+          {
+            question: "Planımı istediğim zaman değiştirebilir miyim?",
+            answer:
+              "Evet. Kredi paketleri tek seferlik alımdır; aboneliği ise istediğiniz zaman iptal edebilirsiniz.",
+          },
+          {
+            question: "Dosya boyutu sınırı var mı?",
+            answer:
+              "Web uygulamasında 100 MB'a kadar dosya desteklenmektedir. Windows uygulamasında pratik limit çok daha yüksektir.",
+          },
+          {
+            question: "Ücretsiz deneme sunuyor musunuz?",
+            answer:
+              "Evet. Kayıt olmadan birkaç işlemi ücretsiz deneyebilirsiniz. Kredi paketi satın almadan önce platformu keşfedin.",
+          },
+        ]
+      : [
+          {
+            question: "Is my data secure when I upload PDFs?",
+            answer:
+              "Yes. Files are transferred over encrypted connections and permanently deleted after 1 hour. With the Windows app, files never leave your device.",
+          },
+          {
+            question: "Does the desktop app work offline?",
+            answer:
+              "Yes. The Windows desktop app works fully offline with no internet connection required.",
+          },
+          {
+            question: "How long are my files stored on your servers?",
+            answer:
+              "Web-processed files are permanently deleted after 1 hour. Desktop app files are never sent to a server.",
+          },
+          {
+            question: "Can I switch plans at any time?",
+            answer:
+              "Yes. Credit packs are one-time purchases; subscriptions can be cancelled any time from your dashboard.",
+          },
+          {
+            question: "Is there a file size limit?",
+            answer:
+              "The web app supports files up to 100 MB. The Windows desktop app handles much larger files locally.",
+          },
+          {
+            question: "Do you offer a free trial?",
+            answer:
+              "Yes. You can try several operations without signing up. Explore the platform before purchasing any credits.",
+          },
+        ];
+
+  return (
+    <section id="faq" className="relative py-24 px-5 sm:px-8">
+      <div className="max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-400 text-sm font-medium mb-6">
+            ? {tr ? "Sık Sorulan Sorular" : "FAQ"}
+          </span>
+          <h2
+            className="text-3xl sm:text-4xl font-extrabold text-white"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {tr ? "Merak Ettikleriniz" : "Common Questions"}
+          </h2>
+        </motion.div>
+
+        <div className="divide-y divide-white/[0.06]">
+          {items.map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.05 }}
+            >
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+                aria-expanded={open === i}
+              >
+                <span
+                  className={`text-sm sm:text-base font-semibold transition-colors ${open === i ? "text-white" : "text-gray-300 group-hover:text-white"}`}
+                >
+                  {item.question}
+                </span>
+                <span
+                  className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-sm transition-all ${open === i ? "border-blue-500/40 text-blue-400 rotate-45" : "border-white/15 text-gray-500 group-hover:border-white/25"}`}
+                  aria-hidden="true"
+                >
+                  +
+                </span>
+              </button>
+              <AnimatePresence initial={false}>
+                {open === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{
+                      height: "auto",
+                      opacity: 1,
+                      transition: {
+                        duration: 0.3,
+                        ease: [0.22, 1, 0.36, 1] as const,
+                      },
+                    }}
+                    exit={{
+                      height: 0,
+                      opacity: 0,
+                      transition: { duration: 0.22 },
+                    }}
+                    className="overflow-hidden"
+                  >
+                    <p className="pb-5 text-sm text-gray-400 leading-relaxed">
+                      {item.answer}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Final CTA ────────────────────────────────────────────────────────────────
+
+function FinalCta({
+  language,
+  onUseWebApp,
+  windowsDownloadUrl,
+}: {
+  language: Language;
+  onUseWebApp: () => void;
+  windowsDownloadUrl: string;
+}) {
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+
+  return (
+    <section className="relative py-24 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-950/50 via-indigo-950/50 to-violet-950/50 border-y border-white/[0.06]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.12)_0%,transparent_65%)]" />
+      <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+        >
+          <h2
+            className="text-4xl sm:text-5xl font-black text-white mb-4"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {copy.finalCta.title}
+          </h2>
+          <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+            {copy.finalCta.description}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={onUseWebApp}
+              className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-2xl shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-[0.97]"
+            >
+              {copy.finalCta.primaryCta}
+            </button>
+            <CrawlableLink
+              href={windowsDownloadUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all hover:-translate-y-0.5"
+            >
+              {copy.finalCta.secondaryCta}
+            </CrawlableLink>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+
+function Footer({
+  language,
+  onOpenTerms,
+  onOpenPrivacy,
+  onOpenKvkk,
+  onUseWebApp,
+}: {
+  language: Language;
+  onOpenTerms: () => void;
+  onOpenPrivacy: () => void;
+  onOpenKvkk: () => void;
+  onUseWebApp: () => void;
+}) {
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+
+  const cols = [
+    {
+      heading: tr ? "Ürün" : "Product",
+      links: [
+        { label: tr ? "Araçlar" : "Tools", action: onUseWebApp },
+        { label: "Merge PDF", action: onUseWebApp },
+        { label: "Split PDF", action: onUseWebApp },
+        { label: tr ? "Sıkıştır" : "Compress PDF", action: onUseWebApp },
+      ],
+    },
+    {
+      heading: tr ? "Şirket" : "Company",
+      links: [
+        { label: tr ? "Hakkımızda" : "About", href: "#" },
+        { label: tr ? "İletişim" : "Contact", href: "#contact" },
+        { label: "Blog", href: "#" },
+      ],
+    },
+    {
+      heading: tr ? "Yasal" : "Legal",
+      links: [
+        { label: copy.footer.termsLabel, action: onOpenTerms },
+        { label: copy.footer.privacyLabel, action: onOpenPrivacy },
+        ...(tr ? [{ label: "KVKK", action: onOpenKvkk }] : []),
+      ],
+    },
+  ];
+
+  return (
+    <footer className="border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-10">
+        {/* Brand */}
+        <div className="col-span-2 md:col-span-1">
+          <button
+            onClick={onUseWebApp}
+            className="flex items-center gap-2.5 mb-4 group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-[0_0_18px_rgba(59,130,246,0.4)]">
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <span className="font-bold text-white text-sm">
+              {copy.navbar.productLabel}
+            </span>
+          </button>
+          <p className="text-xs text-gray-600 leading-relaxed max-w-[200px]">
+            {copy.footer.description}
+          </p>
+        </div>
+
+        {/* Link columns */}
+        {cols.map((col) => (
+          <div key={col.heading}>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">
+              {col.heading}
+            </p>
+            <ul className="space-y-3">
+              {col.links.map((link) => (
+                <li key={link.label}>
+                  {"action" in link ? (
+                    <button
+                      onClick={link.action}
+                      className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      {link.label}
+                    </button>
+                  ) : (
+                    <CrawlableLink
+                      href={link.href ?? "#"}
+                      className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+                    >
+                      {link.label}
+                    </CrawlableLink>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom bar */}
+      <div className="border-t border-white/[0.04] px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p className="text-xs text-gray-600">
+          © {new Date().getFullYear()} NB Global Studio.{" "}
+          {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+        </p>
+        <p className="text-xs text-gray-700">Made with ❤️ for productivity</p>
+      </div>
+    </footer>
+  );
+}
+
+// ─── LandingPage (main export) ────────────────────────────────────────────────
+
 export function LandingPage({
   language,
   onLanguageChange,
@@ -134,975 +1553,71 @@ export function LandingPage({
   onOpenTerms,
   onOpenPrivacy,
   onOpenKvkk,
-  canonicalBaseUrl = "",
-  organizationName = "NB PDF PLATFORM",
+  organizationName = "PDF PLATFORM",
+  onSelectPlan,
 }: LandingPageProps) {
-  const { cms: cmsContent, flags: runtimeFlags } = useSettings();
-  const contactFormEnabled = runtimeFlags.featureFlags?.contactForm !== false;
-  const windowsDownloadUrl = useMemo(
-    () => getWindowsDownloadUrlFromCms(cmsContent),
-    [cmsContent],
-  );
+  const { cms: cmsContent } = useSettings();
+  const windowsDownloadUrl = getWindowsDownloadUrlFromCms(cmsContent);
 
-  const { copy, heroImageSrc, logoSrc } = useMemo(() => {
-    const base = landingTranslations[language];
-    const merged = mergeLandingWithCms(base, cmsContent ?? null, language);
-    const apiBase = getSaasApiBase();
-    const assets = cmsContent?.assets as
-      | {
-        heroImageUrl?: string;
-        logoUrl?: string;
-        screenshot1Url?: string;
-        screenshot2Url?: string;
-      }
-      | undefined;
-    const hero =
-      resolveCmsAssetUrl(assets?.heroImageUrl, apiBase) ??
-      "/app-preview-main.png";
-    const logo = resolveCmsAssetUrl(assets?.logoUrl, apiBase);
-    const s1 = resolveCmsAssetUrl(assets?.screenshot1Url, apiBase);
-    const s2 = resolveCmsAssetUrl(assets?.screenshot2Url, apiBase);
-    let copyOut = merged;
-    if (s1 || s2) {
-      copyOut = {
-        ...merged,
-        screenshots: {
-          ...merged.screenshots,
-          items: merged.screenshots.items.map((item, i) => {
-            if (i === 0 && s1) return { ...item, src: s1 };
-            if (i === 1 && s2) return { ...item, src: s2 };
-            return item;
-          }),
-        },
-      };
-    }
-    return { copy: copyOut, heroImageSrc: hero, logoSrc: logo };
-  }, [cmsContent, language]);
-
-  // ── SEO: inject head tags on language / copy change ──────────────────────
-  const seoHeadline =
-    language === "tr"
-      ? "PDF Düzenleme, Dönüştürme ve Birleştirme Platformu"
-      : "PDF Editing, Conversion and Merge PDF Platform";
-
-  const seoDescription =
-    language === "tr"
-      ? "PDF converter, merge PDF ve compress PDF araçlarını tek bir profesyonel akışta kullanın. Hızlı, güvenli ve ücretsiz."
-      : "Use PDF converter, merge PDF, and compress PDF tools in one professional workflow. Fast, secure and free.";
-
-  const seoKeywords =
-    language === "tr"
-      ? "pdf düzenleme, pdf dönüştürme, pdf birleştirme, pdf sıkıştırma, pdf imzalama, online pdf aracı"
-      : "pdf editor, pdf converter, merge pdf, compress pdf, pdf sign, online pdf tool";
-
+  // Google Fonts inject
   useEffect(() => {
-    if (typeof document === "undefined") return;
-
-    // ── Title ────────────────────────────────────────────────────────────
-    const pageTitle = copy.hero?.headline?.trim() || seoHeadline;
-    document.title = `${pageTitle} | ${organizationName}`;
-
-    // ── Basic meta ───────────────────────────────────────────────────────
-    setMeta("name", "description", copy.hero?.description?.trim() || seoDescription);
-    setMeta("name", "keywords", seoKeywords);
-    setMeta("name", "author", organizationName);
-    setMeta("name", "robots", "index, follow, max-image-preview:large");
-    setMeta("name", "theme-color", "#0f172a");
-    setMeta("name", "viewport", "width=device-width, initial-scale=1, viewport-fit=cover");
-
-    // ── Language / hreflang ──────────────────────────────────────────────
-    document.documentElement.lang = language === "tr" ? "tr" : "en";
-    if (canonicalBaseUrl) {
-      setLinkTag("canonical", `${canonicalBaseUrl}${language === "tr" ? "" : "/en"}`);
-      setLinkTag("alternate", `${canonicalBaseUrl}`, { hreflang: "tr" });
-      setLinkTag("alternate", `${canonicalBaseUrl}/en`, { hreflang: "en" });
-      setLinkTag("alternate", `${canonicalBaseUrl}`, { hreflang: "x-default" });
-    }
-
-    // ── Open Graph ───────────────────────────────────────────────────────
-    setMeta("property", "og:type", "website");
-    setMeta("property", "og:title", document.title);
-    setMeta("property", "og:description", copy.hero?.description?.trim() || seoDescription);
-    setMeta("property", "og:image", heroImageSrc || "/app-preview-main.png");
-    setMeta("property", "og:image:width", "1200");
-    setMeta("property", "og:image:height", "630");
-    setMeta("property", "og:image:alt", seoHeadline);
-    setMeta("property", "og:locale", language === "tr" ? "tr_TR" : "en_US");
-    setMeta("property", "og:locale:alternate", language === "tr" ? "en_US" : "tr_TR");
-    setMeta("property", "og:site_name", organizationName);
-    if (canonicalBaseUrl) setMeta("property", "og:url", canonicalBaseUrl);
-
-    // ── Twitter Card ─────────────────────────────────────────────────────
-    setMeta("name", "twitter:card", "summary_large_image");
-    setMeta("name", "twitter:title", document.title);
-    setMeta("name", "twitter:description", copy.hero?.description?.trim() || seoDescription);
-    setMeta("name", "twitter:image", heroImageSrc || "/app-preview-main.png");
-    setMeta("name", "twitter:image:alt", seoHeadline);
-
-    // ── JSON-LD Structured Data ──────────────────────────────────────────
-    const ldId = "nb-jsonld";
-    let ldEl = document.getElementById(ldId) as HTMLScriptElement | null;
-    if (!ldEl) {
-      ldEl = document.createElement("script");
-      ldEl.id = ldId;
-      ldEl.type = "application/ld+json";
-      document.head.appendChild(ldEl);
-    }
-    ldEl.textContent = buildJsonLd({
-      orgName: organizationName,
-      description: copy.hero?.description?.trim() || seoDescription,
-      url: canonicalBaseUrl || window.location.origin,
-      logoUrl: logoSrc || "/logo.png",
-      language,
-    });
-
-    // ── Preload hero image ───────────────────────────────────────────────
-    if (heroImageSrc) {
-      setLinkTag("preload", heroImageSrc, { as: "image", fetchpriority: "high" });
-    }
-  }, [language, copy, heroImageSrc, logoSrc, canonicalBaseUrl, organizationName, seoHeadline, seoDescription, seoKeywords]);
-
-  // ── Showcase features ─────────────────────────────────────────────────────
-  const showcaseFeatures = useMemo(() => {
-    const screenshots = copy.screenshots?.items ?? [];
-    const firstShot = screenshots[0];
-    const secondShot = screenshots[1];
-
-    const localizedContent =
-      language === "tr"
-        ? {
-          convert: {
-            title: "Dosyaları tek akışta dönüştürün",
-            description:
-              "Word, Excel, PowerPoint ve görselleri temiz bir arayüzle saniyeler içinde PDF'e çevirin.",
-            eyebrow: "Akıllı dönüşüm",
-          },
-          compress: {
-            title: "Kaliteyi koruyarak boyutu küçültün",
-            description:
-              "Paylaşım ve arşivleme için dosya ağırlığını düşürün, önizleme netliğini premium seviyede tutun.",
-            eyebrow: "Verimli sıkıştırma",
-          },
-          merge: {
-            title: "Birden fazla dosyayı tek bir PDF'de birleştirin",
-            description:
-              "Sürükle-bırak akışı ile sayfaları hizalayın, belgeleri düzenleyin ve tek PDF olarak çıktı alın.",
-            eyebrow: "Düzenli birleştirme",
-          },
-          sign: {
-            title: "İmza sürecini daha hızlı tamamlayın",
-            description:
-              "Sözleşmeleri tek panelde hazırlayın, imza alanlarını yerleştirin ve profesyonel bir teslim deneyimi sunun.",
-            eyebrow: "Güvenli imza",
-          },
-        }
-        : {
-          convert: {
-            title: "Convert files in one polished flow",
-            description:
-              "Turn Word, Excel, PowerPoint, and images into PDF in seconds with a focused, premium workflow.",
-            eyebrow: "Smart conversion",
-          },
-          compress: {
-            title: "Reduce size without losing clarity",
-            description:
-              "Optimize documents for sharing and storage while keeping previews sharp and presentation-ready.",
-            eyebrow: "Efficient compression",
-          },
-          merge: {
-            title: "Combine documents into one delivery",
-            description:
-              "Arrange pages, organize uploads, and export a single PDF from a calm drag-and-drop workspace.",
-            eyebrow: "Structured merging",
-          },
-          sign: {
-            title: "Move signing from friction to flow",
-            description:
-              "Prepare agreements, place signature fields, and complete approvals from one clean control surface.",
-            eyebrow: "Secure signing",
-          },
-        };
-
-    return [
-      {
-        key: "convert" as const,
-        label: "Convert",
-        src: firstShot?.src ?? heroImageSrc,
-        ...localizedContent.convert,
-      },
-      {
-        key: "compress" as const,
-        label: "Compress",
-        src: secondShot?.src ?? firstShot?.src ?? heroImageSrc,
-        ...localizedContent.compress,
-      },
-      {
-        key: "merge" as const,
-        label: "Merge",
-        src: heroImageSrc,
-        ...localizedContent.merge,
-      },
-      {
-        key: "sign" as const,
-        label: "Sign",
-        src: secondShot?.src ?? heroImageSrc,
-        ...localizedContent.sign,
-      },
-    ];
-  }, [copy.screenshots?.items, heroImageSrc, language]);
-
-  const [activeShowcaseIndex, setActiveShowcaseIndex] = useState(0);
-  const [visibleShowcaseIndex, setVisibleShowcaseIndex] = useState(0);
-  const [isShowcaseTransitioning, setIsShowcaseTransitioning] = useState(false);
-  const [isShowcasePaused, setIsShowcasePaused] = useState(false);
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactMessage, setContactMessage] = useState("");
-  const [contactWebsite, setContactWebsite] = useState("");
-  const [contactError, setContactError] = useState("");
-  const [contactSuccess, setContactSuccess] = useState("");
-  const [contactSubmitting, setContactSubmitting] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
-
-  // CMS preview message handler
-  useEffect(() => {
-    if (!isCmsPreviewActive()) return;
-    const onMsg = (ev: MessageEvent) => {
-      if (ev.origin !== window.location.origin) return;
-      const d = ev.data as { type?: string; section?: string } | null;
-      if (!d || d.type !== ADMIN_PREVIEW_HIGHLIGHT || typeof d.section !== "string") return;
-      document
-        .querySelectorAll(".nb-preview-flash")
-        .forEach((node) => node.classList.remove("nb-preview-flash"));
-      const el = document.querySelector(
-        `[data-nb-preview="${d.section.replace(/["\\]/g, "")}"]`,
-      );
-      if (el instanceof HTMLElement) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("nb-preview-flash");
-        window.setTimeout(() => el.classList.remove("nb-preview-flash"), 2200);
-      }
-    };
-    window.addEventListener("message", onMsg);
-    return () => window.removeEventListener("message", onMsg);
+    injectFonts();
   }, []);
 
-  // Auto-rotate showcase
-  useEffect(() => {
-    if (isShowcasePaused) return;
-    const rotateTimer = window.setInterval(() => {
-      setActiveShowcaseIndex((current) => (current + 1) % showcaseFeatures.length);
-    }, 3600);
-    return () => window.clearInterval(rotateTimer);
-  }, [isShowcasePaused, showcaseFeatures.length]);
-
-  useEffect(() => {
-    if (activeShowcaseIndex === visibleShowcaseIndex) return;
-    setIsShowcaseTransitioning(true);
-    const swapTimer = window.setTimeout(() => setVisibleShowcaseIndex(activeShowcaseIndex), 170);
-    const settleTimer = window.setTimeout(() => setIsShowcaseTransitioning(false), 380);
-    return () => {
-      window.clearTimeout(swapTimer);
-      window.clearTimeout(settleTimer);
-    };
-  }, [activeShowcaseIndex, visibleShowcaseIndex]);
-
-  async function handleContactSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setContactError("");
-    setContactSuccess("");
-
-    if (!contactName.trim()) { setContactError(copy.contactSection.validation.nameRequired); return; }
-    if (contactName.trim().length < 2) { setContactError(copy.contactSection.validation.nameTooShort); return; }
-    if (!contactEmail.trim()) { setContactError(copy.contactSection.validation.emailRequired); return; }
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(contactEmail.trim())) { setContactError(copy.contactSection.validation.emailInvalid); return; }
-    if (!contactMessage.trim()) { setContactError(copy.contactSection.validation.messageRequired); return; }
-    if (contactMessage.trim().length < 10) { setContactError(copy.contactSection.validation.messageTooShort); return; }
-
-    try {
-      setContactSubmitting(true);
-      await submitContactForm({
-        name: contactName.trim(),
-        email: contactEmail.trim(),
-        message: contactMessage.trim(),
-        website: contactWebsite.trim(),
-      });
-      setContactSuccess(copy.contactSection.success);
-      setContactName("");
-      setContactEmail("");
-      setContactMessage("");
-      setContactWebsite("");
-    } catch (error) {
-      setContactError(
-        error instanceof Error ? error.message : copy.contactSection.errorFallback,
-      );
-    } finally {
-      setContactSubmitting(false);
-    }
-  }
-
-  // ── Trusted / fallback copy ──────────────────────────────────────────────
-  const seoHeadlineFallback =
-    language === "tr"
-      ? "PDF duzenleme, donusturme ve birlestirme platformu"
-      : "PDF editing, conversion, and merge PDF platform";
-  const seoDescriptionFallback =
-    language === "tr"
-      ? "PDF converter, merge PDF ve compress PDF araclarini tek bir profesyonel akista kullanin."
-      : "Use PDF converter, merge PDF, and compress PDF tools in one professional workflow.";
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RENDER
-  // ═══════════════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
-      {/* ── Background radial gradients ── */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[min(720px,85vh)] bg-[radial-gradient(ellipse_90%_60%_at_50%_-10%,rgba(34,211,238,0.35),transparent_65%),radial-gradient(circle_at_85%_15%,rgba(129,140,232,0.08),transparent_35%)]"
+    <div
+      className="min-h-screen text-white antialiased"
+      style={{ background: "#030711" }}
+    >
+      <AuroraBackground />
+
+      <Navbar
+        language={language}
+        onLanguageChange={onLanguageChange}
+        isAuthenticated={isAuthenticated}
+        authGreeting={authGreeting}
+        onLogin={onLogin}
+        onRegister={onRegister}
+        onUseWebApp={onUseWebApp}
+        windowsDownloadUrl={windowsDownloadUrl}
       />
 
-      <main
-        className="relative mx-auto flex w-full max-w-7xl flex-col px-4 sm:px-8 lg:px-12 pb-16 pt-3 overflow-hidden"
-        // Landmark for screen readers / crawlers
-        role="main"
-      >
-        {/* ════════════════════════════════════════════════════════════════
-            HEADER / NAV
-        ════════════════════════════════════════════════════════════════ */}
-        <header
-          aria-label="Site header"
-          className="mb-8 sm:mb-12 rounded-[20px] sm:rounded-[28px] border border-white/[0.08] bg-gradient-to-br from-white/[0.06] to-white/[0.02] px-4 py-4 sm:px-5 sm:py-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md xl:px-8"
-        >
-          <div className="flex flex-col items-center text-center gap-4 sm:gap-6 lg:flex-row lg:text-left lg:justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl border border-cyan-400/35 bg-gradient-to-br from-cyan-500/18 to-indigo-500/12 shadow-[0_0_48px_rgba(34,211,238,0.2)]">
-                <img
-                  src={logoSrc ?? "/logo.png"}
-                  alt={`${organizationName} logo`}
-                  width={32}
-                  height={32}
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl object-cover"
-                  loading="eager"
-                  fetchPriority="high"
-                />
-              </div>
-              <div>
-                <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.38em] text-cyan-200/75">
-                  {copy.navbar.studioTagline}
-                </p>
-                <span className="text-base sm:text-lg font-semibold tracking-[0.14em] text-white">
-                  {copy.navbar.productLabel}
-                </span>
-              </div>
-            </div>
-
-            {/* Nav actions */}
-            <nav
-              aria-label="Primary navigation"
-              className="flex flex-wrap items-center justify-center gap-2 sm:gap-3"
-            >
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300">
-                {copy.navbar.platformTag}
-              </span>
-
-              {/* ── Language switcher ── */}
-              <div
-                className="relative"
-                onMouseEnter={() => setIsLangOpen(true)}
-                onMouseLeave={() => setIsLangOpen(false)}
-              >
-                <button
-                  type="button"
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  aria-haspopup="listbox"
-                  aria-expanded={isLangOpen}
-                  aria-label={language === "tr" ? "Dil seçimi" : "Language selection"}
-                  className="flex h-9 sm:h-10 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 text-xs font-semibold text-slate-300 transition-all hover:bg-white/10 outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                >
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest">LNG</span>
-                  <span className="w-[20px] text-cyan-400 uppercase">{language}</span>
-                  <svg
-                    className={`h-3 w-3 text-slate-500 transition-transform ${isLangOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {isLangOpen && (
-                  <div
-                    role="listbox"
-                    aria-label={language === "tr" ? "Dil seçenekleri" : "Language options"}
-                    className="absolute left-1/2 top-full z-[100] mt-2 w-40 -translate-x-1/2 animate-in fade-in zoom-in-95 duration-200"
-                  >
-                    <div className="absolute -top-2 left-0 h-2 w-full" />
-                    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#0f172a] p-1.5 shadow-2xl backdrop-blur-3xl">
-                      {(["tr", "en"] as Language[]).map((lang) => (
-                        <button
-                          key={lang}
-                          role="option"
-                          aria-selected={language === lang}
-                          onClick={() => { onLanguageChange(lang); setIsLangOpen(false); }}
-                          className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-[11px] font-medium transition ${language === lang
-                              ? "bg-white text-slate-950"
-                              : "text-slate-300 hover:bg-white/10"
-                            }`}
-                        >
-                          <span>{lang === "tr" ? "Türkçe" : "English"}</span>
-                          <span className="text-[9px] opacity-50">{lang.toUpperCase()}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {contactFormEnabled && (
-                <CrawlableLink
-                  href="#contact"
-                  className="rounded-full border border-white/10 px-3 sm:px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                >
-                  {copy.navbar.contact}
-                </CrawlableLink>
-              )}
-
-              {isAuthenticated ? (
-                <>
-                  <span className="max-w-[min(200px,calc(100vw-12rem))] truncate rounded-full border border-white/12 bg-white/[0.07] px-3 sm:px-4 py-2 text-sm font-medium text-slate-100">
-                    {authGreeting ?? copy.navbar.signedInFallback}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={onUseWebApp}
-                    className="rounded-full bg-white px-3 sm:px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                  >
-                    {copy.navbar.openWorkspace}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={onLogin}
-                    className="rounded-full border border-white/10 px-3 sm:px-4 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:bg-white/5 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                  >
-                    {copy.navbar.login}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onRegister}
-                    className="rounded-full bg-white px-3 sm:px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                  >
-                    {copy.navbar.register}
-                  </button>
-                </>
-              )}
-            </nav>
-          </div>
-        </header>
-
-        {/* ════════════════════════════════════════════════════════════════
-            HERO
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          data-nb-preview="hero"
-          aria-labelledby="hero-heading"
-          className="relative flex flex-col items-center justify-center pt-4 pb-16 sm:pt-0 sm:pb-20 lg:pt-10 lg:pb-24 text-center"
-        >
-          <div
-            aria-hidden="true"
-            className="absolute left-1/2 top-1/2 -z-10 h-[300px] w-[500px] sm:h-[400px] sm:w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-500/[0.05] blur-[120px]"
-          />
-
-          <div className="relative z-10 max-w-5xl px-2 sm:px-4 w-full">
-            {/* Kicker badge */}
-            <div className="mb-5 sm:mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/10 bg-cyan-500/5 px-3 py-1 backdrop-blur-sm opacity-80">
-              <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-60" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-500" />
-              </span>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-cyan-400/90">
-                {copy.hero.kicker}
-              </p>
-            </div>
-
-            {/* H1 — SEO: single, keyword-rich heading */}
-            <h1
-              id="hero-heading"
-              className="mx-auto max-w-4xl bg-gradient-to-b from-white via-white to-slate-400 bg-clip-text text-[1.75rem] font-semibold tracking-tight text-transparent xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.2] sm:leading-[1.15]"
-            >
-              {copy.hero.headline?.trim() || seoHeadlineFallback}
-            </h1>
-
-            {/* Description */}
-            <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-sm sm:text-base font-normal leading-relaxed text-slate-400">
-              {copy.hero.description?.trim() || seoDescriptionFallback}
-            </p>
-
-            {/* Audience tags */}
-            <div className="mt-4 sm:mt-5 flex flex-wrap justify-center gap-2 sm:gap-3">
-              {copy.hero.audience.map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/40 bg-cyan-500/15 px-2.5 sm:px-3 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] backdrop-blur-md"
-                >
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,1)]" aria-hidden="true" />
-                  {item}
-                </span>
-              ))}
-            </div>
-
-            {/* Trusted line */}
-            <div className="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-slate-400">
-              <br aria-hidden="true" />
-              🔥 {copy.trustedText.trusted}
-            </div>
-            <p className="mt-2 text-xs sm:text-sm text-slate-500">
-              {copy.trustedText.payment} • {copy.trustedText.freePlan}
-            </p>
-
-            {/* CTA buttons */}
-            <div
-              data-nb-preview="hero-buttons"
-              className="mt-8 sm:mt-10 flex flex-col items-center justify-center gap-3 sm:gap-4 sm:flex-row"
-            >
-              <button
-                type="button"
-                onClick={onUseWebApp}
-                className="group relative inline-flex h-12 sm:h-14 w-full sm:w-auto min-w-[190px] items-center justify-center overflow-hidden rounded-2xl bg-white px-6 sm:px-8 text-sm sm:text-base font-bold text-slate-950 transition-all hover:scale-[1.02] hover:bg-slate-100 shadow-[0_20px_40px_-10px_rgba(255,255,255,0.2)] active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-              >
-                <span className="relative z-10">{copy.hero.primaryCta}</span>
-              </button>
-
-              <CrawlableLink
-                href={windowsDownloadUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex h-12 sm:h-14 w-full sm:w-auto min-w-[190px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-6 sm:px-8 text-sm sm:text-base font-bold text-white transition-all hover:bg-white/10 hover:border-white/20 active:scale-95 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-              >
-                {copy.hero.secondaryCta}
-              </CrawlableLink>
-            </div>
-          </div>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════
-            HIGHLIGHTS BAR
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          aria-label="Key highlights"
-          className="mt-6 md:-mt-16 mb-12 sm:mb-16 rounded-[24px] sm:rounded-[32px] border border-white/[0.05] bg-slate-900/40 px-4 sm:px-6 md:px-9 py-6 sm:py-8 shadow-2xl backdrop-blur-2xl flex items-center justify-center"
-        >
-          <div className="mt-2 grid grid-cols-1 xs:grid-cols-3 md:grid-cols-3 gap-4 sm:gap-6 w-full">
-            {copy.hero.highlights.map((item, index) => (
-              <div
-                key={item.label}
-                className="flex min-h-[60px] sm:min-h-[80px] items-start gap-3 sm:gap-4 p-2 transition-all hover:scale-[1.03]"
-              >
-                <div
-                  className={`mt-1 sm:mt-1.5 flex h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 items-center justify-center rounded-lg sm:rounded-xl border border-cyan-500/20 ${index === 0
-                      ? "bg-cyan-500/10 text-cyan-400"
-                      : index === 1
-                        ? "bg-indigo-500/10 text-indigo-400"
-                        : "bg-blue-500/10 text-blue-400"
-                    }`}
-                  aria-hidden="true"
-                >
-                  <LandingIcon kind={index === 0 ? "shield" : index === 1 ? "speed" : "secure"} />
-                </div>
-                <div>
-                  <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] text-cyan-300">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 sm:mt-2 text-xs sm:text-sm leading-relaxed text-slate-300">
-                    {item.value}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Marquee */}
-        <Marquee language={language} />
-
-        {/* ════════════════════════════════════════════════════════════════
-            FEATURES
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          data-nb-preview="features"
-          aria-labelledby="features-heading"
-          className="relative pt-12 sm:pt-16 pb-6 sm:pb-8 px-2 sm:px-6 overflow-hidden"
-        >
-          <div className="relative z-10 mx-auto max-w-6xl rounded-[32px] sm:rounded-[48px] border border-white/5 bg-slate-900/20 p-6 sm:p-12 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">
-            <div aria-hidden="true" className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/10 blur-[120px] opacity-30" />
-            <div aria-hidden="true" className="absolute -left-[10%] top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px] opacity-30" />
-
-            <div className="relative z-10 mb-8 sm:mb-12 max-w-3xl">
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.3em] text-cyan-400/90">
-                {copy.features.kicker}
-              </p>
-              <h2
-                id="features-heading"
-                className="mt-3 sm:mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight text-white md:text-5xl"
-              >
-                {copy.features.title}
-              </h2>
-            </div>
-
-            <div className="grid gap-4 sm:gap-8 grid-cols-1 xs:grid-cols-2 md:grid-cols-2 xl:grid-cols-3">
-              {copy.features.items.map((item) => (
-                <article
-                  key={item.title}
-                  className="group relative overflow-hidden rounded-[24px] sm:rounded-[32px] border border-white/5 bg-slate-900/40 p-5 sm:p-8 transition-all duration-500 hover:-translate-y-2 hover:border-cyan-500/30 hover:bg-slate-900/60 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.7),0_0_20px_rgba(34,211,238,0.1)]"
-                >
-                  <div aria-hidden="true" className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-cyan-500/5 blur-2xl transition-all group-hover:bg-cyan-500/10" />
-                  <div className="relative z-10">
-                    <div className="flex h-11 w-11 sm:h-14 sm:w-14 items-center justify-center rounded-xl sm:rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-400 shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:bg-cyan-500 group-hover:text-slate-950 group-hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]">
-                      <LandingIcon kind={item.icon} />
-                    </div>
-                    <h3 className="mt-5 sm:mt-8 text-lg sm:text-2xl font-bold text-white tracking-tight">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed text-slate-400 group-hover:text-slate-300">
-                      {item.benefit}
-                    </p>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════
-            TRUST SECTION
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          aria-labelledby="trust-heading"
-          className="relative pt-6 sm:pt-8 pb-12 sm:pb-16 px-2 sm:px-6 overflow-hidden"
-        >
-          <div aria-hidden="true" className="absolute -right-[10%] top-1/2 -z-10 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-indigo-600/20 blur-[140px] opacity-50 animate-pulse" />
-          <div aria-hidden="true" className="absolute -left-[10%] top-1/4 -z-10 h-[400px] w-[400px] rounded-full bg-cyan-500/10 blur-[120px] opacity-30" />
-
-          <div className="mx-auto max-w-6xl rounded-[32px] sm:rounded-[48px] border border-white/5 bg-slate-900/20 p-8 sm:p-12 md:p-24 backdrop-blur-3xl shadow-[0_32px_100px_-20px_rgba(0,0,0,0.7)]">
-            <div className="mb-12 sm:mb-24 max-w-3xl">
-              <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-cyan-400 mb-4 sm:mb-6 drop-shadow-[0_0_15px_rgba(34,211,238,0.4)]">
-                {copy.trust.kicker}
-              </p>
-              <h2
-                id="trust-heading"
-                className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter text-white leading-[1.1] mb-5 sm:mb-8"
-              >
-                {copy.trust.title}
-              </h2>
-              <p className="text-base sm:text-lg md:text-xl text-slate-400 font-light leading-relaxed">
-                {copy.trust.description}
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 xs:grid-cols-2 md:grid-cols-3">
-              {copy.trust.points.map((item, index) => (
-                <div
-                  key={item.title}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl sm:rounded-3xl border border-white/[0.03] bg-slate-950/40 p-6 sm:p-10 transition-all duration-500 hover:border-white/10 hover:bg-slate-950/60"
-                >
-                  <div aria-hidden="true" className="absolute -right-8 -top-8 -z-10 h-32 w-32 rounded-full bg-indigo-500/0 blur-3xl transition-all duration-700 group-hover:bg-indigo-500/10" />
-                  <div>
-                    <div className="mb-6 sm:mb-10 inline-flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl sm:rounded-2xl border border-white/5 bg-white/5 text-xs sm:text-sm font-bold text-slate-400 group-hover:border-indigo-500/30 group-hover:text-indigo-300 transition-all">
-                      0{index + 1}
-                    </div>
-                    <h3 className="text-lg sm:text-2xl font-bold tracking-tight text-white mb-3 sm:mb-4 group-hover:translate-x-1 transition-transform duration-300">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm leading-relaxed text-slate-500 group-hover:text-slate-400 transition-colors">
-                      {item.description}
-                    </p>
-                  </div>
-                  <div aria-hidden="true" className="mt-8 sm:mt-12 h-[1px] w-12 bg-white/10 group-hover:w-full group-hover:bg-gradient-to-r group-hover:from-indigo-500 group-hover:to-transparent transition-all duration-700" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════
-            PRODUCT SHOWCASE
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          aria-labelledby="showcase-heading"
-          className="py-16 sm:py-28 space-y-16 sm:space-y-32"
-        >
-          <h2 id="showcase-heading" className="sr-only">
-            {language === "tr"
-              ? "PDF düzenleme özellikleri"
-              : "PDF editing and conversion features"}
-          </h2>
-
-          {showcaseFeatures.map((item, index) => {
-            const isReversed = index % 2 === 1;
-            return (
-              <div
-                key={item.key}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center px-2 sm:px-4"
-              >
-                {/* Text */}
-                <div className={`space-y-3 sm:space-y-4 ${isReversed ? "lg:order-2" : "lg:order-1"}`}>
-                  <p className="text-[10px] sm:text-xs uppercase tracking-[0.3em] text-cyan-400">
-                    {item.eyebrow}
-                  </p>
-                  <h3 className="text-2xl sm:text-3xl font-bold text-white">
-                    {item.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                {/* Image */}
-                <div
-                  className={`rounded-xl sm:rounded-2xl overflow-hidden border border-white/10 shadow-2xl ${isReversed ? "lg:order-1" : "lg:order-2"}`}
-                >
-                  <img
-                    src={item.src}
-                    alt={`${item.title} – ${item.eyebrow}`}
-                    width={1600}
-                    height={1000}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-auto"
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </section>
-
-        {/* ════════════════════════════════════════════════════════════════
-            PRICING
-        ════════════════════════════════════════════════════════════════ */}
-        <LandingPricingSection
+      <main>
+        <Hero
           language={language}
-          kicker={copy.pricing.kicker}
-          title={copy.pricing.title}
-          description={copy.pricing.description}
           onUseWebApp={onUseWebApp}
+          windowsDownloadUrl={windowsDownloadUrl}
         />
-
-        {/* ════════════════════════════════════════════════════════════════
-            CONTACT FORM
-        ════════════════════════════════════════════════════════════════ */}
-        {contactFormEnabled && (
-          <section
-            id="contact"
-            aria-labelledby="contact-heading"
-            className="scroll-mt-8 py-8 sm:py-10"
-          >
-            <div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-start">
-              <div>
-                <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">
-                  {copy.contactSection.kicker}
-                </p>
-                <h2
-                  id="contact-heading"
-                  className="mt-3 sm:mt-4 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white"
-                >
-                  {copy.contactSection.title}
-                </h2>
-                <p className="mt-3 sm:mt-4 max-w-2xl text-sm sm:text-base leading-7 sm:leading-8 text-slate-300">
-                  {copy.contactSection.description}
-                </p>
-              </div>
-
-              {/* Use <form> for native browser behaviour + SEO/accessibility */}
-              <form
-                className="rounded-[24px] sm:rounded-[30px] border border-white/[0.07] bg-white/[0.035] p-5 sm:p-7 shadow-[0_28px_70px_-18px_rgba(0,0,0,0.45),0_0_0_1px_rgba(255,255,255,0.03)_inset]"
-                onSubmit={handleContactSubmit}
-                noValidate
-              >
-                <div className="grid gap-4 sm:gap-5">
-                  <label className="block">
-                    <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-300">
-                      {copy.contactSection.nameLabel}
-                    </span>
-                    <input
-                      type="text"
-                      name="name"
-                      autoComplete="name"
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      disabled={contactSubmitting}
-                      className="w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/90 px-4 py-3 sm:py-3.5 text-sm sm:text-base text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 focus:border-nb-primary/50 focus:ring-2 focus:ring-nb-primary/15 hover:border-white/12 disabled:opacity-60"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-300">
-                      {copy.contactSection.emailLabel}
-                    </span>
-                    <input
-                      type="email"
-                      name="email"
-                      autoComplete="email"
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      disabled={contactSubmitting}
-                      className="w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/90 px-4 py-3 sm:py-3.5 text-sm sm:text-base text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 focus:border-nb-primary/50 focus:ring-2 focus:ring-nb-primary/15 hover:border-white/12 disabled:opacity-60"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-1.5 sm:mb-2 block text-xs sm:text-sm font-medium text-slate-300">
-                      {copy.contactSection.messageLabel}
-                    </span>
-                    <textarea
-                      name="message"
-                      value={contactMessage}
-                      onChange={(e) => setContactMessage(e.target.value)}
-                      rows={5}
-                      disabled={contactSubmitting}
-                      className="w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/90 px-4 py-3 sm:py-3.5 text-sm sm:text-base text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 focus:border-nb-primary/50 focus:ring-2 focus:ring-nb-primary/15 hover:border-white/12 disabled:opacity-60"
-                    />
-                  </label>
-
-                  {/* Honeypot — hidden from humans, accessible name kept neutral */}
-                  <label className="hidden" aria-hidden="true">
-                    <span>{copy.contactSection.honeypotLabel}</span>
-                    <input
-                      type="text"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={contactWebsite}
-                      onChange={(e) => setContactWebsite(e.target.value)}
-                    />
-                  </label>
-
-                  {contactError && (
-                    <div role="alert" className="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-xs sm:text-sm text-rose-100">
-                      {contactError}
-                    </div>
-                  )}
-
-                  {contactSuccess && (
-                    <div role="status" className="rounded-2xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 text-xs sm:text-sm text-cyan-100">
-                      {contactSuccess}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={contactSubmitting}
-                    className="inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-2xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-7 text-sm sm:text-base font-semibold text-slate-950 shadow-[0_16px_40px_-12px_rgba(34,211,238,0.45)] transition duration-300 hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                  >
-                    {contactSubmitting ? copy.contactSection.submitting : copy.contactSection.submit}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </section>
-        )}
-
-        {/* ════════════════════════════════════════════════════════════════
-            FINAL CTA
-        ════════════════════════════════════════════════════════════════ */}
-        <section
-          data-nb-preview="final-cta"
-          aria-labelledby="final-cta-heading"
-          className="py-8 sm:py-10"
-        >
-          <div className="rounded-[24px] sm:rounded-[34px] border border-white/[0.08] bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(15,23,42,0.92),rgba(129,140,232,0.1))] p-6 sm:p-9 shadow-[0_36px_100px_-20px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.04)_inset] sm:p-11 lg:flex lg:items-center lg:justify-between lg:gap-12">
-            <div className="max-w-2xl">
-              <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.3em] text-cyan-200">
-                {copy.finalCta.kicker}
-              </p>
-              <h2
-                id="final-cta-heading"
-                className="mt-3 sm:mt-4 text-2xl sm:text-3xl md:text-4xl font-semibold tracking-tight text-white"
-              >
-                {copy.finalCta.title}
-              </h2>
-              <p className="mt-3 sm:mt-4 text-sm sm:text-base leading-7 sm:leading-8 text-slate-200/85">
-                {copy.finalCta.description}
-              </p>
-            </div>
-
-            <div className="mt-6 sm:mt-8 flex flex-col gap-3 sm:gap-4 sm:flex-row lg:mt-0 lg:flex-shrink-0">
-              <button
-                type="button"
-                onClick={onUseWebApp}
-                className="inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-2xl bg-white px-6 sm:px-7 text-sm sm:text-base font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-              >
-                {copy.finalCta.primaryCta}
-              </button>
-              <CrawlableLink
-                href={windowsDownloadUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className={`inline-flex min-h-12 sm:min-h-14 items-center justify-center rounded-2xl border px-6 sm:px-7 text-sm sm:text-base font-semibold transition ${windowsDownloadUrl === "#"
-                    ? "cursor-not-allowed border-white/10 bg-white/5 text-slate-400"
-                    : "border-white/20 bg-white/10 text-white hover:-translate-y-0.5 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-cyan-400/50"
-                  }`}
-                aria-disabled={windowsDownloadUrl === "#"}
-              >
-                {copy.finalCta.secondaryCta}
-              </CrawlableLink>
-            </div>
-          </div>
-        </section>
+        <StatsBar language={language} />
+        <ProductShowcase
+          language={language}
+          onUseWebApp={onUseWebApp}
+          organizationName={organizationName}
+          windowsDownloadUrl={windowsDownloadUrl}
+        />
+        <HowItWorks language={language} />
+        <PdfToolsSection language={language} onUseWebApp={onUseWebApp} />
+        <PricingSection
+          language={language}
+          onUseWebApp={onUseWebApp}
+          onSelectPlan={onSelectPlan}
+        />
+        <Testimonials language={language} />
+        <Faq language={language} />
+        <FinalCta
+          language={language}
+          onUseWebApp={onUseWebApp}
+          windowsDownloadUrl={windowsDownloadUrl}
+        />
       </main>
 
-      {/* ════════════════════════════════════════════════════════════════
-          FOOTER
-      ════════════════════════════════════════════════════════════════ */}
-      <footer
-        data-nb-preview="footer"
-        aria-label="Site footer"
-        className="relative border-t border-white/[0.06] bg-nb-bg-soft/95"
-      >
-        {/* Hidden SEO nav for crawlers */}
-        <nav aria-label="SEO internal links" className="sr-only">
-          <CrawlableLink href="/pricing">Pricing</CrawlableLink>
-          <CrawlableLink href="/terms">Terms</CrawlableLink>
-          <CrawlableLink href="/privacy">Privacy</CrawlableLink>
-          <CrawlableLink href="/kvkk">KVKK</CrawlableLink>
-          <CrawlableLink href="/tools/merge-pdf">Merge PDF</CrawlableLink>
-          <CrawlableLink href="/tools/compress">Compress PDF</CrawlableLink>
-          <CrawlableLink href="/tools/convert">Convert PDF</CrawlableLink>
-          <CrawlableLink href="/tools/sign">Sign PDF</CrawlableLink>
-        </nav>
-
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-5 px-4 sm:px-6 py-6 sm:py-8 text-xs sm:text-sm text-slate-400 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:px-12">
-          <div>
-            <p className="font-semibold tracking-[0.18em] text-slate-200">
-              {copy.navbar.productLabel}
-            </p>
-            <p className="mt-1">{copy.footer.description}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-            <span>{copy.footer.availability}</span>
-            <span>{copy.footer.security}</span>
-            <button type="button" onClick={onOpenTerms} className="text-slate-200 transition hover:text-white focus-visible:underline">
-              {copy.footer.termsLabel}
-            </button>
-            <button type="button" onClick={onOpenPrivacy} className="text-slate-200 transition hover:text-white focus-visible:underline">
-              {copy.footer.privacyLabel}
-            </button>
-            <button type="button" onClick={onOpenKvkk} className="text-slate-200 transition hover:text-white focus-visible:underline">
-              {copy.footer.kvkkLabel}
-            </button>
-            {contactFormEnabled && (
-              <CrawlableLink href="#contact" className="text-slate-200 transition hover:text-white focus-visible:underline">
-                {copy.footer.contact}
-              </CrawlableLink>
-            )}
-          </div>
-        </div>
-      </footer>
+      <Footer
+        language={language}
+        onOpenTerms={onOpenTerms}
+        onOpenPrivacy={onOpenPrivacy}
+        onOpenKvkk={onOpenKvkk}
+        onUseWebApp={onUseWebApp}
+      />
     </div>
   );
 }

@@ -9,25 +9,11 @@ import { HttpError } from "../../lib/http-error.js";
 import { logSuspiciousActivity } from "../../lib/app-logger.js";
 import { prisma } from "../../lib/prisma.js";
 import { hashToken } from "../../lib/token.js";
-import { recordCreditPackPurchaseMeta } from "../credit-checkout/credit-checkout.post-purchase.js";
 import {
-  CREDIT_PACK_CATALOG,
   eqIyzicoMoney,
-  formatTry2,
   normalizeIyzicoMoneyString,
 } from "../credit-checkout/credit-pack-pricing.js";
-import type { CreditPricingPayload } from "../credit-checkout/pricing-token.js";
-import {
-  createFakeCheckoutSession,
-  createPricedCreditPackFakeSession,
-} from "../fake-payment/fake-payment.service.js";
-import { grantCredits } from "../subscription/entitlement.engine.js";
-import {
-  formatMoney2,
-  getTierOneTimePrice,
-  getUnlimitedProPrice,
-  type CheckoutCurrency,
-} from "./pricing-matrix.js";
+import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -460,10 +446,10 @@ export async function createPaymentCheckoutSession(params: {
         name:
           params.basketItemName ??
           (params.plan === "BUSINESS"
-            ? "NB PDF PLATFORM Bas (1 ay)"
+            ? "PDF PLATFORM Bas (1 ay)"
             : isAnnualPro
-              ? "NB PDF PLATFORM PRO (1 yıl)"
-              : "NB PDF PLATFORM PRO (1 ay)"),
+              ? "PDF PLATFORM PRO (1 yıl)"
+              : "PDF PLATFORM PRO (1 ay)"),
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -542,229 +528,22 @@ export type TierCheckoutInitResult =
       redirectUrl: string;
     };
 
-/** Public pricing tiers: two one-time credit bundles + monthly Unlimited Pro (iyzico checkout form). */
-export async function initializeTierCheckout(params: {
+/** @deprecated Kredi paketi sistemi kaldırıldı. */
+export async function initializeTierCheckout(_params: {
   userId: string;
   tier: PricingTierId;
   clientIp: string;
   currency: CheckoutCurrency;
 }): Promise<TierCheckoutInitResult> {
-  if (params.tier === "unlimited_pro") {
-    if (!env.creditCheckoutUseFake) {
-      const priceStr = formatMoney2(
-        params.currency,
-        getUnlimitedProPrice(params.currency),
-      );
-      const s = await createPaymentCheckoutSession({
-        userId: params.userId,
-        plan: "PRO",
-        billing: "monthly",
-        clientIp: params.clientIp,
-        priceTryOverride: priceStr,
-        checkoutCurrency: params.currency,
-        subscriptionDaysOverride: 30,
-        basketItemName: "NB PDF PLATFORM Limitsiz Pro (aylık)",
-      });
-      return {
-        mode: "iyzico" as const,
-        token: s.token,
-        checkoutFormContent: s.checkoutFormContent,
-        paymentPageUrl: s.paymentPageUrl,
-        conversationId: s.conversationId,
-      };
-    }
-    return {
-      mode: "fake",
-      ...createFakeCheckoutSession({ userId: params.userId, product: "PRO" }),
-    };
-  }
-
-  const sku = ONE_TIME_TIER_SKU[params.tier];
-  const cat = CREDIT_PACK_CATALOG[sku];
-  const baseMoney = getTierOneTimePrice(sku, params.currency);
-  const base = formatMoney2(params.currency, baseMoney);
-  const payload: CreditPricingPayload = {
-    v: 2,
-    sub: params.userId,
-    currency: params.currency,
-    product: sku,
-    basePrice: base,
-    finalPrice: base,
-    credits: cat.credits,
-    couponId: null,
-    exitIntent: false,
-  };
-
-  if (!env.creditCheckoutUseFake) {
-    const s = await createCreditPackIyzicoSession({
-      userId: params.userId,
-      clientIp: params.clientIp,
-      payload,
-    });
-    return {
-      mode: "iyzico" as const,
-      token: s.token,
-      checkoutFormContent: s.checkoutFormContent,
-      paymentPageUrl: s.paymentPageUrl,
-      conversationId: s.conversationId,
-    };
-  }
-
-  return {
-    mode: "fake",
-    ...createPricedCreditPackFakeSession({ userId: params.userId, payload }),
-  };
+  throw new HttpError(410, "Credit pack checkout is no longer available.");
 }
 
-/** Kredi paketi — `finalPrice` iyzico’ya paidPrice olarak gider. */
-export async function createCreditPackIyzicoSession(params: {
+/** @deprecated Kredi paketi sistemi kaldırıldı. */
+export async function createCreditPackIyzicoSession(_params: {
   userId: string;
   clientIp: string;
-  payload: CreditPricingPayload;
-}): Promise<{
-  mode: "iyzico";
-  token: string;
-  checkoutFormContent: string;
-  paymentPageUrl?: string;
-  conversationId: string;
-}> {
-  const p = params.payload;
-  const user = await prisma.user.findUnique({
-    where: { id: params.userId },
-  });
-  if (!user) {
-    throw new HttpError(404, "User account could not be found.");
-  }
-  if (!user.isVerified) {
-    throw new HttpError(
-      403,
-      "Please verify your email before purchasing credits.",
-    );
-  }
-
-  const conversationId = randomUUID();
-  const basketId = `nbpdf-credits-${conversationId.slice(0, 8)}`;
-  const price = normalizeCheckoutPrice(p.finalPrice);
-  const baseNormalized = normalizeCheckoutPrice(p.basePrice);
-  const { name, surname } = splitBuyerName(user);
-  const venue = buyerVenueFromUser(user);
-  const fmtIyziDate = (d: Date) =>
-    d.toISOString().slice(0, 19).replace("T", " ");
-  const callbackUrl = getCheckoutFormCallbackUrl();
-
-  await prisma.creditPackCheckout.create({
-    data: {
-      conversationId,
-      userId: user.id,
-      product: p.product,
-      basePriceTry: baseNormalized,
-      finalPriceTry: price,
-      paymentCurrency: p.currency,
-      credits: p.credits,
-      status: "pending",
-      couponId: p.couponId,
-      exitIntentApplied: p.exitIntent,
-    },
-  });
-
-  const iyzipay = getIyzipay();
-  const buyerId = user.id.slice(0, 20);
-  const packIyziCurrency = iyzicoFx(p.currency);
-
-  const request = {
-    locale: Iyzipay.LOCALE.TR,
-    conversationId,
-    price,
-    paidPrice: price,
-    currency: packIyziCurrency,
-    basketId,
-    paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
-    callbackUrl,
-    enabledInstallments: [1],
-    buyer: {
-      id: buyerId,
-      name,
-      surname,
-      gsmNumber: venue.gsmNumber,
-      email: user.email,
-      identityNumber: env.IYZICO_BUYER_IDENTITY_NUMBER,
-      lastLoginDate: fmtIyziDate(new Date()),
-      registrationDate: fmtIyziDate(user.createdAt),
-      registrationAddress: venue.street,
-      ip: params.clientIp || "127.0.0.1",
-      city: venue.city,
-      country: venue.country,
-      zipCode: venue.zipCode,
-    },
-    shippingAddress: {
-      contactName: `${name} ${surname}`,
-      city: venue.city,
-      country: venue.country,
-      address: venue.street,
-      zipCode: venue.zipCode,
-    },
-    billingAddress: {
-      contactName: `${name} ${surname}`,
-      city: venue.city,
-      country: venue.country,
-      address: venue.street,
-      zipCode: venue.zipCode,
-    },
-    basketItems: [
-      {
-        id: p.product,
-        name: `NB PDF credits pack (${p.credits} credits)`,
-        category1: "Credits",
-        category2: "Software",
-        itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
-        price,
-      },
-    ],
-  };
-
-  let result: IyzicoInitResult;
-  try {
-    result = await promisifyInit(iyzipay, request);
-  } catch (e) {
-    await prisma.creditPackCheckout.updateMany({
-      where: { conversationId, status: "pending" },
-      data: { status: "failed" },
-    });
-    throw e instanceof HttpError
-      ? e
-      : new HttpError(502, "Payment provider request failed.");
-  }
-
-  if (result.status !== "success" || !result.token || !result.conversationId) {
-    await prisma.creditPackCheckout.updateMany({
-      where: { conversationId, status: "pending" },
-      data: { status: "failed" },
-    });
-    throw new HttpError(
-      502,
-      result.errorMessage ?? "Could not start payment session.",
-    );
-  }
-
-  verifyInitSignature(
-    result.conversationId,
-    result.token,
-    result.signature,
-    env.IYZICO_SECRET_KEY,
-  );
-
-  await prisma.creditPackCheckout.update({
-    where: { conversationId },
-    data: { iyzicoTokenHash: hashToken(result.token) },
-  });
-
-  return {
-    mode: "iyzico",
-    token: result.token,
-    checkoutFormContent: result.checkoutFormContent ?? "",
-    paymentPageUrl: result.paymentPageUrl,
-    conversationId: result.conversationId,
-  };
+}): Promise<never> {
+  throw new HttpError(410, "Credit pack checkout is no longer available.");
 }
 
 /** SPA dönüş adresi (iyzico callback sonrası `303` ile gider; inline script kullanmıyoruz — üretimde Helmet CSP `script-src 'none'`.) */
@@ -790,43 +569,16 @@ async function resolveConversationIdFromToken(
     extractConversationIdFromRetrieve(result)?.trim() ??
     String(result.conversationId ?? "").trim();
   const h = hashToken(token.trim());
-  const [creditRow, paymentRow] = await Promise.all([
-    prisma.creditPackCheckout.findFirst({
-      where: { iyzicoTokenHash: h },
-    }),
-    prisma.paymentCheckout.findFirst({
-      where: { iyzicoTokenHash: h },
-    }),
-  ]);
+  const paymentRow = await prisma.paymentCheckout.findFirst({
+    where: { iyzicoTokenHash: h },
+  });
 
-  let fromDb: string | undefined;
-  if (creditRow && !paymentRow) {
-    fromDb = creditRow.conversationId;
-  } else if (paymentRow && !creditRow) {
-    fromDb = paymentRow.conversationId;
-  } else if (creditRow && paymentRow) {
-    const b = String(result.basketId ?? "").toLowerCase();
-    const creditsBasket = b.includes("nbpdf-credits") || b.includes("credit");
-    console.warn(
-      `${PC_LOG} matched both checkout rows by token hash — using basketId hint`,
-      {
-        basketId: result.basketId,
-        picked: creditsBasket ? "credit_pack" : "subscription",
-      },
-    );
-    fromDb = creditsBasket
-      ? creditRow.conversationId
-      : paymentRow.conversationId;
-  }
-
-  if (fromDb) {
+  if (paymentRow) {
+    const fromDb = paymentRow.conversationId;
     if (fromApi && fromApi !== fromDb) {
       console.warn(
         `${PC_LOG} conversationId from retrieve differs from DB row for this token — using DB`,
-        {
-          fromApi,
-          fromDb,
-        },
+        { fromApi, fromDb },
       );
     }
     return fromDb;
@@ -957,70 +709,6 @@ export async function processPaymentCallback(
       conversationId,
     });
 
-    const creditPending = await prisma.creditPackCheckout.findUnique({
-      where: { conversationId: String(conversationId) },
-    });
-    if (creditPending) {
-      console.log(`${PC_LOG} matched creditPackCheckout row`, {
-        conversationId: creditPending.conversationId,
-        status: creditPending.status,
-        credits: creditPending.credits,
-        userId: creditPending.userId,
-      });
-      if (creditPending.status === "completed") {
-        console.log(
-          `${PC_LOG} credit pack already completed — idempotent success`,
-        );
-        return paymentWorkspaceRedirectUrl(true);
-      }
-      if (
-        result.paidPrice != null &&
-        !eqIyzicoMoney(result.paidPrice, creditPending.finalPriceTry)
-      ) {
-        logSuspiciousActivity({
-          type: "iyzico_price_mismatch",
-          detail: `credit_pack expected=${creditPending.finalPriceTry} got=${String(result.paidPrice)}`,
-        });
-        console.warn(`${PC_LOG} credit pack price mismatch`);
-        return paymentWorkspaceRedirectUrl(false);
-      }
-      try {
-        console.log(
-          `${PC_LOG} granting credits`,
-          creditPending.credits,
-          "to user",
-          creditPending.userId,
-        );
-        await grantCredits(
-          creditPending.userId,
-          creditPending.credits,
-          "bonus",
-        );
-        console.log(`${PC_LOG} grantCredits OK`);
-      } catch (grantErr) {
-        console.error(
-          `${PC_LOG} grantCredits failed`,
-          grantErr instanceof Error ? grantErr.message : grantErr,
-        );
-        return paymentWorkspaceRedirectUrl(false);
-      }
-      try {
-        await recordCreditPackPurchaseMeta({
-          userId: creditPending.userId,
-          couponId: creditPending.couponId,
-          exitIntentApplied: creditPending.exitIntentApplied,
-        });
-      } catch {
-        // kupon satırı çakışması vb.; ödeme alındı, krediler yine verildi
-      }
-      await prisma.creditPackCheckout.update({
-        where: { conversationId: creditPending.conversationId },
-        data: { status: "completed", completedAt: new Date() },
-      });
-      console.log(`${PC_LOG} creditPackCheckout marked completed`);
-      return paymentWorkspaceRedirectUrl(true);
-    }
-
     const pending = await prisma.paymentCheckout.findUnique({
       where: { conversationId: String(conversationId) },
     });
@@ -1031,7 +719,7 @@ export async function processPaymentCallback(
         detail: conversationId,
       });
       console.warn(
-        `${PC_LOG} no paymentCheckout or creditPackCheckout for conversationId`,
+        `${PC_LOG} no paymentCheckout for conversationId`,
         conversationId,
       );
       return paymentWorkspaceRedirectUrl(false);
@@ -1078,12 +766,18 @@ export async function processPaymentCallback(
 
       await tx.user.update({
         where: { id: current.userId },
-        data: {
-          plan: current.plan,
-          subscription_status: "active",
-          subscriptionExpiry: expiry,
-        },
+        data: { plan: current.plan },
       });
+      if (current.organizationId) {
+        await tx.organization.update({
+          where: { id: current.organizationId },
+          data: {
+            plan: current.plan,
+            subscriptionStatus: "active",
+            subscriptionExpiry: expiry,
+          },
+        });
+      }
 
       await tx.paymentCheckout.update({
         where: { conversationId },

@@ -133,7 +133,13 @@ export function PricingPage({
         setBusyTier(null);
       }
     },
-    [accessToken, checkoutCurrency, language, showToast, onBeforeExternalCheckout],
+    [
+      accessToken,
+      checkoutCurrency,
+      language,
+      showToast,
+      onBeforeExternalCheckout,
+    ],
   );
 
   const onRequestTier = useCallback(
@@ -160,7 +166,7 @@ export function PricingPage({
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              NB PDF PLATFORM
+              PDF PLATFORM
             </p>
             <h1 className="mt-2 text-2xl font-black tracking-tight text-nb-text md:text-3xl">
               {tr ? "Planlar ve fiyatlandırma" : "Plans & pricing"}

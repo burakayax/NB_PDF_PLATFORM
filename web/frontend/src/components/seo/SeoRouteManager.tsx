@@ -43,7 +43,7 @@ export function SeoRouteManager({
     view === "web" && selectedFeatureId
       ? [
           {
-            name: "NB PDF PLATFORM",
+            name: "PDF PLATFORM",
             url: siteOrigin || toAbsoluteUrl("/"),
           },
           {

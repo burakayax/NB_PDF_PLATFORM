@@ -17,6 +17,8 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "pdf-to-image",
   "image-to-pdf",
   "html-to-pdf",
+  "pdf-to-text",
+  "flatten-pdf",
   "unlock-pdf",
   "watermark",
   "page-numbers",
@@ -50,6 +52,8 @@ export const SIDEBAR_TOOL_CREDIT_COST: Record<FeatureKey, number> = {
   "pdf-to-image": 3,
   "image-to-pdf": 3,
   "html-to-pdf": 3,
+  "pdf-to-text": 1,
+  "flatten-pdf": 2,
 };
 
 export function sidebarToolCreditLine(id: FeatureKey, lang: Language): string {
@@ -78,6 +82,8 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "pdf-to-image": { tr: "PDF → Görüntü", en: "PDF to image" },
   "image-to-pdf": { tr: "Görüntü → PDF", en: "Image to PDF" },
   "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
+  "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
+  "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
 };
 
 export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
@@ -652,6 +658,20 @@ export function featureCopy(
         ? "Bir web adresini veya HTML parçasını PDF’e çevirir."
         : "Turn a web URL or HTML snippet into a PDF.",
       button: tr ? "PDF OLUŞTUR" : "CREATE PDF",
+    },
+    "pdf-to-text": {
+      title: tr ? "PDF → METİN" : "PDF TO TEXT",
+      description: tr
+        ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
+        : "Extract the text layer from a PDF as a plain text file.",
+      button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "flatten-pdf": {
+      title: tr ? "PDF DÜZLEŞTIR" : "FLATTEN PDF",
+      description: tr
+        ? "Etkileşimli form alanlarını ve açıklamaları sayfaya gömer, düzenlenemez hale getirir."
+        : "Embed interactive form fields and annotations into the page permanently.",
+      button: tr ? "DÜZLEŞTİR" : "FLATTEN",
     },
   };
   return map[id];

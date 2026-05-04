@@ -19,6 +19,8 @@ export const FEATURE_IDS = [
   "page-numbers",
   "repair-pdf",
   "encrypt",
+  "pdf-to-text",
+  "flatten-pdf",
 ];
 
 export function toolSlugForFeature(id) {

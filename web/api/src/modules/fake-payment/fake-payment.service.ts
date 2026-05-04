@@ -221,12 +221,23 @@ export async function confirmFakePayment(params: {
     const dbPlan = session.product === "PRO" ? "PRO" : "BUSINESS";
     await prisma.user.update({
       where: { id: session.userId },
-      data: {
-        plan: dbPlan,
-        subscription_status: "active",
-        subscriptionExpiry: expiry,
-      },
+      data: { plan: dbPlan },
     });
+    // Update organization subscription if user belongs to one
+    const userWithOrg = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { organizationId: true },
+    });
+    if (userWithOrg?.organizationId) {
+      await prisma.organization.update({
+        where: { id: userWithOrg.organizationId },
+        data: {
+          plan: dbPlan,
+          subscriptionStatus: "active",
+          subscriptionExpiry: expiry,
+        },
+      });
+    }
   }
 
   if (session.creditPackMeta) {

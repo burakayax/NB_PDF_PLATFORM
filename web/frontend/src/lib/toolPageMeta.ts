@@ -8,214 +8,238 @@ type SeoPair = { title: string; description: string };
 const META: Record<FeatureKey, Record<Language, SeoPair>> = {
   split: {
     tr: {
-      title: "PDF sayfalarını ayır | NB PDF PLATFORM",
+      title: "PDF sayfalarını ayır | PDF PLATFORM",
       description:
         "PDF dosyanızı sayfa sayfa ayırın. Güvenli sunucu işleme; çıktıyı tek veya çoklu dosya olarak indirin.",
     },
     en: {
-      title: "Split PDF pages | NB PDF PLATFORM",
+      title: "Split PDF | PDF PLATFORM",
       description:
         "Split a PDF into separate pages. Secure processing and fast downloads.",
     },
   },
   merge: {
     tr: {
-      title: "PDF birleştir | NB PDF PLATFORM",
+      title: "PDF birleştir | PDF PLATFORM",
       description:
         "Birden fazla PDF veya görüntüyü tek dosyada birleştirin. Sürükle-bırak ve sıralama ile hızlı birleştirme.",
     },
     en: {
-      title: "Merge PDF | NB PDF PLATFORM",
+      title: "Merge PDF | PDF PLATFORM",
       description:
         "Combine multiple PDFs or images into one document with reorder support.",
     },
   },
   "delete-pages": {
     tr: {
-      title: "PDF’ten sayfa sil | NB PDF PLATFORM",
+      title: "PDF’ten sayfa sil | PDF PLATFORM",
       description: "İstemediğiniz sayfaları seçip PDF’ten güvenle silin.",
     },
     en: {
-      title: "Delete PDF pages | NB PDF PLATFORM",
+      title: "Delete PDF Pages | PDF PLATFORM",
       description:
         "Remove unwanted pages from your PDF while keeping the rest intact.",
     },
   },
   "rotate-pdf": {
     tr: {
-      title: "PDF döndür | NB PDF PLATFORM",
+      title: "PDF döndür | PDF PLATFORM",
       description: "Sayfaları tek tek veya toplu olarak döndürün.",
     },
     en: {
-      title: "Rotate PDF | NB PDF PLATFORM",
+      title: "Rotate PDF | PDF PLATFORM",
       description: "Rotate PDF pages individually or in bulk.",
     },
   },
   "organize-pdf": {
     tr: {
-      title: "PDF sayfa sırası | NB PDF PLATFORM",
+      title: "PDF sayfa sırası | PDF PLATFORM",
       description:
         "Sayfa sırasını yeniden düzenleyin ve yeni bir PDF oluşturun.",
     },
     en: {
-      title: "Organize PDF pages | NB PDF PLATFORM",
+      title: "Organize PDF Pages | PDF PLATFORM",
       description: "Reorder pages and export a clean PDF.",
     },
   },
   compress: {
     tr: {
-      title: "PDF sıkıştır | NB PDF PLATFORM",
+      title: "PDF sıkıştır | PDF PLATFORM",
       description:
         "Dosya boyutunu küçültün; içeriği koruyarak paylaşıma uygun hale getirin.",
     },
     en: {
-      title: "Compress PDF | NB PDF PLATFORM",
+      title: "Compress PDF | PDF PLATFORM",
       description: "Shrink PDF file size while preserving readability.",
     },
   },
   "pdf-to-word": {
     tr: {
-      title: "PDF’ten Word’e | NB PDF PLATFORM",
+      title: "PDF’ten Word’e | PDF PLATFORM",
       description:
         "PDF içeriğini düzenlenebilir Word (DOCX) çıktısına dönüştürün.",
     },
     en: {
-      title: "PDF to Word | NB PDF PLATFORM",
+      title: "PDF to Word | PDF PLATFORM",
       description: "Convert PDF content to an editable Word document.",
     },
   },
   "word-to-pdf": {
     tr: {
-      title: "Word’ten PDF’e | NB PDF PLATFORM",
+      title: "Word’ten PDF’e | PDF PLATFORM",
       description: "DOC ve DOCX dosyalarını baskıya hazır PDF’e çevirin.",
     },
     en: {
-      title: "Word to PDF | NB PDF PLATFORM",
+      title: "Word to PDF | PDF PLATFORM",
       description: "Turn DOC/DOCX files into reliable PDFs.",
     },
   },
   "excel-to-pdf": {
     tr: {
-      title: "Excel’den PDF’e | NB PDF PLATFORM",
+      title: "Excel’den PDF’e | PDF PLATFORM",
       description:
         "Elektronik tablolarınızı paylaşılabilir PDF formatına aktarın.",
     },
     en: {
-      title: "Excel to PDF | NB PDF PLATFORM",
+      title: "Excel to PDF | PDF PLATFORM",
       description: "Export spreadsheets to clean PDF pages.",
     },
   },
   "pdf-to-excel": {
     tr: {
-      title: "PDF’ten Excel’e | NB PDF PLATFORM",
+      title: "PDF’ten Excel’e | PDF PLATFORM",
       description:
         "PDF tablolarını XLSX’e aktarmanıza yardımcı olan dönüştürme aracı.",
     },
     en: {
-      title: "PDF to Excel | NB PDF PLATFORM",
+      title: "PDF to Excel | PDF PLATFORM",
       description: "Extract tables from PDF into Excel-friendly output.",
     },
   },
   "pdf-to-ppt": {
     tr: {
-      title: "PDF’ten PowerPoint | NB PDF PLATFORM",
+      title: "PDF’ten PowerPoint | PDF PLATFORM",
       description: "Sunum içeriğini PPTX olarak kullanın.",
     },
     en: {
-      title: "PDF to PowerPoint | NB PDF PLATFORM",
+      title: "PDF to PowerPoint | PDF PLATFORM",
       description: "Convert PDF slides toward editable presentation format.",
     },
   },
   "ppt-to-pdf": {
     tr: {
-      title: "PowerPoint’ten PDF | NB PDF PLATFORM",
+      title: "PowerPoint’ten PDF | PDF PLATFORM",
       description: "PPT/PPTX dosyalarını tek bir PDF’te birleştirin.",
     },
     en: {
-      title: "PowerPoint to PDF | NB PDF PLATFORM",
+      title: "PowerPoint to PDF | PDF PLATFORM",
       description: "Export presentations to universal PDF.",
     },
   },
   "pdf-to-image": {
     tr: {
-      title: "PDF’ten görüntüye | NB PDF PLATFORM",
+      title: "PDF’ten görüntüye | PDF PLATFORM",
       description: "Sayfaları PNG/JPEG vb. görüntü paketi olarak indirin.",
     },
     en: {
-      title: "PDF to images | NB PDF PLATFORM",
+      title: "PDF to Image | PDF PLATFORM",
       description: "Rasterize PDF pages into downloadable images.",
     },
   },
   "image-to-pdf": {
     tr: {
-      title: "Görüntüden PDF | NB PDF PLATFORM",
+      title: "Görüntüden PDF | PDF PLATFORM",
       description: "Birden fazla görseli tek PDF dosyasında toplayın.",
     },
     en: {
-      title: "Images to PDF | NB PDF PLATFORM",
+      title: "Image to PDF | PDF PLATFORM",
       description: "Pack JPG/PNG/WebP images into one PDF.",
     },
   },
   "html-to-pdf": {
     tr: {
-      title: "HTML’den PDF | NB PDF PLATFORM",
+      title: "HTML’den PDF | PDF PLATFORM",
       description: "URL veya HTML içeriğini sabit düzen PDF’e dönüştürün.",
     },
     en: {
-      title: "HTML to PDF | NB PDF PLATFORM",
+      title: "HTML to PDF | PDF PLATFORM",
       description: "Turn URLs or HTML snippets into printable PDFs.",
     },
   },
   "unlock-pdf": {
     tr: {
-      title: "PDF şifresini kaldır | NB PDF PLATFORM",
+      title: "PDF şifresini kaldır | PDF PLATFORM",
       description: "Yetkili olduğunuz şifreli PDF’leri işlem için açın.",
     },
     en: {
-      title: "Unlock PDF | NB PDF PLATFORM",
+      title: "Unlock PDF | PDF PLATFORM",
       description: "Open password-protected PDFs when you have the password.",
     },
   },
   watermark: {
     tr: {
-      title: "PDF filigran | NB PDF PLATFORM",
+      title: "PDF filigran ekle | PDF PLATFORM",
       description:
         "Metin veya görsel filigran ekleyin; paylaşımı güvenli biçimde işaretleyin.",
     },
     en: {
-      title: "PDF watermark | NB PDF PLATFORM",
+      title: "Add Watermark to PDF | PDF PLATFORM",
       description: "Add text or image watermarks across pages.",
     },
   },
   "page-numbers": {
     tr: {
-      title: "PDF sayfa numarası | NB PDF PLATFORM",
+      title: "PDF sayfa numarası ekle | PDF PLATFORM",
       description:
         "Başlık ve dip bilgisinde profesyonel sayfa numaralandırma ekleyin.",
     },
     en: {
-      title: "PDF page numbers | NB PDF PLATFORM",
+      title: "Add Page Numbers to PDF | PDF PLATFORM",
       description: "Stamp readable page numbers in headers or footers.",
     },
   },
   "repair-pdf": {
     tr: {
-      title: "PDF onarımı | NB PDF PLATFORM",
+      title: "PDF onarımı | PDF PLATFORM",
       description: "Bozuk veya sorunlu PDF’leri yeniden paketlemeyi deneyin.",
     },
     en: {
-      title: "Repair PDF | NB PDF PLATFORM",
+      title: "Repair PDF | PDF PLATFORM",
       description: "Attempt recovery for corrupted PDF containers.",
     },
   },
   encrypt: {
     tr: {
-      title: "PDF şifrele | NB PDF PLATFORM",
+      title: "PDF şifrele | PDF PLATFORM",
       description: "Açılış parolası ekleyerek belgenizi koruyun.",
     },
     en: {
-      title: "Encrypt PDF | NB PDF PLATFORM",
+      title: "Encrypt PDF | PDF PLATFORM",
       description: "Protect PDFs with an owner-supplied password.",
+    },
+  },
+  "pdf-to-text": {
+    tr: {
+      title: "PDF metin çıkar | PDF PLATFORM",
+      description:
+        "PDF sayfalarındaki metin katmanını düz metin dosyasına aktarın.",
+    },
+    en: {
+      title: "PDF to Text | PDF PLATFORM",
+      description:
+        "Extract the text layer from PDF pages as a plain text file.",
+    },
+  },
+  "flatten-pdf": {
+    tr: {
+      title: "PDF düzleştir | PDF PLATFORM",
+      description:
+        "Form alanlarını ve açıklamaları sayfaya gömerek kalıcı hale getirin.",
+    },
+    en: {
+      title: "Flatten PDF | PDF PLATFORM",
+      description:
+        "Embed form fields and annotations permanently into PDF pages.",
     },
   },
 };

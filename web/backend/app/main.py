@@ -1,4 +1,4 @@
-"""NB PDF PLATFORM web API giris noktasi."""
+"""PDF PLATFORM web API giris noktasi."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ async def _app_lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="NB PDF PLATFORM Web API",
+    title="PDF PLATFORM Web API",
     version="0.1.0",
     description="Masatüstü PDF aracının web arayüzü için API katmanı.",
     lifespan=_app_lifespan,

@@ -19,13 +19,18 @@ const publicDir = join(frontendRoot, "public");
 
 function readEnvBaseUrl() {
   let base =
-    String(process.env.VITE_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "").trim() ||
-    "";
+    String(
+      process.env.VITE_PUBLIC_SITE_URL ||
+        process.env.NEXT_PUBLIC_SITE_URL ||
+        "",
+    ).trim() || "";
   const envFile = join(frontendRoot, ".env");
   if (!base && existsSync(envFile)) {
     const raw = readFileSync(envFile, "utf8");
     for (const line of raw.split("\n")) {
-      const m = line.match(/^\s*(?:VITE_PUBLIC_SITE_URL|NEXT_PUBLIC_SITE_URL)\s*=\s*(.+?)\s*$/);
+      const m = line.match(
+        /^\s*(?:VITE_PUBLIC_SITE_URL|NEXT_PUBLIC_SITE_URL)\s*=\s*(.+?)\s*$/,
+      );
       if (m?.[1]) {
         base = m[1].replace(/^["']|["']$/g, "").trim();
         break;
@@ -40,7 +45,9 @@ function readEnvBaseUrl() {
 
 /** Yerel / önizleme: Google vb. indekslemesin diye `true` (`.env` içinde). */
 function readBlockSearchIndexing() {
-  const direct = String(process.env.VITE_BLOCK_SEARCH_INDEXING ?? "").trim().toLowerCase();
+  const direct = String(process.env.VITE_BLOCK_SEARCH_INDEXING ?? "")
+    .trim()
+    .toLowerCase();
   if (direct === "true" || direct === "1") return true;
   if (direct === "false" || direct === "0") return false;
   const envFile = join(frontendRoot, ".env");
@@ -51,7 +58,10 @@ function readBlockSearchIndexing() {
   for (const line of raw.split("\n")) {
     const m = line.match(/^\s*VITE_BLOCK_SEARCH_INDEXING\s*=\s*(.+?)\s*$/);
     if (m?.[1]) {
-      const v = m[1].replace(/^["']|["']$/g, "").trim().toLowerCase();
+      const v = m[1]
+        .replace(/^["']|["']$/g, "")
+        .trim()
+        .toLowerCase();
       return v === "true" || v === "1";
     }
   }
@@ -76,7 +86,7 @@ function ensurePublicFilePathForRoute(routePath) {
 function pageMetaForRoute(routePath) {
   if (routePath === "/") {
     return {
-      title: "PDF editing and conversion platform | NB PDF PLATFORM",
+      title: "PDF editing and conversion platform | PDF PLATFORM",
       description:
         "Use PDF editing, PDF converter, merge PDF, and compress PDF workflows in one professional platform.",
       index: true,
@@ -85,13 +95,41 @@ function pageMetaForRoute(routePath) {
     };
   }
   if (routePath.startsWith("/tools/")) {
-    const readable = routePath
-      .slice("/tools/".length)
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const slug = routePath.slice("/tools/".length);
+    const toolNames = {
+      "merge-pdf": "Merge PDF",
+      "split-pdf": "Split PDF",
+      compress: "Compress PDF",
+      "pdf-to-word": "PDF to Word",
+      "word-to-pdf": "Word to PDF",
+      "pdf-to-excel": "PDF to Excel",
+      "excel-to-pdf": "Excel to PDF",
+      "pdf-to-ppt": "PDF to PowerPoint",
+      "ppt-to-pdf": "PowerPoint to PDF",
+      "pdf-to-image": "PDF to Image",
+      "image-to-pdf": "Image to PDF",
+      "html-to-pdf": "HTML to PDF",
+      "rotate-pdf": "Rotate PDF",
+      "delete-pages": "Delete PDF Pages",
+      "organize-pdf": "Organize PDF Pages",
+      watermark: "Add Watermark to PDF",
+      "page-numbers": "Add Page Numbers to PDF",
+      encrypt: "Encrypt PDF",
+      "unlock-pdf": "Unlock PDF",
+      "repair-pdf": "Repair PDF",
+      "pdf-to-text": "PDF to Text",
+      "flatten-pdf": "Flatten PDF",
+    };
+    const readable =
+      toolNames[slug] ||
+      slug
+        .replace(/-/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+        .replace(/\bPdf\b/g, "PDF")
+        .replace(/\bPpt\b/g, "PPT");
     return {
-      title: `${readable} | NB PDF PLATFORM`,
-      description: `Run ${readable} in a secure PDF workflow platform.`,
+      title: `${readable} | PDF PLATFORM`,
+      description: `Use the ${readable} tool in a secure, professional PDF platform.`,
       index: true,
       follow: true,
       includeProductSchema: true,
@@ -99,7 +137,7 @@ function pageMetaForRoute(routePath) {
   }
   if (routePath === "/pricing") {
     return {
-      title: "Pricing | NB PDF PLATFORM",
+      title: "Pricing | PDF PLATFORM",
       description: "Explore plans and credit packs for PDF workflows.",
       index: true,
       follow: true,
@@ -107,30 +145,30 @@ function pageMetaForRoute(routePath) {
   }
   if (routePath === "/terms") {
     return {
-      title: "Terms of service | NB PDF PLATFORM",
-      description: "Read the NB PDF PLATFORM terms of service.",
+      title: "Terms of service | PDF PLATFORM",
+      description: "Read the PDF PLATFORM terms of service.",
       index: true,
       follow: true,
     };
   }
   if (routePath === "/privacy") {
     return {
-      title: "Privacy policy | NB PDF PLATFORM",
-      description: "Read the NB PDF PLATFORM privacy policy.",
+      title: "Privacy policy | PDF PLATFORM",
+      description: "Read the PDF PLATFORM privacy policy.",
       index: true,
       follow: true,
     };
   }
   if (routePath === "/kvkk") {
     return {
-      title: "KVKK | NB PDF PLATFORM",
-      description: "Read NB PDF PLATFORM KVKK information.",
+      title: "KVKK | PDF PLATFORM",
+      description: "Read PDF PLATFORM KVKK information.",
       index: true,
       follow: true,
     };
   }
   return {
-    title: "NB PDF PLATFORM",
+    title: "PDF PLATFORM",
     description: "Professional PDF platform.",
     index: false,
     follow: false,
@@ -142,13 +180,13 @@ function renderStructuredData(baseUrl, routePath, meta) {
   const website = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "NB PDF PLATFORM",
+    name: "PDF PLATFORM",
     url: canonicalUrl,
   };
   const org = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "NB PDF PLATFORM",
+    name: "PDF PLATFORM",
     url: baseUrl,
     logo: `${baseUrl}/logo.png`,
   };
@@ -160,19 +198,26 @@ function renderStructuredData(baseUrl, routePath, meta) {
       name: meta.title,
       description: meta.description,
       category: "PDF software",
-      brand: { "@type": "Brand", name: "NB PDF PLATFORM" },
+      brand: { "@type": "Brand", name: "PDF PLATFORM" },
       url: canonicalUrl,
     });
   }
   return all
-    .map((node) => `<script type="application/ld+json">${JSON.stringify(node)}</script>`)
+    .map(
+      (node) =>
+        `<script type="application/ld+json">${JSON.stringify(node)}</script>`,
+    )
     .join("\n");
 }
 
 function renderPrerenderHtml(baseUrl, routePath) {
   const meta = pageMetaForRoute(routePath);
   const canonicalUrl = `${baseUrl}${routePath}`;
-  const robots = meta.index ? (meta.follow ? "index, follow" : "index, nofollow") : "noindex, nofollow";
+  const robots = meta.index
+    ? meta.follow
+      ? "index, follow"
+      : "index, nofollow"
+    : "noindex, nofollow";
   const title = meta.title;
   const description = meta.description;
 

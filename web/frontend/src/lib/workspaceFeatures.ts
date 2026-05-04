@@ -161,6 +161,20 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     accept: ".pdf,application/pdf",
     fallbackFilename: "şifreli.pdf",
   },
+  {
+    id: "pdf-to-text",
+    icon: "📋",
+    endpoint: "pdf-to-text",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "metin.txt",
+  },
+  {
+    id: "flatten-pdf",
+    icon: "🧹",
+    endpoint: "flatten-pdf",
+    accept: ".pdf,application/pdf",
+    fallbackFilename: "düzleştirilmiş.pdf",
+  },
 ];
 
 /** POST sonucu result_id dönen (önizleme + indirmede tüketim) araçlar */
@@ -184,6 +198,8 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "excel-to-pdf",
   "pdf-to-excel",
   "ppt-to-pdf",
+  "pdf-to-text",
+  "flatten-pdf",
 ];
 
 export function isResultStoreTool(id: FeatureKey): boolean {

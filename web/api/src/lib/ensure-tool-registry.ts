@@ -11,35 +11,37 @@ import { prisma } from "./prisma.js";
  * The web sidebar copy in `web/frontend/src/i18n/workspace.ts`
  * (`SIDEBAR_TOOL_CREDIT_COST`) should match these values for consistent UX.
  */
-const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string; cost: number }[] = [
-  { id: "split", strategy: "per_run", cost: 2 },
-  { id: "merge", strategy: "per_run", cost: 3 },
-  { id: "compress", strategy: "per_run", cost: 2 },
-  { id: "encrypt", strategy: "per_run", cost: 2 },
-  { id: "pdf-to-word", strategy: "per_run", cost: 3 },
-  { id: "word-to-pdf", strategy: "per_run", cost: 3 },
-  { id: "excel-to-pdf", strategy: "per_run", cost: 3 },
-  { id: "pdf-to-excel", strategy: "per_run", cost: 3 },
-  { id: "delete-pages", strategy: "per_run", cost: 1 },
-  { id: "rotate-pdf", strategy: "per_run", cost: 2 },
-  { id: "organize-pdf", strategy: "per_run", cost: 2 },
-  { id: "unlock-pdf", strategy: "per_run", cost: 2 },
-  { id: "watermark", strategy: "per_run", cost: 2 },
-  { id: "page-numbers", strategy: "per_run", cost: 2 },
-  { id: "repair-pdf", strategy: "per_run", cost: 2 },
-  { id: "pdf-to-ppt", strategy: "per_run", cost: 4 },
-  { id: "ppt-to-pdf", strategy: "per_run", cost: 3 },
-  { id: "pdf-to-image", strategy: "per_run", cost: 3 },
-  { id: "image-to-pdf", strategy: "per_run", cost: 3 },
-  { id: "html-to-pdf", strategy: "per_run", cost: 3 },
+const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string }[] = [
+  { id: "split", strategy: "per_run" },
+  { id: "merge", strategy: "per_run" },
+  { id: "compress", strategy: "per_run" },
+  { id: "encrypt", strategy: "per_run" },
+  { id: "pdf-to-word", strategy: "per_run" },
+  { id: "word-to-pdf", strategy: "per_run" },
+  { id: "excel-to-pdf", strategy: "per_run" },
+  { id: "pdf-to-excel", strategy: "per_run" },
+  { id: "delete-pages", strategy: "per_run" },
+  { id: "rotate-pdf", strategy: "per_run" },
+  { id: "organize-pdf", strategy: "per_run" },
+  { id: "unlock-pdf", strategy: "per_run" },
+  { id: "watermark", strategy: "per_run" },
+  { id: "page-numbers", strategy: "per_run" },
+  { id: "repair-pdf", strategy: "per_run" },
+  { id: "pdf-to-ppt", strategy: "per_run" },
+  { id: "ppt-to-pdf", strategy: "per_run" },
+  { id: "pdf-to-image", strategy: "per_run" },
+  { id: "image-to-pdf", strategy: "per_run" },
+  { id: "html-to-pdf", strategy: "per_run" },
+  { id: "pdf-to-text", strategy: "per_run" },
+  { id: "flatten-pdf", strategy: "per_run" },
 ];
 
 export async function ensureToolRegistry(): Promise<void> {
   for (const row of DEFAULT_TOOL_REGISTRY) {
     await prisma.toolRegistry.upsert({
       where: { id: row.id },
-      create: row,
-      update: { cost: row.cost, strategy: row.strategy },
+      create: { id: row.id, strategy: row.strategy },
+      update: { strategy: row.strategy },
     });
   }
 }

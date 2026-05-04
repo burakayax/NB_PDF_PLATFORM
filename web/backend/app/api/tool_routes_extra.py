@@ -48,6 +48,23 @@ def _g_check(d: dict[str, Any]) -> dict[str, Any]:
 # --- result-store: önizleme + kredi indirmede
 
 
+def _pack_text_result_file(out_p: Path, out_filename: str, user_id: str, tool: str) -> dict[str, Any]:
+    h = save_result_from_file(
+        out_p,
+        out_filename,
+        "text/plain; charset=utf-8",
+        user_id=user_id,
+        tool=tool,
+    )
+    return {
+        "result_id": h.result_id,
+        "filename": h.filename,
+        "mime": h.mime,
+        "size_bytes": h.size_bytes,
+        "has_thumbnail": False,
+    }
+
+
 def _pack_pdf_result_file(out_p: Path, out_filename: str, user_id: str, tool: str) -> dict[str, Any]:
     thumb = generate_blurred_pdf_thumbnail_from_path(out_p)
     h = save_result_from_file(
@@ -248,8 +265,12 @@ async def tool_watermark(
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     watermark_text: str = Form(...),
+    watermark_color: str = Form("#8C8C8C"),
+    watermark_font: str = Form("helv"),
+    watermark_opacity: float = Form(0.15),
     password: str = Form(""),
 ):
+    opacity = max(0.05, min(0.50, float(watermark_opacity)))
     decision = await entitlement_check(token, "watermark")
     workdir = create_workdir()
     try:
@@ -261,7 +282,11 @@ async def tool_watermark(
         out_p = workdir / out_n
 
         def _run():
-            ptx.add_watermark_text(sp, str(out_p), watermark_text, opacity=0.15, password=pwd)
+            ptx.add_watermark_text(
+                sp, str(out_p), watermark_text,
+                opacity=opacity, password=pwd,
+                font_name=watermark_font, font_color=watermark_color,
+            )
             return out_p
 
         await run_cpu_bound(_run)
@@ -281,10 +306,13 @@ async def tool_page_numbers(
     file: UploadFile = File(...),
     start_at: int = Form(1),
     position: str = Form("footer"),
+    fmt: str = Form("plain"),
     password: str = Form(""),
 ):
     if position not in ("footer", "header"):
         position = "footer"
+    if fmt not in ("plain", "page", "of"):
+        fmt = "plain"
     decision = await entitlement_check(token, "page-numbers")
     workdir = create_workdir()
     try:
@@ -296,7 +324,7 @@ async def tool_page_numbers(
         out_p = workdir / out_n
 
         def _run():
-            ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd)
+            ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd, fmt=fmt)
             return out_p
 
         await run_cpu_bound(_run)
@@ -525,8 +553,12 @@ async def tool_html_to_pdf(
     source_url: str = Form(""),
     html: str = Form(""),
 ):
-    if not (source_url or "").strip() and not (html or "").strip():
+    _url_stripped = (source_url or "").strip().rstrip("/")
+    _url_valid = _url_stripped and _url_stripped not in ("http:", "https:", "http://", "https://")
+    if not _url_valid and not (html or "").strip():
         raise HTTPException(status_code=400, detail="URL veya HTML metni gerekli.")
+    if not _url_valid:
+        source_url = ""
     decision = await entitlement_check(token, "html-to-pdf")
     workdir = create_workdir()
     try:
@@ -543,6 +575,56 @@ async def tool_html_to_pdf(
 
         await run_cpu_bound(_run)
         body = _pack_pdf_result_file(out_p, "web.pdf", user_id, "html-to-pdf")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/pdf-to-text")
+async def tool_pdf_to_text(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "pdf-to-text")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir)
+        out_p = workdir / "metin.txt"
+        pwd = (password or "").strip() or None
+        await run_cpu_bound(lambda: ptx.pdf_to_text(str(sp), str(out_p), password=pwd))
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "metin", ".txt")
+        body = _pack_text_result_file(out_p, out_n, user_id, "pdf-to-text")
+        body["saasGating"] = _g_check(decision)
+        return body
+    except Exception as e:
+        cleanup_and_raise(workdir, e)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/flatten-pdf")
+async def tool_flatten_pdf(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "flatten-pdf")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir)
+        out_p = workdir / "duzlestir.pdf"
+        pwd = (password or "").strip() or None
+        await run_cpu_bound(lambda: ptx.flatten_pdf(str(sp), str(out_p), password=pwd))
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "düz", ".pdf")
+        body = _pack_pdf_result_file(out_p, out_n, user_id, "flatten-pdf")
         body["saasGating"] = _g_check(decision)
         return body
     except Exception as e:
