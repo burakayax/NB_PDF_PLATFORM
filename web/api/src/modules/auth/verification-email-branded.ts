@@ -14,7 +14,7 @@ export function renderBrandedVerificationEmailHtml(
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="x-apple-disable-message-reformatting" />
-  <title>NB PDF PLATFORM</title>
+  <title>PDF PLATFORM</title>
 </head>
 
 <body style="margin:0;padding:0;width:100%;background-color:#f8fafc;">
@@ -98,7 +98,7 @@ export function renderBrandedVerificationEmailHtml(
               </p>
 
               <p style="margin:8px 0 0 0;font-family:Arial;font-size:12px;color:#94a3b8;">
-                NB PDF PLATFORM © 2026
+                PDF PLATFORM © 2026
               </p>
             </td>
           </tr>

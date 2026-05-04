@@ -41,12 +41,26 @@ def create_workdir(prefix: str = "nbpdf-web-") -> Path:
     return Path(tempfile.mkdtemp(prefix=prefix))
 
 
+_MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB
+
+
 async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = None) -> Path:
     """Tarayıcıdan gelen dosyayı diske yazar ve işlem motoruna uygun hale getirir."""
+    from fastapi import HTTPException
     target_name = filename or upload.filename or "upload.bin"
     target_path = workdir / Path(target_name).name
+    written = 0
     with target_path.open("wb") as output:
-        shutil.copyfileobj(upload.file, output)
+        while True:
+            chunk = upload.file.read(256 * 1024)
+            if not chunk:
+                break
+            written += len(chunk)
+            if written > _MAX_UPLOAD_BYTES:
+                output.close()
+                target_path.unlink(missing_ok=True)
+                raise HTTPException(status_code=413, detail="Dosya boyutu 200 MB sınırını aşıyor.")
+            output.write(chunk)
     await upload.close()
     return target_path
 
@@ -234,7 +248,7 @@ def format_derived_filename(source_name: str, suffix: str, extension: str) -> st
 def operation_capabilities() -> dict:
     """Web arayuzunun hangi islemleri nasil gosterecegini belirler."""
     return {
-        "brand": "NB PDF PLATFORM",
+        "brand": "PDF PLATFORM",
         "supports": {
             "merge": True,
             "split": True,

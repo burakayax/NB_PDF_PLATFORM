@@ -16,7 +16,6 @@ import { requireAuth } from "./middleware/auth.middleware.js";
 import { verifyEmailController } from "./modules/auth/auth.controller.js";
 import { submitContactController } from "./modules/contact/contact.controller.js";
 import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
-import { creditCheckoutRouter } from "./modules/credit-checkout/credit-checkout.routes.js";
 import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
@@ -120,7 +119,8 @@ app.use(
     exposedHeaders: ["X-SaaS-Gating"],
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 app.use(cookieParser());
 
 /** Fake PSP: JWT + same abuse/rate limits as `/api`; mounted here so paths are explicit in `app`. */
@@ -130,14 +130,6 @@ app.use(
   globalApiLimiter,
   requireAuth,
   fakePaymentRouter,
-);
-
-app.use(
-  "/api/credit-checkout",
-  abuseBlockMiddleware,
-  globalApiLimiter,
-  requireAuth,
-  creditCheckoutRouter,
 );
 
 /** iyzico form POST — abonelik ve kredi paketi callback’i; JWT yok. `/api` router’daki 503’ten önce kayıtlı olmalı. */

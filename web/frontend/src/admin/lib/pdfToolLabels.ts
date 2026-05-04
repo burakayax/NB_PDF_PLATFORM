@@ -19,6 +19,8 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "pdf-to-image": "PDF → görüntü",
   "image-to-pdf": "Görüntü → PDF",
   "html-to-pdf": "HTML → PDF",
+  "pdf-to-text": "PDF → Metin",
+  "flatten-pdf": "PDF Düzleştir",
 };
 
 export function pdfToolLabelTr(featureKey: string): string {

@@ -159,6 +159,56 @@ export async function adminDeleteUserController(
   response.json({ ok: true });
 }
 
+export async function adminGetUserDetailController(
+  request: Request,
+  response: Response,
+) {
+  const raw = request.params.id;
+  const userId = Array.isArray(raw) ? raw[0] : raw;
+  if (!userId) {
+    throw new HttpError(400, "User id is required.");
+  }
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      plan: true,
+      role: true,
+      createdAt: true,
+      toolUsageCountsJson: true,
+      paymentCheckouts: {
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          plan: true,
+          status: true,
+          priceTry: true,
+          paymentCurrency: true,
+          createdAt: true,
+          completedAt: true,
+        },
+      },
+    },
+  });
+  if (!user) {
+    throw new HttpError(404, "User not found.");
+  }
+  let toolUsageCounts: Record<string, number> = {};
+  try {
+    toolUsageCounts = JSON.parse(user.toolUsageCountsJson) as Record<
+      string,
+      number
+    >;
+  } catch {
+    /* ignore */
+  }
+  response.json({ ...user, toolUsageCounts });
+}
+
 export async function adminListBlockedEmailsController(
   _request: Request,
   response: Response,
@@ -914,7 +964,7 @@ export async function adminDownloadLogProofController(
     throw new HttpError(404, "Not found.");
   }
   const text =
-    `NB PDF PLATFORM — Download technical record\n` +
+    `PDF PLATFORM — Download technical record\n` +
     `Record ID: ${row.id}\n` +
     `Created (UTC): ${row.createdAt.toISOString()}\n` +
     `User ID: ${row.userId}\n` +

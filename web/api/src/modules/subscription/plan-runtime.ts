@@ -8,11 +8,12 @@ import {
   isFeatureKey,
 } from "./subscription.config.js";
 
-const PLANS: Plan[] = ["FREE", "PRO", "BUSINESS"];
+const PLANS: Plan[] = ["FREE", "PLUS", "PRO", "BUSINESS"];
 
 function cloneBase(): Record<Plan, PlanDefinition> {
   return {
     FREE: { ...planDefinitions.FREE, allowedFeatures: [...planDefinitions.FREE.allowedFeatures] },
+    PLUS: { ...planDefinitions.PLUS, allowedFeatures: [...planDefinitions.PLUS.allowedFeatures] },
     PRO: { ...planDefinitions.PRO, allowedFeatures: [...planDefinitions.PRO.allowedFeatures] },
     BUSINESS: { ...planDefinitions.BUSINESS, allowedFeatures: [...planDefinitions.BUSINESS.allowedFeatures] },
   };

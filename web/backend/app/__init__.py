@@ -1,1 +1,1 @@
-"""NB PDF PLATFORM web backend paketi; FastAPI uygulaması ve çekirdek servisleri gruplar."""
+"""PDF PLATFORM web backend paketi; FastAPI uygulaması ve çekirdek servisleri gruplar."""

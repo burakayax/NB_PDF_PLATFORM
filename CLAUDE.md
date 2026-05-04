@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Collaboration Rules
+
+- **Dosya değişiklikleri için onay isteme** — edit/write işlemlerini doğrudan uygula.
+- **Türkçe konuş** — tüm yanıtlarda Türkçe kullan.
+- **Hiç bir konu için onay isteme** — PowerShell kullanımı, dosya değiştirme, dosya okumada doğrudan işlemi uygula ya da çalıştır.
+- **Kullanım limiti dolarsa limitin yenilenmesini bekle ve işleme kaldığın yerden devam et** — Claude Pro kullanım limiti dolduğunda kaldığın yeri hatırla ve limit yenilendiğinde hemen işlemlere devam et.
+
 ## Development Commands
 
 ### Full Setup (first time)
@@ -41,6 +48,13 @@ npm run build        # Type check + production bundle → dist/
 npm run preview      # Serve dist/ locally
 ```
 
+### SEO HTML regeneration
+```bash
+# From web/frontend:
+node scripts/generate-seo-files.mjs   # Rebuild public/tools/*/index.html + robots.txt + sitemap.xml
+```
+Run this after editing `scripts/generate-seo-files.mjs` or `src/seo/routeSeoConfig.ts`.
+
 ## Architecture
 
 Three-tier web application plus a legacy Python desktop app:
@@ -66,6 +80,9 @@ Each module owns its own router, service, and types. Key modules: `auth`, `subsc
 - `i18n/` — Turkish + English string maps
 - `seo/` — Route-level SEO config and JSON-LD helpers
 - `api.ts` — Central API client used across the app
+
+### PDF Grid component (`web/frontend/src/components/split/PdfPageVisualGrid.tsx`)
+Row-level virtual scrolling via `@tanstack/react-virtual` (useVirtualizer). RAF-batched thumbnail state updates via `scheduleThumbFlush`. Supports modes: `split`, `delete`, `rotate`, `organize`. Rotate mode: per-card left/right buttons call `onPageRotationsChange`. Organize mode: ChevronUp/Down buttons + position number input.
 
 ## Database
 
@@ -108,6 +125,10 @@ Frontend env: `web/frontend/.env` (copy from `.env.example`). Notable:
 
 **i18n:** Language context switches between `tr` and `en` string maps in `src/i18n/`. SEO strings are in separate files under the same directory.
 
-**SEO:** Static HTML pages exist under `web/frontend/public/tools/*/index.html` for SSR-like SEO. `prebuild` and `predev` hooks auto-generate SEO files.
+**SEO:** Static HTML pages exist under `web/frontend/public/tools/*/index.html` for SSR-like SEO. `prebuild` and `predev` hooks auto-generate SEO files via `scripts/generate-seo-files.mjs`. Tool name map lives in that script — edit it to fix capitalization (e.g. "PDF" not "Pdf").
+
+**PDF Tool API pattern:** POST → returns `result_id` → GET `/api/preview/{id}` (free) → GET `/api/download/{id}` (costs credits). All PDF routes live in `web/backend/app/api/tool_routes_extra.py`; Python logic in `src/pdf_toolkit_extra.py`.
+
+**Watermark tool:** Accepts `watermark_text`, `watermark_color` (#RRGGBB), `watermark_font` (helv/tiro/cour). Python side: `add_watermark_text` with `font_name` + `font_color` params; `_hex_to_rgb` helper converts hex to 0–1 RGB tuple.
 
 **JS Obfuscation:** Production Vite build obfuscates output. Controlled by `VITE_DISABLE_OBFUSCATION`.

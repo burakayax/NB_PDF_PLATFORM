@@ -34,7 +34,7 @@ export async function broadcastCampaignToAllUsers(
   while (true) {
     const rows = await prisma.user.findMany({
       where: { role: { not: "ADMIN" } },
-      select: { email: true, firstName: true, lastName: true, name: true, credit_balance: true },
+      select: { email: true, firstName: true, lastName: true, name: true },
       take: batch,
       skip: offset,
       orderBy: { createdAt: "asc" },
@@ -49,7 +49,7 @@ export async function broadcastCampaignToAllUsers(
           u.email,
           subject,
           htmlBody,
-          { name, credits: u.credit_balance, email: u.email },
+          { name, credits: 0, email: u.email },
         );
         sent++;
         if (sampleEmails.length < 20) {

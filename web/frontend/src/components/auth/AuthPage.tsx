@@ -224,7 +224,7 @@ export function AuthPage({
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
           <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">
-            NB PDF PLATFORM
+            PDF PLATFORM
           </p>
           {adminPortal ? (
             <>

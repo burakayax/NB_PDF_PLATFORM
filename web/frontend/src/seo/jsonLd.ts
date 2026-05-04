@@ -12,7 +12,11 @@ type SchemaInput = {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 function origin(url: string): string {
-  try { return new URL(url).origin; } catch { return url; }
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
 }
 
 // ─── WebSite ─────────────────────────────────────────────────────────────────
@@ -21,7 +25,7 @@ function buildWebSite(input: SchemaInput): JsonLdNode {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${origin(input.canonicalUrl)}/#website`,
-    name: "NB PDF PLATFORM",
+    name: "PDF PLATFORM",
     url: origin(input.canonicalUrl),
     inLanguage: input.language === "tr" ? "tr-TR" : "en-US",
     description: input.pageDescription,
@@ -42,7 +46,7 @@ function buildOrganization(input: SchemaInput): JsonLdNode {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${origin(input.canonicalUrl)}/#organization`,
-    name: "NB PDF PLATFORM",
+    name: "PDF PLATFORM",
     url: origin(input.canonicalUrl),
     logo: {
       "@type": "ImageObject",
@@ -69,12 +73,13 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "NB PDF PLATFORM",
+    name: "PDF PLATFORM",
     url: input.canonicalUrl,
     description: input.pageDescription,
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web, Windows 10, Windows 11",
-    browserRequirements: "Requires JavaScript. Works in Chrome, Firefox, Edge, Safari.",
+    browserRequirements:
+      "Requires JavaScript. Works in Chrome, Firefox, Edge, Safari.",
     inLanguage: [
       { "@type": "Language", name: "Turkish" },
       { "@type": "Language", name: "English" },
@@ -91,7 +96,7 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
     },
     brand: {
       "@type": "Brand",
-      name: "NB PDF PLATFORM",
+      name: "PDF PLATFORM",
     },
     publisher: {
       "@id": `${origin(input.canonicalUrl)}/#organization`,
@@ -157,10 +162,7 @@ function buildFaqPage(
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 export function buildBaseStructuredData(input: SchemaInput): JsonLdNode[] {
-  const result: JsonLdNode[] = [
-    buildWebSite(input),
-    buildOrganization(input),
-  ];
+  const result: JsonLdNode[] = [buildWebSite(input), buildOrganization(input)];
 
   if (input.includeProduct) {
     result.push(buildSoftwareApplication(input));

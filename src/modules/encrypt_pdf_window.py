@@ -91,6 +91,7 @@ class EncryptPdfWindow(ctk.CTkToplevel):
             on_paths=lambda paths: self.ingest_paths(paths),
             on_browse=self.select_file,
             extensions={".pdf"},
+            access_controller=self.access_controller,
         )
         drop.pack(fill="both", expand=True)
 

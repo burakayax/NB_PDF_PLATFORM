@@ -24,6 +24,8 @@ export const featureCatalog = [
   "pdf-to-image",
   "image-to-pdf",
   "html-to-pdf",
+  "pdf-to-text",
+  "flatten-pdf",
 ] as const;
 
 export type FeatureKey = (typeof featureCatalog)[number];
@@ -42,6 +44,14 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
     name: "FREE",
     displayName: "Free",
     description: "Full toolkit with unlimited daily use; later runs may be slower until you upgrade.",
+    dailyLimit: null,
+    allowedFeatures: [...featureCatalog],
+    multiUser: false,
+  },
+  PLUS: {
+    name: "PLUS",
+    displayName: "Plus",
+    description: "Priority processing and unlimited daily use.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: false,

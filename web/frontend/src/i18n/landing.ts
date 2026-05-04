@@ -145,7 +145,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
   en: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "NB PDF PLATFORM",
+      productLabel: "PDF PLATFORM",
       platformTag: "Professional PDF Workflow Platform",
       contact: "Contact",
       languageLabel: "Language",
@@ -262,7 +262,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
     screenshots: {
       kicker: "Product Preview",
-      title: "A focused PDF workspace for teams that handle documents every day.",
+      title:
+        "A focused PDF workspace for teams that handle documents every day.",
       description:
         "The interface keeps core PDF operations visible, reduces tool-switching confusion, and supports high-volume document workflows with a clean enterprise-grade layout.",
       items: [
@@ -296,7 +297,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trust: {
-      kicker: "Why teams trust NB PDF PLATFORM",
+      kicker: "Why teams trust PDF PLATFORM",
       // H2 — E-E-A-T focus: accuracy + security
       title: "Built to reduce document errors and protect sensitive files.",
       description:
@@ -333,7 +334,8 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
     finalCta: {
       kicker: "Start with the right PDF workflow for your team",
-      title: "Start instantly in your browser or download for full desktop control.",
+      title:
+        "Start instantly in your browser or download for full desktop control.",
       description:
         "Open the web version for immediate PDF access, or install the Windows app for an offline, dedicated desktop workflow.",
       primaryCta: "Use Web Version",
@@ -396,25 +398,25 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "How do I merge PDF files online for free?",
         answer:
-          "With NB PDF PLATFORM you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required.",
+          "With PDF PLATFORM you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required.",
       },
       {
         question: "Can I convert PDF to Word without losing formatting?",
         answer:
-          "Yes. The PDF converter in NB PDF PLATFORM preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing.",
+          "Yes. The PDF converter in PDF PLATFORM preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing.",
       },
       {
         question: "How do I compress a PDF to reduce its file size?",
         answer:
-          "Upload your PDF, choose a compression level, and download the optimized file. NB PDF PLATFORM reduces file size while keeping text and images sharp for email attachments and portal uploads.",
+          "Upload your PDF, choose a compression level, and download the optimized file. PDF PLATFORM reduces file size while keeping text and images sharp for email attachments and portal uploads.",
       },
       {
         question: "Is my PDF data secure when using an online PDF tool?",
         answer:
-          "NB PDF PLATFORM does not retain processed document contents. The Windows app processes files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
+          "PDF PLATFORM does not retain processed document contents. The Windows app processes files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
       },
       {
-        question: "Does NB PDF PLATFORM work without installing software?",
+        question: "Does PDF PLATFORM work without installing software?",
         answer:
           "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app is also available for offline use and higher-volume document operations.",
       },
@@ -425,7 +427,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
   tr: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "NB PDF PLATFORM",
+      productLabel: "PDF PLATFORM",
       platformTag: "Profesyonel PDF İş Akışı Platformu",
       contact: "İletişim",
       languageLabel: "Dil",
@@ -585,9 +587,10 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trust: {
-      kicker: "Ekipler neden NB PDF PLATFORM'a güveniyor",
+      kicker: "Ekipler neden PDF PLATFORM'a güveniyor",
       // H2 — E-E-A-T sinyali: doğruluk + güvenlik
-      title: "Belge hatalarını azaltmak ve hassas dosyaları korumak için tasarlandı.",
+      title:
+        "Belge hatalarını azaltmak ve hassas dosyaları korumak için tasarlandı.",
       description:
         "Ofis operasyonlarından ihale hazırlığına kadar platform, PDF hazırlama süresini kısaltırken çıktıların düzenli, güvenli ve tutarlı kalmasını sağlar.",
       points: [
@@ -645,8 +648,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     contactSection: {
       kicker: "İletişim",
       title: "Ekibimize mesaj gönderin",
-      description:
-        "İhtiyacınızı yazın, size en kısa sürede dönüş yapalım.",
+      description: "İhtiyacınızı yazın, size en kısa sürede dönüş yapalım.",
       nameLabel: "Ad Soyad",
       emailLabel: "E-posta",
       messageLabel: "Mesaj",
@@ -687,25 +689,26 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF dosyaları nasıl ücretsiz birleştirilir?",
         answer:
-          "NB PDF PLATFORM ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez.",
+          "PDF PLATFORM ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez.",
       },
       {
-        question: "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?",
+        question:
+          "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?",
         answer:
-          "NB PDF PLATFORM'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir.",
+          "PDF PLATFORM'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir.",
       },
       {
         question: "PDF dosyasının boyutu nasıl küçültülür?",
         answer:
-          "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. NB PDF PLATFORM, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür.",
+          "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF PLATFORM, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür.",
       },
       {
         question: "Online PDF aracı kullanırken verilerim güvende mi?",
         answer:
-          "NB PDF PLATFORM işlenen belge içeriklerini saklamaz. Windows uygulaması dosyaları tamamen cihazınızda işler; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmaz. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
+          "PDF PLATFORM işlenen belge içeriklerini saklamaz. Windows uygulaması dosyaları tamamen cihazınızda işler; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmaz. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
       },
       {
-        question: "NB PDF PLATFORM yazılım yüklemeden çalışır mı?",
+        question: "PDF PLATFORM yazılım yüklemeden çalışır mı?",
         answer:
           "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması da mevcuttur.",
       },

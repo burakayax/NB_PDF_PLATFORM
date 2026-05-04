@@ -14,6 +14,7 @@ import { isAdminEmail, resolveRoleFromEmail } from "../../lib/role-policy.js";
 import { getPaymentPricesTry } from "../payment/payment-pricing.js";
 import { featureCatalog } from "../subscription/subscription.config.js";
 import { getPlanDefinitionsResolved, invalidatePlanRuntimeCache } from "../subscription/plan-runtime.js";
+import { updatePlanConfigAndPropagate } from "../organization/organization.service.js";
 
 function todayKeyUtc() {
   return new Date().toISOString().slice(0, 10);
@@ -39,7 +40,7 @@ export type AdminOverview = {
   todayTotalOperations: number;
   freeUsers: number;
   paidUsers: number;
-  usersByPlan: { FREE: number; PRO: number; BUSINESS: number };
+  usersByPlan: Record<string, number>;
   mostUsedTOOLS: Array<{
     featureKey: string;
     userDayRows: number;
@@ -180,13 +181,13 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       })
     : toolGroups30d;
 
-  const usersByPlan = { FREE: 0, PRO: 0, BUSINESS: 0 };
+  const usersByPlan: Record<string, number> = { FREE: 0, PLUS: 0, PRO: 0, BUSINESS: 0 };
   for (const row of planGroups) {
     usersByPlan[row.plan] = row._count._all;
   }
 
-  const paidUsers = usersByPlan.PRO + usersByPlan.BUSINESS;
-  const freeUsers = usersByPlan.FREE;
+  const paidUsers = (usersByPlan.PLUS ?? 0) + (usersByPlan.PRO ?? 0) + (usersByPlan.BUSINESS ?? 0);
+  const freeUsers = usersByPlan.FREE ?? 0;
 
   const mostUsedTOOLS = toolGroups
     .map((row) => ({
@@ -246,12 +247,13 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     todayTotalOperations: todayAgg._sum.operationsCount ?? 0,
     freeUsers,
     paidUsers,
-    usersByPlan,
+    usersByPlan: usersByPlan as Record<string, number>,
     mostUsedTOOLS,
     usagePerPackage: [
-      { plan: "FREE", userCount: usersByPlan.FREE },
-      { plan: "PRO", userCount: usersByPlan.PRO },
-      { plan: "BUSINESS", userCount: usersByPlan.BUSINESS },
+      { plan: "FREE", userCount: usersByPlan["FREE"] ?? 0 },
+      { plan: "PLUS", userCount: usersByPlan["PLUS"] ?? 0 },
+      { plan: "PRO", userCount: usersByPlan["PRO"] ?? 0 },
+      { plan: "BUSINESS", userCount: usersByPlan["BUSINESS"] ?? 0 },
     ],
     anonymousSessionsToday: anonSessions.length,
     registeredSessionsToday: regSessions.length,
@@ -292,6 +294,8 @@ export async function listUsersForAdmin(params: {
   const skip = (page - 1) * pageSize;
 
   const parts: Prisma.UserWhereInput[] = [];
+  // Never show ADMIN accounts in the user list (prevent accidental deletion)
+  parts.push({ role: { not: "ADMIN" } });
   if (q?.trim()) {
     parts.push({
       OR: [
@@ -310,7 +314,7 @@ export async function listUsersForAdmin(params: {
   } else if (verifiedFilter === "no") {
     parts.push({ isVerified: false });
   }
-  const where: Prisma.UserWhereInput | undefined = parts.length > 0 ? { AND: parts } : undefined;
+  const where: Prisma.UserWhereInput = { AND: parts };
 
   const orderBy: Prisma.UserOrderByWithRelationInput =
     sort === "email"
@@ -336,11 +340,9 @@ export async function listUsersForAdmin(params: {
         role: true,
         isVerified: true,
         authProvider: true,
-        subscriptionExpiry: true,
         preferredLanguage: true,
         createdAt: true,
         freeLimitFirstExceededAt: true,
-        credit_balance: true,
         country: true,
         city: true,
         _count: { select: { dailyUsages: true } },
@@ -371,11 +373,9 @@ export async function listUsersForAdmin(params: {
       role: u.role,
       isVerified: u.isVerified,
       authProvider: u.authProvider,
-      subscriptionExpiry: u.subscriptionExpiry?.toISOString() ?? null,
       preferredLanguage: u.preferredLanguage,
       createdAt: u.createdAt.toISOString(),
       freeLimitFirstExceededAt: u.freeLimitFirstExceededAt?.toISOString() ?? null,
-      creditBalance: u.credit_balance,
       country: u.country,
       city: u.city,
       _count: u._count,
@@ -413,18 +413,6 @@ export async function updateUserForAdmin(
     throw new HttpError(404, "User not found.");
   }
 
-  const nextPlan = data.plan ?? existing.plan;
-  let nextExpiry = existing.subscriptionExpiry;
-  if (data.subscriptionExpiry !== undefined) {
-    nextExpiry =
-      data.subscriptionExpiry && String(data.subscriptionExpiry).trim() !== ""
-        ? new Date(data.subscriptionExpiry)
-        : null;
-  }
-  if (data.plan === "FREE") {
-    nextExpiry = null;
-  }
-
   const displayName =
     data.firstName !== undefined || data.lastName !== undefined
       ? `${(data.firstName ?? existing.firstName ?? "").trim()} ${(data.lastName ?? existing.lastName ?? "").trim()}`.trim() ||
@@ -439,9 +427,6 @@ export async function updateUserForAdmin(
       ...(data.plan !== undefined ? { plan: data.plan } : {}),
       ...(data.role !== undefined ? { role: data.role } : {}),
       ...(data.isVerified !== undefined ? { isVerified: data.isVerified } : {}),
-      ...(data.subscriptionExpiry !== undefined || data.plan !== undefined
-        ? { subscriptionExpiry: nextPlan === "FREE" ? null : nextExpiry }
-        : {}),
       ...(data.firstName !== undefined || data.lastName !== undefined ? { name: displayName } : {}),
     },
     select: {
@@ -453,7 +438,6 @@ export async function updateUserForAdmin(
       plan: true,
       role: true,
       isVerified: true,
-      subscriptionExpiry: true,
     },
   });
   await logAdminAudit(actor, "user.update", userId, `Kullanıcı güncellendi: ${existing.email}`, {
@@ -624,6 +608,23 @@ export async function patchSiteSettings(patches: Record<string, unknown>, actor:
 
 export async function putPlansOverride(override: unknown, actor: AdminActor) {
   await auditedPackagesPartial({ plansOverride: override }, actor, "plans.override", "Plan override kaydedildi");
+
+  // Propagate dailyLimit changes to PlanConfig + all Organization records
+  const PLANS: Plan[] = ["FREE", "PLUS", "PRO", "BUSINESS"];
+  if (override && typeof override === "object" && !Array.isArray(override)) {
+    const ov = override as Record<string, unknown>;
+    for (const plan of PLANS) {
+      const patch = ov[plan];
+      if (!patch || typeof patch !== "object") continue;
+      const p = patch as Record<string, unknown>;
+      if ("dailyLimit" in p) {
+        const dl = p.dailyLimit === null ? null : typeof p.dailyLimit === "number" ? p.dailyLimit : undefined;
+        if (dl !== undefined) {
+          await updatePlanConfigAndPropagate(plan, { dailyOperationLimit: dl });
+        }
+      }
+    }
+  }
 }
 
 const DEFAULT_CMS = {
@@ -809,8 +810,8 @@ export async function listToolRegistryForAdmin() {
     id: r.id,
     toolId: r.id,
     strategy: r.strategy,
-    creditCost: r.cost,
-    cost: r.cost,
+    creditCost: 0,
+    cost: 0,
     isVisible: r.isVisible,
     isMaintenanceMode: r.isMaintenanceMode,
     updatedAt: r.updatedAt.toISOString(),
@@ -829,7 +830,6 @@ export async function updateToolRegistryForAdmin(
   const next = await prisma.toolRegistry.update({
     where: { id },
     data: {
-      ...(data.cost !== undefined ? { cost: data.cost } : {}),
       ...(data.isVisible !== undefined ? { isVisible: data.isVisible } : {}),
       ...(data.isMaintenanceMode !== undefined ? { isMaintenanceMode: data.isMaintenanceMode } : {}),
     },
@@ -839,7 +839,7 @@ export async function updateToolRegistryForAdmin(
     id: next.id,
     toolId: next.id,
     strategy: next.strategy,
-    creditCost: next.cost,
+    creditCost: 0,
     isVisible: next.isVisible,
     isMaintenanceMode: next.isMaintenanceMode,
     updatedAt: next.updatedAt.toISOString(),

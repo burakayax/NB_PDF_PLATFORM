@@ -194,7 +194,7 @@ export function DashboardTopNav({
             NB Global Studio
           </span>
           <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">
-            NB PDF PLATFORM
+            PDF PLATFORM
           </span>
         </span>
         <span className="max-w-[140px] truncate text-sm font-semibold tracking-wide text-nb-text sm:hidden">

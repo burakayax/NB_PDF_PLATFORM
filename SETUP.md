@@ -1,4 +1,4 @@
-# NB PDF PLATFORM — Kurulum Rehberi
+# PDF PLATFORM — Kurulum Rehberi
 
 Bu dosya projeyi ilk kez kuracaklar için sade adımları anlatır.
 
@@ -6,7 +6,7 @@ Bu dosya projeyi ilk kez kuracaklar için sade adımları anlatır.
 
 ## 1) Proje nedir?
 
-**NB PDF PLATFORM**, PDF dosyaları üzerinde birleştirme, sayfa ayırma, dönüştürme, sıkıştırma ve şifreleme gibi işlemler yapmanızı sağlayan bir projedir.
+**PDF PLATFORM**, PDF dosyaları üzerinde birleştirme, sayfa ayırma, dönüştürme, sıkıştırma ve şifreleme gibi işlemler yapmanızı sağlayan bir projedir.
 
 - **Web sürümü:** Tarayıcıda çalışan arayüz; üç servisten oluşur (PDF API, kimlik doğrulama API’si, React arayüzü).
 - **Masaüstü sürümü:** Windows’ta Python ve grafik arayüz ile çalışan uygulama.

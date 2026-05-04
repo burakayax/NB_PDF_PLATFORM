@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as pdfjsLib from "pdfjs-dist";
-import { Check, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronUp, GripVertical, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { expandPagesString, formatPageSelection, ws } from "../../i18n/workspace";
 
@@ -259,7 +259,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       onPagesTextChange,
       onPagesErrorClear,
       pageRotations,
-      onPageRotationsChange: _unusedPageRotChange,
+      onPageRotationsChange,
       pageOrder,
       onPageOrderChange,
       zoomPercent,
@@ -270,7 +270,45 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     },
     ref,
   ) {
-    void _unusedPageRotChange;
+    const handleRotatePage = useCallback(
+      (page1: number, delta: 90 | -90) => {
+        const cur = pageRotations[page1] ?? 0;
+        const next = ((cur + delta) % 360 + 360) % 360;
+        onPageRotationsChange({ ...pageRotations, [page1]: next });
+      },
+      [pageRotations, onPageRotationsChange],
+    );
+
+    const moveOrderToPosition = useCallback(
+      (fromIndex: number, toPosition: number) => {
+        const arr = [...pageOrder];
+        const to = Math.max(0, Math.min(arr.length - 1, toPosition - 1));
+        const [item] = arr.splice(fromIndex, 1);
+        arr.splice(to, 0, item!);
+        onPageOrderChange(arr);
+        onPagesTextChange(arr.join(","));
+        onPagesErrorClear();
+      },
+      [pageOrder, onPageOrderChange, onPagesTextChange, onPagesErrorClear],
+    );
+
+    // ── Organize mode drag-and-drop state ─────────────────────────────────────
+    const [dragSrcFlat, setDragSrcFlat] = useState<number | null>(null);
+    const [dragOverFlat, setDragOverFlat] = useState<number | null>(null);
+
+    const applyOrganizeDrop = useCallback(
+      (fromFlat: number, toFlat: number) => {
+        if (fromFlat === toFlat) return;
+        const arr = [...pageOrder];
+        const [item] = arr.splice(fromFlat, 1);
+        arr.splice(toFlat, 0, item!);
+        onPageOrderChange(arr);
+        onPagesTextChange(arr.join(","));
+        onPagesErrorClear();
+      },
+      [pageOrder, onPageOrderChange, onPagesTextChange, onPagesErrorClear],
+    );
+
     const effectiveLang: Language =
       strictTurkishUi && mode === "delete" ? "tr" : language;
     const W = ws(effectiveLang);
@@ -1611,6 +1649,37 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         );
       }
 
+      if (mode === "rotate") {
+        return (
+          <div className="relative h-full min-h-0 w-full min-w-0" data-page-thumb="">
+            {cardInner}
+            <div className="absolute bottom-6 left-0 right-0 z-20 flex items-center justify-center gap-1">
+              <button
+                type="button"
+                title={effectiveLang === "tr" ? "Sola döndür" : "Rotate left"}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
+                onClick={(e) => { e.stopPropagation(); handleRotatePage(page1, -90); }}
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden strokeWidth={2.2} />
+              </button>
+              <button
+                type="button"
+                title={effectiveLang === "tr" ? "Sağa döndür" : "Rotate right"}
+                className="flex h-7 w-7 items-center justify-center rounded-md border border-white/15 bg-slate-950/90 text-slate-100 shadow-md backdrop-blur-[2px] transition hover:border-cyan-400/45 hover:bg-slate-900/90 hover:text-cyan-200"
+                onClick={(e) => { e.stopPropagation(); handleRotatePage(page1, 90); }}
+              >
+                <RotateCw className="h-3.5 w-3.5" aria-hidden strokeWidth={2.2} />
+              </button>
+            </div>
+            {rot !== 0 ? (
+              <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 rounded bg-cyan-500/90 px-1 py-0.5 text-[9px] font-bold text-white">
+                {rot}°
+              </div>
+            ) : null}
+          </div>
+        );
+      }
+
       return cardInner;
     };
 
@@ -1627,8 +1696,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             : "Preview only; rotation is done in the main workflow. Arrow keys scroll."
           : mode === "organize"
             ? effectiveLang === "tr"
-              ? "Kart üzerindeki ↑ ↓ ile sırayı değiştirin. Ok tuşları ızgarayı kaydırır."
-              : "Use ↑ ↓ on each card to reorder. Arrow keys scroll the grid."
+              ? "Kart üzerindeki ok butonlarıyla sırayı değiştirin veya pozisyon kutusuna hedef sayfa numarasını yazın. Ok tuşları ızgarayı kaydırır."
+              : "Use the arrow buttons on each card to reorder, or type a target position in the number box. Arrow keys scroll the grid."
             : effectiveLang === "tr"
               ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
               : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
@@ -1789,39 +1858,57 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                       if (page1 < 1 || page1 > numPages) {
                         return null;
                       }
+                      const isDragSrc = organizeMode && dragSrcFlat === flat;
+                      const isDragOver = organizeMode && dragOverFlat === flat && dragSrcFlat !== null && dragSrcFlat !== flat;
                       return (
                         <div
                           key={`page-${thumbSessionTag || "pending"}-${page1}`}
                           data-pdf-thumb-page={page1}
-                          className="relative min-w-0"
+                          data-flat-index={flat}
+                          className={`relative min-w-0 transition-all duration-150 ${organizeMode ? "cursor-grab active:cursor-grabbing" : ""} ${isDragSrc ? "opacity-40 scale-95" : ""} ${isDragOver ? "ring-2 ring-cyan-400 ring-offset-1 ring-offset-slate-900 rounded-lg" : ""}`}
+                          draggable={organizeMode}
+                          onDragStart={organizeMode ? (e) => {
+                            e.stopPropagation();
+                            setDragSrcFlat(flat);
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", String(flat));
+                          } : undefined}
+                          onDragOver={organizeMode ? (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.dataTransfer.dropEffect = "move";
+                            setDragOverFlat(flat);
+                          } : undefined}
+                          onDragLeave={organizeMode ? (e) => {
+                            e.stopPropagation();
+                            setDragOverFlat(null);
+                          } : undefined}
+                          onDrop={organizeMode ? (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const src = dragSrcFlat;
+                            setDragSrcFlat(null);
+                            setDragOverFlat(null);
+                            if (src !== null && src !== flat) {
+                              applyOrganizeDrop(src, flat);
+                            }
+                          } : undefined}
+                          onDragEnd={organizeMode ? () => {
+                            setDragSrcFlat(null);
+                            setDragOverFlat(null);
+                          } : undefined}
                         >
                           {organizeMode ? (
-                            <div className="absolute right-0 top-0 z-[15] flex flex-col gap-0.5 p-0.5">
-                              <button
-                                type="button"
-                                disabled={flat === 0}
-                                title={effectiveLang === "tr" ? "Önceki sıraya taşı" : "Move earlier"}
-                                className="rounded border border-white/15 bg-slate-950/90 px-1 py-0.5 text-[10px] font-semibold text-slate-200 shadow-sm disabled:opacity-25"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  moveOrder(flat, -1);
-                                }}
-                              >
-                                ↑
-                              </button>
-                              <button
-                                type="button"
-                                disabled={flat >= sequenceLength - 1}
-                                title={effectiveLang === "tr" ? "Sonraki sıraya taşı" : "Move later"}
-                                className="rounded border border-white/15 bg-slate-950/90 px-1 py-0.5 text-[10px] font-semibold text-slate-200 shadow-sm disabled:opacity-25"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  moveOrder(flat, 1);
-                                }}
-                              >
-                                ↓
-                              </button>
-                            </div>
+                            <>
+                              <div className="absolute left-1 top-1 z-[15] flex items-center justify-center rounded border border-white/10 bg-slate-950/80 p-0.5 text-slate-400 shadow-sm">
+                                <GripVertical className="h-3.5 w-3.5" aria-hidden />
+                              </div>
+                              <div className="absolute bottom-1 left-0 right-0 z-[15] flex items-center justify-center">
+                                <span className="rounded bg-slate-950/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300 shadow-sm">
+                                  {flat + 1}
+                                </span>
+                              </div>
+                            </>
                           ) : null}
                           <PageThumbMountTrigger
                             pageIndex={page1}

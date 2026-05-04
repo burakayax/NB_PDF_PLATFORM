@@ -14,11 +14,6 @@ export async function recordCreditPackPurchaseMeta(params: {
         data: { userId: params.userId, couponId: params.couponId },
       });
     }
-    if (params.exitIntentApplied) {
-      await tx.user.update({
-        where: { id: params.userId },
-        data: { lastExitIntentCreditDiscountAt: new Date() },
-      });
-    }
+    // lastExitIntentCreditDiscountAt field removed from User model
   });
 }

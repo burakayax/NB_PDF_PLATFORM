@@ -6,6 +6,7 @@ import {
   FileSpreadsheet,
   FileText,
   File as FileIcon,
+  Layers2,
   Globe,
   Image,
   Images,
@@ -43,6 +44,8 @@ const byId: Record<FeatureKey, LucideIcon> = {
   "page-numbers": ListOrdered,
   "repair-pdf": Wrench,
   encrypt: Lock,
+  "pdf-to-text": FileText,
+  "flatten-pdf": Layers2,
 };
 
 type SidebarToolGlyphProps = {

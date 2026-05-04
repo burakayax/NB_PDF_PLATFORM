@@ -4,10 +4,12 @@ import {
   createAdminUser,
   deleteAdminUser,
   fetchAdminBlockedEmails,
+  fetchAdminUserDetail,
   fetchAdminUsers,
   patchAdminUser,
   postAdminBlockedEmail,
   deleteAdminBlockedEmail,
+  type AdminUserDetail,
   type AdminUserRow,
   type BlockedEmailRow,
 } from "../../api/admin";
@@ -78,6 +80,10 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
   const [confirmBusy, setConfirmBusy] = useState(false);
   const [blockEmailInput, setBlockEmailInput] = useState("");
   const [blockReasonInput, setBlockReasonInput] = useState("");
+  const [detailUser, setDetailUser] = useState<AdminUserRow | null>(null);
+  const [detailData, setDetailData] = useState<AdminUserDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailTab, setDetailTab] = useState<"credits" | "payments" | "tools">("credits");
 
   const debRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
@@ -101,6 +107,21 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
       setBlocked(await fetchAdminBlockedEmails(accessToken));
     } catch {
       /* ignore */
+    }
+  }, [accessToken]);
+
+  const openDetail = useCallback(async (u: AdminUserRow) => {
+    setDetailUser(u);
+    setDetailData(null);
+    setDetailLoading(true);
+    setDetailTab("credits");
+    try {
+      const data = await fetchAdminUserDetail(accessToken, u.id);
+      setDetailData(data);
+    } catch {
+      /* ignore */
+    } finally {
+      setDetailLoading(false);
     }
   }, [accessToken]);
 
@@ -389,6 +410,14 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
                     <span className="shrink-0 font-mono text-xs text-slate-400 sm:w-20">{u.plan}</span>
                     <button
                       type="button"
+                      onClick={() => void openDetail(u)}
+                      className="shrink-0 rounded-lg bg-violet-500/15 px-2.5 py-1.5 text-xs font-semibold text-violet-200 ring-1 ring-violet-500/30 transition hover:bg-violet-500/25"
+                      title="Detaylar ve geçmiş"
+                    >
+                      Detay
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setSelectOpen(u)}
                       className="shrink-0 rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 ring-1 ring-cyan-500/30 transition hover:bg-cyan-500/25"
                     >
@@ -489,7 +518,216 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
         onBlockedChange={() => void loadBlocked()}
         requestDanger={requestDanger}
       />
+
+      <UserDetailPanel
+        user={detailUser}
+        detail={detailData}
+        loading={detailLoading}
+        tab={detailTab}
+        onTabChange={setDetailTab}
+        onClose={() => { setDetailUser(null); setDetailData(null); }}
+      />
     </div>
+  );
+}
+
+function UserDetailPanel({
+  user,
+  detail,
+  loading,
+  tab,
+  onTabChange,
+  onClose,
+}: {
+  user: AdminUserRow | null;
+  detail: AdminUserDetail | null;
+  loading: boolean;
+  tab: "credits" | "payments" | "tools";
+  onTabChange: (t: "credits" | "payments" | "tools") => void;
+  onClose: () => void;
+}) {
+  const fmtDate = (s: string) =>
+    new Date(s).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+
+  const transactionLabel = (type: string) => {
+    if (type === "consume") return "Kullanım";
+    if (type === "refund") return "İade";
+    if (type === "bonus") return "Bonus";
+    if (type === "admin_add") return "Admin ekledi";
+    return type;
+  };
+
+  const txColor = (type: string) => {
+    if (type === "consume") return "text-rose-300";
+    if (type === "refund") return "text-emerald-300";
+    if (type === "bonus") return "text-amber-300";
+    if (type === "admin_add") return "text-violet-300";
+    return "text-slate-300";
+  };
+
+  return (
+    <MotionSlideOver
+      open={user !== null}
+      onClose={onClose}
+      title={user ? user.email : ""}
+      description={user ? `${user.plan} · ${user.creditBalance} kredi` : undefined}
+      widthClassName="max-w-lg"
+    >
+      {user ? (
+        <div className="flex flex-col gap-4">
+          <div className="flex gap-1 rounded-xl bg-slate-900/60 p-1">
+            {(["credits", "payments", "tools"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => onTabChange(t)}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
+                  tab === t
+                    ? "bg-slate-700 text-white shadow"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {t === "credits" ? "Kredi Geçmişi" : t === "payments" ? "Ödemeler" : "Araç Kullanımı"}
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <p className="py-8 text-center text-sm text-slate-500">Yükleniyor…</p>
+          ) : !detail ? (
+            <p className="py-8 text-center text-sm text-slate-500">Veri yüklenemedi.</p>
+          ) : tab === "credits" ? (
+            <div className="space-y-1">
+              {detail.creditTransactions.length === 0 ? (
+                <p className="py-6 text-center text-sm text-slate-500">Kayıt yok.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-800/60">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-left text-slate-500">
+                        <th className="px-3 py-2">Tarih</th>
+                        <th className="px-3 py-2">Tür</th>
+                        <th className="px-3 py-2">Araç</th>
+                        <th className="px-3 py-2 text-right">Miktar</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.creditTransactions.map((tx) => (
+                        <tr key={tx.id} className="border-b border-slate-800/40 last:border-0">
+                          <td className="px-3 py-2 font-mono text-slate-400">{fmtDate(tx.createdAt)}</td>
+                          <td className={`px-3 py-2 font-medium ${txColor(tx.type)}`}>{transactionLabel(tx.type)}</td>
+                          <td className="px-3 py-2 text-slate-400">{tx.toolId ?? "—"}</td>
+                          <td className={`px-3 py-2 text-right font-bold tabular-nums ${tx.amount < 0 ? "text-rose-300" : "text-emerald-300"}`}>
+                            {tx.amount > 0 ? "+" : ""}{tx.amount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : tab === "payments" ? (
+            <div className="space-y-3">
+              {detail.paymentCheckouts.length === 0 && detail.creditPackCheckouts.length === 0 ? (
+                <p className="py-6 text-center text-sm text-slate-500">Ödeme kaydı yok.</p>
+              ) : (
+                <>
+                  {detail.paymentCheckouts.length > 0 ? (
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Abonelik Ödemeleri</p>
+                      <div className="overflow-x-auto rounded-xl border border-slate-800/60">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-800 text-left text-slate-500">
+                              <th className="px-3 py-2">Tarih</th>
+                              <th className="px-3 py-2">Plan</th>
+                              <th className="px-3 py-2 text-right">Tutar</th>
+                              <th className="px-3 py-2">Durum</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {detail.paymentCheckouts.map((p) => (
+                              <tr key={p.id} className="border-b border-slate-800/40 last:border-0">
+                                <td className="px-3 py-2 font-mono text-slate-400">{fmtDate(p.createdAt)}</td>
+                                <td className="px-3 py-2 font-medium text-cyan-200">{p.plan}</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-slate-200">{p.priceTry} {p.paymentCurrency}</td>
+                                <td className={`px-3 py-2 font-semibold ${p.status === "completed" ? "text-emerald-300" : p.status === "pending" ? "text-amber-300" : "text-rose-300"}`}>
+                                  {p.status}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {detail.creditPackCheckouts.length > 0 ? (
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Kredi Paketi Ödemeleri</p>
+                      <div className="overflow-x-auto rounded-xl border border-slate-800/60">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-800 text-left text-slate-500">
+                              <th className="px-3 py-2">Tarih</th>
+                              <th className="px-3 py-2">Paket</th>
+                              <th className="px-3 py-2">Kredi</th>
+                              <th className="px-3 py-2 text-right">Tutar</th>
+                              <th className="px-3 py-2">Durum</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {detail.creditPackCheckouts.map((c) => (
+                              <tr key={c.id} className="border-b border-slate-800/40 last:border-0">
+                                <td className="px-3 py-2 font-mono text-slate-400">{fmtDate(c.createdAt)}</td>
+                                <td className="px-3 py-2 text-slate-200">{c.product}</td>
+                                <td className="px-3 py-2 font-bold tabular-nums text-amber-200">{c.credits}</td>
+                                <td className="px-3 py-2 text-right tabular-nums text-slate-200">{c.finalPriceTry} {c.paymentCurrency}</td>
+                                <td className={`px-3 py-2 font-semibold ${c.status === "completed" ? "text-emerald-300" : c.status === "pending" ? "text-amber-300" : "text-rose-300"}`}>
+                                  {c.status}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {Object.keys(detail.toolUsageCounts).length === 0 ? (
+                <p className="py-6 text-center text-sm text-slate-500">Araç kullanım kaydı yok.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-xl border border-slate-800/60">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-left text-slate-500">
+                        <th className="px-3 py-2">Araç</th>
+                        <th className="px-3 py-2 text-right">Kullanım</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(detail.toolUsageCounts)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([toolId, count]) => (
+                          <tr key={toolId} className="border-b border-slate-800/40 last:border-0">
+                            <td className="px-3 py-2 font-mono text-slate-300">{toolId}</td>
+                            <td className="px-3 py-2 text-right font-bold tabular-nums text-cyan-200">{count}</td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </MotionSlideOver>
   );
 }
 

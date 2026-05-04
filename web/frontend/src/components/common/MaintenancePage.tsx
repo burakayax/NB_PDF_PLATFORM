@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const MAINTENANCE_TAB_TITLE = "Bakım Çalışması | NB PDF Platform";
+const MAINTENANCE_TAB_TITLE = "Bakım Çalışması | PDF PLATFORM";
 
 /** Tab title during maintenance block; restores previous title on unmount (e.g. admin bypass → normal page titles). */
 export function MaintenanceTabTitle() {
@@ -42,7 +42,7 @@ export function MaintenancePage() {
 
         <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
-            NB PDF PLATFORM
+            PDF PLATFORM
           </p>
 
           <div className="mt-10 flex h-36 w-36 items-center justify-center rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/[0.14] to-indigo-600/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_24px_80px_-28px_rgba(34,211,238,0.35)] ring-1 ring-white/[0.06]">

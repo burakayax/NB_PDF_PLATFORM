@@ -4,8 +4,10 @@ declare global {
       authUser?: {
         id: string;
         email: string;
-        plan: "FREE" | "PRO" | "BUSINESS";
+        plan: "FREE" | "PLUS" | "PRO" | "BUSINESS";
         role: "USER" | "ADMIN";
+        orgRole: "OWNER" | "ADMIN" | "MEMBER";
+        organizationId: string | null;
       };
     }
   }

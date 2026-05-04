@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
+import { csrfOriginCheck } from "../../middleware/csrf.middleware.js";
 import {
   changePasswordController,
   googleOAuthCallbackController,
@@ -30,8 +31,8 @@ authRouter.post("/forgot-password/verify-code", asyncHandler(forgotPasswordVerif
 authRouter.post("/forgot-password/reset", asyncHandler(forgotPasswordResetController));
 authRouter.post("/register", asyncHandler(registerController));
 authRouter.post("/login", asyncHandler(loginController));
-authRouter.post("/refresh", asyncHandler(refreshController));
-authRouter.post("/logout", asyncHandler(logoutController));
+authRouter.post("/refresh", csrfOriginCheck, asyncHandler(refreshController));
+authRouter.post("/logout", csrfOriginCheck, asyncHandler(logoutController));
 authRouter.get("/me", asyncHandler(meController));
 authRouter.get("/verify-email", asyncHandler(verifyEmailController));
 authRouter.patch("/preferences/language", asyncHandler(updatePreferredLanguageController));

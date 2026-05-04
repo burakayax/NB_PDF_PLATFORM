@@ -1,8 +1,8 @@
-import { randomInt } from "node:crypto";
 import type {
   AuthProvider,
   EmailVerificationToken,
   Language,
+  OrgRole,
   Plan,
   User,
   UserRole,
@@ -40,7 +40,7 @@ import {
   logGoogleOAuthJwtIssued,
   previewSecret,
 } from "./google-oauth.console.js";
-import { grantCredits } from "../subscription/entitlement.engine.js";
+import { createOrganizationForUser } from "../organization/organization.service.js";
 
 type PublicUser = {
   id: string;
@@ -50,15 +50,15 @@ type PublicUser = {
   name: string | null;
   avatar: string | null;
   plan: Plan;
-  subscription_expiry: string | null;
   role: UserRole;
+  orgRole: OrgRole;
+  organizationId: string | null;
   preferredLanguage: Language;
+  timezone: string;
   isVerified: boolean;
   authProvider: AuthProvider;
-  /** False when the account has no bcrypt password (e.g. Google-only). */
   hasPassword: boolean;
   createdAt: string;
-  /** Billing — used for iyzico checkout inline flow (optional until collected). */
   phone: string | null;
   billingAddressLine: string | null;
   billingPostalCode: string | null;
@@ -108,11 +108,11 @@ function toPublicUser(user: User): PublicUser {
     name: user.name,
     avatar: user.avatar,
     plan: user.plan,
-    subscription_expiry: user.subscriptionExpiry
-      ? user.subscriptionExpiry.toISOString()
-      : null,
     role: user.role,
+    orgRole: user.orgRole,
+    organizationId: user.organizationId ?? null,
     preferredLanguage: user.preferredLanguage,
+    timezone: user.timezone ?? "Europe/Istanbul",
     isVerified: user.isVerified,
     authProvider: user.authProvider,
     hasPassword: Boolean(user.passwordHash),
@@ -126,11 +126,19 @@ function toPublicUser(user: User): PublicUser {
 }
 
 async function createSession(user: User) {
+  // Revoke all existing valid sessions so only one active session per user exists
+  await prisma.refreshToken.updateMany({
+    where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
+    data: { revokedAt: new Date() },
+  });
+
   const payload = {
     sub: user.id,
     email: user.email,
     plan: user.plan,
     role: user.role,
+    orgRole: user.orgRole,
+    ...(user.organizationId ? { organizationId: user.organizationId } : {}),
   };
 
   const accessToken = signAccessToken(payload);
@@ -209,7 +217,7 @@ async function sendVerificationEmail(user: User, rawToken: string) {
   const verificationUrl = buildEmailVerificationLink(rawToken);
   const emailTemplate = createVerificationEmailTemplate({
     verificationUrl,
-    productName: "NB PDF PLATFORM",
+    productName: "PDF PLATFORM",
     expiresInHours: env.EMAIL_VERIFICATION_TTL_HOURS,
   });
 
@@ -225,7 +233,7 @@ async function sendAdminNotificationEmail(user: User) {
   const notificationTemplate = createAdminNotificationEmailTemplate({
     userEmail: user.email,
     registeredAt: user.createdAt.toISOString(),
-    productName: "NB PDF PLATFORM",
+    productName: "PDF PLATFORM",
   });
 
   await sendMail({
@@ -307,14 +315,10 @@ function deriveGoogleFirstLast(parts: {
   return { firstName: fn, lastName: ln };
 }
 
-async function grantWelcomeCreditsForNewUser(userId: string): Promise<void> {
-  const lo = env.welcomeCreditsMin;
-  const hi = env.welcomeCreditsMax;
-  if (hi <= 0) {
-    return;
-  }
-  const amount = lo >= hi ? lo : randomInt(lo, hi + 1);
-  await grantCredits(userId, amount, "bonus");
+async function ensureOrganizationForUser(user: User): Promise<void> {
+  if (user.organizationId) return;
+  const orgName = user.name ?? user.email.split("@")[0] ?? "My Workspace";
+  await createOrganizationForUser(user.id, orgName, "FREE");
 }
 
 export async function registerUser(
@@ -412,13 +416,13 @@ export async function registerUser(
 
   let persistedUser: User = user;
   try {
-    await grantWelcomeCreditsForNewUser(user.id);
+    await ensureOrganizationForUser(user);
     const refetched = await prisma.user.findUnique({ where: { id: user.id } });
     if (refetched) {
       persistedUser = refetched;
     }
   } catch (error) {
-    authLog.warn("register: welcome credits grant failed (user kept)", {
+    authLog.warn("register: organization creation failed (user kept)", {
       userId: user.id,
       error: String(error),
     });
@@ -442,7 +446,6 @@ export async function registerUser(
         lastName: persistedUser.lastName,
         name: persistedUser.name,
         role: persistedUser.role,
-        credit_balance: persistedUser.credit_balance,
       }),
     )
     .catch(() => {
@@ -870,7 +873,7 @@ export async function signInWithGoogle(params: {
   });
 
   try {
-    await grantWelcomeCreditsForNewUser(persistedGoogleUser.id);
+    await ensureOrganizationForUser(persistedGoogleUser);
     const refetched = await prisma.user.findUnique({
       where: { id: persistedGoogleUser.id },
     });
@@ -878,7 +881,7 @@ export async function signInWithGoogle(params: {
       persistedGoogleUser = refetched;
     }
   } catch (error) {
-    authLog.warn("google register: welcome credits grant failed (user kept)", {
+    authLog.warn("google register: organization creation failed (user kept)", {
       userId: persistedGoogleUser.id,
       error: String(error),
     });
@@ -912,7 +915,6 @@ export async function signInWithGoogle(params: {
         lastName: persistedGoogleUser.lastName,
         name: persistedGoogleUser.name,
         role: persistedGoogleUser.role,
-        credit_balance: persistedGoogleUser.credit_balance,
       }),
     )
     .catch(() => {});

@@ -1834,6 +1834,8 @@ def _ghostscript_compress_to_path(
     os.close(fd)
     tmp_keep: Optional[str] = tmp_out
     try:
+        dpi_map = {"/printer": 300, "/ebook": 150, "/screen": 96, "/prepress": 300}
+        dpi = dpi_map.get(pdfsettings, 150)
         cmd: List[str] = [
             exe,
             "-sDEVICE=pdfwrite",
@@ -1841,15 +1843,16 @@ def _ghostscript_compress_to_path(
             "-dBATCH",
             "-dQUIET",
             "-dSAFER",
-            "-dCompatibilityLevel=1.4",
+            "-dCompatibilityLevel=1.5",
             f"-dPDFSETTINGS={pdfsettings}",
             "-dDetectDuplicateImages=true",
             "-dCompressFonts=true",
             "-dSubsetFonts=true",
             "-dDownsampleColorImages=true",
-            "-dColorImageResolution=120",
-            "-dGrayImageResolution=120",
+            f"-dColorImageResolution={dpi}",
+            f"-dGrayImageResolution={dpi}",
             "-dMonoImageResolution=300",
+            "-dOptimize=true",
             f"-sOutputFile={tmp_out}",
             src_abs,
         ]
@@ -1938,8 +1941,11 @@ def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: 
 
 
 # --- 7. PDF SIKIŞTIRMA ---
-def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
-    """Önce Ghostscript (/ebook → /screen), yoksa veya küçültmezse pikepdf + PyMuPDF."""
+def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None, quality: str = "auto") -> bool:
+    """Önce Ghostscript (/ebook → /screen), yoksa veya küçültmezse pikepdf + PyMuPDF.
+
+    quality: "auto" = try all presets in order, "low" = /screen, "medium" = /ebook, "high" = /printer
+    """
     work_tmp: Optional[str] = None
     try:
         import pikepdf  # noqa: F401
@@ -1961,8 +1967,12 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
             os.close(fd)
             work_out = work_tmp
 
+        quality_preset_map = {"low": "/screen", "medium": "/ebook", "high": "/printer"}
+        fixed_preset = quality_preset_map.get(quality)
+        preset_sequence = [fixed_preset] if fixed_preset else ["/ebook", "/printer", "/screen"]
+
         gs_ok = False
-        for preset in ("/ebook", "/screen"):
+        for preset in preset_sequence:
             if os.path.isfile(work_out):
                 try:
                     os.remove(work_out)

@@ -3,7 +3,7 @@ import type { Language } from "../../i18n/landing";
 import { buildBaseStructuredData } from "../../seo/jsonLd";
 import { toAbsoluteUrl } from "../../seo/routeSeoConfig";
 
-const SITE_NAME = "NB PDF PLATFORM";
+const SITE_NAME = "PDF PLATFORM";
 
 type SEOProps = {
   title: string;
@@ -72,9 +72,7 @@ function upsertCanonical(href: string) {
 }
 
 function upsertRobots(content: string) {
-  let node = document.getElementById(
-    HEAD_IDS.robots,
-  ) as HTMLMetaElement | null;
+  let node = document.getElementById(HEAD_IDS.robots) as HTMLMetaElement | null;
   if (!node) {
     node = document.createElement("meta");
     node.id = HEAD_IDS.robots;
