@@ -37,6 +37,7 @@ import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
+import { DownloadFilenameModal } from "./components/common/DownloadFilenameModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
@@ -47,6 +48,7 @@ import {
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { QuotaWidget } from "./components/dashboard/QuotaWidget";
+import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
@@ -662,8 +664,16 @@ function App() {
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
+  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
+  const [downloadModalTarget, setDownloadModalTarget] = useState<{
+    resultId?: string;
+    mergeJobId?: string;
+    fallbackName: string;
+    toolId: FeatureKey;
+  } | null>(null);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
+  const [batchFiles, setBatchFiles] = useState<File[]>([]);
   const [password, setPassword] = useState("");
   const [inputPassword, setInputPassword] = useState("");
   const [pagesText, setPagesText] = useState("");
@@ -1277,6 +1287,7 @@ function App() {
     // Önceki seçimlerin yeni modüle sızmasını önlemek için merkezi sıfırlama gerekir.
     // Alanlar eksik temizlenirse kullanıcı yanlış modülde eski dosya ile gönderim deneyebilir.
     setUploads([]);
+    setBatchFiles([]);
     setPassword("");
     setInputPassword("");
     setPagesText("");
@@ -1749,10 +1760,10 @@ function App() {
 
   const queueGatedDownload = useCallback(
     (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
-      void runGatedDownloadWithFilename(resultId, fallbackName, name, toolId);
+      setDownloadModalTarget({ resultId, fallbackName, toolId });
+      setDownloadModalOpen(true);
     },
-    [runGatedDownloadWithFilename],
+    [],
   );
 
   /** Merge indirmesi: GET başında sunucu ``entitlement_consume`` (merge maliyeti). */
@@ -1840,10 +1851,10 @@ function App() {
 
   const queueMergeGatedDownload = useCallback(
     (jobId: string, fallbackName: string) => {
-      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
-      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, name);
+      setDownloadModalTarget({ mergeJobId: jobId, fallbackName, toolId: "merge" as FeatureKey });
+      setDownloadModalOpen(true);
     },
-    [runMergeJobGatedDownloadWithFilename],
+    [],
   );
 
   const openConversionUpgradeModalManual = useCallback(() => {
@@ -2665,6 +2676,11 @@ function App() {
     () => isLimitsizProUnlimited(userBalance),
     [userBalance],
   );
+  const canUseBatch = Boolean(
+    isAuthenticated && ((userBalance?.isAdmin ?? false) || (userBalance?.batchLimit ?? 0) > 0),
+  );
+  const batchMaxFiles = userBalance?.isAdmin ? 50 : (userBalance?.batchLimit ?? 5);
+  const BATCHABLE_TOOLS = new Set(["compress", "pdf-to-word", "pdf-to-excel", "word-to-pdf", "excel-to-pdf", "encrypt"]);
   const premiumProcessingLane = Boolean(
     user?.role === "ADMIN" ||
     (subscriptionSummary &&
@@ -3319,6 +3335,22 @@ function App() {
       clearToast();
 
       if (selectedFeature.id === "merge") {
+        if (
+          isAuthenticated &&
+          userBalance?.plan === "FREE" &&
+          !userBalance?.isAdmin &&
+          uploads.length > 2
+        ) {
+          showToast(
+            "error",
+            language === "tr" ? "Ücretsiz plan sınırı" : "Free plan limit",
+            language === "tr"
+              ? "Ücretsiz planda en fazla 2 dosya birleştirilebilir. Daha fazlası için planınızı yükseltin."
+              : "Free plan allows merging up to 2 files. Upgrade your plan for more.",
+          );
+          return;
+        }
+
         mergeFlowAbortRef.current?.abort();
         mergeFlowAbortRef.current = new AbortController();
         const mergeSignal = mergeFlowAbortRef.current.signal;
@@ -3508,6 +3540,43 @@ function App() {
           default:
             break;
         }
+      }
+
+      if (batchFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
+        const batchForm = new FormData();
+        batchForm.append("tool_type", fid);
+        for (const bf of batchFiles) {
+          batchForm.append("files", bf);
+        }
+        if (password.trim()) batchForm.append("password", password.trim());
+        if (fid === "compress") batchForm.append("quality", compressQuality);
+        if (fid === "encrypt") {
+          batchForm.append("user_password", outputPassword.trim());
+          batchForm.append("input_password", inputPassword.trim());
+        }
+
+        const res = await postToolToResult("batch", batchForm, accessToken, {
+          signal: toolSignal,
+          errorMessage:
+            language === "tr"
+              ? "Toplu işlem başarısız oldu."
+              : "Batch processing failed.",
+        });
+
+        disposeToolProgressSuccess();
+        setToolProgressSuccess({
+          filename: res.filename || "toplu_sonuc.zip",
+          featureTitle: selectedFeature.title,
+          gatedDownload: {
+            toolId: fid,
+            resultId: res.result_id,
+            fallbackName: res.filename || "toplu_sonuc.zip",
+            thumbnailBlobUrl: null,
+            saasGating: res.saasGating ?? null,
+          },
+        });
+        setBatchFiles([]);
+        return;
       }
 
       if (isResultStoreTool(fid)) {
@@ -4351,6 +4420,27 @@ function App() {
           showToast={showToast}
         />
 
+        <DownloadFilenameModal
+          open={downloadModalOpen}
+          defaultName={sanitizeDownloadBasename(
+            downloadModalTarget?.fallbackName ?? "download.pdf",
+            "download.pdf",
+          )}
+          language={language}
+          onCancel={() => setDownloadModalOpen(false)}
+          onConfirm={(filename) => {
+            setDownloadModalOpen(false);
+            const t = downloadModalTarget;
+            if (!t) return;
+            if (t.mergeJobId) {
+              void runMergeJobGatedDownloadWithFilename(t.mergeJobId, t.fallbackName, filename);
+            } else if (t.resultId) {
+              void runGatedDownloadWithFilename(t.resultId, t.fallbackName, filename, t.toolId);
+            }
+            setDownloadModalTarget(null);
+          }}
+        />
+
         <Suspense fallback={null}>
           <PlanUpgradeModal
             open={upgradeModalOpen}
@@ -4650,6 +4740,41 @@ function App() {
                             </span>
                           </div>
                         ) : null}
+
+                        {isAuthenticated &&
+                          toolNeedsUpload &&
+                          BATCHABLE_TOOLS.has(selectedFeature.id) && (
+                            <div className="field">
+                              <span className="text-xs text-gray-400 font-medium">
+                                {language === "tr"
+                                  ? "Toplu işlem (isteğe bağlı)"
+                                  : "Batch processing (optional)"}
+                              </span>
+                              {canUseBatch ? (
+                                <BatchFileUpload
+                                  files={batchFiles}
+                                  onChange={setBatchFiles}
+                                  accept={selectedFeature.accept || "*"}
+                                  maxFiles={batchMaxFiles}
+                                  language={language}
+                                />
+                              ) : (
+                                <p className="text-xs text-amber-400 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                                  {language === "tr"
+                                    ? "🔒 Toplu işlem Plus ve üzeri planlarda kullanılabilir."
+                                    : "🔒 Batch processing is available on Plus and higher plans."}
+                                  {" "}
+                                  <button
+                                    type="button"
+                                    className="underline font-medium"
+                                    onClick={() => setUpgradeModalOpen(true)}
+                                  >
+                                    {language === "tr" ? "Planını Yükselt" : "Upgrade Plan"}
+                                  </button>
+                                </p>
+                              )}
+                            </div>
+                          )}
 
                         {toolNeedsUpload ? (
                           <label className="field">

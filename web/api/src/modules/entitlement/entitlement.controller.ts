@@ -35,7 +35,10 @@ export async function entitlementCheckController(
   }
 
   const { toolId } = entitlementBodySchema.parse(request.body);
-  const result = await checkQuota(userId, toolId, 1, 0);
+  const fileCount = typeof request.body.fileCount === "number" && request.body.fileCount > 1
+    ? request.body.fileCount
+    : 1;
+  const result = await checkQuota(userId, toolId, fileCount, 0);
 
   response.status(200).json({
     allowed: result.allowed,
@@ -132,6 +135,7 @@ export async function entitlementBalanceController(
     watermarkEnabled: summary.watermarkEnabled,
     batchLimit: summary.batchLimit,
     fileSizeLimitMB: summary.fileSizeLimitMB,
+    isAdmin: summary.isAdmin,
   });
 }
 

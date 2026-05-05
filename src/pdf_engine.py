@@ -1787,7 +1787,7 @@ def excel_to_pdf(xlsx_path: str, pdf_path: str, progress_callback=None) -> bool:
 
 
 def _tool_subprocess_timeout_sec() -> int:
-    return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "120")))
+    return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "60")))
 
 
 def _resolve_ghostscript_executable() -> Optional[str]:
@@ -1874,67 +1874,51 @@ def _ghostscript_compress_to_path(
                 pass
 
 
-def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
-    """pikepdf + PyMuPDF yedek boru hattı (Ghostscript yok / başarısız)."""
-    import pikepdf
+def _pdf_page_count(path: str, password: str = "") -> int:
+    """PyMuPDF ile sayfa sayısını döndürür; hata olursa -1."""
+    try:
+        import fitz
+        doc = fitz.open(path)
+        if password and doc.needs_pass:
+            doc.authenticate(password)
+        n = doc.page_count
+        doc.close()
+        return n
+    except Exception:
+        return -1
 
+
+def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
+    """PyMuPDF yedek boru hattı (Ghostscript yok / başarısız)."""
     import fitz
 
-    target_path = output_path
-    temp_output_path: Optional[str] = None
-    if os.path.abspath(input_path) == os.path.abspath(output_path):
-        fd, temp_output_path = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(output_path) or None)
-        os.close(fd)
-        target_path = temp_output_path
+    out_dir = os.path.dirname(output_path) or None
+    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+    os.close(fd)
     try:
-        with pikepdf.open(input_path, password=open_password) as pdf:
-            pdf.save(
-                target_path,
-                compress_streams=True,
-                recompress_flate=True,
-                object_stream_mode=pikepdf.ObjectStreamMode.generate,
-                stream_decode_level=pikepdf.StreamDecodeLevel.generalized,
-            )
-        if temp_output_path:
-            os.replace(temp_output_path, output_path)
-            temp_output_path = None
-        out_dir = os.path.dirname(output_path) or None
-        fd2, tmp_mupdf = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
-        os.close(fd2)
-        try:
-            doc = fitz.open(output_path)
-            try:
-                doc.save(
-                    tmp_mupdf,
-                    garbage=4,
-                    clean=True,
-                    deflate=True,
-                    deflate_images=True,
-                    deflate_fonts=True,
-                    linear=False,
-                    use_objstms=1,
-                )
-            finally:
-                doc.close()
-            old_sz = os.path.getsize(output_path)
-            new_sz = os.path.getsize(tmp_mupdf)
-            if new_sz < old_sz:
-                os.replace(tmp_mupdf, output_path)
-            else:
-                try:
-                    os.remove(tmp_mupdf)
-                except OSError:
-                    pass
-        except Exception:
-            if os.path.isfile(tmp_mupdf):
-                try:
-                    os.remove(tmp_mupdf)
-                except OSError:
-                    pass
+        doc = fitz.open(input_path)
+        if open_password and doc.needs_pass:
+            doc.authenticate(open_password)
+        doc.save(
+            tmp_out,
+            garbage=4,
+            deflate=True,
+            deflate_images=True,
+            deflate_fonts=True,
+            linear=False,
+        )
+        doc.close()
+        if os.path.getsize(tmp_out) < os.path.getsize(input_path):
+            os.replace(tmp_out, output_path)
+            tmp_out = None
+        else:
+            shutil.copy2(input_path, output_path)
+    except Exception:
+        raise
     finally:
-        if temp_output_path and os.path.isfile(temp_output_path):
+        if tmp_out and os.path.isfile(tmp_out):
             try:
-                os.remove(temp_output_path)
+                os.remove(tmp_out)
             except OSError:
                 pass
 
@@ -1946,11 +1930,6 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
     quality: "auto" = try all presets in order, "low" = /screen, "medium" = /ebook, "high" = /printer
     """
     work_tmp: Optional[str] = None
-    try:
-        import pikepdf  # noqa: F401
-    except ImportError as e:
-        raise Exception("PDF sıkıştırma için 'pikepdf' gerekli.") from e
-
     try:
         if progress_callback:
             progress_callback(0, 2, "PDF sıkıştırılıyor...")
@@ -1970,6 +1949,8 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
         fixed_preset = quality_preset_map.get(quality)
         preset_sequence = [fixed_preset] if fixed_preset else ["/ebook"]
 
+        input_page_count = _pdf_page_count(input_path, open_password)
+
         gs_ok = False
         for preset in preset_sequence:
             if os.path.isfile(work_out):
@@ -1984,6 +1965,14 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
                 password=open_password,
                 timeout_sec=timeout_sec,
             ):
+                # Sayfa sayısı koruması: GS boş sayfa ürettiyse reddet
+                gs_pages = _pdf_page_count(work_out)
+                if input_page_count > 0 and gs_pages != input_page_count:
+                    try:
+                        os.remove(work_out)
+                    except OSError:
+                        pass
+                    continue
                 try:
                     if os.path.getsize(work_out) < os.path.getsize(input_path):
                         gs_ok = True

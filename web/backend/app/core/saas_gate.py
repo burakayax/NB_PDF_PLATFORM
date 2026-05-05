@@ -282,7 +282,7 @@ def _validate_consume(data: Any) -> dict[str, Any]:
     return data
 
 
-async def entitlement_check(token: str, tool_id: str) -> dict[str, Any]:
+async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> dict[str, Any]:
     """POST ``/api/entitlement/check`` — pure engine decision, no side effects.
 
     Raises on transport / auth failure; returns the raw decision dict for
@@ -290,10 +290,13 @@ async def entitlement_check(token: str, tool_id: str) -> dict[str, Any]:
     reject the request (typically ``allowed=false`` → 402).
     """
     base = saas_api_base()
+    json_body: dict[str, Any] = {"toolId": tool_id}
+    if file_count > 1:
+        json_body["fileCount"] = file_count
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/check",
         headers={"Authorization": f"Bearer {token}"},
-        json_body={"toolId": tool_id},
+        json_body=json_body,
     )
     if r.status_code == 401:
         raise HTTPException(status_code=401, detail=_detail_from_response(r))
