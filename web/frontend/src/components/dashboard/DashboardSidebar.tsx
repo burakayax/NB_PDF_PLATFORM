@@ -1,7 +1,7 @@
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
-import { SIDEBAR_TOOL_ORDER, sidebarToolCreditLine, sidebarToolLabel, ws } from "../../i18n/workspace";
+import { SIDEBAR_TOOL_ORDER, sidebarToolLabel, ws } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
 
 export type SidebarToolId = FeatureKey | "subscription";
@@ -94,9 +94,7 @@ export function DashboardSidebar({
                     </span>
                   ) : null}
                 </span>
-                {locked ? null : (
-                  <span className="pl-0 text-[10px] font-medium leading-tight text-nb-muted/80">{sidebarToolCreditLine(id, language)}</span>
-                )}
+                {null}
               </span>
             </button>
           );

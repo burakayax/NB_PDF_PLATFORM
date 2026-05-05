@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CheckoutCurrency } from "../lib/pricingMatrix";
+export type CheckoutCurrency = "TRY" | "USD" | "EUR";
 
 /** Deprecated: persisted manual overrides from older header toggle; cleared on boot. */
 const LEGACY_STORAGE_KEY = "nb-checkout-currency-v1";

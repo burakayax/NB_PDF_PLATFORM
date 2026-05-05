@@ -3,7 +3,7 @@ import { Lock } from "lucide-react";
 import { isValidPhoneNumber } from "libphonenumber-js";
 import type { AuthUser, UpdateProfileInput } from "../../api/auth";
 import type { Language } from "../../i18n/landing";
-import type { PricingTierId } from "../../lib/pricingTiers";
+import type { PlanId } from "../../lib/planConfig";
 import { getMissingBillingFields } from "../../lib/billingProfile";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { NbPhoneInput } from "../common/NbPhoneInput";
@@ -13,11 +13,11 @@ type ProfileCompletionModalProps = {
   onClose: () => void;
   user: AuthUser;
   language: Language;
-  tier: PricingTierId;
+  tier: PlanId;
   /** Shown under the title (e.g. current plan label). */
   productHint?: string;
   updateProfile: (input: UpdateProfileInput) => Promise<AuthUser | null>;
-  onSavedAndContinue: (tier: PricingTierId) => Promise<void>;
+  onSavedAndContinue: (tier: PlanId) => Promise<void>;
   onOpenTerms: () => void;
   onOpenKvkk: () => void;
 };

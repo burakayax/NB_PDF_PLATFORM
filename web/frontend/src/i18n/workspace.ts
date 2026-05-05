@@ -317,6 +317,26 @@ export function ws(lang: Language) {
     filePickNoteAppend: tr
       ? "Yeni seçilen dosyalar listenin sonuna eklenir."
       : "New files are appended to the list.",
+    upgradeNudgeAria: tr ? "Plan yükseltme önerisi" : "Plan upgrade suggestion",
+    upgradeNudgeTierBody: (tier: number) =>
+      tr
+        ? `Daha fazla işlem için planınızı yükseltin (seviye ${tier}).`
+        : `Upgrade your plan for more operations (tier ${tier}).`,
+    upgradeNudgeContinueFree: tr ? "Ücretsiz devam et" : "Continue free",
+    upgradeNudgeUpgradeInstant: tr ? "Planı Yükselt" : "Upgrade plan",
+    proGateTitle: tr ? "Bu araç planınızda mevcut değil" : "This tool is not available on your plan",
+    proGateBody: tr
+      ? "Daha üst bir plana geçerek tüm araçlara erişin."
+      : "Upgrade to a higher plan to access all tools.",
+    proGateCta: tr ? "Planları Gör" : "View Plans",
+    toolProgressNativeDownloadHint: tr
+      ? "Dosya indirildi. Tarayıcınızın indirme klasörünü kontrol edin."
+      : "File downloaded. Check your browser's downloads folder.",
+    navbarCreditsLabel: tr ? "İşlemler" : "Operations",
+    navbarUpgrade: tr ? "Yükselt" : "Upgrade",
+    lockedFeatureTooltip: tr
+      ? "Bu araç planınızda mevcut değil. Yükseltmek için tıklayın."
+      : "This tool is not available on your plan. Click to upgrade.",
 }
 }
 

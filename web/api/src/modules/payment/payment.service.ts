@@ -329,7 +329,7 @@ function promisifyRetrieve(
 
 export async function createPaymentCheckoutSession(params: {
   userId: string;
-  plan: "PRO" | "BUSINESS";
+  plan: "PRO" | "BUSINESS" | "PLUS";
   billing: "monthly" | "annual";
   clientIp: string;
   /** Override list + paid price string (two decimals) in `checkoutCurrency` when tier pricing applies. */
@@ -353,9 +353,11 @@ export async function createPaymentCheckoutSession(params: {
     params.priceTryOverride ??
     (params.plan === "BUSINESS"
       ? prices.BUSINESS
-      : isAnnualPro
-        ? prices.PRO_ANNUAL
-        : prices.PRO);
+      : params.plan === "PLUS"
+        ? prices.PRO
+        : isAnnualPro
+          ? prices.PRO_ANNUAL
+          : prices.PRO);
   const price = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
     params.priceTryOverride != null
@@ -447,9 +449,11 @@ export async function createPaymentCheckoutSession(params: {
           params.basketItemName ??
           (params.plan === "BUSINESS"
             ? "PDF PLATFORM Bas (1 ay)"
-            : isAnnualPro
-              ? "PDF PLATFORM PRO (1 yıl)"
-              : "PDF PLATFORM PRO (1 ay)"),
+            : params.plan === "PLUS"
+              ? "PDF PLATFORM Plus (1 ay)"
+              : isAnnualPro
+                ? "PDF PLATFORM PRO (1 yıl)"
+                : "PDF PLATFORM PRO (1 ay)"),
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,

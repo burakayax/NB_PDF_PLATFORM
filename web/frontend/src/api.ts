@@ -1077,9 +1077,7 @@ function normaliseSaasGating(raw: unknown): SaaSGating | null {
   return {
     allowed: candidate.allowed,
     reason: candidate.reason as SaaSGating["reason"],
-    cost: typeof candidate.cost === "number" ? candidate.cost : 0,
-    creditsBefore: typeof candidate.creditsBefore === "number" ? candidate.creditsBefore : 0,
-    creditsAfter: typeof candidate.creditsAfter === "number" ? candidate.creditsAfter : 0,
+    remainingOps: typeof (candidate as Record<string, unknown>).remainingOps === "number" ? (candidate as Record<string, unknown>).remainingOps as number : 0,
   };
 }
 
