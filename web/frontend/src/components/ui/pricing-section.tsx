@@ -8,6 +8,7 @@ import type {
   BillingCycle,
   PlanDefinition,
 } from "../../lib/planConfig";
+import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -26,43 +27,6 @@ function getRawPrice(
 function fmt(value: number, currency: Currency): string {
   if (currency === "USD") return `$${value.toFixed(2)}`;
   return `₺${value.toLocaleString("tr-TR")}`;
-}
-
-// ─── Currency Toggle ──────────────────────────────────────────────────────────
-
-function CurrencyToggle({
-  currency,
-  onChange,
-}: {
-  currency: Currency;
-  onChange: (c: Currency) => void;
-}) {
-  return (
-    <div className="flex justify-center">
-      <div className="inline-flex items-center gap-1 p-1 rounded-full bg-white/5 border border-white/10 text-sm">
-        {(["TRY", "USD"] as Currency[]).map((c) => (
-          <button
-            key={c}
-            onClick={() => onChange(c)}
-            className={`relative h-8 px-5 rounded-full font-semibold transition-colors ${
-              currency === c
-                ? "text-white"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {currency === c && (
-              <motion.span
-                layoutId="currency-pill"
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-              />
-            )}
-            <span className="relative">{c === "TRY" ? "TRY ₺" : "USD $"}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ─── Billing Toggle (for Business card) ──────────────────────────────────────
@@ -473,7 +437,8 @@ export default function PricingSection({
   onSelectPlan,
 }: PricingSectionProps) {
   const tr = language === "tr";
-  const [currency, setCurrency] = useState<Currency>("TRY");
+  const { currency: checkoutCurrency } = useCheckoutCurrency();
+  const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
 
   const [free, plus, pro, business] = PLANS;
 
@@ -512,7 +477,6 @@ export default function PricingSection({
               ? "Ücretsiz başla, büyüdükçe yükselt. İstediğin zaman iptal et."
               : "Start free, upgrade as you grow. Cancel anytime."}
           </p>
-          <CurrencyToggle currency={currency} onChange={setCurrency} />
         </motion.div>
 
         {/* 4-column grid */}

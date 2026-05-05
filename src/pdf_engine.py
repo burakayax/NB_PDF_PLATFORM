@@ -1787,7 +1787,7 @@ def excel_to_pdf(xlsx_path: str, pdf_path: str, progress_callback=None) -> bool:
 
 
 def _tool_subprocess_timeout_sec() -> int:
-    return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "300")))
+    return max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "120")))
 
 
 def _resolve_ghostscript_executable() -> Optional[str]:
@@ -1893,8 +1893,7 @@ def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: 
                 compress_streams=True,
                 recompress_flate=True,
                 object_stream_mode=pikepdf.ObjectStreamMode.generate,
-                linearize=True,
-                stream_decode_level=pikepdf.StreamDecodeLevel.all,
+                stream_decode_level=pikepdf.StreamDecodeLevel.generalized,
             )
         if temp_output_path:
             os.replace(temp_output_path, output_path)
@@ -1969,7 +1968,7 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
 
         quality_preset_map = {"low": "/screen", "medium": "/ebook", "high": "/printer"}
         fixed_preset = quality_preset_map.get(quality)
-        preset_sequence = [fixed_preset] if fixed_preset else ["/ebook", "/printer", "/screen"]
+        preset_sequence = [fixed_preset] if fixed_preset else ["/ebook"]
 
         gs_ok = False
         for preset in preset_sequence:
