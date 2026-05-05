@@ -2755,7 +2755,7 @@ function App() {
     genericToolEstimateSec - genericToolElapsedSec,
   );
   const genericToolPercent = Math.min(
-    97,
+    99,
     Math.max(
       2,
       Math.round(

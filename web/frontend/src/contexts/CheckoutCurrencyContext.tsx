@@ -125,15 +125,14 @@ function mergeGeoAndHints(geo: string | null): CheckoutCurrency {
 
 type Ctx = {
   currency: CheckoutCurrency;
+  loading: boolean;
 };
 
 const CheckoutCurrencyContext = createContext<Ctx | null>(null);
 
 export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) {
-  /** Avoid USD flash for TR users before IP resolves — hints run synchronously after mount. */
-  const [currency, setCurrency] = useState<CheckoutCurrency>(() =>
-    typeof window !== "undefined" ? inferCurrencyFromClientHints() : "TRY",
-  );
+  const [currency, setCurrency] = useState<CheckoutCurrency>("USD");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +142,12 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     void fetchCountryFromIp().then((cc) => {
       if (!cancelled) {
         setCurrency(mergeGeoAndHints(cc));
+        setLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setCurrency("USD");
+        setLoading(false);
       }
     });
     return () => {
@@ -150,15 +155,14 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     };
   }, []);
 
-  const value = useMemo(() => ({ currency }), [currency]);
+  const value = useMemo(() => ({ currency, loading }), [currency, loading]);
 
   return <CheckoutCurrencyContext.Provider value={value}>{children}</CheckoutCurrencyContext.Provider>;
 }
 
+const _FALLBACK_CTX: Ctx = { currency: "USD", loading: false };
+
 export function useCheckoutCurrency(): Ctx {
   const v = useContext(CheckoutCurrencyContext);
-  if (!v) {
-    throw new Error("useCheckoutCurrency requires CheckoutCurrencyProvider");
-  }
-  return v;
+  return v ?? _FALLBACK_CTX;
 }

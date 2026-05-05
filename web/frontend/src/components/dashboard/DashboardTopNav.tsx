@@ -35,10 +35,10 @@ function LanguageDropdown({
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("mouseup", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("mouseup", onDoc);
       document.removeEventListener("keydown", onKey);
     };
   }, []);
@@ -84,7 +84,7 @@ function LanguageDropdown({
                     ? "bg-nb-primary/15 text-nb-accent"
                     : "text-nb-text hover:bg-white/[0.06]"
                 }`}
-                onClick={() => {
+                onMouseDown={() => {
                   onLanguageChange(opt.code);
                   setOpen(false);
                 }}

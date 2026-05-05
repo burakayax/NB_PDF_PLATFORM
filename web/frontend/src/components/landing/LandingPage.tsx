@@ -230,7 +230,7 @@ function Navbar({
                 {(["tr", "en"] as Language[]).map((l) => (
                   <button
                     key={l}
-                    onClick={() => {
+                    onMouseDown={() => {
                       onLanguageChange(l);
                       setLangOpen(false);
                     }}
