@@ -263,5 +263,6 @@ export async function getQuotaSummary(userId: string) {
     watermarkEnabled: org.watermarkEnabled,
     batchLimit: org.batchLimit,
     fileSizeLimitMB: org.fileSizeLimitMB,
+    isAdmin: user.role === "ADMIN",
   };
 }

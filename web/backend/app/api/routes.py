@@ -587,7 +587,11 @@ async def compress_pdf(
         def _compress_and_store() -> Any:
             engine.compress_pdf(sp, out_str, password=pwd, quality=q)
             outp = Path(out_str)
-            thumb = generate_blurred_pdf_thumbnail_from_path(outp)
+            thumb = None
+            try:
+                thumb = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb = None
             return save_result_from_file(
                 outp,
                 outp.name,
@@ -605,6 +609,125 @@ async def compress_pdf(
             "mime": handle.mime,
             "size_bytes": handle.size_bytes,
             "has_thumbnail": handle.has_thumbnail,
+            "saasGating": _saas_gating_from_check(decision),
+        }
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+_BATCH_ALLOWED_TOOLS = frozenset({
+    "compress",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "word-to-pdf",
+    "excel-to-pdf",
+    "encrypt",
+})
+
+
+@router.post("/batch")
+async def batch_process(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    files: list[UploadFile] = File(...),
+    tool_type: str = Form(...),
+    password: str = Form(default=""),
+    quality: str = Form(default="auto"),
+    user_password: str = Form(default=""),
+    input_password: str = Form(default=""),
+):
+    """Birden fazla dosyayı aynı araçla işle; sonuçları ZIP olarak döndür."""
+    tool_type = tool_type.strip().lower()
+    if tool_type not in _BATCH_ALLOWED_TOOLS:
+        raise HTTPException(status_code=400, detail=f"Toplu işlem için desteklenmeyen araç: {tool_type}")
+    if len(files) < 2:
+        raise HTTPException(status_code=400, detail="Toplu işlem için en az 2 dosya gerekli.")
+    if len(files) > 50:
+        raise HTTPException(status_code=400, detail="En fazla 50 dosya toplu işlenebilir.")
+
+    decision = await entitlement_check(token, tool_type, file_count=len(files))
+    if not decision.get("allowed"):
+        raise HTTPException(
+            status_code=402,
+            detail=decision.get("reason", "batch_not_allowed"),
+        )
+
+    user_id = await saas_current_user_id(token)
+    pwd = password.strip() or None
+    q = quality if quality in ("auto", "low", "medium", "high") else "auto"
+    u_pwd = user_password.strip()
+    i_pwd = input_password.strip() or None
+
+    workdir = create_workdir()
+    try:
+        output_paths: list[tuple[Path, str]] = []
+
+        for idx, upload in enumerate(files):
+            orig_name = Path(upload.filename or f"file_{idx}.pdf").name
+            unique_name = f"{idx:04d}__{orig_name}"
+            saved = await save_upload(upload, workdir, filename=unique_name)
+            sp = str(saved)
+
+            def _process_one(sp=sp, orig_name=orig_name, idx=idx) -> tuple[Path, str]:
+                if tool_type == "compress":
+                    out_name = format_derived_filename(orig_name, "Sıkıştırılmış", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.compress_pdf(sp, str(out_path), password=pwd, quality=q)
+                    return out_path, out_name
+                elif tool_type == "pdf-to-word":
+                    out_name = format_derived_filename(orig_name, "Word", "docx")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.pdf_to_word(sp, str(out_path), password=pwd)
+                    return out_path, out_name
+                elif tool_type == "pdf-to-excel":
+                    out_name = format_derived_filename(orig_name, "Excel", "xlsx")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.pdf_text_to_excel(sp, str(out_path), preserve_tables=True, password=pwd)
+                    return out_path, out_name
+                elif tool_type == "word-to-pdf":
+                    out_name = format_derived_filename(orig_name, "PDF", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.word_to_pdf(sp, str(out_path))
+                    return out_path, out_name
+                elif tool_type == "excel-to-pdf":
+                    out_name = format_derived_filename(orig_name, "PDF", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.excel_to_pdf(sp, str(out_path))
+                    return out_path, out_name
+                elif tool_type == "encrypt":
+                    if not u_pwd:
+                        raise ValueError("Şifrelemek için çıktı parolası gerekli.")
+                    out_name = format_derived_filename(orig_name, "Şifreli", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.encrypt_pdf(sp, str(out_path), user_password=u_pwd, input_password=i_pwd)
+                    return out_path, out_name
+                raise ValueError(f"Bilinmeyen araç: {tool_type}")
+
+            result_path, result_name = await run_cpu_bound(_process_one)
+            output_paths.append((result_path, result_name))
+
+        zip_name = f"toplu_{tool_type.replace('-', '_')}.zip"
+        zip_path = create_zip_archive(workdir / zip_name, [p for p, _ in output_paths])
+
+        def _store_zip():
+            return save_result_from_file(
+                zip_path,
+                zip_path.name,
+                "application/zip",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool=f"batch-{tool_type}",
+            )
+
+        handle = await run_cpu_bound(_store_zip)
+        return {
+            "result_id": handle.result_id,
+            "filename": handle.filename,
+            "mime": handle.mime,
+            "size_bytes": handle.size_bytes,
+            "has_thumbnail": False,
             "saasGating": _saas_gating_from_check(decision),
         }
     except Exception as error:

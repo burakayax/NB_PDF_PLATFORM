@@ -8,6 +8,7 @@ interface QuotaSummary {
   watermarkEnabled: boolean;
   batchLimit: number;
   fileSizeLimitMB: number;
+  isAdmin?: boolean;
 }
 
 function ProgressBar({ value, max, warn }: { value: number; max: number; warn: boolean }) {
@@ -152,6 +153,11 @@ export function QuotaWidget({
 
       {/* Metadata chips */}
       <div className="flex flex-wrap gap-1.5 pt-1">
+        {quota.isAdmin && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-medium">
+            Admin
+          </span>
+        )}
         {quota.batchLimit > 0 && (
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
             {tr ? `Toplu: ${quota.batchLimit} dosya` : `Batch: ${quota.batchLimit} files`}

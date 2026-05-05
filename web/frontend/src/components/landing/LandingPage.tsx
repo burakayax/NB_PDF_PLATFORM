@@ -142,6 +142,19 @@ function Navbar({
   const tr = language === "tr";
   const copy = landingTranslations[language];
   const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) {
+        setLangOpen(false);
+      }
+    }
+    if (langOpen) {
+      document.addEventListener("mouseup", onDoc);
+    }
+    return () => document.removeEventListener("mouseup", onDoc);
+  }, [langOpen]);
 
   return (
     <header
@@ -202,10 +215,9 @@ function Navbar({
         {/* Right */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Language */}
-          <div className="relative" onMouseLeave={() => setLangOpen(false)}>
+          <div className="relative" ref={langRef}>
             <button
-              onClick={() => setLangOpen(!langOpen)}
-              onMouseEnter={() => setLangOpen(true)}
+              onClick={() => setLangOpen((o) => !o)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-white/10 bg-white/5 text-xs font-semibold text-gray-300 hover:bg-white/10 transition-all"
               aria-label={tr ? "Dil seçimi" : "Language"}
             >
@@ -230,7 +242,8 @@ function Navbar({
                 {(["tr", "en"] as Language[]).map((l) => (
                   <button
                     key={l}
-                    onMouseDown={() => {
+                    onMouseDown={(e) => {
+                      e.preventDefault();
                       onLanguageChange(l);
                       setLangOpen(false);
                     }}
