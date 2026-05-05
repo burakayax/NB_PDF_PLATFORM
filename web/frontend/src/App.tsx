@@ -163,14 +163,9 @@ const LegalPage = lazy(() =>
     default: module.LegalPage,
   })),
 );
-const UpgradeModal = lazy(() =>
-  import("./components/ui/upgrade-modal").then((module) => ({
-    default: module.UpgradeModal,
-  })),
-);
-const PricingPage = lazy(() =>
-  import("./components/pricing/PricingPage").then((module) => ({
-    default: module.PricingPage,
+const PlanUpgradeModal = lazy(() =>
+  import("./components/dashboard/PlanUpgradeModal").then((module) => ({
+    default: module.PlanUpgradeModal,
   })),
 );
 
@@ -1256,13 +1251,7 @@ function App() {
     if (!gd || (!gd.resultId && !gd.mergeJobId)) {
       return;
     }
-    const costRaw = gd.saasGating?.cost;
-    const requiredCredits = Math.max(
-      1,
-      typeof costRaw === "number" && Number.isFinite(costRaw)
-        ? Math.trunc(costRaw)
-        : 1,
-    );
+    const requiredCredits = 1;
     const payload: NbResumeProcessV1 = {
       v: 1,
       userId: user.id,
@@ -2673,8 +2662,8 @@ function App() {
     uploads.some((u) => u.inspecting) &&
     pdfInspectionFeatures.includes(selectedFeatureId);
   const limitsizProActive = useMemo(
-    () => isLimitsizProUnlimited(null),
-    [],
+    () => isLimitsizProUnlimited(userBalance),
+    [userBalance],
   );
   const premiumProcessingLane = Boolean(
     user?.role === "ADMIN" ||
@@ -4363,11 +4352,10 @@ function App() {
         />
 
         <Suspense fallback={null}>
-          <UpgradeModal
+          <PlanUpgradeModal
             open={upgradeModalOpen}
             onClose={() => setUpgradeModalOpen(false)}
             language={language}
-            currentPlan={user?.plan}
             accessToken={accessToken ?? undefined}
             user={user}
             updateProfile={updateProfile}
@@ -4498,6 +4486,7 @@ function App() {
           user={user}
           language={language}
           onLanguageChange={(lang) => void handleLanguageChange(lang)}
+          plan={user?.role !== "ADMIN" ? (userBalance?.plan ?? null) : undefined}
           creditBalance={user?.role !== "ADMIN" ? (userBalance?.creditBalance ?? null) : undefined}
           creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
@@ -4560,12 +4549,13 @@ function App() {
 
             {contentPanel === "pricing" && accessToken && user ? (
               <Suspense fallback={null}>
-                <PricingPage
+                <PlanUpgradeModal
+                  open={true}
+                  onClose={() => setContentPanel("subscription")}
                   language={language}
                   accessToken={accessToken}
                   user={user}
                   updateProfile={updateProfile}
-                  onBack={() => setContentPanel("subscription")}
                   showToast={showToast}
                   onOpenTerms={() => openLegalPage("terms")}
                   onOpenKvkk={() => openLegalPage("kvkk")}

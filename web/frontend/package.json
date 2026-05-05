@@ -23,6 +23,7 @@
     "framer-motion": "^12.38.0",
     "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.460.0",
+    "motion": "^12.38.0",
     "pdfjs-dist": "^4.10.38",
     "react": "latest",
     "react-dom": "latest",

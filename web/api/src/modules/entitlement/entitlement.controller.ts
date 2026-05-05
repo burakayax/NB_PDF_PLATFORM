@@ -76,8 +76,10 @@ export async function entitlementConsumeController(
   const quotaCheck = await checkQuota(userId, toolId, fileCount, totalSizeMB);
   if (!quotaCheck.allowed) {
     response.status(200).json({
+      status: "denied",
       allowed: false,
       reason: quotaCheck.reason,
+      transactionId: null,
       cost: 0,
       creditsBefore: 0,
       creditsAfter: 0,
@@ -90,8 +92,10 @@ export async function entitlementConsumeController(
   const summary = await getQuotaSummary(userId);
 
   response.status(200).json({
+    status: "ok",
     allowed: true,
     reason: "quota_available",
+    transactionId: null,
     cost: 0,
     creditsBefore: 0,
     creditsAfter: 0,

@@ -1,4 +1,5 @@
 import type { AuthUser } from "../../api/auth";
+import type { PlanName } from "../../api/entitlement";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
@@ -108,7 +109,9 @@ type DashboardTopNavProps = {
   user: AuthUser;
   language: Language;
   onLanguageChange: (language: Language) => void;
-  /** Credit snapshot for navbar chip; omit for ADMIN or before balance loads. */
+  /** Current plan name from entitlement balance. */
+  plan?: PlanName | null;
+  /** Remaining ops / credit balance for the chip. */
   creditBalance?: number | null;
   creditBalanceLoading?: boolean;
   hasActiveSubscription?: boolean;
@@ -129,6 +132,7 @@ export function DashboardTopNav({
   user,
   language,
   onLanguageChange,
+  plan,
   creditBalance,
   creditBalanceLoading,
   hasActiveSubscription,
@@ -154,25 +158,28 @@ export function DashboardTopNav({
   }, [cms]);
   const showCreditsCenter =
     user.role !== "ADMIN" &&
-    (creditBalanceLoading || typeof creditBalance === "number");
+    (creditBalanceLoading || typeof creditBalance === "number" || plan != null);
   const upgradeVisible = Boolean(
-    onUpgradeClick && showCreditsCenter && !limitsizProActive,
+    onUpgradeClick &&
+    showCreditsCenter &&
+    !limitsizProActive &&
+    plan !== "PRO" &&
+    plan !== "BUSINESS",
   );
   const creditsPanelVisible = Boolean(
     onOpenCreditsPanel && user.role !== "ADMIN",
   );
 
   const centerLabel = () => {
-    if (creditBalanceLoading) {
-      return "…";
-    }
-    if (limitsizProActive) {
-      return W.unlimitedAccessActive;
-    }
-    if (hasActiveSubscription && !limitsizProActive) {
-      return W.usageUnlimited;
-    }
-    return `${W.navbarCreditsLabel}: ${(creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US")}`;
+    if (creditBalanceLoading) return "…";
+    if (limitsizProActive) return W.unlimitedAccessActive;
+    if (plan === "BUSINESS") return tr ? "Business Planı" : "Business Plan";
+    if (plan === "PRO") return tr ? "Pro Planı" : "Pro Plan";
+    if (plan === "PLUS") return tr ? "Plus Planı" : "Plus Plan";
+    if (hasActiveSubscription) return W.usageUnlimited;
+    // FREE plan – show remaining ops count
+    const ops = (creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US");
+    return tr ? `Ücretsiz · ${ops} işlem kaldı` : `Free · ${ops} ops left`;
   };
 
   return (
@@ -196,9 +203,6 @@ export function DashboardTopNav({
           <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">
             PDF PLATFORM
           </span>
-        </span>
-        <span className="max-w-[140px] truncate text-sm font-semibold tracking-wide text-nb-text sm:hidden">
-          NB PDF
         </span>
       </button>
 

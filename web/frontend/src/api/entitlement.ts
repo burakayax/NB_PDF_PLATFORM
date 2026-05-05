@@ -2,7 +2,7 @@ import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 
-export type PlanName = "FREE" | "PRO" | "BUSINESS";
+export type PlanName = "FREE" | "PLUS" | "PRO" | "BUSINESS";
 export type SubscriptionStatus =
   | "none"
   | "active"
