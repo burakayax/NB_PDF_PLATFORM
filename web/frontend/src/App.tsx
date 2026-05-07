@@ -37,7 +37,6 @@ import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
 import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
-import { DownloadFilenameModal } from "./components/common/DownloadFilenameModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
@@ -664,13 +663,6 @@ function App() {
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
-  const [downloadModalOpen, setDownloadModalOpen] = useState(false);
-  const [downloadModalTarget, setDownloadModalTarget] = useState<{
-    resultId?: string;
-    mergeJobId?: string;
-    fallbackName: string;
-    toolId: FeatureKey;
-  } | null>(null);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
   const [batchFiles, setBatchFiles] = useState<File[]>([]);
@@ -1604,8 +1596,9 @@ function App() {
 
   async function onFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(event.target.files ?? []);
+    const inputElement = event.currentTarget;
     await handleNewFiles(selectedFiles);
-    event.currentTarget.value = "";
+        event.currentTarget.value = "";
   }
 
   function triggerFilePicker() {
@@ -1758,13 +1751,17 @@ function App() {
     ],
   );
 
-  const queueGatedDownload = useCallback(
-    (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      setDownloadModalTarget({ resultId, fallbackName, toolId });
-      setDownloadModalOpen(true);
-    },
-    [],
-  );
+const queueGatedDownload = useCallback(
+  (resultId: string, fallbackName: string, toolId: FeatureKey) => {
+    void runGatedDownloadWithFilename(
+      resultId,
+      fallbackName,
+      fallbackName,
+      toolId
+    );
+  },
+  [runGatedDownloadWithFilename],
+);
 
   /** Merge indirmesi: GET başında sunucu ``entitlement_consume`` (merge maliyeti). */
   const runMergeJobGatedDownloadWithFilename = useCallback(
@@ -1849,13 +1846,16 @@ function App() {
     ],
   );
 
-  const queueMergeGatedDownload = useCallback(
-    (jobId: string, fallbackName: string) => {
-      setDownloadModalTarget({ mergeJobId: jobId, fallbackName, toolId: "merge" as FeatureKey });
-      setDownloadModalOpen(true);
-    },
-    [],
-  );
+const queueMergeGatedDownload = useCallback(
+  (jobId: string, fallbackName: string) => {
+    void runMergeJobGatedDownloadWithFilename(
+      jobId,
+      fallbackName,
+      fallbackName
+    );
+  },
+  [runMergeJobGatedDownloadWithFilename],
+);
 
   const openConversionUpgradeModalManual = useCallback(() => {
     setUpgradeModalOpen(true);
@@ -3666,6 +3666,29 @@ function App() {
           /* noop */
         }
       }
+      // Windows save dialog aç
+const handle = await (window as any).showSaveFilePicker?.({
+  suggestedName: selectedFeature.fallbackFilename,
+  types: [
+    {
+      description: "PDF Files",
+      accept: { "application/pdf": [".pdf"] },
+    },
+  ],
+});
+
+if (!handle) {
+  // Kullanıcı iptal etti
+  return;
+}
+      // İndirme success bar'ını göster
+setToolProgressSuccess({
+  filename: selectedFeature.fallbackFilename,
+  featureTitle: selectedFeature.title,
+    replay: () => {
+    // Dosya zaten indirildi, sadece başarı mesajı göster
+  },
+});
       applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       showToast(
         "success",
@@ -4418,27 +4441,6 @@ function App() {
           changePassword={changePassword}
           setInitialPassword={setInitialPassword}
           showToast={showToast}
-        />
-
-        <DownloadFilenameModal
-          open={downloadModalOpen}
-          defaultName={sanitizeDownloadBasename(
-            downloadModalTarget?.fallbackName ?? "download.pdf",
-            "download.pdf",
-          )}
-          language={language}
-          onCancel={() => setDownloadModalOpen(false)}
-          onConfirm={(filename) => {
-            setDownloadModalOpen(false);
-            const t = downloadModalTarget;
-            if (!t) return;
-            if (t.mergeJobId) {
-              void runMergeJobGatedDownloadWithFilename(t.mergeJobId, t.fallbackName, filename);
-            } else if (t.resultId) {
-              void runGatedDownloadWithFilename(t.resultId, t.fallbackName, filename, t.toolId);
-            }
-            setDownloadModalTarget(null);
-          }}
         />
 
         <Suspense fallback={null}>
@@ -5819,7 +5821,7 @@ function App() {
                 >
                   <span className="tool-success-shell__meter-fill" />
                 </div>
-                {toolProgressSuccess.gatedDownload ? (
+                {toolProgressSuccess?.gatedDownload ? (
                   <SaasGatedPreview
                     gating={
                       toolProgressSuccess.gatedDownload.saasGating ?? null
@@ -5881,7 +5883,7 @@ function App() {
                     onDismiss={dismissToolSuccessBar}
                     dismissLabel={W.toolProgressDismiss}
                   />
-                ) : (
+                ) :(
                   <div className="merge-progress-fixed__success-actions">
                     {toolProgressSuccess.replay ? (
                       <button

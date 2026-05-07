@@ -76,7 +76,7 @@ export function saasGatingCopy(
   language: Language,
 ): SaaSGatingCopy {
   const reason: SaaSGatingReason = state.reason ?? "plan_allows";
-  const reasonCopy = REASON_COPY[reason];
+  const reasonCopy = REASON_COPY[reason] ?? REASON_COPY["plan_allows"];
   const actionLabel = pick(ACTION_LABELS[state.action], language);
 
   const remainingOpsLabel =
