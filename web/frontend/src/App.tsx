@@ -105,6 +105,7 @@ import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
+import { PLANS } from "./lib/planConfig";
 import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
   SESSION_POST_OAUTH_REDIRECT_KEY,
@@ -1598,7 +1599,7 @@ function App() {
     const selectedFiles = Array.from(event.target.files ?? []);
     const inputElement = event.currentTarget;
     await handleNewFiles(selectedFiles);
-        event.currentTarget.value = "";
+    event.currentTarget.value = "";
   }
 
   function triggerFilePicker() {
@@ -1625,10 +1626,16 @@ function App() {
       userId: user.id,
       role: user.role === "ADMIN" ? "ADMIN" : "USER",
     })
-      .then((b) => { if (!cancelled) setUserBalance(b); })
+      .then((b) => {
+        if (!cancelled) setUserBalance(b);
+      })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setBalanceLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setBalanceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isAuthenticated, accessToken, user?.id, user?.role]);
 
   /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
@@ -1751,17 +1758,17 @@ function App() {
     ],
   );
 
-const queueGatedDownload = useCallback(
-  (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-    void runGatedDownloadWithFilename(
-      resultId,
-      fallbackName,
-      fallbackName,
-      toolId
-    );
-  },
-  [runGatedDownloadWithFilename],
-);
+  const queueGatedDownload = useCallback(
+    (resultId: string, fallbackName: string, toolId: FeatureKey) => {
+      void runGatedDownloadWithFilename(
+        resultId,
+        fallbackName,
+        fallbackName,
+        toolId,
+      );
+    },
+    [runGatedDownloadWithFilename],
+  );
 
   /** Merge indirmesi: GET başında sunucu ``entitlement_consume`` (merge maliyeti). */
   const runMergeJobGatedDownloadWithFilename = useCallback(
@@ -1846,16 +1853,16 @@ const queueGatedDownload = useCallback(
     ],
   );
 
-const queueMergeGatedDownload = useCallback(
-  (jobId: string, fallbackName: string) => {
-    void runMergeJobGatedDownloadWithFilename(
-      jobId,
-      fallbackName,
-      fallbackName
-    );
-  },
-  [runMergeJobGatedDownloadWithFilename],
-);
+  const queueMergeGatedDownload = useCallback(
+    (jobId: string, fallbackName: string) => {
+      void runMergeJobGatedDownloadWithFilename(
+        jobId,
+        fallbackName,
+        fallbackName,
+      );
+    },
+    [runMergeJobGatedDownloadWithFilename],
+  );
 
   const openConversionUpgradeModalManual = useCallback(() => {
     setUpgradeModalOpen(true);
@@ -1940,10 +1947,12 @@ const queueMergeGatedDownload = useCallback(
     }
     const url = new URL(window.location.href);
     const payment = url.searchParams.get("payment");
+    const plan = url.searchParams.get("plan");
     if (!payment) {
       return;
     }
     url.searchParams.delete("payment");
+    url.searchParams.delete("plan");
     window.history.replaceState(
       {},
       "",
@@ -1956,12 +1965,18 @@ const queueMergeGatedDownload = useCallback(
       void (async () => {
         await refreshSession();
         await refreshSubscriptionState();
+        const planObj = plan ? PLANS.find((p) => p.id === plan) : null;
+        const planName = planObj ? (language === "tr" ? planObj.nameTr : planObj.nameEn) : null;
         showToast(
           "success",
-          language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
-          language === "tr"
-            ? "Hesabınız güncellendi."
-            : "Your account has been updated.",
+          language === "tr" ? "Paket satın alındı!" : "Plan purchased!",
+          planName
+            ? language === "tr"
+              ? `${planName} paketine hoş geldiniz.`
+              : `Welcome to ${planName}.`
+            : language === "tr"
+              ? "Hesabınız güncellendi."
+              : "Your account has been updated.",
         );
       })();
       return;
@@ -2406,7 +2421,6 @@ const queueMergeGatedDownload = useCallback(
     }
   }, [isAuthenticated, isRestoring, view]);
 
-
   /**
    * Completes redirect-based fake checkout: user lands on
    * `/fake-payment/success?sessionId=...`, we confirm server-side, refresh
@@ -2677,10 +2691,28 @@ const queueMergeGatedDownload = useCallback(
     [userBalance],
   );
   const canUseBatch = Boolean(
-    isAuthenticated && ((userBalance?.isAdmin ?? false) || (userBalance?.batchLimit ?? 0) > 0),
+    isAuthenticated &&
+    ((userBalance?.isAdmin ?? false) || (userBalance?.batchLimit ?? 0) > 0),
   );
-  const batchMaxFiles = userBalance?.isAdmin ? 50 : (userBalance?.batchLimit ?? 5);
-  const BATCHABLE_TOOLS = new Set(["compress", "pdf-to-word", "pdf-to-excel", "word-to-pdf", "excel-to-pdf", "encrypt"]);
+  const batchMaxFiles = userBalance?.isAdmin
+    ? 50
+    : (userBalance?.batchLimit ?? 5);
+  const BATCHABLE_TOOLS = new Set([
+    "compress",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "word-to-pdf",
+    "excel-to-pdf",
+    "encrypt",
+    "pdf-to-text",
+    "repair-pdf",
+    "page-numbers",
+    "watermark",
+    "image-to-pdf",
+    "pdf-to-image",
+    "ppt-to-pdf",
+    "pdf-to-ppt",
+  ]);
   const premiumProcessingLane = Boolean(
     user?.role === "ADMIN" ||
     (subscriptionSummary &&
@@ -2785,7 +2817,6 @@ const queueMergeGatedDownload = useCallback(
       ? genericToolElapsedSec < 4 || genericToolPercent < 5
       : genericToolElapsedSec < 5 || genericToolPercent < 6);
 
-
   useEffect(() => {
     if (submitting) {
       setUpgradeNudgeLoadingHidden(false);
@@ -2797,7 +2828,6 @@ const queueMergeGatedDownload = useCallback(
       setUpgradeNudgePostSuccessHidden(false);
     }
   }, [toolProgressSuccess]);
-
 
   const deleteWouldRemoveEveryPage = useMemo(() => {
     if (selectedFeature.id !== "delete-pages") {
@@ -3554,6 +3584,20 @@ const queueMergeGatedDownload = useCallback(
           batchForm.append("user_password", outputPassword.trim());
           batchForm.append("input_password", inputPassword.trim());
         }
+        if (fid === "watermark") {
+          batchForm.append("watermark_text", watermarkPhrase.trim());
+          batchForm.append("watermark_color", watermarkColor);
+          batchForm.append("watermark_font", watermarkFont);
+          batchForm.append("watermark_opacity", watermarkOpacity);
+        }
+        if (fid === "page-numbers") {
+          batchForm.append("start_at", pageNumStart.trim() || "1");
+          batchForm.append("position", pageNumPos);
+          batchForm.append("fmt", pageNumFmt);
+        }
+        if (fid === "pdf-to-image") {
+          batchForm.append("image_format", pdfToImgFmt);
+        }
 
         const res = await postToolToResult("batch", batchForm, accessToken, {
           signal: toolSignal,
@@ -3667,28 +3711,28 @@ const queueMergeGatedDownload = useCallback(
         }
       }
       // Windows save dialog aç
-const handle = await (window as any).showSaveFilePicker?.({
-  suggestedName: selectedFeature.fallbackFilename,
-  types: [
-    {
-      description: "PDF Files",
-      accept: { "application/pdf": [".pdf"] },
-    },
-  ],
-});
+      const handle = await (window as any).showSaveFilePicker?.({
+        suggestedName: selectedFeature.fallbackFilename,
+        types: [
+          {
+            description: "PDF Files",
+            accept: { "application/pdf": [".pdf"] },
+          },
+        ],
+      });
 
-if (!handle) {
-  // Kullanıcı iptal etti
-  return;
-}
+      if (!handle) {
+        // Kullanıcı iptal etti
+        return;
+      }
       // İndirme success bar'ını göster
-setToolProgressSuccess({
-  filename: selectedFeature.fallbackFilename,
-  featureTitle: selectedFeature.title,
-    replay: () => {
-    // Dosya zaten indirildi, sadece başarı mesajı göster
-  },
-});
+      setToolProgressSuccess({
+        filename: selectedFeature.fallbackFilename,
+        featureTitle: selectedFeature.title,
+        replay: () => {
+          // Dosya zaten indirildi, sadece başarı mesajı göster
+        },
+      });
       applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       showToast(
         "success",
@@ -4578,8 +4622,14 @@ setToolProgressSuccess({
           user={user}
           language={language}
           onLanguageChange={(lang) => void handleLanguageChange(lang)}
-          plan={user?.role !== "ADMIN" ? (userBalance?.plan ?? null) : undefined}
-          creditBalance={user?.role !== "ADMIN" ? (userBalance?.creditBalance ?? null) : undefined}
+          plan={
+            user?.role !== "ADMIN" ? (userBalance?.plan ?? null) : undefined
+          }
+          creditBalance={
+            user?.role !== "ADMIN"
+              ? (userBalance?.creditBalance ?? null)
+              : undefined
+          }
           creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
           limitsizProActive={limitsizProActive}
@@ -4588,9 +4638,7 @@ setToolProgressSuccess({
           onPassword={handleNavPassword}
           onLogout={() => void handleLogout()}
           onUpgradeClick={
-            limitsizProActive
-              ? undefined
-              : () => setUpgradeModalOpen(true)
+            limitsizProActive ? undefined : () => setUpgradeModalOpen(true)
           }
           onOpenCreditsPanel={
             user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined
@@ -4617,7 +4665,7 @@ setToolProgressSuccess({
           onUpgrade={() => setUpgradeModalOpen(true)}
         />
         <div
-          className={`min-h-screen bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-10"}`}
+          className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 pb-56 ${bottomToolProgressActive ? "pb-32 md:pb-36" : ""}`}
         >
           <DashboardSidebarMobileRail
             active={activeSidebar}
@@ -4764,14 +4812,15 @@ setToolProgressSuccess({
                                 <p className="text-xs text-amber-400 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
                                   {language === "tr"
                                     ? "🔒 Toplu işlem Plus ve üzeri planlarda kullanılabilir."
-                                    : "🔒 Batch processing is available on Plus and higher plans."}
-                                  {" "}
+                                    : "🔒 Batch processing is available on Plus and higher plans."}{" "}
                                   <button
                                     type="button"
                                     className="underline font-medium"
                                     onClick={() => setUpgradeModalOpen(true)}
                                   >
-                                    {language === "tr" ? "Planını Yükselt" : "Upgrade Plan"}
+                                    {language === "tr"
+                                      ? "Planını Yükselt"
+                                      : "Upgrade Plan"}
                                   </button>
                                 </p>
                               )}
@@ -5877,13 +5926,17 @@ setToolProgressSuccess({
                         return;
                       }
                       if (gd.resultId) {
-                        queueGatedDownload(gd.resultId, gd.fallbackName, gd.toolId);
+                        queueGatedDownload(
+                          gd.resultId,
+                          gd.fallbackName,
+                          gd.toolId,
+                        );
                       }
                     }}
                     onDismiss={dismissToolSuccessBar}
                     dismissLabel={W.toolProgressDismiss}
                   />
-                ) :(
+                ) : (
                   <div className="merge-progress-fixed__success-actions">
                     {toolProgressSuccess.replay ? (
                       <button

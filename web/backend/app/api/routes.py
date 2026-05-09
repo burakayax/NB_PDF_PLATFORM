@@ -625,6 +625,14 @@ _BATCH_ALLOWED_TOOLS = frozenset({
     "word-to-pdf",
     "excel-to-pdf",
     "encrypt",
+    "pdf-to-text",
+    "repair-pdf",
+    "page-numbers",
+    "watermark",
+    "image-to-pdf",
+    "pdf-to-image",
+    "ppt-to-pdf",
+    "pdf-to-ppt",
 })
 
 
@@ -637,6 +645,14 @@ async def batch_process(
     quality: str = Form(default="auto"),
     user_password: str = Form(default=""),
     input_password: str = Form(default=""),
+    watermark_text: str = Form(default=""),
+    watermark_color: str = Form(default="#000000"),
+    watermark_font: str = Form(default="helv"),
+    watermark_opacity: str = Form(default="0.5"),
+    start_at: str = Form(default="1"),
+    position: str = Form(default="bottom-right"),
+    fmt: str = Form(default="numeric"),
+    image_format: str = Form(default="png"),
 ):
     """Birden fazla dosyayı aynı araçla işle; sonuçları ZIP olarak döndür."""
     tool_type = tool_type.strip().lower()
@@ -659,6 +675,16 @@ async def batch_process(
     q = quality if quality in ("auto", "low", "medium", "high") else "auto"
     u_pwd = user_password.strip()
     i_pwd = input_password.strip() or None
+
+    wm_text = watermark_text.strip()
+    wm_color = watermark_color.strip() or "#000000"
+    wm_font = watermark_font.strip() or "helv"
+    wm_opacity = watermark_opacity.strip() or "0.5"
+
+    page_start = start_at.strip() or "1"
+    page_pos = position.strip() or "bottom-right"
+    page_fmt = fmt.strip() or "numeric"
+    img_fmt = image_format.strip() or "png"
 
     workdir = create_workdir()
     try:
@@ -702,6 +728,46 @@ async def batch_process(
                     out_name = format_derived_filename(orig_name, "Şifreli", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
                     engine.encrypt_pdf(sp, str(out_path), user_password=u_pwd, input_password=i_pwd)
+                    return out_path, out_name
+                elif tool_type == "pdf-to-text":
+                    out_name = format_derived_filename(orig_name, "Metin", "txt")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.pdf_to_text(sp, str(out_path), password=pwd)
+                    return out_path, out_name
+                elif tool_type == "repair-pdf":
+                    out_name = format_derived_filename(orig_name, "Onarılmış", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.repair_pdf(sp, str(out_path), password=pwd)
+                    return out_path, out_name
+                elif tool_type == "page-numbers":
+                    out_name = format_derived_filename(orig_name, "Numaralı", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.add_page_numbers(sp, str(out_path), start=int(page_start), position=page_pos, fmt=page_fmt, password=pwd)
+                    return out_path, out_name
+                elif tool_type == "watermark":
+                    out_name = format_derived_filename(orig_name, "Filigran", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.add_watermark_text(sp, str(out_path), watermark_text=wm_text, watermark_color=wm_color, font_name=wm_font, opacity=float(wm_opacity), password=pwd)
+                    return out_path, out_name
+                elif tool_type == "image-to-pdf":
+                    out_name = format_derived_filename(orig_name, "PDF", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.image_to_pdf(sp, str(out_path))
+                    return out_path, out_name
+                elif tool_type == "pdf-to-image":
+                    out_name = format_derived_filename(orig_name, "Görüntü", img_fmt)
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.pdf_to_image(sp, str(out_path), image_format=img_fmt, password=pwd)
+                    return out_path, out_name
+                elif tool_type == "ppt-to-pdf":
+                    out_name = format_derived_filename(orig_name, "PDF", "pdf")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.ppt_to_pdf(sp, str(out_path))
+                    return out_path, out_name
+                elif tool_type == "pdf-to-ppt":
+                    out_name = format_derived_filename(orig_name, "PowerPoint", "pptx")
+                    out_path = workdir / f"{idx:04d}_{out_name}"
+                    engine.pdf_to_ppt(sp, str(out_path), password=pwd)
                     return out_path, out_name
                 raise ValueError(f"Bilinmeyen araç: {tool_type}")
 
