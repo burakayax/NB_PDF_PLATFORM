@@ -436,6 +436,24 @@ textarea {
   margin-bottom: 20px;
 }
 
+@media (max-width: 640px) {
+  .workspace-card,
+  .notes-card {
+    padding: 14px 12px;
+    margin-bottom: 12px;
+  }
+
+  .workspace-card__header {
+    margin-bottom: 12px;
+    gap: 10px;
+  }
+
+  .workspace-card__header h1,
+  .workspace-card__header h2 {
+    font-size: 15px !important;
+  }
+}
+
 .workspace-card__header {
   display: flex;
   justify-content: space-between;

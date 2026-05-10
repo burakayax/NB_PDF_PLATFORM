@@ -171,7 +171,13 @@ const PlanUpgradeModal = lazy(() =>
   })),
 );
 
-type ContentPanel = "tool" | "subscription" | "profile" | "pricing";
+const DashboardLayout = lazy(() =>
+  import("./components/dashboard/DashboardLayout").then((module) => ({
+    default: module.DashboardLayout,
+  })),
+);
+
+type ContentPanel = "tool" | "subscription" | "profile" | "pricing" | "home";
 
 type ToastState = {
   type: ToastType;
@@ -653,7 +659,7 @@ function App() {
       ? readInitialWorkspaceToolSelection(window.location.pathname)
       : "split",
   );
-  const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
+  const [contentPanel, setContentPanel] = useState<ContentPanel>("home");
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>("split");
   const [submitting, setSubmitting] = useState(false);
   const [authSubmitting, setAuthSubmitting] = useState(false);
@@ -1176,7 +1182,7 @@ function App() {
         return;
       }
 
-      url.pathname = workspacePathForFeature("split");
+      url.pathname = "/workspace";
       window.history.replaceState(
         {},
         "",
@@ -1184,7 +1190,7 @@ function App() {
       );
       setSelectedFeatureId("split");
       setActiveSidebar("split");
-      setContentPanel("tool");
+      setContentPanel("home");
       setView("web");
     },
     [logout],
@@ -3028,8 +3034,14 @@ function App() {
 
   function handleDashboardLogoClick() {
     if (view === "admin") {
+      setContentPanel("home");
       setView("web");
-      window.history.replaceState({}, "", workspacePathForFeature("split"));
+      window.history.replaceState({}, "", "/workspace");
+      return;
+    }
+    if (view === "web") {
+      setContentPanel("home");
+      window.history.replaceState({}, "", "/workspace");
       return;
     }
     setView("landing");
@@ -3110,9 +3122,9 @@ function App() {
 
       setSelectedFeatureId("split");
       setActiveSidebar("split");
-      setContentPanel("tool");
+      setContentPanel("home");
       setView("web");
-      window.history.replaceState({}, "", workspacePathForFeature("split"));
+      window.history.replaceState({}, "", "/workspace");
 
       const pendingPlan = sessionStorage.getItem("nb_pending_plan");
       if (pendingPlan) {
@@ -4259,6 +4271,8 @@ function App() {
     );
   }
 
+
+
   if (isRestoring) {
     return (
       <>
@@ -4656,23 +4670,8 @@ function App() {
             {workspaceBanner.text}
           </div>
         ) : null}
-        <DashboardSidebar
-          active={activeSidebar}
-          onSelect={handleSidebarSelect}
-          language={language}
-          lockedFeatures={lockedFeatures}
-          userRole={user?.role}
-          enabledToolIds={enabledToolIds}
-          resolveToolLabel={resolveToolLabel}
-          limitsizProActive={limitsizProActive}
-          onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
-          accessToken={accessToken}
-          onUpgrade={() => setUpgradeModalOpen(true)}
-        />
-        <div
-          className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 pb-56 ${bottomToolProgressActive ? "pb-32 md:pb-36" : ""}`}
-        >
-          <DashboardSidebarMobileRail
+        {contentPanel !== "home" && (
+          <DashboardSidebar
             active={activeSidebar}
             onSelect={handleSidebarSelect}
             language={language}
@@ -4680,8 +4679,46 @@ function App() {
             userRole={user?.role}
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
+            limitsizProActive={limitsizProActive}
+            onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
+            accessToken={accessToken}
+            onUpgrade={() => setUpgradeModalOpen(true)}
           />
-          <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
+        )}
+        <div
+          className={contentPanel === "home" ? "min-h-screen w-full bg-nb-bg" : `min-h-screen w-full bg-nb-bg pt-14 md:pl-60 pb-56 ${bottomToolProgressActive ? "pb-32 md:pb-36" : ""}`}
+        >
+          {contentPanel === "home" && user ? (
+            <Suspense fallback={<div className="min-h-screen bg-nb-bg" />}>
+              <DashboardLayout
+                user={user}
+                language={language}
+                userBalance={userBalance}
+                lockedFeatures={lockedFeatures}
+                enabledToolIds={enabledToolIds}
+                selectedTool={activeSidebar}
+                onSelectTool={handleSidebarSelect}
+                accessToken={accessToken}
+                limitsizProActive={limitsizProActive}
+                onUpgrade={() => setUpgradeModalOpen(true)}
+                onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
+                onOpenSettings={handleNavProfile}
+                resolveToolLabel={resolveToolLabel}
+              />
+            </Suspense>
+          ) : null}
+          {contentPanel !== "home" && (
+            <DashboardSidebarMobileRail
+              active={activeSidebar}
+              onSelect={handleSidebarSelect}
+              language={language}
+              lockedFeatures={lockedFeatures}
+              userRole={user?.role}
+              enabledToolIds={enabledToolIds}
+              resolveToolLabel={resolveToolLabel}
+            />
+          )}
+          <div className={contentPanel === "home" ? "hidden" : "mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6"}>
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
                 <QuotaWidget
@@ -4722,6 +4759,21 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
+                <div className="mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setContentPanel("home");
+                      window.history.replaceState({}, "", "/workspace");
+                    }}
+                    className="nb-transition inline-flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-nb-panel/60 px-3 py-1.5 text-sm font-medium text-nb-muted hover:border-white/[0.2] hover:text-nb-text"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {language === "tr" ? "Ana Sayfa" : "Dashboard"}
+                  </button>
+                </div>
                 <section className="workspace-card relative overflow-x-hidden">
                   <div className="workspace-card__header">
                     <div>
