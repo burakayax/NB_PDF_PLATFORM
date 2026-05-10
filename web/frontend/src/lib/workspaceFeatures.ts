@@ -59,6 +59,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🗜",
     endpoint: "compress",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sıkıştırılmış.pdf",
   },
   {
@@ -66,6 +67,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📝",
     endpoint: "pdf-to-word",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "çıktı.docx",
   },
   {
@@ -73,6 +75,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🧾",
     endpoint: "word-to-pdf",
     accept: ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
@@ -80,6 +83,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📊",
     endpoint: "excel-to-pdf",
     accept: ".xlsx,.xlsm,.xltx,.xltm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
@@ -87,6 +91,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📈",
     endpoint: "pdf-to-excel",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "çıktı.xlsx",
   },
   {
@@ -94,6 +99,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📽",
     endpoint: "pdf-to-ppt",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sunum.pptx",
   },
   {
@@ -101,6 +107,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📊",
     endpoint: "ppt-to-pdf",
     accept: ".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
@@ -108,6 +115,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🖼",
     endpoint: "pdf-to-image",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sayfalar.zip",
   },
   {
@@ -138,6 +146,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "💧",
     endpoint: "watermark",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "filigranlı.pdf",
   },
   {
@@ -145,6 +154,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "#",
     endpoint: "page-numbers",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "numaralı.pdf",
   },
   {
@@ -152,6 +162,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🩹",
     endpoint: "repair-pdf",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "onarılmış.pdf",
   },
   {
@@ -159,6 +170,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🔒",
     endpoint: "encrypt",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "şifreli.pdf",
   },
   {
@@ -166,6 +178,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📋",
     endpoint: "pdf-to-text",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "metin.txt",
   },
   {
@@ -173,6 +186,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🧹",
     endpoint: "flatten-pdf",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "düzleştirilmiş.pdf",
   },
 ];

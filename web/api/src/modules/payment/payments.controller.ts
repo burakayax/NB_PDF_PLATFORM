@@ -7,28 +7,32 @@ import { getPublicTierPricingRows } from "./payment-pricing-tiers.js";
 import { isCheckoutCurrency, type CheckoutCurrency } from "./pricing-matrix.js";
 
 const planPaymentBodySchema = z.object({
-  planId: z.enum(["PLUS", "PRO", "BUSINESS"]),
+  planId: z.enum(["STARTER", "PLUS", "PRO", "BUSINESS"]),
   currency: z.enum(["TRY", "USD"]).optional().default("TRY"),
+  billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional().default("MONTHLY"),
 });
 
-/** TRY prices matching planConfig.ts */
-const PLAN_PRICES_TRY: Record<"PLUS" | "PRO" | "BUSINESS", string> = {
-  PLUS: "220.00",
-  PRO: "1900.00",
-  BUSINESS: "650.00",
+/** TRY prices in cents */
+const PLAN_PRICES_TRY: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
+  STARTER: { monthly: "4900", yearly: "49000" },
+  PLUS: { monthly: "14900", yearly: "149000" },
+  PRO: { monthly: "29900", yearly: "299000" },
+  BUSINESS: { monthly: "79900", yearly: "799000" },
 };
 
-/** USD prices (as dollars, 2 decimal): planConfig values in cents / 100 */
-const PLAN_PRICES_USD: Record<"PLUS" | "PRO" | "BUSINESS", string> = {
-  PLUS: "6.99",
-  PRO: "59.00",
-  BUSINESS: "20.00",
+/** USD prices in cents */
+const PLAN_PRICES_USD: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
+  STARTER: { monthly: "1599", yearly: "15900" },
+  PLUS: { monthly: "4799", yearly: "47990" },
+  PRO: { monthly: "9799", yearly: "97990" },
+  BUSINESS: { monthly: "25000", yearly: "250000" },
 };
 
-const BASKET_NAMES_TR: Record<"PLUS" | "PRO" | "BUSINESS", string> = {
-  PLUS: "PDF PLATFORM Plus (1 ay)",
-  PRO: "PDF PLATFORM Pro (1 yıl)",
-  BUSINESS: "PDF PLATFORM Business (1 ay)",
+const BASKET_NAMES_TR: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", string> = {
+  STARTER: "PDF PLATFORM Başlangıç",
+  PLUS: "PDF PLATFORM Plus",
+  PRO: "PDF PLATFORM Pro",
+  BUSINESS: "PDF PLATFORM Business",
 };
 
 export async function initializePaymentsController(request: Request, response: Response): Promise<void> {
@@ -42,16 +46,14 @@ export async function initializePaymentsController(request: Request, response: R
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
   }
 
-  const { planId, currency } = parsed.data;
+  const { planId, currency, billingCycle } = parsed.data;
   const checkoutCurrency = currency as CheckoutCurrency;
 
-  const priceTryOverride =
-    checkoutCurrency === "USD"
-      ? PLAN_PRICES_USD[planId]
-      : PLAN_PRICES_TRY[planId];
-
-  const billing = planId === "PRO" ? "annual" : "monthly";
-  const subscriptionDaysOverride = planId === "PRO" ? 365 : 30;
+  const isYearly = billingCycle === "YEARLY";
+  const priceObj = checkoutCurrency === "USD" ? PLAN_PRICES_USD[planId] : PLAN_PRICES_TRY[planId];
+  const priceTryOverride = isYearly ? priceObj.yearly : priceObj.monthly;
+  const billing = isYearly ? "annual" : "monthly";
+  const subscriptionDaysOverride = isYearly ? 365 : 30;
 
   const session = await createPaymentCheckoutSession({
     userId,

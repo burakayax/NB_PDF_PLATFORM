@@ -361,6 +361,7 @@ export async function registerUser(
   const cityTrim = input.city?.trim() ?? "";
 
   const passwordHash = await hashPassword(input.password);
+  const resolvedRole = resolveRoleFromEmail(input.email);
   const user = await prisma.user.create({
     data: {
       email: input.email,
@@ -371,9 +372,10 @@ export async function registerUser(
       ...(cityTrim ? { city: cityTrim, country: "Turkey" } : {}),
       passwordHash,
       authProvider: "local",
-      role: resolveRoleFromEmail(input.email),
+      role: resolvedRole,
       isVerified: false,
       preferredLanguage: input.preferredLanguage ?? "en",
+      plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
     },
   });
 
@@ -513,6 +515,13 @@ export async function loginUser(
   }
 
   user = await syncUserRoleFromEmail(user);
+
+  if (isAdminUser(user) && user.plan !== "BUSINESS") {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { plan: "BUSINESS" },
+    });
+  }
 
   if (deviceId) {
     await ensureDesktopDeviceAccess(user.id, deviceId, true, {
@@ -800,7 +809,7 @@ export async function signInWithGoogle(params: {
       );
     }
 
-    const user = await prisma.user.update({
+    let user = await prisma.user.update({
       where: { id: existing.id },
       data: {
         googleId,
@@ -831,7 +840,13 @@ export async function signInWithGoogle(params: {
       email: user.email,
     });
     const synced = await syncUserRoleFromEmail(user);
-    const session = await createSession(synced);
+    if (isAdminUser(synced) && synced.plan !== "BUSINESS") {
+      user = await prisma.user.update({
+        where: { id: synced.id },
+        data: { plan: "BUSINESS" },
+      });
+    }
+    const session = await createSession(isAdminUser(synced) ? (synced.plan === "BUSINESS" ? synced : user) : synced);
     logGoogleOAuthSessionIssued(session, "google-login");
     return session;
   }
@@ -858,6 +873,7 @@ export async function signInWithGoogle(params: {
       isVerified: true,
       verifiedAt: new Date(),
       preferredLanguage: params.preferredLanguage,
+      plan: resolveRoleFromEmail(email) === "ADMIN" ? "BUSINESS" : "FREE",
     },
   });
 

@@ -29,7 +29,7 @@ type LandingPageProps = {
   onOpenKvkk: () => void;
   canonicalBaseUrl?: string;
   organizationName?: string;
-  onSelectPlan?: (planId: "PLUS" | "PRO" | "BUSINESS") => void;
+  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
 };
 
 type ShowcaseTab = "web" | "desktop";

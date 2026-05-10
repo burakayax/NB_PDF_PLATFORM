@@ -329,7 +329,7 @@ function promisifyRetrieve(
 
 export async function createPaymentCheckoutSession(params: {
   userId: string;
-  plan: "PRO" | "BUSINESS" | "PLUS";
+  plan: "STARTER" | "PLUS" | "PRO" | "BUSINESS";
   billing: "monthly" | "annual";
   clientIp: string;
   /** Override list + paid price string (two decimals) in `checkoutCurrency` when tier pricing applies. */
@@ -551,9 +551,13 @@ export async function createCreditPackIyzicoSession(_params: {
 }
 
 /** SPA dönüş adresi (iyzico callback sonrası `303` ile gider; inline script kullanmıyoruz — üretimde Helmet CSP `script-src 'none'`.) */
-export function paymentWorkspaceRedirectUrl(success: boolean): string {
+export function paymentWorkspaceRedirectUrl(success: boolean, plan?: string): string {
   const origin = env.FRONTEND_ORIGIN.replace(/\/+$/, "");
-  return `${origin}/workspace?payment=${success ? "success" : "failed"}`;
+  const params = new URLSearchParams({ payment: success ? "success" : "failed" });
+  if (success && plan) {
+    params.set("plan", plan);
+  }
+  return `${origin}/workspace?${params.toString()}`;
 }
 
 export type ProcessPaymentCallbackOpts = {
@@ -740,7 +744,7 @@ export async function processPaymentCallback(
       console.log(
         `${PC_LOG} subscription checkout already completed — idempotent success`,
       );
-      return paymentWorkspaceRedirectUrl(true);
+      return paymentWorkspaceRedirectUrl(true, pending.plan);
     }
 
     const expectedPrice = pending.priceTry;
@@ -793,7 +797,7 @@ export async function processPaymentCallback(
     });
 
     console.log(`${PC_LOG} subscription updated; done`);
-    return paymentWorkspaceRedirectUrl(true);
+    return paymentWorkspaceRedirectUrl(true, pending.plan);
   } catch (unexpected) {
     console.error(
       `${PC_LOG} unexpected error`,
