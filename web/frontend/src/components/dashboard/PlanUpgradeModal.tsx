@@ -55,7 +55,7 @@ export function PlanUpgradeModal({
   }, [open, onClose]);
 
   const handleSelectPlan = useCallback(
-    (planId: "PLUS" | "PRO" | "BUSINESS") => {
+    (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => {
       if (!accessToken || !user) return;
       if (!isBillingProfileComplete(user)) {
         setBillingPlanPending(planId);

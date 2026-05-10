@@ -225,6 +225,8 @@ const pdfInspectionFeatures: FeatureId[] = [
   "repair-pdf",
   "pdf-to-ppt",
   "pdf-to-image",
+  "pdf-to-text",
+  "flatten-pdf",
 ];
 
 function EmptyStateIllustration() {
@@ -2650,31 +2652,36 @@ function App() {
         ? "Seçtiğiniz sayfalar ayrı PDF dosyaları olarak hazırlanıp ZIP ile indirilir."
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
 
+  const splitPasswordToolIds = [
+    "split",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "compress",
+    "delete-pages",
+    "rotate-pdf",
+    "organize-pdf",
+    "watermark",
+    "page-numbers",
+    "repair-pdf",
+    "pdf-to-ppt",
+    "pdf-to-image",
+    "pdf-to-text",
+    "flatten-pdf",
+  ];
+  const anyUploadEncrypted =
+    uploads.length > 0 && uploads.some((u) => u.encrypted);
   const showSplitPasswordField =
-    [
-      "split",
-      "pdf-to-word",
-      "pdf-to-excel",
-      "compress",
-      "delete-pages",
-      "rotate-pdf",
-      "organize-pdf",
-      "watermark",
-      "page-numbers",
-      "repair-pdf",
-      "pdf-to-ppt",
-      "pdf-to-image",
-      "pdf-to-text",
-      "flatten-pdf",
-    ].includes(selectedFeature.id) &&
-    uploads.length > 0 &&
-    currentPdfIsEncrypted;
+    splitPasswordToolIds.includes(selectedFeature.id) &&
+    anyUploadEncrypted;
+  const showEncryptedFileWarning =
+    splitPasswordToolIds.includes(selectedFeature.id) &&
+    anyUploadEncrypted &&
+    !password.trim();
   const showUnlockPasswordField =
     selectedFeature.id === "unlock-pdf" && uploads.length > 0;
   const showEncryptSourcePasswordField =
     selectedFeature.id === "encrypt" &&
-    uploads.length > 0 &&
-    currentPdfIsEncrypted;
+    anyUploadEncrypted;
   const mergeHasMissingPasswords =
     selectedFeature.id === "merge" &&
     uploads.some(
@@ -3447,7 +3454,8 @@ function App() {
       const runBytes =
         selectedFeature.id === "html-to-pdf"
           ? 0
-          : selectedFeature.id === "image-to-pdf"
+          : selectedFeature.id === "image-to-pdf" ||
+            (uploads.length > 1 && BATCHABLE_TOOLS.has(selectedFeature.id))
             ? uploads.reduce((a, u) => a + u.file.size, 0)
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
@@ -3572,10 +3580,15 @@ function App() {
         }
       }
 
-      if (batchFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
+      const batchSourceFiles =
+        uploads.length > 1 && BATCHABLE_TOOLS.has(fid)
+          ? uploads.map((u) => u.file)
+          : batchFiles;
+
+      if (batchSourceFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
         const batchForm = new FormData();
         batchForm.append("tool_type", fid);
-        for (const bf of batchFiles) {
+        for (const bf of batchSourceFiles) {
           batchForm.append("files", bf);
         }
         if (password.trim()) batchForm.append("password", password.trim());
@@ -3620,6 +3633,7 @@ function App() {
           },
         });
         setBatchFiles([]);
+        setUploads([]);
         return;
       }
 
@@ -3710,28 +3724,10 @@ function App() {
           /* noop */
         }
       }
-      // Windows save dialog aç
-      const handle = await (window as any).showSaveFilePicker?.({
-        suggestedName: selectedFeature.fallbackFilename,
-        types: [
-          {
-            description: "PDF Files",
-            accept: { "application/pdf": [".pdf"] },
-          },
-        ],
-      });
-
-      if (!handle) {
-        // Kullanıcı iptal etti
-        return;
-      }
-      // İndirme success bar'ını göster
       setToolProgressSuccess({
         filename: selectedFeature.fallbackFilename,
         featureTitle: selectedFeature.title,
-        replay: () => {
-          // Dosya zaten indirildi, sadece başarı mesajı göster
-        },
+        replay: dl.replay,
       });
       applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       showToast(
@@ -3887,6 +3883,15 @@ function App() {
     );
 
     if (inspectRunRef.current !== token) {
+      // Yeni bir inspection round başladı; bu round'un sonuçları geçersiz sayılır ama
+      // incelediğimiz dosyaların inspecting=true flag'ini temizlemeliyiz; yoksa buton
+      // kalıcı olarak devre dışı kalır (toolFilesStillInspecting hiç false olmaz).
+      const staleIds = new Set(inspectedNewItems.map((i) => i.id));
+      setUploads((cur) =>
+        cur.map((item) =>
+          staleIds.has(item.id) ? { ...item, inspecting: false } : item,
+        ),
+      );
       return;
     }
 
@@ -4793,7 +4798,8 @@ function App() {
 
                         {isAuthenticated &&
                           toolNeedsUpload &&
-                          BATCHABLE_TOOLS.has(selectedFeature.id) && (
+                          BATCHABLE_TOOLS.has(selectedFeature.id) &&
+                          !selectedFeature.multiple && (
                             <div className="field">
                               <span className="text-xs text-gray-400 font-medium">
                                 {language === "tr"
@@ -5488,8 +5494,7 @@ function App() {
                             <div className="selected-files__header">
                               <div className="selected-files__title-row">
                                 <p>{W.selectedFiles}</p>
-                                {selectedFeature.id === "merge" &&
-                                uploads.length > 0 ? (
+                                {uploads.length > 0 ? (
                                   <button
                                     type="button"
                                     className="nb-transition shrink-0 rounded-xl border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-200/95 hover:border-rose-400/55 hover:bg-rose-950/50 sm:text-sm"
@@ -5709,8 +5714,7 @@ function App() {
                                         </div>
                                       </div>
 
-                                      {selectedFeature.id === "merge" &&
-                                      item.encrypted ? (
+                                      {item.encrypted ? (
                                         <div className="mt-3 rounded-xl border border-white/[0.1] bg-nb-panel/50 px-4 py-3">
                                           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nb-muted">
                                             {language === "tr"
@@ -5780,6 +5784,18 @@ function App() {
                                 })}
                               </div>
                             )}
+                          </div>
+                        ) : null}
+
+                        {showEncryptedFileWarning ? (
+                          <div className="merge-hint-banner" role="alert">
+                            <span
+                              className="merge-hint-banner__dot"
+                              aria-hidden
+                            />
+                            <p className="merge-hint-banner__text">
+                              {W.encryptedFileWarning}
+                            </p>
                           </div>
                         ) : null}
 

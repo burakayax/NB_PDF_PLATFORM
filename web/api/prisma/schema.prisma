@@ -11,6 +11,7 @@ datasource db {
 
 enum Plan {
   FREE
+  STARTER
   PLUS
   PRO
   BUSINESS

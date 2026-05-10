@@ -290,6 +290,9 @@ export function ws(lang: Language) {
     mergeButtonHintPassword: tr
       ? "Şifreli dosyalarda önce Parolayı doğrula — ardından birleştirme açılır."
       : "For locked files, use Verify password first — then merge enables.",
+    encryptedFileWarning: tr
+      ? "Listede şifreli PDF var — işleme devam etmek için aşağıdaki şifre alanını doldurun."
+      : "Your file list contains a password-protected PDF — fill in the password field below to continue.",
     validationPagesRequired: tr
       ? "Sayfa numaralarını girin."
       : "Enter page numbers.",

@@ -428,7 +428,7 @@ function BusinessCard({
 interface PricingSectionProps {
   language: Language;
   onUseWebApp: () => void;
-  onSelectPlan?: (planId: "PLUS" | "PRO" | "BUSINESS") => void;
+  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
 }
 
 export default function PricingSection({
@@ -440,7 +440,7 @@ export default function PricingSection({
   const { currency: checkoutCurrency } = useCheckoutCurrency();
   const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
 
-  const [free, plus, pro, business] = PLANS;
+  const [free, starter, plus, pro, business] = PLANS;
 
   return (
     <section id="pricing" className="relative py-28 overflow-hidden">
@@ -479,13 +479,19 @@ export default function PricingSection({
           </p>
         </motion.div>
 
-        {/* 4-column grid */}
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4 items-stretch">
+        {/* 5-column grid */}
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5 items-stretch">
           <FreeCard
             plan={free}
             currency={currency}
             lang={language}
             onCta={onUseWebApp}
+          />
+          <PlusCard
+            plan={starter}
+            currency={currency}
+            lang={language}
+            onCta={onSelectPlan ? () => onSelectPlan("STARTER") : onUseWebApp}
           />
           <PlusCard
             plan={plus}
