@@ -587,6 +587,34 @@ export async function logoutUser(refreshToken: string | undefined) {
   await revokeRefreshToken(refreshToken);
 }
 
+export async function deleteUserAccount(userId: string, password: string): Promise<{ email: string; preferredLanguage: Language }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new HttpError(404, "User account could not be found.");
+  }
+
+  // Google-only accounts have no password; reject deletion via this path.
+  if (!user.passwordHash) {
+    throw new HttpError(400, "This account uses Google sign-in and has no password. Contact support to delete your account.");
+  }
+
+  const passwordOk = await verifyPassword(password, user.passwordHash);
+  if (!passwordOk) {
+    throw new HttpError(401, "Incorrect password.");
+  }
+
+  // Explicitly delete refresh tokens before the user row so any in-flight
+  // token rotation cannot race past the cascade (defensive; cascade covers it).
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  // Deleting the user cascades to: RefreshToken, DailyUsage, PaymentCheckout,
+  // CreditTransaction, EmailVerificationToken, DeviceToken, CouponUsage,
+  // UserEntitlement per schema onDelete: Cascade rules.
+  await prisma.user.delete({ where: { id: userId } });
+
+  return { email: user.email, preferredLanguage: user.preferredLanguage };
+}
+
 export async function getUserById(userId: string) {
   let user = await prisma.user.findUnique({
     where: { id: userId },
