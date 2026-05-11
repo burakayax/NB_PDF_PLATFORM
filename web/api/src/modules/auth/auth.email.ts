@@ -96,6 +96,86 @@ export function createAdminNotificationEmailTemplate({
   };
 }
 
+type AccountDeletionEmailInput = {
+  email: string;
+  deletedAt: string;
+  lang?: "tr" | "en";
+};
+
+export function createAccountDeletionEmailTemplate({
+  email,
+  deletedAt,
+  lang = "en",
+}: AccountDeletionEmailInput) {
+  const safeEmail = escapeHtml(email);
+  const safeDate = escapeHtml(deletedAt);
+
+  const subject =
+    lang === "tr"
+      ? "Hesabınız silindi — PDF PLATFORM"
+      : "Your account has been deleted — PDF PLATFORM";
+
+  const title = lang === "tr" ? "Hesap Silindi" : "Account Deleted";
+  const intro =
+    lang === "tr"
+      ? "PDF PLATFORM hesabınız kalıcı olarak silindi. Tüm verileriniz kaldırıldı."
+      : "Your PDF PLATFORM account has been permanently deleted. All your data has been removed.";
+
+  const html = renderCorporateEmail({
+    eyebrow: lang === "tr" ? "Hesap" : "Account",
+    title,
+    intro,
+    bodyHtml: `
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #334155;border-radius:20px;background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);padding:24px 26px;">
+        <tbody>
+          <tr>
+            <td style="padding:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">Email</td>
+          </tr>
+          <tr>
+            <td style="padding:0 0 20px;font-size:17px;line-height:1.65;color:#f8fafc;border-bottom:1px solid #1e293b;">${safeEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding:18px 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">${lang === "tr" ? "Silinme Tarihi" : "Deleted At"}</td>
+          </tr>
+          <tr>
+            <td style="padding:0;font-size:15px;line-height:1.65;color:#cbd5e1;">${safeDate}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#94a3b8;">
+        ${lang === "tr"
+          ? "Bu işlemi siz yapmadıysanız lütfen destek ekibimizle iletişime geçin."
+          : "If you did not request this, please contact our support team immediately."}
+      </p>
+    `,
+    footerText: "PDF PLATFORM — NB Global Studio",
+    productName: "PDF PLATFORM",
+  });
+
+  const text =
+    lang === "tr"
+      ? [
+          "Hesabınız silindi — PDF PLATFORM",
+          "",
+          `Email: ${email}`,
+          `Silinme tarihi: ${deletedAt}`,
+          "",
+          "Tüm verileriniz kalıcı olarak kaldırıldı.",
+          "Bu işlemi siz yapmadıysanız lütfen destek ekibimizle iletişime geçin.",
+        ].join("\n")
+      : [
+          "Your account has been deleted — PDF PLATFORM",
+          "",
+          `Email: ${email}`,
+          `Deleted at: ${deletedAt}`,
+          "",
+          "All your data has been permanently removed.",
+          "If you did not request this, please contact our support team immediately.",
+        ].join("\n");
+
+  return { subject, html, text };
+}
+
 type PasswordResetCodeEmailInput = {
   code: string;
   lang: "tr" | "en";

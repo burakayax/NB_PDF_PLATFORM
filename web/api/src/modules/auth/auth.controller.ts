@@ -14,6 +14,7 @@ import {
   changePasswordSchema,
   changePasswordSnakeSchema,
   setInitialPasswordSnakeSchema,
+  deleteAccountSchema,
   preferredLanguageSchema,
   registerSchema,
   updateProfileSchema,
@@ -34,6 +35,7 @@ import {
 import {
   changeUserPassword,
   setInitialPasswordForUser,
+  deleteUserAccount,
   getUserById,
   loginUser,
   logoutUser,
@@ -53,6 +55,9 @@ import {
   acceptOAuthFrontendOriginFromRequest,
   resolveOAuthSpaRedirectBase,
 } from "../../lib/oauth-frontend-origin.js";
+import { logAdminAudit } from "../admin/admin-audit.service.js";
+import { sendMail } from "../../lib/mailer.js";
+import { createAccountDeletionEmailTemplate } from "./auth.email.js";
 
 const REFRESH_COOKIE_NAME = "nbpdf_refresh_token";
 const OAUTH_STATE_COOKIE = "nbpdf_google_oauth";
@@ -550,6 +555,74 @@ export async function setInitialPasswordPostController(
     message: "Password has been set successfully.",
     user,
   });
+}
+
+const DELETE_ACCOUNT_LOG = "[auth/delete-account]";
+
+/**
+ * DELETE /api/auth/me — GDPR hesap silme.
+ * Kullanıcı şifresini doğrular; eşleşirse tüm verileri siler, oturumu kapatır,
+ * onay e-postası gönderir ve denetim kaydı bırakır.
+ */
+export async function deleteMyAccountController(
+  request: Request,
+  response: Response,
+) {
+  if (!request.authUser) {
+    throw new HttpError(401, "Authentication is required.");
+  }
+
+  const parsed = deleteAccountSchema.safeParse(request.body ?? {});
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
+  }
+
+  const { id: userId, email } = request.authUser;
+
+  console.log(`${DELETE_ACCOUNT_LOG} deletion requested`, { userId, email });
+
+  // deleteUserAccount verifies password and performs the delete atomically.
+  const { email: deletedEmail, preferredLanguage } = await deleteUserAccount(
+    userId,
+    parsed.data.password,
+  );
+
+  const deletedAt = new Date().toISOString();
+  console.log(`${DELETE_ACCOUNT_LOG} user deleted successfully`, { userId, email: deletedEmail, deletedAt });
+
+  // Persist audit trail — userId set to null because the row no longer exists.
+  try {
+    await logAdminAudit(
+      { userId: "deleted", email: deletedEmail },
+      "USER_SELF_DELETE",
+      deletedEmail,
+      `User deleted own account (GDPR). deletedAt=${deletedAt}`,
+      { userId, deletedAt },
+    );
+  } catch (auditErr) {
+    // Non-fatal: account is already deleted; just log the audit failure.
+    console.error(`${DELETE_ACCOUNT_LOG} audit log write failed (non-fatal)`, auditErr);
+  }
+
+  // Clear refresh token cookie so the browser session is immediately invalidated.
+  response.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  // Send confirmation email asynchronously — don't block the response.
+  const lang = preferredLanguage === "tr" ? "tr" : "en";
+  const emailTemplate = createAccountDeletionEmailTemplate({
+    email: deletedEmail,
+    deletedAt,
+    lang,
+  });
+  sendMail({ to: deletedEmail, ...emailTemplate }).catch((mailErr: unknown) => {
+    console.error(`${DELETE_ACCOUNT_LOG} confirmation email failed (non-fatal)`, mailErr);
+  });
+
+  response.status(200).json({ message: "Account deleted successfully." });
 }
 
 export async function googleOAuthStartController(
