@@ -231,12 +231,12 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     return {
       title:
         context.language === "tr"
-          ? `PDF Araçları Fiyatlandırma — Ücretsiz & Abonelik | ${BRAND}`
-          : `PDF Tools Pricing — Free & Subscription | ${BRAND}`,
+          ? `PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi | ${BRAND}`
+          : `PDF Tools Pricing — 7-Day Money-Back Guarantee | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. Ücretsiz başlayın."
-          : "Explore plans for PDF merge, convert, and compress tools. Start free today.",
+          ? "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün koşulsuz para iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin."
+          : "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, cancel anytime. Start free today.",
       canonicalPath: "/pricing",
       index: true,
       follow: true,

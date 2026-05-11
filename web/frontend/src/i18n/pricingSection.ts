@@ -12,6 +12,23 @@ export function pricingSectionCopy(lang: Language) {
       tr ? `Günde yalnızca ~${amount}` : `Only ~${amount}/day`,
     trustCancel: tr ? "İstediğiniz zaman iptal" : "Cancel anytime",
     trustSecure: tr ? "Güvenli ödeme" : "Secure payment",
+    trustRefund: tr ? "7 gün para iade garantisi" : "7-day money-back guarantee",
+    refundBadge: tr ? "💰 7 Gün İade Garantisi" : "💰 7-Day Money-Back Guarantee",
+    refundHeading: tr ? "7 Gün Koşulsuz İade" : "7-Day No-Questions-Asked Refund",
+    refundBody: tr
+      ? "Satın alma tarihinden itibaren 7 gün içinde memnun kalmazsanız ücretin tamamını iade ediyoruz. Gerekçe belirtmenize gerek yok."
+      : "Not satisfied within 7 days of purchase? We'll refund every penny. No questions asked.",
+    refundAfterBody: tr
+      ? "7 günü geçtikten sonra iptal ederseniz mevcut abonelik döneminiz sonuna kadar tüm özelliklere erişiminiz kesintisiz devam eder. Paranız boşa gitmez."
+      : "Cancel after 7 days and you keep full access until your current billing period ends. Your money never goes to waste.",
+    faqRefundQ: tr ? "Para iade politikanız nedir?" : "What is your refund policy?",
+    faqRefundA: tr
+      ? "Satın alımdan itibaren 7 gün içinde başvurursanız ücretin tamamını iade ediyoruz. 7 günü geçtikten sonra aboneliğinizi iptal ederseniz dönem sonuna kadar platforma erişiminiz açık kalır."
+      : "We offer a full refund within 7 days of purchase. After 7 days, you can cancel anytime and retain access until the end of your billing period.",
+    faqCancelAfterQ: tr ? "7 günden sonra iptal edersem ne olur?" : "What happens if I cancel after 7 days?",
+    faqCancelAfterA: tr
+      ? "Aboneliğiniz hemen iptal edilir ancak geçerli dönem sona erene kadar platformu kullanmaya devam edersiniz. Bir sonraki dönem için ücret alınmaz."
+      : "Your subscription is cancelled immediately but you keep full access until your current period ends. No charges for the next period.",
     regionTry: tr ? "Türkiye fiyatları (TRY)" : "Turkey pricing (TRY)",
     regionIntl: tr ? "Uluslararası fiyatlar (USD)" : "International pricing (USD)",
     checkoutTryNote: tr

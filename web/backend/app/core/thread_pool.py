@@ -74,6 +74,17 @@ def _retry_after_header_sec() -> int:
     return min(120, max(15, int(_acquire_timeout_sec())))
 
 
+def _operation_timeout_sec() -> float:
+    """Tek bir PDF işleminin maksimum çalışma süresi (saniye). Varsayılan 120."""
+    raw = os.getenv("PDF_OPERATION_TIMEOUT_SEC", "").strip()
+    if raw:
+        try:
+            return max(10.0, float(raw))
+        except ValueError:
+            pass
+    return 120.0
+
+
 def pdf_cpu_settings_snapshot() -> dict[str, int | float]:
     return {
         "workers": _workers(),
@@ -130,6 +141,7 @@ async def run_cpu_bound(func: Callable[P, R], *args: P.args, **kwargs: P.kwargs)
     executor = _executor_singleton()
     slots = _get_slots()
     timeout = _acquire_timeout_sec()
+    op_timeout = _operation_timeout_sec()
     retry_after = _retry_after_header_sec()
     try:
         await asyncio.wait_for(slots.acquire(), timeout=timeout)
@@ -142,9 +154,14 @@ async def run_cpu_bound(func: Callable[P, R], *args: P.args, **kwargs: P.kwargs)
         raise CpuCapacityTimeout(retry_after_sec=retry_after) from None
     loop = asyncio.get_running_loop()
     try:
-        return await loop.run_in_executor(
-            executor,
-            functools.partial(func, *args, **kwargs),
+        future = loop.run_in_executor(executor, functools.partial(func, *args, **kwargs))
+        return await asyncio.wait_for(future, timeout=op_timeout)
+    except asyncio.TimeoutError:
+        logger.error(
+            "pdf_operation_timeout op_timeout_sec=%s func=%s",
+            op_timeout,
+            getattr(func, "__name__", repr(func)),
         )
+        raise CpuCapacityTimeout(retry_after_sec=retry_after) from None
     finally:
         slots.release()

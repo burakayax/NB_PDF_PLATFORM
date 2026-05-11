@@ -332,9 +332,13 @@ export async function createPaymentCheckoutSession(params: {
   plan: "STARTER" | "PLUS" | "PRO" | "BUSINESS";
   billing: "monthly" | "annual";
   clientIp: string;
-  /** Override list + paid price string (two decimals) in `checkoutCurrency` when tier pricing applies. */
+  /**
+   * Yalnızca dahili (server-side) çağrılar için. Asla istemciden gelen değer geçirilmemeli.
+   * İstemci tarafından gelen ödeme isteği `createPaymentBodySchema` ile doğrulanır
+   * ve bu parametre hiçbir zaman istek gövdesinden alınmaz.
+   */
   priceTryOverride?: string;
-  /** When `priceTryOverride` is set (matrix / tier); admin DB prices remain TRY. */
+  /** Dahili çağrılar için para birimi; varsayılan TRY. */
   checkoutCurrency?: CheckoutCurrency;
   subscriptionDaysOverride?: number;
   /** Cart line label on iyzico basket. */
@@ -360,9 +364,7 @@ export async function createPaymentCheckoutSession(params: {
           : prices.PRO);
   const price = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
-    params.priceTryOverride != null
-      ? (params.checkoutCurrency ?? "TRY")
-      : "TRY";
+    params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
   const iyziCurrency = iyzicoFx(settlementCurrency);
 
   const user = await prisma.user.findUnique({
@@ -663,18 +665,6 @@ export async function processPaymentCallback(
       return paymentWorkspaceRedirectUrl(false);
     }
 
-    try {
-      console.log(
-        "[DEBUG] Full Iyzico Retrieve Response:",
-        JSON.stringify(result),
-      );
-    } catch {
-      console.log(
-        "[DEBUG] Full Iyzico Retrieve Response: (stringify failed)",
-        result,
-      );
-    }
-
     const extractedConv = extractConversationIdFromRetrieve(result);
     if (extractedConv) {
       result = { ...result, conversationId: extractedConv };
@@ -832,5 +822,128 @@ export async function processPaymentCallback(
         : unexpected,
     );
     return paymentWorkspaceRedirectUrl(false);
+  }
+}
+
+// ─── Refund ───────────────────────────────────────────────────────────────────
+
+const REFUND_LOG = "[iyzico/refund]";
+
+/** Satın alımdan itibaren kaç gün içinde tam iade hakkı vardır. */
+export const REFUND_WINDOW_DAYS = 7;
+
+export type RefundResult =
+  | { ok: true; conversationId: string; userId: string; planBefore: string }
+  | { ok: false; reason: "not_found" | "already_refunded" | "window_expired" | "not_completed" };
+
+/**
+ * Hem admin manuel iadesi hem de iyzico webhook bildirimi için ortak iade mantığı.
+ * - 7 günlük pencere kontrolü yapar.
+ * - Kullanıcı planını FREE'ye düşürür.
+ * - PaymentCheckout.status'u "refunded" yapar.
+ * - subscriptionExpiry'yi null'a çeker (org varsa da).
+ */
+export async function processRefund(
+  conversationId: string,
+  reason: string,
+): Promise<RefundResult> {
+  const checkout = await prisma.paymentCheckout.findUnique({
+    where: { conversationId },
+  });
+
+  if (!checkout) {
+    console.warn(`${REFUND_LOG} conversationId not found`, { conversationId });
+    return { ok: false, reason: "not_found" };
+  }
+
+  if (checkout.status === "refunded" || checkout.refundedAt) {
+    console.log(`${REFUND_LOG} already refunded — idempotent skip`, { conversationId });
+    return { ok: false, reason: "already_refunded" };
+  }
+
+  if (checkout.status !== "completed") {
+    console.warn(`${REFUND_LOG} checkout not completed, status=${checkout.status}`, { conversationId });
+    return { ok: false, reason: "not_completed" };
+  }
+
+  // 7 günlük iade penceresi kontrolü
+  const completedAt = checkout.completedAt ?? checkout.createdAt;
+  const windowMs = REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const ageMs = Date.now() - completedAt.getTime();
+  if (ageMs > windowMs) {
+    const ageDays = Math.floor(ageMs / (24 * 60 * 60 * 1000));
+    console.warn(`${REFUND_LOG} refund window expired`, { conversationId, ageDays, windowDays: REFUND_WINDOW_DAYS });
+    return { ok: false, reason: "window_expired" };
+  }
+
+  const planBefore = checkout.plan;
+
+  await prisma.$transaction(async (tx) => {
+    // Checkout kaydını güncelle
+    await tx.paymentCheckout.update({
+      where: { conversationId },
+      data: {
+        status: "refunded",
+        refundedAt: new Date(),
+        refundReason: reason.slice(0, 500),
+      },
+    });
+
+    // Kullanıcı planını FREE'ye düşür
+    await tx.user.update({
+      where: { id: checkout.userId },
+      data: { plan: "FREE" },
+    });
+
+    // Organizasyon varsa org planını da düşür ve subscription'ı sona erdir
+    if (checkout.organizationId) {
+      await tx.organization.update({
+        where: { id: checkout.organizationId },
+        data: {
+          plan: "FREE",
+          subscriptionStatus: "canceled",
+          subscriptionExpiry: null,
+        },
+      });
+    }
+  });
+
+  console.log(`${REFUND_LOG} refund processed`, {
+    conversationId,
+    userId: checkout.userId,
+    planBefore,
+    reason,
+  });
+
+  return { ok: true, conversationId, userId: checkout.userId, planBefore };
+}
+
+/**
+ * iyzico'dan gelen iade webhook bildirimi.
+ * iyzico, iade onayı geldiğinde conversationId + paymentId içeren POST gönderir.
+ */
+export async function processIyzicoRefundWebhook(body: Record<string, unknown>): Promise<void> {
+  const conversationId =
+    (typeof body.conversationId === "string" ? body.conversationId : null) ??
+    (typeof body.paymentConversationId === "string" ? body.paymentConversationId : null) ??
+    (typeof body.refundConversationId === "string" ? body.refundConversationId : null);
+
+  const paymentId = typeof body.paymentId === "string" ? body.paymentId : null;
+
+  console.log(`${REFUND_LOG} webhook received`, { conversationId, paymentId, bodyKeys: Object.keys(body) });
+
+  if (!conversationId) {
+    // conversationId yoksa paymentId ile arama yap
+    if (paymentId) {
+      console.warn(`${REFUND_LOG} no conversationId in webhook; paymentId lookup not implemented — manual review needed`, { paymentId });
+    } else {
+      console.warn(`${REFUND_LOG} webhook missing conversationId and paymentId — ignoring`);
+    }
+    return;
+  }
+
+  const result = await processRefund(conversationId, "iyzico_refund_webhook");
+  if (!result.ok) {
+    console.warn(`${REFUND_LOG} webhook refund skipped`, { conversationId, reason: result.reason });
   }
 }

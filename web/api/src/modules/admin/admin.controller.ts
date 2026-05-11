@@ -82,6 +82,11 @@ import {
   FEATURE_FLAG_CATALOG,
   RESETTABLE_SCOPES,
 } from "./admin-system-defaults.js";
+import {
+  processRefund,
+  REFUND_WINDOW_DAYS,
+} from "../payment/payment.service.js";
+import { adminRefundBodySchema } from "./admin.schema.js";
 
 function requireUserId(request: Request): string {
   const userId = request.authUser?.id;
@@ -790,6 +795,95 @@ export async function adminAdjustCreditsController(
     }
     throw new HttpError(400, message);
   }
+}
+
+/**
+ * POST /api/admin/payments/:conversationId/refund
+ * Admin tarafından manuel iade işlemi.
+ * - 7 günlük pencereyi `forceOverrideWindow: true` ile aşabilir.
+ * - İade gerçekleşirse kullanıcı planı FREE'ye düşer.
+ */
+export async function adminIssueRefundController(
+  request: Request,
+  response: Response,
+) {
+  const { conversationId } = request.params as { conversationId: string };
+  if (!conversationId?.trim()) {
+    throw new HttpError(400, "conversationId is required.");
+  }
+
+  const parsed = adminRefundBodySchema.safeParse(request.body ?? {});
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { reason, forceOverrideWindow } = parsed.data;
+  const actor = adminActor(request);
+
+  // forceOverrideWindow modunda pencere kontrolü atlanır — normal modda processRefund yapar
+  let result;
+  if (forceOverrideWindow) {
+    // Pencere kontrolü olmadan doğrudan iade et
+    const { prisma } = await import("../../lib/prisma.js");
+    const checkout = await prisma.paymentCheckout.findUnique({ where: { conversationId } });
+    if (!checkout) {
+      throw new HttpError(404, "Payment not found.");
+    }
+    if (checkout.status === "refunded") {
+      throw new HttpError(409, "Payment already refunded.");
+    }
+    if (checkout.status !== "completed") {
+      throw new HttpError(400, `Cannot refund a payment with status "${checkout.status}".`);
+    }
+    await prisma.$transaction(async (tx) => {
+      await tx.paymentCheckout.update({
+        where: { conversationId },
+        data: { status: "refunded", refundedAt: new Date(), refundReason: `[admin-force] ${reason}`.slice(0, 500) },
+      });
+      await tx.user.update({ where: { id: checkout.userId }, data: { plan: "FREE" } });
+      if (checkout.organizationId) {
+        await tx.organization.update({
+          where: { id: checkout.organizationId },
+          data: { plan: "FREE", subscriptionStatus: "canceled", subscriptionExpiry: null },
+        });
+      }
+    });
+    result = { ok: true as const, conversationId, userId: checkout.userId, planBefore: checkout.plan };
+  } else {
+    result = await processRefund(conversationId, `admin: ${reason}`);
+  }
+
+  if (!result.ok) {
+    const statusMap: Record<string, number> = {
+      not_found: 404,
+      already_refunded: 409,
+      window_expired: 422,
+      not_completed: 400,
+    };
+    const reasonMsg: Record<string, string> = {
+      not_found: "Payment record not found.",
+      already_refunded: "This payment has already been refunded.",
+      window_expired: `Refund window of ${REFUND_WINDOW_DAYS} days has expired. Use forceOverrideWindow: true to override.`,
+      not_completed: "Cannot refund a payment that has not been completed.",
+    };
+    throw new HttpError(statusMap[result.reason] ?? 400, reasonMsg[result.reason] ?? "Refund failed.");
+  }
+
+  await logAdminAudit(
+    actor,
+    "payment.refund",
+    conversationId,
+    `Admin issued refund for conversationId=${conversationId}, planBefore=${result.planBefore}, reason: ${reason}${forceOverrideWindow ? " [window-override]" : ""}`,
+    { conversationId, userId: result.userId, planBefore: result.planBefore, reason, forceOverrideWindow },
+  );
+
+  response.status(200).json({
+    ok: true,
+    conversationId,
+    userId: result.userId,
+    planBefore: result.planBefore,
+    planAfter: "FREE",
+    refundedAt: new Date().toISOString(),
+  });
 }
 
 export async function adminGetMarketingController(

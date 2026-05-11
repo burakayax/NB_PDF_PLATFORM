@@ -245,6 +245,8 @@ model PaymentCheckout {
   subscriptionDays Int       @default(30) @map("subscription_days")
   createdAt        DateTime  @default(now())
   completedAt      DateTime?
+  refundedAt       DateTime? @map("refunded_at")
+  refundReason     String?   @map("refund_reason")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)

@@ -6,23 +6,9 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
-# Nuisance warnings from fontTools / pypdf when PDF font metadata uses odd date encodings
-# (e.g. "created timestamp seems very low; regarding as unix timestamp"). They are safe
-# to ignore for this API service — keep application logs focused on real issues.
-def _configure_third_party_logging() -> None:
-    for name in (
-        "fontTools",
-        "fontTools.ttLib",
-        "fontTools.ttLib.tables",
-        "PIL.PngImagePlugin",
-    ):
-        try:
-            logging.getLogger(name).setLevel(logging.ERROR)
-        except Exception:
-            pass
+from app.core.logging_config import configure_logging
 
-
-_configure_third_party_logging()
+configure_logging()
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
