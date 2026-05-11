@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  python-security:
+    name: Python Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        working-directory: web/backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip install -r requirements.txt
+
+      - name: Run pip-audit (fail on CRITICAL or HIGH)
+        working-directory: web/backend
+        run: |
+          pip-audit --format=json --output=audit-report.json || true
+          python - <<'EOF'
+          import json, sys
+
+          with open("audit-report.json") as f:
+              report = json.load(f)
+
+          critical_high = []
+          for dep in report.get("dependencies", []):
+              for vuln in dep.get("vulns", []):
+                  severity = vuln.get("fix_versions") and ""
+                  aliases = vuln.get("aliases", [])
+                  # pip-audit doesn't always include severity; check via id prefix or description
+                  vid = vuln.get("id", "")
+                  # Treat all findings as potential HIGH/CRITICAL since pip-audit flags exploitable vulns
+                  critical_high.append(
+                      f"  {dep['name']}=={dep['version']}: {vid} — {vuln.get('description', '')[:120]}"
+                  )
+
+          if critical_high:
+              print("CRITICAL/HIGH vulnerabilities found in Python dependencies:")
+              print("\n".join(critical_high))
+              sys.exit(1)
+          else:
+              print("No vulnerabilities found.")
+          EOF
+
+  node-security-api:
+    name: Node Security Scan (web/api)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/api/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/api
+        run: npm ci
+
+      - name: Run npm audit (fail on critical/high)
+        working-directory: web/api
+        run: npm audit --audit-level=high
+
+  node-security-frontend:
+    name: Node Security Scan (web/frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Run npm audit (fail on critical/high)
+        working-directory: web/frontend
+        run: npm audit --audit-level=high
+
+  frontend-build:
+    name: Frontend Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: web/frontend
+        env:
+          VITE_API_BASE: http://localhost:8000
+          VITE_SAAS_PROXY_TARGET: http://localhost:4000
+          VITE_DISABLE_OBFUSCATION: "true"
+        run: npm run build
+
+  api-typecheck:
+    name: TypeScript Type Check (web/api)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/api/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/api
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: web/api
+        run: npx prisma generate
+
+      - name: TypeScript type check
+        working-directory: web/api
+        run: npx tsc --noEmit
