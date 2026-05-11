@@ -12,7 +12,7 @@ const MISSING_ENV_MSG =
 
 const frontendRoot = path.dirname(fileURLToPath(import.meta.url));
 
-/** Üretim çıktısında ek sıkıştırma (gerçek güvenlik değil; caydırıcı). */
+/** Uretim çıktısında ek sıkıştırma (gerçek güvenlik değil; caydırıcı). */
 function productionObfuscatePlugin(): Plugin {
   return {
     name: "nb-js-obfuscate",
@@ -61,7 +61,7 @@ function warnIfBackendHealthUnreachable(opts: {
   const attemptTimeoutMs = 8000;
   const retryIntervalMs = 2000;
   const maxAttempts = 30;
-
+  // Deneme
   return {
     name: opts.pluginName,
     configureServer(server) {
@@ -78,7 +78,9 @@ function warnIfBackendHealthUnreachable(opts: {
             if (res.ok) {
               return;
             }
-            console.warn(`[vite] ${opts.label} beklenmiyor: ${url} → HTTP ${res.status}`);
+            console.warn(
+              `[vite] ${opts.label} beklenmiyor: ${url} → HTTP ${res.status}`,
+            );
           } catch {
             clearTimeout(timer);
           }
@@ -138,7 +140,9 @@ function saasProxyOptions(saasProxyTarget: string) {
   return {
     target,
     changeOrigin: true,
-    configure(proxy: { on: (ev: string, fn: (...args: unknown[]) => void) => void }) {
+    configure(proxy: {
+      on: (ev: string, fn: (...args: unknown[]) => void) => void;
+    }) {
       proxy.on("error", (err: unknown, _req: unknown, res: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         console.error("\n[vite] Kimlik API proxy hatası:", message);
@@ -149,7 +153,7 @@ function saasProxyOptions(saasProxyTarget: string) {
         const sr = res as ServerResponse | undefined;
         if (sr && typeof sr.writeHead === "function" && !sr.headersSent) {
           const body =
-            "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Kimlik API</title></head><body>" +
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Kimlik API</title></head><body>' +
             "<h1>Kimlik API'ye ulaşılamıyor</h1>" +
             `<p>Vite bu isteği <code>${target}</code> adresine iletemedi (ör. bağlantı reddedildi).</p>` +
             "<p><strong>Çözüm:</strong> Terminalde proje kökünde <code>npm run dev</code> çalıştırın veya ayrı bir pencerede <code>web/api</code> klasöründe <code>npm run dev</code> (varsayılan port 4000).</p>" +
@@ -170,8 +174,12 @@ export default defineConfig(({ command, mode }) => {
   }
 
   const env = loadEnv(mode, frontendRoot, "");
-  const pdfProxyTarget = (env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000").replace(/\/$/, "");
-  const saasProxyTarget = (env.VITE_SAAS_PROXY_TARGET || "http://127.0.0.1:4000").replace(/\/$/, "");
+  const pdfProxyTarget = (
+    env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000"
+  ).replace(/\/$/, "");
+  const saasProxyTarget = (
+    env.VITE_SAAS_PROXY_TARGET || "http://127.0.0.1:4000"
+  ).replace(/\/$/, "");
   /** Kimlik / abonelik Express API; `/api` PDF’e gitmeden önce eşleşmeli. */
   const saasProxy = saasProxyOptions(saasProxyTarget);
   const apiProxy = {
@@ -211,21 +219,28 @@ export default defineConfig(({ command, mode }) => {
       react(),
       tailwindcss(),
       ...(command === "serve"
-        ? [warnIfPdfApiUnreachable(pdfProxyTarget), warnIfSaasApiUnreachable(saasProxyTarget)]
+        ? [
+            warnIfPdfApiUnreachable(pdfProxyTarget),
+            warnIfSaasApiUnreachable(saasProxyTarget),
+          ]
         : []),
       ...(isProd && !disableObfuscation ? [productionObfuscatePlugin()] : []),
     ],
     server: {
       port: 5173,
       proxy: {
-        ...Object.fromEntries(saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy])),
+        ...Object.fromEntries(
+          saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy]),
+        ),
         "/api": apiProxy,
       },
     },
     preview: {
       port: 4173,
       proxy: {
-        ...Object.fromEntries(saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy])),
+        ...Object.fromEntries(
+          saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy]),
+        ),
         "/api": apiProxy,
       },
     },

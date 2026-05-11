@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import warnings
 from typing import Any
 
 import httpx
@@ -55,6 +56,8 @@ def _saas_session_ok_dev_bypass_enabled() -> bool:
 
     Üretimde (Vercel vb.) veya ``NB_PDF_FORCE_SAAS_SESSION`` ile asla aktif olmaz.
     """
+    if os.getenv("NB_PDF_ALLOW_DEV_BYPASS", "").strip().lower() not in ("1", "true"):
+        return False  # bypass devre dışı — production'da bu var'ı asla set etme
     if _is_production_like_environment():
         return False
     force = os.getenv("NB_PDF_FORCE_SAAS_SESSION", "").strip().lower()
@@ -70,6 +73,13 @@ def _saas_session_ok_dev_bypass_enabled() -> bool:
     if explicit in ("1", "true", "yes"):
         return True
     return False
+
+
+if os.getenv("NB_PDF_ALLOW_DEV_BYPASS", "").strip().lower() in ("1", "true"):
+    warnings.warn(
+        "NB_PDF_ALLOW_DEV_BYPASS is enabled — saas gate bypass is active. Never use in production.",
+        stacklevel=1,
+    )
 
 
 def saas_api_base() -> str:

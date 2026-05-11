@@ -287,6 +287,13 @@ const paymentCallbackBase = /^https?:\/\/.+/i.test(paymentCallbackRaw)
   ? paymentCallbackRaw.replace(/\/$/, "")
   : raw.APP_BASE_URL.trim().replace(/\/$/, "");
 
+if (process.env.NODE_ENV === "production" && creditCheckoutUseFake) {
+  throw new Error(
+    "FATAL: CREDIT_CHECKOUT_USE_FAKE must not be true in production. " +
+    "Users would receive credits without payment."
+  );
+}
+
 export const env = {
   ...raw,
   welcomeCreditsMin,
