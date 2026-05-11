@@ -19,10 +19,15 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-/** Sabit 10 sütun — satır başına 10 sayfa kutusu. Yakınlaştırma raster çözünürlüğünü değiştirir. */
-const FIXED_GRID_COLS = 10;
 const ZOOM_SLIDER_MIN = 25;
 const ZOOM_SLIDER_MAX = 100;
+
+function zoomToColumns(zoom: number): number {
+  if (zoom <= 25) return 10;
+  if (zoom <= 50) return 7;
+  if (zoom <= 75) return 5;
+  return 3;
+}
 /** Tailwind gap-6 / satır arası ~gap-7 — rubber-band için nötr alan */
 const GAP_PX = 24;
 const ROW_GAP_PX = 28;
@@ -311,6 +316,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     const effectiveLang: Language =
       strictTurkishUi && mode === "delete" ? "tr" : language;
+    const effectiveLangRef = useRef<Language>(effectiveLang);
+    effectiveLangRef.current = effectiveLang;
     const W = ws(effectiveLang);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
@@ -336,6 +343,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const idx = page1 - 1;
         const arr = thumbsRef.current;
         if (idx >= 0 && idx < arr.length && arr[idx] != null) {
+          readyCountRef.current = Math.max(0, readyCountRef.current - 1);
           arr[idx] = null;
           scheduleThumbFlush();
         }
@@ -371,6 +379,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const cellWidthRef = useRef(0);
     const requestSinglePageThumbRef = useRef<(p: number, w: number, o?: { force?: boolean }) => void>(() => {});
     const pendingThumbFlushRef = useRef(false);
+    const readyCountRef = useRef(0);
     const scheduleThumbFlush = useCallback(() => {
       if (!pendingThumbFlushRef.current) {
         pendingThumbFlushRef.current = true;
@@ -392,17 +401,22 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     /** `gridContentRef.clientWidth` — satır `1fr` matematiği ile aynı iç genişlik (yan çubuk/modal/padding otomatik). */
     const innerWidth = Math.max(280, containerWidth);
 
+    // 150 ms debounce — kaydırıcı hızlı sürüklenince her piksel değişiminde
+    // yeni batch başlatmayı önler; slider UI'ı anında yanıt verir (prop zoomPercent).
+    const [debouncedZoom, setDebouncedZoom] = useState(zoomPercent);
+    useEffect(() => {
+      const id = setTimeout(() => setDebouncedZoom(zoomPercent), 150);
+      return () => clearTimeout(id);
+    }, [zoomPercent]);
+
     const { cols, cellWidth, cardHeight, thumbRasterCssW } = useMemo(() => {
-      const c = FIXED_GRID_COLS;
+      const clampedZoom = Math.min(ZOOM_SLIDER_MAX, Math.max(ZOOM_SLIDER_MIN, debouncedZoom));
+      const c = zoomToColumns(clampedZoom);
       const cw = (innerWidth - (c - 1) * GAP_PX) / c;
       const ch = Math.round(cw * (4 / 3));
-      const z =
-        (Math.min(ZOOM_SLIDER_MAX, Math.max(ZOOM_SLIDER_MIN, zoomPercent)) - ZOOM_SLIDER_MIN) /
-        (ZOOM_SLIDER_MAX - ZOOM_SLIDER_MIN);
-      /** En az hücre genişliği kadar raster — düşük yakınlaştırmada bulanık büyütme olmasın. */
-      const rw = Math.min(Math.max(Math.round(cw * (0.98 + z * 0.28)), Math.ceil(cw)), 384);
+      const rw = Math.min(Math.max(Math.round(cw * 1.12), Math.ceil(cw)), 512);
       return { cols: c, cellWidth: cw, cardHeight: ch, thumbRasterCssW: rw };
-    }, [innerWidth, zoomPercent]);
+    }, [innerWidth, debouncedZoom]);
 
     cellWidthRef.current = thumbRasterCssW;
     scrollStepYRef.current = cardHeight + ROW_GAP_PX;
@@ -709,6 +723,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         setLoading(true);
         setThumbs([]);
         thumbsRef.current = [];
+        readyCountRef.current = 0;
         setNumPages(0);
         selected.current = new Set();
         docRef.current = null;
@@ -735,11 +750,12 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           setNumPages(n);
           const empty = Array.from({ length: n }, () => null);
           thumbsRef.current = empty;
+          readyCountRef.current = 0;
           setThumbs(empty);
         } catch (e) {
           if (!cancelled) {
             setLoadError(
-              e instanceof Error ? e.message : effectiveLang === "tr" ? "PDF açılamadı." : "Could not open PDF.",
+              e instanceof Error ? e.message : effectiveLangRef.current === "tr" ? "PDF açılamadı." : "Could not open PDF.",
             );
           }
         } finally {
@@ -762,7 +778,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           URL.revokeObjectURL(blobUrl);
         }
       };
-    }, [file, password, effectiveLang, language, strictTurkishUi, mode]);
+    // mode intentionally excluded — does not require PDF reload
+  }, [file, password]);
 
     const clearThumbRetryTimer = useCallback((page1: number) => {
       const existing = thumbRetryTimersRef.current.get(page1);
@@ -813,7 +830,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             if (stale()) {
               return null;
             }
-            return canvas.toDataURL("image/png");
+            // JPEG saves ~80% memory vs PNG; quality 0.82 is indistinguishable for thumbnails
+            return canvas.toDataURL("image/jpeg", 0.82);
           } finally {
             page.cleanup();
           }
@@ -857,6 +875,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (ck) {
             thumbLru.delete(ck);
           }
+          if (thumbsRef.current[page1 - 1] != null) {
+            readyCountRef.current = Math.max(0, readyCountRef.current - 1);
+          }
           thumbsRef.current[page1 - 1] = null;
           scheduleThumbFlush();
           thumbFailureCountRef.current.delete(page1);
@@ -869,6 +890,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             thumbLru.touch(ck);
           }
           if (!thumbsRef.current[page1 - 1]) {
+            readyCountRef.current++;
             thumbsRef.current[page1 - 1] = cached.dataUrl;
             scheduleThumbFlush();
           }
@@ -880,6 +902,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             thumbLru.touch(ck);
           }
           if (!thumbsRef.current[page1 - 1]) {
+            readyCountRef.current++;
             thumbsRef.current[page1 - 1] = cached.dataUrl;
             scheduleThumbFlush();
           }
@@ -900,6 +923,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               if (ckNow) {
                 thumbLru.set(ckNow, { dataUrl: url, cssW });
               }
+              if (!thumbsRef.current[page1 - 1]) readyCountRef.current++;
               thumbsRef.current[page1 - 1] = url;
               scheduleThumbFlush();
               thumbFailureCountRef.current.delete(page1);
@@ -936,6 +960,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         const ck = sid ? thumbCacheKey(sid, page1) : null;
         if (ck) {
           thumbLru.delete(ck);
+        }
+        if (thumbsRef.current[page1 - 1] != null) {
+          readyCountRef.current = Math.max(0, readyCountRef.current - 1);
         }
         thumbsRef.current[page1 - 1] = null;
         setThumbs([...thumbsRef.current]);
@@ -987,8 +1014,8 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     useLayoutEffect(() => {
       const prev = prevZoomColsRef.current;
-      const changed = prev.z !== zoomPercent || prev.c !== cols;
-      prevZoomColsRef.current = { z: zoomPercent, c: cols };
+      const changed = prev.z !== debouncedZoom || prev.c !== cols;
+      prevZoomColsRef.current = { z: debouncedZoom, c: cols };
       if (!changed) {
         return;
       }
@@ -1014,11 +1041,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           clientH: nh,
         };
       });
-    }, [zoomPercent, cols]);
+    }, [debouncedZoom, cols]);
 
     useEffect(() => {
       setRangeRevision((r) => r + 1);
-    }, [zoomPercent, cols, numPages, virtualRowCount]);
+    }, [debouncedZoom, cols, numPages, virtualRowCount]);
 
     /** Kalıcı önbellek kullanıldığı için görünür dışına taşan thumb’lar silinmez. */
     const evictOutsideRange = useCallback((_low: number, _high: number) => {}, []);
@@ -1058,77 +1085,87 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       evictOutsideRange(low, high);
       const cssW = thumbRasterCssW;
       const job = ++renderJobRef.current;
-      void (async () => {
-        const doc = docRef.current;
-        if (!doc) {
+      const doc = docRef.current;
+      if (!doc) {
+        return;
+      }
+      const queue = buildThumbLoadQueue(low, high);
+      for (let idx = 0; idx < queue.length; idx++) {
+        const i = queue[idx]!;
+        if (job !== renderJobRef.current) {
           return;
         }
-        const queue = buildThumbLoadQueue(low, high);
-        for (let idx = 0; idx < queue.length; idx++) {
-          const i = queue[idx]!;
-          if (job !== renderJobRef.current) {
-            return;
+        const sid = thumbSessionIdRef.current;
+        const ck = sid ? thumbCacheKey(sid, i) : null;
+        const cached = ck ? thumbLru.peek(ck) : undefined;
+        if (!thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
+          if (ck) {
+            thumbLru.touch(ck);
           }
-          const sid = thumbSessionIdRef.current;
-          const ck = sid ? thumbCacheKey(sid, i) : null;
-          const cached = ck ? thumbLru.peek(ck) : undefined;
-          if (!thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
-            if (ck) {
-              thumbLru.touch(ck);
-            }
-            thumbsRef.current[i - 1] = cached.dataUrl;
-            scheduleThumbFlush();
-            continue;
-          }
-          if (
-            !thumbsRef.current[i - 1] &&
-            cached &&
-            cssW > cached.cssW * THUMB_UPGRADE_MIN_RATIO
-          ) {
-            if (ck) {
-              thumbLru.touch(ck);
-            }
-            thumbsRef.current[i - 1] = cached.dataUrl;
-            scheduleThumbFlush();
-          }
-          if (thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
-            if (ck) {
-              thumbLru.touch(ck);
-            }
-            continue;
-          }
-          if (pendingThumbRef.current.has(i)) {
-            continue;
-          }
-          const url = await rasterPageToDataUrl(i, cssW, { mode: "batch", job });
-          if (job !== renderJobRef.current) {
-            return;
-          }
-          if (url) {
-            const sidNow = thumbSessionIdRef.current;
-            const ckNow = sidNow ? thumbCacheKey(sidNow, i) : null;
-            if (ckNow) {
-              thumbLru.set(ckNow, { dataUrl: url, cssW });
-            }
-            thumbsRef.current[i - 1] = url;
-            scheduleThumbFlush();
-            thumbFailureCountRef.current.delete(i);
-          } else {
-            const fails = (thumbFailureCountRef.current.get(i) ?? 0) + 1;
-            thumbFailureCountRef.current.set(i, fails);
-            if (fails <= THUMB_RETRY_MAX_ATTEMPTS) {
-              clearThumbRetryTimer(i);
-              const timer = window.setTimeout(() => {
-                thumbRetryTimersRef.current.delete(i);
-                pendingThumbRef.current.delete(i);
-                const w = cellWidthRef.current;
-                requestSinglePageThumbRef.current(i, w);
-              }, THUMB_RETRY_DELAY_MS);
-              thumbRetryTimersRef.current.set(i, timer);
-            }
-          }
+          readyCountRef.current++;
+          thumbsRef.current[i - 1] = cached.dataUrl;
+          scheduleThumbFlush();
+          continue;
         }
-      })();
+        if (
+          !thumbsRef.current[i - 1] &&
+          cached &&
+          cssW > cached.cssW * THUMB_UPGRADE_MIN_RATIO
+        ) {
+          if (ck) {
+            thumbLru.touch(ck);
+          }
+          readyCountRef.current++;
+          thumbsRef.current[i - 1] = cached.dataUrl;
+          scheduleThumbFlush();
+        }
+        if (thumbsRef.current[i - 1] && cached && cssW <= cached.cssW * THUMB_REUSE_MAX_RATIO) {
+          if (ck) {
+            thumbLru.touch(ck);
+          }
+          continue;
+        }
+        if (pendingThumbRef.current.has(i)) {
+          continue;
+        }
+        // Mark pending before enqueue so concurrent submissions don't double-render
+        pendingThumbRef.current.add(i);
+        const pageNum = i;
+        enqueueThumbRasterJob(async () => {
+          try {
+            const url = await rasterPageToDataUrl(pageNum, cssW, { mode: "batch", job });
+            if (job !== renderJobRef.current) {
+              return;
+            }
+            if (url) {
+              const sidNow = thumbSessionIdRef.current;
+              const ckNow = sidNow ? thumbCacheKey(sidNow, pageNum) : null;
+              if (ckNow) {
+                thumbLru.set(ckNow, { dataUrl: url, cssW });
+              }
+              if (!thumbsRef.current[pageNum - 1]) readyCountRef.current++;
+              thumbsRef.current[pageNum - 1] = url;
+              scheduleThumbFlush();
+              thumbFailureCountRef.current.delete(pageNum);
+            } else {
+              const fails = (thumbFailureCountRef.current.get(pageNum) ?? 0) + 1;
+              thumbFailureCountRef.current.set(pageNum, fails);
+              if (fails <= THUMB_RETRY_MAX_ATTEMPTS) {
+                clearThumbRetryTimer(pageNum);
+                const timer = window.setTimeout(() => {
+                  thumbRetryTimersRef.current.delete(pageNum);
+                  pendingThumbRef.current.delete(pageNum);
+                  const w = cellWidthRef.current;
+                  requestSinglePageThumbRef.current(pageNum, w);
+                }, THUMB_RETRY_DELAY_MS);
+                thumbRetryTimersRef.current.set(pageNum, timer);
+              }
+            }
+          } finally {
+            pendingThumbRef.current.delete(pageNum);
+          }
+        });
+      }
     }, [
       numPages,
       computeVisiblePageRange,
@@ -1139,31 +1176,17 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       clearThumbRetryTimer,
       buildThumbLoadQueue,
       thumbLru,
+      enqueueThumbRasterJob,
+      scheduleThumbFlush,
     ]);
-
-    const readyPreviews = useMemo(() => {
-      if (numPages === 0) {
-        return 0;
-      }
-      const sid = thumbSessionIdRef.current;
-      let n = 0;
-      for (let p = 1; p <= numPages; p++) {
-        if (thumbs[p - 1]) {
-          n++;
-        } else if (sid && thumbLru.has(thumbCacheKey(sid, p))) {
-          n++;
-        }
-      }
-      return n;
-    }, [thumbs, numPages, thumbLru]);
 
     useEffect(() => {
       onStatsChange?.({
         selectedCount: selected.current.size,
-        readyPreviews,
+        readyPreviews: readyCountRef.current,
         totalPages: numPages,
       });
-    }, [onStatsChange, readyPreviews, numPages, selectionTick]);
+    }, [onStatsChange, thumbs, numPages, selectionTick]);
 
     useImperativeHandle(
       ref,
@@ -1188,7 +1211,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       if (e.shiftKey && anchorRef.current != null) {
         const a = Math.min(anchorRef.current, page1);
         const b = Math.max(anchorRef.current, page1);
-        const next = new Set<number>();
+        const next = new Set(selected.current);
         for (let p = a; p <= b; p++) {
           next.add(p);
         }
@@ -1487,13 +1510,12 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       setRubberLiveSelection(null);
       const { x, y } = contentXY(e);
       rubberLatestContentRef.current = { x, y };
-      const additive = e.ctrlKey || e.metaKey || e.shiftKey;
       rubberPointerRef.current = {
         startX: x,
         startY: y,
-        additive,
+        additive: true,
         dragApplied: false,
-        initialSelection: additive ? new Set(selected.current) : new Set(),
+        initialSelection: new Set(selected.current),
       };
       setRubberRect({ x, y, w: 0, h: 0 });
       setRubberActive(true);
@@ -1702,29 +1724,6 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
               ? "Sayfaya tıklayın veya boş alanda sürükleyerek seçin. Seçimi kaldırmak için «Seçimi temizle» veya Ctrl+D. Ctrl+A tümü; ok tuşları kaydırır."
               : "Click pages or drag on empty space to select. Use Clear selection or Ctrl+D. Ctrl+A all; arrow keys scroll.";
 
-    const progressLabel =
-      readyPreviews < numPages
-        ? effectiveLang === "tr"
-          ? `Önizleme: ${readyPreviews} / ${numPages} sayfa hazır — Kalanı yükleniyor...`
-          : `Preview: ${readyPreviews} / ${numPages} pages ready — loading the rest...`
-        : null;
-
-    const selectedCountDisplay = useMemo(() => selected.current.size, [selectionTick]);
-
-    const selectedLabel =
-      mode === "delete"
-        ? strictTurkishUi || effectiveLang === "tr"
-          ? `Silinecek: ${selectedCountDisplay} sayfa`
-          : `${selectedCountDisplay} page(s) marked for removal`
-        : effectiveLang === "tr"
-          ? `Seçilen: ${selectedCountDisplay} sayfa`
-          : `Selected: ${selectedCountDisplay} page(s)`;
-
-    const previewPlaceholderGhost =
-      effectiveLang === "tr"
-        ? "Önizleme: 0000 / 0000 sayfa hazır — Kalanı yükleniyor..."
-        : "Preview: 0000 / 0000 pages ready — loading the rest...";
-
     if (loadError) {
       return (
         <div
@@ -1747,42 +1746,22 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     return (
       <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col gap-2">
-        <p className="text-[11px] leading-relaxed text-slate-500">{hint}</p>
-        <div className="flex w-full min-w-0 flex-nowrap items-center gap-0 border-b border-white/[0.07] pb-2.5 text-[12px] text-slate-400">
-          <div
-            className="w-72 min-w-[18rem] max-w-[40vw] shrink-0 border-r border-white/15 pr-4 [font-variant-numeric:tabular-nums]"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
-            {progressLabel ? (
-              <span className="block font-medium whitespace-nowrap text-cyan-200/90 tabular-nums">
-                {progressLabel}
-              </span>
-            ) : (
-              <span
-                className="block whitespace-nowrap tabular-nums text-transparent select-none"
-                aria-hidden
-              >
-                {previewPlaceholderGhost}
-              </span>
-            )}
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-[11px] leading-relaxed text-slate-300">
+            <span className="font-bold text-cyan-400">
+              {effectiveLang === "tr" ? "Nasıl kullanılır: " : "How to use: "}
+            </span>
+            {hint}
           </div>
-          <div
-            className="min-w-0 flex-1 px-4 text-center text-slate-300 sm:text-left [font-variant-numeric:tabular-nums]"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
-            <span className="tabular-nums">{selectedLabel}</span>
-          </div>
-          <div className="flex shrink-0 items-center pl-1">
-            {selectionMode ? (
-              <button
-                type="button"
-                onClick={() => applySelection(new Set())}
-                className="rounded-md border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-300 transition hover:border-cyan-500/35 hover:bg-white/10 hover:text-cyan-100"
-              >
-                {effectiveLang === "tr" ? "Seçimi temizle" : "Clear selection"}
-              </button>
-            ) : null}
-          </div>
+          {selectionMode ? (
+            <button
+              type="button"
+              onClick={() => applySelection(new Set())}
+              className="shrink-0 rounded-md border border-white/20 bg-white/5 px-3 py-2 text-[11px] font-semibold text-slate-200 transition hover:border-cyan-500/45 hover:bg-cyan-500/10 hover:text-cyan-100"
+            >
+              {effectiveLang === "tr" ? "Seçimi temizle" : "Clear selection"}
+            </button>
+          ) : null}
         </div>
 
         <div

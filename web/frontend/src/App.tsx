@@ -35,7 +35,11 @@ import {
 import { RuntimeBootstrapSplash } from "./components/common/RuntimeBootstrapSplash";
 import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
-import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
+const SplitPagePickerModal = lazy(() =>
+  import("./components/split/SplitPagePickerModal").then((module) => ({
+    default: module.SplitPagePickerModal,
+  })),
+);
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
@@ -171,11 +175,6 @@ const PlanUpgradeModal = lazy(() =>
   })),
 );
 
-const DashboardLayout = lazy(() =>
-  import("./components/dashboard/DashboardLayout").then((module) => ({
-    default: module.DashboardLayout,
-  })),
-);
 
 type ContentPanel = "tool" | "subscription" | "profile" | "pricing" | "home";
 
@@ -659,8 +658,12 @@ function App() {
       ? readInitialWorkspaceToolSelection(window.location.pathname)
       : "split",
   );
-  const [contentPanel, setContentPanel] = useState<ContentPanel>("home");
-  const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>("split");
+  const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
+  const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
+    typeof window !== "undefined"
+      ? readInitialWorkspaceToolSelection(window.location.pathname)
+      : "split",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -1190,7 +1193,7 @@ function App() {
       );
       setSelectedFeatureId("split");
       setActiveSidebar("split");
-      setContentPanel("home");
+      setContentPanel("tool");
       setView("web");
     },
     [logout],
@@ -3034,13 +3037,13 @@ function App() {
 
   function handleDashboardLogoClick() {
     if (view === "admin") {
-      setContentPanel("home");
+      setContentPanel("tool");
       setView("web");
       window.history.replaceState({}, "", "/workspace");
       return;
     }
     if (view === "web") {
-      setContentPanel("home");
+      setContentPanel("tool");
       window.history.replaceState({}, "", "/workspace");
       return;
     }
@@ -3122,7 +3125,7 @@ function App() {
 
       setSelectedFeatureId("split");
       setActiveSidebar("split");
-      setContentPanel("home");
+      setContentPanel("tool");
       setView("web");
       window.history.replaceState({}, "", "/workspace");
 
@@ -4526,45 +4529,47 @@ function App() {
           selectedFeatureId === "delete-pages" ||
           selectedFeatureId === "rotate-pdf" ||
           selectedFeatureId === "organize-pdf") ? (
-          <SplitPagePickerModal
-            open={pageVisualModalOpen}
-            onClose={() => setPageVisualModalOpen(false)}
-            onReset={resetVisualPagePicker}
-            file={uploads[0].file}
-            password={password}
-            maxPage={uploads[0].pageCount}
-            language={language}
-            mode={pageVisualMode}
-            pagesText={
-              pageVisualMode === "split"
-                ? pagesText
-                : pageVisualMode === "delete"
-                  ? deletePagesText
-                  : ""
-            }
-            onPagesTextChange={
-              pageVisualMode === "split"
-                ? setPagesText
-                : pageVisualMode === "delete"
-                  ? setDeletePagesText
-                  : () => {}
-            }
-            onPagesErrorClear={
-              pageVisualMode === "split"
-                ? () => setPagesError("")
-                : pageVisualMode === "delete"
-                  ? () => setDeletePagesError("")
-                  : () => {}
-            }
-            pageRotations={rotatePageRotations}
-            onPageRotationsChange={setRotatePageRotations}
-            pageOrder={organizePageOrder}
-            onPageOrderChange={setOrganizePageOrder}
-            strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
-            onDeleteWouldRemoveWholeDocument={() =>
-              showToast("info", "Uyarı", PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG)
-            }
-          />
+          <Suspense fallback={null}>
+            <SplitPagePickerModal
+              open={pageVisualModalOpen}
+              onClose={() => setPageVisualModalOpen(false)}
+              onReset={resetVisualPagePicker}
+              file={uploads[0].file}
+              password={password}
+              maxPage={uploads[0].pageCount}
+              language={language}
+              mode={pageVisualMode}
+              pagesText={
+                pageVisualMode === "split"
+                  ? pagesText
+                  : pageVisualMode === "delete"
+                    ? deletePagesText
+                    : ""
+              }
+              onPagesTextChange={
+                pageVisualMode === "split"
+                  ? setPagesText
+                  : pageVisualMode === "delete"
+                    ? setDeletePagesText
+                    : () => {}
+              }
+              onPagesErrorClear={
+                pageVisualMode === "split"
+                  ? () => setPagesError("")
+                  : pageVisualMode === "delete"
+                    ? () => setDeletePagesError("")
+                    : () => {}
+              }
+              pageRotations={rotatePageRotations}
+              onPageRotationsChange={setRotatePageRotations}
+              pageOrder={organizePageOrder}
+              onPageOrderChange={setOrganizePageOrder}
+              strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
+              onDeleteWouldRemoveWholeDocument={() =>
+                showToast("info", "Uyarı", PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG)
+              }
+            />
+          </Suspense>
         ) : null}
 
         <GatedResultPreviewModal
@@ -4670,8 +4675,23 @@ function App() {
             {workspaceBanner.text}
           </div>
         ) : null}
-        {contentPanel !== "home" && (
-          <DashboardSidebar
+        <DashboardSidebar
+          active={activeSidebar}
+          onSelect={handleSidebarSelect}
+          language={language}
+          lockedFeatures={lockedFeatures}
+          userRole={user?.role}
+          enabledToolIds={enabledToolIds}
+          resolveToolLabel={resolveToolLabel}
+          limitsizProActive={limitsizProActive}
+          onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
+          accessToken={accessToken}
+          onUpgrade={() => setUpgradeModalOpen(true)}
+        />
+        <div
+          className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-56"}`}
+        >
+          <DashboardSidebarMobileRail
             active={activeSidebar}
             onSelect={handleSidebarSelect}
             language={language}
@@ -4679,46 +4699,8 @@ function App() {
             userRole={user?.role}
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
-            limitsizProActive={limitsizProActive}
-            onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
-            accessToken={accessToken}
-            onUpgrade={() => setUpgradeModalOpen(true)}
           />
-        )}
-        <div
-          className={contentPanel === "home" ? "min-h-screen w-full bg-nb-bg" : `min-h-screen w-full bg-nb-bg pt-14 md:pl-60 pb-56 ${bottomToolProgressActive ? "pb-32 md:pb-36" : ""}`}
-        >
-          {contentPanel === "home" && user ? (
-            <Suspense fallback={<div className="min-h-screen bg-nb-bg" />}>
-              <DashboardLayout
-                user={user}
-                language={language}
-                userBalance={userBalance}
-                lockedFeatures={lockedFeatures}
-                enabledToolIds={enabledToolIds}
-                selectedTool={activeSidebar}
-                onSelectTool={handleSidebarSelect}
-                accessToken={accessToken}
-                limitsizProActive={limitsizProActive}
-                onUpgrade={() => setUpgradeModalOpen(true)}
-                onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
-                onOpenSettings={handleNavProfile}
-                resolveToolLabel={resolveToolLabel}
-              />
-            </Suspense>
-          ) : null}
-          {contentPanel !== "home" && (
-            <DashboardSidebarMobileRail
-              active={activeSidebar}
-              onSelect={handleSidebarSelect}
-              language={language}
-              lockedFeatures={lockedFeatures}
-              userRole={user?.role}
-              enabledToolIds={enabledToolIds}
-              resolveToolLabel={resolveToolLabel}
-            />
-          )}
-          <div className={contentPanel === "home" ? "hidden" : "mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6"}>
+          <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6">
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
                 <QuotaWidget
@@ -4759,21 +4741,6 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
-                <div className="mb-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setContentPanel("home");
-                      window.history.replaceState({}, "", "/workspace");
-                    }}
-                    className="nb-transition inline-flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-nb-panel/60 px-3 py-1.5 text-sm font-medium text-nb-muted hover:border-white/[0.2] hover:text-nb-text"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                    {language === "tr" ? "Ana Sayfa" : "Dashboard"}
-                  </button>
-                </div>
                 <section className="workspace-card relative overflow-x-hidden">
                   <div className="workspace-card__header">
                     <div>

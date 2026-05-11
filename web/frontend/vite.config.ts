@@ -201,8 +201,9 @@ export default defineConfig(({ command, mode }) => {
   ];
 
   const isProd = mode === "production";
-  /** Ağır obfuscation bazı CI / düşük bellek ortamlarında sorun çıkarabilir; kapatmak için VITE_DISABLE_OBFUSCATION=true. */
-  const disableObfuscation = env.VITE_DISABLE_OBFUSCATION === "true";
+  // Obfuscation removed: caused ~30% bundle size increase, broke source maps, provided zero real security
+  // To opt-in to obfuscation set VITE_DISABLE_OBFUSCATION=false
+  const disableObfuscation = env.VITE_DISABLE_OBFUSCATION !== "false";
 
   return {
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
@@ -237,6 +238,9 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes("node_modules/pdfjs-dist")) {
+              return "pdfjs";
+            }
             if (id.includes("node_modules/react-dom")) {
               return "react-dom";
             }

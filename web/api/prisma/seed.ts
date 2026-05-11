@@ -90,6 +90,29 @@ async function main() {
       create: config,
     });
     console.log(`  ✓ ${config.plan} planı oluşturuldu/güncellendi`);
+
+    // Mevcut organizasyonların limitlerini de güncelle
+    const orgs = await prisma.organization.findMany({
+      where: { plan: config.plan as any },
+      select: { id: true },
+    });
+    for (const org of orgs) {
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: {
+          dailyOperationLimit: config.dailyOperationLimit,
+          monthlyOperationLimit: config.monthlyOperationLimit,
+          fileSizeLimitMB: config.fileSizeLimitMB,
+          batchLimit: config.batchLimit,
+          watermarkEnabled: config.watermarkEnabled,
+          queuePriority: config.queuePriority,
+          maxSeats: config.maxSeats,
+        },
+      });
+    }
+    if (orgs.length > 0) {
+      console.log(`    → ${orgs.length} organizasyon güncellendi`);
+    }
   }
 
   console.log("✅ Seed tamamlandı.");
