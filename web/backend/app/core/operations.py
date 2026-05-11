@@ -47,14 +47,23 @@ _MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB
 async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = None) -> Path:
     """Tarayıcıdan gelen dosyayı diske yazar ve işlem motoruna uygun hale getirir."""
     from fastapi import HTTPException
+    if upload.content_type not in ("application/pdf", "application/octet-stream"):
+        raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
     target_name = filename or upload.filename or "upload.bin"
     target_path = workdir / Path(target_name).name
     written = 0
+    first_chunk = True
     with target_path.open("wb") as output:
         while True:
             chunk = upload.file.read(256 * 1024)
             if not chunk:
                 break
+            if first_chunk:
+                first_chunk = False
+                if not chunk.startswith(b"%PDF-"):
+                    output.close()
+                    target_path.unlink(missing_ok=True)
+                    raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
             written += len(chunk)
             if written > _MAX_UPLOAD_BYTES:
                 output.close()
