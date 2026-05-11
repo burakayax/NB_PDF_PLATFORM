@@ -500,6 +500,32 @@ export async function adminUploadMediaController(
       "Upload buffer missing; check multer memory storage.",
     );
   }
+
+  // Magic byte validation — ensures actual file content matches the declared type.
+  const MAGIC: Record<string, [number, Buffer][]> = {
+    "image/png":      [[0, Buffer.from([0x89, 0x50, 0x4e, 0x47])]],
+    "image/jpeg":     [[0, Buffer.from([0xff, 0xd8, 0xff])]],
+    "image/gif":      [[0, Buffer.from("GIF87a")], [0, Buffer.from("GIF89a")]],
+    "image/webp":     [[0, Buffer.from("RIFF")], [8, Buffer.from("WEBP")]],
+    "application/pdf":[[0, Buffer.from("%PDF-")]],
+  };
+  const signatures = MAGIC[file.mimetype];
+  if (!signatures) {
+    throw new HttpError(415, "Unsupported file type.");
+  }
+  const matches = (offset: number, sig: Buffer) =>
+    buf.length >= offset + sig.length && buf.slice(offset, offset + sig.length).equals(sig);
+
+  // For WebP both signatures must match; for all others at least one must match.
+  const valid =
+    file.mimetype === "image/webp"
+      ? matches(0, signatures[0][1]) && matches(8, signatures[1][1])
+      : signatures.some(([offset, sig]) => matches(offset, sig));
+
+  if (!valid) {
+    throw new HttpError(415, "File content does not match its declared type.");
+  }
+
   const row = await persistMediaUpload({
     buffer: buf,
     originalName: file.originalname,
