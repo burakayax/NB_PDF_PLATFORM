@@ -44,13 +44,27 @@ def create_workdir(prefix: str = "nbpdf-web-") -> Path:
 _MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB
 
 
+_ALLOWED_CONTENT_TYPES = frozenset({
+    "application/pdf",
+    "application/octet-stream",
+    "binary/octet-stream",
+})
+
+_PDF_MAGIC = b"%PDF-"
+
+
 async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = None) -> Path:
     """Tarayıcıdan gelen dosyayı diske yazar ve işlem motoruna uygun hale getirir."""
     from fastapi import HTTPException
-    if upload.content_type not in ("application/pdf", "application/octet-stream"):
+    content_type = (upload.content_type or "").split(";")[0].strip().lower()
+    if content_type not in _ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
-    target_name = filename or upload.filename or "upload.bin"
-    target_path = workdir / Path(target_name).name
+
+    # Dosya adında path traversal koruması: yalnızca basename kullan.
+    raw_name = filename or upload.filename or "upload.bin"
+    safe_name = Path(raw_name).name or "upload.bin"
+    target_path = workdir / safe_name
+
     written = 0
     first_chunk = True
     with target_path.open("wb") as output:
@@ -60,7 +74,8 @@ async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = 
                 break
             if first_chunk:
                 first_chunk = False
-                if not chunk.startswith(b"%PDF-"):
+                # Magic byte doğrulama: ilk 5 bayt %PDF- olmalı.
+                if len(chunk) < 5 or chunk[:5] != _PDF_MAGIC:
                     output.close()
                     target_path.unlink(missing_ok=True)
                     raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
@@ -76,16 +91,25 @@ async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = 
 
 def cleanup_path(path: str | Path) -> None:
     """İndirme bittikten sonra geçici dosya veya klasörü siler."""
-    target = Path(path)
+    target = Path(path).resolve()
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    if not str(target).startswith(str(temp_root)):
+        logger.error("cleanup_path: güvenlik sınırı dışı yol reddedildi: %s", target)
+        return
     if not target.exists():
         return
     if target.is_dir():
-        shutil.rmtree(target, ignore_errors=True)
+        try:
+            shutil.rmtree(target)
+        except Exception as exc:
+            logger.warning("cleanup_path: rmtree başarısız: %s — %s", target, exc)
     else:
         try:
             target.unlink()
         except FileNotFoundError:
             pass
+        except Exception as exc:
+            logger.warning("cleanup_path: unlink başarısız: %s — %s", target, exc)
 
 
 def cleanup_and_raise(workdir: Path, error: Exception) -> None:

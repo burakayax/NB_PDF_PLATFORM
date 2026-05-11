@@ -30,6 +30,16 @@ apiRouter.use(abuseBlockMiddleware);
 apiRouter.use(globalApiLimiter);
 apiRouter.use(requireJwtUnlessPublic);
 
+// Kimlik doğrulama ve ödeme endpoint'lerinin tarayıcı tarafından cache'lenmesini engelle.
+apiRouter.use((req, res, next) => {
+  const p = req.path;
+  if (p.startsWith("/auth") || p.startsWith("/payment") || p.startsWith("/user") || p.startsWith("/admin")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+  }
+  next();
+});
+
 apiRouter.get("/health", (_request, response) => {
   response.json({
     status: "ok",

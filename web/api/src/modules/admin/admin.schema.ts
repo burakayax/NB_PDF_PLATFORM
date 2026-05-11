@@ -140,6 +140,13 @@ export const adminAdjustCreditsBodySchema = z.object({
   reason: z.string().trim().min(1).max(500),
 });
 
+/** POST /api/admin/payments/:conversationId/refund */
+export const adminRefundBodySchema = z.object({
+  reason: z.string().trim().min(1, "Reason is required.").max(500),
+  /** true → 7 günlük pencere kontrolünü atla (zorunlu admin override) */
+  forceOverrideWindow: z.boolean().optional().default(false),
+});
+
 export const emailAutomationBodySchema = z.object({
   lowCreditEnabled: z.boolean().optional(),
   welcomeEnabled: z.boolean().optional(),

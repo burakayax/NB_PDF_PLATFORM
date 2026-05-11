@@ -45,6 +45,7 @@ import {
   adminUsageExportController,
   adminUsageSeriesController,
   adminGetUserDetailController,
+  adminIssueRefundController,
 } from "./admin.controller.js";
 // SVG is intentionally excluded: SVG files can embed JavaScript and cause stored XSS.
 const ALLOWED_MIME = /^image\/(png|jpeg|gif|webp)$|^application\/pdf$/;
@@ -121,6 +122,8 @@ adminRouter.get("/download-logs/:id/proof", asyncHandler(adminDownloadLogProofCo
 
 adminRouter.post("/credits/grant", asyncHandler(adminGrantCreditsController));
 adminRouter.post("/credits/adjust", asyncHandler(adminAdjustCreditsController));
+
+adminRouter.post("/payments/:conversationId/refund", asyncHandler(adminIssueRefundController));
 
 adminRouter.get("/marketing", asyncHandler(adminGetMarketingController));
 adminRouter.put("/marketing/automation", asyncHandler(adminPutMarketingAutomationController));

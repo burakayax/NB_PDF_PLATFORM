@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
+import { pricingSectionCopy } from "../../i18n/pricingSection";
 import { PLANS } from "../../lib/planConfig";
 import type {
   Currency,
@@ -437,6 +438,7 @@ export default function PricingSection({
   onSelectPlan,
 }: PricingSectionProps) {
   const tr = language === "tr";
+  const copy = pricingSectionCopy(language);
   const { currency: checkoutCurrency } = useCheckoutCurrency();
   const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
 
@@ -472,11 +474,30 @@ export default function PricingSection({
           >
             {tr ? "Her Ölçeğe Uygun Plan" : "Plans for Every Scale"}
           </h2>
-          <p className="text-gray-400 text-lg max-w-xl mx-auto mb-8">
+          <p className="text-gray-400 text-lg max-w-xl mx-auto mb-6">
             {tr
               ? "Ücretsiz başla, büyüdükçe yükselt. İstediğin zaman iptal et."
               : "Start free, upgrade as you grow. Cancel anytime."}
           </p>
+
+          {/* 7-Day Money-Back Guarantee Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: 0.15 }}
+            className="inline-flex items-center gap-3 px-5 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 mb-8"
+          >
+            <span className="text-xl">💰</span>
+            <div className="text-left">
+              <p className="text-emerald-300 font-bold text-sm">
+                {copy.refundHeading}
+              </p>
+              <p className="text-emerald-400/70 text-xs mt-0.5 max-w-xs">
+                {copy.refundBody}
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* 5-column grid */}
@@ -516,16 +537,37 @@ export default function PricingSection({
         {/* Trust line */}
         <p className="text-center text-gray-600 text-sm mt-10">
           {tr
-            ? "SSL şifreli · GDPR uyumlu · İstediğiniz zaman iptal · 7 gün para iade garantisi iyzico ile güvenli ödeme"
-            : "SSL encryption · GDPR compliant · Cancel anytime · 7-day money-back guarantee · Secure payments via iyzico"}
+            ? "SSL şifreli · GDPR uyumlu · İstediğiniz zaman iptal · 7 gün para iade garantisi"
+            : "SSL encryption · GDPR compliant · Cancel anytime · 7-day money-back guarantee"}
           <span className="block mt-2 font-semibold">
             🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
           </span>
         </p>
 
+        {/* Refund detail block */}
+        <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-6 text-center">
+          <p className="text-emerald-300 font-bold text-base mb-2">
+            {copy.refundBadge}
+          </p>
+          <p className="text-gray-300 text-sm leading-relaxed mb-3">
+            {copy.refundBody}
+          </p>
+          <p className="text-gray-500 text-xs leading-relaxed">
+            {copy.refundAfterBody}
+          </p>
+        </div>
+
         {/* Inline FAQ */}
-        <div className="mt-12 grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="mt-10 grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {[
+            {
+              q: copy.faqRefundQ,
+              a: copy.faqRefundA,
+            },
+            {
+              q: copy.faqCancelAfterQ,
+              a: copy.faqCancelAfterA,
+            },
             {
               q: tr
                 ? "Ücretsiz planda kredi kartı gerekli mi?"

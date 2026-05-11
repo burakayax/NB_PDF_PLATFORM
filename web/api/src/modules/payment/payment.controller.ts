@@ -7,6 +7,7 @@ import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
   processPaymentCallback,
+  processIyzicoRefundWebhook,
   PaymentFulfillmentDbError,
 } from "./payment.service.js";
 
@@ -132,4 +133,25 @@ export async function paymentCallbackController(request: Request, response: Resp
   // `res.redirect()` Express bazen küçük bir HTML "Redirecting…" gövdesi ekler — tarayıcı ekranda kalıyormuş gibi görünür; yalnız Location başlığı.
   response.writeHead(303, { Location: redirectUrl });
   response.end();
+}
+
+const REFUND_WH_LOG = "[iyzico/refund-webhook]";
+
+/**
+ * POST /api/payments/refund-notify
+ * iyzico iade bildirimi webhook'u.
+ * iyzico'nun başarılı gönderim için 200 beklediği uç nokta — hata durumunda
+ * 500 döndürerek otomatik yeniden deneme tetiklenir.
+ */
+export async function paymentRefundWebhookController(request: Request, response: Response) {
+  const raw = request.body as Record<string, unknown>;
+  console.log(`${REFUND_WH_LOG} received`, { keys: Object.keys(raw) });
+
+  try {
+    await processIyzicoRefundWebhook(raw);
+    response.status(200).json({ received: true });
+  } catch (err) {
+    console.error(`${REFUND_WH_LOG} processing failed — iyzico will retry`, err instanceof Error ? err.message : err);
+    response.status(500).end();
+  }
 }

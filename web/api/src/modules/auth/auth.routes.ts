@@ -18,7 +18,7 @@ import {
   updateProfileController,
   verifyEmailController,
 } from "./auth.controller.js";
-import { deleteAccountLimiter } from "./auth.rate-limit.js";
+import { deleteAccountLimiter, forgotPasswordLimiter } from "./auth.rate-limit.js";
 import {
   forgotPasswordRequestController,
   forgotPasswordResetController,
@@ -29,9 +29,9 @@ export const authRouter = Router();
 
 authRouter.get("/google", asyncHandler(googleOAuthStartController));
 authRouter.get("/google/callback", asyncHandler(googleOAuthCallbackController));
-authRouter.post("/forgot-password/request", asyncHandler(forgotPasswordRequestController));
-authRouter.post("/forgot-password/verify-code", asyncHandler(forgotPasswordVerifyController));
-authRouter.post("/forgot-password/reset", asyncHandler(forgotPasswordResetController));
+authRouter.post("/forgot-password/request", forgotPasswordLimiter, asyncHandler(forgotPasswordRequestController));
+authRouter.post("/forgot-password/verify-code", forgotPasswordLimiter, asyncHandler(forgotPasswordVerifyController));
+authRouter.post("/forgot-password/reset", forgotPasswordLimiter, asyncHandler(forgotPasswordResetController));
 authRouter.post("/register", asyncHandler(registerController));
 authRouter.post("/login", asyncHandler(loginController));
 authRouter.post("/refresh", csrfOriginCheck, asyncHandler(refreshController));
