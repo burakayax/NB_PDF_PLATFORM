@@ -7,6 +7,7 @@ import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
   processPaymentCallback,
+  PaymentFulfillmentDbError,
 } from "./payment.service.js";
 
 /** Süre dolunca bile tarayıcıyı SPA’ya gönderiz (iyi/başarısız URL ayrımı güvenilir olmayabilir; ödeme yine PSP tarafında tamamlanmış olabilir). */
@@ -88,24 +89,44 @@ export async function paymentCallbackController(request: Request, response: Resp
 
   console.log(`${IYZICO_CB_LOG} extracted token=${token ? `"len=${token.length}"` : "MISSING"}, conversationIdFromPost=${conversationIdFromPost ?? "none"}`);
 
+  // Wrap fulfillment so PaymentFulfillmentDbError propagates; other errors resolve to failed-URL.
   const fulfil = processPaymentCallback(token, {
     conversationIdFromRedirect: conversationIdFromPost,
     rawCallbackKeys: Object.keys(raw),
-  }).then((url) => ({ url, timedOut: false as const }));
+  }).then((url) => ({ url, timedOut: false as const, dbError: null as null | PaymentFulfillmentDbError }))
+    .catch((err: unknown) => {
+      if (err instanceof PaymentFulfillmentDbError) {
+        return { url: null as null, timedOut: false as const, dbError: err };
+      }
+      // Non-DB errors: log and fall through to failed redirect.
+      console.error(`${IYZICO_CB_LOG} processPaymentCallback rejected unexpectedly`, err);
+      return { url: paymentWorkspaceRedirectUrl(false), timedOut: false as const, dbError: null as null };
+    });
 
-  const timedOutFallback = new Promise<{ url: string; timedOut: true }>((resolve) => {
+  const timedOutFallback = new Promise<{ url: string; timedOut: true; dbError: null }>((resolve) => {
     setTimeout(
-      () => resolve({ url: paymentWorkspaceRedirectUrl(false), timedOut: true }),
+      () => resolve({ url: paymentWorkspaceRedirectUrl(false), timedOut: true, dbError: null }),
       CALLBACK_MAX_MS,
     );
   });
 
   const result = await Promise.race([fulfil, timedOutFallback]);
+
   if (result.timedOut) {
     console.warn(`${IYZICO_CB_LOG} processing exceeded ${CALLBACK_MAX_MS}ms → 303 Location (fallback failed state; check logs above)`);
   }
 
-  const redirectUrl = result.url;
+  // DB write failed: return 500 so iyzico retries the webhook automatically.
+  if (result.dbError) {
+    console.error(
+      `${IYZICO_CB_LOG} returning 500 — DB fulfillment error; iyzico will retry`,
+      result.dbError.message,
+    );
+    response.status(500).end();
+    return;
+  }
+
+  const redirectUrl = result.url!;
   console.log(`${IYZICO_CB_LOG} sending 303, empty body, Location=${redirectUrl}`);
 
   // `res.redirect()` Express bazen küçük bir HTML "Redirecting…" gövdesi ekler — tarayıcı ekranda kalıyormuş gibi görünür; yalnız Location başlığı.

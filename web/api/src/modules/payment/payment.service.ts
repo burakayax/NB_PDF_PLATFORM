@@ -569,6 +569,18 @@ export type ProcessPaymentCallbackOpts = {
 
 const PC_LOG = "[iyzico/processPaymentCallback]";
 
+/**
+ * Thrown when the payment was verified by iyzico but our DB write failed.
+ * The controller must return HTTP 500 so iyzico retries the webhook.
+ */
+export class PaymentFulfillmentDbError extends Error {
+  constructor(cause: unknown) {
+    super("Payment verified but DB fulfillment failed — webhook must be retried");
+    this.name = "PaymentFulfillmentDbError";
+    this.cause = cause;
+  }
+}
+
 async function resolveConversationIdFromToken(
   token: string,
   result: IyzicoRetrieveResult,
@@ -764,41 +776,55 @@ export async function processPaymentCallback(
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + subscriptionDays);
 
-    await prisma.$transaction(async (tx) => {
-      const current = await tx.paymentCheckout.findUnique({
-        where: { conversationId },
-      });
-      if (!current || current.status === "completed") {
-        return;
-      }
+    try {
+      await prisma.$transaction(async (tx) => {
+        const current = await tx.paymentCheckout.findUnique({
+          where: { conversationId },
+        });
+        if (!current || current.status === "completed") {
+          return;
+        }
 
-      await tx.user.update({
-        where: { id: current.userId },
-        data: { plan: current.plan },
-      });
-      if (current.organizationId) {
-        await tx.organization.update({
-          where: { id: current.organizationId },
+        await tx.user.update({
+          where: { id: current.userId },
+          data: { plan: current.plan },
+        });
+        if (current.organizationId) {
+          await tx.organization.update({
+            where: { id: current.organizationId },
+            data: {
+              plan: current.plan,
+              subscriptionStatus: "active",
+              subscriptionExpiry: expiry,
+            },
+          });
+        }
+
+        await tx.paymentCheckout.update({
+          where: { conversationId },
           data: {
-            plan: current.plan,
-            subscriptionStatus: "active",
-            subscriptionExpiry: expiry,
+            status: "completed",
+            completedAt: new Date(),
           },
         });
-      }
-
-      await tx.paymentCheckout.update({
-        where: { conversationId },
-        data: {
-          status: "completed",
-          completedAt: new Date(),
-        },
       });
-    });
+    } catch (dbErr) {
+      // Payment was verified by iyzico but our DB write failed. Throw so the
+      // controller returns HTTP 500 — iyzico will retry the webhook automatically.
+      console.error(
+        `${PC_LOG} DB fulfillment FAILED for conversationId=${conversationId}; will throw so caller returns 500 for iyzico retry`,
+        dbErr instanceof Error ? (dbErr.stack ?? dbErr.message) : dbErr,
+      );
+      throw new PaymentFulfillmentDbError(dbErr);
+    }
 
-    console.log(`${PC_LOG} subscription updated; done`);
+    console.log(`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
     return paymentWorkspaceRedirectUrl(true, pending.plan);
   } catch (unexpected) {
+    // Re-throw DB fulfillment errors — the controller must return 500 for these.
+    if (unexpected instanceof PaymentFulfillmentDbError) {
+      throw unexpected;
+    }
     console.error(
       `${PC_LOG} unexpected error`,
       unexpected instanceof Error
