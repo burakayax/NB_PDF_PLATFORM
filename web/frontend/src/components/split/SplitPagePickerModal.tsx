@@ -8,6 +8,7 @@ import {
   type PdfPageVisualMode,
   type VisualPickerStats,
 } from "./PdfPageVisualGrid";
+import PdfErrorBoundary from "./PdfErrorBoundary";
 
 export type SplitPagePickerModalProps = {
   open: boolean;
@@ -85,7 +86,6 @@ export function SplitPagePickerModal({
   const W = ws(effectiveModalLang);
   const title = modalTitle(mode, effectiveModalLang);
   const done = effectiveModalLang === "tr" ? "Tamam" : "Done";
-  const resetLabel = effectiveModalLang === "tr" ? "Sıfırla" : "Reset";
 
   const gridRef = useRef<PdfPageVisualGridHandle>(null);
   /** Rubber-band sürüklerken tüm diyalogda metin seçimini kapatır. */
@@ -109,11 +109,6 @@ export function SplitPagePickerModal({
     gridRef.current?.scrollToPage(n);
     setGitInput("");
   }, [gitInput, totalPages]);
-
-  const handleReset = () => {
-    onReset?.();
-    setGitInput("");
-  };
 
   useEffect(() => {
     if (!open) {
@@ -147,7 +142,11 @@ export function SplitPagePickerModal({
             aria-modal="true"
             aria-labelledby="split-picker-title"
             className={`relative z-10 flex h-[min(94vh,100dvh)] w-[min(96vw,100vw)] max-w-[96vw] flex-col overflow-hidden rounded-xl border border-cyan-500/20 bg-gradient-to-b from-slate-900/[0.98] via-slate-950/[0.99] to-[#070b12] shadow-[0_0_0_1px_rgba(34,211,238,0.12),0_25px_80px_-20px_rgba(0,0,0,0.85)] ${rubberBandActive ? "select-none" : ""}`}
-            style={rubberBandActive ? { WebkitUserSelect: "none", userSelect: "none" } : undefined}
+            style={
+              rubberBandActive
+                ? { WebkitUserSelect: "none", userSelect: "none" }
+                : undefined
+            }
             initial={{ opacity: 0, y: 12, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.985 }}
@@ -168,12 +167,7 @@ export function SplitPagePickerModal({
                 </span>
                 <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">
                   {ZOOM_LEVELS.map((z) => {
-                    const isStandard = z === 25;
-                    const label = isStandard
-                      ? effectiveModalLang === "tr"
-                        ? "Std"
-                        : "0"
-                      : `%${z}`;
+                    const label = `%${z}`;
                     return (
                       <button
                         key={z}
@@ -181,15 +175,15 @@ export function SplitPagePickerModal({
                         title={
                           effectiveModalLang === "tr"
                             ? z <= 25
-                              ? "Standart görünüm (çok sütun)"
+                              ? "Küçük kartlar (%25)"
                               : z >= 100
-                                ? "Büyük detay"
-                                : "Ara yakınlaştırma"
+                                ? "Büyük kartlar (%100)"
+                                : `Orta büyüklük (%${z})`
                             : z <= 25
-                              ? "Standard view (many columns)"
+                              ? "Small cards (25%)"
                               : z >= 100
-                                ? "Large detail"
-                                : "Medium zoom"
+                                ? "Large cards (100%)"
+                                : `Medium size (${z}%)`
                         }
                         onClick={() => setZoomPercent(z)}
                         className={`rounded px-1.5 py-1 text-[10px] font-semibold tabular-nums transition sm:px-2 sm:text-xs ${
@@ -205,54 +199,48 @@ export function SplitPagePickerModal({
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-1 text-[11px]">
-                <span className="whitespace-nowrap text-slate-500">{effectiveModalLang === "tr" ? "Git:" : "Go:"}</span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="whitespace-nowrap text-[11px] font-semibold text-slate-300">
+                  {effectiveModalLang === "tr" ? "Sayfaya git:" : "Go to page:"}
+                </span>
                 <input
                   type="text"
                   inputMode="numeric"
                   placeholder="—"
                   value={gitInput}
-                  onChange={(e) => setGitInput(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(e) =>
+                    setGitInput(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       applyGit();
                     }
                   }}
-                  className="w-11 rounded border border-cyan-500/25 bg-slate-950/80 px-1 py-0.5 text-center font-mono text-[11px] text-cyan-100 tabular-nums outline-none ring-0 focus:border-cyan-400/50 sm:w-14 sm:py-1"
+                  className="w-12 rounded border border-cyan-500/40 bg-slate-900/90 px-1.5 py-0.5 text-center font-mono text-[12px] font-semibold text-cyan-100 tabular-nums outline-none ring-0 focus:border-cyan-400/70 focus:ring-1 focus:ring-cyan-400/30 sm:w-14 sm:py-1"
                 />
-                <span className="tabular-nums text-slate-500">/ {totalPages > 0 ? totalPages : "—"}</span>
+                <span className="tabular-nums text-[11px] font-medium text-slate-400">
+                  / {totalPages > 0 ? totalPages : "—"}
+                </span>
                 <button
                   type="button"
                   onClick={applyGit}
-                  className="rounded border border-cyan-400/30 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-cyan-100 hover:bg-cyan-500/20 sm:text-[11px]"
+                  className="rounded border border-cyan-400/45 bg-cyan-500/15 px-2 py-0.5 text-[11px] font-bold text-cyan-100 hover:bg-cyan-500/25 sm:text-[12px]"
                 >
                   OK
                 </button>
               </div>
 
-              <div className="min-w-0 shrink text-[10px] leading-tight whitespace-nowrap text-slate-500 tabular-nums">
-                <span>
-                  {effectiveModalLang === "tr" ? "Önizl.:" : "Prv:"}{" "}
-                  {stats.readyPreviews}/{stats.totalPages || totalPages || "—"}
-                </span>
-                <span className="text-slate-600"> · </span>
-                <span className="text-slate-400">
+              <div className="min-w-0 shrink whitespace-nowrap tabular-nums">
+                <span className="rounded border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold text-cyan-200 tabular-nums">
                   {strictTurkishForDeleteUi && mode === "delete"
-                    ? `Sil: ${stats.selectedCount}`
-                    : `Sel: ${stats.selectedCount}`}
+                    ? `Silinecek: ${stats.selectedCount}`
+                    : effectiveModalLang === "tr"
+                      ? `Seçilen: ${stats.selectedCount}`
+                      : `Selected: ${stats.selectedCount}`}
                 </span>
               </div>
 
               <div className="ml-auto flex shrink-0 items-center gap-1.5">
-                {onReset ? (
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="rounded-md border border-cyan-400/35 bg-cyan-500/10 px-2 py-1 text-[11px] font-semibold text-cyan-100 shadow-[0_0_16px_-8px_rgba(34,211,238,0.5)] transition hover:border-cyan-300/50 hover:bg-cyan-500/15 sm:px-2.5 sm:text-xs"
-                  >
-                    {resetLabel}
-                  </button>
-                ) : null}
                 <button
                   type="button"
                   onClick={onClose}
@@ -265,29 +253,37 @@ export function SplitPagePickerModal({
 
             <div className="flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden px-1 py-1 sm:px-1.5 sm:py-1.5">
               {file.type === "application/pdf" && (maxPage ?? 0) > 0 ? (
-                <PdfPageVisualGrid
-                  key={`pdf-visual-${maxPage}-${file.size}-${file.lastModified}`}
-                  ref={gridRef}
-                  file={file}
-                  password={password}
-                  maxPage={maxPage}
-                  language={language}
-                  mode={mode}
-                  pagesText={pagesText}
-                  onPagesTextChange={onPagesTextChange}
-                  onPagesErrorClear={onPagesErrorClear}
-                  pageRotations={pageRotations}
-                  onPageRotationsChange={onPageRotationsChange}
-                  pageOrder={pageOrder}
-                  onPageOrderChange={onPageOrderChange}
-                  zoomPercent={zoomPercent}
-                  onStatsChange={setStats}
-                  onRubberBandActiveChange={setRubberBandActive}
-                  strictTurkishUi={strictTurkishForDeleteUi && mode === "delete"}
-                  onDeleteWouldRemoveWholeDocument={onDeleteWouldRemoveWholeDocument}
-                />
+                <PdfErrorBoundary>
+                  <PdfPageVisualGrid
+                    key={`pdf-visual-${maxPage}-${file.size}-${file.lastModified}`}
+                    ref={gridRef}
+                    file={file}
+                    password={password}
+                    maxPage={maxPage}
+                    language={language}
+                    mode={mode}
+                    pagesText={pagesText}
+                    onPagesTextChange={onPagesTextChange}
+                    onPagesErrorClear={onPagesErrorClear}
+                    pageRotations={pageRotations}
+                    onPageRotationsChange={onPageRotationsChange}
+                    pageOrder={pageOrder}
+                    onPageOrderChange={onPageOrderChange}
+                    zoomPercent={zoomPercent}
+                    onStatsChange={setStats}
+                    onRubberBandActiveChange={setRubberBandActive}
+                    strictTurkishUi={
+                      strictTurkishForDeleteUi && mode === "delete"
+                    }
+                    onDeleteWouldRemoveWholeDocument={
+                      onDeleteWouldRemoveWholeDocument
+                    }
+                  />
+                </PdfErrorBoundary>
               ) : (
-                <p className="text-sm text-slate-400">{W.splitPickerWaitHint}</p>
+                <p className="text-sm text-slate-400">
+                  {W.splitPickerWaitHint}
+                </p>
               )}
             </div>
           </motion.div>

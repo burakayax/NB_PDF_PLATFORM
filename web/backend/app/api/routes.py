@@ -41,7 +41,10 @@ from app.core.jobs import (
     request_cancel_merge_job,
 )
 from app.core.thread_pool import run_cpu_bound
-from app.core.preview_gate import generate_hero_watermarked_preview_png_queued
+from app.core.preview_gate import (
+    generate_hero_watermarked_preview_png_queued,
+    generate_hero_watermarked_preview_png_queued_from_path,
+)
 from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail_from_path
 from app.core.result_store import (
     delete_result,
@@ -237,8 +240,7 @@ async def preview_merge_job_hero(
     """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
     await saas_session_ok(token)
     output_path, _output_name, _workdir = get_job_download(job_id)
-    pdf_bytes = await run_cpu_bound(Path(output_path).read_bytes)
-    png = await generate_hero_watermarked_preview_png_queued(pdf_bytes)
+    png = await generate_hero_watermarked_preview_png_queued_from_path(output_path)
     if not png:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     return Response(content=png, media_type="image/png")
@@ -974,11 +976,7 @@ async def preview_result_hero(
     """Large watermarked first-page preview for gated-download modal (FREE, owner-only)."""
     user_id = await saas_current_user_id(token)
     read = get_result(result_id, user_id)
-    try:
-        pdf_bytes = await run_cpu_bound(read.payload_path.read_bytes)
-    except OSError:
-        raise HTTPException(status_code=404, detail="Preview not available.") from None
-    png = await generate_hero_watermarked_preview_png_queued(pdf_bytes)
+    png = await generate_hero_watermarked_preview_png_queued_from_path(read.payload_path)
     if not png:
         raise HTTPException(status_code=404, detail="Preview could not be generated.")
     return Response(content=png, media_type="image/png")

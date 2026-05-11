@@ -43,9 +43,12 @@ export function normalizeUserBalance(
 ): UserBalance {
   const isAdmin = wire.isAdmin ?? ctx.role === "ADMIN";
   const hasActiveSubscription = wire.plan !== "FREE" || isAdmin;
+  const dailyLimit = wire.daily?.limit ?? null;
+  const dailyUsed = wire.daily?.used ?? 0;
+  const creditBalance = dailyLimit !== null ? Math.max(0, dailyLimit - dailyUsed) : 0;
   return {
     userId: ctx.userId,
-    creditBalance: 0,
+    creditBalance,
     plan: wire.plan,
     role: isAdmin ? "ADMIN" : "USER",
     subscriptionStatus: wire.plan !== "FREE" ? "active" : "none",

@@ -22,15 +22,14 @@ export async function createOrganizationForUser(
   const slug = generateSlug(orgName);
 
   const planConfig = await prisma.planConfig.findUnique({ where: { plan } });
-  const limits = planConfig ?? {
-    dailyOperationLimit: 5,
-    monthlyOperationLimit: 50,
-    fileSizeLimitMB: 20,
-    batchLimit: 0,
-    watermarkEnabled: true,
-    queuePriority: "LOW" as const,
-    maxSeats: 1,
+  const PLAN_DEFAULTS: Record<string, { dailyOperationLimit: number | null; monthlyOperationLimit: number; fileSizeLimitMB: number; batchLimit: number; watermarkEnabled: boolean; queuePriority: "LOW" | "MEDIUM" | "HIGH" | "HIGHEST"; maxSeats: number }> = {
+    FREE:     { dailyOperationLimit: 3,    monthlyOperationLimit: 30,     fileSizeLimitMB: 25,     batchLimit: 0,   watermarkEnabled: true,  queuePriority: "LOW",     maxSeats: 1 },
+    STARTER:  { dailyOperationLimit: 25,   monthlyOperationLimit: 250,    fileSizeLimitMB: 100,    batchLimit: 2,   watermarkEnabled: true,  queuePriority: "LOW",     maxSeats: 1 },
+    PLUS:     { dailyOperationLimit: null, monthlyOperationLimit: 600,    fileSizeLimitMB: 250,    batchLimit: 5,   watermarkEnabled: false, queuePriority: "MEDIUM",  maxSeats: 1 },
+    PRO:      { dailyOperationLimit: null, monthlyOperationLimit: 1000,   fileSizeLimitMB: 500,    batchLimit: 25,  watermarkEnabled: false, queuePriority: "HIGH",    maxSeats: 1 },
+    BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: 999999, fileSizeLimitMB: 999999, batchLimit: 999, watermarkEnabled: false, queuePriority: "HIGHEST", maxSeats: 999 },
   };
+  const limits = planConfig ?? PLAN_DEFAULTS[plan] ?? PLAN_DEFAULTS["FREE"];
 
   const org = await prisma.organization.create({
     data: {
