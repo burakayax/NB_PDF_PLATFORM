@@ -69,6 +69,7 @@ const rawEnvSchema = z
     JWT_REFRESH_SECRET: z.string().min(32),
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().positive().default(15),
     REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+    DESKTOP_ACCESS_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(4),
     EMAIL_VERIFICATION_TTL_HOURS: z.coerce
       .number()
       .int()
@@ -99,6 +100,8 @@ const rawEnvSchema = z
     SMTP_FROM_NAME: z.string().min(1).default("PDF PLATFORM"),
     /** Yönetici bildirimleri ve iletişim formu için gelen kutusu adresi. */
     ADMIN_EMAIL: z.string().email(),
+    /** ADMIN rolü verilen tek e-posta; kaynak kodda sabit değil, env'den okunur. */
+    ROLE_ADMIN_EMAIL: z.string().email(),
     /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: nbglobalstudio@gmail.com). */
     CONTACT_TO_EMAIL: z.string().email().default("nbglobalstudio@gmail.com"),
     /**

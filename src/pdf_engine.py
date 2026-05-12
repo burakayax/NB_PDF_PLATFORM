@@ -30,8 +30,17 @@ except ImportError:  # pragma: no cover
         _PdfReadError = Exception  # type: ignore[misc,assignment]
 
 # --- YOLLAR ---
-# Tesseract'in yolu: sisteminizde farklıysa burayı güncelleyin
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+_tess_which = shutil.which("tesseract")
+_tess_fallback = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+if _tess_which:
+    pytesseract.pytesseract.tesseract_cmd = _tess_which
+elif os.path.isfile(_tess_fallback):
+    pytesseract.pytesseract.tesseract_cmd = _tess_fallback
+else:
+    raise EnvironmentError(
+        "Tesseract bulunamadı. Lütfen Tesseract-OCR'ı kurun ve PATH'e ekleyin: "
+        "https://github.com/UB-Mannheim/tesseract/wiki"
+    )
 base_dir = os.path.dirname(os.path.abspath(__file__))
 # Poppler klasörünün proje ana dizinindeki Library/bin içinde olduğu varsayılır
 poppler_bin_path = os.path.join(base_dir, "..", "Library", "bin")

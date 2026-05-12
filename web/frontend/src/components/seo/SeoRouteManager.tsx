@@ -93,6 +93,7 @@ export function SeoRouteManager({
         image: seo.ogImage ?? "/app-preview-main.png",
       }}
       includeProductSchema={view === "landing" || view === "web"}
+      includePricingOfferSchema={view === "pricing"}
       faqSchema={faqSchema}
       breadcrumb={breadcrumb}
       hreflang={hreflang}

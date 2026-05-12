@@ -79,6 +79,7 @@
     "usage_today": "Bugün {used}/{limit} kullanım",
     "quota_exhausted_detail": "Ücretsiz planda günde en fazla {limit} işlem yapılabilir. Sınırsız kullanım için yükseltin.",
     "navbar_upgrade": "Yükselt",
+    "offline_no_cache": "Bu işlemi yapmak için internet bağlantısı gerekiyor. Lütfen bağlantınızı kontrol edin.",
     "profile_settings": "Ayarlar",
     "profile_password": "Şifre değiştir",
     "profile_logout": "Çıkış yap",

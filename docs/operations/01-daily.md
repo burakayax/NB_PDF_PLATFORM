@@ -16,7 +16,7 @@
 
 ```bash
 # 🍎 Mac / Linux Terminal:
-curl -s -o /dev/null -w "%{http_code}" https://siteadın.com/
+curl -s -o /dev/null -w "%{http_code}" https://pdfplatform.com/
 # Beklenen: 200
 
 curl -s -o /dev/null -w "%{http_code}" https://siteadın.com/api/health
@@ -27,13 +27,13 @@ curl -s https://siteadın.com/api/health | python3 -m json.tool
 
 ```powershell
 # 🪟 Windows (PowerShell):
-(Invoke-WebRequest -Uri "https://siteadin.com/" -UseBasicParsing).StatusCode
+(Invoke-WebRequest -Uri "https://pdfplatform.com/" -UseBasicParsing).StatusCode
 # Beklenen: 200
 
-(Invoke-WebRequest -Uri "https://siteadin.com/api/health" -UseBasicParsing).StatusCode
+(Invoke-WebRequest -Uri "https://pdfplatform/api/health" -UseBasicParsing).StatusCode
 # Beklenen: 200
 
-(Invoke-WebRequest -Uri "https://siteadin.com/api/health" -UseBasicParsing).Content | ConvertFrom-Json
+(Invoke-WebRequest -Uri "https://pdfplatform/api/health" -UseBasicParsing).Content | ConvertFrom-Json
 ```
 
 **Tarayıcıdan da kontrol et:** Gizli/incognito pencerede siteyi aç.
@@ -64,6 +64,7 @@ journalctl -u nb-pdf-api -n 200 --no-pager | grep -E "ERROR|WARNING"
 ```
 
 **Ne aramalısın?**
+
 - `"level":"error"` → Hata oluşmuş
 - `iyzico_signature_mismatch` → Ödeme sahtecilik girişimi
 - `ip_blocked` → IP engellenmiş (normal olabilir)
@@ -89,6 +90,7 @@ find /tmp -name "nbpdf-*" -mmin +60 | wc -l
 ```
 
 **Eşikler:**
+
 - ✅ %70 altı → Normal
 - ⚠️ %70-85 → Dikkat et
 - 🚨 %85 üstü → Hemen temizle → `runbooks/RB-06-disk-full.md`
@@ -114,6 +116,7 @@ ps aux | grep uvicorn | grep -v grep
 ```
 
 **Eşikler:**
+
 - ✅ %70 altı → Normal
 - ⚠️ %80 → Servisleri yeniden başlatmayı düşün
 - 🚨 %90 üstü → Hemen müdahale → `runbooks/RB-04-memory-leak.md`
@@ -172,12 +175,13 @@ echo | openssl s_client -connect siteadın.com:443 -servername siteadın.com 2>/
 
 ```powershell
 # 🪟 Windows (PowerShell):
-$cert = [System.Net.ServicePointManager]::FindServicePoint("https://siteadin.com").Certificate
+$cert = [System.Net.ServicePointManager]::FindServicePoint("https://pdfplatform.app").Certificate
 # Daha basit yöntem — tarayıcıda:
 # Site adres çubuğundaki kilide tıkla → Sertifika Bilgisi → Son Kullanma Tarihi
 ```
 
 **Eşikler:**
+
 - ✅ 30+ gün → Sorun yok
 - ⚠️ 14-30 gün → Yakında yenilenecek
 - 🚨 14 gün altı → Hemen yenile → `runbooks/RB-08-ssl-expired.md`
@@ -209,20 +213,21 @@ grep "pdf_processed\|pdf_api_incoming" /var/log/nb-pdf-platform/api.log | \
 
 ## 📊 Özet Tablo — Günlük Kontrol
 
-| Kontrol | Nerede | Beklenen | Alarm |
-|---------|--------|----------|-------|
-| Site sağlık | Yerel makine | HTTP 200 | Başka her şey |
-| Disk kullanımı | SSH → `df -h` | < %85 | > %85 |
-| RAM kullanımı | SSH → `free -h` | < %80 | > %90 |
-| Hata sayısı | SSH → log grep | < 50/saat | > 200/saat |
-| SSL süresi | Yerel makine / tarayıcı | > 30 gün | < 14 gün |
-| Geçici dosyalar | SSH → find /tmp | < 5 dosya | > 50 dosya |
+| Kontrol         | Nerede                  | Beklenen  | Alarm         |
+| --------------- | ----------------------- | --------- | ------------- |
+| Site sağlık     | Yerel makine            | HTTP 200  | Başka her şey |
+| Disk kullanımı  | SSH → `df -h`           | < %85     | > %85         |
+| RAM kullanımı   | SSH → `free -h`         | < %80     | > %90         |
+| Hata sayısı     | SSH → log grep          | < 50/saat | > 200/saat    |
+| SSL süresi      | Yerel makine / tarayıcı | > 30 gün  | < 14 gün      |
+| Geçici dosyalar | SSH → find /tmp         | < 5 dosya | > 50 dosya    |
 
 ---
 
 ## 🛠️ Günlük İzleme Araçları
 
 ### 1. UptimeRobot (Ücretsiz)
+
 - Her 5 dakikada `/api/health` endpoint'ini kontrol eder
 - Site düşünce SMS/email atar
 - https://uptimerobot.com → Hesap aç → Monitor ekle
