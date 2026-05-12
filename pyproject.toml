@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setupTOOLS>=68", "wheel"]
-build-backend = "setupTOOLS.build_meta"
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "nb-pdf-TOOLS"
@@ -24,8 +24,8 @@ classifiers = [
 [project.scripts]
 nb-pdf-TOOLS = "src.__main__:main"
 
-[tool.setupTOOLS]
+[tool.setuptools]
 include-package-data = true
 
-[tool.setupTOOLS.packages.find]
+[tool.setuptools.packages.find]
 include = ["src", "src.*"]

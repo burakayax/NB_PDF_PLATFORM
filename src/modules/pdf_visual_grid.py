@@ -415,6 +415,9 @@ class PdfVisualGrid(ctk.CTkFrame):
         self._render_thread = threading.Thread(target=self._render_worker, daemon=True)
         self._render_thread.start()
 
+    # Bellekte tutulacak maksimum thumbnail sayısı (yaklaşık 200x283px RGB ≈ 165 KB/sayfa)
+    _CACHE_MAX_PAGES = 80
+
     def _render_worker(self):
         try:
             import fitz
@@ -429,6 +432,10 @@ class PdfVisualGrid(ctk.CTkFrame):
                 mat = fitz.Matrix(scale, scale)
                 pix = page.get_pixmap(matrix=mat, alpha=False)
                 img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+                # Cache doluysa en eski girişi temizle
+                if len(self._raw_cache) >= self._CACHE_MAX_PAGES:
+                    oldest = min(self._raw_cache)
+                    del self._raw_cache[oldest]
                 self._raw_cache[i + 1] = img
                 if not self._stop_render.is_set():
                     self.after(0, self._on_thumb_ready, i + 1)

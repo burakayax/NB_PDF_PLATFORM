@@ -76,44 +76,78 @@ function useInViewOnce(ref: React.RefObject<Element | null>) {
   return inView;
 }
 
+
 // ─── Animated Background ──────────────────────────────────────────────────────
 
-function AuroraBackground() {
+function GradientBackground() {
   return (
-    <div
-      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none"
-      aria-hidden="true"
-    >
+    <>
+      <style>{`
+        @keyframes gb-drift-a {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50%      { transform: translate(4%,6%) scale(1.06); }
+        }
+        @keyframes gb-drift-b {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50%      { transform: translate(-5%,-4%) scale(1.08); }
+        }
+        @keyframes gb-drift-c {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50%      { transform: translate(3%,-5%) scale(1.05); }
+        }
+        @keyframes gb-noise {
+          0%,100% { opacity: 0.035; }
+          50%      { opacity: 0.055; }
+        }
+      `}</style>
       <div
-        className="absolute top-[-15%] left-[5%] w-[700px] h-[700px] rounded-full opacity-[0.15]"
-        style={{
-          background: "radial-gradient(circle,#3b82f6,transparent 70%)",
-          animation: "lp-blob-a 22s ease-in-out infinite",
-        }}
-      />
-      <div
-        className="absolute top-[40%] right-[-8%] w-[520px] h-[520px] rounded-full opacity-[0.11]"
-        style={{
-          background: "radial-gradient(circle,#8b5cf6,transparent 70%)",
-          animation: "lp-float 7s ease-in-out infinite alternate",
-        }}
-      />
-      <div
-        className="absolute bottom-[5%] left-[25%] w-[460px] h-[460px] rounded-full opacity-[0.08]"
-        style={{
-          background: "radial-gradient(circle,#06b6d4,transparent 70%)",
-          animation: "lp-float 9s ease-in-out infinite alternate-reverse",
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-[0.022]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-    </div>
+        className="fixed inset-0 pointer-events-none"
+        style={{ zIndex: -1, overflow: "hidden", background: "#080b14" }}
+        aria-hidden="true"
+      >
+        {/* Blob A – derin mavi sol üst */}
+        <div style={{
+          position: "absolute", top: "-30%", left: "-20%",
+          width: "80vw", height: "80vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 40% 40%, rgba(29,78,216,0.18), transparent 60%)",
+          animation: "gb-drift-a 26s ease-in-out infinite",
+          filter: "blur(120px)",
+        }} />
+        {/* Blob B – indigo sağ */}
+        <div style={{
+          position: "absolute", top: "-10%", right: "-25%",
+          width: "65vw", height: "65vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 55% 40%, rgba(67,56,202,0.14), transparent 60%)",
+          animation: "gb-drift-b 34s ease-in-out infinite",
+          filter: "blur(130px)",
+        }} />
+        {/* Blob C – cyan-blue ince çizgi sol orta */}
+        <div style={{
+          position: "absolute", top: "40%", left: "-5%",
+          width: "45vw", height: "45vw",
+          borderRadius: "50%",
+          background: "radial-gradient(circle at 45% 50%, rgba(14,116,144,0.12), transparent 60%)",
+          animation: "gb-drift-c 20s ease-in-out infinite",
+          filter: "blur(100px)",
+        }} />
+        {/* Üst ince parlak şerit */}
+        <div style={{
+          position: "absolute", top: 0, left: "15%",
+          width: "70%", height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.25), transparent)",
+        }} />
+        {/* Noise doku katmanı */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+          backgroundSize: "200px 200px",
+          animation: "gb-noise 8s ease-in-out infinite",
+          mixBlendMode: "overlay",
+        }} />
+      </div>
+    </>
   );
 }
 
@@ -1578,12 +1612,8 @@ export function LandingPage({
   }, []);
 
   return (
-    <div
-      className="min-h-screen text-white antialiased"
-      style={{ background: "#030711" }}
-    >
-      <AuroraBackground />
-
+    <div className="min-h-screen text-white antialiased">
+      <GradientBackground />
       <Navbar
         language={language}
         onLanguageChange={onLanguageChange}

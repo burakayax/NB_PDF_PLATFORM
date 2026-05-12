@@ -29,6 +29,7 @@ type SEOProps = {
     image?: string;
   };
   includeProductSchema?: boolean;
+  includePricingOfferSchema?: boolean;
   faqSchema?: Array<{ question: string; answer: string }>;
   breadcrumb?: Array<{ name: string; url: string }>;
   /** Absolute URLs for hreflang alternates */
@@ -122,6 +123,7 @@ export function SEO({
   og,
   twitter,
   includeProductSchema = false,
+  includePricingOfferSchema = false,
   faqSchema,
   breadcrumb,
   hreflang,
@@ -179,6 +181,7 @@ export function SEO({
       pageTitle: title,
       pageDescription: description,
       includeProduct: includeProductSchema,
+      includePricingOffer: includePricingOfferSchema,
       includeFaq: faqSchema,
       breadcrumb,
     });
@@ -190,6 +193,7 @@ export function SEO({
     breadcrumb,
     hreflang,
     includeProductSchema,
+    includePricingOfferSchema,
     language,
     og,
     robots,

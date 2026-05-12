@@ -353,8 +353,10 @@ def pdf_to_images_zip(
     ext = "png" if fmt == "png" else "jpg"
     import src.pdf_engine as pe
 
+    import os as _os
+    _cpu = max(1, min((_os.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png" if ext == "png" else "jpeg"}
+    kw_base: dict = {"dpi": int(dpi), "fmt": "png" if ext == "png" else "jpeg", "thread_count": _cpu}
     if poppler and os.path.isdir(poppler):
         kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()
@@ -478,8 +480,10 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
     from pptx import Presentation
     import src.pdf_engine as pe
 
+    import os as _os2
+    _cpu2 = max(1, min((_os2.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png"}
+    kw_base: dict = {"dpi": int(dpi), "fmt": "png", "thread_count": _cpu2}
     if poppler and os.path.isdir(poppler):
         kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()

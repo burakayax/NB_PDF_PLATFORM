@@ -152,6 +152,7 @@ class NBPDFApp(ctk.CTk):
         self.configure(fg_color=self.ui["bg"])
         self._configure_windows_identity()
         self._configure_window_icon()
+        self.protocol("WM_DELETE_WINDOW", self.destroy)
         self.bind("<FocusIn>", self._handle_window_focus)
 
         # Uygulama ana pencere alanını üst içerik ve alt sabit çubuk olarak ayırıyoruz.
@@ -1186,7 +1187,6 @@ class NBPDFApp(ctk.CTk):
                 text_color=self.ui["text"],
                 border_width=1,
                 border_color=self.ui["border_subtle"],
-                wraplength=100,
                 command=lambda key=spec["key"], label=isim: self._grid_tool_launch(key, label),
             )
             btn.grid(row=i // 4, column=i % 4, padx=8, pady=10, sticky="nsew")
@@ -1470,6 +1470,13 @@ class NBPDFApp(ctk.CTk):
             self._schedule_periodic_validation()
             if self.license_notice:
                 self.license_notice.configure(text=message or t("main.subscription_refreshing"))
+        elif kind == "handle_click_ready":
+            _, feature_key, isim = item
+            self._apply_license_visuals()
+            self._handle_click_after_sync(feature_key, isim)
+        elif kind == "handle_click_error":
+            _, message = item
+            messagebox.showwarning(t("app.warning"), message)
 
     def start_google_login(self):
         self.login_error_label.configure(text="")
@@ -1606,7 +1613,7 @@ class NBPDFApp(ctk.CTk):
     def _schedule_periodic_validation(self):
         self._cancel_periodic_validation()
         if self._is_authenticated_session():
-            self.periodic_validation_after_id = self.after(3 * 60 * 1000, self._run_periodic_validation)
+            self.periodic_validation_after_id = self.after(30 * 60 * 1000, self._run_periodic_validation)
 
     def _run_periodic_validation(self):
         self.periodic_validation_after_id = None
@@ -1637,7 +1644,7 @@ class NBPDFApp(ctk.CTk):
         if not self._is_authenticated_session() or self._is_guest_mode() or self.is_refreshing_license:
             return
         now = time.monotonic()
-        if self._last_focus_subscription_sync is not None and now - self._last_focus_subscription_sync < 25.0:
+        if self._last_focus_subscription_sync is not None and now - self._last_focus_subscription_sync < 600.0:
             return
         self._last_focus_subscription_sync = now
         self._refresh_license_in_background(None, silent=True)
@@ -1750,7 +1757,11 @@ class NBPDFApp(ctk.CTk):
     def _offer_upgrade_for_server_error(self, message: str) -> None:
         self._open_upgrade_modal_quota_limit(detail=message)
 
+    # Offline çalışma: son başarılı sunucu yanıtını ve zamanını sakla
+    _OFFLINE_GRACE_SECONDS = 4 * 60 * 60  # 4 saat
+
     def authorize_operation(self, feature_key, file_paths):
+        import time
         if self._is_guest_mode():
             guest_state = self._load_guest_state(force_reload=True)
             if guest_state.guest_locked or guest_state.remaining_operations <= 0:
@@ -1768,12 +1779,22 @@ class NBPDFApp(ctk.CTk):
             raise DesktopAuthError(str(error)) from error
         try:
             result = self.auth_client.authorize_operation(self.current_session["accessToken"], feature_key, file_paths)
+            # Başarılı yanıtı önbelleğe al (offline grace period için)
+            self._last_authorize_result = result
+            self._last_authorize_time = time.monotonic()
         except DesktopAuthExpiredError as error:
             self.force_logout(t("main.session_expired"))
             raise DesktopAuthError(str(error)) from error
         except DesktopAccessBlockedError as error:
             self.force_logout(t("main.device_blocked"))
             raise DesktopAuthError(str(error)) from error
+        except DesktopNetworkError:
+            # İnternet yok — önbellek geçerliyse offline çalışmaya izin ver
+            cached = getattr(self, "_last_authorize_result", None)
+            cached_time = getattr(self, "_last_authorize_time", None)
+            if cached and cached_time and (time.monotonic() - cached_time) < self._OFFLINE_GRACE_SECONDS:
+                return cached
+            raise DesktopAuthError(t("desktop.offline_no_cache"))
         except DesktopAuthError as error:
             msg = str(error)
             if self._server_error_suggests_upgrade(msg):
@@ -1796,13 +1817,18 @@ class NBPDFApp(ctk.CTk):
 
     def handle_click(self, feature_key, isim):
         if self._is_authenticated_session():
-            try:
-                self._sync_subscription_for_auth()
-                self._apply_license_visuals()
-            except (DesktopAuthError, DesktopNetworkError) as error:
-                messagebox.showwarning(t("app.warning"), str(error))
-                return
+            def _worker():
+                try:
+                    self._sync_subscription_for_auth()
+                    self.auth_queue.put(("handle_click_ready", feature_key, isim))
+                except (DesktopAuthError, DesktopNetworkError) as error:
+                    self.auth_queue.put(("handle_click_error", str(error)))
+            threading.Thread(target=_worker, daemon=True).start()
+            return
 
+        self._handle_click_after_sync(feature_key, isim)
+
+    def _handle_click_after_sync(self, feature_key, isim):
         if not self.license_info:
             messagebox.showwarning(t("app.warning"), t("main.license_missing"))
             return

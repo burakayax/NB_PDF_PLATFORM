@@ -6,6 +6,7 @@ type SchemaInput = {
   pageTitle: string;
   pageDescription: string;
   includeProduct?: boolean;
+  includePricingOffer?: boolean;
   includeFaq?: Array<{ question: string; answer: string }>;
   breadcrumb?: Array<{ name: string; url: string }>;
 };
@@ -126,6 +127,39 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
   };
 }
 
+// ─── Pricing Offer with 7-day MoneyBackGuarantee ─────────────────────────────
+function buildPricingOffer(input: SchemaInput): JsonLdNode {
+  const isTr = input.language === "tr";
+  return {
+    "@context": "https://schema.org",
+    "@type": "Offer",
+    name: isTr
+      ? "PDF PLATFORM — Abonelik Planları"
+      : "PDF PLATFORM — Subscription Plans",
+    description: isTr
+      ? "Ücretsiz plan dahil aylık ve yıllık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi."
+      : "Monthly and annual subscription plans including a free tier. 7-day no-questions-asked money-back guarantee.",
+    url: input.canonicalUrl,
+    priceCurrency: isTr ? "TRY" : "USD",
+    availability: "https://schema.org/InStock",
+    seller: {
+      "@id": `${origin(input.canonicalUrl)}/#organization`,
+    },
+    hasMerchantReturnPolicy: {
+      "@type": "MerchantReturnPolicy",
+      name: isTr ? "7 Gün Para İade Garantisi" : "7-Day Money-Back Guarantee",
+      description: isTr
+        ? "Satın alma tarihinden itibaren 7 gün içinde tam iade. Gerekçe belirtmenize gerek yoktur."
+        : "Full refund within 7 days of purchase. No questions asked.",
+      returnPolicyCategory:
+        "https://schema.org/MerchantReturnFiniteReturnWindow",
+      merchantReturnDays: 7,
+      refundType: "https://schema.org/FullRefund",
+      returnFees: "https://schema.org/FreeReturn",
+    },
+  };
+}
+
 // ─── BreadcrumbList ───────────────────────────────────────────────────────────
 function buildBreadcrumb(
   items: Array<{ name: string; url: string }>,
@@ -166,6 +200,10 @@ export function buildBaseStructuredData(input: SchemaInput): JsonLdNode[] {
 
   if (input.includeProduct) {
     result.push(buildSoftwareApplication(input));
+  }
+
+  if (input.includePricingOffer) {
+    result.push(buildPricingOffer(input));
   }
 
   if (input.breadcrumb && input.breadcrumb.length > 0) {

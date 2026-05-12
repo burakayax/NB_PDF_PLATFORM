@@ -215,6 +215,11 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
+    resolve: {
+      alias: {
+        "@": path.resolve(frontendRoot, "src"),
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),

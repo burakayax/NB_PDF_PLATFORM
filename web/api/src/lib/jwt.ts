@@ -34,6 +34,12 @@ export function signAccessToken(payload: AuthUserPayload) {
   });
 }
 
+export function signDesktopAccessToken(payload: AuthUserPayload) {
+  return jwt.sign(createPayload(payload, "access"), env.JWT_ACCESS_SECRET, {
+    expiresIn: `${env.DESKTOP_ACCESS_TOKEN_TTL_DAYS}d`,
+  });
+}
+
 export function signRefreshToken(payload: AuthUserPayload) {
   return jwt.sign(createPayload(payload, "refresh"), env.JWT_REFRESH_SECRET, {
     expiresIn: `${env.REFRESH_TOKEN_TTL_DAYS}d`,

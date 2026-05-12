@@ -79,6 +79,7 @@
     "usage_today": "Today: {used}/{limit} operations",
     "quota_exhausted_detail": "Free plan allows up to {limit} operations per day. Upgrade for unlimited access.",
     "navbar_upgrade": "Upgrade",
+    "offline_no_cache": "An internet connection is required for this operation. Please check your connection.",
     "profile_settings": "Settings",
     "profile_password": "Change password",
     "profile_logout": "Sign out",

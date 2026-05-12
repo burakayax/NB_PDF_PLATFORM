@@ -20,6 +20,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@number-flow/react": "^0.6.0",
     "@tanstack/react-virtual": "^3.13.2",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.460.0",
@@ -29,7 +30,8 @@
     "react-dom": "latest",
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.2",

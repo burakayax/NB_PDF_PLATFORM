@@ -663,8 +663,27 @@ def open_payment_checkout_in_browser(checkout_result: dict[str, Any]) -> None:
         fd, path = tempfile.mkstemp(suffix=".html", prefix="nbpdf-iyzico-", text=False)
         try:
             os.write(fd, html.encode("utf-8"))
-        finally:
             os.close(fd)
-        webbrowser.open(Path(path).as_uri())
+            webbrowser.open(Path(path).as_uri())
+            # Tarayıcının dosyayı okuması için kısa bir süre bekle, sonra temizle
+            import threading as _t
+            def _cleanup(p=path):
+                import time as _time
+                _time.sleep(10)
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
+            _t.Thread(target=_cleanup, daemon=True).start()
+        except Exception:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            raise
         return
     raise DesktopAuthError("Ödeme sayfası (URL veya form) sunucudan gelmedi. iyzico anahtarlarını kontrol edin.")

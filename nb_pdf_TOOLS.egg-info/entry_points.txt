@@ -1,0 +1,2 @@
+[console_scripts]
+nb-pdf-TOOLS = src.__main__:main

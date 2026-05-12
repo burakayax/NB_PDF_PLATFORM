@@ -1,6 +1,22 @@
 import rateLimit from "express-rate-limit";
 
 /**
+ * POST /api/auth/login ve /api/auth/register: IP başına 5 dakikada en fazla 10 istek.
+ * Kaba kuvvet parola saldırılarını yavaşlatır.
+ */
+export const loginLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  statusCode: 429,
+  keyGenerator: (req) => `login:${req.ip ?? "unknown"}`,
+  message: {
+    message: "Çok fazla giriş denemesi. Lütfen 5 dakika sonra tekrar deneyin.",
+  },
+});
+
+/**
  * DELETE /api/auth/me: authenticated user ID + IP çifti başına dakikada en fazla 1 istek.
  * Kaba kuvvet saldırısını ve kazara çift silmeyi önler.
  */

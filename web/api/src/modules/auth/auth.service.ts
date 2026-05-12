@@ -13,6 +13,7 @@ import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import {
   signAccessToken,
+  signDesktopAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } from "../../lib/jwt.js";
@@ -125,7 +126,7 @@ function toPublicUser(user: User): PublicUser {
   };
 }
 
-async function createSession(user: User) {
+async function createSession(user: User, isDesktop = false) {
   // Revoke all existing valid sessions so only one active session per user exists
   await prisma.refreshToken.updateMany({
     where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
@@ -141,7 +142,9 @@ async function createSession(user: User) {
     ...(user.organizationId ? { organizationId: user.organizationId } : {}),
   };
 
-  const accessToken = signAccessToken(payload);
+  const accessToken = isDesktop
+    ? signDesktopAccessToken(payload)
+    : signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
   const refreshTokenHash = hashToken(refreshToken);
 
@@ -530,7 +533,7 @@ export async function loginUser(
   }
 
   authLog.info("login: success", { userId: user.id, email: user.email });
-  return createSession(user);
+  return createSession(user, Boolean(deviceId));
 }
 
 export async function refreshSession(
