@@ -10,6 +10,7 @@ export interface QuotaCheckResult {
   dailyLimit?: number | null;
   monthlyUsed?: number;
   monthlyLimit?: number;
+  watermarkEnabled?: boolean;
 }
 
 function getNextMidnightInTimezone(timezone: string): Date {
@@ -111,6 +112,15 @@ export async function checkQuota(
     return { allowed: true, reason: "admin_bypass" };
   }
 
+  // Team member with active patron subscription gets business-level access
+  if (user.isTeamMember && user.teamOwnerId) {
+    const team = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+    if (team?.subscriptionStatus === "ACTIVE") {
+      return { allowed: true, reason: "team_member_business" };
+    }
+    // Patron expired — fall through to free-tier quota check below
+  }
+
   let org = user.organization;
   if (!org) {
     org = await createOrganizationForUser(userId, user.name ?? user.email, "FREE");
@@ -193,6 +203,7 @@ export async function checkQuota(
     dailyLimit: currentOrg.dailyOperationLimit,
     monthlyUsed: currentOrg.currentMonthOperations,
     monthlyLimit: currentOrg.monthlyOperationLimit,
+    watermarkEnabled: currentOrg.watermarkEnabled,
   };
 }
 

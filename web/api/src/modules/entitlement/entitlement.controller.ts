@@ -51,6 +51,7 @@ export async function entitlementCheckController(
     monthlyUsed: result.monthlyUsed,
     monthlyLimit: result.monthlyLimit,
     resetAt: result.resetAt?.toISOString() ?? null,
+    watermarkEnabled: result.watermarkEnabled ?? false,
   });
 }
 

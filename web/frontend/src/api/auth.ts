@@ -27,6 +27,10 @@ export type AuthUser = {
   billingPostalCode?: string | null;
   city?: string | null;
   country?: string | null;
+  /** True when user is part of a Business team (patron-managed). */
+  isTeamMember?: boolean;
+  /** The patron user's id when isTeamMember is true. */
+  teamOwnerId?: string | null;
 };
 
 /** PATCH /api/auth/profile and PATCH /api/user/profile (same backend handler). */

@@ -117,10 +117,11 @@ async function fetchCountryFromIp(): Promise<string | null> {
 }
 
 function mergeGeoAndHints(geo: string | null): CheckoutCurrency {
-  if (geo) {
-    return defaultCurrencyFromCountryCode(geo);
-  }
-  return inferCurrencyFromClientHints();
+  // Timezone + language are high-confidence signals for Turkey — don't let IP override them
+  const hints = inferCurrencyFromClientHints();
+  if (hints === "TRY") return "TRY";
+  if (geo) return defaultCurrencyFromCountryCode(geo);
+  return hints;
 }
 
 type Ctx = {
@@ -131,7 +132,7 @@ type Ctx = {
 const CheckoutCurrencyContext = createContext<Ctx | null>(null);
 
 export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrency] = useState<CheckoutCurrency>("USD");
+  const [currency, setCurrency] = useState<CheckoutCurrency>(() => inferCurrencyFromClientHints());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -146,7 +147,7 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
       }
     }).catch(() => {
       if (!cancelled) {
-        setCurrency("USD");
+        setCurrency(inferCurrencyFromClientHints());
         setLoading(false);
       }
     });

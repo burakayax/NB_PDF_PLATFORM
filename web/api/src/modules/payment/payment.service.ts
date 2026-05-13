@@ -15,6 +15,7 @@ import {
 } from "../credit-checkout/credit-pack-pricing.js";
 import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
+import { createTeamForOwner } from "../team/team.service.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
 
@@ -798,6 +799,24 @@ export async function processPaymentCallback(
           },
         });
       });
+
+      // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
+      if (pending.plan === "BUSINESS") {
+        try {
+          const owner = await prisma.user.findUnique({
+            where: { id: pending.userId },
+            select: { firstName: true, lastName: true, email: true },
+          });
+          const ownerName =
+            [owner?.firstName, owner?.lastName].filter(Boolean).join(" ") ||
+            owner?.email?.split("@")[0] ||
+            "Business";
+          await createTeamForOwner(pending.userId, ownerName);
+        } catch (teamErr) {
+          // Non-fatal: payment succeeded; team creation failure is recoverable.
+          console.error(`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
+        }
+      }
     } catch (dbErr) {
       // Payment was verified by iyzico but our DB write failed. Throw so the
       // controller returns HTTP 500 — iyzico will retry the webhook automatically.

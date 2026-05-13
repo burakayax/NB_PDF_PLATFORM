@@ -257,6 +257,13 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           benefit:
             "Extract tabular data from PDFs into editable Excel files for faster reporting and verification.",
         },
+        {
+          icon: "session",
+          // H3 — enterprise differentiator: zero-loss workflow resilience
+          title: "Work never lost — session memory built in",
+          benefit:
+            "Page selections, split ranges, and tool settings persist across navigation, disconnections, and tab switches — pick up exactly where you left off, every time.",
+        },
       ],
     },
 
@@ -547,6 +554,13 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           title: "PDF tabloları Excel'e dönüştürün",
           benefit:
             "PDF içindeki tablo verilerini düzenleme, raporlama ve doğrulama için Excel dosyasına aktarın.",
+        },
+        {
+          icon: "session",
+          // H3 — kurumsal farklılaştırıcı: sıfır kayıplı iş akışı
+          title: "Çalışmanız hiç kaybolmaz — yerleşik oturum hafızası",
+          benefit:
+            "Sayfa seçimleri, bölme aralıkları ve araç ayarları; sayfa değişimlerinde, internet kopukluklarında ve sekme geçişlerinde korunur. İndirme onaylanana kadar yaptığınız her seçim güvende kalır — tam kaldığınız yerden devam edin.",
         },
       ],
     },

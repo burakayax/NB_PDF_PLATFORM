@@ -609,9 +609,19 @@ function showSavePickerTypesFor(filename: string, blob: Blob) {
 }
 
 /**
- * Delivers a blob to the user: prefers the File System Access API Save dialog
- * when available (Chromium), otherwise falls back to `URL.createObjectURL` +
- * `<a download>` (browser default folder; still honors suggested filename).
+ * Pre-acquired save handle: set via `setPendingSaveHandle` BEFORE async API calls
+ * (while user activation is still valid), consumed once by `deliverBlobAsDownload`.
+ */
+let _pendingSaveHandle: FileSystemFileHandle | null = null;
+
+export function setPendingSaveHandle(handle: FileSystemFileHandle | null): void {
+  _pendingSaveHandle = handle;
+}
+
+/**
+ * Delivers a blob to the user: uses a pre-acquired FileSystemFileHandle when available
+ * (ensures native save dialog appears even after long async operations), otherwise
+ * falls back to `URL.createObjectURL` + `<a download>`.
  */
 async function deliverBlobAsDownload(
   blob: Blob,
@@ -636,28 +646,46 @@ async function deliverBlobAsDownload(
   };
 
   let usedNativeSave = false;
-  try {
-    if (typeof w.showSaveFilePicker === "function") {
-      const handle = await w.showSaveFilePicker({
-        suggestedName: filename,
-        types: showSavePickerTypesFor(filename, blob),
-      });
-      usedNativeSave = true;
-      const writable = await handle.createWritable();
+
+  // 1. Try pre-acquired handle (obtained within user activation before API call)
+  const preHandle = _pendingSaveHandle;
+  _pendingSaveHandle = null;
+  if (preHandle) {
+    try {
+      const writable = await preHandle.createWritable();
       await writable.write(blob);
       await writable.close();
+      usedNativeSave = true;
+    } catch {
+      usedNativeSave = false;
     }
-  } catch (e: unknown) {
-    const name =
-      e && typeof e === "object" && "name" in e
-        ? String((e as { name: unknown }).name)
-        : "";
-    if (name === "AbortError") {
-      throw e instanceof DOMException
-        ? e
-        : new DOMException("The user aborted a request.", "AbortError");
+  }
+
+  // 2. Fallback: try showSaveFilePicker directly (works if user activation still valid)
+  if (!usedNativeSave) {
+    try {
+      if (typeof w.showSaveFilePicker === "function") {
+        const handle = await w.showSaveFilePicker({
+          suggestedName: filename,
+          types: showSavePickerTypesFor(filename, blob),
+        });
+        usedNativeSave = true;
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      }
+    } catch (e: unknown) {
+      const name =
+        e && typeof e === "object" && "name" in e
+          ? String((e as { name: unknown }).name)
+          : "";
+      if (name === "AbortError") {
+        throw e instanceof DOMException
+          ? e
+          : new DOMException("The user aborted a request.", "AbortError");
+      }
+      usedNativeSave = false;
     }
-    usedNativeSave = false;
   }
 
   if (!usedNativeSave) {

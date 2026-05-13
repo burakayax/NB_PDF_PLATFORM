@@ -12,20 +12,20 @@ const planPaymentBodySchema = z.object({
   billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional().default("MONTHLY"),
 });
 
-/** TRY prices in cents */
+/** TRY prices — decimal format ("799.00" = 799 TL). iyzico requires two-decimal strings. */
 const PLAN_PRICES_TRY: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
-  STARTER: { monthly: "4900", yearly: "49000" },
-  PLUS: { monthly: "14900", yearly: "149000" },
-  PRO: { monthly: "29900", yearly: "299000" },
-  BUSINESS: { monthly: "79900", yearly: "799000" },
+  STARTER: { monthly: "49.00", yearly: "490.00" },
+  PLUS: { monthly: "149.00", yearly: "1490.00" },
+  PRO: { monthly: "299.00", yearly: "2990.00" },
+  BUSINESS: { monthly: "799.00", yearly: "7990.00" },
 };
 
-/** USD prices in cents */
+/** USD prices — decimal format ("250.00" = $250). */
 const PLAN_PRICES_USD: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
-  STARTER: { monthly: "1599", yearly: "15900" },
-  PLUS: { monthly: "4799", yearly: "47990" },
-  PRO: { monthly: "9799", yearly: "97990" },
-  BUSINESS: { monthly: "25000", yearly: "250000" },
+  STARTER: { monthly: "15.99", yearly: "159.00" },
+  PLUS: { monthly: "47.99", yearly: "479.90" },
+  PRO: { monthly: "97.99", yearly: "979.90" },
+  BUSINESS: { monthly: "250.00", yearly: "2500.00" },
 };
 
 const BASKET_NAMES_TR: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", string> = {

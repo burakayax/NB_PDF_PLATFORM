@@ -26,3 +26,7 @@ python-pptx
 xhtml2pdf
 pdfkit
 img2pdf
+
+# Billing / invoicing
+tenacity>=8.2.0
+sendgrid>=6.10.0

@@ -436,6 +436,28 @@ textarea {
   margin-bottom: 20px;
 }
 
+/* Laptop / medium screens: compact workspace so submit button stays in view */
+@media (min-width: 641px) and (max-width: 1279px) {
+  .workspace-card,
+  .notes-card {
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+
+  .workspace-card__header {
+    margin-bottom: 12px;
+  }
+
+  .workspace-card__header h1 {
+    font-size: 16px !important;
+  }
+
+  .workspace-card__header h2 {
+    font-size: 13px !important;
+    margin-top: 4px !important;
+  }
+}
+
 @media (max-width: 640px) {
   .workspace-card,
   .notes-card {

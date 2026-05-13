@@ -170,6 +170,8 @@ export function DashboardTopNav({
     onOpenCreditsPanel && user.role !== "ADMIN",
   );
 
+  const isLimitExhausted = !hasActiveSubscription && !limitsizProActive && (creditBalance ?? 0) <= 0 && plan === "FREE";
+
   const centerLabel = () => {
     if (creditBalanceLoading) return "…";
     if (limitsizProActive) return W.unlimitedAccessActive;
@@ -179,6 +181,7 @@ export function DashboardTopNav({
     if (hasActiveSubscription) return W.usageUnlimited;
     // FREE plan – show remaining ops count
     const ops = (creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US");
+    if (isLimitExhausted) return tr ? "Günlük limit doldu" : "Daily limit reached";
     return tr ? `Ücretsiz · ${ops} işlem kaldı` : `Free · ${ops} ops left`;
   };
 
@@ -245,7 +248,11 @@ export function DashboardTopNav({
               <button
                 type="button"
                 onClick={() => onOpenCreditsPanel?.()}
-                className="hidden sm:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition hover:bg-slate-700/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/35"
+                className={`hidden sm:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition focus:outline-none focus-visible:ring-2 ${
+                  isLimitExhausted
+                    ? "border border-red-500/50 bg-red-950/80 text-red-200 hover:bg-red-900/80 focus-visible:ring-red-500/35"
+                    : "border border-white/[0.06] bg-slate-800/95 text-slate-100 hover:bg-slate-700/95 focus-visible:ring-cyan-500/35"
+                }`}
                 aria-label={
                   tr
                     ? `${W.navbarCreditsLabel}: ${centerLabel()}`
@@ -253,16 +260,20 @@ export function DashboardTopNav({
                 }
               >
                 <Coins
-                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
                 />
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </button>
             ) : (
-              <span className="inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-[13px] font-semibold tabular-nums text-slate-100 ring-1 ring-black/20 sm:max-w-[22rem]">
+              <span className={`inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
+                isLimitExhausted
+                  ? "border border-red-500/50 bg-red-950/80 text-red-200"
+                  : "border border-white/[0.06] bg-slate-800/95 text-slate-100"
+              }`}>
                 <Coins
-                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
                 />
