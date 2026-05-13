@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os as _os
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -42,7 +43,32 @@ def _g_check(d: dict[str, Any]) -> dict[str, Any]:
         "cost": int(d.get("cost") or 0),
         "creditsBefore": int(d.get("creditsBefore") or 0),
         "creditsAfter": int(d.get("creditsAfter") or 0),
+        "watermarkEnabled": bool(d.get("watermarkEnabled", False)),
     }
+
+
+def _maybe_watermark_pdf(p: Path, enabled: bool) -> None:
+    """Plan-level watermark: FREE/Starter çıktılarına NB PDF Platform damgası ekler."""
+    if not enabled:
+        return
+    tmp = p.parent / (p.stem + "__wm_tmp.pdf")
+    try:
+        from src import pdf_toolkit_extra as _ptx
+        _ptx.add_watermark_text(
+            str(p), str(tmp),
+            "NB PDF Platform",
+            opacity=0.12,
+            font_name="helv",
+            font_color="#8C8C8C",
+        )
+        _os.replace(str(tmp), str(p))
+    except Exception as exc:
+        logger.warning("Plan watermark uygulama başarısız (non-fatal): %s", exc)
+        try:
+            if tmp.exists():
+                tmp.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 # --- result-store: önizleme + kredi indirmede
@@ -105,6 +131,7 @@ async def tool_delete_pages(
 
         def _run():
             ptx.delete_pages_pdf(sp, str(out_p), to_del, password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -175,6 +202,7 @@ async def tool_rotate_pdf(
                 password=pwd,
                 per_page_degrees=per_page,
             )
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -215,6 +243,7 @@ async def tool_organize_pdf(
 
         def _run():
             ptx.organize_pdf(sp, str(out_p), raw, password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -247,6 +276,7 @@ async def tool_unlock_pdf(
 
         def _run():
             ptx.unlock_pdf_pikepdf(sp, str(out_p), password)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -325,6 +355,7 @@ async def tool_page_numbers(
 
         def _run():
             ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd, fmt=fmt)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -356,6 +387,7 @@ async def tool_repair_pdf(
 
         def _run():
             ptx.repair_pdf(sp, str(out_p), password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -435,6 +467,7 @@ async def tool_ppt_to_pdf(
         user_id = await saas_current_user_id(token)
 
         def _store():
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             thumb_png = None
             try:
                 thumb_png = generate_blurred_pdf_thumbnail_from_path(out_p)
@@ -534,6 +567,7 @@ async def tool_image_to_pdf(
 
         def _run():
             ptx.images_to_pdf(paths, str(out_p))
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -571,6 +605,7 @@ async def tool_html_to_pdf(
                 ptx.html_url_to_pdf(u, str(out_p))
             else:
                 ptx.html_to_pdf_file(html or "<html><body><p>Boş</p></body></html>", str(out_p))
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return out_p
 
         await run_cpu_bound(_run)
@@ -622,7 +657,11 @@ async def tool_flatten_pdf(
         sp = await save_upload(file, workdir)
         out_p = workdir / "duzlestir.pdf"
         pwd = (password or "").strip() or None
-        await run_cpu_bound(lambda: ptx.flatten_pdf(str(sp), str(out_p), password=pwd))
+        def _run():
+            ptx.flatten_pdf(str(sp), str(out_p), password=pwd)
+            _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+
+        await run_cpu_bound(_run)
         out_n = format_derived_filename(file.filename or "dosya.pdf", "düz", ".pdf")
         body = _pack_pdf_result_file(out_p, out_n, user_id, "flatten-pdf")
         body["saasGating"] = _g_check(decision)

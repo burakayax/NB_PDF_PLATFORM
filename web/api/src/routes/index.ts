@@ -17,6 +17,7 @@ import { subscriptionRouter } from "../modules/subscription/subscription.routes.
 import { userRouter } from "../modules/user/user.routes.js";
 import orgRouter from "../modules/organization/organization.routes.js";
 import billingRouter from "../modules/billing/billing.routes.js";
+import teamRouter from "../modules/team/team.controller.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -69,3 +70,4 @@ apiRouter.use("/subscription", subscriptionRouter);
 apiRouter.use("/user", userRouter);
 apiRouter.use("/org", orgRouter);
 apiRouter.use("/billing", billingRouter);
+apiRouter.use("/team", teamRouter);

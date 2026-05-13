@@ -149,6 +149,10 @@ app.include_router(tool_routes_extra)
 app.include_router(auth_router, prefix="/api")
 # app.include_router(example_router, prefix="/api")
 
+# BirFatura entegrasyonu (BILLING_PROVIDER=birfatura iken etkinleştirin):
+# from app.billing.birfatura import birfatura_router
+# app.include_router(birfatura_router, prefix="/api/birfatura")
+
 
 if __name__ == "__main__":
     """`python -m app.main` çalışır (cwd: web/backend). Üretim: uvicorn CLI veya run-pdf-api.mjs."""

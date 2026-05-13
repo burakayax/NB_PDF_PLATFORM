@@ -227,31 +227,28 @@ export const PLANS: PlanDefinition[] = [
   },
 ];
 
+/** Prices are stored in minor units (kuruş for TRY, cents for USD). Always divide by 100. */
 export function formatPrice(
   plan: PlanDefinition,
   currency: Currency,
   cycle: BillingCycle,
 ): string {
-  const sym = currency === "TRY" ? "₺" : "$";
-  const divisor = currency === "USD" ? 100 : 1;
-  const price =
+  const raw =
     cycle === "YEARLY"
-      ? plan.pricing.yearly[currency] / divisor
-      : plan.pricing.monthly[currency] / divisor;
-
-  if (price === 0) return `${sym}0`;
-  if (currency === "USD") return `$${(price / 100).toFixed(2)}`;
-  return `${sym}${price.toLocaleString("tr-TR")}`;
+      ? plan.pricing.yearly[currency]
+      : plan.pricing.monthly[currency];
+  const faceValue = raw / 100;
+  if (faceValue === 0) return currency === "TRY" ? "₺0" : "$0";
+  if (currency === "USD") return `$${faceValue.toFixed(2)}`;
+  return `₺${Math.round(faceValue).toLocaleString("tr-TR")}`;
 }
 
 export function getMonthlyEquivalent(
   plan: PlanDefinition,
   currency: Currency,
 ): string {
-  const divisor = currency === "USD" ? 100 : 1;
-  const yearly = plan.pricing.yearly[currency] / divisor;
-  const monthly = yearly / 12;
-  if (currency === "USD") return `$${(monthly / 100).toFixed(2)}/mo`;
+  const monthly = plan.pricing.yearly[currency] / 100 / 12;
+  if (currency === "USD") return `$${monthly.toFixed(2)}/mo`;
   return `₺${Math.round(monthly).toLocaleString("tr-TR")}/ay`;
 }
 
@@ -259,12 +256,10 @@ export function getYearlySavings(
   plan: PlanDefinition,
   currency: Currency,
 ): string {
-  const divisor = currency === "USD" ? 100 : 1;
-  const monthly = plan.pricing.monthly[currency] / divisor;
-  const yearlyEquiv = monthly * 12;
-  const actual = plan.pricing.yearly[currency] / divisor;
-  const savings = yearlyEquiv - actual;
+  const monthly = plan.pricing.monthly[currency] / 100;
+  const actual = plan.pricing.yearly[currency] / 100;
+  const savings = monthly * 12 - actual;
   if (savings <= 0) return "";
-  if (currency === "USD") return `$${(savings / 100).toFixed(0)}`;
+  if (currency === "USD") return `$${savings.toFixed(0)}`;
   return `₺${Math.round(savings).toLocaleString("tr-TR")}`;
 }

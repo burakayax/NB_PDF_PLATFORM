@@ -19,6 +19,7 @@ import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
 import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
+import { registerTeamJobs } from "./jobs/teamJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
 function corsAllowedOrigins(): Set<string> {
@@ -156,6 +157,8 @@ app.use(
 );
 
 app.use("/api", apiRouter);
+
+registerTeamJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.

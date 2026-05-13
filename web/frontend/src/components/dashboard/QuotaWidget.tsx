@@ -29,10 +29,12 @@ export function QuotaWidget({
   language = "tr",
   onUpgrade,
   accessToken,
+  isTeamMember = false,
 }: {
   language?: string;
   onUpgrade?: () => void;
   accessToken?: string | null;
+  isTeamMember?: boolean;
 }) {
   const [quota, setQuota] = useState<QuotaSummary | null>(null);
   const [error, setError] = useState(false);
@@ -141,8 +143,8 @@ export function QuotaWidget({
         </div>
       )}
 
-      {/* Upgrade CTA */}
-      {onUpgrade && (quota.plan === "FREE" || quota.plan === "PLUS") && (
+      {/* Upgrade CTA — team members never see this */}
+      {!isTeamMember && onUpgrade && (quota.plan === "FREE" || quota.plan === "PLUS") && (
         <button
           onClick={onUpgrade}
           className="w-full py-2 rounded-lg text-xs font-semibold bg-gradient-to-r from-violet-600/80 to-blue-600/80 hover:from-violet-500/90 hover:to-blue-500/90 text-white transition-all"

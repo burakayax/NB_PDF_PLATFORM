@@ -62,6 +62,28 @@ enum DownloadLogStatus {
   FAILED
 }
 
+enum TeamSubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum TeamMemberInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+enum TeamMemberRole {
+  MEMBER
+  MANAGER
+}
+
+enum TeamActivityStatus {
+  SUCCESS
+  FAILED
+}
+
 enum AuthProvider {
   local
   google
@@ -170,6 +192,9 @@ model User {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
+  isTeamMember Boolean @default(false) @map("is_team_member")
+  teamOwnerId  String? @map("team_owner_id")
+
   refreshTokens RefreshToken[]
   dailyUsages  DailyUsage[]
   verificationTokens EmailVerificationToken[]
@@ -182,6 +207,8 @@ model User {
   operationLogs    OperationLog[]
   paymentCheckouts PaymentCheckout[]
   adminAuditLogs   AdminAuditLog[] @relation("AdminAuditActor")
+  ownedTeam    Team?         @relation("TeamOwner")
+  teamMembership TeamMember? @relation("TeamMemberUser")
 
   @@index([organizationId])
   @@index([country])
@@ -486,4 +513,83 @@ model SettingRevision {
 
   @@index([scope, createdAt])
   @@map("setting_revisions")
+}
+
+// ─── Business Team System ─────────────────────────────────────────────────────
+
+model Team {
+  id                 String                @id @default(cuid())
+  name               String
+  ownerId            String                @unique @map("owner_id")
+  maxSeats           Int                   @default(5) @map("max_seats")
+  extraSeats         Int                   @default(0) @map("extra_seats")
+  subscriptionStatus TeamSubscriptionStatus @default(ACTIVE) @map("subscription_status")
+  subscriptionEndsAt DateTime?             @map("subscription_ends_at")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  owner    User          @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members  TeamMember[]
+  invoices TeamInvoice[]
+
+  @@index([ownerId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id           String               @id @default(cuid())
+  teamId       String               @map("team_id")
+  userId       String?              @unique @map("user_id")
+  inviteEmail  String               @map("invite_email")
+  inviteToken  String?              @unique @map("invite_token")
+  inviteStatus TeamMemberInviteStatus @default(PENDING) @map("invite_status")
+  role         TeamMemberRole       @default(MEMBER)
+  invitedAt    DateTime             @default(now()) @map("invited_at")
+  joinedAt     DateTime?            @map("joined_at")
+  revokedAt    DateTime?            @map("revoked_at")
+
+  team       Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User?                @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: SetNull)
+  activities TeamMemberActivity[]
+
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+model TeamMemberActivity {
+  id               String             @id @default(cuid())
+  memberId         String             @map("member_id")
+  toolId           String             @map("tool_id")
+  toolName         String             @map("tool_name")
+  pageCount        Int?               @map("page_count")
+  fileSizeMB       Float?             @map("file_size_mb")
+  originalSizeMB   Float?             @map("original_size_mb")
+  compressedSizeMB Float?             @map("compressed_size_mb")
+  compressionRatio Float?             @map("compression_ratio")
+  durationMs       Int?               @map("duration_ms")
+  status           TeamActivityStatus @default(SUCCESS)
+  ipAddress        String?            @map("ip_address")
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  member TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+  @@index([toolId])
+  @@map("team_member_activities")
+}
+
+model TeamInvoice {
+  id          String   @id @default(cuid())
+  teamId      String   @map("team_id")
+  amount      Int
+  currency    String   @default("TRY")
+  description String
+  paidAt      DateTime @map("paid_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@map("team_invoices")
 }

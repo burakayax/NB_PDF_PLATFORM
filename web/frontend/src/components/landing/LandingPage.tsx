@@ -13,6 +13,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
+import { LandingIcon } from "./LandingIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -416,9 +417,12 @@ function Hero({
           {...stagger(3)}
           className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <button
+          <motion.button
             onClick={onUseWebApp}
-            className="group relative inline-flex h-13 items-center justify-center px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-base shadow-2xl shadow-blue-500/30 hover:from-blue-500 hover:to-indigo-500 hover:-translate-y-0.5 transition-all overflow-hidden"
+            whileHover={{ y: -4, boxShadow: "0 24px 60px rgba(59,130,246,0.55), 0 0 0 1px rgba(99,102,241,0.35)" }}
+            whileTap={{ scale: 0.97, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 18 }}
+            className="group relative inline-flex h-13 items-center justify-center px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-base shadow-2xl shadow-blue-500/30 hover:from-blue-500 hover:to-indigo-500 transition-colors overflow-hidden"
           >
             <div
               className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
@@ -429,29 +433,35 @@ function Hero({
                 ? "Ücretsiz Başla — Kredi Kartı Gerekmez"
                 : "Start Free — No Credit Card"}
             </span>
-          </button>
-          <CrawlableLink
-            href={windowsDownloadUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base hover:bg-white/10 hover:border-white/25 hover:-translate-y-0.5 transition-all"
+          </motion.button>
+          <motion.div
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.97, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 18 }}
           >
-            <svg
-              className="w-5 h-5 text-blue-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+            <CrawlableLink
+              href={windowsDownloadUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base hover:bg-white/10 hover:border-white/30 transition-all"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-              />
-            </svg>
-            {copy.hero.secondaryCta}
-          </CrawlableLink>
+              <svg
+                className="w-5 h-5 text-blue-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+                />
+              </svg>
+              {copy.hero.secondaryCta}
+            </CrawlableLink>
+          </motion.div>
         </motion.div>
 
         {/* Trust bar */}
@@ -977,9 +987,12 @@ function ProductShowcase({
 
         {/* CTA strip */}
         <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
+          <motion.button
             onClick={onUseWebApp}
-            className="group relative inline-flex h-12 min-w-[200px] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 font-semibold text-white shadow-[0_0_50px_-8px_rgba(99,102,241,0.7)] hover:shadow-[0_0_60px_-8px_rgba(99,102,241,1)] hover:scale-[1.03] active:scale-[0.97] transition-all"
+            whileHover={{ y: -4, boxShadow: "0 20px 55px rgba(99,102,241,0.6), 0 0 0 1px rgba(99,102,241,0.35)" }}
+            whileTap={{ scale: 0.97, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 18 }}
+            className="group relative inline-flex h-12 min-w-[200px] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 font-semibold text-white shadow-[0_0_50px_-8px_rgba(99,102,241,0.7)] transition-all"
           >
             <div
               className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
@@ -988,29 +1001,148 @@ function ProductShowcase({
             <span className="relative">
               {tr ? "Ücretsiz Dene" : "Start Free Trial"}
             </span>
-          </button>
-          <CrawlableLink
-            href={windowsDownloadUrl}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 hover:bg-white/[0.09] hover:text-white hover:border-white/25 transition-all"
+          </motion.button>
+          <motion.div
+            whileHover={{ y: -4 }}
+            whileTap={{ scale: 0.97, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 18 }}
           >
-            {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
+            <CrawlableLink
+              href={windowsDownloadUrl}
+              target="_blank"
+              rel="noreferrer noopener"
+              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 hover:bg-white/[0.09] hover:text-white hover:border-white/25 transition-all"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M14 5l7 7m0 0l-7 7m7-7H3"
-              />
-            </svg>
-          </CrawlableLink>
+              {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="M14 5l7 7m0 0l-7 7m7-7H3"
+                />
+              </svg>
+            </CrawlableLink>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Features ─────────────────────────────────────────────────────────────────
+
+const FEAT_COLORS: Record<string, { r: string; iconBg: string; iconText: string }> = {
+  merge:    { r: "59,130,246",  iconBg: "bg-blue-500/15",    iconText: "text-blue-300"    },
+  split:    { r: "139,92,246",  iconBg: "bg-violet-500/15",  iconText: "text-violet-300"  },
+  convert:  { r: "99,102,241",  iconBg: "bg-indigo-500/15",  iconText: "text-indigo-300"  },
+  secure:   { r: "16,185,129",  iconBg: "bg-emerald-500/15", iconText: "text-emerald-300" },
+  compress: { r: "245,158,11",  iconBg: "bg-amber-500/15",   iconText: "text-amber-300"   },
+  excel:    { r: "34,197,94",   iconBg: "bg-green-500/15",   iconText: "text-green-300"   },
+  session:  { r: "6,182,212",   iconBg: "bg-cyan-500/15",    iconText: "text-cyan-300"    },
+};
+
+function Features({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const copy = landingTranslations[language];
+
+  return (
+    <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_60%_bottom,rgba(99,102,241,0.09)_0%,transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_top,rgba(6,182,212,0.06)_0%,transparent_55%)]" />
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.55 }}
+          className="text-center mb-16"
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm font-medium mb-6">
+            ✦ {copy.features.kicker}
+          </span>
+          <h2
+            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white max-w-3xl mx-auto"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+          >
+            {copy.features.title}
+          </h2>
+        </motion.div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {copy.features.items.map((item, i) => {
+            const col = FEAT_COLORS[item.icon] ?? FEAT_COLORS.merge;
+            const isSession = item.icon === "session";
+            return (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{
+                  y: -8,
+                  boxShadow: `0 20px 50px rgba(${col.r},0.16), 0 0 0 1px rgba(${col.r},0.22)`,
+                  transition: { duration: 0.22, ease: "easeOut" },
+                }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.07, duration: 0.45 }}
+                className="group relative flex flex-col gap-4 p-6 lg:p-7 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.04] to-transparent cursor-default overflow-hidden"
+              >
+                {/* Top accent line on hover */}
+                <div
+                  className="absolute inset-x-0 top-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{ background: `linear-gradient(90deg, transparent, rgba(${col.r},0.85), transparent)` }}
+                />
+                {/* Radial glow from top */}
+                <div
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse at 50% -5%, rgba(${col.r},0.11), transparent 65%)` }}
+                />
+                {/* Shimmer sweep */}
+                <div
+                  className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"
+                  style={{ background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.045) 50%, transparent 65%)" }}
+                />
+
+                {isSession && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="text-[10px] font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      {tr ? "Özel" : "Exclusive"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Icon with spring hover */}
+                <motion.div
+                  className={`relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${col.iconBg}`}
+                  whileHover={{ scale: 1.15, rotate: 8, transition: { type: "spring", stiffness: 350, damping: 10 } }}
+                >
+                  <div
+                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ boxShadow: `0 0 18px rgba(${col.r},0.55)` }}
+                  />
+                  <LandingIcon kind={item.icon} className={`h-5 w-5 ${col.iconText} relative z-10`} />
+                </motion.div>
+
+                <div className="relative z-10">
+                  <h3
+                    className="text-white font-bold text-base mb-2 leading-snug"
+                    style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                  >
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors duration-300">
+                    {item.benefit}
+                  </p>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1025,41 +1157,48 @@ function HowItWorks({ language }: { language: Language }) {
   const steps = tr
     ? [
         {
-          icon: "⚙️",
-          title: "Aracı Seç",
+          icon: "⚙️", title: "Aracı Seç",
           desc: "20+ profesyonel araç arasından seç. İşlem saniyeler içinde tamamlanır.",
+          r: "59,130,246", badge: "from-blue-600 to-indigo-600",
+          iconGrad: "from-blue-500/20 to-indigo-600/20",
         },
         {
-          icon: "⬆️",
-          title: "PDF'ini Yükle",
+          icon: "⬆️", title: "PDF'ini Yükle",
           desc: "Sürükle-bırak ya da tıkla. Tarayıcıdan anında başla.",
+          r: "139,92,246", badge: "from-violet-600 to-purple-600",
+          iconGrad: "from-violet-500/20 to-purple-600/20",
         },
         {
-          icon: "⬇️",
-          title: "Sonucu İndir",
+          icon: "⬇️", title: "Sonucu İndir",
           desc: "Dosyan hazır. Güvenli, gizli bir şekilde indir.",
+          r: "6,182,212", badge: "from-cyan-600 to-blue-600",
+          iconGrad: "from-cyan-500/20 to-blue-600/20",
         },
       ]
     : [
         {
-          icon: "⬆️",
-          title: "Upload Your PDF",
+          icon: "⬆️", title: "Upload Your PDF",
           desc: "Drag & drop or click to upload. Start instantly from your browser.",
+          r: "59,130,246", badge: "from-blue-600 to-indigo-600",
+          iconGrad: "from-blue-500/20 to-indigo-600/20",
         },
         {
-          icon: "⚙️",
-          title: "Choose Your Tool",
+          icon: "⚙️", title: "Choose Your Tool",
           desc: "Select from 20+ professional tools. Processing completes in seconds.",
+          r: "139,92,246", badge: "from-violet-600 to-purple-600",
+          iconGrad: "from-violet-500/20 to-purple-600/20",
         },
         {
-          icon: "⬇️",
-          title: "Download Result",
+          icon: "⬇️", title: "Download Result",
           desc: "Your file is ready instantly. Download it securely and privately.",
+          r: "6,182,212", badge: "from-cyan-600 to-blue-600",
+          iconGrad: "from-cyan-500/20 to-blue-600/20",
         },
       ];
 
   return (
     <section className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.05)_0%,transparent_65%)]" />
       <div className="max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1080,34 +1219,66 @@ function HowItWorks({ language }: { language: Language }) {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-6 relative">
-          {/* Connector line */}
-          <div
-            className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
-            aria-hidden="true"
-          />
+          {/* Glowing gradient connector */}
+          <div className="hidden md:block absolute top-[52px] left-[calc(33%+20px)] right-[calc(33%+20px)] h-px" aria-hidden="true">
+            <div className="h-full bg-gradient-to-r from-blue-500/35 via-violet-500/35 to-cyan-500/35" />
+            <div className="absolute inset-0 blur-sm bg-gradient-to-r from-blue-500/30 via-violet-500/30 to-cyan-500/30" />
+          </div>
 
           {steps.map((step, i) => (
             <motion.div
               key={step.title}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 28 }}
               whileInView={{ opacity: 1, y: 0 }}
+              whileHover={{
+                y: -10,
+                boxShadow: `0 24px 60px rgba(${step.r},0.2), 0 0 0 1px rgba(${step.r},0.2)`,
+                transition: { duration: 0.22, ease: "easeOut" },
+              }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
-              className="relative flex flex-col items-center text-center p-7 rounded-2xl border border-white/[0.07] bg-white/[0.03] backdrop-blur-sm hover:border-white/[0.14] hover:bg-white/[0.06] transition-all group"
+              className="group relative flex flex-col items-center text-center p-7 pt-9 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-sm cursor-default overflow-hidden"
             >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border border-white/10 flex items-center justify-center text-3xl mb-5 group-hover:from-blue-500/30 group-hover:to-indigo-600/30 transition-all">
-                {step.icon}
-              </div>
-              <div className="absolute -top-3 right-5 w-6 h-6 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-[10px] font-black text-white">
+              {/* Top accent line */}
+              <div
+                className="absolute inset-x-0 top-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style={{ background: `linear-gradient(90deg, transparent, rgba(${step.r},1), transparent)` }}
+              />
+              {/* Background radial glow */}
+              <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{ background: `radial-gradient(ellipse at 50% 0%, rgba(${step.r},0.13), transparent 60%)` }}
+              />
+              {/* Shimmer */}
+              <div
+                className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"
+                style={{ background: "linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.04) 50%, transparent 65%)" }}
+              />
+
+              {/* Step number badge */}
+              <motion.div
+                className={`absolute -top-4 right-5 w-8 h-8 rounded-full bg-gradient-to-br ${step.badge} flex items-center justify-center text-[11px] font-black text-white z-10`}
+                style={{ boxShadow: `0 0 10px rgba(${step.r},0.35)` }}
+                whileHover={{ scale: 1.25, boxShadow: `0 0 20px rgba(${step.r},0.7)`, transition: { type: "spring", stiffness: 400, damping: 10 } }}
+              >
                 {i + 1}
-              </div>
+              </motion.div>
+
+              {/* Icon container */}
+              <motion.div
+                className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${step.iconGrad} border border-white/10 flex items-center justify-center text-3xl mb-5 relative`}
+                whileHover={{ scale: 1.12, rotate: -6, boxShadow: `0 0 28px rgba(${step.r},0.38)`, transition: { type: "spring", stiffness: 300, damping: 12 } }}
+              >
+                {step.icon}
+              </motion.div>
+
               <h3
-                className="text-lg font-bold text-white mb-2"
+                className="text-lg font-bold text-white mb-2 relative z-10"
                 style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
               >
                 {step.title}
               </h3>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-400 leading-relaxed relative z-10 group-hover:text-gray-300 transition-colors duration-300">
                 {step.desc}
               </p>
             </motion.div>
@@ -1443,20 +1614,29 @@ function FinalCta({
             {copy.finalCta.description}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
+            <motion.button
               onClick={onUseWebApp}
-              className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-2xl shadow-blue-500/30 transition-all hover:-translate-y-0.5 active:scale-[0.97]"
+              whileHover={{ y: -4, boxShadow: "0 20px 55px rgba(59,130,246,0.55), 0 0 0 1px rgba(99,102,241,0.3)" }}
+              whileTap={{ scale: 0.97, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 18 }}
+              className="px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-500 hover:to-indigo-500 shadow-2xl shadow-blue-500/30 transition-colors"
             >
               {copy.finalCta.primaryCta}
-            </button>
-            <CrawlableLink
-              href={windowsDownloadUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 transition-all hover:-translate-y-0.5"
+            </motion.button>
+            <motion.div
+              whileHover={{ y: -4 }}
+              whileTap={{ scale: 0.97, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 18 }}
             >
-              {copy.finalCta.secondaryCta}
-            </CrawlableLink>
+              <CrawlableLink
+                href={windowsDownloadUrl}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-block px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 hover:border-white/30 transition-all"
+              >
+                {copy.finalCta.secondaryCta}
+              </CrawlableLink>
+            </motion.div>
           </div>
         </motion.div>
       </div>
@@ -1638,6 +1818,7 @@ export function LandingPage({
           organizationName={organizationName}
           windowsDownloadUrl={windowsDownloadUrl}
         />
+        <Features language={language} />
         <HowItWorks language={language} />
         <PdfToolsSection language={language} onUseWebApp={onUseWebApp} />
         <PricingSection

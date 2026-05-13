@@ -23,6 +23,7 @@ import {
   MergeJobNotFoundError,
   postToolToResult,
   requestMergeJobCancel,
+  setPendingSaveHandle,
   type MergeJobStatus,
 } from "./api";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
@@ -109,6 +110,7 @@ import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
+import { CompressionResultBanner } from "./components/tools/CompressionResultBanner";
 import { PLANS } from "./lib/planConfig";
 import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
@@ -134,7 +136,8 @@ type NonLegalView =
   | "forgot_password"
   | "web"
   | "admin"
-  | "admin_login";
+  | "admin_login"
+  | "team_invite";
 type LegalView = "terms" | "privacy" | "kvkk";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
@@ -175,8 +178,20 @@ const PlanUpgradeModal = lazy(() =>
   })),
 );
 
+const TeamDashboardLazy = lazy(() =>
+  import("./components/team/TeamDashboard").then((m) => ({
+    default: m.TeamDashboard,
+  })),
+);
 
-type ContentPanel = "tool" | "subscription" | "profile" | "pricing" | "home";
+const TeamInviteAcceptPageLazy = lazy(() =>
+  import("./components/team/TeamInviteAcceptPage").then((m) => ({
+    default: m.TeamInviteAcceptPage,
+  })),
+);
+
+
+type ContentPanel = "tool" | "subscription" | "profile" | "pricing" | "home" | "team";
 
 type ToastState = {
   type: ToastType;
@@ -601,6 +616,8 @@ function getInitialViewFromLocation(): AppView {
       return "web";
     case "/admin-login":
       return "admin_login";
+    case "/team-invite":
+      return "team_invite";
     case "/fake-payment/success":
       return "web";
     case "/admin":
@@ -744,6 +761,10 @@ function App() {
   const [compressQuality, setCompressQuality] = useState<
     "auto" | "low" | "medium" | "high"
   >("auto");
+  const [compressionStats, setCompressionStats] = useState<{
+    originalSizeMB: number;
+    compressedSizeMB: number;
+  } | null>(null);
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
   const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
   const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("");
@@ -823,6 +844,7 @@ function App() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -1014,9 +1036,6 @@ function App() {
     if (!isAuthenticated || !subscriptionSummary || subscriptionLoading) {
       return next;
     }
-    if (subscriptionSummary.currentPlan.name === "FREE") {
-      return next;
-    }
     for (const f of workspaceFeatures) {
       if (!subscriptionSummary.allowedFeatures.includes(f.id)) {
         next.add(f.id);
@@ -1050,9 +1069,6 @@ function App() {
       return true;
     }
     if (subscriptionLoading || !subscriptionSummary) {
-      return true;
-    }
-    if (subscriptionSummary.currentPlan.name === "FREE") {
       return true;
     }
     return subscriptionSummary.allowedFeatures.includes(selectedFeatureId);
@@ -1311,6 +1327,7 @@ function App() {
     setPageNumPos("footer");
     setPageNumFmt("plain");
     setCompressQuality("auto");
+    setCompressionStats(null);
     setPdfToImgFmt("jpg");
     setHtmlToPdfMode("url");
     setHtmlToPdfUrl("https://");
@@ -1618,13 +1635,18 @@ function App() {
   }
 
   const refreshSubscriptionState = useCallback(async () => {
-    if (!accessToken || !isAuthenticated) {
+    if (!accessToken || !isAuthenticated || !user) {
       return;
     }
 
-    const summary = await fetchSubscriptionSummary(accessToken);
+    const ctx = { userId: user.id, role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const) };
+    const [summary, balance] = await Promise.all([
+      fetchSubscriptionSummary(accessToken),
+      fetchUserBalance(accessToken, ctx),
+    ]);
     setSubscriptionSummary(summary);
-  }, [accessToken, isAuthenticated]);
+    setUserBalance(balance);
+  }, [accessToken, isAuthenticated, user]);
 
   useEffect(() => {
     if (!isAuthenticated || !accessToken || !user) {
@@ -2275,47 +2297,8 @@ function App() {
           resetForm(true);
           setMergeJob(null);
           setSubmitting(false);
-
-          let thumbnailBlobUrl: string | null = null;
-          if (accessToken?.trim()) {
-            try {
-              thumbnailBlobUrl = await fetchMergeJobHeroPreviewBlobUrl(
-                jobId,
-                accessToken,
-                { signal: pollSignal },
-              );
-            } catch {
-              thumbnailBlobUrl = null;
-            }
-          }
-          if (thumbnailBlobUrl) {
-            toolProgressDisposeRef.current = () => {
-              URL.revokeObjectURL(thumbnailBlobUrl as string);
-            };
-          }
-
-          setToolProgressSuccess({
-            filename: fallbackName,
-            featureTitle: selectedFeature.title,
-            gatedDownload: {
-              toolId: "merge",
-              mergeJobId: jobId,
-              fallbackName,
-              thumbnailBlobUrl,
-              saasGating: mergeSaasGatingRef.current,
-            },
-          });
-          showToast(
-            "success",
-            language === "tr" ? "İşlem tamamlandı" : "Process complete",
-            language === "tr"
-              ? "İndirmek için aşağıdaki düğmeyi kullanın."
-              : "Use the button below to download.",
-          );
-          offerPostRunMonetizationHintAfterSuccess(
-            mergeSaasGatingRef.current ?? null,
-          );
           void refreshSubscriptionState();
+          void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
         }
       } catch (error) {
         if (!active) {
@@ -2371,6 +2354,7 @@ function App() {
     offerPostRunMonetizationHintAfterSuccess,
     refreshSubscriptionState,
     accessToken,
+    runMergeJobGatedDownloadWithFilename,
   ]);
 
   useEffect(() => {
@@ -3022,11 +3006,10 @@ function App() {
   }
 
   function handleSidebarSelect(id: SidebarToolId) {
+    setActiveSidebar(id);
     if (id !== "subscription" && lockedFeatures.has(id)) {
       setUpgradeModalOpen(true);
-      return;
     }
-    setActiveSidebar(id);
     if (id === "subscription") {
       setContentPanel("subscription");
       return;
@@ -3460,6 +3443,28 @@ function App() {
         return;
       }
 
+      // Pre-acquire save file handle HERE — user activation is still valid (no awaits above for non-merge tools).
+      // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
+      {
+        const win = window as unknown as {
+          showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+        };
+        if (typeof win.showSaveFilePicker === "function") {
+          try {
+            const handle = await win.showSaveFilePicker({
+              suggestedName: selectedFeature.fallbackFilename,
+            });
+            setPendingSaveHandle(handle);
+          } catch (e: unknown) {
+            const eName = e instanceof DOMException ? e.name : "";
+            if (eName === "AbortError") {
+              return; // kullanıcı kaydetme diyalogunu iptal etti
+            }
+            // desteklenmiyor veya güvenli bağlam değil — devam et
+          }
+        }
+      }
+
       toolRunAbortRef.current?.abort();
       toolRunAbortRef.current = new AbortController();
       const toolSignal = toolRunAbortRef.current.signal;
@@ -3635,24 +3640,19 @@ function App() {
               : "Batch processing failed.",
         });
 
-        disposeToolProgressSuccess();
-        setToolProgressSuccess({
-          filename: res.filename || "toplu_sonuc.zip",
-          featureTitle: selectedFeature.title,
-          gatedDownload: {
-            toolId: fid,
-            resultId: res.result_id,
-            fallbackName: res.filename || "toplu_sonuc.zip",
-            thumbnailBlobUrl: null,
-            saasGating: res.saasGating ?? null,
-          },
-        });
         setBatchFiles([]);
         setUploads([]);
+        void runGatedDownloadWithFilename(
+          res.result_id,
+          res.filename || "toplu_sonuc.zip",
+          res.filename || "toplu_sonuc.zip",
+          fid,
+        );
         return;
       }
 
       if (isResultStoreTool(fid)) {
+        const originalFileSizeBytes = fid === "compress" && uploads[0]?.file ? uploads[0].file.size : 0;
         const res = await postToolToResult(
           selectedFeature.endpoint,
           formData,
@@ -3666,46 +3666,35 @@ function App() {
           },
         );
 
-        let thumbnailBlobUrl: string | null = null;
-        if (res.has_thumbnail) {
-          try {
-            thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(
-              res.result_id,
-              accessToken,
-              {
-                signal: toolSignal,
-              },
-            );
-          } catch {
-            thumbnailBlobUrl = null;
+        resetForm(true);
+
+        if (fid === "compress" && res.size_bytes > 0 && originalFileSizeBytes > 0) {
+          const origMB = originalFileSizeBytes / (1024 * 1024);
+          const compMB = res.size_bytes / (1024 * 1024);
+          setCompressionStats({ originalSizeMB: origMB, compressedSizeMB: compMB });
+          if (isTeamMember && accessToken) {
+            const ratio = origMB > 0 ? Math.round((1 - compMB / origMB) * 100) / 100 : 0;
+            fetch("/api/team/activity", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+              body: JSON.stringify({
+                toolId: "compress",
+                toolName: "PDF Sıkıştır",
+                fileSizeMB: Math.round(origMB * 100) / 100,
+                status: "SUCCESS",
+                compressionResult: { originalSizeMB: origMB, compressedSizeMB: compMB, compressionRatio: ratio },
+              }),
+            }).catch(() => {/* noop */});
           }
         }
 
-        disposeToolProgressSuccess();
-        toolProgressDisposeRef.current = thumbnailBlobUrl
-          ? () => URL.revokeObjectURL(thumbnailBlobUrl)
-          : null;
-        setToolProgressSuccess({
-          filename: res.filename || selectedFeature.fallbackFilename,
-          featureTitle: selectedFeature.title,
-          gatedDownload: {
-            toolId: fid,
-            resultId: res.result_id,
-            fallbackName: res.filename || selectedFeature.fallbackFilename,
-            thumbnailBlobUrl,
-            saasGating: res.saasGating ?? null,
-          },
-        });
-        showToast(
-          "success",
-          language === "tr" ? "İşlem tamamlandı" : "Process complete",
-          language === "tr"
-            ? "İndirmek için aşağıdaki düğmeyi kullanın."
-            : "Use the button below to download.",
-        );
-        resetForm(true);
-        offerPostRunMonetizationHintAfterSuccess(res.saasGating ?? null);
         void refreshSubscriptionState();
+        void runGatedDownloadWithFilename(
+          res.result_id,
+          res.filename || selectedFeature.fallbackFilename,
+          res.filename || selectedFeature.fallbackFilename,
+          fid,
+        );
         return;
       }
 
@@ -3969,6 +3958,14 @@ function App() {
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
+    );
+  }
+
+  if (view === "team_invite") {
+    return (
+      <Suspense fallback={null}>
+        <TeamInviteAcceptPageLazy />
+      </Suspense>
     );
   }
 
@@ -4509,20 +4506,22 @@ function App() {
           showToast={showToast}
         />
 
-        <Suspense fallback={null}>
-          <PlanUpgradeModal
-            open={upgradeModalOpen}
-            onClose={() => setUpgradeModalOpen(false)}
-            language={language}
-            accessToken={accessToken ?? undefined}
-            user={user}
-            updateProfile={updateProfile}
-            showToast={showToast}
-            onOpenTerms={() => openLegalPage("terms")}
-            onOpenKvkk={() => openLegalPage("kvkk")}
-            onBeforeExternalCheckout={persistNbResumeSnapshot}
-          />
-        </Suspense>
+        {!isTeamMember && (
+          <Suspense fallback={null}>
+            <PlanUpgradeModal
+              open={upgradeModalOpen}
+              onClose={() => setUpgradeModalOpen(false)}
+              language={language}
+              accessToken={accessToken ?? undefined}
+              user={user}
+              updateProfile={updateProfile}
+              showToast={showToast}
+              onOpenTerms={() => openLegalPage("terms")}
+              onOpenKvkk={() => openLegalPage("kvkk")}
+              onBeforeExternalCheckout={persistNbResumeSnapshot}
+            />
+          </Suspense>
+        )}
 
         {uploads[0] &&
         (selectedFeatureId === "split" ||
@@ -4662,7 +4661,7 @@ function App() {
           onPassword={handleNavPassword}
           onLogout={() => void handleLogout()}
           onUpgradeClick={
-            limitsizProActive ? undefined : () => setUpgradeModalOpen(true)
+            isTeamMember || limitsizProActive ? undefined : () => setUpgradeModalOpen(true)
           }
           onOpenCreditsPanel={
             user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined
@@ -4686,7 +4685,10 @@ function App() {
           limitsizProActive={limitsizProActive}
           onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
           accessToken={accessToken}
-          onUpgrade={() => setUpgradeModalOpen(true)}
+          onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
+          currentPlan={user?.plan}
+          isTeamMember={isTeamMember}
+          onTeamClick={() => setContentPanel("team" as ContentPanel)}
         />
         <div
           className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-56"}`}
@@ -4706,12 +4708,22 @@ function App() {
                 <QuotaWidget
                   language={language}
                   accessToken={accessToken}
-                  onUpgrade={() => setUpgradeModalOpen(true)}
+                  onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
+                  isTeamMember={isTeamMember}
                 />
               </section>
             ) : null}
 
-            {contentPanel === "pricing" && accessToken && user ? (
+            {contentPanel === "team" && accessToken ? (
+              <Suspense fallback={null}>
+                <TeamDashboardLazy
+                  language={language}
+                  accessToken={accessToken}
+                />
+              </Suspense>
+            ) : null}
+
+            {contentPanel === "pricing" && accessToken && user && !isTeamMember ? (
               <Suspense fallback={null}>
                 <PlanUpgradeModal
                   open={true}
@@ -4753,7 +4765,7 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="relative min-h-[280px]">
+                  <div className="relative min-h-[180px] md:min-h-[220px] xl:min-h-[260px]">
                     <div
                       className={
                         !selectedFeatureAllowed
@@ -5428,44 +5440,56 @@ function App() {
                         ) : null}
 
                         {selectedFeature.id === "compress" ? (
-                          <label className="field">
-                            <span>
-                              {language === "tr" ? "Kalite" : "Quality"}
-                            </span>
-                            <select
-                              value={compressQuality}
-                              onChange={(e) =>
-                                setCompressQuality(
-                                  e.target.value as
-                                    | "auto"
-                                    | "low"
-                                    | "medium"
-                                    | "high",
-                                )
-                              }
-                            >
-                              <option value="auto">
-                                {language === "tr"
-                                  ? "Otomatik (önerilen)"
-                                  : "Auto (recommended)"}
-                              </option>
-                              <option value="low">
-                                {language === "tr"
-                                  ? "Düşük — ekran kalitesi"
-                                  : "Low — screen quality"}
-                              </option>
-                              <option value="medium">
-                                {language === "tr"
-                                  ? "Orta — e-kitap kalitesi"
-                                  : "Medium — e-book quality"}
-                              </option>
-                              <option value="high">
-                                {language === "tr"
-                                  ? "Yüksek — baskı kalitesi"
-                                  : "High — print quality"}
-                              </option>
-                            </select>
-                          </label>
+                          <>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Kalite" : "Quality"}
+                              </span>
+                              <select
+                                value={compressQuality}
+                                onChange={(e) => {
+                                  const val = e.target.value as "auto" | "low" | "medium" | "high";
+                                  const isFreePlan = userBalance?.plan === "FREE" && !userBalance?.isAdmin;
+                                  if (val === "high" && isFreePlan) {
+                                    setUpgradeModalOpen(true);
+                                    return;
+                                  }
+                                  setCompressQuality(val);
+                                }}
+                              >
+                                <option value="auto">
+                                  {language === "tr"
+                                    ? "Otomatik (önerilen)"
+                                    : "Auto (recommended)"}
+                                </option>
+                                <option value="low">
+                                  {language === "tr"
+                                    ? "Düşük — ekran kalitesi"
+                                    : "Low — screen quality"}
+                                </option>
+                                <option value="medium">
+                                  {language === "tr"
+                                    ? "Orta — e-kitap kalitesi"
+                                    : "Medium — e-book quality"}
+                                </option>
+                                <option value="high">
+                                  {userBalance?.plan === "FREE" && !userBalance?.isAdmin
+                                    ? language === "tr"
+                                      ? "Yüksek — baskı kalitesi 🔒 Plus+"
+                                      : "High — print quality 🔒 Plus+"
+                                    : language === "tr"
+                                    ? "Yüksek — baskı kalitesi"
+                                    : "High — print quality"}
+                                </option>
+                              </select>
+                            </label>
+                            {compressionStats ? (
+                              <CompressionResultBanner
+                                originalSizeMB={compressionStats.originalSizeMB}
+                                compressedSizeMB={compressionStats.compressedSizeMB}
+                              />
+                            ) : null}
+                          </>
                         ) : null}
 
                         {selectedFeature.id === "encrypt" ? (

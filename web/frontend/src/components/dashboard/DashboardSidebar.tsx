@@ -21,6 +21,9 @@ type DashboardSidebarProps = {
   onAdminClick?: () => void;
   accessToken?: string | null;
   onUpgrade?: () => void;
+  currentPlan?: string;
+  isTeamMember?: boolean;
+  onTeamClick?: () => void;
 };
 
 /**
@@ -39,6 +42,9 @@ export function DashboardSidebar({
   onAdminClick,
   accessToken,
   onUpgrade,
+  currentPlan,
+  isTeamMember,
+  onTeamClick,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -133,6 +139,19 @@ export function DashboardSidebar({
               {L.unlimitedAccessActive}
             </p>
           </div>
+        </div>
+      ) : null}
+
+      {currentPlan === "BUSINESS" && !isTeamMember && onTeamClick ? (
+        <div className="border-t border-white/[0.06] px-3 py-3">
+          <button
+            type="button"
+            onClick={onTeamClick}
+            className="nb-transition flex w-full items-center gap-2.5 rounded-2xl border border-cyan-500/30 bg-cyan-500/8 px-3 py-2.5 text-left text-sm font-semibold text-cyan-200 hover:bg-cyan-500/16 hover:text-cyan-100 hover:shadow-[0_0_20px_-6px_rgba(6,182,212,0.4)]"
+          >
+            <span className="text-lg">👥</span>
+            <span>Ekip Yönetimi</span>
+          </button>
         </div>
       ) : null}
 

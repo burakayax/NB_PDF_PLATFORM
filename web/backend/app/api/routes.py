@@ -91,6 +91,7 @@ def _saas_gating_from_check(d: dict[str, Any]) -> dict[str, Any]:
         "cost": int(d.get("cost") or 0),
         "creditsBefore": int(d.get("creditsBefore") or 0),
         "creditsAfter": int(d.get("creditsAfter") or 0),
+        "watermarkEnabled": bool(d.get("watermarkEnabled", False)),
     }
 
 
@@ -111,6 +112,30 @@ def _saas_gating_from_consume(d: dict[str, Any]) -> dict[str, Any]:
         "creditsBefore": int(d.get("creditsBefore") or 0),
         "creditsAfter": int(d.get("creditsAfter") or 0),
     }
+
+
+def _maybe_watermark_pdf(p: Path, enabled: bool) -> None:
+    """Plan-level watermark: FREE/Starter çıktılarına NB PDF Platform damgası ekler."""
+    if not enabled:
+        return
+    import os as _os
+    tmp = p.parent / (p.stem + "__wm_tmp.pdf")
+    try:
+        engine.add_watermark_text(
+            str(p), str(tmp),
+            watermark_text="NB PDF Platform",
+            opacity=0.12,
+            font_name="helv",
+            watermark_color="#8C8C8C",
+        )
+        _os.replace(str(tmp), str(p))
+    except Exception as exc:
+        logger.warning("Plan watermark başarısız (non-fatal): %s", exc)
+        try:
+            if tmp.exists():
+                tmp.unlink(missing_ok=True)
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -346,7 +371,7 @@ async def split_pdf(
             m = "single"
 
         def _do_split() -> Any:
-            return _split_to_result_store(workdir, sp, pages, file_base, m, pwd, user_id)
+            return _split_to_result_store(workdir, sp, pages, file_base, m, pwd, user_id, watermark_enabled=bool(decision.get("watermarkEnabled", False)))
 
         handle = await run_cpu_bound(_do_split)
 
@@ -432,6 +457,7 @@ async def word_to_pdf(
 
         def _store():
             outp = Path(str(output_path))
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
             thumb_png = None
             try:
                 thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
@@ -481,6 +507,7 @@ async def excel_to_pdf(
 
         def _store():
             outp = Path(str(output_path))
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
             thumb_png = None
             try:
                 thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
@@ -589,6 +616,7 @@ async def compress_pdf(
         def _compress_and_store() -> Any:
             engine.compress_pdf(sp, out_str, password=pwd, quality=q)
             outp = Path(out_str)
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
             thumb = None
             try:
                 thumb = generate_blurred_pdf_thumbnail_from_path(outp)
@@ -813,6 +841,7 @@ def _split_to_result_store(
     mode: str,
     password: str | None,
     user_id: str,
+    watermark_enabled: bool = False,
 ) -> Any:
     """CPU-bound: build split output bytes + blurred preview; returns ResultHandle."""
     from pathlib import Path as P
@@ -821,6 +850,7 @@ def _split_to_result_store(
         output_name = format_split_single_filename(file_base_name, pages)
         output_path = workdir / output_name
         engine.extract_pages(sp, pages, str(output_path), password=password)
+        _maybe_watermark_pdf(output_path, watermark_enabled)
         thumb = generate_blurred_pdf_thumbnail_from_path(output_path)
         return save_result_from_file(
             output_path,
@@ -885,6 +915,7 @@ async def encrypt_pdf(
 
         def _store():
             outp = Path(str(output_path))
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
             thumb_png = None
             try:
                 thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
