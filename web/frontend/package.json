@@ -31,7 +31,6 @@
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.1",
-    "tailwind": "^4.0.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
