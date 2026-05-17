@@ -18,6 +18,14 @@ logger = logging.getLogger(__name__)
 
 def _build_html_body(customer_info: CustomerInfo, invoice_result: InvoiceResult) -> str:
     company = os.getenv("COMPANY_NAME", "Uygulama")
+    pdf_url = invoice_result.pdf_url or ""
+    has_link = bool(pdf_url) and not pdf_url.startswith("https://mock-pdf-url")
+    pdf_section = (
+        f'<p><a href="{pdf_url}" style="background:#1a73e8;color:white;padding:10px 20px;'
+        f'text-decoration:none;border-radius:4px;display:inline-block;">Faturayı Görüntüle</a></p>'
+        if has_link else
+        "<p>Faturanız PDF olarak bu e-postaya eklenmiştir.</p>"
+    )
     return f"""<!DOCTYPE html>
 <html lang="tr">
 <head><meta charset="UTF-8"><style>
@@ -33,19 +41,19 @@ def _build_html_body(customer_info: CustomerInfo, invoice_result: InvoiceResult)
     <p>Fatura Bildirimi</p>
   </div>
   <div class="content">
-    <p>Sayın {customer_info.name},</p>
-    <p>Ödemeniz alınmış ve faturanız düzenlenmiştir. Ayrıntılar aşağıdadır:</p>
+    <p>Sayin {customer_info.name},</p>
+    <p>Odemeniz alinmis ve faturaniz duzenlenmiştir. Ayrintilar asagidadir:</p>
     <div class="invoice-box">
       <strong>Fatura No:</strong> {invoice_result.invoice_number or '-'}<br>
       <strong>Fatura Tarihi:</strong> {invoice_result.issued_at or '-'}<br>
-      <strong>Belge Türü:</strong> {(invoice_result.e_document_type or 'e_archive').replace('_', ' ').title()}<br>
+      <strong>Belge Turu:</strong> {(invoice_result.e_document_type or 'Fatura').replace('_', ' ').title()}<br>
     </div>
-    <p>Faturanız PDF olarak bu e-postaya eklenmiştir.</p>
-    <p>Herhangi bir sorunuz olursa bizimle iletişime geçebilirsiniz.</p>
-    <p>Saygılarımızla,<br><strong>{company} Ekibi</strong></p>
+    {pdf_section}
+    <p>Herhangi bir sorunuz olursa bizimle iletisime gecebilirsiniz.</p>
+    <p>Saygilarimizla,<br><strong>{company} Ekibi</strong></p>
   </div>
   <div class="footer">
-    Bu e-posta otomatik olarak oluşturulmuştur. Lütfen yanıtlamayınız.
+    Bu e-posta otomatik olarak olusturulmustur. Lutfen yanitlamayiniz.
   </div>
 </body>
 </html>"""
@@ -53,14 +61,16 @@ def _build_html_body(customer_info: CustomerInfo, invoice_result: InvoiceResult)
 
 def _build_plain_body(customer_info: CustomerInfo, invoice_result: InvoiceResult) -> str:
     company = os.getenv("COMPANY_NAME", "Uygulama")
+    pdf_url = invoice_result.pdf_url or ""
+    link_line = f"Fatura Linki : {pdf_url}\n" if pdf_url and not pdf_url.startswith("https://mock-pdf-url") else ""
     return (
-        f"Sayın {customer_info.name},\n\n"
-        f"Ödemeniz alınmış ve faturanız düzenlenmiştir.\n\n"
+        f"Sayin {customer_info.name},\n\n"
+        f"Odemeniz alinmis ve faturaniz duzenlenmiştir.\n\n"
         f"Fatura No   : {invoice_result.invoice_number or '-'}\n"
         f"Tarih       : {invoice_result.issued_at or '-'}\n"
-        f"Belge Türü  : {invoice_result.e_document_type or 'e_archive'}\n\n"
-        f"Faturanız PDF olarak bu e-postaya eklenmiştir.\n\n"
-        f"Saygılarımızla,\n{company} Ekibi"
+        f"Belge Turu  : {invoice_result.e_document_type or 'Fatura'}\n"
+        f"{link_line}\n"
+        f"Saygilarimizla,\n{company} Ekibi"
     )
 
 
@@ -68,6 +78,30 @@ def _download_pdf(pdf_url: str) -> bytes:
     resp = requests.get(pdf_url, timeout=60)
     resp.raise_for_status()
     return resp.content
+
+
+def _send_via_smtp_no_attachment(to_email: str, subject: str, html_body: str, plain_body: str) -> None:
+    host = os.environ["SMTP_HOST"]
+    port = int(os.getenv("SMTP_PORT", "587"))
+    username = os.environ["SMTP_USERNAME"]
+    password = os.environ["SMTP_PASSWORD"]
+    from_email = os.getenv("EMAIL_FROM", username)
+    from_name = os.getenv("EMAIL_FROM_NAME", os.getenv("COMPANY_NAME", "Uygulama"))
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = f"{from_name} <{from_email}>"
+    msg["To"] = to_email
+    msg.attach(MIMEText(plain_body, "plain", "utf-8"))
+    msg.attach(MIMEText(html_body, "html", "utf-8"))
+
+    with smtplib.SMTP(host, port) as server:
+        server.ehlo()
+        server.starttls()
+        server.login(username, password)
+        server.sendmail(from_email, [to_email], msg.as_string())
+
+    logger.info("email: SMTP (eksiz) ile gonderildi -> %s", to_email)
 
 
 def _send_via_smtp(
@@ -109,7 +143,7 @@ def _send_via_smtp(
         server.login(username, password)
         server.sendmail(from_email, [to_email], outer.as_string())
 
-    logger.info("email: SMTP ile gönderildi → %s", to_email)
+    logger.info("email: SMTP ile gönderildi -> %s", to_email)
 
 
 def _send_via_sendgrid(
@@ -151,34 +185,61 @@ def _send_via_sendgrid(
         timeout=30,
     )
     resp.raise_for_status()
-    logger.info("email: SendGrid ile gönderildi → %s", to_email)
+    logger.info("email: SendGrid ile gönderildi -> %s", to_email)
+
+
+_PARASUT_PRINT_HOST = "uygulama.parasut.com"
+_MOCK_PDF_PREFIX = "https://mock-pdf-url"
+
+
+def _is_downloadable_pdf_url(url: str) -> bool:
+    """Gercek indirilebilir PDF URL'i mi yoksa bir web sayfasi mi?"""
+    if not url:
+        return False
+    if url.startswith(_MOCK_PDF_PREFIX):
+        return False
+    # Parasut print ve portal/preview URL'leri HTML sayfa; PDF degil
+    if _PARASUT_PRINT_HOST in url:
+        return False
+    return True
 
 
 def send_invoice_email(customer_info: CustomerInfo, invoice_result: InvoiceResult) -> bool:
     """
-    Fatura PDF'ini müşteriye e-posta ile gönderir.
-    EMAIL_BACKEND=smtp (varsayılan) veya sendgrid.
-    Hata durumunda False döner, hiçbir zaman exception fırlatmaz.
+    Fatura PDF'ini (veya fatura linkini) mussteriye e-posta ile gonderir.
+    EMAIL_BACKEND=smtp (varsayilan) veya sendgrid.
+    Hata durumunda False doner, hicbir zaman exception firlatmaz.
     """
-    if not invoice_result.success or not invoice_result.pdf_url:
-        logger.warning("email: geçersiz invoice_result, e-posta gönderilmedi")
+    if not invoice_result.success:
+        logger.warning("email: basarisiz invoice_result, e-posta gonderilmedi")
         return False
 
     try:
         company = os.getenv("COMPANY_NAME", "Uygulama")
         invoice_number = invoice_result.invoice_number or "FATURA"
-        subject = f"{company} — Fatura #{invoice_number}"
+        subject = f"{company} - Fatura #{invoice_number}"
         filename = f"fatura_{invoice_number}.pdf"
 
         html_body = _build_html_body(customer_info, invoice_result)
         plain_body = _build_plain_body(customer_info, invoice_result)
-
-        logger.info("email: PDF indiriliyor url=%s", invoice_result.pdf_url)
-        pdf_bytes = _download_pdf(invoice_result.pdf_url)
-
         backend = os.getenv("EMAIL_BACKEND", "smtp").strip().lower()
 
-        if backend == "sendgrid":
+        pdf_url = invoice_result.pdf_url or ""
+        if _is_downloadable_pdf_url(pdf_url):
+            logger.info("email: PDF indiriliyor url=%s", pdf_url)
+            pdf_bytes = _download_pdf(pdf_url)
+        else:
+            # e-Arsiv aktif degil veya mock — PDF eki olmadan gonder
+            if pdf_url:
+                logger.info("email: PDF eki yok (print/mock URL), e-posta link ile gonderiliyor url=%s", pdf_url)
+            else:
+                logger.info("email: PDF URL yok, e-posta eksiz gonderiliyor")
+            pdf_bytes = b""
+
+        if not pdf_bytes and backend == "smtp":
+            # PDF eki olmayan SMTP gonderimi — attachment'siz yolla
+            _send_via_smtp_no_attachment(customer_info.email, subject, html_body, plain_body)
+        elif backend == "sendgrid":
             _send_via_sendgrid(customer_info.email, subject, html_body, plain_body, pdf_bytes, filename)
         else:
             _send_via_smtp(customer_info.email, subject, html_body, plain_body, pdf_bytes, filename)
@@ -186,5 +247,5 @@ def send_invoice_email(customer_info: CustomerInfo, invoice_result: InvoiceResul
         return True
 
     except Exception:
-        logger.exception("email: fatura e-postası gönderilemedi müşteri=%s", customer_info.email)
+        logger.exception("email: fatura e-postasi gonderilemedi musteri=%s", customer_info.email)
         return False

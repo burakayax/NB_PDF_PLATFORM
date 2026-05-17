@@ -56,6 +56,7 @@ import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
+import { PaymentSuccessModal } from "./components/dashboard/PaymentSuccessModal";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
 import { SeoRouteManager } from "./components/seo/SeoRouteManager";
 import {
@@ -138,7 +139,7 @@ type NonLegalView =
   | "admin"
   | "admin_login"
   | "team_invite";
-type LegalView = "terms" | "privacy" | "kvkk";
+type LegalView = "terms" | "privacy" | "kvkk" | "on-bilgilendirme" | "mesafeli-satis";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -552,6 +553,10 @@ function getTrackedViewName(view: AppView) {
       return "legal-privacy";
     case "kvkk":
       return "legal-kvkk";
+    case "on-bilgilendirme":
+      return "legal-on-bilgilendirme";
+    case "mesafeli-satis":
+      return "legal-mesafeli-satis";
     case "web":
       return "workspace";
     case "admin":
@@ -577,6 +582,10 @@ function getTrackedPath(view: AppView) {
       return "/privacy";
     case "kvkk":
       return "/kvkk";
+    case "on-bilgilendirme":
+      return "/legal/on-bilgilendirme";
+    case "mesafeli-satis":
+      return "/legal/mesafeli-satis";
     case "web":
       return "/workspace";
     case "admin_login":
@@ -612,6 +621,10 @@ function getInitialViewFromLocation(): AppView {
       return "privacy";
     case "/kvkk":
       return "kvkk";
+    case "/legal/on-bilgilendirme":
+      return "on-bilgilendirme";
+    case "/legal/mesafeli-satis":
+      return "mesafeli-satis";
     case "/workspace":
       return "web";
     case "/admin-login":
@@ -636,7 +649,9 @@ function getInitialViewFromLocation(): AppView {
     requestedView === "admin_login" ||
     requestedView === "terms" ||
     requestedView === "privacy" ||
-    requestedView === "kvkk"
+    requestedView === "kvkk" ||
+    requestedView === "on-bilgilendirme" ||
+    requestedView === "mesafeli-satis"
   ) {
     return requestedView;
   }
@@ -690,6 +705,7 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [paymentSuccessModal, setPaymentSuccessModal] = useState<{ planName: string | null } | null>(null);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
@@ -2000,17 +2016,7 @@ function App() {
         await refreshSubscriptionState();
         const planObj = plan ? PLANS.find((p) => p.id === plan) : null;
         const planName = planObj ? (language === "tr" ? planObj.nameTr : planObj.nameEn) : null;
-        showToast(
-          "success",
-          language === "tr" ? "Paket satın alındı!" : "Plan purchased!",
-          planName
-            ? language === "tr"
-              ? `${planName} paketine hoş geldiniz.`
-              : `Welcome to ${planName}.`
-            : language === "tr"
-              ? "Hesabınız güncellendi."
-              : "Your account has been updated.",
-        );
+        setPaymentSuccessModal({ planName });
       })();
       return;
     }
@@ -4244,7 +4250,7 @@ function App() {
     );
   }
 
-  if (view === "terms" || view === "privacy" || view === "kvkk") {
+  if (view === "terms" || view === "privacy" || view === "kvkk" || view === "on-bilgilendirme" || view === "mesafeli-satis") {
     return (
       <>
         <SeoRouteManager
@@ -4504,6 +4510,13 @@ function App() {
           changePassword={changePassword}
           setInitialPassword={setInitialPassword}
           showToast={showToast}
+        />
+
+        <PaymentSuccessModal
+          open={paymentSuccessModal !== null}
+          planName={paymentSuccessModal?.planName ?? null}
+          language={language}
+          onClose={() => setPaymentSuccessModal(null)}
         />
 
         {!isTeamMember && (

@@ -279,8 +279,7 @@ export async function assertSubscriptionAllowsOperation(userId: string, featureK
 
   const defs = await getPlanDefinitionsResolved();
   const plan = defs[user.plan];
-  /* FREE: full catalog always (see plan-runtime); never 403 on tool choice — friction handles conversion. */
-  if (user.plan !== "FREE" && !plan.allowedFeatures.includes(featureKey)) {
+  if (!plan.allowedFeatures.includes(featureKey)) {
     throw new HttpError(403, "Your current plan does not include this feature.");
   }
 

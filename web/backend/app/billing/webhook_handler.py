@@ -9,6 +9,7 @@ from typing import Any
 from . import get_provider
 from .email_service import send_invoice_email
 from .models import CustomerInfo, InvoiceItem, PaymentInfo
+from .tcmb import get_rate
 
 logger = logging.getLogger(__name__)
 
@@ -49,20 +50,64 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
 
     logger.info("webhook: başarılı ödeme payment_id=%s işleniyor", payment_id)
 
+    # ---- Ülke / KDV tespiti — çok-sinyal güvenli taraf ----
+    declared_country = str(payload.get("customerCountry", "") or "").upper().strip()
+    payment_currency = str(payload.get("currency", "TRY") or "TRY").upper().strip()
+    if payment_currency in ("TRL", ""):
+        payment_currency = "TRY"
+
+    # iyzico kart ülkesi (varsa) — en güvenilir sinyal
+    card_country_raw = str(payload.get("cardCountry", "") or "").upper().strip()
+    is_tr_card = card_country_raw in ("TURKEY", "TR")
+
+    # Güvenli taraf kuralı:
+    #   1. TRY ödeme → daima TR
+    #   2. TR kart → TR (VPN'e karşı koruma)
+    #   3. Beyan edilen ülke TR ya da boş → TR (safe harbor)
+    #   4. Hepsi yabancı → ihracat
+    if payment_currency == "TRY":
+        country_code = "TR"
+        logger.info("webhook: TRY ödeme → KDV zorunlu (safe-harbor)")
+    elif is_tr_card:
+        country_code = "TR"
+        logger.warning(
+            "webhook: TR kart + yabancı para birimi tespit edildi — KDV uygulanıyor "
+            "payment_currency=%s card_country=%s conversationId=%s",
+            payment_currency, card_country_raw, payment_id,
+        )
+    elif declared_country and declared_country != "TR":
+        country_code = declared_country
+    else:
+        # Bilinmiyor veya TR → güvenli taraf: KDV
+        country_code = "TR"
+        if not declared_country:
+            logger.info("webhook: ülke beyanı yok → KDV uygulanıyor (safe-harbor)")
+
+    is_export = country_code != "TR"
+    kdv_rate = 0 if is_export else 20
+
     # ---- Müşteri bilgisi ----
     buyer: dict = payload.get("buyer", {})
     first = (buyer.get("name") or "").strip()
     last = (buyer.get("surname") or "").strip()
     full_name = f"{first} {last}".strip() or "Bilinmeyen Müşteri"
 
+    # TC No — asla loglanmaz
+    national_id_raw = buyer.get("identityNumber")
+    national_id_masked = f"***{national_id_raw[-4:]}" if national_id_raw and len(national_id_raw) >= 4 else "***"
+    logger.info("webhook: buyer national_id present=%s masked=%s", bool(national_id_raw), national_id_masked)
+
     customer_info = CustomerInfo(
         name=full_name,
         email=buyer.get("email", ""),
         phone=buyer.get("gsmNumber"),
-        national_id=buyer.get("identityNumber"),
+        national_id=national_id_raw if not is_export else None,
         address=buyer.get("registrationAddress"),
         city=buyer.get("city"),
+        country="Turkey" if country_code == "TR" else country_code,
         contact_type="person",
+        country_code=country_code,
+        is_export=is_export,
     )
 
     if not customer_info.email:
@@ -71,43 +116,60 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
 
     # ---- Fatura kalemleri ----
     basket_items: list[dict] = payload.get("basketItems", [])
-    currency = payload.get("currency", "TRL")
+    # iyzico "TRL" gönderebilir; Paraşüt ISO 4217 "TRY" bekliyor
+    _raw_currency = str(payload.get("currency", "TRY") or "TRY").upper()
+    currency = "TRY" if _raw_currency in ("TRL", "TRY", "") else _raw_currency
     paid_price = float(payload.get("paidPrice") or payload.get("price", 0))
     payment_date = date.today().isoformat()
 
     invoice_items: list[InvoiceItem] = []
 
+    # İhracat istisnası açıklaması — KDV Kanunu Madde 12 kapsamı
+    export_description = "İhracat İstisnası (KDV K. Mad. 12)" if is_export else ""
+
     if basket_items:
         for bi in basket_items:
             item_price = float(bi.get("price", 0))
-            # KDV'siz fiyat: price / 1.20 (Türkiye 2024 — %20 KDV)
-            unit_price_excl_vat = round(item_price / 1.20, 2)
+            if is_export:
+                unit_price_excl_vat = item_price  # İhracatta KDV yok
+            else:
+                unit_price_excl_vat = round(item_price / 1.20, 2)
             invoice_items.append(
                 InvoiceItem(
                     name=bi.get("name", "Hizmet"),
                     quantity=1,
                     unit_price=unit_price_excl_vat,
-                    vat_rate=20,
-                    description=bi.get("itemType"),
+                    vat_rate=kdv_rate,
+                    description=export_description,
+                    is_export=is_export,
                 )
             )
     else:
         # Sepet boşsa tek satır
-        unit_price_excl_vat = round(paid_price / 1.20, 2)
+        if is_export:
+            unit_price_excl_vat = paid_price
+        else:
+            unit_price_excl_vat = round(paid_price / 1.20, 2)
         invoice_items.append(
             InvoiceItem(
                 name="Dijital Hizmet",
                 quantity=1,
                 unit_price=unit_price_excl_vat,
-                vat_rate=20,
+                vat_rate=kdv_rate,
+                description=export_description,
+                is_export=is_export,
             )
         )
+
+    # TCMB günlük alış kuru — TRY dışı ödemelerde Paraşüt/BirFatura için gerekli
+    currency_rate = get_rate(currency)
 
     payment_info = PaymentInfo(
         payment_id=payment_id,
         amount_paid=paid_price,
         currency=currency,
         payment_date=payment_date,
+        currency_rate=currency_rate,
     )
 
     # ---- Fatura akışı ----

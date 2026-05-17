@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput } from "../../api/auth";
+import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 import type { PlanName } from "../../api/subscription";
 import { localizedPlanDisplayName } from "../../i18n/plans";
 import type { Language } from "../../i18n/landing";
+import { getSaasApiBase } from "../../api/saasBase";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -14,6 +15,7 @@ type UserProfilePanelProps = {
   showToast: (type: ToastType, title: string, detail: string) => void;
   onOpenChangePassword: () => void;
   setInitialPassword: (newPassword: string) => Promise<AuthUser | null>;
+  onSubscriptionCancelled?: () => void;
 };
 
 const inputClass =
@@ -49,11 +51,13 @@ function splitFromName(name: string | null | undefined): { first: string; last: 
   return { first: t.slice(0, i).trim(), last: t.slice(i + 1).trim() };
 }
 
-export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword }: UserProfilePanelProps) {
+export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled }: UserProfilePanelProps) {
   const tr = language === "tr";
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [cancelConfirm, setCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [setPwdNew, setSetPwdNew] = useState("");
   const [setPwdConfirm, setSetPwdConfirm] = useState("");
@@ -107,6 +111,39 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
       showToast("error", tr ? "Şifre" : "Password", error instanceof Error ? error.message : tr ? "Şifre kaydedilemedi." : "Could not save password.");
     } finally {
       setSetPwdSubmitting(false);
+    }
+  }
+
+  // 7 günlük iade penceresi tahmini: subscription_expiry bugünden 23+ gün uzaktaysa
+  // (30 günlük planın 7 günlük iade penceresi içinde) iade hakkı muhtemel
+  const maybeRefundEligible = (() => {
+    if (!user.subscription_expiry || user.plan === "FREE") return false;
+    const expiry = new Date(user.subscription_expiry);
+    const daysLeft = (expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return daysLeft >= 23;
+  })();
+
+  async function handleCancelSubscription() {
+    setCancelling(true);
+    try {
+      const token = window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? "";
+      const res = await fetch(`${getSaasApiBase()}/api/subscription/cancel`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = (await res.json()) as { ok?: boolean; action?: string; message?: string; error?: string };
+      if (!res.ok || !data.ok) {
+        showToast("error", tr ? "İptal" : "Cancel", data.message ?? data.error ?? (tr ? "İşlem başarısız." : "Operation failed."));
+        return;
+      }
+      setCancelConfirm(false);
+      showToast("success", tr ? "Abonelik iptal edildi" : "Subscription cancelled", data.message ?? "");
+      onSubscriptionCancelled?.();
+    } catch {
+      showToast("error", tr ? "İptal" : "Cancel", tr ? "Bir hata oluştu. Lütfen tekrar deneyin." : "An error occurred. Please try again.");
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -197,6 +234,52 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
             ? "Abonelik bitişi, ücretli plan satın alındığında veya yenilendiğinde güncellenir."
             : "Subscription end date is set when you purchase or renew a paid plan."}
         </p>
+
+        {user.plan !== "FREE" && (
+          <div className="mt-5 border-t border-white/[0.06] pt-5">
+            {!cancelConfirm ? (
+              <button
+                type="button"
+                onClick={() => setCancelConfirm(true)}
+                className="rounded-xl border border-red-500/30 bg-red-500/[0.06] px-4 py-2.5 text-sm font-semibold text-red-400 transition hover:border-red-500/50 hover:bg-red-500/[0.12]"
+              >
+                {maybeRefundEligible
+                  ? (tr ? "İptal Et ve Tam İade Al" : "Cancel & Get Full Refund")
+                  : (tr ? "Aboneliği İptal Et" : "Cancel Subscription")}
+              </button>
+            ) : (
+              <div className="rounded-xl border border-red-500/25 bg-red-500/[0.05] p-4 text-sm">
+                <p className="font-semibold text-red-300">
+                  {maybeRefundEligible
+                    ? (tr ? "Aboneliğinizi iptal edip tam iade almak istediğinize emin misiniz?" : "Are you sure you want to cancel and get a full refund?")
+                    : (tr ? "Aboneliğinizi iptal etmek istediğinize emin misiniz?" : "Are you sure you want to cancel your subscription?")}
+                </p>
+                <p className="mt-1.5 text-xs text-slate-400">
+                  {maybeRefundEligible
+                    ? (tr ? "Ücretiniz iade edilecek ve planınız hemen FREE'ye düşürülecektir." : "Your payment will be refunded and your plan will immediately downgrade to FREE.")
+                    : (tr ? "Mevcut dönem sonunda planınız FREE'ye düşürülecek, ücret iadesi yapılmayacaktır." : "Your plan will downgrade to FREE at the end of the current period. No refund will be issued.")}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    disabled={cancelling}
+                    onClick={() => void handleCancelSubscription()}
+                    className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500 disabled:opacity-50"
+                  >
+                    {cancelling ? (tr ? "İşleniyor…" : "Processing…") : (tr ? "Evet, İptal Et" : "Yes, Cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCancelConfirm(false)}
+                    className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/[0.08]"
+                  >
+                    {tr ? "Geri Dön" : "Go Back"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       <section

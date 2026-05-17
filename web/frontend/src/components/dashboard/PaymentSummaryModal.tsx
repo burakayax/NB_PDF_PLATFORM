@@ -37,6 +37,7 @@ async function initializePlanPayment(
   accessToken: string,
   planId: PlanId,
   currency: string,
+  billingCycle: "MONTHLY" | "YEARLY",
 ): Promise<PlanCheckoutResponse> {
   const token = readToken(accessToken);
   const response = await saasAuthorizedFetch(token, (t) =>
@@ -47,7 +48,7 @@ async function initializePlanPayment(
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ planId, currency }),
+      body: JSON.stringify({ planId, currency, billingCycle }),
     }),
   );
   if (!response.ok) {
@@ -83,6 +84,7 @@ async function validateCouponCode(
 type Props = {
   open: boolean;
   planId: PlanId;
+  billingCycle?: "MONTHLY" | "YEARLY";
   accessToken: string;
   language: Language;
   onClose: () => void;
@@ -93,6 +95,7 @@ type Props = {
 export function PaymentSummaryModal({
   open,
   planId,
+  billingCycle = "MONTHLY",
   accessToken,
   language,
   onClose,
@@ -114,7 +117,27 @@ export function PaymentSummaryModal({
 
   const plan = PLANS.find((p) => p.id === planId);
   const planName = plan ? (tr ? plan.nameTr : plan.nameEn) : planId;
-  const planPrice = plan ? formatPrice(plan, checkoutCurrency === "TRY" ? "TRY" : "USD", "MONTHLY") : "";
+  const isTry = checkoutCurrency === "TRY";
+  const planPrice = plan ? formatPrice(plan, isTry ? "TRY" : "USD", billingCycle) : "";
+
+  // KDV dökümü — yalnızca TRY ödemelerinde (%20 KDV)
+  // planConfig fiyatları kuruş cinsindendir (14900 = 149 ₺); önce 100'e böl.
+  // Katalog fiyatı KDV-HARİÇ (net). KDV = net × 0.20, toplam = net × 1.20
+  const vatBreakdown = (() => {
+    if (!plan || !isTry) return null;
+    const rawKurus = billingCycle === "YEARLY" ? plan.pricing.yearly.TRY : plan.pricing.monthly.TRY;
+    if (!rawKurus) return null;
+    const net = rawKurus / 100;                              // liraya çevir
+    const vat = Math.round(net * 0.20 * 100) / 100;
+    const gross = Math.round((net + vat) * 100) / 100;
+    const discountedNet = promoApplied
+      ? Math.round(net * (1 - promoApplied.discountPercent / 100) * 100) / 100
+      : net;
+    const discountedVat = Math.round(discountedNet * 0.20 * 100) / 100;
+    const discountedGross = Math.round((discountedNet + discountedVat) * 100) / 100;
+    const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return { gross, net, vat, discountedGross, discountedNet, discountedVat, fmt };
+  })();
 
   useEffect(() => {
     if (!open) {
@@ -191,7 +214,7 @@ export function PaymentSummaryModal({
     setPaying(true);
     setPromoError(null);
     try {
-      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency);
+      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency, billingCycle);
       if (session.mode === "fake") {
         onBeforeExternalCheckout?.();
         const result = await confirmFakeCheckout(accessToken, session.sessionId);
@@ -271,7 +294,9 @@ export function PaymentSummaryModal({
               {planName}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              {tr ? "Aylık abonelik — istediğiniz zaman iptal" : "Monthly subscription — cancel anytime"}
+              {billingCycle === "YEARLY"
+                ? (tr ? "Yıllık abonelik — istediğiniz zaman iptal" : "Yearly subscription — cancel anytime")
+                : (tr ? "Aylık abonelik — istediğiniz zaman iptal" : "Monthly subscription — cancel anytime")}
             </p>
             {/* Feature list */}
             <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5">
@@ -297,21 +322,55 @@ export function PaymentSummaryModal({
               </div>
             ) : (
               <>
-                {/* Price block */}
-                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-5 text-center">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    {tr ? "Ödenecek tutar" : "Total due today"}
-                  </p>
-                  <p className="mt-2 text-[3rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[3.4rem]">
-                    {promoApplied
-                      ? <span className="line-through text-slate-500 text-[2rem] mr-2">{planPrice}</span>
-                      : null}
-                    {promoApplied
-                      ? <span>{planPrice} <span className="text-emerald-400 text-xl">−{promoApplied.discountPercent}%</span></span>
-                      : planPrice}
-                  </p>
-                  <p className="mt-1.5 text-xs text-slate-500">
-                    / {tr ? "ay · Otomatik yenilenir" : "mo · Auto-renews monthly"}
+                {/* Price block — KDV dökümüyle */}
+                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-4">
+                  {vatBreakdown ? (
+                    <div className="space-y-1.5 text-sm">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-slate-400">{tr ? "Paket Fiyatı (KDV hariç)" : "Package Price (excl. VAT)"}</span>
+                        <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.net)} ₺</span>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-slate-400">{tr ? "KDV (%20)" : "VAT (20%)"}</span>
+                        <span className="tabular-nums text-slate-400">{vatBreakdown.fmt(vatBreakdown.vat)} ₺</span>
+                      </div>
+                      {promoApplied && (
+                        <div className="flex items-baseline justify-between text-emerald-400">
+                          <span>{tr ? `İndirim (−%${promoApplied.discountPercent})` : `Discount (−${promoApplied.discountPercent}%)`}</span>
+                          <span className="tabular-nums">−{vatBreakdown.fmt(vatBreakdown.gross - vatBreakdown.discountedGross)} ₺</span>
+                        </div>
+                      )}
+                      <div className="mt-2 border-t border-white/[0.08] pt-2">
+                        <div className="flex items-baseline justify-between">
+                          <span className="font-semibold text-white">{tr ? "Ödenecek Tutar" : "Total Due"}</span>
+                          <span className="text-[1.6rem] font-black tabular-nums leading-none text-white">
+                            {vatBreakdown.fmt(vatBreakdown.discountedGross)} ₺
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                        {tr ? "Ödenecek tutar" : "Total due today"}
+                      </p>
+                      <p className="mt-2 text-[3rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[3.4rem]">
+                        {promoApplied ? (
+                          <><span className="mr-2 text-[2rem] line-through text-slate-500">{planPrice}</span>
+                          <span>{planPrice} <span className="text-emerald-400 text-xl">−{promoApplied.discountPercent}%</span></span></>
+                        ) : planPrice}
+                      </p>
+                      {!isTry && (
+                        <p className="mt-1 text-[11px] text-slate-500">
+                          {tr ? "KDV Muafiyeti: İhracat İstisnası" : "VAT Exemption: Export Exception"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <p className="mt-2 text-center text-xs text-slate-500">
+                    {billingCycle === "YEARLY"
+                      ? (tr ? "/ yıl · Yıllık faturalandırılır" : "/ yr · Billed annually")
+                      : (tr ? "/ ay · Aylık otomatik yenilenir" : "/ mo · Auto-renews monthly")}
                   </p>
                 </div>
 
@@ -349,12 +408,10 @@ export function PaymentSummaryModal({
                 </div>
 
                 {/* Trust row */}
-                <div className="mt-4 flex items-center justify-center gap-3 text-[11px] text-slate-600">
-                  <span>🔒 {tr ? "SSL Güvenli" : "SSL Secured"}</span>
-                  <span>·</span>
-                  <span>iyzico</span>
-                  <span>·</span>
-                  <span>Visa / Mastercard</span>
+                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[11px] text-slate-500">
+                  {tr
+                    ? "iyzico güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
+                    : "Secured by iyzico — your card details are never stored on our servers"}
                 </div>
               </>
             )}
@@ -363,7 +420,8 @@ export function PaymentSummaryModal({
           {/* Footer CTA */}
           {!successMessage ? (
             <div className="shrink-0 border-t border-white/[0.07] bg-gradient-to-t from-[#060910]/95 to-[#0d1120]/90 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-8">
-              <label className="mx-auto flex max-w-lg cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
+              {/* Kullanım Koşulları + KVKK checkbox */}
+              <label className="mx-auto mb-2 flex max-w-lg cursor-pointer gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3.5 text-left text-[12px] leading-relaxed text-slate-400">
                 <input
                   type="checkbox"
                   className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-nb-bg-soft accent-nb-primary"
@@ -382,6 +440,9 @@ export function PaymentSummaryModal({
                         KVKK metnini
                       </button>{" "}
                       okudum, kabul ediyorum.
+                      <span className="mt-1.5 block text-[10px] text-slate-600">
+                        Ön Bilgilendirme Formu ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
+                      </span>
                     </>
                   ) : (
                     <>
@@ -393,6 +454,9 @@ export function PaymentSummaryModal({
                       <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("kvkk")}>
                         KVKK disclosure
                       </button>.
+                      <span className="mt-1.5 block text-[10px] text-slate-600">
+                        Your Pre-Purchase Information Form and withdrawal waiver were recorded in the previous step.
+                      </span>
                     </>
                   )}
                 </span>
@@ -433,8 +497,8 @@ export function PaymentSummaryModal({
             <div className="mb-3 flex items-center justify-between gap-2 border-b border-white/[0.08] pb-3">
               <h2 className="text-sm font-semibold text-nb-text">
                 {legalOverlay === "terms"
-                  ? tr ? "Kullanım koşulları" : "Terms of use"
-                  : tr ? "KVKK" : "KVKK disclosure"}
+                  ? (tr ? "Kullanım koşulları" : "Terms of use")
+                  : (tr ? "KVKK" : "KVKK disclosure")}
               </h2>
               <button
                 type="button"

@@ -182,6 +182,16 @@ model User {
   phone                String?  @map("phone")
   billingAddressLine   String?  @map("billing_address_line")
   billingPostalCode    String?  @map("billing_postal_code")
+  tcKimlikNo          String?   @map("tc_kimlik_no")
+  taxId               String?   @map("tax_id")
+  taxOffice           String?   @map("tax_office")
+  companyName         String?   @map("company_name")
+  invoiceType         String?   @map("invoice_type")
+  billingCountryCode  String?   @map("billing_country_code")
+  isKvkkConsented     Boolean   @default(false) @map("is_kvkk_consented")
+  kvkkConsentedAt     DateTime? @map("kvkk_consented_at")
+  distanceSalesConsentedAt DateTime? @map("distance_sales_consented_at")
+  withdrawalWaivedAt  DateTime? @map("withdrawal_waived_at")
   freeLimitFirstExceededAt DateTime? @map("free_limit_first_exceeded_at")
   totalOperationsCount     Int            @default(0) @map("total_operations_count")
   totalThrottleEventsCount Int            @default(0) @map("total_throttle_events_count")
@@ -207,6 +217,7 @@ model User {
   operationLogs    OperationLog[]
   paymentCheckouts PaymentCheckout[]
   adminAuditLogs   AdminAuditLog[] @relation("AdminAuditActor")
+  invoices         Invoice[]
   ownedTeam    Team?         @relation("TeamOwner")
   teamMembership TeamMember? @relation("TeamMemberUser")
 
@@ -274,13 +285,53 @@ model PaymentCheckout {
   completedAt      DateTime?
   refundedAt       DateTime? @map("refunded_at")
   refundReason     String?   @map("refund_reason")
+  kdvRate         Float?   @map("kdv_rate")
+  kdvAmount       String?  @map("kdv_amount")
+  netAmount       String?  @map("net_amount")
+  customerCountry String?  @map("customer_country")
+  invoiceStatus   String?  @map("invoice_status")
+  cardCountry     String?  @map("card_country")   // iyzico'dan gelen kart ülkesi
+  cardBin         String?  @map("card_bin")        // iyzico BIN (ilk 6 hane)
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  invoice      Invoice?
 
   @@index([userId])
   @@index([organizationId])
   @@index([status])
+}
+
+// ─── Invoice ──────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String   @id @default(cuid())
+  checkoutId      String   @unique @map("checkout_id")
+  userId          String   @map("user_id")
+  externalId      String?  @map("external_id")
+  invoiceNo       String?  @map("invoice_no")
+  type            String   @default("e-arsiv")
+  status          String   @default("pending")
+  pdfUrl          String?  @map("pdf_url")
+  netAmount       String   @map("net_amount")
+  kdvRate         Float    @map("kdv_rate")
+  kdvAmount       String   @map("kdv_amount")
+  grossAmount     String   @map("gross_amount")
+  currency        String   @default("TRY")
+  customerName    String   @map("customer_name")
+  customerEmail   String   @map("customer_email")
+  customerCountry String   @map("customer_country")
+  customerTaxId   String?  @map("customer_tax_id")
+  isExport        Boolean  @default(false) @map("is_export")
+  createdAt       DateTime @default(now()) @map("created_at")
+  sentAt          DateTime? @map("sent_at")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkout PaymentCheckout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("invoices")
 }
 
 // ─── Auth / Session ───────────────────────────────────────────────────────────

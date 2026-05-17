@@ -65,4 +65,28 @@ router.post(
   },
 );
 
+// GET /api/billing/info — kayıtlı fatura bilgilerini getir
+router.get("/info", requireAuth(), async (req, res) => {
+  try {
+    const user = (req as any).authUser;
+    const { getBillingInfo } = await import("./billing-info.service.js");
+    const info = await getBillingInfo(user.id);
+    res.json(info);
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
+// POST /api/billing/info — fatura bilgilerini kaydet
+router.post("/info", requireAuth(), async (req, res) => {
+  try {
+    const user = (req as any).authUser;
+    const { saveBillingInfo } = await import("./billing-info.service.js");
+    await saveBillingInfo(user.id, req.body);
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 export default router;

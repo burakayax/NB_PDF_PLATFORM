@@ -17,6 +17,8 @@ class CustomerInfo:
     city: str | None = None
     country: str = "Turkey"
     contact_type: str = "person"      # "person" | "company"
+    country_code: str = "TR"          # ISO 3166-1 alpha-2
+    is_export: bool = False           # Yabancı müşteri = True (ihracat istisnası)
 
 
 @dataclass
@@ -27,14 +29,16 @@ class InvoiceItem:
     vat_rate: int                     # 0, 10 veya 20
     description: str | None = None
     unit: str = "Adet"
+    is_export: bool = False
 
 
 @dataclass
 class PaymentInfo:
     payment_id: str                   # iyzico ödeme ID
     amount_paid: float                # KDV dahil toplam ödenen tutar
-    currency: str = "TRL"
+    currency: str = "TRY"
     payment_date: str = ""            # YYYY-MM-DD
+    currency_rate: float = 1.0        # 1 birim döviz = X TRY (TCMB alış kuru)
 
 
 @dataclass

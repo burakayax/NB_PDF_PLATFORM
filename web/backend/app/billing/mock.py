@@ -1,4 +1,4 @@
-"""Mock billing provider — gerçek API çağrısı yapmaz, test/geliştirme içindir."""
+"""Mock billing provider - gercek API cagrisi yapmaz, test/gelistirme icin."""
 
 from __future__ import annotations
 
@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class MockProvider(BillingProviderBase):
-    """Tüm işlemleri loglar ve sahte veriler döner; Paraşüt hesabı gerekmez."""
+    """Tum islemleri loglar ve sahte veriler doner; Parasut hesabi gerekmez."""
 
     def find_or_create_customer(self, customer_info: CustomerInfo) -> str:
         customer_id = str(uuid.uuid4())
-        logger.info("[MOCK] Creating customer: %s (%s) → id=%s", customer_info.name, customer_info.email, customer_id)
+        logger.info("[MOCK] Creating customer: %s (%s) -> id=%s", customer_info.name, customer_info.email, customer_id)
         return customer_id
 
     def create_invoice(
@@ -28,7 +28,7 @@ class MockProvider(BillingProviderBase):
     ) -> InvoiceResult:
         invoice_id = str(uuid.uuid4())
         invoice_number = f"MOCK-{date.today().strftime('%Y%m%d')}-{invoice_id[:6].upper()}"
-        logger.info("[MOCK] Creating invoice for customer_id=%s → invoice_id=%s", customer_id, invoice_id)
+        logger.info("[MOCK] Creating invoice for customer_id=%s -> invoice_id=%s", customer_id, invoice_id)
         for item in items:
             logger.debug("[MOCK]   item: %s qty=%s price=%s vat=%s%%", item.name, item.quantity, item.unit_price, item.vat_rate)
         return InvoiceResult(
@@ -67,7 +67,7 @@ class MockProvider(BillingProviderBase):
         logger.info("[MOCK] Starting full invoice flow for %s (%s)", customer_info.name, customer_info.email)
         result = super().full_invoice_flow(customer_info, items, payment_info)
         logger.info(
-            "[MOCK] Full flow complete — invoice_id=%s number=%s pdf=%s",
+            "[MOCK] Full flow complete - invoice_id=%s number=%s pdf=%s",
             result.invoice_id,
             result.invoice_number,
             result.pdf_url,
