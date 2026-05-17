@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
 import {
+  cancelSubscriptionController,
   currentSubscriptionController,
   listPlansController,
   subscriptionStatusController,
@@ -16,3 +17,4 @@ export const subscriptionRouter = Router();
 subscriptionRouter.get("/plans", asyncHandler(listPlansController));
 subscriptionRouter.get("/status", asyncHandler(subscriptionStatusController));
 subscriptionRouter.get("/current", asyncHandler(currentSubscriptionController));
+subscriptionRouter.post("/cancel", asyncHandler(cancelSubscriptionController));

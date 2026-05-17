@@ -1,7 +1,6 @@
 import type { Plan } from "@prisma/client";
 import { getResolvedPackagesConfig, invalidateResolvedPackagesConfig } from "../../lib/packages-config.service.js";
 import {
-  featureCatalog,
   planDefinitions,
   type FeatureKey,
   type PlanDefinition,
@@ -60,8 +59,6 @@ export async function getPlanDefinitionsResolved(): Promise<Record<Plan, PlanDef
   } catch {
     /* ignore invalid shape */
   }
-  /* Free tier: never restrict TOOLS via packages.config — monetization is soft friction only. */
-  out.FREE = { ...out.FREE, allowedFeatures: [...featureCatalog] };
   return out;
 }
 

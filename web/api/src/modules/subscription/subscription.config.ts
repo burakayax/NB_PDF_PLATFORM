@@ -39,13 +39,35 @@ export type PlanDefinition = {
   multiUser: boolean;
 };
 
+/** Temel araçlar — ücretli plan gerektirmez */
+const FREE_TOOLS: FeatureKey[] = [
+  "split",
+  "merge",
+  "compress",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "pdf-to-text",
+];
+
+/** Starter'a ek olarak açılan araçlar */
+const STARTER_TOOLS: FeatureKey[] = [
+  ...FREE_TOOLS,
+  "encrypt",
+  "pdf-to-image",
+  "image-to-pdf",
+  "page-numbers",
+  "watermark",
+];
+
 export const planDefinitions: Record<Plan, PlanDefinition> = {
   FREE: {
     name: "FREE",
     displayName: "Free",
     description: "Full toolkit with usage limits.",
     dailyLimit: 3,
-    allowedFeatures: [...featureCatalog],
+    allowedFeatures: FREE_TOOLS,
     multiUser: false,
   },
   STARTER: {
@@ -53,7 +75,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
     displayName: "Starter",
     description: "Great for getting started with 25 daily operations.",
     dailyLimit: 25,
-    allowedFeatures: [...featureCatalog],
+    allowedFeatures: STARTER_TOOLS,
     multiUser: false,
   },
   PLUS: {

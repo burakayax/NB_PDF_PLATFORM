@@ -1,7 +1,9 @@
 import { legalDocuments } from "../../content/legal";
 import type { Language } from "../../i18n/landing";
 
-type LegalDocKey = "terms" | "privacy" | "kvkk";
+type LegalDocKey = "terms" | "privacy" | "kvkk" | "on-bilgilendirme" | "mesafeli-satis";
+
+export type { LegalDocKey };
 
 export type LegalDocumentBodyProps = {
   language: Language;

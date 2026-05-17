@@ -26,13 +26,15 @@ export const deleteAccountLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  validate: { default: false },
   keyGenerator: (req) => {
     const userId = req.authUser?.id ?? "anon";
     const ip = req.ip ?? "unknown";
     return `delete-account:${userId}:${ip}`;
   },
   message: {
-    message: "Too many deletion attempts. Please wait a minute before trying again.",
+    message:
+      "Too many deletion attempts. Please wait a minute before trying again.",
   },
 });
 
@@ -46,6 +48,7 @@ export const forgotPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  validate: { default: false },
   keyGenerator: (req) => `forgot-password:${req.ip ?? "unknown"}`,
   message: {
     message: "Too many password reset requests. Please try again later.",

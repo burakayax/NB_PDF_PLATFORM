@@ -18,10 +18,12 @@
     "prisma:generate": "npm run prisma:generate --prefix web/api"
   },
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "concurrently": "^9.1.2"
   },
   "dependencies": {
     "all": "^0.0.0",
+    "axios": "^1.16.1",
     "framer-motion": "^12.38.0",
     "postinstall": "^0.11.2",
     "predev": "^1.0.12"

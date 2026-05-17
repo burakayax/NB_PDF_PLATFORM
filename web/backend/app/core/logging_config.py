@@ -1,11 +1,12 @@
-"""Üretim için JSON tabanlı yapılandırılmış loglama ayarları.
+"""Uretim icin JSON tabanli yapilandirilmis loglama ayarlari.
 
-LOG_FORMAT=json (veya üretimde varsayılan) iken her log satırı tek satır JSON olarak çıkar.
+LOG_FORMAT=json (veya uretimde varsayilan) iken her log satiri tek satir JSON olarak cikar.
 Bu format Loki, Datadog, CloudWatch gibi log aggregator'larla uyumludur.
 """
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import os
@@ -15,7 +16,7 @@ from typing import Any
 
 
 class JsonFormatter(logging.Formatter):
-    """Her log kaydını tek satır JSON olarak serileştirir."""
+    """Her log kaydini tek satir JSON olarak serileştirir."""
 
     LEVEL_MAP = {
         logging.DEBUG: "debug",
@@ -40,8 +41,21 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(data, ensure_ascii=False)
 
 
+def _utf8_stream() -> Any:
+    """Windows'ta stdout'u UTF-8 moduna alir; diger platformlarda aynen doner."""
+    stream = sys.stdout
+    if sys.platform == "win32" and hasattr(stream, "buffer"):
+        try:
+            return io.TextIOWrapper(
+                stream.buffer, encoding="utf-8", errors="replace", line_buffering=True
+            )
+        except Exception:
+            pass
+    return stream
+
+
 def configure_logging() -> None:
-    """Uygulama başlangıcında bir kez çağrılır."""
+    """Uygulama baslangiicinda bir kez cagrilir."""
     fmt = os.getenv("LOG_FORMAT", "json" if os.getenv("NODE_ENV") == "production" else "text").lower()
     level_name = os.getenv("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
@@ -52,7 +66,7 @@ def configure_logging() -> None:
     if root.handlers:
         root.handlers.clear()
 
-    handler = logging.StreamHandler(sys.stdout)
+    handler = logging.StreamHandler(_utf8_stream())
     handler.setLevel(level)
 
     if fmt == "json":
@@ -60,13 +74,13 @@ def configure_logging() -> None:
     else:
         handler.setFormatter(
             logging.Formatter(
-                fmt="%(asctime)s %(levelname)-8s %(name)s — %(message)s",
+                fmt="%(asctime)s %(levelname)-8s %(name)s - %(message)s",
                 datefmt="%Y-%m-%d %H:%M:%S",
             )
         )
 
     root.addHandler(handler)
 
-    # Gürültülü kütüphaneleri sustur
+    # Gurultulu kutuphaneleri sustur
     for noisy in ("fontTools", "PIL", "urllib3", "httpcore"):
         logging.getLogger(noisy).setLevel(logging.ERROR)

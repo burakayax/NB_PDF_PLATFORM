@@ -15,6 +15,7 @@ import {
 } from "../credit-checkout/credit-pack-pricing.js";
 import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
+import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -42,6 +43,48 @@ type IyzipayCtor = {
 };
 
 const Iyzipay = IyzipayImport as unknown as IyzipayCtor;
+
+const PLAN_ORG_LIMITS: Record<string, {
+  dailyOperationLimit: number | null;
+  monthlyOperationLimit: number;
+  fileSizeLimitMB: number;
+  batchLimit: number;
+  watermarkEnabled: boolean;
+  queuePriority: "LOW" | "MEDIUM" | "HIGH" | "HIGHEST";
+}> = {
+  FREE:     { dailyOperationLimit: 3,    monthlyOperationLimit: 30,     fileSizeLimitMB: 25,     batchLimit: 0,   watermarkEnabled: true,  queuePriority: "LOW" },
+  STARTER:  { dailyOperationLimit: 25,   monthlyOperationLimit: 250,    fileSizeLimitMB: 100,    batchLimit: 2,   watermarkEnabled: true,  queuePriority: "LOW" },
+  PLUS:     { dailyOperationLimit: null, monthlyOperationLimit: 600,    fileSizeLimitMB: 250,    batchLimit: 5,   watermarkEnabled: false, queuePriority: "MEDIUM" },
+  PRO:      { dailyOperationLimit: null, monthlyOperationLimit: 1000,   fileSizeLimitMB: 500,    batchLimit: 25,  watermarkEnabled: false, queuePriority: "HIGH" },
+  BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: 999999, fileSizeLimitMB: 999999, batchLimit: 999, watermarkEnabled: false, queuePriority: "HIGHEST" },
+};
+
+async function resolvePlanLimits(plan: string) {
+  try {
+    const config = await prisma.planConfig.findUnique({ where: { plan: plan as never } });
+    if (config) {
+      return {
+        dailyOperationLimit: config.dailyOperationLimit ?? undefined,
+        monthlyOperationLimit: config.monthlyOperationLimit,
+        fileSizeLimitMB: config.fileSizeLimitMB,
+        batchLimit: config.batchLimit,
+        watermarkEnabled: config.watermarkEnabled,
+        queuePriority: config.queuePriority,
+      };
+    }
+  } catch {
+    // DB'de kayıt yoksa varsayılana dön
+  }
+  const def = PLAN_ORG_LIMITS[plan] ?? PLAN_ORG_LIMITS["FREE"];
+  return {
+    dailyOperationLimit: def.dailyOperationLimit ?? undefined,
+    monthlyOperationLimit: def.monthlyOperationLimit,
+    fileSizeLimitMB: def.fileSizeLimitMB,
+    batchLimit: def.batchLimit,
+    watermarkEnabled: def.watermarkEnabled,
+    queuePriority: def.queuePriority,
+  };
+}
 
 /** Sandbox-safe dummy postal addresses required by Checkout Form validator. */
 const BUYER_DUMMY_STREET =
@@ -118,6 +161,12 @@ type IyzicoRetrieveResult = {
   token?: string;
   signature?: string;
   fraudStatus?: number;
+  // Kart bilgileri — VAT/KDV doğrulama için
+  binNumber?: string;
+  cardAssociation?: string;       // "VISA" | "MASTER_CARD" | ...
+  cardType?: string;              // "CREDIT_CARD" | "DEBIT_CARD"
+  cardCountry?: string;           // "TURKEY" | "UNITED STATES" | ...
+  cardFamily?: string;
 };
 
 /** SDK / API may return camelCase or snake_case; normalized before signature + DB lookups. */
@@ -363,7 +412,8 @@ export async function createPaymentCheckoutSession(params: {
         : isAnnualPro
           ? prices.PRO_ANNUAL
           : prices.PRO);
-  const price = normalizeCheckoutPrice(rawFromCatalog);
+  // netPrice = katalog fiyati (KDV haric)
+  const netPrice = normalizeCheckoutPrice(rawFromCatalog);
   const settlementCurrency: CheckoutCurrency =
     params.priceTryOverride != null ? (params.checkoutCurrency ?? "TRY") : "TRY";
   const iyziCurrency = iyzicoFx(settlementCurrency);
@@ -383,6 +433,16 @@ export async function createPaymentCheckoutSession(params: {
     );
   }
 
+  // KDV hesabı — çok-sinyal güvenli taraf kuralı:
+  //   TRY ödemesi → daima TR, USD + boş/TR adres → TR (safe harbor)
+  const customerCountry = resolveEffectiveCountry(
+    settlementCurrency,
+    user.billingCountryCode,
+  );
+  const vatPricing = buildCheckoutPricing(netPrice, customerCountry, settlementCurrency);
+  // iyzico'ya KDV-dahil gross gonderilir
+  const grossPrice = normalizeCheckoutPrice(vatPricing.grossAmount);
+
   const conversationId = randomUUID();
   const basketId = `nbpdf-${params.plan.toLowerCase()}-${conversationId.slice(0, 8)}`;
   const { name, surname } = splitBuyerName(user);
@@ -397,7 +457,11 @@ export async function createPaymentCheckoutSession(params: {
       userId: user.id,
       plan: params.plan,
       status: "pending",
-      priceTry: price,
+      priceTry: grossPrice,
+      netAmount: vatPricing.netAmount,
+      kdvRate: vatPricing.kdvRate,
+      kdvAmount: vatPricing.kdvAmount,
+      customerCountry,
       paymentCurrency: settlementCurrency,
       subscriptionDays,
     },
@@ -409,8 +473,8 @@ export async function createPaymentCheckoutSession(params: {
   const request = {
     locale: Iyzipay.LOCALE.TR,
     conversationId,
-    price,
-    paidPrice: price,
+    price: grossPrice,
+    paidPrice: grossPrice,
     currency: iyziCurrency,
     basketId,
     paymentGroup: Iyzipay.PAYMENT_GROUP.PRODUCT,
@@ -460,7 +524,7 @@ export async function createPaymentCheckoutSession(params: {
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
-        price,
+        price: grossPrice,
       },
     ],
   };
@@ -610,6 +674,166 @@ async function resolveConversationIdFromToken(
   return fromApi || undefined;
 }
 
+// ---------------------------------------------------------------------------
+// Dahili fatura tetikleyici — abonelik aktivasyonunu asla engellemez
+// ---------------------------------------------------------------------------
+
+async function triggerInvoiceGeneration(
+  checkout: {
+    userId: string;
+    plan: string;
+    priceTry: string;
+    conversationId: string;
+    kdvRate?: number | null;
+    kdvAmount?: string | null;
+    netAmount?: string | null;
+    customerCountry?: string | null;
+    paymentCurrency?: string | null;
+  },
+  retrieveResult: IyzicoRetrieveResult,
+): Promise<void> {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: checkout.userId },
+      select: {
+        firstName: true,
+        lastName: true,
+        name: true,
+        email: true,
+        phone: true,
+        billingAddressLine: true,
+        city: true,
+        billingCountryCode: true,
+        tcKimlikNo: true,
+        taxId: true,
+        taxOffice: true,
+        companyName: true,
+        invoiceType: true,
+      },
+    });
+    if (!user) return;
+
+    // Çok-sinyal güvenli taraf: iyzico kart ülkesi + ödeme para birimi + beyan edilen ülke
+    const cardCountryFromIyzico = (
+      (retrieveResult as Record<string, unknown>).cardCountry as string | undefined ?? ""
+    ).toUpperCase().trim();
+    const isTRCard = cardCountryFromIyzico === "TURKEY" || cardCountryFromIyzico === "TR";
+    const paymentCurr = (checkout.paymentCurrency ?? "TRY").toUpperCase();
+
+    let countryCode: string;
+    if (paymentCurr === "TRY") {
+      // TRY ödemesi → daima Türkiye
+      countryCode = "TR";
+    } else if (isTRCard) {
+      // Yabancı para birimi ama TR kart → KDV uygula (compliance güvenliği)
+      countryCode = "TR";
+      console.warn(`${PC_LOG} invoice: TR card on foreign currency — overriding to TR for KDV`, {
+        conversationId: checkout.conversationId, cardCountry: cardCountryFromIyzico,
+      });
+    } else {
+      // Kart ülkesi yabancı ya da bilinmiyor → beyan edilen ülkeyi kullan
+      countryCode = resolveEffectiveCountry(
+        paymentCurr,
+        checkout.customerCountry ?? user.billingCountryCode,
+      );
+    }
+    const { name, surname } = splitBuyerName(user as Parameters<typeof splitBuyerName>[0]);
+    const fullName = user.companyName
+      ? user.companyName
+      : `${name} ${surname}`.trim();
+
+    // TC No şifresini çöz — ASLA loglanmaz
+    let nationalId: string | null = null;
+    if (user.tcKimlikNo) {
+      try {
+        const { decryptField } = await import("../../lib/encryption.js");
+        nationalId = decryptField(user.tcKimlikNo);
+      } catch {
+        console.warn(`${PC_LOG} TC No decrypt başarısız — fallback kullanılacak`);
+        nationalId = null;
+      }
+    }
+
+    const pdfBackendBase =
+      process.env.PDF_BACKEND_URL ?? "http://127.0.0.1:8000";
+    const grossPrice = checkout.priceTry;
+
+    // iyzico retrieve sonucundan gerçek ödenen tutarı al;
+    // yoksa DB'deki kayıtlı fiyatı kullan.
+    const actualPaidPrice =
+      retrieveResult.paidPrice != null
+        ? parseFloat(String(retrieveResult.paidPrice))
+        : parseFloat(grossPrice);
+
+    // Ödemenin gerçek para birimini kullan (USD, EUR, TRY).
+    // retrieveResult.currency iyzico'dan gelir (USD, TRY vb.);
+    // checkout.paymentCurrency DB'ye yazılan değerdir — ikisi de geçerli.
+    const actualCurrency =
+      (retrieveResult.currency?.trim().toUpperCase()) ||
+      (checkout.paymentCurrency?.trim().toUpperCase()) ||
+      "TRY";
+
+    const invoicePayload = {
+      paymentId: String(
+        (retrieveResult as Record<string, unknown>).paymentId ??
+          checkout.conversationId,
+      ),
+      status: "SUCCESS",
+      customerCountry: countryCode,
+      // Kart ülkesini de gönder — Python webhook_handler çok-sinyal denetimi için
+      cardCountry: (retrieveResult as Record<string, unknown>).cardCountry ?? null,
+      currency: actualCurrency,
+      paidPrice: actualPaidPrice,
+      price: actualPaidPrice,
+      buyer: {
+        name,
+        surname,
+        email: user.email,
+        gsmNumber: user.phone ?? "",
+        identityNumber: nationalId ?? "",
+        registrationAddress: user.billingAddressLine ?? "",
+        city: user.city ?? "",
+        country: countryCode === "TR" ? "Turkey" : countryCode,
+      },
+      basketItems: [
+        {
+          id: checkout.plan,
+          name: `PDF PLATFORM ${checkout.plan} Abonelik`,
+          category1: "Subscription",
+          itemType: "VIRTUAL",
+          price: actualPaidPrice,
+        },
+      ],
+    };
+
+    const resp = await fetch(`${pdfBackendBase}/api/internal/invoice`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(invoicePayload),
+      signal: AbortSignal.timeout(35_000),
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.warn(
+        `${PC_LOG} invoice API returned ${resp.status}: ${text.slice(0, 200)}`,
+      );
+    } else {
+      const data = (await resp.json()) as Record<string, unknown>;
+      console.log(`${PC_LOG} invoice generated`, {
+        invoiceId: data["invoice_id"],
+        invoiceNumber: data["invoice_number"],
+        emailSent: data["email_sent"],
+      });
+    }
+  } catch (err) {
+    console.error(
+      `${PC_LOG} triggerInvoiceGeneration error`,
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 /**
  * iyzico Checkout Form callback — posted `token`, then server calls `checkoutForm.retrieve` (NOT `threedsPayment.create`,
  * which is for direct `/payment/3dsecure/*` APIs). On success we grant credits or extend subscription.
@@ -684,7 +908,14 @@ export async function processPaymentCallback(
       currency: result.currency,
       basketId: result.basketId,
       hasSignature: Boolean(result.signature),
+      cardCountry: result.cardCountry,
+      binNumber: result.binNumber ? `${result.binNumber.slice(0, 3)}***` : undefined,
     });
+
+    // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı
+    const cardCountryRaw = (result.cardCountry ?? "").toUpperCase().trim();
+    const isTurkishCard = cardCountryRaw === "TURKEY" || cardCountryRaw === "TR";
+    // (Bu noktada pending henüz yüklenmemiş; loglama callback doğrulandıktan sonra yapılır)
 
     if (result.status !== "success") {
       console.warn(`${PC_LOG} retrieve status !== success`);
@@ -767,6 +998,9 @@ export async function processPaymentCallback(
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + subscriptionDays);
 
+    // Plan limitlerini DB'den veya varsayılanlardan al
+    const planLimits = await resolvePlanLimits(pending.plan);
+
     try {
       await prisma.$transaction(async (tx) => {
         const current = await tx.paymentCheckout.findUnique({
@@ -776,17 +1010,23 @@ export async function processPaymentCallback(
           return;
         }
 
-        await tx.user.update({
+        // Kullanıcı planını güncelle
+        const updatedUser = await tx.user.update({
           where: { id: current.userId },
           data: { plan: current.plan },
+          select: { organizationId: true },
         });
-        if (current.organizationId) {
+
+        // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
+        const orgId = current.organizationId ?? updatedUser.organizationId;
+        if (orgId) {
           await tx.organization.update({
-            where: { id: current.organizationId },
+            where: { id: orgId },
             data: {
               plan: current.plan,
               subscriptionStatus: "active",
               subscriptionExpiry: expiry,
+              ...planLimits,
             },
           });
         }
@@ -796,6 +1036,8 @@ export async function processPaymentCallback(
           data: {
             status: "completed",
             completedAt: new Date(),
+            cardCountry: result.cardCountry ?? null,
+            cardBin: result.binNumber ? result.binNumber.slice(0, 6) : null,
           },
         });
       });
@@ -828,6 +1070,35 @@ export async function processPaymentCallback(
     }
 
     console.log(`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
+
+    // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı logla
+    if (isTurkishCard && (pending.kdvRate === 0 || pending.paymentCurrency !== "TRY")) {
+      logSuspiciousActivity({
+        type: "vat_compliance_warning",
+        detail: JSON.stringify({
+          conversationId,
+          paymentCurrency: pending.paymentCurrency,
+          kdvRate: pending.kdvRate,
+          customerCountry: pending.customerCountry,
+          cardCountry: result.cardCountry,
+          binPrefix: result.binNumber?.slice(0, 6),
+          note: "TR kart + KDV muaf fatura — manuel inceleme gerekebilir",
+        }),
+      });
+      console.warn(
+        `${PC_LOG} VAT COMPLIANCE WARNING: Turkish card used on non-KDV invoice`,
+        { conversationId, cardCountry: result.cardCountry },
+      );
+    }
+
+    // Fire-and-forget fatura üretimi — abonelik aktivasyonunu asla engellemez
+    void triggerInvoiceGeneration(pending, result).catch((err) => {
+      console.error(
+        `${PC_LOG} invoice trigger başarısız (kritik değil)`,
+        err instanceof Error ? err.message : err,
+      );
+    });
+
     return paymentWorkspaceRedirectUrl(true, pending.plan);
   } catch (unexpected) {
     // Re-throw DB fulfillment errors — the controller must return 500 for these.

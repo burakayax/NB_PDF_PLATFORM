@@ -117,11 +117,10 @@ async function fetchCountryFromIp(): Promise<string | null> {
 }
 
 function mergeGeoAndHints(geo: string | null): CheckoutCurrency {
-  // Timezone + language are high-confidence signals for Turkey — don't let IP override them
-  const hints = inferCurrencyFromClientHints();
-  if (hints === "TRY") return "TRY";
+  // IP sonucu en güvenilir sinyal; gelirse onu kullan
   if (geo) return defaultCurrencyFromCountryCode(geo);
-  return hints;
+  // IP yoksa timezone/dil fallback
+  return inferCurrencyFromClientHints();
 }
 
 type Ctx = {

@@ -26,6 +26,8 @@ export const legalDocuments: Record<
     terms: LegalDocument;
     privacy: LegalDocument;
     kvkk: LegalDocument;
+    "on-bilgilendirme": LegalDocument;
+    "mesafeli-satis": LegalDocument;
     cookieNotice: CookieNoticeCopy;
   }
 > = {
@@ -228,6 +230,115 @@ export const legalDocuments: Record<
           title: "3. Rights & contact",
           paragraphs: [
             "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: nbglobalstudio@gmail.com.",
+          ],
+        },
+      ],
+    },
+    "on-bilgilendirme": {
+      title: "Pre-Purchase Information Form",
+      summary:
+        "Mandatory consumer information form required before payment, pursuant to the Distance Sales Regulation.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "2024 and onwards",
+      sections: [
+        {
+          title: "1. Seller Information",
+          paragraphs: [
+            "Seller: NB Global Studio",
+            "Email: nbglobalstudio@gmail.com",
+            "Website: nbglobalstudio.com",
+            "Service: PDF PLATFORM — cloud-based PDF processing services",
+          ],
+        },
+        {
+          title: "2. Key Features of the Service",
+          paragraphs: [
+            "PDF PLATFORM is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.",
+            "Different usage limits, file size limits, and features apply depending on the subscription plan. Visit nbpdf.app/pricing for details.",
+          ],
+        },
+        {
+          title: "3. Price and Payment",
+          paragraphs: [
+            "Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.",
+            "Payment is made via credit card or debit card through the iyzico infrastructure.",
+            "No refund is provided for the remaining period after the subscription term has commenced.",
+          ],
+        },
+        {
+          title: "4. Withdrawal Right Exception",
+          paragraphs: [
+            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal does not apply to digital content services whose performance has begun with the consumer's consent.",
+            "Once payment is completed and the service performance (subscription activation) has begun, you will not be able to exercise your right of withdrawal. If you accept this condition, you may proceed to payment.",
+            "In case of technical issues or complete inability to use the service, please contact our support team.",
+          ],
+        },
+        {
+          title: "5. Complaints and Disputes",
+          paragraphs: [
+            "For complaints, you may send an email to nbglobalstudio@gmail.com.",
+            "Your right to apply to Consumer Arbitration Committees and Consumer Courts remains reserved.",
+          ],
+        },
+      ],
+    },
+    "mesafeli-satis": {
+      title: "Distance Sales Agreement",
+      summary:
+        "Agreement drawn up pursuant to Law No. 6502 on the Protection of Consumers and the Distance Sales Regulation.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "Applies to each subscription purchase",
+      sections: [
+        {
+          title: "1. Parties",
+          paragraphs: [
+            "SELLER: NB Global Studio, Email: nbglobalstudio@gmail.com",
+            "BUYER: The user identified by the name, surname, and email address provided at the payment step.",
+          ],
+        },
+        {
+          title: "2. Subject of the Agreement",
+          paragraphs: [
+            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF PLATFORM digital service subscription for the plan selected by the BUYER at nbpdf.app.",
+            "Service content and features vary by the selected plan.",
+          ],
+        },
+        {
+          title: "3. Price and Payment",
+          paragraphs: [
+            "The sales price including VAT is displayed to the BUYER at the payment screen.",
+            "20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
+            "Payment is made securely through the iyzico infrastructure. Card details are not stored by the SELLER.",
+          ],
+        },
+        {
+          title: "4. Subscription and Renewal",
+          paragraphs: [
+            "The subscription is activated immediately upon payment confirmation. The subscription term is determined by the selected plan (monthly/yearly).",
+            "Subscriptions do not renew automatically. A new payment must be made for renewal.",
+            "When the subscription term expires, paid features are deactivated and the account automatically reverts to the free plan.",
+          ],
+        },
+        {
+          title: "5. Right of Withdrawal",
+          paragraphs: [
+            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal cannot be exercised for digital content services whose performance has begun with the BUYER's express consent.",
+            "The BUYER has expressly declared at the payment step that they waive the right of withdrawal. Therefore, no refund can be requested after subscription activation.",
+            "In case the service is completely unavailable, the situation will be evaluated upon contact with the SELLER.",
+          ],
+        },
+        {
+          title: "6. Protection of Personal Data",
+          paragraphs: [
+            "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years pursuant to VUK Article 253.",
+            "For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
+          ],
+        },
+        {
+          title: "7. Dispute Resolution",
+          paragraphs: [
+            "Turkish law applies to disputes arising from this agreement.",
+            "Under consumer rights, you may apply to the Consumer Arbitration Committee or Consumer Courts.",
           ],
         },
       ],
@@ -486,6 +597,115 @@ export const legalDocuments: Record<
             "Yukarıda belirtilen haklarınızı kullanmak için nbglobalstudio@gmail.com adresine kimliğinizi doğrulayan bilgilerle birlikte yazılı başvuruda bulunabilirsiniz.",
             "Başvurunuzda; adınız, soyadınız, e-posta adresiniz, talebinizin konusu ve açıklaması yer almalıdır. Kimlik teyidi yapıldıktan sonra talebiniz KVKK’da öngörülen süreler içinde (en geç 30 gün) sonuçlandırılır.",
             "Başvurunuzun olumsuz sonuçlanması veya başvuruya hiç yanıt verilmemesi hâlinde Kişisel Verileri Koruma Kurumu’na (www.kvkk.gov.tr) şikâyette bulunma hakkınız saklıdır.",
+          ],
+        },
+      ],
+    },
+    "on-bilgilendirme": {
+      title: "Ön Bilgilendirme Formu",
+      summary:
+        "Mesafeli Sözleşmeler Yönetmeliği kapsamında, ödeme öncesinde tüketiciye sunulması zorunlu bilgilendirme formu.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "2024 yılı ve sonrası",
+      sections: [
+        {
+          title: "1. Satıcı Bilgileri",
+          paragraphs: [
+            "Satıcı: NB Global Studio",
+            "E-posta: nbglobalstudio@gmail.com",
+            "Web sitesi: nbglobalstudio.com",
+            "Hizmet: PDF PLATFORM — bulut tabanlı PDF işleme hizmetleri",
+          ],
+        },
+        {
+          title: "2. Hizmetin Temel Özellikleri",
+          paragraphs: [
+            "PDF PLATFORM; PDF birleştirme, bölme, sıkıştırma, dönüştürme, şifreleme ve diğer PDF işleme araçlarını içeren bulut tabanlı bir SaaS (Hizmet Olarak Yazılım) abonelik hizmetidir.",
+            "Abonelik planlarına göre farklı işlem limitleri, dosya boyutu limitleri ve özellikler uygulanmaktadır. Detaylar için nbpdf.app/pricing adresini ziyaret ediniz.",
+          ],
+        },
+        {
+          title: "3. Fiyat ve Ödeme",
+          paragraphs: [
+            "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
+            "Ödeme iyzico altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
+            "Abonelik süresi başladıktan sonra kalan süre için ücret iadesi yapılmamaktadır.",
+          ],
+        },
+        {
+          title: "4. Cayma Hakkı İstisnası",
+          paragraphs: [
+            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; tüketicinin onayı ile ifasına başlanan dijital içerik niteliğindeki bu hizmet için cayma hakkı uygulanmaz.",
+            "Ödeme tamamlandığında ve hizmetin ifasına (abonelik aktivasyonu) başlanması halinde cayma hakkınızı kullanamayacaksınız. Bu durumu onaylıyorsanız ödemeye devam edebilirsiniz.",
+            "Teknik sorunlar veya hizmetin hiç kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz.",
+          ],
+        },
+        {
+          title: "5. Şikayet ve İtiraz",
+          paragraphs: [
+            "Şikayetleriniz için nbglobalstudio@gmail.com adresine e-posta gönderebilirsiniz.",
+            "Tüketici olarak Tüketici Hakem Heyetlerine ve Tüketici Mahkemelerine başvurma hakkınız saklıdır.",
+          ],
+        },
+      ],
+    },
+    "mesafeli-satis": {
+      title: "Mesafeli Satış Sözleşmesi",
+      summary:
+        "6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenen sözleşme.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "Her abonelik satın alımında geçerlidir",
+      sections: [
+        {
+          title: "1. Taraflar",
+          paragraphs: [
+            "SATICI: NB Global Studio, E-posta: nbglobalstudio@gmail.com",
+            "ALICI: Ödeme adımında belirtilen ad-soyad ve e-posta adresiyle tanımlanan kullanıcı.",
+          ],
+        },
+        {
+          title: "2. Sözleşme Konusu",
+          paragraphs: [
+            "Bu sözleşmenin konusu; ALICI'nın nbpdf.app adresinden seçtiği abonelik planına ait PDF PLATFORM dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
+            "Hizmet içeriği ve özellikleri seçilen plana göre değişmektedir.",
+          ],
+        },
+        {
+          title: "3. Fiyat ve Ödeme",
+          paragraphs: [
+            "Satış fiyatı, ödeme ekranında KDV dahil olarak ALICI'ya gösterilmektedir.",
+            "Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışında mukim kullanıcılar için KDV uygulanmamaktadır (ihracat istisnası).",
+            "Ödeme, iyzico altyapısı üzerinden güvenli biçimde gerçekleştirilmektedir. Kart bilgileri SATICI tarafından saklanmamaktadır.",
+          ],
+        },
+        {
+          title: "4. Abonelik ve Yenileme",
+          paragraphs: [
+            "Abonelik, ödeme onayının ardından derhal aktive edilir. Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
+            "Abonelik otomatik olarak yenilenmez. Yenileme için yeni bir ödeme yapılması gerekmektedir.",
+            "Abonelik süresi dolduğunda ücretli özellikler devre dışı kalır, ücretsiz plana geçiş otomatik olarak gerçekleşir.",
+          ],
+        },
+        {
+          title: "5. Cayma Hakkı",
+          paragraphs: [
+            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; ALICI'nın açık onayı ile ifasına başlanan dijital içerik hizmetlerinde cayma hakkı kullanılamaz.",
+            "ALICI, ödeme adımında cayma hakkından feragat ettiğini açıkça beyan etmiştir. Bu nedenle abonelik aktivasyonu gerçekleştikten sonra iade talep edilemez.",
+            "Hizmetin tamamen kullanılamaması durumunda SATICI ile iletişime geçilmesi halinde değerlendirme yapılacaktır.",
+          ],
+        },
+        {
+          title: "6. Kişisel Verilerin Korunması",
+          paragraphs: [
+            "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri VUK Madde 253 uyarınca 10 yıl süreyle saklanmaktadır.",
+            "Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
+          ],
+        },
+        {
+          title: "7. Uyuşmazlık Çözümü",
+          paragraphs: [
+            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır.",
+            "Tüketici hakları kapsamında Tüketici Hakem Heyeti veya Tüketici Mahkemelerine başvurabilirsiniz.",
           ],
         },
       ],

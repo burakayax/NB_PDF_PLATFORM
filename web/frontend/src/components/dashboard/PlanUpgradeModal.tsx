@@ -3,8 +3,7 @@ import { X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import type { AuthUser, UpdateProfileInput } from "../../api/auth";
 import type { PlanId } from "../../lib/planConfig";
-import { isBillingProfileComplete } from "../../lib/billingProfile";
-import { ProfileCompletionModal } from "../pricing/ProfileCompletionModal";
+import { BillingInfoModal } from "../pricing/BillingInfoModal";
 import { PaymentSummaryModal } from "./PaymentSummaryModal";
 import PricingSection from "../ui/pricing-section";
 
@@ -27,15 +26,14 @@ export function PlanUpgradeModal({
   language = "tr",
   accessToken,
   user,
-  updateProfile,
   showToast,
-  onOpenTerms,
-  onOpenKvkk,
   onBeforeExternalCheckout,
 }: PlanUpgradeModalProps) {
   const tr = language === "tr";
   const [selectedPlanId, setSelectedPlanId] = useState<PlanId | null>(null);
-  const [billingPlanPending, setBillingPlanPending] = useState<PlanId | null>(null);
+  const [billingInfoOpen, setBillingInfoOpen] = useState(false);
+  const [billingInfoPlanId, setBillingInfoPlanId] = useState<PlanId | null>(null);
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => {
@@ -55,25 +53,22 @@ export function PlanUpgradeModal({
   }, [open, onClose]);
 
   const handleSelectPlan = useCallback(
-    (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => {
+    (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: "MONTHLY" | "YEARLY" = "MONTHLY") => {
       if (!accessToken || !user) return;
-      if (!isBillingProfileComplete(user)) {
-        setBillingPlanPending(planId);
-        return;
-      }
-      setSelectedPlanId(planId);
-      setSummaryOpen(true);
+      setBillingInfoPlanId(planId);
+      setSelectedBillingCycle(billingCycle);
+      setBillingInfoOpen(true);
     },
     [accessToken, user],
   );
 
-  const handleAfterBillingSave = useCallback((planId: PlanId) => {
-    setSelectedPlanId(planId);
-    setSummaryOpen(true);
-    return Promise.resolve();
-  }, []);
-
-  const noop = () => {};
+  const handleBillingInfoComplete = useCallback(() => {
+    setBillingInfoOpen(false);
+    if (billingInfoPlanId) {
+      setSelectedPlanId(billingInfoPlanId);
+      setSummaryOpen(true);
+    }
+  }, [billingInfoPlanId]);
 
   if (!open) return null;
 
@@ -104,17 +99,13 @@ export function PlanUpgradeModal({
         </div>
       </div>
 
-      {billingPlanPending !== null && user && updateProfile ? (
-        <ProfileCompletionModal
-          open={billingPlanPending !== null}
-          onClose={() => setBillingPlanPending(null)}
-          user={user}
+      {billingInfoOpen && billingInfoPlanId && accessToken ? (
+        <BillingInfoModal
+          open={billingInfoOpen}
+          accessToken={accessToken}
           language={language}
-          tier={billingPlanPending}
-          updateProfile={updateProfile}
-          onSavedAndContinue={handleAfterBillingSave}
-          onOpenTerms={onOpenTerms ?? noop}
-          onOpenKvkk={onOpenKvkk ?? noop}
+          onClose={() => { setBillingInfoOpen(false); setBillingInfoPlanId(null); }}
+          onComplete={handleBillingInfoComplete}
         />
       ) : null}
 
@@ -122,6 +113,7 @@ export function PlanUpgradeModal({
         <PaymentSummaryModal
           open={summaryOpen}
           planId={selectedPlanId}
+          billingCycle={selectedBillingCycle}
           accessToken={accessToken}
           language={language}
           onClose={() => { setSummaryOpen(false); setSelectedPlanId(null); }}

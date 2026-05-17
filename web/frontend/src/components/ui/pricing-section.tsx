@@ -102,14 +102,17 @@ function Feature({ text, highlight }: { text: string; highlight: boolean }) {
 function FreeCard({
   plan,
   lang,
+  currency,
   onCta,
 }: {
   plan: PlanDefinition;
   lang: Language;
+  currency: Currency;
   onCta: () => void;
 }) {
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
+  const freeLabel = currency === "TRY" ? "₺0" : "$0";
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -122,7 +125,7 @@ function FreeCard({
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
       <p className="text-gray-500 text-sm mb-5">{tr ? "Başla, kart gerekmez." : "Get started, no card required."}</p>
       <div className="mb-6 flex items-baseline gap-1.5">
-        <span className="text-4xl lg:text-5xl font-black text-white">₺0</span>
+        <span className="text-4xl lg:text-5xl font-black text-white">{freeLabel}</span>
         <span className="text-gray-500 text-sm">{tr ? "/ ay" : "/ mo"}</span>
       </div>
       <ul className="space-y-2.5 flex-1 mb-7">
@@ -246,7 +249,7 @@ function CycleAwareCard({
   currency: Currency;
   lang: Language;
   delay: number;
-  onCta: () => void;
+  onCta: (cycle: BillingCycle) => void;
 }) {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
   const tr = lang === "tr";
@@ -377,7 +380,7 @@ function CycleAwareCard({
       </p>
 
       <button
-        onClick={onCta}
+        onClick={() => onCta(cycle)}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
           isPro
             ? "border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
@@ -530,14 +533,15 @@ function PricingFaq({ language }: { language: Language }) {
 interface PricingSectionProps {
   language: Language;
   onUseWebApp: () => void;
-  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
+  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle) => void;
 }
 
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { currency: checkoutCurrency } = useCheckoutCurrency();
-  const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
+  // EUR iyzico tarafından desteklenmez; USD fiyat bandını kullan
+const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
 
   const [free, starter, plus, pro, business] = PLANS;
 
@@ -597,6 +601,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
           <FreeCard
             plan={free}
             lang={language}
+            currency={currency}
             onCta={onUseWebApp}
           />
           <MonthlyOnlyCard
@@ -604,33 +609,40 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             currency={currency}
             lang={language}
             delay={0.04}
-            onCta={onSelectPlan ? () => onSelectPlan("STARTER") : onUseWebApp}
+            onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
           <MonthlyOnlyCard
             plan={plus}
             currency={currency}
             lang={language}
             delay={0.08}
-            onCta={onSelectPlan ? () => onSelectPlan("PLUS") : onUseWebApp}
+            onCta={onSelectPlan ? () => onSelectPlan("PLUS", "MONTHLY") : onUseWebApp}
           />
           <CycleAwareCard
             plan={pro}
             currency={currency}
             lang={language}
             delay={0.12}
-            onCta={onSelectPlan ? () => onSelectPlan("PRO") : onUseWebApp}
+            onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle) : () => onUseWebApp()}
           />
           <CycleAwareCard
             plan={business}
             currency={currency}
             lang={language}
             delay={0.16}
-            onCta={onSelectPlan ? () => onSelectPlan("BUSINESS") : onUseWebApp}
+            onCta={onSelectPlan ? (cycle) => onSelectPlan("BUSINESS", cycle) : () => onUseWebApp()}
           />
         </div>
 
+        {/* VAT info note */}
+        <p className="text-center text-gray-600 text-xs mt-8">
+          {tr
+            ? "Türkiye'deki kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışı kullanıcılar KDV'den muaftır."
+            : "20% VAT applies for users in Turkey. International users are VAT exempt."}
+        </p>
+
         {/* Trust line */}
-        <p className="text-center text-gray-600 text-sm mt-10">
+        <p className="text-center text-gray-600 text-sm mt-4">
           {tr
             ? "SSL şifreli · GDPR uyumlu · İstediğiniz zaman iptal · 7 gün para iade garantisi"
             : "SSL encryption · GDPR compliant · Cancel anytime · 7-day money-back guarantee"}
