@@ -6,7 +6,12 @@ import {
   getSubscriptionSummary,
   listPlans,
 } from "./subscription.service.js";
-import { processRefund, REFUND_WINDOW_DAYS } from "../payment/payment.service.js";
+import {
+  processRefund,
+  REFUND_WINDOW_DAYS,
+  issueIyzicoRefund,
+  checkRefundAbuse,
+} from "../payment/payment.service.js";
 
 /*
  * Daily-quota HTTP surface (``/assert-feature`` and ``/record-usage``) has
@@ -70,14 +75,62 @@ export async function cancelSubscriptionController(request: Request, response: R
   const withinWindow = ageMs <= REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
   if (withinWindow) {
-    // 7 gün içinde: tam iade
-    const result = await processRefund(lastCheckout.conversationId, "self_service_cancel_refund");
+    // Kötüye kullanım koruması
+    const abuseCheck = await checkRefundAbuse(userId);
+    if (!abuseCheck.allowed) {
+      const msg = abuseCheck.reason === "cooling_period"
+        ? `İade talebiniz şu an işlenemez. Son iade işleminizden ${30} gün geçmesi gerekmektedir.`
+        : "İade limitinize ulaştınız. Lütfen destek ekibiyle iletişime geçin.";
+      throw new HttpError(429, msg);
+    }
+
+    // iyzico'ya iade isteği gönder
+    const rawIp =
+      (request.headers["x-forwarded-for"] as string | undefined)
+        ?.split(",")[0]
+        ?.trim() ??
+      request.ip ??
+      "127.0.0.1";
+
+    const refundIssued = await issueIyzicoRefund(lastCheckout, rawIp);
+
+    if (!refundIssued.ok) {
+      console.error("cancelSubscription: iyzico iade başarısız", {
+        error: refundIssued.error,
+        conversationId: lastCheckout.conversationId,
+      });
+      throw new HttpError(502, "İade işlemi sırasında bir hata oluştu. Lütfen destek ekibiyle iletişime geçin.");
+    }
+
+    if (refundIssued.requiresManualReview) {
+      console.warn("cancelSubscription: eski ödeme kaydı — iyzico manüel iade gerekiyor", {
+        conversationId: lastCheckout.conversationId,
+        userId,
+      });
+    }
+
+    // DB güncelle + iade faturasını tetikle
+    const refundReason = refundIssued.requiresManualReview
+      ? "self_service_cancel_manual_review"
+      : "self_service_cancel_refund";
+
+    const result = await processRefund(lastCheckout.conversationId, refundReason);
     if (!result.ok) {
       if (result.reason === "already_refunded") {
         throw new HttpError(409, "Bu abonelik için zaten iade işlendi.");
       }
-      throw new HttpError(500, "İade işlemi gerçekleştirilemedi. Lütfen destek ekibiyle iletişime geçin.");
+      throw new HttpError(500, "İade kaydı oluşturulamadı. Lütfen destek ekibiyle iletişime geçin.");
     }
+
+    // Admin incelemesi gerekiyorsa kullanıcıyı işaretle (non-fatal)
+    if (abuseCheck.requiresAdminReview) {
+      prisma.user.update({
+        where: { id: userId },
+        data: { refundAbuseFlagged: true },
+      }).catch((e) => console.error("refundAbuseFlagged update hatası", e));
+      console.warn("cancelSubscription: kullanıcı admin incelemesi için işaretlendi", { userId });
+    }
+
     response.json({ ok: true, action: "refunded", message: "Aboneliğiniz iptal edildi ve ücret iade edildi." });
   } else {
     // 7 günden sonra: yenilemeyi iptal et, süre dolana kadar aktif
