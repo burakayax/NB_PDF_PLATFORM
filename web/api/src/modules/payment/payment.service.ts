@@ -35,6 +35,18 @@ type IyzipayCtor = {
         cb: (err: Error | null, result: IyzicoRetrieveResult) => void,
       ) => void;
     };
+    refund: {
+      create: (
+        req: Record<string, unknown>,
+        cb: (err: Error | null, result: IyzicoOperationResult) => void,
+      ) => void;
+    };
+    cancel: {
+      create: (
+        req: Record<string, unknown>,
+        cb: (err: Error | null, result: IyzicoOperationResult) => void,
+      ) => void;
+    };
   };
   LOCALE: { TR: string; EN: string };
   CURRENCY: { TRY: string; USD: string; EUR: string };
@@ -147,6 +159,15 @@ type IyzicoInitResult = {
   paymentPageUrl?: string;
 };
 
+type IyzicoOperationResult = {
+  status: string;
+  errorCode?: string;
+  errorMessage?: string;
+  errorGroup?: string;
+  authCode?: string;
+  hostReference?: string;
+};
+
 type IyzicoRetrieveResult = {
   status: string;
   errorCode?: string;
@@ -161,12 +182,17 @@ type IyzicoRetrieveResult = {
   token?: string;
   signature?: string;
   fraudStatus?: number;
-  // Kart bilgileri — VAT/KDV doğrulama için
   binNumber?: string;
-  cardAssociation?: string;       // "VISA" | "MASTER_CARD" | ...
-  cardType?: string;              // "CREDIT_CARD" | "DEBIT_CARD"
-  cardCountry?: string;           // "TURKEY" | "UNITED STATES" | ...
+  cardAssociation?: string;
+  cardType?: string;
+  cardCountry?: string;
   cardFamily?: string;
+  paymentItems?: Array<{
+    paymentTransactionId?: string;
+    itemId?: string;
+    price?: string | number;
+    paidPrice?: string | number;
+  }>;
 };
 
 /** SDK / API may return camelCase or snake_case; normalized before signature + DB lookups. */
@@ -374,6 +400,30 @@ function promisifyRetrieve(
         resolve(result);
       },
     );
+  });
+}
+
+function promisifyRefund(
+  iyzipay: ReturnType<typeof getIyzipay>,
+  request: Record<string, unknown>,
+): Promise<IyzicoOperationResult> {
+  return new Promise((resolve, reject) => {
+    iyzipay.refund.create(request, (err, result) => {
+      if (err) { reject(err); return; }
+      resolve(result);
+    });
+  });
+}
+
+function promisifyCancel(
+  iyzipay: ReturnType<typeof getIyzipay>,
+  request: Record<string, unknown>,
+): Promise<IyzicoOperationResult> {
+  return new Promise((resolve, reject) => {
+    iyzipay.cancel.create(request, (err, result) => {
+      if (err) { reject(err); return; }
+      resolve(result);
+    });
   });
 }
 
@@ -794,6 +844,9 @@ async function triggerInvoiceGeneration(
         registrationAddress: user.billingAddressLine ?? "",
         city: user.city ?? "",
         country: countryCode === "TR" ? "Turkey" : countryCode,
+        invoiceType: user.invoiceType ?? "individual",
+        taxId: user.taxId ?? "",
+        taxOffice: user.taxOffice ?? "",
       },
       basketItems: [
         {
@@ -1038,6 +1091,8 @@ export async function processPaymentCallback(
             completedAt: new Date(),
             cardCountry: result.cardCountry ?? null,
             cardBin: result.binNumber ? result.binNumber.slice(0, 6) : null,
+            iyzicoPaymentId: result.paymentId ?? null,
+            iyzicoPaymentTransactionId: result.paymentItems?.[0]?.paymentTransactionId ?? null,
           },
         });
       });
@@ -1118,6 +1173,132 @@ export async function processPaymentCallback(
 // ─── Refund ───────────────────────────────────────────────────────────────────
 
 const REFUND_LOG = "[iyzico/refund]";
+const IYZICO_REFUND_LOG = "[iyzico/issueRefund]";
+
+const REFUND_COOLING_DAYS = 30;
+const REFUND_MAX_PER_YEAR = 2;
+
+export type RefundAbuseCheck =
+  | { allowed: true; requiresAdminReview: boolean }
+  | { allowed: false; reason: "cooling_period" | "refund_limit_exceeded" };
+
+export async function checkRefundAbuse(userId: string): Promise<RefundAbuseCheck> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { totalRefunds: true, lastRefundedAt: true },
+  });
+  if (!user) return { allowed: false, reason: "refund_limit_exceeded" };
+
+  // İlk iade her zaman onaylanır
+  if (user.totalRefunds === 0) {
+    return { allowed: true, requiresAdminReview: false };
+  }
+
+  // 30 günlük soğuma süresi (2. iade ve sonrası)
+  if (user.lastRefundedAt) {
+    const coolMs = REFUND_COOLING_DAYS * 24 * 60 * 60 * 1000;
+    if (Date.now() - user.lastRefundedAt.getTime() < coolMs) {
+      return { allowed: false, reason: "cooling_period" };
+    }
+  }
+
+  // 12 ay içindeki iade sayısı
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  const refundCount12m = await prisma.paymentCheckout.count({
+    where: { userId, status: "refunded", refundedAt: { gte: oneYearAgo } },
+  });
+
+  if (refundCount12m >= REFUND_MAX_PER_YEAR) {
+    return { allowed: false, reason: "refund_limit_exceeded" };
+  }
+
+  return { allowed: true, requiresAdminReview: refundCount12m >= 1 };
+}
+
+export async function issueIyzicoRefund(
+  checkout: {
+    conversationId: string;
+    iyzicoPaymentId?: string | null;
+    iyzicoPaymentTransactionId?: string | null;
+    priceTry: string;
+    completedAt?: Date | null;
+    createdAt: Date;
+  },
+  clientIp = "127.0.0.1",
+): Promise<{ ok: boolean; requiresManualReview?: boolean; error?: string }> {
+  // Legacy ödeme: iyzicoPaymentId kaydedilmemiş → iyzico çağrısı yapılamaz
+  if (!checkout.iyzicoPaymentId) {
+    console.warn(
+      `${IYZICO_REFUND_LOG} iyzicoPaymentId eksik — manüel iade gerekiyor conversationId=${checkout.conversationId}`,
+    );
+    return { ok: true, requiresManualReview: true };
+  }
+
+  if (!env.iyzicoEnabled) {
+    return { ok: false, error: "iyzico_not_configured" };
+  }
+
+  const iyzipay = getIyzipay();
+  const refundConversationId = randomUUID();
+  const safeIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(clientIp ?? "") ? clientIp : "127.0.0.1";
+
+  // Aynı takvim günü → cancel (anlık), farklı gün → refund
+  const completedAt = checkout.completedAt ?? checkout.createdAt;
+  const now = new Date();
+  const isToday =
+    completedAt.getFullYear() === now.getFullYear() &&
+    completedAt.getMonth() === now.getMonth() &&
+    completedAt.getDate() === now.getDate();
+
+  if (isToday) {
+    try {
+      const cancelResult = await promisifyCancel(iyzipay, {
+        locale: Iyzipay.LOCALE.TR,
+        conversationId: refundConversationId,
+        paymentId: checkout.iyzicoPaymentId,
+        ip: safeIp,
+      });
+      console.log(`${IYZICO_REFUND_LOG} cancel sonucu`, {
+        status: cancelResult.status,
+        errorCode: cancelResult.errorCode,
+        errorMessage: cancelResult.errorMessage,
+      });
+      if (cancelResult.status === "success") return { ok: true };
+      console.warn(`${IYZICO_REFUND_LOG} cancel başarısız, refund deneniyor`, { errorCode: cancelResult.errorCode });
+    } catch (cancelErr) {
+      console.warn(`${IYZICO_REFUND_LOG} cancel hata fırlattı, refund deneniyor`, cancelErr instanceof Error ? cancelErr.message : String(cancelErr));
+    }
+  }
+
+  if (!checkout.iyzicoPaymentTransactionId) {
+    console.warn(
+      `${IYZICO_REFUND_LOG} iyzicoPaymentTransactionId eksik — manüel iade gerekiyor conversationId=${checkout.conversationId}`,
+    );
+    return { ok: true, requiresManualReview: true };
+  }
+
+  try {
+    const refundResult = await promisifyRefund(iyzipay, {
+      locale: Iyzipay.LOCALE.TR,
+      conversationId: refundConversationId,
+      paymentTransactionId: checkout.iyzicoPaymentTransactionId,
+      price: checkout.priceTry,
+      currency: Iyzipay.CURRENCY.TRY,
+      ip: safeIp,
+    });
+    console.log(`${IYZICO_REFUND_LOG} refund sonucu`, {
+      status: refundResult.status,
+      errorCode: refundResult.errorCode,
+      errorMessage: refundResult.errorMessage,
+    });
+    if (refundResult.status === "success") return { ok: true };
+    return { ok: false, error: refundResult.errorMessage ?? refundResult.errorCode ?? "iyzico_refund_failed" };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`${IYZICO_REFUND_LOG} refund hata fırlattı`, msg);
+    return { ok: false, error: msg };
+  }
+}
 
 /** Satın alımdan itibaren kaç gün içinde tam iade hakkı vardır. */
 export const REFUND_WINDOW_DAYS = 7;
@@ -1179,10 +1360,14 @@ export async function processRefund(
       },
     });
 
-    // Kullanıcı planını FREE'ye düşür
+    // Kullanıcı planını FREE'ye düşür; iade sayacını güncelle
     await tx.user.update({
       where: { id: checkout.userId },
-      data: { plan: "FREE" },
+      data: {
+        plan: "FREE",
+        totalRefunds: { increment: 1 },
+        lastRefundedAt: new Date(),
+      },
     });
 
     // Organizasyon varsa org planını da düşür ve subscription'ı sona erdir
@@ -1205,7 +1390,130 @@ export async function processRefund(
     reason,
   });
 
+  // İade faturası — arka planda tetikle, abonelik akışını bloke etme
+  void triggerCreditNote(checkout.id, checkout.userId, reason).catch((err) => {
+    console.error(`${REFUND_LOG} triggerCreditNote error`, err instanceof Error ? err.message : err);
+  });
+
   return { ok: true, conversationId, userId: checkout.userId, planBefore };
+}
+
+// ---------------------------------------------------------------------------
+// triggerCreditNote — iade faturası oluşturur (Paraşüt)
+// ---------------------------------------------------------------------------
+
+async function triggerCreditNote(
+  checkoutId: string,
+  userId: string,
+  reason: string,
+): Promise<void> {
+  // Orijinal fatura kaydını çek
+  const invoice = await prisma.invoice.findUnique({
+    where: { checkoutId },
+  });
+
+  if (!invoice?.externalId) {
+    console.warn(`${REFUND_LOG} credit-note: orijinal fatura bulunamadı checkoutId=${checkoutId}`);
+    return;
+  }
+
+  // Kullanıcı + fatura bilgilerini çek
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      firstName: true, lastName: true, name: true, email: true, phone: true,
+      billingAddressLine: true, city: true, billingCountryCode: true,
+      tcKimlikNo: true, taxId: true, taxOffice: true,
+      companyName: true, invoiceType: true,
+    },
+  });
+
+  if (!user) return;
+
+  const { name, surname } = splitBuyerName(user as Parameters<typeof splitBuyerName>[0]);
+  const fullName = user.companyName ? user.companyName : `${name} ${surname}`.trim();
+
+  let nationalId: string | null = null;
+  if (user.tcKimlikNo) {
+    try {
+      const { decryptField } = await import("../../lib/encryption.js");
+      nationalId = decryptField(user.tcKimlikNo);
+    } catch {
+      nationalId = null;
+    }
+  }
+
+  const isCorprate = user.invoiceType === "corporate";
+  const paidPrice = parseFloat(invoice.grossAmount);
+  const kdvRate = invoice.kdvRate ?? 20;
+
+  const creditNotePayload = {
+    originalInvoiceId: invoice.externalId,
+    paymentId: checkoutId,
+    reason,
+    buyer: {
+      name,
+      surname,
+      email: user.email,
+      gsmNumber: user.phone ?? "",
+      identityNumber: nationalId ?? "",
+      registrationAddress: user.billingAddressLine ?? "",
+      city: user.city ?? "",
+      country: invoice.customerCountry === "TR" ? "Turkey" : (invoice.customerCountry ?? "Turkey"),
+      invoiceType: user.invoiceType ?? "individual",
+      taxId: user.taxId ?? "",
+      taxOffice: user.taxOffice ?? "",
+    },
+    basketItems: [
+      {
+        name: `${invoice.customerName} İade`,
+        price: paidPrice,
+      },
+    ],
+    paidPrice,
+    currency: invoice.currency ?? "TRY",
+    kdvRate,
+  };
+
+  const pdfBackendBase = process.env.PDF_BACKEND_URL ?? "http://127.0.0.1:8000";
+
+  try {
+    const resp = await fetch(`${pdfBackendBase}/api/internal/credit-note`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(creditNotePayload),
+      signal: AbortSignal.timeout(60_000),
+    });
+
+    const data = (await resp.json()) as Record<string, unknown>;
+    console.log(`${REFUND_LOG} credit-note result`, {
+      success: data["success"],
+      creditNoteId: data["creditNoteId"],
+      creditNoteNo: data["creditNoteNo"],
+    });
+
+    if (data["success"]) {
+      await prisma.invoice.update({
+        where: { checkoutId },
+        data: {
+          creditNoteId: String(data["creditNoteId"] ?? ""),
+          creditNoteStatus: "issued",
+          creditNoteIssuedAt: new Date(),
+        },
+      });
+    } else {
+      await prisma.invoice.update({
+        where: { checkoutId },
+        data: { creditNoteStatus: "failed" },
+      });
+    }
+  } catch (err) {
+    console.error(`${REFUND_LOG} credit-note fetch error`, err instanceof Error ? err.message : err);
+    await prisma.invoice.update({
+      where: { checkoutId },
+      data: { creditNoteStatus: "failed" },
+    }).catch(() => {});
+  }
 }
 
 /**

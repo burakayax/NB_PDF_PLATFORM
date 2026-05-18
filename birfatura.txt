@@ -1,0 +1,73 @@
+[pdf] 2026-05-18 10:29:41 INFO     app.billing.birfatura - birfatura POST https://uygulama.edonustur.com/SendBasicInvoiceFromModel status=200 response=ï»¿<!DOCTYPE html>
+[pdf]
+[pdf] <html xmlns="http://www.w3.org/1999/xhtml">
+[pdf] <head>
+[pdf]     <title></title>
+[pdf]     <link href="/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/global/css/components-md.css" id="style_components" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/admin/pages/css/error.css" rel="stylesheet" type="text/css" />
+[pdf]     <script>
+[pdf]         (function (i, s, o, g, r, a, m) {
+[pdf]             i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+[pdf]                 (i[r].q = i[r].q || []).push(arguments)
+[pdf]             }, i[r].l = 1 * new Date(); a = s.createElement(o),
+[pdf]                 m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+[pdf]         })(window, document, 'script', 'https://www.google-analytics.com/analytics.js', 'ga');
+[pdf]
+[pdf]         ga('create', 'UA-79210162-2', 'auto');
+[pdf]         ga('send', 'pageview');
+[pdf]
+[pdf]     </script>
+[pdf] </head>
+[pdf] <body class="page-md page-404-full-page">
+[pdf]
+[pdf]     <div class="row">
+[pdf]         <div class="col-md-12 page-500">
+[pdf]             <div class="number">
+[pdf]                 Sorun
+[pdf]             </div>
+[pdf]             <div class="details">
+[pdf]                 <h3>GÃ¶rÃ¼nen o ki birÅeyler yolunda gitmedi.</h3>
+[pdf]                 <p>
+[pdf]                     Bu durumla karÅÄ±laÅtÄ±ÄÄ±nÄ±z iÃ§in Ã¼zgÃ¼nÃ¼z:(<br />
+[pdf]                     AnlÄ±k bir hata oluÅtu veya Åuanda sistemde bir gÃ¼ncelleme yapÄ±lÄ±yor.</br> LÃ¼tfen birkaÃ§ dakika sonra tekar deneyin.<br />
+[pdf]                     <br />
+[pdf]                 </p>
+[pdf]                 <p>
+[pdf]                     Birfatura Ana Sayfaya DÃ¶nmek iÃ§in <a href="/dashboard" class="btn red">TÄ±klayÄ±n</a>
+[pdf]                 </p>
+[pdf]             </div>
+[pdf]         </div>
+[pdf]
+[pdf]
+[pdf]     </div>
+[pdf] </body>
+[pdf] </html>
+[pdf] 2026-05-18 10:29:41 ERROR    app.billing.birfatura - birfatura: fatura oluşturma başarısız hata=BirFatura JSON yanıt beklendi, 'text/html' geldi (url=https://uygulama.edonustur.com/hatagoster.html, status=200): ï»¿<!DOCTYPE html>
+[pdf]
+[pdf] <html xmlns="http://www.w3.org/1999/xhtml">
+[pdf] <head>
+[pdf]     <title></title>
+[pdf]     <link href="/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/global/css/components-md.css" id="style_components" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/admin/pages/css/error.css" rel="stylesheet" type="text/css" />
+[pdf]     <script>
+[pdf]         (function (i, s, o, g, r, a, m) {
+[pdf]             i['GoogleAnalyticsObject'] = r; i[r
+[pdf] 2026-05-18 10:29:41 ERROR    app.billing.webhook_handler - webhook: fatura akışı başarısız — BirFatura JSON yanıt beklendi, 'text/html' geldi (url=https://uygulama.edonustur.com/hatagoster.html, status=200): ï»¿<!DOCTYPE html>
+[pdf]
+[pdf] <html xmlns="http://www.w3.org/1999/xhtml">
+[pdf] <head>
+[pdf]     <title></title>
+[pdf]     <link href="/assets/global/plugins/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/global/css/components-md.css" id="style_components" rel="stylesheet" type="text/css" />
+[pdf]     <link href="/assets/admin/pages/css/error.css" rel="stylesheet" type="text/css" />
+[pdf]     <script>
+[pdf]         (function (i, s, o, g, r, a, m) {
+[pdf]             i['GoogleAnalyticsObject'] = r; i[r
+[pdf] INFO:     127.0.0.1:52659 - "POST /api/internal/invoice HTTP/1.1" 200 OK
+[pdf] INFO:     127.0.0.1:52693 - "GET /api/health HTTP/1.1" 200 OK
+[api] [iyzico/processPaymentCallback] invoice generated {
+[api]   invoiceId: undefined,
+[api]   invoiceNumber: undefined,
+[api]   emailSent: undefined

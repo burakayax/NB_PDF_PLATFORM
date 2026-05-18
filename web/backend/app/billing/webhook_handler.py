@@ -90,22 +90,34 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     buyer: dict = payload.get("buyer", {})
     first = (buyer.get("name") or "").strip()
     last = (buyer.get("surname") or "").strip()
+    invoice_type = buyer.get("invoiceType", "individual")
+    tax_id = (buyer.get("taxId") or "").strip()       # Kurumsal VKN
+    tax_office = (buyer.get("taxOffice") or "").strip()
+
+    # Kurumsal müşteride şirket adı full_name olarak gelir (TS tarafında ayarlandı)
     full_name = f"{first} {last}".strip() or "Bilinmeyen Müşteri"
 
     # TC No — asla loglanmaz
     national_id_raw = buyer.get("identityNumber")
     national_id_masked = f"***{national_id_raw[-4:]}" if national_id_raw and len(national_id_raw) >= 4 else "***"
-    logger.info("webhook: buyer national_id present=%s masked=%s", bool(national_id_raw), national_id_masked)
+    logger.info(
+        "webhook: buyer invoice_type=%s national_id present=%s masked=%s tax_id present=%s",
+        invoice_type, bool(national_id_raw), national_id_masked, bool(tax_id),
+    )
+
+    is_corporate = invoice_type == "corporate"
 
     customer_info = CustomerInfo(
         name=full_name,
         email=buyer.get("email", ""),
         phone=buyer.get("gsmNumber"),
-        national_id=national_id_raw if not is_export else None,
+        national_id=national_id_raw if (not is_export and not is_corporate) else None,
+        tax_number=tax_id if (is_corporate and tax_id) else None,
+        tax_office=tax_office if (is_corporate and tax_office) else None,
         address=buyer.get("registrationAddress"),
         city=buyer.get("city"),
         country="Turkey" if country_code == "TR" else country_code,
-        contact_type="person",
+        contact_type="company" if is_corporate else "person",
         country_code=country_code,
         is_export=is_export,
     )

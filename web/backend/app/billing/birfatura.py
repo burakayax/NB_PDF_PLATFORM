@@ -27,7 +27,8 @@ from __future__ import annotations
 import logging
 import os
 import time
-from datetime import date
+import uuid
+from datetime import date, datetime
 from typing import Any
 
 import requests
@@ -38,7 +39,7 @@ from .models import CustomerInfo, InvoiceItem, InvoiceResult, PaymentInfo
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_BASE = "https://uygulama.edonustur.com"
+_DEFAULT_BASE = "https://uygulama.edonustur.com/api/OutEBelgeV2"
 _POLL_INTERVAL = 10
 _POLL_MAX = 30
 
@@ -164,7 +165,9 @@ class BirFaturaProvider(BillingProviderBase):
         SendBasicInvoiceFromModel ile fatura oluşturur ve GİB'e gönderir.
         Dönen UUID ile durum takibi yapılır.
         """
+        now = datetime.now()
         today = payment_info.payment_date or date.today().isoformat()
+        now_str = now.strftime("%Y-%m-%dT%H:%M:%S")
         ci = customer_info
         pi = payment_info
 
@@ -187,7 +190,7 @@ class BirFaturaProvider(BillingProviderBase):
         for item in items:
             price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
             order_details.append({
-                "productCode": item.name[:20],
+                "productCode": item.name.replace(" ", "_")[:20],
                 "productName": item.name,
                 "productNote": item.description or export_note,
                 "productQuantityType": item.unit,
@@ -197,15 +200,21 @@ class BirFaturaProvider(BillingProviderBase):
                 "productUnitPriceTaxIncluding": price_incl,
             })
 
+        doc_uuid = str(uuid.uuid4())
+
         invoice_payload: dict[str, Any] = {
-            "invoiceDate": today,
+            "ettn": doc_uuid,
+            "orderDate": now_str,
+            "OrderCode": pi.payment_id,
+            "invoiceDate": now_str,
+            "invoiceExplanation": "PDF Platform",
             "isDocumentNoAuto": True,
             "billingName": ci.name,
             "billingAddress": ci.address or "",
             "billingCity": ci.city or "",
             "billingMobilePhone": ci.phone or "",
             "email": ci.email,
-            "paymentType": "Kredi Kartı",
+            "paymentType": "iyzico",
             "currency": currency_code,
             "currencyRate": currency_rate,
             "totalPaidTaxExcluding": total_excl,
@@ -228,23 +237,22 @@ class BirFaturaProvider(BillingProviderBase):
         data = self._post("SendBasicInvoiceFromModel", {"invoice": invoice_payload})
         result_data = self._check_api_response(data, "SendBasicInvoiceFromModel")
 
-        doc_uuid: str = ""
-        if isinstance(result_data, list) and result_data:
-            doc_uuid = result_data[0].get("uuid") or result_data[0].get("UUID") or ""
-        elif isinstance(result_data, dict):
-            doc_uuid = result_data.get("uuid") or result_data.get("UUID") or ""
-        elif isinstance(result_data, str):
-            doc_uuid = result_data
+        invoice_no: str | None = None
+        pdf_link: str | None = None
+        if isinstance(result_data, dict):
+            invoice_no = result_data.get("invoiceNo") or result_data.get("InvoiceNo")
+            pdf_link = result_data.get("pdfLink") or result_data.get("PdfLink")
 
         logger.info(
-            "birfatura: fatura gönderildi uuid=%s tip=%s",
-            doc_uuid, "e_invoice" if is_e_invoice else "e_archive",
+            "birfatura: fatura gönderildi uuid=%s invoiceNo=%s tip=%s pdfLink=%s",
+            doc_uuid, invoice_no, "e_invoice" if is_e_invoice else "e_archive", bool(pdf_link),
         )
 
         return InvoiceResult(
             success=True,
             invoice_id=doc_uuid,
-            invoice_number=None,
+            invoice_number=invoice_no,
+            pdf_url=pdf_link,
             e_document_type="e_invoice" if is_e_invoice else "e_archive",
             issued_at=today,
         )
@@ -269,7 +277,7 @@ class BirFaturaProvider(BillingProviderBase):
                     "birfatura: belge durum=%s uuid=%s (deneme %s/%s)",
                     status, doc_uuid, attempt, max_attempts,
                 )
-                if status in ("SUCCEED", "SUCCESS", "BASARILI", "COMPLETED"):
+                if status in ("SUCCEED", "SUCCESS", "BASARILI", "COMPLETED", "IMZALANDI", "ILETILDI", "KABUL"):
                     return InvoiceResult(
                         success=True,
                         invoice_id=doc_uuid,
@@ -351,7 +359,8 @@ class BirFaturaProvider(BillingProviderBase):
             logger.error("birfatura: fatura oluşturma başarısız hata=%s", exc)
             return InvoiceResult(success=False, error=str(exc))
 
-        # Durum bekle + PDF al (hata olursa faturayı engelleme)
+        # Durum bekle (hata olursa faturayı engelleme)
+        initial_pdf_url = result.pdf_url
         try:
             result = self.publish_invoice(result.invoice_id)  # type: ignore[arg-type]
         except Exception as pub_exc:
@@ -360,13 +369,17 @@ class BirFaturaProvider(BillingProviderBase):
                 result.invoice_id, pub_exc,
             )
 
-        try:
-            result.pdf_url = self.get_invoice_pdf_url(result.invoice_id)  # type: ignore[arg-type]
-        except Exception as pdf_exc:
-            logger.warning(
-                "birfatura: PDF URL alınamadı (fatura geçerli) uuid=%s hata=%s",
-                result.invoice_id, pdf_exc,
-            )
+        # SendBasicInvoiceFromModel zaten pdfLink döndürdüyse tekrar sorgulamaya gerek yok
+        if initial_pdf_url:
+            result.pdf_url = initial_pdf_url
+        else:
+            try:
+                result.pdf_url = self.get_invoice_pdf_url(result.invoice_id)  # type: ignore[arg-type]
+            except Exception as pdf_exc:
+                logger.warning(
+                    "birfatura: PDF URL alınamadı (fatura geçerli) uuid=%s hata=%s",
+                    result.invoice_id, pdf_exc,
+                )
 
         result.success = True
         return result

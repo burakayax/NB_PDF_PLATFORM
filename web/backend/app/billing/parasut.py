@@ -572,3 +572,115 @@ class ParasutProvider(BillingProviderBase):
             logger.error("parasut: fatura iptali başarısız id=%s hata=%s", invoice_id, exc)
             return False
 
+    # ------------------------------------------------------------------
+    # create_credit_note — iade faturası oluştur ve e-belge olarak gönder
+    # ------------------------------------------------------------------
+
+    def create_credit_note(
+        self,
+        original_invoice_id: str,
+        customer_info: CustomerInfo,
+        items: list[InvoiceItem],
+        payment_info: PaymentInfo,
+        reason: str = "Kullanıcı talebiyle iade",
+    ) -> InvoiceResult:
+        """
+        Orijinal faturayı iptal eder, ardından iade faturası (credit note) oluşturur.
+        Paraşüt'te iade faturası: item_type='refund' + orijinal fatura ilişkisi.
+        """
+        today = date.today().isoformat()
+        raw_currency = payment_info.currency.upper()
+        parasut_currency = "TRL" if raw_currency in ("TRY", "TRL", "") else raw_currency
+        exchange_rate = payment_info.currency_rate if parasut_currency != "TRL" else 1.0
+        category_id = self._get_category_id()
+
+        # Müşteri bul/oluştur
+        try:
+            customer_id = self.find_or_create_customer(customer_info)
+        except Exception as exc:
+            return InvoiceResult(success=False, error=f"Müşteri bulunamadı: {exc}")
+
+        # Ürün satırları
+        details_data = []
+        for item in items:
+            product_id = self._find_or_create_product(
+                name=item.name,
+                unit_price=float(item.unit_price),
+                vat_rate=int(item.vat_rate),
+                unit=item.unit,
+            )
+            details_data.append({
+                "type": "sales_invoice_details",
+                "attributes": {
+                    "quantity": float(item.quantity),
+                    "unit_price": float(item.unit_price),
+                    "vat_rate": int(item.vat_rate),
+                    "unit": item.unit,
+                    "description": reason,
+                },
+                "relationships": {
+                    "product": {"data": {"type": "products", "id": product_id}},
+                },
+            })
+
+        body: dict[str, Any] = {
+            "data": {
+                "type": "sales_invoices",
+                "attributes": {
+                    "item_type": "refund",
+                    "description": f"İade - {reason} | Orijinal Ödeme #{payment_info.payment_id}",
+                    "issue_date": today,
+                    "due_date": today,
+                    "currency": parasut_currency,
+                    "exchange_rate": exchange_rate,
+                    "cash_sale": True,
+                    "payment_account_id": int(self._get_default_account_id()),
+                    "payment_date": today,
+                    "payment_description": f"iade iyzico #{payment_info.payment_id}",
+                },
+                "relationships": {
+                    "contact": {"data": {"type": "contacts", "id": customer_id}},
+                    "details": {"data": details_data},
+                    "invoice": {"data": {"type": "sales_invoices", "id": original_invoice_id}},
+                    **({
+                        "category": {"data": {"type": "item_categories", "id": category_id}}
+                    } if category_id else {}),
+                },
+            }
+        }
+
+        try:
+            result = self._post("sales_invoices", body)
+        except Exception as exc:
+            return InvoiceResult(success=False, error=f"İade faturası oluşturulamadı: {exc}")
+
+        credit_note_id = result["data"]["id"]
+        attrs = result["data"]["attributes"]
+        invoice_no = attrs.get("invoice_no", "")
+        logger.info(
+            "parasut: iade faturası oluşturuldu id=%s no=%s orijinal=%s",
+            credit_note_id, invoice_no, original_invoice_id,
+        )
+
+        # e-belge olarak gönder
+        try:
+            pub_result = self.publish_invoice(credit_note_id)
+            if pub_result.success:
+                try:
+                    pub_result.pdf_url = self.get_invoice_pdf_url(credit_note_id)
+                except Exception as pdf_exc:
+                    logger.warning("parasut: iade PDF URL alınamadı hata=%s", pdf_exc)
+            return pub_result
+        except Exception as pub_exc:
+            logger.warning(
+                "parasut: iade e-belge gönderilemedi (iade faturası taslak) id=%s hata=%s",
+                credit_note_id, pub_exc,
+            )
+            return InvoiceResult(
+                success=True,
+                invoice_id=credit_note_id,
+                invoice_number=invoice_no,
+                issued_at=today,
+                pdf_url=f"https://uygulama.parasut.com/{self._company_id}/sales_invoices/{credit_note_id}/print",
+            )
+
