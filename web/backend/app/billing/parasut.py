@@ -583,6 +583,8 @@ class ParasutProvider(BillingProviderBase):
         items: list[InvoiceItem],
         payment_info: PaymentInfo,
         reason: str = "Kullanıcı talebiyle iade",
+        original_invoice_no: str = "",
+        original_invoice_date: str = "",
     ) -> InvoiceResult:
         """
         Orijinal faturayı iptal eder, ardından iade faturası (credit note) oluşturur.

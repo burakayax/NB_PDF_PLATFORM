@@ -1,16 +1,13 @@
 import { env } from "../config/env.js";
 import { escapeHtml } from "./email-html.js";
-import { renderCorporateEmail } from "./email-layout.js";
+import { renderCorporateEmail, ctaButton } from "./email-layout.js";
 import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
+import { emailT, type Locale } from "./email-i18n.js";
 
 const product = () => env.SMTP_FROM_NAME;
-const cta = (url: string, label: string) =>
-  `<a href="${escapeHtml(url)}" style="display:inline-block;margin:8px 0 0;padding:14px 28px;border-radius:14px;background:linear-gradient(180deg,#22d3ee 0%,#0ea5e9 100%);color:#0f172a;font-weight:800;text-decoration:none;font-size:15px;">${escapeHtml(
-    label,
-  )}</a>`;
 
-export function applyTemplateVars(content: string, vars: Record<string, string | number>) {
+export function applyTemplateVars(content: string, vars: Record<string, string | number>): string {
   return content.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k: string) => {
     const v = vars[k];
     return v === undefined || v === null ? "" : String(v);
@@ -23,67 +20,66 @@ function stripForText(html: string): string {
 
 export async function sendWelcomeEmailToUser(
   toEmail: string,
-  vars: { name: string; credits: number; userId: string },
-) {
+  vars: { name: string; userId: string; locale?: Locale },
+): Promise<void> {
+  const locale: Locale = vars.locale ?? "tr";
+  const t = emailT[locale];
   const name = escapeHtml(vars.name);
-  const credits = String(vars.credits);
-  const bodyFragment = applyTemplateVars(
-    `<p style="margin:0 0 12px;font-size:16px;line-height:1.75;color:#e2e8f0;">Hi <strong>{{name}}</strong>,</p>
-     <p style="margin:0 0 12px;font-size:15px;line-height:1.75;color:#cbd5e1;">Your account is ready. You have <strong>{{credits}}</strong> credits to get started with NB PDF.</p>
-     <p style="margin:0;font-size:15px;line-height:1.75;color:#94a3b8;">We're glad you're here.</p>`,
-    { name, credits },
-  );
   const shopUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
-  const bodyHtml = `${bodyFragment}<div style="margin-top:20px;">${cta(shopUrl, "Open workspace")}</div>`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#e2e8f0;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#cbd5e1;">${t.welcome_body()}</p>
+    <p style="margin:0;font-size:14px;line-height:1.75;color:#94a3b8;">${t.welcome_footer}</p>
+    ${ctaButton(shopUrl, t.welcome_cta)}
+  `;
+
   const html = renderCorporateEmail({
-    eyebrow: "Welcome",
-    title: "You’re in",
-    intro: "Thanks for creating your account.",
+    eyebrow: t.welcome_eyebrow,
+    title: t.welcome_title,
+    intro: t.welcome_intro,
     bodyHtml,
-    footerText: "You can manage your tools anytime from the workspace.",
+    footerText: t.welcome_footer,
     productName: product(),
   });
-  const subject = `Welcome to ${product()}`;
-  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — welcome. Credits: ${credits} — ${shopUrl}`) });
-  await logAutomationEmailAudit("email.welcome", vars.userId, `Welcome email → ${toEmail}`, {
-    template: "welcome",
-    to: toEmail,
-  });
+
+  const subject = t.welcome_subject(product());
+  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${shopUrl}`) });
+  await logAutomationEmailAudit("email.welcome", vars.userId, `Welcome email → ${toEmail}`, { template: "welcome", to: toEmail, locale });
 }
 
 export async function sendLowCreditNudge(
   toEmail: string,
-  vars: { name: string; credits: number; userId: string; ctaUrl: string },
-) {
+  vars: { name: string; credits: number; userId: string; ctaUrl: string; locale?: Locale },
+): Promise<void> {
+  const locale: Locale = vars.locale ?? "tr";
+  const t = emailT[locale];
   const name = escapeHtml(vars.name);
   const credits = String(vars.credits);
   const ctaUrl = vars.ctaUrl || `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
-  const bodyFragment = applyTemplateVars(
-    `<p style="margin:0 0 12px;font-size:16px;line-height:1.75;color:#e2e8f0;">Hi <strong>{{name}}</strong>,</p>
-     <p style="margin:0 0 12px;font-size:15px;line-height:1.75;color:#fbbf24;">Your balance is <strong>{{credits}}</strong> credits — running low.</p>
-     <p style="margin:0;font-size:15px;line-height:1.75;color:#cbd5e1;">Top up and keep working without interruption. Special offer on credit packs this week.</p>`,
-    { name, credits } as Record<string, string>,
-  );
-  const bodyHtml = `${bodyFragment}<div style="margin-top:20px;">${cta(ctaUrl, "Get credits / discount")}</div>`;
+
+  const bodyHtml = `
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#e2e8f0;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#fbbf24;">${t.low_credit_body(credits)}</p>
+    ${ctaButton(ctaUrl, t.low_credit_cta)}
+  `;
+
   const html = renderCorporateEmail({
-    eyebrow: "Account",
-    title: "Low credit reminder",
-    intro: "A quick nudge so you are not stopped mid-work.",
+    eyebrow: t.low_credit_eyebrow,
+    title: t.low_credit_title,
+    intro: t.low_credit_intro,
     bodyHtml,
-    footerText: "This is an automated sales message. You can ignore it if you already topped up.",
+    footerText: t.low_credit_footer,
     productName: product(),
   });
-  const subject = `Your credits are low — ${product()}`;
-  await sendMail({
-    to: toEmail,
-    subject,
-    html,
-    text: stripForText(name + " low balance " + credits + " " + ctaUrl),
-  });
+
+  const subject = t.low_credit_subject(product());
+  await sendMail({ to: toEmail, subject, html, text: stripForText(name + " " + credits + " " + ctaUrl) });
   await logAutomationEmailAudit("email.automation.low_credit", vars.userId, `Low-credit nudge → ${toEmail}`, {
     template: "low_credit",
     credits: vars.credits,
     ctaUrl,
+    locale,
   });
 }
 
@@ -92,7 +88,9 @@ export async function sendMassCampaignEmail(
   subject: string,
   bodyHtml: string,
   sampleVars: { name: string; credits: number; email: string },
-) {
+  locale: Locale = "tr",
+): Promise<void> {
+  const t = emailT[locale];
   const safe = {
     name: escapeHtml(sampleVars.name),
     email: escapeHtml(sampleVars.email),
@@ -101,11 +99,11 @@ export async function sendMassCampaignEmail(
   const safeSubject = applyTemplateVars(subject, safe);
   const inner = applyTemplateVars(bodyHtml, safe);
   const wrapped = renderCorporateEmail({
-    eyebrow: "Newsletter",
-    title: "Message from the team",
+    eyebrow: t.newsletter_eyebrow,
+    title: t.newsletter_title,
     intro: " ",
     bodyHtml: `<div style="font-size:15px;line-height:1.75;color:#e2e8f0;">${inner}</div>`,
-    footerText: "You are receiving this as a registered user.",
+    footerText: t.newsletter_footer,
     productName: product(),
   });
   await sendMail({

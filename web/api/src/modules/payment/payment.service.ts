@@ -443,6 +443,15 @@ export async function createPaymentCheckoutSession(params: {
   subscriptionDaysOverride?: number;
   /** Cart line label on iyzico basket. */
   basketItemName?: string;
+  /** Kupon bilgisi — fatura iskonto ve kullanım kaydı için */
+  couponId?: string | null;
+  discountPercent?: number | null;
+  /** İskonto öncesi KDV hariç net fiyat (fatura iskonto satırı için) */
+  originalNetAmount?: string | null;
+  /** Business plan için ek koltuk sayısı */
+  extraSeats?: number;
+  /** True: mevcut Business sahibi sadece koltuk genişletiyor — plan aboneliği değişmiyor */
+  seatsOnly?: boolean;
 }): Promise<{
   token: string;
   checkoutFormContent: string;
@@ -514,6 +523,11 @@ export async function createPaymentCheckoutSession(params: {
       customerCountry,
       paymentCurrency: settlementCurrency,
       subscriptionDays,
+      couponId: params.couponId ?? null,
+      discountPercent: params.discountPercent ?? null,
+      originalNetAmount: params.originalNetAmount ?? null,
+      extraSeats: params.extraSeats ?? 0,
+      seatsOnly: params.seatsOnly ?? false,
     },
   });
 
@@ -562,15 +576,21 @@ export async function createPaymentCheckoutSession(params: {
     basketItems: [
       {
         id: params.plan,
-        name:
-          params.basketItemName ??
-          (params.plan === "BUSINESS"
-            ? "PDF PLATFORM Bas (1 ay)"
+        name: (() => {
+          if (params.basketItemName) return params.basketItemName;
+          if (params.seatsOnly && (params.extraSeats ?? 0) > 0) {
+            const seats = params.extraSeats!;
+            const period = params.billing === "annual" ? "1 yıl" : "1 ay";
+            return `PDF PLATFORM ${seats} Ekstra Koltuk (${period})`;
+          }
+          return params.plan === "BUSINESS"
+            ? "PDF PLATFORM Business (1 ay)"
             : params.plan === "PLUS"
               ? "PDF PLATFORM Plus (1 ay)"
               : isAnnualPro
                 ? "PDF PLATFORM PRO (1 yıl)"
-                : "PDF PLATFORM PRO (1 ay)"),
+                : "PDF PLATFORM PRO (1 ay)";
+        })(),
         category1: "Subscription",
         category2: "Software",
         itemType: Iyzipay.BASKET_ITEM_TYPE.VIRTUAL,
@@ -668,11 +688,15 @@ export async function createCreditPackIyzicoSession(_params: {
 }
 
 /** SPA dönüş adresi (iyzico callback sonrası `303` ile gider; inline script kullanmıyoruz — üretimde Helmet CSP `script-src 'none'`.) */
-export function paymentWorkspaceRedirectUrl(success: boolean, plan?: string): string {
+export function paymentWorkspaceRedirectUrl(success: boolean, plan?: string, extraSeats?: number, seatsOnly?: boolean): string {
   const origin = env.FRONTEND_ORIGIN.replace(/\/+$/, "");
   const params = new URLSearchParams({ payment: success ? "success" : "failed" });
-  if (success && plan) {
-    params.set("plan", plan);
+  if (success) {
+    if (seatsOnly && extraSeats && extraSeats > 0) {
+      params.set("seats", String(extraSeats));
+    } else if (plan) {
+      params.set("plan", plan);
+    }
   }
   return `${origin}/workspace?${params.toString()}`;
 }
@@ -730,6 +754,7 @@ async function resolveConversationIdFromToken(
 
 async function triggerInvoiceGeneration(
   checkout: {
+    id: string;
     userId: string;
     plan: string;
     priceTry: string;
@@ -739,6 +764,9 @@ async function triggerInvoiceGeneration(
     netAmount?: string | null;
     customerCountry?: string | null;
     paymentCurrency?: string | null;
+    couponId?: string | null;
+    discountPercent?: number | null;
+    originalNetAmount?: string | null;
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
@@ -857,6 +885,9 @@ async function triggerInvoiceGeneration(
           price: actualPaidPrice,
         },
       ],
+      // Kupon / iskonto bilgisi — webhook_handler.py faturada iskonto satırı için kullanır
+      discountPercent: checkout.discountPercent ?? 0,
+      originalNetAmount: checkout.originalNetAmount ?? null,
     };
 
     const resp = await fetch(`${pdfBackendBase}/api/internal/invoice`, {
@@ -878,6 +909,48 @@ async function triggerInvoiceGeneration(
         invoiceNumber: data["invoice_number"],
         emailSent: data["email_sent"],
       });
+
+      if (data["success"] && data["invoice_id"]) {
+        const kdvR = checkout.kdvRate ?? 20;
+        const grossAmt = String(actualPaidPrice);
+        const netAmt = checkout.netAmount ?? String(round2(actualPaidPrice / (1 + kdvR / 100)));
+        const kdvAmt = checkout.kdvAmount ?? String(round2(actualPaidPrice - parseFloat(netAmt)));
+        try {
+          await prisma.invoice.upsert({
+            where: { checkoutId: checkout.id },
+            create: {
+              checkoutId: checkout.id,
+              userId: checkout.userId,
+              externalId: String(data["invoice_id"]),
+              invoiceNo: data["invoice_number"] ? String(data["invoice_number"]) : null,
+              type: String(data["e_document_type"] ?? "e-arsiv"),
+              status: "issued",
+              pdfUrl: data["pdf_url"] ? String(data["pdf_url"]) : null,
+              netAmount: netAmt,
+              kdvRate: kdvR,
+              kdvAmount: kdvAmt,
+              grossAmount: grossAmt,
+              currency: actualCurrency,
+              customerName: fullName,
+              customerEmail: user.email,
+              customerCountry: countryCode,
+              customerTaxId: user.taxId ?? null,
+              isExport: countryCode !== "TR",
+              sentAt: new Date(),
+            },
+            update: {
+              externalId: String(data["invoice_id"]),
+              invoiceNo: data["invoice_number"] ? String(data["invoice_number"]) : null,
+              status: "issued",
+              pdfUrl: data["pdf_url"] ? String(data["pdf_url"]) : null,
+              sentAt: new Date(),
+            },
+          });
+          console.log(`${PC_LOG} invoice record saved checkoutId=${checkout.id}`);
+        } catch (dbErr) {
+          console.error(`${PC_LOG} invoice DB kayıt hatası`, dbErr instanceof Error ? dbErr.message : dbErr);
+        }
+      }
     }
   } catch (err) {
     console.error(
@@ -885,6 +958,10 @@ async function triggerInvoiceGeneration(
       err instanceof Error ? err.message : err,
     );
   }
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 /**
@@ -1031,7 +1108,7 @@ export async function processPaymentCallback(
       console.log(
         `${PC_LOG} subscription checkout already completed — idempotent success`,
       );
-      return paymentWorkspaceRedirectUrl(true, pending.plan);
+      return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly);
     }
 
     const expectedPrice = pending.priceTry;
@@ -1063,16 +1140,16 @@ export async function processPaymentCallback(
           return;
         }
 
-        // Kullanıcı planını güncelle
+        // seatsOnly: sadece koltuk ekleme — kullanıcı planı değişmez, sadece ekip koltuğu güncellenir
         const updatedUser = await tx.user.update({
           where: { id: current.userId },
-          data: { plan: current.plan },
+          data: current.seatsOnly ? {} : { plan: current.plan },
           select: { organizationId: true },
         });
 
         // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
         const orgId = current.organizationId ?? updatedUser.organizationId;
-        if (orgId) {
+        if (orgId && !current.seatsOnly) {
           await tx.organization.update({
             where: { id: orgId },
             data: {
@@ -1095,6 +1172,32 @@ export async function processPaymentCallback(
             iyzicoPaymentTransactionId: result.paymentItems?.[0]?.paymentTransactionId ?? null,
           },
         });
+
+        // Kupon kullanım kaydı — admin panelinde kullanım sayısını günceller
+        if (current.couponId) {
+          await tx.couponUse.create({
+            data: {
+              userId: current.userId,
+              couponId: current.couponId,
+            },
+          });
+          // Toplam kullanım sayısı usageLimitPerUser'a ulaştıysa kuponu pasif yap
+          const coupon = await tx.coupon.findUnique({
+            where: { id: current.couponId },
+            select: { usageLimitPerUser: true },
+          });
+          if (coupon) {
+            const totalUses = await tx.couponUse.count({ where: { couponId: current.couponId } });
+            if (totalUses >= coupon.usageLimitPerUser) {
+              await tx.coupon.update({
+                where: { id: current.couponId },
+                data: { isActive: false },
+              });
+              console.log(`${PC_LOG} coupon auto-deactivated couponId=${current.couponId} totalUses=${totalUses}`);
+            }
+          }
+          console.log(`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
+        }
       });
 
       // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
@@ -1108,7 +1211,22 @@ export async function processPaymentCallback(
             [owner?.firstName, owner?.lastName].filter(Boolean).join(" ") ||
             owner?.email?.split("@")[0] ||
             "Business";
-          await createTeamForOwner(pending.userId, ownerName);
+          const team = await createTeamForOwner(pending.userId, ownerName);
+          // Update extraSeats if purchaser requested additional seats
+          if ((pending.extraSeats ?? 0) > 0) {
+            // seatsOnly: kümülatif güncelleme — yeni toplam = mevcut + satın alınan
+            if (pending.seatsOnly) {
+              await prisma.team.update({
+                where: { id: team.id },
+                data: { extraSeats: { increment: pending.extraSeats } },
+              });
+            } else {
+              await prisma.team.update({
+                where: { id: team.id },
+                data: { extraSeats: pending.extraSeats },
+              });
+            }
+          }
         } catch (teamErr) {
           // Non-fatal: payment succeeded; team creation failure is recoverable.
           console.error(`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
@@ -1154,7 +1272,7 @@ export async function processPaymentCallback(
       );
     });
 
-    return paymentWorkspaceRedirectUrl(true, pending.plan);
+    return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly);
   } catch (unexpected) {
     // Re-throw DB fulfillment errors — the controller must return 500 for these.
     if (unexpected instanceof PaymentFulfillmentDbError) {
@@ -1449,6 +1567,10 @@ async function triggerCreditNote(
 
   const creditNotePayload = {
     originalInvoiceId: invoice.externalId,
+    originalInvoiceNo: invoice.invoiceNo ?? "",
+    originalInvoiceDate: invoice.sentAt
+      ? invoice.sentAt.toISOString().split("T")[0]
+      : invoice.createdAt.toISOString().split("T")[0],
     paymentId: checkoutId,
     reason,
     buyer: {

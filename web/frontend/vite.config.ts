@@ -207,6 +207,7 @@ export default defineConfig(({ command, mode }) => {
     "public",
     "media",
     "billing",
+    "team",
   ];
 
   const isProd = mode === "production";

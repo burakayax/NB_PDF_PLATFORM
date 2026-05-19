@@ -57,7 +57,10 @@ export type AdminOverview = {
     usersWithCountry: number;
     usersWithCity: number;
     topCountries: Array<{ country: string; count: number }>;
+    topCities: Array<{ city: string; country: string | null; count: number }>;
   };
+  registrationsByDay: Array<{ date: string; count: number }>;
+  subscriptionSalesByDay: Array<{ date: string; plan: string; count: number }>;
 };
 
 export type AdminUserRow = {
@@ -78,6 +81,8 @@ export type AdminUserRow = {
   creditBalance: number;
   country: string | null;
   city: string | null;
+  isTeamMember: boolean;
+  teamOwnerId: string | null;
   usageToday: {
     operationsCount: number;
     postLimitExtraOps: number;

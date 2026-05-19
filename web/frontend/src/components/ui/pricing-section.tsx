@@ -238,6 +238,9 @@ function MonthlyOnlyCard({
 }
 
 /** Pro and Business each manage their own billing cycle toggle internally. */
+const EXTRA_SEAT_PRICE_TRY = 19900; // kuruş (₺199/ay)
+const EXTRA_SEAT_PRICE_USD = 599;   // kuruş ($5.99/ay)
+
 function CycleAwareCard({
   plan,
   currency,
@@ -249,17 +252,22 @@ function CycleAwareCard({
   currency: Currency;
   lang: Language;
   delay: number;
-  onCta: (cycle: BillingCycle) => void;
+  onCta: (cycle: BillingCycle, extraSeats: number) => void;
 }) {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
+  const [extraSeats, setExtraSeats] = useState(0);
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
   const isPro = plan.id === "PRO";
   const sym = currency === "TRY" ? "₺" : "$";
 
-  const displayPrice = monthlyEquivPrice(plan, currency, cycle);
+  const baseMonthlyPrice = monthlyEquivPrice(plan, currency, cycle);
+  const extraSeatUnitPrice = faceValue(currency === "TRY" ? EXTRA_SEAT_PRICE_TRY : EXTRA_SEAT_PRICE_USD);
+  const extraSeatTotal = !isPro ? extraSeats * extraSeatUnitPrice : 0;
+  const displayPrice = baseMonthlyPrice + extraSeatTotal;
   const isYearly = cycle === "YEARLY";
-  const yearlyTotal = faceValue(plan.pricing.yearly[currency]);
+  const baseYearlyTotal = faceValue(plan.pricing.yearly[currency]);
+  const yearlyTotal = !isPro ? baseYearlyTotal + extraSeats * extraSeatUnitPrice * 12 : baseYearlyTotal;
   const savePct = yearlySavingsPct(plan, currency);
 
   return (
@@ -307,6 +315,48 @@ function CycleAwareCard({
         savePct={savePct}
         cardId={plan.id}
       />
+
+      {/* Extra seats stepper — Business only */}
+      {!isPro && (
+        <div className="mb-4 rounded-xl border border-violet-500/20 bg-violet-500/5 px-3 py-2.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-300">
+                {tr ? "Ekstra Kişi" : "Extra Seats"}
+              </p>
+              <p className="text-[10px] text-slate-500">
+                {tr
+                  ? `5 kişi dahil · +${currency === "TRY" ? "₺199" : "$5.99"}/kişi/ay`
+                  : `5 seats included · +${currency === "TRY" ? "₺199" : "$5.99"}/seat/mo`}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setExtraSeats((n) => Math.max(0, n - 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+              >
+                −
+              </button>
+              <span className="w-6 text-center text-sm font-bold text-white">{extraSeats}</span>
+              <button
+                type="button"
+                onClick={() => setExtraSeats((n) => Math.min(95, n + 1))}
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
+              >
+                +
+              </button>
+            </div>
+          </div>
+          {extraSeats > 0 && (
+            <p className="mt-1.5 text-[10px] text-violet-400">
+              {tr
+                ? `${5 + extraSeats} kişi · ${fmt(extraSeatTotal, currency)}/ay ekstra`
+                : `${5 + extraSeats} seats · ${fmt(extraSeatTotal, currency)}/mo extra`}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Yearly savings badge */}
       <AnimatePresence>
@@ -380,7 +430,7 @@ function CycleAwareCard({
       </p>
 
       <button
-        onClick={() => onCta(cycle)}
+        onClick={() => onCta(cycle, isPro ? 0 : extraSeats)}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
           isPro
             ? "border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
@@ -389,7 +439,9 @@ function CycleAwareCard({
       >
         {isPro
           ? (tr ? "Pro'ya Geç" : "Go Pro")
-          : (tr ? "Business'ı Başlat" : "Start Business")}
+          : (tr
+              ? `Business'ı Başlat${extraSeats > 0 ? ` · ${5 + extraSeats} Kişi` : ""}`
+              : `Start Business${extraSeats > 0 ? ` · ${5 + extraSeats} Seats` : ""}`)}
       </button>
     </motion.div>
   );
@@ -533,7 +585,7 @@ function PricingFaq({ language }: { language: Language }) {
 interface PricingSectionProps {
   language: Language;
   onUseWebApp: () => void;
-  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle) => void;
+  onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: BillingCycle, extraSeats?: number) => void;
 }
 
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
@@ -623,14 +675,14 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             currency={currency}
             lang={language}
             delay={0.12}
-            onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle) : () => onUseWebApp()}
+            onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
           />
           <CycleAwareCard
             plan={business}
             currency={currency}
             lang={language}
             delay={0.16}
-            onCta={onSelectPlan ? (cycle) => onSelectPlan("BUSINESS", cycle) : () => onUseWebApp()}
+            onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
           />
         </div>
 

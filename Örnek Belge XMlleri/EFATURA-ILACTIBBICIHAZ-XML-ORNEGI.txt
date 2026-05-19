@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Invoice xmlns:ubltr="urn:oasis:names:specification:ubl:schema:xsd:TurkishCustomizationExtensionComponents" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ccts="urn:un:unece:uncefact:documentation:2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+  <cbc:ProfileID>ILAC_TIBBICIHAZ</cbc:ProfileID>
+  <cbc:ID>FIT2025000000001</cbc:ID>
+  <cbc:CopyIndicator>false</cbc:CopyIndicator>
+  <cbc:UUID>2a3f3163-709f-43e1-8b19-606dd91f8323</cbc:UUID>
+  <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+  <cbc:IssueTime>23:49:19.9665541+03:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>SATIS</cbc:InvoiceTypeCode>
+  <cbc:Note>Yalnız AltıYüzTürkLirası</cbc:Note>
+  <cbc:Note>E-Fatura izni kapsamında elektronik ortamda iletilmiştir. Bu fatura irsaliye yerine geçer.</cbc:Note>
+  <cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+  <cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>2a3f3163-709f-43e1-8b19-606dd91f8323</cbc:ID>
+    <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+    <cbc:DocumentTypeCode>CUST_INV_ID</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>0100</cbc:ID>
+    <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+    <cbc:DocumentTypeCode>OUTPUT_TYPE</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>99</cbc:ID>
+    <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+    <cbc:DocumentTypeCode>TRANSPORT_TYPE</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>ELEKTRONIK</cbc:ID>
+    <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+    <cbc:DocumentTypeCode>EREPSENDT</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>0</cbc:ID>
+    <cbc:IssueDate>2025-12-08</cbc:IssueDate>
+    <cbc:DocumentTypeCode>SendingType</cbc:DocumentTypeCode>
+    <cbc:DocumentType>KAGIT</cbc:DocumentType>
+  </cac:AdditionalDocumentReference>
+  <cac:Signature>
+    <cbc:ID schemeID="VKN_TCKN">1234567801</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">1234567801</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PostalAddress>
+        <cbc:StreetName>*</cbc:StreetName>
+        <cbc:CitySubdivisionName />
+        <cbc:CityName>Ankara</cbc:CityName>
+        <cac:Country>
+          <cbc:Name>TÜRKİYE</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>#Signature</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cbc:WebsiteURI />
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">1234567801</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="TICARETSICILNO" />
+      </cac:PartyIdentification>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="MERSISNO" />
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>Enes Karakuş Company</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>*</cbc:StreetName>
+        <cbc:CitySubdivisionName />
+        <cbc:CityName>Ankara</cbc:CityName>
+        <cac:Country>
+          <cbc:Name>Türkiye</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cac:TaxScheme>
+          <cbc:Name>Çankaya</cbc:Name>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:Contact>
+        <cbc:Telephone>05301232321</cbc:Telephone>
+        <cbc:ElectronicMail>mail@mail.com</cbc:ElectronicMail>
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">1234567801</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>Birfatura Yazılım Teknolojileri Anonim Şirketi</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName />
+        <cbc:BuildingName />
+        <cbc:CitySubdivisionName>Çankaya</cbc:CitySubdivisionName>
+        <cbc:CityName>Ankara</cbc:CityName>
+        <cac:Country>
+          <cbc:Name>Türkiye</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cac:TaxScheme>
+          <cbc:Name>Ankara Kurumlar Vergi Dairesi Müdürlüğü</cbc:Name>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:Contact>
+        <cbc:Telephone />
+        <cbc:ElectronicMail />
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="TRY">100.0</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="TRY">500.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="TRY">100.00</cbc:TaxAmount>
+      <cbc:Percent>20</cbc:Percent>
+      <cac:TaxCategory>
+        <cac:TaxScheme>
+          <cbc:Name>KDV</cbc:Name>
+          <cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="TRY">500.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="TRY">500.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="TRY">600.00</cbc:TaxInclusiveAmount>
+    <cbc:AllowanceTotalAmount currencyID="TRY">0.00</cbc:AllowanceTotalAmount>
+    <cbc:PayableAmount currencyID="TRY">600.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU">2.0000</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="TRY">500.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="TRY">100.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="TRY">500.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="TRY">100.00</cbc:TaxAmount>
+        <cbc:Percent>20</cbc:Percent>
+        <cac:TaxCategory>
+          <cac:TaxScheme>
+            <cbc:Name>KDV</cbc:Name>
+            <cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description />
+      <cbc:Name>Zovirax(GTIN: 11111111111111111)|(BN: 22222222222222222)|(SN: 3333333333333333)|(XD: 301231)</cbc:Name>
+      <cac:BuyersItemIdentification>
+        <cbc:ID />
+      </cac:BuyersItemIdentification>
+      <cac:SellersItemIdentification>
+        <cbc:ID>Zovirax</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:AdditionalItemIdentification>
+        <cbc:ID schemeID="ILAC">(GTIN)11111111111111111(BN)22222222222222222(SN)3333333333333333(XD)301231</cbc:ID>
+      </cac:AdditionalItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="TRY">250.000000</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

@@ -206,8 +206,10 @@ model User {
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
-  isTeamMember Boolean @default(false) @map("is_team_member")
-  teamOwnerId  String? @map("team_owner_id")
+  isTeamMember    Boolean          @default(false) @map("is_team_member")
+  teamOwnerId     String?          @map("team_owner_id")
+  teamMemberRole  TeamMemberRole?  @map("team_member_role")
+  lastLoginAt     DateTime?        @map("last_login_at")
 
   refreshTokens RefreshToken[]
   dailyUsages  DailyUsage[]
@@ -298,6 +300,11 @@ model PaymentCheckout {
   cardBin                     String?  @map("card_bin")
   iyzicoPaymentId             String?  @map("iyzico_payment_id")
   iyzicoPaymentTransactionId  String?  @map("iyzico_payment_transaction_id")
+  couponId                    String?  @map("coupon_id")
+  discountPercent             Int?     @map("discount_percent")
+  originalNetAmount           String?  @map("original_net_amount")
+  extraSeats                  Int      @default(0) @map("extra_seats")
+  seatsOnly                   Boolean  @default(false) @map("seats_only")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
@@ -515,7 +522,7 @@ model SiteSetting {
 
 model AppSettings {
   id                    Int     @id @default(1)
-  siteName              String  @default("NB PDF") @map("site_name")
+  siteName              String  @default("PDF PLATFORM") @map("site_name")
   logoUrl               String? @map("logo_url")
   globalMaintenanceMode Boolean @default(false) @map("global_maintenance_mode")
   seoTitle              String? @map("seo_title")

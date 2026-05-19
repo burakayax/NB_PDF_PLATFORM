@@ -1,8 +1,18 @@
 import { useEffect, useState, useCallback } from "react";
 import type { Language } from "../../i18n/landing";
+import { getSaasApiBase } from "../../api/saasBase";
 import { TeamMemberCard } from "./TeamMemberCard";
 import { InviteMemberModal } from "./InviteMemberModal";
 import { TeamReportButton } from "./TeamReportButton";
+import { GrowTeamModal } from "./GrowTeamModal";
+import { ShrinkTeamModal } from "./ShrinkTeamModal";
+import { PaymentSummaryModal } from "../dashboard/PaymentSummaryModal";
+
+type ToolBreakdownItem = {
+  toolId: string;
+  toolName: string;
+  count: number;
+};
 
 type TeamMemberStats = {
   totalOps: number;
@@ -11,6 +21,7 @@ type TeamMemberStats = {
   totalPagesProcessed: number;
   totalFileSizeGB: number;
   lastActivity: string | null;
+  toolBreakdown?: ToolBreakdownItem[];
 };
 
 type TeamMemberItem = {
@@ -25,6 +36,7 @@ type TeamMemberItem = {
     lastName: string | null;
     email: string;
     updatedAt: string;
+    lastLoginAt?: string | null;
   } | null;
   stats: TeamMemberStats;
   activities: unknown[];
@@ -51,6 +63,8 @@ type TeamData = {
 type Props = {
   language: Language;
   accessToken: string;
+  isOwner?: boolean;
+  currentUserId?: string;
 };
 
 function SkeletonCard() {
@@ -62,17 +76,37 @@ function SkeletonCard() {
   );
 }
 
-export function TeamDashboard({ language: _language, accessToken }: Props) {
+export function TeamDashboard({ language: _language, accessToken, isOwner = true, currentUserId }: Props) {
   const [team, setTeam] = useState<TeamData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [revokeInfoMsg, setRevokeInfoMsg] = useState<string | null>(null);
+  const [growOpen, setGrowOpen] = useState(false);
+  const [shrinkOpen, setShrinkOpen] = useState(false);
+  const [seatPayment, setSeatPayment] = useState<{ billingCycle: "MONTHLY" | "YEARLY"; extraSeats: number } | null>(null);
+
+  const handleRoleChange = useCallback(
+    (memberId: string, newRole: "MEMBER" | "MANAGER") => {
+      setTeam((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: prev.members.map((m) =>
+            m.id === memberId ? { ...m, role: newRole } : m,
+          ),
+        };
+      });
+    },
+    [],
+  );
 
   const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/team/dashboard", {
+      const res = await fetch(`${getSaasApiBase()}/api/team/dashboard`, {
         headers: { Authorization: `Bearer ${accessToken}` },
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Ekip verisi alınamadı.");
       const data: TeamData = await res.json();
@@ -90,11 +124,15 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
 
   const handleRevoke = useCallback(
     async (memberId: string) => {
-      await fetch(`/api/team/members/${memberId}`, {
+      await fetch(`${getSaasApiBase()}/api/team/members/${memberId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${accessToken}` },
+        credentials: "include",
       });
       await fetchDashboard();
+      setRevokeInfoMsg(
+        "Çıkardığınız üyenin erişimi bu fatura döneminin sonuna kadar devam edecektir. Gelecek ay faturanız güncel kişi sayısına göre güncellenecektir.",
+      );
     },
     [accessToken, fetchDashboard],
   );
@@ -164,8 +202,26 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
             {seatsUsed} / {seatsTotal} koltuk kullanımda
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <TeamReportButton accessToken={accessToken} teamName={team.name} />
+          {isOwner && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShrinkOpen(true)}
+                className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300 transition-all hover:bg-amber-500/18 active:scale-[0.97]"
+              >
+                ➖ Ekibi Küçült
+              </button>
+              <button
+                type="button"
+                onClick={() => setGrowOpen(true)}
+                className="rounded-xl border border-emerald-400/35 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 transition-all hover:bg-emerald-500/18 active:scale-[0.97]"
+              >
+                🏢 Ekibi Büyüt
+              </button>
+            </>
+          )}
           {seatsAvailable > 0 ? (
             <button
               type="button"
@@ -177,14 +233,31 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
           ) : (
             <button
               type="button"
-              onClick={() => { /* navigate to billing */ }}
-              className="rounded-xl border border-amber-400/35 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-300 transition-all hover:bg-amber-500/18"
+              onClick={() => setInviteOpen(true)}
+              className="rounded-xl border border-slate-600/50 bg-slate-800/50 px-4 py-2 text-sm font-semibold text-slate-400 transition-all cursor-not-allowed"
+              disabled
+              title="Tüm koltuklar dolu. Ekibi büyütmek için 'Ekibi Büyüt' butonunu kullanın."
             >
-              Koltuk Ekle (₺99/ay)
+              + Üye Davet Et
             </button>
           )}
         </div>
       </div>
+
+      {/* Seat reduction info message */}
+      {revokeInfoMsg && (
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/8 p-4">
+          <span className="shrink-0 text-amber-400">ℹ️</span>
+          <p className="text-sm text-amber-300">{revokeInfoMsg}</p>
+          <button
+            type="button"
+            onClick={() => setRevokeInfoMsg(null)}
+            className="ml-auto shrink-0 text-amber-500/60 hover:text-amber-400"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -221,6 +294,7 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
       <div className="space-y-3">
         {team.members
           .filter((m) => m.inviteStatus !== "REVOKED")
+          .filter((m) => !currentUserId || !m.user || m.user.id !== currentUserId)
           .map((m) => (
             <TeamMemberCard
               key={m.id}
@@ -228,6 +302,8 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
               language="tr"
               accessToken={accessToken}
               onRevoke={handleRevoke}
+              isOwner={isOwner}
+              onRoleChange={handleRoleChange}
             />
           ))}
       </div>
@@ -242,6 +318,48 @@ export function TeamDashboard({ language: _language, accessToken }: Props) {
           void fetchDashboard();
         }}
       />
+
+      {/* Grow Team Modal — sadece patron */}
+      <GrowTeamModal
+        open={isOwner && growOpen}
+        onClose={() => setGrowOpen(false)}
+        currentExtraSeats={team.extraSeats}
+        onPurchaseIntent={(billingCycle, extraSeats) => {
+          setGrowOpen(false);
+          setSeatPayment({ billingCycle, extraSeats });
+        }}
+      />
+
+      {/* Shrink Team Modal — sadece patron */}
+      <ShrinkTeamModal
+        open={isOwner && shrinkOpen}
+        onClose={() => setShrinkOpen(false)}
+        currentExtraSeats={team.extraSeats}
+        activeMembers={summary.activeMembers}
+        accessToken={accessToken}
+        onSuccess={() => {
+          setShrinkOpen(false);
+          void fetchDashboard();
+        }}
+      />
+
+      {/* Seat Payment Modal */}
+      {seatPayment && (
+        <PaymentSummaryModal
+          open={true}
+          planId="BUSINESS"
+          billingCycle={seatPayment.billingCycle}
+          extraSeats={seatPayment.extraSeats}
+          seatsOnly={true}
+          accessToken={accessToken}
+          language={_language}
+          onClose={() => setSeatPayment(null)}
+          onPurchaseSuccess={() => {
+            setSeatPayment(null);
+            void fetchDashboard();
+          }}
+        />
+      )}
     </div>
   );
 }

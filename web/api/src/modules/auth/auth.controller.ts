@@ -332,8 +332,13 @@ export async function registerController(request: Request, response: Response) {
     );
   }
 
+  const skipEmailVerification =
+    typeof request.body === "object" &&
+    request.body !== null &&
+    (request.body as Record<string, unknown>)["skipEmailVerification"] === true;
+
   try {
-    const result = await registerUser(parsed.data);
+    const result = await registerUser(parsed.data, { skipEmailVerification });
     authLog.info("POST /api/auth/register: created", {
       userId: result.user.id,
     });

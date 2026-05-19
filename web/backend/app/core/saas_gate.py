@@ -350,3 +350,25 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     return _validate_consume(data)
 
 
+async def get_user_file_size_limit_bytes(token: str) -> int | None:
+    """GET ``/api/entitlement/balance`` — kullanıcının plan bazlı dosya boyutu limitini bayt cinsinden döndürür.
+    999999 MB veya hata durumunda None (sınırsız/bilinmiyor) döner.
+    """
+    base = saas_api_base()
+    try:
+        async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
+            r = await client.get(
+                f"{base}/api/entitlement/balance",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        mb = data.get("fileSizeLimitMB")
+        if mb is None or mb >= 999999:
+            return None
+        return int(mb) * 1024 * 1024
+    except Exception:
+        return None
+
+

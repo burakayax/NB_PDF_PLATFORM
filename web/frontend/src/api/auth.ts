@@ -14,6 +14,8 @@ export type AuthUser = {
   plan: string;
   /** ISO 8601; ücretli abonelik bitişi, yoksa null veya atlanmış. */
   subscription_expiry?: string | null;
+  /** Backend tarafından hesaplanan 7 günlük iade penceresi durumu. */
+  refundEligible?: boolean;
   role?: "USER" | "ADMIN";
   preferredLanguage: Language;
   isVerified?: boolean;
@@ -31,6 +33,8 @@ export type AuthUser = {
   isTeamMember?: boolean;
   /** The patron user's id when isTeamMember is true. */
   teamOwnerId?: string | null;
+  /** Role within the team when isTeamMember is true. */
+  teamMemberRole?: "MEMBER" | "MANAGER" | null;
 };
 
 /** PATCH /api/auth/profile and PATCH /api/user/profile (same backend handler). */

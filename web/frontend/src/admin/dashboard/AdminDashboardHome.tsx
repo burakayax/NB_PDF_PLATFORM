@@ -1,20 +1,21 @@
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { Activity, BarChart2, GitBranch, Radio, UserRound, Zap } from "lucide-react";
+import { Activity, BarChart2, GitBranch, Globe, Radio, UserPlus, UserRound, Zap } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { AdminOverview } from "../../api/admin";
-import type { AdminUiMode } from "../adminTypes";
-import { AdminImpactCard, AdminMutedBox } from "../mosaic/adminPrimitives";
 import { MosaicStatCard } from "../mosaic/MosaicStatCard";
 import { pdfToolLabelTr } from "../lib/pdfToolLabels";
 
-type Props = { overview: AdminOverview; uiMode: AdminUiMode };
+type Props = { overview: AdminOverview; uiMode?: unknown };
 
 function sparkFromUsage(overview: AdminOverview, field: "ops" | "users" | "sessions" | "checkout"): number[] {
   const days = overview.usageByDay.slice(-7);
@@ -69,8 +70,60 @@ const chartColor = {
   fill: "rgba(34, 211, 238, 0.12)",
 };
 
-export function AdminDashboardHome({ overview, uiMode }: Props) {
-  const advanced = uiMode === "advanced";
+type Period = "daily" | "weekly" | "monthly";
+
+function aggregateByPeriod(data: { date: string; count: number }[], period: Period): { label: string; count: number }[] {
+  if (period === "daily") {
+    return data.slice(-14).map((d) => ({ label: d.date.slice(5), count: d.count }));
+  }
+  if (period === "weekly") {
+    const weeks = new Map<string, number>();
+    for (const d of data) {
+      const dt = new Date(d.date);
+      const mon = new Date(dt);
+      mon.setDate(dt.getDate() - dt.getDay() + 1);
+      const key = mon.toISOString().slice(0, 10);
+      weeks.set(key, (weeks.get(key) ?? 0) + d.count);
+    }
+    return [...weeks.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-8).map(([k, count]) => ({ label: k.slice(5), count }));
+  }
+  const months = new Map<string, number>();
+  for (const d of data) {
+    const key = d.date.slice(0, 7);
+    months.set(key, (months.get(key) ?? 0) + d.count);
+  }
+  return [...months.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-6).map(([k, count]) => ({ label: k, count }));
+}
+
+function aggregateSalesByPeriod(
+  data: { date: string; plan: string; count: number }[],
+  period: Period,
+): { label: string; PRO: number; BUSINESS: number }[] {
+  const buckets = new Map<string, { PRO: number; BUSINESS: number }>();
+  for (const d of data) {
+    let key = d.date;
+    if (period === "weekly") {
+      const dt = new Date(d.date);
+      const mon = new Date(dt);
+      mon.setDate(dt.getDate() - dt.getDay() + 1);
+      key = mon.toISOString().slice(0, 10);
+    } else if (period === "monthly") {
+      key = d.date.slice(0, 7);
+    }
+    const b = buckets.get(key) ?? { PRO: 0, BUSINESS: 0 };
+    if (d.plan === "PRO") b.PRO += d.count;
+    else if (d.plan === "BUSINESS") b.BUSINESS += d.count;
+    buckets.set(key, b);
+  }
+  return [...buckets.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .slice(period === "daily" ? -14 : period === "weekly" ? -8 : -6)
+    .map(([k, v]) => ({ label: period === "monthly" ? k : k.slice(5), ...v }));
+}
+
+export function AdminDashboardHome({ overview }: Props) {
+  const [regPeriod, setRegPeriod] = useState<Period>("daily");
+  const [salesPeriod, setSalesPeriod] = useState<Period>("monthly");
   const updatedAt = new Date(overview.generatedAt).toLocaleString("tr-TR", {
     dateStyle: "short",
     timeStyle: "medium",
@@ -87,21 +140,18 @@ export function AdminDashboardHome({ overview, uiMode }: Props) {
 
   const feed = buildActivityFeed(overview);
 
+  const regChartData = useMemo(() => aggregateByPeriod(overview.registrationsByDay ?? [], regPeriod), [overview.registrationsByDay, regPeriod]);
+  const salesChartData = useMemo(() => aggregateSalesByPeriod(overview.subscriptionSalesByDay ?? [], salesPeriod), [overview.subscriptionSalesByDay, salesPeriod]);
+
+  const totalRegsToday = (overview.registrationsByDay ?? []).find((d) => d.date === overview.usageDateUtc)?.count ?? 0;
+  const totalRegsWeek = useMemo(() => {
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    return (overview.registrationsByDay ?? []).filter((d) => d.date >= weekAgo).reduce((s, d) => s + d.count, 0);
+  }, [overview.registrationsByDay, overview.usageDateUtc]);
+  const totalRegsMonth = useMemo(() => (overview.registrationsByDay ?? []).reduce((s, d) => s + d.count, 0), [overview.registrationsByDay]);
+
   return (
     <div className="space-y-8">
-      {advanced ? (
-        <AdminImpactCard title="Bu sayfada neler var?">
-          <p>
-            Aşağıdaki istatistikler <strong className="text-slate-100">salt okunur</strong> — izleme amaçlıdır. Ağ grafiğinde 30 güne kadar
-            operasyon hacmi gösterilir; son hareketler, günlük ve araç toplamlarından üretilen bir <strong className="text-slate-100">özet
-            akıştır</strong> (Cruip tarzı).
-          </p>
-        </AdminImpactCard>
-      ) : (
-        <AdminMutedBox>
-          Özet: kayıt, işlem, canlı oturum ve ödeme. Düzenleme için <strong className="text-slate-200">İçerik</strong> sekmesine geçin.
-        </AdminMutedBox>
-      )}
 
       <div className="flex flex-col gap-2 rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-200">
@@ -216,44 +266,164 @@ export function AdminDashboardHome({ overview, uiMode }: Props) {
         </div>
       </div>
 
-      {advanced ? (
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800/50 bg-slate-900/25 p-5">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Paket dağılımı</h3>
-            <ul className="mt-3 space-y-2">
-              {overview.usagePerPackage.map((p) => (
-                <li key={p.plan} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-300">{p.plan}</span>
-                  <span className="font-mono text-cyan-300">{p.userCount}</span>
+      {/* Kayıt istatistikleri */}
+      <div className="rounded-2xl border border-slate-800/50 bg-slate-900/35 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <UserPlus className="h-5 w-5 text-violet-400/70" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Yeni kayıtlar</h3>
+              <p className="text-xs text-slate-500">
+                Bugün: <strong className="text-slate-200">{totalRegsToday}</strong> · Bu hafta: <strong className="text-slate-200">{totalRegsWeek}</strong> · Bu ay: <strong className="text-slate-200">{totalRegsMonth}</strong>
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1 rounded-lg bg-slate-800/60 p-1">
+            {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setRegPeriod(p)}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${regPeriod === p ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"}`}
+              >
+                {p === "daily" ? "Günlük" : p === "weekly" ? "Haftalık" : "Aylık"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 h-[160px] w-full">
+          {regChartData.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-500">Henüz kayıt verisi yok</p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={regChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgb(51 65 85 / 0.4)" />
+                <XAxis dataKey="label" tick={{ fill: "rgb(148 163 184)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: "rgb(148 163 184)", fontSize: 10 }} width={28} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "rgb(15 23 42 / 0.95)", border: "1px solid rgb(51 65 85 / 0.5)", borderRadius: "12px", fontSize: 12 }}
+                  labelStyle={{ color: "rgb(226 232 240)" }}
+                />
+                <Bar dataKey="count" name="Kayıt" fill="rgb(139 92 246 / 0.7)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      {/* Abonelik satışları */}
+      <div className="rounded-2xl border border-slate-800/50 bg-slate-900/35 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-emerald-400/70" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Abonelik satışları</h3>
+              <p className="text-xs text-slate-500">Tamamlanan ödemeler plana göre</p>
+            </div>
+          </div>
+          <div className="flex gap-1 rounded-lg bg-slate-800/60 p-1">
+            {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setSalesPeriod(p)}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${salesPeriod === p ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"}`}
+              >
+                {p === "daily" ? "Günlük" : p === "weekly" ? "Haftalık" : "Aylık"}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="mt-4 h-[160px] w-full">
+          {salesChartData.length === 0 ? (
+            <p className="py-10 text-center text-sm text-slate-500">Henüz satış verisi yok</p>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={salesChartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgb(51 65 85 / 0.4)" />
+                <XAxis dataKey="label" tick={{ fill: "rgb(148 163 184)", fontSize: 10 }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fill: "rgb(148 163 184)", fontSize: 10 }} width={28} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: "rgb(15 23 42 / 0.95)", border: "1px solid rgb(51 65 85 / 0.5)", borderRadius: "12px", fontSize: 12 }}
+                  labelStyle={{ color: "rgb(226 232 240)" }}
+                />
+                <Bar dataKey="PRO" name="PRO" fill="rgb(34 211 238 / 0.7)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="BUSINESS" name="BUSINESS" fill="rgb(16 185 129 / 0.7)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+        <div className="mt-3 flex gap-4 text-[11px]">
+          <span className="flex items-center gap-1.5 text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-cyan-400/70" /> PRO</span>
+          <span className="flex items-center gap-1.5 text-slate-400"><span className="h-2.5 w-2.5 rounded-sm bg-emerald-400/70" /> BUSINESS</span>
+        </div>
+      </div>
+
+      {/* Paket dağılımı + Araçlar + Geo */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-800/50 bg-slate-900/25 p-5">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Paket dağılımı</h3>
+          <ul className="mt-3 space-y-2">
+            {overview.usagePerPackage.map((p) => (
+              <li key={p.plan} className="flex items-center justify-between text-sm">
+                <span className="text-slate-300">{p.plan}</span>
+                <span className="font-mono text-cyan-300">{p.userCount}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-2xl border border-slate-800/50 bg-slate-900/25 p-5">
+          <div className="flex items-center gap-1.5">
+            <Globe className="h-4 w-4 text-blue-400/70" />
+            <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Ülke dağılımı</h3>
+          </div>
+          {overview.geo.topCountries.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">Konum verisi yok</p>
+          ) : (
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {overview.geo.topCountries.map((c) => (
+                <li key={c.country} className="flex items-center justify-between gap-2">
+                  <span className="truncate text-slate-300">{c.country}</span>
+                  <span className="shrink-0 font-mono text-xs text-blue-300">{c.count}</span>
                 </li>
               ))}
             </ul>
-            <p className="mt-3 border-t border-slate-800/50 pt-2 text-xs text-slate-500">
-              A/B test ve ürün yönetimi verisi — ödemeler toplu listede
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-800/50 bg-slate-900/25 p-5">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">En çok kullanılan araçlar (30g)</h3>
-            {overview.mostUsedTOOLS.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-500">Henüz veri yok</p>
-            ) : (
-              <ul className="mt-3 max-h-40 space-y-1 overflow-y-auto text-sm">
-                {overview.mostUsedTOOLS.map((t) => (
-                  <li key={t.featureKey} className="flex justify-between gap-2">
-                    <span className="min-w-0 truncate text-slate-200">
-                      {pdfToolLabelTr(t.featureKey)} <span className="text-slate-600">· {t.featureKey}</span>
-                    </span>
-                    <span className="shrink-0 font-mono text-xs text-slate-400">{t.operationsAttributed}</span>
+          )}
+          {overview.geo.topCities && overview.geo.topCities.length > 0 ? (
+            <div className="mt-3 border-t border-slate-800/50 pt-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-600">Şehirler</p>
+              <ul className="space-y-1 text-xs">
+                {overview.geo.topCities.slice(0, 5).map((c) => (
+                  <li key={`${c.city}-${c.country}`} className="flex items-center justify-between gap-2">
+                    <span className="truncate text-slate-400">{c.city}{c.country ? ` · ${c.country}` : ""}</span>
+                    <span className="shrink-0 font-mono text-slate-500">{c.count}</span>
                   </li>
                 ))}
               </ul>
-            )}
-            {overview.mostUsedTOOLSAllTimeFallback ? (
-              <p className="mt-2 text-xs text-amber-200/80">Tüm zaman verisi — son 30 gün boş</p>
-            ) : null}
-          </div>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+        <div className="rounded-2xl border border-slate-800/50 bg-slate-900/25 p-5">
+          <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">En çok kullanılan araçlar (30g)</h3>
+          {overview.mostUsedTOOLS.length === 0 ? (
+            <p className="mt-2 text-sm text-slate-500">Henüz veri yok</p>
+          ) : (
+            <ul className="mt-3 max-h-48 space-y-1 overflow-y-auto text-sm">
+              {overview.mostUsedTOOLS.map((t) => (
+                <li key={t.featureKey} className="flex justify-between gap-2">
+                  <span className="min-w-0 truncate text-slate-200">
+                    {pdfToolLabelTr(t.featureKey)}
+                  </span>
+                  <span className="shrink-0 font-mono text-xs text-slate-400">{t.operationsAttributed}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          {overview.mostUsedTOOLSAllTimeFallback ? (
+            <p className="mt-2 text-xs text-amber-200/80">Tüm zaman verisi — son 30 gün boş</p>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

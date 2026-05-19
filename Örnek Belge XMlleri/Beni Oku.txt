@@ -1,0 +1,79 @@
+ Değerli Müşterilerimiz,
+
+"28.01.2025" tarihinde Gelir İdaresi Başkanlığı (GİB) yeni e-Fatura Paketini ve 
+UBL-TR (Kod Listesi) Kılavuzunu güncelledi ve bu paketteki şematron 
+kontrollerinin 28.03.2025 tarihinde canlı ortamda geçerli olacağını bildirdi. Aşağıda belirtilen fatura tiplerinde zorunlu eklenmesi gereken alanlar hakkında bilgi verilmiştir. 
+Gerekli alanları belgelerinizi resmileştirmeden önce eklemeniz gerekmektedir aksi takdirde şematrondan geçmeyecek ve resmileşmeyecektir.  
+
+**Fatura tipi "İade" olan faturalarda en az bir adet iadeye konu olan fatura 
+bilgisi eklenmesi zorunlu hale geldi.
+
+**Fatura tipi "İhraç Kayıtlı" olan faturalarda İstisna muhafiyeti olarak 702 kodlu
+istisna seçildiğinde GTİP numarası ve Satır Kodu (DIBSATIRKOD) girilmesi 
+zorunlu hale geldi.
+
+**İrsaliye belgelerinde Alıcı ve Gönderici bilgilerinde ilgili tarafın tanımlayıcı 
+değeri olarak VKN ya da TCKN seçilmesi ve bu seçim sonrası girilen değerin 
+VKN ya da TCKN'e olmasına göre Ünvan ya da Ad, Soyad bilgilerinin girilmesi 
+zorunlu hale geldi.
+
+
+İade fatura tipinde iadeye konu olan fatura bilgileri (Fatura numarası ve Fatura tarihi); Aşağıdaki gibi XML e eklenmelidir. Örnekte 2 tane fatura belirtilmiştir, minimum 1 tane belirtilmelidir. 
+ Örnek XML => EFATURA-IADE FATURASI-XML-ORNEK isimli dosyayı kontrol edebilirsiniz.
+
+<cac:BillingReference>
+<cac:InvoiceDocumentReference>
+<cbc:ID>EFA2025000000001</cbc:ID>
+<cbc:IssueDate>2025-04-02</cbc:IssueDate>
+<cbc:DocumentTypeCode>IADE</cbc:DocumentTypeCode>
+<cbc:DocumentType>IADE</cbc:DocumentType>
+</cac:InvoiceDocumentReference>
+</cac:BillingReference>
+
+<cac:BillingReference>
+<cac:InvoiceDocumentReference>
+<cbc:ID>EFA2025000000002</cbc:ID>
+<cbc:IssueDate>2025-04-03</cbc:IssueDate>
+<cbc:DocumentTypeCode>IADE</cbc:DocumentTypeCode>
+<cbc:DocumentType>IADE</cbc:DocumentType>
+</cac:InvoiceDocumentReference>
+</cac:BillingReference>
+
+
+İhraç Kayıtlı fatura tipi ve istisna sebebi 702 Kodlu istisna seçildiğinde ürünlere GTİP numarası ve Satır Kodu (DIBSATIRKOD) bilgileri eklenmelidir. 
+ Örnek XML => 702-DİİB ve Geçici Kabul Rejimi Kapsamındaki Satışlar-IstisnaSebepli-EFATURA-ORNEK isimli dosyayı kontrol edebilirsiniz.
+RequiredCustomsID alanında GTİP numarası  
+<cbc:ID schemeID="DIBSATIRKOD" alanında ise Satır Kodu (DIBSATIRKOD) belirtilmelidir. 
+
+<cac:Delivery>
+<cac:Shipment>
+<cbc:ID/>
+<cac:GoodsItem>
+<cbc:RequiredCustomsID>147258369121</cbc:RequiredCustomsID>
+</cac:GoodsItem>
+<cac:TransportHandlingUnit>
+<cac:CustomsDeclaration>
+<cbc:ID/>
+<cac:IssuerParty>
+<cac:PartyIdentification>
+<cbc:ID schemeID="DIBSATIRKOD">36985274111</cbc:ID>
+</cac:PartyIdentification>
+<cac:PartyName>
+<cbc:Name>Test Firma</cbc:Name>
+</cac:PartyName>
+<cac:PostalAddress>
+<cbc:StreetName>Kuşkavağı, Belediye Cd. No:78, 07070 Konyaaltı/Antalya</cbc:StreetName>
+<cbc:CitySubdivisionName>Konyaaltı</cbc:CitySubdivisionName>
+<cbc:CityName>Antalya</cbc:CityName>
+<cac:Country>
+<cbc:Name>TÜRKİYE</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+</cac:IssuerParty>
+</cac:CustomsDeclaration>
+</cac:TransportHandlingUnit>
+</cac:Shipment>
+</cac:Delivery>
+
+
+

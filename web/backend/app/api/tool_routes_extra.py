@@ -19,6 +19,9 @@ from app.core.operations import (
     format_derived_filename,
     parse_pages_text,
     save_upload,
+    save_office_upload,
+    save_any_upload,
+    max_bytes_from_decision,
 )
 from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail_from_path
 from app.core.result_store import save_result_from_file
@@ -120,7 +123,7 @@ async def tool_delete_pages(
     decision = await entitlement_check(token, "delete-pages")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
@@ -157,7 +160,7 @@ async def tool_rotate_pdf(
     decision = await entitlement_check(token, "rotate-pdf")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
@@ -227,7 +230,7 @@ async def tool_organize_pdf(
     decision = await entitlement_check(token, "organize-pdf")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         n = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
@@ -268,7 +271,7 @@ async def tool_unlock_pdf(
         raise HTTPException(status_code=400, detail="PDF parolası gerekli.")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved)
         user_id = await saas_current_user_id(token)
         out_n = format_derived_filename(file.filename or saved.name, "Acik", "pdf")
@@ -304,7 +307,7 @@ async def tool_watermark(
     decision = await entitlement_check(token, "watermark")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
@@ -346,7 +349,7 @@ async def tool_page_numbers(
     decision = await entitlement_check(token, "page-numbers")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
@@ -378,7 +381,7 @@ async def tool_repair_pdf(
     decision = await entitlement_check(token, "repair-pdf")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
@@ -410,7 +413,7 @@ async def tool_pdf_to_ppt(
     decision = await entitlement_check(token, "pdf-to-ppt")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
@@ -457,10 +460,10 @@ async def tool_ppt_to_pdf(
     decision = await entitlement_check(token, "ppt-to-pdf")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_office_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved)
-        if not (saved.suffix.lower() in (".ppt", ".pptx")):
-            raise HTTPException(status_code=400, detail="PPT veya PPTX yükleyin.")
+        if not (saved.suffix.lower() in (".ppt", ".pptx", ".pptm", ".potx", ".potm", ".odp")):
+            raise HTTPException(status_code=400, detail="PPT, PPTX veya uyumlu sunum dosyası yükleyin.")
         out_n = format_derived_filename(file.filename or saved.name, "PDF", "pdf")
         out_p = workdir / out_n
         await run_cpu_bound(ptx.pptx_to_pdf, sp, str(out_p))
@@ -509,7 +512,7 @@ async def tool_pdf_to_image(
     decision = await entitlement_check(token, "pdf-to-image")
     workdir = create_workdir()
     try:
-        saved = await save_upload(file, workdir)
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved)
         user_id = await saas_current_user_id(token)
@@ -560,7 +563,7 @@ async def tool_image_to_pdf(
     try:
         paths: list[str] = []
         for i, up in enumerate(files):
-            p = await save_upload(up, workdir, filename=f"{i:04d}_{Path(up.filename or 'img').name}")
+            p = await save_any_upload(up, workdir, filename=f"{i:04d}_{Path(up.filename or 'img').name}", max_bytes=max_bytes_from_decision(decision))
             paths.append(str(p))
         user_id = await saas_current_user_id(token)
         out_p = workdir / "fotograflar.pdf"
@@ -629,7 +632,7 @@ async def tool_pdf_to_text(
     workdir = create_workdir()
     try:
         user_id = await saas_current_user_id(token)
-        sp = await save_upload(file, workdir)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         out_p = workdir / "metin.txt"
         pwd = (password or "").strip() or None
         await run_cpu_bound(lambda: ptx.pdf_to_text(str(sp), str(out_p), password=pwd))
@@ -654,7 +657,7 @@ async def tool_flatten_pdf(
     workdir = create_workdir()
     try:
         user_id = await saas_current_user_id(token)
-        sp = await save_upload(file, workdir)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         out_p = workdir / "duzlestir.pdf"
         pwd = (password or "").strip() or None
         def _run():

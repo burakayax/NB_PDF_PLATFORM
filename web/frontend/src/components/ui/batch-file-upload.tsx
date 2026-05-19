@@ -6,14 +6,15 @@ interface BatchFileUploadProps {
   accept?: string;
   maxFiles?: number;
   language?: string;
+  disabled?: boolean;
 }
 
-export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr" }: BatchFileUploadProps) {
+export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr", disabled = false }: BatchFileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const tr = language === "tr";
 
   function addFiles(incoming: FileList | null) {
-    if (!incoming) return;
+    if (disabled || !incoming) return;
     const next = [...files];
     for (const f of Array.from(incoming)) {
       if (next.length >= maxFiles) break;
@@ -37,10 +38,10 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
   return (
     <div className="space-y-2">
       <div
-        className="border border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5 transition-all min-h-[80px] w-full touch-manipulation flex flex-col items-center justify-center"
-        onClick={() => inputRef.current?.click()}
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={onDrop}
+        className={`border border-dashed rounded-xl p-4 text-center transition-all min-h-[80px] w-full touch-manipulation flex flex-col items-center justify-center ${disabled ? "border-white/10 opacity-40 cursor-not-allowed" : "border-white/20 cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5"}`}
+        onClick={() => !disabled && inputRef.current?.click()}
+        onDragOver={(e) => { if (!disabled) e.preventDefault(); }}
+        onDrop={(e) => { e.preventDefault(); if (!disabled) onDrop(e); }}
       >
         <p className="text-xs text-gray-400">
           {tr
@@ -53,6 +54,7 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
           className="hidden"
           multiple
           accept={accept}
+          disabled={disabled}
           onChange={(e) => addFiles(e.target.files)}
         />
       </div>

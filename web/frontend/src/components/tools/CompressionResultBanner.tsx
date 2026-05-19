@@ -86,10 +86,10 @@ export function CompressionResultBanner({ originalSizeMB, compressedSizeMB }: Pr
         <span className="compression-banner__icon">{icon}</span>
         <div>
           <p className={`compression-banner__headline compression-banner__headline--${state}`}>
-            Dosyanız <span>%{savedPercent}</span> küçüldü
+            Dosyanız <span>{savedMB.toFixed(2)} MB</span> küçüldü
           </p>
           <p className="compression-banner__detail">
-            {originalSizeMB.toFixed(2)} MB → {compressedSizeMB.toFixed(2)} MB ({savedMB.toFixed(2)} MB tasarruf)
+            {originalSizeMB.toFixed(2)} MB → {compressedSizeMB.toFixed(2)} MB
           </p>
         </div>
       </div>

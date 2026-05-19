@@ -38,6 +38,9 @@ async function initializePlanPayment(
   planId: PlanId,
   currency: string,
   billingCycle: "MONTHLY" | "YEARLY",
+  couponCode?: string | null,
+  _extraSeats = 0,
+  _seatsOnly = false,
 ): Promise<PlanCheckoutResponse> {
   const token = readToken(accessToken);
   const response = await saasAuthorizedFetch(token, (t) =>
@@ -48,7 +51,7 @@ async function initializePlanPayment(
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ planId, currency, billingCycle }),
+      body: JSON.stringify({ planId, currency, billingCycle, couponCode: couponCode || undefined, extraSeats: _extraSeats, seatsOnly: _seatsOnly }),
     }),
   );
   if (!response.ok) {
@@ -85,6 +88,9 @@ type Props = {
   open: boolean;
   planId: PlanId;
   billingCycle?: "MONTHLY" | "YEARLY";
+  extraSeats?: number;
+  /** Sadece ek koltuk satın alımı — mevcut Business sahipleri için. Plan fiyatı eklenmez. */
+  seatsOnly?: boolean;
   accessToken: string;
   language: Language;
   onClose: () => void;
@@ -96,6 +102,8 @@ export function PaymentSummaryModal({
   open,
   planId,
   billingCycle = "MONTHLY",
+  extraSeats = 0,
+  seatsOnly = false,
   accessToken,
   language,
   onClose,
@@ -116,27 +124,52 @@ export function PaymentSummaryModal({
   const { currency: checkoutCurrency } = useCheckoutCurrency();
 
   const plan = PLANS.find((p) => p.id === planId);
-  const planName = plan ? (tr ? plan.nameTr : plan.nameEn) : planId;
   const isTry = checkoutCurrency === "TRY";
-  const planPrice = plan ? formatPrice(plan, isTry ? "TRY" : "USD", billingCycle) : "";
+
+  // seatsOnly modunda ad ve fiyat override
+  const YEARLY_SEAT_DISCOUNT = 0.83;
+  const seatUnitTRY = 199;
+  const seatUnitUSD = 5.99;
+  const seatUnit = isTry ? seatUnitTRY : seatUnitUSD;
+  const seatSym = isTry ? "₺" : "$";
+  const seatsMonthly = extraSeats * seatUnit;
+  const seatsYearly = Math.round(seatsMonthly * 12 * YEARLY_SEAT_DISCOUNT * 100) / 100;
+  const seatsPrice = billingCycle === "YEARLY" ? seatsYearly : seatsMonthly;
+
+  const planName = seatsOnly
+    ? (tr ? `${extraSeats} Ekstra Koltuk` : `${extraSeats} Extra Seat${extraSeats !== 1 ? "s" : ""}`)
+    : (plan ? (tr ? plan.nameTr : plan.nameEn) : planId);
+  const planPrice = seatsOnly
+    ? `${seatSym}${isTry ? Math.round(seatsPrice).toLocaleString("tr-TR") : seatsPrice.toFixed(2)}`
+    : (plan ? formatPrice(plan, isTry ? "TRY" : "USD", billingCycle) : "");
 
   // KDV dökümü — yalnızca TRY ödemelerinde (%20 KDV)
   // planConfig fiyatları kuruş cinsindendir (14900 = 149 ₺); önce 100'e böl.
   // Katalog fiyatı KDV-HARİÇ (net). KDV = net × 0.20, toplam = net × 1.20
   const vatBreakdown = (() => {
-    if (!plan || !isTry) return null;
-    const rawKurus = billingCycle === "YEARLY" ? plan.pricing.yearly.TRY : plan.pricing.monthly.TRY;
-    if (!rawKurus) return null;
-    const net = rawKurus / 100;                              // liraya çevir
-    const vat = Math.round(net * 0.20 * 100) / 100;
-    const gross = Math.round((net + vat) * 100) / 100;
-    const discountedNet = promoApplied
-      ? Math.round(net * (1 - promoApplied.discountPercent / 100) * 100) / 100
-      : net;
-    const discountedVat = Math.round(discountedNet * 0.20 * 100) / 100;
+    if (!isTry) return null;
+    let rawKurus: number;
+    if (seatsOnly) {
+      rawKurus = Math.round(seatsPrice * 100); // TL → kuruş
+    } else {
+      if (!plan) return null;
+      rawKurus = billingCycle === "YEARLY" ? plan.pricing.yearly.TRY : plan.pricing.monthly.TRY;
+      if (!rawKurus) return null;
+    }
+    // KDV Kanunu Madde 25: iskonto matrahtan düşülür → KDV indirimli net üzerinden hesaplanır.
+    // Genel KDV oranı: %20 (10 Temmuz 2023'ten itibaren).
+    const VAT_RATE = 0.20;
+    const net = rawKurus / 100;                              // kuruş → TL, KDV hariç katalog fiyatı
+    const discountAmount = promoApplied
+      ? Math.round(net * (promoApplied.discountPercent / 100) * 100) / 100
+      : 0;
+    const discountedNet = Math.round((net - discountAmount) * 100) / 100; // matrah (KDV hariç, iskonto sonrası)
+    const discountedVat = Math.round(discountedNet * VAT_RATE * 100) / 100; // KDV matrah üzerinden
     const discountedGross = Math.round((discountedNet + discountedVat) * 100) / 100;
+    const originalVat = Math.round(net * VAT_RATE * 100) / 100;
+    const gross = Math.round((net + originalVat) * 100) / 100;
     const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return { gross, net, vat, discountedGross, discountedNet, discountedVat, fmt };
+    return { gross, net, originalVat, discountAmount, discountedNet, discountedVat, discountedGross, fmt };
   })();
 
   useEffect(() => {
@@ -214,7 +247,7 @@ export function PaymentSummaryModal({
     setPaying(true);
     setPromoError(null);
     try {
-      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency, billingCycle);
+      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency, billingCycle, promoApplied ? promoInput.trim() : null, extraSeats, seatsOnly);
       if (session.mode === "fake") {
         onBeforeExternalCheckout?.();
         const result = await confirmFakeCheckout(accessToken, session.sessionId);
@@ -243,7 +276,7 @@ export function PaymentSummaryModal({
         msg || (tr ? "Ödeme başlatılamadı. Daha sonra tekrar deneyin." : "Payment could not start. Please try again later."),
       );
     }
-  }, [legalAccepted, tr, accessToken, planId, checkoutCurrency, onBeforeExternalCheckout, onPurchaseSuccess]);
+  }, [legalAccepted, tr, accessToken, planId, checkoutCurrency, billingCycle, promoApplied, promoInput, onBeforeExternalCheckout, onPurchaseSuccess]);
 
   const handleBackdropMouseDown = useCallback(
     (event: MouseEvent) => {
@@ -252,7 +285,7 @@ export function PaymentSummaryModal({
     [onClose],
   );
 
-  if (!open || !plan) return null;
+  if (!open || (!plan && !seatsOnly)) return null;
 
   const isViteDev = import.meta.env.DEV;
 
@@ -262,8 +295,12 @@ export function PaymentSummaryModal({
     PRO:     { ring: "ring-amber-500/25 border-amber-500/20",  glow: "shadow-[0_0_60px_-20px_rgba(245,158,11,0.3)]",   badge: "bg-amber-500/15 text-amber-300 border-amber-500/25",  dot: "bg-amber-400" },
     BUSINESS:{ ring: "ring-violet-500/25 border-violet-500/20",glow: "shadow-[0_0_60px_-20px_rgba(139,92,246,0.35)]",  badge: "bg-violet-500/15 text-violet-300 border-violet-500/25",dot: "bg-violet-400" },
   };
-  const accent = planAccent[planId] ?? planAccent["PLUS"];
-  const features = (tr ? plan.featuresTr : plan.featuresEn).slice(0, 5);
+  const accent = planAccent[planId] ?? planAccent["PLUS"]!;
+  const features = seatsOnly
+    ? (tr
+        ? [`${extraSeats} ekstra koltuk`, "Business planı kapsamında", "Hemen aktif", `Koltuk başı ${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/ay`]
+        : [`${extraSeats} extra seat${extraSeats !== 1 ? "s" : ""}`, "Within Business plan", "Active immediately", `${seatSym}${isTry ? Math.round(seatUnit) : seatUnit}/seat/mo`])
+    : (plan ? (tr ? plan.featuresTr : plan.featuresEn).slice(0, 5) : []);
 
   return (
     <>
@@ -284,12 +321,17 @@ export function PaymentSummaryModal({
             >
               ×
             </button>
-            {plan.badge && (
+            {seatsOnly ? (
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${accent.badge}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
+                {tr ? "Ekip Genişletme" : "Team Expansion"}
+              </span>
+            ) : plan?.badge ? (
               <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${accent.badge}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${accent.dot}`} />
                 {tr ? plan.badge.textTr : plan.badge.textEn}
               </span>
-            )}
+            ) : null}
             <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
               {planName}
             </h2>
@@ -326,20 +368,30 @@ export function PaymentSummaryModal({
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-4">
                   {vatBreakdown ? (
                     <div className="space-y-1.5 text-sm">
+                      {/* Hizmet bedeli (KDV hariç liste fiyatı) */}
                       <div className="flex items-baseline justify-between">
-                        <span className="text-slate-400">{tr ? "Paket Fiyatı (KDV hariç)" : "Package Price (excl. VAT)"}</span>
+                        <span className="text-slate-400">{tr ? "Hizmet Bedeli (KDV hariç)" : "Service Fee (excl. VAT)"}</span>
                         <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.net)} ₺</span>
                       </div>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-slate-400">{tr ? "KDV (%20)" : "VAT (20%)"}</span>
-                        <span className="tabular-nums text-slate-400">{vatBreakdown.fmt(vatBreakdown.vat)} ₺</span>
-                      </div>
-                      {promoApplied && (
+                      {/* İskonto — KDV Kanunu Md.25: faturada ayrıca gösterilmeli */}
+                      {promoApplied && vatBreakdown.discountAmount > 0 && (
                         <div className="flex items-baseline justify-between text-emerald-400">
-                          <span>{tr ? `İndirim (−%${promoApplied.discountPercent})` : `Discount (−${promoApplied.discountPercent}%)`}</span>
-                          <span className="tabular-nums">−{vatBreakdown.fmt(vatBreakdown.gross - vatBreakdown.discountedGross)} ₺</span>
+                          <span>{tr ? `İskonto (−%${promoApplied.discountPercent})` : `Discount (−${promoApplied.discountPercent}%)`}</span>
+                          <span className="tabular-nums">−{vatBreakdown.fmt(vatBreakdown.discountAmount)} ₺</span>
                         </div>
                       )}
+                      {/* Matrah = KDV hariç, iskonto sonrası fiyat */}
+                      {promoApplied && (
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-slate-400">{tr ? "Matrah (KDV hariç)" : "Taxable Amount (excl. VAT)"}</span>
+                          <span className="tabular-nums text-slate-300">{vatBreakdown.fmt(vatBreakdown.discountedNet)} ₺</span>
+                        </div>
+                      )}
+                      {/* KDV — matrah üzerinden hesaplanır */}
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-slate-400">{tr ? "KDV (%20)" : "VAT (20%)"}</span>
+                        <span className="tabular-nums text-slate-400">{vatBreakdown.fmt(vatBreakdown.discountedVat)} ₺</span>
+                      </div>
                       <div className="mt-2 border-t border-white/[0.08] pt-2">
                         <div className="flex items-baseline justify-between">
                           <span className="font-semibold text-white">{tr ? "Ödenecek Tutar" : "Total Due"}</span>

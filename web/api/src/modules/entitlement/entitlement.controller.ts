@@ -8,6 +8,7 @@ import {
   incrementQuota,
   getQuotaSummary,
 } from "../../lib/quota.js";
+import { canExecute } from "./entitlement.engine.js";
 import { downloadLogCreateSchema, entitlementBodySchema } from "./entitlement.schema.js";
 
 function clientIpFromRequest(request: Request): string | null {
@@ -38,7 +39,7 @@ export async function entitlementCheckController(
   const fileCount = typeof request.body.fileCount === "number" && request.body.fileCount > 1
     ? request.body.fileCount
     : 1;
-  const result = await checkQuota(userId, toolId, fileCount, 0);
+  const result = await canExecute(userId, toolId, fileCount, 0);
 
   response.status(200).json({
     allowed: result.allowed,
@@ -52,6 +53,7 @@ export async function entitlementCheckController(
     monthlyLimit: result.monthlyLimit,
     resetAt: result.resetAt?.toISOString() ?? null,
     watermarkEnabled: result.watermarkEnabled ?? false,
+    fileSizeLimitMB: result.fileSizeLimitMB ?? 999999,
   });
 }
 
@@ -76,8 +78,8 @@ export async function entitlementConsumeController(
     ? request.body.processingTimeMs
     : undefined;
 
-  // Re-check quota before incrementing (race condition guard)
-  const quotaCheck = await checkQuota(userId, toolId, fileCount, totalSizeMB);
+  // Re-check quota before incrementing (race condition guard) — canExecute handles team member bypass
+  const quotaCheck = await canExecute(userId, toolId, fileCount, totalSizeMB);
   if (!quotaCheck.allowed) {
     response.status(200).json({
       status: "denied",

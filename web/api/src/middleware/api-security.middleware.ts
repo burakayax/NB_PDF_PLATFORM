@@ -178,6 +178,9 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/payments/pricing" && method === "GET") {
     return true;
   }
+  if (p === "/team/invite/preview" && method === "GET") {
+    return true;
+  }
   return false;
 }
 

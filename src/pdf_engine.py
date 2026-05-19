@@ -520,15 +520,182 @@ def _fitz_pdf_text_stats(pdf_path: str, password: Optional[str]) -> Tuple[int, i
         doc.close()
 
 
+def _is_scanned_pdf(pdf_path: str, password: Optional[str] = None) -> bool:
+    """
+    Taranmış PDF tespiti: sayfaların büyük çoğunluğu görüntü blokları içeriyorsa
+    ve metin çok azsa taranmış kabul et.
+
+    Yöntem: fitz ile her sayfa blok analizi yap.
+      - Görüntü bloğu var AND metin bloğu çok az → taranmış sayfa
+      - Sayfaların %50+ taranmışsa → taranmış PDF
+    """
+    import fitz
+
+    doc = fitz.open(pdf_path)
+    try:
+        if doc.needs_pass:
+            doc.authenticate((password or "").strip())
+        n = len(doc)
+        if n == 0:
+            return False
+        scanned_pages = 0
+        for i in range(n):
+            page = doc[i]
+            blocks = page.get_text("dict")["blocks"]
+            img_blocks = sum(1 for b in blocks if b.get("type") == 1)
+            # Metin karakteri sayısı (gerçek metin, boşluk sayılmaz)
+            text_chars = sum(
+                len(span["text"].strip())
+                for b in blocks if b.get("type") == 0
+                for line in b.get("lines", [])
+                for span in line.get("spans", [])
+            )
+            # Sayfa taranmış mı: görüntü var AND metin çok az (sayfa başına <30 karakter)
+            if img_blocks >= 1 and text_chars < 30:
+                scanned_pages += 1
+        return scanned_pages >= max(1, n * 0.5)
+    finally:
+        doc.close()
+
+
+def _preprocess_ocr_image(img: "Image.Image") -> "Image.Image":
+    """OCR doğruluğunu artırmak için görüntüyü ön işle: gri, kontrast, gürültü azaltma."""
+    from PIL import ImageEnhance, ImageFilter
+
+    # Gri tonlamaya çevir
+    if img.mode != "L":
+        img = img.convert("L")
+    # Kontrast artır
+    img = ImageEnhance.Contrast(img).enhance(1.8)
+    # Keskinleştir
+    img = img.filter(ImageFilter.SHARPEN)
+    # Hafif gürültü azaltma
+    img = img.filter(ImageFilter.MedianFilter(size=3))
+    return img
+
+
+def _ocr_page_to_blocks(img: "Image.Image", lang: str) -> List[Dict]:
+    """
+    Tesseract TSV (image_to_data) çıktısından kelime kutularını parse eder.
+    Her blok: {'text', 'left', 'top', 'width', 'height', 'conf', 'block_num', 'par_num', 'line_num'}
+    """
+    from pytesseract import Output
+
+    config = "--oem 3 --psm 6"
+    data = pytesseract.image_to_data(img, lang=lang, config=config, output_type=Output.DICT)
+    words = []
+    n = len(data["text"])
+    for i in range(n):
+        txt = str(data["text"][i]).strip()
+        conf = int(data["conf"][i])
+        if not txt or conf < 20:
+            continue
+        words.append({
+            "text":      txt,
+            "left":      int(data["left"][i]),
+            "top":       int(data["top"][i]),
+            "width":     int(data["width"][i]),
+            "height":    int(data["height"][i]),
+            "conf":      conf,
+            "block_num": int(data["block_num"][i]),
+            "par_num":   int(data["par_num"][i]),
+            "line_num":  int(data["line_num"][i]),
+        })
+    return words
+
+
+def _words_to_paragraphs(words: List[Dict]) -> List[str]:
+    """
+    Kelime kutularını (block_num, par_num, line_num) üçlüsüne göre
+    mantıklı paragraflara dönüştürür. Her blok ayrı paragraf.
+    """
+    if not words:
+        return []
+
+    # (block, par, line) → [words]
+    lines: Dict[tuple, List[str]] = {}
+    for w in words:
+        key = (w["block_num"], w["par_num"], w["line_num"])
+        lines.setdefault(key, []).append(w["text"])
+
+    # Satırları (block, par) grubuna göre birleştir
+    paras: Dict[tuple, List[str]] = {}
+    for (b, p, _l), ws in sorted(lines.items()):
+        key = (b, p)
+        paras.setdefault(key, []).append(" ".join(ws))
+
+    result = []
+    for key in sorted(paras.keys()):
+        para_text = " ".join(paras[key]).strip()
+        para_text = _polish_tesseract_output(para_text)
+        if para_text:
+            result.append(para_text)
+    return result
+
+
+def _is_heading_candidate(text: str) -> bool:
+    """Büyük harfli, kısa ve nokta/virgül içermeyen satırları başlık adayı say."""
+    t = text.strip()
+    if not t or len(t) > 120:
+        return False
+    words = t.split()
+    if len(words) > 10:
+        return False
+    upper_ratio = sum(1 for c in t if c.isupper()) / max(len(t), 1)
+    has_punct = any(c in t for c in ".,;:?!")
+    return upper_ratio > 0.6 and not has_punct
+
+
+def _build_docx_from_paragraphs(dw: "Document", paragraphs: List[str], page_num: int, total_pages: int) -> None:
+    """Paragraph listesini Word belgesine yazar; başlık tespiti ve sayfa sonu ekler."""
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    if page_num > 1:
+        dw.add_page_break()
+
+    if total_pages > 1:
+        # Sayfa numarası başlığı — küçük, gri, ayırıcı işlevi
+        h = dw.add_heading(f"— Sayfa {page_num} —", level=3)
+        h.runs[0].font.size = Pt(9)
+
+    if not paragraphs:
+        p = dw.add_paragraph("(Bu sayfada metin okunamadı.)")
+        p.runs[0].font.size = Pt(10)
+        return
+
+    for para_text in paragraphs:
+        stripped = para_text.strip()
+        if not stripped:
+            continue
+        if _is_heading_candidate(stripped):
+            h = dw.add_heading(stripped, level=2)
+            for run in h.runs:
+                run.font.size = Pt(13)
+        else:
+            p = dw.add_paragraph(stripped)
+            for run in p.runs:
+                run.font.size = Pt(11)
+
+
 def _pdf_to_word_ocr_fitz(
     pdf_path: str,
     docx_path: str,
     password: Optional[str],
     progress_callback=None,
     *,
-    ocr_matrix_scale: float = 2.0,
+    ocr_matrix_scale: float = 2.5,
 ) -> None:
-    """Metin katmanı zayıf / taranmış PDF: sayfa görüntüsünden Tesseract ile düzenlenebilir metin."""
+    """
+    Taranmış / görsel PDF → düzenlenebilir Word.
+
+    Strateji:
+    1. Her sayfayı 300 DPI'ye yakın çözünürlükte render et
+    2. Görüntü ön işleme: gri + kontrast + keskinleştirme
+    3. Tesseract image_to_data (TSV) ile kelime bazlı bounding box al
+    4. block_num/par_num/line_num gruplama ile paragraf yeniden oluştur
+    5. Başlık tespiti + Word paragraph stilleri uygula
+    """
     import fitz
 
     doc_pdf = fitz.open(pdf_path)
@@ -538,30 +705,52 @@ def _pdf_to_word_ocr_fitz(
                 raise Exception("Şifre gerekli")
             if not doc_pdf.authenticate(password):
                 raise Exception("Girilen şifre hatalı")
+
         dw = Document()
+        # Normal metin için varsayılan stil
+        style = dw.styles["Normal"]
+        style.font.name = "Calibri"
+        from docx.shared import Pt
+        style.font.size = Pt(11)
+
         n = len(doc_pdf)
+        # Dil tespiti: ilk sayfada her iki dili de dene, hangisi daha fazla sonuç verirse onu kullan
+        ocr_lang = "tur+eng"
+
         for i in range(n):
             if progress_callback:
-                progress_callback(i + 1, max(n, 1), f"OCR (sayfa {i + 1}/{n})")
+                progress_callback(i + 1, max(n, 1), f"OCR işleniyor: sayfa {i + 1}/{n}")
+
             page = doc_pdf.load_page(i)
             mat = fitz.Matrix(ocr_matrix_scale, ocr_matrix_scale)
-            pix = page.get_pixmap(matrix=mat, alpha=False)
+            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
             img = Image.open(io.BytesIO(pix.tobytes("png")))
+
+            # Görüntü ön işleme
+            img_proc = _preprocess_ocr_image(img)
+
+            # Kelime bazlı OCR
+            words = []
             try:
-                text = pytesseract.image_to_string(img, lang="tur+eng", config=_TESSERACT_CONFIG)
+                words = _ocr_page_to_blocks(img_proc, ocr_lang)
             except Exception:
-                text = pytesseract.image_to_string(img, lang="eng", config=_TESSERACT_CONFIG)
-            text = _polish_tesseract_output(text.strip())
-            if i > 0:
-                dw.add_page_break()
-            dw.add_heading(f"Sayfa {i + 1}", level=2)
-            if text:
-                for block in text.split("\n\n"):
-                    line = block.strip()
-                    if line:
-                        dw.add_paragraph(line)
+                try:
+                    words = _ocr_page_to_blocks(img_proc, "eng")
+                except Exception:
+                    pass
+
+            # Kelimeler yoksa ham metin dene
+            if not words:
+                try:
+                    raw = pytesseract.image_to_string(img_proc, lang=ocr_lang, config="--oem 3 --psm 6")
+                    paragraphs = [_polish_tesseract_output(b.strip()) for b in raw.split("\n\n") if b.strip()]
+                except Exception:
+                    paragraphs = []
             else:
-                dw.add_paragraph("(Bu sayfada metin okunamadı.)")
+                paragraphs = _words_to_paragraphs(words)
+
+            _build_docx_from_paragraphs(dw, paragraphs, i + 1, n)
+
         dw.save(docx_path)
     finally:
         doc_pdf.close()
@@ -591,16 +780,74 @@ def pdf_to_word(
         except ImportError as e:
             raise Exception("pdf2docx yüklü değil.") from e
 
-        n_pages, text_len = _fitz_pdf_text_stats(pdf_path, password)
-        # Taranmış PDF: yalnızca gerçekten metin katmanı çok zayıfsa OCR (aksi halde pdf2docx düzen korur; erken OCR bazı metin PDF’lerini bozuyordu)
-        if n_pages > 0 and text_len < max(50, n_pages * 18):
+        # Taranmış PDF tespiti: fitz blok analizi ile görsel sayfa oranı kontrol edilir
+        if _is_scanned_pdf(pdf_path, password):
             if progress_callback:
-                progress_callback(1, 3, "Taranmış veya görsel PDF — OCR ile metin çıkarılıyor...")
+                progress_callback(1, 4, "Taranmış PDF tespit edildi — OCRmyPDF ile metin katmanı ekleniyor...")
+            ocr_pdf_path = pdf_path + ".ocr_tmp.pdf"
+            ocr_success = False
+            try:
+                import ocrmypdf
+                ocrmypdf_kwargs = dict(
+                    input_file=pdf_path,
+                    output_file=ocr_pdf_path,
+                    language="tur+eng",
+                    deskew=True,
+                    optimize=0,
+                    progress_bar=False,
+                    output_type="pdf",
+                    skip_text=True,   # metin katmanı olan sayfaları atla, karışık PDF'lerde güvenli
+                )
+                if password:
+                    ocrmypdf_kwargs["pdf_renderer"] = "hocr"
+                ocrmypdf.ocr(**ocrmypdf_kwargs)
+                ocr_success = os.path.isfile(ocr_pdf_path) and os.path.getsize(ocr_pdf_path) > 0
+            except Exception as ocr_err:
+                ocr_success = False
+                print(f"[pdf_to_word] OCRmyPDF başarısız ({ocr_err}), Tesseract fallback'e geçiliyor")
+
+            if ocr_success:
+                if progress_callback:
+                    progress_callback(2, 4, "Metin katmanı eklendi — Word'e dönüştürülüyor...")
+                try:
+                    _src = ocr_pdf_path
+                    _pwd = None  # OCRmyPDF output is unencrypted
+                    if os.path.isfile(docx_path):
+                        try:
+                            os.remove(docx_path)
+                        except OSError:
+                            pass
+                    converter = Converter(_src, password=_pwd)
+                    try:
+                        converter.convert(
+                            docx_path,
+                            clip_image_res_ratio=2.0,
+                            float_image_ignorable_gap=12.0,
+                            line_overlap_threshold=0.9,
+                            line_separate_threshold=6.0,
+                        )
+                    finally:
+                        converter.close()
+                    if progress_callback:
+                        progress_callback(4, 4, "Word kaydediliyor...")
+                    return True
+                except Exception as conv_err:
+                    print(f"[pdf_to_word] OCRmyPDF+pdf2docx başarısız ({conv_err}), Tesseract fallback")
+                finally:
+                    try:
+                        if os.path.isfile(ocr_pdf_path):
+                            os.remove(ocr_pdf_path)
+                    except OSError:
+                        pass
+
+            # OCRmyPDF başarısız → eski Tesseract yolu
             if os.path.isfile(docx_path):
                 try:
                     os.remove(docx_path)
                 except OSError:
                     pass
+            if progress_callback:
+                progress_callback(2, 4, "Tesseract OCR ile metin çıkarılıyor...")
             ocr_scale = 1.38 if reduced_quality else 2.0
             _pdf_to_word_ocr_fitz(
                 pdf_path,
@@ -610,7 +857,7 @@ def pdf_to_word(
                 ocr_matrix_scale=ocr_scale,
             )
             if progress_callback:
-                progress_callback(3, 3, "Word kaydediliyor...")
+                progress_callback(4, 4, "Word kaydediliyor...")
             return True
 
         if progress_callback:
@@ -1858,10 +2105,14 @@ def _ghostscript_compress_to_path(
             "-dCompressFonts=true",
             "-dSubsetFonts=true",
             "-dDownsampleColorImages=true",
+            "-dDownsampleGrayImages=true",
+            "-dColorImageDownsampleType=/Bicubic",
+            "-dGrayImageDownsampleType=/Bicubic",
             f"-dColorImageResolution={dpi}",
             f"-dGrayImageResolution={dpi}",
             "-dMonoImageResolution=300",
             "-dOptimize=true",
+            "-dFastWebView=true",
             f"-sOutputFile={tmp_out}",
             src_abs,
         ]
@@ -1897,8 +2148,248 @@ def _pdf_page_count(path: str, password: str = "") -> int:
         return -1
 
 
+def _fast_image_compress_pipeline(
+    input_path: str, output_path: str, open_password: str, quality: str = "auto"
+) -> bool:
+    """pikepdf + Pillow ile hızlı görüntü çözünürlük düşürme + yeniden sıkıştırma.
+
+    Tüm PDF dolaylı nesnelerini tarar (/Subtype /Image olanları sıkıştırır).
+    page.images yerine doğrudan nesne tablosu kullanılır — form XObject içindeki
+    görüntüler de dahil olmak üzere hiçbir görüntü atlanmaz.
+    200 MB dosyada ~30-90 saniye. Döner: True = küçültme başarılı.
+
+    Hedef uzun kenar (piksel):
+      low    → 1200 px  (~100 DPI A4) + JPEG 50
+      auto   → 1800 px  (~150 DPI A4) + JPEG 62
+      medium → 1800 px  (~150 DPI A4) + JPEG 72
+      high   → 2400 px  (~200 DPI A4) + JPEG 82
+    """
+    import io
+    import pikepdf
+    from PIL import Image
+
+    cfg = {
+        "low":    {"max_px": 900,  "jpeg_q": 40},
+        "auto":   {"max_px": 1400, "jpeg_q": 52},
+        "medium": {"max_px": 1600, "jpeg_q": 65},
+        "high":   {"max_px": 2200, "jpeg_q": 78},
+    }
+    c = cfg.get(quality, cfg["auto"])
+    max_px: int = c["max_px"]
+    jpeg_q: int = c["jpeg_q"]
+
+    out_dir = os.path.dirname(output_path) or None
+    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+    os.close(fd)
+    tmp_keep: Optional[str] = tmp_out
+
+    try:
+        open_kw: dict = {}
+        if open_password:
+            open_kw["password"] = open_password
+
+        pdf = pikepdf.open(input_path, allow_overwriting_input=False, **open_kw)
+        replaced = 0
+
+        # Tüm dolaylı nesneleri tara — page.images sadece sayfa kaynakları sözlüğündeki
+        # adlandırılmış görüntüleri döndürür; form XObject ve paylaşılan nesneler atlanabilir.
+        for obj in pdf.objects:
+            try:
+                if not isinstance(obj, pikepdf.Stream):
+                    continue
+                if obj.get("/Subtype") != pikepdf.Name("/Image"):
+                    continue
+
+                # Maske görüntülerini atla (genellikle 1-bit, JPEG'e uygun değil)
+                color_space = obj.get("/ColorSpace")
+                if color_space == pikepdf.Name("/DeviceGray"):
+                    bits = obj.get("/BitsPerComponent")
+                    if bits is not None and int(bits) == 1:
+                        continue
+
+                w = int(obj.get("/Width", 0))
+                h = int(obj.get("/Height", 0))
+                if w < 8 or h < 8:
+                    continue
+
+                # Ham stream boyutunu kontrol et — 5 KB altı küçük logolar/ikonları atla
+                try:
+                    raw = obj.read_raw_bytes()
+                except Exception:
+                    continue
+                if len(raw) < 5 * 1024:
+                    continue
+
+                # Pillow'a çevir
+                try:
+                    pdfimg = pikepdf.PdfImage(obj)
+                    pil_img: Image.Image = pdfimg.as_pil_image()
+                except Exception:
+                    continue
+
+                # Mod dönüşümü: JPEG alpha desteklemez
+                if pil_img.mode == "P":
+                    pil_img = pil_img.convert("RGBA")
+                if pil_img.mode in ("RGBA", "LA"):
+                    bg = Image.new("RGB", pil_img.size, (255, 255, 255))
+                    bg.paste(pil_img, mask=pil_img.split()[-1])
+                    pil_img = bg
+                elif pil_img.mode not in ("RGB", "L"):
+                    pil_img = pil_img.convert("RGB")
+
+                # Çözünürlük düşürme: en uzun kenar max_px'i geçiyorsa küçült
+                long_side = max(w, h)
+                if long_side > max_px:
+                    scale = max_px / long_side
+                    new_w = max(1, int(w * scale))
+                    new_h = max(1, int(h * scale))
+                    pil_img = pil_img.resize((new_w, new_h), Image.LANCZOS)
+
+                # JPEG olarak kodla
+                buf = io.BytesIO()
+                pil_img.save(buf, format="JPEG", quality=jpeg_q, optimize=True, progressive=True)
+                new_bytes = buf.getvalue()
+
+                # Orijinalden büyükse atla
+                if len(new_bytes) >= len(raw):
+                    continue
+
+                # Stream'i yeni JPEG verisiyle güncelle
+                obj.write(new_bytes, filter=pikepdf.Name("/DCTDecode"))
+                # ColorSpace ve BitsPerComponent'i JPEG ile uyumlu hale getir
+                if pil_img.mode == "L":
+                    obj["/ColorSpace"] = pikepdf.Name("/DeviceGray")
+                else:
+                    obj["/ColorSpace"] = pikepdf.Name("/DeviceRGB")
+                obj["/BitsPerComponent"] = pikepdf.objects.Integer(8)
+                obj["/Width"] = pikepdf.objects.Integer(pil_img.width)
+                obj["/Height"] = pikepdf.objects.Integer(pil_img.height)
+                # Önceki filter array'ini temizle
+                for k in ("/DecodeParms", "/Decode"):
+                    if k in obj:
+                        del obj[k]
+                replaced += 1
+
+            except Exception:
+                continue
+
+        # Thumbnail'ları temizle
+        try:
+            for page in pdf.pages:
+                if "/Thumb" in page:
+                    del page["/Thumb"]
+        except Exception:
+            pass
+
+        pdf.save(
+            tmp_out,
+            compress_streams=True,
+            recompress_flate=True,
+            object_stream_mode=pikepdf.ObjectStreamMode.generate,
+            linearize=True,
+        )
+        pdf.close()
+
+        in_size = os.path.getsize(input_path)
+        out_size = os.path.getsize(tmp_out)
+        if out_size < in_size:
+            os.replace(tmp_out, output_path)
+            tmp_keep = None
+            return True
+        # Sıkıştırma kazanımı yoksa bile stream-optimize edilmiş sürümü kullan
+        # (en azından orijinal kadar iyi)
+        shutil.copy2(input_path, output_path)
+        return False
+
+    except Exception as e:
+        logger.warning("_fast_image_compress_pipeline failed: %s", e)
+        shutil.copy2(input_path, output_path)
+        return False
+    finally:
+        if tmp_keep and os.path.isfile(tmp_keep):
+            try:
+                os.remove(tmp_keep)
+            except OSError:
+                pass
+
+
+def _fitz_render_compress(
+    input_path: str, output_path: str, open_password: str, quality: str = "auto"
+) -> bool:
+    """PyMuPDF ile sayfa bazlı render + JPEG yeniden kodlama (Ghostscript alternatifi).
+
+    Her sayfayı hedef DPI'de piksel olarak render eder, ardından yeni bir PDF içine
+    JPEG stream olarak yerleştirir. Metin aranabilirliği kaybolur ama görüntü ağırlıklı
+    (tarama) PDF'lerde en agresif boyut küçültmeyi sağlar.
+    """
+    import fitz
+    from PIL import Image as PilImage
+
+    dpi_map   = {"low": 96,  "auto": 120, "medium": 150, "high": 200}
+    jpegq_map = {"low": 35,  "auto": 50,  "medium": 62,  "high": 75}
+    dpi   = dpi_map.get(quality, 120)
+    jpegq = jpegq_map.get(quality, 50)
+
+    out_dir = os.path.dirname(output_path) or None
+    fd, tmp_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+    os.close(fd)
+    tmp_keep: Optional[str] = tmp_out
+
+    try:
+        src = fitz.open(input_path)
+        if open_password and src.needs_pass:
+            src.authenticate(open_password)
+
+        out_doc = fitz.open()
+        scale = dpi / 72.0
+        mat = fitz.Matrix(scale, scale)
+
+        for page in src:
+            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
+            # Pillow ile JPEG olarak yeniden kodla (kalite kontrolü için)
+            pil_img = PilImage.frombytes("RGB", (pix.width, pix.height), pix.samples)
+            buf = io.BytesIO()
+            pil_img.save(buf, format="JPEG", quality=jpegq, optimize=True, progressive=True)
+            jpeg_bytes = buf.getvalue()
+
+            # Orijinal sayfa boyutlarını koru (pt cinsinden)
+            rect = page.rect
+            new_page = out_doc.new_page(width=rect.width, height=rect.height)
+            new_page.insert_image(rect, stream=jpeg_bytes)
+
+        src.close()
+        out_doc.save(
+            tmp_out,
+            garbage=4,
+            deflate=True,
+            deflate_images=True,
+            deflate_fonts=True,
+        )
+        out_doc.close()
+
+        in_size  = os.path.getsize(input_path)
+        out_size = os.path.getsize(tmp_out)
+        if out_size < in_size:
+            os.replace(tmp_out, output_path)
+            tmp_keep = None
+            return True
+        shutil.copy2(input_path, output_path)
+        return False
+
+    except Exception as e:
+        logger.warning("_fitz_render_compress failed: %s", e)
+        shutil.copy2(input_path, output_path)
+        return False
+    finally:
+        if tmp_keep and os.path.isfile(tmp_keep):
+            try:
+                os.remove(tmp_keep)
+            except OSError:
+                pass
+
+
 def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: str) -> None:
-    """PyMuPDF yedek boru hattı (Ghostscript yok / başarısız)."""
+    """PyMuPDF stream-sıkıştırma yedek boru hattı (görüntü yeniden örnekleme yapmaz)."""
     import fitz
 
     out_dir = os.path.dirname(output_path) or None
@@ -1914,6 +2405,7 @@ def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: 
             deflate=True,
             deflate_images=True,
             deflate_fonts=True,
+            clean=True,
             linear=False,
         )
         doc.close()
@@ -1932,92 +2424,131 @@ def _legacy_compress_pipeline(input_path: str, output_path: str, open_password: 
                 pass
 
 
-# --- 7. PDF SIKIŞTIRMA ---
-def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None, quality: str = "auto") -> bool:
-    """Önce Ghostscript (/ebook → /screen), yoksa veya küçültmezse pikepdf + PyMuPDF.
+def _fmt_mb(n: int) -> str:
+    return f"{n / (1024 * 1024):.1f} MB"
 
-    quality: "auto" = try all presets in order, "low" = /screen, "medium" = /ebook, "high" = /printer
+
+# --- 7. PDF SIKIŞTIRMA ---
+# Kaliteye göre GS preset ve kazanım eşiği
+_COMPRESS_GS_SETTINGS = {
+    "low":    "/screen",
+    "auto":   "/ebook",
+    "medium": "/ebook",
+    "high":   "/printer",
+}
+# pikepdf sonrası bu oran altında kazanım varsa GS devreye girer (0.45 = %45)
+_COMPRESS_GS_FALLBACK_THRESHOLD = 0.40
+
+
+def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None, quality: str = "auto") -> bool:
+    """İki aşamalı sıkıştırma: pikepdf+Pillow görüntü yeniden örnekleme + gerekirse Ghostscript.
+
+    Strateji:
+      1. pikepdf + Pillow: görüntüleri hedef çözünürlüğe düşür, JPEG ile yeniden kodla.
+      2. pikepdf kazanımı hedef eşiğin altındaysa Ghostscript preset ile ikinci geçiş.
+         low    → /screen   (en agresif)
+         auto   → /ebook    (150 DPI, dengeli hız/kalite)
+         medium → /ebook
+         high   → /printer  (300 DPI, en kaliteli)
+    Her iki aşamada da en küçük sonuç seçilir.
     """
-    work_tmp: Optional[str] = None
     try:
         if progress_callback:
             progress_callback(0, 2, "PDF sıkıştırılıyor...")
         if is_pdf_encrypted(input_path) and not password:
             raise Exception(f"PDF sıkıştırma için şifre gerekli: {os.path.basename(input_path)}")
         open_password = (password or "").strip()
+        in_size = os.path.getsize(input_path)
         timeout_sec = _tool_subprocess_timeout_sec()
 
-        work_out = output_path
-        work_tmp = None
-        if os.path.abspath(input_path) == os.path.abspath(output_path):
-            fd, work_tmp = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(output_path) or None)
-            os.close(fd)
-            work_out = work_tmp
+        out_dir = os.path.dirname(output_path) or None
+        pike_keep: Optional[str] = None
+        gs_keep: Optional[str] = None
 
-        quality_preset_map = {"low": "/screen", "medium": "/ebook", "high": "/printer"}
-        fixed_preset = quality_preset_map.get(quality)
-        preset_sequence = [fixed_preset] if fixed_preset else ["/ebook"]
-
-        input_page_count = _pdf_page_count(input_path, open_password)
-
-        gs_ok = False
-        for preset in preset_sequence:
-            if os.path.isfile(work_out):
-                try:
-                    os.remove(work_out)
-                except OSError:
-                    pass
-            if _ghostscript_compress_to_path(
-                input_path,
-                work_out,
-                pdfsettings=preset,
-                password=open_password,
-                timeout_sec=timeout_sec,
-            ):
-                # Sayfa sayısı koruması: GS boş sayfa ürettiyse reddet
-                gs_pages = _pdf_page_count(work_out)
-                if input_page_count > 0 and gs_pages != input_page_count:
-                    try:
-                        os.remove(work_out)
-                    except OSError:
-                        pass
-                    continue
-                try:
-                    if os.path.getsize(work_out) < os.path.getsize(input_path):
-                        gs_ok = True
-                        break
-                except OSError:
-                    gs_ok = True
-                    break
-
-        if not gs_ok:
-            if os.path.isfile(work_out):
-                try:
-                    os.remove(work_out)
-                except OSError:
-                    pass
-            _legacy_compress_pipeline(input_path, work_out, open_password)
-        if work_tmp:
-            os.replace(work_out, output_path)
-
+        # --- 1. pikepdf + Pillow görüntü yeniden sıkıştırma ---
+        fd1, pike_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+        os.close(fd1)
+        pike_keep = pike_out
         try:
-            in_sz = os.path.getsize(input_path)
-            out_sz = os.path.getsize(output_path)
-            if out_sz > in_sz:
-                shutil.copy2(input_path, output_path)
-        except OSError:
-            pass
+            _fast_image_compress_pipeline(input_path, pike_out, open_password, quality)
+            pike_size = os.path.getsize(pike_out)
+            pike_ratio = 1.0 - pike_size / in_size  # örn. 0.42 = %42 küçülme
+        except Exception:
+            pike_size = in_size
+            pike_ratio = 0.0
+
+        if progress_callback:
+            progress_callback(1, 2, "Görüntüler işlendi, akışlar optimize ediliyor...")
+
+        # --- 2. GS ikinci geçiş: pikepdf yeterince sıkıştıramadıysa veya "high" ise ---
+        best_path: str = pike_out
+        best_size: int = pike_size
+        need_second = False
+
+        # --- 2. İkinci geçiş: önce GS dene, yoksa fitz render ---
+        # pikepdf yeterli kazanım sağlayamadıysa veya "high" kaliteyse ikinci geçiş zorunlu
+        need_second = (quality == "high") or (pike_ratio < _COMPRESS_GS_FALLBACK_THRESHOLD)
+
+        if need_second:
+            gs_preset = _COMPRESS_GS_SETTINGS.get(quality, "/ebook")
+            gs_exe = _resolve_ghostscript_executable()
+
+            fd2, second_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
+            os.close(fd2)
+            gs_keep = second_out
+            # İkinci geçişin girişi: pikepdf küçülttüyse onu kullan
+            second_input = pike_out if pike_size < in_size else input_path
+            second_ok = False
+
+            if gs_exe:
+                # GS kuruluysa tercih et
+                second_ok = _ghostscript_compress_to_path(
+                    second_input, second_out,
+                    pdfsettings=gs_preset,
+                    password=open_password,
+                    timeout_sec=timeout_sec,
+                )
+            else:
+                # GS yok → fitz sayfa render pipeline (metin aranabilirliği kaybolur
+                # ama görüntü ağırlıklı/tarama PDF'lerde en etkili sıkıştırma)
+                second_ok = _fitz_render_compress(second_input, second_out, open_password, quality)
+
+            if second_ok:
+                second_size = os.path.getsize(second_out)
+                try:
+                    exp_pages = _pdf_page_count(second_input)
+                    got_pages = _pdf_page_count(second_out)
+                    pages_ok = (exp_pages <= 0 or got_pages == exp_pages)
+                except Exception:
+                    pages_ok = True
+                if pages_ok and second_size < best_size:
+                    best_path = second_out
+                    best_size = second_size
+
+        # --- En küçük sonucu çıktıya yaz ---
+        if best_size < in_size:
+            shutil.copy2(best_path, output_path)
+        else:
+            shutil.copy2(input_path, output_path)
+
+        saved_pct = max(0, round((1 - best_size / in_size) * 100, 1))
+        logger.info(
+            "compress_pdf done: %s → %s (%.1f%% saved, quality=%s, gs=%s)",
+            _fmt_mb(in_size), _fmt_mb(best_size), saved_pct, quality, need_second,
+        )
+
         if progress_callback:
             progress_callback(2, 2, "Tamamlandı")
         return True
     except Exception as e:
         raise Exception(f"PDF Sıkıştırma Hatası: {e}")
     finally:
-        if work_tmp and os.path.isfile(work_tmp):
-            try:
-                os.remove(work_tmp)
-            except Exception:
-                pass
+        for _tmp in (pike_keep, gs_keep):
+            if _tmp and os.path.isfile(_tmp):
+                try:
+                    os.remove(_tmp)
+                except OSError:
+                    pass
 
 
 # --- 8. PDF ŞİFRELEME ---

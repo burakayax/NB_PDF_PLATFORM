@@ -41,24 +41,67 @@ def create_workdir(prefix: str = "nbpdf-web-") -> Path:
     return Path(tempfile.mkdtemp(prefix=prefix))
 
 
-_MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB
+_DEFAULT_MAX_UPLOAD_BYTES = 200 * 1024 * 1024  # 200 MB fallback (kimlik doğrulanmamış / plan bilinmiyor)
+
+_UNSET: object = object()  # max_bytes parametresi verilmedi sentinel'i
+
+
+def max_bytes_from_decision(decision: dict) -> int | None:
+    """Entitlement check kararından izin verilen maksimum yükleme bayt sayısını döndürür.
+    999999 veya belirtilmemişse None (sınırsız) döner; aksi hâlde bayt cinsinden limit.
+    """
+    mb = decision.get("fileSizeLimitMB") if isinstance(decision, dict) else None
+    if mb is None or mb >= 999999:
+        return None  # sınırsız
+    return int(mb) * 1024 * 1024
 
 
 _ALLOWED_CONTENT_TYPES = frozenset({
     "application/pdf",
+    "application/x-pdf",
+    "application/acrobat",
+    "application/vnd.pdf",
+    "text/pdf",
+    "text/x-pdf",
+    "application/octet-stream",
+    "binary/octet-stream",
+    "",  # Bazı tarayıcılar content-type göndermez; magic byte kontrolü devreye girer
+})
+
+_ALLOWED_OFFICE_CONTENT_TYPES = frozenset({
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/msword",
+    "application/vnd.ms-excel",
     "application/octet-stream",
     "binary/octet-stream",
 })
 
 _PDF_MAGIC = b"%PDF-"
 
+_OFFICE_EXTENSIONS = frozenset({
+    # Word
+    ".docx", ".doc", ".docm", ".dotx", ".dotm", ".odt", ".rtf",
+    # Excel
+    ".xlsx", ".xls", ".xlsm", ".xlsb", ".xltx", ".xltm", ".ods", ".csv",
+    # PowerPoint
+    ".pptx", ".ppt", ".pptm", ".potx", ".potm", ".odp",
+})
 
-async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = None) -> Path:
-    """Tarayıcıdan gelen dosyayı diske yazar ve işlem motoruna uygun hale getirir."""
+
+async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = None, max_bytes: object = _UNSET) -> Path:
+    """Tarayıcıdan gelen dosyayı diske yazar ve işlem motoruna uygun hale getirir.
+
+    max_bytes=_UNSET (varsayılan) → 200 MB fallback
+    max_bytes=None               → sınırsız (Business / sınırsız plan)
+    max_bytes=<int>              → belirtilen bayt limiti
+    """
     from fastapi import HTTPException
     content_type = (upload.content_type or "").split(";")[0].strip().lower()
     if content_type not in _ALLOWED_CONTENT_TYPES:
-        raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
+        raise HTTPException(status_code=415, detail=f"Yalnızca PDF dosyaları kabul edilmektedir. (content_type={content_type!r})")
+
+    effective_max: int | None = _DEFAULT_MAX_UPLOAD_BYTES if max_bytes is _UNSET else max_bytes  # type: ignore[assignment]
 
     # Dosya adında path traversal koruması: yalnızca basename kullan.
     raw_name = filename or upload.filename or "upload.bin"
@@ -74,16 +117,77 @@ async def save_upload(upload: UploadFile, workdir: Path, filename: str | None = 
                 break
             if first_chunk:
                 first_chunk = False
-                # Magic byte doğrulama: ilk 5 bayt %PDF- olmalı.
-                if len(chunk) < 5 or chunk[:5] != _PDF_MAGIC:
+                # PDF spec: %PDF- ilk 1024 byte içinde olmalı (byte 0'da olmak zorunda değil).
+                # Bazı PDF oluşturucular BOM veya boşluk karakteri ekler.
+                if _PDF_MAGIC not in chunk[:1024]:
                     output.close()
                     target_path.unlink(missing_ok=True)
                     raise HTTPException(status_code=415, detail="Yalnızca PDF dosyaları kabul edilmektedir.")
             written += len(chunk)
-            if written > _MAX_UPLOAD_BYTES:
+            if effective_max is not None and written > effective_max:
                 output.close()
                 target_path.unlink(missing_ok=True)
-                raise HTTPException(status_code=413, detail="Dosya boyutu 200 MB sınırını aşıyor.")
+                limit_mb = effective_max // (1024 * 1024)
+                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
+            output.write(chunk)
+    await upload.close()
+    return target_path
+
+
+_IMAGE_EXTENSIONS = frozenset({".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif", ".webp"})
+
+
+async def save_any_upload(upload: UploadFile, workdir: Path, filename: str | None = None, max_bytes: object = _UNSET) -> Path:
+    """Herhangi bir dosyayı tip kontrolü yapmadan diske yazar."""
+    from fastapi import HTTPException
+    effective_max: int | None = _DEFAULT_MAX_UPLOAD_BYTES if max_bytes is _UNSET else max_bytes  # type: ignore[assignment]
+    raw_name = filename or upload.filename or "upload.bin"
+    safe_name = Path(raw_name).name or "upload.bin"
+    target_path = workdir / safe_name
+
+    written = 0
+    with target_path.open("wb") as output:
+        while True:
+            chunk = upload.file.read(256 * 1024)
+            if not chunk:
+                break
+            written += len(chunk)
+            if effective_max is not None and written > effective_max:
+                output.close()
+                target_path.unlink(missing_ok=True)
+                limit_mb = effective_max // (1024 * 1024)
+                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
+            output.write(chunk)
+    await upload.close()
+    return target_path
+
+
+async def save_office_upload(upload: UploadFile, workdir: Path, filename: str | None = None, max_bytes: object = _UNSET) -> Path:
+    """Word veya Excel dosyasını diske yazar; PDF magic byte kontrolü yapılmaz."""
+    from fastapi import HTTPException
+    effective_max: int | None = _DEFAULT_MAX_UPLOAD_BYTES if max_bytes is _UNSET else max_bytes  # type: ignore[assignment]
+    raw_name = filename or upload.filename or "upload.bin"
+    safe_name = Path(raw_name).name or "upload.bin"
+    ext = Path(safe_name).suffix.lower()
+    if ext not in _OFFICE_EXTENSIONS:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Desteklenmeyen dosya türü. Kabul edilen: {', '.join(sorted(_OFFICE_EXTENSIONS))}",
+        )
+    target_path = workdir / safe_name
+
+    written = 0
+    with target_path.open("wb") as output:
+        while True:
+            chunk = upload.file.read(256 * 1024)
+            if not chunk:
+                break
+            written += len(chunk)
+            if effective_max is not None and written > effective_max:
+                output.close()
+                target_path.unlink(missing_ok=True)
+                limit_mb = effective_max // (1024 * 1024)
+                raise HTTPException(status_code=413, detail=f"Dosya boyutu {limit_mb} MB sınırını aşıyor.")
             output.write(chunk)
     await upload.close()
     return target_path

@@ -1,0 +1,293 @@
+<Invoice xmlns:ubltr="urn:oasis:names:specification:ubl:schema:xsd:TurkishCustomizationExtensionComponents" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ccts="urn:un:unece:uncefact:documentation:2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+<ext:UBLExtensions>
+<ext:UBLExtension>
+<ext:ExtensionContent> </ext:ExtensionContent>
+</ext:UBLExtension>
+</ext:UBLExtensions>
+<cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+<cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+<cbc:ProfileID>TICARIFATURA</cbc:ProfileID>
+<cbc:ID>EFA2025000000211</cbc:ID>
+<cbc:CopyIndicator>false</cbc:CopyIndicator>
+<cbc:UUID>ab1f811d-5d85-447f-a320-3ed9ae5c2ecd</cbc:UUID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:IssueTime>12:30:07.8887240+03:00</cbc:IssueTime>
+<cbc:InvoiceTypeCode>IHRACKAYITLI</cbc:InvoiceTypeCode>
+<cbc:Note>3065 sayılı KDV Kanununun Geçici 17 nci maddesi hükmü gereğince KDV tahsil edilmemiştir.</cbc:Note>
+<cbc:Note>Yalnız BeşYüzTürkLirası</cbc:Note>
+<cbc:Note>E-Fatura izni kapsamında elektronik ortamda iletilmiştir.Ödeme Yöntemi: Kredi Kartı İle Ödendi</cbc:Note>
+<cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+<cbc:LineCountNumeric>2</cbc:LineCountNumeric>
+<cac:AdditionalDocumentReference>
+<cbc:ID>ab1f811d-5d85-447f-a320-3ed9ae5c2ecd</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>CUST_INV_ID</cbc:DocumentTypeCode>
+</cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference>
+<cbc:ID>0100</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>OUTPUT_TYPE</cbc:DocumentTypeCode>
+</cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference>
+<cbc:ID>99</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>TRANSPORT_TYPE</cbc:DocumentTypeCode>
+</cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference>
+<cbc:ID>ELEKTRONIK</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>EREPSENDT</cbc:DocumentTypeCode>
+</cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference>
+<cbc:ID>0</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>SendingType</cbc:DocumentTypeCode>
+<cbc:DocumentType>KAGIT</cbc:DocumentType>
+</cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference>
+<cbc:ID>urn:mail:defaultpk@birfatura.com</cbc:ID>
+<cbc:IssueDate>2025-04-04</cbc:IssueDate>
+<cbc:DocumentTypeCode>recvpk</cbc:DocumentTypeCode>
+</cac:AdditionalDocumentReference>
+<cac:Signature>
+<cbc:ID schemeID="VKN_TCKN">1234567801</cbc:ID>
+<cac:SignatoryParty>
+<cac:PartyIdentification>
+<cbc:ID schemeID="VKN">1234567801</cbc:ID>
+</cac:PartyIdentification>
+<cac:PostalAddress>
+<cbc:StreetName>Kuşkavağı, Belediye Cd. No:78, 07070 Konyaaltı/Antalya</cbc:StreetName>
+<cbc:CitySubdivisionName>Konyaaltı</cbc:CitySubdivisionName>
+<cbc:CityName>Antalya</cbc:CityName>
+<cac:Country>
+<cbc:Name>TÜRKİYE</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+</cac:SignatoryParty>
+<cac:DigitalSignatureAttachment>
+<cac:ExternalReference>
+<cbc:URI>#Signature</cbc:URI>
+</cac:ExternalReference>
+</cac:DigitalSignatureAttachment>
+</cac:Signature>
+<cac:AccountingSupplierParty>
+<cac:Party>
+<cbc:WebsiteURI/>
+<cac:PartyIdentification>
+<cbc:ID schemeID="VKN">1234567801</cbc:ID>
+</cac:PartyIdentification>
+<cac:PartyIdentification>
+<cbc:ID schemeID="TICARETSICILNO"/>
+</cac:PartyIdentification>
+<cac:PartyIdentification>
+<cbc:ID schemeID="MERSISNO"/>
+</cac:PartyIdentification>
+<cac:PartyName>
+<cbc:Name>Test Firma</cbc:Name>
+</cac:PartyName>
+<cac:PostalAddress>
+<cbc:StreetName>Kuşkavağı, Belediye Cd. No:78, 07070 Konyaaltı/Antalya</cbc:StreetName>
+<cbc:CitySubdivisionName>Konyaaltı</cbc:CitySubdivisionName>
+<cbc:CityName>Antalya</cbc:CityName>
+<cac:Country>
+<cbc:Name>Türkiye</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+<cac:PartyTaxScheme>
+<cac:TaxScheme>
+<cbc:Name>Antalya</cbc:Name>
+</cac:TaxScheme>
+</cac:PartyTaxScheme>
+<cac:Contact>
+<cbc:Telephone>05555555555</cbc:Telephone>
+<cbc:ElectronicMail>info@firma.com</cbc:ElectronicMail>
+</cac:Contact>
+</cac:Party>
+</cac:AccountingSupplierParty>
+<cac:AccountingCustomerParty>
+<cac:Party>
+<cac:PartyIdentification>
+<cbc:ID schemeID="VKN">1770605950</cbc:ID>
+</cac:PartyIdentification>
+<cac:PartyName>
+<cbc:Name>Birfatura Yazılım Teknolojileri Anonim Şirketi</cbc:Name>
+</cac:PartyName>
+<cac:PostalAddress>
+<cbc:StreetName>Üniversiteler Mh. Lodumlu Köy Yolu No:5 bilkent Cyberpark Tepebinası 413</cbc:StreetName>
+<cbc:BuildingName/>
+<cbc:CitySubdivisionName>Çankaya</cbc:CitySubdivisionName>
+<cbc:CityName>Ankara</cbc:CityName>
+<cac:Country>
+<cbc:Name>Türkiye</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+<cac:PartyTaxScheme>
+<cac:TaxScheme>
+<cbc:Name>Ankara Kurumlar Vergi Dairesi Müdürlüğü</cbc:Name>
+</cac:TaxScheme>
+</cac:PartyTaxScheme>
+<cac:Contact>
+<cbc:Telephone>03123170220</cbc:Telephone>
+<cbc:ElectronicMail/>
+</cac:Contact>
+</cac:Party>
+</cac:AccountingCustomerParty>
+<cac:TaxTotal>
+<cbc:TaxAmount currencyID="TRY">100.0</cbc:TaxAmount>
+<cac:TaxSubtotal>
+<cbc:TaxableAmount currencyID="TRY">500.00</cbc:TaxableAmount>
+<cbc:TaxAmount currencyID="TRY">100.00</cbc:TaxAmount>
+<cbc:Percent>20</cbc:Percent>
+<cac:TaxCategory>
+<cbc:Name>KDV</cbc:Name>
+<cbc:TaxExemptionReasonCode>702</cbc:TaxExemptionReasonCode>
+<cbc:TaxExemptionReason>DİİB ve Geçici Kabul Rejimi Kapsamındaki Satışlar</cbc:TaxExemptionReason>
+<cac:TaxScheme>
+<cbc:Name>KDV</cbc:Name>
+<cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+</cac:TaxScheme>
+</cac:TaxCategory>
+</cac:TaxSubtotal>
+</cac:TaxTotal>
+<cac:LegalMonetaryTotal>
+<cbc:LineExtensionAmount currencyID="TRY">500.00</cbc:LineExtensionAmount>
+<cbc:TaxExclusiveAmount currencyID="TRY">500.00</cbc:TaxExclusiveAmount>
+<cbc:TaxInclusiveAmount currencyID="TRY">600.00</cbc:TaxInclusiveAmount>
+<cbc:AllowanceTotalAmount currencyID="TRY">0.00</cbc:AllowanceTotalAmount>
+<cbc:PayableAmount currencyID="TRY">500.00</cbc:PayableAmount>
+</cac:LegalMonetaryTotal>
+<cac:InvoiceLine>
+<cbc:ID>1</cbc:ID>
+<cbc:InvoicedQuantity unitCode="NIU">1.0000</cbc:InvoicedQuantity>
+<cbc:LineExtensionAmount currencyID="TRY">300.00</cbc:LineExtensionAmount>
+<cac:Delivery>
+<cac:Shipment>
+<cbc:ID/>
+<cac:GoodsItem>
+<cbc:RequiredCustomsID>147258369121</cbc:RequiredCustomsID>
+</cac:GoodsItem>
+<cac:TransportHandlingUnit>
+<cac:CustomsDeclaration>
+<cbc:ID/>
+<cac:IssuerParty>
+<cac:PartyIdentification>
+<cbc:ID schemeID="DIBSATIRKOD">36985274111</cbc:ID>
+</cac:PartyIdentification>
+<cac:PartyName>
+<cbc:Name>Test Firma</cbc:Name>
+</cac:PartyName>
+<cac:PostalAddress>
+<cbc:StreetName>Kuşkavağı, Belediye Cd. No:78, 07070 Konyaaltı/Antalya</cbc:StreetName>
+<cbc:CitySubdivisionName>Konyaaltı</cbc:CitySubdivisionName>
+<cbc:CityName>Antalya</cbc:CityName>
+<cac:Country>
+<cbc:Name>TÜRKİYE</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+</cac:IssuerParty>
+</cac:CustomsDeclaration>
+</cac:TransportHandlingUnit>
+</cac:Shipment>
+</cac:Delivery>
+<cac:TaxTotal>
+<cbc:TaxAmount currencyID="TRY">60.00</cbc:TaxAmount>
+<cac:TaxSubtotal>
+<cbc:TaxableAmount currencyID="TRY">300.00</cbc:TaxableAmount>
+<cbc:TaxAmount currencyID="TRY">60.00</cbc:TaxAmount>
+<cbc:CalculationSequenceNumeric>1</cbc:CalculationSequenceNumeric>
+<cbc:Percent>20</cbc:Percent>
+<cac:TaxCategory>
+<cbc:TaxExemptionReasonCode>702</cbc:TaxExemptionReasonCode>
+<cbc:TaxExemptionReason>DİİB ve Geçici Kabul Rejimi Kapsamındaki Satışlar</cbc:TaxExemptionReason>
+<cac:TaxScheme>
+<cbc:Name>KDV</cbc:Name>
+<cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+</cac:TaxScheme>
+</cac:TaxCategory>
+</cac:TaxSubtotal>
+</cac:TaxTotal>
+<cac:Item>
+<cbc:Description/>
+<cbc:Name>Outdoor Kafa Feneri Usb Şarjlı Led Kamp Kafa Lambası</cbc:Name>
+<cac:BuyersItemIdentification>
+<cbc:ID/>
+</cac:BuyersItemIdentification>
+<cac:SellersItemIdentification>
+<cbc:ID>KFL6-N11</cbc:ID>
+</cac:SellersItemIdentification>
+<cac:AdditionalItemIdentification>
+<cbc:ID/>
+</cac:AdditionalItemIdentification>
+</cac:Item>
+<cac:Price>
+<cbc:PriceAmount currencyID="TRY">300.000000</cbc:PriceAmount>
+</cac:Price>
+</cac:InvoiceLine>
+<cac:InvoiceLine>
+<cbc:ID>2</cbc:ID>
+<cbc:InvoicedQuantity unitCode="NIU">1.0000</cbc:InvoicedQuantity>
+<cbc:LineExtensionAmount currencyID="TRY">200.00</cbc:LineExtensionAmount>
+<cac:Delivery>
+<cac:Shipment>
+<cbc:ID/>
+<cac:GoodsItem>
+<cbc:RequiredCustomsID>321654987322</cbc:RequiredCustomsID>
+</cac:GoodsItem>
+<cac:TransportHandlingUnit>
+<cac:CustomsDeclaration>
+<cbc:ID/>
+<cac:IssuerParty>
+<cac:PartyIdentification>
+<cbc:ID schemeID="DIBSATIRKOD">45682793144</cbc:ID>
+</cac:PartyIdentification>
+<cac:PartyName>
+<cbc:Name>Test Firma</cbc:Name>
+</cac:PartyName>
+<cac:PostalAddress>
+<cbc:StreetName>Kuşkavağı, Belediye Cd. No:78, 07070 Konyaaltı/Antalya</cbc:StreetName>
+<cbc:CitySubdivisionName>Konyaaltı</cbc:CitySubdivisionName>
+<cbc:CityName>Antalya</cbc:CityName>
+<cac:Country>
+<cbc:Name>TÜRKİYE</cbc:Name>
+</cac:Country>
+</cac:PostalAddress>
+</cac:IssuerParty>
+</cac:CustomsDeclaration>
+</cac:TransportHandlingUnit>
+</cac:Shipment>
+</cac:Delivery>
+<cac:TaxTotal>
+<cbc:TaxAmount currencyID="TRY">40.00</cbc:TaxAmount>
+<cac:TaxSubtotal>
+<cbc:TaxableAmount currencyID="TRY">200.00</cbc:TaxableAmount>
+<cbc:TaxAmount currencyID="TRY">40.00</cbc:TaxAmount>
+<cbc:CalculationSequenceNumeric>2</cbc:CalculationSequenceNumeric>
+<cbc:Percent>20</cbc:Percent>
+<cac:TaxCategory>
+<cbc:TaxExemptionReasonCode>702</cbc:TaxExemptionReasonCode>
+<cbc:TaxExemptionReason>DİİB ve Geçici Kabul Rejimi Kapsamındaki Satışlar</cbc:TaxExemptionReason>
+<cac:TaxScheme>
+<cbc:Name>KDV</cbc:Name>
+<cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+</cac:TaxScheme>
+</cac:TaxCategory>
+</cac:TaxSubtotal>
+</cac:TaxTotal>
+<cac:Item>
+<cbc:Description/>
+<cbc:Name>Taşınabilir Mini USB 3 LED Beyaz Lamba 5730 SMD Kamp Stick Led</cbc:Name>
+<cac:BuyersItemIdentification>
+<cbc:ID/>
+</cac:BuyersItemIdentification>
+<cac:SellersItemIdentification>
+<cbc:ID>B2</cbc:ID>
+</cac:SellersItemIdentification>
+<cac:AdditionalItemIdentification>
+<cbc:ID/>
+</cac:AdditionalItemIdentification>
+</cac:Item>
+<cac:Price>
+<cbc:PriceAmount currencyID="TRY">200.000000</cbc:PriceAmount>
+</cac:Price>
+</cac:InvoiceLine>
+</Invoice>

@@ -61,7 +61,7 @@ export async function trySendWelcomeAfterRegistration(user: {
   }
   const name = displayNameForEmail(user);
   try {
-    await sendWelcomeEmailToUser(user.email, { name, credits: 0, userId: user.id });
+    await sendWelcomeEmailToUser(user.email, { name, userId: user.id });
   } catch (e) {
     console.warn("welcome email failed", e);
   }

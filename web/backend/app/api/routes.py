@@ -32,6 +32,8 @@ from app.core.operations import (
     operation_capabilities,
     parse_pages_text,
     save_upload,
+    save_office_upload,
+    max_bytes_from_decision,
 )
 from app.core.jobs import (
     cleanup_job,
@@ -57,6 +59,7 @@ from app.core.saas_gate import (
     entitlement_consume,
     saas_current_user_id,
     saas_session_ok,
+    get_user_file_size_limit_bytes,
 )
 from app.limiter import limiter
 
@@ -177,7 +180,7 @@ async def merge_pdfs(
         for idx, upload in enumerate(files):
             orig_name = Path(upload.filename or "upload.pdf").name
             unique_name = f"{idx:04d}__{orig_name}"
-            saved = await save_upload(upload, workdir, filename=unique_name)
+            saved = await save_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
             saved_paths.append(saved)
 
         passwords: dict[str, str] = {}
@@ -302,11 +305,12 @@ async def inspect_pdf(
         file.filename,
     )
     await saas_session_ok(token)
-    logger.info("inspect_pdf saas_session_ok done filename=%s", file.filename)
+    logger.info("inspect_pdf saas_session_ok done filename=%s content_type=%s", file.filename, file.content_type)
+    max_bytes = await get_user_file_size_limit_bytes(token)
 
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes)
         p = str(saved_file)
         requires_pw, encrypt_diag = await run_cpu_bound(
             engine.classify_pdf_password_requirement,
@@ -357,7 +361,7 @@ async def split_pdf(
 
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved_file)
         if (await run_cpu_bound(engine.is_pdf_encrypted, sp)) and not pwd:
@@ -400,7 +404,7 @@ async def pdf_to_word(
     decision = await entitlement_check(token, "pdf-to-word")
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         pwd = password.strip() or None
         sp = str(saved_file)
         if (await run_cpu_bound(engine.is_pdf_encrypted, sp)) and not pwd:
@@ -448,7 +452,7 @@ async def word_to_pdf(
     decision = await entitlement_check(token, "word-to-pdf")
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_office_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
@@ -498,7 +502,7 @@ async def excel_to_pdf(
     decision = await entitlement_check(token, "excel-to-pdf")
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_office_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
@@ -549,7 +553,7 @@ async def pdf_to_excel(
     decision = await entitlement_check(token, "pdf-to-excel")
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Excel", "xlsx")
         output_path = workdir / output_name
@@ -603,7 +607,7 @@ async def compress_pdf(
 
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Sıkıştırılmış", "pdf")
         output_path = workdir / output_name
@@ -720,10 +724,14 @@ async def batch_process(
     try:
         output_paths: list[tuple[Path, str]] = []
 
+        _office_tools = {"word-to-pdf", "excel-to-pdf", "ppt-to-pdf"}
         for idx, upload in enumerate(files):
             orig_name = Path(upload.filename or f"file_{idx}.pdf").name
             unique_name = f"{idx:04d}__{orig_name}"
-            saved = await save_upload(upload, workdir, filename=unique_name)
+            if tool_type in _office_tools:
+                saved = await save_office_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
+            else:
+                saved = await save_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
             sp = str(saved)
 
             def _process_one(sp=sp, orig_name=orig_name, idx=idx) -> tuple[Path, str]:
@@ -900,7 +908,7 @@ async def encrypt_pdf(
     decision = await entitlement_check(token, "encrypt")
     workdir = create_workdir()
     try:
-        saved_file = await save_upload(file, workdir)
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Şifreli", "pdf")
         output_path = workdir / output_name

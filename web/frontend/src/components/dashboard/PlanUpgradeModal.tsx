@@ -34,6 +34,7 @@ export function PlanUpgradeModal({
   const [billingInfoOpen, setBillingInfoOpen] = useState(false);
   const [billingInfoPlanId, setBillingInfoPlanId] = useState<PlanId | null>(null);
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<"MONTHLY" | "YEARLY">("MONTHLY");
+  const [selectedExtraSeats, setSelectedExtraSeats] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => {
@@ -53,10 +54,11 @@ export function PlanUpgradeModal({
   }, [open, onClose]);
 
   const handleSelectPlan = useCallback(
-    (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: "MONTHLY" | "YEARLY" = "MONTHLY") => {
+    (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: "MONTHLY" | "YEARLY" = "MONTHLY", extraSeats = 0) => {
       if (!accessToken || !user) return;
       setBillingInfoPlanId(planId);
       setSelectedBillingCycle(billingCycle);
+      setSelectedExtraSeats(extraSeats);
       setBillingInfoOpen(true);
     },
     [accessToken, user],
@@ -114,6 +116,7 @@ export function PlanUpgradeModal({
           open={summaryOpen}
           planId={selectedPlanId}
           billingCycle={selectedBillingCycle}
+          extraSeats={selectedExtraSeats}
           accessToken={accessToken}
           language={language}
           onClose={() => { setSummaryOpen(false); setSelectedPlanId(null); }}

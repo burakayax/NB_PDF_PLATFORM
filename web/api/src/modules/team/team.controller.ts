@@ -2,31 +2,90 @@ import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { prisma } from "../../lib/prisma.js";
 import {
+  createTeamForOwner,
   inviteTeamMember,
   acceptTeamInvite,
   revokeTeamMember,
   getTeamDashboard,
   logMemberActivity,
+  setMemberRole,
 } from "./team.service.js";
 import { generateCSVReport, generateExcelReport } from "./report.generator.js";
 
 const teamRouter = Router();
+
+// Public endpoint — no auth required
+teamRouter.get("/invite/preview", async (req, res) => {
+  try {
+    const { token } = req.query as { token?: string };
+    if (!token) {
+      res.status(400).json({ message: "Token gerekli." });
+      return;
+    }
+    const member = await prisma.teamMember.findUnique({
+      where: { inviteToken: token },
+      include: { team: { include: { owner: { select: { firstName: true, lastName: true, email: true } } } } },
+    });
+    if (!member) {
+      res.status(404).json({ message: "INVITE_NOT_FOUND" });
+      return;
+    }
+    if (member.inviteStatus !== "PENDING") {
+      res.status(400).json({ message: "INVITE_ALREADY_USED" });
+      return;
+    }
+    const ownerName =
+      [member.team.owner.firstName, member.team.owner.lastName].filter(Boolean).join(" ") ||
+      member.team.owner.email;
+    res.json({ email: member.inviteEmail, teamName: member.team.name, ownerName });
+  } catch {
+    res.status(500).json({ message: "Sunucu hatası." });
+  }
+});
 
 teamRouter.use(requireAuth);
 
 teamRouter.get("/dashboard", async (req, res) => {
   try {
     const userId = req.authUser!.id;
-    const team = await prisma.team.findUnique({ where: { ownerId: userId } });
-    if (!team) {
-      res.status(404).json({ message: "Ekip bulunamadı." });
+    const authUser = req.authUser!;
+
+    // Manager: patronun teamOwnerId'si üzerinden ekibe eriş
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { teamMemberRole: true, teamOwnerId: true, plan: true, firstName: true, lastName: true, email: true },
+    });
+    if (dbUser?.teamMemberRole === "MANAGER" && dbUser.teamOwnerId) {
+      const ownerTeam = await prisma.team.findUnique({ where: { ownerId: dbUser.teamOwnerId } });
+      if (!ownerTeam) {
+        res.status(404).json({ message: "Ekip bulunamadı." });
+        return;
+      }
+      const data = await getTeamDashboard(ownerTeam.id, ownerTeam.ownerId);
+      res.json(data);
       return;
     }
+
+    let team = await prisma.team.findUnique({ where: { ownerId: userId } });
+
+    if (!team) {
+      const user = dbUser;
+      if (user?.plan !== "BUSINESS") {
+        res.status(403).json({ message: "Ekip özelliği sadece Business planına dahildir." });
+        return;
+      }
+      const ownerName =
+        [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+        user.email?.split("@")[0] ||
+        "Business";
+      team = await createTeamForOwner(userId, ownerName);
+    }
+
     const data = await getTeamDashboard(team.id, userId);
     res.json(data);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Sunucu hatası.";
-    res.status(403).json({ message: msg });
+    res.status(500).json({ message: msg });
   }
 });
 
@@ -36,12 +95,33 @@ teamRouter.post("/invite", async (req, res) => {
     const { email } = req.body as { email: string };
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { firstName: true, lastName: true, email: true },
+      select: { firstName: true, lastName: true, email: true, plan: true, teamMemberRole: true, teamOwnerId: true },
     });
-    const team = await prisma.team.findUnique({ where: { ownerId: userId } });
-    if (!team) {
-      res.status(404).json({ message: "Ekip bulunamadı." });
+
+    // Manager: patronun ekibine davet gönderebilir
+    if (user?.teamMemberRole === "MANAGER" && user.teamOwnerId) {
+      const ownerTeam = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+      if (!ownerTeam) {
+        res.status(404).json({ message: "Ekip bulunamadı." });
+        return;
+      }
+      const managerName = [user.firstName, user.lastName].filter(Boolean).join(" ") || (user.email ?? "Yönetici");
+      const member = await inviteTeamMember(ownerTeam.id, email, managerName, ownerTeam.name);
+      res.status(201).json(member);
       return;
+    }
+
+    let team = await prisma.team.findUnique({ where: { ownerId: userId } });
+    if (!team) {
+      if (user?.plan !== "BUSINESS") {
+        res.status(403).json({ message: "Ekip özelliği sadece Business planına dahildir." });
+        return;
+      }
+      const ownerName =
+        [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+        user?.email?.split("@")[0] ||
+        "Business";
+      team = await createTeamForOwner(userId, ownerName);
     }
     const patronName =
       [user?.firstName, user?.lastName].filter(Boolean).join(" ") || (user?.email ?? "Patron");
@@ -69,16 +149,47 @@ teamRouter.post("/invite/accept", async (req, res) => {
   }
 });
 
+teamRouter.patch("/members/:memberId/role", async (req, res) => {
+  try {
+    const userId = req.authUser!.id;
+    const { memberId } = req.params;
+    const { role } = req.body as { role: "MEMBER" | "MANAGER" };
+    if (role !== "MEMBER" && role !== "MANAGER") {
+      res.status(400).json({ message: "Geçersiz rol." });
+      return;
+    }
+    const team = await prisma.team.findUnique({ where: { ownerId: userId } });
+    if (!team) {
+      res.status(403).json({ message: "Bu işlemi yalnızca ekip sahibi yapabilir." });
+      return;
+    }
+    const result = await setMemberRole(team.id, memberId, userId, role);
+    res.json(result);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Rol güncellenemedi.";
+    res.status(400).json({ message: msg });
+  }
+});
+
 teamRouter.delete("/members/:memberId", async (req, res) => {
   try {
     const userId = req.authUser!.id;
     const { memberId } = req.params;
-    const team = await prisma.team.findUnique({ where: { ownerId: userId } });
+    const dbU = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { teamMemberRole: true, teamOwnerId: true },
+    });
+    let team = await prisma.team.findUnique({ where: { ownerId: userId } });
+
+    // Manager: patronun teamOwnerId üzerinden
+    if (!team && dbU?.teamMemberRole === "MANAGER" && dbU.teamOwnerId) {
+      team = await prisma.team.findUnique({ where: { ownerId: dbU.teamOwnerId } });
+    }
     if (!team) {
       res.status(404).json({ message: "Ekip bulunamadı." });
       return;
     }
-    await revokeTeamMember(team.id, memberId, userId);
+    await revokeTeamMember(team.id, memberId, team.ownerId);
     res.json({ success: true });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Üye kaldırılamadı.";
@@ -162,6 +273,52 @@ teamRouter.post("/activity", async (req, res) => {
     res.json({ ok: true });
   } catch {
     res.json({ ok: false });
+  }
+});
+
+// PATCH /api/team/seats — koltuk sayısını azalt (sonraki dönemde devreye girer)
+teamRouter.patch("/seats", async (req, res) => {
+  try {
+    const userId = req.authUser!.id;
+    const { extraSeats } = req.body as { extraSeats: number };
+
+    if (typeof extraSeats !== "number" || extraSeats < 0 || extraSeats > 95) {
+      res.status(400).json({ message: "Geçersiz koltuk sayısı." });
+      return;
+    }
+
+    const team = await prisma.team.findUnique({
+      where: { ownerId: userId },
+      include: { members: { where: { inviteStatus: "ACCEPTED" } } },
+    });
+    if (!team) {
+      res.status(404).json({ message: "Ekip bulunamadı." });
+      return;
+    }
+
+    const newTotal = team.maxSeats + extraSeats;
+    if (team.members.length > newTotal) {
+      res.status(400).json({
+        message: `Aktif ${team.members.length} üye var. Koltuk sayısını en az ${Math.max(0, team.members.length - team.maxSeats)} ekstra olarak ayarlayın.`,
+      });
+      return;
+    }
+
+    await prisma.team.update({
+      where: { id: team.id },
+      data: { extraSeats },
+    });
+
+    res.json({
+      ok: true,
+      totalSeats: newTotal,
+      message: extraSeats < team.extraSeats
+        ? `Koltuk sayısı azaltıldı. Çıkardığınız koltukların erişimi bu fatura döneminin sonuna kadar devam edecektir. Gelecek ay faturanız ${5 + extraSeats} kişi üzerinden güncellenecektir.`
+        : null,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Sunucu hatası.";
+    res.status(500).json({ message: msg });
   }
 });
 
