@@ -6,12 +6,20 @@ import { createPaymentCheckoutSession } from "./payment.service.js";
 import { getPublicTierPricingRows } from "./payment-pricing-tiers.js";
 import { isCheckoutCurrency, type CheckoutCurrency } from "./pricing-matrix.js";
 import { prisma } from "../../lib/prisma.js";
+import { validateCouponForUser } from "../coupon/coupon.service.js";
 
 const planPaymentBodySchema = z.object({
   planId: z.enum(["STARTER", "PLUS", "PRO", "BUSINESS"]),
   currency: z.enum(["TRY", "USD", "EUR"]).optional().default("TRY"),
   billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional().default("MONTHLY"),
+  couponCode: z.string().optional().nullable(),
+  extraSeats: z.number().int().min(0).max(95).optional().default(0),
+  seatsOnly: z.boolean().optional().default(false),
 });
+
+/** Extra seat monthly prices (net, excluding VAT) */
+const EXTRA_SEAT_PRICE_TRY = 199; // ₺199/kişi/ay
+const EXTRA_SEAT_PRICE_USD = 5.99; // $5.99/kişi/ay
 
 /** TRY prices — decimal format ("799.00" = 799 TL). iyzico requires two-decimal strings. */
 const PLAN_PRICES_TRY: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
@@ -47,7 +55,7 @@ export async function initializePaymentsController(request: Request, response: R
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
   }
 
-  const { planId, billingCycle } = parsed.data;
+  const { planId, billingCycle, couponCode, extraSeats, seatsOnly } = parsed.data;
   // EUR iyzico tarafından desteklenmez; USD fiyat bandına yönlendir
   const rawCurrency = parsed.data.currency;
   const checkoutCurrency: CheckoutCurrency = rawCurrency === "EUR" ? "USD" : (rawCurrency as CheckoutCurrency);
@@ -74,7 +82,44 @@ export async function initializePaymentsController(request: Request, response: R
 
   const isYearly = billingCycle === "YEARLY";
   const priceObj = checkoutCurrency === "USD" ? PLAN_PRICES_USD[planId] : PLAN_PRICES_TRY[planId];
-  const priceTryOverride = isYearly ? priceObj.yearly : priceObj.monthly;
+  const seatUnitPrice = checkoutCurrency === "USD" ? EXTRA_SEAT_PRICE_USD : EXTRA_SEAT_PRICE_TRY;
+  const seatMonthlyTotal = (extraSeats ?? 0) * seatUnitPrice;
+  // Yıllık koltuklarda %17 indirim (10 ay fiyatına 12 ay = aylık * 12 * 0.83)
+  const YEARLY_SEAT_DISCOUNT = 0.83;
+  const seatTotal = isYearly
+    ? Math.round(seatMonthlyTotal * 12 * YEARLY_SEAT_DISCOUNT * 100) / 100
+    : seatMonthlyTotal;
+  // seatsOnly=true: mevcut Business sahibi sadece ek koltuk satın alıyor
+  const basePriceNum = seatsOnly
+    ? seatTotal
+    : parseFloat(isYearly ? priceObj.yearly : priceObj.monthly) + seatTotal;
+  const originalBasePrice = basePriceNum.toFixed(2);
+  let basePrice = originalBasePrice;
+
+  let appliedCouponId: string | null = null;
+  let appliedDiscountPercent: number | null = null;
+
+  // Kupon varsa doğrula ve KDV matrahına (net fiyat) uygula.
+  // PLAN_PRICES_* değerleri KDV hariç (net) fiyatlardır.
+  // KDV Kanunu Md.25: iskonto faturada gösterilmeli ve matrahtan düşülür.
+  if (couponCode?.trim()) {
+    const v = await validateCouponForUser(couponCode, userId);
+    if (!v.ok) {
+      throw new HttpError(
+        400,
+        v.reason === "limit" ? "Bu promosyon kodunun kullanım limitine ulaştınız." : "Geçersiz veya pasif promosyon kodu.",
+      );
+    }
+    appliedCouponId = v.coupon.id;
+    appliedDiscountPercent = v.coupon.discountPercent;
+    const netPrice = parseFloat(basePrice);
+    const discountedNet = Math.round(netPrice * (1 - v.coupon.discountPercent / 100) * 100) / 100;
+    basePrice = Math.max(discountedNet, 0.01).toFixed(2);
+  }
+
+  // basePrice KDV hariç (net) fiyattır; createPaymentCheckoutSession içinde
+  // buildCheckoutPricing KDV'yi ekler ve iyzico'ya gross gönderir.
+  const priceTryOverride = basePrice;
   const billing = isYearly ? "annual" : "monthly";
   const subscriptionDaysOverride = isYearly ? 365 : 30;
 
@@ -86,7 +131,12 @@ export async function initializePaymentsController(request: Request, response: R
     priceTryOverride,
     checkoutCurrency,
     subscriptionDaysOverride,
-    basketItemName: BASKET_NAMES_TR[planId],
+    basketItemName: seatsOnly ? undefined : BASKET_NAMES_TR[planId], // seatsOnly: basket adı payment.service içinde otomatik üretilir
+    couponId: appliedCouponId,
+    discountPercent: appliedDiscountPercent,
+    originalNetAmount: appliedCouponId ? originalBasePrice : null,
+    extraSeats: extraSeats ?? 0,
+    seatsOnly: seatsOnly ?? false,
   });
 
   response.status(200).json({

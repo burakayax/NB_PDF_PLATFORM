@@ -134,6 +134,11 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     paid_price = float(payload.get("paidPrice") or payload.get("price", 0))
     payment_date = date.today().isoformat()
 
+    # Kupon / iskonto bilgisi — KDV Kanunu Md.25: faturada ayrıca gösterilmeli
+    discount_percent = int(payload.get("discountPercent", 0) or 0)
+    original_net_amount = payload.get("originalNetAmount")  # KDV hariç, iskonto öncesi
+    original_net = float(original_net_amount) if original_net_amount else None
+
     invoice_items: list[InvoiceItem] = []
 
     # İhracat istisnası açıklaması — KDV Kanunu Madde 12 kapsamı
@@ -154,6 +159,8 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
                     vat_rate=kdv_rate,
                     description=export_description,
                     is_export=is_export,
+                    discount_percent=discount_percent,
+                    original_unit_price=original_net,
                 )
             )
     else:
@@ -170,6 +177,8 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
                 vat_rate=kdv_rate,
                 description=export_description,
                 is_export=is_export,
+                discount_percent=discount_percent,
+                original_unit_price=original_net,
             )
         )
 
@@ -202,7 +211,8 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     )
 
     # ---- E-posta gönder ----
-    email_sent = send_invoice_email(customer_info, invoice_result)
+    locale = "tr" if country_code == "TR" else "en"
+    email_sent = send_invoice_email(customer_info, invoice_result, locale=locale)
     if not email_sent:
         logger.warning("webhook: fatura e-postası gönderilemedi müşteri=%s", customer_info.email)
 

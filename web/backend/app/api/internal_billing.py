@@ -10,6 +10,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from app.billing import get_provider
+from app.billing.birfatura import BirFaturaProvider
 from app.billing.models import CustomerInfo, InvoiceItem, PaymentInfo
 from app.billing.parasut import ParasutProvider
 from app.billing.webhook_handler import handle_iyzico_webhook
@@ -63,6 +64,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         payload: dict[str, Any] = await request.json()
 
         original_invoice_id = payload.get("originalInvoiceId", "")
+        original_invoice_no = str(payload.get("originalInvoiceNo", ""))
+        original_invoice_date = str(payload.get("originalInvoiceDate", ""))
         payment_id = str(payload.get("paymentId", ""))
         reason = str(payload.get("reason", "Kullanıcı talebiyle iade"))
         buyer: dict = payload.get("buyer", {})
@@ -129,9 +132,9 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
 
         provider = get_provider()
 
-        if not isinstance(provider, ParasutProvider):
+        if not isinstance(provider, (ParasutProvider, BirFaturaProvider)):
             logger.warning(
-                "credit_note: provider=%s Paraşüt değil, iade faturası atlanıyor",
+                "credit_note: provider=%s iade faturasını desteklemiyor, atlanıyor",
                 type(provider).__name__,
             )
             return JSONResponse(content={
@@ -140,8 +143,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
             })
 
         logger.info(
-            "credit_note: iade faturası başlatılıyor originalInvoiceId=%s paymentId=%s",
-            original_invoice_id, payment_id,
+            "credit_note: iade faturası başlatılıyor provider=%s originalInvoiceId=%s paymentId=%s",
+            type(provider).__name__, original_invoice_id, payment_id,
         )
 
         result = provider.create_credit_note(
@@ -150,6 +153,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
             items=invoice_items,
             payment_info=payment_info,
             reason=reason,
+            original_invoice_no=original_invoice_no,
+            original_invoice_date=original_invoice_date,
         )
 
         logger.info(

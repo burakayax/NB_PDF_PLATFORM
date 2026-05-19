@@ -42,6 +42,7 @@ import {
   previewSecret,
 } from "./google-oauth.console.js";
 import { createOrganizationForUser } from "../organization/organization.service.js";
+import { REFUND_WINDOW_DAYS } from "../payment/payment.service.js";
 
 type PublicUser = {
   id: string;
@@ -65,6 +66,10 @@ type PublicUser = {
   billingPostalCode: string | null;
   city: string | null;
   country: string | null;
+  refundEligible?: boolean;
+  isTeamMember: boolean;
+  teamOwnerId: string | null;
+  teamMemberRole: "MEMBER" | "MANAGER" | null;
 };
 
 type EmailVerificationTokenWithUser = EmailVerificationToken & {
@@ -123,6 +128,9 @@ function toPublicUser(user: User): PublicUser {
     billingPostalCode: user.billingPostalCode ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
+    isTeamMember: user.isTeamMember,
+    teamOwnerId: user.teamOwnerId ?? null,
+    teamMemberRole: (user.teamMemberRole as "MEMBER" | "MANAGER" | null) ?? null,
   };
 }
 
@@ -188,11 +196,14 @@ function logGoogleOAuthSessionIssued(
   });
 }
 
-/** E-postadaki tıklanabilir bağlantı: {APP_BASE_URL}/api/auth/verify-email?token=... */
+/** E-postadaki tıklanabilir bağlantı: {FRONTEND_ORIGIN}/api/auth/verify-email?token=...
+ *  FRONTEND_ORIGIN kullanılır — production'da kullanıcı bu domain'e erişir,
+ *  /api/auth/* reverse-proxy veya Vite proxy üzerinden API'ye iletilir.
+ */
 export function buildEmailVerificationLink(rawToken: string) {
   const verifyUrl = new URL(
     "/api/auth/verify-email",
-    env.APP_BASE_URL.replace(/\/$/, ""),
+    env.FRONTEND_ORIGIN.replace(/\/$/, ""),
   );
   verifyUrl.searchParams.set("token", rawToken);
   return verifyUrl.toString();
@@ -326,6 +337,7 @@ async function ensureOrganizationForUser(user: User): Promise<void> {
 
 export async function registerUser(
   input: RegisterInput,
+  options?: { skipEmailVerification?: boolean },
 ): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
@@ -376,7 +388,7 @@ export async function registerUser(
       passwordHash,
       authProvider: "local",
       role: resolvedRole,
-      isVerified: false,
+      isVerified: options?.skipEmailVerification === true,
       preferredLanguage: input.preferredLanguage ?? "en",
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
     },
@@ -392,31 +404,33 @@ export async function registerUser(
     preferredLanguage: user.preferredLanguage,
   });
 
-  const rawToken = await createEmailVerificationToken(user.id);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { verificationToken: rawToken },
-  });
-
-  console.log("Verification email sending...");
-  try {
-    await sendVerificationEmail(user, rawToken);
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Verification email failed — full error:", error);
-    if (error instanceof Error) {
-      console.error(error.stack);
-    }
-    authLog.error("register: verification email failed, rolling back user", {
-      userId: user.id,
-      email: user.email,
-      error: String(error),
+  if (!options?.skipEmailVerification) {
+    const rawToken = await createEmailVerificationToken(user.id);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken: rawToken },
     });
-    await prisma.user.delete({ where: { id: user.id } });
-    throw new HttpError(
-      503,
-      "We could not send the verification email. Please try again later.",
-    );
+
+    console.log("Verification email sending...");
+    try {
+      await sendVerificationEmail(user, rawToken);
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Verification email failed — full error:", error);
+      if (error instanceof Error) {
+        console.error(error.stack);
+      }
+      authLog.error("register: verification email failed, rolling back user", {
+        userId: user.id,
+        email: user.email,
+        error: String(error),
+      });
+      await prisma.user.delete({ where: { id: user.id } });
+      throw new HttpError(
+        503,
+        "We could not send the verification email. Please try again later.",
+      );
+    }
   }
 
   let persistedUser: User = user;
@@ -532,6 +546,7 @@ export async function loginUser(
     });
   }
 
+  user = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   authLog.info("login: success", { userId: user.id, email: user.email });
   return createSession(user, Boolean(deviceId));
 }
@@ -628,7 +643,26 @@ export async function getUserById(userId: string) {
   }
 
   user = await syncUserRoleFromEmail(user);
-  return toPublicUser(user);
+  const publicUser = toPublicUser(user);
+
+  if (user.plan !== "FREE") {
+    const lastCheckout = await prisma.paymentCheckout.findFirst({
+      where: { userId, status: "completed" },
+      orderBy: { completedAt: "desc" },
+      select: { completedAt: true, createdAt: true },
+    });
+    if (lastCheckout) {
+      const completedAt = lastCheckout.completedAt ?? lastCheckout.createdAt;
+      const ageMs = Date.now() - completedAt.getTime();
+      publicUser.refundEligible = ageMs <= REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    } else {
+      publicUser.refundEligible = false;
+    }
+  } else {
+    publicUser.refundEligible = false;
+  }
+
+  return publicUser;
 }
 
 export async function updatePreferredLanguage(

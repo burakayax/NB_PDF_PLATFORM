@@ -107,9 +107,19 @@ export async function checkQuota(
     return { allowed: false, reason: "user_not_found" };
   }
 
-  // Platform ADMIN bypasses all quotas
+  // Platform ADMIN bypasses all quotas — sınırsız erişim
   if (user.role === "ADMIN") {
-    return { allowed: true, reason: "admin_bypass" };
+    return {
+      allowed: true,
+      reason: "admin_bypass",
+      fileSizeLimitMB: 999999,
+      watermarkEnabled: false,
+      batchLimit: 999,
+      dailyUsed: 0,
+      dailyLimit: null,
+      monthlyUsed: 0,
+      monthlyLimit: null,
+    };
   }
 
   // Team member with active patron subscription gets business-level access
@@ -204,6 +214,7 @@ export async function checkQuota(
     monthlyUsed: currentOrg.currentMonthOperations,
     monthlyLimit: currentOrg.monthlyOperationLimit,
     watermarkEnabled: currentOrg.watermarkEnabled,
+    fileSizeLimitMB: currentOrg.fileSizeLimitMB,
   };
 }
 
@@ -259,6 +270,35 @@ export async function getQuotaSummary(userId: string) {
   const org = user.organization;
   const timezone = user.timezone || "Europe/Istanbul";
   const resetAt = getNextMidnightInTimezone(timezone);
+
+  // Admin → tüm sınırlar kaldırılmış
+  if (user.role === "ADMIN") {
+    return {
+      plan: "BUSINESS" as const,
+      daily: { used: 0, limit: null, resetAt },
+      monthly: { used: 0, limit: null },
+      watermarkEnabled: false,
+      batchLimit: 999,
+      fileSizeLimitMB: 999999,
+      isAdmin: true,
+    };
+  }
+
+  // Team member with active patron → Business-level unlimited display
+  if (user.isTeamMember && user.teamOwnerId) {
+    const team = await prisma.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+    if (team?.subscriptionStatus === "ACTIVE") {
+      return {
+        plan: "BUSINESS" as const,
+        daily: { used: org.currentDayOperations, limit: 999999, resetAt },
+        monthly: { used: org.currentMonthOperations, limit: null },
+        watermarkEnabled: false,
+        batchLimit: 100,
+        fileSizeLimitMB: 500,
+        isAdmin: false,
+      };
+    }
+  }
 
   return {
     plan: org.plan,

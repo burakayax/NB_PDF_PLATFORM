@@ -24,12 +24,16 @@ Gerekli env değişkenleri:
 
 from __future__ import annotations
 
+import base64
+import io
 import logging
 import os
 import time
 import uuid
+import zipfile
 from datetime import date, datetime
 from typing import Any
+from xml.etree import ElementTree as ET
 
 import requests
 from tenacity import before_sleep_log, retry, stop_after_attempt, wait_exponential
@@ -174,6 +178,8 @@ class BirFaturaProvider(BillingProviderBase):
         is_e_invoice = customer_id.startswith("efatura:")
         receiver_tag = customer_id.split(":", 1)[1] if is_e_invoice else ""
 
+        # KDV Kanunu Md.25: iskonto matrahtan düşülür; unit_price zaten iskonto sonrası net fiyat.
+        # Faturada iskonto ayrıca gösterilmeli → original_unit_price ve discount_percent kullan.
         total_excl = round(sum(i.quantity * i.unit_price for i in items), 2)
         total_incl = round(sum(
             i.quantity * i.unit_price * (1 + i.vat_rate / 100) for i in items
@@ -188,15 +194,33 @@ class BirFaturaProvider(BillingProviderBase):
 
         order_details = []
         for item in items:
+            has_discount = item.discount_percent > 0 and item.original_unit_price is not None
+            # Birim fiyat daima iskonto sonrası net fiyat — BirFatura toplamları buradan hesaplar.
+            # BirFatura'nın discountRate desteği belirsiz olduğundan kullanılmıyor;
+            # iskonto bilgisi productNote'a yazılıyor (KDV Kanunu Md.25 uyumu için).
+            price_excl = round(float(item.unit_price), 4)
             price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
+
+            if has_discount:
+                orig = item.original_unit_price
+                disc_amt = round(orig * item.discount_percent / 100, 2)
+                note = (
+                    f"İskonto %{item.discount_percent} uygulandı. "
+                    f"Liste fiyatı: {orig:.2f} TL | "
+                    f"İskonto: {disc_amt:.2f} TL | "
+                    f"Matrah: {item.unit_price:.2f} TL"
+                )
+            else:
+                note = item.description or export_note
+
             order_details.append({
                 "productCode": item.name.replace(" ", "_")[:20],
                 "productName": item.name,
-                "productNote": item.description or export_note,
+                "productNote": note,
                 "productQuantityType": item.unit,
                 "productQuantity": item.quantity,
                 "vatRate": int(item.vat_rate),
-                "productUnitPriceTaxExcluding": round(float(item.unit_price), 4),
+                "productUnitPriceTaxExcluding": price_excl,
                 "productUnitPriceTaxIncluding": price_incl,
             })
 
@@ -262,7 +286,7 @@ class BirFaturaProvider(BillingProviderBase):
     # ------------------------------------------------------------------
 
     def publish_invoice(self, invoice_id: str) -> InvoiceResult:
-        """Belge durumu SUCCEED olana dek poll eder."""
+        """Belge durumu SUCCEED olana dek poll eder; invoice numarasını da döner."""
         doc_uuid = invoice_id
         max_attempts = self._max_attempts or _POLL_MAX
 
@@ -272,15 +296,26 @@ class BirFaturaProvider(BillingProviderBase):
 
             statuses = result if isinstance(result, list) else []
             if statuses:
-                status = statuses[0].get("Status", "").upper()
-                logger.debug(
-                    "birfatura: belge durum=%s uuid=%s (deneme %s/%s)",
-                    status, doc_uuid, attempt, max_attempts,
+                rec = statuses[0]
+                status = rec.get("Status", "").upper()
+                doc_no = (
+                    rec.get("DocumentNo") or rec.get("documentNo")
+                    or rec.get("InvoiceNo") or rec.get("invoiceNo")
+                    or rec.get("DocNo") or rec.get("docNo")
+                    or rec.get("BelgeNo") or rec.get("belgeNo")
+                    or rec.get("EBelgeNo") or rec.get("eBelgeNo")
+                    or rec.get("FaturaNo") or rec.get("faturaNo")
+                    or rec.get("Number") or rec.get("number")
+                )
+                logger.info(
+                    "birfatura: belge durum=%s docNo=%s uuid=%s tüm_alanlar=%s (deneme %s/%s)",
+                    status, doc_no, doc_uuid, list(rec.keys()), attempt, max_attempts,
                 )
                 if status in ("SUCCEED", "SUCCESS", "BASARILI", "COMPLETED", "IMZALANDI", "ILETILDI", "KABUL"):
                     return InvoiceResult(
                         success=True,
                         invoice_id=doc_uuid,
+                        invoice_number=doc_no,
                         issued_at=date.today().isoformat(),
                     )
                 if status in ("ERROR", "FAILED", "BASARISIZ", "CANCELLED", "IPTAL"):
@@ -290,6 +325,32 @@ class BirFaturaProvider(BillingProviderBase):
         raise TimeoutError(
             f"BirFatura belge {doc_uuid} {max_attempts * self._interval}s içinde tamamlanmadı"
         )
+
+    def _fetch_invoice_number_by_uuid(self, doc_uuid: str) -> str | None:
+        """UUID ile BirFatura'dan belge numarasını sorgular."""
+        try:
+            data = self._post("GetOutBoxDocumentStatusesWithUUIDs", {"uuids": [doc_uuid]})
+            result = self._check_api_response(data, "GetOutBoxDocumentStatusesWithUUIDs")
+            statuses = result if isinstance(result, list) else []
+            if statuses:
+                rec = statuses[0]
+                doc_no = (
+                    rec.get("DocumentNo") or rec.get("documentNo")
+                    or rec.get("InvoiceNo") or rec.get("invoiceNo")
+                    or rec.get("DocNo") or rec.get("docNo")
+                    or rec.get("BelgeNo") or rec.get("belgeNo")
+                    or rec.get("EBelgeNo") or rec.get("eBelgeNo")
+                    or rec.get("FaturaNo") or rec.get("faturaNo")
+                    or rec.get("Number") or rec.get("number")
+                )
+                logger.info(
+                    "birfatura: UUID=%s → belge no=%s tüm_alanlar=%s",
+                    doc_uuid, doc_no, list(rec.keys()),
+                )
+                return doc_no
+        except Exception as exc:
+            logger.warning("birfatura: belge no sorgulanamadı uuid=%s hata=%s", doc_uuid, exc)
+        return None
 
     # ------------------------------------------------------------------
     # get_invoice_pdf_url — GetPDFLinkByUUID
@@ -341,6 +402,366 @@ class BirFaturaProvider(BillingProviderBase):
             return False
 
     # ------------------------------------------------------------------
+    # create_credit_note — iade faturası oluştur (SendDocument + UBL XML)
+    # ------------------------------------------------------------------
+
+    def create_credit_note(
+        self,
+        original_invoice_id: str,
+        customer_info: CustomerInfo,
+        items: list[InvoiceItem],
+        payment_info: PaymentInfo,
+        reason: str = "Kullanıcı talebiyle iade",
+        original_invoice_no: str = "",
+        original_invoice_date: str = "",
+    ) -> InvoiceResult:
+        """
+        BirFatura'da iade faturası SendDocument + UBL-TR XML ile gönderilir.
+        SendBasicInvoiceFromModel yalnızca basit satış faturası destekler;
+        iade (IADE) tipi için tam UBL XML zorunludur.
+        """
+        try:
+            customer_id = self.find_or_create_customer(customer_info)
+        except Exception as exc:
+            return InvoiceResult(success=False, error=f"Müşteri bulunamadı: {exc}")
+
+        is_e_invoice = customer_id.startswith("efatura:")
+        receiver_tag = customer_id.split(":", 1)[1] if is_e_invoice else ""
+        system_type = "EFATURA" if is_e_invoice else "EARSIV"
+
+        today = payment_info.payment_date or date.today().isoformat()
+        doc_uuid = str(uuid.uuid4())
+
+        # original_invoice_no boş ya da 16 karakter değilse UUID ile BirFatura'dan sorgula
+        resolved_invoice_no = original_invoice_no.strip()
+        if (not resolved_invoice_no or len(resolved_invoice_no) != 16) and original_invoice_id:
+            fetched = self._fetch_invoice_number_by_uuid(original_invoice_id)
+            if fetched and len(fetched.strip()) == 16:
+                resolved_invoice_no = fetched.strip()
+                logger.info(
+                    "birfatura: orijinal fatura no UUID'den alındı uuid=%s no=%s",
+                    original_invoice_id, resolved_invoice_no,
+                )
+
+        if not resolved_invoice_no or len(resolved_invoice_no) != 16:
+            logger.error(
+                "birfatura: iade faturası iptal — 16 haneli orijinal fatura no bulunamadı "
+                "uuid=%s no=%r", original_invoice_id, resolved_invoice_no,
+            )
+            return InvoiceResult(
+                success=False,
+                error=f"Orijinal fatura numarası (16 hane) bulunamadı. "
+                      f"UUID={original_invoice_id}, no={resolved_invoice_no!r}",
+            )
+
+        try:
+            xml_str = self._build_credit_note_xml(
+                doc_uuid=doc_uuid,
+                issue_date=today,
+                original_invoice_no=resolved_invoice_no,
+                original_invoice_date=original_invoice_date or today,
+                customer_info=customer_info,
+                receiver_tag=receiver_tag,
+                items=items,
+                payment_info=payment_info,
+                reason=reason,
+                is_e_invoice=is_e_invoice,
+            )
+        except Exception as exc:
+            return InvoiceResult(success=False, error=f"XML oluşturulamadı: {exc}")
+
+        document_bytes = self._compress_xml(xml_str)
+
+        payload: dict[str, Any] = {
+            "documentBytes": document_bytes,
+            "systemTypeCodes": system_type,
+            "isDocumentNoAuto": True,
+        }
+        if receiver_tag:
+            payload["receivertag"] = receiver_tag
+
+        try:
+            data = self._post("SendDocument", payload)
+            result_data = self._check_api_response(data, "SendDocument IADE")
+        except Exception as exc:
+            return InvoiceResult(success=False, error=f"İade faturası gönderilemedi: {exc}")
+
+        invoice_no: str | None = None
+        pdf_link: str | None = None
+        if isinstance(result_data, dict):
+            invoice_no = result_data.get("invoiceNo") or result_data.get("InvoiceNo")
+            pdf_link = result_data.get("pdfLink") or result_data.get("PdfLink")
+
+        logger.info(
+            "birfatura: iade faturası gönderildi uuid=%s invoiceNo=%s orijinal=%s tip=%s",
+            doc_uuid, invoice_no, original_invoice_no or original_invoice_id, system_type,
+        )
+
+        # GİB durum bekle (hata olursa faturayı engelleme)
+        try:
+            self.publish_invoice(doc_uuid)
+        except Exception as pub_exc:
+            logger.warning(
+                "birfatura: iade belge durum beklenemedi uuid=%s hata=%s",
+                doc_uuid, pub_exc,
+            )
+
+        if not pdf_link:
+            try:
+                pdf_link = self.get_invoice_pdf_url(doc_uuid)
+            except Exception as pdf_exc:
+                logger.warning("birfatura: iade PDF URL alınamadı uuid=%s hata=%s", doc_uuid, pdf_exc)
+
+        return InvoiceResult(
+            success=True,
+            invoice_id=doc_uuid,
+            invoice_number=invoice_no,
+            pdf_url=pdf_link,
+            e_document_type="e_invoice" if is_e_invoice else "e_archive",
+            issued_at=today,
+        )
+
+    # ------------------------------------------------------------------
+    # _build_credit_note_xml — UBL-TR IADE fatura XML'i oluşturur
+    # ------------------------------------------------------------------
+
+    def _build_credit_note_xml(
+        self,
+        doc_uuid: str,
+        issue_date: str,
+        original_invoice_no: str,
+        original_invoice_date: str,
+        customer_info: CustomerInfo,
+        receiver_tag: str,
+        items: list[InvoiceItem],
+        payment_info: PaymentInfo,
+        reason: str,
+        is_e_invoice: bool,
+    ) -> str:
+        from xml.sax.saxutils import escape as _esc
+
+        now_time = datetime.now().strftime("%H:%M:%S.0000000+03:00")
+        currency = (payment_info.currency or "TRY").upper()
+        if currency in ("TRL", ""):
+            currency = "TRY"
+
+        total_excl = round(sum(i.quantity * i.unit_price for i in items), 2)
+        tax_amount = round(sum(
+            i.quantity * i.unit_price * (i.vat_rate / 100) for i in items
+        ), 2)
+        total_incl = round(total_excl + tax_amount, 2)
+        vat_rate = items[0].vat_rate if items else 20
+
+        sup_vkn      = _esc(os.getenv("BIRFATURA_SUPPLIER_VKN", ""))
+        sup_name     = _esc(os.getenv("BIRFATURA_SUPPLIER_NAME", os.getenv("COMPANY_NAME", "")))
+        sup_address  = _esc(os.getenv("BIRFATURA_SUPPLIER_ADDRESS", ""))
+        sup_city     = _esc(os.getenv("BIRFATURA_SUPPLIER_CITY", ""))
+        sup_tax_off  = _esc(os.getenv("BIRFATURA_SUPPLIER_TAX_OFFICE", ""))
+        sup_phone    = _esc(os.getenv("BIRFATURA_SUPPLIER_PHONE", ""))
+        sup_email    = _esc(os.getenv("BIRFATURA_SUPPLIER_EMAIL", ""))
+
+        ci = customer_info
+        cust_id_scheme = "VKN" if ci.tax_number else "TCKN"
+        cust_id_value  = _esc(ci.tax_number or ci.national_id or "")
+        cust_name      = _esc(ci.name)
+        cust_address   = _esc(ci.address or "")
+        cust_city      = _esc(ci.city or "")
+        cust_country   = _esc(ci.country or "Türkiye")
+        cust_phone     = _esc(ci.phone or "")
+        cust_email     = _esc(ci.email)
+        cust_tax_off   = _esc(ci.tax_office or "")
+
+        recvpk = _esc(f"urn:mail:{receiver_tag}" if receiver_tag else "urn:mail:defaultpk@birfatura.com")
+        reason_esc = _esc(reason)
+
+        billing_ref_xml = ""
+        if original_invoice_no:
+            oin = _esc(original_invoice_no)
+            oid = _esc(original_invoice_date)
+            billing_ref_xml = f"""
+  <cac:BillingReference>
+    <cac:InvoiceDocumentReference>
+      <cbc:ID>{oin}</cbc:ID>
+      <cbc:IssueDate>{oid}</cbc:IssueDate>
+      <cbc:DocumentTypeCode>IADE</cbc:DocumentTypeCode>
+      <cbc:DocumentType>IADE</cbc:DocumentType>
+    </cac:InvoiceDocumentReference>
+  </cac:BillingReference>"""
+
+        # Ana Note alanına iade ve orijinal fatura bilgisini ekle
+        if original_invoice_no:
+            reason_esc = _esc(f"{reason} - Iadeye Konu Fatura: {original_invoice_no} ({original_invoice_date})")
+
+        cust_tax_scheme_xml = ""
+        if ci.tax_number:
+            cust_tax_scheme_xml = f"""
+        <cac:PartyTaxScheme>
+          <cac:TaxScheme><cbc:Name>{cust_tax_off}</cbc:Name></cac:TaxScheme>
+        </cac:PartyTaxScheme>"""
+
+        lines_xml = ""
+        for idx, item in enumerate(items, start=1):
+            line_excl = round(item.quantity * item.unit_price, 2)
+            line_tax  = round(line_excl * item.vat_rate / 100, 2)
+            item_name = _esc(item.name)
+            item_desc = _esc(item.description or reason)
+            lines_xml += f"""
+  <cac:InvoiceLine>
+    <cbc:ID>{idx}</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU">{item.quantity:.4f}</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="{currency}">{line_excl:.2f}</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="{currency}">{line_tax:.2f}</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="{currency}">{line_excl:.2f}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="{currency}">{line_tax:.2f}</cbc:TaxAmount>
+        <cbc:Percent>{item.vat_rate}</cbc:Percent>
+        <cac:TaxCategory>
+          <cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>{item_desc}</cbc:Description>
+      <cbc:Name>{item_name}</cbc:Name>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="{currency}">{item.unit_price:.6f}</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>"""
+
+        return f"""<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns:ubltr="urn:oasis:names:specification:ubl:schema:xsd:TurkishCustomizationExtensionComponents"
+         xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:ccts="urn:un:unece:uncefact:documentation:2"
+         xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+         xmlns:xades="http://uri.etsi.org/01903/v1.3.2#"
+         xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"
+         xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <ext:UBLExtensions>
+    <ext:UBLExtension><ext:ExtensionContent> </ext:ExtensionContent></ext:UBLExtension>
+  </ext:UBLExtensions>
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+  <cbc:ProfileID>{"TEMELFATURA" if is_e_invoice else "EARSIVFATURA"}</cbc:ProfileID>
+  <cbc:ID>{"EFA" if is_e_invoice else "ARS"}0000000000001</cbc:ID>
+  <cbc:CopyIndicator>false</cbc:CopyIndicator>
+  <cbc:UUID>{doc_uuid}</cbc:UUID>
+  <cbc:IssueDate>{issue_date}</cbc:IssueDate>
+  <cbc:IssueTime>{now_time}</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>IADE</cbc:InvoiceTypeCode>
+  <cbc:Note>{reason_esc}</cbc:Note>
+  <cbc:DocumentCurrencyCode>{currency}</cbc:DocumentCurrencyCode>
+  <cbc:LineCountNumeric>{len(items)}</cbc:LineCountNumeric>{billing_ref_xml}
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>{doc_uuid}</cbc:ID>
+    <cbc:IssueDate>{issue_date}</cbc:IssueDate>
+    <cbc:DocumentTypeCode>CUST_INV_ID</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>0100</cbc:ID>
+    <cbc:IssueDate>{issue_date}</cbc:IssueDate>
+    <cbc:DocumentTypeCode>OUTPUT_TYPE</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>ELEKTRONIK</cbc:ID>
+    <cbc:IssueDate>{issue_date}</cbc:IssueDate>
+    <cbc:DocumentTypeCode>EREPSENDT</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>{recvpk}</cbc:ID>
+    <cbc:IssueDate>{issue_date}</cbc:IssueDate>
+    <cbc:DocumentTypeCode>recvpk</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:Signature>
+    <cbc:ID schemeID="VKN_TCKN">{sup_vkn}</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PostalAddress>
+        <cbc:StreetName>{sup_address}</cbc:StreetName>
+        <cbc:CitySubdivisionName/>
+        <cbc:CityName>{sup_city}</cbc:CityName>
+        <cac:Country><cbc:Name>TÜRKİYE</cbc:Name></cac:Country>
+      </cac:PostalAddress>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference><cbc:URI>#Signature</cbc:URI></cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyIdentification><cbc:ID schemeID="VKN">{sup_vkn}</cbc:ID></cac:PartyIdentification>
+      <cac:PartyName><cbc:Name>{sup_name}</cbc:Name></cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>{sup_address}</cbc:StreetName>
+        <cbc:CitySubdivisionName/>
+        <cbc:CityName>{sup_city}</cbc:CityName>
+        <cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cac:TaxScheme><cbc:Name>{sup_tax_off}</cbc:Name></cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:Contact>
+        <cbc:Telephone>{sup_phone}</cbc:Telephone>
+        <cbc:ElectronicMail>{sup_email}</cbc:ElectronicMail>
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="{cust_id_scheme}">{cust_id_value}</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName><cbc:Name>{cust_name}</cbc:Name></cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>{cust_address}</cbc:StreetName>
+        <cbc:CitySubdivisionName/>
+        <cbc:CityName>{cust_city}</cbc:CityName>
+        <cac:Country><cbc:Name>{cust_country}</cbc:Name></cac:Country>
+      </cac:PostalAddress>{cust_tax_scheme_xml}
+      <cac:Contact>
+        <cbc:Telephone>{cust_phone}</cbc:Telephone>
+        <cbc:ElectronicMail>{cust_email}</cbc:ElectronicMail>
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="{currency}">{tax_amount:.2f}</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="{currency}">{total_excl:.2f}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="{currency}">{tax_amount:.2f}</cbc:TaxAmount>
+      <cbc:Percent>{vat_rate}</cbc:Percent>
+      <cac:TaxCategory>
+        <cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="{currency}">{total_excl:.2f}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="{currency}">{total_excl:.2f}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="{currency}">{total_incl:.2f}</cbc:TaxInclusiveAmount>
+    <cbc:AllowanceTotalAmount currencyID="{currency}">0.00</cbc:AllowanceTotalAmount>
+    <cbc:PayableAmount currencyID="{currency}">{total_incl:.2f}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>{lines_xml}
+</Invoice>"""
+
+    # ------------------------------------------------------------------
+    # _compress_xml — XML'i ZIP sıkıştırıp base64'e çevirir
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _compress_xml(xml_str: str) -> str:
+        xml_bytes = xml_str.encode("utf-8")
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("invoice.xml", xml_bytes)
+        return base64.b64encode(buf.getvalue()).decode("ascii")
+
+    # ------------------------------------------------------------------
     # full_invoice_flow — tüm akışı yönetir
     # ------------------------------------------------------------------
 
@@ -361,25 +782,35 @@ class BirFaturaProvider(BillingProviderBase):
 
         # Durum bekle (hata olursa faturayı engelleme)
         initial_pdf_url = result.pdf_url
+        initial_invoice_no = result.invoice_number
+        saved_uuid = result.invoice_id
         try:
-            result = self.publish_invoice(result.invoice_id)  # type: ignore[arg-type]
+            pub_result = self.publish_invoice(saved_uuid)  # type: ignore[arg-type]
+            # publish_invoice'dan gelen invoice numarasını koru
+            if pub_result.invoice_number:
+                result.invoice_number = pub_result.invoice_number
         except Exception as pub_exc:
             logger.warning(
                 "birfatura: belge durum beklenemedi (fatura gönderildi) uuid=%s hata=%s",
-                result.invoice_id, pub_exc,
+                saved_uuid, pub_exc,
             )
+
+        # invoice_number hala yoksa status'tan doğrudan al
+        if not result.invoice_number:
+            result.invoice_number = self._fetch_invoice_number_by_uuid(saved_uuid) or initial_invoice_no
 
         # SendBasicInvoiceFromModel zaten pdfLink döndürdüyse tekrar sorgulamaya gerek yok
         if initial_pdf_url:
             result.pdf_url = initial_pdf_url
         else:
             try:
-                result.pdf_url = self.get_invoice_pdf_url(result.invoice_id)  # type: ignore[arg-type]
+                result.pdf_url = self.get_invoice_pdf_url(saved_uuid)  # type: ignore[arg-type]
             except Exception as pdf_exc:
                 logger.warning(
                     "birfatura: PDF URL alınamadı (fatura geçerli) uuid=%s hata=%s",
-                    result.invoice_id, pdf_exc,
+                    saved_uuid, pdf_exc,
                 )
 
+        result.invoice_id = saved_uuid
         result.success = True
         return result

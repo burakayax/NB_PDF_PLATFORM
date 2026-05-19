@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getSaasApiBase } from "../../api/saasBase";
 
 type Props = {
   accessToken: string;
@@ -13,8 +14,9 @@ export function TeamReportButton({ accessToken, teamName }: Props) {
     setLoading(true);
     setOpen(false);
     try {
-      const res = await fetch(`/api/team/report?format=${format}`, {
+      const res = await fetch(`${getSaasApiBase()}/api/team/report?format=${format}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Rapor indirilemedi.");
       const blob = await res.blob();

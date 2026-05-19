@@ -74,7 +74,12 @@ export type AdminOverview = {
     usersWithCountry: number;
     usersWithCity: number;
     topCountries: Array<{ country: string; count: number }>;
+    topCities: Array<{ city: string; country: string | null; count: number }>;
   };
+  /** Daily new user registrations — last 30 days. */
+  registrationsByDay: Array<{ date: string; count: number }>;
+  /** Completed subscription checkouts by plan and day — last 30 days. */
+  subscriptionSalesByDay: Array<{ date: string; plan: string; count: number }>;
 };
 
 export async function getAdminOverview(): Promise<AdminOverview> {
@@ -220,7 +225,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   }
   const pageViewsTodayByHourUtc = hourCounts.map((count, hour) => ({ hour, count }));
 
-  const [usersWithCountry, usersWithCity, countryGroupRows] = await Promise.all([
+  const [usersWithCountry, usersWithCity, countryGroupRows, cityGroupRows, recentRegistrations, recentCheckouts] = await Promise.all([
     prisma.user.count({
       where: { AND: [{ country: { not: null } }, { country: { not: "" } }] },
     }),
@@ -232,12 +237,58 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       where: { AND: [{ country: { not: null } }, { country: { not: "" } }] },
       _count: { _all: true },
     }),
+    prisma.user.findMany({
+      where: { AND: [{ city: { not: null } }, { city: { not: "" } }] },
+      select: { city: true, country: true },
+    }),
+    prisma.user.findMany({
+      where: { createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true },
+    }),
+    prisma.paymentCheckout.findMany({
+      where: { status: "completed", createdAt: { gte: thirtyDaysAgo } },
+      select: { createdAt: true, plan: true },
+    }),
   ]);
   const topCountries = countryGroupRows
     .filter((r) => r.country != null && r.country.length > 0)
     .map((r) => ({ country: r.country as string, count: r._count?._all ?? 0 }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
+
+  const cityCountMap = new Map<string, { city: string; country: string | null; count: number }>();
+  for (const r of cityGroupRows) {
+    if (!r.city) continue;
+    const key = `${r.city}|${r.country ?? ""}`;
+    const existing = cityCountMap.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      cityCountMap.set(key, { city: r.city, country: r.country ?? null, count: 1 });
+    }
+  }
+  const topCities = [...cityCountMap.values()].sort((a, b) => b.count - a.count).slice(0, 8);
+
+  const regByDayMap = new Map<string, number>();
+  for (const u of recentRegistrations) {
+    const k = u.createdAt.toISOString().slice(0, 10);
+    regByDayMap.set(k, (regByDayMap.get(k) ?? 0) + 1);
+  }
+  const registrationsByDay = [...regByDayMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([date, count]) => ({ date, count }));
+
+  const salesByDayPlanMap = new Map<string, number>();
+  for (const c of recentCheckouts) {
+    const k = `${c.createdAt.toISOString().slice(0, 10)}|${c.plan ?? "UNKNOWN"}`;
+    salesByDayPlanMap.set(k, (salesByDayPlanMap.get(k) ?? 0) + 1);
+  }
+  const subscriptionSalesByDay = [...salesByDayPlanMap.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([key, count]) => {
+      const [date, plan] = key.split("|");
+      return { date: date!, plan: plan!, count };
+    });
 
   return {
     generatedAt: new Date().toISOString(),
@@ -277,7 +328,10 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       usersWithCountry,
       usersWithCity,
       topCountries,
+      topCities,
     },
+    registrationsByDay,
+    subscriptionSalesByDay,
   };
 }
 
@@ -345,6 +399,8 @@ export async function listUsersForAdmin(params: {
         freeLimitFirstExceededAt: true,
         country: true,
         city: true,
+        isTeamMember: true,
+        teamOwnerId: true,
         _count: { select: { dailyUsages: true } },
       },
     }),
@@ -378,6 +434,8 @@ export async function listUsersForAdmin(params: {
       freeLimitFirstExceededAt: u.freeLimitFirstExceededAt?.toISOString() ?? null,
       country: u.country,
       city: u.city,
+      isTeamMember: u.isTeamMember,
+      teamOwnerId: u.teamOwnerId,
       _count: u._count,
       usageToday: d
         ? {

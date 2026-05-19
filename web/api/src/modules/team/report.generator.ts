@@ -74,7 +74,9 @@ export function generateCSVReport(
       ? [m.user.firstName, m.user.lastName].filter(Boolean).join(" ") || m.user.email
       : m.inviteEmail;
     const email = m.user?.email ?? m.inviteEmail;
-    const lastLogin = m.user?.updatedAt ? m.user.updatedAt.toLocaleDateString("tr-TR") : "";
+    const lastLogin = m.user?.lastLoginAt
+      ? new Date(m.user.lastLoginAt).toLocaleString("tr-TR")
+      : (m.user?.updatedAt ? m.user.updatedAt.toLocaleDateString("tr-TR") : "");
     const lastOp = m.stats.lastActivity
       ? new Date(m.stats.lastActivity).toLocaleDateString("tr-TR")
       : "";
@@ -188,7 +190,9 @@ export async function generateExcelReport(
       thisMonthOps: m.stats.thisMonthOps,
       totalPages: m.stats.totalPagesProcessed,
       topTool: m.stats.mostUsedTool ?? "",
-      lastLogin: m.user?.updatedAt ? m.user.updatedAt.toLocaleDateString("tr-TR") : "",
+      lastLogin: m.user?.lastLoginAt
+        ? new Date(m.user.lastLoginAt).toLocaleString("tr-TR")
+        : (m.user?.updatedAt ? m.user.updatedAt.toLocaleDateString("tr-TR") : ""),
       lastOp: m.stats.lastActivity
         ? new Date(m.stats.lastActivity).toLocaleDateString("tr-TR")
         : "",
@@ -205,9 +209,31 @@ export async function generateExcelReport(
     }
   });
 
-  // ── Sheet 3: İşlem Geçmişi ──────────────────────────────────────────────
-  const sheet3 = wb.addWorksheet("İşlem Geçmişi");
+  // ── Sheet 3: Araç Dökümü ────────────────────────────────────────────────
+  const sheet3 = wb.addWorksheet("Araç Dökümü");
   sheet3.columns = [
+    { header: "Üye Adı", key: "member", width: 25 },
+    { header: "Araç", key: "tool", width: 22 },
+    { header: "Kullanım Sayısı", key: "count", width: 18 },
+  ];
+  applyHeaderStyle(sheet3.getRow(1));
+
+  let toolRowIdx = 0;
+  for (const m of team.members) {
+    if (m.inviteStatus !== "ACCEPTED") continue;
+    const memberName = m.user
+      ? [m.user.firstName, m.user.lastName].filter(Boolean).join(" ") || m.user.email
+      : m.inviteEmail;
+    for (const t of (m.stats.toolBreakdown ?? [])) {
+      const row = sheet3.addRow({ member: memberName, tool: t.toolName, count: t.count });
+      applyDataRowStyle(row, toolRowIdx % 2 === 0);
+      toolRowIdx++;
+    }
+  }
+
+  // ── Sheet 4: İşlem Geçmişi ──────────────────────────────────────────────
+  const sheet4 = wb.addWorksheet("İşlem Geçmişi");
+  sheet4.columns = [
     { header: "Üye", key: "member", width: 25 },
     { header: "Araç", key: "tool", width: 22 },
     { header: "Sayfa", key: "pages", width: 10 },
@@ -220,7 +246,7 @@ export async function generateExcelReport(
     { header: "Tarih", key: "date", width: 22 },
   ];
 
-  applyHeaderStyle(sheet3.getRow(1));
+  applyHeaderStyle(sheet4.getRow(1));
 
   let rowIdx = 0;
   for (const m of team.members) {
@@ -240,7 +266,7 @@ export async function generateExcelReport(
         a.compressionRatio !== null && a.compressionRatio !== undefined
           ? Math.round(a.compressionRatio * 100)
           : null;
-      const row = sheet3.addRow({
+      const row = sheet4.addRow({
         member: memberName,
         tool: a.toolName,
         pages: a.pageCount ?? "",
@@ -254,7 +280,7 @@ export async function generateExcelReport(
       });
 
       applyDataRowStyle(row, rowIdx % 2 === 0);
-      const statusCell = row.getCell(9);
+      const statusCell = row.getCell(9); // sheet4
       if (a.status === "SUCCESS") {
         statusCell.font = { color: { argb: COLORS.success }, size: 10 };
       } else {

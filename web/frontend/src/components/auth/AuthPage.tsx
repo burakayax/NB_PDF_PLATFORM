@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { isValidPhoneNumber } from "libphonenumber-js";
 import { getGoogleOAuthStartUrl } from "../../api/auth";
-import { NbPhoneInput } from "../common/NbPhoneInput";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
 import type { Language } from "../../i18n/landing";
@@ -10,6 +8,15 @@ import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
   SESSION_POST_OAUTH_REDIRECT_KEY,
 } from "../../lib/oauthRedirect";
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1.5 text-xs leading-snug text-rose-400" role="alert">
+      {msg}
+    </p>
+  );
+}
 
 type AuthMode = "login" | "register";
 
@@ -89,11 +96,48 @@ export function AuthPage({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [registerPhone, setRegisterPhone] = useState("");
   const [registerCity, setRegisterCity] = useState("");
-  const [localError, setLocalError] = useState("");
   const [urlAuthError, setUrlAuthError] = useState("");
   const [urlEmailVerifiedNotice, setUrlEmailVerifiedNotice] = useState(false);
+
+  // Per-field inline errors (local validation)
+  const [firstNameErr, setFirstNameErr] = useState("");
+  const [lastNameErr, setLastNameErr] = useState("");
+  const [emailErr, setEmailErr] = useState("");
+  const [passwordErr, setPasswordErr] = useState("");
+
+  function clearFieldErrors() {
+    setFirstNameErr("");
+    setLastNameErr("");
+    setEmailErr("");
+    setPasswordErr("");
+  }
+
+  // Map server error (already translated by parent) to the right field
+  const { serverEmailErr, serverPasswordErr, serverGeneralErr } = useMemo(() => {
+    if (!serverError) return { serverEmailErr: "", serverPasswordErr: "", serverGeneralErr: "" };
+    const lower = serverError.toLowerCase();
+    if (
+      lower.includes("e-posta veya şifre") ||
+      lower.includes("email or password") ||
+      lower.includes("invalid email or password")
+    ) {
+      return { serverEmailErr: "", serverPasswordErr: serverError, serverGeneralErr: "" };
+    }
+    if (
+      lower.includes("zaten var") ||
+      lower.includes("already exists") ||
+      lower.includes("doğrulayın") ||
+      lower.includes("verify your email") ||
+      lower.includes("oluşturulamaz") ||
+      lower.includes("cannot be used") ||
+      lower.includes("google sign-in") ||
+      lower.includes("google ile")
+    ) {
+      return { serverEmailErr: serverError, serverPasswordErr: "", serverGeneralErr: "" };
+    }
+    return { serverEmailErr: "", serverPasswordErr: "", serverGeneralErr: serverError };
+  }, [serverError]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -125,73 +169,53 @@ export function AuthPage({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    clearFieldErrors();
+
+    const tr = language === "tr";
+    let hasErr = false;
 
     if (mode === "register") {
       if (!firstName.trim()) {
-        setLocalError(
-          language === "tr" ? "Ad gereklidir." : "First name is required.",
-        );
-        return;
+        setFirstNameErr(tr ? "Ad gereklidir." : "First name is required.");
+        hasErr = true;
       }
       if (!lastName.trim()) {
-        setLocalError(
-          language === "tr" ? "Soyad gereklidir." : "Last name is required.",
-        );
-        return;
+        setLastNameErr(tr ? "Soyad gereklidir." : "Last name is required.");
+        hasErr = true;
       }
     }
 
     if (!email.trim()) {
-      setLocalError(
-        language === "tr"
-          ? "E-posta adresi gereklidir."
-          : "Email address is required.",
-      );
-      return;
+      setEmailErr(tr ? "E-posta adresi gereklidir." : "Email address is required.");
+      hasErr = true;
     }
 
     if (mode === "register") {
-      if (registerPhone.trim() && !isValidPhoneNumber(registerPhone.trim())) {
-        setLocalError(
-          language === "tr"
-            ? "Geçerli bir cep telefonu girin veya alanı boş bırakın."
-            : "Enter a valid mobile number or leave the field empty.",
-        );
-        return;
-      }
       const policy = validateNewPasswordPolicy(password);
       if (!policy.ok) {
-        const msg =
-          language === "tr"
-            ? policy.issues.map((i) => i.tr).join(" Â· ")
-            : policy.issues.map((i) => i.en).join(" Â· ");
-        setLocalError(msg);
-        return;
+        setPasswordErr(
+          tr ? policy.issues.map((i) => i.tr).join(" · ") : policy.issues.map((i) => i.en).join(" · "),
+        );
+        hasErr = true;
       }
     } else if (password.length < 8) {
-      setLocalError(
-        language === "tr"
-          ? "Şifre en az 8 karakter olmalıdır."
-          : "Password must be at least 8 characters.",
-      );
-      return;
+      setPasswordErr(tr ? "Şifre en az 8 karakter olmalıdır." : "Password must be at least 8 characters.");
+      hasErr = true;
     }
 
-    setLocalError("");
-    const wasRegister = mode === "register";
+    if (hasErr) return;
+
     try {
-      if (wasRegister) {
+      if (mode === "register") {
         await onSubmit({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           email,
           password,
-          phone: registerPhone.trim() || undefined,
           city: registerCity.trim() || undefined,
         });
         setFirstName("");
         setLastName("");
-        setRegisterPhone("");
         setRegisterCity("");
         setEmail("");
         setPassword("");
@@ -199,11 +223,11 @@ export function AuthPage({
         await onSubmit({ email, password });
       }
     } catch {
-      /* Hata üst bileşende authError ile gösterilir; kayıtta alanlar korunur */
+      /* Hata üst bileşende serverError prop olarak gelir; serverEmailErr/serverPasswordErr ile alanlara yönlendirilir */
     }
   }
 
-  const activeError = localError || serverError || urlAuthError;
+  const generalDisplayError = serverGeneralErr || urlAuthError;
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
@@ -346,67 +370,48 @@ export function AuthPage({
             </div>
           ) : null}
 
-          {activeError ? (
-            <div className="mt-6 rounded-xl border border-rose-500/20 bg-rose-500/[0.08] px-4 py-3 text-sm text-rose-100">
-              <span className="font-semibold">{copy.shared.errorPrefix}</span>{" "}
-              {activeError}
-            </div>
-          ) : null}
-
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             {mode === "register" ? (
               <div className="grid gap-5 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">
-                    {copy.shared.firstNameLabel}
-                  </span>
-                  <input
-                    type="text"
-                    name="given-name"
-                    autoComplete="given-name"
-                    value={firstName}
-                    onChange={(event) => setFirstName(event.target.value)}
-                    className={inputClassName}
-                    placeholder={language === "tr" ? "Adınız" : "Jane"}
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">
-                    {copy.shared.lastNameLabel}
-                  </span>
-                  <input
-                    type="text"
-                    name="family-name"
-                    autoComplete="family-name"
-                    value={lastName}
-                    onChange={(event) => setLastName(event.target.value)}
-                    className={inputClassName}
-                    placeholder={language === "tr" ? "Soyadınız" : "Doe"}
-                  />
-                </label>
+                <div>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-nb-muted">
+                      {copy.shared.firstNameLabel}
+                    </span>
+                    <input
+                      type="text"
+                      name="given-name"
+                      autoComplete="given-name"
+                      value={firstName}
+                      onChange={(event) => { setFirstName(event.target.value); setFirstNameErr(""); }}
+                      className={firstNameErr ? inputClassName + " !border-rose-500/60" : inputClassName}
+                      placeholder={language === "tr" ? "Adınız" : "Jane"}
+                    />
+                  </label>
+                  <FieldError msg={firstNameErr} />
+                </div>
+                <div>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-medium text-nb-muted">
+                      {copy.shared.lastNameLabel}
+                    </span>
+                    <input
+                      type="text"
+                      name="family-name"
+                      autoComplete="family-name"
+                      value={lastName}
+                      onChange={(event) => { setLastName(event.target.value); setLastNameErr(""); }}
+                      className={lastNameErr ? inputClassName + " !border-rose-500/60" : inputClassName}
+                      placeholder={language === "tr" ? "Soyadınız" : "Doe"}
+                    />
+                  </label>
+                  <FieldError msg={lastNameErr} />
+                </div>
               </div>
             ) : null}
 
             {mode === "register" ? (
               <>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">
-                    {language === "tr" ? "Cep telefonu" : "Mobile phone"}{" "}
-                    <span className="font-normal opacity-75">
-                      (
-                      {language === "tr"
-                        ? "isteğe bağlı, +90"
-                        : "optional, +90"}
-                      )
-                    </span>
-                  </span>
-                  <NbPhoneInput
-                    className="[&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-white/[0.08] [&_.PhoneInput]:bg-nb-bg-soft/95 [&_.PhoneInputInput]:rounded-r-xl [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:py-3.5 [&_.PhoneInputInput]:text-[15px] [&_.PhoneInputInput]:text-nb-text"
-                    value={registerPhone}
-                    onChange={(v) => setRegisterPhone(v)}
-                    disabled={submitting}
-                  />
-                </label>
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-nb-muted">
                     {language === "tr" ? "Şehir" : "City"}{" "}
@@ -433,46 +438,56 @@ export function AuthPage({
               </>
             ) : null}
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-nb-muted">
-                {copy.shared.emailLabel}
-              </span>
-              <input
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className={inputClassName}
-                placeholder="name@company.com"
-              />
-            </label>
-
-            <label className="block">
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="block text-sm font-medium text-nb-muted">
-                  {copy.shared.passwordLabel}
+            <div>
+              <label className="block">
+                <span className="mb-2 block text-sm font-medium text-nb-muted">
+                  {copy.shared.emailLabel}
                 </span>
-                {mode === "login" && onForgotPassword ? (
-                  <button
-                    type="button"
-                    onClick={onForgotPassword}
-                    className="text-xs font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
-                  >
-                    {authTranslations[language].login.forgotPassword}
-                  </button>
-                ) : null}
-              </div>
-              <input
-                type="password"
-                autoComplete={
-                  mode === "login" ? "current-password" : "new-password"
-                }
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className={inputClassName}
-                placeholder="••••••••••••••"
-              />
-            </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => { setEmail(event.target.value); setEmailErr(""); }}
+                  className={(emailErr || serverEmailErr) ? inputClassName + " !border-rose-500/60" : inputClassName}
+                  placeholder="name@company.com"
+                />
+              </label>
+              <FieldError msg={emailErr || serverEmailErr} />
+            </div>
+
+            <div>
+              <label className="block">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="block text-sm font-medium text-nb-muted">
+                    {copy.shared.passwordLabel}
+                  </span>
+                  {mode === "login" && onForgotPassword ? (
+                    <button
+                      type="button"
+                      onClick={onForgotPassword}
+                      className="text-xs font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
+                    >
+                      {authTranslations[language].login.forgotPassword}
+                    </button>
+                  ) : null}
+                </div>
+                <input
+                  type="password"
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(event) => { setPassword(event.target.value); setPasswordErr(""); }}
+                  className={(passwordErr || serverPasswordErr) ? inputClassName + " !border-rose-500/60" : inputClassName}
+                  placeholder="••••••••••••••"
+                />
+              </label>
+              <FieldError msg={passwordErr || serverPasswordErr} />
+            </div>
+
+            {generalDisplayError ? (
+              <p className="text-xs leading-snug text-rose-400" role="alert">
+                {generalDisplayError}
+              </p>
+            ) : null}
 
             <button
               type="submit"

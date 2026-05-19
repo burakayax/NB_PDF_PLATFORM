@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import * as pdfjsLib from "pdfjs-dist";
-import { Check, ChevronDown, ChevronUp, GripVertical, RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { expandPagesString, formatPageSelection, ws } from "../../i18n/workspace";
 
@@ -299,7 +299,16 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     // ── Organize mode drag-and-drop state ─────────────────────────────────────
     const [dragSrcFlat, setDragSrcFlat] = useState<number | null>(null);
-    const [dragOverFlat, setDragOverFlat] = useState<number | null>(null);
+    const dragSrcRef = useRef<number | null>(null);
+    const lastSwapTargetRef = useRef<number | null>(null);
+    // Swap animasyonu: son swap olan flat indekslerini kısa süre işaretle
+    const [swappedFlats, setSwappedFlats] = useState<Set<number>>(new Set());
+    const swapAnimTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Tarayıcı ghost image'ını gizlemek için 1×1 şeffaf GIF
+    const transparentDragImageRef = useRef<HTMLImageElement | null>(null);
+
+    // Pozisyon girişi için per-card state (flat index → geçici string)
+    const [posInputs, setPosInputs] = useState<Record<number, string>>({});
 
     const applyOrganizeDrop = useCallback(
       (fromFlat: number, toFlat: number) => {
@@ -310,6 +319,29 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         onPageOrderChange(arr);
         onPagesTextChange(arr.join(","));
         onPagesErrorClear();
+      },
+      [pageOrder, onPageOrderChange, onPagesTextChange, onPagesErrorClear],
+    );
+
+    // Canlı swap: sürüklerken hedef karta gelindiğinde hemen yer değiştir
+    const applyLiveSwap = useCallback(
+      (toFlat: number) => {
+        const src = dragSrcRef.current;
+        if (src === null || src === toFlat) return;
+        if (lastSwapTargetRef.current === toFlat) return;
+        lastSwapTargetRef.current = toFlat;
+        const arr = [...pageOrder];
+        const [item] = arr.splice(src, 1);
+        arr.splice(toFlat, 0, item!);
+        onPageOrderChange(arr);
+        onPagesTextChange(arr.join(","));
+        onPagesErrorClear();
+        dragSrcRef.current = toFlat;
+        setDragSrcFlat(toFlat);
+        // Swap animasyonu: her iki kartı kısa süre işaretle
+        if (swapAnimTimerRef.current) clearTimeout(swapAnimTimerRef.current);
+        setSwappedFlats(new Set([src, toFlat]));
+        swapAnimTimerRef.current = setTimeout(() => setSwappedFlats(new Set()), 180);
       },
       [pageOrder, onPageOrderChange, onPagesTextChange, onPagesErrorClear],
     );
@@ -1838,54 +1870,118 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                         return null;
                       }
                       const isDragSrc = organizeMode && dragSrcFlat === flat;
-                      const isDragOver = organizeMode && dragOverFlat === flat && dragSrcFlat !== null && dragSrcFlat !== flat;
+                      const isSwapAnim = organizeMode && swappedFlats.has(flat) && !isDragSrc;
+                      const totalCards = pageOrder.length;
                       return (
                         <div
                           key={`page-${thumbSessionTag || "pending"}-${page1}`}
                           data-pdf-thumb-page={page1}
                           data-flat-index={flat}
-                          className={`relative min-w-0 transition-all duration-150 ${organizeMode ? "cursor-grab active:cursor-grabbing" : ""} ${isDragSrc ? "opacity-40 scale-95" : ""} ${isDragOver ? "ring-2 ring-cyan-400 ring-offset-1 ring-offset-slate-900 rounded-lg" : ""}`}
+                          style={{
+                            transition: "opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease",
+                            transform: isSwapAnim ? "scale(1.04)" : isDragSrc ? "scale(0.93)" : "scale(1)",
+                            opacity: isDragSrc ? 0.25 : 1,
+                            boxShadow: isSwapAnim ? "0 0 0 2px #38bdf8, 0 4px 16px rgba(56,189,248,0.25)" : undefined,
+                            borderRadius: 8,
+                          }}
+                          className={`relative min-w-0 ${organizeMode ? "cursor-grab active:cursor-grabbing" : ""}`}
                           draggable={organizeMode}
                           onDragStart={organizeMode ? (e) => {
                             e.stopPropagation();
+                            dragSrcRef.current = flat;
+                            lastSwapTargetRef.current = null;
                             setDragSrcFlat(flat);
                             e.dataTransfer.effectAllowed = "move";
                             e.dataTransfer.setData("text/plain", String(flat));
+                            // Tarayıcı ghost image'ını tamamen gizle
+                            if (!transparentDragImageRef.current) {
+                              const img = new Image();
+                              img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                              transparentDragImageRef.current = img;
+                            }
+                            e.dataTransfer.setDragImage(transparentDragImageRef.current, 0, 0);
                           } : undefined}
                           onDragOver={organizeMode ? (e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             e.dataTransfer.dropEffect = "move";
-                            setDragOverFlat(flat);
-                          } : undefined}
-                          onDragLeave={organizeMode ? (e) => {
-                            e.stopPropagation();
-                            setDragOverFlat(null);
+                            // Canlı swap: hedef değiştiğinde hemen yer değiştir
+                            if (dragSrcRef.current !== null && dragSrcRef.current !== flat) {
+                              applyLiveSwap(flat);
+                            }
                           } : undefined}
                           onDrop={organizeMode ? (e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            const src = dragSrcFlat;
+                            dragSrcRef.current = null;
+                            lastSwapTargetRef.current = null;
                             setDragSrcFlat(null);
-                            setDragOverFlat(null);
-                            if (src !== null && src !== flat) {
-                              applyOrganizeDrop(src, flat);
-                            }
                           } : undefined}
                           onDragEnd={organizeMode ? () => {
+                            dragSrcRef.current = null;
+                            lastSwapTargetRef.current = null;
                             setDragSrcFlat(null);
-                            setDragOverFlat(null);
                           } : undefined}
                         >
                           {organizeMode ? (
                             <>
+                              {/* Grip ikonu */}
                               <div className="absolute left-1 top-1 z-[15] flex items-center justify-center rounded border border-white/10 bg-slate-950/80 p-0.5 text-slate-400 shadow-sm">
                                 <GripVertical className="h-3.5 w-3.5" aria-hidden />
                               </div>
+
+                              {/* Ok butonları — sol/sağ */}
+                              <div className="absolute top-1 right-1 z-[15] flex gap-0.5">
+                                <button
+                                  type="button"
+                                  disabled={flat === 0}
+                                  className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onClick={(e) => { e.stopPropagation(); applyOrganizeDrop(flat, flat - 1); }}
+                                  title={language === "tr" ? "Sola taşı" : "Move left"}
+                                >
+                                  <ChevronLeft className="h-3 w-3" />
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={flat === totalCards - 1}
+                                  className="flex h-5 w-5 items-center justify-center rounded border border-white/10 bg-slate-950/80 text-slate-300 shadow-sm transition-colors hover:bg-blue-600/80 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed"
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onClick={(e) => { e.stopPropagation(); applyOrganizeDrop(flat, flat + 1); }}
+                                  title={language === "tr" ? "Sağa taşı" : "Move right"}
+                                >
+                                  <ChevronRight className="h-3 w-3" />
+                                </button>
+                              </div>
+
+                              {/* Pozisyon girişi — alt */}
                               <div className="absolute bottom-1 left-0 right-0 z-[15] flex items-center justify-center">
-                                <span className="rounded bg-slate-950/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-300 shadow-sm">
-                                  {flat + 1}
-                                </span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={totalCards}
+                                  value={posInputs[flat] ?? (flat + 1)}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onDragStart={(e) => e.stopPropagation()}
+                                  onChange={(e) => {
+                                    setPosInputs((prev) => ({ ...prev, [flat]: e.target.value }));
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    setPosInputs((prev) => { const n = { ...prev }; delete n[flat]; return n; });
+                                    if (!isNaN(val) && val >= 1 && val <= totalCards && val - 1 !== flat) {
+                                      moveOrderToPosition(flat, val);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                    if (e.key === "Escape") {
+                                      setPosInputs((prev) => { const n = { ...prev }; delete n[flat]; return n; });
+                                      (e.target as HTMLInputElement).blur();
+                                    }
+                                  }}
+                                  className="w-10 rounded bg-slate-950/90 px-1 py-0.5 text-center text-[10px] font-semibold text-slate-300 shadow-sm outline-none ring-0 focus:ring-1 focus:ring-blue-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                                />
                               </div>
                             </>
                           ) : null}

@@ -25,11 +25,13 @@ class CustomerInfo:
 class InvoiceItem:
     name: str
     quantity: float
-    unit_price: float                 # KDV HARİÇ fiyat
+    unit_price: float                 # KDV HARİÇ fiyat (iskonto sonrası)
     vat_rate: int                     # 0, 10 veya 20
     description: str | None = None
     unit: str = "Adet"
     is_export: bool = False
+    discount_percent: int = 0         # İskonto yüzdesi — KDV Kanunu Md.25 uyumu
+    original_unit_price: float | None = None  # İskonto öncesi KDV hariç birim fiyat
 
 
 @dataclass

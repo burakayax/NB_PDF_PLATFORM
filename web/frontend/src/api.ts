@@ -264,7 +264,11 @@ async function ensureOk(response: Response, defaultMessage: string) {
       throw new Error(hint || defaultMessage);
     }
     const msg = detailToMessage(payload.detail);
-    throw new Error(msg || hint || defaultMessage);
+    const busyMsg =
+      status === 503 && (payload as { error?: string }).error === "server_busy"
+        ? "Sunucu şu an büyük dosyanızı işleyemiyor, lütfen birkaç saniye sonra tekrar deneyin."
+        : "";
+    throw new Error(busyMsg || msg || hint || defaultMessage);
   }
   const errorText = (await response.text()).trim();
   const looksLikeHtml = errorText.startsWith("<") || errorText.toLowerCase().includes("<!doctype");

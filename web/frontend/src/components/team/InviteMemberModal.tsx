@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getSaasApiBase } from "../../api/saasBase";
 
 type Props = {
   open: boolean;
@@ -19,12 +20,13 @@ export function InviteMemberModal({ open, onClose, accessToken, onSuccess }: Pro
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/team/invite", {
+      const res = await fetch(`${getSaasApiBase()}/api/team/invite`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
+        credentials: "include",
         body: JSON.stringify({ email }),
       });
       if (!res.ok) {

@@ -1,11 +1,13 @@
-import { renderCorporateEmail } from "../../lib/email-layout.js";
+import { renderCorporateEmail, ctaButton, detailTable } from "../../lib/email-layout.js";
 import { escapeHtml } from "../../lib/email-html.js";
 import { renderBrandedVerificationEmailHtml } from "./verification-email-branded.js";
+import { emailT, type Locale } from "../../lib/email-i18n.js";
 
 type VerificationEmailTemplateInput = {
   verificationUrl: string;
   productName: string;
   expiresInHours: number;
+  locale?: Locale;
 };
 
 type AdminNotificationEmailTemplateInput = {
@@ -18,32 +20,30 @@ export function createVerificationEmailTemplate({
   verificationUrl,
   productName,
   expiresInHours,
+  locale = "tr",
 }: VerificationEmailTemplateInput) {
-  const subject = "Email Doğrulama";
+  const t = emailT[locale];
   const safeProduct = escapeHtml(productName);
-
-  const html = renderBrandedVerificationEmailHtml(verificationUrl);
+  const html = renderBrandedVerificationEmailHtml(verificationUrl, locale);
 
   const text = [
-    "Email Doğrulama — PDF PLATFORM",
+    t.verify_subject,
     "",
-    "Email Adresinizi Doğrulayın",
+    t.verify_title,
     "",
-    "PDF PLATFORM hesabınızı aktifleştirmek için aşağıdaki bağlantıyı tarayıcıda açın:",
+    t.verify_body,
     "",
     verificationUrl,
     "",
-    `Bu bağlantı ${expiresInHours} saat içinde sona erer.`,
+    locale === "tr"
+      ? `Bu bağlantı ${expiresInHours} saat içinde sona erer.`
+      : `This link expires in ${expiresInHours} hours.`,
     "",
-    "Bu işlemi siz yapmadıysanız bu emaili dikkate almayabilirsiniz.",
+    t.verify_footer_note,
     `${safeProduct} © 2026`,
   ].join("\n");
 
-  return {
-    subject,
-    html,
-    text,
-  };
+  return { subject: t.verify_subject, html, text };
 }
 
 export function createAdminNotificationEmailTemplate({
@@ -60,24 +60,10 @@ export function createAdminNotificationEmailTemplate({
     eyebrow: "Admin",
     title: "New user registered",
     intro: `A new account was created on ${safeProduct}. The user must verify their email before they can sign in.`,
-    bodyHtml: `
-      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #334155;border-radius:20px;background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);padding:24px 26px;">
-        <tbody>
-          <tr>
-            <td style="padding:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">Email</td>
-          </tr>
-          <tr>
-            <td style="padding:0 0 20px;font-size:17px;line-height:1.65;color:#f8fafc;border-bottom:1px solid #1e293b;">${safeEmail}</td>
-          </tr>
-          <tr>
-            <td style="padding:18px 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">Registered at</td>
-          </tr>
-          <tr>
-            <td style="padding:0;font-size:15px;line-height:1.65;color:#cbd5e1;">${safeDate}</td>
-          </tr>
-        </tbody>
-      </table>
-    `,
+    bodyHtml: detailTable([
+      { label: "Email", value: safeEmail },
+      { label: "Registered at", value: safeDate },
+    ]),
     footerText: `This notification was sent to the configured administrator for ${safeProduct}.`,
     productName: safeProduct,
   });
@@ -89,17 +75,13 @@ export function createAdminNotificationEmailTemplate({
     `Registered at: ${registeredAt}`,
   ].join("\n");
 
-  return {
-    subject,
-    html,
-    text,
-  };
+  return { subject, html, text };
 }
 
 type AccountDeletionEmailInput = {
   email: string;
   deletedAt: string;
-  lang?: "tr" | "en";
+  lang?: Locale;
 };
 
 export function createAccountDeletionEmailTemplate({
@@ -107,134 +89,79 @@ export function createAccountDeletionEmailTemplate({
   deletedAt,
   lang = "en",
 }: AccountDeletionEmailInput) {
+  const t = emailT[lang];
   const safeEmail = escapeHtml(email);
   const safeDate = escapeHtml(deletedAt);
 
-  const subject =
-    lang === "tr"
-      ? "Hesabınız silindi — PDF PLATFORM"
-      : "Your account has been deleted — PDF PLATFORM";
-
-  const title = lang === "tr" ? "Hesap Silindi" : "Account Deleted";
-  const intro =
-    lang === "tr"
-      ? "PDF PLATFORM hesabınız kalıcı olarak silindi. Tüm verileriniz kaldırıldı."
-      : "Your PDF PLATFORM account has been permanently deleted. All your data has been removed.";
-
   const html = renderCorporateEmail({
-    eyebrow: lang === "tr" ? "Hesap" : "Account",
-    title,
-    intro,
+    eyebrow: t.delete_eyebrow,
+    title: t.delete_title,
+    intro: t.delete_intro,
     bodyHtml: `
-      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #334155;border-radius:20px;background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);padding:24px 26px;">
-        <tbody>
-          <tr>
-            <td style="padding:0 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">Email</td>
-          </tr>
-          <tr>
-            <td style="padding:0 0 20px;font-size:17px;line-height:1.65;color:#f8fafc;border-bottom:1px solid #1e293b;">${safeEmail}</td>
-          </tr>
-          <tr>
-            <td style="padding:18px 0 8px;font-size:11px;font-weight:700;letter-spacing:0.1em;color:#94a3b8;text-transform:uppercase;">${lang === "tr" ? "Silinme Tarihi" : "Deleted At"}</td>
-          </tr>
-          <tr>
-            <td style="padding:0;font-size:15px;line-height:1.65;color:#cbd5e1;">${safeDate}</td>
-          </tr>
-        </tbody>
-      </table>
-      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#94a3b8;">
-        ${lang === "tr"
-          ? "Bu işlemi siz yapmadıysanız lütfen destek ekibimizle iletişime geçin."
-          : "If you did not request this, please contact our support team immediately."}
-      </p>
+      ${detailTable([
+        { label: t.delete_email_label, value: safeEmail },
+        { label: t.delete_date_label, value: safeDate },
+      ])}
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">${t.delete_note}</p>
     `,
     footerText: "PDF PLATFORM — NB Global Studio",
     productName: "PDF PLATFORM",
   });
 
-  const text =
-    lang === "tr"
-      ? [
-          "Hesabınız silindi — PDF PLATFORM",
-          "",
-          `Email: ${email}`,
-          `Silinme tarihi: ${deletedAt}`,
-          "",
-          "Tüm verileriniz kalıcı olarak kaldırıldı.",
-          "Bu işlemi siz yapmadıysanız lütfen destek ekibimizle iletişime geçin.",
-        ].join("\n")
-      : [
-          "Your account has been deleted — PDF PLATFORM",
-          "",
-          `Email: ${email}`,
-          `Deleted at: ${deletedAt}`,
-          "",
-          "All your data has been permanently removed.",
-          "If you did not request this, please contact our support team immediately.",
-        ].join("\n");
+  const text = [
+    t.delete_subject,
+    "",
+    `${t.delete_email_label}: ${email}`,
+    `${t.delete_date_label}: ${deletedAt}`,
+    "",
+    t.delete_intro,
+    t.delete_note,
+  ].join("\n");
 
-  return { subject, html, text };
+  return { subject: t.delete_subject, html, text };
 }
 
 type PasswordResetCodeEmailInput = {
   code: string;
-  lang: "tr" | "en";
+  lang: Locale;
 };
 
 export function createPasswordResetCodeEmailTemplate({
   code,
   lang,
 }: PasswordResetCodeEmailInput) {
+  const t = emailT[lang];
   const safeCode = escapeHtml(code);
-  const subject =
-    lang === "tr"
-      ? "PDF PLATFORM — Şifre sıfırlama kodunuz"
-      : "PDF PLATFORM — Your password reset code";
-
-  const title = lang === "tr" ? "Şifre sıfırlama kodu" : "Password reset code";
-  const intro =
-    lang === "tr"
-      ? "Hesabınız için tek kullanımlık doğrulama kodunuz aşağıdadır. Kodu kimseyle paylaşmayın."
-      : "Your one-time verification code is below. Do not share this code with anyone.";
 
   const html = renderCorporateEmail({
-    eyebrow: lang === "tr" ? "Güvenlik" : "Security",
-    title,
-    intro,
+    eyebrow: t.reset_eyebrow,
+    title: t.reset_title,
+    intro: t.reset_intro,
     bodyHtml: `
-      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #334155;border-radius:20px;background:linear-gradient(180deg,#0f172a 0%,#0b1220 100%);padding:28px 24px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+        style="width:100%;border-collapse:collapse;border:1px solid #2d1b69;border-radius:16px;
+          background:linear-gradient(135deg,#13082a 0%,#0d0d2e 100%);padding:28px 24px;">
         <tbody>
           <tr>
-            <td style="text-align:center;font-size:32px;font-weight:800;letter-spacing:0.35em;color:#38bdf8;font-family:ui-monospace,monospace;">${safeCode}</td>
+            <td style="text-align:center;font-size:36px;font-weight:800;letter-spacing:0.45em;
+              color:#a78bfa;font-family:ui-monospace,Courier New,monospace;
+              text-shadow:0 0 20px rgba(167,139,250,0.5);">${safeCode}</td>
           </tr>
         </tbody>
       </table>
-      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#94a3b8;">
-        ${lang === "tr" ? "Bu kod 15 dakika geçerlidir. İsteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz." : "This code expires in 15 minutes. If you did not request a reset, you can ignore this email."}
-      </p>
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.6;color:#6b7280;">${t.reset_note}</p>
     `,
     footerText: "PDF PLATFORM — NB Global Studio",
     productName: "PDF PLATFORM",
   });
 
-  const text =
-    lang === "tr"
-      ? [
-          "PDF PLATFORM — Şifre sıfırlama",
-          "",
-          `Kodunuz: ${code}`,
-          "",
-          "Bu kod 15 dakika geçerlidir.",
-          "İsteği siz yapmadıysanız bu e-postayı yok sayın.",
-        ].join("\n")
-      : [
-          "PDF PLATFORM — Password reset",
-          "",
-          `Your code: ${code}`,
-          "",
-          "This code expires in 15 minutes.",
-          "If you did not request this, ignore this email.",
-        ].join("\n");
+  const text = [
+    t.reset_subject,
+    "",
+    lang === "tr" ? `Kodunuz: ${code}` : `Your code: ${code}`,
+    "",
+    t.reset_note,
+  ].join("\n");
 
-  return { subject, html, text };
+  return { subject: t.reset_subject, html, text };
 }

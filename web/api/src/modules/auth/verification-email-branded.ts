@@ -1,114 +1,147 @@
-import { escapeHtmlAttr } from "../../lib/email-html.js";
+import { escapeHtmlAttr, escapeHtml } from "../../lib/email-html.js";
+import { env } from "../../config/env.js";
+import { type Locale } from "../../lib/email-i18n.js";
 
-/**
- * PLATFORM — SaaS verification email (icon placeholders included)
- */
+const copy = {
+  tr: {
+    title: "E-posta adresinizi doğrulayın",
+    body: "PDF PLATFORM hesabınızı aktifleştirmek için doğrulama yapmanız gerekiyor.",
+    note: "Bu bağlantı güvenlik nedeniyle sınırlı süre geçerlidir.",
+    cta: "E-postamı doğrula",
+    fallback_label: "Buton çalışmıyorsa bağlantıyı kopyalayın:",
+    footer_note: "Bu işlemi siz yapmadıysanız dikkate almayabilirsiniz.",
+    copyright: "PDF PLATFORM © 2026",
+  },
+  en: {
+    title: "Verify your email address",
+    body: "You need to verify your email to activate your PDF PLATFORM account.",
+    note: "This link is valid for a limited time for security reasons.",
+    cta: "Verify my email",
+    fallback_label: "If the button doesn't work, copy the link:",
+    footer_note: "If you did not request this, you can safely ignore this email.",
+    copyright: "PDF PLATFORM © 2026",
+  },
+};
+
+/** Branded doğrulama emaili — modern dark tasarım, gerçek logo. */
 export function renderBrandedVerificationEmailHtml(
   verificationUrl: string,
+  locale: Locale = "tr",
 ): string {
   const href = escapeHtmlAttr(verificationUrl);
+  const origin = (env as any).FRONTEND_ORIGIN?.replace(/\/$/, "") ?? "";
+  const logoUrl = origin ? escapeHtml(`${origin}/logo.png`) : "";
+  const c = copy[locale];
+
+  const logoBlock = logoUrl
+    ? `<img src="${logoUrl}" width="38" height="38" alt="PDF PLATFORM"
+        style="display:block;border-radius:10px;border:1px solid rgba(139,92,246,0.35);" />`
+    : `<div style="width:38px;height:38px;border-radius:10px;border:1px dashed #8b5cf6;
+        background:rgba(139,92,246,0.12);display:inline-block;line-height:38px;text-align:center;
+        font-size:9px;font-weight:800;letter-spacing:0.1em;color:#a78bfa;">PDF</div>`;
 
   return `<!DOCTYPE html>
-<html lang="tr">
+<html lang="${locale}">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="x-apple-disable-message-reformatting" />
   <title>PDF PLATFORM</title>
 </head>
+<body style="margin:0;padding:0;background-color:#0a0f1e;font-family:Arial,Helvetica,sans-serif;">
 
-<body style="margin:0;padding:0;width:100%;background-color:#f8fafc;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="background:#0a0f1e;border-collapse:collapse;">
+  <tr>
+    <td align="center" style="padding:40px 16px;">
 
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-    style="border-collapse:collapse;background-color:#f8fafc;">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+        style="max-width:600px;width:100%;background:#111827;border:1px solid #1e2d45;
+          border-radius:20px;overflow:hidden;">
 
-    <tr>
-      <td align="center" style="padding:32px 16px;">
+        <!-- HEADER -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a1040 0%,#0d1b35 50%,#0a1628 100%);
+            padding:30px 36px 26px;border-bottom:1px solid #1e2d45;">
 
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
-          style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="vertical-align:middle;padding-right:14px;">${logoBlock}</td>
+                <td style="vertical-align:middle;">
+                  <div style="font-size:15px;font-weight:800;color:#e2e8f0;letter-spacing:0.04em;">PDF PLATFORM</div>
+                  <div style="font-size:10px;font-weight:700;color:#8b5cf6;letter-spacing:0.18em;
+                    text-transform:uppercase;margin-top:3px;">${locale === "tr" ? "DOĞRULAMA" : "VERIFICATION"}</div>
+                </td>
+              </tr>
+            </table>
 
-          <!-- HEADER -->
-          <tr>
-            <td style="padding:26px 32px;border-bottom:1px solid #e2e8f0;">
+          </td>
+        </tr>
 
-              <div style="display:flex;align-items:center;gap:10px;font-family:Arial;font-weight:700;color:#2563eb;font-size:18px;">
+        <!-- BODY -->
+        <tr>
+          <td style="padding:34px 36px 10px;">
 
-                <!-- BURAYA İKON (LOGO) -->
-                <img src="/web/frontend/public/logo.png" width="24" height="24" style="display:inline-block;" />
+            <h1 style="margin:0 0 14px;font-size:22px;font-weight:800;line-height:1.3;
+              background:linear-gradient(135deg,#f8fafc 0%,#c4b5fd 100%);
+              -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+              background-clip:text;color:#f8fafc;">
+              ${c.title}
+            </h1>
 
-                PLATFORM
-              </div>
+            <p style="margin:0 0 8px;font-family:Arial;font-size:15px;line-height:1.65;color:#94a3b8;">
+              ${c.body}
+            </p>
 
-            </td>
-          </tr>
+            <p style="margin:0;font-family:Arial;font-size:13px;color:#6b7280;">
+              ${c.note}
+            </p>
 
-          <!-- BODY -->
-          <tr>
-            <td style="padding:34px 32px 10px 32px;">
-              <h1 style="margin:0;font-family:Arial;font-size:20px;font-weight:700;color:#0f172a;">
-                E-posta adresinizi doğrulayın
-              </h1>
+          </td>
+        </tr>
 
-              <p style="margin:12px 0 0 0;font-family:Arial;font-size:15px;line-height:1.6;color:#334155;">
-                PLATFORM hesabınızı aktifleştirmek için doğrulamayı tamamlamanız gerekiyor.
-              </p>
+        <!-- CTA -->
+        <tr>
+          <td align="center" style="padding:28px 36px 14px;">
+            <a href="${href}" target="_blank"
+              style="display:inline-block;padding:15px 32px;
+                background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);
+                color:#ffffff;text-decoration:none;border-radius:12px;
+                font-family:Arial;font-size:15px;font-weight:800;letter-spacing:0.02em;
+                border:1px solid rgba(167,139,250,0.3);">
+              ${c.cta}
+            </a>
+          </td>
+        </tr>
 
-              <p style="margin:10px 0 0 0;font-family:Arial;font-size:13px;color:#64748b;">
-                Bu bağlantı güvenlik nedeniyle sınırlı süre geçerlidir.
-              </p>
-            </td>
-          </tr>
+        <!-- FALLBACK LINK -->
+        <tr>
+          <td style="padding:8px 36px 28px;">
+            <p style="margin:0 0 6px;font-family:Arial;font-size:12px;color:#4b5563;">
+              ${c.fallback_label}
+            </p>
+            <p style="margin:0;font-family:Arial;font-size:12px;color:#7c3aed;word-break:break-all;">
+              ${href}
+            </p>
+          </td>
+        </tr>
 
-          <!-- CTA -->
-          <tr>
-            <td align="center" style="padding:24px 32px 10px 32px;">
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#0d1117;border-top:1px solid #1e2d45;padding:18px 36px;">
+            <p style="margin:0 0 6px;font-family:Arial;font-size:12px;color:#374151;">
+              ${c.footer_note}
+            </p>
+            <p style="margin:0;font-family:Arial;font-size:11px;color:#1e2d45;font-weight:600;">
+              ${c.copyright}
+            </p>
+          </td>
+        </tr>
 
-              <a href="${href}" target="_blank"
-                style="display:inline-flex;align-items:center;gap:8px;background-color:#2563eb;color:#fff;text-decoration:none;
-                padding:14px 26px;border-radius:8px;font-family:Arial;font-size:15px;font-weight:700;">
-
-                <!-- BURAYA İKON (BUTON ICON) -->
-                <img src="BURAYA_BUTTON_ICON_URL" width="16" height="16" />
-
-                E-posta adresimi doğrula
-              </a>
-
-            </td>
-          </tr>
-
-          <!-- FALLBACK -->
-          <tr>
-            <td style="padding:10px 32px 24px 32px;">
-              <p style="margin:0;font-family:Arial;font-size:12px;color:#64748b;">
-                Buton çalışmıyorsa linki kopyalayın:
-              </p>
-
-              <p style="margin:6px 0 0 0;font-family:Arial;font-size:12px;color:#2563eb;word-break:break-all;">
-                ${href}
-              </p>
-            </td>
-          </tr>
-
-          <!-- FOOTER -->
-          <tr>
-            <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 32px;">
-              <p style="margin:0;font-family:Arial;font-size:12px;color:#64748b;">
-                Bu işlemi siz yapmadıysanız dikkate almayabilirsiniz.
-              </p>
-
-              <p style="margin:8px 0 0 0;font-family:Arial;font-size:12px;color:#94a3b8;">
-                PDF PLATFORM © 2026
-              </p>
-            </td>
-          </tr>
-
-        </table>
-
-      </td>
-    </tr>
-
-  </table>
+      </table>
+    </td>
+  </tr>
+</table>
 
 </body>
 </html>`;

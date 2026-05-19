@@ -88,7 +88,13 @@ export async function acceptTeamInvite(token: string, userId: string) {
 
   await prisma.user.update({
     where: { id: userId },
-    data: { isTeamMember: true, teamOwnerId: member.team.ownerId },
+    data: {
+      isTeamMember: true,
+      teamOwnerId: member.team.ownerId,
+      plan: "BUSINESS",
+      isVerified: true,
+      teamMemberRole: "MEMBER",
+    },
   });
 
   return updated;
@@ -108,10 +114,13 @@ export async function revokeTeamMember(teamId: string, memberId: string, ownerId
     data: { inviteStatus: "REVOKED", revokedAt: new Date() },
   });
 
+  // Üyenin kişisel planı FREE'ye düşürülür ve ekip bağlantısı kesilir.
+  // Ancak ekibin ödenen koltuk kapasitesi (extraSeats) DEĞİŞMEZ —
+  // o koltuk boşalır ve sahibi başka birini davet edebilir.
   if (member.userId) {
     await prisma.user.update({
       where: { id: member.userId },
-      data: { isTeamMember: false, teamOwnerId: null },
+      data: { isTeamMember: false, teamOwnerId: null, plan: "FREE", teamMemberRole: null },
     });
   }
 }
@@ -129,6 +138,7 @@ export async function getTeamDashboard(teamId: string, ownerId: string) {
               lastName: true,
               email: true,
               updatedAt: true,
+              lastLoginAt: true,
             },
           },
           activities: {
@@ -153,12 +163,15 @@ export async function getTeamDashboard(teamId: string, ownerId: string) {
       });
       const thisMonth = allActivities.filter((a) => a.createdAt >= monthStart);
 
-      const toolCounts: Record<string, number> = {};
+      const toolCounts: Record<string, { name: string; count: number }> = {};
       for (const a of allActivities) {
-        toolCounts[a.toolId] = (toolCounts[a.toolId] ?? 0) + 1;
+        if (!toolCounts[a.toolId]) toolCounts[a.toolId] = { name: a.toolName, count: 0 };
+        toolCounts[a.toolId]!.count += 1;
       }
-      const mostUsedTool =
-        Object.entries(toolCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      const toolBreakdown = Object.entries(toolCounts)
+        .map(([toolId, { name, count }]) => ({ toolId, toolName: name, count }))
+        .sort((a, b) => b.count - a.count);
+      const mostUsedTool = toolBreakdown[0]?.toolName ?? null;
 
       const totalPages = allActivities.reduce((s, a) => s + (a.pageCount ?? 0), 0);
       const totalFileSizeGB =
@@ -176,6 +189,7 @@ export async function getTeamDashboard(teamId: string, ownerId: string) {
           totalPagesProcessed: totalPages,
           totalFileSizeGB,
           lastActivity,
+          toolBreakdown,
         },
       };
     }),
@@ -238,6 +252,27 @@ export async function logMemberActivity(
         : {}),
     },
   });
+}
+
+export async function setMemberRole(
+  teamId: string,
+  memberId: string,
+  ownerId: string,
+  role: "MEMBER" | "MANAGER",
+) {
+  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  if (!team || team.ownerId !== ownerId) throw new HttpError(403, "UNAUTHORIZED");
+
+  const member = await prisma.teamMember.findFirst({ where: { id: memberId, teamId } });
+  if (!member) throw new HttpError(404, "Üye bulunamadı.");
+
+  await prisma.teamMember.update({ where: { id: memberId }, data: { role } });
+
+  if (member.userId) {
+    await prisma.user.update({ where: { id: member.userId }, data: { teamMemberRole: role } });
+  }
+
+  return { ok: true, role };
 }
 
 export async function expireTeamSubscription(ownerId: string) {

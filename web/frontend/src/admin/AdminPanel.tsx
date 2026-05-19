@@ -255,7 +255,7 @@ export function AdminPanel({
   viewerRole = "ADMIN",
 }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTabId>("dashboard");
-  const [uiMode, setUiMode] = useState<AdminUiMode>(() => readStoredAdminUiMode());
+  const uiMode: AdminUiMode = "advanced";
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [pendingCmsMediaBind, setPendingCmsMediaBind] = useState<{
@@ -273,14 +273,6 @@ export function AdminPanel({
   const [bBusy, setBBusy] = useState(false);
   const [cBusy, setCBusy] = useState(false);
   const [cmdErr, setCmdErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(ADMIN_UI_MODE_STORAGE_KEY, uiMode);
-    } catch {
-      /* ignore quota / private mode */
-    }
-  }, [uiMode]);
 
   const queueCmsMediaBind = useCallback((slot: CmsMediaBindSlot, url: string) => {
     setPendingCmsMediaBind({ slot, url });
@@ -380,8 +372,8 @@ export function AdminPanel({
       userEmail={userEmail}
       onExit={onExit}
       onLogout={onLogout}
-      simpleMode={uiMode === "simple"}
-      onSimpleMode={(v) => setUiMode(v ? "simple" : "advanced")}
+      simpleMode={false}
+      onSimpleMode={() => undefined}
     >
       <div className="px-4 py-6 md:px-8">
         {cmdErr && ["cmd-tools", "cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (

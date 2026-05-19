@@ -8,6 +8,9 @@ declare global {
         role: "USER" | "ADMIN";
         orgRole: "OWNER" | "ADMIN" | "MEMBER";
         organizationId: string | null;
+        isTeamMember?: boolean;
+        teamOwnerId?: string | null;
+        teamMemberRole?: "MEMBER" | "MANAGER" | null;
       };
     }
   }

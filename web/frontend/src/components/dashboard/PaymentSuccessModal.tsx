@@ -6,6 +6,7 @@ type PaymentSuccessModalProps = {
   planName: string | null;
   language: Language;
   onClose: () => void;
+  addedSeats?: number;
 };
 
 export function PaymentSuccessModal({
@@ -13,6 +14,7 @@ export function PaymentSuccessModal({
   planName,
   language,
   onClose,
+  addedSeats,
 }: PaymentSuccessModalProps) {
   const tr = language === "tr";
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -35,6 +37,7 @@ export function PaymentSuccessModal({
   if (!open) return null;
 
   const planLabel = planName ?? (tr ? "Yeni Planınız" : "Your New Plan");
+  const isSeatsMode = (addedSeats ?? 0) > 0;
 
   return (
     <div
@@ -72,28 +75,45 @@ export function PaymentSuccessModal({
             id="payment-success-title"
             className="mb-3 text-2xl font-black tracking-tight text-nb-text"
           >
-            {tr ? "Hoş Geldiniz! 🎉" : "Welcome Aboard! 🎉"}
+            {isSeatsMode
+              ? (tr ? `${addedSeats} Koltuk Eklendi 🎉` : `${addedSeats} Seats Added 🎉`)
+              : (tr ? "Hoş Geldiniz! 🎉" : "Welcome Aboard! 🎉")}
           </h2>
           <p className="mb-1 text-base font-semibold text-nb-text/90">
-            {tr
-              ? `${planLabel} planına başarıyla geçtiniz.`
-              : `You've successfully upgraded to ${planLabel}.`}
+            {isSeatsMode
+              ? (tr
+                  ? `${addedSeats} ekstra koltuk başarıyla hesabınıza eklendi.`
+                  : `${addedSeats} extra seats have been added to your account.`)
+              : (tr
+                  ? `${planLabel} planına başarıyla geçtiniz.`
+                  : `You've successfully upgraded to ${planLabel}.`)}
           </p>
           <p className="mt-2 text-sm leading-relaxed text-nb-muted">
-            {tr
-              ? "Hesabınız hemen aktif edildi. Tüm premium araçlara ve özelliklerinize erişebilirsiniz."
-              : "Your account has been activated immediately. You now have full access to all premium tools and features."}
+            {isSeatsMode
+              ? (tr
+                  ? "Yeni koltuklar hemen aktif oldu. Ekip üyelerinizi davet edebilirsiniz."
+                  : "New seats are immediately active. You can now invite more team members.")
+              : (tr
+                  ? "Hesabınız hemen aktif edildi. Tüm premium araçlara ve özelliklerinize erişebilirsiniz."
+                  : "Your account has been activated immediately. You now have full access to all premium tools and features.")}
           </p>
         </div>
 
         {/* Feature highlights */}
         <div className="mt-6 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
           <ul className="space-y-2">
-            {[
-              tr ? "Tüm premium PDF araçlarına erişim" : "Access to all premium PDF tools",
-              tr ? "Öncelikli işlem kuyruğu" : "Priority processing queue",
-              tr ? "Büyük dosya desteği" : "Large file support",
-            ].map((item) => (
+            {(isSeatsMode
+              ? [
+                  tr ? `${addedSeats} yeni koltuk hemen kullanılabilir` : `${addedSeats} new seats immediately available`,
+                  tr ? "Ekip panosundan yeni üyeleri davet edin" : "Invite new members from the team dashboard",
+                  tr ? "Koltuklar mevcut aboneliğinize eklendi" : "Seats added to your existing subscription",
+                ]
+              : [
+                  tr ? "Tüm premium PDF araçlarına erişim" : "Access to all premium PDF tools",
+                  tr ? "Öncelikli işlem kuyruğu" : "Priority processing queue",
+                  tr ? "Büyük dosya desteği" : "Large file support",
+                ]
+            ).map((item) => (
               <li key={item} className="flex items-center gap-2.5 text-sm text-nb-text/80">
                 <span className="flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-black text-emerald-400">✓</span>
                 {item}
@@ -109,7 +129,9 @@ export function PaymentSuccessModal({
           onClick={onClose}
           className="mt-6 w-full rounded-2xl bg-gradient-to-r from-emerald-500/90 to-cyan-500/80 px-6 py-3.5 text-sm font-bold tracking-wide text-white shadow-[0_4px_24px_-6px_rgba(16,185,129,0.5)] transition hover:from-emerald-400 hover:to-cyan-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/50"
         >
-          {tr ? "Araçları Keşfet" : "Explore Tools"}
+          {isSeatsMode
+            ? (tr ? "Ekip Panosuna Git" : "Go to Team Dashboard")
+            : (tr ? "Araçları Keşfet" : "Explore Tools")}
         </button>
 
         {/* Close button */}

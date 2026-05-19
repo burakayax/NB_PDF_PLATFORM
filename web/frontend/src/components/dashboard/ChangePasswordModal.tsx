@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { userEffectiveHasPassword, type AuthUser } from "../../api/auth";
 import type { Language } from "../../i18n/landing";
 import { newPasswordStrengthScore, validateNewPasswordPolicy } from "../../lib/passwordPolicy";
+import { translateAuthApiMessage } from "../../i18n/auth";
 
 type ToastFn = (type: "success" | "error" | "loading" | "info", title: string, detail: string) => void;
 
@@ -18,7 +19,19 @@ type ChangePasswordModalProps = {
 const inputClass =
   "w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/60 px-4 py-3 text-sm text-nb-text outline-none transition duration-200 ease-out placeholder:text-nb-muted focus:border-nb-primary/50 focus:ring-2 focus:ring-nb-primary/15 hover:border-white/12";
 
+const inputErrorClass =
+  "w-full rounded-xl border border-rose-500/60 bg-nb-bg-soft/60 px-4 py-3 text-sm text-nb-text outline-none transition duration-200 ease-out placeholder:text-nb-muted focus:border-rose-500/80 focus:ring-2 focus:ring-rose-500/20";
+
 const MODAL_CLOSE_DELAY_MS = 900;
+
+function FieldError({ msg }: { msg: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1.5 text-xs leading-snug text-rose-400" role="alert">
+      {msg}
+    </p>
+  );
+}
 
 export function ChangePasswordModal({
   open,
@@ -36,27 +49,31 @@ export function ChangePasswordModal({
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [apiError, setApiError] = useState("");
+
+  // Per-field errors
+  const [currentPwdErr, setCurrentPwdErr] = useState("");
+  const [newPwdErr, setNewPwdErr] = useState("");
+  const [confirmPwdErr, setConfirmPwdErr] = useState("");
+
+  function clearErrors() {
+    setCurrentPwdErr("");
+    setNewPwdErr("");
+    setConfirmPwdErr("");
+  }
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
     setSubmitting(false);
-    setApiError("");
+    clearErrors();
   }, [open, user.id]);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
+    if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape" && !submitting) {
-        onClose();
-      }
+      if (event.key === "Escape" && !submitting) onClose();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -66,7 +83,6 @@ export function ChangePasswordModal({
   const strengthLabels = tr
     ? ["Çok zayıf", "Zayıf", "Orta", "İyi", "Güçlü", "Çok güçlü"]
     : ["Very weak", "Weak", "Fair", "Good", "Strong", "Very strong"];
-  const strengthLabel = strengthLabels[strengthScore];
   const strengthBarClass =
     strengthScore <= 1
       ? "bg-red-500/80"
@@ -94,37 +110,39 @@ export function ChangePasswordModal({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting) {
-      return;
-    }
+    if (submitting) return;
+    clearErrors();
 
-    setApiError("");
+    let hasErr = false;
 
     if (hasPwd) {
       if (!currentPassword.trim()) {
-        showToast("error", tr ? "Şifre" : "Password", tr ? "Mevcut şifrenizi girin." : "Enter your current password.");
-        return;
-      }
-      if (currentPassword === newPassword) {
-        showToast(
-          "error",
-          tr ? "Şifre" : "Password",
-          tr ? "Yeni şifre mevcut şifrenizden farklı olmalıdır." : "New password must be different from your current password.",
+        setCurrentPwdErr(tr ? "Mevcut şifrenizi girin." : "Enter your current password.");
+        hasErr = true;
+      } else if (currentPassword === newPassword) {
+        setNewPwdErr(
+          tr
+            ? "Yeni şifre mevcut şifrenizden farklı olmalıdır."
+            : "New password must be different from your current password.",
         );
-        return;
+        hasErr = true;
       }
     }
 
     const policy = validateNewPasswordPolicy(newPassword);
-    if (!policy.ok) {
-      const msg = tr ? policy.issues.map((i) => i.tr).join(" · ") : policy.issues.map((i) => i.en).join(" · ");
-      showToast("error", tr ? "Şifre gücü" : "Password strength", msg);
-      return;
+    if (!policy.ok && !hasErr) {
+      setNewPwdErr(
+        tr ? policy.issues.map((i) => i.tr).join(" · ") : policy.issues.map((i) => i.en).join(" · "),
+      );
+      hasErr = true;
     }
-    if (newPassword !== confirmPassword) {
-      showToast("error", tr ? "Şifre" : "Password", tr ? "Yeni şifreler eşleşmiyor." : "New passwords do not match.");
-      return;
+
+    if (!hasErr && newPassword !== confirmPassword) {
+      setConfirmPwdErr(tr ? "Şifreler eşleşmiyor." : "Passwords do not match.");
+      hasErr = true;
     }
+
+    if (hasErr) return;
 
     setSubmitting(true);
     try {
@@ -132,7 +150,7 @@ export function ChangePasswordModal({
         ? await changePassword(currentPassword, newPassword)
         : await setInitialPassword(newPassword);
       if (!next) {
-        showToast("error", tr ? "Şifre" : "Password", tr ? "Oturum bulunamadı; yeniden giriş yapın." : "Session not found; please sign in again.");
+        setCurrentPwdErr(tr ? "Oturum bulunamadı; yeniden giriş yapın." : "Session not found; please sign in again.");
         setSubmitting(false);
         return;
       }
@@ -143,43 +161,44 @@ export function ChangePasswordModal({
         "success",
         tr ? "Şifre" : "Password",
         hasPwd
-          ? tr
-            ? "Şifreniz başarıyla güncellendi"
-            : "Your password was updated successfully."
-          : tr
-            ? "Hesap şifreniz kaydedildi; e-posta ve şifre ile de giriş yapabilirsiniz."
-            : "Your account password is set; you can also sign in with email and password.",
+          ? tr ? "Şifreniz başarıyla güncellendi." : "Your password was updated successfully."
+          : tr ? "Şifreniz kaydedildi; e-posta ve şifre ile de giriş yapabilirsiniz." : "Password set; you can now sign in with email and password.",
       );
-      window.setTimeout(() => {
-        onClose();
-      }, MODAL_CLOSE_DELAY_MS);
+      window.setTimeout(() => onClose(), MODAL_CLOSE_DELAY_MS);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : tr ? "Şifre değiştirilemedi." : "Password change failed.";
-      setApiError(msg);
-      showToast("error", tr ? "Şifre" : "Password", msg);
+      const raw = error instanceof Error ? error.message : "";
+      const translated = translateAuthApiMessage(raw || (tr ? "Şifre değiştirilemedi." : "Password change failed."), language);
+
+      // Map known API error messages to the correct field
+      const isCurrent =
+        raw.includes("Current password is incorrect") ||
+        raw.includes("Incorrect password");
+      if (isCurrent) {
+        setCurrentPwdErr(translated);
+      } else if (raw.includes("different") || raw.includes("New password")) {
+        setNewPwdErr(translated);
+      } else {
+        // fallback — show under new password field
+        setNewPwdErr(translated);
+      }
       setSubmitting(false);
     }
   }
 
-  if (!open) {
-    return null;
-  }
+  if (!open) return null;
 
   const title = hasPwd ? (tr ? "Şifre değiştir" : "Change password") : tr ? "Şifre belirle" : "Set password";
-  const closeLabel = tr ? "Kapat" : "Close";
 
   return (
     <div
       className="contact-modal-backdrop"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !submitting) {
-          onClose();
-        }
+        if (event.target === event.currentTarget && !submitting) onClose();
       }}
     >
       <div
-        className="contact-modal max-h-[min(90vh,560px)]"
+        className="contact-modal max-h-[min(90vh,580px)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby="change-password-modal-title"
@@ -192,51 +211,59 @@ export function ChangePasswordModal({
             className="contact-modal__close"
             onClick={() => (!submitting ? onClose() : undefined)}
             disabled={submitting}
-            aria-label={closeLabel}
+            aria-label={tr ? "Kapat" : "Close"}
           >
             ×
           </button>
         </div>
 
         <form className="contact-modal__form" onSubmit={(e) => void handleSubmit(e)}>
-          {apiError ? (
-            <div
-              className="mb-4 rounded-xl border border-rose-500/45 bg-rose-950/50 px-3 py-2.5 text-sm leading-snug text-rose-100"
-              role="alert"
-            >
-              {apiError}
+          {hasPwd ? (
+            <div className="block">
+              <label>
+                <span className="mb-2 block text-sm font-medium text-nb-muted">
+                  {tr ? "Mevcut şifre" : "Current password"}
+                </span>
+                <input
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => { setCurrentPassword(e.target.value); setCurrentPwdErr(""); }}
+                  className={currentPwdErr ? inputErrorClass : inputClass}
+                  disabled={submitting}
+                />
+              </label>
+              <FieldError msg={currentPwdErr} />
             </div>
           ) : null}
-          {hasPwd ? (
-            <label className="block">
-              <span className="mb-2 block text-sm font-medium text-nb-muted">{tr ? "Mevcut şifre" : "Current password"}</span>
+
+          <div className="block">
+            <label>
+              <span className="mb-2 block text-sm font-medium text-nb-muted">
+                {tr ? "Yeni şifre" : "New password"}
+              </span>
               <input
                 type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className={inputClass}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value); setNewPwdErr(""); }}
+                className={newPwdErr ? inputErrorClass : inputClass}
                 disabled={submitting}
               />
             </label>
-          ) : null}
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-nb-muted">{tr ? "Yeni şifre" : "New password"}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className={inputClass}
-              disabled={submitting}
-            />
             {newPassword.length > 0 ? (
               <div className="mt-2 space-y-2">
                 <div className="flex items-center justify-between gap-2 text-xs text-nb-muted">
                   <span>{tr ? "Güç" : "Strength"}</span>
-                  <span className="font-medium text-nb-text">{strengthLabel}</span>
+                  <span className="font-medium text-nb-text">{strengthLabels[strengthScore]}</span>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]" role="progressbar" aria-valuenow={strengthScore} aria-valuemin={0} aria-valuemax={5}>
+                <div
+                  className="h-1.5 overflow-hidden rounded-full bg-white/[0.08]"
+                  role="progressbar"
+                  aria-valuenow={strengthScore}
+                  aria-valuemin={0}
+                  aria-valuemax={5}
+                >
                   <div
                     className={`h-full rounded-full transition-all duration-300 ${strengthBarClass}`}
                     style={{ width: `${(strengthScore / 5) * 100}%` }}
@@ -252,29 +279,30 @@ export function ChangePasswordModal({
                 </ul>
               </div>
             ) : null}
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-sm font-medium text-nb-muted">{tr ? "Yeni şifre (tekrar)" : "Confirm new password"}</span>
-            <input
-              type="password"
-              autoComplete="new-password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className={inputClass}
-              disabled={submitting}
-            />
-          </label>
+            <FieldError msg={newPwdErr} />
+          </div>
+
+          <div className="block">
+            <label>
+              <span className="mb-2 block text-sm font-medium text-nb-muted">
+                {tr ? "Yeni şifre (tekrar)" : "Confirm new password"}
+              </span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => { setConfirmPassword(e.target.value); setConfirmPwdErr(""); }}
+                className={confirmPwdErr ? inputErrorClass : inputClass}
+                disabled={submitting}
+              />
+            </label>
+            <FieldError msg={confirmPwdErr} />
+          </div>
 
           <button type="submit" className="primary-action" disabled={submitting}>
             {submitting ? (
               <span className="inline-flex items-center justify-center gap-2">
-                <svg
-                  className="h-4 w-4 shrink-0 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  aria-hidden
-                >
+                <svg className="h-4 w-4 shrink-0 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path
                     className="opacity-90"
@@ -285,15 +313,9 @@ export function ChangePasswordModal({
                 {tr ? "Güncelleniyor…" : "Updating…"}
               </span>
             ) : hasPwd ? (
-              tr ? (
-                "Şifreyi güncelle"
-              ) : (
-                "Update password"
-              )
-            ) : tr ? (
-              "Şifreyi kaydet"
+              tr ? "Şifreyi güncelle" : "Update password"
             ) : (
-              "Save password"
+              tr ? "Şifreyi kaydet" : "Save password"
             )}
           </button>
         </form>

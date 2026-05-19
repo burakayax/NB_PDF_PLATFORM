@@ -23,6 +23,7 @@ type DashboardSidebarProps = {
   onUpgrade?: () => void;
   currentPlan?: string;
   isTeamMember?: boolean;
+  isManagerMember?: boolean;
   onTeamClick?: () => void;
 };
 
@@ -44,6 +45,7 @@ export function DashboardSidebar({
   onUpgrade,
   currentPlan,
   isTeamMember,
+  isManagerMember,
   onTeamClick,
 }: DashboardSidebarProps) {
   const L = ws(language);
@@ -142,7 +144,7 @@ export function DashboardSidebar({
         </div>
       ) : null}
 
-      {currentPlan === "BUSINESS" && !isTeamMember && onTeamClick ? (
+      {currentPlan === "BUSINESS" && (!isTeamMember || isManagerMember) && onTeamClick ? (
         <div className="border-t border-white/[0.06] px-3 py-3">
           <button
             type="button"

@@ -126,6 +126,7 @@ type DashboardTopNavProps = {
   onOpenCreditsPanel?: () => void;
   showAdminEntry?: boolean;
   onOpenAdmin?: () => void;
+  isTeamMember?: boolean;
 };
 
 export function DashboardTopNav({
@@ -145,6 +146,7 @@ export function DashboardTopNav({
   onOpenCreditsPanel,
   showAdminEntry,
   onOpenAdmin,
+  isTeamMember,
 }: DashboardTopNavProps) {
   const W = ws(language);
   const tr = language === "tr";
@@ -153,10 +155,11 @@ export function DashboardTopNav({
     const assets = cms?.assets as { logoUrl?: string } | undefined;
     return (
       resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ??
-      "/nb_pdf_TOOLS_icon.png"
+      "/logo.png"
     );
   }, [cms]);
   const showCreditsCenter =
+    !isTeamMember &&
     user.role !== "ADMIN" &&
     (creditBalanceLoading || typeof creditBalance === "number" || plan != null);
   const upgradeVisible = Boolean(

@@ -152,27 +152,6 @@ export function MosaicLayout({
             </div>
           ))}
         </nav>
-        <div className="space-y-2 border-t border-slate-800/80 p-2">
-          <div className={`rounded-lg border border-slate-700/50 bg-slate-800/30 p-2 ${hover ? "" : "px-0"}`}>
-            <p className={`text-[10px] font-bold uppercase text-slate-500 ${hover ? "" : "sr-only"}`}>Mode</p>
-            <div className={`mt-1 flex rounded-lg p-0.5 ring-1 ring-slate-700/50 ${hover ? "gap-0.5" : "flex-col"}`}>
-              <button
-                type="button"
-                onClick={() => onSimpleMode(true)}
-                className={`flex-1 rounded-md px-2 py-1.5 text-[10px] font-semibold ${simpleMode ? "bg-cyan-600/30 text-cyan-100" : "text-slate-500"}`}
-              >
-                S
-              </button>
-              <button
-                type="button"
-                onClick={() => onSimpleMode(false)}
-                className={`flex-1 rounded-md px-2 py-1.5 text-[10px] font-semibold ${!simpleMode ? "bg-amber-600/25 text-amber-100" : "text-slate-500"}`}
-              >
-                A
-              </button>
-            </div>
-          </div>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">

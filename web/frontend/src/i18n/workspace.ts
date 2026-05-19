@@ -104,8 +104,8 @@ export function ws(lang: Language) {
     perFilePassword: tr ? "Bu dosyanın şifresi" : "Password for this file",
     perFilePasswordPh: tr ? "PDF parolasını girin" : "Enter PDF password",
     mergeEncryptedAlert: tr
-      ? "Bu dosya şifre korumalı. Birleştirme için aşağıya PDF parolasını girin."
-      : "This file is password-protected. Enter the PDF password below to include it in the merge.",
+      ? "Bu dosya şifre korumalı. Lütfen PDF parolasını girin."
+      : "This file is password protected. Please enter the PDF password.",
     mergeClearAll: tr ? "Tüm dosyaları temizle" : "Clear all files",
     mergeDuplicateFileTitle: tr ? "Dosya zaten listede" : "File already added",
     mergeDuplicateFileDetail: tr
@@ -162,10 +162,10 @@ export function ws(lang: Language) {
     inspecting: tr ? "PDF kontrol ediliyor…" : "Checking PDF…",
     encryptedBadge: tr ? "Şifreli PDF" : "Encrypted PDF",
     ready: tr ? "Hazır" : "Ready",
-    compressEstimateLine: (minPct: number, maxPct: number) =>
+    compressEstimateLine: (minMB: number, maxMB: number) =>
       tr
-        ? `Tahmini boyut düşüşü: ~%${minPct}–${maxPct} (tipik)`
-        : `Est. size reduction: ~${minPct}–${maxPct}% (typical)`,
+        ? `Tahmini boyut düşüşü: ~${minMB}–${maxMB} MB (tipik)`
+        : `Est. size reduction: ~${minMB}–${maxMB} MB (typical)`,
     compressEstimateTooltip: tr
       ? "Yaklaşık tahmin; gerçek sonuç PDF içeriğine göre değişir."
       : "Approximate; actual savings depend on PDF content.",
@@ -327,7 +327,9 @@ export function ws(lang: Language) {
         : `Upgrade your plan for more operations (tier ${tier}).`,
     upgradeNudgeContinueFree: tr ? "Ücretsiz devam et" : "Continue free",
     upgradeNudgeUpgradeInstant: tr ? "Planı Yükselt" : "Upgrade plan",
-    proGateTitle: tr ? "Bu araç planınızda mevcut değil" : "This tool is not available on your plan",
+    proGateTitle: tr
+      ? "Bu araç planınızda mevcut değil"
+      : "This tool is not available on your plan",
     proGateBody: tr
       ? "Daha üst bir plana geçerek tüm araçlara erişin."
       : "Upgrade to a higher plan to access all tools.",
@@ -340,7 +342,7 @@ export function ws(lang: Language) {
     lockedFeatureTooltip: tr
       ? "Bu araç planınızda mevcut değil. Yükseltmek için tıklayın."
       : "This tool is not available on your plan. Click to upgrade.",
-}
+  };
 }
 
 export type UpgradeNudgeTierWeb = 0 | 1 | 2 | 3;
