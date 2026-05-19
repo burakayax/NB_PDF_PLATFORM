@@ -9,8 +9,10 @@ export interface QuotaCheckResult {
   dailyUsed?: number;
   dailyLimit?: number | null;
   monthlyUsed?: number;
-  monthlyLimit?: number;
+  monthlyLimit?: number | null;
   watermarkEnabled?: boolean;
+  fileSizeLimitMB?: number;
+  batchLimit?: number;
 }
 
 function getNextMidnightInTimezone(timezone: string): Date {
@@ -314,6 +316,6 @@ export async function getQuotaSummary(userId: string) {
     watermarkEnabled: org.watermarkEnabled,
     batchLimit: org.batchLimit,
     fileSizeLimitMB: org.fileSizeLimitMB,
-    isAdmin: user.role === "ADMIN",
+    isAdmin: false,
   };
 }
