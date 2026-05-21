@@ -64,6 +64,7 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         payload: dict[str, Any] = await request.json()
 
         original_invoice_id = payload.get("originalInvoiceId", "")
+        original_invoice_ettn = payload.get("originalInvoiceEttn", original_invoice_id)
         original_invoice_no = str(payload.get("originalInvoiceNo", ""))
         original_invoice_date = str(payload.get("originalInvoiceDate", ""))
         payment_id = str(payload.get("paymentId", ""))
@@ -75,6 +76,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         if currency in ("TRL", ""):
             currency = "TRY"
         kdv_rate = int(payload.get("kdvRate", 20))
+        discount_percent = int(payload.get("discountPercent", 0) or 0)
+        original_net_amount = payload.get("originalNetAmount")
 
         if not original_invoice_id:
             return JSONResponse(content={"success": False, "error": "originalInvoiceId zorunlu"})
@@ -89,30 +92,42 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         tax_office = (buyer.get("taxOffice") or "").strip()
         national_id = buyer.get("identityNumber") or None
 
+        buyer_country = buyer.get("country", "Turkey")
+        is_export = buyer_country.upper() not in ("TURKEY", "TÜRKİYE", "TR")
+
         customer_info = CustomerInfo(
             name=full_name,
             email=buyer.get("email", ""),
             phone=buyer.get("gsmNumber"),
-            national_id=national_id if not is_corporate else None,
+            national_id=national_id if (not is_corporate and not is_export) else None,
             tax_number=tax_id if (is_corporate and tax_id) else None,
             tax_office=tax_office if (is_corporate and tax_office) else None,
             address=buyer.get("registrationAddress"),
             city=buyer.get("city"),
-            country=buyer.get("country", "Turkey"),
+            country=buyer_country,
             contact_type="company" if is_corporate else "person",
+            is_export=is_export,
         )
 
         # Fatura kalemleri
+        # netAmount/kdvAmount DB'den geliyorsa yeniden hesaplama yapma — daha güvenilir
         invoice_items: list[InvoiceItem] = []
         if basket_items:
             for bi in basket_items:
-                item_price = float(bi.get("price", 0))
-                unit_price = round(item_price / (1 + kdv_rate / 100), 2) if kdv_rate > 0 else item_price
+                stored_net = bi.get("netAmount")
+                gross = float(bi.get("grossAmount") or bi.get("price") or paid_price)
+                if stored_net is not None:
+                    unit_price = float(stored_net)
+                else:
+                    unit_price = round(gross / (1 + kdv_rate / 100), 2) if kdv_rate > 0 else gross
+                orig_net = float(original_net_amount) if (discount_percent > 0 and original_net_amount) else None
                 invoice_items.append(InvoiceItem(
-                    name=bi.get("name", "Hizmet"),
+                    name=bi.get("name", "Dijital Hizmet İadesi"),
                     quantity=1,
                     unit_price=unit_price,
                     vat_rate=kdv_rate,
+                    discount_percent=discount_percent,
+                    original_unit_price=orig_net,
                 ))
         else:
             unit_price = round(paid_price / (1 + kdv_rate / 100), 2) if kdv_rate > 0 else paid_price
@@ -148,7 +163,7 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         )
 
         result = provider.create_credit_note(
-            original_invoice_id=original_invoice_id,
+            original_invoice_id=original_invoice_ettn,
             customer_info=customer_info,
             items=invoice_items,
             payment_info=payment_info,

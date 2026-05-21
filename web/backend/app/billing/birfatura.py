@@ -4,12 +4,19 @@ Mimari:
   Paraşüt gibi siz BirFatura'yı çağırırsınız.
   Auth: X-Api-Key / X-Secret-Key / X-Integration-Key header'ları ile.
 
-Akış:
+Satış faturası akışı:
   1. GibUserList → vergi numarasına göre e-fatura mükellefi mi kontrol et.
-  2. SendBasicInvoiceFromModel → fatura oluştur + GİB'e gönder (UUID döner).
+  2. SendBasicInvoiceFromModel → SADECE "Satış" tipi fatura (E-Fatura / E-Arşiv).
+     İskonto: discountIsPercentUnit + discountRateUnit + discountUnitTaxExcluding/Including.
   3. GetOutBoxDocumentStatusesWithUUIDs → belge "SUCCEED" olana dek poll.
   4. GetPDFLinkByUUID → PDF linkini al.
   5. SendDocumentAnswer (IPTAL) → iptal akışı için.
+
+İade faturası akışı (IADE tipi — SendBasicInvoiceFromModel desteklemez):
+  1. GibUserList → mükellefiyet kontrolü (e-fatura / e-arşiv tespiti).
+  2. SendDocument + UBL-TR XML (InvoiceTypeCode=IADE) → iade faturası gönder.
+  3. GetOutBoxDocumentStatusesWithUUIDs → durum takibi.
+  4. GetPDFLinkByUUID → PDF linki.
 
 Gerekli env değişkenleri:
   BIRFATURA_API_KEY       — BirFatura panelindeki API anahtarı
@@ -130,9 +137,9 @@ class BirFaturaProvider(BillingProviderBase):
     def _get_e_invoice_receiver_tag(self, tax_number: str) -> str | None:
         """Vergi numarasına göre GİB e-fatura alıcı etiketini döner; yoksa None."""
         data = self._post("GibUserList", {
-            "pkGbTypeCode": tax_number,
-            "pageNumber": 1,
-            "pageSize": 10,
+            "PkGbTypeCode": tax_number,
+            "PageNumber": 1,
+            "PageSize": 10,
         })
         result = self._check_api_response(data, "GibUserList")
         if result and isinstance(result, list) and len(result) > 0:
@@ -169,9 +176,8 @@ class BirFaturaProvider(BillingProviderBase):
         SendBasicInvoiceFromModel ile fatura oluşturur ve GİB'e gönderir.
         Dönen UUID ile durum takibi yapılır.
         """
-        now = datetime.now()
         today = payment_info.payment_date or date.today().isoformat()
-        now_str = now.strftime("%Y-%m-%dT%H:%M:%S")
+        now_time = datetime.now().strftime("%H:%M:%S")
         ci = customer_info
         pi = payment_info
 
@@ -185,6 +191,28 @@ class BirFaturaProvider(BillingProviderBase):
             i.quantity * i.unit_price * (1 + i.vat_rate / 100) for i in items
         ), 2)
 
+        # İskontolu kalemler: productsTotalTax = liste fiyatı, discountTotal = fark
+        has_any_discount = any(
+            i.discount_percent > 0 and i.original_unit_price is not None for i in items
+        )
+        if has_any_discount:
+            products_total_excl = round(sum(
+                i.quantity * (float(i.original_unit_price) if i.original_unit_price else i.unit_price)
+                for i in items
+            ), 2)
+            products_total_incl = round(sum(
+                i.quantity * (float(i.original_unit_price) if i.original_unit_price else i.unit_price)
+                * (1 + i.vat_rate / 100)
+                for i in items
+            ), 2)
+            discount_total_excl = round(products_total_excl - total_excl, 2)
+            discount_total_incl = round(products_total_incl - total_incl, 2)
+        else:
+            products_total_excl = total_excl
+            products_total_incl = total_incl
+            discount_total_excl = 0.0
+            discount_total_incl = 0.0
+
         # TCMB alış kurunu kullan; TRY ödemelerde 1.0
         currency_code = (pi.currency or "TRY").upper()
         currency_rate = pi.currency_rate if currency_code not in ("TRY", "TRL") else 1.0
@@ -195,44 +223,64 @@ class BirFaturaProvider(BillingProviderBase):
         order_details = []
         for item in items:
             has_discount = item.discount_percent > 0 and item.original_unit_price is not None
-            # Birim fiyat daima iskonto sonrası net fiyat — BirFatura toplamları buradan hesaplar.
-            # BirFatura'nın discountRate desteği belirsiz olduğundan kullanılmıyor;
-            # iskonto bilgisi productNote'a yazılıyor (KDV Kanunu Md.25 uyumu için).
-            price_excl = round(float(item.unit_price), 4)
-            price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
 
             if has_discount:
-                orig = item.original_unit_price
-                disc_amt = round(orig * item.discount_percent / 100, 2)
+                orig = float(item.original_unit_price)
+                # BirFatura iskonto alanları: birim fiyat liste fiyatı (iskonto öncesi),
+                # iskonto tutarı ayrı alanlarda iletilir — KDV Kanunu Md.25 uyumu.
+                disc_per_unit = round(orig * item.discount_percent / 100, 4)
+                orig_excl = round(orig, 4)
+                orig_incl = round(orig * (1 + item.vat_rate / 100), 4)
+                disc_incl = round(disc_per_unit * (1 + item.vat_rate / 100), 4)
                 note = (
                     f"İskonto %{item.discount_percent} uygulandı. "
                     f"Liste fiyatı: {orig:.2f} TL | "
-                    f"İskonto: {disc_amt:.2f} TL | "
+                    f"İskonto: {disc_per_unit:.2f} TL | "
                     f"Matrah: {item.unit_price:.2f} TL"
                 )
+                order_details.append({
+                    "productCode": item.name.replace(" ", "_")[:20],
+                    "productName": item.name,
+                    "productNote": note,
+                    "productQuantityType": item.unit,
+                    "productQuantity": item.quantity,
+                    "vatRate": int(item.vat_rate),
+                    "productUnitPriceTaxExcluding": orig_excl,
+                    "productUnitPriceTaxIncluding": orig_incl,
+                    "discountIsPercentUnit": 1,
+                    "discountRateUnit": float(item.discount_percent),
+                    "discountUnitTaxExcluding": disc_per_unit,
+                    "discountUnitTaxIncluding": disc_incl,
+                })
             else:
                 note = item.description or export_note
-
-            order_details.append({
-                "productCode": item.name.replace(" ", "_")[:20],
-                "productName": item.name,
-                "productNote": note,
-                "productQuantityType": item.unit,
-                "productQuantity": item.quantity,
-                "vatRate": int(item.vat_rate),
-                "productUnitPriceTaxExcluding": price_excl,
-                "productUnitPriceTaxIncluding": price_incl,
-            })
+                price_excl = round(float(item.unit_price), 4)
+                price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
+                order_details.append({
+                    "productCode": item.name.replace(" ", "_")[:20],
+                    "productName": item.name,
+                    "productNote": note,
+                    "productQuantityType": item.unit,
+                    "productQuantity": item.quantity,
+                    "vatRate": int(item.vat_rate),
+                    "productUnitPriceTaxExcluding": price_excl,
+                    "productUnitPriceTaxIncluding": price_incl,
+                    "discountIsPercentUnit": 0,
+                    "discountRateUnit": 0,
+                    "discountUnitTaxExcluding": 0,
+                    "discountUnitTaxIncluding": 0,
+                })
 
         doc_uuid = str(uuid.uuid4())
 
         invoice_payload: dict[str, Any] = {
             "ettn": doc_uuid,
-            "orderDate": now_str,
+            "invoiceDate": today,
+            "invoiceTime": now_time,
+            "orderDate": today,
             "OrderCode": pi.payment_id,
-            "invoiceDate": now_str,
-            "invoiceExplanation": "PDF Platform",
             "isDocumentNoAuto": True,
+            "invoiceExplanation": "PDF Platform",
             "billingName": ci.name,
             "billingAddress": ci.address or "",
             "billingCity": ci.city or "",
@@ -243,15 +291,18 @@ class BirFaturaProvider(BillingProviderBase):
             "currencyRate": currency_rate,
             "totalPaidTaxExcluding": total_excl,
             "totalPaidTaxIncluding": total_incl,
-            "productsTotalTaxExcluding": total_excl,
-            "productsTotalTaxIncluding": total_incl,
+            "productsTotalTaxExcluding": products_total_excl,
+            "productsTotalTaxIncluding": products_total_incl,
+            "discountTotalTaxExcluding": discount_total_excl,
+            "discountTotalTaxIncluding": discount_total_incl,
             "orderDetails": order_details,
         }
 
+        # VKN (10 hane, kurumsal) veya TCKN (11 hane, bireysel) — her ikisi de taxNo alanına gider
         if ci.tax_number:
             invoice_payload["taxNo"] = ci.tax_number
             invoice_payload["taxOffice"] = ci.tax_office or ""
-        if ci.national_id:
+        elif ci.national_id:
             invoice_payload["taxNo"] = ci.national_id
 
         if is_e_invoice and receiver_tag:
@@ -291,7 +342,7 @@ class BirFaturaProvider(BillingProviderBase):
         max_attempts = self._max_attempts or _POLL_MAX
 
         for attempt in range(1, max_attempts + 1):
-            data = self._post("GetOutBoxDocumentStatusesWithUUIDs", {"uuids": [doc_uuid]})
+            data = self._post("GetOutBoxDocumentStatusesWithUUIDs", {"Uuids": [doc_uuid]})
             result = self._check_api_response(data, "GetOutBoxDocumentStatusesWithUUIDs")
 
             statuses = result if isinstance(result, list) else []
@@ -329,7 +380,7 @@ class BirFaturaProvider(BillingProviderBase):
     def _fetch_invoice_number_by_uuid(self, doc_uuid: str) -> str | None:
         """UUID ile BirFatura'dan belge numarasını sorgular."""
         try:
-            data = self._post("GetOutBoxDocumentStatusesWithUUIDs", {"uuids": [doc_uuid]})
+            data = self._post("GetOutBoxDocumentStatusesWithUUIDs", {"Uuids": [doc_uuid]})
             result = self._check_api_response(data, "GetOutBoxDocumentStatusesWithUUIDs")
             statuses = result if isinstance(result, list) else []
             if statuses:
@@ -363,8 +414,8 @@ class BirFaturaProvider(BillingProviderBase):
         for system_type in ("EFATURA", "EARSIV"):
             try:
                 data = self._post("GetPDFLinkByUUID", {
-                    "uuids": [doc_uuid],
-                    "systemType": system_type,
+                    "Uuids": [doc_uuid],
+                    "SystemType": system_type,
                 })
                 result = self._check_api_response(data, "GetPDFLinkByUUID")
                 items = result if isinstance(result, list) else []
@@ -388,10 +439,10 @@ class BirFaturaProvider(BillingProviderBase):
     def cancel_invoice(self, invoice_id: str) -> bool:
         try:
             data = self._post("SendDocumentAnswer", {
-                "documentUUID": invoice_id,
-                "acceptOrRejectCode": "IPTAL",
-                "acceptOrRejectReason": "Kullanıcı talebiyle iptal",
-                "systemTypeCodes": "EARSIV",
+                "DocumentUUID": invoice_id,
+                "AcceptOrRejectCode": "IPTAL",
+                "AcceptOrRejectReason": "Kullanıcı talebiyle iptal",
+                "SystemTypeCodes": "EARSIV",
             })
             result = self._check_api_response(data, "SendDocumentAnswer")
             success = result.get("Success", False) if isinstance(result, dict) else False
@@ -473,12 +524,12 @@ class BirFaturaProvider(BillingProviderBase):
         document_bytes = self._compress_xml(xml_str)
 
         payload: dict[str, Any] = {
-            "documentBytes": document_bytes,
-            "systemTypeCodes": system_type,
-            "isDocumentNoAuto": True,
+            "DocumentBytes": document_bytes,
+            "SystemTypeCodes": system_type,
+            "IsDocumentNoAuto": True,
         }
         if receiver_tag:
-            payload["receivertag"] = receiver_tag
+            payload["ReceiverTag"] = receiver_tag
 
         try:
             data = self._post("SendDocument", payload)
@@ -576,12 +627,14 @@ class BirFaturaProvider(BillingProviderBase):
 
         billing_ref_xml = ""
         if original_invoice_no:
-            oin = _esc(original_invoice_no)
-            oid = _esc(original_invoice_date)
+            oin  = _esc(original_invoice_no)
+            oid  = _esc(original_invoice_date)
+            oettn = _esc(original_invoice_id)   # orijinal faturanın ETTN/UUID'si
             billing_ref_xml = f"""
   <cac:BillingReference>
     <cac:InvoiceDocumentReference>
       <cbc:ID>{oin}</cbc:ID>
+      <cbc:UUID>{oettn}</cbc:UUID>
       <cbc:IssueDate>{oid}</cbc:IssueDate>
       <cbc:DocumentTypeCode>IADE</cbc:DocumentTypeCode>
       <cbc:DocumentType>IADE</cbc:DocumentType>
@@ -598,6 +651,18 @@ class BirFaturaProvider(BillingProviderBase):
         <cac:PartyTaxScheme>
           <cac:TaxScheme><cbc:Name>{cust_tax_off}</cbc:Name></cac:TaxScheme>
         </cac:PartyTaxScheme>"""
+
+        # UBL-TR Schematron: TCKN olduğunda cac:Person zorunlu
+        cust_person_xml = ""
+        if cust_id_scheme == "TCKN":
+            name_parts = ci.name.strip().rsplit(" ", 1)
+            p_first  = _esc(name_parts[0]) if len(name_parts) > 1 else _esc(ci.name)
+            p_family = _esc(name_parts[1]) if len(name_parts) > 1 else ""
+            cust_person_xml = f"""
+      <cac:Person>
+        <cbc:FirstName>{p_first}</cbc:FirstName>
+        <cbc:FamilyName>{p_family}</cbc:FamilyName>
+      </cac:Person>"""
 
         lines_xml = ""
         for idx, item in enumerate(items, start=1):
@@ -726,7 +791,7 @@ class BirFaturaProvider(BillingProviderBase):
       <cac:Contact>
         <cbc:Telephone>{cust_phone}</cbc:Telephone>
         <cbc:ElectronicMail>{cust_email}</cbc:ElectronicMail>
-      </cac:Contact>
+      </cac:Contact>{cust_person_xml}
     </cac:Party>
   </cac:AccountingCustomerParty>
   <cac:TaxTotal>

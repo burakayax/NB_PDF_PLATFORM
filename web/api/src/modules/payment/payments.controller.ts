@@ -131,7 +131,7 @@ export async function initializePaymentsController(request: Request, response: R
     priceTryOverride,
     checkoutCurrency,
     subscriptionDaysOverride,
-    basketItemName: seatsOnly ? undefined : BASKET_NAMES_TR[planId], // seatsOnly: basket adı payment.service içinde otomatik üretilir
+    basketItemName: seatsOnly ? undefined : `${BASKET_NAMES_TR[planId]} (${isYearly ? "1 yıl" : "1 ay"})`, // seatsOnly: basket adı payment.service içinde otomatik üretilir
     couponId: appliedCouponId,
     discountPercent: appliedDiscountPercent,
     originalNetAmount: appliedCouponId ? originalBasePrice : null,
