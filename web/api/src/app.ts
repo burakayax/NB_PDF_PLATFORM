@@ -237,29 +237,26 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
 
     if (error.code === "P2002") {
       const targets = (error.meta?.target as string[] | undefined) ?? [];
-      const label = targets.length ? targets.join(", ") : "field";
+      const label = targets.length ? targets.join(", ") : "alan";
       response.status(409).json({
-        message: `A record with this ${label} already exists.`,
+        message: `Bu ${label} zaten kayıtlı.`,
       });
+      return;
+    }
+
+    if (error.code === "P2025") {
+      response.status(404).json({ message: "Kayıt bulunamadı." });
       return;
     }
 
     if (error.code === "P2021" || error.code === "P2010") {
       response.status(503).json({
-        message:
-          env.NODE_ENV === "development"
-            ? `[${error.code}] ${error.message}`
-            : "Database schema is out of sync. From the web/api folder run: npx prisma db push && npx prisma generate",
+        message: "Veritabanı şeması güncel değil. Lütfen yöneticiyle iletişime geçin.",
       });
       return;
     }
 
-    response.status(400).json({
-      message:
-        env.NODE_ENV === "development"
-          ? `[Prisma ${error.code}] ${error.message}`
-          : "Database request failed. If this persists, run prisma db push and restart the API.",
-    });
+    response.status(400).json({ message: "İşlem gerçekleştirilemedi. Lütfen tekrar deneyin." });
     return;
   }
 
@@ -273,10 +270,7 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
       ip,
     });
     console.error("[prisma] validation", error.message);
-    response.status(400).json({
-      message:
-        env.NODE_ENV === "development" ? error.message : "Invalid data sent to the server.",
-    });
+    response.status(400).json({ message: "İşlem gerçekleştirilemedi. Lütfen tekrar deneyin." });
     return;
   }
 
@@ -290,12 +284,7 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
       ip,
     });
     console.error("[prisma] init", error.message);
-    response.status(503).json({
-      message:
-        env.NODE_ENV === "development"
-          ? error.message
-          : "Cannot connect to the database. Check DATABASE_URL in web/api/.env.",
-    });
+    response.status(503).json({ message: "Sunucu geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin." });
     return;
   }
 
@@ -310,12 +299,5 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
     stack,
   });
   console.error(error);
-  if (env.NODE_ENV === "development") {
-    response.status(500).json({
-      message: error instanceof Error ? error.message : "An unexpected server error occurred.",
-      ...(error instanceof Error && stack ? { detail: stack.split("\n").slice(0, 6).join("\n") } : {}),
-    });
-    return;
-  }
-  response.status(500).json({ message: "An unexpected server error occurred." });
+  response.status(500).json({ message: "Bir hata oluştu. Lütfen tekrar deneyin." });
 });

@@ -894,7 +894,7 @@ async function triggerInvoiceGeneration(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(invoicePayload),
-      signal: AbortSignal.timeout(35_000),
+      signal: AbortSignal.timeout(90_000),
     });
 
     if (!resp.ok) {
@@ -904,11 +904,19 @@ async function triggerInvoiceGeneration(
       );
     } else {
       const data = (await resp.json()) as Record<string, unknown>;
-      console.log(`${PC_LOG} invoice generated`, {
-        invoiceId: data["invoice_id"],
-        invoiceNumber: data["invoice_number"],
-        emailSent: data["email_sent"],
-      });
+
+      if (data["success"]) {
+        console.log(`${PC_LOG} invoice generated`, {
+          invoiceId: data["invoice_id"],
+          invoiceNumber: data["invoice_number"],
+          emailSent: data["email_sent"],
+        });
+      } else {
+        console.warn(`${PC_LOG} invoice generation FAILED`, {
+          success: data["success"],
+          error: data["error"],
+        });
+      }
 
       if (data["success"] && data["invoice_id"]) {
         const kdvR = checkout.kdvRate ?? 20;
@@ -1562,11 +1570,26 @@ async function triggerCreditNote(
   }
 
   const isCorprate = user.invoiceType === "corporate";
-  const paidPrice = parseFloat(invoice.grossAmount);
-  const kdvRate = invoice.kdvRate ?? 20;
+
+  // Checkout'tan plan adı ve iskonto bilgisini al
+  const checkout = await prisma.paymentCheckout.findUnique({
+    where: { id: checkoutId },
+    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true },
+  });
+
+  const planLabel = checkout?.plan ?? "PRO";
+  const billingLabel = checkout?.billingCycle === "YEARLY" ? "(1 yıl)" : "(1 ay)";
+  const productName = `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
+
+  // DB'de saklanan net/KDV/brüt tutarları direkt kullan — yeniden hesaplama hatası olmaz
+  const netAmount  = parseFloat(invoice.netAmount);
+  const kdvAmount  = parseFloat(invoice.kdvAmount);
+  const paidPrice  = parseFloat(invoice.grossAmount);
+  const kdvRate    = invoice.kdvRate ?? 20;
 
   const creditNotePayload = {
     originalInvoiceId: invoice.externalId,
+    originalInvoiceEttn: invoice.externalId,    // BillingReference UUID
     originalInvoiceNo: invoice.invoiceNo ?? "",
     originalInvoiceDate: invoice.sentAt
       ? invoice.sentAt.toISOString().split("T")[0]
@@ -1588,13 +1611,17 @@ async function triggerCreditNote(
     },
     basketItems: [
       {
-        name: `${invoice.customerName} İade`,
-        price: paidPrice,
+        name: productName,
+        netAmount,           // KDV hariç net tutar (iskonto sonrası)
+        kdvAmount,           // KDV tutarı
+        grossAmount: paidPrice,
       },
     ],
     paidPrice,
     currency: invoice.currency ?? "TRY",
     kdvRate,
+    discountPercent: checkout?.discountPercent ?? 0,
+    originalNetAmount: checkout?.originalNetAmount ?? null,
   };
 
   const pdfBackendBase = process.env.PDF_BACKEND_URL ?? "http://127.0.0.1:8000";

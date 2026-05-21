@@ -144,6 +144,14 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
     # İhracat istisnası açıklaması — KDV Kanunu Madde 12 kapsamı
     export_description = "İhracat İstisnası (KDV K. Mad. 12)" if is_export else ""
 
+    def _billing_unit(name: str) -> str:
+        lower = name.lower()
+        if "yıl" in lower:
+            return "Yıl"
+        if "ay" in lower:
+            return "Ay"
+        return "Adet"
+
     if basket_items:
         for bi in basket_items:
             item_price = float(bi.get("price", 0))
@@ -151,13 +159,15 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
                 unit_price_excl_vat = item_price  # İhracatta KDV yok
             else:
                 unit_price_excl_vat = round(item_price / 1.20, 2)
+            item_name = bi.get("name", "Hizmet")
             invoice_items.append(
                 InvoiceItem(
-                    name=bi.get("name", "Hizmet"),
+                    name=item_name,
                     quantity=1,
                     unit_price=unit_price_excl_vat,
                     vat_rate=kdv_rate,
                     description=export_description,
+                    unit=_billing_unit(item_name),
                     is_export=is_export,
                     discount_percent=discount_percent,
                     original_unit_price=original_net,

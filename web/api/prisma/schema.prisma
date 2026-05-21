@@ -286,7 +286,12 @@ model PaymentCheckout {
   status           String    @default("pending")
   priceTry         String
   paymentCurrency  String    @default("TRY") @map("payment_currency")
-  subscriptionDays Int       @default(30) @map("subscription_days")
+  subscriptionDays            Int       @default(30) @map("subscription_days")
+  couponId                    String?   @map("coupon_id")
+  discountPercent             Int?      @map("discount_percent")
+  originalNetAmount           String?   @map("original_net_amount")
+  extraSeats                  Int       @default(0)     @map("extra_seats")
+  seatsOnly                   Boolean   @default(false) @map("seats_only")
   createdAt        DateTime  @default(now())
   completedAt      DateTime?
   refundedAt       DateTime? @map("refunded_at")
@@ -296,15 +301,10 @@ model PaymentCheckout {
   netAmount       String?  @map("net_amount")
   customerCountry String?  @map("customer_country")
   invoiceStatus   String?  @map("invoice_status")
-  cardCountry     String?  @map("card_country")   // iyzico'dan gelen kart ülkesi
-  cardBin                     String?  @map("card_bin")
+  cardCountry     String?  @map("card_country")
+  cardBin         String?  @map("card_bin")
   iyzicoPaymentId             String?  @map("iyzico_payment_id")
   iyzicoPaymentTransactionId  String?  @map("iyzico_payment_transaction_id")
-  couponId                    String?  @map("coupon_id")
-  discountPercent             Int?     @map("discount_percent")
-  originalNetAmount           String?  @map("original_net_amount")
-  extraSeats                  Int      @default(0) @map("extra_seats")
-  seatsOnly                   Boolean  @default(false) @map("seats_only")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
