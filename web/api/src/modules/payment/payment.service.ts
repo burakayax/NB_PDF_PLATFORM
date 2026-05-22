@@ -1581,11 +1581,14 @@ async function triggerCreditNote(
   const billingLabel = checkout?.billingCycle === "YEARLY" ? "(1 yıl)" : "(1 ay)";
   const productName = `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
 
-  // DB'de saklanan net/KDV/brüt tutarları direkt kullan — yeniden hesaplama hatası olmaz
-  const netAmount  = parseFloat(invoice.netAmount);
-  const kdvAmount  = parseFloat(invoice.kdvAmount);
   const paidPrice  = parseFloat(invoice.grossAmount);
-  const kdvRate    = invoice.kdvRate ?? 20;
+  // kdvRate: eski kayıtlarda sütun migration ile 0.0 set edilmiş olabilir.
+  // ?? operatörü 0'ı geçmez — yurt içi faturada 0 gelirse 20 kullan.
+  const kdvRate = invoice.kdvRate > 0
+    ? invoice.kdvRate
+    : (invoice.isExport ? 0 : 20);
+  const netAmount  = parseFloat(invoice.netAmount) || round2(paidPrice / (1 + kdvRate / 100));
+  const kdvAmount  = parseFloat(invoice.kdvAmount) || round2(paidPrice - netAmount);
 
   const creditNotePayload = {
     originalInvoiceId: invoice.externalId,

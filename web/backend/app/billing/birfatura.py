@@ -178,6 +178,7 @@ class BirFaturaProvider(BillingProviderBase):
         """
         today = payment_info.payment_date or date.today().isoformat()
         now_time = datetime.now().strftime("%H:%M:%S")
+        invoice_datetime = f"{today} {now_time}"
         ci = customer_info
         pi = payment_info
 
@@ -275,8 +276,7 @@ class BirFaturaProvider(BillingProviderBase):
 
         invoice_payload: dict[str, Any] = {
             "ettn": doc_uuid,
-            "invoiceDate": today,
-            "invoiceTime": now_time,
+            "invoiceDate": invoice_datetime,
             "orderDate": today,
             "OrderCode": pi.payment_id,
             "isDocumentNoAuto": True,
@@ -304,6 +304,11 @@ class BirFaturaProvider(BillingProviderBase):
             invoice_payload["taxOffice"] = ci.tax_office or ""
         elif ci.national_id:
             invoice_payload["taxNo"] = ci.national_id
+            if not self._is_valid_tckn(ci.national_id):
+                logger.warning(
+                    "birfatura: TCKN checksum hatalı — BirFatura 9.900₺ üzeri faturalarda reddedebilir "
+                    "national_id=%s", ci.national_id[:3] + "****" + ci.national_id[-2:],
+                )
 
         if is_e_invoice and receiver_tag:
             invoice_payload["receiverTag"] = receiver_tag
@@ -509,6 +514,7 @@ class BirFaturaProvider(BillingProviderBase):
             xml_str = self._build_credit_note_xml(
                 doc_uuid=doc_uuid,
                 issue_date=today,
+                original_invoice_ettn=original_invoice_id,
                 original_invoice_no=resolved_invoice_no,
                 original_invoice_date=original_invoice_date or today,
                 customer_info=customer_info,
@@ -519,6 +525,7 @@ class BirFaturaProvider(BillingProviderBase):
                 is_e_invoice=is_e_invoice,
             )
         except Exception as exc:
+            logger.error("birfatura: XML oluşturulamadı hata=%s", exc)
             return InvoiceResult(success=False, error=f"XML oluşturulamadı: {exc}")
 
         document_bytes = self._compress_xml(xml_str)
@@ -580,6 +587,7 @@ class BirFaturaProvider(BillingProviderBase):
         self,
         doc_uuid: str,
         issue_date: str,
+        original_invoice_ettn: str,
         original_invoice_no: str,
         original_invoice_date: str,
         customer_info: CustomerInfo,
@@ -591,7 +599,7 @@ class BirFaturaProvider(BillingProviderBase):
     ) -> str:
         from xml.sax.saxutils import escape as _esc
 
-        now_time = datetime.now().strftime("%H:%M:%S.0000000+03:00")
+        now_time = datetime.now().strftime("%H:%M:%S")
         currency = (payment_info.currency or "TRY").upper()
         if currency in ("TRL", ""):
             currency = "TRY"
@@ -627,9 +635,9 @@ class BirFaturaProvider(BillingProviderBase):
 
         billing_ref_xml = ""
         if original_invoice_no:
-            oin  = _esc(original_invoice_no)
-            oid  = _esc(original_invoice_date)
-            oettn = _esc(original_invoice_id)   # orijinal faturanın ETTN/UUID'si
+            oin   = _esc(original_invoice_no)
+            oid   = _esc(original_invoice_date)
+            oettn = _esc(original_invoice_ettn)  # orijinal faturanın ETTN/UUID'si
             billing_ref_xml = f"""
   <cac:BillingReference>
     <cac:InvoiceDocumentReference>
@@ -641,9 +649,13 @@ class BirFaturaProvider(BillingProviderBase):
     </cac:InvoiceDocumentReference>
   </cac:BillingReference>"""
 
-        # Ana Note alanına iade ve orijinal fatura bilgisini ekle
+        # Ana Note alanına iade gerekçesi + orijinal fatura no ve ETTN ekle
         if original_invoice_no:
-            reason_esc = _esc(f"{reason} - Iadeye Konu Fatura: {original_invoice_no} ({original_invoice_date})")
+            reason_esc = _esc(
+                f"{reason} - İadeye Konu Fatura No: {original_invoice_no}"
+                f" ETTN: {original_invoice_ettn}"
+                f" ({original_invoice_date})"
+            )
 
         cust_tax_scheme_xml = ""
         if ci.tax_number:
@@ -817,6 +829,15 @@ class BirFaturaProvider(BillingProviderBase):
     # ------------------------------------------------------------------
     # _compress_xml — XML'i ZIP sıkıştırıp base64'e çevirir
     # ------------------------------------------------------------------
+
+    @staticmethod
+    def _is_valid_tckn(tckn: str) -> bool:
+        """TC Kimlik No algoritması — 11 hane, checksum doğrulama."""
+        if not tckn or len(tckn) != 11 or not tckn.isdigit() or tckn[0] == "0":
+            return False
+        d = [int(c) for c in tckn]
+        d10 = ((sum(d[i] for i in range(0, 9, 2)) * 7) - sum(d[i] for i in range(1, 8, 2))) % 10
+        return d10 == d[9] and sum(d[:10]) % 10 == d[10]
 
     @staticmethod
     def _compress_xml(xml_str: str) -> str:

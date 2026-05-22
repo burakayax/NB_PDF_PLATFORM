@@ -75,7 +75,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         currency = str(payload.get("currency", "TRY")).upper()
         if currency in ("TRL", ""):
             currency = "TRY"
-        kdv_rate = int(payload.get("kdvRate", 20))
+        kdv_rate_raw = payload.get("kdvRate")
+        kdv_rate = int(kdv_rate_raw) if kdv_rate_raw is not None else 20
         discount_percent = int(payload.get("discountPercent", 0) or 0)
         original_net_amount = payload.get("originalNetAmount")
 
@@ -94,6 +95,12 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
 
         buyer_country = buyer.get("country", "Turkey")
         is_export = buyer_country.upper() not in ("TURKEY", "TÜRKİYE", "TR")
+
+        # Eski kayıtlarda kdvRate=0 olabilir (migration default).
+        # Yurt içi müşteride 0 gelirse 20 yap.
+        if kdv_rate == 0 and not is_export:
+            logger.warning("credit_note: kdvRate=0 yurt içi fatura — 20 olarak düzeltildi")
+            kdv_rate = 20
 
         customer_info = CustomerInfo(
             name=full_name,
@@ -114,28 +121,41 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         invoice_items: list[InvoiceItem] = []
         if basket_items:
             for bi in basket_items:
-                stored_net = bi.get("netAmount")
+                net_raw = bi.get("netAmount")
+                kdv_raw = bi.get("kdvAmount")
                 gross = float(bi.get("grossAmount") or bi.get("price") or paid_price)
-                if stored_net is not None:
-                    unit_price = float(stored_net)
+
+                if net_raw is not None and float(net_raw) > 0:
+                    # Orijinal faturanın matrahını direkt kullan
+                    unit_price = float(net_raw)
+                    if kdv_raw is not None and float(net_raw) > 0:
+                        # KDV oranını gerçek tutarlardan türet — stored kdvRate sıfır olabilir
+                        item_kdv_rate = round(float(kdv_raw) / float(net_raw) * 100)
+                    else:
+                        item_kdv_rate = 0 if is_export else (kdv_rate if kdv_rate > 0 else 20)
                 else:
-                    unit_price = round(gross / (1 + kdv_rate / 100), 2) if kdv_rate > 0 else gross
+                    # netAmount yoksa grosstan hesapla
+                    effective_rate = kdv_rate if kdv_rate > 0 else (0 if is_export else 20)
+                    unit_price = round(gross / (1 + effective_rate / 100), 2) if effective_rate > 0 else gross
+                    item_kdv_rate = effective_rate
+
                 orig_net = float(original_net_amount) if (discount_percent > 0 and original_net_amount) else None
                 invoice_items.append(InvoiceItem(
                     name=bi.get("name", "Dijital Hizmet İadesi"),
                     quantity=1,
                     unit_price=unit_price,
-                    vat_rate=kdv_rate,
+                    vat_rate=item_kdv_rate,
                     discount_percent=discount_percent,
                     original_unit_price=orig_net,
                 ))
         else:
-            unit_price = round(paid_price / (1 + kdv_rate / 100), 2) if kdv_rate > 0 else paid_price
+            effective_rate = kdv_rate if kdv_rate > 0 else (0 if is_export else 20)
+            unit_price = round(paid_price / (1 + effective_rate / 100), 2) if effective_rate > 0 else paid_price
             invoice_items.append(InvoiceItem(
                 name="Dijital Hizmet İadesi",
                 quantity=1,
                 unit_price=unit_price,
-                vat_rate=kdv_rate,
+                vat_rate=effective_rate,
             ))
 
         payment_info = PaymentInfo(
@@ -173,8 +193,8 @@ async def trigger_credit_note(request: Request) -> JSONResponse:
         )
 
         logger.info(
-            "credit_note: sonuç success=%s id=%s no=%s",
-            result.success, result.invoice_id, result.invoice_number,
+            "credit_note: sonuç success=%s id=%s no=%s error=%s",
+            result.success, result.invoice_id, result.invoice_number, result.error,
         )
 
         return JSONResponse(content={
