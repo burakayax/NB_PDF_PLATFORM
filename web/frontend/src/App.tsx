@@ -138,7 +138,12 @@ type NonLegalView =
   | "admin"
   | "admin_login"
   | "team_invite";
-type LegalView = "terms" | "privacy" | "kvkk" | "on-bilgilendirme" | "mesafeli-satis";
+type LegalView =
+  | "terms"
+  | "privacy"
+  | "kvkk"
+  | "on-bilgilendirme"
+  | "mesafeli-satis";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -190,8 +195,13 @@ const TeamInviteAcceptPageLazy = lazy(() =>
   })),
 );
 
-
-type ContentPanel = "tool" | "subscription" | "profile" | "pricing" | "home" | "team";
+type ContentPanel =
+  | "tool"
+  | "subscription"
+  | "profile"
+  | "pricing"
+  | "home"
+  | "team";
 
 type ToastState = {
   type: ToastType;
@@ -208,6 +218,8 @@ type UploadItem = {
   pageCount: number | null;
   /** Birleştirme: şifreli dosyada parola sunucuda doğrulandı mı */
   mergePasswordVerified: boolean;
+  /** Dosya bozuk, boş veya geçerli bir PDF değil */
+  corrupt: boolean;
 };
 
 type Feature = WorkspaceFeatureUi;
@@ -309,10 +321,13 @@ function compressEstimateMBRange(bytes: number): {
 } {
   const mb = bytes / (1024 * 1024);
   // Tahmini sıkıştırılmış boyut aralığı (min = en agresif, max = otomatik)
-  if (bytes < 80 * 1024) return { min: +(mb * 0.05).toFixed(2), max: +(mb * 0.20).toFixed(2) };
-  if (bytes < 512 * 1024) return { min: +(mb * 0.10).toFixed(2), max: +(mb * 0.30).toFixed(2) };
-  if (bytes < 5 * 1024 * 1024) return { min: +(mb * 0.15).toFixed(2), max: +(mb * 0.40).toFixed(2) };
-  return { min: +(mb * 0.20).toFixed(2), max: +(mb * 0.50).toFixed(2) };
+  if (bytes < 80 * 1024)
+    return { min: +(mb * 0.05).toFixed(2), max: +(mb * 0.2).toFixed(2) };
+  if (bytes < 512 * 1024)
+    return { min: +(mb * 0.1).toFixed(2), max: +(mb * 0.3).toFixed(2) };
+  if (bytes < 5 * 1024 * 1024)
+    return { min: +(mb * 0.15).toFixed(2), max: +(mb * 0.4).toFixed(2) };
+  return { min: +(mb * 0.2).toFixed(2), max: +(mb * 0.5).toFixed(2) };
 }
 
 function genericToolPhaseLabel(
@@ -418,6 +433,7 @@ function createUploadItems(fileList: File[]) {
     password: "",
     pageCount: null,
     mergePasswordVerified: false,
+    corrupt: false,
   }));
 }
 
@@ -708,7 +724,10 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
-  const [paymentSuccessModal, setPaymentSuccessModal] = useState<{ planName: string | null; addedSeats?: number } | null>(null);
+  const [paymentSuccessModal, setPaymentSuccessModal] = useState<{
+    planName: string | null;
+    addedSeats?: number;
+  } | null>(null);
   const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
@@ -1653,7 +1672,10 @@ function App() {
       return;
     }
 
-    const ctx = { userId: user.id, role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const) };
+    const ctx = {
+      userId: user.id,
+      role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+    };
     const [summary, balance] = await Promise.all([
       fetchSubscriptionSummary(accessToken),
       fetchUserBalance(accessToken, ctx),
@@ -1741,7 +1763,9 @@ function App() {
         try {
           const refreshed = await refreshSession();
           if (refreshed?.accessToken) currentToken = refreshed.accessToken;
-        } catch { /* token hâlâ geçerliyse devam */ }
+        } catch {
+          /* token hâlâ geçerliyse devam */
+        }
 
         let pendingLogId: string | null = null;
         const outcome = await downloadResult(
@@ -1786,23 +1810,44 @@ function App() {
         }
         if (isTeamMember && currentToken) {
           const TOOL_NAMES_TR: Record<string, string> = {
-            "split": "PDF Böl", "merge": "PDF Birleştir", "compress": "PDF Sıkıştır",
-            "pdf-to-word": "PDF → Word", "word-to-pdf": "Word → PDF",
-            "excel-to-pdf": "Excel → PDF", "pdf-to-excel": "PDF → Excel",
-            "encrypt": "PDF Şifrele", "unlock-pdf": "PDF Kilidi Aç",
-            "delete-pages": "Sayfa Sil", "rotate-pdf": "PDF Döndür",
-            "organize-pdf": "PDF Düzenle", "watermark": "Filigran",
-            "page-numbers": "Sayfa Numarası", "repair-pdf": "PDF Onar",
-            "pdf-to-ppt": "PDF → PowerPoint", "ppt-to-pdf": "PowerPoint → PDF",
-            "pdf-to-image": "PDF → Görsel", "image-to-pdf": "Görsel → PDF",
-            "html-to-pdf": "HTML → PDF", "pdf-to-text": "PDF → Metin",
+            split: "PDF Böl",
+            merge: "PDF Birleştir",
+            compress: "PDF Sıkıştır",
+            "pdf-to-word": "PDF → Word",
+            "word-to-pdf": "Word → PDF",
+            "excel-to-pdf": "Excel → PDF",
+            "pdf-to-excel": "PDF → Excel",
+            encrypt: "PDF Şifrele",
+            "unlock-pdf": "PDF Kilidi Aç",
+            "delete-pages": "Sayfa Sil",
+            "rotate-pdf": "PDF Döndür",
+            "organize-pdf": "PDF Düzenle",
+            watermark: "Filigran",
+            "page-numbers": "Sayfa Numarası",
+            "repair-pdf": "PDF Onar",
+            "pdf-to-ppt": "PDF → PowerPoint",
+            "ppt-to-pdf": "PowerPoint → PDF",
+            "pdf-to-image": "PDF → Görsel",
+            "image-to-pdf": "Görsel → PDF",
+            "html-to-pdf": "HTML → PDF",
+            "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
           };
           fetch("/api/team/activity", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${currentToken}` },
-            body: JSON.stringify({ toolId, toolName: TOOL_NAMES_TR[toolId] ?? toolId, status: "SUCCESS", pageCount: pageCount ?? null }),
-          }).catch(() => {/* noop */});
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify({
+              toolId,
+              toolName: TOOL_NAMES_TR[toolId] ?? toolId,
+              status: "SUCCESS",
+              pageCount: pageCount ?? null,
+            }),
+          }).catch(() => {
+            /* noop */
+          });
         }
         applyWorkspaceCleanSlateAfterDownload(toolId);
         showToast(
@@ -1836,13 +1881,19 @@ function App() {
   );
 
   const queueGatedDownload = useCallback(
-    (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      void runGatedDownloadWithFilename(
-        resultId,
-        fallbackName,
-        fallbackName,
-        toolId,
-      );
+    async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
+      const win = window as unknown as {
+        showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+      };
+      if (typeof win.showSaveFilePicker === "function") {
+        try {
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName });
+          setPendingSaveHandle(handle);
+        } catch (e: unknown) {
+          if (e instanceof DOMException && e.name === "AbortError") return;
+        }
+      }
+      void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
     },
     [runGatedDownloadWithFilename],
   );
@@ -1891,9 +1942,18 @@ function App() {
         if (isTeamMember && accessToken) {
           fetch("/api/team/activity", {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-            body: JSON.stringify({ toolId: "merge", toolName: "PDF Birleştir", status: "SUCCESS" }),
-          }).catch(() => {/* noop */});
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              toolId: "merge",
+              toolName: "PDF Birleştir",
+              status: "SUCCESS",
+            }),
+          }).catch(() => {
+            /* noop */
+          });
         }
         applyWorkspaceCleanSlateAfterDownload("merge");
         showToast(
@@ -1939,12 +1999,19 @@ function App() {
   );
 
   const queueMergeGatedDownload = useCallback(
-    (jobId: string, fallbackName: string) => {
-      void runMergeJobGatedDownloadWithFilename(
-        jobId,
-        fallbackName,
-        fallbackName,
-      );
+    async (jobId: string, fallbackName: string) => {
+      const win = window as unknown as {
+        showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+      };
+      if (typeof win.showSaveFilePicker === "function") {
+        try {
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName });
+          setPendingSaveHandle(handle);
+        } catch (e: unknown) {
+          if (e instanceof DOMException && e.name === "AbortError") return;
+        }
+      }
+      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
     [runMergeJobGatedDownloadWithFilename],
   );
@@ -2050,14 +2117,27 @@ function App() {
     if (payment === "success") {
       const seats = url.searchParams.get("seats");
       url.searchParams.delete("seats");
-      window.history.replaceState({}, "", url.pathname + (url.search ? `?${url.searchParams.toString()}` : "") + url.hash);
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname +
+          (url.search ? `?${url.searchParams.toString()}` : "") +
+          url.hash,
+      );
       void (async () => {
         await refreshSession();
         await refreshSubscriptionState();
         const planObj = plan ? PLANS.find((p) => p.id === plan) : null;
-        const planName = planObj ? (language === "tr" ? planObj.nameTr : planObj.nameEn) : null;
+        const planName = planObj
+          ? language === "tr"
+            ? planObj.nameTr
+            : planObj.nameEn
+          : null;
         const addedSeats = seats ? parseInt(seats, 10) : undefined;
-        setPaymentSuccessModal({ planName: addedSeats ? null : planName, addedSeats });
+        setPaymentSuccessModal({
+          planName: addedSeats ? null : planName,
+          addedSeats,
+        });
       })();
       return;
     }
@@ -2345,7 +2425,11 @@ function App() {
           setMergeJob(null);
           setSubmitting(false);
           void refreshSubscriptionState();
-          void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
+          void runMergeJobGatedDownloadWithFilename(
+            jobId,
+            fallbackName,
+            fallbackName,
+          );
         }
       } catch (error) {
         if (!active) {
@@ -2686,8 +2770,8 @@ function App() {
   const splitModeDescription =
     splitMode === "single"
       ? language === "tr"
-        ? "Seçtiğiniz sayfalar tek bir PDF dosyası içinde birleştirilerek indirilecektir."
-        : "Selected pages are merged into one downloadable PDF."
+        ? "Seçtiğiniz sayfalar tek bir PDF dosyası içinde birleştirilecek."
+        : "Selected pages are merged into one PDF file."
       : language === "tr"
         ? "Seçtiğiniz sayfalar ayrı PDF dosyaları olarak hazırlanıp ZIP ile indirilir."
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
@@ -2711,8 +2795,7 @@ function App() {
   const anyUploadEncrypted =
     uploads.length > 0 && uploads.some((u) => u.encrypted);
   const showSplitPasswordField =
-    splitPasswordToolIds.includes(selectedFeature.id) &&
-    anyUploadEncrypted;
+    splitPasswordToolIds.includes(selectedFeature.id) && anyUploadEncrypted;
   const showEncryptedFileWarning =
     splitPasswordToolIds.includes(selectedFeature.id) &&
     anyUploadEncrypted &&
@@ -2720,8 +2803,7 @@ function App() {
   const showUnlockPasswordField =
     selectedFeature.id === "unlock-pdf" && uploads.length > 0;
   const showEncryptSourcePasswordField =
-    selectedFeature.id === "encrypt" &&
-    anyUploadEncrypted;
+    selectedFeature.id === "encrypt" && anyUploadEncrypted;
   const mergeHasMissingPasswords =
     selectedFeature.id === "merge" &&
     uploads.some(
@@ -3433,6 +3515,24 @@ function App() {
           return;
         }
 
+        // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
+        {
+          const win = window as unknown as {
+            showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+          };
+          if (typeof win.showSaveFilePicker === "function") {
+            try {
+              const handle = await win.showSaveFilePicker({
+                suggestedName: language === "tr" ? "birlestirilmis.pdf" : "merged.pdf",
+              });
+              setPendingSaveHandle(handle);
+            } catch (e: unknown) {
+              if (e instanceof DOMException && e.name === "AbortError") return;
+              // showSaveFilePicker desteklenmiyorsa veya güvenli bağlam değilse devam et
+            }
+          }
+        }
+
         mergeFlowAbortRef.current?.abort();
         mergeFlowAbortRef.current = new AbortController();
         const mergeSignal = mergeFlowAbortRef.current.signal;
@@ -3494,7 +3594,9 @@ function App() {
       // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
       {
         const win = window as unknown as {
-          showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+          showSaveFilePicker?: (o: {
+            suggestedName?: string;
+          }) => Promise<FileSystemFileHandle>;
         };
         if (typeof win.showSaveFilePicker === "function") {
           try {
@@ -3526,7 +3628,7 @@ function App() {
         selectedFeature.id === "html-to-pdf"
           ? 0
           : selectedFeature.id === "image-to-pdf" ||
-            (uploads.length > 1 && BATCHABLE_TOOLS.has(selectedFeature.id))
+              (uploads.length > 1 && BATCHABLE_TOOLS.has(selectedFeature.id))
             ? uploads.reduce((a, u) => a + u.file.size, 0)
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
@@ -3763,24 +3865,45 @@ function App() {
       }
       if (isTeamMember && accessToken) {
         const TOOL_NAMES_TR: Record<string, string> = {
-          "split": "PDF Böl", "merge": "PDF Birleştir", "compress": "PDF Sıkıştır",
-          "pdf-to-word": "PDF → Word", "word-to-pdf": "Word → PDF",
-          "excel-to-pdf": "Excel → PDF", "pdf-to-excel": "PDF → Excel",
-          "encrypt": "PDF Şifrele", "unlock-pdf": "PDF Kilidi Aç",
-          "delete-pages": "Sayfa Sil", "rotate-pdf": "PDF Döndür",
-          "organize-pdf": "PDF Düzenle", "watermark": "Filigran",
-          "page-numbers": "Sayfa Numarası", "repair-pdf": "PDF Onar",
-          "pdf-to-ppt": "PDF → PowerPoint", "ppt-to-pdf": "PowerPoint → PDF",
-          "pdf-to-image": "PDF → Görsel", "image-to-pdf": "Görsel → PDF",
-          "html-to-pdf": "HTML → PDF", "pdf-to-text": "PDF → Metin",
+          split: "PDF Böl",
+          merge: "PDF Birleştir",
+          compress: "PDF Sıkıştır",
+          "pdf-to-word": "PDF → Word",
+          "word-to-pdf": "Word → PDF",
+          "excel-to-pdf": "Excel → PDF",
+          "pdf-to-excel": "PDF → Excel",
+          encrypt: "PDF Şifrele",
+          "unlock-pdf": "PDF Kilidi Aç",
+          "delete-pages": "Sayfa Sil",
+          "rotate-pdf": "PDF Döndür",
+          "organize-pdf": "PDF Düzenle",
+          watermark: "Filigran",
+          "page-numbers": "Sayfa Numarası",
+          "repair-pdf": "PDF Onar",
+          "pdf-to-ppt": "PDF → PowerPoint",
+          "ppt-to-pdf": "PowerPoint → PDF",
+          "pdf-to-image": "PDF → Görsel",
+          "image-to-pdf": "Görsel → PDF",
+          "html-to-pdf": "HTML → PDF",
+          "pdf-to-text": "PDF → Metin",
           "flatten-pdf": "PDF Düzleştir",
         };
         const fid2 = selectedFeature.id;
         fetch("/api/team/activity", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ toolId: fid2, toolName: TOOL_NAMES_TR[fid2] ?? fid2, status: "SUCCESS", pageCount: directDownloadPageCount ?? null }),
-        }).catch(() => {/* noop */});
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            toolId: fid2,
+            toolName: TOOL_NAMES_TR[fid2] ?? fid2,
+            status: "SUCCESS",
+            pageCount: directDownloadPageCount ?? null,
+          }),
+        }).catch(() => {
+          /* noop */
+        });
       }
       setToolProgressSuccess({
         filename: selectedFeature.fallbackFilename,
@@ -3842,8 +3965,12 @@ function App() {
     const L = ws(language);
 
     const fileSizeLimitMB = userBalance?.fileSizeLimitMB ?? 200;
-    const MAX_FILE_BYTES = fileSizeLimitMB >= 999999 ? Infinity : fileSizeLimitMB * 1024 * 1024;
-    const oversized = MAX_FILE_BYTES === Infinity ? [] : rawFiles.filter((f) => f.size > MAX_FILE_BYTES);
+    const MAX_FILE_BYTES =
+      fileSizeLimitMB >= 999999 ? Infinity : fileSizeLimitMB * 1024 * 1024;
+    const oversized =
+      MAX_FILE_BYTES === Infinity
+        ? []
+        : rawFiles.filter((f) => f.size > MAX_FILE_BYTES);
     if (oversized.length > 0) {
       const names = oversized.map((f) => f.name).join(", ");
       showToast(
@@ -3904,12 +4031,27 @@ function App() {
             inspectPdf(item.file, undefined, accessToken),
             PDF_INSPECT_TIMEOUT_MS,
           );
+          const isCorrupt = Boolean(
+            (result as { corrupt?: boolean }).corrupt ||
+            (result.page_count === 0 && !result.encrypted),
+          );
+          if (isCorrupt) {
+            return {
+              ...item,
+              encrypted: false,
+              inspecting: false,
+              pageCount: 0,
+              mergePasswordVerified: false,
+              corrupt: true,
+            };
+          }
           return {
             ...item,
             encrypted: Boolean(result.encrypted),
             inspecting: false,
             pageCount: result.page_count ?? null,
             mergePasswordVerified: false,
+            corrupt: false,
           };
         } catch (err) {
           const L2 = ws(language);
@@ -3936,6 +4078,7 @@ function App() {
             inspecting: false,
             pageCount: null,
             mergePasswordVerified: false,
+            corrupt: false,
           };
         }
       }),
@@ -3964,8 +4107,22 @@ function App() {
         // pageCount === null → inspect başarısız (415 veya hata); dosyayı listede tut,
         // merge sırasında sunucu tekrar okuyacak.
         // pageCount === 0 → sunucu 0 döndürdü; yine de listede tut ve uyar.
-        const zeroPageItems = inspectedNewItems.filter((i) => i.pageCount === 0);
-        const inspectFailedItems = inspectedNewItems.filter((i) => i.pageCount === null);
+        const corruptItems = inspectedNewItems.filter((i) => i.corrupt);
+        const zeroPageItems = inspectedNewItems.filter(
+          (i) => i.pageCount === 0 && !i.corrupt,
+        );
+        const inspectFailedItems = inspectedNewItems.filter(
+          (i) => i.pageCount === null && !i.corrupt,
+        );
+        if (corruptItems.length > 0) {
+          showToast(
+            "error",
+            language === "tr" ? "Geçersiz PDF dosyası" : "Invalid PDF file",
+            language === "tr"
+              ? `${corruptItems.map((i) => i.file.name).join(", ")} — bozuk veya boş PDF. Listeden kaldırın.`
+              : `${corruptItems.map((i) => i.file.name).join(", ")} — corrupt or empty PDF. Remove it from the list.`,
+          );
+        }
         if (zeroPageItems.length > 0) {
           showToast(
             "info",
@@ -4309,7 +4466,13 @@ function App() {
     );
   }
 
-  if (view === "terms" || view === "privacy" || view === "kvkk" || view === "on-bilgilendirme" || view === "mesafeli-satis") {
+  if (
+    view === "terms" ||
+    view === "privacy" ||
+    view === "kvkk" ||
+    view === "on-bilgilendirme" ||
+    view === "mesafeli-satis"
+  ) {
     return (
       <>
         <SeoRouteManager
@@ -4335,8 +4498,6 @@ function App() {
       </>
     );
   }
-
-
 
   if (isRestoring) {
     return (
@@ -4734,7 +4895,9 @@ function App() {
           onPassword={handleNavPassword}
           onLogout={() => void handleLogout()}
           onUpgradeClick={
-            isTeamMember || limitsizProActive ? undefined : () => setUpgradeModalOpen(true)
+            isTeamMember || limitsizProActive
+              ? undefined
+              : () => setUpgradeModalOpen(true)
           }
           onOpenCreditsPanel={
             user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined
@@ -4783,7 +4946,9 @@ function App() {
                 <QuotaWidget
                   language={language}
                   accessToken={accessToken}
-                  onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
+                  onUpgrade={
+                    isTeamMember ? undefined : () => setUpgradeModalOpen(true)
+                  }
                   isTeamMember={isTeamMember}
                 />
               </section>
@@ -4800,7 +4965,10 @@ function App() {
               </Suspense>
             ) : null}
 
-            {contentPanel === "pricing" && accessToken && user && !isTeamMember ? (
+            {contentPanel === "pricing" &&
+            accessToken &&
+            user &&
+            !isTeamMember ? (
               <Suspense fallback={null}>
                 <PlanUpgradeModal
                   open={true}
@@ -4825,6 +4993,14 @@ function App() {
                 showToast={showToast}
                 onOpenChangePassword={() => setChangePasswordModalOpen(true)}
                 setInitialPassword={setInitialPassword}
+                subscriptionExpiry={userBalance?.subscriptionExpiry ?? null}
+                subscriptionStartedAt={
+                  userBalance?.subscriptionStartedAt ?? null
+                }
+                onSubscriptionCancelled={() => {
+                  void refreshSubscriptionState();
+                  void refreshSession();
+                }}
               />
             ) : null}
 
@@ -4977,6 +5153,7 @@ function App() {
 
                         {selectedFeature.id === "split" ? (
                           <>
+                            {/* Sağ sütun satır 1: Sayfa numaraları */}
                             <label className="field">
                               <span>{W.pagesLabel}</span>
                               <input
@@ -5033,18 +5210,23 @@ function App() {
                                 placeholder={W.pagesPlaceholder}
                               />
                               {pagesError ? (
-                                <span className="field-error">
-                                  {pagesError}
-                                </span>
+                                <span className="field-error">{pagesError}</span>
                               ) : null}
                             </label>
 
+                            {/* Sol sütun satır 2: görsel seçici (PDF yüklüyse) */}
                             {uploads[0]?.file.type === "application/pdf" &&
                             (uploads[0].pageCount ?? 0) > 0 ? (
                               <div className="field">
                                 <button
                                   type="button"
                                   className="primary-action w-full sm:w-auto"
+                                  style={{
+                                    background: "rgba(255,255,255,0.07)",
+                                    boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset",
+                                    filter: "none",
+                                    color: "var(--nb-muted)",
+                                  }}
                                   onClick={() => {
                                     setPageVisualMode("split");
                                     setPageVisualModalOpen(true);
@@ -5052,7 +5234,7 @@ function App() {
                                 >
                                   {W.splitPickerOpen}
                                 </button>
-                                <span className="field-hint block mt-1.5">
+                                <span className="field-hint">
                                   {language === "tr"
                                     ? "Görsel ızgarada sayfa seçin; metin alanı ile eşzamanlıdır."
                                     : "Pick pages in the grid; the text field updates with your selection."}
@@ -5060,25 +5242,67 @@ function App() {
                               </div>
                             ) : null}
 
-                            <label className="field">
-                              <span>{W.splitModeLabel}</span>
-                              <select
-                                value={splitMode}
-                                onChange={(event) =>
-                                  setSplitMode(event.target.value)
-                                }
+                            {/* Sağ sütun satır 2: ayırma modu — her zaman 2. sütunda */}
+                            <div className="field" style={{ gridColumn: "2" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: "12px",
+                                }}
                               >
-                                <option value="single">
-                                  {W.splitModeSingle}
-                                </option>
-                                <option value="separate">
-                                  {W.splitModeSeparate}
-                                </option>
-                              </select>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    color: "var(--nb-muted)",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {W.splitModeLabel}
+                                </span>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSplitMode("single")}
+                                    className={[
+                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      splitMode === "single"
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
+                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
+                                    ].join(" ")}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                      <polyline points="14 2 14 8 20 8" />
+                                      <line x1="8" y1="13" x2="16" y2="13" />
+                                      <line x1="8" y1="17" x2="12" y2="17" />
+                                    </svg>
+                                    <span className="leading-tight text-center">{W.splitModeSingle}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSplitMode("separate")}
+                                    className={[
+                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      splitMode === "separate"
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
+                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
+                                    ].join(" ")}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                    <span className="leading-tight text-center">{W.splitModeSeparate}</span>
+                                  </button>
+                                </div>
+                              </div>
                               <span className="field-hint">
                                 {splitModeDescription}
                               </span>
-                            </label>
+                            </div>
                           </>
                         ) : null}
 
@@ -5175,7 +5399,9 @@ function App() {
                           </div>
                         ) : null}
 
-                        {selectedFeature.id === "organize-pdf" ? (
+                        {selectedFeature.id === "organize-pdf" &&
+                        uploads[0]?.file.type === "application/pdf" &&
+                        (uploads[0]?.pageCount ?? 0) > 0 ? (
                           <div className="field">
                             <button
                               type="button"
@@ -5528,8 +5754,14 @@ function App() {
                               <select
                                 value={compressQuality}
                                 onChange={(e) => {
-                                  const val = e.target.value as "auto" | "low" | "medium" | "high";
-                                  const isFreePlan = userBalance?.plan === "FREE" && !userBalance?.isAdmin;
+                                  const val = e.target.value as
+                                    | "auto"
+                                    | "low"
+                                    | "medium"
+                                    | "high";
+                                  const isFreePlan =
+                                    userBalance?.plan === "FREE" &&
+                                    !userBalance?.isAdmin;
                                   if (val === "high" && isFreePlan) {
                                     setUpgradeModalOpen(true);
                                     return;
@@ -5553,13 +5785,14 @@ function App() {
                                     : "Balanced — ~40–60% smaller"}
                                 </option>
                                 <option value="high">
-                                  {userBalance?.plan === "FREE" && !userBalance?.isAdmin
+                                  {userBalance?.plan === "FREE" &&
+                                  !userBalance?.isAdmin
                                     ? language === "tr"
                                       ? "Kaliteli — ~%25–45 küçülme 🔒 Plus+"
                                       : "Quality — ~25–45% smaller 🔒 Plus+"
                                     : language === "tr"
-                                    ? "Kaliteli — ~%25–45 küçülme"
-                                    : "Quality — ~25–45% smaller"}
+                                      ? "Kaliteli — ~%25–45 küçülme"
+                                      : "Quality — ~25–45% smaller"}
                                 </option>
                               </select>
                             </label>
@@ -5649,9 +5882,7 @@ function App() {
                                   const compressEst =
                                     selectedFeature.id === "compress" &&
                                     !item.inspecting
-                                      ? compressEstimateMBRange(
-                                          item.file.size,
-                                        )
+                                      ? compressEstimateMBRange(item.file.size)
                                       : null;
                                   const dragFromIdx =
                                     mergePointerDraggingId !== null
@@ -5760,12 +5991,20 @@ function App() {
                                                 <span>{W.inspecting}</span>
                                               ) : null}
                                               {!item.inspecting &&
+                                              item.corrupt ? (
+                                                <span style={{ color: "#f87171", fontWeight: 600 }}>
+                                                  {language === "tr" ? "⚠ Bozuk PDF" : "⚠ Corrupt PDF"}
+                                                </span>
+                                              ) : null}
+                                              {!item.inspecting &&
+                                              !item.corrupt &&
                                               item.encrypted ? (
                                                 <span className="warning-text">
                                                   {W.encryptedBadge}
                                                 </span>
                                               ) : null}
                                               {!item.inspecting &&
+                                              !item.corrupt &&
                                               !item.encrypted ? (
                                                 <span>{W.ready}</span>
                                               ) : null}

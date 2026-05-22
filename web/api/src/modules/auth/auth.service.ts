@@ -168,10 +168,33 @@ async function createSession(user: User, isDesktop = false) {
     },
   });
 
+  const publicUser = toPublicUser(user);
+
+  if (user.plan !== "FREE") {
+    try {
+      const lastCheckout = await prisma.paymentCheckout.findFirst({
+        where: { userId: user.id, status: "completed" },
+        orderBy: { completedAt: "desc" },
+        select: { completedAt: true, createdAt: true },
+      });
+      if (lastCheckout) {
+        const completedAt = lastCheckout.completedAt ?? lastCheckout.createdAt;
+        const ageMs = Date.now() - completedAt.getTime();
+        publicUser.refundEligible = ageMs <= REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+      } else {
+        publicUser.refundEligible = false;
+      }
+    } catch {
+      publicUser.refundEligible = false;
+    }
+  } else {
+    publicUser.refundEligible = false;
+  }
+
   return {
     accessToken,
     refreshToken,
-    user: toPublicUser(user),
+    user: publicUser,
   };
 }
 

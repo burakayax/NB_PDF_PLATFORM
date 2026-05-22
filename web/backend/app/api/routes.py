@@ -312,15 +312,30 @@ async def inspect_pdf(
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes)
         p = str(saved_file)
+
+        # 0-byte dosya — geçersiz/bozuk PDF, işleme sokmadan erken dön
+        if saved_file.stat().st_size == 0:
+            return {
+                "filename": file.filename,
+                "encrypted": False,
+                "page_count": 0,
+                "corrupt": True,
+                "inspect_error": "Dosya boş (0 byte) — geçersiz veya bozuk PDF.",
+                "inspect_diagnostic": {"classification_reason": "empty_file"},
+            }
+
         requires_pw, encrypt_diag = await run_cpu_bound(
             engine.classify_pdf_password_requirement,
             p,
         )
         encrypted = requires_pw
+        corrupt = bool(encrypt_diag.get("corrupt"))
         pwd = password.strip() or None
         page_count = None
         inspect_error = None
-        if encrypted and not pwd:
+        if corrupt:
+            inspect_error = "Dosya geçersiz veya bozuk — PDF olarak açılamıyor."
+        elif encrypted and not pwd:
             pass
         else:
             try:
@@ -332,6 +347,7 @@ async def inspect_pdf(
             "filename": file.filename,
             "encrypted": encrypted,
             "page_count": page_count,
+            "corrupt": corrupt,
             "inspect_error": inspect_error,
             "inspect_diagnostic": encrypt_diag,
         }
