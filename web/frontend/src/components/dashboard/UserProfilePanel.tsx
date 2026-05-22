@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
-import type { PlanName } from "../../api/subscription";
+import type { PlanName } from "../../api/entitlement";
 import { localizedPlanDisplayName } from "../../i18n/plans";
 import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
@@ -16,6 +16,8 @@ type UserProfilePanelProps = {
   onOpenChangePassword: () => void;
   setInitialPassword: (newPassword: string) => Promise<AuthUser | null>;
   onSubscriptionCancelled?: () => void;
+  subscriptionExpiry?: string | null;
+  subscriptionStartedAt?: string | null;
 };
 
 const inputClass =
@@ -25,7 +27,7 @@ const inputClass =
 const PROFILE_DIRTY_DELAY_MS = 600;
 
 function planNameFromUser(plan: string): PlanName {
-  if (plan === "PRO" || plan === "BUSINESS" || plan === "FREE") return plan;
+  if (plan === "FREE" || plan === "STARTER" || plan === "PLUS" || plan === "PRO" || plan === "BUSINESS") return plan;
   return "FREE";
 }
 
@@ -44,7 +46,7 @@ function splitFromName(name: string | null | undefined): { first: string; last: 
   return { first: t.slice(0, i).trim(), last: t.slice(i + 1).trim() };
 }
 
-export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled }: UserProfilePanelProps) {
+export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt }: UserProfilePanelProps) {
   const tr = language === "tr";
 
   // Saved baseline — güncelleme başarılı olunca burası da güncellenir
@@ -195,7 +197,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
   const planName = planNameFromUser(user.plan);
   const isPaidPlan = planName !== "FREE";
-  const renewalDate = formatDate(user.subscription_expiry, language);
+  const effectiveExpiry = subscriptionExpiry ?? user.subscription_expiry;
+  const renewalDate = formatDate(effectiveExpiry, language);
+  const startedAtDate = formatDate(subscriptionStartedAt, language);
 
   return (
     <div className="space-y-8">
@@ -278,15 +282,22 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 <dd className="font-semibold text-nb-text">{localizedPlanDisplayName(planName, language)}</dd>
               </div>
 
-              {isPaidPlan && (
+              {isPaidPlan && startedAtDate !== "—" && (
                 <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                  <dt className="text-slate-400">{tr ? "Yenileme tarihi" : "Renewal date"}</dt>
+                  <dt className="text-slate-400">{tr ? "Dönem başlangıcı" : "Period start"}</dt>
+                  <dd className="font-semibold text-nb-text">{startedAtDate}</dd>
+                </div>
+              )}
+
+              {isPaidPlan && renewalDate !== "—" && (
+                <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
+                  <dt className="text-slate-400">{tr ? "Dönem yenilenme tarihi" : "Next renewal date"}</dt>
                   <dd className="font-semibold text-nb-text">{renewalDate}</dd>
                 </div>
               )}
             </dl>
 
-            {isPaidPlan && (
+            {isPaidPlan && renewalDate !== "—" && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500">
                 {tr
                   ? "Aboneliğiniz bu tarihte otomatik olarak yenilenir."
@@ -304,6 +315,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
 
             {isPaidPlan && (
               <div className="mt-5 border-t border-white/[0.06] pt-5">
+                {/* İptal / iade butonu */}
                 {!cancelConfirm ? (
                   <button
                     type="button"
@@ -323,8 +335,8 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                     </p>
                     <p className="mt-1.5 text-xs text-slate-400">
                       {maybeRefundEligible
-                        ? (tr ? "Ücretiniz iade edilecek ve planınız hemen FREE'ye düşürülecektir." : "Your payment will be refunded and your plan will immediately downgrade to FREE.")
-                        : (tr ? "Mevcut dönem sonunda planınız FREE'ye düşürülecek, ücret iadesi yapılmayacaktır." : "Your plan will downgrade to FREE at the end of the current period. No refund will be issued.")}
+                        ? (tr ? "Ücretiniz iade edilecek ve planınız hemen Ücretsiz plana düşürülecektir." : "Your payment will be refunded and your plan will immediately downgrade to Free.")
+                        : (tr ? "Mevcut dönem sonunda planınız Ücretsiz plana düşürülecektir." : "Your plan will downgrade to Free at the end of the current period.")}
                     </p>
                     <div className="mt-3 flex gap-2">
                       <button

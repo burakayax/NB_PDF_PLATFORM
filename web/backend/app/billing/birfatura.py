@@ -24,7 +24,7 @@ Gerekli env değişkenleri:
   BIRFATURA_INTEGRATION_KEY — Entegrasyon anahtarı
 
 İsteğe bağlı:
-  BIRFATURA_BASE_URL      — varsayılan https://uygulama.edonustur.com
+  BIRFATURA_BASE_URL      — varsayılan https://uygulama.edonustur.com/api/OutEBelgeV2
   BIRFATURA_POLL_TIMEOUT_SEC  — varsayılan 300 (5 dakika)
   BIRFATURA_POLL_INTERVAL_SEC — varsayılan 10 saniye
 """
@@ -214,6 +214,26 @@ class BirFaturaProvider(BillingProviderBase):
             discount_total_excl = 0.0
             discount_total_incl = 0.0
 
+        # KDV özet tablosu — orana göre grupla; BirFatura bu alanlardan KDV satırını oluşturur
+        _tax_groups: dict[int, dict[str, float]] = {}
+        for _item in items:
+            _rate = int(_item.vat_rate)
+            _base = round(_item.quantity * _item.unit_price, 4)
+            _tax  = round(_base * _rate / 100, 4)
+            if _rate not in _tax_groups:
+                _tax_groups[_rate] = {"base": 0.0, "tax": 0.0}
+            _tax_groups[_rate]["base"] += _base
+            _tax_groups[_rate]["tax"]  += _tax
+        order_taxes = [
+            {
+                "TaxRate": rate,
+                "TaxBase": round(vals["base"], 2),
+                "TaxAmount": round(vals["tax"], 2),
+            }
+            for rate, vals in sorted(_tax_groups.items())
+        ]
+        total_tax = round(sum(t["TaxAmount"] for t in order_taxes), 2)
+
         # TCMB alış kurunu kullan; TRY ödemelerde 1.0
         currency_code = (pi.currency or "TRY").upper()
         currency_rate = pi.currency_rate if currency_code not in ("TRY", "TRL") else 1.0
@@ -233,6 +253,8 @@ class BirFaturaProvider(BillingProviderBase):
                 orig_excl = round(orig, 4)
                 orig_incl = round(orig * (1 + item.vat_rate / 100), 4)
                 disc_incl = round(disc_per_unit * (1 + item.vat_rate / 100), 4)
+                net_excl = round(item.unit_price * item.quantity, 2)
+                net_incl = round(net_excl * (1 + item.vat_rate / 100), 2)
                 note = (
                     f"İskonto %{item.discount_percent} uygulandı. "
                     f"Liste fiyatı: {orig:.2f} TL | "
@@ -240,79 +262,89 @@ class BirFaturaProvider(BillingProviderBase):
                     f"Matrah: {item.unit_price:.2f} TL"
                 )
                 order_details.append({
-                    "productCode": item.name.replace(" ", "_")[:20],
-                    "productName": item.name,
-                    "productNote": note,
-                    "productQuantityType": item.unit,
-                    "productQuantity": item.quantity,
-                    "vatRate": int(item.vat_rate),
-                    "productUnitPriceTaxExcluding": orig_excl,
-                    "productUnitPriceTaxIncluding": orig_incl,
-                    "discountIsPercentUnit": 1,
-                    "discountRateUnit": float(item.discount_percent),
-                    "discountUnitTaxExcluding": disc_per_unit,
-                    "discountUnitTaxIncluding": disc_incl,
+                    "ProductCode": item.name.replace(" ", "_")[:20],
+                    "ProductName": item.name,
+                    "ProductNote": note,
+                    "ProductQuantityType": item.unit,
+                    "ProductQuantity": item.quantity,
+                    "VatRate": int(item.vat_rate),
+                    "ProductUnitPriceTaxExcluding": orig_excl,
+                    "ProductUnitPriceTaxIncluding": orig_incl,
+                    "DiscountIsPercentUnit": 1,
+                    "DiscountRateUnit": float(item.discount_percent),
+                    "DiscountUnitTaxExcluding": disc_per_unit,
+                    "DiscountUnitTaxIncluding": disc_incl,
                 })
             else:
                 note = item.description or export_note
                 price_excl = round(float(item.unit_price), 4)
                 price_incl = round(item.unit_price * (1 + item.vat_rate / 100), 4)
+                total_excl_line = round(item.unit_price * item.quantity, 2)
+                total_incl_line = round(total_excl_line * (1 + item.vat_rate / 100), 2)
                 order_details.append({
-                    "productCode": item.name.replace(" ", "_")[:20],
-                    "productName": item.name,
-                    "productNote": note,
-                    "productQuantityType": item.unit,
-                    "productQuantity": item.quantity,
-                    "vatRate": int(item.vat_rate),
-                    "productUnitPriceTaxExcluding": price_excl,
-                    "productUnitPriceTaxIncluding": price_incl,
-                    "discountIsPercentUnit": 0,
-                    "discountRateUnit": 0,
-                    "discountUnitTaxExcluding": 0,
-                    "discountUnitTaxIncluding": 0,
+                    "ProductCode": item.name.replace(" ", "_")[:20],
+                    "ProductName": item.name,
+                    "ProductNote": note,
+                    "ProductQuantityType": item.unit,
+                    "ProductQuantity": item.quantity,
+                    "VatRate": int(item.vat_rate),
+                    "ProductUnitPriceTaxExcluding": price_excl,
+                    "ProductUnitPriceTaxIncluding": price_incl,
+                    "DiscountIsPercentUnit": 0,
+                    "DiscountRateUnit": 0,
+                    "DiscountUnitTaxExcluding": 0,
+                    "DiscountUnitTaxIncluding": 0,
                 })
 
         doc_uuid = str(uuid.uuid4())
 
         invoice_payload: dict[str, Any] = {
-            "ettn": doc_uuid,
-            "invoiceDate": invoice_datetime,
-            "orderDate": today,
+            "Ettn": doc_uuid,
+            "InvoiceDate": invoice_datetime,
+            "OrderDate": today,
             "OrderCode": pi.payment_id,
-            "isDocumentNoAuto": True,
-            "invoiceExplanation": "PDF Platform",
-            "billingName": ci.name,
-            "billingAddress": ci.address or "",
-            "billingCity": ci.city or "",
-            "billingMobilePhone": ci.phone or "",
-            "email": ci.email,
-            "paymentType": "iyzico",
-            "currency": currency_code,
-            "currencyRate": currency_rate,
-            "totalPaidTaxExcluding": total_excl,
-            "totalPaidTaxIncluding": total_incl,
-            "productsTotalTaxExcluding": products_total_excl,
-            "productsTotalTaxIncluding": products_total_incl,
-            "discountTotalTaxExcluding": discount_total_excl,
-            "discountTotalTaxIncluding": discount_total_incl,
-            "orderDetails": order_details,
+            "IsDocumentNoAuto": True,
+            "InvoiceExplanation": "PDF Platform",
+            "BillingName": ci.name,
+            "BillingAddress": ci.address or "",
+            "BillingCity": ci.city or "",
+            "BillingMobilePhone": ci.phone or "",
+            "Email": ci.email,
+            "PaymentType": "iyzico",
+            "Currency": currency_code,
+            "CurrencyRate": currency_rate,
+            # Fatura özet tablosu — UBL-TR LegalMonetaryTotal karşılığı
+            "ProductsTotalTaxExcluding": products_total_excl,   # Mal/Hizmet Toplam Tutar
+            "ProductsTotalTaxIncluding": products_total_incl,
+            "DiscountTotalTaxExcluding": discount_total_excl,   # İskonto
+            "DiscountTotalTaxIncluding": discount_total_incl,
+            "TotalPaidTaxExcluding": total_excl,                # Matrah
+            "TotalTaxAmount": total_tax,                        # KDV Tutarı
+            "TotalPaidTaxIncluding": total_incl,                # Vergiler Dahil Toplam = Ödenecek
+            # KDV oranına göre KDV özet satırları
+            "OrderTaxes": order_taxes,
+            "OrderDetails": order_details,
         }
 
         # VKN (10 hane, kurumsal) veya TCKN (11 hane, bireysel) — her ikisi de taxNo alanına gider
         if ci.tax_number:
-            invoice_payload["taxNo"] = ci.tax_number
-            invoice_payload["taxOffice"] = ci.tax_office or ""
+            invoice_payload["TaxNo"] = ci.tax_number
+            invoice_payload["TaxOffice"] = ci.tax_office or ""
         elif ci.national_id:
-            invoice_payload["taxNo"] = ci.national_id
+            invoice_payload["TaxNo"] = ci.national_id
             if not self._is_valid_tckn(ci.national_id):
                 logger.warning(
                     "birfatura: TCKN checksum hatalı — BirFatura 9.900₺ üzeri faturalarda reddedebilir "
                     "national_id=%s", ci.national_id[:3] + "****" + ci.national_id[-2:],
                 )
+        elif not ci.is_export:
+            # Bireysel yurt içi, TC girilmemiş — GİB standart placeholder (11 hane)
+            invoice_payload["TaxNo"] = "11111111111"
+            logger.info("birfatura: TC girilmedi, GİB standart 11111111111 kullanılıyor")
 
         if is_e_invoice and receiver_tag:
-            invoice_payload["receiverTag"] = receiver_tag
-            invoice_payload["eInvoiceId"] = receiver_tag
+            invoice_payload["ReceiverTag"] = receiver_tag
+            invoice_payload["EInvoiceId"] = receiver_tag
 
         data = self._post("SendBasicInvoiceFromModel", {"invoice": invoice_payload})
         result_data = self._check_api_response(data, "SendBasicInvoiceFromModel")
@@ -621,7 +653,8 @@ class BirFaturaProvider(BillingProviderBase):
 
         ci = customer_info
         cust_id_scheme = "VKN" if ci.tax_number else "TCKN"
-        cust_id_value  = _esc(ci.tax_number or ci.national_id or "")
+        # Yurt içi bireysel, TC girilmemiş → GİB standart 11 haneli placeholder
+        cust_id_value  = _esc(ci.tax_number or ci.national_id or ("" if ci.is_export else "11111111111"))
         cust_name      = _esc(ci.name)
         cust_address   = _esc(ci.address or "")
         cust_city      = _esc(ci.city or "")

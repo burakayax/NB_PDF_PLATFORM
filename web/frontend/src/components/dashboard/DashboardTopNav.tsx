@@ -181,6 +181,7 @@ export function DashboardTopNav({
     if (plan === "BUSINESS") return tr ? "Business Planı" : "Business Plan";
     if (plan === "PRO") return tr ? "Pro Planı" : "Pro Plan";
     if (plan === "PLUS") return tr ? "Plus Planı" : "Plus Plan";
+    if (plan === "STARTER") return tr ? "Başlangıç Planı" : "Starter Plan";
     if (hasActiveSubscription) return W.usageUnlimited;
     // FREE plan – show remaining ops count
     const ops = (creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US");

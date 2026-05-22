@@ -165,6 +165,21 @@ def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, An
     diagnostics: parola sızdırmadan kısa teşhis bilgisi (log / inspect API).
     """
     basename = os.path.basename(pdf_path)
+
+    # 0-byte veya çok küçük dosya — geçersiz PDF, şifreli değil
+    try:
+        file_size = os.path.getsize(pdf_path)
+        if file_size == 0:
+            logger.warning("[pdf-password] %s is 0 bytes — invalid/empty PDF, not encrypted", basename)
+            return False, {
+                "file": basename,
+                "file_size": 0,
+                "corrupt": True,
+                "classification_reason": "empty_file",
+                "note": "0 byte dosya — geçersiz veya bozuk PDF, şifreli değil.",
+            }
+    except OSError:
+        pass
     diagnostics: Dict[str, Any] = {"file": basename, "engines": {}}
 
     def _finalize(requires_pw: bool, reason: str) -> Tuple[bool, Dict[str, Any]]:
@@ -248,6 +263,13 @@ def pymupdf_requires_non_empty_password(pdf_path: str) -> Tuple[bool, Dict[str, 
         doc = fitz.open(pdf_path)
     except Exception as e:
         meta["open_error"] = f"{type(e).__name__}:{e}"
+        err_lower = str(e).lower()
+        # Bozuk/geçersiz/boş dosya hataları → şifreli değil, arızalı
+        if any(k in err_lower for k in ("empty", "invalid", "cannot open", "not a pdf", "no objects", "bad file", "syntax")):
+            meta["corrupt"] = True
+            meta["note"] = "Bozuk veya geçersiz PDF — şifreli değil."
+            return False, meta
+        # Bilinmeyen exception — ihtiyatlı: şifreli sayılır
         return True, meta
 
     try:
@@ -1612,7 +1634,7 @@ def _merge_pdfs_fitz_throttled(
                 src.close()
         if progress_callback:
             progress_callback(total, total, "PDF yazılıyor...")
-        merged.save(output_path, garbage=4, deflate=True, linear=False)
+        merged.save(output_path, garbage=2, deflate=False, linear=False)
     finally:
         merged.close()
 
@@ -1672,13 +1694,9 @@ def extract_pages(
                     raise ValueError(f"Geçersiz sayfa numarası: {p} (Dosya {num_pages} sayfa)")
                 normalized.append(p)
 
-            out = fitz.open()
-            try:
-                for p in normalized:
-                    out.insert_pdf(doc, from_page=p - 1, to_page=p - 1)
-                out.save(output_path, garbage=4, deflate=True, linear=False)
-            finally:
-                out.close()
+            # select() ile istenilen sayfalar in-place seçilir; insert_pdf döngüsünden çok daha hızlı.
+            doc.select([p - 1 for p in normalized])
+            doc.save(output_path, garbage=2, deflate=False, linear=False)
         finally:
             doc.close()
         _apply_output_pdf_password(output_path, output_password)
@@ -1725,7 +1743,7 @@ def extract_pages_separate(
                     one.insert_pdf(doc, from_page=p - 1, to_page=p - 1)
                     out_name = f"{base_name}_page_{p}.pdf"
                     out_path = os.path.join(output_folder, out_name)
-                    one.save(out_path, garbage=4, deflate=True, linear=False)
+                    one.save(out_path, garbage=2, deflate=False, linear=False)
                 finally:
                     one.close()
                 _apply_output_pdf_password(out_path, output_password)

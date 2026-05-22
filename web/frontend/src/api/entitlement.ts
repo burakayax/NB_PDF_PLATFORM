@@ -2,7 +2,7 @@ import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 
-export type PlanName = "FREE" | "PLUS" | "PRO" | "BUSINESS";
+export type PlanName = "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS";
 export type SubscriptionStatus =
   | "none"
   | "active"
@@ -19,6 +19,8 @@ export type EntitlementBalanceWire = {
   batchLimit: number;
   fileSizeLimitMB: number;
   isAdmin: boolean;
+  subscriptionExpiry?: string | null;
+  subscriptionStartedAt?: string | null;
 };
 
 export type UserBalance = {
@@ -27,7 +29,10 @@ export type UserBalance = {
   plan: PlanName;
   role: "USER" | "ADMIN";
   subscriptionStatus: SubscriptionStatus;
+  /** ISO 8601 — abonelik bitiş / yenilenme tarihi, sadece ücretli planlarda döner. */
   subscriptionExpiry: string | null;
+  /** ISO 8601 — mevcut dönem başlangıç tarihi (son ödeme tarihi), sadece ücretli planlarda döner. */
+  subscriptionStartedAt: string | null;
   hasActiveSubscription: boolean;
   batchLimit: number;
   isAdmin: boolean;
@@ -52,7 +57,6 @@ export function normalizeUserBalance(
     plan: wire.plan,
     role: isAdmin ? "ADMIN" : "USER",
     subscriptionStatus: wire.plan !== "FREE" ? "active" : "none",
-    subscriptionExpiry: null,
     hasActiveSubscription,
     batchLimit: wire.batchLimit ?? 0,
     isAdmin,
@@ -60,6 +64,8 @@ export function normalizeUserBalance(
     monthly: wire.monthly ?? { used: 0, limit: null },
     watermarkEnabled: wire.watermarkEnabled ?? false,
     fileSizeLimitMB: wire.fileSizeLimitMB ?? 999999,
+    subscriptionExpiry: wire.subscriptionExpiry ?? null,
+    subscriptionStartedAt: wire.subscriptionStartedAt ?? null,
   };
 }
 

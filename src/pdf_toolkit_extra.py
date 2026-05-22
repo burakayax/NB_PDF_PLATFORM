@@ -37,9 +37,11 @@ def delete_pages_pdf(
     output_path: str,
     pages_to_delete: List[int],
     password: Optional[str] = None,
+    *,
+    total_pages: Optional[int] = None,
 ) -> bool:
     """İstenen sayfaları kaynakta silerek tek geçişte kaydeder (büyük PDF’lerde insert_pdf döngüsünden çok daha verimli)."""
-    n = get_num_pages(pdf_path, password=password)
+    n = total_pages if total_pages is not None else get_num_pages(pdf_path, password=password)
     to_del = {int(p) for p in pages_to_delete}
     if any(p < 1 or p > n for p in to_del):
         raise Exception("Geçersiz sayfa numarası.")
@@ -47,9 +49,10 @@ def delete_pages_pdf(
         raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
     doc = _fitz_open(pdf_path, password=password)
     try:
-        for p in sorted(to_del, reverse=True):
-            doc.delete_page(p - 1)
-        doc.save(output_path, garbage=4, deflate=True, linear=False)
+        # select() ile tutulacak sayfalar belirlenir; delete_page döngüsünden çok daha hızlı.
+        keep = [i for i in range(n) if (i + 1) not in to_del]
+        doc.select(keep)
+        doc.save(output_path, garbage=2, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -87,7 +90,9 @@ def rotate_pdf(
                 page = doc[i]
                 cur = int(page.rotation) % 360
                 page.set_rotation((cur + degrees) % 360)
-        doc.save(output_path, garbage=4, deflate=True, linear=False)
+        # Döndürme yalnızca sayfa sözlüğündeki /Rotate meta-verisini değiştirir;
+        # içerik akışları dokunulmaz — yeniden sıkıştırmaya gerek yok.
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -98,9 +103,15 @@ def organize_pdf(
     output_path: str,
     new_order_1based: List[int],
     password: Optional[str] = None,
+    *,
+    total_pages: Optional[int] = None,
 ) -> bool:
-    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2])."""
-    n = get_num_pages(pdf_path, password=password)
+    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2]).
+
+    doc.select() kullanır — sayfa içeriklerini kopyalamaz, sadece xref sırasını
+    değiştirir; insert_pdf döngüsüne kıyasla büyük PDF'lerde çok daha hızlıdır.
+    """
+    n = total_pages if total_pages is not None else get_num_pages(pdf_path, password=password)
     for p in new_order_1based:
         if p < 1 or p > n:
             raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
@@ -108,15 +119,14 @@ def organize_pdf(
         raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
     if len(set(new_order_1based)) != n:
         raise Exception("Aynı sayfa iki kez kullanılamaz.")
-    src = _fitz_open(pdf_path, password=password)
-    out = fitz.open()
+    doc = _fitz_open(pdf_path, password=password)
     try:
-        for p in new_order_1based:
-            out.insert_pdf(src, from_page=p - 1, to_page=p - 1)
-        out.save(output_path, garbage=4, deflate=True, linear=False)
+        # select() sayfaları in-place yeniden sıralar; içerik akışlarına dokunmaz.
+        # Tüm sayfalar korunduğundan (yalnızca sıra değişiyor) unreferenced nesne oluşmaz → garbage=0.
+        doc.select([p - 1 for p in new_order_1based])
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
-        out.close()
-        src.close()
+        doc.close()
     return True
 
 
@@ -177,7 +187,7 @@ def add_watermark_text(
                 render_mode=0,
                 fill_opacity=op,
             )
-        doc.save(output_path, garbage=4, deflate=True, linear=False)
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -223,7 +233,7 @@ def add_page_numbers(
                 align=fitz.TEXT_ALIGN_CENTER,
             )
             num += 1
-        doc.save(output_path, garbage=4, deflate=True, linear=False)
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -402,7 +412,7 @@ def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
                     merged.insert_pdf(m)
                 finally:
                     m.close()
-            merged.save(output_path, garbage=4, deflate=True)
+            merged.save(output_path, garbage=1, deflate=False)
         finally:
             merged.close()
         return True

@@ -111,7 +111,7 @@ def _process(payload: dict[str, Any], headers: dict[str, Any]) -> dict[str, Any]
         name=full_name,
         email=buyer.get("email", ""),
         phone=buyer.get("gsmNumber"),
-        national_id=national_id_raw if (not is_export and not is_corporate) else None,
+        national_id=(national_id_raw or None) if (not is_export and not is_corporate) else None,
         tax_number=tax_id if (is_corporate and tax_id) else None,
         tax_office=tax_office if (is_corporate and tax_office) else None,
         address=buyer.get("registrationAddress"),

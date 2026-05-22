@@ -25,7 +25,7 @@ from app.core.operations import (
 )
 from app.core.preview_thumbnail import generate_blurred_pdf_thumbnail_from_path
 from app.core.result_store import save_result_from_file
-from app.core.thread_pool import run_cpu_bound
+from app.core.thread_pool import CpuCapacityTimeout, run_cpu_bound
 from app.core.saas_gate import (
     entitlement_check,
     saas_current_user_id,
@@ -133,14 +133,16 @@ async def tool_delete_pages(
         out_p = workdir / out_n
 
         def _run():
-            ptx.delete_pages_pdf(sp, str(out_p), to_del, password=pwd)
+            ptx.delete_pages_pdf(sp, str(out_p), to_del, password=pwd, total_pages=n)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "delete-pages")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "delete-pages")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -206,12 +208,14 @@ async def tool_rotate_pdf(
                 per_page_degrees=per_page,
             )
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "rotate-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "rotate-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -245,14 +249,16 @@ async def tool_organize_pdf(
         out_p = workdir / out_n
 
         def _run():
-            ptx.organize_pdf(sp, str(out_p), raw, password=pwd)
+            ptx.organize_pdf(sp, str(out_p), raw, password=pwd, total_pages=n)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "organize-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "organize-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -280,12 +286,14 @@ async def tool_unlock_pdf(
         def _run():
             ptx.unlock_pdf_pikepdf(sp, str(out_p), password)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "unlock-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "unlock-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -320,12 +328,14 @@ async def tool_watermark(
                 opacity=opacity, password=pwd,
                 font_name=watermark_font, font_color=watermark_color,
             )
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "watermark")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "watermark")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -359,12 +369,14 @@ async def tool_page_numbers(
         def _run():
             ptx.add_page_numbers(sp, str(out_p), start_at=int(start_at), position=position, password=pwd, fmt=fmt)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "page-numbers")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "page-numbers")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -391,12 +403,14 @@ async def tool_repair_pdf(
         def _run():
             ptx.repair_pdf(sp, str(out_p), password=pwd)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, out_n, user_id, "repair-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "repair-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -422,21 +436,20 @@ async def tool_pdf_to_ppt(
 
         def _run():
             ptx.pdf_to_pptx(sp, str(out_p), password=pwd, dpi=int(ptx.PDF_EXPORT_DPI_WEB))
-            return out_p
+            try:
+                thumb = generate_blurred_pdf_thumbnail_from_path(Path(sp))
+            except OSError:
+                thumb = None
+            return save_result_from_file(
+                out_p,
+                out_n,
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                user_id=user_id,
+                thumbnail_png=thumb,
+                tool="pdf-to-ppt",
+            )
 
-        await run_cpu_bound(_run)
-        try:
-            thumb = generate_blurred_pdf_thumbnail_from_path(Path(sp))
-        except OSError:
-            thumb = None
-        h = save_result_from_file(
-            out_p,
-            out_n,
-            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-            user_id=user_id,
-            thumbnail_png=thumb,
-            tool="pdf-to-ppt",
-        )
+        h = await run_cpu_bound(_run)
         return {
             "result_id": h.result_id,
             "filename": h.filename,
@@ -445,6 +458,9 @@ async def tool_pdf_to_ppt(
             "has_thumbnail": h.has_thumbnail,
             "saasGating": _g_check(decision),
         }
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -495,6 +511,9 @@ async def tool_ppt_to_pdf(
             "has_thumbnail": handle.has_thumbnail,
             "saasGating": _g_check(decision),
         }
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -525,17 +544,16 @@ async def tool_pdf_to_image(
                 dpi=int(ptx.PDF_EXPORT_DPI_WEB),
                 password=pwd,
             )
-            return Path(zpath)
+            return save_result_from_file(
+                Path(zpath),
+                "sayfalar.zip",
+                "application/zip",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-image",
+            )
 
-        zip_p = await run_cpu_bound(_zip)
-        h = save_result_from_file(
-            zip_p,
-            "sayfalar.zip",
-            "application/zip",
-            user_id=user_id,
-            thumbnail_png=None,
-            tool="pdf-to-image",
-        )
+        h = await run_cpu_bound(_zip)
         return {
             "result_id": h.result_id,
             "filename": h.filename,
@@ -544,6 +562,9 @@ async def tool_pdf_to_image(
             "has_thumbnail": False,
             "saasGating": _g_check(decision),
         }
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -571,12 +592,14 @@ async def tool_image_to_pdf(
         def _run():
             ptx.images_to_pdf(paths, str(out_p))
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, "fotograflar.pdf", user_id, "image-to-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, "fotograflar.pdf", user_id, "image-to-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -609,12 +632,14 @@ async def tool_html_to_pdf(
             else:
                 ptx.html_to_pdf_file(html or "<html><body><p>Boş</p></body></html>", str(out_p))
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
-            return out_p
+            return _pack_pdf_result_file(out_p, "web.pdf", user_id, "html-to-pdf")
 
-        await run_cpu_bound(_run)
-        body = _pack_pdf_result_file(out_p, "web.pdf", user_id, "html-to-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -635,11 +660,18 @@ async def tool_pdf_to_text(
         sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         out_p = workdir / "metin.txt"
         pwd = (password or "").strip() or None
-        await run_cpu_bound(lambda: ptx.pdf_to_text(str(sp), str(out_p), password=pwd))
         out_n = format_derived_filename(file.filename or "dosya.pdf", "metin", ".txt")
-        body = _pack_text_result_file(out_p, out_n, user_id, "pdf-to-text")
+
+        def _run():
+            ptx.pdf_to_text(str(sp), str(out_p), password=pwd)
+            return _pack_text_result_file(out_p, out_n, user_id, "pdf-to-text")
+
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:
@@ -660,15 +692,19 @@ async def tool_flatten_pdf(
         sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         out_p = workdir / "duzlestir.pdf"
         pwd = (password or "").strip() or None
+        out_n = format_derived_filename(file.filename or "dosya.pdf", "düz", ".pdf")
+
         def _run():
             ptx.flatten_pdf(str(sp), str(out_p), password=pwd)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
+            return _pack_pdf_result_file(out_p, out_n, user_id, "flatten-pdf")
 
-        await run_cpu_bound(_run)
-        out_n = format_derived_filename(file.filename or "dosya.pdf", "düz", ".pdf")
-        body = _pack_pdf_result_file(out_p, out_n, user_id, "flatten-pdf")
+        body = await run_cpu_bound(_run)
         body["saasGating"] = _g_check(decision)
         return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
     except Exception as e:
         cleanup_and_raise(workdir, e)
     finally:

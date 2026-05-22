@@ -131,6 +131,32 @@ export async function entitlementBalanceController(
     throw new HttpError(404, "User or organization not found.");
   }
 
+  // Ücretli planlar için abonelik başlangıç ve bitiş tarihleri
+  let subscriptionExpiry: string | null = null;
+  let subscriptionStartedAt: string | null = null;
+  if (summary.plan !== "FREE" && !summary.isAdmin) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    if (user?.organizationId) {
+      const org = await prisma.organization.findUnique({
+        where: { id: user.organizationId },
+        select: { subscriptionExpiry: true },
+      });
+      subscriptionExpiry = org?.subscriptionExpiry?.toISOString() ?? null;
+    }
+    // Dönem başlangıcı: son tamamlanmış ödemenin tarihi
+    const lastCheckout = await prisma.paymentCheckout.findFirst({
+      where: { userId, status: "completed" },
+      orderBy: { completedAt: "desc" },
+      select: { completedAt: true, createdAt: true },
+    });
+    if (lastCheckout) {
+      subscriptionStartedAt = (lastCheckout.completedAt ?? lastCheckout.createdAt).toISOString();
+    }
+  }
+
   response.status(200).json({
     plan: summary.plan,
     daily: summary.daily,
@@ -139,6 +165,8 @@ export async function entitlementBalanceController(
     batchLimit: summary.batchLimit,
     fileSizeLimitMB: summary.fileSizeLimitMB,
     isAdmin: summary.isAdmin,
+    subscriptionExpiry,
+    subscriptionStartedAt,
   });
 }
 
