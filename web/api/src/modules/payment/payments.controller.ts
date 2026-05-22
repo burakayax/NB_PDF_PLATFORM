@@ -44,6 +44,14 @@ const BASKET_NAMES_TR: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", string> =
   BUSINESS: "PDF PLATFORM Business",
 };
 
+/** TC Kimlik No algoritması — 11 hane checksum doğrulaması */
+function isValidTckn(tckn: string): boolean {
+  if (!tckn || tckn.length !== 11 || !/^\d{11}$/.test(tckn) || tckn[0] === "0") return false;
+  const d = tckn.split("").map(Number);
+  const d10 = ((d[0] + d[2] + d[4] + d[6] + d[8]) * 7 - (d[1] + d[3] + d[5] + d[7])) % 10;
+  return d10 === d[9] && (d[0]+d[1]+d[2]+d[3]+d[4]+d[5]+d[6]+d[7]+d[8]+d[9]) % 10 === d[10];
+}
+
 export async function initializePaymentsController(request: Request, response: Response): Promise<void> {
   const userId = request.authUser?.id;
   if (!userId) {
@@ -115,6 +123,30 @@ export async function initializePaymentsController(request: Request, response: R
     const netPrice = parseFloat(basePrice);
     const discountedNet = Math.round(netPrice * (1 - v.coupon.discountPercent / 100) * 100) / 100;
     basePrice = Math.max(discountedNet, 0.01).toFixed(2);
+  }
+
+  // TC Kimlik No validasyonu — geçersiz TC ile ödeme başlatılamaz
+  if (checkoutCurrency === "TRY") {
+    const invoiceUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { tcKimlikNo: true, invoiceType: true },
+    });
+    const isIndividual = (invoiceUser?.invoiceType ?? "individual") !== "corporate";
+    if (isIndividual && invoiceUser?.tcKimlikNo) {
+      try {
+        const { decryptField } = await import("../../lib/encryption.js");
+        const tc = decryptField(invoiceUser.tcKimlikNo);
+        if (!isValidTckn(tc)) {
+          throw new HttpError(
+            400,
+            "Kayıtlı TC Kimlik Numaranız geçersiz. Lütfen profil sayfanızdan fatura bilgilerinizi güncelleyin.",
+          );
+        }
+      } catch (err) {
+        if (err instanceof HttpError) throw err;
+        // Decrypt hatası — TC doğrulanamadı, geçişe izin ver
+      }
+    }
   }
 
   // basePrice KDV hariç (net) fiyattır; createPaymentCheckoutSession içinde
