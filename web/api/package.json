@@ -54,13 +54,13 @@
     "prisma": "^6.6.0",
     "redis": "^6.0.0",
     "stripe": "^17.7.0",
+    "tsx": "^4.19.3",
     "typescript": "~5.8.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.8",
     "cross-env": "^10.1.0",
-    "tsx": "^4.19.3",
     "vitest": "^4.1.8"
   },
   "overrides": {
