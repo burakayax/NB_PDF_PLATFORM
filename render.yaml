@@ -66,7 +66,10 @@ services:
     plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
                               # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
     rootDir: web/api
-    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run prisma:seed
+    # PostgreSQL şeması (schema.postgres.prisma) ile generate + db push.
+    # Not: migrations/ klasörü SQLite diyalektinde olduğu için Postgres'e
+    # uygulanamaz; bunun yerine db push şemayı doğrudan Neon'a senkronlar.
+    buildCommand: npm ci && npx prisma generate --schema prisma/schema.postgres.prisma && npm run build && npx prisma db push --schema prisma/schema.postgres.prisma --skip-generate --accept-data-loss && npm run prisma:seed
     startCommand: npm run start
     healthCheckPath: /api/health
     envVars:
