@@ -81,6 +81,38 @@ Tam liste `DEPLOYMENT.md` dosyasında (proje ana klasöründe). En önemlileri:
 
 ---
 
+## 💰 Bölüm 1.5 — Ücretsiz mi, Ücretli mi? (Önemli)
+
+Kafa karışıklığı genelde "Blueprint ücretli mi?" sorusudur. Net cevap:
+
+- **Blueprint ÜCRETSİZDİR.** Blueprint sadece bir *kurulum yöntemidir* —
+  `render.yaml` dosyasını okuyup 3 servisi tek seferde kurar. "Web Service"
+  ile elle kurmaktan tek farkı kolaylıktır, fiyatla ilgisi yoktur.
+- Ücreti belirleyen tek şey her servisin **plan (paket)** ayarıdır. Bu ayar
+  `render.yaml` içinde her servis için yazılıdır.
+
+| Plan | Ücret | Davranış |
+|------|-------|----------|
+| `free` | **Ücretsiz** | 15 dk işlem olmazsa uyur, sonraki ziyaretçi ~50 sn bekler (cold start) |
+| `starter` | ~$7/ay (servis başına) | Hep açık, uyumaz — gerçek yayın için önerilen |
+
+> **Şu an `render.yaml` `free` (ücretsiz) ayarda.** Proje bakım/test
+> dönemindeyken para ödemezsin. Şirketi kurup gerçek kullanıcıya açarken
+> `render.yaml`'da iki web servisinin `plan: free` satırını `plan: starter`
+> yapıp `git push` yapman yeterli — Render otomatik geçirir.
+
+### Ücretsiz dönemde dikkat edilecekler
+
+- **Frontend (vitrin) zaten her zaman ücretsiz** (static site, CDN'den servis).
+- **Veritabanı (PostgreSQL) ayrı bir konu.** Render'ın ücretsiz PostgreSQL'i
+  bir süre sonra (genelde 30 gün) silinir. Bakım dönemi için ücretsiz bir
+  dış sağlayıcı (örn. Supabase / Neon ücretsiz katmanı) `DATABASE_URL` olarak
+  kullanılabilir. Gerçek yayında kalıcı (ücretli) bir veritabanına geç.
+- **Free plan uyuduğu için** bakım modunda zaten kullanıcı olmayacağından
+  cold start sorun değildir.
+
+---
+
 ## 🌐 Bölüm 2 — Render.com'da Adım Adım Yayına Alma
 
 ### Hazırlık: Önce kodu GitHub'a gönder
