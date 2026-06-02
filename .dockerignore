@@ -1,0 +1,29 @@
+# Docker build context = proje kökü. İmaja yalnızca web/backend + src gerekir.
+# Gizli .env dosyaları imaja ASLA gömülmemeli (Render env değişkenleri dashboard'dan gelir).
+
+# Sırlar
+**/.env
+**/.env.*
+!**/.env.example
+
+# Bu imajda gerekmeyen servisler / büyük klasörler (context yüklemesini hızlandırır)
+web/frontend
+web/api
+.git
+.github
+docs
+
+# Python / test artefaktları
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.coverage
+**/venv
+**/.venv
+
+# Veritabanı / çıktı / geçici
+*.db
+**/*.db
+**/tmp
+**/dist
+**/build

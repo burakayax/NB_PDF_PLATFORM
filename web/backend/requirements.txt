@@ -14,10 +14,10 @@ pikepdf>=10
 pymupdf>=1.24
 pdf2docx>=0.5
 pytesseract
-docling
-onnxruntime
-easyocr
 ocrmypdf
+# NOT: docling / easyocr / onnxruntime (torch + CUDA, ~5 GB) buradan ÇIKARILDI.
+# Ücretsiz/küçük planlara sığmaz. Yapay zeka tabanlı OCR gerektiğinde (büyük
+# planda) requirements-ocr.txt dosyasını da kurun: pip install -r requirements-ocr.txt
 pypdf>=6
 python-docx
 Pillow
