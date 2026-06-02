@@ -9,6 +9,11 @@
   "scripts": {
     "prebuild": "node scripts/generate-seo-files.mjs",
     "predev": "node scripts/generate-seo-files.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium --with-deps",
     "dev": "vite --host",
     "dev:with-pdf-api": "concurrently -k -n pdf,ui -c blue,magenta \"node ../../scripts/run-pdf-api.mjs\" \"vite --host\"",
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
@@ -18,27 +23,41 @@
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
+    "@number-flow/react": "^0.6.0",
+    "@sentry/react": "^10.55.0",
+    "@tanstack/react-virtual": "^3.13.2",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.460.0",
+    "motion": "^12.38.0",
     "pdfjs-dist": "^4.10.38",
     "react": "latest",
     "react-dom": "latest",
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.2.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.13.14",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^9.2.1",
     "esbuild": "^0.27.4",
     "javascript-obfuscator": "^5.4.1",
+    "jsdom": "^29.1.1",
+    "playwright": "^1.59.1",
     "tailwindcss": "^4.2.2",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "^8.0.12",
+    "vitest": "^4.1.8"
   }
 }

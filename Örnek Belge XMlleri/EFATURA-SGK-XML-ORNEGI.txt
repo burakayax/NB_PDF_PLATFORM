@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Invoice xmlns:ubltr="urn:oasis:names:specification:ubl:schema:xsd:TurkishCustomizationExtensionComponents" xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ccts="urn:un:unece:uncefact:documentation:2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+  <cbc:ProfileID>TEMELFATURA</cbc:ProfileID>
+  <cbc:ID>FIT2025000000001</cbc:ID>
+  <cbc:CopyIndicator>false</cbc:CopyIndicator>
+  <cbc:UUID>068f64f5-8f65-44b1-89f5-fdb8775a9bf9</cbc:UUID>
+  <cbc:IssueDate>2025-12-22</cbc:IssueDate>
+  <cbc:IssueTime>12:32:12.8487556+03:00</cbc:IssueTime>
+  <cbc:InvoiceTypeCode>SGK</cbc:InvoiceTypeCode>
+  <cbc:Note>Yalnız OtuzBinTürkLirası</cbc:Note>
+  <cbc:Note>E-Fatura izni kapsamında elektronik ortamda iletilmiştir. Bu fatura irsaliye yerine geçer.</cbc:Note>
+  <cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+  <cbc:AccountingCost>SAGLIK_ECZ</cbc:AccountingCost>
+  <cbc:LineCountNumeric>1</cbc:LineCountNumeric>
+  <cac:InvoicePeriod>
+    <cbc:StartDate>2025-12-22</cbc:StartDate>
+    <cbc:EndDate>2025-12-22</cbc:EndDate>
+  </cac:InvoicePeriod>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>068f64f5-8f65-44b1-89f5-fdb8775a9bf9</cbc:ID>
+    <cbc:IssueDate>2025-12-22</cbc:IssueDate>
+    <cbc:DocumentTypeCode>CUST_INV_ID</cbc:DocumentTypeCode>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>1</cbc:ID>
+    <cbc:IssueDate>2025-12-22</cbc:IssueDate>
+    <cbc:DocumentTypeCode>DOSYA_NO</cbc:DocumentTypeCode>
+    <cbc:DocumentType>D-12313213</cbc:DocumentType>
+    <cbc:DocumentDescription>Döküm No</cbc:DocumentDescription>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>1</cbc:ID>
+    <cbc:IssueDate>2025-12-22</cbc:IssueDate>
+    <cbc:DocumentTypeCode>MUKELLEF_KODU</cbc:DocumentTypeCode>
+    <cbc:DocumentType>12312312312</cbc:DocumentType>
+    <cbc:DocumentDescription>Eczane Sicil Numarası</cbc:DocumentDescription>
+  </cac:AdditionalDocumentReference>
+  <cac:AdditionalDocumentReference>
+    <cbc:ID>1</cbc:ID>
+    <cbc:IssueDate>2025-12-22</cbc:IssueDate>
+    <cbc:DocumentTypeCode>MUKELLEF_ADI</cbc:DocumentTypeCode>
+    <cbc:DocumentType>Mükellef Adı</cbc:DocumentType>
+    <cbc:DocumentDescription>Eczane Adı</cbc:DocumentDescription>
+  </cac:AdditionalDocumentReference>
+  <cac:Signature>
+    <cbc:ID schemeID="VKN_TCKN">1234567801</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">1234567801</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PostalAddress>
+        <cbc:StreetName>*</cbc:StreetName>
+        <cbc:CitySubdivisionName />
+        <cbc:CityName>Ankara</cbc:CityName>
+        <cac:Country>
+          <cbc:Name>TÜRKİYE</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>#Signature</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cbc:WebsiteURI />
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">1234567801</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="TICARETSICILNO" />
+      </cac:PartyIdentification>
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="MERSISNO" />
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>Enes Karakuş Company</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>*</cbc:StreetName>
+        <cbc:CitySubdivisionName />
+        <cbc:CityName>Ankara</cbc:CityName>
+        <cac:Country>
+          <cbc:Name>Türkiye</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cac:TaxScheme>
+          <cbc:Name>Çankaya</cbc:Name>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:Contact>
+        <cbc:Telephone>05301232321</cbc:Telephone>
+        <cbc:ElectronicMail>mail@mail.com</cbc:ElectronicMail>
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cbc:WebsiteURI />
+      <cac:PartyIdentification>
+        <cbc:ID schemeID="VKN">7750409379</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>Sosyal Güvenlik Kurumu</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:Room />
+        <cbc:StreetName />
+        <cbc:BuildingName />
+        <cbc:BuildingNumber />
+        <cbc:CitySubdivisionName>Çankaya</cbc:CitySubdivisionName>
+        <cbc:CityName>ANKARA</cbc:CityName>
+        <cbc:PostalZone />
+        <cbc:Region />
+        <cbc:District />
+        <cac:Country>
+          <cbc:Name>TÜRKİYE</cbc:Name>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cac:TaxScheme>
+          <cbc:Name>ÇANKAYA VERGİ DAİRESİ (6257)</cbc:Name>
+          <cbc:TaxTypeCode />
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+      <cac:Contact>
+        <cbc:Telephone />
+        <cbc:Telefax />
+        <cbc:ElectronicMail />
+      </cac:Contact>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="TRY">5000.0</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="TRY">25000.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="TRY">5000.00</cbc:TaxAmount>
+      <cbc:Percent>20</cbc:Percent>
+      <cac:TaxCategory>
+        <cac:TaxScheme>
+          <cbc:Name>KDV</cbc:Name>
+          <cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="TRY">25000.00</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="TRY">25000.00</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="TRY">30000.00</cbc:TaxInclusiveAmount>
+    <cbc:AllowanceTotalAmount currencyID="TRY">0.00</cbc:AllowanceTotalAmount>
+    <cbc:PayableAmount currencyID="TRY">30000.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  <cac:InvoiceLine>
+    <cbc:ID>1</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="NIU">1.0000</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="TRY">25000.00</cbc:LineExtensionAmount>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="TRY">5000.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="TRY">25000.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="TRY">5000.00</cbc:TaxAmount>
+        <cbc:Percent>20</cbc:Percent>
+        <cac:TaxCategory>
+          <cac:TaxScheme>
+            <cbc:Name>KDV</cbc:Name>
+            <cbc:TaxTypeCode>0015</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description />
+      <cbc:Name>Telefon</cbc:Name>
+      <cac:BuyersItemIdentification>
+        <cbc:ID />
+      </cac:BuyersItemIdentification>
+      <cac:SellersItemIdentification>
+        <cbc:ID>0000001</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:AdditionalItemIdentification>
+        <cbc:ID />
+      </cac:AdditionalItemIdentification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="TRY">25000.000000</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

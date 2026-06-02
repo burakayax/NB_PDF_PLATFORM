@@ -6,7 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CheckoutCurrency } from "../lib/pricingMatrix";
+export type CheckoutCurrency = "TRY" | "USD" | "EUR";
 
 /** Deprecated: persisted manual overrides from older header toggle; cleared on boot. */
 const LEGACY_STORAGE_KEY = "nb-checkout-currency-v1";
@@ -117,23 +117,22 @@ async function fetchCountryFromIp(): Promise<string | null> {
 }
 
 function mergeGeoAndHints(geo: string | null): CheckoutCurrency {
-  if (geo) {
-    return defaultCurrencyFromCountryCode(geo);
-  }
+  // IP sonucu en güvenilir sinyal; gelirse onu kullan
+  if (geo) return defaultCurrencyFromCountryCode(geo);
+  // IP yoksa timezone/dil fallback
   return inferCurrencyFromClientHints();
 }
 
 type Ctx = {
   currency: CheckoutCurrency;
+  loading: boolean;
 };
 
 const CheckoutCurrencyContext = createContext<Ctx | null>(null);
 
 export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) {
-  /** Avoid USD flash for TR users before IP resolves — hints run synchronously after mount. */
-  const [currency, setCurrency] = useState<CheckoutCurrency>(() =>
-    typeof window !== "undefined" ? inferCurrencyFromClientHints() : "TRY",
-  );
+  const [currency, setCurrency] = useState<CheckoutCurrency>(() => inferCurrencyFromClientHints());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,6 +142,12 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     void fetchCountryFromIp().then((cc) => {
       if (!cancelled) {
         setCurrency(mergeGeoAndHints(cc));
+        setLoading(false);
+      }
+    }).catch(() => {
+      if (!cancelled) {
+        setCurrency(inferCurrencyFromClientHints());
+        setLoading(false);
       }
     });
     return () => {
@@ -150,15 +155,14 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     };
   }, []);
 
-  const value = useMemo(() => ({ currency }), [currency]);
+  const value = useMemo(() => ({ currency, loading }), [currency, loading]);
 
   return <CheckoutCurrencyContext.Provider value={value}>{children}</CheckoutCurrencyContext.Provider>;
 }
 
+const _FALLBACK_CTX: Ctx = { currency: "USD", loading: false };
+
 export function useCheckoutCurrency(): Ctx {
   const v = useContext(CheckoutCurrencyContext);
-  if (!v) {
-    throw new Error("useCheckoutCurrency requires CheckoutCurrencyProvider");
-  }
-  return v;
+  return v ?? _FALLBACK_CTX;
 }

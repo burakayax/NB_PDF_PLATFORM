@@ -1,10 +1,9 @@
-import type { UserRole } from "@prisma/client";
+import type { OrgRole, UserRole } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import { logSuspiciousActivity } from "../lib/app-logger.js";
 import { verifyAccessToken } from "../lib/jwt.js";
 import { resolveRoleFromEmail } from "../lib/role-policy.js";
 
-/** JWT içindeki role alanına güvenilmez; yetki yalnızca e-posta politikasından türetilir. */
 function tokenRole(payload: { email: string }): UserRole {
   return resolveRoleFromEmail(payload.email);
 }
@@ -14,13 +13,29 @@ function readBearerToken(request: Request) {
   if (!header.startsWith("Bearer ")) {
     return null;
   }
-
   return header.slice("Bearer ".length).trim();
 }
 
 const BEARER_CHALLENGE = 'Bearer realm="api"';
 
-export function requireAuth(request: Request, response: Response, next: NextFunction) {
+export function requireAuth(request: Request, response: Response, next: NextFunction): void;
+export function requireAuth(): (request: Request, response: Response, next: NextFunction) => void;
+export function requireAuth(
+  request?: Request,
+  response?: Response,
+  next?: NextFunction,
+): ((request: Request, response: Response, next: NextFunction) => void) | void {
+  // Called as requireAuth() factory form
+  if (!request) {
+    return (req: Request, res: Response, n: NextFunction) => {
+      requireAuthImpl(req, res, n);
+    };
+  }
+  // Called as direct middleware requireAuth (old style)
+  requireAuthImpl(request, response!, next!);
+}
+
+function requireAuthImpl(request: Request, response: Response, next: NextFunction) {
   const token = readBearerToken(request);
   if (!token) {
     response
@@ -37,6 +52,8 @@ export function requireAuth(request: Request, response: Response, next: NextFunc
       email: payload.email,
       plan: payload.plan,
       role: tokenRole(payload),
+      orgRole: (payload.orgRole as OrgRole) ?? "OWNER",
+      organizationId: payload.organizationId ?? null,
     };
     next();
   } catch {
@@ -70,11 +87,11 @@ export function attachOptionalAuth(request: Request, _response: Response, next: 
       email: payload.email,
       plan: payload.plan,
       role: tokenRole(payload),
+      orgRole: (payload.orgRole as OrgRole) ?? "OWNER",
+      organizationId: payload.organizationId ?? null,
     };
   } catch {
-    // Geçersiz Bearer token olsa bile isteği durdurmaz; anonim trafik gözlemlenebilir uçlara ulaşabilsin.
-    // Analytics veya sağlık kontrolleri 401 ile tıkanmamalıdır.
-    // Burada yanıt dönmeye başlanırsa isteğe bağlı kimlik gerektirmeyen rotalar hatalı 401 üretebilir.
+    // optional auth: invalid token doesn't block the request
   }
 
   next();

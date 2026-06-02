@@ -1,4 +1,4 @@
-# NB PDF PLATFORM Web
+# PDF PLATFORM Web
 
 > **Geliştirme:** Üç servisi birlikte başlatmak için çoğu zaman proje **kökünde** `npm run install-all` ve `npm run dev` yeterlidir. Ayrıntılar: kökteki **CALISTIRMA.md**.
 

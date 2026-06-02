@@ -178,7 +178,7 @@ export function ConfirmModal({
     return null;
   }
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[400] flex items-center justify-center p-4" role="dialog" aria-modal="true">
       <button type="button" className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" onClick={busy ? undefined : onClose} aria-label="Kapat" />
       <div className="relative z-10 w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-900 p-6 shadow-2xl">
         <h2 className="text-lg font-semibold text-white">{title}</h2>

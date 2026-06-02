@@ -39,11 +39,23 @@ if (!globalForPrisma.__nbPrismaLogged) {
   globalForPrisma.__nbPrismaLogged = true;
   const url = process.env.DATABASE_URL;
   const absolute = resolveSqliteAbsolutePath(url);
-  // eslint-disable-next-line no-console
-  console.log(
-    "[prisma] cwd=%s DATABASE_URL=%s%s",
-    process.cwd(),
-    url ?? "(unset)",
-    absolute ? ` absolute=${absolute}` : "",
-  );
+  // Başlangıç logu — hangi veritabanı dosyasına bağlandığımızı kaydeder.
+  // Üretimde url'den şifre çıkarılır.
+  const safeUrl = url
+    ? url.replace(/:([^:@/]+)@/, ":***@")
+    : "(unset)";
+  import("./file-log.js").then(({ appendLogLine }) => {
+    appendLogLine(
+      JSON.stringify({
+        ts: new Date().toISOString(),
+        kind: "startup",
+        message: "prisma client initialized",
+        cwd: process.cwd(),
+        database_url: safeUrl,
+        ...(absolute ? { absolute_path: absolute } : {}),
+      }),
+    );
+  }).catch(() => {
+    // file-log başlatılamadıysa log kaybı kabul edilebilir
+  });
 }

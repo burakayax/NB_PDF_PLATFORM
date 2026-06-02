@@ -24,6 +24,8 @@ export const featureCatalog = [
   "pdf-to-image",
   "image-to-pdf",
   "html-to-pdf",
+  "pdf-to-text",
+  "flatten-pdf",
 ] as const;
 
 export type FeatureKey = (typeof featureCatalog)[number];
@@ -37,11 +39,49 @@ export type PlanDefinition = {
   multiUser: boolean;
 };
 
+/** Temel araçlar — ücretli plan gerektirmez */
+const FREE_TOOLS: FeatureKey[] = [
+  "split",
+  "merge",
+  "compress",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "pdf-to-text",
+];
+
+/** Starter'a ek olarak açılan araçlar */
+const STARTER_TOOLS: FeatureKey[] = [
+  ...FREE_TOOLS,
+  "encrypt",
+  "pdf-to-image",
+  "image-to-pdf",
+  "page-numbers",
+  "watermark",
+];
+
 export const planDefinitions: Record<Plan, PlanDefinition> = {
   FREE: {
     name: "FREE",
     displayName: "Free",
-    description: "Full toolkit with unlimited daily use; later runs may be slower until you upgrade.",
+    description: "Full toolkit with usage limits.",
+    dailyLimit: 3,
+    allowedFeatures: FREE_TOOLS,
+    multiUser: false,
+  },
+  STARTER: {
+    name: "STARTER",
+    displayName: "Starter",
+    description: "Great for getting started with 25 daily operations.",
+    dailyLimit: 25,
+    allowedFeatures: STARTER_TOOLS,
+    multiUser: false,
+  },
+  PLUS: {
+    name: "PLUS",
+    displayName: "Plus",
+    description: "Unlimited daily use with 600 monthly operations.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: false,
@@ -49,7 +89,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   PRO: {
     name: "PRO",
     displayName: "Pro",
-    description: "Unlimited usage with access to the full PDF toolkit.",
+    description: "Unlimited usage with 1000 monthly operations and priority support.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: false,
@@ -57,7 +97,7 @@ export const planDefinitions: Record<Plan, PlanDefinition> = {
   BUSINESS: {
     name: "BUSINESS",
     displayName: "Business",
-    description: "Unlimited operations and full toolkit for individual productivity (Basic tier).",
+    description: "Unlimited operations for teams.",
     dailyLimit: null,
     allowedFeatures: [...featureCatalog],
     multiUser: true,

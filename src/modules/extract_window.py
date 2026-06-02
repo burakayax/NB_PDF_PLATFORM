@@ -4,34 +4,9 @@ import os
 
 from modules.i18n import t
 from modules.pdf_password_dialog import PdfPasswordDialog
-from modules.pdf_tool_ui import build_drop_zone, build_file_card, build_tool_header, register_file_drop
+from modules.pdf_tool_ui import build_drop_zone, build_file_card, build_tool_header
+from modules.pdf_visual_grid import PdfVisualGrid
 from modules.ui_theme import theme
-
-
-def _parse_pages_selection(input_text: str):
-    """Web API ile uyumlu sayfa listesi: virgülle ayrılmış sayılar ve tireli aralıklar (1 tabanlı)."""
-    raw = input_text.replace(" ", "").strip()
-    if not raw:
-        return None, "empty"
-    pages: set[int] = set()
-    for token in raw.split(","):
-        if not token:
-            continue
-        if "-" in token:
-            start_raw, end_raw = token.split("-", 1)
-            if not start_raw.isdigit() or not end_raw.isdigit():
-                return None, "format"
-            start, end = int(start_raw), int(end_raw)
-            if start > end:
-                return None, "format"
-            pages.update(range(start, end + 1))
-        else:
-            if not token.isdigit():
-                return None, "format"
-            pages.add(int(token))
-    if not pages:
-        return None, "empty"
-    return sorted(pages), None
 
 
 class ExtractWindow(ctk.CTkToplevel):
@@ -43,122 +18,69 @@ class ExtractWindow(ctk.CTkToplevel):
         self.access_controller = access_controller
         self.ui = theme()
         self.selected_file = None
-        self.total_pages = 0
         self.selected_password = None
         self.selected_is_encrypted = False
+        self.visual_grid: PdfVisualGrid | None = None
 
         self.title(t("extract.window_title"))
-        self.ortalama_func(self, 640, 800)
+        self.ortalama_func(self, 820, 820)
         self.grab_set()
         self.configure(fg_color=self.ui["bg"])
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
         build_tool_header(self, t("extract.header"))
 
-        self.file_card = ctk.CTkFrame(
-            self,
-            fg_color=self.ui["panel"],
-            corner_radius=16,
-            border_width=1,
-            border_color=self.ui["border"],
-        )
-        self.file_card.pack(pady=20, padx=40, fill="x")
-        register_file_drop(self.file_card, lambda paths: self.ingest_paths(paths), {".pdf"})
+        self.main_card = ctk.CTkFrame(self, fg_color=self.ui["panel"], corner_radius=16,
+                                      border_width=1, border_color=self.ui["border"])
+        self.main_card.pack(pady=12, padx=28, fill="both", expand=True)
 
-        self.file_area = ctk.CTkFrame(self.file_card, fg_color="transparent")
-        self.file_area.pack(fill="x", padx=18, pady=18)
-        self._render_file_empty()
+        self.content_frame = ctk.CTkFrame(self.main_card, fg_color="transparent")
+        self.content_frame.pack(pady=10, padx=16, fill="both", expand=True)
 
-        self.main_container = ctk.CTkFrame(self, fg_color="transparent")
-        self.main_container.pack(fill="x", padx=40)
+        self.show_empty_state()
 
-        ctk.CTkLabel(self.main_container, text=t("extract.save_mode"), font=self.ui["subtitle_font"], text_color=self.ui["warning"]).pack(
-            anchor="w"
-        )
+        # Save mode — gösterilmez/aktif değilken pasif görünür
+        bottom_bar = ctk.CTkFrame(self, fg_color="transparent")
+        bottom_bar.pack(pady=(4, 0), padx=28, fill="x")
+
+        ctk.CTkLabel(
+            bottom_bar, text=t("extract.save_mode"),
+            font=self.ui["subtitle_font"], text_color=self.ui["warning"],
+        ).pack(anchor="w")
         self.segment_mode = ctk.CTkSegmentedButton(
-            self.main_container,
+            bottom_bar,
             values=[t("extract.mode_single"), t("extract.mode_separate")],
-            command=lambda _value: self.update_mode_info(),
+            command=lambda _: None,
         )
         self.segment_mode.set(t("extract.mode_single"))
-        self.segment_mode.pack(fill="x", pady=(5, 15))
-        self.mode_info = ctk.CTkLabel(
-            self.main_container,
-            text=t("extract.mode_single_info"),
-            font=self.ui["small_font"],
-            text_color=self.ui["muted"],
-            justify="left",
-            wraplength=500,
+        self.segment_mode.pack(fill="x", pady=(4, 4))
+
+        self.status_lbl = ctk.CTkLabel(
+            self, text=t("visual_grid.no_selection"),
+            font=self.ui["small_font"], text_color=self.ui["muted"],
         )
-        self.mode_info.pack(anchor="w", pady=(0, 10))
-
-        ctk.CTkLabel(self.main_container, text=t("extract.page_label"), font=self.ui["subtitle_font"], text_color=self.ui["text"]).pack(fill="x")
-
-        self.entry_var = ctk.StringVar()
-        self.entry_var.trace_add("write", self.validate_inputs)
-
-        self.ent_page = ctk.CTkEntry(
-            self.main_container,
-            height=45,
-            placeholder_text=t("extract.page_placeholder_disabled"),
-            font=("Segoe UI Semibold", 16, "bold"),
-            justify="center",
-            border_color=self.ui["border"],
-            fg_color=self.ui["panel_alt"],
-            text_color=self.ui["text"],
-            textvariable=self.entry_var,
-            state="disabled",
-        )
-        self.ent_page.pack(fill="x", pady=(5, 10))
-
-        self.lbl_warning = ctk.CTkLabel(self, text="", font=self.ui["body_font"], text_color=self.ui["danger"])
-        self.lbl_warning.pack(pady=5)
+        self.status_lbl.pack(pady=(2, 2))
 
         self.btn_run = ctk.CTkButton(
-            self,
-            text=t("extract.run"),
-            font=("Segoe UI Semibold", 18, "bold"),
-            height=56,
-            fg_color=self.ui["panel_alt"],
-            hover_color=self.ui["border"],
-            text_color=self.ui["button_text"],
-            state="disabled",
+            self, text=t("extract.run"),
+            font=("Segoe UI Semibold", 16, "bold"), height=50,
+            fg_color=self.ui["panel_alt"], hover_color=self.ui["border"],
+            text_color=self.ui["button_text"], state="disabled",
             command=self.run_extract,
         )
-        self.btn_run.pack(pady=(10, 20), padx=40, fill="x")
+        self.btn_run.pack(pady=(0, 18), padx=28, fill="x")
 
-    def _render_file_empty(self) -> None:
-        for w in self.file_area.winfo_children():
+    def show_empty_state(self):
+        for w in self.content_frame.winfo_children():
             w.destroy()
-        self.file_card.configure(border_color=self.ui["border"])
-        drop = build_drop_zone(
-            self.file_area,
-            on_paths=lambda paths: self.ingest_paths(paths),
+        self.visual_grid = None
+        build_drop_zone(
+            self.content_frame,
+            on_paths=self.ingest_paths,
             on_browse=self.select_file,
-            extensions=None,
-        )
-        drop.pack(fill="x")
-
-    def _render_file_selected(self) -> None:
-        for w in self.file_area.winfo_children():
-            w.destroy()
-        self.file_card.configure(border_color=self.ui["success"])
-        assert self.selected_file is not None
-        sub = t("extract.file_pages_line", total=self.total_pages)
-        badge = t("app.encrypted_badge") if self.selected_is_encrypted else None
-        build_file_card(
-            self.file_area,
-            self.selected_file,
-            second_line=sub,
-            badge_text=badge,
-            badge_warning=self.selected_is_encrypted,
-            on_change=self.select_file,
-        )
-
-    def update_mode_info(self):
-        if self.segment_mode.get() == t("extract.mode_single"):
-            self.mode_info.configure(text=t("extract.mode_single_info"))
-        else:
-            self.mode_info.configure(text=t("extract.mode_separate_info"))
+            extensions={".pdf"},
+            access_controller=self.access_controller,
+        ).pack(fill="both", expand=True)
 
     def ingest_paths(self, paths: list[str]) -> None:
         if not paths:
@@ -170,21 +92,17 @@ class ExtractWindow(ctk.CTkToplevel):
             if hasattr(self.pdf_engine, "is_pdf_encrypted"):
                 is_encrypted = self.pdf_engine.is_pdf_encrypted(file)
             if is_encrypted:
-
                 def validate_password(value):
                     try:
-                        if hasattr(self.pdf_engine, "validate_pdf_password") and self.pdf_engine.validate_pdf_password(file, value):
+                        if hasattr(self.pdf_engine, "validate_pdf_password") \
+                                and self.pdf_engine.validate_pdf_password(file, value):
                             return True
                         return t("pdf_password.invalid_password")
                     except Exception as e:
                         return str(e)
-
                 dialog = PdfPasswordDialog(
-                    self,
-                    self.ortalama_func,
-                    os.path.basename(file),
-                    password_validator=validate_password,
-                    allow_skip=False,
+                    self, self.ortalama_func, os.path.basename(file),
+                    password_validator=validate_password, allow_skip=False,
                 )
                 self.wait_window(dialog)
                 if not dialog.result:
@@ -195,101 +113,80 @@ class ExtractWindow(ctk.CTkToplevel):
             self.selected_file = file
             self.selected_password = password
             self.selected_is_encrypted = is_encrypted
-            if hasattr(self.pdf_engine, "get_num_pages"):
-                self.total_pages = self.pdf_engine.get_num_pages(file, password=password)
-            else:
-                import pikepdf
-
-                with pikepdf.open(file, password=password) as pdf:
-                    self.total_pages = len(pdf.pages)
-
-            self._render_file_selected()
-
-            self.ent_page.configure(
-                state="normal",
-                placeholder_text=t("extract.page_placeholder_active"),
-                border_color=self.ui["accent"],
-                fg_color=self.ui["panel_alt"],
-                text_color=self.ui["text"],
-            )
-            self.validate_inputs()
+            self.update_ui()
         except Exception as e:
-            self.selected_password = None
-            if "şifreli" in str(e).lower() or "şifre" in str(e).lower():
-                messagebox.showwarning(t("extract.encrypted_title"), str(e))
-            else:
-                messagebox.showerror(t("app.error"), t("extract.file_read_error", error=e))
+            messagebox.showerror(t("app.error"), t("extract.file_read_error", error=e))
         self.lift()
 
     def select_file(self):
-        file = filedialog.askopenfilename(parent=self, filetypes=[("PDF Files", "*.pdf")])
-        if file:
-            self.ingest_paths([file])
+        f = filedialog.askopenfilename(parent=self, filetypes=[("PDF Files", "*.pdf")])
+        if f:
+            self.ingest_paths([f])
         else:
             self.lift()
 
-    def validate_inputs(self, *args):
-        raw_text = self.entry_var.get()
-        allowed = "0123456789,- "
-        filtered_text = "".join(c for c in raw_text if c in allowed)
-        if raw_text != filtered_text:
-            self.entry_var.set(filtered_text)
-            return
+    def update_ui(self):
+        if self.visual_grid:
+            self.visual_grid.stop()
+        for w in self.content_frame.winfo_children():
+            w.destroy()
+        self.visual_grid = None
 
-        input_text = filtered_text.replace(" ", "").strip()
-        self.lbl_warning.configure(text="")
+        badge = t("app.encrypted_badge") if self.selected_is_encrypted else None
+        build_file_card(
+            self.content_frame, self.selected_file,
+            badge_text=badge, badge_warning=bool(self.selected_is_encrypted),
+            on_change=self.select_file,
+        )
 
-        if not self.selected_file or not input_text:
+        self.visual_grid = PdfVisualGrid(
+            self.content_frame,
+            mode="select",
+            cols=4,
+            on_selection_change=self._on_selection_changed,
+        )
+        self.visual_grid.pack(fill="both", expand=True, pady=(8, 0))
+        self.visual_grid.load_pdf(self.selected_file, self.selected_password)
+
+    def _on_selection_changed(self, pages: set):
+        n = len(pages)
+        if n == 0:
+            self.status_lbl.configure(text=t("visual_grid.no_selection"), text_color=self.ui["muted"])
             self.btn_run.configure(state="disabled", fg_color=self.ui["panel_alt"])
-            return
-
-        pages, err = _parse_pages_selection(input_text)
-        if err == "format":
-            self.lbl_warning.configure(text=t("extract.invalid_format"))
-            self.btn_run.configure(state="disabled", fg_color=self.ui["panel_alt"])
-            self.ent_page.configure(border_color=self.ui["danger"])
-            return
-        if err == "empty" or not pages:
-            self.btn_run.configure(state="disabled", fg_color=self.ui["panel_alt"])
-            return
-
-        for p_num in pages:
-            if p_num < 1 or p_num > self.total_pages:
-                self.lbl_warning.configure(text=t("extract.invalid_page", total=self.total_pages))
-                self.btn_run.configure(state="disabled", fg_color=self.ui["panel_alt"])
-                self.ent_page.configure(border_color=self.ui["danger"])
-                return
-
-        self.btn_run.configure(state="normal", fg_color=self.ui["accent"], text_color=self.ui["button_text"])
-        self.ent_page.configure(border_color=self.ui["success"])
+        else:
+            self.status_lbl.configure(
+                text=t("visual_grid.selected_status", n=n),
+                text_color=self.ui["accent"],
+            )
+            self.btn_run.configure(state="normal", fg_color=self.ui["accent"],
+                                   text_color=self.ui["button_text"])
 
     def run_extract(self):
-        try:
-            pages_text = self.ent_page.get().replace(" ", "").strip()
-            pages_list, err = _parse_pages_selection(pages_text)
-            if err or not pages_list:
-                messagebox.showwarning(t("app.warning"), t("extract.invalid_format"))
-                return
-            for p in pages_list:
-                if p < 1 or p > self.total_pages:
-                    messagebox.showwarning(t("app.warning"), t("extract.invalid_page", total=self.total_pages))
-                    return
-            save_mode = self.segment_mode.get()
+        if not self.visual_grid:
+            return
+        pages_list = self.visual_grid.get_selected()
+        if not pages_list:
+            messagebox.showwarning(t("app.warning"), t("extract.invalid_format"))
+            return
 
+        save_mode = self.segment_mode.get()
+
+        try:
             if save_mode == t("extract.mode_single"):
                 save_path = filedialog.asksaveasfilename(
-                    parent=self, title=t("extract.save_title"), defaultextension=".pdf", filetypes=[("PDF", "*.pdf")]
+                    parent=self, title=t("extract.save_title"),
+                    defaultextension=".pdf", filetypes=[("PDF", "*.pdf")],
                 )
                 if save_path:
                     if self.access_controller:
                         self.access_controller.authorize_operation("split", [self.selected_file])
                     if hasattr(self.pdf_engine, "extract_and_merge_pages"):
-                        self.pdf_engine.extract_and_merge_pages(self.selected_file, save_path, pages_list)
+                        self.pdf_engine.extract_and_merge_pages(
+                            self.selected_file, save_path, pages_list,
+                        )
                     else:
                         self.pdf_engine.extract_pages(
-                            self.selected_file,
-                            pages_list,
-                            save_path,
+                            self.selected_file, pages_list, save_path,
                             password=self.selected_password,
                         )
                     self.destroy()
@@ -300,15 +197,20 @@ class ExtractWindow(ctk.CTkToplevel):
                     if self.access_controller:
                         self.access_controller.authorize_operation("split", [self.selected_file])
                     if hasattr(self.pdf_engine, "extract_and_save_separate_pages"):
-                        self.pdf_engine.extract_and_save_separate_pages(self.selected_file, folder_path, pages_list)
+                        self.pdf_engine.extract_and_save_separate_pages(
+                            self.selected_file, folder_path, pages_list,
+                        )
                     else:
                         self.pdf_engine.extract_pages_separate(
-                            self.selected_file,
-                            pages_list,
-                            folder_path,
+                            self.selected_file, pages_list, folder_path,
                             password=self.selected_password,
                         )
                     self.destroy()
                     self.success_dialog(self.master, os.path.abspath(folder_path), self.ortalama_func)
         except Exception as e:
             messagebox.showerror(t("app.error"), str(e))
+
+    def _on_close(self):
+        if self.visual_grid:
+            self.visual_grid.stop()
+        self.destroy()

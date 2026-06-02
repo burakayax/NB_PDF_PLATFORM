@@ -1,4 +1,5 @@
 import type { AuthUser } from "../../api/auth";
+import type { PlanName } from "../../api/entitlement";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
@@ -34,10 +35,10 @@ function LanguageDropdown({
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("mouseup", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("mouseup", onDoc);
       document.removeEventListener("keydown", onKey);
     };
   }, []);
@@ -52,7 +53,7 @@ function LanguageDropdown({
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="nb-transition inline-flex items-center gap-1.5 rounded-xl border border-white/[0.1] bg-nb-bg-soft/90 px-2.5 py-1.5 text-xs font-semibold text-nb-text shadow-sm hover:border-white/[0.16] hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40 sm:px-3"
+        className="nb-transition inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-white/[0.1] bg-nb-bg-soft/90 px-1.5 py-0.5 sm:px-2.5 sm:py-1.5 text-[9px] sm:text-xs font-semibold text-nb-text shadow-sm hover:border-white/[0.16] hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40"
       >
         <span className="text-base leading-none" aria-hidden>
           {current.flag}
@@ -83,7 +84,7 @@ function LanguageDropdown({
                     ? "bg-nb-primary/15 text-nb-accent"
                     : "text-nb-text hover:bg-white/[0.06]"
                 }`}
-                onClick={() => {
+                onMouseDown={() => {
                   onLanguageChange(opt.code);
                   setOpen(false);
                 }}
@@ -108,7 +109,9 @@ type DashboardTopNavProps = {
   user: AuthUser;
   language: Language;
   onLanguageChange: (language: Language) => void;
-  /** Credit snapshot for navbar chip; omit for ADMIN or before balance loads. */
+  /** Current plan name from entitlement balance. */
+  plan?: PlanName | null;
+  /** Remaining ops / credit balance for the chip. */
   creditBalance?: number | null;
   creditBalanceLoading?: boolean;
   hasActiveSubscription?: boolean;
@@ -123,12 +126,14 @@ type DashboardTopNavProps = {
   onOpenCreditsPanel?: () => void;
   showAdminEntry?: boolean;
   onOpenAdmin?: () => void;
+  isTeamMember?: boolean;
 };
 
 export function DashboardTopNav({
   user,
   language,
   onLanguageChange,
+  plan,
   creditBalance,
   creditBalanceLoading,
   hasActiveSubscription,
@@ -141,6 +146,7 @@ export function DashboardTopNav({
   onOpenCreditsPanel,
   showAdminEntry,
   onOpenAdmin,
+  isTeamMember,
 }: DashboardTopNavProps) {
   const W = ws(language);
   const tr = language === "tr";
@@ -149,30 +155,38 @@ export function DashboardTopNav({
     const assets = cms?.assets as { logoUrl?: string } | undefined;
     return (
       resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ??
-      "/nb_pdf_TOOLS_icon.png"
+      "/logo.png"
     );
   }, [cms]);
   const showCreditsCenter =
+    !isTeamMember &&
     user.role !== "ADMIN" &&
-    (creditBalanceLoading || typeof creditBalance === "number");
+    (creditBalanceLoading || typeof creditBalance === "number" || plan != null);
   const upgradeVisible = Boolean(
-    onUpgradeClick && showCreditsCenter && !limitsizProActive,
+    onUpgradeClick &&
+    showCreditsCenter &&
+    !limitsizProActive &&
+    plan !== "PRO" &&
+    plan !== "BUSINESS",
   );
   const creditsPanelVisible = Boolean(
     onOpenCreditsPanel && user.role !== "ADMIN",
   );
 
+  const isLimitExhausted = !hasActiveSubscription && !limitsizProActive && (creditBalance ?? 0) <= 0 && plan === "FREE";
+
   const centerLabel = () => {
-    if (creditBalanceLoading) {
-      return "…";
-    }
-    if (limitsizProActive) {
-      return W.unlimitedAccessActive;
-    }
-    if (hasActiveSubscription && !limitsizProActive) {
-      return W.usageUnlimited;
-    }
-    return `${W.navbarCreditsLabel}: ${(creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US")}`;
+    if (creditBalanceLoading) return "…";
+    if (limitsizProActive) return W.unlimitedAccessActive;
+    if (plan === "BUSINESS") return tr ? "Business Planı" : "Business Plan";
+    if (plan === "PRO") return tr ? "Pro Planı" : "Pro Plan";
+    if (plan === "PLUS") return tr ? "Plus Planı" : "Plus Plan";
+    if (plan === "STARTER") return tr ? "Başlangıç Planı" : "Starter Plan";
+    if (hasActiveSubscription) return W.usageUnlimited;
+    // FREE plan – show remaining ops count
+    const ops = (creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US");
+    if (isLimitExhausted) return tr ? "Günlük limit doldu" : "Daily limit reached";
+    return tr ? `Ücretsiz · ${ops} işlem kaldı` : `Free · ${ops} ops left`;
   };
 
   return (
@@ -194,15 +208,12 @@ export function DashboardTopNav({
             NB Global Studio
           </span>
           <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">
-            NB PDF PLATFORM
+            PDF PLATFORM
           </span>
-        </span>
-        <span className="max-w-[140px] truncate text-sm font-semibold tracking-wide text-nb-text sm:hidden">
-          NB PDF
         </span>
       </button>
 
-      <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-4">
+      <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">
         {showCreditsCenter ? (
           <>
             {limitsizProActive ? (
@@ -210,7 +221,7 @@ export function DashboardTopNav({
                 <button
                   type="button"
                   onClick={() => onOpenCreditsPanel?.()}
-                  className="inline-flex max-w-[min(100%,17rem)] flex-col items-start gap-0.5 rounded-full border border-amber-400/35 bg-gradient-to-r from-amber-500/14 to-emerald-600/12 px-3.5 py-1.5 text-left shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)] transition hover:bg-amber-500/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/35 sm:flex-row sm:items-center sm:gap-2"
+                  className="inline-flex max-w-[min(100vw-8rem,12rem)] sm:max-w-[min(100vw-12rem,18rem)] md:max-w-[22rem] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-2 sm:px-3.5 py-1.5 text-left text-[11px] sm:text-[13px] font-semibold tabular-nums tracking-tight text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition hover:bg-slate-700/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/35"
                 >
                   <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-amber-200 sm:text-xs">
                     <Coins
@@ -241,7 +252,11 @@ export function DashboardTopNav({
               <button
                 type="button"
                 onClick={() => onOpenCreditsPanel?.()}
-                className="inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition hover:bg-slate-700/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/35 sm:max-w-[22rem]"
+                className={`hidden sm:inline-flex max-w-[min(100vw-12rem,14rem)] md:max-w-[min(100vw-14rem,18rem)] lg:max-w-[22rem] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-left text-[13px] font-semibold tabular-nums tracking-tight shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition focus:outline-none focus-visible:ring-2 ${
+                  isLimitExhausted
+                    ? "border border-red-500/50 bg-red-950/80 text-red-200 hover:bg-red-900/80 focus-visible:ring-red-500/35"
+                    : "border border-white/[0.06] bg-slate-800/95 text-slate-100 hover:bg-slate-700/95 focus-visible:ring-cyan-500/35"
+                }`}
                 aria-label={
                   tr
                     ? `${W.navbarCreditsLabel}: ${centerLabel()}`
@@ -249,16 +264,20 @@ export function DashboardTopNav({
                 }
               >
                 <Coins
-                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
                 />
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </button>
             ) : (
-              <span className="inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-3.5 py-1.5 text-[13px] font-semibold tabular-nums text-slate-100 ring-1 ring-black/20 sm:max-w-[22rem]">
+              <span className={`inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
+                isLimitExhausted
+                  ? "border border-red-500/50 bg-red-950/80 text-red-200"
+                  : "border border-white/[0.06] bg-slate-800/95 text-slate-100"
+              }`}>
                 <Coins
-                  className="h-4 w-4 shrink-0 text-amber-300/90"
+                  className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
                 />
@@ -269,7 +288,7 @@ export function DashboardTopNav({
               <button
                 type="button"
                 onClick={onUpgradeClick}
-                className="nb-transition shrink-0 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35 sm:px-3.5 sm:text-[11px]"
+                className="nb-transition shrink-0 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 px-2 py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
               >
                 {W.navbarUpgrade}
               </button>
@@ -286,7 +305,7 @@ export function DashboardTopNav({
           <button
             type="button"
             onClick={onOpenAdmin}
-            className="nb-transition shrink-0 rounded-full border border-violet-400/40 bg-violet-500/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-violet-100 hover:bg-violet-500/25 sm:px-3 sm:text-[11px]"
+            className="nb-transition shrink-0 rounded-full border border-violet-400/40 bg-violet-500/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.08em] text-violet-100 hover:bg-violet-500/25 sm:px-3 sm:py-1 sm:text-[11px]"
           >
             {tr ? "Yönetim" : "Admin"}
           </button>

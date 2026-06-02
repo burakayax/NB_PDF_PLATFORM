@@ -44,14 +44,20 @@ import {
   adminUploadMediaController,
   adminUsageExportController,
   adminUsageSeriesController,
+  adminGetUserDetailController,
+  adminIssueRefundController,
 } from "./admin.controller.js";
+// SVG is intentionally excluded: SVG files can embed JavaScript and cause stored XSS.
+const ALLOWED_MIME = /^image\/(png|jpeg|gif|webp)$|^application\/pdf$/;
+const ALLOWED_EXT = /\.(png|jpe?g|gif|webp|pdf)$/i;
+
 const mediaUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 12 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    const okMime = /^image\//.test(file.mimetype) || file.mimetype === "application/pdf";
-    const okExt = /\.(png|jpe?g|gif|webp|svg|pdf)$/i.test(file.originalname);
-    if (okMime || okExt) {
+    const okMime = ALLOWED_MIME.test(file.mimetype);
+    const okExt = ALLOWED_EXT.test(file.originalname);
+    if (okMime && okExt) {
       cb(null, true);
       return;
     }
@@ -68,6 +74,7 @@ adminRouter.get("/stats", asyncHandler(adminOverviewController));
 
 adminRouter.get("/users", asyncHandler(adminListUsersController));
 adminRouter.post("/users", asyncHandler(adminCreateUserController));
+adminRouter.get("/users/:id/detail", asyncHandler(adminGetUserDetailController));
 adminRouter.delete("/users/:id", asyncHandler(adminDeleteUserController));
 adminRouter.patch("/users/:id", asyncHandler(adminUpdateUserController));
 
@@ -115,6 +122,8 @@ adminRouter.get("/download-logs/:id/proof", asyncHandler(adminDownloadLogProofCo
 
 adminRouter.post("/credits/grant", asyncHandler(adminGrantCreditsController));
 adminRouter.post("/credits/adjust", asyncHandler(adminAdjustCreditsController));
+
+adminRouter.post("/payments/:conversationId/refund", asyncHandler(adminIssueRefundController));
 
 adminRouter.get("/marketing", asyncHandler(adminGetMarketingController));
 adminRouter.put("/marketing/automation", asyncHandler(adminPutMarketingAutomationController));

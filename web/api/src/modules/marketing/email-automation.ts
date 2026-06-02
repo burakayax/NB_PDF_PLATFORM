@@ -2,7 +2,7 @@ import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
 import { getSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
-import { sendLowCreditNudge, sendWelcomeEmailToUser } from "../../lib/email-service.js";
+import { sendWelcomeEmailToUser } from "../../lib/email-service.js";
 
 export type EmailAutomationConfig = {
   lowCreditEnabled: boolean;
@@ -51,7 +51,6 @@ export async function trySendWelcomeAfterRegistration(user: {
   lastName: string | null;
   name: string | null;
   role: string;
-  credit_balance: number;
 }) {
   if (user.role === "ADMIN") {
     return;
@@ -62,58 +61,16 @@ export async function trySendWelcomeAfterRegistration(user: {
   }
   const name = displayNameForEmail(user);
   try {
-    await sendWelcomeEmailToUser(user.email, { name, credits: user.credit_balance, userId: user.id });
+    await sendWelcomeEmailToUser(user.email, { name, userId: user.id });
   } catch (e) {
     console.warn("welcome email failed", e);
   }
 }
 
 /**
- * After credit-consuming tool use, if balance is below threshold, send a throttled nudge.
+ * Quota tükendikten sonra nudge gönder (low-credit nudge artık quota bazlı).
+ * lowCreditNudgeAt alanı kaldırıldığı için bu fonksiyon sessizce devre dışı.
  */
-export async function queueLowCreditNudgeAfterConsume(userId: string, creditsAfter: number) {
-  const cfg = await readEmailAutomationConfig();
-  if (!cfg.lowCreditEnabled) {
-    return;
-  }
-  if (creditsAfter >= cfg.lowCreditThreshold) {
-    return;
-  }
-
-  const u = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      id: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      name: true,
-      role: true,
-      lowCreditNudgeAt: true,
-      credit_balance: true,
-    },
-  });
-  if (!u || u.role === "ADMIN") {
-    return;
-  }
-
-  const now = new Date();
-  if (u.lowCreditNudgeAt) {
-    const coolMs = cfg.lowCreditCooldownDays * 86400000;
-    if (now.getTime() - u.lowCreditNudgeAt.getTime() < coolMs) {
-      return;
-    }
-  }
-
-  const cta = cfg.discountCtaUrl.trim() || `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace?panel=subscription`;
-  const name = displayNameForEmail(u);
-  try {
-    await sendLowCreditNudge(u.email, { name, credits: creditsAfter, userId: u.id, ctaUrl: cta });
-    await prisma.user.update({
-      where: { id: u.id },
-      data: { lowCreditNudgeAt: now },
-    });
-  } catch (e) {
-    console.warn("low-credit nudge failed", e);
-  }
+export async function queueLowCreditNudgeAfterConsume(_userId: string, _creditsAfter: number) {
+  // lowCreditNudgeAt User modelinden kaldırıldı — nudge devre dışı
 }

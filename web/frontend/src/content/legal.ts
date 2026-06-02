@@ -26,6 +26,8 @@ export const legalDocuments: Record<
     terms: LegalDocument;
     privacy: LegalDocument;
     kvkk: LegalDocument;
+    "on-bilgilendirme": LegalDocument;
+    "mesafeli-satis": LegalDocument;
     cookieNotice: CookieNoticeCopy;
   }
 > = {
@@ -33,21 +35,21 @@ export const legalDocuments: Record<
     terms: {
       title: "Terms of Service",
       summary:
-        "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding NB PDF PLATFORM. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
+        "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF PLATFORM. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
           paragraphs: [
-            "NB PDF PLATFORM is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
+            "PDF PLATFORM is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
             "If you use the service on behalf of a company, you represent that you are authorized to accept these Terms for that organization.",
           ],
         },
         {
           title: "2. The service",
           paragraphs: [
-            "NB PDF PLATFORM provides software and web-based TOOLS for working with PDF and related documents (for example merge, split, conversion, compression, and encryption), together with account, authentication, and subscription features.",
+            "PDF PLATFORM provides software and web-based TOOLS for working with PDF and related documents (for example merge, split, conversion, compression, and encryption), together with account, authentication, and subscription features.",
             "We may change, suspend, or discontinue parts of the service for security, legal, operational, or product reasons. We do not guarantee uninterrupted or error-free operation.",
           ],
         },
@@ -88,7 +90,7 @@ export const legalDocuments: Record<
         {
           title: "7. Intellectual property",
           paragraphs: [
-            "NB PDF PLATFORM, its branding, software, documentation, and related materials are owned by NB Global Studio or its licensors. These Terms do not grant you ownership of any intellectual property rights beyond the limited right to use the service as offered.",
+            "PDF PLATFORM, its branding, software, documentation, and related materials are owned by NB Global Studio or its licensors. These Terms do not grant you ownership of any intellectual property rights beyond the limited right to use the service as offered.",
             "You retain rights in your own content. You grant us only the rights reasonably necessary to operate the service (for example processing files you submit and hosting account data).",
           ],
         },
@@ -118,14 +120,14 @@ export const legalDocuments: Record<
     privacy: {
       title: "Privacy Policy",
       summary:
-        "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use NB PDF PLATFORM (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
+        "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF PLATFORM (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
         {
           title: "1. Data controller",
           paragraphs: [
-            "The data controller responsible for personal data processed in connection with NB PDF PLATFORM is NB Global Studio. For privacy requests, use the contact email at the end of this policy.",
+            "The data controller responsible for personal data processed in connection with PDF PLATFORM is NB Global Studio. For privacy requests, use the contact email at the end of this policy.",
           ],
         },
         {
@@ -162,9 +164,30 @@ export const legalDocuments: Record<
           ],
         },
         {
+          title: "5a. Cookies and third-party services",
+          paragraphs: [
+            "The table below lists all cookies and similar storage items used on this site, their purpose, the third-party responsible, and their retention period.",
+            "| Cookie / Key | Purpose | Set by | Retention |",
+            "| nbpdf-access-token | Authentication (JWT) | PDF Platform (first-party) | Session |",
+            "| nbpdf-refresh-token | Persistent session | PDF Platform (first-party) | 7 days (HttpOnly cookie) |",
+            "| nbpdf-language | Language preference | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Records your consent choices | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonymous usage statistics | Google LLC | 13 months |",
+            "| sentry-* | Error monitoring and diagnostic reports (only with your consent) | Functional Software Inc. (Sentry) | Session |",
+            "You may withdraw analytics and error-monitoring consent at any time by clicking 'Cookie Settings' in the footer and selecting 'Necessary Only'.",
+          ],
+        },
+        {
           title: "6. Retention",
           paragraphs: [
-            "We retain personal data only as long as needed for the purposes above, including providing the service, resolving disputes, and meeting legal, tax, or accounting requirements. When retention periods end, we delete or anonymize data where feasible.",
+            "We retain personal data for the specific periods set out below, after which data is deleted or anonymized:",
+            "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
+            "Operation logs: 90 days from the date of creation, after which records are archived and no longer accessible for regular use.",
+            "Download logs: 90 days from the date of creation.",
+            "Invoices and billing records: 10 years, as required by Turkish Tax Procedure Law (VUK) Article 253 and equivalent accounting regulations.",
+            "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
+            "Error and diagnostic logs: 30 days.",
+            "Uploaded files: automatically deleted within 24 hours of processing completion.",
           ],
         },
         {
@@ -189,7 +212,7 @@ export const legalDocuments: Record<
         {
           title: "10. Children",
           paragraphs: [
-            "NB PDF PLATFORM is not directed at children under the age where parental consent is required in their jurisdiction. We do not knowingly collect personal data from such children.",
+            "PDF PLATFORM is not directed at children under the age where parental consent is required in their jurisdiction. We do not knowingly collect personal data from such children.",
           ],
         },
         {
@@ -207,7 +230,7 @@ export const legalDocuments: Record<
     kvkk: {
       title: "Privacy disclosure per Turkish Law No. 6698 (KVKK)",
       summary:
-        "This notice summarizes how NB Global Studio processes personal data in NB PDF PLATFORM checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
+        "This notice summarizes how NB Global Studio processes personal data in PDF PLATFORM checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
@@ -232,11 +255,120 @@ export const legalDocuments: Record<
         },
       ],
     },
+    "on-bilgilendirme": {
+      title: "Pre-Purchase Information Form",
+      summary:
+        "Mandatory consumer information form required before payment, pursuant to the Distance Sales Regulation.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "2024 and onwards",
+      sections: [
+        {
+          title: "1. Seller Information",
+          paragraphs: [
+            "Seller: NB Global Studio",
+            "Email: nbglobalstudio@gmail.com",
+            "Website: nbglobalstudio.com",
+            "Service: PDF PLATFORM — cloud-based PDF processing services",
+          ],
+        },
+        {
+          title: "2. Key Features of the Service",
+          paragraphs: [
+            "PDF PLATFORM is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.",
+            "Different usage limits, file size limits, and features apply depending on the subscription plan. Visit nbpdf.app/pricing for details.",
+          ],
+        },
+        {
+          title: "3. Price and Payment",
+          paragraphs: [
+            "Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.",
+            "Payment is made via credit card or debit card through the iyzico infrastructure.",
+            "No refund is provided for the remaining period after the subscription term has commenced.",
+          ],
+        },
+        {
+          title: "4. Withdrawal Right Exception",
+          paragraphs: [
+            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal does not apply to digital content services whose performance has begun with the consumer's consent.",
+            "Once payment is completed and the service performance (subscription activation) has begun, you will not be able to exercise your right of withdrawal. If you accept this condition, you may proceed to payment.",
+            "In case of technical issues or complete inability to use the service, please contact our support team.",
+          ],
+        },
+        {
+          title: "5. Complaints and Disputes",
+          paragraphs: [
+            "For complaints, you may send an email to nbglobalstudio@gmail.com.",
+            "Your right to apply to Consumer Arbitration Committees and Consumer Courts remains reserved.",
+          ],
+        },
+      ],
+    },
+    "mesafeli-satis": {
+      title: "Distance Sales Agreement",
+      summary:
+        "Agreement drawn up pursuant to Law No. 6502 on the Protection of Consumers and the Distance Sales Regulation.",
+      effectiveDateLabel: "Effective date",
+      effectiveDate: "Applies to each subscription purchase",
+      sections: [
+        {
+          title: "1. Parties",
+          paragraphs: [
+            "SELLER: NB Global Studio, Email: nbglobalstudio@gmail.com",
+            "BUYER: The user identified by the name, surname, and email address provided at the payment step.",
+          ],
+        },
+        {
+          title: "2. Subject of the Agreement",
+          paragraphs: [
+            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF PLATFORM digital service subscription for the plan selected by the BUYER at nbpdf.app.",
+            "Service content and features vary by the selected plan.",
+          ],
+        },
+        {
+          title: "3. Price and Payment",
+          paragraphs: [
+            "The sales price including VAT is displayed to the BUYER at the payment screen.",
+            "20% VAT applies to individual users residing in Turkey. VAT is not applied to users residing abroad (export exemption).",
+            "Payment is made securely through the iyzico infrastructure. Card details are not stored by the SELLER.",
+          ],
+        },
+        {
+          title: "4. Subscription and Renewal",
+          paragraphs: [
+            "The subscription is activated immediately upon payment confirmation. The subscription term is determined by the selected plan (monthly/yearly).",
+            "Subscriptions do not renew automatically. A new payment must be made for renewal.",
+            "When the subscription term expires, paid features are deactivated and the account automatically reverts to the free plan.",
+          ],
+        },
+        {
+          title: "5. Right of Withdrawal",
+          paragraphs: [
+            "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal cannot be exercised for digital content services whose performance has begun with the BUYER's express consent.",
+            "The BUYER has expressly declared at the payment step that they waive the right of withdrawal. Therefore, no refund can be requested after subscription activation.",
+            "In case the service is completely unavailable, the situation will be evaluated upon contact with the SELLER.",
+          ],
+        },
+        {
+          title: "6. Protection of Personal Data",
+          paragraphs: [
+            "The BUYER's personal data is processed within the scope of KVKK and GDPR. Invoice records are retained for 10 years pursuant to VUK Article 253.",
+            "For detailed information, please review the Privacy Policy and KVKK Disclosure Text.",
+          ],
+        },
+        {
+          title: "7. Dispute Resolution",
+          paragraphs: [
+            "Turkish law applies to disputes arising from this agreement.",
+            "Under consumer rights, you may apply to the Consumer Arbitration Committee or Consumer Courts.",
+          ],
+        },
+      ],
+    },
     cookieNotice: {
       title: "Cookie Notice",
       description:
-        "We use essential storage for login, language preference, and consent settings. With your approval, we also collect basic page analytics to improve product quality. See our Privacy Policy for details.",
-      accept: "Accept Analytics",
+        "We use cookies and similar technologies. Under GDPR Article 7, we require your separate consent for each category. Essential and Payment Processing cookies are mandatory for the service to function. Analytics and Error Monitoring are optional — you can accept or reject each independently.\n\n• Essential (always on): login session, language preference, consent record.\n• Analytics (Google Analytics GA4): page views and feature usage to improve the product.\n• Error Monitoring (Sentry): diagnostic reports to fix bugs faster — only active with your consent.\n• Payment Processing (İyzico, always on): required to process subscription payments securely.",
+      accept: "Accept All",
       learnMore: "Privacy Policy",
     },
   },
@@ -244,21 +376,21 @@ export const legalDocuments: Record<
     terms: {
       title: "Hizmet Şartları",
       summary:
-        "İşbu Hizmet Şartları (“Şartlar”), NB PDF PLATFORM’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
+        "İşbu Hizmet Şartları (“Şartlar”), PDF PLATFORM’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
       effectiveDate: "24 Mart 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
           paragraphs: [
-            "NB PDF PLATFORM, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
+            "PDF PLATFORM, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
             "Hizmeti bir işletme adına kullanıyorsanız, bu Şartları o kuruluş adına kabul etmeye yetkili olduğunuzu taahhüt edersiniz.",
           ],
         },
         {
           title: "2. Hizmetin kapsamı",
           paragraphs: [
-            "NB PDF PLATFORM; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar.",
+            "PDF PLATFORM; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar.",
             "Güvenlik, yasal zorunluluklar, operasyon veya ürün gerekçeleriyle hizmetin bölümlerini değiştirebilir, askıya alabilir veya sonlandırabiliriz. Kesintisiz veya hatasız çalışma garantisi vermeyiz.",
           ],
         },
@@ -299,7 +431,7 @@ export const legalDocuments: Record<
         {
           title: "7. Fikri mülkiyet",
           paragraphs: [
-            "NB PDF PLATFORM, markalar, yazılım, dokümantasyon ve ilgili materyaller NB Global Studio veya lisans verenlerinin mülkiyetindedir. Bu Şartlar, sunulan hizmeti kullanma dışında mülkiyet hakkı vermez.",
+            "PDF PLATFORM, markalar, yazılım, dokümantasyon ve ilgili materyaller NB Global Studio veya lisans verenlerinin mülkiyetindedir. Bu Şartlar, sunulan hizmeti kullanma dışında mülkiyet hakkı vermez.",
             "Kendi içeriğinizdeki haklar size aittir. Hizmeti işletmek için makul ölçüde gerekli hakları (örneğin gönderdiğiniz dosyaları işleme ve hesap verilerini barındırma) bize tanırsınız.",
           ],
         },
@@ -329,14 +461,14 @@ export const legalDocuments: Record<
     privacy: {
       title: "Gizlilik Politikası",
       summary:
-        "Bu Gizlilik Politikası, NB PDF PLATFORM’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
+        "Bu Gizlilik Politikası, PDF PLATFORM’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
       effectiveDate: "24 Mart 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
           paragraphs: [
-            "NB PDF PLATFORM ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu NB Global Studio’dur. Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
+            "PDF PLATFORM ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu NB Global Studio’dur. Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
           ],
         },
         {
@@ -373,9 +505,30 @@ export const legalDocuments: Record<
           ],
         },
         {
+          title: "5a. Çerezler ve üçüncü taraf hizmetler",
+          paragraphs: [
+            "Aşağıdaki tabloda sitede kullanılan tüm çerez ve benzer depolama öğeleri, amaçları, sorumlu üçüncü taraf ve saklama süreleriyle listelenmiştir.",
+            "| Çerez / Anahtar | Amaç | Yerleştiren | Saklama Süresi |",
+            "| nbpdf-access-token | Kimlik doğrulama (JWT) | PDF Platform (birinci taraf) | Oturum |",
+            "| nbpdf-refresh-token | Kalıcı oturum | PDF Platform (birinci taraf) | 7 gün (HttpOnly çerez) |",
+            "| nbpdf-language | Dil tercihi | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Çerez onay tercihlerinizi kaydeder | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonim kullanım istatistikleri | Google LLC | 13 ay |",
+            "| sentry-* | Hata izleme ve tanı raporları (yalnızca onayınızla aktif) | Functional Software Inc. (Sentry) | Oturum |",
+            "Analitik ve hata izleme onayını istediğiniz zaman alt kısımdaki 'Çerez Ayarları'ndan 'Yalnızca Zorunlu' seçeneğini belirleyerek geri alabilirsiniz.",
+          ],
+        },
+        {
           title: "6. Saklama süresi",
           paragraphs: [
-            "Kişisel verileri yukarıdaki amaçlar için gerekli olduğu sürece, hizmeti sunmak, uyuşmazlıkları çözmek ve yasal, vergi veya muhasebe gerekliliklerini karşılamak üzere saklarız. Süre dolduğunda, mümkün olduğunda verileri siler veya anonimleştiririz.",
+            "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
+            "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
+            "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; bu sürenin ardından kayıtlar arşivlenir.",
+            "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün.",
+            "Fatura ve ödeme kayıtları: Vergi Usul Kanunu (VUK) Madde 253 ve ilgili muhasebe mevzuatı gereği 10 yıl.",
+            "Analitik veriler: 13 ay (Google Analytics 4 varsayılan saklama süresiyle uyumlu).",
+            "Hata ve tanı günlükleri: 30 gün.",
+            "Yüklenen dosyalar: İşlemin tamamlanmasının ardından 24 saat içinde otomatik olarak silinir.",
           ],
         },
         {
@@ -400,7 +553,7 @@ export const legalDocuments: Record<
         {
           title: "10. Çocuklar",
           paragraphs: [
-            "NB PDF PLATFORM, bulunduğu ülkede ebeveyn onayı gerektiren yaşın altındaki çocuklara yönelik değildir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
+            "PDF PLATFORM, bulunduğu ülkede ebeveyn onayı gerektiren yaşın altındaki çocuklara yönelik değildir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
           ],
         },
         {
@@ -416,29 +569,185 @@ export const legalDocuments: Record<
       ],
     },
     kvkk: {
-      title: "KVKK Kapsamında Aydınlatma Metni",
+      title: "Kişisel Verilerin İşlenmesi Hakkında Aydınlatma Metni",
       summary:
-        "Bu metin, NB PDF PLATFORM üzerinden sunulan ödeme süreçleri kapsamında işlenen kişisel veriler için 6698 sayılı Kişisel Verilerin Korunması Kanunu uyarınca veri sorumlusunun aydınlatma yükümlülüğünün yerine getirilmesine yönelik özet bilgi sunar; Hizmet Şartları veya Gizlilik Politikası yerine geçmez.",
+        "NB Global Studio olarak, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamındaki veri sorumlusu sıfatıyla kişisel verilerinizin güvenliği ve gizliliği konusundaki sorumluluğumuzun bilinciyle hareket etmekteyiz. Bu Aydınlatma Metni, hangi kişisel verilerinizi, hangi amaçlarla, hangi hukuki sebeple işlediğimizi ve KVKK madde 11 kapsamındaki haklarınızı açıklamaktadır.",
       effectiveDateLabel: "Yürürlük tarihi",
       effectiveDate: "24 Mart 2026",
       sections: [
         {
-          title: "1. Veri sorumlusu ve işleme amaçları",
+          title: "1. Veri Sorumlusu",
           paragraphs: [
-            "Veri sorumlusu NB Global Studio’dur. Ödeme öncesi toplanan ad, soyad, adres, posta kodu, şehir, ülke ve cep telefonu bilgileri; sözleşmenin yerine getirilmesi, güvenli tahsilat, dolandırıcılığın önlenmesi ve kanuni yükümlülüklerin yerine getirilmesi amacıyla işlenir.",
-            "Ödeme kuruluşu olarak İyzico’nun barındırdığı ödeme sayfasına yalnızca işlem için gerekli teknik öğeler iletilir; kart bilgileriniz sistemimizde saklanmaz.",
+            "Veri sorumlusu: NB Global Studio (bundan böyle ‘Şirket’ olarak anılacaktır).",
+            "İletişim: nbglobalstudio@gmail.com — KVKK kapsamındaki tüm başvurularınızı bu adrese iletebilirsiniz.",
           ],
         },
         {
-          title: "2. Hukuki sebepler ve aktarım",
+          title: "2. İşlenen Kişisel Veriler",
           paragraphs: [
-            "Kişisel verileriniz KVKK’nın 5 ve 6. maddelerinde öngörülen şartlar kapsamında; açık rıza gereken hallerde kutucuk işaretlenerek alınan onayla işlenebilir.",
+            "Kimlik ve iletişim bilgileri: Ad, soyad, e-posta adresi; hesap oluşturma ve kimlik doğrulama süreçlerinde işlenir.",
+            "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (İyzico) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan İyzico’nun PCI DSS uyumlu altyapısında işlenir.",
+            "Teknik ve kullanım verileri: IP adresi, tarayıcı/cihaz bilgisi, oturum bilgileri; güvenlik, sahteciliğin önlenmesi ve sistem performansı amaçlarıyla işlenir.",
+            "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir; içerik analizi yapılmaz.",
           ],
         },
         {
-          title: "3. Haklarınız ve iletişim",
+          title: "3. İşlemenin Amaçları ve Hukuki Sebebi",
           paragraphs: [
-            "Kanun’un 11. maddesi uyarınca haklarınızı kullanmak için nbglobalstudio@gmail.com adresine başvurabilirsiniz; kimlik teyidi gerekebilir.",
+            "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
+            "Meşru menfaat (KVKK md. 5/2-f): Hizmetin güvenliğinin sağlanması, dolandırıcılık ve kötüye kullanımın önlenmesi, sistem performansı.",
+            "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma.",
+            "Açık rıza (KVKK md. 5/1): Analitik ve pazarlama amaçlı çerezler gibi zorunlu olmayan veri işleme faaliyetleri için ayrıca açık rızanız alınır.",
+          ],
+        },
+        {
+          title: "4. Kişisel Verilerin Aktarılması",
+          paragraphs: [
+            "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
+            "Ödeme kuruluşu (İyzico): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
+            "Bulut altyapısı ve barındırma hizmet sağlayıcıları: Hizmetin çalıştırıldığı sunucu altyapısını sunan şirketler; veri işleme sözleşmeleri çerçevesinde sınırlı erişim.",
+            "Analitik hizmet sağlayıcıları (onay halinde): Ürün iyileştirme amacıyla anonimleştirilmiş kullanım verileri.",
+            "Yasal zorunluluk: Mahkeme kararı veya yetkili kamu kurumu talebi halinde ilgili makamlarla paylaşılabilir.",
+          ],
+        },
+        {
+          title: "5. Kişisel Verilerin Saklanma Süresi",
+          paragraphs: [
+            "Hesap bilgileri: Hesabınız aktif olduğu süre boyunca ve hesap silme talebinin ardından en fazla 30 gün.",
+            "Ödeme ve fatura kayıtları: Vergi mevzuatı gereği en az 5 yıl; ilgili mevzuat uyarınca daha uzun süreler uygulanabilir.",
+            "Teknik günlükler (log): En fazla 90 gün; güvenlik ihlali şüphesi varsa ilgili soruşturma tamamlanana kadar.",
+            "Yüklenen belgeler: İşlemin tamamlanmasının ardından otomatik olarak 24 saat içinde silinir.",
+          ],
+        },
+        {
+          title: "6. KVKK Kapsamındaki Haklarınız",
+          paragraphs: [
+            "KVKK’nın 11. maddesi uyarınca aşağıdaki haklara sahipsiniz:",
+            "a) Kişisel verilerinizin işlenip işlenmediğini öğrenme hakkı.",
+            "b) Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme hakkı.",
+            "c) Kişisel verilerinizin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme hakkı.",
+            "ç) Kişisel verilerinizin yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme hakkı.",
+            "d) Kişisel verilerinizin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme ve bu kapsamda yapılan işlemin aktarıldığı üçüncü kişilere bildirilmesini isteme hakkı.",
+            "e) KVKK ve ilgili diğer kanun hükümlerine uygun olarak işlenmiş olmasına rağmen, işlenmesini gerektiren sebeplerin ortadan kalkması hâlinde kişisel verilerinizin silinmesini veya yok edilmesini isteme ve bu kapsamda yapılan işlemin aktarıldığı üçüncü kişilere bildirilmesini isteme hakkı.",
+            "f) İşlenen verilerinizin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle aleyhinize bir sonucun ortaya çıkmasına itiraz etme hakkı.",
+            "g) Kişisel verilerinizin kanuna aykırı olarak işlenmesi sebebiyle zarara uğramanız hâlinde zararın giderilmesini talep etme hakkı.",
+          ],
+        },
+        {
+          title: "7. Başvuru Yolu",
+          paragraphs: [
+            "Yukarıda belirtilen haklarınızı kullanmak için nbglobalstudio@gmail.com adresine kimliğinizi doğrulayan bilgilerle birlikte yazılı başvuruda bulunabilirsiniz.",
+            "Başvurunuzda; adınız, soyadınız, e-posta adresiniz, talebinizin konusu ve açıklaması yer almalıdır. Kimlik teyidi yapıldıktan sonra talebiniz KVKK’da öngörülen süreler içinde (en geç 30 gün) sonuçlandırılır.",
+            "Başvurunuzun olumsuz sonuçlanması veya başvuruya hiç yanıt verilmemesi hâlinde Kişisel Verileri Koruma Kurumu’na (www.kvkk.gov.tr) şikâyette bulunma hakkınız saklıdır.",
+          ],
+        },
+      ],
+    },
+    "on-bilgilendirme": {
+      title: "Ön Bilgilendirme Formu",
+      summary:
+        "Mesafeli Sözleşmeler Yönetmeliği kapsamında, ödeme öncesinde tüketiciye sunulması zorunlu bilgilendirme formu.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "2024 yılı ve sonrası",
+      sections: [
+        {
+          title: "1. Satıcı Bilgileri",
+          paragraphs: [
+            "Satıcı: NB Global Studio",
+            "E-posta: nbglobalstudio@gmail.com",
+            "Web sitesi: nbglobalstudio.com",
+            "Hizmet: PDF PLATFORM — bulut tabanlı PDF işleme hizmetleri",
+          ],
+        },
+        {
+          title: "2. Hizmetin Temel Özellikleri",
+          paragraphs: [
+            "PDF PLATFORM; PDF birleştirme, bölme, sıkıştırma, dönüştürme, şifreleme ve diğer PDF işleme araçlarını içeren bulut tabanlı bir SaaS (Hizmet Olarak Yazılım) abonelik hizmetidir.",
+            "Abonelik planlarına göre farklı işlem limitleri, dosya boyutu limitleri ve özellikler uygulanmaktadır. Detaylar için nbpdf.app/pricing adresini ziyaret ediniz.",
+          ],
+        },
+        {
+          title: "3. Fiyat ve Ödeme",
+          paragraphs: [
+            "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
+            "Ödeme iyzico altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
+            "Abonelik süresi başladıktan sonra kalan süre için ücret iadesi yapılmamaktadır.",
+          ],
+        },
+        {
+          title: "4. Cayma Hakkı İstisnası",
+          paragraphs: [
+            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; tüketicinin onayı ile ifasına başlanan dijital içerik niteliğindeki bu hizmet için cayma hakkı uygulanmaz.",
+            "Ödeme tamamlandığında ve hizmetin ifasına (abonelik aktivasyonu) başlanması halinde cayma hakkınızı kullanamayacaksınız. Bu durumu onaylıyorsanız ödemeye devam edebilirsiniz.",
+            "Teknik sorunlar veya hizmetin hiç kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz.",
+          ],
+        },
+        {
+          title: "5. Şikayet ve İtiraz",
+          paragraphs: [
+            "Şikayetleriniz için nbglobalstudio@gmail.com adresine e-posta gönderebilirsiniz.",
+            "Tüketici olarak Tüketici Hakem Heyetlerine ve Tüketici Mahkemelerine başvurma hakkınız saklıdır.",
+          ],
+        },
+      ],
+    },
+    "mesafeli-satis": {
+      title: "Mesafeli Satış Sözleşmesi",
+      summary:
+        "6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği kapsamında düzenlenen sözleşme.",
+      effectiveDateLabel: "Yürürlük tarihi",
+      effectiveDate: "Her abonelik satın alımında geçerlidir",
+      sections: [
+        {
+          title: "1. Taraflar",
+          paragraphs: [
+            "SATICI: NB Global Studio, E-posta: nbglobalstudio@gmail.com",
+            "ALICI: Ödeme adımında belirtilen ad-soyad ve e-posta adresiyle tanımlanan kullanıcı.",
+          ],
+        },
+        {
+          title: "2. Sözleşme Konusu",
+          paragraphs: [
+            "Bu sözleşmenin konusu; ALICI'nın nbpdf.app adresinden seçtiği abonelik planına ait PDF PLATFORM dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
+            "Hizmet içeriği ve özellikleri seçilen plana göre değişmektedir.",
+          ],
+        },
+        {
+          title: "3. Fiyat ve Ödeme",
+          paragraphs: [
+            "Satış fiyatı, ödeme ekranında KDV dahil olarak ALICI'ya gösterilmektedir.",
+            "Türkiye'de mukim bireysel kullanıcılar için %20 KDV uygulanmaktadır. Yurt dışında mukim kullanıcılar için KDV uygulanmamaktadır (ihracat istisnası).",
+            "Ödeme, iyzico altyapısı üzerinden güvenli biçimde gerçekleştirilmektedir. Kart bilgileri SATICI tarafından saklanmamaktadır.",
+          ],
+        },
+        {
+          title: "4. Abonelik ve Yenileme",
+          paragraphs: [
+            "Abonelik, ödeme onayının ardından derhal aktive edilir. Abonelik süresi seçilen plana göre belirlenir (aylık/yıllık).",
+            "Abonelik otomatik olarak yenilenmez. Yenileme için yeni bir ödeme yapılması gerekmektedir.",
+            "Abonelik süresi dolduğunda ücretli özellikler devre dışı kalır, ücretsiz plana geçiş otomatik olarak gerçekleşir.",
+          ],
+        },
+        {
+          title: "5. Cayma Hakkı",
+          paragraphs: [
+            "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; ALICI'nın açık onayı ile ifasına başlanan dijital içerik hizmetlerinde cayma hakkı kullanılamaz.",
+            "ALICI, ödeme adımında cayma hakkından feragat ettiğini açıkça beyan etmiştir. Bu nedenle abonelik aktivasyonu gerçekleştikten sonra iade talep edilemez.",
+            "Hizmetin tamamen kullanılamaması durumunda SATICI ile iletişime geçilmesi halinde değerlendirme yapılacaktır.",
+          ],
+        },
+        {
+          title: "6. Kişisel Verilerin Korunması",
+          paragraphs: [
+            "ALICI'ya ait kişisel veriler KVKK ve GDPR kapsamında işlenmektedir. Fatura bilgileri VUK Madde 253 uyarınca 10 yıl süreyle saklanmaktadır.",
+            "Ayrıntılı bilgi için Gizlilik Politikası ve KVKK Aydınlatma Metni'ni inceleyiniz.",
+          ],
+        },
+        {
+          title: "7. Uyuşmazlık Çözümü",
+          paragraphs: [
+            "Bu sözleşmeden doğan uyuşmazlıklarda Türk hukuku uygulanır.",
+            "Tüketici hakları kapsamında Tüketici Hakem Heyeti veya Tüketici Mahkemelerine başvurabilirsiniz.",
           ],
         },
       ],
@@ -446,8 +755,8 @@ export const legalDocuments: Record<
     cookieNotice: {
       title: "Çerez Bildirimi",
       description:
-        "Giriş, dil tercihi ve onay bilgisini saklamak için zorunlu depolama kullanıyoruz. Onayınızla birlikte ürün kalitesini iyileştirmek için temel sayfa analitiği de topluyoruz. Ayrıntılar için Gizlilik Politikamıza bakın.",
-      accept: "Analitikleri kabul et",
+        "Çerezler ve benzer teknolojiler kullanıyoruz. GDPR/KVKK Madde 7 gereği her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (İyzico, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
+      accept: "Tümünü kabul et",
       learnMore: "Gizlilik Politikası",
     },
   },

@@ -2,7 +2,7 @@
 ; Install: https://jrsoftware.org/isinfo.php
 ; Command-line: "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\NB_PDF_TOOLS.iss
 
-#define MyAppName "NB PDF PLATFORM"
+#define MyAppName "PDF PLATFORM"
 #define MyAppVersion "1.0.0"
 #define MyPublisher "NB Global Studio"
 #define MyExeName "NB_PDF_TOOLS.exe"

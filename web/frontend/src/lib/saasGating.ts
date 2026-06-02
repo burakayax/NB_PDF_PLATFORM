@@ -12,12 +12,12 @@
 
 /** Backend-authored reasons. Keep in lockstep with the entitlement engine. */
 export type SaaSGatingAllowReason =
-  | "credit_available"
+  | "plan_allows"
   | "active_subscription"
   | "admin_bypass";
 
 export type SaaSGatingDenyReason =
-  | "insufficient_credits"
+  | "plan_limit_reached"
   | "tool_not_registered"
   | "user_not_found"
   | "race_lost";
@@ -28,9 +28,7 @@ export type SaaSGatingReason = SaaSGatingAllowReason | SaaSGatingDenyReason;
 export type SaaSGating = {
   allowed: boolean;
   reason: SaaSGatingReason;
-  cost: number;
-  creditsBefore: number;
-  creditsAfter: number;
+  remainingOps: number;
 };
 
 /**
@@ -42,7 +40,7 @@ export type SaaSGatingMode = "unlocked" | "locked";
 /**
  * Button intent that the UI should render for the primary action.
  *   "download": allowed → trigger file download
- *   "upgrade":  denied (no subscription / no credits) → open upgrade flow
+ *   "upgrade":  denied (plan limit reached) → open upgrade flow
  *   "retry":    denied (transient race_lost) → re-run the tool
  *   "contact":  denied (tool_not_registered / user_not_found) → support path
  */
@@ -68,9 +66,7 @@ export type SaaSGatingState = {
   readonly isDownloadDisabled: boolean;
   readonly action: SaaSGatingActionKind;
   readonly reason: SaaSGatingReason | null;
-  readonly cost: number;
-  readonly creditsBefore: number;
-  readonly creditsAfter: number;
+  readonly remainingOps: number;
 };
 
 /**
@@ -90,15 +86,11 @@ export function deriveSaaSGatingState(
       isDownloadDisabled: false,
       action: "download",
       reason: null,
-      cost: 0,
-      creditsBefore: 0,
-      creditsAfter: 0,
+      remainingOps: 0,
     };
   }
 
-  const safeCost = Number.isFinite(input.cost) ? Math.max(0, Math.trunc(input.cost)) : 0;
-  const before = Number.isFinite(input.creditsBefore) ? Math.max(0, Math.trunc(input.creditsBefore)) : 0;
-  const after = Number.isFinite(input.creditsAfter) ? Math.max(0, Math.trunc(input.creditsAfter)) : 0;
+  const safeRemaining = Number.isFinite(input.remainingOps) ? Math.max(0, Math.trunc(input.remainingOps)) : 0;
 
   if (input.allowed) {
     return {
@@ -109,9 +101,7 @@ export function deriveSaaSGatingState(
       isDownloadDisabled: false,
       action: "download",
       reason: input.reason,
-      cost: safeCost,
-      creditsBefore: before,
-      creditsAfter: after,
+      remainingOps: safeRemaining,
     };
   }
 
@@ -130,9 +120,7 @@ export function deriveSaaSGatingState(
     isDownloadDisabled: true,
     action,
     reason: input.reason,
-    cost: safeCost,
-    creditsBefore: before,
-    creditsAfter: after,
+    remainingOps: safeRemaining,
   };
 }
 

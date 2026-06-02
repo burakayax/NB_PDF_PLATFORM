@@ -1,7 +1,19 @@
 // Web uygulamasının kök bileşeni: karşılama, kimlik, yasal sayfalar ve PDF araçları görünümlerini tek state ile yönetir.
 // Oturum, abonelik ve dosya yükleme durumunun modüller arasında paylaşılması için tek React ağacında toplanır.
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  ModalSkeleton,
+  PageSkeleton,
+} from "./components/common/PageSkeleton";
 import {
   createMergeJob,
   downloadFromApi,
@@ -15,6 +27,8 @@ import {
   MergeJobNotFoundError,
   postToolToResult,
   requestMergeJobCancel,
+  setPendingSaveHandle,
+  showSavePickerTypesFor,
   type MergeJobStatus,
 } from "./api";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
@@ -27,7 +41,11 @@ import {
 import { RuntimeBootstrapSplash } from "./components/common/RuntimeBootstrapSplash";
 import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
-import { SplitPagePickerModal } from "./components/split/SplitPagePickerModal";
+const SplitPagePickerModal = lazy(() =>
+  import("./components/split/SplitPagePickerModal").then((module) => ({
+    default: module.SplitPagePickerModal,
+  })),
+);
 import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
@@ -38,18 +56,14 @@ import {
   type SidebarToolId,
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
+import { QuotaWidget } from "./components/dashboard/QuotaWidget";
+import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
-import { AdminPanel } from "./admin/AdminPanel";
-import { ConversionPopup } from "./components/dashboard/ConversionPopup";
-import { PaymentSummaryModal } from "./components/dashboard/PaymentSummaryModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
+import { PaymentSuccessModal } from "./components/dashboard/PaymentSuccessModal";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
-import { AuthPage } from "./components/auth/AuthPage";
-import { ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
-import { LoginSuccessPage } from "./components/auth/LoginSuccessPage";
-import { LandingPage } from "./components/landing/LandingPage";
-import { LegalPage } from "./components/legal/LegalPage";
+import { SeoRouteManager } from "./components/seo/SeoRouteManager";
 import {
   fetchSubscriptionStatus,
   fetchSubscriptionSummary,
@@ -57,11 +71,9 @@ import {
   type SubscriptionSummary,
 } from "./api/subscription";
 import {
-  fetchCreditTransactions,
   ackDownloadLog,
   createDownloadLog,
   fetchUserBalance,
-  type CreditTransaction,
   type UserBalance,
 } from "./api/entitlement";
 import {
@@ -69,17 +81,6 @@ import {
   PAYMENT_CHECKOUT_NOT_FOUND,
   resolveFakePaymentRedirect,
 } from "./api/fakePayment";
-import { CreditDashboard } from "./components/dashboard/CreditDashboard";
-import { PricingPage } from "./components/pricing/PricingPage";
-import {
-  clearLowCreditSnoozeIfRecovered,
-  getLowCreditPopupSnoozeUntil,
-  hasShownFirstToolFailurePopup,
-  hasShownFirstUpgradeOpPopup,
-  markFirstToolFailurePopupShown,
-  markFirstUpgradeOpPopupShown,
-  snoozeLowCreditPopup,
-} from "./lib/conversionPopupTriggers";
 import {
   buildResumeDownloadUrl,
   canResumeAfterPayment,
@@ -89,7 +90,6 @@ import {
   saveNbResumeProcess,
   type NbResumeProcessV1,
 } from "./lib/nbResumeProcess";
-import type { ConversionPopupVariant } from "./i18n/conversionPopup";
 import { translateAuthApiMessage } from "./i18n/auth";
 import {
   featureCopy,
@@ -110,17 +110,14 @@ import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import {
-  CREDIT_PACKS,
-  isCreditPackProduct,
-  type CreditPackProduct,
-} from "./lib/creditPacks";
 import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
+import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
+import { PLANS } from "./lib/planConfig";
 import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
   SESSION_POST_OAUTH_REDIRECT_KEY,
@@ -134,10 +131,6 @@ import {
   clearPdfWorkspaceSplitDraftsFromLocalStorage,
   clearWorkspaceSessionStoragePrefixes,
 } from "./lib/workspaceToolSelection";
-import {
-  applyWorkspaceToolMeta,
-  resetWorkspaceHeadSeo,
-} from "./lib/toolPageMeta";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -149,12 +142,72 @@ type NonLegalView =
   | "forgot_password"
   | "web"
   | "admin"
-  | "admin_login";
-type LegalView = "terms" | "privacy" | "kvkk";
+  | "admin_login"
+  | "team_invite";
+type LegalView =
+  | "terms"
+  | "privacy"
+  | "kvkk"
+  | "on-bilgilendirme"
+  | "mesafeli-satis";
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
 
-type ContentPanel = "tool" | "subscription" | "profile" | "pricing";
+const AdminPanel = lazy(() =>
+  import("./admin/AdminPanel").then((module) => ({
+    default: module.AdminPanel,
+  })),
+);
+const AuthPage = lazy(() =>
+  import("./components/auth/AuthPage").then((module) => ({
+    default: module.AuthPage,
+  })),
+);
+const ForgotPasswordPage = lazy(() =>
+  import("./components/auth/ForgotPasswordPage").then((module) => ({
+    default: module.ForgotPasswordPage,
+  })),
+);
+const LoginSuccessPage = lazy(() =>
+  import("./components/auth/LoginSuccessPage").then((module) => ({
+    default: module.LoginSuccessPage,
+  })),
+);
+const LandingPage = lazy(() =>
+  import("./components/landing/LandingPage").then((module) => ({
+    default: module.LandingPage,
+  })),
+);
+const LegalPage = lazy(() =>
+  import("./components/legal/LegalPage").then((module) => ({
+    default: module.LegalPage,
+  })),
+);
+const PlanUpgradeModal = lazy(() =>
+  import("./components/dashboard/PlanUpgradeModal").then((module) => ({
+    default: module.PlanUpgradeModal,
+  })),
+);
+
+const TeamDashboardLazy = lazy(() =>
+  import("./components/team/TeamDashboard").then((m) => ({
+    default: m.TeamDashboard,
+  })),
+);
+
+const TeamInviteAcceptPageLazy = lazy(() =>
+  import("./components/team/TeamInviteAcceptPage").then((m) => ({
+    default: m.TeamInviteAcceptPage,
+  })),
+);
+
+type ContentPanel =
+  | "tool"
+  | "subscription"
+  | "profile"
+  | "pricing"
+  | "home"
+  | "team";
 
 type ToastState = {
   type: ToastType;
@@ -171,6 +224,8 @@ type UploadItem = {
   pageCount: number | null;
   /** Birleştirme: şifreli dosyada parola sunucuda doğrulandı mı */
   mergePasswordVerified: boolean;
+  /** Dosya bozuk, boş veya geçerli bir PDF değil */
+  corrupt: boolean;
 };
 
 type Feature = WorkspaceFeatureUi;
@@ -208,6 +263,8 @@ const pdfInspectionFeatures: FeatureId[] = [
   "repair-pdf",
   "pdf-to-ppt",
   "pdf-to-image",
+  "pdf-to-text",
+  "flatten-pdf",
 ];
 
 function EmptyStateIllustration() {
@@ -264,14 +321,19 @@ function formatFileSize(bytes: number): string {
 }
 
 /** UI-only heuristic for typical PDF recompression bands (not a server guarantee). */
-function compressEstimatePercentRange(bytes: number): {
+function compressEstimateMBRange(bytes: number): {
   min: number;
   max: number;
 } {
-  if (bytes < 80 * 1024) return { min: 5, max: 18 };
-  if (bytes < 512 * 1024) return { min: 10, max: 28 };
-  if (bytes < 5 * 1024 * 1024) return { min: 15, max: 38 };
-  return { min: 18, max: 45 };
+  const mb = bytes / (1024 * 1024);
+  // Tahmini sıkıştırılmış boyut aralığı (min = en agresif, max = otomatik)
+  if (bytes < 80 * 1024)
+    return { min: +(mb * 0.05).toFixed(2), max: +(mb * 0.2).toFixed(2) };
+  if (bytes < 512 * 1024)
+    return { min: +(mb * 0.1).toFixed(2), max: +(mb * 0.3).toFixed(2) };
+  if (bytes < 5 * 1024 * 1024)
+    return { min: +(mb * 0.15).toFixed(2), max: +(mb * 0.4).toFixed(2) };
+  return { min: +(mb * 0.2).toFixed(2), max: +(mb * 0.5).toFixed(2) };
 }
 
 function genericToolPhaseLabel(
@@ -377,6 +439,7 @@ function createUploadItems(fileList: File[]) {
     password: "",
     pageCount: null,
     mergePasswordVerified: false,
+    corrupt: false,
   }));
 }
 
@@ -465,11 +528,11 @@ function workspacePathForFeature(featureId: FeatureKey): string {
   return `/tools/${toolSlugForFeature(featureId)}`;
 }
 
-/** createMergeJob yanıtı gelene kadar UI’da anında gösterilen yer tutucu iş kimliği. */
+/** createMergeJob yanıtı gelene kadar UI'da anında gösterilen yer tutucu iş kimliği. */
 const MERGE_JOB_PENDING_ID = "__merge_pending__";
 /** Büyük birleştirmeler (10k+ sayfa) dakikalar sürebilir; 30 sn ile iptal etmeyin. */
 const MERGE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
-/** Büyük PDF’lerde /api/inspect-pdf uzun sürebilir; 30 sn ile yükleme iptali yapmayın. */
+/** Büyük PDF'lerde /api/inspect-pdf uzun sürebilir; 30 sn ile yükleme iptali yapmayın. */
 const PDF_INSPECT_TIMEOUT_MS = 15 * 60 * 1000;
 /** Result-store (Sayfa Sil, Split, …) sunucu işi uzun sürebilir; merge watchdog ile uyumlu üst sınır. */
 const TOOL_PIPELINE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
@@ -513,6 +576,10 @@ function getTrackedViewName(view: AppView) {
       return "legal-privacy";
     case "kvkk":
       return "legal-kvkk";
+    case "on-bilgilendirme":
+      return "legal-on-bilgilendirme";
+    case "mesafeli-satis":
+      return "legal-mesafeli-satis";
     case "web":
       return "workspace";
     case "admin":
@@ -538,12 +605,18 @@ function getTrackedPath(view: AppView) {
       return "/privacy";
     case "kvkk":
       return "/kvkk";
+    case "on-bilgilendirme":
+      return "/legal/on-bilgilendirme";
+    case "mesafeli-satis":
+      return "/legal/mesafeli-satis";
     case "web":
       return "/workspace";
     case "admin_login":
       return "/admin-login";
     case "admin":
       return "/admin";
+    case "team_invite":
+      return "/team-invite";
     default:
       return "/";
   }
@@ -573,10 +646,16 @@ function getInitialViewFromLocation(): AppView {
       return "privacy";
     case "/kvkk":
       return "kvkk";
+    case "/legal/on-bilgilendirme":
+      return "on-bilgilendirme";
+    case "/legal/mesafeli-satis":
+      return "mesafeli-satis";
     case "/workspace":
       return "web";
     case "/admin-login":
       return "admin_login";
+    case "/team-invite":
+      return "team_invite";
     case "/fake-payment/success":
       return "web";
     case "/admin":
@@ -595,7 +674,9 @@ function getInitialViewFromLocation(): AppView {
     requestedView === "admin_login" ||
     requestedView === "terms" ||
     requestedView === "privacy" ||
-    requestedView === "kvkk"
+    requestedView === "kvkk" ||
+    requestedView === "on-bilgilendirme" ||
+    requestedView === "mesafeli-satis"
   ) {
     return requestedView;
   }
@@ -624,7 +705,11 @@ function App() {
   const {
     hasConsent,
     isReady: isCookieConsentReady,
+    prefs: cookiePrefs,
     acceptConsent,
+    acceptAll: acceptAllCookies,
+    acceptNecessaryOnly,
+    savePreferences: saveCookiePreferences,
   } = useCookieConsent();
   const { cms, site, TOOLSPublic, flags, runtimeHydrated } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
@@ -635,7 +720,11 @@ function App() {
       : "split",
   );
   const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
-  const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>("split");
+  const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
+    typeof window !== "undefined"
+      ? readInitialWorkspaceToolSelection(window.location.pathname)
+      : "split",
+  );
   const [submitting, setSubmitting] = useState(false);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -645,8 +734,15 @@ function App() {
   const [subscriptionSummary, setSubscriptionSummary] =
     useState<SubscriptionSummary | null>(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [paymentSuccessModal, setPaymentSuccessModal] = useState<{
+    planName: string | null;
+    addedSeats?: number;
+  } | null>(null);
+  const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const [workspaceSlateNonce, setWorkspaceSlateNonce] = useState(0);
   const [uploads, setUploads] = useState<UploadItem[]>([]);
+  const [batchFiles, setBatchFiles] = useState<File[]>([]);
   const [password, setPassword] = useState("");
   const [inputPassword, setInputPassword] = useState("");
   const [pagesText, setPagesText] = useState("");
@@ -700,14 +796,22 @@ function App() {
   const [deletePagesError, setDeletePagesError] = useState("");
   const [rotateDeg, setRotateDeg] = useState("90");
   const [rotatePagesOnly, setRotatePagesOnly] = useState("");
-  const [organizeOrder, setOrganizeOrder] = useState("");
   const [unlockOpenPassword, setUnlockOpenPassword] = useState("");
   const [watermarkPhrase, setWatermarkPhrase] = useState("TASLAK");
+  const [watermarkColor, setWatermarkColor] = useState("#8C8C8C");
+  const [watermarkFont, setWatermarkFont] = useState("helv");
+  const [watermarkOpacity, setWatermarkOpacity] = useState("0.15");
   const [pageNumStart, setPageNumStart] = useState("1");
   const [pageNumPos, setPageNumPos] = useState<"footer" | "header">("footer");
+  const [pageNumFmt, setPageNumFmt] = useState<"plain" | "page" | "of">(
+    "plain",
+  );
+  const [compressQuality, setCompressQuality] = useState<
+    "auto" | "low" | "medium" | "high"
+  >("auto");
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
   const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
-  const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("https://");
+  const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("");
   const [htmlToPdfRaw, setHtmlToPdfRaw] = useState(
     "<html><body><p>Merhaba</p></body></html>",
   );
@@ -782,48 +886,43 @@ function App() {
   const [mergeVerifyingId, setMergeVerifyingId] = useState<string | null>(null);
   const [mergeSnapId, setMergeSnapId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
+
+  // Ekran okuyucu duyuruları için kalıcı aria-live bölgeleri (DOM'da her zaman var olmalı).
+  useEffect(() => {
+    const ensure = (id: string, politeness: "polite" | "assertive") => {
+      if (document.getElementById(id)) return;
+      const el = document.createElement("div");
+      el.id = id;
+      el.setAttribute("aria-live", politeness);
+      el.setAttribute("aria-atomic", "true");
+      // Görsel olarak gizle ama ekran okuyuculardan saklamak için display:none KULLANMA.
+      el.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;";
+      document.body.appendChild(el);
+    };
+    ensure("nb-toast-polite", "polite");
+    ensure("nb-toast-assertive", "assertive");
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = toast.type === "error" ? "nb-toast-assertive" : "nb-toast-polite";
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${toast.title}. ${toast.detail}`;
+    const timer = setTimeout(() => { el.textContent = ""; }, 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
-  /** Lightweight conversion surfaces (insufficient credits / first failure / first upgrade moment). */
-  const [conversionPopupOpen, setConversionPopupOpen] = useState(false);
-  const [conversionPopupVariant, setConversionPopupVariant] =
-    useState<ConversionPopupVariant | null>(null);
-  const conversionModalShowSourceRef = useRef<"auto" | "manual">("manual");
+  const isTeamMember = Boolean(user?.isTeamMember);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
     useState(false);
-  /**
-   * Credit balance + plan snapshot served by `/api/entitlement/balance`.
-   * This is the ONLY source of truth for remaining-runs UI — we intentionally
-   * do not derive it from `SubscriptionSummary.usage.*` (those fields belonged
-   * to legacy subscription usage fields and have been removed from the wire
-   * contract on purpose).
-   */
-  const [userBalance, setUserBalance] = useState<UserBalance | null>(null);
-  /**
-   * Recent `CreditTransaction` rows for the credit dashboard's "recent
-   * activity" list. Kept in sync with `userBalance` so the two panels can
-   * never disagree about what just happened — both refresh after any
-   * successful tool run, grant, or fake-payment confirm.
-   */
-  const [creditTransactions, setCreditTransactions] = useState<
-    CreditTransaction[] | null
-  >(null);
-  const [creditTransactionsLoading, setCreditTransactionsLoading] =
-    useState(false);
-  /** Tracks which credit-pack SKU is currently in checkout+confirm (instant flow). */
-  const [paymentSummaryProduct, setPaymentSummaryProduct] =
-    useState<CreditPackProduct | null>(null);
   const subscriptionSummaryRef = useRef<SubscriptionSummary | null>(null);
-  const userBalanceRef = useRef<UserBalance | null>(null);
   const userRef = useRef(user);
-  const conversionPopupOpenRef = useRef(false);
-  const conversionPopupVariantRef = useRef<ConversionPopupVariant | null>(null);
-  const paymentSummaryOpenRef = useRef(false);
-  const tryShowConversionPopupRef = useRef<
-    (variant: ConversionPopupVariant, trigger?: "balance" | "download") => void
-  >(() => {});
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactMessage, setContactMessage] = useState("");
@@ -837,14 +936,6 @@ function App() {
   const contactSubmitInFlightRef = useRef(false);
   /** Ensures `/fake-payment/success` confirm runs once per navigation to that path. */
   const fakePaymentSuccessHandledRef = useRef(false);
-  /**
-   * After `saasGating.reason === "insufficient_credits"` (or download 402), blocks
-   * `submitCurrentFeature` until balance rises above the snapshot or the preview is dismissed.
-   */
-  const insufficientCreditsToolRunBlockRef = useRef(false);
-  const insufficientCreditsBarrierCreditSnapshotRef = useRef<number | null>(
-    null,
-  );
   /** Skips one `persistWorkspaceTool` effect run so a post-download atomic reset isn't overwritten by stale tool id. */
   const persistWorkspaceSkipRef = useRef(false);
   /** One-shot: user acknowledged PDF→Excel table-structure warning. */
@@ -859,9 +950,11 @@ function App() {
   const [organizePageOrder, setOrganizePageOrder] = useState<number[]>([]);
   const splitVisualAutoOpenedForUploadId = useRef<string | null>(null);
   const deleteVisualAutoOpenedForUploadId = useRef<string | null>(null);
+  const rotateVisualAutoOpenedForUploadId = useRef<string | null>(null);
+  const organizeVisualAutoOpenedForUploadId = useRef<string | null>(null);
   /** Blocks duplicate `/download` akışları (aynı iş için paralel GET). */
   const gatedDownloadInFlightKeysRef = useRef<Set<string>>(new Set());
-  const selectedFeatureIdEffectDidMountRef = useRef(false);
+  const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
     null,
@@ -900,24 +993,38 @@ function App() {
 
   useEffect(() => {
     setRotatePageRotations({});
+    rotateVisualAutoOpenedForUploadId.current = null;
+    organizeVisualAutoOpenedForUploadId.current = null;
   }, [uploads[0]?.id]);
 
   useEffect(() => {
+    const id = uploads[0]?.id;
     const n = uploads[0]?.pageCount;
-    if (selectedFeatureId !== "organize-pdf" || !n) {
-      return;
-    }
-    setOrganizePageOrder((prev) => {
-      if (prev.length === n && new Set(prev).size === n) {
-        return prev;
-      }
-      return Array.from({ length: n }, (_, i) => i + 1);
-    });
-  }, [uploads[0]?.id, uploads[0]?.pageCount, selectedFeatureId]);
+    if (selectedFeatureId !== "rotate-pdf" || !id || !n) return;
+    if (rotateVisualAutoOpenedForUploadId.current === id) return;
+    rotateVisualAutoOpenedForUploadId.current = id;
+    setPageVisualMode("rotate");
+    setPageVisualModalOpen(true);
+  }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
 
   useEffect(() => {
-    if (!selectedFeatureIdEffectDidMountRef.current) {
-      selectedFeatureIdEffectDidMountRef.current = true;
+    const id = uploads[0]?.id;
+    const n = uploads[0]?.pageCount;
+    if (selectedFeatureId !== "organize-pdf" || !id || !n) return;
+    if (organizeVisualAutoOpenedForUploadId.current === id) return;
+    organizeVisualAutoOpenedForUploadId.current = id;
+    setOrganizePageOrder((prev) => {
+      if (prev.length === n && new Set(prev).size === n) return prev;
+      return Array.from({ length: n }, (_, i) => i + 1);
+    });
+    setPageVisualMode("organize");
+    setPageVisualModalOpen(true);
+  }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
+
+  useEffect(() => {
+    const prev = prevSelectedFeatureIdRef.current;
+    prevSelectedFeatureIdRef.current = selectedFeatureId;
+    if (prev === null || prev === selectedFeatureId) {
       return;
     }
     setPageVisualModalOpen(false);
@@ -958,24 +1065,12 @@ function App() {
         if (n > 0) {
           const order = Array.from({ length: n }, (_, i) => i + 1);
           setOrganizePageOrder(order);
-          setOrganizeOrder(order.join(","));
         }
         break;
       default:
         break;
     }
   }, [pageVisualMode, uploads[0]?.pageCount]);
-
-  function armInsufficientCreditsToolBarrier() {
-    insufficientCreditsToolRunBlockRef.current = true;
-    insufficientCreditsBarrierCreditSnapshotRef.current =
-      userBalanceRef.current?.creditBalance ?? 0;
-  }
-
-  function clearInsufficientCreditsToolBarrier() {
-    insufficientCreditsToolRunBlockRef.current = false;
-    insufficientCreditsBarrierCreditSnapshotRef.current = null;
-  }
 
   const workspaceFeatures = useMemo(
     () =>
@@ -1013,9 +1108,6 @@ function App() {
     if (!isAuthenticated || !subscriptionSummary || subscriptionLoading) {
       return next;
     }
-    if (subscriptionSummary.currentPlan.name === "FREE") {
-      return next;
-    }
     for (const f of workspaceFeatures) {
       if (!subscriptionSummary.allowedFeatures.includes(f.id)) {
         next.add(f.id);
@@ -1051,9 +1143,6 @@ function App() {
     if (subscriptionLoading || !subscriptionSummary) {
       return true;
     }
-    if (subscriptionSummary.currentPlan.name === "FREE") {
-      return true;
-    }
     return subscriptionSummary.allowedFeatures.includes(selectedFeatureId);
   }, [
     isAuthenticated,
@@ -1071,10 +1160,16 @@ function App() {
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
 
-  useGAPageTracking({
-    enabled:
-      GA_TEST_BYPASS_COOKIE_CONSENT || (hasConsent && isCookieConsentReady),
-  });
+  // Sentry — yalnızca errorMonitoring onayı verilmişse başlat (GDPR Madde 7)
+  useEffect(() => {
+    if (isCookieConsentReady && cookiePrefs.errorMonitoring) {
+      initSentry(true);
+    }
+  }, [isCookieConsentReady, cookiePrefs.errorMonitoring]);
+
+  const gaEnabled = GA_TEST_BYPASS_COOKIE_CONSENT || (isCookieConsentReady && cookiePrefs.analytics);
+
+  useGAPageTracking({ enabled: gaEnabled });
 
   useEffect(() => {
     if (workspaceFeatures.length === 0) {
@@ -1099,7 +1194,7 @@ function App() {
   }, [view, contentPanel, selectedFeatureId]);
 
   useAnalyticsTracking({
-    enabled: GA_TEST_BYPASS_COOKIE_CONSENT || hasConsent,
+    enabled: gaEnabled,
     serverAnalyticsEnabled,
     view: trackedView,
     path: trackedPath,
@@ -1184,7 +1279,7 @@ function App() {
         return;
       }
 
-      url.pathname = workspacePathForFeature("split");
+      url.pathname = "/workspace";
       window.history.replaceState(
         {},
         "",
@@ -1209,7 +1304,6 @@ function App() {
       timeoutId = window.setTimeout(() => {
         clearNbResumeProcess();
         clearSession();
-        setPaymentSummaryProduct(null);
         setView("landing");
         window.history.replaceState({}, "", "/");
         showToastRef.current(
@@ -1244,7 +1338,6 @@ function App() {
   const disposeToolProgressSuccess = useCallback(() => {
     toolProgressDisposeRef.current?.();
     toolProgressDisposeRef.current = null;
-    clearInsufficientCreditsToolBarrier();
     setToolProgressSuccess(null);
   }, []);
 
@@ -1266,13 +1359,7 @@ function App() {
     if (!gd || (!gd.resultId && !gd.mergeJobId)) {
       return;
     }
-    const costRaw = gd.saasGating?.cost;
-    const requiredCredits = Math.max(
-      1,
-      typeof costRaw === "number" && Number.isFinite(costRaw)
-        ? Math.trunc(costRaw)
-        : 1,
-    );
+    const requiredCredits = 1;
     const payload: NbResumeProcessV1 = {
       v: 1,
       userId: user.id,
@@ -1298,6 +1385,7 @@ function App() {
     // Önceki seçimlerin yeni modüle sızmasını önlemek için merkezi sıfırlama gerekir.
     // Alanlar eksik temizlenirse kullanıcı yanlış modülde eski dosya ile gönderim deneyebilir.
     setUploads([]);
+    setBatchFiles([]);
     setPassword("");
     setInputPassword("");
     setPagesText("");
@@ -1306,15 +1394,17 @@ function App() {
     setDeletePagesError("");
     setRotateDeg("90");
     setRotatePagesOnly("");
-    setOrganizeOrder("");
     setOrganizePageOrder([]);
     setRotatePageRotations({});
     setPageVisualModalOpen(false);
     splitVisualAutoOpenedForUploadId.current = null;
     setUnlockOpenPassword("");
     setWatermarkPhrase("TASLAK");
+    setWatermarkOpacity("0.15");
     setPageNumStart("1");
     setPageNumPos("footer");
+    setPageNumFmt("plain");
+    setCompressQuality("auto");
     setPdfToImgFmt("jpg");
     setHtmlToPdfMode("url");
     setHtmlToPdfUrl("https://");
@@ -1612,6 +1702,7 @@ function App() {
 
   async function onFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selectedFiles = Array.from(event.target.files ?? []);
+    const inputElement = event.currentTarget;
     await handleNewFiles(selectedFiles);
     event.currentTarget.value = "";
   }
@@ -1621,13 +1712,44 @@ function App() {
   }
 
   const refreshSubscriptionState = useCallback(async () => {
-    if (!accessToken || !isAuthenticated) {
+    if (!accessToken || !isAuthenticated || !user) {
       return;
     }
 
-    const summary = await fetchSubscriptionSummary(accessToken);
+    const ctx = {
+      userId: user.id,
+      role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
+    };
+    const [summary, balance] = await Promise.all([
+      fetchSubscriptionSummary(accessToken),
+      fetchUserBalance(accessToken, ctx),
+    ]);
     setSubscriptionSummary(summary);
-  }, [accessToken, isAuthenticated]);
+    setUserBalance(balance);
+  }, [accessToken, isAuthenticated, user]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken || !user) {
+      setUserBalance(null);
+      return;
+    }
+    let cancelled = false;
+    setBalanceLoading(true);
+    fetchUserBalance(accessToken, {
+      userId: user.id,
+      role: user.role === "ADMIN" ? "ADMIN" : "USER",
+    })
+      .then((b) => {
+        if (!cancelled) setUserBalance(b);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setBalanceLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, accessToken, user?.id, user?.role]);
 
   /** After blob download + audited server ACK — clear drafts/uploads; keep user on the active tool (no jump to Split/home). */
   const applyWorkspaceCleanSlateAfterDownload = useCallback(
@@ -1656,7 +1778,6 @@ function App() {
       resetForm(true);
       setMergeJob(null);
       setSubmitting(false);
-      clearInsufficientCreditsToolBarrier();
       persistWorkspaceTool(keepToolId);
       setWorkspaceSlateNonce((n) => n + 1);
     },
@@ -1673,6 +1794,7 @@ function App() {
       serverFallbackName: string,
       clientFileName: string,
       toolId: FeatureKey,
+      pageCount?: number,
     ) => {
       const flightKey = `r:${resultId}`;
       if (gatedDownloadInFlightKeysRef.current.has(flightKey)) {
@@ -1680,17 +1802,26 @@ function App() {
       }
       gatedDownloadInFlightKeysRef.current.add(flightKey);
       try {
+        // Uzun işlem sonrası token expire olmuş olabilir — indirmeden önce yenile
+        let currentToken = accessToken;
+        try {
+          const refreshed = await refreshSession();
+          if (refreshed?.accessToken) currentToken = refreshed.accessToken;
+        } catch {
+          /* token hâlâ geçerliyse devam */
+        }
+
         let pendingLogId: string | null = null;
         const outcome = await downloadResult(
           resultId,
           serverFallbackName,
-          accessToken,
+          currentToken,
           {
             clientDownloadName: clientFileName,
-            onBeforeReadBody: accessToken
+            onBeforeReadBody: currentToken
               ? async () => {
                   try {
-                    const row = await createDownloadLog(accessToken, {
+                    const row = await createDownloadLog(currentToken!, {
                       resultId,
                       toolId,
                     });
@@ -1703,15 +1834,7 @@ function App() {
           },
         );
         if (outcome.status === "payment_required") {
-          if (outcome.saasGating) {
-            setUserBalance((prev) =>
-              prev
-                ? { ...prev, creditBalance: outcome.saasGating!.creditsAfter }
-                : prev,
-            );
-          }
-          armInsufficientCreditsToolBarrier();
-          tryShowConversionPopupRef.current("insufficient_credits", "download");
+          setUpgradeModalOpen(true);
           return;
         }
         if (outcome.status === "forbidden") {
@@ -1722,12 +1845,53 @@ function App() {
           );
           return;
         }
-        if (accessToken && pendingLogId) {
+        if (currentToken && pendingLogId) {
           try {
-            await ackDownloadLog(accessToken, pendingLogId);
+            await ackDownloadLog(currentToken, pendingLogId);
           } catch {
             /* optional */
           }
+        }
+        if (isTeamMember && currentToken) {
+          const TOOL_NAMES_TR: Record<string, string> = {
+            split: "PDF Böl",
+            merge: "PDF Birleştir",
+            compress: "PDF Sıkıştır",
+            "pdf-to-word": "PDF → Word",
+            "word-to-pdf": "Word → PDF",
+            "excel-to-pdf": "Excel → PDF",
+            "pdf-to-excel": "PDF → Excel",
+            encrypt: "PDF Şifrele",
+            "unlock-pdf": "PDF Kilidi Aç",
+            "delete-pages": "Sayfa Sil",
+            "rotate-pdf": "PDF Döndür",
+            "organize-pdf": "PDF Düzenle",
+            watermark: "Filigran",
+            "page-numbers": "Sayfa Numarası",
+            "repair-pdf": "PDF Onar",
+            "pdf-to-ppt": "PDF → PowerPoint",
+            "ppt-to-pdf": "PowerPoint → PDF",
+            "pdf-to-image": "PDF → Görsel",
+            "image-to-pdf": "Görsel → PDF",
+            "html-to-pdf": "HTML → PDF",
+            "pdf-to-text": "PDF → Metin",
+            "flatten-pdf": "PDF Düzleştir",
+          };
+          fetch("/api/team/activity", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${currentToken}`,
+            },
+            body: JSON.stringify({
+              toolId,
+              toolName: TOOL_NAMES_TR[toolId] ?? toolId,
+              status: "SUCCESS",
+              pageCount: pageCount ?? null,
+            }),
+          }).catch(() => {
+            /* noop */
+          });
         }
         applyWorkspaceCleanSlateAfterDownload(toolId);
         showToast(
@@ -1736,19 +1900,6 @@ function App() {
           clientFileName,
         );
         void refreshSubscriptionState();
-        if (accessToken && user) {
-          const balanceCtx = {
-            userId: user.id,
-            role:
-              user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
-          };
-          const next = await fetchUserBalance(accessToken, balanceCtx).catch(
-            () => null,
-          );
-          if (next) {
-            setUserBalance(next);
-          }
-        }
       } catch (e: unknown) {
         if (isUserAbortError(e)) {
           return;
@@ -1764,18 +1915,29 @@ function App() {
     },
     [
       accessToken,
+      isTeamMember,
       applyWorkspaceCleanSlateAfterDownload,
       language,
+      refreshSession,
       refreshSubscriptionState,
       showToast,
-      user,
     ],
   );
 
   const queueGatedDownload = useCallback(
-    (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
-      void runGatedDownloadWithFilename(resultId, fallbackName, name, toolId);
+    async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
+      const win = window as unknown as {
+        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+      };
+      if (typeof win.showSaveFilePicker === "function") {
+        try {
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
+          setPendingSaveHandle(handle);
+        } catch (e: unknown) {
+          if (e instanceof DOMException && e.name === "AbortError") return;
+        }
+      }
+      void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
     },
     [runGatedDownloadWithFilename],
   );
@@ -1821,6 +1983,22 @@ function App() {
             /* noop */
           }
         }
+        if (isTeamMember && accessToken) {
+          fetch("/api/team/activity", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              toolId: "merge",
+              toolName: "PDF Birleştir",
+              status: "SUCCESS",
+            }),
+          }).catch(() => {
+            /* noop */
+          });
+        }
         applyWorkspaceCleanSlateAfterDownload("merge");
         showToast(
           "success",
@@ -1834,12 +2012,6 @@ function App() {
             role:
               user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
           };
-          const next = await fetchUserBalance(accessToken, balanceCtx).catch(
-            () => null,
-          );
-          if (next) {
-            setUserBalance(next);
-          }
         }
         dl.dispose?.();
         toolProgressDisposeRef.current = null;
@@ -1848,15 +2020,7 @@ function App() {
           return;
         }
         if (e instanceof EntitlementPaymentRequiredError) {
-          if (e.saasGating) {
-            setUserBalance((prev) =>
-              prev && e.saasGating
-                ? { ...prev, creditBalance: e.saasGating.creditsAfter }
-                : prev,
-            );
-          }
-          armInsufficientCreditsToolBarrier();
-          tryShowConversionPopupRef.current("insufficient_credits", "download");
+          setUpgradeModalOpen(true);
           return;
         }
         showToast(
@@ -1870,25 +2034,34 @@ function App() {
     },
     [
       accessToken,
+      isTeamMember,
       applyWorkspaceCleanSlateAfterDownload,
       language,
       refreshSubscriptionState,
       showToast,
-      user,
     ],
   );
 
   const queueMergeGatedDownload = useCallback(
-    (jobId: string, fallbackName: string) => {
-      const name = sanitizeDownloadBasename(fallbackName, "download.pdf");
-      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, name);
+    async (jobId: string, fallbackName: string) => {
+      const win = window as unknown as {
+        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+      };
+      if (typeof win.showSaveFilePicker === "function") {
+        try {
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
+          setPendingSaveHandle(handle);
+        } catch (e: unknown) {
+          if (e instanceof DOMException && e.name === "AbortError") return;
+        }
+      }
+      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
     [runMergeJobGatedDownloadWithFilename],
   );
 
   const openConversionUpgradeModalManual = useCallback(() => {
-    conversionModalShowSourceRef.current = "manual";
-    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
+    setUpgradeModalOpen(true);
   }, []);
 
   useEffect(() => {
@@ -1935,6 +2108,7 @@ function App() {
         "oauth_error",
         "email_verified",
         "lang",
+        "token",
       ] as const) {
         const v = sp.get(key);
         if (v !== null) {
@@ -1970,10 +2144,12 @@ function App() {
     }
     const url = new URL(window.location.href);
     const payment = url.searchParams.get("payment");
+    const plan = url.searchParams.get("plan");
     if (!payment) {
       return;
     }
     url.searchParams.delete("payment");
+    url.searchParams.delete("plan");
     window.history.replaceState(
       {},
       "",
@@ -1983,33 +2159,29 @@ function App() {
     );
 
     if (payment === "success") {
+      const seats = url.searchParams.get("seats");
+      url.searchParams.delete("seats");
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname +
+          (url.search ? `?${url.searchParams.toString()}` : "") +
+          url.hash,
+      );
       void (async () => {
         await refreshSession();
         await refreshSubscriptionState();
-        if (accessToken && user) {
-          const balanceCtx = {
-            userId: user.id,
-            role:
-              user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
-          };
-          const [nextBalance, nextTransactions] = await Promise.all([
-            fetchUserBalance(accessToken, balanceCtx).catch(() => null),
-            fetchCreditTransactions(accessToken, 10).catch(() => null),
-          ]);
-          if (nextBalance) {
-            setUserBalance(nextBalance);
-          }
-          if (nextTransactions) {
-            setCreditTransactions(nextTransactions);
-          }
-        }
-        showToast(
-          "success",
-          language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
-          language === "tr"
-            ? "Hesabınız güncellendi."
-            : "Your account has been updated.",
-        );
+        const planObj = plan ? PLANS.find((p) => p.id === plan) : null;
+        const planName = planObj
+          ? language === "tr"
+            ? planObj.nameTr
+            : planObj.nameEn
+          : null;
+        const addedSeats = seats ? parseInt(seats, 10) : undefined;
+        setPaymentSuccessModal({
+          planName: addedSeats ? null : planName,
+          addedSeats,
+        });
       })();
       return;
     }
@@ -2062,16 +2234,17 @@ function App() {
   }, [subscriptionSummary]);
 
   useEffect(() => {
-    userBalanceRef.current = userBalance;
-  }, [userBalance]);
-
-  useEffect(() => {
     userRef.current = user;
   }, [user]);
 
   /** PSP / pricing redirect sonrası: kredi yeterliyse kayıtlı çıktıyı geri yükle ve ilgili araca yönlendir. */
   useEffect(() => {
-    if (view !== "web" || !isAuthenticated || !user?.id || !accessToken?.trim()) {
+    if (
+      view !== "web" ||
+      !isAuthenticated ||
+      !user?.id ||
+      !accessToken?.trim()
+    ) {
       return;
     }
 
@@ -2087,7 +2260,7 @@ function App() {
       clearNbResumeProcess();
       return;
     }
-    if (!canResumeAfterPayment(payload, userBalance)) {
+    if (!canResumeAfterPayment(payload, null)) {
       return;
     }
     if (lastRestoredResumeTsRef.current === payload.timestamp) {
@@ -2182,27 +2355,14 @@ function App() {
     isAuthenticated,
     user?.id,
     accessToken,
-    userBalance,
     language,
     disposeToolProgressSuccess,
     selectedFeatureId,
   ]);
 
-  useEffect(() => {
-    conversionPopupOpenRef.current = conversionPopupOpen;
-  }, [conversionPopupOpen]);
-
-  useEffect(() => {
-    conversionPopupVariantRef.current = conversionPopupVariant;
-  }, [conversionPopupVariant]);
-
-  useEffect(() => {
-    paymentSummaryOpenRef.current = paymentSummaryProduct != null;
-  }, [paymentSummaryProduct]);
-
   const offerPostRunMonetizationHintAfterSuccess = useCallback(
     (_gating?: SaaSGating | null) => {
-      queueMicrotask(() => tryShowConversionPopupRef.current("pro_unlock"));
+      // No-op: credit popup removed
     },
     [],
   );
@@ -2260,7 +2420,6 @@ function App() {
               ? "Birleştirme çok uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
               : "The merge took too long or the connection stalled. Check your connection or try again.",
           );
-          tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
           setMergeJob(null);
           mergePollInFlightRef.current = false;
@@ -2286,7 +2445,6 @@ function App() {
                 ? "Birleştirme tamamlanamadı."
                 : "The merge could not be completed."),
           );
-          tryShowConversionPopupRef.current("buy_credits");
           setSubmitting(false);
           mergePollHandledRef.current = true;
           return;
@@ -2310,47 +2468,12 @@ function App() {
           resetForm(true);
           setMergeJob(null);
           setSubmitting(false);
-
-          let thumbnailBlobUrl: string | null = null;
-          if (accessToken?.trim()) {
-            try {
-              thumbnailBlobUrl = await fetchMergeJobHeroPreviewBlobUrl(
-                jobId,
-                accessToken,
-                { signal: pollSignal },
-              );
-            } catch {
-              thumbnailBlobUrl = null;
-            }
-          }
-          if (thumbnailBlobUrl) {
-            toolProgressDisposeRef.current = () => {
-              URL.revokeObjectURL(thumbnailBlobUrl as string);
-            };
-          }
-
-          setToolProgressSuccess({
-            filename: fallbackName,
-            featureTitle: selectedFeature.title,
-            gatedDownload: {
-              toolId: "merge",
-              mergeJobId: jobId,
-              fallbackName,
-              thumbnailBlobUrl,
-              saasGating: mergeSaasGatingRef.current,
-            },
-          });
-          showToast(
-            "success",
-            language === "tr" ? "İşlem tamamlandı" : "Process complete",
-            language === "tr"
-              ? "İndirmek için aşağıdaki düğmeyi kullanın."
-              : "Use the button below to download.",
-          );
-          offerPostRunMonetizationHintAfterSuccess(
-            mergeSaasGatingRef.current ?? null,
-          );
           void refreshSubscriptionState();
+          void runMergeJobGatedDownloadWithFilename(
+            jobId,
+            fallbackName,
+            fallbackName,
+          );
         }
       } catch (error) {
         if (!active) {
@@ -2378,7 +2501,6 @@ function App() {
             ? error.message.trim()
             : M.mergeToastPollErrorDetail;
         showToast("error", M.mergeToastPollErrorTitle, pollFailDetail);
-        tryShowConversionPopupRef.current("buy_credits");
         setSubmitting(false);
         mergePollHandledRef.current = true;
       } finally {
@@ -2407,6 +2529,7 @@ function App() {
     offerPostRunMonetizationHintAfterSuccess,
     refreshSubscriptionState,
     accessToken,
+    runMergeJobGatedDownloadWithFilename,
   ]);
 
   useEffect(() => {
@@ -2468,10 +2591,6 @@ function App() {
     }
   }, [isAuthenticated, isRestoring, view]);
 
-  useEffect(() => {
-    setPaymentSummaryProduct(null);
-  }, [view]);
-
   /**
    * Completes redirect-based fake checkout: user lands on
    * `/fake-payment/success?sessionId=...`, we confirm server-side, refresh
@@ -2518,30 +2637,6 @@ function App() {
           await refreshSession().catch(() => null);
           await refreshSubscriptionState();
         }
-        if (
-          "creditsGranted" in result &&
-          result.product !== "PRO" &&
-          result.product !== "BUSINESS"
-        ) {
-          setUserBalance((prev) =>
-            prev ? { ...prev, creditBalance: result.creditsAfter } : null,
-          );
-        }
-        const balanceCtx = {
-          userId: user.id,
-          role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
-        };
-        const [nextBalance, nextTransactions] = await Promise.all([
-          fetchUserBalance(accessToken, balanceCtx).catch(() => null),
-          fetchCreditTransactions(accessToken, 10).catch(() => null),
-        ]);
-        if (nextBalance) {
-          setUserBalance(nextBalance);
-        }
-        if (nextTransactions) {
-          setCreditTransactions(nextTransactions);
-        }
-        const Wloc = ws(language);
         if ("alreadyConfirmed" in result && result.alreadyConfirmed) {
           showToast(
             "success",
@@ -2550,11 +2645,13 @@ function App() {
               ? "Bu ödeme daha önce tamamlandı."
               : "This payment was already completed.",
           );
-        } else if ("creditsGranted" in result) {
+        } else {
           showToast(
             "success",
             language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
-            Wloc.creditDashboardBuyCreditsSuccess(result.creditsGranted),
+            language === "tr"
+              ? "Hesabınız güncellendi."
+              : "Your account has been updated.",
           );
         }
       } catch (error) {
@@ -2576,21 +2673,6 @@ function App() {
     refreshSubscriptionState,
     user,
   ]);
-
-  useEffect(() => {
-    if (view !== "web") {
-      return;
-    }
-    applyWorkspaceToolMeta(selectedFeatureId, language);
-  }, [view, selectedFeatureId, language]);
-
-  useEffect(() => {
-    if (view === "web") {
-      return;
-    }
-    resetWorkspaceHeadSeo();
-    document.title = "NB PDF PLATFORM";
-  }, [view]);
 
   useEffect(() => {
     if (view !== "web") {
@@ -2654,8 +2736,6 @@ function App() {
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) {
       setSubscriptionSummary(null);
-      setUserBalance(null);
-      setCreditTransactions(null);
       return;
     }
 
@@ -2667,29 +2747,15 @@ function App() {
 
     async function loadSubscriptionBlock() {
       setSubscriptionLoading(true);
-      setCreditTransactionsLoading(true);
       try {
-        const balanceCtx = {
-          userId: authUser.id,
-          role:
-            authUser.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
-        };
-        const [summary, status, balance, transactions] = await Promise.all([
+        const [summary, status] = await Promise.all([
           fetchSubscriptionSummary(authToken),
           fetchSubscriptionStatus(authToken),
-          fetchUserBalance(authToken, balanceCtx).catch(() => null),
-          fetchCreditTransactions(authToken, 10).catch(() => null),
         ]);
         if (cancelled) {
           return;
         }
         setSubscriptionSummary(summary);
-        if (balance) {
-          setUserBalance(balance);
-        }
-        if (transactions) {
-          setCreditTransactions(transactions);
-        }
 
         const adminProNavbar =
           authUser.role === "ADMIN" && status.plan === "PRO";
@@ -2701,25 +2767,11 @@ function App() {
           if (cancelled || !refreshed) {
             return;
           }
-          const [nextSummary, nextStatus, nextBalance, nextTransactions] =
-            await Promise.all([
-              fetchSubscriptionSummary(refreshed.accessToken),
-              fetchSubscriptionStatus(refreshed.accessToken),
-              fetchUserBalance(refreshed.accessToken, balanceCtx).catch(
-                () => null,
-              ),
-              fetchCreditTransactions(refreshed.accessToken, 10).catch(
-                () => null,
-              ),
-            ]);
+          const [nextSummary] = await Promise.all([
+            fetchSubscriptionSummary(refreshed.accessToken),
+          ]);
           if (!cancelled) {
             setSubscriptionSummary(nextSummary);
-            if (nextBalance) {
-              setUserBalance(nextBalance);
-            }
-            if (nextTransactions) {
-              setCreditTransactions(nextTransactions);
-            }
           }
         }
       } catch (error) {
@@ -2734,7 +2786,6 @@ function App() {
       } finally {
         if (!cancelled) {
           setSubscriptionLoading(false);
-          setCreditTransactionsLoading(false);
         }
       }
     }
@@ -2763,35 +2814,40 @@ function App() {
   const splitModeDescription =
     splitMode === "single"
       ? language === "tr"
-        ? "Seçtiğiniz sayfalar tek bir PDF dosyası içinde birleştirilerek indirilecektir."
-        : "Selected pages are merged into one downloadable PDF."
+        ? "Seçtiğiniz sayfalar tek bir PDF dosyası içinde birleştirilecek."
+        : "Selected pages are merged into one PDF file."
       : language === "tr"
         ? "Seçtiğiniz sayfalar ayrı PDF dosyaları olarak hazırlanıp ZIP ile indirilir."
         : "Selected pages are saved as separate PDFs inside a ZIP download.";
 
+  const splitPasswordToolIds = [
+    "split",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "compress",
+    "delete-pages",
+    "rotate-pdf",
+    "organize-pdf",
+    "watermark",
+    "page-numbers",
+    "repair-pdf",
+    "pdf-to-ppt",
+    "pdf-to-image",
+    "pdf-to-text",
+    "flatten-pdf",
+  ];
+  const anyUploadEncrypted =
+    uploads.length > 0 && uploads.some((u) => u.encrypted);
   const showSplitPasswordField =
-    [
-      "split",
-      "pdf-to-word",
-      "pdf-to-excel",
-      "compress",
-      "delete-pages",
-      "rotate-pdf",
-      "organize-pdf",
-      "watermark",
-      "page-numbers",
-      "repair-pdf",
-      "pdf-to-ppt",
-      "pdf-to-image",
-    ].includes(selectedFeature.id) &&
-    uploads.length > 0 &&
-    currentPdfIsEncrypted;
+    splitPasswordToolIds.includes(selectedFeature.id) && anyUploadEncrypted;
+  const showEncryptedFileWarning =
+    splitPasswordToolIds.includes(selectedFeature.id) &&
+    anyUploadEncrypted &&
+    !password.trim();
   const showUnlockPasswordField =
     selectedFeature.id === "unlock-pdf" && uploads.length > 0;
   const showEncryptSourcePasswordField =
-    selectedFeature.id === "encrypt" &&
-    uploads.length > 0 &&
-    currentPdfIsEncrypted;
+    selectedFeature.id === "encrypt" && anyUploadEncrypted;
   const mergeHasMissingPasswords =
     selectedFeature.id === "merge" &&
     uploads.some(
@@ -2803,56 +2859,38 @@ function App() {
     uploads.length > 0 &&
     uploads.some((u) => u.inspecting) &&
     pdfInspectionFeatures.includes(selectedFeatureId);
-  /**
-   * Credit/workspace chrome (sidebar chip, mobile pill, in-tool hints) for
-   * signed-in non-admin users once balance is loaded.
-   */
-  const showCreditWorkspaceChrome =
-    user?.role !== "ADMIN" && Boolean(userBalance);
   const limitsizProActive = useMemo(
     () => isLimitsizProUnlimited(userBalance),
     [userBalance],
   );
-  /**
-   * Credit depletion replaces the old "friction active" signal. `userBalance`
-   * is the authoritative source; `subscriptionSummary` no longer carries any
-   * usage data. A null balance (load failure / pre-boot) is treated as
-   * "not yet depleted" to avoid flashing the upgrade banner during refresh.
-   */
-  const creditsExhausted =
-    userBalance !== null &&
-    !userBalance.hasActiveSubscription &&
-    userBalance.role !== "ADMIN" &&
-    userBalance.creditBalance <= 0;
-  const creditsRunningLow = Boolean(
-    userBalance &&
-    !userBalance.hasActiveSubscription &&
-    userBalance.role !== "ADMIN" &&
-    userBalance.creditBalance > 0 &&
-    userBalance.creditBalance < 5,
+  const canUseBatch = Boolean(
+    isAuthenticated &&
+    ((userBalance?.isAdmin ?? false) || (userBalance?.batchLimit ?? 0) > 0),
   );
-  /** 5–14 credits: “moderate low” strip (5+ already covered by `creditsRunningLow`). */
-  const creditsModerateLow = Boolean(
-    userBalance &&
-    !userBalance.hasActiveSubscription &&
-    userBalance.role !== "ADMIN" &&
-    userBalance.creditBalance >= 5 &&
-    userBalance.creditBalance < 15,
-  );
-  /**
-   * Paid lane (PRO / BUSINESS / admin bypass). The engine treats these as
-   * "active_subscription" / "admin_bypass" — UI uses the same predicate so
-   * the progress hint matches what the engine will allow.
-   */
+  const batchMaxFiles = userBalance?.isAdmin
+    ? 50
+    : (userBalance?.batchLimit ?? 5);
+  const BATCHABLE_TOOLS = new Set([
+    "compress",
+    "pdf-to-word",
+    "pdf-to-excel",
+    "word-to-pdf",
+    "excel-to-pdf",
+    "encrypt",
+    "pdf-to-text",
+    "repair-pdf",
+    "page-numbers",
+    "watermark",
+    "pdf-to-image",
+    "ppt-to-pdf",
+    "pdf-to-ppt",
+  ]);
   const premiumProcessingLane = Boolean(
-    showCreditWorkspaceChrome ||
     user?.role === "ADMIN" ||
-    userBalance?.hasActiveSubscription ||
     (subscriptionSummary &&
       (subscriptionSummary.currentPlan.name === "PRO" ||
         subscriptionSummary.currentPlan.name === "BUSINESS")),
   );
-  const creditStandardLaneQueue = false;
 
   const mergeProgressActive = Boolean(
     mergeJob &&
@@ -2874,9 +2912,6 @@ function App() {
   const TOOLSuccessBarActive = Boolean(
     toolProgressSuccess && view === "web" && contentPanel === "tool",
   );
-  const hideMonetizationHintsForInsufficientGate =
-    toolProgressSuccess?.gatedDownload?.saasGating?.reason ===
-    "insufficient_credits";
   const bottomToolProgressActive =
     mergeProgressActive || genericToolProgressActive || TOOLSuccessBarActive;
   const mergeProgressIndeterminate = Boolean(
@@ -2940,7 +2975,7 @@ function App() {
     genericToolEstimateSec - genericToolElapsedSec,
   );
   const genericToolPercent = Math.min(
-    97,
+    99,
     Math.max(
       2,
       Math.round(
@@ -2954,23 +2989,6 @@ function App() {
       ? genericToolElapsedSec < 4 || genericToolPercent < 5
       : genericToolElapsedSec < 5 || genericToolPercent < 6);
 
-  /** Inline nudge after success when credits are depleted (non-subscriber). */
-  const upgradeNudgeTier: 0 | 1 = useMemo(() => {
-    if (user?.role === "ADMIN") {
-      return 0;
-    }
-    if (
-      !subscriptionSummary ||
-      subscriptionSummary.currentPlan.name !== "FREE"
-    ) {
-      return 0;
-    }
-    if (!userBalance || userBalance.hasActiveSubscription) {
-      return 0;
-    }
-    return userBalance.creditBalance <= 0 ? 1 : 0;
-  }, [subscriptionSummary, user?.role, userBalance]);
-
   useEffect(() => {
     if (submitting) {
       setUpgradeNudgeLoadingHidden(false);
@@ -2982,8 +3000,6 @@ function App() {
       setUpgradeNudgePostSuccessHidden(false);
     }
   }, [toolProgressSuccess]);
-
-  const showUpgradeNudgeOnLoading = false;
 
   const deleteWouldRemoveEveryPage = useMemo(() => {
     if (selectedFeature.id !== "delete-pages") {
@@ -3013,7 +3029,7 @@ function App() {
     (selectedFeature.id === "split" && (!!pagesError || !pagesText.trim())) ||
     (selectedFeature.id === "delete-pages" &&
       (!!deletePagesError || !deletePagesText.trim())) ||
-    (selectedFeature.id === "organize-pdf" && !organizeOrder.trim()) ||
+    (selectedFeature.id === "organize-pdf" && organizePageOrder.length === 0) ||
     (showUnlockPasswordField && !unlockOpenPassword.trim()) ||
     (selectedFeature.id === "watermark" && !watermarkPhrase.trim()) ||
     (selectedFeature.id === "html-to-pdf" &&
@@ -3058,199 +3074,10 @@ function App() {
     setContactModalOpen(false);
   }
 
-  /** Opens the credit-pack modal (instant checkout from there). */
-  function handleBuyCredits() {
-    if (limitsizProActive) {
-      return;
-    }
-    if (!accessToken) {
-      showToast(
-        "error",
-        language === "tr" ? "Oturum gerekli" : "Sign-in required",
-        language === "tr"
-          ? "Kredi satın almak için giriş yapın."
-          : "Please sign in to buy credits.",
-      );
-      return;
-    }
-    setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
+  function openCreditsWorkspaceFromNav() {
+    setActiveSidebar("subscription");
+    setContentPanel("subscription");
   }
-
-  async function refreshEntitlementAfterPurchase() {
-    if (!accessToken || !user) {
-      return;
-    }
-    const balanceCtx = {
-      userId: user.id,
-      role: user.role === "ADMIN" ? ("ADMIN" as const) : ("USER" as const),
-    };
-    const [nextBalance, nextTransactions] = await Promise.all([
-      fetchUserBalance(accessToken, balanceCtx).catch(() => null),
-      fetchCreditTransactions(accessToken, 10).catch(() => null),
-    ]);
-    if (nextBalance) {
-      setUserBalance(nextBalance);
-    }
-    if (nextTransactions) {
-      setCreditTransactions(nextTransactions);
-    }
-  }
-
-  const handleSelectCreditPackForPayment = useCallback(
-    (product: CreditPackProduct) => {
-      if (!isCreditPackProduct(product)) {
-        return;
-      }
-      if (!accessToken || !user) {
-        showToast(
-          "error",
-          language === "tr" ? "Oturum gerekli" : "Sign-in required",
-          language === "tr"
-            ? "Kredi satın almak için giriş yapın."
-            : "Please sign in to buy credits.",
-        );
-        return;
-      }
-      setPaymentSummaryProduct(product);
-    },
-    [accessToken, user, language, showToast],
-  );
-
-  async function handleCreditPackPurchaseSuccess() {
-    try {
-      await refreshEntitlementAfterPurchase();
-    } catch {
-      /* still toast */
-    }
-    setPaymentSummaryProduct(null);
-    showToast(
-      "success",
-      language === "tr" ? "Ödeme tamamlandı" : "Payment complete",
-      language === "tr"
-        ? "Krediler hesabınıza eklendi."
-        : "Credits have been added to your account.",
-    );
-  }
-
-  const closeConversionPopup = useCallback(
-    (snoozeInsufficientCredits: boolean) => {
-      if (
-        conversionPopupVariantRef.current === "insufficient_credits" &&
-        snoozeInsufficientCredits
-      ) {
-        snoozeLowCreditPopup();
-      }
-      setConversionPopupOpen(false);
-      setConversionPopupVariant(null);
-    },
-    [],
-  );
-
-  const dismissConversionPopup = useCallback(() => {
-    closeConversionPopup(
-      conversionPopupVariantRef.current === "insufficient_credits",
-    );
-  }, [closeConversionPopup]);
-
-  const onConversionPopupPrimary = useCallback(() => {
-    const v = conversionPopupVariantRef.current;
-    const snooze = v === "insufficient_credits";
-    closeConversionPopup(snooze);
-    if (
-      v === "insufficient_credits" ||
-      v === "buy_credits" ||
-      v === "pro_unlock"
-    ) {
-      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
-    }
-  }, [closeConversionPopup]);
-
-  const onConversionPopupSecondary = useCallback(() => {
-    const v = conversionPopupVariantRef.current;
-    if (v === "insufficient_credits") {
-      closeConversionPopup(true);
-      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
-      return;
-    }
-    closeConversionPopup(false);
-  }, [closeConversionPopup]);
-
-  const tryShowConversionPopup = useCallback(
-    (variant: ConversionPopupVariant, trigger?: "balance" | "download") => {
-      if (view !== "web" || !isAuthenticated) {
-        return;
-      }
-      if (user?.role === "ADMIN") {
-        return;
-      }
-      const insuffDownload =
-        variant === "insufficient_credits" && trigger === "download";
-      if (!insuffDownload && conversionPopupOpenRef.current) {
-        return;
-      }
-      if (!insuffDownload && paymentSummaryOpenRef.current) {
-        return;
-      }
-
-      if (variant === "insufficient_credits" && trigger !== "download") {
-        return;
-      }
-
-      if (variant === "buy_credits" && hasShownFirstToolFailurePopup()) {
-        return;
-      }
-
-      if (variant === "pro_unlock") {
-        if (hasShownFirstUpgradeOpPopup()) {
-          return;
-        }
-        const sum = subscriptionSummaryRef.current;
-        const ub = userBalanceRef.current;
-        if (!sum || sum.currentPlan.name !== "FREE") {
-          return;
-        }
-        if (ub?.hasActiveSubscription) {
-          return;
-        }
-      }
-
-      if (variant === "buy_credits") {
-        markFirstToolFailurePopupShown();
-      }
-      if (variant === "pro_unlock") {
-        markFirstUpgradeOpPopupShown();
-      }
-
-      setConversionPopupVariant(variant);
-      setConversionPopupOpen(true);
-    },
-    [view, isAuthenticated, user?.role],
-  );
-
-  useEffect(() => {
-    tryShowConversionPopupRef.current = tryShowConversionPopup;
-  }, [tryShowConversionPopup]);
-
-  useEffect(() => {
-    const n = userBalance?.creditBalance;
-    if (typeof n === "number") {
-      clearLowCreditSnoozeIfRecovered(n);
-    }
-  }, [userBalance?.creditBalance]);
-
-  useEffect(() => {
-    if (!insufficientCreditsToolRunBlockRef.current) {
-      return;
-    }
-    const snap = insufficientCreditsBarrierCreditSnapshotRef.current;
-    if (snap === null) {
-      return;
-    }
-    const b = userBalance?.creditBalance;
-    if (typeof b === "number" && b > snap) {
-      clearInsufficientCreditsToolBarrier();
-    }
-  }, [userBalance?.creditBalance]);
 
   async function handleContactModalSubmit(
     event: React.FormEvent<HTMLFormElement>,
@@ -3351,11 +3178,10 @@ function App() {
   }
 
   function handleSidebarSelect(id: SidebarToolId) {
-    if (id !== "subscription" && lockedFeatures.has(id)) {
-      setPaymentSummaryProduct(CREDIT_PACKS[0]!.product);
-      return;
-    }
     setActiveSidebar(id);
+    if (id !== "subscription" && lockedFeatures.has(id)) {
+      setUpgradeModalOpen(true);
+    }
     if (id === "subscription") {
       setContentPanel("subscription");
       return;
@@ -3366,17 +3192,18 @@ function App() {
 
   function handleDashboardLogoClick() {
     if (view === "admin") {
+      setContentPanel("tool");
       setView("web");
-      window.history.replaceState({}, "", workspacePathForFeature("split"));
+      window.history.replaceState({}, "", "/workspace");
+      return;
+    }
+    if (view === "web") {
+      setContentPanel("tool");
+      window.history.replaceState({}, "", "/workspace");
       return;
     }
     setView("landing");
     window.history.replaceState({}, "", "/");
-  }
-
-  function openCreditsWorkspaceFromNav() {
-    setContentPanel("subscription");
-    setActiveSidebar("subscription");
   }
 
   function handleNavProfile() {
@@ -3455,7 +3282,13 @@ function App() {
       setActiveSidebar("split");
       setContentPanel("tool");
       setView("web");
-      window.history.replaceState({}, "", workspacePathForFeature("split"));
+      window.history.replaceState({}, "", "/workspace");
+
+      const pendingPlan = sessionStorage.getItem("nb_pending_plan");
+      if (pendingPlan) {
+        sessionStorage.removeItem("nb_pending_plan");
+        setUpgradeModalOpen(true);
+      }
     } catch (error) {
       const fallback =
         language === "tr"
@@ -3467,6 +3300,11 @@ function App() {
     } finally {
       setAuthSubmitting(false);
     }
+  }
+
+  function handleGoToAdmin() {
+    setView("admin");
+    window.history.pushState({}, "", "/admin");
   }
 
   async function handleLogout() {
@@ -3656,7 +3494,7 @@ function App() {
       showToast(
         "error",
         "Parola gerekli",
-        "PDF’yi açmak için mevcut parolayı girin.",
+        "PDF'yi açmak için mevcut parolayı girin.",
       );
       return;
     }
@@ -3677,7 +3515,7 @@ function App() {
           ? "Şifre doğrulaması gerekli"
           : "Password verification required",
         language === "tr"
-          ? "Şifreli PDF’ler için parolayı girin ve her dosyanın yanındaki «Parolayı doğrula» ile onaylayın."
+          ? "Şifreli PDF'ler için parolayı girin ve her dosyanın yanındaki «Parolayı doğrula» ile onaylayın."
           : "For password-protected PDFs, enter the password and tap «Verify password» next to each file.",
       );
       return;
@@ -3685,19 +3523,6 @@ function App() {
 
     if (!accessToken) {
       showToast("error", "Oturum gerekli", "İşlem için yeniden giriş yapın.");
-      return;
-    }
-
-    if (insufficientCreditsToolRunBlockRef.current) {
-      showToast(
-        "error",
-        language === "tr"
-          ? "Önce kredi ekleyin veya yükseltin"
-          : "Add credits or upgrade first",
-        language === "tr"
-          ? "Yetersiz kredi nedeniyle yeni işlem başlatılamıyor. Kredi satın alın, planı yükseltin veya önizlemeyi kapatın."
-          : "You can’t start another run while credits are insufficient. Buy credits, upgrade, or dismiss the preview.",
-      );
       return;
     }
 
@@ -3717,6 +3542,42 @@ function App() {
       clearToast();
 
       if (selectedFeature.id === "merge") {
+        if (
+          isAuthenticated &&
+          userBalance?.plan === "FREE" &&
+          !userBalance?.isAdmin &&
+          uploads.length > 2
+        ) {
+          showToast(
+            "error",
+            language === "tr" ? "Ücretsiz plan sınırı" : "Free plan limit",
+            language === "tr"
+              ? "Ücretsiz planda en fazla 2 dosya birleştirilebilir. Daha fazlası için planınızı yükseltin."
+              : "Free plan allows merging up to 2 files. Upgrade your plan for more.",
+          );
+          return;
+        }
+
+        // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
+        {
+          const win = window as unknown as {
+            showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+          };
+          if (typeof win.showSaveFilePicker === "function") {
+            try {
+              const _mergeName = language === "tr" ? "birlestirilmis.pdf" : "merged.pdf";
+              const handle = await win.showSaveFilePicker({
+                suggestedName: _mergeName,
+                types: showSavePickerTypesFor(_mergeName),
+              });
+              setPendingSaveHandle(handle);
+            } catch (e: unknown) {
+              if (e instanceof DOMException && e.name === "AbortError") return;
+              // showSaveFilePicker desteklenmiyorsa veya güvenli bağlam değilse devam et
+            }
+          }
+        }
+
         mergeFlowAbortRef.current?.abort();
         mergeFlowAbortRef.current = new AbortController();
         const mergeSignal = mergeFlowAbortRef.current.signal;
@@ -3770,9 +3631,35 @@ function App() {
                 ? "İstek gönderilemedi."
                 : "Request failed.",
           );
-          tryShowConversionPopupRef.current("buy_credits");
         }
         return;
+      }
+
+      // Pre-acquire save file handle HERE — user activation is still valid (no awaits above for non-merge tools).
+      // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
+      {
+        const win = window as unknown as {
+          showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+        };
+        if (typeof win.showSaveFilePicker === "function") {
+          try {
+            const suggestedSaveName =
+              selectedFeature.id === "split" && splitMode === "separate"
+                ? "ayrılan-sayfalar.zip"
+                : selectedFeature.fallbackFilename;
+            const handle = await win.showSaveFilePicker({
+              suggestedName: suggestedSaveName,
+              types: showSavePickerTypesFor(suggestedSaveName),
+            });
+            setPendingSaveHandle(handle);
+          } catch (e: unknown) {
+            const eName = e instanceof DOMException ? e.name : "";
+            if (eName === "AbortError") {
+              return; // kullanıcı kaydetme diyalogunu iptal etti
+            }
+            // desteklenmiyor veya güvenli bağlam değil — devam et
+          }
+        }
       }
 
       toolRunAbortRef.current?.abort();
@@ -3784,7 +3671,8 @@ function App() {
       const runBytes =
         selectedFeature.id === "html-to-pdf"
           ? 0
-          : selectedFeature.id === "image-to-pdf"
+          : selectedFeature.id === "image-to-pdf" ||
+              (uploads.length > 1 && BATCHABLE_TOOLS.has(selectedFeature.id))
             ? uploads.reduce((a, u) => a + u.file.size, 0)
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
@@ -3820,6 +3708,7 @@ function App() {
           case "pdf-to-word":
           case "pdf-to-excel":
           case "compress":
+            formData.append("quality", compressQuality);
             formData.append("password", password.trim());
             break;
           case "delete-pages":
@@ -3838,27 +3727,29 @@ function App() {
             if (Object.keys(rotObj).length > 0) {
               formData.append("pages_rotation_json", JSON.stringify(rotObj));
             } else {
-              formData.append("degrees", rotateDeg);
-              if (rotatePagesOnly.trim()) {
-                formData.append("pages", rotatePagesOnly.trim());
-              }
+              formData.append("degrees", "90");
             }
             if (password.trim()) {
               formData.append("password", password.trim());
             }
             break;
           }
-          case "organize-pdf":
-            formData.append("page_order", organizeOrder.trim());
+          case "organize-pdf": {
+            const order = organizePageOrder.join(",");
+            formData.append("page_order", order);
             if (password.trim()) {
               formData.append("password", password.trim());
             }
             break;
+          }
           case "unlock-pdf":
             formData.append("password", unlockOpenPassword.trim());
             break;
           case "watermark":
             formData.append("watermark_text", watermarkPhrase.trim());
+            formData.append("watermark_color", watermarkColor);
+            formData.append("watermark_font", watermarkFont);
+            formData.append("watermark_opacity", watermarkOpacity);
             if (password.trim()) {
               formData.append("password", password.trim());
             }
@@ -3866,6 +3757,7 @@ function App() {
           case "page-numbers":
             formData.append("start_at", pageNumStart.trim() || "1");
             formData.append("position", pageNumPos);
+            formData.append("fmt", pageNumFmt);
             if (password.trim()) {
               formData.append("password", password.trim());
             }
@@ -3890,12 +3782,74 @@ function App() {
             formData.append("input_password", inputPassword.trim());
             formData.append("user_password", outputPassword.trim());
             break;
+          case "pdf-to-text":
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
+          case "flatten-pdf":
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
           default:
             break;
         }
       }
 
+      const batchSourceFiles =
+        uploads.length > 1 && BATCHABLE_TOOLS.has(fid)
+          ? uploads.map((u) => u.file)
+          : batchFiles;
+
+      if (batchSourceFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
+        const batchForm = new FormData();
+        batchForm.append("tool_type", fid);
+        for (const bf of batchSourceFiles) {
+          batchForm.append("files", bf);
+        }
+        if (password.trim()) batchForm.append("password", password.trim());
+        if (fid === "compress") batchForm.append("quality", compressQuality);
+        if (fid === "encrypt") {
+          batchForm.append("user_password", outputPassword.trim());
+          batchForm.append("input_password", inputPassword.trim());
+        }
+        if (fid === "watermark") {
+          batchForm.append("watermark_text", watermarkPhrase.trim());
+          batchForm.append("watermark_color", watermarkColor);
+          batchForm.append("watermark_font", watermarkFont);
+          batchForm.append("watermark_opacity", watermarkOpacity);
+        }
+        if (fid === "page-numbers") {
+          batchForm.append("start_at", pageNumStart.trim() || "1");
+          batchForm.append("position", pageNumPos);
+          batchForm.append("fmt", pageNumFmt);
+        }
+        if (fid === "pdf-to-image") {
+          batchForm.append("image_format", pdfToImgFmt);
+        }
+
+        const res = await postToolToResult("batch", batchForm, accessToken, {
+          signal: toolSignal,
+          errorMessage:
+            language === "tr"
+              ? "Toplu işlem başarısız oldu."
+              : "Batch processing failed.",
+        });
+
+        setBatchFiles([]);
+        setUploads([]);
+        void runGatedDownloadWithFilename(
+          res.result_id,
+          res.filename || "toplu_sonuc.zip",
+          res.filename || "toplu_sonuc.zip",
+          fid,
+        );
+        return;
+      }
+
       if (isResultStoreTool(fid)) {
+        const uploadPageCount = uploads[0]?.pageCount ?? undefined;
         const res = await postToolToResult(
           selectedFeature.endpoint,
           formData,
@@ -3909,50 +3863,21 @@ function App() {
           },
         );
 
-        let thumbnailBlobUrl: string | null = null;
-        if (res.has_thumbnail) {
-          try {
-            thumbnailBlobUrl = await fetchResultThumbnailBlobUrl(
-              res.result_id,
-              accessToken,
-              {
-                signal: toolSignal,
-              },
-            );
-          } catch {
-            thumbnailBlobUrl = null;
-          }
-        }
-
-        disposeToolProgressSuccess();
-        toolProgressDisposeRef.current = thumbnailBlobUrl
-          ? () => URL.revokeObjectURL(thumbnailBlobUrl)
-          : null;
-        setToolProgressSuccess({
-          filename: res.filename || selectedFeature.fallbackFilename,
-          featureTitle: selectedFeature.title,
-          gatedDownload: {
-            toolId: fid,
-            resultId: res.result_id,
-            fallbackName: res.filename || selectedFeature.fallbackFilename,
-            thumbnailBlobUrl,
-            saasGating: res.saasGating ?? null,
-          },
-        });
-        showToast(
-          "success",
-          language === "tr" ? "İşlem tamamlandı" : "Process complete",
-          language === "tr"
-            ? "İndirmek için aşağıdaki düğmeyi kullanın."
-            : "Use the button below to download.",
-        );
         resetForm(true);
-        offerPostRunMonetizationHintAfterSuccess(res.saasGating ?? null);
+
         void refreshSubscriptionState();
+        void runGatedDownloadWithFilename(
+          res.result_id,
+          res.filename || selectedFeature.fallbackFilename,
+          res.filename || selectedFeature.fallbackFilename,
+          fid,
+          uploadPageCount,
+        );
         return;
       }
 
       let pendingLogId: string | null = null;
+      const directDownloadPageCount = uploads[0]?.pageCount ?? undefined;
       const dl = await downloadFromApi(
         selectedFeature.endpoint,
         formData,
@@ -3982,6 +3907,53 @@ function App() {
           /* noop */
         }
       }
+      if (isTeamMember && accessToken) {
+        const TOOL_NAMES_TR: Record<string, string> = {
+          split: "PDF Böl",
+          merge: "PDF Birleştir",
+          compress: "PDF Sıkıştır",
+          "pdf-to-word": "PDF → Word",
+          "word-to-pdf": "Word → PDF",
+          "excel-to-pdf": "Excel → PDF",
+          "pdf-to-excel": "PDF → Excel",
+          encrypt: "PDF Şifrele",
+          "unlock-pdf": "PDF Kilidi Aç",
+          "delete-pages": "Sayfa Sil",
+          "rotate-pdf": "PDF Döndür",
+          "organize-pdf": "PDF Düzenle",
+          watermark: "Filigran",
+          "page-numbers": "Sayfa Numarası",
+          "repair-pdf": "PDF Onar",
+          "pdf-to-ppt": "PDF → PowerPoint",
+          "ppt-to-pdf": "PowerPoint → PDF",
+          "pdf-to-image": "PDF → Görsel",
+          "image-to-pdf": "Görsel → PDF",
+          "html-to-pdf": "HTML → PDF",
+          "pdf-to-text": "PDF → Metin",
+          "flatten-pdf": "PDF Düzleştir",
+        };
+        const fid2 = selectedFeature.id;
+        fetch("/api/team/activity", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            toolId: fid2,
+            toolName: TOOL_NAMES_TR[fid2] ?? fid2,
+            status: "SUCCESS",
+            pageCount: directDownloadPageCount ?? null,
+          }),
+        }).catch(() => {
+          /* noop */
+        });
+      }
+      setToolProgressSuccess({
+        filename: selectedFeature.fallbackFilename,
+        featureTitle: selectedFeature.title,
+        replay: dl.replay,
+      });
       applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
       showToast(
         "success",
@@ -4003,20 +3975,11 @@ function App() {
               ? "Sunucudan uzun süre yanıt gelmedi; bağlantıyı kontrol edin veya daha sonra yeniden deneyin."
               : "No server response for a long time. Check your connection or try again later.",
           );
-          tryShowConversionPopupRef.current("buy_credits");
         }
         return;
       }
       if (error instanceof EntitlementPaymentRequiredError) {
-        if (error.saasGating) {
-          setUserBalance((prev) =>
-            prev && error.saasGating
-              ? { ...prev, creditBalance: error.saasGating.creditsAfter }
-              : prev,
-          );
-        }
-        armInsufficientCreditsToolBarrier();
-        tryShowConversionPopupRef.current("insufficient_credits", "download");
+        setUpgradeModalOpen(true);
         return;
       }
       showToast(
@@ -4024,7 +3987,6 @@ function App() {
         "İşlem başarısız",
         friendlyOperationFailedMessage(language),
       );
-      tryShowConversionPopupRef.current("buy_credits");
     } finally {
       if (toolStalemateWatchdogId !== undefined) {
         window.clearTimeout(toolStalemateWatchdogId);
@@ -4045,6 +4007,26 @@ function App() {
   async function handleNewFiles(fileList: File[]) {
     const rawFiles = Array.from(fileList);
     const L = ws(language);
+
+    const fileSizeLimitMB = userBalance?.fileSizeLimitMB ?? 200;
+    const MAX_FILE_BYTES =
+      fileSizeLimitMB >= 999999 ? Infinity : fileSizeLimitMB * 1024 * 1024;
+    const oversized =
+      MAX_FILE_BYTES === Infinity
+        ? []
+        : rawFiles.filter((f) => f.size > MAX_FILE_BYTES);
+    if (oversized.length > 0) {
+      const names = oversized.map((f) => f.name).join(", ");
+      showToast(
+        "error",
+        language === "tr" ? "Dosya çok büyük" : "File too large",
+        language === "tr"
+          ? `Maksimum dosya boyutu ${fileSizeLimitMB} MB. Büyük dosya(lar): ${names}`
+          : `Maximum file size is ${fileSizeLimitMB} MB. Oversized: ${names}`,
+      );
+      return;
+    }
+
     const existingKeys = new Set(uploads.map((u) => fileIdentityKey(u.file)));
     const duplicates = rawFiles.filter((f) =>
       existingKeys.has(fileIdentityKey(f)),
@@ -4093,12 +4075,27 @@ function App() {
             inspectPdf(item.file, undefined, accessToken),
             PDF_INSPECT_TIMEOUT_MS,
           );
+          const isCorrupt = Boolean(
+            (result as { corrupt?: boolean }).corrupt ||
+            (result.page_count === 0 && !result.encrypted),
+          );
+          if (isCorrupt) {
+            return {
+              ...item,
+              encrypted: false,
+              inspecting: false,
+              pageCount: 0,
+              mergePasswordVerified: false,
+              corrupt: true,
+            };
+          }
           return {
             ...item,
             encrypted: Boolean(result.encrypted),
             inspecting: false,
             pageCount: result.page_count ?? null,
             mergePasswordVerified: false,
+            corrupt: false,
           };
         } catch (err) {
           const L2 = ws(language);
@@ -4125,12 +4122,22 @@ function App() {
             inspecting: false,
             pageCount: null,
             mergePasswordVerified: false,
+            corrupt: false,
           };
         }
       }),
     );
 
     if (inspectRunRef.current !== token) {
+      // Yeni bir inspection round başladı; bu round'un sonuçları geçersiz sayılır ama
+      // incelediğimiz dosyaların inspecting=true flag'ini temizlemeliyiz; yoksa buton
+      // kalıcı olarak devre dışı kalır (toolFilesStillInspecting hiç false olmaz).
+      const staleIds = new Set(inspectedNewItems.map((i) => i.id));
+      setUploads((cur) =>
+        cur.map((item) =>
+          staleIds.has(item.id) ? { ...item, inspecting: false } : item,
+        ),
+      );
       return;
     }
 
@@ -4141,18 +4148,42 @@ function App() {
           item,
       );
       if (selectedFeature.id === "merge") {
-        const removedIds = new Set(
-          inspectedNewItems.filter((i) => i.pageCount === 0).map((i) => i.id),
+        // pageCount === null → inspect başarısız (415 veya hata); dosyayı listede tut,
+        // merge sırasında sunucu tekrar okuyacak.
+        // pageCount === 0 → sunucu 0 döndürdü; yine de listede tut ve uyar.
+        const corruptItems = inspectedNewItems.filter((i) => i.corrupt);
+        const zeroPageItems = inspectedNewItems.filter(
+          (i) => i.pageCount === 0 && !i.corrupt,
         );
-        if (removedIds.size > 0) {
+        const inspectFailedItems = inspectedNewItems.filter(
+          (i) => i.pageCount === null && !i.corrupt,
+        );
+        if (corruptItems.length > 0) {
+          showToast(
+            "error",
+            language === "tr" ? "Geçersiz PDF dosyası" : "Invalid PDF file",
+            language === "tr"
+              ? `${corruptItems.map((i) => i.file.name).join(", ")} — bozuk veya boş PDF. Listeden kaldırın.`
+              : `${corruptItems.map((i) => i.file.name).join(", ")} — corrupt or empty PDF. Remove it from the list.`,
+          );
+        }
+        if (zeroPageItems.length > 0) {
           showToast(
             "info",
-            language === "tr" ? "Geçersiz PDF" : "Invalid PDF",
+            language === "tr" ? "Sayfa okunamadı" : "Page count unreadable",
             language === "tr"
-              ? "Bu PDF dosyasında sayfa bulunamadı; listeden çıkarıldı."
-              : "This PDF has no pages and was removed from the list.",
+              ? `${zeroPageItems.map((i) => i.file.name).join(", ")} — sayfa sayısı alınamadı, yine de birleştirmeye dahil edildi.`
+              : `${zeroPageItems.map((i) => i.file.name).join(", ")} — could not read page count, included in merge anyway.`,
           );
-          mapped = mapped.filter((item) => !removedIds.has(item.id));
+        }
+        if (inspectFailedItems.length > 0) {
+          showToast(
+            "info",
+            language === "tr" ? "PDF denetimi başarısız" : "PDF check failed",
+            language === "tr"
+              ? `${inspectFailedItems.map((i) => i.file.name).join(", ")} — dosya kontrol edilemedi, birleştirmeye dahil edildi.`
+              : `${inspectFailedItems.map((i) => i.file.name).join(", ")} — file could not be checked, included in merge anyway.`,
+          );
         }
       }
       return mapped;
@@ -4177,7 +4208,9 @@ function App() {
           <CookieNotice
             language={language}
             visible={shouldShowCookieNotice}
-            onAccept={acceptConsent}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
         </>
@@ -4189,10 +4222,20 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
+    );
+  }
+
+  if (view === "team_invite") {
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        <TeamInviteAcceptPageLazy />
+      </Suspense>
     );
   }
 
@@ -4200,11 +4243,21 @@ function App() {
 
   if (isLoginSuccessRoute) {
     return (
-      <LoginSuccessPage
-        completeOAuthLogin={completeOAuthLogin}
-        clearSession={clearSession}
-        onNavigateToDashboard={navigateToDashboardAfterOAuth}
-      />
+      <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
+        <Suspense fallback={<ModalSkeleton />}>
+          <LoginSuccessPage
+            completeOAuthLogin={completeOAuthLogin}
+            clearSession={clearSession}
+            onNavigateToDashboard={navigateToDashboardAfterOAuth}
+          />
+        </Suspense>
+      </>
     );
   }
 
@@ -4224,11 +4277,17 @@ function App() {
     if (isRestoring && tokenPending) {
       return (
         <>
+          <SeoRouteManager
+            pathname={pathname}
+            view={view}
+            language={language}
+            selectedFeatureId={selectedFeatureId}
+          />
           <MaintenanceTabTitle />
           <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-6 py-12 font-sans text-nb-text antialiased">
             <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-                NB PDF PLATFORM
+                PDF PLATFORM
               </p>
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                 Oturum doğrulanıyor
@@ -4241,7 +4300,9 @@ function App() {
           <CookieNotice
             language={language}
             visible={shouldShowCookieNotice}
-            onAccept={acceptConsent}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
         </>
@@ -4250,11 +4311,19 @@ function App() {
 
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <MaintenancePage />
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4264,23 +4333,31 @@ function App() {
   if (view === "forgot_password") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <ForgotPasswordPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          onBackToLogin={() => {
-            setAuthError("");
-            setView("login");
-          }}
-          onCompleted={(successMessage) => {
-            setAuthError("");
-            setView("login");
-            showToast(
-              "success",
-              language === "tr" ? "Şifre sıfırlandı" : "Password reset",
-              successMessage,
-            );
-          }}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <ForgotPasswordPage
+            language={language}
+            onBackToLogin={() => {
+              setAuthError("");
+              setView("login");
+            }}
+            onCompleted={(successMessage) => {
+              setAuthError("");
+              setView("login");
+              showToast(
+                "success",
+                language === "tr" ? "Şifre sıfırlandı" : "Password reset",
+                successMessage,
+              );
+            }}
+          />
+        </Suspense>
       </>
     );
   }
@@ -4288,29 +4365,49 @@ function App() {
   if (view === "landing") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <LandingPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          onLanguageChange={handleLanguageChange}
-          onUseWebApp={openWorkspace}
-          isAuthenticated={isAuthenticated}
-          authGreeting={user ? userGreetingLine(user, language) : undefined}
-          onLogin={() => {
-            setAuthError("");
-            setView("login");
-          }}
-          onRegister={() => {
-            setAuthError("");
-            setView("register");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <LandingPage
+            language={language}
+            onLanguageChange={handleLanguageChange}
+            onUseWebApp={openWorkspace}
+            isAuthenticated={isAuthenticated}
+            authGreeting={user ? userGreetingLine(user, language) : undefined}
+            onLogin={() => {
+              setAuthError("");
+              setView("login");
+            }}
+            onRegister={() => {
+              setAuthError("");
+              setView("register");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+            onSelectPlan={(planId) => {
+              if (isAuthenticated) {
+                openWorkspace();
+                setUpgradeModalOpen(true);
+              } else {
+                sessionStorage.setItem("nb_pending_plan", planId);
+                setAuthError("");
+                setView("register");
+              }
+            }}
+          />
+        </Suspense>
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4320,30 +4417,38 @@ function App() {
   if (view === "admin_login") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <AuthPage
-          mode="login"
-          purpose="admin"
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          submitting={authSubmitting || isRestoring}
-          serverError={authError}
-          registrationSuccessBanner={null}
-          onDismissRegistrationSuccess={undefined}
-          onBack={() => {
-            setAuthError("");
-            setView("landing");
-            window.history.replaceState({}, "", "/");
-          }}
-          onModeChange={() => {}}
-          onSubmit={handleAuthSubmit}
-          onForgotPassword={() => {
-            setAuthError("");
-            setView("forgot_password");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <AuthPage
+            mode="login"
+            purpose="admin"
+            language={language}
+            submitting={authSubmitting || isRestoring}
+            serverError={authError}
+            registrationSuccessBanner={null}
+            onDismissRegistrationSuccess={undefined}
+            onBack={() => {
+              setAuthError("");
+              setView("landing");
+              window.history.replaceState({}, "", "/");
+            }}
+            onModeChange={() => {}}
+            onSubmit={handleAuthSubmit}
+            onForgotPassword={() => {
+              setAuthError("");
+              setView("forgot_password");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+          />
+        </Suspense>
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
             <div className="toast__title">{toast.title}</div>
@@ -4353,7 +4458,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4363,34 +4470,42 @@ function App() {
   if (view === "login" || view === "register") {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <AuthPage
-          mode={view}
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          submitting={authSubmitting || isRestoring}
-          serverError={authError}
-          registrationSuccessBanner={registrationSuccessBanner}
-          onDismissRegistrationSuccess={() =>
-            setRegistrationSuccessBanner(null)
-          }
-          onBack={() => {
-            setAuthError("");
-            setRegistrationSuccessBanner(null);
-            setView("landing");
-          }}
-          onModeChange={(nextMode) => {
-            setAuthError("");
-            setView(nextMode);
-          }}
-          onSubmit={handleAuthSubmit}
-          onForgotPassword={() => {
-            setAuthError("");
-            setView("forgot_password");
-          }}
-          onOpenTerms={() => openLegalPage("terms")}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-          onOpenKvkk={() => openLegalPage("kvkk")}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <AuthPage
+            mode={view}
+            language={language}
+            submitting={authSubmitting || isRestoring}
+            serverError={authError}
+            registrationSuccessBanner={registrationSuccessBanner}
+            onDismissRegistrationSuccess={() =>
+              setRegistrationSuccessBanner(null)
+            }
+            onBack={() => {
+              setAuthError("");
+              setRegistrationSuccessBanner(null);
+              setView("landing");
+            }}
+            onModeChange={(nextMode) => {
+              setAuthError("");
+              setView(nextMode);
+            }}
+            onSubmit={handleAuthSubmit}
+            onForgotPassword={() => {
+              setAuthError("");
+              setView("forgot_password");
+            }}
+            onOpenTerms={() => openLegalPage("terms")}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+            onOpenKvkk={() => openLegalPage("kvkk")}
+          />
+        </Suspense>
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
             <div className="toast__title">{toast.title}</div>
@@ -4400,26 +4515,44 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
     );
   }
 
-  if (view === "terms" || view === "privacy" || view === "kvkk") {
+  if (
+    view === "terms" ||
+    view === "privacy" ||
+    view === "kvkk" ||
+    view === "on-bilgilendirme" ||
+    view === "mesafeli-satis"
+  ) {
     return (
       <>
-        <SystemNotificationBanner language={language} />
-        <LegalPage
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
           language={language}
-          documentKey={view}
-          onBack={closeLegalPage}
+          selectedFeatureId={selectedFeatureId}
         />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <LegalPage
+            language={language}
+            documentKey={view}
+            onBack={closeLegalPage}
+          />
+        </Suspense>
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4429,10 +4562,16 @@ function App() {
   if (isRestoring) {
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              NB PDF PLATFORM
+              PDF PLATFORM
             </p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
               Oturum doğrulanıyor
@@ -4445,7 +4584,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4479,7 +4620,7 @@ function App() {
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-xl backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              NB PDF PLATFORM
+              PDF PLATFORM
             </p>
             <p className="mt-4 text-base text-nb-muted">
               Oturum bilgileri yükleniyor…
@@ -4489,7 +4630,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4498,27 +4641,24 @@ function App() {
 
   if (view === "admin") {
     if (user.role !== "ADMIN" || !accessToken) {
+      if (!isRestoring) {
+        window.history.replaceState({}, "", "/admin-login");
+        setView("admin_login");
+      }
       return (
-        <>
-          <div className="min-h-screen bg-nb-bg px-6 py-16 text-center text-nb-muted">
-            <p className="text-lg font-semibold text-nb-text">
-              Yönetici erişimi gerekli
-            </p>
-            <p className="mt-2 text-sm">
-              Yetkili bir yönetici hesabıyla giriş yapın.
-            </p>
-          </div>
-          <CookieNotice
-            language={language}
-            visible={shouldShowCookieNotice}
-            onAccept={acceptConsent}
-            onOpenPrivacy={() => openLegalPage("privacy")}
-          />
-        </>
+        <div className="flex min-h-screen items-center justify-center bg-nb-bg">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-nb-primary border-t-transparent" />
+        </div>
       );
     }
     return (
       <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
         <SystemNotificationBanner language={language} />
         {toast ? (
           <div className={`toast toast--${toast.type}`}>
@@ -4529,28 +4669,38 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
-        <AdminPanel
-          accessToken={accessToken}
-          userEmail={user?.email ?? "admin"}
-          onExit={() => {
-            setView("web");
-            window.history.replaceState(
-              {},
-              "",
-              workspacePathForFeature("split"),
-            );
-          }}
-          onLogout={() => void handleLogout()}
-        />
+        <Suspense fallback={<PageSkeleton />}>
+          <AdminPanel
+            accessToken={accessToken}
+            userEmail={user?.email ?? "admin"}
+            onExit={() => {
+              setView("web");
+              window.history.replaceState(
+                {},
+                "",
+                workspacePathForFeature("split"),
+              );
+            }}
+            onLogout={() => void handleLogout()}
+          />
+        </Suspense>
       </>
     );
   }
 
   return (
     <CheckoutCurrencyProvider>
+      <SeoRouteManager
+        pathname={pathname}
+        view={view}
+        language={language}
+        selectedFeatureId={selectedFeatureId}
+      />
       <div className="app-shell">
         <PdfApiOfflineBanner />
         <SystemNotificationBanner language={language} />
@@ -4648,67 +4798,77 @@ function App() {
           showToast={showToast}
         />
 
-        {paymentSummaryProduct && accessToken ? (
-          <PaymentSummaryModal
-            open
-            product={paymentSummaryProduct}
-            accessToken={accessToken}
-            language={language}
-            onClose={() => setPaymentSummaryProduct(null)}
-            onPurchaseSuccess={() => void handleCreditPackPurchaseSuccess()}
-            onChangeProduct={(p) => setPaymentSummaryProduct(p)}
-            onBeforeExternalCheckout={persistNbResumeSnapshot}
-          />
-        ) : null}
+        <PaymentSuccessModal
+          open={paymentSuccessModal !== null}
+          planName={paymentSuccessModal?.planName ?? null}
+          language={language}
+          onClose={() => setPaymentSuccessModal(null)}
+          addedSeats={paymentSuccessModal?.addedSeats}
+        />
+
+        {!isTeamMember && (
+          <Suspense fallback={<ModalSkeleton />}>
+            <PlanUpgradeModal
+              open={upgradeModalOpen}
+              onClose={() => setUpgradeModalOpen(false)}
+              language={language}
+              accessToken={accessToken ?? undefined}
+              user={user}
+              updateProfile={updateProfile}
+              showToast={showToast}
+              onOpenTerms={() => openLegalPage("terms")}
+              onOpenKvkk={() => openLegalPage("kvkk")}
+              onBeforeExternalCheckout={persistNbResumeSnapshot}
+            />
+          </Suspense>
+        )}
 
         {uploads[0] &&
         (selectedFeatureId === "split" ||
           selectedFeatureId === "delete-pages" ||
           selectedFeatureId === "rotate-pdf" ||
           selectedFeatureId === "organize-pdf") ? (
-          <SplitPagePickerModal
-            open={pageVisualModalOpen}
-            onClose={() => setPageVisualModalOpen(false)}
-            onReset={resetVisualPagePicker}
-            file={uploads[0].file}
-            password={password}
-            maxPage={uploads[0].pageCount}
-            language={language}
-            mode={pageVisualMode}
-            pagesText={
-              pageVisualMode === "split"
-                ? pagesText
-                : pageVisualMode === "delete"
-                  ? deletePagesText
-                  : pageVisualMode === "organize"
-                    ? organizeOrder
+          <Suspense fallback={<ModalSkeleton />}>
+            <SplitPagePickerModal
+              open={pageVisualModalOpen}
+              onClose={() => setPageVisualModalOpen(false)}
+              onReset={resetVisualPagePicker}
+              file={uploads[0].file}
+              password={password}
+              maxPage={uploads[0].pageCount}
+              language={language}
+              mode={pageVisualMode}
+              pagesText={
+                pageVisualMode === "split"
+                  ? pagesText
+                  : pageVisualMode === "delete"
+                    ? deletePagesText
                     : ""
-            }
-            onPagesTextChange={
-              pageVisualMode === "split"
-                ? setPagesText
-                : pageVisualMode === "delete"
-                  ? setDeletePagesText
-                  : pageVisualMode === "organize"
-                    ? setOrganizeOrder
+              }
+              onPagesTextChange={
+                pageVisualMode === "split"
+                  ? setPagesText
+                  : pageVisualMode === "delete"
+                    ? setDeletePagesText
                     : () => {}
-            }
-            onPagesErrorClear={
-              pageVisualMode === "split"
-                ? () => setPagesError("")
-                : pageVisualMode === "delete"
-                  ? () => setDeletePagesError("")
-                  : () => {}
-            }
-            pageRotations={rotatePageRotations}
-            onPageRotationsChange={setRotatePageRotations}
-            pageOrder={organizePageOrder}
-            onPageOrderChange={setOrganizePageOrder}
-            strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
-            onDeleteWouldRemoveWholeDocument={() =>
-              showToast("info", "Uyarı", PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG)
-            }
-          />
+              }
+              onPagesErrorClear={
+                pageVisualMode === "split"
+                  ? () => setPagesError("")
+                  : pageVisualMode === "delete"
+                    ? () => setDeletePagesError("")
+                    : () => {}
+              }
+              pageRotations={rotatePageRotations}
+              onPageRotationsChange={setRotatePageRotations}
+              pageOrder={organizePageOrder}
+              onPageOrderChange={setOrganizePageOrder}
+              strictTurkishForDeleteUi={selectedFeatureId === "delete-pages"}
+              onDeleteWouldRemoveWholeDocument={() =>
+                showToast("info", "Uyarı", PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG)
+              }
+            />
+          </Suspense>
         ) : null}
 
         <GatedResultPreviewModal
@@ -4723,15 +4883,6 @@ function App() {
           accessToken={accessToken}
           filename={toolProgressSuccess?.filename ?? ""}
           language={language}
-        />
-
-        <ConversionPopup
-          open={conversionPopupOpen}
-          variant={conversionPopupVariant}
-          language={language}
-          onDismiss={dismissConversionPopup}
-          onPrimary={onConversionPopupPrimary}
-          onSecondary={onConversionPopupSecondary}
         />
 
         {excelDialogOpen ? (
@@ -4794,8 +4945,15 @@ function App() {
           user={user}
           language={language}
           onLanguageChange={(lang) => void handleLanguageChange(lang)}
-          creditBalance={userBalance?.creditBalance ?? null}
-          creditBalanceLoading={subscriptionLoading && !userBalance}
+          plan={
+            user?.role !== "ADMIN" ? (userBalance?.plan ?? null) : undefined
+          }
+          creditBalance={
+            user?.role !== "ADMIN"
+              ? (userBalance?.creditBalance ?? null)
+              : undefined
+          }
+          creditBalanceLoading={balanceLoading && user?.role !== "ADMIN"}
           hasActiveSubscription={userBalance?.hasActiveSubscription}
           limitsizProActive={limitsizProActive}
           onLogoClick={handleDashboardLogoClick}
@@ -4803,14 +4961,16 @@ function App() {
           onPassword={handleNavPassword}
           onLogout={() => void handleLogout()}
           onUpgradeClick={
-            limitsizProActive
+            isTeamMember || limitsizProActive
               ? undefined
-              : () => setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)
+              : () => setUpgradeModalOpen(true)
           }
           onOpenCreditsPanel={
             user?.role !== "ADMIN" ? openCreditsWorkspaceFromNav : undefined
           }
-          showAdminEntry={false}
+          showAdminEntry={user?.role === "ADMIN"}
+          onOpenAdmin={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
+          isTeamMember={isTeamMember}
         />
         {workspaceBanner.enabled ? (
           <div className="border-b border-cyan-500/30 bg-cyan-950/50 px-4 py-2 text-center text-xs font-medium text-cyan-100 md:text-sm">
@@ -4822,69 +4982,20 @@ function App() {
           onSelect={handleSidebarSelect}
           language={language}
           lockedFeatures={lockedFeatures}
-          userBalance={userBalance}
           userRole={user?.role}
           enabledToolIds={enabledToolIds}
           resolveToolLabel={resolveToolLabel}
           limitsizProActive={limitsizProActive}
+          onAdminClick={user?.role === "ADMIN" ? handleGoToAdmin : undefined}
+          accessToken={accessToken}
+          onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
+          currentPlan={user?.plan}
+          isTeamMember={isTeamMember}
+          isManagerMember={user?.teamMemberRole === "MANAGER"}
+          onTeamClick={() => setContentPanel("team" as ContentPanel)}
         />
-        {showCreditWorkspaceChrome &&
-        !bottomToolProgressActive &&
-        userBalance ? (
-          <div className="pointer-events-none fixed bottom-4 left-4 z-30 max-w-[calc(100vw-2rem)] md:hidden">
-            <div
-              className={`pointer-events-auto rounded-xl border px-3 py-3 text-xs shadow-lg backdrop-blur-md ${
-                !limitsizProActive && (creditsExhausted || creditsRunningLow)
-                  ? "border-amber-500/45 bg-gradient-to-b from-amber-950/50 to-nb-bg-elevated/98"
-                  : limitsizProActive
-                    ? "border-amber-400/35 bg-gradient-to-b from-amber-950/40 to-nb-bg-elevated/98"
-                    : "border-white/[0.1] bg-nb-bg-elevated/95"
-              }`}
-            >
-              <div className="flex items-end justify-between gap-2">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">
-                    {limitsizProActive
-                      ? W.unlimitedAccessActive
-                      : W.creditBalanceHeading}
-                  </p>
-                  <p className="mt-0.5 text-2xl font-black tabular-nums leading-none text-nb-text">
-                    {limitsizProActive
-                      ? W.unlimitedSidebarBadge
-                      : userBalance.hasActiveSubscription
-                        ? W.usageUnlimited
-                        : userBalance.creditBalance}
-                  </p>
-                </div>
-              </div>
-              {!limitsizProActive ? (
-                <>
-                  {creditsRunningLow ? (
-                    <p className="mt-2 text-[11px] font-semibold leading-snug text-amber-200/95">
-                      {W.creditRunningOutBanner}
-                    </p>
-                  ) : null}
-                  {creditsExhausted ? (
-                    <p className="mt-2 text-[11px] leading-snug text-amber-200/90">
-                      {W.creditBalanceExhaustedHint}
-                    </p>
-                  ) : null}
-                  <div className="mt-2.5 flex flex-col gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleBuyCredits()}
-                      className="nb-transition w-full rounded-lg border border-nb-primary/45 bg-nb-primary/12 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.05em] text-nb-accent hover:bg-nb-primary/18"
-                    >
-                      {W.creditDashboardBuyCreditsCta}
-                    </button>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
         <div
-          className={`min-h-screen bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-10"}`}
+          className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-56"}`}
         >
           <DashboardSidebarMobileRail
             active={activeSidebar}
@@ -4895,44 +5006,49 @@ function App() {
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
           />
-          <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8">
+          <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6">
             {contentPanel === "subscription" ? (
-              <section className="subscription-card">
-                <CreditDashboard
+              <section className="subscription-card space-y-4">
+                <QuotaWidget
                   language={language}
-                  balance={userBalance}
-                  balanceLoading={subscriptionLoading}
-                  transactions={creditTransactions}
-                  transactionsLoading={creditTransactionsLoading}
-                  onBuyPack={(product) =>
-                    void handleSelectCreditPackForPayment(product)
+                  accessToken={accessToken}
+                  onUpgrade={
+                    isTeamMember ? undefined : () => setUpgradeModalOpen(true)
                   }
-                  buyingProduct={null}
-                  limitsizProActive={limitsizProActive}
-                  onOpenPlansPage={
-                    limitsizProActive
-                      ? undefined
-                      : () => {
-                          setActiveSidebar("subscription");
-                          setContentPanel("pricing");
-                        }
-                  }
+                  isTeamMember={isTeamMember}
                 />
               </section>
             ) : null}
 
-            {contentPanel === "pricing" && accessToken && user ? (
-              <PricingPage
-                language={language}
-                accessToken={accessToken}
-                user={user}
-                updateProfile={updateProfile}
-                onBack={() => setContentPanel("subscription")}
-                showToast={showToast}
-                onOpenTerms={() => openLegalPage("terms")}
-                onOpenKvkk={() => openLegalPage("kvkk")}
-                onBeforeExternalCheckout={persistNbResumeSnapshot}
-              />
+            {contentPanel === "team" && accessToken ? (
+              <Suspense fallback={<PageSkeleton />}>
+                <TeamDashboardLazy
+                  language={language}
+                  accessToken={accessToken}
+                  isOwner={!user?.isTeamMember}
+                  currentUserId={user?.id}
+                />
+              </Suspense>
+            ) : null}
+
+            {contentPanel === "pricing" &&
+            accessToken &&
+            user &&
+            !isTeamMember ? (
+              <Suspense fallback={<ModalSkeleton />}>
+                <PlanUpgradeModal
+                  open={true}
+                  onClose={() => setContentPanel("subscription")}
+                  language={language}
+                  accessToken={accessToken}
+                  user={user}
+                  updateProfile={updateProfile}
+                  showToast={showToast}
+                  onOpenTerms={() => openLegalPage("terms")}
+                  onOpenKvkk={() => openLegalPage("kvkk")}
+                  onBeforeExternalCheckout={persistNbResumeSnapshot}
+                />
+              </Suspense>
             ) : null}
 
             {contentPanel === "profile" ? (
@@ -4943,6 +5059,14 @@ function App() {
                 showToast={showToast}
                 onOpenChangePassword={() => setChangePasswordModalOpen(true)}
                 setInitialPassword={setInitialPassword}
+                subscriptionExpiry={userBalance?.subscriptionExpiry ?? null}
+                subscriptionStartedAt={
+                  userBalance?.subscriptionStartedAt ?? null
+                }
+                onSubscriptionCancelled={() => {
+                  void refreshSubscriptionState();
+                  void refreshSession();
+                }}
               />
             ) : null}
 
@@ -4960,55 +5084,7 @@ function App() {
                     </div>
                   </div>
 
-                  {showCreditWorkspaceChrome &&
-                  !limitsizProActive &&
-                  creditsExhausted ? (
-                    <div className="border-b border-amber-500/25 bg-gradient-to-r from-amber-950/45 via-amber-950/25 to-transparent px-4 py-3 md:px-6">
-                      <p className="text-sm font-medium leading-snug text-amber-50/95">
-                        {W.creditBalanceExhaustedHint}
-                      </p>
-                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleBuyCredits()}
-                          className="nb-transition inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-nb-primary/45 bg-nb-primary/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/25"
-                        >
-                          {W.creditDashboardBuyCreditsCta}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {showCreditWorkspaceChrome &&
-                  !limitsizProActive &&
-                  creditsRunningLow ? (
-                    <div className="border-b border-amber-500/30 bg-gradient-to-r from-amber-950/35 via-amber-950/15 to-transparent px-4 py-3 md:px-6">
-                      <p className="text-sm font-semibold text-amber-50/95">
-                        {W.creditRunningOutBanner}
-                      </p>
-                      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => handleBuyCredits()}
-                          className="nb-transition inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-nb-primary/45 bg-nb-primary/15 px-4 py-2 text-xs font-bold uppercase tracking-[0.06em] text-nb-accent hover:bg-nb-primary/25"
-                        >
-                          {W.creditDashboardBuyCreditsCta}
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {showCreditWorkspaceChrome &&
-                  creditsModerateLow &&
-                  !creditsRunningLow ? (
-                    <div className="border-b border-cyan-500/20 bg-gradient-to-r from-cyan-950/30 via-slate-900/40 to-transparent px-4 py-2.5 md:px-6">
-                      <p className="text-[13px] font-medium text-cyan-100/90">
-                        {W.lowCreditBanner(userBalance?.creditBalance ?? 0)}
-                      </p>
-                    </div>
-                  ) : null}
-
-                  <div className="relative min-h-[280px]">
+                  <div className="relative min-h-[180px] md:min-h-[220px] xl:min-h-[260px]">
                     <div
                       className={
                         !selectedFeatureAllowed
@@ -5070,6 +5146,44 @@ function App() {
                           </div>
                         ) : null}
 
+                        {isAuthenticated &&
+                          toolNeedsUpload &&
+                          BATCHABLE_TOOLS.has(selectedFeature.id) &&
+                          !selectedFeature.multiple && (
+                            <div className="field">
+                              <span className="text-xs text-gray-400 font-medium">
+                                {language === "tr"
+                                  ? "Toplu işlem (isteğe bağlı)"
+                                  : "Batch processing (optional)"}
+                              </span>
+                              {canUseBatch ? (
+                                <BatchFileUpload
+                                  files={batchFiles}
+                                  onChange={setBatchFiles}
+                                  accept={selectedFeature.accept || "*"}
+                                  maxFiles={batchMaxFiles}
+                                  language={language}
+                                  disabled={submitting}
+                                />
+                              ) : (
+                                <p className="text-xs text-amber-400 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+                                  {language === "tr"
+                                    ? "🔒 Toplu işlem Plus ve üzeri planlarda kullanılabilir."
+                                    : "🔒 Batch processing is available on Plus and higher plans."}{" "}
+                                  <button
+                                    type="button"
+                                    className="underline font-medium"
+                                    onClick={() => setUpgradeModalOpen(true)}
+                                  >
+                                    {language === "tr"
+                                      ? "Planını Yükselt"
+                                      : "Upgrade Plan"}
+                                  </button>
+                                </p>
+                              )}
+                            </div>
+                          )}
+
                         {toolNeedsUpload ? (
                           <label className="field">
                             <span>{W.filePick}</span>
@@ -5078,6 +5192,7 @@ function App() {
                                 className="file-picker-button"
                                 type="button"
                                 onClick={triggerFilePicker}
+                                disabled={submitting}
                               >
                                 {pickerButtonText}
                               </button>
@@ -5097,12 +5212,14 @@ function App() {
                               accept={selectedFeature.accept || "*"}
                               multiple={Boolean(selectedFeature.multiple)}
                               onChange={onFilesChange}
+                              disabled={submitting}
                             />
                           </label>
                         ) : null}
 
                         {selectedFeature.id === "split" ? (
                           <>
+                            {/* Sağ sütun satır 1: Sayfa numaraları */}
                             <label className="field">
                               <span>{W.pagesLabel}</span>
                               <input
@@ -5159,18 +5276,23 @@ function App() {
                                 placeholder={W.pagesPlaceholder}
                               />
                               {pagesError ? (
-                                <span className="field-error">
-                                  {pagesError}
-                                </span>
+                                <span className="field-error">{pagesError}</span>
                               ) : null}
                             </label>
 
+                            {/* Sol sütun satır 2: görsel seçici (PDF yüklüyse) */}
                             {uploads[0]?.file.type === "application/pdf" &&
                             (uploads[0].pageCount ?? 0) > 0 ? (
                               <div className="field">
                                 <button
                                   type="button"
                                   className="primary-action w-full sm:w-auto"
+                                  style={{
+                                    background: "rgba(255,255,255,0.07)",
+                                    boxShadow: "0 0 0 1px rgba(255,255,255,0.12) inset",
+                                    filter: "none",
+                                    color: "var(--nb-muted)",
+                                  }}
                                   onClick={() => {
                                     setPageVisualMode("split");
                                     setPageVisualModalOpen(true);
@@ -5178,7 +5300,7 @@ function App() {
                                 >
                                   {W.splitPickerOpen}
                                 </button>
-                                <span className="field-hint block mt-1.5">
+                                <span className="field-hint">
                                   {language === "tr"
                                     ? "Görsel ızgarada sayfa seçin; metin alanı ile eşzamanlıdır."
                                     : "Pick pages in the grid; the text field updates with your selection."}
@@ -5186,25 +5308,67 @@ function App() {
                               </div>
                             ) : null}
 
-                            <label className="field">
-                              <span>{W.splitModeLabel}</span>
-                              <select
-                                value={splitMode}
-                                onChange={(event) =>
-                                  setSplitMode(event.target.value)
-                                }
+                            {/* Sağ sütun satır 2: ayırma modu — her zaman 2. sütunda */}
+                            <div className="field" style={{ gridColumn: "2" }}>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: "12px",
+                                }}
                               >
-                                <option value="single">
-                                  {W.splitModeSingle}
-                                </option>
-                                <option value="separate">
-                                  {W.splitModeSeparate}
-                                </option>
-                              </select>
+                                <span
+                                  style={{
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    color: "var(--nb-muted)",
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  {W.splitModeLabel}
+                                </span>
+                                <div style={{ display: "flex", gap: "8px" }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSplitMode("single")}
+                                    className={[
+                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      splitMode === "single"
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
+                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
+                                    ].join(" ")}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                      <polyline points="14 2 14 8 20 8" />
+                                      <line x1="8" y1="13" x2="16" y2="13" />
+                                      <line x1="8" y1="17" x2="12" y2="17" />
+                                    </svg>
+                                    <span className="leading-tight text-center">{W.splitModeSingle}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSplitMode("separate")}
+                                    className={[
+                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      splitMode === "separate"
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
+                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
+                                    ].join(" ")}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                    <span className="leading-tight text-center">{W.splitModeSeparate}</span>
+                                  </button>
+                                </div>
+                              </div>
                               <span className="field-hint">
                                 {splitModeDescription}
                               </span>
-                            </label>
+                            </div>
                           </>
                         ) : null}
 
@@ -5270,106 +5434,65 @@ function App() {
                         ) : null}
 
                         {selectedFeature.id === "rotate-pdf" ? (
-                          <>
-                            <p className="field-hint mb-2 text-sm text-nb-muted">
+                          <div className="field">
+                            <p className="field-hint mb-3 text-sm text-nb-muted">
                               {language === "tr"
-                                ? "Görsel modda her sayfaya ayrı açı uygulayın; aksi halde aşağıdaki toplu açı kullanılır."
-                                : "Use visual mode for per-page rotation, or the bulk angle below for all pages."}
+                                ? "PDF'i yükleyin, ardından sayfaları görsel modda döndürün."
+                                : "Upload your PDF, then rotate pages in visual mode."}
                             </p>
                             {uploads[0]?.file.type === "application/pdf" &&
                             (uploads[0].pageCount ?? 0) > 0 ? (
-                              <div className="field">
-                                <button
-                                  type="button"
-                                  className="primary-action w-full sm:w-auto"
-                                  onClick={() => {
-                                    setPageVisualMode("rotate");
-                                    setPageVisualModalOpen(true);
-                                  }}
-                                >
-                                  {W.splitPickerOpen}
-                                </button>
-                              </div>
-                            ) : null}
-                            <label className="field">
-                              <span>
-                                {language === "tr"
-                                  ? "Dönüş açısı (toplu)"
-                                  : "Rotation (bulk)"}
-                              </span>
-                              <select
-                                value={rotateDeg}
-                                onChange={(e) => setRotateDeg(e.target.value)}
+                              <button
+                                type="button"
+                                className="primary-action w-full sm:w-auto"
+                                onClick={() => {
+                                  setPageVisualMode("rotate");
+                                  setPageVisualModalOpen(true);
+                                }}
                               >
-                                <option value="90">90°</option>
-                                <option value="180">180°</option>
-                                <option value="270">270°</option>
-                              </select>
-                            </label>
-                            <label className="field">
-                              <span>
                                 {language === "tr"
-                                  ? "Sadece belirli sayfalar (isteğe bağlı)"
-                                  : "Only certain pages (optional)"}
-                              </span>
-                              <input
-                                type="text"
-                                value={rotatePagesOnly}
-                                onChange={(e) =>
-                                  setRotatePagesOnly(
-                                    e.target.value.replace(/[^\d,\-\s]/g, ""),
-                                  )
-                                }
-                                placeholder={
-                                  language === "tr"
-                                    ? "Boş: tüm sayfalar"
-                                    : "Empty: all pages"
-                                }
-                              />
-                            </label>
-                          </>
+                                  ? "Sayfaları Döndür"
+                                  : "Rotate Pages"}
+                              </button>
+                            ) : null}
+                            {Object.keys(rotatePageRotations).length > 0 ? (
+                              <p className="mt-2 text-xs text-cyan-400">
+                                {language === "tr"
+                                  ? `${Object.keys(rotatePageRotations).length} sayfa döndürme seçildi`
+                                  : `${Object.keys(rotatePageRotations).length} page rotation(s) selected`}
+                              </p>
+                            ) : null}
+                          </div>
                         ) : null}
 
-                        {selectedFeature.id === "organize-pdf" ? (
-                          <>
-                            <label className="field">
-                              <span>
-                                {language === "tr"
-                                  ? "Yeni sıra (1 tabanlı, virgülle)"
-                                  : "New order (1-based, comma-separated)"}
-                              </span>
-                              <input
-                                type="text"
-                                value={organizeOrder}
-                                onChange={(e) =>
-                                  setOrganizeOrder(
-                                    e.target.value.replace(/[^\d,\s]/g, ""),
-                                  )
-                                }
-                                placeholder="3,1,2,4"
-                              />
+                        {selectedFeature.id === "organize-pdf" &&
+                        uploads[0]?.file.type === "application/pdf" &&
+                        (uploads[0]?.pageCount ?? 0) > 0 ? (
+                          <div className="field">
+                            <button
+                              type="button"
+                              className="primary-action w-full sm:w-auto"
+                              onClick={() => {
+                                setPageVisualMode("organize");
+                                setPageVisualModalOpen(true);
+                              }}
+                            >
+                              {W.splitPickerOpen}
+                            </button>
+                            {organizePageOrder.length > 0 ? (
                               <span className="field-hint">
                                 {language === "tr"
-                                  ? "Toplam sayfa adedi kadar ve her sayfayı bir kez içermelidir."
-                                  : "Must list every page exactly once, in the new order."}
+                                  ? `${organizePageOrder.length} sayfa sıralandı: ${organizePageOrder.slice(0, 8).join(", ")}${organizePageOrder.length > 8 ? "…" : ""}`
+                                  : `${organizePageOrder.length} pages ordered: ${organizePageOrder.slice(0, 8).join(", ")}${organizePageOrder.length > 8 ? "…" : ""}`}
                               </span>
-                            </label>
-                            {uploads[0]?.file.type === "application/pdf" &&
-                            (uploads[0].pageCount ?? 0) > 0 ? (
-                              <div className="field">
-                                <button
-                                  type="button"
-                                  className="primary-action w-full sm:w-auto"
-                                  onClick={() => {
-                                    setPageVisualMode("organize");
-                                    setPageVisualModalOpen(true);
-                                  }}
-                                >
-                                  {W.splitPickerOpen}
-                                </button>
-                              </div>
-                            ) : null}
-                          </>
+                            ) : (
+                              <span className="field-hint">
+                                {language === "tr"
+                                  ? "Sayfaları sürükleyerek yeniden sıralayın."
+                                  : "Drag pages to reorder them."}
+                              </span>
+                            )}
+                          </div>
                         ) : null}
 
                         {showUnlockPasswordField ? (
@@ -5395,21 +5518,142 @@ function App() {
                         ) : null}
 
                         {selectedFeature.id === "watermark" ? (
-                          <label className="field">
-                            <span>
-                              {language === "tr"
-                                ? "Filigran metni"
-                                : "Watermark text"}
-                            </span>
-                            <input
-                              type="text"
-                              value={watermarkPhrase}
-                              onChange={(e) =>
-                                setWatermarkPhrase(e.target.value)
-                              }
-                              maxLength={120}
-                            />
-                          </label>
+                          <>
+                            {/* Canlı önizleme */}
+                            <div className="field">
+                              <span>
+                                {language === "tr" ? "Önizleme" : "Preview"}
+                              </span>
+                              <div className="relative mx-auto flex h-32 w-24 items-center justify-center overflow-hidden rounded-md border border-white/10 bg-white shadow-inner">
+                                <span
+                                  className="pointer-events-none select-none break-all text-center text-[11px] font-bold leading-tight"
+                                  style={{
+                                    color: watermarkColor,
+                                    opacity: parseFloat(watermarkOpacity),
+                                    transform: "rotate(-35deg)",
+                                    fontFamily:
+                                      watermarkFont === "tiro"
+                                        ? "Times New Roman, serif"
+                                        : watermarkFont === "cour"
+                                          ? "Courier New, monospace"
+                                          : "Helvetica, Arial, sans-serif",
+                                    maxWidth: "90%",
+                                  }}
+                                >
+                                  {watermarkPhrase ||
+                                    (language === "tr"
+                                      ? "FİLİGRAN"
+                                      : "WATERMARK")}
+                                </span>
+                              </div>
+                            </div>
+                            <label className="field">
+                              <span>
+                                {language === "tr"
+                                  ? "Filigran metni"
+                                  : "Watermark text"}
+                              </span>
+                              <input
+                                type="text"
+                                value={watermarkPhrase}
+                                onChange={(e) =>
+                                  setWatermarkPhrase(e.target.value)
+                                }
+                                maxLength={120}
+                                placeholder={
+                                  language === "tr"
+                                    ? "örn. GİZLİ"
+                                    : "e.g. CONFIDENTIAL"
+                                }
+                              />
+                            </label>
+                            <div className="field">
+                              <span>
+                                {language === "tr" ? "Renk" : "Color"}
+                              </span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Hazır renkler */}
+                                {[
+                                  "#8C8C8C",
+                                  "#CC0000",
+                                  "#0057B8",
+                                  "#007A33",
+                                  "#E6A817",
+                                  "#4B0082",
+                                  "#000000",
+                                ].map((c) => (
+                                  <button
+                                    key={c}
+                                    type="button"
+                                    title={c}
+                                    onClick={() => setWatermarkColor(c)}
+                                    className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
+                                    style={{
+                                      background: c,
+                                      borderColor:
+                                        watermarkColor === c
+                                          ? "white"
+                                          : "transparent",
+                                    }}
+                                  />
+                                ))}
+                                <input
+                                  type="color"
+                                  value={watermarkColor}
+                                  onChange={(e) =>
+                                    setWatermarkColor(e.target.value)
+                                  }
+                                  title={
+                                    language === "tr"
+                                      ? "Özel renk"
+                                      : "Custom color"
+                                  }
+                                  className="h-7 w-7 cursor-pointer rounded-full border border-white/20 bg-transparent p-0"
+                                  style={{ padding: 0 }}
+                                />
+                                <span className="font-mono text-xs text-white/40">
+                                  {watermarkColor}
+                                </span>
+                              </div>
+                            </div>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Yazı tipi" : "Font"}
+                              </span>
+                              <select
+                                value={watermarkFont}
+                                onChange={(e) =>
+                                  setWatermarkFont(e.target.value)
+                                }
+                              >
+                                <option value="helv">Helvetica</option>
+                                <option value="tiro">Times New Roman</option>
+                                <option value="cour">Courier New</option>
+                              </select>
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Saydamlık" : "Opacity"}{" "}
+                                <span className="text-white/40">
+                                  {Math.round(
+                                    parseFloat(watermarkOpacity) * 100,
+                                  )}
+                                  %
+                                </span>
+                              </span>
+                              <input
+                                type="range"
+                                min="0.05"
+                                max="0.50"
+                                step="0.05"
+                                value={watermarkOpacity}
+                                onChange={(e) =>
+                                  setWatermarkOpacity(e.target.value)
+                                }
+                                className="w-full accent-cyan-400"
+                              />
+                            </label>
+                          </>
                         ) : null}
 
                         {selectedFeature.id === "page-numbers" ? (
@@ -5447,6 +5691,27 @@ function App() {
                                 <option value="header">
                                   {language === "tr" ? "Üst bilgi" : "Header"}
                                 </option>
+                              </select>
+                            </label>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Biçim" : "Format"}
+                              </span>
+                              <select
+                                value={pageNumFmt}
+                                onChange={(e) =>
+                                  setPageNumFmt(
+                                    e.target.value as "plain" | "page" | "of",
+                                  )
+                                }
+                              >
+                                <option value="plain">1, 2, 3 …</option>
+                                <option value="page">
+                                  {language === "tr"
+                                    ? "Sayfa 1, Sayfa 2 …"
+                                    : "Page 1, Page 2 …"}
+                                </option>
+                                <option value="of">1 / 10, 2 / 10 …</option>
                               </select>
                             </label>
                           </>
@@ -5490,20 +5755,114 @@ function App() {
                           </label>
                         ) : null}
 
-                        {selectedFeature.id === "ppt-to-pdf" &&
-                        language === "en" ? (
-                          <p className="text-xs text-amber-200/80">
-                            Best on Windows with Microsoft PowerPoint installed.
-                            Other environments may not support conversion.
-                          </p>
+                        {selectedFeature.id === "ppt-to-pdf" ? (
+                          <div className="rounded-lg border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-200/90">
+                            {language === "tr"
+                              ? "Windows ve yüklü Microsoft PowerPoint ile en iyi sonuç alınır; diğer ortamlarda dönüşüm desteklenmeyebilir."
+                              : "Best results on Windows with Microsoft PowerPoint installed. Other environments may not support conversion."}
+                          </div>
                         ) : null}
-                        {selectedFeature.id === "ppt-to-pdf" &&
-                        language === "tr" ? (
-                          <p className="text-xs text-amber-200/80">
-                            Windows ve yüklü Microsoft PowerPoint ile en iyi
-                            sonuç alınır; diğer ortamlarda dönüşüm
-                            desteklenmeyebilir.
-                          </p>
+
+                        {selectedFeature.id === "pdf-to-word" ? (
+                          <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-200/90">
+                            {language === "tr"
+                              ? "Düz metin içerikli PDF'lerde iyi sonuç alınır. Karmaşık düzen, tablo ve görseller tam olarak korunamayabilir."
+                              : "Works well for text-based PDFs. Complex layouts, tables, and images may not be fully preserved."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-excel" ? (
+                          <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-200/90">
+                            {language === "tr"
+                              ? "Tablo içeren PDF'lerde en iyi sonucu verir. Tablolar ve hücreler mükemmel korunamayabilir; sonucu gözden geçirmeniz önerilir."
+                              : "Best for PDFs with tables. Cell structure may not be perfectly preserved; review the result before use."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-ppt" ? (
+                          <div className="rounded-lg border border-blue-400/20 bg-blue-500/10 px-3 py-2 text-xs text-blue-200/90">
+                            {language === "tr"
+                              ? "Her sayfa bir slayta dönüştürülür. Animasyon ve özel geçişler desteklenmez; çıktı salt görüntü içerebilir."
+                              : "Each page is converted to one slide. Animations and transitions are not supported; output may contain image-based slides."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "word-to-pdf" ? (
+                          <div className="rounded-lg border border-green-400/20 bg-green-500/10 px-3 py-2 text-xs text-green-200/90">
+                            {language === "tr"
+                              ? "En iyi sonuç için Microsoft Word yüklü bir ortamda çalışır. Bazı yazı tipleri veya karmaşık biçimlendirmeler tam olarak aktarılamayabilir."
+                              : "Best results when Microsoft Word is available on the server. Some fonts or complex formatting may not transfer perfectly."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "excel-to-pdf" ? (
+                          <div className="rounded-lg border border-green-400/20 bg-green-500/10 px-3 py-2 text-xs text-green-200/90">
+                            {language === "tr"
+                              ? "Tüm sayfalar PDF'e aktarılır. Yazdırma alanı dışındaki içerikler kesilebilir; sayfa düzenini önceden kontrol edin."
+                              : "All sheets are exported to PDF. Content outside print areas may be clipped; check your page layout first."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "html-to-pdf" ? (
+                          <div className="rounded-lg border border-slate-400/20 bg-slate-500/10 px-3 py-2 text-xs text-slate-300/90">
+                            {language === "tr"
+                              ? "CSS ve JavaScript desteklenir ancak harici kaynaklar (CDN fontları, uzak görseller) sunucuda yüklenemeyebilir."
+                              : "CSS and JavaScript are supported, but external resources (CDN fonts, remote images) may not load on the server."}
+                          </div>
+                        ) : null}
+
+                        {selectedFeature.id === "compress" ? (
+                          <>
+                            <label className="field">
+                              <span>
+                                {language === "tr" ? "Kalite" : "Quality"}
+                              </span>
+                              <select
+                                value={compressQuality}
+                                onChange={(e) => {
+                                  const val = e.target.value as
+                                    | "auto"
+                                    | "low"
+                                    | "medium"
+                                    | "high";
+                                  const isFreePlan =
+                                    userBalance?.plan === "FREE" &&
+                                    !userBalance?.isAdmin;
+                                  if (val === "high" && isFreePlan) {
+                                    setUpgradeModalOpen(true);
+                                    return;
+                                  }
+                                  setCompressQuality(val);
+                                }}
+                              >
+                                <option value="auto">
+                                  {language === "tr"
+                                    ? "Otomatik — ~%50–70 küçülme (önerilen)"
+                                    : "Auto — ~50–70% smaller (recommended)"}
+                                </option>
+                                <option value="low">
+                                  {language === "tr"
+                                    ? "Agresif — ~%65–80 küçülme"
+                                    : "Aggressive — ~65–80% smaller"}
+                                </option>
+                                <option value="medium">
+                                  {language === "tr"
+                                    ? "Dengeli — ~%40–60 küçülme"
+                                    : "Balanced — ~40–60% smaller"}
+                                </option>
+                                <option value="high">
+                                  {userBalance?.plan === "FREE" &&
+                                  !userBalance?.isAdmin
+                                    ? language === "tr"
+                                      ? "Kaliteli — ~%25–45 küçülme 🔒 Plus+"
+                                      : "Quality — ~25–45% smaller 🔒 Plus+"
+                                    : language === "tr"
+                                      ? "Kaliteli — ~%25–45 küçülme"
+                                      : "Quality — ~25–45% smaller"}
+                                </option>
+                              </select>
+                            </label>
+                          </>
                         ) : null}
 
                         {selectedFeature.id === "encrypt" ? (
@@ -5551,8 +5910,7 @@ function App() {
                             <div className="selected-files__header">
                               <div className="selected-files__title-row">
                                 <p>{W.selectedFiles}</p>
-                                {selectedFeature.id === "merge" &&
-                                uploads.length > 0 ? (
+                                {uploads.length > 0 ? (
                                   <button
                                     type="button"
                                     className="nb-transition shrink-0 rounded-xl border border-rose-500/40 bg-rose-950/30 px-3 py-2 text-xs font-semibold text-rose-200/95 hover:border-rose-400/55 hover:bg-rose-950/50 sm:text-sm"
@@ -5590,9 +5948,7 @@ function App() {
                                   const compressEst =
                                     selectedFeature.id === "compress" &&
                                     !item.inspecting
-                                      ? compressEstimatePercentRange(
-                                          item.file.size,
-                                        )
+                                      ? compressEstimateMBRange(item.file.size)
                                       : null;
                                   const dragFromIdx =
                                     mergePointerDraggingId !== null
@@ -5701,12 +6057,20 @@ function App() {
                                                 <span>{W.inspecting}</span>
                                               ) : null}
                                               {!item.inspecting &&
+                                              item.corrupt ? (
+                                                <span style={{ color: "#f87171", fontWeight: 600 }}>
+                                                  {language === "tr" ? "⚠ Bozuk PDF" : "⚠ Corrupt PDF"}
+                                                </span>
+                                              ) : null}
+                                              {!item.inspecting &&
+                                              !item.corrupt &&
                                               item.encrypted ? (
                                                 <span className="warning-text">
                                                   {W.encryptedBadge}
                                                 </span>
                                               ) : null}
                                               {!item.inspecting &&
+                                              !item.corrupt &&
                                               !item.encrypted ? (
                                                 <span>{W.ready}</span>
                                               ) : null}
@@ -5772,8 +6136,7 @@ function App() {
                                         </div>
                                       </div>
 
-                                      {selectedFeature.id === "merge" &&
-                                      item.encrypted ? (
+                                      {item.encrypted ? (
                                         <div className="mt-3 rounded-xl border border-white/[0.1] bg-nb-panel/50 px-4 py-3">
                                           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-nb-muted">
                                             {language === "tr"
@@ -5846,6 +6209,18 @@ function App() {
                           </div>
                         ) : null}
 
+                        {showEncryptedFileWarning ? (
+                          <div className="merge-hint-banner" role="alert">
+                            <span
+                              className="merge-hint-banner__dot"
+                              aria-hidden
+                            />
+                            <p className="merge-hint-banner__text">
+                              {W.encryptedFileWarning}
+                            </p>
+                          </div>
+                        ) : null}
+
                         {selectedFeature.id === "merge" &&
                         uploads.length > 0 &&
                         (toolFilesStillInspecting ||
@@ -5869,11 +6244,9 @@ function App() {
                           disabled={submitDisabled}
                         >
                           {submitting
-                            ? creditStandardLaneQueue
-                              ? W.processingQueued
-                              : premiumProcessingLane
-                                ? W.processingPremium
-                                : W.processing
+                            ? premiumProcessingLane
+                              ? W.processingPremium
+                              : W.processing
                             : selectedFeature.buttonText}
                         </button>
                       </form>
@@ -5889,9 +6262,7 @@ function App() {
                         <button
                           type="button"
                           className="primary-action mt-5"
-                          onClick={() =>
-                            setPaymentSummaryProduct(CREDIT_PACKS[0]!.product)
-                          }
+                          onClick={() => setUpgradeModalOpen(true)}
                         >
                           {W.proGateCta}
                         </button>
@@ -5937,23 +6308,7 @@ function App() {
                 >
                   <span className="tool-success-shell__meter-fill" />
                 </div>
-                {upgradeNudgeTier >= 1 &&
-                showCreditWorkspaceChrome &&
-                !upgradeNudgePostSuccessHidden &&
-                !hideMonetizationHintsForInsufficientGate ? (
-                  <UpgradeNudgeInline
-                    tier={upgradeNudgeTier as 1 | 2 | 3}
-                    W={W}
-                    onContinueFree={() =>
-                      setUpgradeNudgePostSuccessHidden(true)
-                    }
-                    onUpgrade={() => {
-                      openConversionUpgradeModalManual();
-                      setUpgradeNudgePostSuccessHidden(true);
-                    }}
-                  />
-                ) : null}
-                {toolProgressSuccess.gatedDownload ? (
+                {toolProgressSuccess?.gatedDownload ? (
                   <SaasGatedPreview
                     gating={
                       toolProgressSuccess.gatedDownload.saasGating ?? null
@@ -5999,37 +6354,23 @@ function App() {
                     }}
                     onUpgrade={() => openConversionUpgradeModalManual()}
                     onInsufficientCredits={() => {
-                      armInsufficientCreditsToolBarrier();
-                      tryShowConversionPopupRef.current(
-                        "insufficient_credits",
-                        "download",
-                      );
+                      setUpgradeModalOpen(true);
                     }}
-                    onRetry={
-                      toolProgressSuccess.gatedDownload?.saasGating?.reason ===
-                      "insufficient_credits"
-                        ? undefined
-                        : () => {
-                            const gd = toolProgressSuccess.gatedDownload;
-                            if (!gd) {
-                              return;
-                            }
-                            if (gd.mergeJobId) {
-                              queueMergeGatedDownload(
-                                gd.mergeJobId,
-                                gd.fallbackName,
-                              );
-                              return;
-                            }
-                            if (gd.resultId) {
-                              queueGatedDownload(
-                                gd.resultId,
-                                gd.fallbackName,
-                                gd.toolId,
-                              );
-                            }
-                          }
-                    }
+                    onRetry={() => {
+                      const gd = toolProgressSuccess.gatedDownload;
+                      if (!gd) return;
+                      if (gd.mergeJobId) {
+                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
+                        return;
+                      }
+                      if (gd.resultId) {
+                        queueGatedDownload(
+                          gd.resultId,
+                          gd.fallbackName,
+                          gd.toolId,
+                        );
+                      }
+                    }}
                     onDismiss={dismissToolSuccessBar}
                     dismissLabel={W.toolProgressDismiss}
                   />
@@ -6079,11 +6420,9 @@ function App() {
                     {mergeJob.status !== "failed" ? (
                       <p className="merge-progress-fixed__phase">
                         {mergeJob.id === MERGE_JOB_PENDING_ID
-                          ? creditStandardLaneQueue
-                            ? W.mergeProgressQueueFree
-                            : premiumProcessingLane
-                              ? W.mergeProgressQueuePremium
-                              : W.mergeProgressStarting
+                          ? premiumProcessingLane
+                            ? W.mergeProgressQueuePremium
+                            : W.mergeProgressStarting
                           : mergeToolPhaseLabel(
                               mergeJob,
                               mergeProgressIndeterminate,
@@ -6095,7 +6434,7 @@ function App() {
                   {showToolCancelButton ? (
                     <button
                       type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-white/14 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/30 hover:text-cyan-100"
+                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
                       onClick={handleCancelCurrentOperation}
                     >
                       {W.toolRunCancel}
@@ -6156,17 +6495,6 @@ function App() {
                     </span>
                   ) : null}
                 </div>
-                {showUpgradeNudgeOnLoading && mergeProgressActive ? (
-                  <UpgradeNudgeInline
-                    tier={upgradeNudgeTier as 1 | 2 | 3}
-                    W={W}
-                    onContinueFree={() => setUpgradeNudgeLoadingHidden(true)}
-                    onUpgrade={() => {
-                      openConversionUpgradeModalManual();
-                      setUpgradeNudgeLoadingHidden(true);
-                    }}
-                  />
-                ) : null}
                 {mergeJob.status === "failed" ? (
                   <p className="merge-progress-fixed__err">
                     {friendlyOperationFailedMessage(language)}
@@ -6193,14 +6521,14 @@ function App() {
                         genericToolPercent,
                         genericProgressIndeterminate,
                         W,
-                        creditStandardLaneQueue,
+                        false,
                       )}
                     </p>
                   </div>
                   {showToolCancelButton ? (
                     <button
                       type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-white/14 bg-white/[0.05] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/30 hover:text-cyan-100"
+                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
                       onClick={handleCancelCurrentOperation}
                     >
                       {W.toolRunCancel}
@@ -6227,7 +6555,7 @@ function App() {
                     genericToolPercent,
                     genericProgressIndeterminate,
                     W,
-                    creditStandardLaneQueue,
+                    false,
                   )}
                 >
                   {genericProgressIndeterminate ? (
@@ -6241,11 +6569,9 @@ function App() {
                 </div>
                 <div className="merge-progress-fixed__meta merge-progress-fixed__meta--generic">
                   <span>
-                    {creditStandardLaneQueue
-                      ? W.toolProgressSubQueueFree
-                      : premiumProcessingLane
-                        ? W.toolProgressSubPremium
-                        : W.toolProgressSub}
+                    {premiumProcessingLane
+                      ? W.toolProgressSubPremium
+                      : W.toolProgressSub}
                   </span>
                   {genericToolFileMb >= 5 ? (
                     <span className="merge-progress-fixed__eta">
@@ -6263,24 +6589,13 @@ function App() {
                     </span>
                   ) : null}
                 </div>
-                {showUpgradeNudgeOnLoading && genericToolProgressActive ? (
-                  <UpgradeNudgeInline
-                    tier={upgradeNudgeTier as 1 | 2 | 3}
-                    W={W}
-                    onContinueFree={() => setUpgradeNudgeLoadingHidden(true)}
-                    onUpgrade={() => {
-                      openConversionUpgradeModalManual();
-                      setUpgradeNudgeLoadingHidden(true);
-                    }}
-                  />
-                ) : null}
               </div>
             </div>
           ) : null}
         </div>
 
         <footer className="footer-bar">
-          <span>NB PDF PLATFORM</span>
+          <span>PDF PLATFORM</span>
           <span>by NB Global Studio</span>
           <div className="footer-bar__right">
             <span>Web Edition</span>
@@ -6302,7 +6617,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </div>

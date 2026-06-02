@@ -2,7 +2,7 @@ import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 
-export type PlanName = "FREE" | "PRO" | "BUSINESS";
+export type PlanName = "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS";
 export type SubscriptionStatus =
   | "none"
   | "active"
@@ -10,42 +10,62 @@ export type SubscriptionStatus =
   | "canceled"
   | "incomplete";
 
-/** Wire shape from `GET /api/entitlement/balance` (read-only Prisma). */
+/** Wire shape from `GET /api/entitlement/balance` */
 export type EntitlementBalanceWire = {
-  credit_balance: number;
   plan: PlanName;
-  subscription_status: SubscriptionStatus;
+  daily: { used: number; limit: number | null; resetAt: string };
+  monthly: { used: number; limit: number | null };
+  watermarkEnabled: boolean;
+  batchLimit: number;
+  fileSizeLimitMB: number;
+  isAdmin: boolean;
+  subscriptionExpiry?: string | null;
+  subscriptionStartedAt?: string | null;
 };
 
-/**
- * Normalized balance for UI. Built from the balance endpoint plus session
- * identity; `subscriptionExpiry` is not returned by the read API (always
- * null here). `hasActiveSubscription` follows plan + status only.
- */
 export type UserBalance = {
   userId: string;
   creditBalance: number;
   plan: PlanName;
   role: "USER" | "ADMIN";
   subscriptionStatus: SubscriptionStatus;
+  /** ISO 8601 — abonelik bitiş / yenilenme tarihi, sadece ücretli planlarda döner. */
   subscriptionExpiry: string | null;
+  /** ISO 8601 — mevcut dönem başlangıç tarihi (son ödeme tarihi), sadece ücretli planlarda döner. */
+  subscriptionStartedAt: string | null;
   hasActiveSubscription: boolean;
+  batchLimit: number;
+  isAdmin: boolean;
+  daily: { used: number; limit: number | null; resetAt: string };
+  monthly: { used: number; limit: number | null };
+  watermarkEnabled: boolean;
+  fileSizeLimitMB: number;
 };
 
 export function normalizeUserBalance(
   wire: EntitlementBalanceWire,
   ctx: { userId: string; role: "USER" | "ADMIN" },
 ): UserBalance {
-  const hasActiveSubscription =
-    wire.plan !== "FREE" && wire.subscription_status === "active";
+  const isAdmin = wire.isAdmin ?? ctx.role === "ADMIN";
+  const hasActiveSubscription = wire.plan !== "FREE" || isAdmin;
+  const dailyLimit = wire.daily?.limit ?? null;
+  const dailyUsed = wire.daily?.used ?? 0;
+  const creditBalance = dailyLimit !== null ? Math.max(0, dailyLimit - dailyUsed) : 0;
   return {
     userId: ctx.userId,
-    creditBalance: wire.credit_balance,
+    creditBalance,
     plan: wire.plan,
-    role: ctx.role,
-    subscriptionStatus: wire.subscription_status,
-    subscriptionExpiry: null,
+    role: isAdmin ? "ADMIN" : "USER",
+    subscriptionStatus: wire.plan !== "FREE" ? "active" : "none",
     hasActiveSubscription,
+    batchLimit: wire.batchLimit ?? 0,
+    isAdmin,
+    daily: wire.daily ?? { used: 0, limit: null, resetAt: "" },
+    monthly: wire.monthly ?? { used: 0, limit: null },
+    watermarkEnabled: wire.watermarkEnabled ?? false,
+    fileSizeLimitMB: wire.fileSizeLimitMB ?? 999999,
+    subscriptionExpiry: wire.subscriptionExpiry ?? null,
+    subscriptionStartedAt: wire.subscriptionStartedAt ?? null,
   };
 }
 
@@ -56,10 +76,6 @@ function readLatestAccessToken(fallback: string): string {
   return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
 }
 
-/**
- * Fetch the caller's credit balance + plan from `GET /api/entitlement/balance`
- * and merge session identity into `UserBalance` for components.
- */
 export async function fetchUserBalance(
   accessToken: string,
   ctx: { userId: string; role: "USER" | "ADMIN" },
@@ -81,13 +97,6 @@ export async function fetchUserBalance(
   return normalizeUserBalance(wire, ctx);
 }
 
-/**
- * Ledger row types mirror `CreditTransactionRecord` in the engine.
- *   - `consume`   — tool run (amount <= 0; 0 for subscription/admin bypass)
- *   - `bonus`     — automated grant (onboarding, fake-payment confirm)
- *   - `admin_add` — manual top-up through the admin panel
- *   - `refund`    — credit returned after a failed/support-triggered op
- */
 export type CreditTransactionType = "consume" | "bonus" | "admin_add" | "refund";
 
 export type CreditTransaction = {
@@ -98,10 +107,6 @@ export type CreditTransaction = {
   createdAt: string;
 };
 
-/**
- * Pulls the last `limit` ledger rows for the caller, newest first.
- * API returns a JSON array; `limit` is clamped server-side to [1, 100].
- */
 export async function fetchCreditTransactions(
   accessToken: string,
   limit = 10,

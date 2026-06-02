@@ -41,6 +41,24 @@ function todayKey() {
 
 function getDesktopPlanRules(plan: Plan, defs: Record<Plan, PlanDefinition>, TOOLS: ResolvedTOOLSBusinessConfig) {
   switch (plan) {
+    case "STARTER":
+      return {
+        status: "active" as const,
+        dailyLimit: 25,
+        canUseEncryption: true,
+        canUseBatchProcessing: true,
+        maxFileSizeMb: 100,
+        blockedFeatures: [] as FeatureKey[],
+      };
+    case "PLUS":
+      return {
+        status: "active" as const,
+        dailyLimit: defs.PLUS.dailyLimit,
+        canUseEncryption: true,
+        canUseBatchProcessing: true,
+        maxFileSizeMb: null,
+        blockedFeatures: [] as FeatureKey[],
+      };
     case "PRO":
       return {
         status: "active" as const,
@@ -195,8 +213,8 @@ export async function validateDesktopLicense(userId: string, deviceId?: string) 
             }
         : null,
     processingTier:
-      admin || user.plan === "PRO" || user.plan === "BUSINESS" ? ("premium" as const) : ("standard" as const),
-    priorityProcessing: admin || user.plan === "PRO" || user.plan === "BUSINESS",
+      admin || user.plan === "PLUS" || user.plan === "PRO" || user.plan === "BUSINESS" ? ("premium" as const) : ("standard" as const),
+    priorityProcessing: admin || user.plan === "PLUS" || user.plan === "PRO" || user.plan === "BUSINESS",
   };
 }
 

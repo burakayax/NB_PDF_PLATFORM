@@ -1,4 +1,4 @@
-# NB PDF PLATFORM — Birlikte çalıştırma (kök `npm` betikleri)
+# PDF PLATFORM — Birlikte çalıştırma (kök `npm` betikleri)
 
 Bu dosya **proje kökündeki** `package.json` içindeki komutların ne işe yaradığını Türkçe açıklar.
 

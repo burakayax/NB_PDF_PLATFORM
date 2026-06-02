@@ -1,112 +1,235 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://pdfplatform.app/</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/"/>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pdfplatform.app/admin-login</loc>
+    <loc>https://pdfplatform.app/pricing</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/pricing"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/pricing"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/pricing"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/terms</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/terms"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/terms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/terms"/>
     <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/privacy</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/privacy"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/privacy"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/privacy"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/kvkk</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/kvkk"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/kvkk"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/kvkk"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/login</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/login"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/login"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/login"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/register</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/register"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/register"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/register"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/split-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/split-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/split-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/split-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/merge-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/merge-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/merge-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/merge-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/delete-pages</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/delete-pages"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/delete-pages"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/delete-pages"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/rotate-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/rotate-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/rotate-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/rotate-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/organize-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/organize-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/organize-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/organize-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/compress</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/compress"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/compress"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/compress"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/pdf-to-word</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-to-word"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-to-word"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-to-word"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/word-to-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/word-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/word-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/word-to-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/excel-to-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/excel-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/excel-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/excel-to-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/pdf-to-excel</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-to-excel"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-to-excel"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-to-excel"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/pdf-to-ppt</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-to-ppt"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-to-ppt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-to-ppt"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/ppt-to-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/ppt-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/ppt-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/ppt-to-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/pdf-to-image</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-to-image"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-to-image"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-to-image"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/image-to-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/image-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/image-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/image-to-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/html-to-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/html-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/html-to-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/html-to-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/unlock-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/unlock-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/unlock-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/unlock-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/watermark</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/watermark"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/watermark"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/watermark"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/page-numbers</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/page-numbers"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/page-numbers"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/page-numbers"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/repair-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/repair-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/repair-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/repair-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://pdfplatform.app/tools/encrypt</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/encrypt"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/encrypt"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/encrypt"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/tools/pdf-to-text</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-to-text"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-to-text"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-to-text"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/tools/flatten-pdf</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/flatten-pdf"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/flatten-pdf"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/flatten-pdf"/>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>

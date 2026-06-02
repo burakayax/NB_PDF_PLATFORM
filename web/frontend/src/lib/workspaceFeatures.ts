@@ -59,6 +59,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🗜",
     endpoint: "compress",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sıkıştırılmış.pdf",
   },
   {
@@ -66,20 +67,23 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📝",
     endpoint: "pdf-to-word",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "çıktı.docx",
   },
   {
     id: "word-to-pdf",
     icon: "🧾",
     endpoint: "word-to-pdf",
-    accept: ".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    accept: ".doc,.docx,.docm,.dotx,.dotm,.odt,.rtf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/octet-stream",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
     id: "excel-to-pdf",
     icon: "📊",
     endpoint: "excel-to-pdf",
-    accept: ".xlsx,.xlsm,.xltx,.xltm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    accept: ".xlsx,.xls,.xlsm,.xlsb,.xltx,.xltm,.ods,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/octet-stream",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
@@ -87,6 +91,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📈",
     endpoint: "pdf-to-excel",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "çıktı.xlsx",
   },
   {
@@ -94,13 +99,15 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "📽",
     endpoint: "pdf-to-ppt",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sunum.pptx",
   },
   {
     id: "ppt-to-pdf",
     icon: "📊",
     endpoint: "ppt-to-pdf",
-    accept: ".ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    accept: ".ppt,.pptx,.pptm,.potx,.potm,.odp,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/octet-stream",
+    multiple: true,
     fallbackFilename: "çıktı.pdf",
   },
   {
@@ -108,6 +115,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🖼",
     endpoint: "pdf-to-image",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "sayfalar.zip",
   },
   {
@@ -138,6 +146,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "💧",
     endpoint: "watermark",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "filigranlı.pdf",
   },
   {
@@ -145,6 +154,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "#",
     endpoint: "page-numbers",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "numaralı.pdf",
   },
   {
@@ -152,6 +162,7 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🩹",
     endpoint: "repair-pdf",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "onarılmış.pdf",
   },
   {
@@ -159,7 +170,24 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     icon: "🔒",
     endpoint: "encrypt",
     accept: ".pdf,application/pdf",
+    multiple: true,
     fallbackFilename: "şifreli.pdf",
+  },
+  {
+    id: "pdf-to-text",
+    icon: "📋",
+    endpoint: "pdf-to-text",
+    accept: ".pdf,application/pdf",
+    multiple: true,
+    fallbackFilename: "metin.txt",
+  },
+  {
+    id: "flatten-pdf",
+    icon: "🧹",
+    endpoint: "flatten-pdf",
+    accept: ".pdf,application/pdf",
+    multiple: true,
+    fallbackFilename: "düzleştirilmiş.pdf",
   },
 ];
 
@@ -184,6 +212,8 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "excel-to-pdf",
   "pdf-to-excel",
   "ppt-to-pdf",
+  "pdf-to-text",
+  "flatten-pdf",
 ];
 
 export function isResultStoreTool(id: FeatureKey): boolean {

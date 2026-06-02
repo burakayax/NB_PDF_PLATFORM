@@ -45,11 +45,30 @@ export async function ensurePaidSubscriptionActiveOrDowngrade(userId: string): P
     return { user: userBefore, downgraded: false };
   }
 
-  const paid = userBefore.plan === "PRO" || userBefore.plan === "BUSINESS";
-  if (paid && userBefore.subscriptionExpiry != null && userBefore.subscriptionExpiry.getTime() <= now.getTime()) {
+  const paid = userBefore.plan === "PLUS" || userBefore.plan === "PRO" || userBefore.plan === "BUSINESS";
+  if (paid && userBefore.organizationId) {
+    const org = await prisma.organization.findUnique({
+      where: { id: userBefore.organizationId },
+      select: { id: true, subscriptionExpiry: true },
+    });
+    if (org?.subscriptionExpiry != null && org.subscriptionExpiry.getTime() <= now.getTime()) {
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { plan: "FREE" },
+      });
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: { plan: "FREE", subscriptionStatus: "canceled" },
+      });
+      return { user, downgraded: true };
+    }
+  }
+
+  // Ücretli planı olan ama organizasyonu bulunmayan kullanıcı: tutarsız durum, FREE'ye düşür
+  if (paid && !userBefore.organizationId) {
     const user = await prisma.user.update({
       where: { id: userId },
-      data: { plan: "FREE", subscriptionExpiry: null },
+      data: { plan: "FREE" },
     });
     return { user, downgraded: true };
   }
@@ -84,13 +103,23 @@ export async function getSubscriptionStatus(userId: string): Promise<Subscriptio
     return { plan: "FREE", remaining_days: null, ...base, ...lane };
   }
 
-  if (!user.subscriptionExpiry) {
+  // Subscription expiry lives on Organization
+  let subscriptionExpiry: Date | null = null;
+  if (user.organizationId) {
+    const org = await prisma.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { subscriptionExpiry: true },
+    });
+    subscriptionExpiry = org?.subscriptionExpiry ?? null;
+  }
+
+  if (!subscriptionExpiry) {
     return { plan: user.plan, remaining_days: null, ...lane };
   }
 
   const remaining_days = Math.max(
     0,
-    Math.ceil((user.subscriptionExpiry.getTime() - now.getTime()) / MS_PER_DAY),
+    Math.ceil((subscriptionExpiry.getTime() - now.getTime()) / MS_PER_DAY),
   );
 
   return { plan: user.plan, remaining_days, ...lane };
@@ -259,8 +288,7 @@ export async function assertSubscriptionAllowsOperation(userId: string, featureK
 
   const defs = await getPlanDefinitionsResolved();
   const plan = defs[user.plan];
-  /* FREE: full catalog always (see plan-runtime); never 403 on tool choice — friction handles conversion. */
-  if (user.plan !== "FREE" && !plan.allowedFeatures.includes(featureKey)) {
+  if (!plan.allowedFeatures.includes(featureKey)) {
     throw new HttpError(403, "Your current plan does not include this feature.");
   }
 

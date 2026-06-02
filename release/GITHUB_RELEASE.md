@@ -2,7 +2,7 @@
 
 ## Release Title
 
-`NB PDF PLATFORM v1.0.0`
+`PDF PLATFORM v1.0.0`
 
 ## Suggested Tag
 
@@ -13,7 +13,7 @@
 ```md
 ## Overview
 
-NB PDF PLATFORM is a Windows desktop application designed to simplify common PDF workflows from a single interface. It brings together PDF conversion, page extraction, compression, password protection, and Office document conversion features in one place.
+PDF PLATFORM is a Windows desktop application designed to simplify common PDF workflows from a single interface. It brings together PDF conversion, page extraction, compression, password protection, and Office document conversion features in one place.
 
 ## Highlights
 

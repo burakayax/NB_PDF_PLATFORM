@@ -14,6 +14,20 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 try:
     import pdf_engine
     from modules.compress_pdf_window import CompressPdfWindow
+    from modules.delete_pages_window import DeletePagesWindow
+    from modules.rotate_pdf_window import RotatePdfWindow
+    from modules.organize_pdf_window import OrganizePdfWindow
+    from modules.pdf_to_ppt_window import PdfToPptWindow
+    from modules.ppt_to_pdf_window import PptToPdfWindow
+    from modules.pdf_to_image_window import PdfToImageWindow
+    from modules.image_to_pdf_window import ImageToPdfWindow
+    from modules.html_to_pdf_window import HtmlToPdfWindow
+    from modules.pdf_to_text_window import PdfToTextWindow
+    from modules.flatten_pdf_window import FlattenPdfWindow
+    from modules.unlock_pdf_window import UnlockPdfWindow
+    from modules.watermark_window import WatermarkWindow
+    from modules.page_numbers_window import PageNumbersWindow
+    from modules.repair_pdf_window import RepairPdfWindow
     from modules.desktop_auth import (
         DesktopAuthClient,
         DesktopAccessBlockedError,
@@ -43,6 +57,7 @@ try:
     from modules.success_dialog import SuccessDialog
     from modules.ui_polish import (
         LoadingPulseDots,
+        ToolTip,
         attach_feature_button_polish,
         stagger_raise_buttons,
         thin_accent_line,
@@ -83,6 +98,7 @@ class NBPDFApp(ctk.CTk):
         self.guest_store = GuestUsageStore(device_id=self.device_id)
         self.guest_state = self.guest_store.load()
         self.feature_buttons = {}
+        self.credit_balance: dict | None = None
         self.refresh_status_button = None
         self.upgrade_button = None
         self.session_action_button = None
@@ -106,14 +122,28 @@ class NBPDFApp(ctk.CTk):
         self._closing = False
         self._auth_queue_after_id = None
         self.feature_specs = [
-            {"key": "split", "label_key": "main.feature_split", "icon": "📄"},
-            {"key": "merge", "label_key": "main.feature_merge", "icon": "🗂"},
-            {"key": "pdf-to-word", "label_key": "main.feature_pdf_to_word", "icon": "📝"},
-            {"key": "compress", "label_key": "main.feature_compress", "icon": "🗜"},
-            {"key": "word-to-pdf", "label_key": "main.feature_word_to_pdf", "icon": "🧾"},
-            {"key": "excel-to-pdf", "label_key": "main.feature_excel_to_pdf", "icon": "📊"},
-            {"key": "pdf-to-excel", "label_key": "main.feature_pdf_to_excel", "icon": "📈"},
-            {"key": "encrypt", "label_key": "main.feature_encrypt", "icon": "🔒"},
+            {"key": "split", "label_key": "main.feature_split", "icon": "📄", "tip_key": "desktop.tip_split"},
+            {"key": "merge", "label_key": "main.feature_merge", "icon": "🗂", "tip_key": "desktop.tip_merge"},
+            {"key": "pdf-to-word", "label_key": "main.feature_pdf_to_word", "icon": "📝", "tip_key": "desktop.tip_pdf_to_word"},
+            {"key": "compress", "label_key": "main.feature_compress", "icon": "🗜", "tip_key": "desktop.tip_compress"},
+            {"key": "word-to-pdf", "label_key": "main.feature_word_to_pdf", "icon": "🧾", "tip_key": "desktop.tip_word_to_pdf"},
+            {"key": "excel-to-pdf", "label_key": "main.feature_excel_to_pdf", "icon": "📊", "tip_key": "desktop.tip_excel_to_pdf"},
+            {"key": "pdf-to-excel", "label_key": "main.feature_pdf_to_excel", "icon": "📈", "tip_key": "desktop.tip_pdf_to_excel"},
+            {"key": "encrypt", "label_key": "main.feature_encrypt", "icon": "🔒", "tip_key": "desktop.tip_encrypt"},
+            {"key": "delete-pages", "label_key": "main.feature_delete_pages", "icon": "✂", "tip_key": "desktop.tip_delete_pages"},
+            {"key": "rotate-pdf", "label_key": "main.feature_rotate_pdf", "icon": "↺", "tip_key": "desktop.tip_rotate_pdf"},
+            {"key": "organize-pdf", "label_key": "main.feature_organize_pdf", "icon": "⇅", "tip_key": "desktop.tip_organize_pdf"},
+            {"key": "pdf-to-ppt", "label_key": "main.feature_pdf_to_ppt", "icon": "📑", "tip_key": "desktop.tip_pdf_to_ppt"},
+            {"key": "ppt-to-pdf", "label_key": "main.feature_ppt_to_pdf", "icon": "🖥", "tip_key": "desktop.tip_ppt_to_pdf"},
+            {"key": "pdf-to-image", "label_key": "main.feature_pdf_to_image", "icon": "🖼", "tip_key": "desktop.tip_pdf_to_image"},
+            {"key": "image-to-pdf", "label_key": "main.feature_image_to_pdf", "icon": "🖼", "tip_key": "desktop.tip_image_to_pdf"},
+            {"key": "html-to-pdf", "label_key": "main.feature_html_to_pdf", "icon": "🌐", "tip_key": "desktop.tip_html_to_pdf"},
+            {"key": "pdf-to-text", "label_key": "main.feature_pdf_to_text", "icon": "📃", "tip_key": "desktop.tip_pdf_to_text"},
+            {"key": "flatten-pdf", "label_key": "main.feature_flatten_pdf", "icon": "⬛", "tip_key": "desktop.tip_flatten_pdf"},
+            {"key": "unlock-pdf", "label_key": "main.feature_unlock_pdf", "icon": "🔓", "tip_key": "desktop.tip_unlock_pdf"},
+            {"key": "watermark", "label_key": "main.feature_watermark", "icon": "◎", "tip_key": "desktop.tip_watermark"},
+            {"key": "page-numbers", "label_key": "main.feature_page_numbers", "icon": "#", "tip_key": "desktop.tip_page_numbers"},
+            {"key": "repair-pdf", "label_key": "main.feature_repair_pdf", "icon": "🔧", "tip_key": "desktop.tip_repair_pdf"},
         ]
 
         ctk.set_appearance_mode("dark")
@@ -122,6 +152,7 @@ class NBPDFApp(ctk.CTk):
         self.configure(fg_color=self.ui["bg"])
         self._configure_windows_identity()
         self._configure_window_icon()
+        self.protocol("WM_DELETE_WINDOW", self.destroy)
         self.bind("<FocusIn>", self._handle_window_focus)
 
         # Uygulama ana pencere alanını üst içerik ve alt sabit çubuk olarak ayırıyoruz.
@@ -169,7 +200,7 @@ class NBPDFApp(ctk.CTk):
         for widget in self.content_container.winfo_children():
             widget.destroy()
 
-    def _set_footer(self, left_text, center_text, right_text, action_text, action_command):
+    def _set_footer(self, left_text, center_text, right_text, action_text, action_command, extra_links=None):
         if self.footer is not None:
             try:
                 self.footer.destroy()
@@ -182,7 +213,19 @@ class NBPDFApp(ctk.CTk):
             right_text=right_text,
             action_text=action_text,
             action_command=action_command,
+            extra_links=extra_links,
         )
+
+    def _footer_web_links(self):
+        def _open(path):
+            url = (self.auth_config.get("web_app_url") or "").strip().rstrip("/")
+            if url:
+                webbrowser.open(f"{url}/{path}")
+        return [
+            (t("app.kvkk"), lambda: _open("kvkk")),
+            (t("app.privacy"), lambda: _open("privacy")),
+            (t("app.terms"), lambda: _open("terms")),
+        ]
 
     def _feature_label(self, spec):
         return t(spec["label_key"])
@@ -221,6 +264,14 @@ class NBPDFApp(ctk.CTk):
             return tier
         suffix = f"{rd} gün kaldı" if lang == "tr" else f"{rd} days left"
         return f"{tier} • {suffix}"
+
+    def _nav_plan_credits_text(self) -> str:
+        base = self._subscription_nav_pill_text()
+        if self.credit_balance is not None:
+            bal = self.credit_balance.get("credit_balance")
+            if bal is not None:
+                return f"{base}  💎 {bal}"
+        return base
 
     def _nav_upgrade_visible(self) -> bool:
         if not self._is_authenticated_session():
@@ -283,6 +334,28 @@ class NBPDFApp(ctk.CTk):
         )
         if self.license_notice:
             self.license_notice.configure(text=t("main.payment_return_hint"))
+
+    def _fetch_credit_balance_async(self) -> None:
+        if not self._is_authenticated_session():
+            return
+        token = self.current_session["accessToken"]
+
+        def worker():
+            data = self.auth_client.fetch_credit_balance(token)
+            self.auth_queue.put(("credit_balance_ok", data))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def open_credit_purchase(self) -> None:
+        if not self._is_authenticated_session():
+            self.open_subscription_workspace()
+            return
+        plan = (self.license_info or {}).get("plan", "FREE")
+        if plan == "FREE":
+            self.open_subscription_workspace()
+            return
+        token = self.current_session["accessToken"]
+        threading.Thread(target=lambda: self.auth_client.credit_checkout_open_browser(token, "credits_500"), daemon=True).start()
 
     def _toggle_profile_menu(self) -> None:
         if self.profile_menu_window is not None:
@@ -387,7 +460,12 @@ class NBPDFApp(ctk.CTk):
 
     def _grid_tool_launch(self, key: str, label: str) -> None:
         self._set_sidebar_active(key)
-        self.handle_click(key, label)
+        btn = self.feature_buttons.get(key)
+        if btn:
+            orig_fg = btn.cget("fg_color")
+            btn.configure(fg_color=self.ui["accent"])
+            self.after(90, lambda b=btn, c=orig_fg: b.configure(fg_color=c) if b.winfo_exists() else None)
+        self.after(70, lambda k=key, l=label: self.handle_click(k, l))
 
     def _on_sidebar_subscription_click(self) -> None:
         self._set_sidebar_active("subscription")
@@ -555,6 +633,12 @@ class NBPDFApp(ctk.CTk):
         self._refresh_full_ui()
 
     def _refresh_full_ui(self):
+        _scroll_y = 0.0
+        if getattr(self, "_ui_phase", "") == "main" and hasattr(self, "shell_main_area"):
+            try:
+                _scroll_y = self.shell_main_area._parent_canvas.yview()[0]
+            except Exception:
+                pass
         self.title(f"{t('app.name')} · v{get_version_string()}")
         self._build_language_bar()
         phase = getattr(self, "_ui_phase", "loading")
@@ -567,6 +651,12 @@ class NBPDFApp(ctk.CTk):
             if self._is_guest_mode():
                 self._sync_guest_session(force_reload=True)
             self.setup_ui()
+            if _scroll_y > 0.001 and hasattr(self, "shell_main_area"):
+                self.after(40, lambda y=_scroll_y: (
+                    self.shell_main_area._parent_canvas.yview_moveto(y)
+                    if hasattr(self, "shell_main_area") and self.shell_main_area.winfo_exists()
+                    else None
+                ))
             return
         if phase == "login":
             preserve = None
@@ -840,182 +930,102 @@ class NBPDFApp(ctk.CTk):
         shell = ctk.CTkFrame(self.content_container, fg_color=self.ui["bg"])
         shell.pack(expand=True, fill="both")
 
-        nav_h = int(self.ui.get("nav_height", 56))
+        # --- Navbar (42px): Amblem sol | Uygulama adı merkez | Plan+kredi+butonlar sağ ---
         navbar = ctk.CTkFrame(
             shell,
             fg_color=self.ui.get("nav_bar", self.ui["panel"]),
             border_width=1,
             border_color=self.ui["border_subtle"],
             corner_radius=0,
-            height=nav_h,
+            height=42,
         )
         navbar.pack(fill="x", padx=0, pady=0)
         navbar.pack_propagate(False)
         navbar.grid_columnconfigure(1, weight=1)
 
+        # Sol: sadece amblem/logo
         nav_left = ctk.CTkFrame(navbar, fg_color="transparent")
-        nav_left.grid(row=0, column=0, sticky="w", padx=(16, 8), pady=8)
+        nav_left.grid(row=0, column=0, sticky="w", padx=(12, 6), pady=5)
         logo_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "assets", "nb_pdf_TOOLS_icon.png"))
         logo_lbl = None
         if os.path.isfile(logo_path):
             try:
                 img = PhotoImage(file=logo_path)
-                if img.width() > 36:
-                    img = img.subsample(max(1, img.width() // 36))
+                if img.width() > 26:
+                    img = img.subsample(max(1, img.width() // 26))
                 logo_lbl = ctk.CTkLabel(nav_left, image=img, text="")
                 logo_lbl.image = img
             except Exception:
                 logo_lbl = None
         if logo_lbl is None:
-            logo_lbl = ctk.CTkLabel(nav_left, text="◆", font=("Segoe UI", 22), text_color=self.ui["accent_soft"])
-        logo_lbl.pack(side="left", padx=(0, 10))
-        brand_col = ctk.CTkFrame(nav_left, fg_color="transparent")
-        brand_col.pack(side="left")
-        ctk.CTkLabel(
-            brand_col,
-            text=t("desktop.nav_kicker"),
-            font=("Segoe UI", 10, "bold"),
-            text_color=self.ui["muted"],
-        ).pack(anchor="w")
-        ctk.CTkLabel(
-            brand_col,
-            text=t("app.name"),
-            font=("Segoe UI Semibold", 15, "bold"),
-            text_color=self.ui["text"],
-        ).pack(anchor="w")
+            logo_lbl = ctk.CTkLabel(nav_left, text="◆", font=("Segoe UI", 16), text_color=self.ui["accent_soft"])
+        logo_lbl.pack(side="left")
 
+        # Merkez: uygulama adı
         nav_center = ctk.CTkFrame(navbar, fg_color="transparent")
         nav_center.grid(row=0, column=1, sticky="ew")
-        self.nav_center_inner = ctk.CTkFrame(nav_center, fg_color="transparent")
-        self.nav_center_inner.place(relx=0.5, rely=0.5, anchor="center")
+        ctk.CTkLabel(
+            nav_center,
+            text="PDF PLATFORM",
+            font=("Segoe UI Semibold", 13, "bold"),
+            text_color=self.ui.get("accent_soft", self.ui["accent"]),
+        ).place(relx=0.5, rely=0.5, anchor="center")
 
-        pill = ctk.CTkFrame(
-            self.nav_center_inner,
-            fg_color=self.ui["panel"],
-            border_width=1,
-            border_color=self.ui["border_subtle"],
-            corner_radius=20,
-        )
-        pill.pack(side="left", padx=(0, 8))
-        self.nav_subscription_label = ctk.CTkLabel(
-            pill,
-            text=self._subscription_nav_pill_text(),
-            font=("Segoe UI", 11, "bold"),
-            text_color=self.ui["accent_soft"],
-            padx=14,
-            pady=6,
-        )
-        self.nav_subscription_label.pack()
-
-        self.nav_upgrade_btn = ctk.CTkButton(
-            self.nav_center_inner,
-            text=t("desktop.navbar_upgrade"),
-            height=32,
-            font=("Segoe UI Semibold", 11, "bold"),
-            fg_color=self.ui["accent"],
-            hover_color=self.ui["accent_hover"],
-            text_color=self.ui["button_text"],
-            corner_radius=14,
-            command=self.open_upgrade_page,
-        )
-        if self._nav_upgrade_visible():
-            self.nav_upgrade_btn.pack(side="left", padx=4)
-        else:
-            self.nav_upgrade_btn.pack_forget()
-
+        # Sağ: plan+kredi pill + upgrade/buy btn + TR/EN + 🏠 + ↻ + profil
         nav_right = ctk.CTkFrame(navbar, fg_color="transparent")
-        nav_right.grid(row=0, column=2, sticky="e", padx=(8, 16), pady=6)
+        nav_right.grid(row=0, column=2, sticky="e", padx=(6, 10), pady=5)
+
+        # Profil butonu (en sağda)
         self.nav_profile_btn = ctk.CTkButton(
             nav_right,
-            text=f"{self._user_nav_greeting()}   ▾",
-            height=34,
-            font=("Segoe UI Semibold", 13),
+            text=f"{self._user_nav_greeting()}  ▾",
+            height=28,
+            font=("Segoe UI Semibold", 11),
             fg_color=self.ui["panel"],
             hover_color=self.ui["panel_soft"],
             text_color=self.ui["text"],
             border_width=1,
             border_color=self.ui["border_subtle"],
-            corner_radius=12,
+            corner_radius=10,
             command=self._toggle_profile_menu,
         )
-        self.nav_profile_btn.pack(side="right")
+        self.nav_profile_btn.pack(side="right", padx=(4, 0))
 
-        _nav_accent = thin_accent_line(shell, self.ui, width=1600, height=2)
-        _nav_accent.pack(fill="x", padx=0, pady=0)
+        # Yenile butonu (auth kullanıcılar)
+        if self._is_authenticated_session() and not self._is_guest_mode():
+            self.sidebar_refresh_btn = ctk.CTkButton(
+                nav_right,
+                text="↻",
+                width=28,
+                height=28,
+                font=("Segoe UI", 14),
+                fg_color=self.ui["panel_soft"],
+                hover_color=self.ui["accent"],
+                text_color=self.ui["text"],
+                border_width=1,
+                border_color=self.ui["border_subtle"],
+                corner_radius=10,
+                command=self.refresh_subscription_status,
+            )
+            self.sidebar_refresh_btn.pack(side="right", padx=(4, 0))
 
-        body = ctk.CTkFrame(shell, fg_color=self.ui["bg"])
-        body.pack(expand=True, fill="both", padx=0, pady=0)
-
-        sb_w = int(self.ui.get("sidebar_width", 240))
-        sidebar = ctk.CTkFrame(
-            body,
-            fg_color=self.ui.get("sidebar_bg", self.ui["panel"]),
+        # Ana sayfa butonu
+        ctk.CTkButton(
+            nav_right,
+            text="🏠",
+            width=28,
+            height=28,
+            font=("Segoe UI", 12),
+            fg_color=self.ui["panel_soft"],
+            hover_color=self.ui["accent"],
+            text_color=self.ui["text"],
             border_width=1,
             border_color=self.ui["border_subtle"],
-            width=sb_w,
-            corner_radius=0,
-        )
-        sidebar.pack(side="left", fill="y", padx=0, pady=0)
-        sidebar.pack_propagate(False)
+            corner_radius=10,
+            command=self._open_web_home,
+        ).pack(side="right", padx=(4, 0))
 
-        s_nav = ctk.CTkScrollableFrame(sidebar, fg_color="transparent", scrollbar_button_color=self.ui["panel_soft"])
-        s_nav.pack(fill="both", expand=True, padx=10, pady=(8, 8))
-
-        self.sidebar_tool_buttons = {}
-        for spec in self.feature_specs:
-            key = spec["key"]
-            txt = self._tool_sidebar_label(key)
-            blocked = set()
-            if self.license_info and not self.license_info.get("guest"):
-                ent = self.license_info.get("entitlements") or {}
-                blocked = set(ent.get("blockedFeatures") or [])
-            locked = key in blocked
-            prefix = "🔒 " if locked else "•  "
-            btn = ctk.CTkButton(
-                s_nav,
-                text=f"{prefix}{txt}",
-                height=40,
-                anchor="w",
-                font=("Segoe UI Semibold", 13),
-                corner_radius=14,
-                border_width=1,
-                command=lambda k=key: self._on_sidebar_tool_click(k),
-            )
-            btn.pack(fill="x", pady=3)
-            self.sidebar_tool_buttons[key] = btn
-            btn.bind("<Enter>", lambda e, b=btn, k=key: self._sidebar_hover(b, k, True))
-            btn.bind("<Leave>", lambda e, b=btn, k=key: self._sidebar_hover(b, k, False))
-            self._sidebar_style_row(btn, self.active_sidebar_key == key, locked)
-
-        plan_btn = ctk.CTkButton(
-            s_nav,
-            text=t("desktop.plan_nav"),
-            height=40,
-            anchor="w",
-            font=("Segoe UI Semibold", 13),
-            corner_radius=14,
-            border_width=1,
-            command=self._on_sidebar_subscription_click,
-        )
-        plan_btn.pack(fill="x", pady=(10, 3))
-        self.sidebar_tool_buttons["subscription"] = plan_btn
-        plan_btn.bind("<Enter>", lambda e, b=plan_btn, k="subscription": self._sidebar_hover(b, k, True))
-        plan_btn.bind("<Leave>", lambda e, b=plan_btn, k="subscription": self._sidebar_hover(b, k, False))
-        self._sidebar_style_row(plan_btn, self.active_sidebar_key == "subscription", False)
-
-        lang_head = ctk.CTkLabel(
-            sidebar,
-            text=t("desktop.lang_section"),
-            font=("Segoe UI", 10, "bold"),
-            text_color=self.ui["muted"],
-            anchor="w",
-        )
-        lang_head.pack(fill="x", padx=14, pady=(4, 4))
-        lang_row = ctk.CTkFrame(sidebar, fg_color="transparent")
-        lang_row.pack(fill="x", padx=10, pady=(0, 6))
-        d_tr = t("app.lang_display_tr")
-        d_en = t("app.lang_display_en")
-
+        # Dil butonları
         def _set_lang_tr():
             set_language("tr")
             self._refresh_full_ui()
@@ -1024,155 +1034,142 @@ class NBPDFApp(ctk.CTk):
             set_language("en")
             self._refresh_full_ui()
 
+        lang_frame = ctk.CTkFrame(nav_right, fg_color="transparent")
+        lang_frame.pack(side="right", padx=(4, 0))
         ctk.CTkButton(
-            lang_row,
+            lang_frame,
             text="TR",
-            width=100,
-            height=32,
-            corner_radius=12,
-            fg_color=self.ui["panel"] if get_language() == "tr" else "transparent",
+            width=30,
+            height=28,
+            font=("Segoe UI Semibold", 10),
+            fg_color=self.ui["panel"] if get_language() == "tr" else self.ui["panel_soft"],
+            hover_color=self.ui["accent"],
+            text_color=self.ui["accent_soft"] if get_language() == "tr" else self.ui["muted"],
             border_width=1,
-            border_color=self.ui["border"],
+            border_color=self.ui["accent"] if get_language() == "tr" else self.ui["border_subtle"],
+            corner_radius=10,
             command=_set_lang_tr,
-        ).pack(side="left", expand=True, fill="x", padx=(0, 4))
+        ).pack(side="left")
         ctk.CTkButton(
-            lang_row,
+            lang_frame,
             text="EN",
-            width=100,
-            height=32,
-            corner_radius=12,
-            fg_color=self.ui["panel"] if get_language() == "en" else "transparent",
+            width=30,
+            height=28,
+            font=("Segoe UI Semibold", 10),
+            fg_color=self.ui["panel"] if get_language() == "en" else self.ui["panel_soft"],
+            hover_color=self.ui["accent"],
+            text_color=self.ui["accent_soft"] if get_language() == "en" else self.ui["muted"],
             border_width=1,
-            border_color=self.ui["border"],
+            border_color=self.ui["accent"] if get_language() == "en" else self.ui["border_subtle"],
+            corner_radius=10,
             command=_set_lang_en,
-        ).pack(side="left", expand=True, fill="x", padx=(4, 0))
+        ).pack(side="left", padx=(2, 0))
 
-        ctk.CTkButton(
-            sidebar,
-            text=t("desktop.home_nav"),
-            height=34,
-            font=("Segoe UI", 12),
-            fg_color="transparent",
-            border_width=1,
-            border_color=self.ui["border_subtle"],
-            hover_color=self.ui["panel_soft"],
-            command=self._open_web_home,
-        ).pack(fill="x", padx=10, pady=(0, 6))
-
-        self.sidebar_refresh_btn = ctk.CTkButton(
-            sidebar,
-            text=t("desktop.refresh_subscription"),
-            height=34,
-            font=("Segoe UI", 12),
-            fg_color=self.ui["panel_soft"],
-            hover_color=self.ui["border"],
-            command=self.refresh_subscription_status,
-        )
-        self.sidebar_refresh_btn.pack(fill="x", padx=10, pady=(0, 10))
-
-        self.shell_main_area = ctk.CTkScrollableFrame(
-            body,
-            fg_color=self.ui["bg"],
-            scrollbar_button_color=self.ui["panel_soft"],
-        )
-        self.shell_main_area.pack(side="right", expand=True, fill="both", padx=(16, 20), pady=(16, 12))
-
-        hero = ctk.CTkFrame(
-            self.shell_main_area,
+        # Plan + kredi pill
+        pill = ctk.CTkFrame(
+            nav_right,
             fg_color=self.ui["panel"],
             border_width=1,
             border_color=self.ui["border_subtle"],
-            corner_radius=self.ui.get("radius_lg", 16),
+            corner_radius=14,
         )
-        hero.pack(fill="x", pady=(0, 18))
-        hero_strip = ctk.CTkFrame(hero, fg_color="transparent", height=84)
-        hero_strip.pack(fill="x", side="top")
-        hero_strip.pack_propagate(False)
-        _hw = 920
-        _ht = 84
-        _hb = self.ui.get("gradient_hero_bottom", self.ui["panel"])
-        _hl = vertical_gradient_strip(
-            hero_strip,
-            _hw,
-            _ht,
-            self.ui.get("gradient_hero_top", self.ui["accent"]),
-            _hb,
-            bg_hex=_hb,
-        )
-        _hl.pack(fill="both", expand=True)
-        hero_inner = ctk.CTkFrame(hero, fg_color="transparent")
-        hero_inner.pack(fill="x", padx=24, pady=(14, 22))
-        ctk.CTkLabel(
-            hero_inner,
-            text=t("desktop.workspace_title"),
-            font=("Segoe UI Semibold", 26, "bold"),
+        pill.pack(side="right", padx=(4, 0))
+        self.nav_subscription_label = ctk.CTkLabel(
+            pill,
+            text=self._nav_plan_credits_text(),
+            font=("Segoe UI", 10, "bold"),
             text_color=self.ui["accent_soft"],
-        ).pack(anchor="w")
+            padx=10,
+            pady=3,
+        )
+        self.nav_subscription_label.pack()
+
+        # Yükselt / Paket Al butonu
+        _cur_plan = (self.license_info or {}).get("plan", "FREE")
+        _upgrade_text = t("desktop.buy_credits") if _cur_plan != "FREE" else t("desktop.navbar_upgrade")
+        _upgrade_cmd = self.open_credit_purchase if _cur_plan != "FREE" else self.open_upgrade_page
+        self.nav_upgrade_btn = ctk.CTkButton(
+            nav_right,
+            text=_upgrade_text,
+            height=26,
+            font=("Segoe UI Semibold", 10, "bold"),
+            fg_color=self.ui["accent"],
+            hover_color=self.ui["accent_hover"],
+            text_color=self.ui["button_text"],
+            corner_radius=10,
+            command=_upgrade_cmd,
+        )
+        if self._nav_upgrade_visible():
+            self.nav_upgrade_btn.pack(side="right", padx=(4, 0))
+        else:
+            self.nav_upgrade_btn.pack_forget()
+
+        _nav_accent = thin_accent_line(shell, self.ui, width=1600, height=2)
+        _nav_accent.pack(fill="x", padx=0, pady=0)
+
+        # --- Tam genişlik kaydırılabilir alan (sidebar yok) ---
+        self.shell_main_area = ctk.CTkScrollableFrame(
+            shell,
+            fg_color=self.ui["bg"],
+            scrollbar_button_color=self.ui["panel_soft"],
+        )
+        self.shell_main_area.pack(expand=True, fill="both", padx=20, pady=(14, 10))
+
+        # --- Karşılama başlığı (kart çerçevesi yok) ---
+        welcome_hdr = ctk.CTkFrame(self.shell_main_area, fg_color="transparent")
+        welcome_hdr.pack(fill="x", pady=(0, 4))
+
+        _greeting = (
+            t("desktop.greeting", name=self._user_first_name())
+            if self._is_authenticated_session()
+            else t("desktop.workspace_title")
+        )
         ctk.CTkLabel(
-            hero_inner,
-            text=t("desktop.workspace_subtitle"),
-            font=("Segoe UI Semibold", 12, "bold"),
-            text_color=self.ui["text"],
-        ).pack(anchor="w", pady=(4, 0))
+            welcome_hdr,
+            text=_greeting,
+            font=("Segoe UI Semibold", 20, "bold"),
+            text_color=self.ui["accent_soft"],
+            anchor="w",
+        ).pack(anchor="w", padx=2)
+
         ctk.CTkLabel(
-            hero_inner,
-            text=t("desktop.workspace_desc"),
-            font=self.ui["small_font"],
+            welcome_hdr,
+            text=t("desktop.welcome_subtitle"),
+            font=("Segoe UI", 11),
             text_color=self.ui["muted"],
-            wraplength=720,
-            justify="left",
-        ).pack(anchor="w", pady=(8, 0))
+            anchor="w",
+        ).pack(anchor="w", padx=2, pady=(2, 8))
 
         self.account_badge = ctk.CTkLabel(
-            hero_inner,
+            welcome_hdr,
             text="",
             font=self.ui["small_font"],
             text_color=self.ui["text"],
             fg_color=self.ui["panel_soft"],
-            corner_radius=12,
-            padx=12,
-            pady=6,
+            corner_radius=10,
+            padx=10,
+            pady=5,
         )
-        self.account_badge.pack(anchor="w", pady=(14, 0))
+        self.account_badge.pack(anchor="w", padx=2)
 
         self.license_notice = ctk.CTkLabel(
-            hero_inner,
+            welcome_hdr,
             text="",
             font=self.ui["small_font"],
             text_color=self.ui["warning"],
-            wraplength=720,
+            wraplength=1000,
             justify="left",
+            anchor="w",
         )
-        self.license_notice.pack(anchor="w", pady=(8, 0))
+        self.license_notice.pack(anchor="w", padx=2, pady=(6, 0))
 
-        if self._is_authenticated_session() and not self._is_guest_mode():
-            hero_sync_row = ctk.CTkFrame(hero_inner, fg_color="transparent")
-            hero_sync_row.pack(anchor="w", pady=(8, 0))
-            self.hero_refresh_btn = ctk.CTkButton(
-                hero_sync_row,
-                text=t("desktop.refresh_subscription"),
-                height=34,
-                corner_radius=10,
-                font=("Segoe UI Semibold", 12, "bold"),
-                fg_color=self.ui["panel_soft"],
-                hover_color=self.ui["accent"],
-                text_color=self.ui["text"],
-                border_width=1,
-                border_color=self.ui["border_subtle"],
-                command=self.refresh_subscription_status,
-            )
-            self.hero_refresh_btn.pack(side="left")
-            ctk.CTkLabel(
-                hero_sync_row,
-                text=t("desktop.sync_web_hint"),
-                font=("Segoe UI", 11),
-                text_color=self.ui["muted"],
-                padx=(14, 0),
-            ).pack(side="left")
+        _sep = thin_accent_line(self.shell_main_area, self.ui, width=1400, height=1)
+        _sep.pack(fill="x", padx=0, pady=(8, 10))
 
+        # 4 kolonlu araç butonu ızgarası
         self.button_frame = ctk.CTkFrame(self.shell_main_area, fg_color="transparent")
-        self.button_frame.pack(fill="x")
-        for idx in range(3):
+        self.button_frame.pack(fill="x", pady=(0, 8))
+        for idx in range(4):
             self.button_frame.grid_columnconfigure(idx, weight=1)
 
         for i, spec in enumerate(self.feature_specs):
@@ -1180,11 +1177,11 @@ class NBPDFApp(ctk.CTk):
             ikon = spec["icon"]
             btn = ctk.CTkButton(
                 self.button_frame,
-                text=f"{ikon}\n\n{isim}",
-                width=220,
-                height=160,
+                text=f"{ikon}\n{isim}",
+                width=120,
+                height=120,
                 corner_radius=self.ui.get("radius_lg", 16),
-                font=("Segoe UI Semibold", 16, "bold"),
+                font=("Segoe UI Semibold", 12, "bold"),
                 fg_color=self.ui["panel"],
                 hover_color=self.ui["accent"],
                 text_color=self.ui["text"],
@@ -1192,7 +1189,7 @@ class NBPDFApp(ctk.CTk):
                 border_color=self.ui["border_subtle"],
                 command=lambda key=spec["key"], label=isim: self._grid_tool_launch(key, label),
             )
-            btn.grid(row=i // 3, column=i % 3, padx=12, pady=16)
+            btn.grid(row=i // 4, column=i % 4, padx=8, pady=10, sticky="nsew")
             self.feature_buttons[spec["key"]] = btn
 
         self._apply_license_visuals()
@@ -1211,23 +1208,30 @@ class NBPDFApp(ctk.CTk):
                 _unlock_btns.append(b)
         stagger_raise_buttons(self, _unlock_btns, self.ui, self.ui["panel_alt"], self.ui["panel"], 36)
         for spec in self.feature_specs:
+            btn = self.feature_buttons.get(spec["key"])
+            if not btn:
+                continue
             if spec["key"] not in _blocked:
-                attach_feature_button_polish(self.feature_buttons[spec["key"]], self.ui)
+                attach_feature_button_polish(btn, self.ui)
+            tip_text = t(spec.get("tip_key", "")) if spec.get("tip_key") else ""
+            if tip_text:
+                ToolTip(btn, tip_text, self.ui)
         self._set_footer(
             t("app.name"),
             f"{t('app.footer_byline')} · v{get_version_string()}",
             t("app.desktop_edition"),
             t("app.contact"),
             self.open_contact_dialog,
+            extra_links=self._footer_web_links(),
         )
 
     def _apply_license_visuals(self):
         if not self.license_info:
             return
         if self.nav_subscription_label:
-            self.nav_subscription_label.configure(text=self._subscription_nav_pill_text())
+            self.nav_subscription_label.configure(text=self._nav_plan_credits_text())
         if self.nav_profile_btn:
-            self.nav_profile_btn.configure(text=f"{self._user_nav_greeting()}   ▾")
+            self.nav_profile_btn.configure(text=f"{self._user_nav_greeting()}  ▾")
         if self.license_info.get("guest"):
             guest_state = self._load_guest_state(force_reload=True)
             remaining = guest_state.remaining_operations
@@ -1244,12 +1248,6 @@ class NBPDFApp(ctk.CTk):
             )
             if self.nav_upgrade_btn:
                 self.nav_upgrade_btn.pack_forget()
-            if self.sidebar_refresh_btn:
-                self.sidebar_refresh_btn.configure(
-                    state="normal",
-                    text=t("main.login"),
-                    command=lambda: self.show_login_screen(),
-                )
             for spec in self.feature_specs:
                 button = self.feature_buttons.get(spec["key"])
                 if button:
@@ -1257,14 +1255,8 @@ class NBPDFApp(ctk.CTk):
                         fg_color=self.ui["panel"],
                         hover_color=self.ui["accent"],
                         border_color=self.ui.get("border_subtle", self.ui["border"]),
-                        text=f"{spec['icon']}\n\n{self._feature_label(spec)}",
+                        text=f"{spec['icon']}\n{self._feature_label(spec)}",
                     )
-            for key, sbtn in self.sidebar_tool_buttons.items():
-                if key == "subscription":
-                    self._sidebar_style_row(sbtn, self.active_sidebar_key == "subscription", False)
-                    continue
-                self._sidebar_style_row(sbtn, self.active_sidebar_key == key, False)
-                sbtn.configure(text=f"•  {self._tool_sidebar_label(key)}")
             return
         user = self.current_session.get("user", {}) if self.current_session else {}
         plan = self.license_info.get("plan", user.get("plan", "-"))
@@ -1296,25 +1288,24 @@ class NBPDFApp(ctk.CTk):
             self.license_notice.configure(
                 text=f"{usage_head}\n\n{free_body}" if usage_head else free_body
             )
+            if self.nav_upgrade_btn:
+                self.nav_upgrade_btn.configure(text=t("desktop.navbar_upgrade"), command=self.open_upgrade_page)
             if self.nav_upgrade_btn and self._nav_upgrade_visible():
-                self.nav_upgrade_btn.pack(side="left", padx=4)
+                self.nav_upgrade_btn.pack(side="right", padx=(4, 0))
         else:
             self.license_notice.configure(
                 text=t("main.active_notice", device_text=device_text)
             )
             if self.nav_upgrade_btn:
+                self.nav_upgrade_btn.configure(text=t("desktop.buy_credits"), command=self.open_credit_purchase)
+            if self.nav_upgrade_btn and self._nav_upgrade_visible():
+                self.nav_upgrade_btn.pack(side="right", padx=(4, 0))
+            elif self.nav_upgrade_btn:
                 self.nav_upgrade_btn.pack_forget()
         idle_label = t("desktop.refresh_subscription")
         if self.sidebar_refresh_btn:
             self.sidebar_refresh_btn.configure(
                 state="disabled" if self.is_refreshing_license else "normal",
-                text=t("main.refresh_loading") if self.is_refreshing_license else idle_label,
-                command=self.refresh_subscription_status,
-            )
-        if getattr(self, "hero_refresh_btn", None):
-            self.hero_refresh_btn.configure(
-                state="disabled" if self.is_refreshing_license else "normal",
-                text=t("main.refresh_loading") if self.is_refreshing_license else idle_label,
                 command=self.refresh_subscription_status,
             )
 
@@ -1328,23 +1319,15 @@ class NBPDFApp(ctk.CTk):
                     fg_color=self.ui["panel_alt"],
                     hover_color=self.ui["panel_soft"],
                     border_color=self.ui["warning"],
-                    text=f"{spec['icon']}\n\n{self._feature_label(spec)}\n\n{t('desktop.locked_badge')}",
+                    text=f"{spec['icon']}\n{self._feature_label(spec)}\n{t('desktop.locked_badge')}",
                 )
             else:
                 button.configure(
                     fg_color=self.ui["panel"],
                     hover_color=self.ui["accent"],
                     border_color=self.ui.get("border_subtle", self.ui["border"]),
-                    text=f"{spec['icon']}\n\n{self._feature_label(spec)}",
+                    text=f"{spec['icon']}\n{self._feature_label(spec)}",
                 )
-        for key, sbtn in self.sidebar_tool_buttons.items():
-            if key == "subscription":
-                self._sidebar_style_row(sbtn, self.active_sidebar_key == "subscription", False)
-                continue
-            locked = key in blocked
-            prefix = "🔒 " if locked else "•  "
-            sbtn.configure(text=f"{prefix}{self._tool_sidebar_label(key)}")
-            self._sidebar_style_row(sbtn, self.active_sidebar_key == key, locked)
 
     def bootstrap_session(self):
         """If no access token → login. Otherwise re-validate on the server (never trust cached plan on disk)."""
@@ -1432,6 +1415,7 @@ class NBPDFApp(ctk.CTk):
             self.current_session["license"] = license_info
             self.license_info = license_info
             self.setup_ui()
+            self._fetch_credit_balance_async()
         elif kind == "login_status":
             _, message = item
             if hasattr(self, "login_status_label"):
@@ -1443,6 +1427,12 @@ class NBPDFApp(ctk.CTk):
             self.license_info = license_info
             self.session_store.save(build_session_payload(session["accessToken"], session["user"], license_info))
             self.setup_ui()
+            self._fetch_credit_balance_async()
+        elif kind == "credit_balance_ok":
+            _, data = item
+            self.credit_balance = data
+            if self.nav_subscription_label:
+                self.nav_subscription_label.configure(text=self._nav_plan_credits_text())
         elif kind == "login_error":
             _, message = item
             if hasattr(self, "login_button"):
@@ -1480,6 +1470,13 @@ class NBPDFApp(ctk.CTk):
             self._schedule_periodic_validation()
             if self.license_notice:
                 self.license_notice.configure(text=message or t("main.subscription_refreshing"))
+        elif kind == "handle_click_ready":
+            _, feature_key, isim = item
+            self._apply_license_visuals()
+            self._handle_click_after_sync(feature_key, isim)
+        elif kind == "handle_click_error":
+            _, message = item
+            messagebox.showwarning(t("app.warning"), message)
 
     def start_google_login(self):
         self.login_error_label.configure(text="")
@@ -1592,16 +1589,9 @@ class NBPDFApp(ctk.CTk):
 
     def _set_refresh_button_state(self, loading):
         self.is_refreshing_license = loading
-        idle_label = t("desktop.refresh_subscription")
         if self.sidebar_refresh_btn:
             self.sidebar_refresh_btn.configure(
                 state="disabled" if loading else "normal",
-                text=t("main.refresh_loading") if loading else idle_label,
-            )
-        if getattr(self, "hero_refresh_btn", None):
-            self.hero_refresh_btn.configure(
-                state="disabled" if loading else "normal",
-                text=t("main.refresh_loading") if loading else idle_label,
             )
 
     def _cancel_auth_queue_polling(self):
@@ -1623,7 +1613,7 @@ class NBPDFApp(ctk.CTk):
     def _schedule_periodic_validation(self):
         self._cancel_periodic_validation()
         if self._is_authenticated_session():
-            self.periodic_validation_after_id = self.after(3 * 60 * 1000, self._run_periodic_validation)
+            self.periodic_validation_after_id = self.after(30 * 60 * 1000, self._run_periodic_validation)
 
     def _run_periodic_validation(self):
         self.periodic_validation_after_id = None
@@ -1654,7 +1644,7 @@ class NBPDFApp(ctk.CTk):
         if not self._is_authenticated_session() or self._is_guest_mode() or self.is_refreshing_license:
             return
         now = time.monotonic()
-        if self._last_focus_subscription_sync is not None and now - self._last_focus_subscription_sync < 25.0:
+        if self._last_focus_subscription_sync is not None and now - self._last_focus_subscription_sync < 600.0:
             return
         self._last_focus_subscription_sync = now
         self._refresh_license_in_background(None, silent=True)
@@ -1767,7 +1757,11 @@ class NBPDFApp(ctk.CTk):
     def _offer_upgrade_for_server_error(self, message: str) -> None:
         self._open_upgrade_modal_quota_limit(detail=message)
 
+    # Offline çalışma: son başarılı sunucu yanıtını ve zamanını sakla
+    _OFFLINE_GRACE_SECONDS = 4 * 60 * 60  # 4 saat
+
     def authorize_operation(self, feature_key, file_paths):
+        import time
         if self._is_guest_mode():
             guest_state = self._load_guest_state(force_reload=True)
             if guest_state.guest_locked or guest_state.remaining_operations <= 0:
@@ -1785,12 +1779,22 @@ class NBPDFApp(ctk.CTk):
             raise DesktopAuthError(str(error)) from error
         try:
             result = self.auth_client.authorize_operation(self.current_session["accessToken"], feature_key, file_paths)
+            # Başarılı yanıtı önbelleğe al (offline grace period için)
+            self._last_authorize_result = result
+            self._last_authorize_time = time.monotonic()
         except DesktopAuthExpiredError as error:
             self.force_logout(t("main.session_expired"))
             raise DesktopAuthError(str(error)) from error
         except DesktopAccessBlockedError as error:
             self.force_logout(t("main.device_blocked"))
             raise DesktopAuthError(str(error)) from error
+        except DesktopNetworkError:
+            # İnternet yok — önbellek geçerliyse offline çalışmaya izin ver
+            cached = getattr(self, "_last_authorize_result", None)
+            cached_time = getattr(self, "_last_authorize_time", None)
+            if cached and cached_time and (time.monotonic() - cached_time) < self._OFFLINE_GRACE_SECONDS:
+                return cached
+            raise DesktopAuthError(t("desktop.offline_no_cache"))
         except DesktopAuthError as error:
             msg = str(error)
             if self._server_error_suggests_upgrade(msg):
@@ -1813,13 +1817,18 @@ class NBPDFApp(ctk.CTk):
 
     def handle_click(self, feature_key, isim):
         if self._is_authenticated_session():
-            try:
-                self._sync_subscription_for_auth()
-                self._apply_license_visuals()
-            except (DesktopAuthError, DesktopNetworkError) as error:
-                messagebox.showwarning(t("app.warning"), str(error))
-                return
+            def _worker():
+                try:
+                    self._sync_subscription_for_auth()
+                    self.auth_queue.put(("handle_click_ready", feature_key, isim))
+                except (DesktopAuthError, DesktopNetworkError) as error:
+                    self.auth_queue.put(("handle_click_error", str(error)))
+            threading.Thread(target=_worker, daemon=True).start()
+            return
 
+        self._handle_click_after_sync(feature_key, isim)
+
+    def _handle_click_after_sync(self, feature_key, isim):
         if not self.license_info:
             messagebox.showwarning(t("app.warning"), t("main.license_missing"))
             return
@@ -1856,8 +1865,60 @@ class NBPDFApp(ctk.CTk):
             CompressPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
         elif feature_key == "encrypt":
             EncryptPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "delete-pages":
+            DeletePagesWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "rotate-pdf":
+            RotatePdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "organize-pdf":
+            OrganizePdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "pdf-to-ppt":
+            PdfToPptWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "ppt-to-pdf":
+            PptToPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "pdf-to-image":
+            PdfToImageWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "image-to-pdf":
+            ImageToPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "html-to-pdf":
+            HtmlToPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "pdf-to-text":
+            PdfToTextWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "flatten-pdf":
+            FlattenPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "unlock-pdf":
+            UnlockPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "watermark":
+            WatermarkWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "page-numbers":
+            PageNumbersWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
+        elif feature_key == "repair-pdf":
+            RepairPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
         else:
             messagebox.showinfo(t("app.name"), f"{isim.replace('\n', ' ')}")
+
+    def _launch_with_animation(self, factory_fn):
+        try:
+            win = factory_fn()
+        except Exception:
+            return
+        if win is None:
+            return
+        try:
+            win.attributes("-alpha", 0.0)
+            alphas = [0.15, 0.35, 0.55, 0.75, 0.90, 1.0]
+
+            def _step(idx=0):
+                if idx >= len(alphas):
+                    return
+                try:
+                    win.attributes("-alpha", alphas[idx])
+                    win.after(20, lambda: _step(idx + 1))
+                except Exception:
+                    pass
+
+            win.after(10, lambda: _step(0))
+        except Exception:
+            pass
 
     def open_contact_dialog(self):
         ContactDialog(self, self.ekran_ortala, self.auth_client)

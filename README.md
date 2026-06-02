@@ -1,4 +1,4 @@
-# NB PDF PLATFORM
+# PDF PLATFORM
 
 Çoklu PDF ve ofis belgesi işlemlerini tek yerden yönetmenizi sağlayan araç seti. **Windows masaüstü uygulaması** ve tarayıcıda çalışan **web sürümü** (kimlik doğrulama, abonelik özeti ve PDF API) birlikte sunulur.
 
@@ -8,7 +8,7 @@
 
 ### Proje açıklaması
 
-NB PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler, sıkıştırma ve şifreleme gibi işlemleri kullanıcı dostu arayüzlerle sunar. Masaüstü sürümü yerel Python motoru üzerinde çalışır; web sürümü FastAPI tabanlı PDF servisi, Node.js kimlik API’si ve React arayüzünden oluşur.
+PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler, sıkıştırma ve şifreleme gibi işlemleri kullanıcı dostu arayüzlerle sunar. Masaüstü sürümü yerel Python motoru üzerinde çalışır; web sürümü FastAPI tabanlı PDF servisi, Node.js kimlik API’si ve React arayüzünden oluşur.
 
 ### Özellikler
 
@@ -62,6 +62,19 @@ NB PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler,
 3. **Masaüstü:** `python -m pip install -r requirements.txt` ve harici bağımlılıklar (Tesseract, Poppler, Word/Excel) — ayrıntılar için `SETUP_NOTES.txt`.
 4. Ayrıntılı adımlar: **[SETUP.md](SETUP.md)**, birlikte çalıştırma: **[CALISTIRMA.md](CALISTIRMA.md)**, web mimarisi: **[web/README.md](web/README.md)**.
 
+### Veritabanı Migration Rehberi
+
+Proje Prisma ORM kullanır. Migration geçmişi `web/api/prisma/migrations/` dizininde tutulur.
+
+| Komut | Ne Zaman |
+|-------|----------|
+| `npm run prisma:push` | İlk kurulum — bekleyen migration'ları dev.db'ye uygular |
+| `npm run prisma:migrate -- --name <açıklama>` | Şema değişikliği sonrası yeni migration oluştur (geliştirme) |
+| `npm run prisma:deploy` | **Üretim** — migration'ları üretim veritabanına güvenli uygula |
+| `npm run prisma:generate` | Sadece Prisma Client'ı yeniden oluştur (şema değişmedi) |
+
+**Önemli:** Üretim sunucusunda şema güncellemesi yaparken her zaman `prisma migrate deploy` kullanın; `db push` ASLA kullanmayın. `db push` migration dosyası oluşturmaz ve değişiklikleri geri almak imkânsız hale gelir.
+
 ### Kullanım
 
 - **Web:** Tarayıcıda `http://localhost:5173` (kökten `npm run dev` ile). PDF istekleri `localhost:8000`, oturum API’si `localhost:4000` üzerindedir.
@@ -75,7 +88,7 @@ NB PDF PLATFORM; PDF birleştirme, sayfa ayırma, Word/Excel ile dönüşümler,
 
 ### Overview
 
-NB PDF PLATFORM is a document toolkit for merging, splitting, converting, compressing, and securing PDFs, plus Word/Excel workflows. It ships as a **Windows desktop app** (Python) and a **web stack** (FastAPI PDF service, Node.js auth API, React UI).
+PDF PLATFORM is a document toolkit for merging, splitting, converting, compressing, and securing PDFs, plus Word/Excel workflows. It ships as a **Windows desktop app** (Python) and a **web stack** (FastAPI PDF service, Node.js auth API, React UI).
 
 ### Features
 
@@ -101,6 +114,18 @@ Python / CustomTkinter / PyPDF2 / pikepdf (desktop); React / TypeScript / Vite /
 2. **Web:** From the repo root run `npm run install-all`, copy `web/api/.env.example` → `web/api/.env` and `web/frontend/.env.example` → `web/frontend/.env`, run `npm run prisma:push`, then `npm run dev`.
 3. **Desktop:** `pip install -r requirements.txt` and follow **SETUP_NOTES.txt** for Tesseract, Poppler, and Office.
 4. More detail: **SETUP.md**, run scripts: **CALISTIRMA.md**, web architecture: **web/README.md**.
+
+### Database Migrations
+
+Migration history lives in `web/api/prisma/migrations/`. Always commit migration files to version control.
+
+| Command | When to use |
+|---------|-------------|
+| `npm run prisma:push` | First-time setup — applies pending migrations to dev.db |
+| `npm run prisma:migrate -- --name <desc>` | After changing schema.prisma — creates a new migration file |
+| `npm run prisma:deploy` | **Production** — applies pending migrations safely (no data loss) |
+
+> **Never use `db push` in production.** It does not create migration files and makes schema changes impossible to track or roll back.
 
 ### Usage
 

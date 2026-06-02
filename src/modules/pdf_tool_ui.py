@@ -38,6 +38,23 @@ def file_icon_emoji(path: str) -> str:
     return "📄"
 
 
+def _is_guest(access_controller) -> bool:
+    return (
+        access_controller is not None
+        and hasattr(access_controller, "_is_guest_mode")
+        and access_controller._is_guest_mode()
+    )
+
+
+def show_guest_file_wall(parent_widget, access_controller) -> None:
+    """Misafir modunda dosya seçimini engelle ve giriş mesajı göster."""
+    from tkinter import messagebox
+    msg = f"{t('desktop.guest_file_blocked')}\n\n{t('desktop.guest_file_blocked_hint')}"
+    if messagebox.askyesno(t("app.name"), msg + "\n\n" + t("main.sign_in_to_continue"), parent=parent_widget):
+        if hasattr(access_controller, "show_login_screen"):
+            access_controller.show_login_screen()
+
+
 def filter_paths_by_extensions(paths: Iterable[str], extensions: set[str]) -> list[str]:
     out: list[str] = []
     ext_lower = {e.lower() if e.startswith(".") else f".{e.lower()}" for e in extensions}
@@ -115,11 +132,24 @@ def build_drop_zone(
     title: str | None = None,
     hint: str | None = None,
     extensions: set[str] | None = None,
+    access_controller=None,
 ) -> ctk.CTkFrame:
     """Dashed-style drop area + primary browse. When ``extensions`` is set, Windows file drop is enabled (windnd)."""
     ui = theme()
     title = title or t("tool_ui.drop_title")
     hint = hint or t("tool_ui.drop_hint")
+
+    def _guarded_on_paths(paths):
+        if _is_guest(access_controller):
+            show_guest_file_wall(parent, access_controller)
+            return
+        on_paths(paths)
+
+    def _guarded_on_browse():
+        if _is_guest(access_controller):
+            show_guest_file_wall(parent, access_controller)
+            return
+        on_browse()
 
     outer = ctk.CTkFrame(
         parent,
@@ -132,7 +162,7 @@ def build_drop_zone(
     inner.pack(expand=True, fill="both", padx=28, pady=36)
 
     if extensions:
-        register_file_drop(outer, on_paths, extensions)
+        register_file_drop(outer, _guarded_on_paths, extensions)
 
     ctk.CTkLabel(inner, text="⬍", font=("Segoe UI", 42), text_color=ui["muted"]).pack()
     ctk.CTkLabel(
@@ -156,7 +186,7 @@ def build_drop_zone(
         fg_color=ui["accent"],
         hover_color=ui["accent_hover"],
         text_color=ui["button_text"],
-        command=on_browse,
+        command=_guarded_on_browse,
     ).pack()
 
     return outer
@@ -244,12 +274,13 @@ def build_file_card(
         ctk.CTkButton(
             row,
             text=t("app.change"),
-            width=96,
-            height=34,
+            width=120,
+            height=36,
             corner_radius=10,
             fg_color=ui["panel_soft"],
             hover_color=ui["border"],
             text_color=ui["text"],
+            font=ui["subtitle_font"],
             command=on_change,
         ).pack(side="right", padx=(12, 0))
 

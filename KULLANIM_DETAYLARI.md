@@ -1,4 +1,4 @@
-# NB PDF PLATFORM — Kullanım Detayları
+# PDF PLATFORM — Kullanım Detayları
 
 Bu dosya, projeyi **kod bilgisi olmayan** biri için de anlaşılır şekilde özetler: klasörler ne işe yarar, metni nereden değiştirirsiniz, ödeme ve e-posta ayarları nerededir, masaüstü uygulaması nasıl derlenir.
 
@@ -28,7 +28,7 @@ Projede kökte tek bir `backend` veya `desktop` klasörü **yoktur**; işlevler 
 
 ### Masaüstü uygulaması — `src/` (Windows .exe)
 
-- **Ne işe yarar:** Bilgisayara kurulan **NB PDF PLATFORM masaüstü programı** buradaki Python kodlarıdır (CustomTkinter arayüzü).
+- **Ne işe yarar:** Bilgisayara kurulan **PDF PLATFORM masaüstü programı** buradaki Python kodlarıdır (CustomTkinter arayüzü).
 - **Ana giriş dosyası:** `src/main.py` veya çalıştırma için `src/__main__.py` (aşağıda “Masaüstü uygulaması” bölümünde).
 - **Kısaca:** “Desktop” dediğimiz parça pratikte **`src/`** klasörüdür; kökte ayrı bir `desktop/` klasörü yoktur.
 
@@ -116,7 +116,7 @@ EMAIL_PASS=...
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_FROM_NAME=NB PDF PLATFORM
+SMTP_FROM_NAME=PDF PLATFORM
 ```
 
 - **Gmail kullanıyorsanız:** Normal hesap şifresi çoğu zaman çalışmaz. Google Hesabı → Güvenlik → **2 adımlı doğrulama** açıkken **uygulama şifresi** oluşturup `EMAIL_PASS` alanına yazmanız gerekir (`.env.example` içindeki Türkçe açıklamaya bakın).
@@ -149,7 +149,7 @@ Projede hazır tek tıkla `build.bat` her zaman olmayabilir. Önerilen yöntem *
 
 ### Masaüstü sunucu adresi
 
-- Masaüstü uygulaması API’ye bağlanmak için **`desktop_auth_config.json`** (proje kökünde veya `%APPDATA%\NB PDF PLATFORM` altında) kullanabilir; içinde **`api_base_url`** (örn. `http://127.0.0.1:4000/api`) tanımlanır.
+- Masaüstü uygulaması API’ye bağlanmak için **`desktop_auth_config.json`** (proje kökünde veya `%APPDATA%\PDF PLATFORM` altında) kullanabilir; içinde **`api_base_url`** (örn. `http://127.0.0.1:4000/api`) tanımlanır.
 
 ---
 

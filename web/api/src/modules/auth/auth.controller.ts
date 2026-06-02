@@ -14,6 +14,7 @@ import {
   changePasswordSchema,
   changePasswordSnakeSchema,
   setInitialPasswordSnakeSchema,
+  deleteAccountSchema,
   preferredLanguageSchema,
   registerSchema,
   updateProfileSchema,
@@ -34,6 +35,7 @@ import {
 import {
   changeUserPassword,
   setInitialPasswordForUser,
+  deleteUserAccount,
   getUserById,
   loginUser,
   logoutUser,
@@ -53,6 +55,9 @@ import {
   acceptOAuthFrontendOriginFromRequest,
   resolveOAuthSpaRedirectBase,
 } from "../../lib/oauth-frontend-origin.js";
+import { logAdminAudit } from "../admin/admin-audit.service.js";
+import { sendMail } from "../../lib/mailer.js";
+import { createAccountDeletionEmailTemplate } from "./auth.email.js";
 
 const REFRESH_COOKIE_NAME = "nbpdf_refresh_token";
 const OAUTH_STATE_COOKIE = "nbpdf_google_oauth";
@@ -279,7 +284,7 @@ function renderVerificationHtml(
   <body style="margin:0;min-height:100vh;background:#0f172a;font-family:Arial,Helvetica,sans-serif;color:#e2e8f0;display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="width:min(560px,100%);background:#111827;border:1px solid #1f2937;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.35);overflow:hidden;">
       <div style="padding:28px 28px 16px;border-bottom:1px solid #1f2937;">
-        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;color:#7dd3fc;text-transform:uppercase;">NB PDF PLATFORM</div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.18em;color:#7dd3fc;text-transform:uppercase;">PDF PLATFORM</div>
         <h1 style="margin:16px 0 0;font-size:28px;line-height:1.2;color:#f8fafc;">${title}</h1>
       </div>
       <div style="padding:28px;">
@@ -289,7 +294,7 @@ function renderVerificationHtml(
         <p style="margin:18px 0 0;font-size:15px;line-height:1.8;color:#cbd5e1;">${detail}</p>
         <p style="margin:18px 0 0;font-size:14px;line-height:1.8;color:#94a3b8;">You can now return to the application and continue with your account flow.</p>
         <a href="${env.FRONTEND_ORIGIN}/?view=login&email_verified=1" style="display:inline-block;margin-top:24px;padding:12px 18px;border-radius:14px;background:#1e293b;color:#f8fafc;text-decoration:none;font-weight:700;">
-          Open NB PDF PLATFORM
+          Open PDF PLATFORM
         </a>
       </div>
     </div>
@@ -327,8 +332,13 @@ export async function registerController(request: Request, response: Response) {
     );
   }
 
+  const skipEmailVerification =
+    typeof request.body === "object" &&
+    request.body !== null &&
+    (request.body as Record<string, unknown>)["skipEmailVerification"] === true;
+
   try {
-    const result = await registerUser(parsed.data);
+    const result = await registerUser(parsed.data, { skipEmailVerification });
     authLog.info("POST /api/auth/register: created", {
       userId: result.user.id,
     });
@@ -552,6 +562,74 @@ export async function setInitialPasswordPostController(
   });
 }
 
+const DELETE_ACCOUNT_LOG = "[auth/delete-account]";
+
+/**
+ * DELETE /api/auth/me — GDPR hesap silme.
+ * Kullanıcı şifresini doğrular; eşleşirse tüm verileri siler, oturumu kapatır,
+ * onay e-postası gönderir ve denetim kaydı bırakır.
+ */
+export async function deleteMyAccountController(
+  request: Request,
+  response: Response,
+) {
+  if (!request.authUser) {
+    throw new HttpError(401, "Authentication is required.");
+  }
+
+  const parsed = deleteAccountSchema.safeParse(request.body ?? {});
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
+  }
+
+  const { id: userId, email } = request.authUser;
+
+  authLog.info(`${DELETE_ACCOUNT_LOG} deletion requested`, { userId, email });
+
+  // deleteUserAccount verifies password and performs the delete atomically.
+  const { email: deletedEmail, preferredLanguage } = await deleteUserAccount(
+    userId,
+    parsed.data.password,
+  );
+
+  const deletedAt = new Date().toISOString();
+  authLog.info(`${DELETE_ACCOUNT_LOG} user deleted successfully`, { userId, email: deletedEmail, deletedAt });
+
+  // Persist audit trail — userId set to null because the row no longer exists.
+  try {
+    await logAdminAudit(
+      { userId: "deleted", email: deletedEmail },
+      "USER_SELF_DELETE",
+      deletedEmail,
+      `User deleted own account (GDPR). deletedAt=${deletedAt}`,
+      { userId, deletedAt },
+    );
+  } catch (auditErr) {
+    // Non-fatal: account is already deleted; just log the audit failure.
+    authLog.error(`${DELETE_ACCOUNT_LOG} audit log write failed (non-fatal)`, { detail: String(auditErr) });
+  }
+
+  // Clear refresh token cookie so the browser session is immediately invalidated.
+  response.clearCookie(REFRESH_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+  });
+
+  // Send confirmation email asynchronously — don't block the response.
+  const lang = preferredLanguage === "tr" ? "tr" : "en";
+  const emailTemplate = createAccountDeletionEmailTemplate({
+    email: deletedEmail,
+    deletedAt,
+    lang,
+  });
+  sendMail({ to: deletedEmail, ...emailTemplate }).catch((mailErr: unknown) => {
+    authLog.error(`${DELETE_ACCOUNT_LOG} confirmation email failed (non-fatal)`, { detail: String(mailErr) });
+  });
+
+  response.status(200).json({ message: "Account deleted successfully." });
+}
+
 export async function googleOAuthStartController(
   request: Request,
   response: Response,
@@ -567,7 +645,7 @@ export async function googleOAuthStartController(
         reason: error.message,
         ...meta,
       });
-      console.error(
+      authLog.error(
         `${GOOGLE_OAUTH_LOG} start FAILED (not configured or misconfigured)`,
         {
           message: error.message,
@@ -634,7 +712,7 @@ export async function googleOAuthStartController(
   const stateForGoogle =
     desktopLocalPort !== null ? `${state}.d${desktopLocalPort}` : state;
   const authorizeUrl = buildGoogleAuthorizeUrl(stateForGoogle);
-  console.log(`${GOOGLE_OAUTH_LOG} start → redirect to Google accounts`, {
+  authLog.info(`${GOOGLE_OAUTH_LOG} start → redirect to Google accounts`, {
     preferredLanguage,
     redirectUri: getGoogleRedirectUri(),
     statePreview: `${state.slice(0, 8)}…`,
@@ -679,7 +757,7 @@ export async function googleOAuthCallbackController(
       reason: desc.slice(0, 500),
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: Google returned error to redirect_uri`,
       {
         error: oauthErr,
@@ -713,7 +791,7 @@ export async function googleOAuthCallbackController(
       reason: "missing_code_or_state",
       ...meta,
     });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, {
+    authLog.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, {
       ...meta,
     });
     const url = oauthFrontendRedirect(
@@ -743,7 +821,7 @@ export async function googleOAuthCallbackController(
       reason: "oauth_cookie_missing",
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: OAuth state cookie missing (expired or blocked)`,
       { ...meta },
     );
@@ -789,7 +867,7 @@ export async function googleOAuthCallbackController(
       reason: "state_mismatch",
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: state mismatch (possible CSRF or stale session)`,
       {
         ...meta,
@@ -809,7 +887,7 @@ export async function googleOAuthCallbackController(
   }
 
   try {
-    console.log(
+    authLog.info(
       `${GOOGLE_OAUTH_LOG} callback: exchanging authorization code for tokens`,
       {
         codeLength: code.length,
@@ -818,7 +896,7 @@ export async function googleOAuthCallbackController(
       },
     );
     const googleAccess = await exchangeGoogleAuthorizationCode(code);
-    console.log(
+    authLog.info(
       `${GOOGLE_OAUTH_LOG} callback: fetching userinfo with access token`,
     );
     const profile = await fetchGoogleProfile(googleAccess);
@@ -858,7 +936,7 @@ export async function googleOAuthCallbackController(
             { token: session.accessToken },
             oauthSpaRedirectBase,
           );
-    console.log(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
+    authLog.info(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
       redirectKind:
         desktopLocalPort !== null ? "desktop-localhost" : "login-success",
       maskedUrl: maskRedirectUrlForLog(redirectUrl),
@@ -875,7 +953,7 @@ export async function googleOAuthCallbackController(
       message,
       raw: error instanceof Error ? error.message : String(error),
     });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: unhandled failure`, {
+    authLog.error(`${GOOGLE_OAUTH_LOG} callback: unhandled failure`, {
       userMessage: message,
       httpStatus: error instanceof HttpError ? error.statusCode : undefined,
       stack,
@@ -944,4 +1022,62 @@ export async function verifyEmailController(
     }
     throw error;
   }
+}
+
+/** GDPR Madde 20 — Kullanıcı verilerini JSON olarak dışa aktarır. */
+export async function exportMyDataController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) throw new HttpError(401, "Authentication required.");
+
+  const { prisma } = await import("../../lib/prisma.js");
+
+  const [user, operationLogs, downloadLogs] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, email: true, firstName: true, lastName: true, name: true,
+        plan: true, preferredLanguage: true, timezone: true, country: true,
+        city: true, authProvider: true, isVerified: true,
+        createdAt: true, lastLoginAt: true,
+        invoiceType: true, billingCountryCode: true, billingPostalCode: true,
+        companyName: true, taxOffice: true, isKvkkConsented: true,
+        kvkkConsentedAt: true,
+      },
+    }),
+    prisma.operationLog.findMany({
+      where: { userId },
+      select: { id: true, toolType: true, fileCount: true, totalFileSizeMB: true, status: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.downloadLog.findMany({
+      where: { userId },
+      select: { id: true, toolId: true, status: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  if (!user) throw new HttpError(404, "User not found.");
+
+  // Dışa aktarma isteğini denetim günlüğüne yaz
+  await prisma.adminAuditLog.create({
+    data: {
+      userId,
+      userEmail: user.email,
+      action: "GDPR_DATA_EXPORT",
+      summary: `User ${user.email} exported their personal data.`,
+    },
+  });
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    gdprNote: "This export fulfils GDPR Article 20 (data portability). Sensitive fields (password hash, encryption keys) are excluded.",
+    profile: user,
+    operationHistory: operationLogs,
+    downloadHistory: downloadLogs,
+  };
+
+  const filename = `nbpdf-data-export-${userId.slice(0, 8)}-${Date.now()}.json`;
+  response.setHeader("Content-Type", "application/json");
+  response.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  response.json(exportPayload);
 }

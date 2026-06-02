@@ -31,5 +31,11 @@ export function upgradeModalCopy(lang: Language) {
     ctaPro: tr ? "Pro’ya geç" : "Get Pro",
     ctaAnnual: tr ? "Yıllık Pro" : "Get annual Pro",
     close: tr ? "Kapat" : "Close",
+    refundGuarantee: tr
+      ? "💰 7 gün koşulsuz iade garantisi"
+      : "💰 7-day no-questions-asked refund",
+    refundSub: tr
+      ? "Memnun kalmazsanız, 7 gün içinde tam iade."
+      : "Not happy? Full refund within 7 days.",
   };
 }

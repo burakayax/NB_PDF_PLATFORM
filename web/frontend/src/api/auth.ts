@@ -14,6 +14,8 @@ export type AuthUser = {
   plan: string;
   /** ISO 8601; ücretli abonelik bitişi, yoksa null veya atlanmış. */
   subscription_expiry?: string | null;
+  /** Backend tarafından hesaplanan 7 günlük iade penceresi durumu. */
+  refundEligible?: boolean;
   role?: "USER" | "ADMIN";
   preferredLanguage: Language;
   isVerified?: boolean;
@@ -27,6 +29,12 @@ export type AuthUser = {
   billingPostalCode?: string | null;
   city?: string | null;
   country?: string | null;
+  /** True when user is part of a Business team (patron-managed). */
+  isTeamMember?: boolean;
+  /** The patron user's id when isTeamMember is true. */
+  teamOwnerId?: string | null;
+  /** Role within the team when isTeamMember is true. */
+  teamMemberRole?: "MEMBER" | "MANAGER" | null;
 };
 
 /** PATCH /api/auth/profile and PATCH /api/user/profile (same backend handler). */
@@ -190,6 +198,22 @@ export async function refreshAuthSession(): Promise<AuthResponse | null> {
 
 export async function logoutAuthUser() {
   await sendAuthRequest("/logout");
+}
+
+/** GDPR Madde 17 — kullanıcı kendi hesabını kalıcı olarak siler. */
+export async function deleteMyAccount(
+  accessToken: string,
+  password: string,
+): Promise<void> {
+  const response = await saasFetch(`/api/auth/me`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password }),
+  });
+  await ensureOk(response, "Account deletion failed.");
 }
 
 export async function fetchAuthenticatedUser(

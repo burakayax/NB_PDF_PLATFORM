@@ -24,17 +24,7 @@ function normalizeMeasurementId(raw: string | undefined): string | null {
   return id;
 }
 
-let loggedGaEnvOnce = false;
-
 export function getGaMeasurementId(): string | null {
-  if (!loggedGaEnvOnce) {
-    loggedGaEnvOnce = true;
-    // Vercel / yerel derlemede VITE_* değişkeninin gerçekten bundle’a dahil olduğunu F12 ile doğrulamak için
-    console.log(
-      "[GA] import.meta.env.VITE_GA_MEASUREMENT_ID",
-      JSON.stringify(import.meta.env.VITE_GA_MEASUREMENT_ID),
-    );
-  }
   return normalizeMeasurementId(import.meta.env.VITE_GA_MEASUREMENT_ID);
 }
 

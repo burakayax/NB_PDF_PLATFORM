@@ -11,7 +11,10 @@ import asyncio
 import os
 from typing import Optional
 
-from app.core.preview_thumbnail import generate_hero_watermarked_preview_png
+from app.core.preview_thumbnail import (
+    generate_hero_watermarked_preview_png,
+    generate_hero_watermarked_preview_png_from_path,
+)
 from app.core.thread_pool import run_cpu_bound
 
 _MAX = max(1, int(os.getenv("PREVIEW_HERO_MAX_CONCURRENT", "2")))
@@ -22,3 +25,9 @@ async def generate_hero_watermarked_preview_png_queued(pdf_bytes: bytes) -> Opti
     """Hero önizlemesini en fazla ``PREVIEW_HERO_MAX_CONCURRENT`` eşzamanlı iş parçacığında üret."""
     async with _hero_semaphore:
         return await run_cpu_bound(generate_hero_watermarked_preview_png, pdf_bytes)
+
+
+async def generate_hero_watermarked_preview_png_queued_from_path(pdf_path) -> Optional[bytes]:
+    """``generate_hero_watermarked_preview_png_queued`` gibi ama dosyayı RAM'e yüklemeden açar."""
+    async with _hero_semaphore:
+        return await run_cpu_bound(generate_hero_watermarked_preview_png_from_path, pdf_path)

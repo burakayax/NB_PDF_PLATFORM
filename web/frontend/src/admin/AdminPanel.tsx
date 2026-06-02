@@ -1,6 +1,7 @@
 ﻿import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   fetchAdminAppSettings,
+  fetchAdminAuditLog,
   fetchAdminCms,
   fetchAdminCoupons,
   fetchAdminMarketing,
@@ -13,6 +14,7 @@ import {
   downloadAdminDownloadLogProof,
   fetchAdminDownloadLogs,
   fetchAdminUsageSeries,
+  type AdminAuditRow,
   type AdminDownloadLogRow,
   postAdminMarketingBroadcast,
   putAdminCms,
@@ -71,7 +73,8 @@ type AdminTabId =
   | "content"
   | "media"
   | "settings"
-  | "analytics";
+  | "analytics"
+  | "audit";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
 
@@ -112,6 +115,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "media", label: "Medya" },
       { id: "settings", label: "Ayarlar" },
       { id: "analytics", label: "Analitik" },
+      { id: "audit", label: "İşlem günlüğü" },
     ],
   },
 ]);
@@ -251,7 +255,7 @@ export function AdminPanel({
   viewerRole = "ADMIN",
 }: AdminPanelProps) {
   const [tab, setTab] = useState<AdminTabId>("dashboard");
-  const [uiMode, setUiMode] = useState<AdminUiMode>(() => readStoredAdminUiMode());
+  const uiMode: AdminUiMode = "advanced";
   const [overview, setOverview] = useState<AdminOverview | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [pendingCmsMediaBind, setPendingCmsMediaBind] = useState<{
@@ -269,14 +273,6 @@ export function AdminPanel({
   const [bBusy, setBBusy] = useState(false);
   const [cBusy, setCBusy] = useState(false);
   const [cmdErr, setCmdErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(ADMIN_UI_MODE_STORAGE_KEY, uiMode);
-    } catch {
-      /* ignore quota / private mode */
-    }
-  }, [uiMode]);
 
   const queueCmsMediaBind = useCallback((slot: CmsMediaBindSlot, url: string) => {
     setPendingCmsMediaBind({ slot, url });
@@ -376,8 +372,8 @@ export function AdminPanel({
       userEmail={userEmail}
       onExit={onExit}
       onLogout={onLogout}
-      simpleMode={uiMode === "simple"}
-      onSimpleMode={(v) => setUiMode(v ? "simple" : "advanced")}
+      simpleMode={false}
+      onSimpleMode={() => undefined}
     >
       <div className="px-4 py-6 md:px-8">
         {cmdErr && ["cmd-tools", "cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
@@ -558,6 +554,7 @@ export function AdminPanel({
           <SettingsTab accessToken={accessToken} uiMode={uiMode} showSystemTOOLS={viewerRole === "ADMIN"} />
         ) : null}
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
+        {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
     </MosaicLayout>
   );
@@ -2634,6 +2631,97 @@ function MediaTab({
         </table>
         {items.length === 0 ? <p className="p-4 text-center text-xs text-slate-500">Henüz dosya yok.</p> : null}
       </div>
+    </div>
+  );
+}
+
+function AuditLogTab({ accessToken }: { accessToken: string }) {
+  const [rows, setRows] = useState<AdminAuditRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { items } = await fetchAdminAuditLog(accessToken, 300);
+        setRows(items);
+      } catch {
+        setRows([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [accessToken]);
+
+  const filtered = q.trim()
+    ? rows.filter(
+        (r) =>
+          r.userEmail.toLowerCase().includes(q.toLowerCase()) ||
+          r.action.toLowerCase().includes(q.toLowerCase()) ||
+          r.summary.toLowerCase().includes(q.toLowerCase()),
+      )
+    : rows;
+
+  const fmtDate = (s: string) =>
+    new Date(s).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" });
+
+  const actionColor = (action: string) => {
+    if (action.includes("delete") || action.includes("reset")) return "text-rose-300";
+    if (action.includes("create") || action.includes("grant")) return "text-emerald-300";
+    if (action.includes("update") || action.includes("patch") || action.includes("put")) return "text-cyan-300";
+    if (action.includes("block")) return "text-amber-300";
+    return "text-slate-300";
+  };
+
+  return (
+    <div className="space-y-4">
+      <AdminMutedBox>
+        Tüm yönetici değişiklikleri bu günlükte kayıt altına alınır. Salt okunurdur.
+      </AdminMutedBox>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="E-posta, işlem veya özet ara…"
+          className="flex-1 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+        />
+        <span className="shrink-0 text-xs text-slate-500">{filtered.length} kayıt</span>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <p className="py-10 text-center text-sm text-slate-500">Kayıt bulunamadı.</p>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.07]">
+          <table className="w-full min-w-[700px] text-xs">
+            <thead>
+              <tr className="border-b border-white/[0.08] text-left text-slate-500">
+                <th className="px-4 py-2.5 font-semibold">Tarih</th>
+                <th className="px-4 py-2.5 font-semibold">Kullanıcı</th>
+                <th className="px-4 py-2.5 font-semibold">İşlem</th>
+                <th className="px-4 py-2.5 font-semibold">Hedef</th>
+                <th className="px-4 py-2.5 font-semibold">Özet</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => (
+                <tr key={row.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                  <td className="px-4 py-2 font-mono text-slate-400 whitespace-nowrap">{fmtDate(row.createdAt)}</td>
+                  <td className="px-4 py-2 text-slate-300 whitespace-nowrap">{row.userEmail}</td>
+                  <td className={`px-4 py-2 font-mono font-semibold whitespace-nowrap ${actionColor(row.action)}`}>{row.action}</td>
+                  <td className="max-w-[140px] truncate px-4 py-2 font-mono text-slate-400">{row.targetKey ?? "—"}</td>
+                  <td className="max-w-[280px] truncate px-4 py-2 text-slate-300">{row.summary}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

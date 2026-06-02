@@ -1,4 +1,4 @@
-# NB PDF PLATFORM - Paket Başlatıcı
+# PDF PLATFORM - Paket Başlatıcı
 # Bu dosya, 'src' klasörünü bir Python modülü (package) olarak tanımlar.
 
 from . import pdf_engine
