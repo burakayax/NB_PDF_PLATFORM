@@ -12,6 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:install": "playwright install chromium --with-deps",
     "dev": "vite --host",
     "dev:with-pdf-api": "concurrently -k -n pdf,ui -c blue,magenta \"node ../../scripts/run-pdf-api.mjs\" \"vite --host\"",
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
