@@ -5,6 +5,7 @@ services:
   # ─── PDF API (FastAPI / Python) ───────────────────────────────────────────
   - type: web
     name: nb-pdf-api
+    branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
     # Docker runtime: native Python runtime'da apt-get çalışmaz (salt-okunur FS).
     # Sistem araçları (tesseract/poppler/wkhtmltopdf/ghostscript) Dockerfile'da kurulur.
     runtime: docker
@@ -58,6 +59,7 @@ services:
   # ─── Auth API (Express / Node.js) ─────────────────────────────────────────
   - type: web
     name: nb-auth-api
+    branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
     runtime: node
     region: frankfurt
     plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
@@ -128,6 +130,7 @@ services:
   # alanları desteklenmez (her ikisi de blueprint doğrulama hatası verir).
   - type: web
     name: nb-pdf-frontend
+    branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
     runtime: static
     rootDir: web/frontend
     buildCommand: npm ci && npm run build
