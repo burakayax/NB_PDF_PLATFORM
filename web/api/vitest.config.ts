@@ -5,6 +5,15 @@ export default defineConfig({
     globals: false,
     environment: "node",
     include: ["src/__tests__/**/*.test.ts"],
+    // Testlerde .env dosyası yoktur (CI). env.ts/zod tarafından zorunlu tutulan
+    // ancak DB'yi etkilemeyen saf config değerlerine güvenli test varsayılanları
+    // ver. DATABASE_URL / JWT_* / BILLING_ENCRYPTION_KEY CI ortamından gelir.
+    env: {
+      ADMIN_EMAIL: "admin@example.test",
+      ROLE_ADMIN_EMAIL: "admin@example.test",
+      EMAIL_USER: "ci@example.test",
+      EMAIL_PASS: "ci-test-password",
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
