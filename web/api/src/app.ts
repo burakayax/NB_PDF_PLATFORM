@@ -24,37 +24,36 @@ import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
-function corsAllowedOrigins(): Set<string> {
-  const primary = env.FRONTEND_ORIGIN.replace(/\/$/, "");
-  const set = new Set<string>([primary]);
+/**
+ * İzinli origin'leri toplar ve her biri için varyantlarını ekler:
+ *  - localhost ↔ 127.0.0.1 (yerel geliştirme)
+ *  - apex ↔ www (örn. pdfplatform.app ↔ www.pdfplatform.app)
+ * Site www'a (veya tam tersi) yönlendiğinde CORS'un kırılmaması için.
+ */
+function addOriginVariants(set: Set<string>, raw: string): void {
+  const origin = raw.replace(/\/$/, "");
+  if (!origin) return;
+  set.add(origin);
   try {
-    const u = new URL(primary);
+    const u = new URL(origin);
     if (u.hostname === "localhost") {
-      u.hostname = "127.0.0.1";
-      set.add(u.origin);
+      const v = new URL(origin); v.hostname = "127.0.0.1"; set.add(v.origin);
     } else if (u.hostname === "127.0.0.1") {
-      u.hostname = "localhost";
-      set.add(u.origin);
+      const v = new URL(origin); v.hostname = "localhost"; set.add(v.origin);
+    } else {
+      const v = new URL(origin);
+      v.hostname = u.hostname.startsWith("www.") ? u.hostname.slice(4) : `www.${u.hostname}`;
+      set.add(v.origin);
     }
   } catch {
     /* ignore */
   }
-  const oauth = env.OAUTH_FRONTEND_REDIRECT_ORIGIN.replace(/\/$/, "");
-  if (oauth && oauth !== primary) {
-    set.add(oauth);
-    try {
-      const u = new URL(oauth);
-      if (u.hostname === "localhost") {
-        u.hostname = "127.0.0.1";
-        set.add(u.origin);
-      } else if (u.hostname === "127.0.0.1") {
-        u.hostname = "localhost";
-        set.add(u.origin);
-      }
-    } catch {
-      /* ignore */
-    }
-  }
+}
+
+function corsAllowedOrigins(): Set<string> {
+  const set = new Set<string>();
+  addOriginVariants(set, env.FRONTEND_ORIGIN);
+  addOriginVariants(set, env.OAUTH_FRONTEND_REDIRECT_ORIGIN);
   return set;
 }
 

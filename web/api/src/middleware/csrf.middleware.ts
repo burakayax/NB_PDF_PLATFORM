@@ -1,24 +1,27 @@
 import type { NextFunction, Request, Response } from "express";
 import { env } from "../config/env.js";
 
-function allowedOrigins(): Set<string> {
-  const normalize = (o: string) => o.replace(/\/$/, "");
-  const primary = normalize(env.FRONTEND_ORIGIN);
-  const set = new Set<string>([primary]);
+/** Bir origin'i ve varyantlarını (localhost↔127.0.0.1, apex↔www) sete ekler. */
+function addOriginVariants(set: Set<string>, raw: string): void {
+  const origin = raw.replace(/\/$/, "");
+  if (!origin) return;
+  set.add(origin);
   try {
-    const u = new URL(primary);
-    if (u.hostname === "localhost") { u.hostname = "127.0.0.1"; set.add(u.origin); }
-    else if (u.hostname === "127.0.0.1") { u.hostname = "localhost"; set.add(u.origin); }
+    const u = new URL(origin);
+    if (u.hostname === "localhost") { const v = new URL(origin); v.hostname = "127.0.0.1"; set.add(v.origin); }
+    else if (u.hostname === "127.0.0.1") { const v = new URL(origin); v.hostname = "localhost"; set.add(v.origin); }
+    else {
+      const v = new URL(origin);
+      v.hostname = u.hostname.startsWith("www.") ? u.hostname.slice(4) : `www.${u.hostname}`;
+      set.add(v.origin);
+    }
   } catch { /* ignore */ }
-  const oauth = normalize(env.OAUTH_FRONTEND_REDIRECT_ORIGIN);
-  if (oauth && oauth !== primary) {
-    set.add(oauth);
-    try {
-      const u = new URL(oauth);
-      if (u.hostname === "localhost") { u.hostname = "127.0.0.1"; set.add(u.origin); }
-      else if (u.hostname === "127.0.0.1") { u.hostname = "localhost"; set.add(u.origin); }
-    } catch { /* ignore */ }
-  }
+}
+
+function allowedOrigins(): Set<string> {
+  const set = new Set<string>();
+  addOriginVariants(set, env.FRONTEND_ORIGIN);
+  addOriginVariants(set, env.OAUTH_FRONTEND_REDIRECT_ORIGIN);
   return set;
 }
 
