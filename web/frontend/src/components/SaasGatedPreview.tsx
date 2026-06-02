@@ -91,7 +91,7 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
   const { isLocked, isDownloadDisabled, action, blurLevel, source, reason } = state;
 
   const handlePrimary = () => {
-    if (action === "upgrade" && reason === "insufficient_credits" && onInsufficientCredits) {
+    if (action === "upgrade" && reason === "plan_limit_reached" && onInsufficientCredits) {
       onInsufficientCredits();
       return;
     }
@@ -192,12 +192,12 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
               </p>
               <p className="saas-gated-preview__meta" aria-label={filename}>
                 <span className="saas-gated-preview__filename">{filename}</span>
-              {copy.creditsLeftLabel.trim().length > 0 ? (
+              {copy.remainingOpsLabel.trim().length > 0 ? (
                 <>
                   <span className="saas-gated-preview__dot" aria-hidden="true">
                     ·
                   </span>
-                  <span className="saas-gated-preview__cost">{copy.creditsLeftLabel}</span>
+                  <span className="saas-gated-preview__cost">{copy.remainingOpsLabel}</span>
                 </>
               ) : null}
               </p>

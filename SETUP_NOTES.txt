@@ -1,4 +1,4 @@
-NB PDF PLATFORM - GEREKLI KURULUM NOTLARI
+PDF PLATFORM - GEREKLI KURULUM NOTLARI
 
 Bu projeyi farkli bir bilgisayarda calistirirken sadece kodu tasimak yetmez.
 Asagidaki Python kutuphaneleri ve harici programlar eksiksiz kurulmalidir.

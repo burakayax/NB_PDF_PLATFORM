@@ -102,7 +102,7 @@ export async function previewCreditPackCheckout(params: {
   const product = params.product;
   const row = await prisma.user.findUnique({
     where: { id: params.userId },
-    select: { lastExitIntentCreditDiscountAt: true },
+    select: { id: true },
   });
   if (!row) {
     throw new HttpError(404, "User not found.");
@@ -128,7 +128,7 @@ export async function previewCreditPackCheckout(params: {
     discountPercent = v.coupon.discountPercent;
   }
 
-  const exitOfferEligible = isExitIntentEligible(row.lastExitIntentCreditDiscountAt);
+  const exitOfferEligible = isExitIntentEligible(null);
   const { finalAmount, exitApplied } = computeLinePrices({
     baseAmount: baseMoney,
     discountPercent,
@@ -188,7 +188,6 @@ export async function startCreditPackCheckoutFromToken(params: {
   if (!env.creditCheckoutUseFake) {
     return createCreditPackIyzicoSession({
       userId: params.userId,
-      payload: p,
       clientIp: params.clientIp,
     });
   }

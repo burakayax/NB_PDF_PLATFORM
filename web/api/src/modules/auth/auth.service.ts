@@ -1,18 +1,20 @@
-import { randomInt } from "node:crypto";
 import type {
   AuthProvider,
   EmailVerificationToken,
   Language,
+  OrgRole,
   Plan,
   User,
   UserRole,
 } from "@prisma/client";
+import { logger } from "../../lib/file-log.js";
 import { isEmailBlocked } from "../../lib/blocked-email.js";
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
 import {
   signAccessToken,
+  signDesktopAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } from "../../lib/jwt.js";
@@ -40,7 +42,8 @@ import {
   logGoogleOAuthJwtIssued,
   previewSecret,
 } from "./google-oauth.console.js";
-import { grantCredits } from "../subscription/entitlement.engine.js";
+import { createOrganizationForUser } from "../organization/organization.service.js";
+import { REFUND_WINDOW_DAYS } from "../payment/payment.service.js";
 
 type PublicUser = {
   id: string;
@@ -50,20 +53,24 @@ type PublicUser = {
   name: string | null;
   avatar: string | null;
   plan: Plan;
-  subscription_expiry: string | null;
   role: UserRole;
+  orgRole: OrgRole;
+  organizationId: string | null;
   preferredLanguage: Language;
+  timezone: string;
   isVerified: boolean;
   authProvider: AuthProvider;
-  /** False when the account has no bcrypt password (e.g. Google-only). */
   hasPassword: boolean;
   createdAt: string;
-  /** Billing — used for iyzico checkout inline flow (optional until collected). */
   phone: string | null;
   billingAddressLine: string | null;
   billingPostalCode: string | null;
   city: string | null;
   country: string | null;
+  refundEligible?: boolean;
+  isTeamMember: boolean;
+  teamOwnerId: string | null;
+  teamMemberRole: "MEMBER" | "MANAGER" | null;
 };
 
 type EmailVerificationTokenWithUser = EmailVerificationToken & {
@@ -108,11 +115,11 @@ function toPublicUser(user: User): PublicUser {
     name: user.name,
     avatar: user.avatar,
     plan: user.plan,
-    subscription_expiry: user.subscriptionExpiry
-      ? user.subscriptionExpiry.toISOString()
-      : null,
     role: user.role,
+    orgRole: user.orgRole,
+    organizationId: user.organizationId ?? null,
     preferredLanguage: user.preferredLanguage,
+    timezone: user.timezone ?? "Europe/Istanbul",
     isVerified: user.isVerified,
     authProvider: user.authProvider,
     hasPassword: Boolean(user.passwordHash),
@@ -122,18 +129,31 @@ function toPublicUser(user: User): PublicUser {
     billingPostalCode: user.billingPostalCode ?? null,
     city: user.city ?? null,
     country: user.country ?? null,
+    isTeamMember: user.isTeamMember,
+    teamOwnerId: user.teamOwnerId ?? null,
+    teamMemberRole: (user.teamMemberRole as "MEMBER" | "MANAGER" | null) ?? null,
   };
 }
 
-async function createSession(user: User) {
+async function createSession(user: User, isDesktop = false) {
+  // Revoke all existing valid sessions so only one active session per user exists
+  await prisma.refreshToken.updateMany({
+    where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
+    data: { revokedAt: new Date() },
+  });
+
   const payload = {
     sub: user.id,
     email: user.email,
     plan: user.plan,
     role: user.role,
+    orgRole: user.orgRole,
+    ...(user.organizationId ? { organizationId: user.organizationId } : {}),
   };
 
-  const accessToken = signAccessToken(payload);
+  const accessToken = isDesktop
+    ? signDesktopAccessToken(payload)
+    : signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
   const refreshTokenHash = hashToken(refreshToken);
 
@@ -149,10 +169,33 @@ async function createSession(user: User) {
     },
   });
 
+  const publicUser = toPublicUser(user);
+
+  if (user.plan !== "FREE") {
+    try {
+      const lastCheckout = await prisma.paymentCheckout.findFirst({
+        where: { userId: user.id, status: "completed" },
+        orderBy: { completedAt: "desc" },
+        select: { completedAt: true, createdAt: true },
+      });
+      if (lastCheckout) {
+        const completedAt = lastCheckout.completedAt ?? lastCheckout.createdAt;
+        const ageMs = Date.now() - completedAt.getTime();
+        publicUser.refundEligible = ageMs <= REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+      } else {
+        publicUser.refundEligible = false;
+      }
+    } catch {
+      publicUser.refundEligible = false;
+    }
+  } else {
+    publicUser.refundEligible = false;
+  }
+
   return {
     accessToken,
     refreshToken,
-    user: toPublicUser(user),
+    user: publicUser,
   };
 }
 
@@ -168,7 +211,7 @@ function logGoogleOAuthSessionIssued(
     refreshTokenPreview: previewSecret(session.refreshToken, 24),
     refreshTokenLength: session.refreshToken.length,
   });
-  console.log(`${GOOGLE_OAUTH_LOG} session ready`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} session ready`, {
     flow,
     userId: session.user.id,
     email: session.user.email,
@@ -177,11 +220,14 @@ function logGoogleOAuthSessionIssued(
   });
 }
 
-/** E-postadaki tıklanabilir bağlantı: {APP_BASE_URL}/api/auth/verify-email?token=... */
+/** E-postadaki tıklanabilir bağlantı: {FRONTEND_ORIGIN}/api/auth/verify-email?token=...
+ *  FRONTEND_ORIGIN kullanılır — production'da kullanıcı bu domain'e erişir,
+ *  /api/auth/* reverse-proxy veya Vite proxy üzerinden API'ye iletilir.
+ */
 export function buildEmailVerificationLink(rawToken: string) {
   const verifyUrl = new URL(
     "/api/auth/verify-email",
-    env.APP_BASE_URL.replace(/\/$/, ""),
+    env.FRONTEND_ORIGIN.replace(/\/$/, ""),
   );
   verifyUrl.searchParams.set("token", rawToken);
   return verifyUrl.toString();
@@ -209,7 +255,7 @@ async function sendVerificationEmail(user: User, rawToken: string) {
   const verificationUrl = buildEmailVerificationLink(rawToken);
   const emailTemplate = createVerificationEmailTemplate({
     verificationUrl,
-    productName: "NB PDF PLATFORM",
+    productName: "PDF PLATFORM",
     expiresInHours: env.EMAIL_VERIFICATION_TTL_HOURS,
   });
 
@@ -225,7 +271,7 @@ async function sendAdminNotificationEmail(user: User) {
   const notificationTemplate = createAdminNotificationEmailTemplate({
     userEmail: user.email,
     registeredAt: user.createdAt.toISOString(),
-    productName: "NB PDF PLATFORM",
+    productName: "PDF PLATFORM",
   });
 
   await sendMail({
@@ -307,18 +353,15 @@ function deriveGoogleFirstLast(parts: {
   return { firstName: fn, lastName: ln };
 }
 
-async function grantWelcomeCreditsForNewUser(userId: string): Promise<void> {
-  const lo = env.welcomeCreditsMin;
-  const hi = env.welcomeCreditsMax;
-  if (hi <= 0) {
-    return;
-  }
-  const amount = lo >= hi ? lo : randomInt(lo, hi + 1);
-  await grantCredits(userId, amount, "bonus");
+async function ensureOrganizationForUser(user: User): Promise<void> {
+  if (user.organizationId) return;
+  const orgName = user.name ?? user.email.split("@")[0] ?? "My Workspace";
+  await createOrganizationForUser(user.id, orgName, "FREE");
 }
 
 export async function registerUser(
   input: RegisterInput,
+  options?: { skipEmailVerification?: boolean },
 ): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
@@ -357,6 +400,7 @@ export async function registerUser(
   const cityTrim = input.city?.trim() ?? "";
 
   const passwordHash = await hashPassword(input.password);
+  const resolvedRole = resolveRoleFromEmail(input.email);
   const user = await prisma.user.create({
     data: {
       email: input.email,
@@ -367,14 +411,15 @@ export async function registerUser(
       ...(cityTrim ? { city: cityTrim, country: "Turkey" } : {}),
       passwordHash,
       authProvider: "local",
-      role: resolveRoleFromEmail(input.email),
-      isVerified: false,
+      role: resolvedRole,
+      isVerified: options?.skipEmailVerification === true,
       preferredLanguage: input.preferredLanguage ?? "en",
+      plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
     },
   });
 
   // İstenen teşhis çıktıları (kayıt ve e-posta akışı)
-  console.log("User created");
+  logger.info("auth","User created");
 
   authLog.info("register: user saved", {
     userId: user.id,
@@ -383,42 +428,44 @@ export async function registerUser(
     preferredLanguage: user.preferredLanguage,
   });
 
-  const rawToken = await createEmailVerificationToken(user.id);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { verificationToken: rawToken },
-  });
-
-  console.log("Verification email sending...");
-  try {
-    await sendVerificationEmail(user, rawToken);
-    console.log("Email sent successfully");
-  } catch (error) {
-    console.error("Verification email failed — full error:", error);
-    if (error instanceof Error) {
-      console.error(error.stack);
-    }
-    authLog.error("register: verification email failed, rolling back user", {
-      userId: user.id,
-      email: user.email,
-      error: String(error),
+  if (!options?.skipEmailVerification) {
+    const rawToken = await createEmailVerificationToken(user.id);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken: rawToken },
     });
-    await prisma.user.delete({ where: { id: user.id } });
-    throw new HttpError(
-      503,
-      "We could not send the verification email. Please try again later.",
-    );
+
+    logger.info("auth","Verification email sending...");
+    try {
+      await sendVerificationEmail(user, rawToken);
+      logger.info("auth","Email sent successfully");
+    } catch (error) {
+      logger.error("auth","Verification email failed — full error:", error);
+      if (error instanceof Error) {
+        logger.error("auth",error.stack);
+      }
+      authLog.error("register: verification email failed, rolling back user", {
+        userId: user.id,
+        email: user.email,
+        error: String(error),
+      });
+      await prisma.user.delete({ where: { id: user.id } });
+      throw new HttpError(
+        503,
+        "We could not send the verification email. Please try again later.",
+      );
+    }
   }
 
   let persistedUser: User = user;
   try {
-    await grantWelcomeCreditsForNewUser(user.id);
+    await ensureOrganizationForUser(user);
     const refetched = await prisma.user.findUnique({ where: { id: user.id } });
     if (refetched) {
       persistedUser = refetched;
     }
   } catch (error) {
-    authLog.warn("register: welcome credits grant failed (user kept)", {
+    authLog.warn("register: organization creation failed (user kept)", {
       userId: user.id,
       error: String(error),
     });
@@ -442,7 +489,6 @@ export async function registerUser(
         lastName: persistedUser.lastName,
         name: persistedUser.name,
         role: persistedUser.role,
-        credit_balance: persistedUser.credit_balance,
       }),
     )
     .catch(() => {
@@ -511,14 +557,22 @@ export async function loginUser(
 
   user = await syncUserRoleFromEmail(user);
 
+  if (isAdminUser(user) && user.plan !== "BUSINESS") {
+    user = await prisma.user.update({
+      where: { id: user.id },
+      data: { plan: "BUSINESS" },
+    });
+  }
+
   if (deviceId) {
     await ensureDesktopDeviceAccess(user.id, deviceId, true, {
       bypassDeviceLimit: isAdminUser(user),
     });
   }
 
+  user = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   authLog.info("login: success", { userId: user.id, email: user.email });
-  return createSession(user);
+  return createSession(user, Boolean(deviceId));
 }
 
 export async function refreshSession(
@@ -575,6 +629,34 @@ export async function logoutUser(refreshToken: string | undefined) {
   await revokeRefreshToken(refreshToken);
 }
 
+export async function deleteUserAccount(userId: string, password: string): Promise<{ email: string; preferredLanguage: Language }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new HttpError(404, "User account could not be found.");
+  }
+
+  // Google-only accounts have no password; reject deletion via this path.
+  if (!user.passwordHash) {
+    throw new HttpError(400, "This account uses Google sign-in and has no password. Contact support to delete your account.");
+  }
+
+  const passwordOk = await verifyPassword(password, user.passwordHash);
+  if (!passwordOk) {
+    throw new HttpError(401, "Incorrect password.");
+  }
+
+  // Explicitly delete refresh tokens before the user row so any in-flight
+  // token rotation cannot race past the cascade (defensive; cascade covers it).
+  await prisma.refreshToken.deleteMany({ where: { userId } });
+
+  // Deleting the user cascades to: RefreshToken, DailyUsage, PaymentCheckout,
+  // CreditTransaction, EmailVerificationToken, DeviceToken, CouponUsage,
+  // UserEntitlement per schema onDelete: Cascade rules.
+  await prisma.user.delete({ where: { id: userId } });
+
+  return { email: user.email, preferredLanguage: user.preferredLanguage };
+}
+
 export async function getUserById(userId: string) {
   let user = await prisma.user.findUnique({
     where: { id: userId },
@@ -585,7 +667,26 @@ export async function getUserById(userId: string) {
   }
 
   user = await syncUserRoleFromEmail(user);
-  return toPublicUser(user);
+  const publicUser = toPublicUser(user);
+
+  if (user.plan !== "FREE") {
+    const lastCheckout = await prisma.paymentCheckout.findFirst({
+      where: { userId, status: "completed" },
+      orderBy: { completedAt: "desc" },
+      select: { completedAt: true, createdAt: true },
+    });
+    if (lastCheckout) {
+      const completedAt = lastCheckout.completedAt ?? lastCheckout.createdAt;
+      const ageMs = Date.now() - completedAt.getTime();
+      publicUser.refundEligible = ageMs <= REFUND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    } else {
+      publicUser.refundEligible = false;
+    }
+  } else {
+    publicUser.refundEligible = false;
+  }
+
+  return publicUser;
 }
 
 export async function updatePreferredLanguage(
@@ -767,7 +868,7 @@ export async function signInWithGoogle(params: {
     displayName: params.name,
   });
 
-  console.log(`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, {
     email,
     name: params.name ?? null,
     googleId,
@@ -781,7 +882,7 @@ export async function signInWithGoogle(params: {
 
   if (existing) {
     if (existing.authProvider !== "google") {
-      console.error(
+      logger.error("auth",
         `${GOOGLE_OAUTH_LOG} signInWithGoogle ERROR: email already used by local account`,
         {
           email,
@@ -797,7 +898,7 @@ export async function signInWithGoogle(params: {
       );
     }
 
-    const user = await prisma.user.update({
+    let user = await prisma.user.update({
       where: { id: existing.id },
       data: {
         googleId,
@@ -815,7 +916,7 @@ export async function signInWithGoogle(params: {
       },
     });
 
-    console.log(
+    logger.info("auth",
       `${GOOGLE_OAUTH_LOG} user record updated (existing Google user)`,
       {
         userId: user.id,
@@ -828,7 +929,13 @@ export async function signInWithGoogle(params: {
       email: user.email,
     });
     const synced = await syncUserRoleFromEmail(user);
-    const session = await createSession(synced);
+    if (isAdminUser(synced) && synced.plan !== "BUSINESS") {
+      user = await prisma.user.update({
+        where: { id: synced.id },
+        data: { plan: "BUSINESS" },
+      });
+    }
+    const session = await createSession(isAdminUser(synced) ? (synced.plan === "BUSINESS" ? synced : user) : synced);
     logGoogleOAuthSessionIssued(session, "google-login");
     return session;
   }
@@ -855,10 +962,11 @@ export async function signInWithGoogle(params: {
       isVerified: true,
       verifiedAt: new Date(),
       preferredLanguage: params.preferredLanguage,
+      plan: resolveRoleFromEmail(email) === "ADMIN" ? "BUSINESS" : "FREE",
     },
   });
 
-  console.log(`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
     userId: persistedGoogleUser.id,
     email: persistedGoogleUser.email,
     googleId,
@@ -870,7 +978,7 @@ export async function signInWithGoogle(params: {
   });
 
   try {
-    await grantWelcomeCreditsForNewUser(persistedGoogleUser.id);
+    await ensureOrganizationForUser(persistedGoogleUser);
     const refetched = await prisma.user.findUnique({
       where: { id: persistedGoogleUser.id },
     });
@@ -878,7 +986,7 @@ export async function signInWithGoogle(params: {
       persistedGoogleUser = refetched;
     }
   } catch (error) {
-    authLog.warn("google register: welcome credits grant failed (user kept)", {
+    authLog.warn("google register: organization creation failed (user kept)", {
       userId: persistedGoogleUser.id,
       error: String(error),
     });
@@ -887,7 +995,7 @@ export async function signInWithGoogle(params: {
   try {
     await sendAdminNotificationEmail(persistedGoogleUser);
   } catch (error) {
-    console.warn(
+    logger.warn("auth",
       `${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`,
       {
         userId: persistedGoogleUser.id,
@@ -912,7 +1020,6 @@ export async function signInWithGoogle(params: {
         lastName: persistedGoogleUser.lastName,
         name: persistedGoogleUser.name,
         role: persistedGoogleUser.role,
-        credit_balance: persistedGoogleUser.credit_balance,
       }),
     )
     .catch(() => {});

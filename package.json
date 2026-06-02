@@ -1,8 +1,8 @@
 {
-  "name": "nb-pdf-TOOLS",
+  "name": "pdf-platform",
   "private": true,
   "version": "0.1.0",
-  "description": "NB PDF PLATFORM — kök betiklerle web (PDF API + kimlik API + Vite) birlikte çalıştırılır.",
+  "description": "PDF PLATFORM — kök betiklerle web (PDF API + kimlik API + Vite) birlikte çalıştırılır.",
   "//_turkce_aciklama": "JSON standart olarak yorum satırı içermez; tüm betik açıklamaları kökteki CALISTIRMA.md dosyasındadır.",
   "scripts": {
     "postinstall": "npm install --prefix web/api --no-fund --no-audit && npm install --prefix web/frontend --no-fund --no-audit",
@@ -10,6 +10,7 @@
     "install-all": "npm install && npm install --prefix web/api && npm install --prefix web/frontend && node scripts/install-python-web.mjs && npm run prisma:generate --prefix web/api",
     "dev": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs\" \"npm run dev --prefix web/api\" \"node scripts/run-vite-when-ready.mjs\"",
     "prestart": "node scripts/ensure-dev-prereqs.mjs",
+    "dev:local": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs\" \"npm run dev:local --prefix web/api\" \"npm run dev --prefix web/frontend\"",
     "start": "concurrently -n pdf,api,ui -c blue,green,magenta \"node scripts/run-pdf-api.mjs --prod\" \"npm run start --prefix web/api\" \"npm run preview --prefix web/frontend -- --host 127.0.0.1\"",
     "build:all": "npm run build --prefix web/api && npm run build --prefix web/frontend",
     "build:production": "npm run build:all",
@@ -17,10 +18,12 @@
     "prisma:generate": "npm run prisma:generate --prefix web/api"
   },
   "devDependencies": {
+    "@types/axios": "^0.9.36",
     "concurrently": "^9.1.2"
   },
   "dependencies": {
     "all": "^0.0.0",
+    "axios": "^1.16.1",
     "framer-motion": "^12.38.0",
     "postinstall": "^0.11.2",
     "predev": "^1.0.12"

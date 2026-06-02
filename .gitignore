@@ -62,6 +62,9 @@ web/api/node_modules/.prisma/
 # --- Admin uploads (local) ---
 web/api/uploads/
 
+# --- Lokal schema (SQLite development) ---
+schema.sqlite.prisma
+
 # --- IDE ve editör ---
 .idea/
 .vscode/
@@ -75,3 +78,11 @@ output/
 *.pdf
 *.docx
 *.xlsx
+
+# --- Test çıktıları ve coverage ---
+web/frontend/coverage/
+web/api/coverage/
+web/frontend/playwright-report/
+web/frontend/test-results/
+test_output.pptx
+*.pptx

@@ -56,6 +56,8 @@ export const DEFAULT_POST_LIMIT_THROTTLE_RUNTIME: PostLimitThrottleRuntime = {
     "pdf-to-image": 1.28,
     "image-to-pdf": 1.1,
     "html-to-pdf": 1.2,
+    "pdf-to-text": 0.75,
+    "flatten-pdf": 0.85,
   },
   fileTiers: [
     { minMb: 12, factor: 1.22 },

@@ -7,10 +7,14 @@ const MISSING_MSG =
 
 /**
  * Yerel geliştirmede .env unutulduğunda Zod hatalarından önce net uyarı verir.
- * Üretimde yalnızca ortam değişkenleri kullanılıyorsa dosya zorunlu değildir.
+ * Üretim ve test (CI) ortamında yalnızca ortam değişkenleri kullanıldığından
+ * dosya zorunlu değildir.
  */
 export function assertEnvFileExists(): void {
-  if (process.env.NODE_ENV === "production") {
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.NODE_ENV === "test"
+  ) {
     return;
   }
   const configDir = path.dirname(fileURLToPath(import.meta.url));

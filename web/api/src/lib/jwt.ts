@@ -1,4 +1,4 @@
-import type { Plan, UserRole } from "@prisma/client";
+import type { OrgRole, Plan, UserRole } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 
@@ -6,29 +6,37 @@ type UserTokenPayload = {
   sub: string;
   email: string;
   plan: Plan;
-  /** Rol alanı eklendikten sonra üretilen tokenlarda bulunur; eski tokenlarda yok olabilir. */
   role?: UserRole;
+  orgRole?: OrgRole;
+  organizationId?: string;
   type: "access" | "refresh";
 };
 
-/** Yeni üretilen erişim/yenileme JWT'lerine gömülen yük; her zaman role içerir. */
 export type AuthUserPayload = {
   sub: string;
   email: string;
   plan: Plan;
   role: UserRole;
+  orgRole: OrgRole;
+  organizationId?: string;
 };
 
-function createPayload(payload: AuthUserPayload, type: "access" | "refresh"): UserTokenPayload {
-  return {
-    ...payload,
-    type,
-  };
+function createPayload(
+  payload: AuthUserPayload,
+  type: "access" | "refresh",
+): UserTokenPayload {
+  return { ...payload, type };
 }
 
 export function signAccessToken(payload: AuthUserPayload) {
   return jwt.sign(createPayload(payload, "access"), env.JWT_ACCESS_SECRET, {
     expiresIn: `${env.ACCESS_TOKEN_TTL_MINUTES}m`,
+  });
+}
+
+export function signDesktopAccessToken(payload: AuthUserPayload) {
+  return jwt.sign(createPayload(payload, "access"), env.JWT_ACCESS_SECRET, {
+    expiresIn: `${env.DESKTOP_ACCESS_TOKEN_TTL_DAYS}d`,
   });
 }
 
@@ -39,7 +47,10 @@ export function signRefreshToken(payload: AuthUserPayload) {
 }
 
 export function verifyAccessToken(token: string) {
-  const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as UserTokenPayload;
+  const payload = jwt.verify(
+    token,
+    env.JWT_ACCESS_SECRET,
+  ) as UserTokenPayload;
   if (payload.type !== "access") {
     throw new Error("Invalid access token.");
   }
@@ -47,7 +58,10 @@ export function verifyAccessToken(token: string) {
 }
 
 export function verifyRefreshToken(token: string) {
-  const payload = jwt.verify(token, env.JWT_REFRESH_SECRET) as UserTokenPayload;
+  const payload = jwt.verify(
+    token,
+    env.JWT_REFRESH_SECRET,
+  ) as UserTokenPayload;
   if (payload.type !== "refresh") {
     throw new Error("Invalid refresh token.");
   }
@@ -59,7 +73,6 @@ type PasswordResetJwtPayload = {
   typ: "pwd_reset";
 };
 
-/** Kod doğrulandıktan sonra yeni şifre adımı; erişim JWT’sinden ayrı tür. */
 export function signPasswordResetJwt(userId: string) {
   const payload: PasswordResetJwtPayload = { sub: userId, typ: "pwd_reset" };
   return jwt.sign(payload, env.JWT_ACCESS_SECRET, { expiresIn: "25m" });

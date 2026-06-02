@@ -37,21 +37,39 @@ def delete_pages_pdf(
     output_path: str,
     pages_to_delete: List[int],
     password: Optional[str] = None,
+    *,
+    total_pages: Optional[int] = None,
 ) -> bool:
-    """İstenen sayfaları kaynakta silerek tek geçişte kaydeder (büyük PDF’lerde insert_pdf döngüsünden çok daha verimli)."""
-    n = get_num_pages(pdf_path, password=password)
-    to_del = {int(p) for p in pages_to_delete}
-    if any(p < 1 or p > n for p in to_del):
-        raise Exception("Geçersiz sayfa numarası.")
-    if len(to_del) >= n:
-        raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
-    doc = _fitz_open(pdf_path, password=password)
+    """İstenen sayfalar çıkarılmış yeni belge oluşturur (insert_pdf aralık aktarımı ile büyük PDF’lerde çok daha hızlı)."""
+    import fitz as _fitz_local
+    src = _fitz_open(pdf_path, password=password)
     try:
-        for p in sorted(to_del, reverse=True):
-            doc.delete_page(p - 1)
-        doc.save(output_path, garbage=4, deflate=True, linear=False)
+        n = src.page_count
+        to_del = {int(p) for p in pages_to_delete}
+        if any(p < 1 or p > n for p in to_del):
+            raise Exception("Geçersiz sayfa numarası.")
+        if len(to_del) >= n:
+            raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
+        keep = [i for i in range(n) if (i + 1) not in to_del]
+        new_doc = _fitz_local.open()
+        try:
+            ranges: list[tuple[int, int]] = []
+            if keep:
+                s = keep[0]; e = keep[0]
+                for k in keep[1:]:
+                    if k == e + 1:
+                        e = k
+                    else:
+                        ranges.append((s, e))
+                        s = e = k
+                ranges.append((s, e))
+            for from_p, to_p in ranges:
+                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
+            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
+        finally:
+            new_doc.close()
     finally:
-        doc.close()
+        src.close()
     return True
 
 
@@ -87,7 +105,9 @@ def rotate_pdf(
                 page = doc[i]
                 cur = int(page.rotation) % 360
                 page.set_rotation((cur + degrees) % 360)
-        doc.save(output_path, garbage=4, deflate=True, linear=True)
+        # Döndürme yalnızca sayfa sözlüğündeki /Rotate meta-verisini değiştirir;
+        # içerik akışları dokunulmaz — yeniden sıkıştırmaya gerek yok.
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -98,24 +118,43 @@ def organize_pdf(
     output_path: str,
     new_order_1based: List[int],
     password: Optional[str] = None,
+    *,
+    total_pages: Optional[int] = None,
 ) -> bool:
-    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2])."""
-    n = get_num_pages(pdf_path, password=password)
-    for p in new_order_1based:
-        if p < 1 or p > n:
-            raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
-    if len(new_order_1based) != n:
-        raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
-    if len(set(new_order_1based)) != n:
-        raise Exception("Aynı sayfa iki kez kullanılamaz.")
+    """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2]).
+
+    insert_pdf ile ardışık aralık aktarımı kullanır — büyük PDF'lerde
+    select()+save() tam dosya yeniden yazımından çok daha hızlıdır.
+    """
+    import fitz as _fitz_local
     src = _fitz_open(pdf_path, password=password)
-    out = fitz.open()
     try:
+        n = src.page_count
         for p in new_order_1based:
-            out.insert_pdf(src, from_page=p - 1, to_page=p - 1)
-        out.save(output_path, garbage=4, deflate=True, linear=True)
+            if p < 1 or p > n:
+                raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
+        if len(new_order_1based) != n:
+            raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
+        if len(set(new_order_1based)) != n:
+            raise Exception("Aynı sayfa iki kez kullanılamaz.")
+        order_0 = [p - 1 for p in new_order_1based]
+        ranges: list[tuple[int, int]] = []
+        s = order_0[0]; e = order_0[0]
+        for k in order_0[1:]:
+            if k == e + 1:
+                e = k
+            else:
+                ranges.append((s, e))
+                s = e = k
+        ranges.append((s, e))
+        new_doc = _fitz_local.open()
+        try:
+            for from_p, to_p in ranges:
+                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
+            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
+        finally:
+            new_doc.close()
     finally:
-        out.close()
         src.close()
     return True
 
@@ -136,16 +175,32 @@ def unlock_pdf_pikepdf(input_path: str, output_path: str, password: str) -> bool
     return True
 
 
+def _hex_to_rgb(hex_color: str) -> tuple:
+    """#RRGGBB → (r, g, b) 0-1 aralığında."""
+    h = hex_color.lstrip("#")
+    if len(h) != 6:
+        return (0.55, 0.55, 0.55)
+    try:
+        return tuple(int(h[i : i + 2], 16) / 255.0 for i in (0, 2, 4))
+    except ValueError:
+        return (0.55, 0.55, 0.55)
+
+
 def add_watermark_text(
     input_path: str,
     output_path: str,
     text: str,
     opacity: float = 0.12,
     password: Optional[str] = None,
+    font_name: str = "helv",
+    font_color: str = "#8C8C8C",
 ) -> bool:
     if not (text or "").strip():
         raise Exception("Filigran metni boş olamaz.")
     op = max(0.01, min(0.5, float(opacity)))
+    color = _hex_to_rgb(font_color)
+    valid_fonts = {"helv", "tiro", "cour", "zadb", "symb"}
+    fn = font_name if font_name in valid_fonts else "helv"
     doc = _fitz_open(input_path, password=password)
     try:
         for i in range(doc.page_count):
@@ -155,12 +210,13 @@ def add_watermark_text(
             page.insert_text(
                 c,
                 (text or "").strip(),
+                fontname=fn,
                 fontsize=22,
-                color=(0.55, 0.55, 0.55),
+                color=color,
                 render_mode=0,
                 fill_opacity=op,
             )
-        doc.save(output_path, garbage=4, deflate=True, linear=True)
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
@@ -172,44 +228,153 @@ def add_page_numbers(
     start_at: int = 1,
     position: str = "footer",
     password: Optional[str] = None,
+    fmt: str = "plain",
 ) -> bool:
+    """
+    fmt: "plain"  → "3"
+         "page"   → "Sayfa 3"  / "Page 3"
+         "of"     → "3 / 10"
+    """
     doc = _fitz_open(input_path, password=password)
     try:
+        total = doc.page_count
         num = int(start_at)
-        for i in range(doc.page_count):
+        margin_x = 36
+        strip_h = 24
+        for i in range(total):
             page = doc[i]
             r = page.rect
-            label = str(num)
-            if position == "header":
-                pt = fitz.Point(r.x0 + r.width / 2, r.y0 + 20)
+            if fmt == "page":
+                label = f"Sayfa {num}"
+            elif fmt == "of":
+                label = f"{num} / {total}"
             else:
-                pt = fitz.Point(r.x0 + r.width / 2, r.y1 - 18)
-            page.insert_text(pt, label, fontsize=9, color=(0, 0, 0))
+                label = str(num)
+            # Use a full-width rect so insert_textbox can centre the text.
+            if position == "header":
+                rect = fitz.Rect(r.x0 + margin_x, r.y0 + 6, r.x1 - margin_x, r.y0 + strip_h)
+            else:
+                rect = fitz.Rect(r.x0 + margin_x, r.y1 - strip_h, r.x1 - margin_x, r.y1 - 6)
+            page.insert_textbox(
+                rect, label,
+                fontsize=9,
+                color=(0.4, 0.4, 0.4),
+                align=fitz.TEXT_ALIGN_CENTER,
+            )
             num += 1
-        doc.save(output_path, garbage=4, deflate=True, linear=True)
+        doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
     return True
 
 
 def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
+    """Bozuk PDF'i çok aşamalı strateji ile onarır. Tüm yöntemler başarısız olursa açıklayıcı hata verir."""
     try:
         import pikepdf
     except ImportError as e:
-        raise Exception("pikepdf gerekli.") from e
+        raise Exception("pikepdf kütüphanesi bulunamadı; sunucu yapılandırmasını kontrol edin.") from e
+
+    op = (password or "").strip()
+    errors: list[str] = []
+
+    # Strateji 1: pikepdf — çapraz referans tablosunu yeniden oluşturur, bozuk akışları atlar
+    try:
+        with pikepdf.open(input_path, password=op, suppress_warnings=True) as pdf:
+            pdf.save(output_path, compress_streams=True, recompress_flate=True)
+        if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+            return True
+    except pikepdf.PasswordError:
+        raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
+    except Exception as e1:
+        errors.append(f"pikepdf: {e1!s:.150}")
+
+    # Strateji 2: PyMuPDF — xref tablosunu yeniden oluşturur, stream'leri temizler
+    try:
+        doc = _fitz_open(input_path, password=password)
+        try:
+            doc.save(output_path, garbage=4, deflate=True, clean=True, linear=False)
+        finally:
+            doc.close()
+        if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+            return True
+    except Exception as e2:
+        if "password" in str(e2).lower() or "encrypted" in str(e2).lower():
+            raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
+        errors.append(f"fitz: {e2!s:.150}")
+
+    # Strateji 3: pikepdf lenient mode (çok bozuk dosyalar için, kurtarılabilir sayfalar)
+    try:
+        with pikepdf.open(input_path, password=op, suppress_warnings=True, ignore_xref_streams=True) as pdf:
+            if len(pdf.pages) == 0:
+                errors.append("pikepdf-lenient: sayfa bulunamadı")
+            else:
+                pdf.save(output_path, compress_streams=True)
+                if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+                    return True
+    except Exception as e3:
+        errors.append(f"pikepdf-lenient: {e3!s:.150}")
+
+    err_summary = " | ".join(errors[:3])
+    raise Exception(
+        f"PDF onarılamadı. Dosya kurtarılamayacak kadar ciddi biçimde bozulmuş olabilir. "
+        f"Orijinal dosyanın yedeği varsa onu kullanın. ({err_summary})"
+    )
+
+
+def pdf_to_text(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
+    """PDF içindeki metin katmanını düz metin dosyasına yazar (sayfa başlıkları dahil)."""
+    doc = _fitz_open(input_path, password=password)
+    try:
+        lines: list[str] = []
+        for page_num, page in enumerate(doc, 1):
+            text = page.get_text("text").strip()
+            if text:
+                lines.append(f"--- Sayfa {page_num} ---")
+                lines.append(text)
+        if not lines:
+            raise Exception("PDF içinde çıkarılabilir metin bulunamadı. Taranmış görüntü PDF'leri metin içermez.")
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+    finally:
+        doc.close()
+    return True
+
+
+def flatten_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
+    """Etkileşimli form alanlarını ve açıklamaları PDF içeriğine gömer (düzleştirir)."""
+    try:
+        import pikepdf
+    except ImportError as e:
+        raise Exception("pikepdf kütüphanesi bulunamadı.") from e
     op = (password or "").strip()
     try:
-        with pikepdf.open(input_path, password=op or None) as pdf:
-            pdf.save(output_path, linearize=True, compress_streams=True)
-    except Exception as e1:
-        try:
-            doc = _fitz_open(input_path, password=password)
-            try:
-                doc.save(output_path, garbage=3, deflate=True, clean=True)
-            finally:
-                doc.close()
-        except Exception as e2:
-            raise Exception(f"Onarma başarısız: {e1} / {e2}") from e1
+        # pikepdf password varsayılanı "" (parolasız); None geçmek bazı sürümlerde
+        # TypeError verir. Her zaman string geçiyoruz.
+        with pikepdf.open(input_path, password=op) as pdf:
+            # Form alanlarını sil — içerik zaten sayfaya render edilmiş olarak kalır
+            if "/AcroForm" in pdf.Root:
+                del pdf.Root["/AcroForm"]
+            for page in pdf.pages:
+                if "/Annots" in page:
+                    annots = page["/Annots"]
+                    keep = []
+                    for annot in annots:
+                        atype = str(annot.get("/Subtype", ""))
+                        if atype not in ("/Widget", "/FreeText", "/Stamp", "/Highlight",
+                                         "/Underline", "/StrikeOut", "/Squiggly", "/Caret"):
+                            keep.append(annot)
+                    if keep:
+                        page["/Annots"] = pikepdf.Array(keep)
+                    else:
+                        del page["/Annots"]
+            pdf.save(output_path, compress_streams=True)
+    except pikepdf.PasswordError:
+        raise Exception("PDF şifreli; düzleştirmek için doğru parolayı girin.")
+    except Exception as e:
+        if "password" in str(e).lower():
+            raise Exception("PDF şifreli; düzleştirmek için doğru parolayı girin.")
+        raise
     return True
 
 
@@ -229,8 +394,10 @@ def pdf_to_images_zip(
     ext = "png" if fmt == "png" else "jpg"
     import src.pdf_engine as pe
 
+    import os as _os
+    _cpu = max(1, min((_os.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png" if ext == "png" else "jpeg"}
+    kw_base: dict = {"dpi": int(dpi), "fmt": "png" if ext == "png" else "jpeg", "thread_count": _cpu}
     if poppler and os.path.isdir(poppler):
         kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()
@@ -276,7 +443,7 @@ def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
                     merged.insert_pdf(m)
                 finally:
                     m.close()
-            merged.save(output_path, garbage=4, deflate=True)
+            merged.save(output_path, garbage=1, deflate=False)
         finally:
             merged.close()
         return True
@@ -286,7 +453,11 @@ def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
 
 
 def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None) -> bool:
-    """Önce wkhtmltopdf (daha uyumlu), sonra xhtml2pdf dener."""
+    """Önce wkhtmltopdf (daha uyumlu), sonra xhtml2pdf dener.
+
+    wkhtmltopdf sistemde yoksa xhtml2pdf ile devam eder (sınırlı CSS desteği).
+    Her ikisi de başarısız olursa kullanıcı dostu bir hata mesajı fırlatır.
+    """
     wk = shutil.which("wkhtmltopdf")
     if wk:
         try:
@@ -314,16 +485,35 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
     try:
         from xhtml2pdf import pisa
     except ImportError as e:
-        raise Exception("HTML→PDF için 'xhtml2pdf' veya sistemde wkhtmltopdf gerekli.") from e
+        raise Exception(
+            "HTML→PDF dönüşümü şu anda kullanılamıyor. "
+            "Sunucuda wkhtmltopdf kurulu değil ve xhtml2pdf paketi de bulunamadı. "
+            "Lütfen daha sonra tekrar deneyin veya destek ekibiyle iletişime geçin."
+        ) from e
+    html_src = html or "<html><body></body></html>"
+    # xhtml2pdf modern CSS'i parse edemez; tüm stylesheet referanslarını ve inline style bloklarını kaldır
+    import re as _re
+    html_src = _re.sub(r'<link[^>]+rel=["\']stylesheet["\'][^>]*>', '', html_src, flags=_re.IGNORECASE)
+    html_src = _re.sub(r'<link[^>]+href=["\'][^"\']*\.css[^"\']*["\'][^>]*>', '', html_src, flags=_re.IGNORECASE)
+    html_src = _re.sub(r'<style[^>]*>.*?</style>', '', html_src, flags=_re.IGNORECASE | _re.DOTALL)
+    html_src = _re.sub(r'@import\s+["\'][^"\']+["\'];?', '', html_src, flags=_re.IGNORECASE)
+    if "<meta charset" not in html_src[:1000].lower():
+        if "<head>" in html_src.lower():
+            html_src = html_src.replace("<head>", '<head><meta charset="utf-8">', 1)
+        else:
+            html_src = f'<html><head><meta charset="utf-8"></head><body>{html_src}</body></html>'
     with open(output_path, "wb") as out:
         status = pisa.CreatePDF(
-            src=io.StringIO(html or ""),
+            src=html_src.encode("utf-8"),
             dest=out,
+            encoding="utf-8",
             path_base=base_url or None,
         )
     if status.err or not (os.path.isfile(output_path) and os.path.getsize(output_path) > 32):
         raise Exception(
-            "HTML PDF'e dönüştürülemedi. wkhtmltopdf veya geçerli HTML ile tekrar deneyin."
+            "HTML PDF'e dönüştürülemedi. "
+            "Sayfanın geçerli HTML içerdiğinden emin olun ve JavaScript gerektirmeyen basit sayfalar deneyin. "
+            "Karmaşık CSS/JS içeren sayfalar için URL yerine sayfa kaynağını (HTML metnini) kullanın."
         )
     return True
 
@@ -345,10 +535,14 @@ def html_url_to_pdf(url: str, output_path: str) -> bool:
 def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, dpi: int = PDF_EXPORT_DPI_WEB) -> bool:
     from pdf2image import convert_from_path
     from pptx import Presentation
+    from pptx.util import Emu
+    import pdfplumber
     import src.pdf_engine as pe
 
+    import os as _os2
+    _cpu2 = max(1, min((_os2.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png"}
+    kw_base: dict = {"dpi": int(dpi), "fmt": "png", "thread_count": _cpu2}
     if poppler and os.path.isdir(poppler):
         kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()
@@ -356,11 +550,33 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
         kw_base["userpw"] = pwd
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
+
+    # PDF'in gerçek sayfa boyutunu al (ilk sayfa referans)
+    # pdfplumber sayfa boyutunu pt cinsinden verir; 1 pt = 12700 EMU
+    PT_TO_EMU = 12700
+    page_w_pt, page_h_pt = 595.0, 842.0  # A4 varsayılan
+    try:
+        with pdfplumber.open(pdf_path, password=pwd or "") as _pdf:
+            if _pdf.pages:
+                p0 = _pdf.pages[0]
+                page_w_pt = float(p0.width)
+                page_h_pt = float(p0.height)
+    except Exception:
+        pass
+
     prs = Presentation()
+    # Slayt boyutunu PDF sayfa boyutuna eşitle → görüntü bozulmadan yerleşir
+    prs.slide_width = Emu(int(page_w_pt * PT_TO_EMU))
+    prs.slide_height = Emu(int(page_h_pt * PT_TO_EMU))
+
     try:
         blank = prs.slide_layouts[6]
     except (IndexError, KeyError):
         blank = prs.slide_layouts[0]
+
+    slide_w = prs.slide_width
+    slide_h = prs.slide_height
+
     for start in range(1, n + 1, _RASTER_PAGE_BATCH):
         end = min(start + _RASTER_PAGE_BATCH - 1, n)
         kw = {**kw_base, "first_page": start, "last_page": end}
@@ -371,7 +587,14 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
             os.close(fd)
             try:
                 im.save(tmp, "PNG")
-                slide.shapes.add_picture(tmp, 0, 0, width=prs.slide_width, height=prs.slide_height)
+                img_w_px, img_h_px = im.size
+                # En-boy oranını koruyarak slayta sığdır (letterbox)
+                scale = min(slide_w / img_w_px, slide_h / img_h_px)
+                pic_w = Emu(int(img_w_px * scale))
+                pic_h = Emu(int(img_h_px * scale))
+                left = Emu(int((slide_w - pic_w) / 2))
+                top = Emu(int((slide_h - pic_h) / 2))
+                slide.shapes.add_picture(tmp, left, top, width=pic_w, height=pic_h)
             finally:
                 try:
                     os.remove(tmp)
@@ -447,8 +670,10 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
             pres = None
             try:
                 app = DispatchEx("PowerPoint.Application")
-                app.Visible = False
-                app.DisplayAlerts = 0
+                try:
+                    app.DisplayAlerts = 0
+                except Exception:
+                    pass
                 pres = app.Presentations.Open(os.path.abspath(pptx_path), WithWindow=False, ReadOnly=True)
                 out = os.path.abspath(pdf_path)
                 pres.SaveAs(out, 32)  # ppSaveAsPDF

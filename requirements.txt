@@ -19,3 +19,4 @@ reportlab
 pdfplumber
 pycryptodome
 pdf2docx
+ocrmypdf

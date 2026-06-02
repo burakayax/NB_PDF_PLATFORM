@@ -1,4 +1,4 @@
-# Vercel + Express monorepo (NB PDF PLATFORM)
+# Vercel + Express monorepo (PDF PLATFORM)
 
 This repo builds the **static SPA** from `web/frontend`. The **Express API** (`web/api`) is a separate Node.js server—it is **not** automatically packaged as “Vercel Functions” unless you add a dedicated serverless entry (advanced). The practical fix is:
 

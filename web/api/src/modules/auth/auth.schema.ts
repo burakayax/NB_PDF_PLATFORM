@@ -103,6 +103,13 @@ export type PreferredLanguageInput = z.infer<typeof preferredLanguageSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
+/** DELETE /api/auth/me — GDPR account deletion: password confirmation required. */
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Password is required.").max(128),
+});
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
 /** POST /api/auth/forgot-password/request */
 export const forgotPasswordRequestSchema = z.object({
   email: emailField,

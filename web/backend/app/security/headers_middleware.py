@@ -21,6 +21,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        # API versiyonu — istemciler bu header'ı okuyarak kırılma değişikliklerinden haberdar olabilir.
+        response.headers.setdefault("X-API-Version", "1")
 
         # JSON/PDF API: varsayılan olarak hiçbir kaynaktan yükleme yok
         response.headers.setdefault(

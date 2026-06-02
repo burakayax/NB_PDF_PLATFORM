@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import warnings
 from typing import Any
 
 import httpx
@@ -55,6 +56,8 @@ def _saas_session_ok_dev_bypass_enabled() -> bool:
 
     Üretimde (Vercel vb.) veya ``NB_PDF_FORCE_SAAS_SESSION`` ile asla aktif olmaz.
     """
+    if os.getenv("NB_PDF_ALLOW_DEV_BYPASS", "").strip().lower() not in ("1", "true"):
+        return False  # bypass devre dışı — production'da bu var'ı asla set etme
     if _is_production_like_environment():
         return False
     force = os.getenv("NB_PDF_FORCE_SAAS_SESSION", "").strip().lower()
@@ -70,6 +73,13 @@ def _saas_session_ok_dev_bypass_enabled() -> bool:
     if explicit in ("1", "true", "yes"):
         return True
     return False
+
+
+if os.getenv("NB_PDF_ALLOW_DEV_BYPASS", "").strip().lower() in ("1", "true"):
+    warnings.warn(
+        "NB_PDF_ALLOW_DEV_BYPASS is enabled — saas gate bypass is active. Never use in production.",
+        stacklevel=1,
+    )
 
 
 def saas_api_base() -> str:
@@ -282,7 +292,7 @@ def _validate_consume(data: Any) -> dict[str, Any]:
     return data
 
 
-async def entitlement_check(token: str, tool_id: str) -> dict[str, Any]:
+async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> dict[str, Any]:
     """POST ``/api/entitlement/check`` — pure engine decision, no side effects.
 
     Raises on transport / auth failure; returns the raw decision dict for
@@ -290,10 +300,13 @@ async def entitlement_check(token: str, tool_id: str) -> dict[str, Any]:
     reject the request (typically ``allowed=false`` → 402).
     """
     base = saas_api_base()
+    json_body: dict[str, Any] = {"toolId": tool_id}
+    if file_count > 1:
+        json_body["fileCount"] = file_count
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/check",
         headers={"Authorization": f"Bearer {token}"},
-        json_body={"toolId": tool_id},
+        json_body=json_body,
     )
     if r.status_code == 401:
         raise HTTPException(status_code=401, detail=_detail_from_response(r))
@@ -335,5 +348,27 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     except Exception as exc:
         raise HTTPException(status_code=502, detail="Entitlement consume unreadable.") from exc
     return _validate_consume(data)
+
+
+async def get_user_file_size_limit_bytes(token: str) -> int | None:
+    """GET ``/api/entitlement/balance`` — kullanıcının plan bazlı dosya boyutu limitini bayt cinsinden döndürür.
+    999999 MB veya hata durumunda None (sınırsız/bilinmiyor) döner.
+    """
+    base = saas_api_base()
+    try:
+        async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
+            r = await client.get(
+                f"{base}/api/entitlement/balance",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        mb = data.get("fileSizeLimitMB")
+        if mb is None or mb >= 999999:
+            return None
+        return int(mb) * 1024 * 1024
+    except Exception:
+        return None
 
 

@@ -57,7 +57,9 @@ export type FeatureKey =
   | "ppt-to-pdf"
   | "pdf-to-image"
   | "image-to-pdf"
-  | "html-to-pdf";
+  | "html-to-pdf"
+  | "pdf-to-text"
+  | "flatten-pdf";
 
 /*
  * The monetisation surface returned by `/api/subscription/plans` and

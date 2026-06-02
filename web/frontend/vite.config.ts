@@ -12,7 +12,7 @@ const MISSING_ENV_MSG =
 
 const frontendRoot = path.dirname(fileURLToPath(import.meta.url));
 
-/** Üretim çıktısında ek sıkıştırma (gerçek güvenlik değil; caydırıcı). */
+/** Uretim çıktısında ek sıkıştırma (gerçek güvenlik değil; caydırıcı). */
 function productionObfuscatePlugin(): Plugin {
   return {
     name: "nb-js-obfuscate",
@@ -61,7 +61,7 @@ function warnIfBackendHealthUnreachable(opts: {
   const attemptTimeoutMs = 8000;
   const retryIntervalMs = 2000;
   const maxAttempts = 30;
-
+  // Deneme
   return {
     name: opts.pluginName,
     configureServer(server) {
@@ -78,7 +78,9 @@ function warnIfBackendHealthUnreachable(opts: {
             if (res.ok) {
               return;
             }
-            console.warn(`[vite] ${opts.label} beklenmiyor: ${url} → HTTP ${res.status}`);
+            console.warn(
+              `[vite] ${opts.label} beklenmiyor: ${url} → HTTP ${res.status}`,
+            );
           } catch {
             clearTimeout(timer);
           }
@@ -138,7 +140,9 @@ function saasProxyOptions(saasProxyTarget: string) {
   return {
     target,
     changeOrigin: true,
-    configure(proxy: { on: (ev: string, fn: (...args: unknown[]) => void) => void }) {
+    configure(proxy: {
+      on: (ev: string, fn: (...args: unknown[]) => void) => void;
+    }) {
       proxy.on("error", (err: unknown, _req: unknown, res: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         console.error("\n[vite] Kimlik API proxy hatası:", message);
@@ -149,7 +153,7 @@ function saasProxyOptions(saasProxyTarget: string) {
         const sr = res as ServerResponse | undefined;
         if (sr && typeof sr.writeHead === "function" && !sr.headersSent) {
           const body =
-            "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Kimlik API</title></head><body>" +
+            '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Kimlik API</title></head><body>' +
             "<h1>Kimlik API'ye ulaşılamıyor</h1>" +
             `<p>Vite bu isteği <code>${target}</code> adresine iletemedi (ör. bağlantı reddedildi).</p>` +
             "<p><strong>Çözüm:</strong> Terminalde proje kökünde <code>npm run dev</code> çalıştırın veya ayrı bir pencerede <code>web/api</code> klasöründe <code>npm run dev</code> (varsayılan port 4000).</p>" +
@@ -163,15 +167,27 @@ function saasProxyOptions(saasProxyTarget: string) {
   };
 }
 
-export default defineConfig(({ command, mode }) => {
-  if (command === "serve" && !fs.existsSync(path.join(frontendRoot, ".env"))) {
+export default defineConfig(({ command, mode, isPreview }) => {
+  // `vite preview` de command === "serve" ile çalışır; ancak preview yalnızca
+  // önceden derlenmiş dist/'i servis eder ve .env'e ihtiyaç duymaz. CI'da .env
+  // bulunmadığından bu kontrol preview'ı process.exit(1) ile öldürüyordu
+  // (E2E'de ERR_CONNECTION_REFUSED'ın kök nedeni). Sadece gerçek dev server'a uygula.
+  if (
+    command === "serve" &&
+    !isPreview &&
+    !fs.existsSync(path.join(frontendRoot, ".env"))
+  ) {
     console.error(MISSING_ENV_MSG);
     process.exit(1);
   }
 
   const env = loadEnv(mode, frontendRoot, "");
-  const pdfProxyTarget = (env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000").replace(/\/$/, "");
-  const saasProxyTarget = (env.VITE_SAAS_PROXY_TARGET || "http://127.0.0.1:4000").replace(/\/$/, "");
+  const pdfProxyTarget = (
+    env.VITE_PDF_PROXY_TARGET || "http://127.0.0.1:8000"
+  ).replace(/\/$/, "");
+  const saasProxyTarget = (
+    env.VITE_SAAS_PROXY_TARGET || "http://127.0.0.1:4000"
+  ).replace(/\/$/, "");
   /** Kimlik / abonelik Express API; `/api` PDF’e gitmeden önce eşleşmeli. */
   const saasProxy = saasProxyOptions(saasProxyTarget);
   const apiProxy = {
@@ -198,33 +214,48 @@ export default defineConfig(({ command, mode }) => {
     "errors",
     "public",
     "media",
+    "billing",
+    "team",
   ];
 
   const isProd = mode === "production";
-  /** Ağır obfuscation bazı CI / düşük bellek ortamlarında sorun çıkarabilir; kapatmak için VITE_DISABLE_OBFUSCATION=true. */
-  const disableObfuscation = env.VITE_DISABLE_OBFUSCATION === "true";
+  // Obfuscation removed: caused ~30% bundle size increase, broke source maps, provided zero real security
+  // To opt-in to obfuscation set VITE_DISABLE_OBFUSCATION=false
+  const disableObfuscation = env.VITE_DISABLE_OBFUSCATION !== "false";
 
   return {
     envPrefix: ["VITE_", "NEXT_PUBLIC_"],
+    resolve: {
+      alias: {
+        "@": path.resolve(frontendRoot, "src"),
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),
       ...(command === "serve"
-        ? [warnIfPdfApiUnreachable(pdfProxyTarget), warnIfSaasApiUnreachable(saasProxyTarget)]
+        ? [
+            warnIfPdfApiUnreachable(pdfProxyTarget),
+            warnIfSaasApiUnreachable(saasProxyTarget),
+          ]
         : []),
       ...(isProd && !disableObfuscation ? [productionObfuscatePlugin()] : []),
     ],
     server: {
       port: 5173,
       proxy: {
-        ...Object.fromEntries(saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy])),
+        ...Object.fromEntries(
+          saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy]),
+        ),
         "/api": apiProxy,
       },
     },
     preview: {
       port: 4173,
       proxy: {
-        ...Object.fromEntries(saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy])),
+        ...Object.fromEntries(
+          saasApiPrefixes.map((p) => [`/api/${p}`, saasProxy]),
+        ),
         "/api": apiProxy,
       },
     },
@@ -237,6 +268,9 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            if (id.includes("node_modules/pdfjs-dist")) {
+              return "pdfjs";
+            }
             if (id.includes("node_modules/react-dom")) {
               return "react-dom";
             }

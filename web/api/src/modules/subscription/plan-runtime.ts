@@ -1,18 +1,19 @@
 import type { Plan } from "@prisma/client";
 import { getResolvedPackagesConfig, invalidateResolvedPackagesConfig } from "../../lib/packages-config.service.js";
 import {
-  featureCatalog,
   planDefinitions,
   type FeatureKey,
   type PlanDefinition,
   isFeatureKey,
 } from "./subscription.config.js";
 
-const PLANS: Plan[] = ["FREE", "PRO", "BUSINESS"];
+const PLANS: Plan[] = ["FREE", "STARTER", "PLUS", "PRO", "BUSINESS"];
 
 function cloneBase(): Record<Plan, PlanDefinition> {
   return {
     FREE: { ...planDefinitions.FREE, allowedFeatures: [...planDefinitions.FREE.allowedFeatures] },
+    STARTER: { ...planDefinitions.STARTER, allowedFeatures: [...planDefinitions.STARTER.allowedFeatures] },
+    PLUS: { ...planDefinitions.PLUS, allowedFeatures: [...planDefinitions.PLUS.allowedFeatures] },
     PRO: { ...planDefinitions.PRO, allowedFeatures: [...planDefinitions.PRO.allowedFeatures] },
     BUSINESS: { ...planDefinitions.BUSINESS, allowedFeatures: [...planDefinitions.BUSINESS.allowedFeatures] },
   };
@@ -58,8 +59,6 @@ export async function getPlanDefinitionsResolved(): Promise<Record<Plan, PlanDef
   } catch {
     /* ignore invalid shape */
   }
-  /* Free tier: never restrict TOOLS via packages.config — monetization is soft friction only. */
-  out.FREE = { ...out.FREE, allowedFeatures: [...featureCatalog] };
   return out;
 }
 

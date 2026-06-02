@@ -21,6 +21,9 @@ from modules.desktop_security_runtime import (
     AUTH_LOGIN,
     AUTH_PROFILE,
     CONTACT,
+    CREDIT_CHECKOUT_PREVIEW,
+    CREDIT_CHECKOUT_START,
+    ENTITLEMENT_BALANCE,
     LICENSE_AUTHORIZE,
     LICENSE_CHECK,
     PAYMENT_CREATE,
@@ -83,7 +86,7 @@ class DesktopAccessBlockedError(DesktopAuthError):
     pass
 
 
-DEFAULT_GUEST_OPERATION_LIMIT = 3
+DEFAULT_GUEST_OPERATION_LIMIT = 10
 
 
 def normalize_api_base_url(url: str) -> str:
@@ -167,7 +170,7 @@ def _protect_bytes(data: bytes) -> bytes:
     out_blob = _DataBlob()
     if not crypt32.CryptProtectData(
         ctypes.byref(in_blob),
-        "NB PDF PLATFORM desktop session",
+        "PDF PLATFORM desktop session",
         None,
         None,
         None,
@@ -205,7 +208,7 @@ def _unprotect_bytes(data: bytes) -> bytes:
 class DesktopSessionStore:
     def __init__(self):
         appdata_root = Path(os.environ.get("APPDATA") or _project_root())
-        self.session_path = appdata_root / "NB PDF PLATFORM" / "desktop_session.json"
+        self.session_path = appdata_root / "PDF PLATFORM" / "desktop_session.json"
 
     def load(self) -> Optional[dict[str, Any]]:
         if not self.session_path.is_file():
@@ -288,7 +291,7 @@ class DesktopGuestState:
 class GuestUsageStore:
     def __init__(self, device_id: Optional[str] = None, default_limit: int = DEFAULT_GUEST_OPERATION_LIMIT):
         appdata_root = Path(os.environ.get("APPDATA") or _project_root())
-        self.state_path = appdata_root / "NB PDF PLATFORM" / "desktop_guest_usage.json"
+        self.state_path = appdata_root / "PDF PLATFORM" / "desktop_guest_usage.json"
         self.device_id = device_id or ""
         self.default_limit = default_limit
 
@@ -511,6 +514,39 @@ class DesktopAuthClient:
             raise DesktopAuthError("Ödeme oturumu yanıtı beklenen formatta değil.")
         return response
 
+    def fetch_credit_balance(self, access_token: str) -> dict[str, Any]:
+        """GET /api/entitlement/balance → { credit_balance, plan, subscription_status }"""
+        try:
+            response = self._request("GET", ENTITLEMENT_BALANCE, access_token=access_token)
+            if isinstance(response, dict):
+                return response
+        except (DesktopAuthError, DesktopNetworkError):
+            pass
+        return {"credit_balance": None}
+
+    def credit_checkout_open_browser(self, access_token: str, product: str = "TIER_STARTER") -> None:
+        """Kredi paketi satın alma akışını başlatır; iyzico sayfasını tarayıcıda açar."""
+        preview = self._request(
+            "POST", CREDIT_CHECKOUT_PREVIEW,
+            body={"product": product},
+            access_token=access_token,
+        )
+        if not isinstance(preview, dict):
+            raise DesktopAuthError("Kredi önizleme yanıtı alınamadı.")
+        pricing_token = preview.get("pricingToken")
+        if not pricing_token:
+            raise DesktopAuthError("Fiyatlandırma token alınamadı.")
+        result = self._request(
+            "POST", CREDIT_CHECKOUT_START,
+            body={"pricingToken": pricing_token},
+            access_token=access_token,
+        )
+        if not isinstance(result, dict):
+            raise DesktopAuthError("Ödeme oturumu açılamadı.")
+        pay_url = result.get("paymentPageUrl") or result.get("redirectUrl") or ""
+        if pay_url:
+            webbrowser.open(pay_url)
+
     def submit_contact(self, name: str, email: str, message: str) -> dict[str, Any]:
         response = self._request(
             "POST",
@@ -571,7 +607,7 @@ def capture_google_oauth_token(api_base_url: str, lang: str, timeout_seconds: fl
             self.send_header("Content-type", "text/html; charset=utf-8")
             self.end_headers()
             page = (
-                "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>NB PDF PLATFORM</title></head>"
+                "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>PDF PLATFORM</title></head>"
                 "<body style=\"font-family:system-ui,sans-serif;padding:2rem;text-align:center;background:#0f172a;color:#e2e8f0;\">"
                 "<p>Giriş tamamlandı. Bu sekmeyi kapatabilirsiniz.</p>"
                 "<p style=\"color:#94a3b8;font-size:14px;\">Sign-in complete. You may close this tab.</p>"
@@ -627,8 +663,27 @@ def open_payment_checkout_in_browser(checkout_result: dict[str, Any]) -> None:
         fd, path = tempfile.mkstemp(suffix=".html", prefix="nbpdf-iyzico-", text=False)
         try:
             os.write(fd, html.encode("utf-8"))
-        finally:
             os.close(fd)
-        webbrowser.open(Path(path).as_uri())
+            webbrowser.open(Path(path).as_uri())
+            # Tarayıcının dosyayı okuması için kısa bir süre bekle, sonra temizle
+            import threading as _t
+            def _cleanup(p=path):
+                import time as _time
+                _time.sleep(10)
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
+            _t.Thread(target=_cleanup, daemon=True).start()
+        except Exception:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+            raise
         return
     raise DesktopAuthError("Ödeme sayfası (URL veya form) sunucudan gelmedi. iyzico anahtarlarını kontrol edin.")

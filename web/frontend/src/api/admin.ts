@@ -57,7 +57,10 @@ export type AdminOverview = {
     usersWithCountry: number;
     usersWithCity: number;
     topCountries: Array<{ country: string; count: number }>;
+    topCities: Array<{ city: string; country: string | null; count: number }>;
   };
+  registrationsByDay: Array<{ date: string; count: number }>;
+  subscriptionSalesByDay: Array<{ date: string; plan: string; count: number }>;
 };
 
 export type AdminUserRow = {
@@ -78,6 +81,8 @@ export type AdminUserRow = {
   creditBalance: number;
   country: string | null;
   city: string | null;
+  isTeamMember: boolean;
+  teamOwnerId: string | null;
   usageToday: {
     operationsCount: number;
     postLimitExtraOps: number;
@@ -118,6 +123,52 @@ export async function fetchAdminUsers(
     throw new Error(await r.text());
   }
   return r.json() as Promise<{ total: number; page: number; pageSize: number; items: AdminUserRow[] }>;
+}
+
+export type AdminUserDetail = {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  plan: string;
+  role: string;
+  createdAt: string;
+  credit_balance: number;
+  toolUsageCounts: Record<string, number>;
+  creditTransactions: {
+    id: string;
+    type: string;
+    amount: number;
+    toolId: string | null;
+    createdAt: string;
+  }[];
+  paymentCheckouts: {
+    id: string;
+    plan: string;
+    status: string;
+    priceTry: string;
+    paymentCurrency: string;
+    createdAt: string;
+    completedAt: string | null;
+  }[];
+  creditPackCheckouts: {
+    id: string;
+    product: string;
+    credits: number;
+    finalPriceTry: string;
+    paymentCurrency: string;
+    status: string;
+    createdAt: string;
+    completedAt: string | null;
+  }[];
+};
+
+export async function fetchAdminUserDetail(accessToken: string, userId: string): Promise<AdminUserDetail> {
+  const r = await adminFetch(accessToken, `/users/${encodeURIComponent(userId)}/detail`);
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json() as Promise<AdminUserDetail>;
 }
 
 export async function patchAdminUser(

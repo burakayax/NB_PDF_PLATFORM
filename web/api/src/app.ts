@@ -16,10 +16,12 @@ import { requireAuth } from "./middleware/auth.middleware.js";
 import { verifyEmailController } from "./modules/auth/auth.controller.js";
 import { submitContactController } from "./modules/contact/contact.controller.js";
 import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
-import { creditCheckoutRouter } from "./modules/credit-checkout/credit-checkout.routes.js";
 import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
+import { registerTeamJobs } from "./jobs/teamJobs.js";
+import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
+import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
 function corsAllowedOrigins(): Set<string> {
@@ -101,6 +103,12 @@ if (env.NODE_ENV === "production") {
 app.use(compression());
 app.use(enforceHttpsMiddleware);
 
+// API versiyonu — tüm yanıtlarda bildirilir; istemciler gelecek kırılma değişikliklerini bu header'dan takip eder.
+app.use((_req, res, next) => {
+  res.setHeader("X-API-Version", "1");
+  next();
+});
+
 const corsOrigins = corsAllowedOrigins();
 app.use(
   cors({
@@ -120,7 +128,8 @@ app.use(
     exposedHeaders: ["X-SaaS-Gating"],
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 app.use(cookieParser());
 
 /** Fake PSP: JWT + same abuse/rate limits as `/api`; mounted here so paths are explicit in `app`. */
@@ -130,14 +139,6 @@ app.use(
   globalApiLimiter,
   requireAuth,
   fakePaymentRouter,
-);
-
-app.use(
-  "/api/credit-checkout",
-  abuseBlockMiddleware,
-  globalApiLimiter,
-  requireAuth,
-  creditCheckoutRouter,
 );
 
 /** iyzico form POST — abonelik ve kredi paketi callback’i; JWT yok. `/api` router’daki 503’ten önce kayıtlı olmalı. */
@@ -164,6 +165,10 @@ app.use(
 );
 
 app.use("/api", apiRouter);
+
+registerTeamJobs();
+registerDataRetentionJobs();
+registerSubscriptionJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.
@@ -242,29 +247,26 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
 
     if (error.code === "P2002") {
       const targets = (error.meta?.target as string[] | undefined) ?? [];
-      const label = targets.length ? targets.join(", ") : "field";
+      const label = targets.length ? targets.join(", ") : "alan";
       response.status(409).json({
-        message: `A record with this ${label} already exists.`,
+        message: `Bu ${label} zaten kayıtlı.`,
       });
+      return;
+    }
+
+    if (error.code === "P2025") {
+      response.status(404).json({ message: "Kayıt bulunamadı." });
       return;
     }
 
     if (error.code === "P2021" || error.code === "P2010") {
       response.status(503).json({
-        message:
-          env.NODE_ENV === "development"
-            ? `[${error.code}] ${error.message}`
-            : "Database schema is out of sync. From the web/api folder run: npx prisma db push && npx prisma generate",
+        message: "Veritabanı şeması güncel değil. Lütfen yöneticiyle iletişime geçin.",
       });
       return;
     }
 
-    response.status(400).json({
-      message:
-        env.NODE_ENV === "development"
-          ? `[Prisma ${error.code}] ${error.message}`
-          : "Database request failed. If this persists, run prisma db push and restart the API.",
-    });
+    response.status(400).json({ message: "İşlem gerçekleştirilemedi. Lütfen tekrar deneyin." });
     return;
   }
 
@@ -278,10 +280,7 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
       ip,
     });
     console.error("[prisma] validation", error.message);
-    response.status(400).json({
-      message:
-        env.NODE_ENV === "development" ? error.message : "Invalid data sent to the server.",
-    });
+    response.status(400).json({ message: "İşlem gerçekleştirilemedi. Lütfen tekrar deneyin." });
     return;
   }
 
@@ -295,12 +294,7 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
       ip,
     });
     console.error("[prisma] init", error.message);
-    response.status(503).json({
-      message:
-        env.NODE_ENV === "development"
-          ? error.message
-          : "Cannot connect to the database. Check DATABASE_URL in web/api/.env.",
-    });
+    response.status(503).json({ message: "Sunucu geçici olarak kullanılamıyor. Lütfen birkaç dakika sonra tekrar deneyin." });
     return;
   }
 
@@ -315,12 +309,5 @@ app.use((error: unknown, request: express.Request, response: express.Response, _
     stack,
   });
   console.error(error);
-  if (env.NODE_ENV === "development") {
-    response.status(500).json({
-      message: error instanceof Error ? error.message : "An unexpected server error occurred.",
-      ...(error instanceof Error && stack ? { detail: stack.split("\n").slice(0, 6).join("\n") } : {}),
-    });
-    return;
-  }
-  response.status(500).json({ message: "An unexpected server error occurred." });
+  response.status(500).json({ message: "Bir hata oluştu. Lütfen tekrar deneyin." });
 });
