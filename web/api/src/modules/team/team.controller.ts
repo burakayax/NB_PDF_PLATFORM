@@ -1,5 +1,7 @@
 import { Router } from "express";
+import rateLimit from "express-rate-limit";
 import { requireAuth } from "../../middleware/auth.middleware.js";
+import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { prisma } from "../../lib/prisma.js";
 import {
   createTeamForOwner,
@@ -14,8 +16,17 @@ import { generateCSVReport, generateExcelReport } from "./report.generator.js";
 
 const teamRouter = Router();
 
+const invitePreviewLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => getClientIp(req),
+  message: { message: "Too many preview requests. Try again later." },
+});
+
 // Public endpoint — no auth required
-teamRouter.get("/invite/preview", async (req, res) => {
+teamRouter.get("/invite/preview", invitePreviewLimiter, async (req, res) => {
   try {
     const { token } = req.query as { token?: string };
     if (!token) {

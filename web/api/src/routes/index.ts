@@ -58,14 +58,11 @@ apiRouter.use("/contact", contactRouter);
 apiRouter.use("/device", deviceRouter);
 apiRouter.use("/entitlement", entitlementRouter);
 apiRouter.use("/errors", monitoringRouter);
-// Payments: iyzico rotaları yalnız `IYZICO_*` anahtarları doluyken mount edilir.
-if (env.iyzicoEnabled) {
-  apiRouter.use("/payment", paymentRouter);
-  apiRouter.use("/payments", paymentsRouter);
-} else {
-  apiRouter.use("/payment", paymentsDisabledRouter);
-  apiRouter.use("/payments", paymentsDisabledRouter);
-}
+// Payments: iyzico rotaları her zaman mount edilir.
+// Anahtarlar eksikse 503, service katmanında (payment.service.ts) döner — route
+// varlığını key availability'den ayırıyoruz ki webhook endpoint'leri de erişilebilir kalsın.
+apiRouter.use("/payment", paymentRouter);
+apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/license", licenseRouter);
 apiRouter.use("/subscription", subscriptionRouter);
 apiRouter.use("/user", userRouter);

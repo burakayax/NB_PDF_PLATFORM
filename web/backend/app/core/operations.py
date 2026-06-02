@@ -216,12 +216,34 @@ def cleanup_path(path: str | Path) -> None:
             logger.warning("cleanup_path: unlink başarısız: %s — %s", target, exc)
 
 
-def cleanup_and_raise(workdir: Path, error: Exception) -> None:
-    """Endpoint hata aldığında geçici klasörü de temizleyip okunur hata döndürür."""
+def cleanup_and_raise(
+    workdir: Path,
+    error: Exception,
+    *,
+    filename: str = "<bilinmiyor>",
+    file_size_bytes: int | None = None,
+    client_ip: str = "<bilinmiyor>",
+    operation: str = "<bilinmiyor>",
+) -> None:
+    """Endpoint hata aldığında geçici klasörü de temizleyip okunur hata döndürür.
+
+    Tüm parametreler isteğe bağlıdır; verilirse loglara eklenir.
+    """
     cleanup_path(workdir)
     if isinstance(error, HTTPException):
         raise error
-    logger.warning("pdf_tool_route_failed", exc_info=error)
+    # Yapılandırılmış log: izleme sistemleri bu kaydı ayrıştırabilir.
+    logger.warning(
+        "pdf_tool_route_failed op=%s filename=%r file_size=%s ip=%s "
+        "exc_type=%s exc=%s",
+        operation,
+        filename,
+        file_size_bytes if file_size_bytes is not None else "<bilinmiyor>",
+        client_ip,
+        type(error).__name__,
+        str(error)[:240],
+        exc_info=error,
+    )
     raise HTTPException(
         status_code=400,
         detail=public_message_for_exception(error, log_full=False),

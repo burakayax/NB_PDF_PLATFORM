@@ -141,15 +141,11 @@ const rawEnvSchema = z
     /** Ters proxy arkasında doğru istemci IP için (örn. 1 veya sayı). Boş = güvenme. */
     TRUST_PROXY: z.string().optional().default(""),
     /**
-     * Ödeme sağlayıcı seçim bayrağı — ŞU AN DORMANT.
+     * Ödeme sağlayıcı seçim bayrağı.
      *
-     * Ödemeler sistem genelinde DEVRE DIŞI: `/api/payment` rotası `paymentsDisabledRouter`
-     * tarafından handle ediliyor (503 + JSON) ve bu bayrak routing kararlarında kullanılmıyor.
-     *
-     * iyzico modülü (`modules/payment/**`) ve Stripe modülü (`modules/payment/stripe/**`)
-     * diskte library-only modda durur; ikisinin de router'ı mount edilmez. Bayrak schema'da
-     * korunuyor çünkü Phase 3'te provider seçimi için (routing yeniden aktifleştirildiğinde)
-     * kullanılacak. Varsayılan değer geriye dönük uyumluluk için `iyzico` olarak bırakıldı.
+     * iyzico rotaları her zaman mount edilir; IYZICO_API_KEY / IYZICO_SECRET_KEY / IYZICO_URI
+     * eksikse ödeme oluşturma işlemleri 503 döner (servis katmanında).
+     * Stripe Phase 3'e ertelenmiş; router'ı mount edilmez.
      */
     PAYMENTS_PROVIDER: z.enum(["iyzico", "stripe"]).default("iyzico"),
     /** iyzico API (boşsa POST /api/payment/create 503 döner). */
@@ -190,6 +186,12 @@ const rawEnvSchema = z
      * Kredi paketi checkout: gerçek iyzico çağrısı yerine anında sahte ödeme oturumu.
      * (Örn. staging testi; üretimde açık bırakmayın.)
      */
+    /**
+     * AES-256-GCM şifreleme anahtarı — KVKK kapsamındaki TC Kimlik No ve diğer hassas
+     * kişisel veriler için zorunlu. En az 32 karakter. Üretimde güçlü rastgele değer kullanın.
+     * Anahtar üretimi: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+     */
+    BILLING_ENCRYPTION_KEY: z.string().min(32, "BILLING_ENCRYPTION_KEY en az 32 karakter olmalı."),
     CREDIT_CHECKOUT_USE_FAKE: z
       .enum(["true", "false"])
       .optional()

@@ -21,6 +21,19 @@ from app.core.logging_config import configure_logging
 
 configure_logging()
 
+# Sentry — yalnızca SENTRY_DSN ortam değişkeni tanımlıysa başlatılır
+_sentry_dsn = os.getenv("SENTRY_DSN")
+if _sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        environment=os.getenv("ENVIRONMENT", "production"),
+        traces_sample_rate=0.2,
+        integrations=[StarletteIntegration(), FastApiIntegration()],
+    )
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -50,9 +63,37 @@ from app.security.headers_middleware import SecurityHeadersMiddleware
 logger = logging.getLogger(__name__)
 
 
+def _check_tool_dependencies() -> None:
+    """Uygulama başlangıcında araç bağımlılıklarını kontrol eder ve durumu loglar."""
+    import shutil
+
+    wk = shutil.which("wkhtmltopdf")
+    if wk:
+        logger.info("tool_dep wkhtmltopdf=available path=%s", wk)
+    else:
+        logger.warning(
+            "tool_dep wkhtmltopdf=NOT_FOUND  "
+            "html-to-pdf aracı xhtml2pdf fallback'ini kullanacak "
+            "(CSS/JavaScript desteği sınırlıdır). "
+            "Tam destek için Render build komutuna "
+            "'apt-get install -y wkhtmltopdf' ekleyin."
+        )
+
+    # Diğer opsiyonel araçlar
+    for binary, tool in [("tesseract", "OCR"), ("libreoffice", "Office dönüşüm")]:
+        if shutil.which(binary):
+            logger.info("tool_dep %s=available", binary)
+        else:
+            logger.info("tool_dep %s=not_found  (%s bazı özellikler kısıtlı olabilir)", binary, tool)
+
+
 @asynccontextmanager
 async def _app_lifespan(app: FastAPI):
     """PDF CPU havuzu + TTL sweeper; kapanışta executor düzgün durdurulur."""
+    _check_tool_dependencies()
+    # PDF kütüphane versiyonlarını logla ve uygulama state'ine kaydet
+    from app.core.pdf_security import log_pdf_library_versions
+    app.state.pdf_library_versions = log_pdf_library_versions()
     init_pdf_thread_pool()
     start_ttl_sweeper()
     yield
@@ -61,8 +102,12 @@ async def _app_lifespan(app: FastAPI):
 
 app = FastAPI(
     title="PDF PLATFORM Web API",
-    version="0.1.0",
-    description="Masatüstü PDF aracının web arayüzü için API katmanı.",
+    version="1.0.0",
+    description=(
+        "NB PDF Platform PDF işleme API'si.\n\n"
+        "**Versiyon:** Tüm yanıtlarda `X-API-Version: 1` header'ı döner. "
+        "Kırılma değişiklikleri yeni major versiyon numarasıyla yayınlanır."
+    ),
     lifespan=_app_lifespan,
 )
 
@@ -102,13 +147,22 @@ async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded)
 
 # CORS: virgülle ayrılmış kökenler (ör. https://app.example.com) veya boş = yalnızca localhost/127.0.0.1 her port.
 _cors_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+_ALLOWED_METHODS = ["GET", "POST", "DELETE", "OPTIONS", "PATCH"]
+_ALLOWED_HEADERS = [
+    "Content-Type",
+    "Authorization",
+    "X-NB-Device-Id",
+    "X-Request-Id",
+    "Accept",
+    "Accept-Language",
+]
 if _cors_origins:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=_cors_origins,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=_ALLOWED_METHODS,
+        allow_headers=_ALLOWED_HEADERS,
         expose_headers=["X-SaaS-Gating"],
     )
 else:
@@ -116,8 +170,8 @@ else:
         CORSMiddleware,
         allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?$",
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=_ALLOWED_METHODS,
+        allow_headers=_ALLOWED_HEADERS,
         expose_headers=["X-SaaS-Gating"],
     )
 

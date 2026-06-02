@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
+import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY, deleteMyAccount } from "../../api/auth";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 import type { PlanName } from "../../api/entitlement";
 import { localizedPlanDisplayName } from "../../i18n/plans";
 import type { Language } from "../../i18n/landing";
+import { p } from "../../i18n/profile";
 import { getSaasApiBase } from "../../api/saasBase";
 
 type ToastType = "success" | "error" | "loading" | "info";
@@ -18,12 +19,12 @@ type UserProfilePanelProps = {
   onSubscriptionCancelled?: () => void;
   subscriptionExpiry?: string | null;
   subscriptionStartedAt?: string | null;
+  onLogout?: () => void;
 };
 
 const inputClass =
   "w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/60 px-4 py-3 text-sm text-nb-text outline-none transition duration-200 ease-out placeholder:text-nb-muted focus:border-nb-primary/50 focus:ring-2 focus:ring-nb-primary/15 hover:border-white/12";
 
-/** Debounce gecikmesi (ms) — kullanıcı yazmayı bıraktıktan bu süre sonra buton aktif olur. */
 const PROFILE_DIRTY_DELAY_MS = 600;
 
 function planNameFromUser(plan: string): PlanName {
@@ -46,17 +47,37 @@ function splitFromName(name: string | null | undefined): { first: string; last: 
   return { first: t.slice(0, i).trim(), last: t.slice(i + 1).trim() };
 }
 
-export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt }: UserProfilePanelProps) {
-  const tr = language === "tr";
+export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt, onLogout }: UserProfilePanelProps) {
+  const lang = language;
 
-  // Saved baseline — güncelleme başarılı olunca burası da güncellenir
+  // ─── Danger zone: hesap silme ─────────────────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const DELETE_CONFIRM_PHRASE = p("deleteConfirmPhrase", lang);
+
+  const handleDeleteAccount = async (e: FormEvent) => {
+    e.preventDefault();
+    if (deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
+    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    if (!token) return;
+    setDeleteSubmitting(true);
+    try {
+      await deleteMyAccount(token, deletePassword);
+      showToast("success", p("toastAccountDeleted", lang), p("toastAccountDeletedDetail", lang));
+      onLogout?.();
+    } catch {
+      showToast("error", p("toastDeleteError", lang), p("toastDeleteErrorDetail", lang));
+      setDeleteSubmitting(false);
+    }
+  };
+
+  // ─── Profile form state ───────────────────────────────────────────────────
   const [savedFirst, setSavedFirst] = useState("");
   const [savedLast, setSavedLast] = useState("");
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-
-  // Debounced "dirty" state — değişimden PROFILE_DIRTY_DELAY_MS sonra true olur
   const [profileDirty, setProfileDirty] = useState(false);
   const dirtyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -67,7 +88,6 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const [setPwdConfirm, setSetPwdConfirm] = useState("");
   const [setPwdSubmitting, setSetPwdSubmitting] = useState(false);
 
-  // Kullanıcı değiştiğinde başlangıç değerlerini ayarla
   useEffect(() => {
     const f = user.firstName?.trim() ?? "";
     const l = user.lastName?.trim() ?? "";
@@ -80,7 +100,6 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     setProfileDirty(false);
   }, [user.id, user.firstName, user.lastName, user.name]);
 
-  // Temizle timer unmount'ta
   useEffect(() => () => { if (dirtyTimerRef.current) clearTimeout(dirtyTimerRef.current); }, []);
 
   function handleFirstNameChange(value: string) {
@@ -94,11 +113,10 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   }
 
   function scheduleDirtyCheck(first: string, last: string) {
-    setProfileDirty(false); // gecikmeli yeniden değerlendir
+    setProfileDirty(false);
     if (dirtyTimerRef.current) clearTimeout(dirtyTimerRef.current);
     dirtyTimerRef.current = setTimeout(() => {
-      const changed = first.trim() !== savedFirst || last.trim() !== savedLast;
-      setProfileDirty(changed);
+      setProfileDirty(first.trim() !== savedFirst || last.trim() !== savedLast);
     }, PROFILE_DIRTY_DELAY_MS);
   }
 
@@ -109,28 +127,28 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     if (hasPassword || setPwdSubmitting) return;
     const policy = validateNewPasswordPolicy(setPwdNew);
     if (!policy.ok) {
-      const msg = tr ? policy.issues.map((i) => i.tr).join(" · ") : policy.issues.map((i) => i.en).join(" · ");
-      showToast("error", tr ? "Şifre gücü" : "Password strength", msg);
+      const msg = lang === "tr"
+        ? policy.issues.map((i) => i.tr).join(" · ")
+        : policy.issues.map((i) => i.en).join(" · ");
+      showToast("error", p("toastPasswordStrength", lang), msg);
       return;
     }
     if (setPwdNew !== setPwdConfirm) {
-      showToast("error", tr ? "Şifre" : "Password", tr ? "Şifreler eşleşmiyor." : "Passwords do not match.");
+      showToast("error", p("toastPassword", lang), p("toastPasswordMismatch", lang));
       return;
     }
     setSetPwdSubmitting(true);
     try {
       const next = await setInitialPassword(setPwdNew);
       if (!next) {
-        showToast("error", tr ? "Şifre" : "Password", tr ? "Oturum bulunamadı; yeniden giriş yapın." : "Session not found; please sign in again.");
+        showToast("error", p("toastPassword", lang), p("toastSessionNotFound", lang));
         return;
       }
       setSetPwdNew("");
       setSetPwdConfirm("");
-      showToast("success", tr ? "Şifre" : "Password",
-        tr ? "Hesap şifreniz kaydedildi; e-posta ve şifre ile de giriş yapabilirsiniz."
-           : "Your account password is set; you can also sign in with email and password.");
+      showToast("success", p("toastPassword", lang), p("toastPasswordSaved", lang));
     } catch (error) {
-      showToast("error", tr ? "Şifre" : "Password", error instanceof Error ? error.message : tr ? "Şifre kaydedilemedi." : "Could not save password.");
+      showToast("error", p("toastPassword", lang), error instanceof Error ? error.message : p("toastPasswordFailed", lang));
     } finally {
       setSetPwdSubmitting(false);
     }
@@ -149,17 +167,17 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
       });
       const data = (await res.json()) as { ok?: boolean; action?: string; message?: string; error?: string };
       if (!res.ok || !data.ok) {
-        showToast("error", tr ? "İptal" : "Cancel", data.message ?? data.error ?? (tr ? "İşlem başarısız." : "Operation failed."));
+        showToast("error", p("toastCancelLabel", lang), data.message ?? data.error ?? p("toastCancelFailed", lang));
         return;
       }
       setCancelConfirm(false);
       const toastTitle = data.action === "refunded"
-        ? (tr ? "Abonelik iptal edildi ve iade yapıldı" : "Subscription cancelled with refund")
-        : (tr ? "Abonelik iptal edildi" : "Subscription cancelled");
+        ? p("toastCancelledRefund", lang)
+        : p("toastCancelled", lang);
       showToast("success", toastTitle, data.message ?? "");
       onSubscriptionCancelled?.();
     } catch {
-      showToast("error", tr ? "İptal" : "Cancel", tr ? "Bir hata oluştu. Lütfen tekrar deneyin." : "An error occurred. Please try again.");
+      showToast("error", p("toastCancelLabel", lang), p("toastCancelError", lang));
     } finally {
       setCancelling(false);
     }
@@ -169,14 +187,13 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     event.preventDefault();
     if (!profileDirty || profileSubmitting) return;
     if (!firstName.trim()) {
-      showToast("error", tr ? "Profil" : "Profile", tr ? "Ad gereklidir." : "First name is required.");
+      showToast("error", p("toastProfile", lang), p("toastFirstNameRequired", lang));
       return;
     }
     if (!lastName.trim()) {
-      showToast("error", tr ? "Profil" : "Profile", tr ? "Soyad gereklidir." : "Last name is required.");
+      showToast("error", p("toastProfile", lang), p("toastLastNameRequired", lang));
       return;
     }
-
     setProfileSubmitting(true);
     try {
       const next = await updateProfile({ firstName: firstName.trim(), lastName: lastName.trim() });
@@ -186,10 +203,10 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
         setSavedFirst(newFirst);
         setSavedLast(newLast);
         setProfileDirty(false);
-        showToast("success", tr ? "Profil" : "Profile", tr ? "Ad ve soyadınız güncellendi." : "Your name was updated.");
+        showToast("success", p("toastProfile", lang), p("toastProfileUpdated", lang));
       }
     } catch (error) {
-      showToast("error", tr ? "Profil" : "Profile", error instanceof Error ? error.message : tr ? "Güncellenemedi." : "Update failed.");
+      showToast("error", p("toastProfile", lang), error instanceof Error ? error.message : p("toastProfileFailed", lang));
     } finally {
       setProfileSubmitting(false);
     }
@@ -205,39 +222,51 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     <div className="space-y-8">
       {/* ── Kişisel bilgiler ─────────────────────────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{tr ? "Profil" : "Profile"}</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{tr ? "Kişisel bilgiler" : "Personal details"}</h2>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionProfile", lang)}</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{p("headPersonal", lang)}</h2>
 
         <form className="mt-6 space-y-4" onSubmit={(e) => void handleProfileSubmit(e)}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-400">{tr ? "Ad" : "First name"}</span>
+            <label className="block" htmlFor="profile-first-name">
+              <span className="mb-1.5 block text-xs font-medium text-slate-400">{p("fieldFirstName", lang)}</span>
               <input
+                id="profile-first-name"
                 type="text"
                 autoComplete="given-name"
                 value={firstName}
                 onChange={(e) => handleFirstNameChange(e.target.value)}
                 className={inputClass}
                 disabled={profileSubmitting}
+                aria-label={p("fieldFirstName", lang)}
               />
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-400">{tr ? "Soyad" : "Last name"}</span>
+            <label className="block" htmlFor="profile-last-name">
+              <span className="mb-1.5 block text-xs font-medium text-slate-400">{p("fieldLastName", lang)}</span>
               <input
+                id="profile-last-name"
                 type="text"
                 autoComplete="family-name"
                 value={lastName}
                 onChange={(e) => handleLastNameChange(e.target.value)}
                 className={inputClass}
                 disabled={profileSubmitting}
+                aria-label={p("fieldLastName", lang)}
               />
             </label>
           </div>
 
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-slate-400">{tr ? "E-posta" : "Email"}</span>
-            <input type="email" value={user.email} readOnly className={`${inputClass} cursor-not-allowed opacity-60`} />
-            <span className="mt-1.5 block text-xs text-slate-500">{tr ? "E-posta değiştirilemez." : "Email cannot be changed here."}</span>
+          <label className="block" htmlFor="profile-email">
+            <span className="mb-1.5 block text-xs font-medium text-slate-400">{p("fieldEmail", lang)}</span>
+            <input
+              id="profile-email"
+              type="email"
+              value={user.email}
+              readOnly
+              className={`${inputClass} cursor-not-allowed opacity-60`}
+              aria-label={p("fieldEmail", lang)}
+              aria-readonly="true"
+            />
+            <span className="mt-1.5 block text-xs text-slate-500">{p("emailReadOnly", lang)}</span>
           </label>
 
           <button
@@ -245,98 +274,79 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
             disabled={!profileDirty || profileSubmitting}
             className="rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_12px_32px_-10px_rgba(34,211,238,0.45)] transition duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35"
           >
-            {profileSubmitting ? (tr ? "Kaydediliyor…" : "Saving…") : tr ? "Adı güncelle" : "Update name"}
+            {profileSubmitting ? p("btnSaving", lang) : p("btnUpdateName", lang)}
           </button>
         </form>
       </section>
 
       {/* ── Plan ve yenileme / Ekip üyeliği ─────────────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{tr ? "Abonelik" : "Subscription"}</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{tr ? "Plan ve yenileme" : "Plan and renewal"}</h2>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSubscription", lang)}</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">{p("headPlanRenewal", lang)}</h2>
 
         {user.isTeamMember ? (
           <div className="mt-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5">
             <div className="flex items-center gap-3 mb-3">
-              <span className="text-2xl">👥</span>
+              <span className="text-2xl" aria-hidden="true">👥</span>
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{tr ? "Ekip Üyesi" : "Team Member"}</p>
+                <p className="text-sm font-semibold text-cyan-200">{p("teamMemberLabel", lang)}</p>
                 <p className="text-xs text-slate-400">
                   {user.teamMemberRole === "MANAGER"
-                    ? (tr ? "Yönetici rolüyle ekibe dahilsiniz." : "You are a manager in this team.")
-                    : (tr ? "Üye olarak ekibe dahilsiniz." : "You are a member of this team.")}
+                    ? p("teamRoleManager", lang)
+                    : p("teamRoleMember", lang)}
                 </p>
               </div>
             </div>
-            <p className="text-xs leading-relaxed text-slate-400">
-              {tr
-                ? "Bu hesabınız bir Business ekibine dahil edilmiştir. Abonelik yönetimi (yenileme, iptal, plan değişikliği) ekip sahibinin sorumluluğundadır."
-                : "This account is part of a Business team. Subscription management (renewal, cancellation, plan changes) is handled by the team owner."}
-            </p>
+            <p className="text-xs leading-relaxed text-slate-400">{p("teamManagedByOwner", lang)}</p>
           </div>
         ) : (
           <>
             <dl className="mt-6 space-y-0 text-sm divide-y divide-white/[0.06]">
               <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                <dt className="text-slate-400">{tr ? "Mevcut plan" : "Current plan"}</dt>
+                <dt className="text-slate-400">{p("labelCurrentPlan", lang)}</dt>
                 <dd className="font-semibold text-nb-text">{localizedPlanDisplayName(planName, language)}</dd>
               </div>
 
               {isPaidPlan && startedAtDate !== "—" && (
                 <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                  <dt className="text-slate-400">{tr ? "Dönem başlangıcı" : "Period start"}</dt>
+                  <dt className="text-slate-400">{p("labelPeriodStart", lang)}</dt>
                   <dd className="font-semibold text-nb-text">{startedAtDate}</dd>
                 </div>
               )}
 
               {isPaidPlan && renewalDate !== "—" && (
                 <div className="flex flex-wrap items-baseline justify-between gap-2 py-3">
-                  <dt className="text-slate-400">{tr ? "Dönem yenilenme tarihi" : "Next renewal date"}</dt>
+                  <dt className="text-slate-400">{p("labelNextRenewal", lang)}</dt>
                   <dd className="font-semibold text-nb-text">{renewalDate}</dd>
                 </div>
               )}
             </dl>
 
             {isPaidPlan && renewalDate !== "—" && (
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">
-                {tr
-                  ? "Aboneliğiniz bu tarihte otomatik olarak yenilenir."
-                  : "Your subscription will automatically renew on this date."}
-              </p>
+              <p className="mt-3 text-xs leading-relaxed text-slate-500">{p("autoRenewNote", lang)}</p>
             )}
 
             {!isPaidPlan && (
-              <p className="mt-4 text-xs leading-relaxed text-slate-500">
-                {tr
-                  ? "Ücretli bir plana geçerek tüm araçlara sınırsız erişin."
-                  : "Upgrade to a paid plan for unlimited access to all tools."}
-              </p>
+              <p className="mt-4 text-xs leading-relaxed text-slate-500">{p("upgradeNote", lang)}</p>
             )}
 
             {isPaidPlan && (
               <div className="mt-5 border-t border-white/[0.06] pt-5">
-                {/* İptal / iade butonu */}
                 {!cancelConfirm ? (
                   <button
                     type="button"
                     onClick={() => setCancelConfirm(true)}
                     className="rounded-xl border border-red-500/30 bg-red-500/[0.06] px-4 py-2.5 text-sm font-semibold text-red-400 transition hover:border-red-500/50 hover:bg-red-500/[0.12]"
                   >
-                    {maybeRefundEligible
-                      ? (tr ? "İptal Et ve Tam İade Al" : "Cancel & Get Full Refund")
-                      : (tr ? "Aboneliği İptal Et" : "Cancel Subscription")}
+                    {maybeRefundEligible ? p("cancelRefundBtn", lang) : p("cancelBtn", lang)}
                   </button>
                 ) : (
                   <div className="rounded-xl border border-red-500/25 bg-red-500/[0.05] p-4 text-sm">
                     <p className="font-semibold text-red-300">
-                      {maybeRefundEligible
-                        ? (tr ? "Aboneliğinizi iptal edip tam iade almak istediğinize emin misiniz?" : "Are you sure you want to cancel and get a full refund?")
-                        : (tr ? "Aboneliğinizi iptal etmek istediğinize emin misiniz?" : "Are you sure you want to cancel your subscription?")}
+                      {maybeRefundEligible ? p("cancelConfirmRefund", lang) : p("cancelConfirmNoRefund", lang)}
                     </p>
                     <p className="mt-1.5 text-xs text-slate-400">
-                      {maybeRefundEligible
-                        ? (tr ? "Ücretiniz iade edilecek ve planınız hemen Ücretsiz plana düşürülecektir." : "Your payment will be refunded and your plan will immediately downgrade to Free.")
-                        : (tr ? "Mevcut dönem sonunda planınız Ücretsiz plana düşürülecektir." : "Your plan will downgrade to Free at the end of the current period.")}
+                      {maybeRefundEligible ? p("cancelNoteRefund", lang) : p("cancelNoteNoRefund", lang)}
                     </p>
                     <div className="mt-3 flex gap-2">
                       <button
@@ -345,14 +355,14 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                         onClick={() => void handleCancelSubscription()}
                         className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-500 disabled:opacity-50"
                       >
-                        {cancelling ? (tr ? "İşleniyor…" : "Processing…") : (tr ? "Evet, İptal Et" : "Yes, Cancel")}
+                        {cancelling ? p("btnProcessing", lang) : p("btnYesCancel", lang)}
                       </button>
                       <button
                         type="button"
                         onClick={() => setCancelConfirm(false)}
                         className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-semibold text-slate-400 transition hover:bg-white/[0.08]"
                       >
-                        {tr ? "Geri Dön" : "Go Back"}
+                        {p("btnGoBack", lang)}
                       </button>
                     </div>
                   </div>
@@ -363,52 +373,162 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
         )}
       </section>
 
+      {/* ── GDPR Madde 20: Verileri Dışa Aktar ──────────────── */}
+      <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/40 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-nb-primary/70">
+          {lang === "tr" ? "Veri Taşınabilirliği (GDPR Madde 20)" : "Data Portability (GDPR Article 20)"}
+        </p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
+          {lang === "tr" ? "Verilerimi Dışa Aktar" : "Export My Data"}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          {lang === "tr"
+            ? "Profil bilgileri, işlem geçmişi ve indirme kayıtlarınızı makine tarafından okunabilir JSON formatında indirin."
+            : "Download your profile information, operation history and download records in machine-readable JSON format."}
+        </p>
+        <a
+          href={`${getSaasApiBase()}/api/auth/export-my-data`}
+          download
+          className="mt-5 inline-block rounded-xl border border-nb-primary/30 bg-nb-primary/10 px-5 py-2.5 text-sm font-semibold text-nb-primary transition hover:bg-nb-primary/20"
+        >
+          {lang === "tr" ? "JSON Olarak İndir" : "Download as JSON"}
+        </a>
+      </section>
+
+      {/* ── Tehlikeli Alan: Hesap Silme (GDPR Madde 17) ──────── */}
+      <section
+        id="profile-danger-zone"
+        className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+        aria-labelledby="danger-zone-heading"
+      >
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-red-400">{p("sectionDangerZone", lang)}</p>
+        <h2 id="danger-zone-heading" className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
+          {p("headDeleteAccount", lang)}
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">{p("deleteAccountWarning", lang)}</p>
+
+        {!showDeleteConfirm ? (
+          <button
+            type="button"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="mt-5 rounded-xl border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-500/20"
+          >
+            {p("btnPermanentDelete", lang)}
+          </button>
+        ) : (
+          <form className="mt-5 space-y-4" onSubmit={(e) => void handleDeleteAccount(e)}>
+            {user.authProvider !== "google" && (
+              <label className="block" htmlFor="delete-account-password">
+                <span className="mb-1.5 block text-xs font-medium text-slate-400">
+                  {p("fieldEnterPassword", lang)}
+                </span>
+                <input
+                  id="delete-account-password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  required
+                  className={inputClass}
+                  disabled={deleteSubmitting}
+                  aria-label={p("fieldEnterPassword", lang)}
+                />
+              </label>
+            )}
+            <label className="block" htmlFor="delete-account-confirm">
+              <span className="mb-1.5 block text-xs font-medium text-slate-400">
+                {lang === "tr"
+                  ? <><strong className="text-red-300">"{DELETE_CONFIRM_PHRASE}"</strong> yazarak onaylayın</>
+                  : <>Type <strong className="text-red-300">"{DELETE_CONFIRM_PHRASE}"</strong> to confirm</>}
+              </span>
+              <input
+                id="delete-account-confirm"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={DELETE_CONFIRM_PHRASE}
+                className={inputClass}
+                disabled={deleteSubmitting}
+                aria-label={lang === "tr" ? `Onay metni: ${DELETE_CONFIRM_PHRASE}` : `Confirmation text: ${DELETE_CONFIRM_PHRASE}`}
+              />
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={deleteSubmitting || deleteConfirmText !== DELETE_CONFIRM_PHRASE}
+                className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleteSubmitting ? p("btnDeleting", lang) : p("btnDeleteAccount", lang)}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); setDeleteConfirmText(""); }}
+                className="rounded-xl border border-white/[0.1] bg-nb-panel/70 px-5 py-2.5 text-sm font-semibold text-nb-muted transition hover:text-nb-text"
+                disabled={deleteSubmitting}
+              >
+                {p("btnCancel", lang)}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
+
       {/* ── Güvenlik / Şifre ─────────────────────────────────── */}
       <section
         id="profile-password-section"
         className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm"
       >
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{tr ? "Güvenlik" : "Security"}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">{p("sectionSecurity", lang)}</p>
         <h2 className="mt-1 text-xl font-semibold tracking-tight text-nb-text">
-          {hasPassword ? (tr ? "Şifre değiştir" : "Change password") : tr ? "Şifre belirle" : "Set password"}
+          {hasPassword ? p("headChangePassword", lang) : p("headSetPassword", lang)}
         </h2>
 
         {!hasPassword ? (
           <form className="mt-6 space-y-4" onSubmit={(e) => void handleSetPasswordSubmit(e)}>
-            <p className="text-sm leading-relaxed text-slate-400">
-              {tr
-                ? "Google ile giriş yaptınız; isteğe bağlı olarak bu e-posta için bir hesap şifresi belirleyebilirsiniz."
-                : "You signed in with Google. Optionally set a password for this email to sign in with email and password as well."}
-            </p>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-400">{tr ? "Yeni şifre" : "New password"}</span>
-              <input type="password" autoComplete="new-password" value={setPwdNew} onChange={(e) => setSetPwdNew(e.target.value)} className={inputClass} disabled={setPwdSubmitting} />
+            <p className="text-sm leading-relaxed text-slate-400">{p("googlePasswordNote", lang)}</p>
+            <label className="block" htmlFor="set-password-new">
+              <span className="mb-1.5 block text-xs font-medium text-slate-400">{p("fieldNewPassword", lang)}</span>
+              <input
+                id="set-password-new"
+                type="password"
+                autoComplete="new-password"
+                value={setPwdNew}
+                onChange={(e) => setSetPwdNew(e.target.value)}
+                className={inputClass}
+                disabled={setPwdSubmitting}
+                aria-label={p("fieldNewPassword", lang)}
+              />
             </label>
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-slate-400">{tr ? "Yeni şifre (tekrar)" : "Confirm new password"}</span>
-              <input type="password" autoComplete="new-password" value={setPwdConfirm} onChange={(e) => setSetPwdConfirm(e.target.value)} className={inputClass} disabled={setPwdSubmitting} />
+            <label className="block" htmlFor="set-password-confirm">
+              <span className="mb-1.5 block text-xs font-medium text-slate-400">{p("fieldConfirmPassword", lang)}</span>
+              <input
+                id="set-password-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={setPwdConfirm}
+                onChange={(e) => setSetPwdConfirm(e.target.value)}
+                className={inputClass}
+                disabled={setPwdSubmitting}
+                aria-label={p("fieldConfirmPassword", lang)}
+              />
             </label>
             <button
               type="submit"
               disabled={setPwdSubmitting}
               className="rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-[0_12px_32px_-10px_rgba(34,211,238,0.45)] transition duration-200 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-55"
             >
-              {setPwdSubmitting ? (tr ? "Kaydediliyor…" : "Saving…") : tr ? "Şifreyi kaydet" : "Save password"}
+              {setPwdSubmitting ? p("btnSaving", lang) : p("btnSavePassword", lang)}
             </button>
           </form>
         ) : (
           <div className="mt-6">
-            <p className="text-sm leading-relaxed text-slate-400">
-              {tr
-                ? "Hesap şifrenizi güncellemek için aşağıdaki düğmeyi kullanın."
-                : "Use the button below to update your account password."}
-            </p>
+            <p className="text-sm leading-relaxed text-slate-400">{p("hasPasswordNote", lang)}</p>
             <button
               type="button"
               onClick={onOpenChangePassword}
               className="nb-transition mt-4 rounded-xl border border-white/[0.1] bg-nb-panel/70 px-5 py-2.5 text-sm font-semibold text-nb-text hover:border-nb-primary/35 hover:bg-nb-panel"
             >
-              {tr ? "Şifre değiştir" : "Change password"}
+              {p("btnChangePassword", lang)}
             </button>
           </div>
         )}

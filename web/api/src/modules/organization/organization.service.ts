@@ -179,6 +179,11 @@ export async function removeMember(orgId: string, targetUserId: string, actorOrg
     throw new Error("Cannot remove organization owner");
   }
 
+  // Sadece OWNER, ADMIN rolündeki üyeleri çıkarabilir
+  if (targetUser.orgRole === "ADMIN" && actorOrgRole !== "OWNER") {
+    throw new Error("Only the organization owner can remove admins");
+  }
+
   // Create a personal org for the removed user
   await createOrganizationForUser(targetUserId, targetUser.name ?? targetUser.email, "FREE");
 }

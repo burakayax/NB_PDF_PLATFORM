@@ -41,6 +41,15 @@ function todayKey() {
 
 function getDesktopPlanRules(plan: Plan, defs: Record<Plan, PlanDefinition>, TOOLS: ResolvedTOOLSBusinessConfig) {
   switch (plan) {
+    case "STARTER":
+      return {
+        status: "active" as const,
+        dailyLimit: 25,
+        canUseEncryption: true,
+        canUseBatchProcessing: true,
+        maxFileSizeMb: 100,
+        blockedFeatures: [] as FeatureKey[],
+      };
     case "PLUS":
       return {
         status: "active" as const,

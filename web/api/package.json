@@ -9,8 +9,13 @@
     "dev:local": "cross-env DATABASE_URL=file:./dev.db tsx watch src/server.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prisma:generate": "prisma generate",
     "prisma:push": "node scripts/sqlite-prisma-push.mjs",
+    "prisma:migrate": "node scripts/sqlite-prisma-migrate.mjs",
+    "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
     "backfill:gmail-emails": "tsx scripts/backfill-gmail-canonical-emails.ts"
   },
@@ -20,6 +25,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.758.0",
     "@prisma/client": "^6.6.0",
+    "@sentry/node": "^10.55.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.8.1",
     "@types/cookie-parser": "^1.4.8",
@@ -46,12 +52,15 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.3",
     "prisma": "^6.6.0",
+    "redis": "^6.0.0",
     "stripe": "^17.7.0",
     "typescript": "~5.8.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
     "cross-env": "^10.1.0",
-    "tsx": "^4.19.3"
+    "tsx": "^4.19.3",
+    "vitest": "^3.2.4"
   }
 }

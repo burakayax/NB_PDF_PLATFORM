@@ -1,0 +1,175 @@
+# Render.com deploy konfigürasyonu
+# Dökümantasyon: https://render.com/docs/blueprint-spec
+
+services:
+  # ─── PDF API (FastAPI / Python) ───────────────────────────────────────────
+  - type: web
+    name: nb-pdf-api
+    runtime: python
+    region: frankfurt         # EU kullanıcılarına yakın; değiştirilebilir
+    plan: starter             # En az starter plan (free plan sleep'e geçer)
+    rootDir: web/backend
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      apt-get update -qq && apt-get install -y -qq \
+        wkhtmltopdf \
+        tesseract-ocr \
+        tesseract-ocr-tur \
+        poppler-utils \
+        libcairo2
+    startCommand: gunicorn -c gunicorn.conf.py app.main:app
+    healthCheckPath: /health
+    envVars:
+      - key: PDF_API_HOST
+        value: "0.0.0.0"
+      - key: PDF_CPU_WORKERS
+        value: "2"
+      - key: TRUSTED_HTTPS
+        value: "true"
+      - key: ENVIRONMENT
+        value: "production"
+      # Entitlement/kota kontrolü için Auth API kökü (servisler arası çağrı)
+      - key: NB_SAAS_API_BASE
+        sync: false   # Örn. https://auth-api.pdfplatform.app
+      # S3 lifecycle TTL (saat) — sonuç dosyaları 24 saat sonra otomatik silinir
+      - key: S3_RESULT_TTL_HOURS
+        value: "24"
+      - key: S3_REGION
+        sync: false   # Örn. eu-central-1 (AWS) veya auto (Cloudflare R2)
+      # PDF Sandbox: her işlemi ayrı bir subprocess'te izole eder
+      - key: PDF_SANDBOX_ENABLED
+        value: "true"
+      - key: PDF_SANDBOX_MEM_MB
+        value: "1024"   # Her alt süreç için maksimum 1 GB RAM
+      - key: PDF_SANDBOX_CPU_SEC
+        value: "120"    # Her alt süreç için maksimum 120 saniye CPU
+      - key: SENTRY_DSN
+        sync: false   # Render dashboard'dan set edin
+      - key: CORS_ORIGINS
+        sync: false   # Render dashboard'dan set edin (örn. https://pdfplatform.app)
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+
+  # ─── Auth API (Express / Node.js) ─────────────────────────────────────────
+  - type: web
+    name: nb-auth-api
+    runtime: node
+    region: frankfurt
+    plan: starter
+    rootDir: web/api
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run prisma:seed
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+      - key: TRUSTED_HTTPS
+        value: "true"
+      # Render edge TLS sonlandırır; X-Forwarded-* başlıklarına güven
+      - key: TRUST_PROXY
+        value: "1"
+      - key: FORCE_HTTPS
+        value: "true"
+      - key: DATABASE_URL
+        sync: false   # PostgreSQL URL'si + havuz parametreleri:
+                      # postgresql://user:pass@host/db?connection_limit=10&pool_timeout=30
+                      # connection_limit: Render starter (paylaşımlı CPU) için 10 önerilir
+                      # pool_timeout: uzun PDF sorgularında zaman aşımını önlemek için 30 sn
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: BILLING_ENCRYPTION_KEY
+        sync: false
+      - key: IYZICO_API_KEY
+        sync: false
+      - key: IYZICO_SECRET_KEY
+        sync: false
+      - key: IYZICO_URI
+        value: https://api.iyzipay.com
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ROLE_ADMIN_EMAIL
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false   # Örn. https://pdfplatform.app
+      - key: APP_BASE_URL
+        sync: false   # Örn. https://api.pdfplatform.app
+      - key: PAYMENT_CALLBACK_BASE_URL
+        sync: false   # iyzico callback kökü; APP_BASE_URL ile aynı olmalı
+      - key: OAUTH_FRONTEND_REDIRECT_ORIGIN
+        sync: false   # Google OAuth sonrası yönlendirme; FRONTEND_ORIGIN ile aynı
+      - key: GOOGLE_CLIENT_ID
+        sync: false   # Google OAuth (boş bırakılırsa Google girişi devre dışı)
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: REDIS_URL
+        sync: false   # Upstash Redis önerilir (kötüye kullanım takibi + kalıcı sayaç)
+
+  # ─── Frontend (Static Site) ────────────────────────────────────────────────
+  - type: web
+    name: nb-pdf-frontend
+    runtime: static
+    region: frankfurt
+    plan: free
+    rootDir: web/frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    # SPA fallback: tüm yollar index.html'e döner (React Router için)
+    routes:
+      - type: rewrite
+        source: "/*"
+        destination: "/index.html"
+    headers:
+      - path: "/*"
+        name: X-Frame-Options
+        value: DENY
+      - path: "/*"
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: "/*"
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: "/*"
+        name: Permissions-Policy
+        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+      - path: "/*"
+        name: Strict-Transport-Security
+        value: "max-age=31536000; includeSubDomains; preload"
+      # Asset'ler içerik hash'li — uzun süre cache'lenir
+      - path: "/assets/*"
+        name: Cache-Control
+        value: "public, max-age=31536000, immutable"
+      # index.html ve SEO HTML'leri asla cache'lenmemeli (yeni deploy hemen yansır)
+      - path: "/index.html"
+        name: Cache-Control
+        value: "no-cache, no-store, must-revalidate"
+      - path: "/sitemap.xml"
+        name: Cache-Control
+        value: "public, max-age=3600"
+    envVars:
+      - key: VITE_API_BASE
+        sync: false   # Örn. https://pdf-api.pdfplatform.app
+      - key: VITE_SAAS_PROXY_TARGET
+        sync: false   # Örn. https://auth-api.pdfplatform.app
+      - key: VITE_PUBLIC_SITE_URL
+        sync: false   # Örn. https://pdfplatform.app (canonical + hreflang için)
+      - key: VITE_SENTRY_DSN
+        sync: false
+      - key: VITE_GA_MEASUREMENT_ID
+        sync: false   # Google Analytics 4 ID (G-XXXXXXXXXX)

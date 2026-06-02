@@ -3,6 +3,7 @@
  * Do not add new features here. See `.cursor/plans/stripe-phase-1-systemmap_*.plan.md`.
  */
 import { randomUUID } from "node:crypto";
+import { logger } from "../../lib/file-log.js";
 import type { User } from "@prisma/client";
 import { env } from "../../config/env.js";
 import { HttpError } from "../../lib/http-error.js";
@@ -737,7 +738,7 @@ async function resolveConversationIdFromToken(
   if (paymentRow) {
     const fromDb = paymentRow.conversationId;
     if (fromApi && fromApi !== fromDb) {
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} conversationId from retrieve differs from DB row for this token — using DB`,
         { fromApi, fromDb },
       );
@@ -805,7 +806,7 @@ async function triggerInvoiceGeneration(
     } else if (isTRCard) {
       // Yabancı para birimi ama TR kart → KDV uygula (compliance güvenliği)
       countryCode = "TR";
-      console.warn(`${PC_LOG} invoice: TR card on foreign currency — overriding to TR for KDV`, {
+      logger.warn("payment",`${PC_LOG} invoice: TR card on foreign currency — overriding to TR for KDV`, {
         conversationId: checkout.conversationId, cardCountry: cardCountryFromIyzico,
       });
     } else {
@@ -827,7 +828,7 @@ async function triggerInvoiceGeneration(
         const { decryptField } = await import("../../lib/encryption.js");
         nationalId = decryptField(user.tcKimlikNo);
       } catch {
-        console.warn(`${PC_LOG} TC No decrypt başarısız — fallback kullanılacak`);
+        logger.warn("payment",`${PC_LOG} TC No decrypt başarısız — fallback kullanılacak`);
         nationalId = null;
       }
     }
@@ -899,20 +900,20 @@ async function triggerInvoiceGeneration(
 
     if (!resp.ok) {
       const text = await resp.text();
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} invoice API returned ${resp.status}: ${text.slice(0, 200)}`,
       );
     } else {
       const data = (await resp.json()) as Record<string, unknown>;
 
       if (data["success"]) {
-        console.log(`${PC_LOG} invoice generated`, {
+        logger.info("payment",`${PC_LOG} invoice generated`, {
           invoiceId: data["invoice_id"],
           invoiceNumber: data["invoice_number"],
           emailSent: data["email_sent"],
         });
       } else {
-        console.warn(`${PC_LOG} invoice generation FAILED`, {
+        logger.warn("payment",`${PC_LOG} invoice generation FAILED`, {
           success: data["success"],
           error: data["error"],
         });
@@ -954,14 +955,14 @@ async function triggerInvoiceGeneration(
               sentAt: new Date(),
             },
           });
-          console.log(`${PC_LOG} invoice record saved checkoutId=${checkout.id}`);
+          logger.info("payment",`${PC_LOG} invoice record saved checkoutId=${checkout.id}`);
         } catch (dbErr) {
-          console.error(`${PC_LOG} invoice DB kayıt hatası`, dbErr instanceof Error ? dbErr.message : dbErr);
+          logger.error("payment",`${PC_LOG} invoice DB kayıt hatası`, dbErr instanceof Error ? dbErr.message : dbErr);
         }
       }
     }
   } catch (err) {
-    console.error(
+    logger.error("payment",
       `${PC_LOG} triggerInvoiceGeneration error`,
       err instanceof Error ? err.message : err,
     );
@@ -980,7 +981,7 @@ export async function processPaymentCallback(
   token: string,
   opts?: ProcessPaymentCallbackOpts,
 ): Promise<string> {
-  console.log(`${PC_LOG} start`, {
+  logger.info("payment",`${PC_LOG} start`, {
     tokenPresent: Boolean(token?.trim()),
     tokenLen: token?.trim()?.length ?? 0,
     keys: opts?.rawCallbackKeys,
@@ -989,18 +990,18 @@ export async function processPaymentCallback(
 
   try {
     if (opts?.rawCallbackKeys?.some((k) => /conversationData/i.test(k))) {
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} body contains conversationData-like field — typical of non–Checkout Form 3DS redirect; CF finalize uses POST token + checkoutForm.retrieve only.`,
       );
     }
 
     if (!token?.trim()) {
-      console.warn(`${PC_LOG} abort: empty token`);
+      logger.warn("payment",`${PC_LOG} abort: empty token`);
       return paymentWorkspaceRedirectUrl(false);
     }
 
     if (!env.iyzicoEnabled) {
-      console.warn(`${PC_LOG} abort: iyzico not configured`);
+      logger.warn("payment",`${PC_LOG} abort: iyzico not configured`);
       return paymentWorkspaceRedirectUrl(false);
     }
 
@@ -1013,7 +1014,7 @@ export async function processPaymentCallback(
       retrieveRequest.conversationId = opts.conversationIdFromRedirect.trim();
     }
 
-    console.log(`${PC_LOG} calling checkoutForm.retrieve`, {
+    logger.info("payment",`${PC_LOG} calling checkoutForm.retrieve`, {
       hasConversationIdInRequest: Boolean(retrieveRequest.conversationId),
     });
 
@@ -1021,7 +1022,7 @@ export async function processPaymentCallback(
     try {
       result = await promisifyRetrieve(iyzipay, retrieveRequest);
     } catch (e) {
-      console.error(
+      logger.error("payment",
         `${PC_LOG} checkoutForm.retrieve threw`,
         e instanceof Error ? e.message : e,
       );
@@ -1033,7 +1034,7 @@ export async function processPaymentCallback(
       result = { ...result, conversationId: extractedConv };
     }
 
-    console.log(`${PC_LOG} retrieve raw`, {
+    logger.info("payment",`${PC_LOG} retrieve raw`, {
       status: result.status,
       errorCode: result.errorCode,
       errorMessage: result.errorMessage,
@@ -1056,15 +1057,15 @@ export async function processPaymentCallback(
     // (Bu noktada pending henüz yüklenmemiş; loglama callback doğrulandıktan sonra yapılır)
 
     if (result.status !== "success") {
-      console.warn(`${PC_LOG} retrieve status !== success`);
+      logger.warn("payment",`${PC_LOG} retrieve status !== success`);
       return paymentWorkspaceRedirectUrl(false);
     }
 
     try {
       verifyRetrieveSignature(result, env.IYZICO_SECRET_KEY);
-      console.log(`${PC_LOG} retrieve signature OK`);
+      logger.info("payment",`${PC_LOG} retrieve signature OK`);
     } catch (verifyErr) {
-      console.error(
+      logger.error("payment",
         `${PC_LOG} retrieve signature verification failed`,
         verifyErr instanceof Error ? verifyErr.message : verifyErr,
       );
@@ -1072,7 +1073,7 @@ export async function processPaymentCallback(
     }
 
     if (result.paymentStatus !== "SUCCESS") {
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} payment not SUCCESS; paymentStatus=${String(result.paymentStatus)}`,
       );
       return paymentWorkspaceRedirectUrl(false);
@@ -1080,12 +1081,12 @@ export async function processPaymentCallback(
 
     const conversationId = await resolveConversationIdFromToken(token, result);
     if (!conversationId) {
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} missing conversationId on retrieve result (and no DB row matched token hash)`,
       );
       return paymentWorkspaceRedirectUrl(false);
     }
-    console.log(`${PC_LOG} conversationId resolved for fulfillment`, {
+    logger.info("payment",`${PC_LOG} conversationId resolved for fulfillment`, {
       conversationId,
     });
 
@@ -1098,14 +1099,14 @@ export async function processPaymentCallback(
         type: "iyzico_unknown_conversation",
         detail: conversationId,
       });
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} no paymentCheckout for conversationId`,
         conversationId,
       );
       return paymentWorkspaceRedirectUrl(false);
     }
 
-    console.log(`${PC_LOG} matched paymentCheckout (subscription)`, {
+    logger.info("payment",`${PC_LOG} matched paymentCheckout (subscription)`, {
       conversationId: pending.conversationId,
       status: pending.status,
       plan: pending.plan,
@@ -1113,7 +1114,7 @@ export async function processPaymentCallback(
     });
 
     if (pending.status === "completed") {
-      console.log(
+      logger.info("payment",
         `${PC_LOG} subscription checkout already completed — idempotent success`,
       );
       return paymentWorkspaceRedirectUrl(true, pending.plan, pending.extraSeats, pending.seatsOnly);
@@ -1128,7 +1129,7 @@ export async function processPaymentCallback(
         type: "iyzico_price_mismatch",
         detail: `expected=${expectedPrice} got=${String(result.paidPrice)}`,
       });
-      console.warn(`${PC_LOG} subscription price mismatch`);
+      logger.warn("payment",`${PC_LOG} subscription price mismatch`);
       return paymentWorkspaceRedirectUrl(false);
     }
 
@@ -1201,10 +1202,10 @@ export async function processPaymentCallback(
                 where: { id: current.couponId },
                 data: { isActive: false },
               });
-              console.log(`${PC_LOG} coupon auto-deactivated couponId=${current.couponId} totalUses=${totalUses}`);
+              logger.info("payment",`${PC_LOG} coupon auto-deactivated couponId=${current.couponId} totalUses=${totalUses}`);
             }
           }
-          console.log(`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
+          logger.info("payment",`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
         }
       });
 
@@ -1220,37 +1221,66 @@ export async function processPaymentCallback(
             owner?.email?.split("@")[0] ||
             "Business";
           const team = await createTeamForOwner(pending.userId, ownerName);
-          // Update extraSeats if purchaser requested additional seats
+          // Update extraSeats if purchaser requested additional seats.
+          // Atomic transaction: iki eşzamanlı seatsOnly ödemesi race condition yaratamaz.
           if ((pending.extraSeats ?? 0) > 0) {
-            // seatsOnly: kümülatif güncelleme — yeni toplam = mevcut + satın alınan
-            if (pending.seatsOnly) {
-              await prisma.team.update({
-                where: { id: team.id },
-                data: { extraSeats: { increment: pending.extraSeats } },
-              });
-            } else {
-              await prisma.team.update({
-                where: { id: team.id },
-                data: { extraSeats: pending.extraSeats },
-              });
-            }
+            await prisma.$transaction(async (tx) => {
+              if (pending.seatsOnly) {
+                // seatsOnly: kümülatif güncelleme — yeni toplam = mevcut + satın alınan
+                await tx.team.update({
+                  where: { id: team.id },
+                  data: { extraSeats: { increment: pending.extraSeats } },
+                });
+              } else {
+                await tx.team.update({
+                  where: { id: team.id },
+                  data: { extraSeats: pending.extraSeats },
+                });
+              }
+            });
           }
         } catch (teamErr) {
           // Non-fatal: payment succeeded; team creation failure is recoverable.
-          console.error(`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
+          logger.error("payment",`${PC_LOG} team auto-create failed (non-fatal)`, teamErr instanceof Error ? teamErr.message : teamErr);
         }
       }
     } catch (dbErr) {
       // Payment was verified by iyzico but our DB write failed. Throw so the
       // controller returns HTTP 500 — iyzico will retry the webhook automatically.
-      console.error(
+      logger.error("payment",
         `${PC_LOG} DB fulfillment FAILED for conversationId=${conversationId}; will throw so caller returns 500 for iyzico retry`,
         dbErr instanceof Error ? (dbErr.stack ?? dbErr.message) : dbErr,
       );
       throw new PaymentFulfillmentDbError(dbErr);
     }
 
-    console.log(`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
+    logger.info("payment",`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
+
+    // Ödeme başarısı / abonelik aktif e-postası (non-fatal — ödeme zaten tamamlandı).
+    void (async () => {
+      try {
+        const buyer = await prisma.user.findUnique({
+          where: { id: pending.userId },
+          select: { email: true, preferredLanguage: true },
+        });
+        if (buyer?.email) {
+          const { createPaymentSuccessEmailTemplate } = await import("../subscription/subscription.email.js");
+          const lang = buyer.preferredLanguage === "tr" ? "tr" : "en";
+          const expiryDate = new Date(Date.now() + (pending.subscriptionDays ?? 30) * 86400000);
+          const tpl = createPaymentSuccessEmailTemplate({
+            planName: pending.plan,
+            amount: pending.priceTry,
+            currency: pending.paymentCurrency ?? "TRY",
+            periodEnd: expiryDate.toLocaleDateString(lang === "tr" ? "tr-TR" : "en-US", { dateStyle: "long" }),
+            lang,
+          });
+          const { sendMail } = await import("../../lib/mailer.js");
+          await sendMail({ to: buyer.email, ...tpl });
+        }
+      } catch (mailErr) {
+        logger.error("payment", `${PC_LOG} payment success email failed (non-fatal)`, { detail: String(mailErr) });
+      }
+    })();
 
     // KDV uyum denetimi: TR kart + KDV'siz fatura → compliance uyarısı logla
     if (isTurkishCard && (pending.kdvRate === 0 || pending.paymentCurrency !== "TRY")) {
@@ -1266,7 +1296,7 @@ export async function processPaymentCallback(
           note: "TR kart + KDV muaf fatura — manuel inceleme gerekebilir",
         }),
       });
-      console.warn(
+      logger.warn("payment",
         `${PC_LOG} VAT COMPLIANCE WARNING: Turkish card used on non-KDV invoice`,
         { conversationId, cardCountry: result.cardCountry },
       );
@@ -1274,7 +1304,7 @@ export async function processPaymentCallback(
 
     // Fire-and-forget fatura üretimi — abonelik aktivasyonunu asla engellemez
     void triggerInvoiceGeneration(pending, result).catch((err) => {
-      console.error(
+      logger.error("payment",
         `${PC_LOG} invoice trigger başarısız (kritik değil)`,
         err instanceof Error ? err.message : err,
       );
@@ -1286,7 +1316,7 @@ export async function processPaymentCallback(
     if (unexpected instanceof PaymentFulfillmentDbError) {
       throw unexpected;
     }
-    console.error(
+    logger.error("payment",
       `${PC_LOG} unexpected error`,
       unexpected instanceof Error
         ? (unexpected.stack ?? unexpected.message)
@@ -1354,7 +1384,7 @@ export async function issueIyzicoRefund(
 ): Promise<{ ok: boolean; requiresManualReview?: boolean; error?: string }> {
   // Legacy ödeme: iyzicoPaymentId kaydedilmemiş → iyzico çağrısı yapılamaz
   if (!checkout.iyzicoPaymentId) {
-    console.warn(
+    logger.warn("payment",
       `${IYZICO_REFUND_LOG} iyzicoPaymentId eksik — manüel iade gerekiyor conversationId=${checkout.conversationId}`,
     );
     return { ok: true, requiresManualReview: true };
@@ -1384,20 +1414,20 @@ export async function issueIyzicoRefund(
         paymentId: checkout.iyzicoPaymentId,
         ip: safeIp,
       });
-      console.log(`${IYZICO_REFUND_LOG} cancel sonucu`, {
+      logger.info("payment",`${IYZICO_REFUND_LOG} cancel sonucu`, {
         status: cancelResult.status,
         errorCode: cancelResult.errorCode,
         errorMessage: cancelResult.errorMessage,
       });
       if (cancelResult.status === "success") return { ok: true };
-      console.warn(`${IYZICO_REFUND_LOG} cancel başarısız, refund deneniyor`, { errorCode: cancelResult.errorCode });
+      logger.warn("payment",`${IYZICO_REFUND_LOG} cancel başarısız, refund deneniyor`, { errorCode: cancelResult.errorCode });
     } catch (cancelErr) {
-      console.warn(`${IYZICO_REFUND_LOG} cancel hata fırlattı, refund deneniyor`, cancelErr instanceof Error ? cancelErr.message : String(cancelErr));
+      logger.warn("payment",`${IYZICO_REFUND_LOG} cancel hata fırlattı, refund deneniyor`, cancelErr instanceof Error ? cancelErr.message : String(cancelErr));
     }
   }
 
   if (!checkout.iyzicoPaymentTransactionId) {
-    console.warn(
+    logger.warn("payment",
       `${IYZICO_REFUND_LOG} iyzicoPaymentTransactionId eksik — manüel iade gerekiyor conversationId=${checkout.conversationId}`,
     );
     return { ok: true, requiresManualReview: true };
@@ -1412,7 +1442,7 @@ export async function issueIyzicoRefund(
       currency: Iyzipay.CURRENCY.TRY,
       ip: safeIp,
     });
-    console.log(`${IYZICO_REFUND_LOG} refund sonucu`, {
+    logger.info("payment",`${IYZICO_REFUND_LOG} refund sonucu`, {
       status: refundResult.status,
       errorCode: refundResult.errorCode,
       errorMessage: refundResult.errorMessage,
@@ -1421,7 +1451,7 @@ export async function issueIyzicoRefund(
     return { ok: false, error: refundResult.errorMessage ?? refundResult.errorCode ?? "iyzico_refund_failed" };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error(`${IYZICO_REFUND_LOG} refund hata fırlattı`, msg);
+    logger.error("payment",`${IYZICO_REFUND_LOG} refund hata fırlattı`, msg);
     return { ok: false, error: msg };
   }
 }
@@ -1449,17 +1479,17 @@ export async function processRefund(
   });
 
   if (!checkout) {
-    console.warn(`${REFUND_LOG} conversationId not found`, { conversationId });
+    logger.warn("payment",`${REFUND_LOG} conversationId not found`, { conversationId });
     return { ok: false, reason: "not_found" };
   }
 
   if (checkout.status === "refunded" || checkout.refundedAt) {
-    console.log(`${REFUND_LOG} already refunded — idempotent skip`, { conversationId });
+    logger.info("payment",`${REFUND_LOG} already refunded — idempotent skip`, { conversationId });
     return { ok: false, reason: "already_refunded" };
   }
 
   if (checkout.status !== "completed") {
-    console.warn(`${REFUND_LOG} checkout not completed, status=${checkout.status}`, { conversationId });
+    logger.warn("payment",`${REFUND_LOG} checkout not completed, status=${checkout.status}`, { conversationId });
     return { ok: false, reason: "not_completed" };
   }
 
@@ -1469,7 +1499,7 @@ export async function processRefund(
   const ageMs = Date.now() - completedAt.getTime();
   if (ageMs > windowMs) {
     const ageDays = Math.floor(ageMs / (24 * 60 * 60 * 1000));
-    console.warn(`${REFUND_LOG} refund window expired`, { conversationId, ageDays, windowDays: REFUND_WINDOW_DAYS });
+    logger.warn("payment",`${REFUND_LOG} refund window expired`, { conversationId, ageDays, windowDays: REFUND_WINDOW_DAYS });
     return { ok: false, reason: "window_expired" };
   }
 
@@ -1509,7 +1539,7 @@ export async function processRefund(
     }
   });
 
-  console.log(`${REFUND_LOG} refund processed`, {
+  logger.info("payment",`${REFUND_LOG} refund processed`, {
     conversationId,
     userId: checkout.userId,
     planBefore,
@@ -1518,7 +1548,7 @@ export async function processRefund(
 
   // İade faturası — arka planda tetikle, abonelik akışını bloke etme
   void triggerCreditNote(checkout.id, checkout.userId, reason).catch((err) => {
-    console.error(`${REFUND_LOG} triggerCreditNote error`, err instanceof Error ? err.message : err);
+    logger.error("payment",`${REFUND_LOG} triggerCreditNote error`, err instanceof Error ? err.message : err);
   });
 
   return { ok: true, conversationId, userId: checkout.userId, planBefore };
@@ -1539,7 +1569,7 @@ async function triggerCreditNote(
   });
 
   if (!invoice?.externalId) {
-    console.warn(`${REFUND_LOG} credit-note: orijinal fatura bulunamadı checkoutId=${checkoutId}`);
+    logger.warn("payment",`${REFUND_LOG} credit-note: orijinal fatura bulunamadı checkoutId=${checkoutId}`);
     return;
   }
 
@@ -1640,7 +1670,7 @@ async function triggerCreditNote(
     });
 
     const data = (await resp.json()) as Record<string, unknown>;
-    console.log(`${REFUND_LOG} credit-note result`, {
+    logger.info("payment",`${REFUND_LOG} credit-note result`, {
       success: data["success"],
       creditNoteId: data["creditNoteId"],
       creditNoteNo: data["creditNoteNo"],
@@ -1662,7 +1692,7 @@ async function triggerCreditNote(
       });
     }
   } catch (err) {
-    console.error(`${REFUND_LOG} credit-note fetch error`, err instanceof Error ? err.message : err);
+    logger.error("payment",`${REFUND_LOG} credit-note fetch error`, err instanceof Error ? err.message : err);
     await prisma.invoice.update({
       where: { checkoutId },
       data: { creditNoteStatus: "failed" },
@@ -1682,20 +1712,20 @@ export async function processIyzicoRefundWebhook(body: Record<string, unknown>):
 
   const paymentId = typeof body.paymentId === "string" ? body.paymentId : null;
 
-  console.log(`${REFUND_LOG} webhook received`, { conversationId, paymentId, bodyKeys: Object.keys(body) });
+  logger.info("payment",`${REFUND_LOG} webhook received`, { conversationId, paymentId, bodyKeys: Object.keys(body) });
 
   if (!conversationId) {
     // conversationId yoksa paymentId ile arama yap
     if (paymentId) {
-      console.warn(`${REFUND_LOG} no conversationId in webhook; paymentId lookup not implemented — manual review needed`, { paymentId });
+      logger.warn("payment",`${REFUND_LOG} no conversationId in webhook; paymentId lookup not implemented — manual review needed`, { paymentId });
     } else {
-      console.warn(`${REFUND_LOG} webhook missing conversationId and paymentId — ignoring`);
+      logger.warn("payment",`${REFUND_LOG} webhook missing conversationId and paymentId — ignoring`);
     }
     return;
   }
 
   const result = await processRefund(conversationId, "iyzico_refund_webhook");
   if (!result.ok) {
-    console.warn(`${REFUND_LOG} webhook refund skipped`, { conversationId, reason: result.reason });
+    logger.warn("payment",`${REFUND_LOG} webhook refund skipped`, { conversationId, reason: result.reason });
   }
 }

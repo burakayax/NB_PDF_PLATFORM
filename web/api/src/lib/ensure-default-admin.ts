@@ -1,4 +1,5 @@
 import { env } from "../config/env.js";
+import { appendLogLine } from "./file-log.js";
 import { hashPassword } from "./password.js";
 import { prisma } from "./prisma.js";
 import { resolveRoleFromEmail } from "./role-policy.js";
@@ -35,5 +36,5 @@ export async function ensureDefaultAdminUser(): Promise<void> {
     },
   });
 
-  console.log(`Bootstrap user created (${email}, role=${role}).`);
+  appendLogLine(JSON.stringify({ ts: new Date().toISOString(), kind: "startup", message: `Bootstrap user created`, email, role }));
 }

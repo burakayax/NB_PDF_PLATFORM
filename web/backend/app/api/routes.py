@@ -14,7 +14,7 @@ from typing import Annotated, Any
 
 from pathlib import Path
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from app.api.pdf_auth import extract_bearer_header_only, extract_pdf_access_token
 from app.core.operations import (
@@ -33,6 +33,7 @@ from app.core.operations import (
     parse_pages_text,
     save_upload,
     save_office_upload,
+    save_any_upload,
     max_bytes_from_decision,
 )
 from app.core.jobs import (
@@ -43,6 +44,7 @@ from app.core.jobs import (
     request_cancel_merge_job,
 )
 from app.core.thread_pool import run_cpu_bound
+from app.core.pdf_sandbox import run_sandboxed
 from app.core.preview_gate import (
     generate_hero_watermarked_preview_png_queued,
     generate_hero_watermarked_preview_png_queued_from_path,
@@ -62,6 +64,7 @@ from app.core.saas_gate import (
     get_user_file_size_limit_bytes,
 )
 from app.limiter import limiter
+import src.pdf_toolkit_extra as ptx
 
 logger = logging.getLogger(__name__)
 
@@ -148,13 +151,32 @@ def _maybe_watermark_pdf(p: Path, enabled: bool) -> None:
 
 @router.get("/health")
 @limiter.exempt
-def health():
-    return {"status": "ok", "service": "nb-pdf-TOOLS-web"}
+def health(request: Request):
+    import shutil
+    from app.core.pdf_security import get_library_versions
+    lib_versions = getattr(request.app.state, "pdf_library_versions", None) or get_library_versions()
+    return {
+        "status": "ok",
+        "service": "nb-pdf-TOOLS-web",
+        "pdf_libraries": lib_versions,
+        "system_tools": {
+            "wkhtmltopdf": bool(shutil.which("wkhtmltopdf")),
+            "tesseract":   bool(shutil.which("tesseract")),
+            "libreoffice": bool(shutil.which("libreoffice")),
+        },
+    }
 
 
 @router.get("/capabilities")
 def capabilities():
-    return operation_capabilities()
+    import shutil
+    base = operation_capabilities()
+    base["tool_availability"] = {
+        "wkhtmltopdf": bool(shutil.which("wkhtmltopdf")),
+        "tesseract":   bool(shutil.which("tesseract")),
+        "libreoffice": bool(shutil.which("libreoffice")),
+    }
+    return base
 
 
 # ---------------------------------------------------------------------------
@@ -181,6 +203,7 @@ async def merge_pdfs(
             orig_name = Path(upload.filename or "upload.pdf").name
             unique_name = f"{idx:04d}__{orig_name}"
             saved = await save_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
+            validate_pdf_before_processing(saved, filename=orig_name, expected_max_bytes=max_bytes_from_decision(decision))
             saved_paths.append(saved)
 
         passwords: dict[str, str] = {}
@@ -311,6 +334,7 @@ async def inspect_pdf(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes)
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         p = str(saved_file)
 
         # 0-byte dosya — geçersiz/bozuk PDF, işleme sokmadan erken dön
@@ -324,7 +348,7 @@ async def inspect_pdf(
                 "inspect_diagnostic": {"classification_reason": "empty_file"},
             }
 
-        requires_pw, encrypt_diag = await run_cpu_bound(
+        requires_pw, encrypt_diag = await run_sandboxed(
             engine.classify_pdf_password_requirement,
             p,
         )
@@ -339,7 +363,7 @@ async def inspect_pdf(
             pass
         else:
             try:
-                page_count = await run_cpu_bound(engine.get_num_pages, p, password=pwd)
+                page_count = await run_sandboxed(engine.get_num_pages, p, password=pwd)
             except Exception as exc:
                 page_count = None
                 inspect_error = str(exc)
@@ -378,11 +402,12 @@ async def split_pdf(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         pwd = password.strip() or None
         sp = str(saved_file)
-        if (await run_cpu_bound(engine.is_pdf_encrypted, sp)) and not pwd:
+        if (await run_sandboxed(engine.is_pdf_encrypted, sp)) and not pwd:
             raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
-        max_pages = await run_cpu_bound(engine.get_num_pages, sp, password=pwd)
+        max_pages = await run_sandboxed(engine.get_num_pages, sp, password=pwd)
         pages = parse_pages_text(pages_text, max_page=max_pages)
         user_id = await saas_current_user_id(token)
         file_base = file.filename or saved_file.name
@@ -393,7 +418,7 @@ async def split_pdf(
         def _do_split() -> Any:
             return _split_to_result_store(workdir, sp, pages, file_base, m, pwd, user_id, watermark_enabled=bool(decision.get("watermarkEnabled", False)))
 
-        handle = await run_cpu_bound(_do_split)
+        handle = await run_sandboxed(_do_split)
 
         return {
             "result_id": handle.result_id,
@@ -421,17 +446,17 @@ async def pdf_to_word(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         pwd = password.strip() or None
         sp = str(saved_file)
-        if (await run_cpu_bound(engine.is_pdf_encrypted, sp)) and not pwd:
-            raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
-
         output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
         output_path = workdir / output_name
-        await run_cpu_bound(engine.pdf_to_word, sp, str(output_path), password=pwd)
         user_id = await saas_current_user_id(token)
 
-        def _store():
+        def _run():
+            if engine.is_pdf_encrypted(sp) and not pwd:
+                raise HTTPException(status_code=400, detail="Şifreli PDF için kaynak parolası gerekli.")
+            engine.pdf_to_word(sp, str(output_path), password=pwd)
             outp = Path(str(output_path))
             return save_result_from_file(
                 outp,
@@ -442,7 +467,7 @@ async def pdf_to_word(
                 tool="pdf-to-word",
             )
 
-        handle = await run_cpu_bound(_store)
+        handle = await run_sandboxed(_run)
 
         return {
             "result_id": handle.result_id,
@@ -472,7 +497,7 @@ async def word_to_pdf(
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
-        await run_cpu_bound(engine.word_to_pdf, sp, str(output_path))
+        await run_sandboxed(engine.word_to_pdf, sp, str(output_path))
         user_id = await saas_current_user_id(token)
 
         def _store():
@@ -492,7 +517,7 @@ async def word_to_pdf(
                 tool="word-to-pdf",
             )
 
-        handle = await run_cpu_bound(_store)
+        handle = await run_sandboxed(_store)
 
         return {
             "result_id": handle.result_id,
@@ -522,7 +547,7 @@ async def excel_to_pdf(
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "PDF", "pdf")
         output_path = workdir / output_name
-        await run_cpu_bound(engine.excel_to_pdf, sp, str(output_path))
+        await run_sandboxed(engine.excel_to_pdf, sp, str(output_path))
         user_id = await saas_current_user_id(token)
 
         def _store():
@@ -542,7 +567,7 @@ async def excel_to_pdf(
                 tool="excel-to-pdf",
             )
 
-        handle = await run_cpu_bound(_store)
+        handle = await run_sandboxed(_store)
 
         return {
             "result_id": handle.result_id,
@@ -570,10 +595,11 @@ async def pdf_to_excel(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Excel", "xlsx")
         output_path = workdir / output_name
-        await run_cpu_bound(
+        await run_sandboxed(
             engine.pdf_text_to_excel,
             sp,
             str(output_path),
@@ -593,7 +619,7 @@ async def pdf_to_excel(
                 tool="pdf-to-excel",
             )
 
-        handle = await run_cpu_bound(_store)
+        handle = await run_sandboxed(_store)
 
         return {
             "result_id": handle.result_id,
@@ -624,6 +650,7 @@ async def compress_pdf(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Sıkıştırılmış", "pdf")
         output_path = workdir / output_name
@@ -651,7 +678,7 @@ async def compress_pdf(
                 tool="compress",
             )
 
-        handle = await run_cpu_bound(_compress_and_store)
+        handle = await run_sandboxed(_compress_and_store)
 
         return {
             "result_id": handle.result_id,
@@ -746,6 +773,8 @@ async def batch_process(
             unique_name = f"{idx:04d}__{orig_name}"
             if tool_type in _office_tools:
                 saved = await save_office_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
+            elif tool_type == "image-to-pdf":
+                saved = await save_any_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
             else:
                 saved = await save_upload(upload, workdir, filename=unique_name, max_bytes=max_bytes_from_decision(decision))
             sp = str(saved)
@@ -806,7 +835,7 @@ async def batch_process(
                 elif tool_type == "image-to-pdf":
                     out_name = format_derived_filename(orig_name, "PDF", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.image_to_pdf(sp, str(out_path))
+                    ptx.images_to_pdf([sp], str(out_path))
                     return out_path, out_name
                 elif tool_type == "pdf-to-image":
                     out_name = format_derived_filename(orig_name, "Görüntü", img_fmt)
@@ -825,7 +854,7 @@ async def batch_process(
                     return out_path, out_name
                 raise ValueError(f"Bilinmeyen araç: {tool_type}")
 
-            result_path, result_name = await run_cpu_bound(_process_one)
+            result_path, result_name = await run_sandboxed(_process_one)
             output_paths.append((result_path, result_name))
 
         zip_name = f"toplu_{tool_type.replace('-', '_')}.zip"
@@ -841,7 +870,7 @@ async def batch_process(
                 tool=f"batch-{tool_type}",
             )
 
-        handle = await run_cpu_bound(_store_zip)
+        handle = await run_sandboxed(_store_zip)
         return {
             "result_id": handle.result_id,
             "filename": handle.filename,
@@ -925,10 +954,11 @@ async def encrypt_pdf(
     workdir = create_workdir()
     try:
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         sp = str(saved_file)
         output_name = format_derived_filename(file.filename or saved_file.name, "Şifreli", "pdf")
         output_path = workdir / output_name
-        await run_cpu_bound(
+        await run_sandboxed(
             engine.encrypt_pdf,
             sp,
             str(output_path),
@@ -954,7 +984,7 @@ async def encrypt_pdf(
                 tool="encrypt",
             )
 
-        handle = await run_cpu_bound(_store)
+        handle = await run_sandboxed(_store)
 
         return {
             "result_id": handle.result_id,

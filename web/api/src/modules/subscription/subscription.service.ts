@@ -64,6 +64,15 @@ export async function ensurePaidSubscriptionActiveOrDowngrade(userId: string): P
     }
   }
 
+  // Ücretli planı olan ama organizasyonu bulunmayan kullanıcı: tutarsız durum, FREE'ye düşür
+  if (paid && !userBefore.organizationId) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { plan: "FREE" },
+    });
+    return { user, downgraded: true };
+  }
+
   return { user: userBefore, downgraded: false };
 }
 

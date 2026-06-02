@@ -700,6 +700,320 @@ def _build_docx_from_paragraphs(dw: "Document", paragraphs: List[str], page_num:
                 run.font.size = Pt(11)
 
 
+def _pdf_to_word_easyocr(
+    pdf_path: str,
+    docx_path: str,
+    password: Optional[str] = None,
+    progress_callback=None,
+    *,
+    render_scale: float = 2.5,
+) -> bool:
+    """
+    EasyOCR (Türkçe+İngilizce) ile taranmış/görsel PDF → DOCX.
+    - PyMuPDF ile yüksek DPI render
+    - EasyOCR bounding box ile koordinat bazlı layout tespiti
+    - Y kümeleme → satırlar, X boşluk analizi → kolonlar
+    - Başlık, ortalı metin ve çok sütunlu yapı korunur
+    """
+    try:
+        import easyocr as _easyocr
+        import fitz as _fitz
+    except ImportError:
+        return False
+
+    try:
+        _reader = _easyocr.Reader(["tr", "en"], gpu=False, verbose=False)
+    except Exception as e:
+        print(f"[easyocr] model yükleme hatası: {e}")
+        return False
+
+    try:
+        doc_pdf = _fitz.open(pdf_path)
+        if doc_pdf.needs_pass:
+            if not (password or ""):
+                return False
+            if not doc_pdf.authenticate(password or ""):
+                return False
+
+        dw = Document()
+        style = dw.styles["Normal"]
+        style.font.name = "Calibri"
+        from docx.shared import Pt
+        style.font.size = Pt(11)
+        n = doc_pdf.page_count
+
+        for i in range(n):
+            if progress_callback:
+                progress_callback(i + 1, max(n, 1), f"OCR işleniyor: sayfa {i + 1}/{n}")
+
+            page = doc_pdf.load_page(i)
+            mat = _fitz.Matrix(render_scale, render_scale)
+            pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=_fitz.csRGB)
+            img_bytes = pix.tobytes("png")
+            page_w_px = pix.width
+
+            if i > 0:
+                dw.add_page_break()
+
+            try:
+                results = _reader.readtext(img_bytes, detail=1, paragraph=False)
+            except Exception:
+                p = dw.add_paragraph("(Bu sayfada OCR başarısız.)")
+                continue
+
+            if not results:
+                p = dw.add_paragraph("(Bu sayfada metin okunamadı.)")
+                continue
+
+            # results: [([[x1,y1],[x2,y1],[x2,y2],[x1,y2]], text, conf), ...]
+            words = []
+            for bbox, text, conf in results:
+                if conf < 0.2 or not text.strip():
+                    continue
+                xs = [p[0] for p in bbox]
+                ys = [p[1] for p in bbox]
+                left = int(min(xs))
+                top = int(min(ys))
+                w = int(max(xs) - min(xs))
+                h = int(max(ys) - min(ys))
+                words.append({
+                    "text": text.strip(),
+                    "left": left, "top": top,
+                    "width": w, "height": h,
+                    "conf": conf,
+                })
+
+            # Y kümeleme ile satırlara grupla
+            lines = _cluster_words_into_visual_lines(words)
+            if not lines:
+                continue
+
+            # Her satırı X boşluk analizi ile segmentlere böl
+            for line_words in lines:
+                segs = _split_line_into_word_segments(line_words, page_w_px)
+                texts = [_join_words_in_segment(s) for s in segs]
+                texts = [t for t in texts if t.strip()]
+                if not texts:
+                    continue
+
+                if len(texts) == 1:
+                    text = texts[0]
+                    centered = _line_looks_centered(line_words, page_w_px)
+                    bold = _is_section_heading_text(text)
+                    block = {"kind": "paragraph", "text": text, "centered": centered, "bold": bold}
+                else:
+                    block = {"kind": "table_row", "cells": texts}
+                _append_layout_block_to_document(dw, block)
+
+        doc_pdf.close()
+        dw.save(docx_path)
+        return True
+
+    except Exception as e:
+        print(f"[easyocr] dönüşüm hatası: {e}")
+        return False
+
+
+def _pdf_to_word_docling(
+    pdf_path: str,
+    docx_path: str,
+    password: Optional[str] = None,
+    progress_callback=None,
+) -> bool:
+    """
+    Docling (IBM) ile taranmış PDF → DOCX.
+    Sinir ağı tabanlı layout analizi: tablo, başlık, çok sütun, form yapısı.
+    Tesseract fallback ile OCR yapılır. Başarısız olursa False döner.
+    """
+    try:
+        from docling.document_converter import DocumentConverter, PdfFormatOption
+        from docling.datamodel.pipeline_options import PdfPipelineOptions, RapidOcrOptions
+        from docling.datamodel.base_models import InputFormat
+    except ImportError:
+        return False
+
+    try:
+        if progress_callback:
+            progress_callback(1, 4, "Docling ile sayfa düzeni analiz ediliyor...")
+
+        # RapidOCR: ONNX tabanlı, EasyOCR'dan 3-5x hızlı, Tesseract gerektirmez
+        # do_table_structure=False: tablo yapısı modeli kapalı → 3x hızlı
+        ocr_opts = RapidOcrOptions(force_full_page_ocr=True)
+        pipeline_opts = PdfPipelineOptions()
+        pipeline_opts.do_ocr = True
+        pipeline_opts.do_table_structure = False
+        pipeline_opts.ocr_options = ocr_opts
+
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_opts)
+            }
+        )
+
+        if progress_callback:
+            progress_callback(2, 4, "OCR ve tablo yapısı çıkarılıyor...")
+
+        # Docling CPU'da yavaş olabilir — 300s timeout, sonra fallback
+        import threading, queue as _queue
+        _result_q: _queue.Queue = _queue.Queue()
+
+        def _do_convert():
+            try:
+                _result_q.put(("ok", converter.convert(pdf_path)))
+            except Exception as _e:
+                _result_q.put(("err", _e))
+
+        _t = threading.Thread(target=_do_convert, daemon=True)
+        _t.start()
+        _t.join(timeout=480)
+        if _t.is_alive():
+            print("[docling] 480s timeout — fallback'e geçiliyor")
+            return False
+        _kind, _val = _result_q.get_nowait()
+        if _kind == "err":
+            raise _val
+        result = _val
+        doc = result.document
+
+        if progress_callback:
+            progress_callback(3, 4, "Word belgesi oluşturuluyor...")
+
+        _build_docx_from_docling(doc, docx_path)
+
+        if progress_callback:
+            progress_callback(4, 4, "Tamamlandı.")
+        return True
+
+    except Exception as e:
+        print(f"[docling] dönüşüm başarısız: {e}")
+        return False
+
+
+def _build_docx_from_docling(doc, docx_path: str) -> None:
+    """Docling DoclingDocument → python-docx DOCX."""
+    from docx.shared import Pt, Inches, RGBColor
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    import re
+
+    dw = Document()
+    style = dw.styles["Normal"]
+    style.font.name = "Calibri"
+    style.font.size = Pt(11)
+
+    # Docling markdown çıktısını parse edip python-docx'e yaz
+    md = doc.export_to_markdown()
+    if not md or not md.strip():
+        dw.add_paragraph("(Bu belgeden metin çıkarılamadı.)")
+        dw.save(docx_path)
+        return
+
+    lines = md.splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+
+        # Markdown table — satırları topla
+        if line.startswith("|"):
+            table_lines = []
+            while i < len(lines) and lines[i].startswith("|"):
+                if not re.match(r"^\|[\s\-|]+\|$", lines[i]):  # ayraç satırını atla
+                    table_lines.append(lines[i])
+                i += 1
+            if table_lines:
+                _append_md_table_to_docx(dw, table_lines)
+            continue
+
+        # Başlıklar
+        heading_match = re.match(r"^(#{1,6})\s+(.*)", line)
+        if heading_match:
+            level = len(heading_match.group(1))
+            text = heading_match.group(2).strip()
+            text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)  # bold işaretlerini kaldır
+            dw.add_heading(text, level=min(level, 4))
+            i += 1
+            continue
+
+        # Sayfa sonu işareti (Docling genellikle <!-- --> veya hr kullanır)
+        if line.strip() in ("---", "***", "___") or line.strip().startswith("<!-- page"):
+            dw.add_page_break()
+            i += 1
+            continue
+
+        # Boş satır
+        if not line.strip():
+            i += 1
+            continue
+
+        # Normal paragraf — bold/italic parse et
+        text = line.strip()
+        if text:
+            p = dw.add_paragraph()
+            p.paragraph_format.space_after = Pt(4)
+            _add_markdown_runs(p, text)
+
+        i += 1
+
+    dw.save(docx_path)
+
+
+def _append_md_table_to_docx(dw, table_lines: list) -> None:
+    """Markdown tablo satırlarını python-docx tablosuna çevirir."""
+    from docx.shared import Pt
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+
+    rows_data = []
+    for line in table_lines:
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        rows_data.append(cells)
+
+    if not rows_data:
+        return
+
+    col_count = max(len(r) for r in rows_data)
+    tbl = dw.add_table(rows=len(rows_data), cols=col_count)
+    tbl.style = "Table Grid"
+
+    for r_idx, row_cells in enumerate(rows_data):
+        row = tbl.rows[r_idx]
+        for c_idx, cell_text in enumerate(row_cells):
+            if c_idx >= col_count:
+                break
+            cell = row.cells[c_idx]
+            cell.text = ""
+            p = cell.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            import re
+            clean = re.sub(r"\*\*(.+?)\*\*", r"\1", cell_text)
+            run = p.add_run(clean)
+            if r_idx == 0:
+                run.bold = True
+
+
+def _add_markdown_runs(paragraph, text: str) -> None:
+    """**bold** ve *italic* işaretlerini ayrıştırıp Word run olarak ekler."""
+    import re
+    # Basit bold/italic tokenizer
+    pattern = re.compile(r"(\*\*(.+?)\*\*|\*(.+?)\*|`(.+?)`)")
+    last = 0
+    for m in pattern.finditer(text):
+        if m.start() > last:
+            paragraph.add_run(text[last:m.start()])
+        raw = m.group(0)
+        inner = m.group(2) or m.group(3) or m.group(4) or raw
+        run = paragraph.add_run(inner)
+        if raw.startswith("**"):
+            run.bold = True
+        elif raw.startswith("*"):
+            run.italic = True
+        else:
+            run.font.name = "Courier New"
+        last = m.end()
+    if last < len(text):
+        paragraph.add_run(text[last:])
+
+
 def _pdf_to_word_ocr_fitz(
     pdf_path: str,
     docx_path: str,
@@ -712,13 +1026,16 @@ def _pdf_to_word_ocr_fitz(
     Taranmış / görsel PDF → düzenlenebilir Word.
 
     Strateji:
-    1. Her sayfayı 300 DPI'ye yakın çözünürlükte render et
+    1. Her sayfayı yüksek çözünürlükte render et (varsayılan ~300 DPI)
     2. Görüntü ön işleme: gri + kontrast + keskinleştirme
-    3. Tesseract image_to_data (TSV) ile kelime bazlı bounding box al
-    4. block_num/par_num/line_num gruplama ile paragraf yeniden oluştur
-    5. Başlık tespiti + Word paragraph stilleri uygula
+    3. Tesseract image_to_data (--psm 3: otomatik sayfa segmentasyonu) ile
+       koordinatlı kelime verisi al
+    4. Y-koordinatı kümeleme ile görsel satırlar oluştur
+    5. Satır içi X-boşluk analizi ile kolon/etiket-değer tespiti yap
+    6. Düzen bloklarını Word'e yaz (paragraf veya kenarlıksız tablo satırı)
     """
     import fitz
+    from pytesseract import Output
 
     doc_pdf = fitz.open(pdf_path)
     try:
@@ -729,14 +1046,12 @@ def _pdf_to_word_ocr_fitz(
                 raise Exception("Girilen şifre hatalı")
 
         dw = Document()
-        # Normal metin için varsayılan stil
         style = dw.styles["Normal"]
         style.font.name = "Calibri"
         from docx.shared import Pt
         style.font.size = Pt(11)
 
         n = len(doc_pdf)
-        # Dil tespiti: ilk sayfada her iki dili de dene, hangisi daha fazla sonuç verirse onu kullan
         ocr_lang = "tur+eng"
 
         for i in range(n):
@@ -747,31 +1062,54 @@ def _pdf_to_word_ocr_fitz(
             mat = fitz.Matrix(ocr_matrix_scale, ocr_matrix_scale)
             pix = page.get_pixmap(matrix=mat, alpha=False, colorspace=fitz.csRGB)
             img = Image.open(io.BytesIO(pix.tobytes("png")))
-
-            # Görüntü ön işleme
             img_proc = _preprocess_ocr_image(img)
+            page_w = img_proc.width
 
-            # Kelime bazlı OCR
-            words = []
-            try:
-                words = _ocr_page_to_blocks(img_proc, ocr_lang)
-            except Exception:
+            # Sayfa sonu (ilk sayfa hariç)
+            if i > 0:
+                dw.add_page_break()
+
+            # --psm 3: Otomatik sayfa segmentasyonu — tek sütun varsaymaz,
+            # çok sütunlu ve karışık sayfa yapılarını doğru tanır.
+            ocr_data: Optional[Dict] = None
+            for lang in (ocr_lang, "eng"):
                 try:
-                    words = _ocr_page_to_blocks(img_proc, "eng")
+                    ocr_data = pytesseract.image_to_data(
+                        img_proc,
+                        lang=lang,
+                        config="--oem 3 --psm 3",
+                        output_type=Output.DICT,
+                    )
+                    # Geçerli kelime var mı?
+                    if any(str(t).strip() for t in (ocr_data.get("text") or [])):
+                        break
                 except Exception:
-                    pass
+                    ocr_data = None
 
-            # Kelimeler yoksa ham metin dene
-            if not words:
+            if not ocr_data or not any(str(t).strip() for t in (ocr_data.get("text") or [])):
+                # Son çare: ham metin
                 try:
-                    raw = pytesseract.image_to_string(img_proc, lang=ocr_lang, config="--oem 3 --psm 6")
-                    paragraphs = [_polish_tesseract_output(b.strip()) for b in raw.split("\n\n") if b.strip()]
+                    raw = pytesseract.image_to_string(img_proc, lang=ocr_lang, config="--oem 3 --psm 3")
+                    for chunk in raw.split("\n\n"):
+                        chunk = _polish_tesseract_output(chunk.strip())
+                        if chunk:
+                            p = dw.add_paragraph(chunk)
+                            p.paragraph_format.space_after = Pt(5)
                 except Exception:
-                    paragraphs = []
-            else:
-                paragraphs = _words_to_paragraphs(words)
+                    p = dw.add_paragraph("(Bu sayfada metin okunamadı.)")
+                    p.runs[0].font.size = Pt(10)
+                continue
 
-            _build_docx_from_paragraphs(dw, paragraphs, i + 1, n)
+            # Koordinat bazlı düzen analizi
+            blocks = _ocr_data_to_layout_blocks(ocr_data, page_w)
+
+            if not blocks:
+                p = dw.add_paragraph("(Bu sayfada metin okunamadı.)")
+                p.runs[0].font.size = Pt(10)
+                continue
+
+            for block in blocks:
+                _append_layout_block_to_document(dw, block)
 
         dw.save(docx_path)
     finally:
@@ -787,158 +1125,72 @@ def pdf_to_word(
     reduced_quality: bool = False,
 ) -> bool:
     """
-    PDF'i düzenlenebilir DOCX olarak dönüştürür.
-    Metin katmanı çok zayıfsa Tesseract OCR ile metin üretir; aksi halde pdf2docx (yapısal) kullanılır.
+    PDF’i düzenlenebilir DOCX olarak dönüştürür.
+    Öncelik sırası:
+    1. Docling (IBM, sinir ağı tabanlı layout + OCR) — her PDF türü için en iyi kalite
+    2. pdf2docx — dijital PDF’ler için fallback
+    3. Tesseract OCR — son çare
     """
     try:
         if is_pdf_encrypted(pdf_path) and not password:
-            raise Exception(f"PDF'ten Word'e dönüşüm için şifre gerekli: {os.path.basename(pdf_path)}")
+            raise Exception(f"PDF’ten Word’e dönüşüm için şifre gerekli: {os.path.basename(pdf_path)}")
 
         if progress_callback:
-            progress_callback(0, 3, "PDF analiz ediliyor...")
+            progress_callback(0, 4, "EasyOCR ile düzen analizi başlatılıyor...")
 
+        # 1. EasyOCR — Türkçe+İngilizce, koordinat bazlı layout, hızlı (6s/sayfa CPU)
+        if _pdf_to_word_easyocr(pdf_path, docx_path, password=password, progress_callback=progress_callback):
+            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+                if progress_callback:
+                    progress_callback(4, 4, "Tamamlandı.")
+                return True
+
+        # 2. pdf2docx fallback (dijital PDF)
+        if progress_callback:
+            progress_callback(1, 4, "EasyOCR başarısız — pdf2docx ile deneniyor...")
         try:
             from pdf2docx import Converter
-        except ImportError as e:
-            raise Exception("pdf2docx yüklü değil.") from e
-
-        # Taranmış PDF tespiti: fitz blok analizi ile görsel sayfa oranı kontrol edilir
-        if _is_scanned_pdf(pdf_path, password):
-            if progress_callback:
-                progress_callback(1, 4, "Taranmış PDF tespit edildi — OCRmyPDF ile metin katmanı ekleniyor...")
-            ocr_pdf_path = pdf_path + ".ocr_tmp.pdf"
-            ocr_success = False
-            try:
-                import ocrmypdf
-                ocrmypdf_kwargs = dict(
-                    input_file=pdf_path,
-                    output_file=ocr_pdf_path,
-                    language="tur+eng",
-                    deskew=True,
-                    optimize=0,
-                    progress_bar=False,
-                    output_type="pdf",
-                    skip_text=True,   # metin katmanı olan sayfaları atla, karışık PDF'lerde güvenli
-                )
-                if password:
-                    ocrmypdf_kwargs["pdf_renderer"] = "hocr"
-                ocrmypdf.ocr(**ocrmypdf_kwargs)
-                ocr_success = os.path.isfile(ocr_pdf_path) and os.path.getsize(ocr_pdf_path) > 0
-            except Exception as ocr_err:
-                ocr_success = False
-                print(f"[pdf_to_word] OCRmyPDF başarısız ({ocr_err}), Tesseract fallback'e geçiliyor")
-
-            if ocr_success:
-                if progress_callback:
-                    progress_callback(2, 4, "Metin katmanı eklendi — Word'e dönüştürülüyor...")
-                try:
-                    _src = ocr_pdf_path
-                    _pwd = None  # OCRmyPDF output is unencrypted
-                    if os.path.isfile(docx_path):
-                        try:
-                            os.remove(docx_path)
-                        except OSError:
-                            pass
-                    converter = Converter(_src, password=_pwd)
-                    try:
-                        converter.convert(
-                            docx_path,
-                            clip_image_res_ratio=2.0,
-                            float_image_ignorable_gap=12.0,
-                            line_overlap_threshold=0.9,
-                            line_separate_threshold=6.0,
-                        )
-                    finally:
-                        converter.close()
-                    if progress_callback:
-                        progress_callback(4, 4, "Word kaydediliyor...")
-                    return True
-                except Exception as conv_err:
-                    print(f"[pdf_to_word] OCRmyPDF+pdf2docx başarısız ({conv_err}), Tesseract fallback")
-                finally:
-                    try:
-                        if os.path.isfile(ocr_pdf_path):
-                            os.remove(ocr_pdf_path)
-                    except OSError:
-                        pass
-
-            # OCRmyPDF başarısız → eski Tesseract yolu
             if os.path.isfile(docx_path):
                 try:
                     os.remove(docx_path)
                 except OSError:
                     pass
-            if progress_callback:
-                progress_callback(2, 4, "Tesseract OCR ile metin çıkarılıyor...")
-            ocr_scale = 1.38 if reduced_quality else 2.0
-            _pdf_to_word_ocr_fitz(
-                pdf_path,
-                docx_path,
-                password,
-                progress_callback=progress_callback,
-                ocr_matrix_scale=ocr_scale,
-            )
-            if progress_callback:
-                progress_callback(4, 4, "Word kaydediliyor...")
-            return True
-
-        if progress_callback:
-            progress_callback(0, 3, "Yapısal dönüşüm hazırlanıyor...")
-
-        def _run_convert(use_ocr: int) -> None:
             converter = Converter(pdf_path, password=password)
             try:
-                if progress_callback:
-                    msg = (
-                        "Taranmış sayfalar için OCR ile Word oluşturuluyor..."
-                        if use_ocr
-                        else "Sayfa düzeni korunarak Word oluşturuluyor..."
-                    )
-                    progress_callback(1, 3, msg)
-                if os.path.isfile(docx_path):
-                    try:
-                        os.remove(docx_path)
-                    except OSError:
-                        pass
                 converter.convert(
                     docx_path,
-                    ocr=use_ocr,
                     clip_image_res_ratio=2.0,
-                    float_image_ignorable_gap=12.0,
+                    float_image_ignorable_gap=3.0,
                     line_overlap_threshold=0.9,
-                    line_separate_threshold=6.0,
+                    line_separate_threshold=3.0,
+                    connected_border_tolerance=0.5,
+                    min_section_height=10.0,
+                    page_margin_factor_top=0.5,
+                    page_margin_factor_bottom=0.5,
                 )
             finally:
                 converter.close()
+            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+                if progress_callback:
+                    progress_callback(4, 4, "Tamamlandı.")
+                return True
+        except Exception as pdf2docx_err:
+            print(f"[pdf_to_word] pdf2docx başarısız: {pdf2docx_err}")
 
-        try:
-            _run_convert(0)
-        except Exception as structural_error:
+        # 3. Tesseract OCR son çare
+        if progress_callback:
+            progress_callback(2, 4, "Tesseract OCR ile deneniyor...")
+        if os.path.isfile(docx_path):
             try:
-                _run_convert(1)
-            except Exception:
-                try:
-                    if os.path.isfile(docx_path):
-                        try:
-                            os.remove(docx_path)
-                        except OSError:
-                            pass
-                    if progress_callback:
-                        progress_callback(2, 3, "Yapısal dönüşüm başarısız — OCR deneniyor...")
-                    _fb_scale = 1.38 if reduced_quality else 2.0
-                    _pdf_to_word_ocr_fitz(
-                        pdf_path,
-                        docx_path,
-                        password,
-                        progress_callback=progress_callback,
-                        ocr_matrix_scale=_fb_scale,
-                    )
-                except Exception:
-                    raise Exception(
-                        "Bu PDF düzenlenebilir Word olarak dönüştürülemedi. "
-                        "Tesseract kurulu olmalı; taranmış PDF’lerde OCR gerekir.\n\n"
-                        f"Teknik ayrıntı: {structural_error}"
-                    ) from structural_error
+                os.remove(docx_path)
+            except OSError:
+                pass
+        ocr_scale = 1.38 if reduced_quality else 2.0
+        _pdf_to_word_ocr_fitz(
+            pdf_path, docx_path, password,
+            progress_callback=progress_callback,
+            ocr_matrix_scale=ocr_scale,
+        )
 
         if os.path.isfile(docx_path):
             if progress_callback:
@@ -1764,6 +2016,131 @@ def _sanitize_sheet_title(title: str) -> str:
     return (cleaned or "Sayfa")[:31]
 
 
+def _extract_table_by_word_gaps(page) -> list[list[list[str]]]:
+    """
+    PDF'de görsel çizgi olmadığında kelimeler arası boşlukları kullanarak
+    satır ve sütunları tespit eder. Döndürür: list[tablo] → list[satır] → list[hücre_metni]
+    """
+    words = page.extract_words(x_tolerance=2, y_tolerance=3, keep_blank_chars=False)
+    if not words:
+        return []
+
+    # 1. Satırları y-koordinatına göre grupla
+    rows_by_y: dict[float, list] = {}
+    for w in words:
+        mid_y = (w["top"] + w["bottom"]) / 2
+        # Yakın y değerlerini aynı satıra ata
+        matched = None
+        for key in rows_by_y:
+            if abs(key - mid_y) < 4:
+                matched = key
+                break
+        if matched is None:
+            rows_by_y[mid_y] = []
+            matched = mid_y
+        rows_by_y[matched].append(w)
+
+    sorted_rows = [rows_by_y[k] for k in sorted(rows_by_y.keys())]
+    for r in sorted_rows:
+        r.sort(key=lambda w: w["x0"])
+
+    # 2. Tüm satırlardaki gap pozisyonlarını topla.
+    # Her satırda "büyük gap" olan x bölgeleri gerçek sütun sınırlarını verir.
+    # Histogram: her x bölgesinde kaç satırda gap var → çok satırda tekrarlayan = gerçek sınır.
+    if not sorted_rows:
+        return []
+
+    # Tüm gapleri topla (pozisyon + büyüklük)
+    all_row_gaps: list[tuple[float, float]] = []  # (gap_midpoint_x, gap_size)
+    for row in sorted_rows:
+        for i in range(1, len(row)):
+            gap = row[i]["x0"] - row[i - 1]["x1"]
+            if gap > 0:
+                mid_x = (row[i - 1]["x1"] + row[i]["x0"]) / 2
+                all_row_gaps.append((mid_x, gap))
+
+    if not all_row_gaps:
+        return []
+
+    # Tüm gap büyüklüklerinden eşik belirle (başlık satırı ağırlıklı)
+    header_row = sorted_rows[0]
+    header_gap_sizes: list[float] = []
+    for i in range(1, len(header_row)):
+        g = header_row[i]["x0"] - header_row[i - 1]["x1"]
+        if g > 0:
+            header_gap_sizes.append(g)
+
+    unique_hg = sorted(set(round(g, 1) for g in header_gap_sizes))
+    col_gap_threshold = unique_hg[-1] if unique_hg else 4.0
+    best_ratio = 0.0
+    for idx in range(1, len(unique_hg)):
+        if unique_hg[idx - 1] > 0:
+            ratio = unique_hg[idx] / unique_hg[idx - 1]
+            if ratio > best_ratio:
+                best_ratio = ratio
+                col_gap_threshold = (unique_hg[idx - 1] + unique_hg[idx]) / 2
+    col_gap_threshold = max(col_gap_threshold, 2.0)
+
+    # 3. Sütun sınırlarını başlık satırının SÜTUN GRUBU sağ kenarlarından belirle.
+    # Header kelimeleri aynı threshold ile gruplara ayrılır; her grubun son kelimesinin
+    # x1'i (+ küçük padding) sınır olarak kullanılır. Bu sayede data x0 değerleri
+    # midpoint yanılgısı olmadan doğru sütuna atanır.
+    header_row = sorted_rows[0]
+    col_boundaries: set[float] = set()
+    group_x1 = header_row[0]["x1"]
+    for i in range(1, len(header_row)):
+        gap = header_row[i]["x0"] - header_row[i - 1]["x1"]
+        if gap >= col_gap_threshold:
+            # Bu noktada yeni sütun başlıyor; sınır = önceki grubun son x1 + 1pt buffer
+            col_boundaries.add(round(group_x1 + 1.0, 2))
+        group_x1 = header_row[i]["x1"]
+
+    # Çok yakın sınırları birleştir
+    sorted_bounds = sorted(col_boundaries)
+    merged_bounds: list[float] = []
+    for b in sorted_bounds:
+        if not merged_bounds or b - merged_bounds[-1] > 5:
+            merged_bounds.append(b)
+
+    # 4. Her satırı sütunlara ata.
+    # Kelimeyi x0'ına göre ata; ancak önceki kelimeyle arası küçükse (< col_gap_threshold)
+    # sütun sınırını geçse bile aynı sütunda tut — verinin sütun başlığından taşmasını önler.
+    def col_for_x(x: float) -> int:
+        col = 0
+        for idx, bound in enumerate(merged_bounds):
+            if x >= bound:
+                col = idx + 1
+        return col
+
+    num_cols = len(merged_bounds) + 1
+    table: list[list[str]] = []
+    for row in sorted_rows:
+        cells = [""] * num_cols
+        current_col = 0
+        prev_x1 = -9999.0
+        for w in row:
+            gap_from_prev = w["x0"] - prev_x1
+            new_col = current_col
+
+            if gap_from_prev >= col_gap_threshold:
+                # Büyük boşluk: x0'a göre sütun seç
+                new_col = col_for_x(w["x0"])
+            else:
+                # Küçük boşluk: önceki x1 ile bu x0 arasında sınır geçiliyorsa sütun değiştir
+                for bound in merged_bounds:
+                    if prev_x1 < bound <= w["x0"]:
+                        new_col = col_for_x(w["x0"])
+                        break
+
+            current_col = new_col
+            cells[current_col] = (cells[current_col] + " " + w["text"]).strip()
+            prev_x1 = w["x1"]
+        if any(cells):
+            table.append(cells)
+
+    return [table] if table else []
+
+
 def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
     try:
         import pdfplumber
@@ -1800,35 +2177,43 @@ def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, 
                 ws.sheet_view.showGridLines = False
                 ws.freeze_panes = "A2"
 
-                tables = page.extract_tables(
-                    table_settings={
-                        "vertical_strategy": "lines",
-                        "horizontal_strategy": "lines",
-                        "snap_tolerance": 4,
-                        "join_tolerance": 4,
-                        "intersection_tolerance": 6,
-                    }
-                ) or []
-                if not tables:
-                    tables = page.extract_tables(
-                        table_settings={
-                            "vertical_strategy": "text",
-                            "horizontal_strategy": "text",
-                            "text_x_tolerance": 2,
-                            "text_y_tolerance": 2,
-                        }
-                    ) or []
-                current_row = 1
+                # Önce gerçek çizgilere dayalı tablo tespiti dene
+                TABLE_SETTINGS = {
+                    "vertical_strategy": "lines",
+                    "horizontal_strategy": "lines",
+                    "snap_tolerance": 4,
+                    "join_tolerance": 4,
+                    "intersection_tolerance": 6,
+                }
+                found_tables = page.find_tables(table_settings=TABLE_SETTINGS)
 
-                cleaned_tables = []
-                for table in tables:
-                    cleaned_rows = []
-                    for row in table or []:
-                        cells = ["" if cell is None else str(cell).strip() for cell in row]
-                        if any(cell for cell in cells):
-                            cleaned_rows.append(cells)
-                    if cleaned_rows:
-                        cleaned_tables.append(cleaned_rows)
+                current_row = 1
+                cleaned_tables: list[list[list[str]]] = []
+
+                if found_tables:
+                    # Çizgili tablo: her hücreyi within_bbox ile doğru oku
+                    for ft in found_tables:
+                        table_rows: list[list[str]] = []
+                        for trow in ft.rows:
+                            row_cells: list[str] = []
+                            for cell_bbox in trow.cells:
+                                if cell_bbox is None:
+                                    row_cells.append("")
+                                else:
+                                    try:
+                                        cropped = page.within_bbox(cell_bbox, relative=False)
+                                        text = cropped.extract_text(x_tolerance=2, y_tolerance=3) or ""
+                                        text = " ".join(text.split())
+                                    except Exception:
+                                        text = ""
+                                    row_cells.append(text.strip())
+                            if any(row_cells):
+                                table_rows.append(row_cells)
+                        if table_rows:
+                            cleaned_tables.append(table_rows)
+                else:
+                    # Çizgi yok: kelimeler arası boşluk analizi ile sütunları tespit et
+                    cleaned_tables = _extract_table_by_word_gaps(page)
 
                 if cleaned_tables:
                     for table_index, table_rows in enumerate(cleaned_tables, start=1):
@@ -1941,6 +2326,25 @@ def _excel_to_pdf_win32com(xlsx_path: str, pdf_path: str) -> None:
         except Exception:
             pass
         wb = xl.Workbooks.Open(os.path.abspath(xlsx_path), ReadOnly=True)
+
+        # Her sayfa için yön + sığdırma ayarı
+        for ws in wb.Worksheets:
+            ps = ws.PageSetup
+            try:
+                used = ws.UsedRange
+                col_count = used.Columns.Count
+                row_count = used.Rows.Count
+            except Exception:
+                col_count, row_count = 0, 0
+
+            # Sütun sayısı satır sayısından fazlaysa yatay (xlLandscape=2), değilse dikey (xlPortrait=1)
+            ps.Orientation = 2 if col_count > row_count else 1
+
+            # Genişliği tek sayfaya sığdır; yüksekliği serbest bırak (otomatik ölçekleme)
+            ps.Zoom = False
+            ps.FitToPagesWide = 1
+            ps.FitToPagesTall = False  # False = sınırsız sayfa
+
         # 0 = xlTypePDF
         wb.ExportAsFixedFormat(0, os.path.abspath(pdf_path))
         wb.Close(SaveChanges=False)
@@ -1987,16 +2391,37 @@ def _excel_to_pdf_reportlab(xlsx_path: str, pdf_path: str) -> None:
         while len(r) < max_cols:
             r.append("")
 
+    MARGIN = 12 * mm
+    MARGINS = 2 * MARGIN
+    MIN_COL_W = 18 * mm  # okunabilir minimum sütun genişliği
+
+    portrait_usable = A4[0] - MARGINS          # ~170 mm
+    landscape_usable = landscape(A4)[0] - MARGINS  # ~257 mm
+
+    ideal_col_w = 28 * mm  # ideal sütun genişliği
+    needed_w = ideal_col_w * max_cols
+
+    if needed_w <= portrait_usable:
+        # Dikey yeterli; boşluk kalırsa sütunları biraz genişlet
+        pagesize = A4
+        col_w = min(ideal_col_w, portrait_usable / max_cols)
+    elif needed_w <= landscape_usable:
+        # Yatay yeterli
+        pagesize = landscape(A4)
+        col_w = min(ideal_col_w, landscape_usable / max_cols)
+    else:
+        # Hiçbirine sığmıyor: yatay sayfa + ölçekle (min sütun genişliğine indir)
+        pagesize = landscape(A4)
+        col_w = max(MIN_COL_W, landscape_usable / max_cols)
+
     doc = SimpleDocTemplate(
         pdf_path,
-        pagesize=landscape(A4),
-        leftMargin=12 * mm,
-        rightMargin=12 * mm,
-        topMargin=12 * mm,
-        bottomMargin=12 * mm,
+        pagesize=pagesize,
+        leftMargin=MARGIN,
+        rightMargin=MARGIN,
+        topMargin=MARGIN,
+        bottomMargin=MARGIN,
     )
-    usable_w = landscape(A4)[0] - 24 * mm
-    col_w = usable_w / max(1, max_cols)
     t = Table(rows, colWidths=[col_w] * max_cols, repeatRows=1 if len(rows) > 1 else 0)
     t.setStyle(
         TableStyle(

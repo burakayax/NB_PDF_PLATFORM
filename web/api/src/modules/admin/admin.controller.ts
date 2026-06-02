@@ -33,7 +33,6 @@ import {
 } from "../subscription/entitlement.engine.js";
 import {
   adminAddBlockedEmailRaw,
-  adminListBlockedEmails,
   adminPutPaymentPrices,
   adminRemoveBlockedEmailRaw,
   buildUsageExportCsv,
@@ -215,11 +214,22 @@ export async function adminGetUserDetailController(
 }
 
 export async function adminListBlockedEmailsController(
-  _request: Request,
+  request: Request,
   response: Response,
 ) {
-  const items = await adminListBlockedEmails();
-  response.json({ items });
+  const page = Math.max(1, Number.parseInt(String(request.query["page"] ?? "1"), 10) || 1);
+  const limit = Math.min(200, Math.max(1, Number.parseInt(String(request.query["limit"] ?? "50"), 10) || 50));
+  const skip = (page - 1) * limit;
+  const [total, items] = await Promise.all([
+    prisma.blockedEmail.count(),
+    prisma.blockedEmail.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: { email: true, reason: true, createdAt: true },
+    }),
+  ]);
+  response.json({ total, page, limit, items });
 }
 
 export async function adminAddBlockedEmailController(
@@ -933,14 +943,25 @@ export async function adminPostMarketingBroadcastController(
 }
 
 export async function adminListCouponsController(
-  _request: Request,
+  request: Request,
   response: Response,
 ) {
-  const items = await prisma.coupon.findMany({
-    orderBy: { createdAt: "desc" },
-    include: { _count: { select: { uses: true } } },
-  });
+  const page = Math.max(1, Number.parseInt(String(request.query["page"] ?? "1"), 10) || 1);
+  const limit = Math.min(200, Math.max(1, Number.parseInt(String(request.query["limit"] ?? "50"), 10) || 50));
+  const skip = (page - 1) * limit;
+  const [total, items] = await Promise.all([
+    prisma.coupon.count(),
+    prisma.coupon.findMany({
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: { _count: { select: { uses: true } } },
+    }),
+  ]);
   response.json({
+    total,
+    page,
+    limit,
     items: items.map((c) => ({
       id: c.id,
       code: c.code,
@@ -1036,22 +1057,26 @@ export async function adminListDownloadLogsController(
   request: Request,
   response: Response,
 ) {
-  const rawLimit = request.query["limit"];
-  const parsedLimit =
-    typeof rawLimit === "string" ? Number.parseInt(rawLimit, 10) : 100;
-  const take = Math.min(
-    Math.max(1, Number.isFinite(parsedLimit) ? parsedLimit : 100),
-    500,
-  );
+  const page = Math.max(1, Number.parseInt(String(request.query["page"] ?? "1"), 10) || 1);
+  const limit = Math.min(200, Math.max(1, Number.parseInt(String(request.query["limit"] ?? "50"), 10) || 50));
+  const skip = (page - 1) * limit;
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  const rows = await prisma.downloadLog.findMany({
-    where: { createdAt: { gte: oneYearAgo } },
-    orderBy: { createdAt: "desc" },
-    take,
-    include: { user: { select: { email: true } } },
-  });
+  const where = { createdAt: { gte: oneYearAgo } };
+  const [total, rows] = await Promise.all([
+    prisma.downloadLog.count({ where }),
+    prisma.downloadLog.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      include: { user: { select: { email: true } } },
+    }),
+  ]);
   response.json({
+    total,
+    page,
+    limit,
     items: rows.map((r) => ({
       id: r.id,
       userId: r.userId,

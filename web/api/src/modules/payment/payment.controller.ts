@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { logger } from "../../lib/file-log.js";
 import express from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
@@ -71,7 +72,7 @@ function pickFirstString(raw: Record<string, unknown>, keys: string[]): string |
 
 export async function paymentCallbackController(request: Request, response: Response) {
   const raw = request.body as Record<string, unknown>;
-  console.log(`${IYZICO_CB_LOG} POST received (keys=${Object.keys(raw).join(",")})`, summarizeCallbackBody(raw));
+  logger.info("payment",`${IYZICO_CB_LOG} POST received (keys=${Object.keys(raw).join(",")})`, summarizeCallbackBody(raw));
 
   const token =
     typeof raw.token === "string"
@@ -88,7 +89,7 @@ export async function paymentCallbackController(request: Request, response: Resp
     "payment_conversation_id",
   ]);
 
-  console.log(`${IYZICO_CB_LOG} extracted token=${token ? `"len=${token.length}"` : "MISSING"}, conversationIdFromPost=${conversationIdFromPost ?? "none"}`);
+  logger.info("payment",`${IYZICO_CB_LOG} extracted token=${token ? `"len=${token.length}"` : "MISSING"}, conversationIdFromPost=${conversationIdFromPost ?? "none"}`);
 
   // Wrap fulfillment so PaymentFulfillmentDbError propagates; other errors resolve to failed-URL.
   const fulfil = processPaymentCallback(token, {
@@ -100,7 +101,7 @@ export async function paymentCallbackController(request: Request, response: Resp
         return { url: null as null, timedOut: false as const, dbError: err };
       }
       // Non-DB errors: log and fall through to failed redirect.
-      console.error(`${IYZICO_CB_LOG} processPaymentCallback rejected unexpectedly`, err);
+      logger.error("payment",`${IYZICO_CB_LOG} processPaymentCallback rejected unexpectedly`, err);
       return { url: paymentWorkspaceRedirectUrl(false), timedOut: false as const, dbError: null as null };
     });
 
@@ -114,12 +115,12 @@ export async function paymentCallbackController(request: Request, response: Resp
   const result = await Promise.race([fulfil, timedOutFallback]);
 
   if (result.timedOut) {
-    console.warn(`${IYZICO_CB_LOG} processing exceeded ${CALLBACK_MAX_MS}ms → 303 Location (fallback failed state; check logs above)`);
+    logger.warn("payment",`${IYZICO_CB_LOG} processing exceeded ${CALLBACK_MAX_MS}ms → 303 Location (fallback failed state; check logs above)`);
   }
 
   // DB write failed: return 500 so iyzico retries the webhook automatically.
   if (result.dbError) {
-    console.error(
+    logger.error("payment",
       `${IYZICO_CB_LOG} returning 500 — DB fulfillment error; iyzico will retry`,
       result.dbError.message,
     );
@@ -128,7 +129,7 @@ export async function paymentCallbackController(request: Request, response: Resp
   }
 
   const redirectUrl = result.url!;
-  console.log(`${IYZICO_CB_LOG} sending 303, empty body, Location=${redirectUrl}`);
+  logger.info("payment",`${IYZICO_CB_LOG} sending 303, empty body, Location=${redirectUrl}`);
 
   // `res.redirect()` Express bazen küçük bir HTML "Redirecting…" gövdesi ekler — tarayıcı ekranda kalıyormuş gibi görünür; yalnız Location başlığı.
   response.writeHead(303, { Location: redirectUrl });
@@ -145,13 +146,13 @@ const REFUND_WH_LOG = "[iyzico/refund-webhook]";
  */
 export async function paymentRefundWebhookController(request: Request, response: Response) {
   const raw = request.body as Record<string, unknown>;
-  console.log(`${REFUND_WH_LOG} received`, { keys: Object.keys(raw) });
+  logger.info("payment",`${REFUND_WH_LOG} received`, { keys: Object.keys(raw) });
 
   try {
     await processIyzicoRefundWebhook(raw);
     response.status(200).json({ received: true });
   } catch (err) {
-    console.error(`${REFUND_WH_LOG} processing failed — iyzico will retry`, err instanceof Error ? err.message : err);
+    logger.error("payment",`${REFUND_WH_LOG} processing failed — iyzico will retry`, err instanceof Error ? err.message : err);
     response.status(500).end();
   }
 }

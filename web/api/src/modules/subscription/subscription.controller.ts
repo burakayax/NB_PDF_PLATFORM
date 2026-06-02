@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { logger } from "../../lib/file-log.js";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
 import {
@@ -12,6 +13,8 @@ import {
   issueIyzicoRefund,
   checkRefundAbuse,
 } from "../payment/payment.service.js";
+import { sendMail } from "../../lib/mailer.js";
+import { createSubscriptionCancelledEmailTemplate } from "./subscription.email.js";
 
 /*
  * Daily-quota HTTP surface (``/assert-feature`` and ``/record-usage``) has
@@ -95,7 +98,7 @@ export async function cancelSubscriptionController(request: Request, response: R
     const refundIssued = await issueIyzicoRefund(lastCheckout, rawIp);
 
     if (!refundIssued.ok) {
-      console.error("cancelSubscription: iyzico iade başarısız", {
+      logger.error("subscription","cancelSubscription: iyzico iade başarısız", {
         error: refundIssued.error,
         conversationId: lastCheckout.conversationId,
       });
@@ -103,7 +106,7 @@ export async function cancelSubscriptionController(request: Request, response: R
     }
 
     if (refundIssued.requiresManualReview) {
-      console.warn("cancelSubscription: eski ödeme kaydı — iyzico manüel iade gerekiyor", {
+      logger.warn("subscription","cancelSubscription: eski ödeme kaydı — iyzico manüel iade gerekiyor", {
         conversationId: lastCheckout.conversationId,
         userId,
       });
@@ -127,9 +130,12 @@ export async function cancelSubscriptionController(request: Request, response: R
       prisma.user.update({
         where: { id: userId },
         data: { refundAbuseFlagged: true },
-      }).catch((e) => console.error("refundAbuseFlagged update hatası", e));
-      console.warn("cancelSubscription: kullanıcı admin incelemesi için işaretlendi", { userId });
+      }).catch((e) => logger.error("subscription","refundAbuseFlagged update hatası", e));
+      logger.warn("subscription","cancelSubscription: kullanıcı admin incelemesi için işaretlendi", { userId });
     }
+
+    // İptal + iade bildirimi e-postası (non-fatal)
+    void sendCancellationEmail(user.email, user.plan, user.preferredLanguage, true, undefined);
 
     response.json({ ok: true, action: "refunded", message: "Aboneliğiniz iptal edildi ve ücret iade edildi." });
   } else {
@@ -141,10 +147,43 @@ export async function cancelSubscriptionController(request: Request, response: R
         data: { subscriptionStatus: "canceled" },
       });
     }
+
+    // İptal bildirimi e-postası — dönem sonu tarihiyle (non-fatal)
+    let effective: string | undefined;
+    if (orgId) {
+      const org = await prisma.organization.findUnique({
+        where: { id: orgId },
+        select: { subscriptionExpiry: true },
+      });
+      if (org?.subscriptionExpiry) {
+        effective = new Date(org.subscriptionExpiry).toLocaleDateString(
+          user.preferredLanguage === "tr" ? "tr-TR" : "en-US",
+          { dateStyle: "long" },
+        );
+      }
+    }
+    void sendCancellationEmail(user.email, user.plan, user.preferredLanguage, false, effective);
+
     response.json({
       ok: true,
       action: "cancel_pending",
       message: "Aboneliginiz iptal edildi. Mevcut donem sonunda FREE plana gececeksiniz.",
     });
+  }
+}
+
+/** İptal bildirimi e-postası gönderir; başarısızlık akışı bozmaz (non-fatal). */
+async function sendCancellationEmail(
+  email: string,
+  planName: string,
+  lang: "tr" | "en",
+  refunded: boolean,
+  effectiveDate: string | undefined,
+): Promise<void> {
+  try {
+    const tpl = createSubscriptionCancelledEmailTemplate({ planName, effectiveDate, refunded, lang });
+    await sendMail({ to: email, ...tpl });
+  } catch (err) {
+    logger.error("subscription", "cancellation email failed (non-fatal)", { detail: String(err) });
   }
 }

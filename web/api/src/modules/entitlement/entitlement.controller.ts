@@ -6,6 +6,7 @@ import { prisma } from "../../lib/prisma.js";
 import {
   checkQuota,
   incrementQuota,
+  checkAndIncrementQuota,
   getQuotaSummary,
 } from "../../lib/quota.js";
 import { canExecute } from "./entitlement.engine.js";
@@ -78,8 +79,7 @@ export async function entitlementConsumeController(
     ? request.body.processingTimeMs
     : undefined;
 
-  // Re-check quota before incrementing (race condition guard) — canExecute handles team member bypass
-  const quotaCheck = await canExecute(userId, toolId, fileCount, totalSizeMB);
+  const quotaCheck = await checkAndIncrementQuota(userId, toolId, fileCount, totalSizeMB, processingTimeMs);
   if (!quotaCheck.allowed) {
     response.status(200).json({
       status: "denied",
@@ -92,8 +92,6 @@ export async function entitlementConsumeController(
     });
     return;
   }
-
-  await incrementQuota(userId, toolId, fileCount, totalSizeMB, processingTimeMs);
 
   const summary = await getQuotaSummary(userId);
 

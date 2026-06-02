@@ -7,6 +7,7 @@ import type {
   User,
   UserRole,
 } from "@prisma/client";
+import { logger } from "../../lib/file-log.js";
 import { isEmailBlocked } from "../../lib/blocked-email.js";
 import { authLog } from "../../lib/auth-log.js";
 import { env } from "../../config/env.js";
@@ -210,7 +211,7 @@ function logGoogleOAuthSessionIssued(
     refreshTokenPreview: previewSecret(session.refreshToken, 24),
     refreshTokenLength: session.refreshToken.length,
   });
-  console.log(`${GOOGLE_OAUTH_LOG} session ready`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} session ready`, {
     flow,
     userId: session.user.id,
     email: session.user.email,
@@ -418,7 +419,7 @@ export async function registerUser(
   });
 
   // İstenen teşhis çıktıları (kayıt ve e-posta akışı)
-  console.log("User created");
+  logger.info("auth","User created");
 
   authLog.info("register: user saved", {
     userId: user.id,
@@ -434,14 +435,14 @@ export async function registerUser(
       data: { verificationToken: rawToken },
     });
 
-    console.log("Verification email sending...");
+    logger.info("auth","Verification email sending...");
     try {
       await sendVerificationEmail(user, rawToken);
-      console.log("Email sent successfully");
+      logger.info("auth","Email sent successfully");
     } catch (error) {
-      console.error("Verification email failed — full error:", error);
+      logger.error("auth","Verification email failed — full error:", error);
       if (error instanceof Error) {
-        console.error(error.stack);
+        logger.error("auth",error.stack);
       }
       authLog.error("register: verification email failed, rolling back user", {
         userId: user.id,
@@ -867,7 +868,7 @@ export async function signInWithGoogle(params: {
     displayName: params.name,
   });
 
-  console.log(`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} signInWithGoogle: lookup`, {
     email,
     name: params.name ?? null,
     googleId,
@@ -881,7 +882,7 @@ export async function signInWithGoogle(params: {
 
   if (existing) {
     if (existing.authProvider !== "google") {
-      console.error(
+      logger.error("auth",
         `${GOOGLE_OAUTH_LOG} signInWithGoogle ERROR: email already used by local account`,
         {
           email,
@@ -915,7 +916,7 @@ export async function signInWithGoogle(params: {
       },
     });
 
-    console.log(
+    logger.info("auth",
       `${GOOGLE_OAUTH_LOG} user record updated (existing Google user)`,
       {
         userId: user.id,
@@ -965,7 +966,7 @@ export async function signInWithGoogle(params: {
     },
   });
 
-  console.log(`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
+  logger.info("auth",`${GOOGLE_OAUTH_LOG} user record created (new Google user)`, {
     userId: persistedGoogleUser.id,
     email: persistedGoogleUser.email,
     googleId,
@@ -994,7 +995,7 @@ export async function signInWithGoogle(params: {
   try {
     await sendAdminNotificationEmail(persistedGoogleUser);
   } catch (error) {
-    console.warn(
+    logger.warn("auth",
       `${GOOGLE_OAUTH_LOG} admin notification email failed (user kept)`,
       {
         userId: persistedGoogleUser.id,

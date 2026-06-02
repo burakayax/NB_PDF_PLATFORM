@@ -231,15 +231,27 @@ function renderPrerenderHtml(baseUrl, routePath) {
     <meta name="description" content="${description}" />
     <meta name="robots" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="alternate" hreflang="tr" href="${canonicalUrl}" />
+    <link rel="alternate" hreflang="en" href="${canonicalUrl}" />
+    <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF PLATFORM" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
     <meta property="og:image" content="${baseUrl}/app-preview-main.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${title}" />
     <meta property="og:url" content="${canonicalUrl}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${baseUrl}/app-preview-main.png" />
+    <meta name="twitter:image:alt" content="${title}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -263,13 +275,9 @@ Disallow: /
 `;
 } else {
   robots = `User-agent: *
-Allow: /
+Disallow: /workspace
 Disallow: /admin
 Disallow: /admin-login
-Disallow: /login
-Disallow: /register
-Disallow: /forgot-password
-Disallow: /fake-payment
 Disallow: /api/
 
 Sitemap: ${base}/sitemap.xml
@@ -283,8 +291,18 @@ if (blockIndexing) {
 </urlset>
 `;
 } else {
+  const AUTH_ROUTES = [
+    { path: "/login", changefreq: "monthly", priority: "0.5" },
+    { path: "/register", changefreq: "monthly", priority: "0.5" },
+  ];
+
   const urls = [
     ...STATIC_PUBLIC_ROUTES.map((route) => ({
+      loc: `${base}${route.path}`,
+      changefreq: route.changefreq,
+      priority: route.priority,
+    })),
+    ...AUTH_ROUTES.map((route) => ({
       loc: `${base}${route.path}`,
       changefreq: route.changefreq,
       priority: route.priority,
@@ -295,12 +313,23 @@ if (blockIndexing) {
       priority: "0.9",
     })),
   ];
+
+  function renderHreflang(loc) {
+    return [
+      `    <xhtml:link rel="alternate" hreflang="tr" href="${escapeXml(loc)}"/>`,
+      `    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(loc)}"/>`,
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(loc)}"/>`,
+    ].join("\n");
+  }
+
   sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls
   .map(
     (u) => `  <url>
     <loc>${escapeXml(u.loc)}</loc>
+${renderHreflang(u.loc)}
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`,

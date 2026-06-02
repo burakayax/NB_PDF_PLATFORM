@@ -7,6 +7,7 @@ on:
     branches: [main, master, calismaAlani]
 
 jobs:
+  # ─── Python Güvenlik Taraması ────────────────────────────────────────────────
   python-security:
     name: Python Security Scan
     runs-on: ubuntu-latest
@@ -58,6 +59,50 @@ jobs:
               print("No vulnerabilities found.")
           EOF
 
+  # ─── Python Unit Testleri ─────────────────────────────────────────────────
+  python-tests:
+    name: Python Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libcairo2-dev pkg-config \
+            poppler-utils \
+            tesseract-ocr \
+            wkhtmltopdf
+
+      - name: Install dependencies
+        working-directory: web/backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov pytest-asyncio
+          pip install -r requirements.txt
+
+      - name: Run pytest
+        working-directory: web/backend
+        env:
+          NB_RESULT_STORE_DIR: /tmp/test-result-store
+        run: |
+          # Kapsam eşiği regresyon koruması içindir (tüm app/ paketi ölçülür).
+          # Mevcut taban ~%14; güvenlik-kritik modüller (pdf_security, result_store,
+          # billing) tam test edilir. Hedef: kapsamı kademeli %40+'a çıkarmak.
+          pytest tests/ \
+            --tb=short \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-fail-under=12 \
+            -q
+
+  # ─── Node Güvenlik Taraması (Auth API) ───────────────────────────────────
   node-security-api:
     name: Node Security Scan (web/api)
     runs-on: ubuntu-latest
@@ -79,6 +124,41 @@ jobs:
         working-directory: web/api
         run: npm audit --audit-level=high
 
+  # ─── TypeScript Unit Testleri (Auth API) ─────────────────────────────────
+  api-unit-tests:
+    name: TypeScript Unit Tests (web/api)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/api/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/api
+        run: npm ci
+
+      - name: Apply migrations & generate Prisma client
+        working-directory: web/api
+        env:
+          DATABASE_URL: "file:./test.db"
+        run: npx prisma migrate deploy && npx prisma generate
+
+      - name: Run vitest
+        working-directory: web/api
+        env:
+          DATABASE_URL: "file:./test.db"
+          JWT_ACCESS_SECRET: "ci-test-access-secret-must-be-32chars!!"
+          JWT_REFRESH_SECRET: "ci-test-refresh-secret-must-be-32chars!"
+          BILLING_ENCRYPTION_KEY: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          NODE_ENV: "test"
+        run: npm test
+
+  # ─── Node Güvenlik Taraması (Frontend) ───────────────────────────────────
   node-security-frontend:
     name: Node Security Scan (web/frontend)
     runs-on: ubuntu-latest
@@ -100,6 +180,7 @@ jobs:
         working-directory: web/frontend
         run: npm audit --audit-level=high
 
+  # ─── Frontend Build Kontrolü ─────────────────────────────────────────────
   frontend-build:
     name: Frontend Build Check
     runs-on: ubuntu-latest
@@ -125,6 +206,7 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npm run build
 
+  # ─── TypeScript Tip Denetimi (Auth API) ──────────────────────────────────
   api-typecheck:
     name: TypeScript Type Check (web/api)
     runs-on: ubuntu-latest
@@ -149,3 +231,111 @@ jobs:
       - name: TypeScript type check
         working-directory: web/api
         run: npx tsc --noEmit
+
+  # ─── Frontend Bileşen Testleri ───────────────────────────────────────────
+  frontend-component-tests:
+    name: Frontend Component Tests (web/frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Run vitest component tests
+        working-directory: web/frontend
+        env:
+          VITE_API_BASE: http://localhost:8000
+          VITE_SAAS_PROXY_TARGET: http://localhost:4000
+          VITE_DISABLE_OBFUSCATION: "true"
+        run: npm test
+
+      - name: Check test coverage thresholds
+        working-directory: web/frontend
+        env:
+          VITE_API_BASE: http://localhost:8000
+          VITE_SAAS_PROXY_TARGET: http://localhost:4000
+          VITE_DISABLE_OBFUSCATION: "true"
+        run: npm run test:coverage
+
+  # ─── TypeScript Tip Denetimi (Frontend) ──────────────────────────────────
+  frontend-typecheck:
+    name: TypeScript Type Check (web/frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: TypeScript type check
+        working-directory: web/frontend
+        env:
+          VITE_API_BASE: http://localhost:8000
+          VITE_SAAS_PROXY_TARGET: http://localhost:4000
+          VITE_DISABLE_OBFUSCATION: "true"
+        run: npx tsc --noEmit
+
+  # ─── Playwright E2E Testleri (UI davranış) ───────────────────────────────
+  frontend-e2e:
+    name: Frontend E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: web/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: web/frontend
+        run: npx playwright install chromium --with-deps
+
+      - name: Build frontend
+        working-directory: web/frontend
+        env:
+          VITE_API_BASE: http://localhost:8000
+          VITE_SAAS_PROXY_TARGET: http://localhost:4000
+          VITE_DISABLE_OBFUSCATION: "true"
+        run: npm run build
+
+      - name: Serve built frontend and run E2E tests
+        working-directory: web/frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:4173
+          CI: "true"
+        run: |
+          npx vite preview --port 4173 &
+          sleep 3
+          npx playwright test --reporter=github
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: web/frontend/playwright-report/
+          retention-days: 7

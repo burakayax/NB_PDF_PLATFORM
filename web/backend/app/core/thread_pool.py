@@ -82,7 +82,7 @@ def _operation_timeout_sec() -> float:
             return max(10.0, float(raw))
         except ValueError:
             pass
-    return 120.0
+    return 600.0
 
 
 def pdf_cpu_settings_snapshot() -> dict[str, int | float]:
