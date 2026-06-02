@@ -122,11 +122,11 @@ services:
         sync: false   # Upstash Redis önerilir (kötüye kullanım takibi + kalıcı sayaç)
 
   # ─── Frontend (Static Site) ────────────────────────────────────────────────
+  # Not: Static site'lar global CDN'den servis edilir; `region` ve `plan`
+  # alanları desteklenmez (her ikisi de blueprint doğrulama hatası verir).
   - type: web
     name: nb-pdf-frontend
     runtime: static
-    region: frankfurt
-    plan: free
     rootDir: web/frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
