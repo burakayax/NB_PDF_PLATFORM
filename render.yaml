@@ -7,7 +7,8 @@ services:
     name: nb-pdf-api
     runtime: python
     region: frankfurt         # EU kullanıcılarına yakın; değiştirilebilir
-    plan: starter             # En az starter plan (free plan sleep'e geçer)
+    plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
+                              # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
     rootDir: web/backend
     buildCommand: |
       pip install --upgrade pip
@@ -62,7 +63,8 @@ services:
     name: nb-auth-api
     runtime: node
     region: frankfurt
-    plan: starter
+    plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
+                              # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
     rootDir: web/api
     buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run prisma:seed
     startCommand: npm run start
