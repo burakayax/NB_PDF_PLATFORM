@@ -3,7 +3,9 @@
 # çünkü uygulama kök dizindeki src/pdf_engine.py'yi paylaşır
 # (operations.py: REPO_ROOT = parents[4] → from src import pdf_engine).
 
-FROM python:3.12-slim
+# Debian 12 (bookworm)'a sabitlendi: yeni "trixie" tabanından wkhtmltopdf
+# kaldırıldı (upstream arşivlendi). bookworm'da tüm sistem paketleri mevcut.
+FROM python:3.12-slim-bookworm
 
 ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -14,7 +16,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Sistem bağımlılıkları (native Python runtime'da apt-get çalışmadığı için Docker şart):
 #   wkhtmltopdf  → pdfkit | tesseract-ocr(+tur) → pytesseract | poppler-utils → pdf2image
 #   ghostscript  → ocrmypdf | libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
-RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
       wkhtmltopdf \
       tesseract-ocr \
       tesseract-ocr-tur \
