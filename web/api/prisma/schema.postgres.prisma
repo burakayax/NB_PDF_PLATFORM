@@ -1,0 +1,683 @@
+// ⚠️ ÜRETİM (PostgreSQL) şeması — Render build'inde --schema ile kullanılır.
+// Yerel geliştirme schema.prisma (SQLite) kullanır; modeller iki dosyada AYNI olmalı.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum Plan {
+  FREE
+  STARTER
+  PLUS
+  PRO
+  BUSINESS
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum Currency {
+  TRY
+  USD
+  EUR
+}
+
+enum QueuePriority {
+  LOW
+  MEDIUM
+  HIGH
+  HIGHEST
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum OperationStatus {
+  SUCCESS
+  FAILED
+  QUEUED
+}
+
+enum Language {
+  tr
+  en
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum DownloadLogStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum TeamSubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum TeamMemberInviteStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+}
+
+enum TeamMemberRole {
+  MEMBER
+  MANAGER
+}
+
+enum TeamActivityStatus {
+  SUCCESS
+  FAILED
+}
+
+enum AuthProvider {
+  local
+  google
+}
+
+enum SubscriptionStatus {
+  none
+  active
+  past_due
+  canceled
+  incomplete
+}
+
+// ─── Organization (Multi-Tenant Root) ────────────────────────────────────────
+
+model Organization {
+  id                     String        @id @default(cuid())
+  name                   String
+  slug                   String        @unique
+  plan                   Plan          @default(FREE)
+  billingCycle           BillingCycle? @map("billing_cycle")
+  currency               Currency      @default(TRY)
+  stripeCustomerId       String?       @unique @map("stripe_customer_id")
+  stripeSubscriptionId   String?       @unique @map("stripe_subscription_id")
+  iyzicoCustomerId       String?       @unique @map("iyzico_customer_id")
+  monthlyOperationLimit  Int           @default(50) @map("monthly_operation_limit")
+  dailyOperationLimit    Int?          @map("daily_operation_limit")
+  currentMonthOperations Int           @default(0) @map("current_month_operations")
+  currentDayOperations   Int           @default(0) @map("current_day_operations")
+  lastDailyReset         DateTime      @default(now()) @map("last_daily_reset")
+  lastMonthlyReset       DateTime      @default(now()) @map("last_monthly_reset")
+  fileSizeLimitMB        Int           @default(20) @map("file_size_limit_mb")
+  batchLimit             Int           @default(0) @map("batch_limit")
+  watermarkEnabled       Boolean       @default(true) @map("watermark_enabled")
+  queuePriority          QueuePriority @default(LOW) @map("queue_priority")
+  maxSeats               Int           @default(1) @map("max_seats")
+  subscriptionExpiry     DateTime?     @map("subscription_expiry")
+  subscriptionStatus     SubscriptionStatus @default(none) @map("subscription_status")
+  createdAt              DateTime      @default(now()) @map("created_at")
+  updatedAt              DateTime      @updatedAt @map("updated_at")
+
+  members     User[]
+  operationLogs OperationLog[]
+  invitations Invitation[]
+  paymentCheckouts PaymentCheckout[]
+
+  @@index([plan])
+  @@index([slug])
+  @@map("organizations")
+}
+
+// ─── Plan Config (Admin-Editable Defaults) ───────────────────────────────────
+
+model PlanConfig {
+  id                    String        @id @default(cuid())
+  plan                  Plan          @unique
+  dailyOperationLimit   Int?          @map("daily_operation_limit")
+  monthlyOperationLimit Int           @map("monthly_operation_limit")
+  fileSizeLimitMB       Int           @map("file_size_limit_mb")
+  batchLimit            Int           @map("batch_limit")
+  watermarkEnabled      Boolean       @map("watermark_enabled")
+  queuePriority         QueuePriority @map("queue_priority")
+  allowedTools          String        @default("all") @map("allowed_tools")
+  maxSeats              Int           @map("max_seats")
+  monthlyPriceTry       Int           @default(0) @map("monthly_price_try")
+  monthlyPriceUsd       Int           @default(0) @map("monthly_price_usd")
+  monthlyPriceEur       Int           @default(0) @map("monthly_price_eur")
+  yearlyPriceTry        Int           @default(0) @map("yearly_price_try")
+  yearlyPriceUsd        Int           @default(0) @map("yearly_price_usd")
+  yearlyPriceEur        Int           @default(0) @map("yearly_price_eur")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  @@map("plan_configs")
+}
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  firstName    String?        @map("first_name")
+  lastName     String?        @map("last_name")
+  name         String?
+  googleId     String?        @unique
+  avatar       String?
+  passwordHash String?
+  authProvider AuthProvider   @default(local)
+  role         UserRole       @default(USER)
+  orgRole      OrgRole        @default(OWNER) @map("org_role")
+  isVerified   Boolean        @default(false)
+  verifiedAt   DateTime?
+  verificationToken String?
+  plan         Plan           @default(FREE)
+  preferredLanguage Language  @default(en)
+  timezone     String         @default("Europe/Istanbul")
+  country      String?
+  city         String?
+  phone                String?  @map("phone")
+  billingAddressLine   String?  @map("billing_address_line")
+  billingPostalCode    String?  @map("billing_postal_code")
+  tcKimlikNo          String?   @map("tc_kimlik_no")
+  taxId               String?   @map("tax_id")
+  taxOffice           String?   @map("tax_office")
+  companyName         String?   @map("company_name")
+  invoiceType         String?   @map("invoice_type")
+  billingCountryCode  String?   @map("billing_country_code")
+  isKvkkConsented     Boolean   @default(false) @map("is_kvkk_consented")
+  kvkkConsentedAt     DateTime? @map("kvkk_consented_at")
+  distanceSalesConsentedAt DateTime? @map("distance_sales_consented_at")
+  withdrawalWaivedAt  DateTime? @map("withdrawal_waived_at")
+  totalRefunds        Int       @default(0)     @map("total_refunds")
+  firstRefundedAt     DateTime?                @map("first_refunded_at")
+  lastRefundedAt      DateTime?                @map("last_refunded_at")
+  refundAbuseFlagged  Boolean   @default(false) @map("refund_abuse_flagged")
+  refundBlockedUntil  DateTime?                @map("refund_blocked_until")
+  freeLimitFirstExceededAt DateTime? @map("free_limit_first_exceeded_at")
+  totalOperationsCount     Int            @default(0) @map("total_operations_count")
+  totalThrottleEventsCount Int            @default(0) @map("total_throttle_events_count")
+  toolUsageCountsJson      String         @default("{}") @map("tool_usage_counts_json")
+  totalUpgradeCtaImpressionsCount Int     @default(0) @map("total_upgrade_cta_impressions_count")
+  organizationId String?     @map("organization_id")
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  isTeamMember    Boolean          @default(false) @map("is_team_member")
+  teamOwnerId     String?          @map("team_owner_id")
+  teamMemberRole  TeamMemberRole?  @map("team_member_role")
+  lastLoginAt     DateTime?        @map("last_login_at")
+
+  refreshTokens RefreshToken[]
+  dailyUsages  DailyUsage[]
+  verificationTokens EmailVerificationToken[]
+  pageViews    PageView[]
+  clientErrorLogs ClientErrorLog[]
+  desktopDevices DesktopDevice[]
+  passwordResetCodes PasswordResetCode[]
+  downloadLogs     DownloadLog[]
+  couponUses       CouponUse[]
+  operationLogs    OperationLog[]
+  paymentCheckouts PaymentCheckout[]
+  adminAuditLogs   AdminAuditLog[] @relation("AdminAuditActor")
+  invoices         Invoice[]
+  ownedTeam    Team?         @relation("TeamOwner")
+  teamMembership TeamMember? @relation("TeamMemberUser")
+
+  @@index([organizationId])
+  @@index([country])
+}
+
+// ─── Operation Log ────────────────────────────────────────────────────────────
+
+model OperationLog {
+  id              String          @id @default(cuid())
+  userId          String          @map("user_id")
+  organizationId  String          @map("organization_id")
+  toolType        String          @map("tool_type")
+  fileCount       Int             @default(1) @map("file_count")
+  totalFileSizeMB Float           @default(0) @map("total_file_size_mb")
+  isBatch         Boolean         @default(false) @map("is_batch")
+  status          OperationStatus @default(SUCCESS)
+  processingTimeMs Int?           @map("processing_time_ms")
+  isArchived      Boolean         @default(false) @map("is_archived")
+  archivedAt      DateTime?       @map("archived_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([toolType])
+  @@index([organizationId, status, createdAt])
+  @@map("operation_logs")
+}
+
+// ─── Invitation (Business Plan) ───────────────────────────────────────────────
+
+model Invitation {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  email          String
+  role           OrgRole   @default(MEMBER)
+  token          String    @unique
+  expiresAt      DateTime  @map("expires_at")
+  acceptedAt     DateTime? @map("accepted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([token])
+  @@index([organizationId, expiresAt])
+  @@map("invitations")
+}
+
+// ─── Payment / Billing ────────────────────────────────────────────────────────
+
+model PaymentCheckout {
+  id               String    @id @default(cuid())
+  conversationId   String    @unique
+  iyzicoTokenHash  String?   @unique @map("iyzico_token_hash")
+  userId           String
+  organizationId   String?   @map("organization_id")
+  plan             Plan
+  billingCycle     BillingCycle @default(MONTHLY) @map("billing_cycle")
+  status           String    @default("pending")
+  priceTry         String
+  paymentCurrency  String    @default("TRY") @map("payment_currency")
+  subscriptionDays            Int       @default(30) @map("subscription_days")
+  couponId                    String?   @map("coupon_id")
+  discountPercent             Int?      @map("discount_percent")
+  originalNetAmount           String?   @map("original_net_amount")
+  extraSeats                  Int       @default(0)     @map("extra_seats")
+  seatsOnly                   Boolean   @default(false) @map("seats_only")
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+  refundedAt       DateTime? @map("refunded_at")
+  refundReason     String?   @map("refund_reason")
+  kdvRate         Float?   @map("kdv_rate")
+  kdvAmount       String?  @map("kdv_amount")
+  netAmount       String?  @map("net_amount")
+  customerCountry String?  @map("customer_country")
+  invoiceStatus   String?  @map("invoice_status")
+  cardCountry     String?  @map("card_country")
+  cardBin         String?  @map("card_bin")
+  iyzicoPaymentId             String?  @map("iyzico_payment_id")
+  iyzicoPaymentTransactionId  String?  @map("iyzico_payment_transaction_id")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  invoice      Invoice?
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([userId, status, createdAt])
+}
+
+// ─── Invoice ──────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String   @id @default(cuid())
+  checkoutId      String   @unique @map("checkout_id")
+  userId          String   @map("user_id")
+  externalId      String?  @map("external_id")
+  invoiceNo       String?  @map("invoice_no")
+  type            String   @default("e-arsiv")
+  status          String   @default("pending")
+  pdfUrl          String?  @map("pdf_url")
+  netAmount       String   @map("net_amount")
+  kdvRate         Float    @map("kdv_rate")
+  kdvAmount       String   @map("kdv_amount")
+  grossAmount     String   @map("gross_amount")
+  currency        String   @default("TRY")
+  customerName    String   @map("customer_name")
+  customerEmail   String   @map("customer_email")
+  customerCountry String   @map("customer_country")
+  customerTaxId   String?  @map("customer_tax_id")
+  isExport        Boolean  @default(false) @map("is_export")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  sentAt               DateTime? @map("sent_at")
+  creditNoteId         String?   @map("credit_note_id")
+  creditNoteStatus     String?   @map("credit_note_status")
+  creditNoteIssuedAt   DateTime? @map("credit_note_issued_at")
+  // VUK Madde 253: faturalar 10 yıl saklanmalı. isArchived=true → arşivlendi (silinmez).
+  isArchived  Boolean   @default(false) @map("is_archived")
+  archivedAt  DateTime? @map("archived_at")
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkout PaymentCheckout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([isArchived, createdAt])
+  @@map("invoices")
+}
+
+// ─── Auth / Session ───────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordResetCode {
+  id         String    @id @default(cuid())
+  codeHash   String    @map("code_hash")
+  expiresAt  DateTime  @map("expires_at")
+  consumedAt DateTime? @map("consumed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─── Usage Tracking ───────────────────────────────────────────────────────────
+
+model DailyUsage {
+  id              String   @id @default(cuid())
+  usageDate       String
+  operationsCount Int      @default(0)
+  postLimitExtraOps Int    @default(0) @map("post_limit_extra_ops")
+  postLimitThrottleCount Int @default(0) @map("post_limit_throttle_count")
+  lastFeatureKey  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, usageDate])
+  @@index([userId])
+  @@index([usageDate])
+  @@index([userId, usageDate, operationsCount])
+}
+
+// ─── Tool Registry ────────────────────────────────────────────────────────────
+
+model ToolRegistry {
+  id                String  @id
+  strategy          String
+  isVisible         Boolean @default(true) @map("is_visible")
+  isMaintenanceMode Boolean @default(false) @map("is_maintenance_mode")
+  updatedAt         DateTime @default(now()) @updatedAt
+}
+
+// ─── Coupon / Discount ────────────────────────────────────────────────────────
+
+model Coupon {
+  id                String   @id @default(cuid())
+  code              String   @unique
+  discountPercent   Int
+  isActive          Boolean  @default(true)
+  usageLimitPerUser Int      @default(1)
+  createdAt         DateTime @default(now()) @map("created_at")
+  uses              CouponUse[]
+
+  @@map("coupons")
+}
+
+model CouponUse {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  couponId  String   @map("coupon_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([userId, couponId])
+  @@index([couponId])
+  @@index([couponId, createdAt])
+  @@map("coupon_uses")
+}
+
+// ─── Logging / Analytics ──────────────────────────────────────────────────────
+
+model DownloadLog {
+  id         String            @id @default(cuid())
+  userId     String            @map("user_id")
+  resultId   String?           @map("result_id")
+  toolId     String            @map("tool_id")
+  clientIp   String?           @map("client_ip")
+  userAgent  String?           @map("user_agent")
+  status     DownloadLogStatus @default(PENDING)
+  ackedAt    DateTime?         @map("acked_at")
+  isArchived Boolean           @default(false) @map("is_archived")
+  archivedAt DateTime?         @map("archived_at")
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([clientIp])
+  @@map("download_logs")
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  view      String
+  path      String
+  sessionId String
+  language  Language?
+  referrer  String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([view])
+  @@index([userId])
+}
+
+model ClientErrorLog {
+  id        String   @id @default(cuid())
+  level     String
+  message   String
+  source    String?
+  stack     String?
+  url       String?
+  userAgent String?
+  language  Language?
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([level])
+  @@index([userId])
+}
+
+model DesktopDevice {
+  id         String   @id @default(cuid())
+  deviceHash String
+  firstSeenAt DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  blockedAt  DateTime?
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceHash])
+  @@index([userId])
+}
+
+// ─── Site / Admin ─────────────────────────────────────────────────────────────
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AppSettings {
+  id                    Int     @id @default(1)
+  siteName              String  @default("PDF PLATFORM") @map("site_name")
+  logoUrl               String? @map("logo_url")
+  globalMaintenanceMode Boolean @default(false) @map("global_maintenance_mode")
+  seoTitle              String? @map("seo_title")
+  seoDescription        String? @map("seo_description")
+  seoKeywords           String? @map("seo_keywords")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model BlockedEmail {
+  email     String   @id
+  reason    String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("blocked_emails")
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  storageKey   String   @unique
+  originalName String   @map("original_name")
+  mimeType     String   @map("mime_type")
+  byteSize     Int      @map("byte_size")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  userId     String?  @map("user_id")
+  userEmail  String   @map("user_email")
+  action     String
+  targetKey  String?  @map("target_key")
+  summary    String
+  metaJson   String?  @map("meta_json")
+  adminActor User?    @relation("AdminAuditActor", fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("admin_audit_logs")
+}
+
+model SettingRevision {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now()) @map("created_at")
+  scope        String
+  userId       String?  @map("user_id")
+  userEmail    String   @map("user_email")
+  summary      String?
+  previousJson String   @map("previous_json")
+
+  @@index([scope, createdAt])
+  @@map("setting_revisions")
+}
+
+// ─── Business Team System ─────────────────────────────────────────────────────
+
+model Team {
+  id                 String                @id @default(cuid())
+  name               String
+  ownerId            String                @unique @map("owner_id")
+  maxSeats           Int                   @default(5) @map("max_seats")
+  extraSeats         Int                   @default(0) @map("extra_seats")
+  subscriptionStatus TeamSubscriptionStatus @default(ACTIVE) @map("subscription_status")
+  subscriptionEndsAt DateTime?             @map("subscription_ends_at")
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  owner    User          @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members  TeamMember[]
+  invoices TeamInvoice[]
+
+  @@index([ownerId])
+  @@map("teams")
+}
+
+model TeamMember {
+  id           String               @id @default(cuid())
+  teamId       String               @map("team_id")
+  userId       String?              @unique @map("user_id")
+  inviteEmail  String               @map("invite_email")
+  inviteToken  String?              @unique @map("invite_token")
+  inviteStatus TeamMemberInviteStatus @default(PENDING) @map("invite_status")
+  role         TeamMemberRole       @default(MEMBER)
+  invitedAt    DateTime             @default(now()) @map("invited_at")
+  joinedAt     DateTime?            @map("joined_at")
+  revokedAt    DateTime?            @map("revoked_at")
+
+  team       Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User?                @relation("TeamMemberUser", fields: [userId], references: [id], onDelete: SetNull)
+  activities TeamMemberActivity[]
+
+  @@index([teamId])
+  @@index([userId])
+  @@map("team_members")
+}
+
+model TeamMemberActivity {
+  id               String             @id @default(cuid())
+  memberId         String             @map("member_id")
+  toolId           String             @map("tool_id")
+  toolName         String             @map("tool_name")
+  pageCount        Int?               @map("page_count")
+  fileSizeMB       Float?             @map("file_size_mb")
+  originalSizeMB   Float?             @map("original_size_mb")
+  compressedSizeMB Float?             @map("compressed_size_mb")
+  compressionRatio Float?             @map("compression_ratio")
+  durationMs       Int?               @map("duration_ms")
+  status           TeamActivityStatus @default(SUCCESS)
+  ipAddress        String?            @map("ip_address")
+  createdAt        DateTime           @default(now()) @map("created_at")
+
+  member TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+  @@index([toolId])
+  @@map("team_member_activities")
+}
+
+model TeamInvoice {
+  id          String   @id @default(cuid())
+  teamId      String   @map("team_id")
+  amount      Int
+  currency    String   @default("TRY")
+  description String
+  paidAt      DateTime @map("paid_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@map("team_invoices")
+}
