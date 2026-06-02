@@ -296,7 +296,7 @@ jobs:
   frontend-e2e:
     name: Frontend E2E Tests (Playwright)
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -311,6 +311,17 @@ jobs:
         working-directory: web/frontend
         run: npm ci
 
+      # Tarayıcı ikilisini (~170MB) cache'le; her çalıştırmada yeniden
+      # indirmeyi önler (install adımının asıl darboğazı buydu).
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('web/frontend/package-lock.json') }}
+
+      # `playwright install` cache'teki tarayıcıyı algılayıp indirmeyi atlar;
+      # cache hit'te yalnızca sistem bağımlılıkları (apt) çalışır.
       - name: Install Playwright browsers
         working-directory: web/frontend
         run: npm run e2e:install
@@ -332,7 +343,7 @@ jobs:
           # Preview sunucusunu arka planda başlat; çıktısını DOSYAYA yönlendir
           # ki adımın stdout pipe'ını açık tutup job'ı sonsuza kadar
           # bekletmesin (önceki hang'in kök nedeni).
-          npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          npm run preview -- --port 4173 --strictPort > preview.log 2>&1 &
           PREVIEW_PID=$!
           # Sunucu hazır olana kadar bekle (en fazla 60s).
           for i in $(seq 1 60); do
