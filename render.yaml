@@ -99,7 +99,7 @@ services:
       - key: IYZICO_SECRET_KEY
         sync: false
       - key: IYZICO_URI
-        value: https://api.iyzipay.com
+        sync: false   # Test: https://sandbox-api.iyzipay.com | Gerçek: https://api.iyzipay.com
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
