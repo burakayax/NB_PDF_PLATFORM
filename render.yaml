@@ -14,7 +14,7 @@ services:
                               # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
     dockerfilePath: web/backend/Dockerfile
     dockerContext: .          # proje kökü — imaj hem web/backend hem paylaşılan src/ içerir
-    healthCheckPath: /health
+    healthCheckPath: /api/health   # router prefix="/api" → health endpoint /api/health
     envVars:
       - key: WEB_CONCURRENCY
         value: "1"            # free 512 MB RAM için tek gunicorn worker (OOM'u önler)
