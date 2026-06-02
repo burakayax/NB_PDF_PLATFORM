@@ -13,7 +13,11 @@ export default defineConfig({
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   workers: 1,
-  reporter: isCI ? "github" : "html",
+  // CI'da hem GitHub anotasyonları hem de artifact olarak yüklenebilen HTML
+  // raporu üret (upload-artifact playwright-report/ klasörünü arıyor).
+  reporter: isCI
+    ? [["github"], ["html", { open: "never" }]]
+    : "html",
   use: {
     baseURL,
     trace: "on-first-retry",
