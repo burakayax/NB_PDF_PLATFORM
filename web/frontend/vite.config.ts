@@ -167,8 +167,16 @@ function saasProxyOptions(saasProxyTarget: string) {
   };
 }
 
-export default defineConfig(({ command, mode }) => {
-  if (command === "serve" && !fs.existsSync(path.join(frontendRoot, ".env"))) {
+export default defineConfig(({ command, mode, isPreview }) => {
+  // `vite preview` de command === "serve" ile çalışır; ancak preview yalnızca
+  // önceden derlenmiş dist/'i servis eder ve .env'e ihtiyaç duymaz. CI'da .env
+  // bulunmadığından bu kontrol preview'ı process.exit(1) ile öldürüyordu
+  // (E2E'de ERR_CONNECTION_REFUSED'ın kök nedeni). Sadece gerçek dev server'a uygula.
+  if (
+    command === "serve" &&
+    !isPreview &&
+    !fs.existsSync(path.join(frontendRoot, ".env"))
+  ) {
     console.error(MISSING_ENV_MSG);
     process.exit(1);
   }
