@@ -53,6 +53,7 @@ oluşur. Bir restoran gibi düşün:
 | 04 | **Veritabanı** (`04-VERITABANI.md`) | Üye/ödeme bilgilerinin saklandığı yeri yönetirken |
 | 05 | **Günlük Kontrol** (`05-GUNLUK-KONTROL.md`) | Her gün/hafta sistemin sağlığını kontrol ederken |
 | 06 | **Sık Hatalar** (`06-SIK-HATALAR.md`) | Bir hata mesajı gördüğünde, çözüm ararken |
+| 07 | **Canlıya Geçiş ve Ölçeklendirme** (`07-CANLIYA-OLCEKLENDIRME.md`) | Kullanıcı yükü gelince ücretsizden ücretli/güçlü plana geçerken |
 
 ---
 
