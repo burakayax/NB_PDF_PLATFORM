@@ -31,8 +31,18 @@ WORKDIR /app
 
 # Önce yalnızca requirements — Docker katman cache'i (kod değişince pip tekrar çalışmaz)
 COPY web/backend/requirements.txt /app/web/backend/requirements.txt
-RUN pip install --upgrade pip && \
-    pip install -r /app/web/backend/requirements.txt
+# pycairo gibi C-eklentileri kaynaktan derlenir: derleyici + cairo başlıkları +
+# pkg-config gerekir. Bunları kur, pip'i çalıştır, sonra AYNI katmanda kaldır
+# (imaj şişmesin; çalışma zamanında yalnızca libcairo2 yeterli).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      build-essential \
+      libcairo2-dev \
+      pkg-config \
+    && pip install --upgrade pip \
+    && pip install -r /app/web/backend/requirements.txt \
+    && apt-get purge -y build-essential libcairo2-dev pkg-config \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 # Uygulama kodu + paylaşılan PDF motoru (kök src/). Dizin yapısı korunmalı:
 # /app/web/backend/app/core/operations.py → parents[4] = /app → /app/src erişilebilir.
