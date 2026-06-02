@@ -296,6 +296,7 @@ jobs:
   frontend-e2e:
     name: Frontend E2E Tests (Playwright)
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
 
@@ -312,7 +313,7 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: web/frontend
-        run: npx playwright install chromium --with-deps
+        run: npm run e2e:install
 
       - name: Build frontend
         working-directory: web/frontend
@@ -322,11 +323,32 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npm run build
 
-      - name: Run E2E tests (Playwright manages preview server)
+      - name: Run E2E tests
         working-directory: web/frontend
         env:
           CI: "true"
-        run: npx playwright test --reporter=github
+          PLAYWRIGHT_BASE_URL: http://localhost:4173
+        run: |
+          # Preview sunucusunu arka planda başlat; çıktısını DOSYAYA yönlendir
+          # ki adımın stdout pipe'ını açık tutup job'ı sonsuza kadar
+          # bekletmesin (önceki hang'in kök nedeni).
+          npx vite preview --port 4173 --strictPort > preview.log 2>&1 &
+          PREVIEW_PID=$!
+          # Sunucu hazır olana kadar bekle (en fazla 60s).
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:4173 > /dev/null; then
+              echo "Preview server hazır ($i s)."
+              break
+            fi
+            sleep 1
+          done
+          set +e
+          npm run e2e -- --reporter=github
+          STATUS=$?
+          # Sunucuyu ve olası çocuk süreçlerini kesin olarak öldür.
+          kill "$PREVIEW_PID" 2>/dev/null || true
+          pkill -P "$PREVIEW_PID" 2>/dev/null || true
+          exit $STATUS
 
       - name: Upload Playwright report on failure
         if: failure()

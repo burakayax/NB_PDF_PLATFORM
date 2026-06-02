@@ -25,20 +25,18 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  // Sunucu yaşam döngüsünü Playwright yönetir: hazır olana kadar bekler ve
-  // testler bitince kapatır. (Manuel `&` ile başlatılan süreç CI adımını
-  // sonsuza kadar açık tutuyordu.) CI'da derlenmiş çıktı preview edilir.
-  webServer: isCI
-    ? {
-        command: `npm run preview -- --port ${PREVIEW_PORT} --strictPort`,
-        url: baseURL,
-        reuseExistingServer: false,
-        timeout: 120_000,
-      }
+  // Yerelde Playwright dev server'ı yönetir. CI'da sunucu workflow adımında
+  // elle yönetilir (çıktı dosyaya yönlendirilip süreç açıkça öldürülür) —
+  // Playwright'ın `npm run preview` çocuk sürecini Linux'ta tam
+  // öldürememesi adımı sonsuza kadar açık bırakabiliyordu.
+  ...(isCI
+    ? {}
     : {
-        command: "npm run dev",
-        url: "http://localhost:5173",
-        reuseExistingServer: true,
-        timeout: 60_000,
-      },
+        webServer: {
+          command: "npm run dev",
+          url: "http://localhost:5173",
+          reuseExistingServer: true,
+          timeout: 60_000,
+        },
+      }),
 });
