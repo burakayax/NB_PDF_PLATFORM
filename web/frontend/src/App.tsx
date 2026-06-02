@@ -133,7 +133,7 @@ import {
 } from "./lib/workspaceToolSelection";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
-const GA_TEST_BYPASS_COOKIE_CONSENT = true;
+const GA_TEST_BYPASS_COOKIE_CONSENT = false;
 
 type NonLegalView =
   | "landing"
