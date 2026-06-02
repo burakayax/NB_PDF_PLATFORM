@@ -3,7 +3,7 @@
  * Gerçek API bağlantısı gerektirmez — mock server veya test ortamı gerekebilir.
  * Bu testler UI davranışını (form validasyonu, hata mesajları) doğrular.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("Auth Akışı — Form Validasyonu", () => {
   test.beforeEach(async ({ page }) => {
@@ -78,6 +78,7 @@ test.describe("Landing Page — SEO ve Erişilebilirlik", () => {
     expect(response?.status()).toBe(200);
     const body = await response?.text();
     expect(body).toContain("Disallow: /workspace");
-    expect(body).toContain("Allow: /");
+    expect(body).toContain("Disallow: /admin");
+    expect(body).toContain("Sitemap:");
   });
 });

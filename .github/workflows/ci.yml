@@ -322,15 +322,11 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npm run build
 
-      - name: Serve built frontend and run E2E tests
+      - name: Run E2E tests (Playwright manages preview server)
         working-directory: web/frontend
         env:
-          PLAYWRIGHT_BASE_URL: http://localhost:4173
           CI: "true"
-        run: |
-          npx vite preview --port 4173 &
-          sleep 3
-          npx playwright test --reporter=github
+        run: npx playwright test --reporter=github
 
       - name: Upload Playwright report on failure
         if: failure()

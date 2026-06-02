@@ -3,14 +3,14 @@
  * Platform: Playwright / Chromium
  * Gereklilik: Uygulama http://localhost:5173'te çalışıyor olmalı.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("Çerez Onayı Akışı", () => {
   test.beforeEach(async ({ page }) => {
-    // Her test öncesi localStorage temizle — yeni ziyaretçi simülasyonu
-    await page.addInitScript(() => {
-      localStorage.removeItem("nbpdf-cookie-consent-v2");
-    });
+    // Her test izole bir context'te çalışır → localStorage zaten boştur
+    // (yeni ziyaretçi). Burada `addInitScript` ile temizlik YAPMA: "Tümünü
+    // Kabul Et" analitiği açıp sayfayı yeniden yüklediğinden, kalıcı init
+    // script reload'da tekrar çalışıp yeni kaydedilen onayı silerdi.
     await page.goto("/");
   });
 
@@ -30,7 +30,7 @@ test.describe("Çerez Onayı Akışı", () => {
     await expect(dialog).not.toBeVisible({ timeout: 3000 });
 
     // localStorage'a kaydedilmeli
-    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v2"));
+    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v3"));
     expect(consent).toBeTruthy();
     const parsed = JSON.parse(consent!);
     expect(parsed.decided).toBe(true);
@@ -45,7 +45,7 @@ test.describe("Çerez Onayı Akışı", () => {
 
     await expect(dialog).not.toBeVisible({ timeout: 3000 });
 
-    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v2"));
+    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v3"));
     const parsed = JSON.parse(consent!);
     expect(parsed.decided).toBe(true);
     expect(parsed.analytics).toBe(false);
@@ -66,7 +66,7 @@ test.describe("Çerez Onayı Akışı", () => {
 
     await page.getByRole("button", { name: /Tercihleri Kaydet|Save Preferences/i }).first().click();
 
-    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v2"));
+    const consent = await page.evaluate(() => localStorage.getItem("nbpdf-cookie-consent-v3"));
     const parsed = JSON.parse(consent!);
     expect(parsed.decided).toBe(true);
     expect(parsed.marketing).toBe(true);
@@ -76,7 +76,7 @@ test.describe("Çerez Onayı Akışı", () => {
     // Onay ver
     await page.addInitScript(() => {
       localStorage.setItem(
-        "nbpdf-cookie-consent-v2",
+        "nbpdf-cookie-consent-v3",
         JSON.stringify({ decided: true, necessary: true, analytics: true, marketing: false }),
       );
     });
