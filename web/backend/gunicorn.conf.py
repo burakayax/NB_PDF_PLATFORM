@@ -11,7 +11,11 @@ _host = os.environ.get("PDF_API_HOST", "0.0.0.0")
 _port = os.environ.get("PDF_API_PORT", "8000")
 bind = f"{_host}:{_port}"
 
-workers = multiprocessing.cpu_count() * 2 + 1
+# Worker sayısı: WEB_CONCURRENCY env'i ile sınırlanabilir. Paylaşımlı/küçük
+# planlarda cpu_count() ana makinenin çekirdeklerini görür (ör. 8+) ve
+# cpu_count()*2+1 worker düşük RAM'de OOM yapar. Bu yüzden env önceliklidir.
+_default_workers = multiprocessing.cpu_count() * 2 + 1
+workers = int(os.environ.get("WEB_CONCURRENCY") or _default_workers)
 worker_class = "uvicorn.workers.UvicornWorker"
 worker_connections = 1000
 timeout = int(os.environ.get("GUNICORN_TIMEOUT", "660"))

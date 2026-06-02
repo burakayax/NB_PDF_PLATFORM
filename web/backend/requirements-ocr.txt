@@ -1,0 +1,14 @@
+# Opsiyonel: yapay zeka tabanlı OCR / belge ayrıştırma bağımlılıkları.
+#
+# Bunlar torch + CUDA + transformers çeker (~5 GB) ve çalışmak için ~2 GB+ RAM
+# (Render Standard veya üzeri) gerektirir. Ücretsiz/starter planda KURMAYIN.
+#
+# Kurulum (büyük plana geçince):
+#   pip install -r requirements.txt -r requirements-ocr.txt
+#
+# İlgili kod lazy import eder (src/pdf_engine.py); bu paketler yoksa uygulama
+# yine açılır, yalnızca taranmış belge / AI-OCR özellikleri devre dışı kalır.
+
+docling
+easyocr
+onnxruntime

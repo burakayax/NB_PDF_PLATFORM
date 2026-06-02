@@ -5,23 +5,19 @@ services:
   # ─── PDF API (FastAPI / Python) ───────────────────────────────────────────
   - type: web
     name: nb-pdf-api
-    runtime: python
+    # Docker runtime: native Python runtime'da apt-get çalışmaz (salt-okunur FS).
+    # Sistem araçları (tesseract/poppler/wkhtmltopdf/ghostscript) Dockerfile'da kurulur.
+    runtime: docker
     region: frankfurt         # EU kullanıcılarına yakın; değiştirilebilir
-    plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
+    plan: free                # ÜCRETSIZ (bakım/test). AI-OCR (docling/easyocr) için
+                              # gerçek yayında ~2GB+ RAM → standard plan gerekir.
                               # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
-    rootDir: web/backend
-    buildCommand: |
-      pip install --upgrade pip
-      pip install -r requirements.txt
-      apt-get update -qq && apt-get install -y -qq \
-        wkhtmltopdf \
-        tesseract-ocr \
-        tesseract-ocr-tur \
-        poppler-utils \
-        libcairo2
-    startCommand: gunicorn -c gunicorn.conf.py app.main:app
+    dockerfilePath: web/backend/Dockerfile
+    dockerContext: .          # proje kökü — imaj hem web/backend hem paylaşılan src/ içerir
     healthCheckPath: /health
     envVars:
+      - key: WEB_CONCURRENCY
+        value: "1"            # free 512 MB RAM için tek gunicorn worker (OOM'u önler)
       - key: PDF_API_HOST
         value: "0.0.0.0"
       - key: PDF_CPU_WORKERS
@@ -42,7 +38,8 @@ services:
       - key: PDF_SANDBOX_ENABLED
         value: "true"
       - key: PDF_SANDBOX_MEM_MB
-        value: "1024"   # Her alt süreç için maksimum 1 GB RAM
+        value: "384"    # free 512MB için düşük tutuldu (taşan işlem host'u OOM etmeden kesilir).
+                        # Büyük plana geçince 1024'e çıkarılabilir.
       - key: PDF_SANDBOX_CPU_SEC
         value: "120"    # Her alt süreç için maksimum 120 saniye CPU
       - key: SENTRY_DSN
