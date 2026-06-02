@@ -328,22 +328,26 @@ jobs:
         working-directory: web/frontend
         env:
           CI: "true"
-          PLAYWRIGHT_BASE_URL: http://localhost:4173
+          # Container içinde `localhost` IPv6 (::1) çözülebilir; vite preview
+          # IPv4'e bağlandığından her yerde sayısal 127.0.0.1 kullan.
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4173
         run: |
           # Preview sunucusunu arka planda başlat; çıktısını DOSYAYA yönlendir
           # ki adımın stdout pipe'ını açık tutup job'ı sonsuza kadar
-          # bekletmesin (önceki hang'in kök nedeni).
-          npm run preview -- --port 4173 --strictPort > preview.log 2>&1 &
+          # bekletmesin (önceki hang'in kök nedeni). --host 127.0.0.1 ile
+          # IPv4 loopback'e bağla (container'da localhost/::1 reddediliyordu).
+          npm run preview -- --port 4173 --strictPort --host 127.0.0.1 > preview.log 2>&1 &
           PREVIEW_PID=$!
           # Sunucu hazır olana kadar bekle (en fazla 60s). curl yerine node
           # kullan (container imajında node garanti, curl olmayabilir).
           for i in $(seq 1 60); do
-            if node -e "require('http').get('http://localhost:4173',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"; then
+            if node -e "require('http').get('http://127.0.0.1:4173',r=>process.exit(r.statusCode<500?0:1)).on('error',()=>process.exit(1))"; then
               echo "Preview server hazır ($i s)."
               break
             fi
             sleep 1
           done
+          cat preview.log || true
           set +e
           npm run e2e -- --reporter=github
           STATUS=$?
