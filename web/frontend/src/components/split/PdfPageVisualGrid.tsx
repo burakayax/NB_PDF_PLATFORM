@@ -744,6 +744,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       let cancelled = false;
       /** Tam dosya için önce `arrayBuffer()` beklemek yerine blob URL ile pdf.js okumasını kullanır (büyük PDF’lerde daha az bloklar ve daha düzgün akış). */
       let blobUrl: string | null = null;
+      let activeTask: ReturnType<typeof pdfjsLib.getDocument> | null = null;
       const run = async () => {
         const prevSid = thumbSessionIdRef.current;
         if (prevSid) {
@@ -770,7 +771,9 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
             url: blobUrl,
             password: password.trim() || undefined,
           });
+          activeTask = task;
           const pdf = await task.promise;
+          activeTask = null;
           if (cancelled) {
             await pdf.destroy().catch(() => {});
             return;
@@ -799,6 +802,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       void run();
       return () => {
         cancelled = true;
+        if (activeTask) {
+          void activeTask.destroy().catch(() => {});
+          activeTask = null;
+        }
         thumbRetryTimersRef.current.forEach((tid) => clearTimeout(tid));
         thumbRetryTimersRef.current.clear();
         thumbFailureCountRef.current.clear();

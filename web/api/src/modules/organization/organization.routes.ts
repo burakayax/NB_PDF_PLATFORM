@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../../middleware/auth.middleware.js";
 import { requirePermission } from "../../lib/rbac.js";
+import { csrfOriginCheck } from "../../middleware/csrf.middleware.js";
 import {
   inviteMember,
   acceptInvitation,
@@ -28,6 +29,7 @@ router.get("/", requireAuth(), async (req, res) => {
 // POST /api/org/invite — invite a member (OWNER/ADMIN only, BUSINESS plan)
 router.post(
   "/invite",
+  csrfOriginCheck,
   requireAuth(),
   requirePermission("invite_members"),
   async (req, res) => {
@@ -73,6 +75,7 @@ router.get("/invite/accept/:token", requireAuth(), async (req, res) => {
 // DELETE /api/org/members/:userId — remove a member
 router.delete(
   "/members/:userId",
+  csrfOriginCheck,
   requireAuth(),
   requirePermission("remove_members"),
   async (req, res) => {

@@ -1,6 +1,7 @@
 import type { Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
 import { resolveRouteSeo, toAbsoluteUrl } from "../../seo/routeSeoConfig";
+import { getPublicSiteOrigin } from "../../lib/siteOrigin";
 import { landingTranslations } from "../../i18n/landing";
 import { SEO } from "./SEO";
 
@@ -12,7 +13,7 @@ type SeoRouteManagerProps = {
   /**
    * Site origin e.g. "https://nbpdfplatform.com"
    * Used to generate hreflang alternates and absolute canonical URLs.
-   * REQUIRED for proper multi-language SEO.
+   * Boş bırakılırsa getPublicSiteOrigin() (VITE_PUBLIC_SITE_URL veya window.origin) kullanılır.
    */
   siteOrigin?: string;
 };
@@ -22,8 +23,10 @@ export function SeoRouteManager({
   view,
   language,
   selectedFeatureId,
-  siteOrigin = "",
+  siteOrigin: siteOriginProp = "",
 }: SeoRouteManagerProps) {
+  // Origin verilmediyse merkezi yardımcıdan al — hreflang her zaman üretilebilsin.
+  const siteOrigin = siteOriginProp || getPublicSiteOrigin();
   // ── Resolve route-specific SEO config ─────────────────────────────────────
   const seo = resolveRouteSeo({
     pathname,
@@ -53,13 +56,15 @@ export function SeoRouteManager({
         ]
       : undefined;
 
-  // ── hreflang: TR root / EN root / x-default ───────────────────────────────
-  // Only generate if siteOrigin is provided
+  // ── hreflang ──────────────────────────────────────────────────────────────
+  // Bu SPA'da dil URL'ye değil client tercihine bağlıdır; aynı kanonik URL hem
+  // TR hem EN içeriği sunar. Bu yüzden her iki dil de aynı sayfaya işaret eder.
+  const canonicalAbsolute = `${siteOrigin}${seo.canonicalPath === "/" ? "" : seo.canonicalPath}` || "/";
   const hreflang = siteOrigin
     ? [
-        { lang: "tr", href: `${siteOrigin}/` },
-        { lang: "en", href: `${siteOrigin}/en` },
-        { lang: "x-default", href: `${siteOrigin}/` },
+        { lang: "tr", href: canonicalAbsolute || `${siteOrigin}/` },
+        { lang: "en", href: canonicalAbsolute || `${siteOrigin}/` },
+        { lang: "x-default", href: canonicalAbsolute || `${siteOrigin}/` },
       ]
     : undefined;
 

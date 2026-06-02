@@ -164,9 +164,30 @@ export const legalDocuments: Record<
           ],
         },
         {
+          title: "5a. Cookies and third-party services",
+          paragraphs: [
+            "The table below lists all cookies and similar storage items used on this site, their purpose, the third-party responsible, and their retention period.",
+            "| Cookie / Key | Purpose | Set by | Retention |",
+            "| nbpdf-access-token | Authentication (JWT) | PDF Platform (first-party) | Session |",
+            "| nbpdf-refresh-token | Persistent session | PDF Platform (first-party) | 7 days (HttpOnly cookie) |",
+            "| nbpdf-language | Language preference | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Records your consent choices | PDF Platform (first-party) | Indefinite (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonymous usage statistics | Google LLC | 13 months |",
+            "| sentry-* | Error monitoring and diagnostic reports (only with your consent) | Functional Software Inc. (Sentry) | Session |",
+            "You may withdraw analytics and error-monitoring consent at any time by clicking 'Cookie Settings' in the footer and selecting 'Necessary Only'.",
+          ],
+        },
+        {
           title: "6. Retention",
           paragraphs: [
-            "We retain personal data only as long as needed for the purposes above, including providing the service, resolving disputes, and meeting legal, tax, or accounting requirements. When retention periods end, we delete or anonymize data where feasible.",
+            "We retain personal data for the specific periods set out below, after which data is deleted or anonymized:",
+            "Account data: retained while your account is active and for 30 days after a deletion request is processed.",
+            "Operation logs: 90 days from the date of creation, after which records are archived and no longer accessible for regular use.",
+            "Download logs: 90 days from the date of creation.",
+            "Invoices and billing records: 10 years, as required by Turkish Tax Procedure Law (VUK) Article 253 and equivalent accounting regulations.",
+            "Analytics data: 13 months (aligned with Google Analytics 4 default retention).",
+            "Error and diagnostic logs: 30 days.",
+            "Uploaded files: automatically deleted within 24 hours of processing completion.",
           ],
         },
         {
@@ -346,8 +367,8 @@ export const legalDocuments: Record<
     cookieNotice: {
       title: "Cookie Notice",
       description:
-        "We use essential storage for login, language preference, and consent settings. With your approval, we also collect basic page analytics to improve product quality. See our Privacy Policy for details.",
-      accept: "Accept Analytics",
+        "We use cookies and similar technologies. Under GDPR Article 7, we require your separate consent for each category. Essential and Payment Processing cookies are mandatory for the service to function. Analytics and Error Monitoring are optional — you can accept or reject each independently.\n\n• Essential (always on): login session, language preference, consent record.\n• Analytics (Google Analytics GA4): page views and feature usage to improve the product.\n• Error Monitoring (Sentry): diagnostic reports to fix bugs faster — only active with your consent.\n• Payment Processing (İyzico, always on): required to process subscription payments securely.",
+      accept: "Accept All",
       learnMore: "Privacy Policy",
     },
   },
@@ -484,9 +505,30 @@ export const legalDocuments: Record<
           ],
         },
         {
+          title: "5a. Çerezler ve üçüncü taraf hizmetler",
+          paragraphs: [
+            "Aşağıdaki tabloda sitede kullanılan tüm çerez ve benzer depolama öğeleri, amaçları, sorumlu üçüncü taraf ve saklama süreleriyle listelenmiştir.",
+            "| Çerez / Anahtar | Amaç | Yerleştiren | Saklama Süresi |",
+            "| nbpdf-access-token | Kimlik doğrulama (JWT) | PDF Platform (birinci taraf) | Oturum |",
+            "| nbpdf-refresh-token | Kalıcı oturum | PDF Platform (birinci taraf) | 7 gün (HttpOnly çerez) |",
+            "| nbpdf-language | Dil tercihi | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| nbpdf-cookie-consent-v2 | Çerez onay tercihlerinizi kaydeder | PDF Platform (birinci taraf) | Süresiz (localStorage) |",
+            "| _ga, _ga_* | Google Analytics 4 — anonim kullanım istatistikleri | Google LLC | 13 ay |",
+            "| sentry-* | Hata izleme ve tanı raporları (yalnızca onayınızla aktif) | Functional Software Inc. (Sentry) | Oturum |",
+            "Analitik ve hata izleme onayını istediğiniz zaman alt kısımdaki 'Çerez Ayarları'ndan 'Yalnızca Zorunlu' seçeneğini belirleyerek geri alabilirsiniz.",
+          ],
+        },
+        {
           title: "6. Saklama süresi",
           paragraphs: [
-            "Kişisel verileri yukarıdaki amaçlar için gerekli olduğu sürece, hizmeti sunmak, uyuşmazlıkları çözmek ve yasal, vergi veya muhasebe gerekliliklerini karşılamak üzere saklarız. Süre dolduğunda, mümkün olduğunda verileri siler veya anonimleştiririz.",
+            "Kişisel verileri aşağıda belirtilen süreler boyunca saklarız; süre dolduğunda veriler silinir veya anonimleştirilir:",
+            "Hesap verileri: Hesabınız aktif olduğu sürece ve silme talebinin işlenmesinden itibaren 30 gün.",
+            "İşlem günlükleri: Oluşturulma tarihinden itibaren 90 gün; bu sürenin ardından kayıtlar arşivlenir.",
+            "İndirme günlükleri: Oluşturulma tarihinden itibaren 90 gün.",
+            "Fatura ve ödeme kayıtları: Vergi Usul Kanunu (VUK) Madde 253 ve ilgili muhasebe mevzuatı gereği 10 yıl.",
+            "Analitik veriler: 13 ay (Google Analytics 4 varsayılan saklama süresiyle uyumlu).",
+            "Hata ve tanı günlükleri: 30 gün.",
+            "Yüklenen dosyalar: İşlemin tamamlanmasının ardından 24 saat içinde otomatik olarak silinir.",
           ],
         },
         {
@@ -713,8 +755,8 @@ export const legalDocuments: Record<
     cookieNotice: {
       title: "Çerez Bildirimi",
       description:
-        "Giriş, dil tercihi ve onay bilgisini saklamak için zorunlu depolama kullanıyoruz. Onayınızla birlikte ürün kalitesini iyileştirmek için temel sayfa analitiği de topluyoruz. Ayrıntılar için Gizlilik Politikamıza bakın.",
-      accept: "Analitikleri kabul et",
+        "Çerezler ve benzer teknolojiler kullanıyoruz. GDPR/KVKK Madde 7 gereği her kategori için ayrı onayınız gereklidir. Zorunlu ve Ödeme İşleme çerezleri hizmetin çalışması için zorunludur. Analitik ve Hata İzleme isteğe bağlıdır — her birini bağımsız olarak kabul veya reddedebilirsiniz.\n\n• Zorunlu (her zaman aktif): giriş oturumu, dil tercihi, onay kaydı.\n• Analitik (Google Analytics GA4): ürünü iyileştirmek için sayfa görüntüleme ve özellik kullanım verileri.\n• Hata İzleme (Sentry): hataları daha hızlı çözmek için tanı raporları — yalnızca onayınızla aktif olur.\n• Ödeme İşleme (İyzico, her zaman aktif): abonelik ödemelerini güvenli şekilde işlemek için zorunludur.",
+      accept: "Tümünü kabul et",
       learnMore: "Gizlilik Politikası",
     },
   },

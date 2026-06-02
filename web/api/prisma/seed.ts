@@ -15,8 +15,10 @@ const PLAN_CONFIGS = [
     maxSeats: 1,
     monthlyPriceTry: 0,
     monthlyPriceUsd: 0,
+    monthlyPriceEur: 0,
     yearlyPriceTry: 0,
     yearlyPriceUsd: 0,
+    yearlyPriceEur: 0,
   },
   {
     plan: "STARTER" as const,
@@ -30,8 +32,10 @@ const PLAN_CONFIGS = [
     maxSeats: 1,
     monthlyPriceTry: 4900,
     monthlyPriceUsd: 1599,
+    monthlyPriceEur: 1471,   // ~0.92 × 1599
     yearlyPriceTry: 49000,
     yearlyPriceUsd: 15900,
+    yearlyPriceEur: 14628,   // ~0.92 × 15900
   },
   {
     plan: "PLUS" as const,
@@ -45,8 +49,10 @@ const PLAN_CONFIGS = [
     maxSeats: 1,
     monthlyPriceTry: 14900,
     monthlyPriceUsd: 4799,
+    monthlyPriceEur: 4415,   // ~0.92 × 4799
     yearlyPriceTry: 149000,
     yearlyPriceUsd: 47990,
+    yearlyPriceEur: 44151,   // ~0.92 × 47990
   },
   {
     plan: "PRO" as const,
@@ -60,8 +66,10 @@ const PLAN_CONFIGS = [
     maxSeats: 1,
     monthlyPriceTry: 29900,
     monthlyPriceUsd: 9799,
+    monthlyPriceEur: 9015,   // ~0.92 × 9799
     yearlyPriceTry: 299000,
     yearlyPriceUsd: 97990,
+    yearlyPriceEur: 90151,   // ~0.92 × 97990
   },
   {
     plan: "BUSINESS" as const,
@@ -75,8 +83,10 @@ const PLAN_CONFIGS = [
     maxSeats: 999,
     monthlyPriceTry: 79900,
     monthlyPriceUsd: 25000,
+    monthlyPriceEur: 23000,  // ~0.92 × 25000
     yearlyPriceTry: 799000,
     yearlyPriceUsd: 250000,
+    yearlyPriceEur: 230000,  // ~0.92 × 250000
   },
 ];
 

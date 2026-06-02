@@ -377,6 +377,9 @@ export async function listUsersForAdmin(params: {
         ? { plan: dir }
         : { createdAt: dir };
 
+  const usageToday = todayKeyUtc();
+
+  // Tek sorguda kullanıcılar + bugünkü kullanım: N+1 yok.
   const [total, rows] = await Promise.all([
     prisma.user.count({ where }),
     prisma.user.findMany({
@@ -402,20 +405,19 @@ export async function listUsersForAdmin(params: {
         isTeamMember: true,
         teamOwnerId: true,
         _count: { select: { dailyUsages: true } },
+        dailyUsages: {
+          where: { usageDate: usageToday },
+          select: { operationsCount: true, postLimitExtraOps: true, lastFeatureKey: true },
+          take: 1,
+        },
       },
     }),
   ]);
 
-  const usageToday = todayKeyUtc();
-  const userIds = rows.map((r) => r.id);
-  const todayRows =
-    userIds.length === 0
-      ? []
-      : await prisma.dailyUsage.findMany({
-          where: { usageDate: usageToday, userId: { in: userIds } },
-          select: { userId: true, operationsCount: true, postLimitExtraOps: true, lastFeatureKey: true },
-        });
-  const todayByUser = new Map(todayRows.map((r) => [r.userId, r]));
+  // dailyUsages include sonucu Map'e dönüştür (geriye dönük uyumluluk)
+  const todayByUser = new Map(
+    rows.map((r) => [r.id, r.dailyUsages?.[0] ? { ...r.dailyUsages[0], userId: r.id } : undefined]),
+  );
 
   const items = rows.map((u) => {
     const d = todayByUser.get(u.id);

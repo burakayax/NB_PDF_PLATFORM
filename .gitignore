@@ -78,3 +78,11 @@ output/
 *.pdf
 *.docx
 *.xlsx
+
+# --- Test çıktıları ve coverage ---
+web/frontend/coverage/
+web/api/coverage/
+web/frontend/playwright-report/
+web/frontend/test-results/
+test_output.pptx
+*.pptx

@@ -261,6 +261,87 @@ export async function incrementQuota(
   ]);
 }
 
+/**
+ * Kota kontrolü ve artırımını tek bir atomik transaction içinde yapar.
+ * Eş zamanlı isteklerin kota sınırını aşmasını engeller (race condition fix).
+ */
+export async function checkAndIncrementQuota(
+  userId: string,
+  toolType: string,
+  fileCount: number,
+  totalSizeMB: number,
+  processingTimeMs?: number,
+): Promise<QuotaCheckResult> {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      include: { organization: true },
+    });
+
+    if (!user) return { allowed: false, reason: "user_not_found" };
+
+    if (user.role === "ADMIN") {
+      return { allowed: true, reason: "admin_bypass", fileSizeLimitMB: 999999, watermarkEnabled: false, batchLimit: 999, dailyUsed: 0, dailyLimit: null, monthlyUsed: 0, monthlyLimit: null };
+    }
+
+    if (user.isTeamMember && user.teamOwnerId) {
+      const team = await tx.team.findUnique({ where: { ownerId: user.teamOwnerId } });
+      if (team?.subscriptionStatus === "ACTIVE") return { allowed: true, reason: "team_member_business" };
+    }
+
+    let org = user.organization;
+    if (!org) return { allowed: false, reason: "no_organization" };
+
+    const timezone = user.timezone || "Europe/Istanbul";
+    if (isNewDayInTimezone(org.lastDailyReset, timezone)) {
+      org = await tx.organization.update({ where: { id: org.id }, data: { currentDayOperations: 0, lastDailyReset: new Date() } });
+    }
+    if (isNewMonthInTimezone(org.lastMonthlyReset, timezone)) {
+      org = await tx.organization.update({ where: { id: org.id }, data: { currentMonthOperations: 0, lastMonthlyReset: new Date() } });
+    }
+
+    if (totalSizeMB > org.fileSizeLimitMB) return { allowed: false, reason: "file_size_exceeded" };
+
+    if (fileCount > 1) {
+      if (org.batchLimit === 0) return { allowed: false, reason: "batch_not_allowed_on_plan" };
+      if (fileCount > org.batchLimit) return { allowed: false, reason: "batch_limit_exceeded" };
+    }
+
+    if (org.dailyOperationLimit !== null && org.dailyOperationLimit !== undefined) {
+      if (org.currentDayOperations >= org.dailyOperationLimit) {
+        const resetAt = getNextMidnightInTimezone(timezone);
+        return { allowed: false, reason: "daily_limit_reached", resetAt, dailyUsed: org.currentDayOperations, dailyLimit: org.dailyOperationLimit };
+      }
+    }
+
+    if (org.monthlyOperationLimit < 999999) {
+      if (org.currentMonthOperations >= org.monthlyOperationLimit) {
+        return { allowed: false, reason: "monthly_limit_reached", monthlyUsed: org.currentMonthOperations, monthlyLimit: org.monthlyOperationLimit };
+      }
+    }
+
+    // Kota uygun — aynı transaction içinde atomik artır
+    await tx.organization.update({
+      where: { id: org.id },
+      data: { currentDayOperations: { increment: 1 }, currentMonthOperations: { increment: 1 } },
+    });
+    await tx.user.update({ where: { id: userId }, data: { totalOperationsCount: { increment: 1 } } });
+    await tx.operationLog.create({
+      data: { userId, organizationId: org.id, toolType, fileCount, totalFileSizeMB: totalSizeMB, isBatch: fileCount > 1, status: "SUCCESS", processingTimeMs: processingTimeMs ?? null },
+    });
+
+    return {
+      allowed: true,
+      dailyUsed: org.currentDayOperations + 1,
+      dailyLimit: org.dailyOperationLimit,
+      monthlyUsed: org.currentMonthOperations + 1,
+      monthlyLimit: org.monthlyOperationLimit,
+      watermarkEnabled: org.watermarkEnabled,
+      fileSizeLimitMB: org.fileSizeLimitMB,
+    };
+  });
+}
+
 export async function getQuotaSummary(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },

@@ -109,6 +109,11 @@ def generate_blurred_pdf_thumbnail(pdf_bytes: bytes) -> Optional[bytes]:
         doc.close()
 
 
+def generate_blurred_pdf_thumbnail_from_doc(doc: object) -> Optional[bytes]:
+    """Generate thumbnail from an already-open fitz document (avoids a second disk read)."""
+    return _blurred_png_bytes_from_fitz_doc(doc)
+
+
 def generate_blurred_pdf_thumbnail_from_path(pdf_path: Union[str, Path]) -> Optional[bytes]:
     """Like :func:`generate_blurred_pdf_thumbnail` but opens the file on disk (saves RAM for huge PDFs)."""
     p = Path(pdf_path)

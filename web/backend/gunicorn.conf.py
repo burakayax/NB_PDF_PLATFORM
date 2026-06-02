@@ -5,18 +5,28 @@
 # (web/backend dizininden çalıştırın, venv aktif olmalı)
 
 import multiprocessing
+import os
 
-bind = "127.0.0.1:8000"
+_host = os.environ.get("PDF_API_HOST", "0.0.0.0")
+_port = os.environ.get("PDF_API_PORT", "8000")
+bind = f"{_host}:{_port}"
+
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "uvicorn.workers.UvicornWorker"
 worker_connections = 1000
-timeout = 120
+timeout = int(os.environ.get("GUNICORN_TIMEOUT", "660"))
 keepalive = 5
 
-accesslog = "../../logs/gunicorn-access.log"
-errorlog = "../../logs/gunicorn-error.log"
+_log_dir = os.environ.get("LOG_DIR", "/tmp/nb-pdf-logs")
+os.makedirs(_log_dir, exist_ok=True)
+accesslog = os.path.join(_log_dir, "gunicorn-access.log")
+errorlog = os.path.join(_log_dir, "gunicorn-error.log")
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+# Bulut ortamlarında loglar aynı zamanda stdout/stderr'e de yazılır
+capture_output = True
+enable_stdio_inheritance = True
 
 max_requests = 1000
 max_requests_jitter = 100

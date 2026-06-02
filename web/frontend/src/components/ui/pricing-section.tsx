@@ -103,16 +103,19 @@ function FreeCard({
   plan,
   lang,
   currency,
+  displaySymbol,
   onCta,
 }: {
   plan: PlanDefinition;
   lang: Language;
   currency: Currency;
+  displaySymbol?: string;
   onCta: () => void;
 }) {
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
-  const freeLabel = currency === "TRY" ? "₺0" : "$0";
+  const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
+  const freeLabel = `${sym}0`;
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -146,18 +149,20 @@ function MonthlyOnlyCard({
   currency,
   lang,
   delay,
+  displaySymbol,
   onCta,
 }: {
   plan: PlanDefinition;
   currency: Currency;
   lang: Language;
   delay: number;
+  displaySymbol?: string;
   onCta: () => void;
 }) {
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
   const price = faceValue(plan.pricing.monthly[currency]);
-  const sym = currency === "TRY" ? "₺" : "$";
+  const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
   const isPlus = plan.id === "PLUS";
 
   return (
@@ -246,12 +251,14 @@ function CycleAwareCard({
   currency,
   lang,
   delay,
+  displaySymbol,
   onCta,
 }: {
   plan: PlanDefinition;
   currency: Currency;
   lang: Language;
   delay: number;
+  displaySymbol?: string;
   onCta: (cycle: BillingCycle, extraSeats: number) => void;
 }) {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
@@ -259,7 +266,7 @@ function CycleAwareCard({
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
   const isPro = plan.id === "PRO";
-  const sym = currency === "TRY" ? "₺" : "$";
+  const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
 
   const baseMonthlyPrice = monthlyEquivPrice(plan, currency, cycle);
   const extraSeatUnitPrice = faceValue(currency === "TRY" ? EXTRA_SEAT_PRICE_TRY : EXTRA_SEAT_PRICE_USD);
@@ -592,8 +599,11 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
   const { currency: checkoutCurrency } = useCheckoutCurrency();
-  // EUR iyzico tarafından desteklenmez; USD fiyat bandını kullan
-const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
+  // EUR kullanıcıya gösterim için, ödeme USD bandıyla işlenir.
+  // "USD" fiyatlar gösterildiğinde simge "$" yerine "€" gösterilir.
+  const isEurDisplay = checkoutCurrency === "EUR";
+  const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
+  const currencySymbol = checkoutCurrency === "TRY" ? "₺" : checkoutCurrency === "EUR" ? "€" : "$";
 
   const [free, starter, plus, pro, business] = PLANS;
 
@@ -654,6 +664,7 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             plan={free}
             lang={language}
             currency={currency}
+            displaySymbol={currencySymbol}
             onCta={onUseWebApp}
           />
           <MonthlyOnlyCard
@@ -661,6 +672,7 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             currency={currency}
             lang={language}
             delay={0.04}
+            displaySymbol={currencySymbol}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
           <MonthlyOnlyCard
@@ -668,6 +680,7 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             currency={currency}
             lang={language}
             delay={0.08}
+            displaySymbol={currencySymbol}
             onCta={onSelectPlan ? () => onSelectPlan("PLUS", "MONTHLY") : onUseWebApp}
           />
           <CycleAwareCard
@@ -675,6 +688,7 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             currency={currency}
             lang={language}
             delay={0.12}
+            displaySymbol={currencySymbol}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
           />
           <CycleAwareCard
@@ -682,6 +696,7 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
             currency={currency}
             lang={language}
             delay={0.16}
+            displaySymbol={currencySymbol}
             onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
           />
         </div>
@@ -701,6 +716,13 @@ const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
           <span className="block mt-2 font-semibold">
             🔒 {tr ? "iyzico ile güvenli ödeme" : "Secure payments via iyzico"}
           </span>
+          {isEurDisplay && (
+            <span className="block mt-1 text-xs text-amber-400/80">
+              {tr
+                ? "EUR fiyatlar gösterim amaçlıdır; ödeme USD bant fiyatıyla işlenir."
+                : "EUR prices are for display. Payment is processed at the equivalent USD rate."}
+            </span>
+          )}
         </p>
 
         {/* Refund detail block */}

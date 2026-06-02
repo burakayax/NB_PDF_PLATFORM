@@ -163,6 +163,8 @@ export function SEO({
 
     // ── Twitter Card ─────────────────────────────────────────────────────────
     upsertMeta("twitter:card", twitter?.card ?? "summary_large_image");
+    upsertMeta("twitter:site", "@nbglobalstudio");
+    upsertMeta("twitter:creator", "@nbglobalstudio");
     upsertMeta("twitter:title", twitter?.title ?? ogTitle);
     upsertMeta("twitter:description", twitter?.description ?? ogDescription);
     upsertMeta("twitter:image", toAbsoluteUrl(twitter?.image ?? ogImage));

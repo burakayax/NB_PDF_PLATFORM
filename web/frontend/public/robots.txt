@@ -1,2 +1,7 @@
 User-agent: *
-Disallow: /
+Disallow: /workspace
+Disallow: /admin
+Disallow: /admin-login
+Disallow: /api/
+
+Sitemap: https://pdfplatform.app/sitemap.xml

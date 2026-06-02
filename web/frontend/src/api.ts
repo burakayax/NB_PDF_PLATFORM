@@ -594,11 +594,11 @@ type ShowSavePickerWindow = Window &
     }) => Promise<FileSystemFileHandle>;
   };
 
-function showSavePickerTypesFor(filename: string, blob: Blob) {
+export function showSavePickerTypesFor(filename: string, blob?: Blob) {
   const extMatch = filename.match(/(\.[a-z0-9]+)$/i);
   const ext = extMatch?.[1]?.toLowerCase() ?? ".bin";
   const mime =
-    blob.type?.trim() ||
+    blob?.type?.trim() ||
     (ext === ".pdf"
       ? "application/pdf"
       : ext === ".zip"

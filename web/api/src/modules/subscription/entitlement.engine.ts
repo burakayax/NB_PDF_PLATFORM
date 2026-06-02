@@ -5,7 +5,7 @@
  */
 
 import { prisma } from "../../lib/prisma.js";
-import { checkQuota, incrementQuota, getQuotaSummary } from "../../lib/quota.js";
+import { checkQuota, incrementQuota, checkAndIncrementQuota, getQuotaSummary } from "../../lib/quota.js";
 
 // ---------------------------------------------------------------------------
 // Public types (geriye dönük uyumluluk)
@@ -98,7 +98,7 @@ export async function consumeTool(
   userId: string,
   toolId: string,
 ): Promise<ConsumeResult> {
-  const quotaCheck = await checkQuota(userId, toolId, 1, 0);
+  const quotaCheck = await checkAndIncrementQuota(userId, toolId, 1, 0);
   if (!quotaCheck.allowed) {
     return {
       status: "denied",
@@ -109,7 +109,6 @@ export async function consumeTool(
       creditsAfter: 0,
     };
   }
-  await incrementQuota(userId, toolId, 1, 0);
   return {
     status: "ok",
     reason: "active_subscription",

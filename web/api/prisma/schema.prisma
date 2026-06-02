@@ -25,6 +25,7 @@ enum BillingCycle {
 enum Currency {
   TRY
   USD
+  EUR
 }
 
 enum QueuePriority {
@@ -150,8 +151,10 @@ model PlanConfig {
   maxSeats              Int           @map("max_seats")
   monthlyPriceTry       Int           @default(0) @map("monthly_price_try")
   monthlyPriceUsd       Int           @default(0) @map("monthly_price_usd")
+  monthlyPriceEur       Int           @default(0) @map("monthly_price_eur")
   yearlyPriceTry        Int           @default(0) @map("yearly_price_try")
   yearlyPriceUsd        Int           @default(0) @map("yearly_price_usd")
+  yearlyPriceEur        Int           @default(0) @map("yearly_price_eur")
   updatedAt             DateTime      @updatedAt @map("updated_at")
 
   @@map("plan_configs")
@@ -193,6 +196,7 @@ model User {
   distanceSalesConsentedAt DateTime? @map("distance_sales_consented_at")
   withdrawalWaivedAt  DateTime? @map("withdrawal_waived_at")
   totalRefunds        Int       @default(0)     @map("total_refunds")
+  firstRefundedAt     DateTime?                @map("first_refunded_at")
   lastRefundedAt      DateTime?                @map("last_refunded_at")
   refundAbuseFlagged  Boolean   @default(false) @map("refund_abuse_flagged")
   refundBlockedUntil  DateTime?                @map("refund_blocked_until")
@@ -243,6 +247,8 @@ model OperationLog {
   isBatch         Boolean         @default(false) @map("is_batch")
   status          OperationStatus @default(SUCCESS)
   processingTimeMs Int?           @map("processing_time_ms")
+  isArchived      Boolean         @default(false) @map("is_archived")
+  archivedAt      DateTime?       @map("archived_at")
   createdAt       DateTime        @default(now()) @map("created_at")
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -251,6 +257,7 @@ model OperationLog {
   @@index([organizationId, createdAt])
   @@index([userId, createdAt])
   @@index([toolType])
+  @@index([organizationId, status, createdAt])
   @@map("operation_logs")
 }
 
@@ -270,6 +277,7 @@ model Invitation {
 
   @@index([organizationId])
   @@index([token])
+  @@index([organizationId, expiresAt])
   @@map("invitations")
 }
 
@@ -313,6 +321,7 @@ model PaymentCheckout {
   @@index([userId])
   @@index([organizationId])
   @@index([status])
+  @@index([userId, status, createdAt])
 }
 
 // ─── Invoice ──────────────────────────────────────────────────────────────────
@@ -341,12 +350,16 @@ model Invoice {
   creditNoteId         String?   @map("credit_note_id")
   creditNoteStatus     String?   @map("credit_note_status")
   creditNoteIssuedAt   DateTime? @map("credit_note_issued_at")
+  // VUK Madde 253: faturalar 10 yıl saklanmalı. isArchived=true → arşivlendi (silinmez).
+  isArchived  Boolean   @default(false) @map("is_archived")
+  archivedAt  DateTime? @map("archived_at")
 
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   checkout PaymentCheckout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
+  @@index([isArchived, createdAt])
   @@map("invoices")
 }
 
@@ -405,6 +418,8 @@ model DailyUsage {
 
   @@unique([userId, usageDate])
   @@index([userId])
+  @@index([usageDate])
+  @@index([userId, usageDate, operationsCount])
 }
 
 // ─── Tool Registry ────────────────────────────────────────────────────────────
@@ -441,6 +456,7 @@ model CouponUse {
 
   @@index([userId, couponId])
   @@index([couponId])
+  @@index([couponId, createdAt])
   @@map("coupon_uses")
 }
 
@@ -455,12 +471,15 @@ model DownloadLog {
   userAgent  String?           @map("user_agent")
   status     DownloadLogStatus @default(PENDING)
   ackedAt    DateTime?         @map("acked_at")
+  isArchived Boolean           @default(false) @map("is_archived")
+  archivedAt DateTime?         @map("archived_at")
   createdAt  DateTime          @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([createdAt])
+  @@index([clientIp])
   @@map("download_logs")
 }
 

@@ -40,21 +40,36 @@ def delete_pages_pdf(
     *,
     total_pages: Optional[int] = None,
 ) -> bool:
-    """İstenen sayfaları kaynakta silerek tek geçişte kaydeder (büyük PDF’lerde insert_pdf döngüsünden çok daha verimli)."""
-    n = total_pages if total_pages is not None else get_num_pages(pdf_path, password=password)
-    to_del = {int(p) for p in pages_to_delete}
-    if any(p < 1 or p > n for p in to_del):
-        raise Exception("Geçersiz sayfa numarası.")
-    if len(to_del) >= n:
-        raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
-    doc = _fitz_open(pdf_path, password=password)
+    """İstenen sayfalar çıkarılmış yeni belge oluşturur (insert_pdf aralık aktarımı ile büyük PDF’lerde çok daha hızlı)."""
+    import fitz as _fitz_local
+    src = _fitz_open(pdf_path, password=password)
     try:
-        # select() ile tutulacak sayfalar belirlenir; delete_page döngüsünden çok daha hızlı.
+        n = src.page_count
+        to_del = {int(p) for p in pages_to_delete}
+        if any(p < 1 or p > n for p in to_del):
+            raise Exception("Geçersiz sayfa numarası.")
+        if len(to_del) >= n:
+            raise Exception("Tüm sayfalar silinemez; en az bir sayfa kalmalıdır.")
         keep = [i for i in range(n) if (i + 1) not in to_del]
-        doc.select(keep)
-        doc.save(output_path, garbage=2, deflate=False, linear=False)
+        new_doc = _fitz_local.open()
+        try:
+            ranges: list[tuple[int, int]] = []
+            if keep:
+                s = keep[0]; e = keep[0]
+                for k in keep[1:]:
+                    if k == e + 1:
+                        e = k
+                    else:
+                        ranges.append((s, e))
+                        s = e = k
+                ranges.append((s, e))
+            for from_p, to_p in ranges:
+                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
+            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
+        finally:
+            new_doc.close()
     finally:
-        doc.close()
+        src.close()
     return True
 
 
@@ -108,25 +123,39 @@ def organize_pdf(
 ) -> bool:
     """Sayfaları yeni sıraya göre düzenler (ör. [3,1,2]).
 
-    doc.select() kullanır — sayfa içeriklerini kopyalamaz, sadece xref sırasını
-    değiştirir; insert_pdf döngüsüne kıyasla büyük PDF'lerde çok daha hızlıdır.
+    insert_pdf ile ardışık aralık aktarımı kullanır — büyük PDF'lerde
+    select()+save() tam dosya yeniden yazımından çok daha hızlıdır.
     """
-    n = total_pages if total_pages is not None else get_num_pages(pdf_path, password=password)
-    for p in new_order_1based:
-        if p < 1 or p > n:
-            raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
-    if len(new_order_1based) != n:
-        raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
-    if len(set(new_order_1based)) != n:
-        raise Exception("Aynı sayfa iki kez kullanılamaz.")
-    doc = _fitz_open(pdf_path, password=password)
+    import fitz as _fitz_local
+    src = _fitz_open(pdf_path, password=password)
     try:
-        # select() sayfaları in-place yeniden sıralar; içerik akışlarına dokunmaz.
-        # Tüm sayfalar korunduğundan (yalnızca sıra değişiyor) unreferenced nesne oluşmaz → garbage=0.
-        doc.select([p - 1 for p in new_order_1based])
-        doc.save(output_path, garbage=0, deflate=False, linear=False)
+        n = src.page_count
+        for p in new_order_1based:
+            if p < 1 or p > n:
+                raise Exception(f"Geçersiz sayfa: {p} (1–{n})")
+        if len(new_order_1based) != n:
+            raise Exception("Sıra listesi, tüm sayfaları tam olarak bir kez içermelidir.")
+        if len(set(new_order_1based)) != n:
+            raise Exception("Aynı sayfa iki kez kullanılamaz.")
+        order_0 = [p - 1 for p in new_order_1based]
+        ranges: list[tuple[int, int]] = []
+        s = order_0[0]; e = order_0[0]
+        for k in order_0[1:]:
+            if k == e + 1:
+                e = k
+            else:
+                ranges.append((s, e))
+                s = e = k
+        ranges.append((s, e))
+        new_doc = _fitz_local.open()
+        try:
+            for from_p, to_p in ranges:
+                new_doc.insert_pdf(src, from_page=from_p, to_page=to_p)
+            new_doc.save(output_path, garbage=0, deflate=False, linear=False)
+        finally:
+            new_doc.close()
     finally:
-        doc.close()
+        src.close()
     return True
 
 
@@ -251,7 +280,7 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
 
     # Strateji 1: pikepdf — çapraz referans tablosunu yeniden oluşturur, bozuk akışları atlar
     try:
-        with pikepdf.open(input_path, password=op or None, suppress_warnings=True) as pdf:
+        with pikepdf.open(input_path, password=op, suppress_warnings=True) as pdf:
             pdf.save(output_path, compress_streams=True, recompress_flate=True)
         if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
             return True
@@ -276,7 +305,7 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
 
     # Strateji 3: pikepdf lenient mode (çok bozuk dosyalar için, kurtarılabilir sayfalar)
     try:
-        with pikepdf.open(input_path, password=op or None, suppress_warnings=True, ignore_xref_streams=True) as pdf:
+        with pikepdf.open(input_path, password=op, suppress_warnings=True, ignore_xref_streams=True) as pdf:
             if len(pdf.pages) == 0:
                 errors.append("pikepdf-lenient: sayfa bulunamadı")
             else:
@@ -320,7 +349,9 @@ def flatten_pdf(input_path: str, output_path: str, password: Optional[str] = Non
         raise Exception("pikepdf kütüphanesi bulunamadı.") from e
     op = (password or "").strip()
     try:
-        with pikepdf.open(input_path, password=op or None) as pdf:
+        # pikepdf password varsayılanı "" (parolasız); None geçmek bazı sürümlerde
+        # TypeError verir. Her zaman string geçiyoruz.
+        with pikepdf.open(input_path, password=op) as pdf:
             # Form alanlarını sil — içerik zaten sayfaya render edilmiş olarak kalır
             if "/AcroForm" in pdf.Root:
                 del pdf.Root["/AcroForm"]
@@ -422,7 +453,11 @@ def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
 
 
 def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None) -> bool:
-    """Önce wkhtmltopdf (daha uyumlu), sonra xhtml2pdf dener."""
+    """Önce wkhtmltopdf (daha uyumlu), sonra xhtml2pdf dener.
+
+    wkhtmltopdf sistemde yoksa xhtml2pdf ile devam eder (sınırlı CSS desteği).
+    Her ikisi de başarısız olursa kullanıcı dostu bir hata mesajı fırlatır.
+    """
     wk = shutil.which("wkhtmltopdf")
     if wk:
         try:
@@ -450,8 +485,18 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
     try:
         from xhtml2pdf import pisa
     except ImportError as e:
-        raise Exception("HTML→PDF için 'xhtml2pdf' veya sistemde wkhtmltopdf gerekli.") from e
+        raise Exception(
+            "HTML→PDF dönüşümü şu anda kullanılamıyor. "
+            "Sunucuda wkhtmltopdf kurulu değil ve xhtml2pdf paketi de bulunamadı. "
+            "Lütfen daha sonra tekrar deneyin veya destek ekibiyle iletişime geçin."
+        ) from e
     html_src = html or "<html><body></body></html>"
+    # xhtml2pdf modern CSS'i parse edemez; tüm stylesheet referanslarını ve inline style bloklarını kaldır
+    import re as _re
+    html_src = _re.sub(r'<link[^>]+rel=["\']stylesheet["\'][^>]*>', '', html_src, flags=_re.IGNORECASE)
+    html_src = _re.sub(r'<link[^>]+href=["\'][^"\']*\.css[^"\']*["\'][^>]*>', '', html_src, flags=_re.IGNORECASE)
+    html_src = _re.sub(r'<style[^>]*>.*?</style>', '', html_src, flags=_re.IGNORECASE | _re.DOTALL)
+    html_src = _re.sub(r'@import\s+["\'][^"\']+["\'];?', '', html_src, flags=_re.IGNORECASE)
     if "<meta charset" not in html_src[:1000].lower():
         if "<head>" in html_src.lower():
             html_src = html_src.replace("<head>", '<head><meta charset="utf-8">', 1)
@@ -466,7 +511,9 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
         )
     if status.err or not (os.path.isfile(output_path) and os.path.getsize(output_path) > 32):
         raise Exception(
-            "HTML PDF'e dönüştürülemedi. Geçerli HTML içeriği girin veya daha basit bir sayfa deneyin."
+            "HTML PDF'e dönüştürülemedi. "
+            "Sayfanın geçerli HTML içerdiğinden emin olun ve JavaScript gerektirmeyen basit sayfalar deneyin. "
+            "Karmaşık CSS/JS içeren sayfalar için URL yerine sayfa kaynağını (HTML metnini) kullanın."
         )
     return True
 
@@ -488,6 +535,8 @@ def html_url_to_pdf(url: str, output_path: str) -> bool:
 def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, dpi: int = PDF_EXPORT_DPI_WEB) -> bool:
     from pdf2image import convert_from_path
     from pptx import Presentation
+    from pptx.util import Emu
+    import pdfplumber
     import src.pdf_engine as pe
 
     import os as _os2
@@ -501,11 +550,33 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
         kw_base["userpw"] = pwd
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
+
+    # PDF'in gerçek sayfa boyutunu al (ilk sayfa referans)
+    # pdfplumber sayfa boyutunu pt cinsinden verir; 1 pt = 12700 EMU
+    PT_TO_EMU = 12700
+    page_w_pt, page_h_pt = 595.0, 842.0  # A4 varsayılan
+    try:
+        with pdfplumber.open(pdf_path, password=pwd or "") as _pdf:
+            if _pdf.pages:
+                p0 = _pdf.pages[0]
+                page_w_pt = float(p0.width)
+                page_h_pt = float(p0.height)
+    except Exception:
+        pass
+
     prs = Presentation()
+    # Slayt boyutunu PDF sayfa boyutuna eşitle → görüntü bozulmadan yerleşir
+    prs.slide_width = Emu(int(page_w_pt * PT_TO_EMU))
+    prs.slide_height = Emu(int(page_h_pt * PT_TO_EMU))
+
     try:
         blank = prs.slide_layouts[6]
     except (IndexError, KeyError):
         blank = prs.slide_layouts[0]
+
+    slide_w = prs.slide_width
+    slide_h = prs.slide_height
+
     for start in range(1, n + 1, _RASTER_PAGE_BATCH):
         end = min(start + _RASTER_PAGE_BATCH - 1, n)
         kw = {**kw_base, "first_page": start, "last_page": end}
@@ -516,7 +587,14 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
             os.close(fd)
             try:
                 im.save(tmp, "PNG")
-                slide.shapes.add_picture(tmp, 0, 0, width=prs.slide_width, height=prs.slide_height)
+                img_w_px, img_h_px = im.size
+                # En-boy oranını koruyarak slayta sığdır (letterbox)
+                scale = min(slide_w / img_w_px, slide_h / img_h_px)
+                pic_w = Emu(int(img_w_px * scale))
+                pic_h = Emu(int(img_h_px * scale))
+                left = Emu(int((slide_w - pic_w) / 2))
+                top = Emu(int((slide_h - pic_h) / 2))
+                slide.shapes.add_picture(tmp, left, top, width=pic_w, height=pic_h)
             finally:
                 try:
                     os.remove(tmp)
@@ -592,8 +670,10 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
             pres = None
             try:
                 app = DispatchEx("PowerPoint.Application")
-                app.Visible = False
-                app.DisplayAlerts = 0
+                try:
+                    app.DisplayAlerts = 0
+                except Exception:
+                    pass
                 pres = app.Presentations.Open(os.path.abspath(pptx_path), WithWindow=False, ReadOnly=True)
                 out = os.path.abspath(pdf_path)
                 pres.SaveAs(out, 32)  # ppSaveAsPDF

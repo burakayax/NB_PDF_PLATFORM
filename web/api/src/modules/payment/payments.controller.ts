@@ -64,9 +64,12 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const { planId, billingCycle, couponCode, extraSeats, seatsOnly } = parsed.data;
-  // EUR iyzico tarafından desteklenmez; USD fiyat bandına yönlendir
   const rawCurrency = parsed.data.currency;
+  // EUR: iyzico USD fiyat bandıyla işler; kullanıcıya fiyat ekranda EUR olarak gösterilir
+  // ama ödeme teknik olarak USD üzerinden gerçekleşir. Bu durum checkout sayfasında
+  // ve fatura üzerinde açıkça belirtilir.
   const checkoutCurrency: CheckoutCurrency = rawCurrency === "EUR" ? "USD" : (rawCurrency as CheckoutCurrency);
+  const displayCurrency = rawCurrency; // Kullanıcıya gösterim için orijinal para birimi
 
   // Güvenlik: USD ödeme + TR fatura adresi → bloke et.
   // TR fatura adresli kullanıcılar TRY kanalını kullanmalıdır.

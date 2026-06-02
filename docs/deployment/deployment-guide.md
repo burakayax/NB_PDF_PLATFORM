@@ -1,5 +1,11 @@
 # Deployment Rehberi — Üretim'e Nasıl Kod Gönderilir?
 
+> ⚠️ **ESKİ BELGE (Render öncesi dönem).** Bu belge, proje kendi sunucusunda
+> (VPS + Nginx) çalışırken yazılmıştı. Proje artık **Render.com** kullanıyor.
+> Güncel ve sade (sıfır bilgiyle anlaşılır) yayına alma rehberi için:
+> **`docs/rehber/01-YAYINA-ALMA.md`** dosyasını oku. Bu belge yalnızca ileri
+> seviye teknik referans olarak duruyor.
+
 > **Deployment nedir?** Yazdığın kodun gerçek kullanıcılara açık sunucuya aktarılması. En riskli operasyon budur — her şey bu anda kırılabilir.
 
 > 💻 **Platform Notu:**

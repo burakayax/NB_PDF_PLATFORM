@@ -20,6 +20,8 @@ import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
+import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
+import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
 function corsAllowedOrigins(): Set<string> {
@@ -101,6 +103,12 @@ if (env.NODE_ENV === "production") {
 app.use(compression());
 app.use(enforceHttpsMiddleware);
 
+// API versiyonu — tüm yanıtlarda bildirilir; istemciler gelecek kırılma değişikliklerini bu header'dan takip eder.
+app.use((_req, res, next) => {
+  res.setHeader("X-API-Version", "1");
+  next();
+});
+
 const corsOrigins = corsAllowedOrigins();
 app.use(
   cors({
@@ -159,6 +167,8 @@ app.use(
 app.use("/api", apiRouter);
 
 registerTeamJobs();
+registerDataRetentionJobs();
+registerSubscriptionJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.

@@ -52,11 +52,13 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
   const now = new Date();
   const updateData: Record<string, unknown> = {
     invoiceType: input.invoiceType,
-    billingAddressLine: input.billingAddressLine?.trim() || null,
+    billingAddressLine: input.billingAddressLine?.trim()
+      ? encryptField(input.billingAddressLine.trim())
+      : null,
     city: input.city?.trim() || null,
     billingCountryCode: input.billingCountryCode?.trim().toUpperCase() || "TR",
     billingPostalCode: input.billingPostalCode?.trim() || null,
-    phone: input.phone?.trim() || null,
+    phone: input.phone?.trim() ? encryptField(input.phone.trim()) : null,
     isKvkkConsented: true,
     kvkkConsentedAt: now,
   };
@@ -73,7 +75,7 @@ export async function saveBillingInfo(userId: string, input: BillingInfoInput): 
     }
   } else {
     updateData.companyName = input.companyName?.trim() || null;
-    updateData.taxId = input.taxId?.trim() || null;
+    updateData.taxId = input.taxId?.trim() ? encryptField(input.taxId.trim()) : null;
     updateData.taxOffice = input.taxOffice?.trim() || null;
     updateData.firstName = input.firstName?.trim() || null;
     updateData.lastName = input.lastName?.trim() || null;
@@ -126,19 +128,24 @@ export async function getBillingInfo(userId: string): Promise<BillingInfoOutput>
     }
   }
 
+  function safeDecrypt(value: string | null): string | null {
+    if (!value) return null;
+    try { return decryptField(value); } catch { return null; }
+  }
+
   return {
     invoiceType: user.invoiceType,
     firstName: user.firstName,
     lastName: user.lastName,
     companyName: user.companyName,
     tcKimlikNoMasked: tcMasked,
-    taxId: user.taxId,
+    taxId: safeDecrypt(user.taxId),
     taxOffice: user.taxOffice,
-    billingAddressLine: user.billingAddressLine,
+    billingAddressLine: safeDecrypt(user.billingAddressLine),
     city: user.city,
     billingCountryCode: user.billingCountryCode,
     billingPostalCode: user.billingPostalCode,
-    phone: user.phone,
+    phone: safeDecrypt(user.phone),
     distanceSalesConsentedAt: user.distanceSalesConsentedAt,
     withdrawalWaivedAt: user.withdrawalWaivedAt,
   };

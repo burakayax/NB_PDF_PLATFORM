@@ -584,7 +584,7 @@ export async function deleteMyAccountController(
 
   const { id: userId, email } = request.authUser;
 
-  console.log(`${DELETE_ACCOUNT_LOG} deletion requested`, { userId, email });
+  authLog.info(`${DELETE_ACCOUNT_LOG} deletion requested`, { userId, email });
 
   // deleteUserAccount verifies password and performs the delete atomically.
   const { email: deletedEmail, preferredLanguage } = await deleteUserAccount(
@@ -593,7 +593,7 @@ export async function deleteMyAccountController(
   );
 
   const deletedAt = new Date().toISOString();
-  console.log(`${DELETE_ACCOUNT_LOG} user deleted successfully`, { userId, email: deletedEmail, deletedAt });
+  authLog.info(`${DELETE_ACCOUNT_LOG} user deleted successfully`, { userId, email: deletedEmail, deletedAt });
 
   // Persist audit trail — userId set to null because the row no longer exists.
   try {
@@ -606,7 +606,7 @@ export async function deleteMyAccountController(
     );
   } catch (auditErr) {
     // Non-fatal: account is already deleted; just log the audit failure.
-    console.error(`${DELETE_ACCOUNT_LOG} audit log write failed (non-fatal)`, auditErr);
+    authLog.error(`${DELETE_ACCOUNT_LOG} audit log write failed (non-fatal)`, { detail: String(auditErr) });
   }
 
   // Clear refresh token cookie so the browser session is immediately invalidated.
@@ -624,7 +624,7 @@ export async function deleteMyAccountController(
     lang,
   });
   sendMail({ to: deletedEmail, ...emailTemplate }).catch((mailErr: unknown) => {
-    console.error(`${DELETE_ACCOUNT_LOG} confirmation email failed (non-fatal)`, mailErr);
+    authLog.error(`${DELETE_ACCOUNT_LOG} confirmation email failed (non-fatal)`, { detail: String(mailErr) });
   });
 
   response.status(200).json({ message: "Account deleted successfully." });
@@ -645,7 +645,7 @@ export async function googleOAuthStartController(
         reason: error.message,
         ...meta,
       });
-      console.error(
+      authLog.error(
         `${GOOGLE_OAUTH_LOG} start FAILED (not configured or misconfigured)`,
         {
           message: error.message,
@@ -712,7 +712,7 @@ export async function googleOAuthStartController(
   const stateForGoogle =
     desktopLocalPort !== null ? `${state}.d${desktopLocalPort}` : state;
   const authorizeUrl = buildGoogleAuthorizeUrl(stateForGoogle);
-  console.log(`${GOOGLE_OAUTH_LOG} start → redirect to Google accounts`, {
+  authLog.info(`${GOOGLE_OAUTH_LOG} start → redirect to Google accounts`, {
     preferredLanguage,
     redirectUri: getGoogleRedirectUri(),
     statePreview: `${state.slice(0, 8)}…`,
@@ -757,7 +757,7 @@ export async function googleOAuthCallbackController(
       reason: desc.slice(0, 500),
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: Google returned error to redirect_uri`,
       {
         error: oauthErr,
@@ -791,7 +791,7 @@ export async function googleOAuthCallbackController(
       reason: "missing_code_or_state",
       ...meta,
     });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, {
+    authLog.error(`${GOOGLE_OAUTH_LOG} callback: missing code or state`, {
       ...meta,
     });
     const url = oauthFrontendRedirect(
@@ -821,7 +821,7 @@ export async function googleOAuthCallbackController(
       reason: "oauth_cookie_missing",
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: OAuth state cookie missing (expired or blocked)`,
       { ...meta },
     );
@@ -867,7 +867,7 @@ export async function googleOAuthCallbackController(
       reason: "state_mismatch",
       ...meta,
     });
-    console.error(
+    authLog.error(
       `${GOOGLE_OAUTH_LOG} callback: state mismatch (possible CSRF or stale session)`,
       {
         ...meta,
@@ -887,7 +887,7 @@ export async function googleOAuthCallbackController(
   }
 
   try {
-    console.log(
+    authLog.info(
       `${GOOGLE_OAUTH_LOG} callback: exchanging authorization code for tokens`,
       {
         codeLength: code.length,
@@ -896,7 +896,7 @@ export async function googleOAuthCallbackController(
       },
     );
     const googleAccess = await exchangeGoogleAuthorizationCode(code);
-    console.log(
+    authLog.info(
       `${GOOGLE_OAUTH_LOG} callback: fetching userinfo with access token`,
     );
     const profile = await fetchGoogleProfile(googleAccess);
@@ -936,7 +936,7 @@ export async function googleOAuthCallbackController(
             { token: session.accessToken },
             oauthSpaRedirectBase,
           );
-    console.log(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
+    authLog.info(`${GOOGLE_OAUTH_LOG} callback: issuing HTTP redirect`, {
       redirectKind:
         desktopLocalPort !== null ? "desktop-localhost" : "login-success",
       maskedUrl: maskRedirectUrlForLog(redirectUrl),
@@ -953,7 +953,7 @@ export async function googleOAuthCallbackController(
       message,
       raw: error instanceof Error ? error.message : String(error),
     });
-    console.error(`${GOOGLE_OAUTH_LOG} callback: unhandled failure`, {
+    authLog.error(`${GOOGLE_OAUTH_LOG} callback: unhandled failure`, {
       userMessage: message,
       httpStatus: error instanceof HttpError ? error.statusCode : undefined,
       stack,
@@ -1022,4 +1022,62 @@ export async function verifyEmailController(
     }
     throw error;
   }
+}
+
+/** GDPR Madde 20 — Kullanıcı verilerini JSON olarak dışa aktarır. */
+export async function exportMyDataController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) throw new HttpError(401, "Authentication required.");
+
+  const { prisma } = await import("../../lib/prisma.js");
+
+  const [user, operationLogs, downloadLogs] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true, email: true, firstName: true, lastName: true, name: true,
+        plan: true, preferredLanguage: true, timezone: true, country: true,
+        city: true, authProvider: true, isVerified: true,
+        createdAt: true, lastLoginAt: true,
+        invoiceType: true, billingCountryCode: true, billingPostalCode: true,
+        companyName: true, taxOffice: true, isKvkkConsented: true,
+        kvkkConsentedAt: true,
+      },
+    }),
+    prisma.operationLog.findMany({
+      where: { userId },
+      select: { id: true, toolType: true, fileCount: true, totalFileSizeMB: true, status: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.downloadLog.findMany({
+      where: { userId },
+      select: { id: true, toolId: true, status: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  if (!user) throw new HttpError(404, "User not found.");
+
+  // Dışa aktarma isteğini denetim günlüğüne yaz
+  await prisma.adminAuditLog.create({
+    data: {
+      userId,
+      userEmail: user.email,
+      action: "GDPR_DATA_EXPORT",
+      summary: `User ${user.email} exported their personal data.`,
+    },
+  });
+
+  const exportPayload = {
+    exportedAt: new Date().toISOString(),
+    gdprNote: "This export fulfils GDPR Article 20 (data portability). Sensitive fields (password hash, encryption keys) are excluded.",
+    profile: user,
+    operationHistory: operationLogs,
+    downloadHistory: downloadLogs,
+  };
+
+  const filename = `nbpdf-data-export-${userId.slice(0, 8)}-${Date.now()}.json`;
+  response.setHeader("Content-Type", "application/json");
+  response.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+  response.json(exportPayload);
 }

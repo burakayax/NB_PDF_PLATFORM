@@ -105,3 +105,29 @@ export function appendLogLine(line: string): void {
       console.error("[file-log] append failed", err);
     });
 }
+
+// ── Structured logger helper ───────────────────────────────────────────────
+// Tüm uygulama modülleri console.* yerine bu helper'ı kullanmalıdır.
+// Mesajlar NDJSON olarak log dosyasına yazılır; üretimde hiçbir PII konsola sızmaz.
+
+function _log(level: "info" | "warn" | "error", category: string, ...args: unknown[]): void {
+  const parts = args.map((a) =>
+    a instanceof Error
+      ? { message: a.message, name: a.name }
+      : typeof a === "object" && a !== null
+        ? a
+        : String(a),
+  );
+  const [first, ...rest] = parts;
+  const base = typeof first === "object" && first !== null ? first : { msg: first };
+  const payload = rest.length > 0 ? { ...(base as object), extra: rest } : base;
+  appendLogLine(
+    JSON.stringify({ ts: new Date().toISOString(), kind: category, level, ...(payload as object) }),
+  );
+}
+
+export const logger = {
+  info(category: string, ...args: unknown[]) { _log("info", category, ...args); },
+  warn(category: string, ...args: unknown[]) { _log("warn", category, ...args); },
+  error(category: string, ...args: unknown[]) { _log("error", category, ...args); },
+};

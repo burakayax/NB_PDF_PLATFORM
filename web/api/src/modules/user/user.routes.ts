@@ -1,9 +1,13 @@
 import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
+import { requireAuth } from "../../middleware/auth.middleware.js";
 import { updateProfileController } from "../auth/auth.controller.js";
 import { profileController } from "./user.controller.js";
 
 export const userRouter = Router();
+
+// Tüm user endpoint'leri kimlik doğrulaması gerektirir.
+userRouter.use(requireAuth);
 
 userRouter.get("/profile", asyncHandler(profileController));
 /** Alias of PATCH /api/auth/profile — billing fields for checkout (same handler). */

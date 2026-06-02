@@ -11,6 +11,10 @@ import {
   useState,
 } from "react";
 import {
+  ModalSkeleton,
+  PageSkeleton,
+} from "./components/common/PageSkeleton";
+import {
   createMergeJob,
   downloadFromApi,
   downloadMergeJob,
@@ -24,6 +28,7 @@ import {
   postToolToResult,
   requestMergeJobCancel,
   setPendingSaveHandle,
+  showSavePickerTypesFor,
   type MergeJobStatus,
 } from "./api";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
@@ -107,6 +112,7 @@ import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
 import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
+import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
@@ -699,7 +705,11 @@ function App() {
   const {
     hasConsent,
     isReady: isCookieConsentReady,
+    prefs: cookiePrefs,
     acceptConsent,
+    acceptAll: acceptAllCookies,
+    acceptNecessaryOnly,
+    savePreferences: saveCookiePreferences,
   } = useCookieConsent();
   const { cms, site, TOOLSPublic, flags, runtimeHydrated } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
@@ -876,6 +886,33 @@ function App() {
   const [mergeVerifyingId, setMergeVerifyingId] = useState<string | null>(null);
   const [mergeSnapId, setMergeSnapId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
+
+  // Ekran okuyucu duyuruları için kalıcı aria-live bölgeleri (DOM'da her zaman var olmalı).
+  useEffect(() => {
+    const ensure = (id: string, politeness: "polite" | "assertive") => {
+      if (document.getElementById(id)) return;
+      const el = document.createElement("div");
+      el.id = id;
+      el.setAttribute("aria-live", politeness);
+      el.setAttribute("aria-atomic", "true");
+      // Görsel olarak gizle ama ekran okuyuculardan saklamak için display:none KULLANMA.
+      el.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;";
+      document.body.appendChild(el);
+    };
+    ensure("nb-toast-polite", "polite");
+    ensure("nb-toast-assertive", "assertive");
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = toast.type === "error" ? "nb-toast-assertive" : "nb-toast-polite";
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = `${toast.title}. ${toast.detail}`;
+    const timer = setTimeout(() => { el.textContent = ""; }, 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
@@ -917,7 +954,7 @@ function App() {
   const organizeVisualAutoOpenedForUploadId = useRef<string | null>(null);
   /** Blocks duplicate `/download` akışları (aynı iş için paralel GET). */
   const gatedDownloadInFlightKeysRef = useRef<Set<string>>(new Set());
-  const selectedFeatureIdEffectDidMountRef = useRef(false);
+  const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
     null,
@@ -985,8 +1022,9 @@ function App() {
   }, [selectedFeatureId, uploads[0]?.id, uploads[0]?.pageCount]);
 
   useEffect(() => {
-    if (!selectedFeatureIdEffectDidMountRef.current) {
-      selectedFeatureIdEffectDidMountRef.current = true;
+    const prev = prevSelectedFeatureIdRef.current;
+    prevSelectedFeatureIdRef.current = selectedFeatureId;
+    if (prev === null || prev === selectedFeatureId) {
       return;
     }
     setPageVisualModalOpen(false);
@@ -1122,10 +1160,16 @@ function App() {
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
 
-  useGAPageTracking({
-    enabled:
-      GA_TEST_BYPASS_COOKIE_CONSENT || (hasConsent && isCookieConsentReady),
-  });
+  // Sentry — yalnızca errorMonitoring onayı verilmişse başlat (GDPR Madde 7)
+  useEffect(() => {
+    if (isCookieConsentReady && cookiePrefs.errorMonitoring) {
+      initSentry(true);
+    }
+  }, [isCookieConsentReady, cookiePrefs.errorMonitoring]);
+
+  const gaEnabled = GA_TEST_BYPASS_COOKIE_CONSENT || (isCookieConsentReady && cookiePrefs.analytics);
+
+  useGAPageTracking({ enabled: gaEnabled });
 
   useEffect(() => {
     if (workspaceFeatures.length === 0) {
@@ -1150,7 +1194,7 @@ function App() {
   }, [view, contentPanel, selectedFeatureId]);
 
   useAnalyticsTracking({
-    enabled: GA_TEST_BYPASS_COOKIE_CONSENT || hasConsent,
+    enabled: gaEnabled,
     serverAnalyticsEnabled,
     view: trackedView,
     path: trackedPath,
@@ -1883,11 +1927,11 @@ function App() {
   const queueGatedDownload = useCallback(
     async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
       const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
       };
       if (typeof win.showSaveFilePicker === "function") {
         try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName });
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
           setPendingSaveHandle(handle);
         } catch (e: unknown) {
           if (e instanceof DOMException && e.name === "AbortError") return;
@@ -2001,11 +2045,11 @@ function App() {
   const queueMergeGatedDownload = useCallback(
     async (jobId: string, fallbackName: string) => {
       const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
       };
       if (typeof win.showSaveFilePicker === "function") {
         try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName });
+          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
           setPendingSaveHandle(handle);
         } catch (e: unknown) {
           if (e instanceof DOMException && e.name === "AbortError") return;
@@ -2837,7 +2881,6 @@ function App() {
     "repair-pdf",
     "page-numbers",
     "watermark",
-    "image-to-pdf",
     "pdf-to-image",
     "ppt-to-pdf",
     "pdf-to-ppt",
@@ -3518,12 +3561,14 @@ function App() {
         // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
         {
           const win = window as unknown as {
-            showSaveFilePicker?: (o: { suggestedName?: string }) => Promise<FileSystemFileHandle>;
+            showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
           };
           if (typeof win.showSaveFilePicker === "function") {
             try {
+              const _mergeName = language === "tr" ? "birlestirilmis.pdf" : "merged.pdf";
               const handle = await win.showSaveFilePicker({
-                suggestedName: language === "tr" ? "birlestirilmis.pdf" : "merged.pdf",
+                suggestedName: _mergeName,
+                types: showSavePickerTypesFor(_mergeName),
               });
               setPendingSaveHandle(handle);
             } catch (e: unknown) {
@@ -3594,9 +3639,7 @@ function App() {
       // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
       {
         const win = window as unknown as {
-          showSaveFilePicker?: (o: {
-            suggestedName?: string;
-          }) => Promise<FileSystemFileHandle>;
+          showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
         };
         if (typeof win.showSaveFilePicker === "function") {
           try {
@@ -3606,6 +3649,7 @@ function App() {
                 : selectedFeature.fallbackFilename;
             const handle = await win.showSaveFilePicker({
               suggestedName: suggestedSaveName,
+              types: showSavePickerTypesFor(suggestedSaveName),
             });
             setPendingSaveHandle(handle);
           } catch (e: unknown) {
@@ -4164,7 +4208,9 @@ function App() {
           <CookieNotice
             language={language}
             visible={shouldShowCookieNotice}
-            onAccept={acceptConsent}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
         </>
@@ -4176,7 +4222,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4185,7 +4233,7 @@ function App() {
 
   if (view === "team_invite") {
     return (
-      <Suspense fallback={null}>
+      <Suspense fallback={<PageSkeleton />}>
         <TeamInviteAcceptPageLazy />
       </Suspense>
     );
@@ -4202,7 +4250,7 @@ function App() {
           language={language}
           selectedFeatureId={selectedFeatureId}
         />
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModalSkeleton />}>
           <LoginSuccessPage
             completeOAuthLogin={completeOAuthLogin}
             clearSession={clearSession}
@@ -4252,7 +4300,9 @@ function App() {
           <CookieNotice
             language={language}
             visible={shouldShowCookieNotice}
-            onAccept={acceptConsent}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
         </>
@@ -4271,7 +4321,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4288,7 +4340,7 @@ function App() {
           selectedFeatureId={selectedFeatureId}
         />
         <SystemNotificationBanner language={language} />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <ForgotPasswordPage
             language={language}
             onBackToLogin={() => {
@@ -4320,7 +4372,7 @@ function App() {
           selectedFeatureId={selectedFeatureId}
         />
         <SystemNotificationBanner language={language} />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <LandingPage
             language={language}
             onLanguageChange={handleLanguageChange}
@@ -4353,7 +4405,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4370,7 +4424,7 @@ function App() {
           selectedFeatureId={selectedFeatureId}
         />
         <SystemNotificationBanner language={language} />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <AuthPage
             mode="login"
             purpose="admin"
@@ -4404,7 +4458,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4421,7 +4477,7 @@ function App() {
           selectedFeatureId={selectedFeatureId}
         />
         <SystemNotificationBanner language={language} />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <AuthPage
             mode={view}
             language={language}
@@ -4459,7 +4515,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4482,7 +4540,7 @@ function App() {
           selectedFeatureId={selectedFeatureId}
         />
         <SystemNotificationBanner language={language} />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <LegalPage
             language={language}
             documentKey={view}
@@ -4492,7 +4550,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4524,7 +4584,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4568,7 +4630,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </>
@@ -4605,10 +4669,12 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PageSkeleton />}>
           <AdminPanel
             accessToken={accessToken}
             userEmail={user?.email ?? "admin"}
@@ -4741,7 +4807,7 @@ function App() {
         />
 
         {!isTeamMember && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<ModalSkeleton />}>
             <PlanUpgradeModal
               open={upgradeModalOpen}
               onClose={() => setUpgradeModalOpen(false)}
@@ -4762,7 +4828,7 @@ function App() {
           selectedFeatureId === "delete-pages" ||
           selectedFeatureId === "rotate-pdf" ||
           selectedFeatureId === "organize-pdf") ? (
-          <Suspense fallback={null}>
+          <Suspense fallback={<ModalSkeleton />}>
             <SplitPagePickerModal
               open={pageVisualModalOpen}
               onClose={() => setPageVisualModalOpen(false)}
@@ -4955,7 +5021,7 @@ function App() {
             ) : null}
 
             {contentPanel === "team" && accessToken ? (
-              <Suspense fallback={null}>
+              <Suspense fallback={<PageSkeleton />}>
                 <TeamDashboardLazy
                   language={language}
                   accessToken={accessToken}
@@ -4969,7 +5035,7 @@ function App() {
             accessToken &&
             user &&
             !isTeamMember ? (
-              <Suspense fallback={null}>
+              <Suspense fallback={<ModalSkeleton />}>
                 <PlanUpgradeModal
                   open={true}
                   onClose={() => setContentPanel("subscription")}
@@ -6551,7 +6617,9 @@ function App() {
         <CookieNotice
           language={language}
           visible={shouldShowCookieNotice}
-          onAccept={acceptConsent}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
       </div>

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler.js";
+import { requireAuth } from "../../middleware/auth.middleware.js";
 import {
   cancelSubscriptionController,
   currentSubscriptionController,
@@ -14,7 +15,10 @@ import {
  */
 export const subscriptionRouter = Router();
 
+// /plans herkese açık — fiyat listesi için auth gerekmez.
 subscriptionRouter.get("/plans", asyncHandler(listPlansController));
-subscriptionRouter.get("/status", asyncHandler(subscriptionStatusController));
-subscriptionRouter.get("/current", asyncHandler(currentSubscriptionController));
-subscriptionRouter.post("/cancel", asyncHandler(cancelSubscriptionController));
+
+// Kişisel abonelik endpoint'leri kimlik doğrulaması gerektirir.
+subscriptionRouter.get("/status", requireAuth, asyncHandler(subscriptionStatusController));
+subscriptionRouter.get("/current", requireAuth, asyncHandler(currentSubscriptionController));
+subscriptionRouter.post("/cancel", requireAuth, asyncHandler(cancelSubscriptionController));

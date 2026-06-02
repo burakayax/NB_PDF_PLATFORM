@@ -200,6 +200,22 @@ export async function logoutAuthUser() {
   await sendAuthRequest("/logout");
 }
 
+/** GDPR Madde 17 — kullanıcı kendi hesabını kalıcı olarak siler. */
+export async function deleteMyAccount(
+  accessToken: string,
+  password: string,
+): Promise<void> {
+  const response = await saasFetch(`/api/auth/me`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ password }),
+  });
+  await ensureOk(response, "Account deletion failed.");
+}
+
 export async function fetchAuthenticatedUser(
   accessToken: string,
   options?: { silentUnauthorized?: boolean },
