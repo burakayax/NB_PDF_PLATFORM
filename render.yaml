@@ -169,9 +169,11 @@ services:
         value: "public, max-age=3600"
     envVars:
       - key: VITE_API_BASE
-        sync: false   # Örn. https://pdf-api.pdfplatform.app
-      - key: VITE_SAAS_PROXY_TARGET
-        sync: false   # Örn. https://auth-api.pdfplatform.app
+        sync: false   # PDF API kökü, örn. https://nb-pdf-api.onrender.com
+      # ÜRETİMDE GEREKEN auth API kökü — SPA login/ödeme/bakım bunu kullanır.
+      # (VITE_SAAS_PROXY_TARGET yalnızca yerel Vite dev proxy'sidir; üretimde işe yaramaz.)
+      - key: VITE_SAAS_API_BASE
+        sync: false   # Örn. https://api.pdfplatform.app
       - key: VITE_PUBLIC_SITE_URL
         sync: false   # Örn. https://pdfplatform.app (canonical + hreflang için)
       - key: VITE_SENTRY_DSN
