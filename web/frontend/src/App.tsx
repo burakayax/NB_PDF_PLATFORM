@@ -4353,16 +4353,17 @@ function App() {
 
   if (view === "landing") {
     return (
-      <>
-        <SeoRouteManager
-          pathname={pathname}
-          view={view}
-          language={language}
-          selectedFeatureId={selectedFeatureId}
-        />
-        <SystemNotificationBanner language={language} />
-        <Suspense fallback={<PageSkeleton />}>
-          <LandingPage
+      <CheckoutCurrencyProvider>
+        <>
+          <SeoRouteManager
+            pathname={pathname}
+            view={view}
+            language={language}
+            selectedFeatureId={selectedFeatureId}
+          />
+          <SystemNotificationBanner language={language} />
+          <Suspense fallback={<PageSkeleton />}>
+            <LandingPage
             language={language}
             onLanguageChange={handleLanguageChange}
             onUseWebApp={openWorkspace}
@@ -4389,17 +4390,18 @@ function App() {
                 setView("register");
               }
             }}
+            />
+          </Suspense>
+          <CookieNotice
+            language={language}
+            visible={shouldShowCookieNotice}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
+            onOpenPrivacy={() => openLegalPage("privacy")}
           />
-        </Suspense>
-        <CookieNotice
-          language={language}
-          visible={shouldShowCookieNotice}
-          onAcceptAll={acceptAllCookies}
-          onAcceptNecessaryOnly={acceptNecessaryOnly}
-          onSavePreferences={saveCookiePreferences}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-        />
-      </>
+        </>
+      </CheckoutCurrencyProvider>
     );
   }
 
