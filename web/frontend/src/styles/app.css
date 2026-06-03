@@ -4015,3 +4015,28 @@ textarea {
     opacity: 0;
   }
 }
+
+/* Logo ve Icon Styles — Gemini Design System */
+.logo-container {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(34, 211, 238, 0.2);
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.tool-icon {
+  stroke: var(--nb-primary);
+  stroke-width: 2px;
+  transition:
+    transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+    stroke 0.3s ease,
+    filter 0.3s ease;
+}
+
+.tool-icon:hover {
+  transform: translateY(-2px) scale(1.05);
+  stroke: var(--nb-accent);
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.6));
+}
