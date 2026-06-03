@@ -59,10 +59,7 @@ export function AnimatedCardOptions({ options, columns = 4, onSelect }: Animated
   };
 
   return (
-    <div
-      className="grid gap-3 max-w-5xl mx-auto relative"
-      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-    >
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-5xl mx-auto relative">
       {options.map((option, index) => (
         <div key={option.id} className="relative">
           <AnimatePresence mode="wait">
@@ -80,12 +77,12 @@ export function AnimatedCardOptions({ options, columns = 4, onSelect }: Animated
               >
                 <motion.div variants={hoverVariants}>
                   <Card className="h-24 w-full border border-white/10 hover:border-white/25 transition-colors duration-200 bg-white/[0.04] backdrop-blur-sm">
-                    <div className="flex items-center h-full px-4 space-x-3">
-                      <div className="text-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+                    <div className="flex items-center h-full px-3 sm:px-4 space-x-2 sm:space-x-3">
+                      <div className="text-xl sm:text-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                         {option.icon}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-white/80 group-hover:text-white transition-colors duration-200 truncate">
+                        <h3 className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white transition-colors duration-200 truncate">
                           {option.name}
                         </h3>
                       </div>

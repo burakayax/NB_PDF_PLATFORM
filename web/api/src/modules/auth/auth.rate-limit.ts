@@ -33,14 +33,13 @@ export const deleteAccountLimiter = rateLimit({
     return `delete-account:${userId}:${ip}`;
   },
   message: {
-    message:
-      "Too many deletion attempts. Please wait a minute before trying again.",
+    message: "Çok fazla silme denemesi. Lütfen bir dakika sonra tekrar deneyin.",
   },
 });
 
 /**
  * POST /api/auth/forgot-password/*: IP başına saatte en fazla 10 istek.
- * Servis tarafı e-posta başına 5 saat limiti ile birlikte çalışır.
+ * Servis tarafı e-posta başına saatte 5 kod limiti ile birlikte çalışır.
  */
 export const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -51,6 +50,6 @@ export const forgotPasswordLimiter = rateLimit({
   validate: { default: false },
   keyGenerator: (req) => `forgot-password:${req.ip ?? "unknown"}`,
   message: {
-    message: "Too many password reset requests. Please try again later.",
+    message: "Çok fazla şifre sıfırlama isteği. Lütfen bir saat sonra tekrar deneyin.",
   },
 });
