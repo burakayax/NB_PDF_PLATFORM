@@ -21,10 +21,10 @@ async function setDocumentLanguage() {
 
   // Try to detect from IP geolocation
   try {
-    const response = await Promise.race([
+    const response = (await Promise.race([
       fetch("https://ipapi.co/json/"),
       new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 6000))
-    ]);
+    ])) as Response;
 
     if (response.ok) {
       const data = (await response.json()) as { country_code?: string };

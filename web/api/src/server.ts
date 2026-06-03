@@ -68,6 +68,11 @@ const activeServer = useTls
     })()
   : http.createServer(app);
 
+// Büyük PDF işlemleri (split, merge) için server socket timeout'unu 15 dakikaya çıkar.
+activeServer.setTimeout(15 * 60 * 1000);
+// keepAliveTimeout Server'ın Keep-Alive socket'leri kapatmadan önce bekleme süresi.
+activeServer.keepAliveTimeout = 16 * 60 * 1000;
+
 attachListenError(activeServer);
 activeServer.listen(env.PORT, listenMessage);
 
