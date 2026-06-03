@@ -55,7 +55,9 @@ export function inferCurrencyFromClientHints(): CheckoutCurrency {
   }
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+    console.log("[CheckoutCurrency] Timezone:", tz);
     if (/Istanbul|Türkiye|Turkey/i.test(tz)) {
+      console.log("[CheckoutCurrency] Timezone matched Turkey → TRY");
       return "TRY";
     }
     // Common EU metropolitan zones → EUR pricing band
@@ -63,15 +65,19 @@ export function inferCurrencyFromClientHints(): CheckoutCurrency {
     const euTzPattern =
       /^(Africa\/Ceuta|Etc\/GMT-[01]|Europe\/(Amsterdam|Andorra|Athens|Berlin|Brussels|Budapest|Busingen|Chisinau|Copenhagen|Dublin|Gibraltar|Guernsey|Helsinki|Isle_of_Man|Jersey|Kaliningrad|Kyiv|Lisbon|Ljubljana|London|Luxembourg|Madrid|Malta|Mariehamn|Minsk|Monaco|Moscow|Oslo|Paris|Podgorica|Prague|Riga|Rome|Samara|San_Marino|Sarajevo|Simferopol|Skopje|Sofia|Stockholm|Tallinn|Tirane|Tiraspol|Uzhgorod|Vaduz|Vatican|Vienna|Vilnius|Volgograd|Warsaw|Zagreb|Zaporozhye|Zurich))$/;
     if (euTzPattern.test(tz)) {
+      console.log("[CheckoutCurrency] Timezone matched EU → EUR");
       return "EUR";
     }
-  } catch {
-    /* noop */
+  } catch (e) {
+    console.log("[CheckoutCurrency] Timezone check failed:", e);
   }
   const lang = (typeof navigator !== "undefined" ? navigator.language : "").toLowerCase();
+  console.log("[CheckoutCurrency] navigator.language:", lang);
   if (lang === "tr" || lang.startsWith("tr-")) {
+    console.log("[CheckoutCurrency] Language matched Turkish → TRY");
     return "TRY";
   }
+  console.log("[CheckoutCurrency] No match, defaulting to USD");
   return "USD";
 }
 
@@ -141,12 +147,16 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     }
     void fetchCountryFromIp().then((cc) => {
       if (!cancelled) {
-        setCurrency(mergeGeoAndHints(cc));
+        const finalCurrency = mergeGeoAndHints(cc);
+        console.log("[CheckoutCurrency] IP geolocation:", cc, "→ currency:", finalCurrency);
+        setCurrency(finalCurrency);
         setLoading(false);
       }
-    }).catch(() => {
+    }).catch((err) => {
       if (!cancelled) {
-        setCurrency(inferCurrencyFromClientHints());
+        const fallbackCurrency = inferCurrencyFromClientHints();
+        console.log("[CheckoutCurrency] IP lookup failed, using fallback:", fallbackCurrency, "error:", err);
+        setCurrency(fallbackCurrency);
         setLoading(false);
       }
     });
