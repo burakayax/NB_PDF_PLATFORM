@@ -39,5 +39,8 @@ export async function forgotPasswordResetController(request: Request, response: 
   }
 
   await completePasswordResetWithToken(parsed.data.resetToken, parsed.data.newPassword);
-  response.json({ message: "Password has been updated. You can sign in with your new password." });
+  const message = request.body.preferredLanguage === "tr"
+    ? "Şifreniz güncellendi. Yeni şifrenizle giriş yapabilirsiniz."
+    : "Password has been updated. You can sign in with your new password.";
+  response.json({ message });
 }

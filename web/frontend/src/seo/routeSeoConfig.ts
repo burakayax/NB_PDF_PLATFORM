@@ -226,6 +226,26 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     };
   }
 
+  // ── About ──────────────────────────────────────────────────────────────────
+  if (context.view === "about" || pathname === "/about") {
+    return {
+      title:
+        context.language === "tr"
+          ? `Hakkımızda | ${BRAND}`
+          : `About | ${BRAND}`,
+      description:
+        context.language === "tr"
+          ? "PDF PLATFORM hakkında, vizyon, misyon ve değerlerimiz."
+          : "Learn about PDF PLATFORM, our vision, mission and values.",
+      canonicalPath: "/about",
+      index: true,
+      follow: true,
+      ogImage: "/app-preview-main.png",
+      ogLocale: locale,
+      ogLocaleAlternate: localeAlt,
+    };
+  }
+
   // ── Pricing ────────────────────────────────────────────────────────────────
   if (context.view === "pricing" || pathname === "/pricing") {
     return {

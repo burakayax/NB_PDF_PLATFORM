@@ -167,29 +167,31 @@ export function CookieNotice({
     <div
       role="dialog" aria-modal="true" aria-label={copy.title}
       aria-describedby="cookie-notice-description"
-      className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:px-6"
+      className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-6"
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 rounded-[24px] border border-white/[0.08] bg-nb-bg/95 p-5 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:flex-row sm:items-end sm:justify-between sm:p-6">
-        <div className="max-w-3xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-nb-accent">{copy.title}</p>
-          <p id="cookie-notice-description" className="mt-2 text-sm leading-7 text-nb-muted">{copy.description}</p>
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-3 rounded-[20px] border border-white/[0.08] bg-nb-bg/95 p-4 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:max-w-4xl sm:flex-row sm:items-end sm:justify-between sm:gap-4 sm:rounded-[24px] sm:p-6">
+        <div className="flex-1 flex flex-col">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-nb-accent sm:text-sm">{copy.title}</p>
+          <div id="cookie-notice-description" className="mt-2 max-h-[180px] overflow-y-auto sm:max-h-none sm:overflow-y-visible">
+            <p className="text-xs leading-relaxed text-nb-muted sm:text-sm sm:leading-7">{copy.description}</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-3 sm:min-w-[260px] sm:items-end">
+        <div className="flex flex-col gap-2 sm:min-w-[260px] sm:gap-3 sm:items-end">
           <button ref={primaryBtnRef} type="button" onClick={handleAcceptAll} aria-label={t.acceptAll}
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-gradient-to-b from-nb-primary-mid to-nb-primary px-5 text-sm font-semibold text-slate-950 shadow-[0_12px_32px_-8px_rgba(34,211,238,0.4)] transition duration-200 ease-out hover:brightness-110">
+            className="inline-flex min-h-9 w-full items-center justify-center rounded-lg bg-gradient-to-b from-nb-primary-mid to-nb-primary px-4 text-xs font-semibold text-slate-950 shadow-[0_12px_32px_-8px_rgba(34,211,238,0.4)] transition duration-200 ease-out hover:brightness-110 sm:min-h-11 sm:rounded-xl sm:px-5 sm:text-sm">
             {t.acceptAll}
           </button>
           <button type="button" onClick={onAcceptNecessaryOnly} aria-label={t.acceptNecessary}
-            className="inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-white/[0.1] bg-nb-panel/70 px-5 text-sm font-semibold text-nb-muted transition hover:text-nb-text">
+            className="inline-flex min-h-8 w-full items-center justify-center rounded-lg border border-white/[0.1] bg-nb-panel/70 px-4 text-xs font-semibold text-nb-muted transition hover:text-nb-text sm:min-h-10 sm:rounded-xl sm:px-5 sm:text-sm">
             {t.acceptNecessary}
           </button>
-          <div className="flex gap-4">
+          <div className="flex gap-3 justify-center sm:justify-end sm:gap-4">
             <button type="button" onClick={() => setShowCustomize(true)}
-              className="text-xs font-medium text-nb-muted transition hover:text-nb-text">
+              className="text-xs font-medium text-nb-muted transition hover:text-nb-text sm:text-sm">
               {t.customize}
             </button>
             <button type="button" onClick={onOpenPrivacy} aria-label={copy.learnMore}
-              className="text-xs font-medium text-nb-muted transition hover:text-nb-text">
+              className="text-xs font-medium text-nb-muted transition hover:text-nb-text sm:text-sm">
               {copy.learnMore}
             </button>
           </div>

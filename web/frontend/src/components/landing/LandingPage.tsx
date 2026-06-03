@@ -28,6 +28,8 @@ type LandingPageProps = {
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
   onOpenKvkk: () => void;
+  onContactClick: () => void;
+  onOpenAbout: () => void;
   canonicalBaseUrl?: string;
   organizationName?: string;
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
@@ -423,17 +425,8 @@ function Hero({
                 : "Start Free — No Credit Card"}
             </span>
           </motion.button>
-          <motion.div
-            whileHover={{ y: -4 }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 18 }}
-          >
-            <CrawlableLink
-              href={windowsDownloadUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base hover:bg-white/10 hover:border-white/30 transition-all"
-            >
+          <div className="relative">
+            <span className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base opacity-50 cursor-not-allowed">
               <svg
                 className="w-5 h-5 text-blue-400"
                 fill="none"
@@ -449,8 +442,11 @@ function Hero({
                 />
               </svg>
               {copy.hero.secondaryCta}
-            </CrawlableLink>
-          </motion.div>
+            </span>
+            <span className="absolute -top-2 -right-1 bg-amber-500 text-[11px] font-bold text-white px-2 py-0.5 rounded-full whitespace-nowrap">
+              {tr ? "Yakında" : "Coming"}
+            </span>
+          </div>
         </motion.div>
 
         {/* Trust bar */}
@@ -996,28 +992,28 @@ function ProductShowcase({
             whileTap={{ scale: 0.97, y: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 18 }}
           >
-            <CrawlableLink
-              href={windowsDownloadUrl}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 hover:bg-white/[0.09] hover:text-white hover:border-white/25 transition-all"
-            >
-              {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.8}
-                  d="M14 5l7 7m0 0l-7 7m7-7H3"
-                />
-              </svg>
-            </CrawlableLink>
+            <div className="relative">
+              <span className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 opacity-50 cursor-not-allowed">
+                {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M14 5l7 7m0 0l-7 7m7-7H3"
+                  />
+                </svg>
+              </span>
+              <span className="absolute -top-2 -right-1 bg-amber-500 text-black text-[11px] font-bold px-2 py-1 rounded">
+                {tr ? "Yakında" : "Coming"}
+              </span>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -1617,14 +1613,14 @@ function FinalCta({
               whileTap={{ scale: 0.97, y: 0 }}
               transition={{ type: "spring", stiffness: 380, damping: 18 }}
             >
-              <CrawlableLink
-                href={windowsDownloadUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-block px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold hover:bg-white/10 hover:border-white/30 transition-all"
-              >
-                {copy.finalCta.secondaryCta}
-              </CrawlableLink>
+              <div className="relative">
+                <span className="inline-block px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold opacity-50 cursor-not-allowed">
+                  {copy.finalCta.secondaryCta}
+                </span>
+                <span className="absolute -top-2 -right-1 bg-amber-500 text-black text-[11px] font-bold px-2 py-1 rounded">
+                  {tr ? "Yakında" : "Coming"}
+                </span>
+              </div>
             </motion.div>
           </div>
         </motion.div>
@@ -1641,12 +1637,16 @@ function Footer({
   onOpenPrivacy,
   onOpenKvkk,
   onUseWebApp,
+  onOpenAbout,
+  onContactClick,
 }: {
   language: Language;
   onOpenTerms: () => void;
   onOpenPrivacy: () => void;
   onOpenKvkk: () => void;
   onUseWebApp: () => void;
+  onOpenAbout: () => void;
+  onContactClick: () => void;
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
@@ -1664,8 +1664,8 @@ function Footer({
     {
       heading: tr ? "Şirket" : "Company",
       links: [
-        { label: tr ? "Hakkımızda" : "About", href: "#" },
-        { label: tr ? "İletişim" : "Contact", href: "#contact" },
+        { label: tr ? "Hakkımızda" : "About", action: onOpenAbout },
+        { label: tr ? "İletişim" : "Contact", action: onContactClick },
         { label: "Blog", href: "#" },
       ],
     },
@@ -1758,6 +1758,8 @@ export function LandingPage({
   onOpenTerms,
   onOpenPrivacy,
   onOpenKvkk,
+  onOpenAbout,
+  onContactClick,
   organizationName = "PDF PLATFORM",
   onSelectPlan,
 }: LandingPageProps) {
@@ -1819,6 +1821,8 @@ export function LandingPage({
         onOpenPrivacy={onOpenPrivacy}
         onOpenKvkk={onOpenKvkk}
         onUseWebApp={onUseWebApp}
+        onOpenAbout={onOpenAbout}
+        onContactClick={onContactClick}
       />
     </div>
   );

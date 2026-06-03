@@ -168,7 +168,7 @@ export async function abuseBlockMiddleware(request: Request, response: Response,
       method: request.method,
       detail: "abuse_block_active",
     });
-    response.status(429).json({ message: "Too many requests. Try again later." });
+    response.status(429).json({ message: "Çok fazla istek. Lütfen daha sonra tekrar deneyin." });
     return;
   }
   next();
@@ -184,7 +184,7 @@ export const globalApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `${getClientIp(req)}:${rateLimitTierForRequest(req)}`,
-  message: { message: "Too many requests from this IP. Please try again shortly." },
+  message: { message: "Bu IP'den çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin." },
   handler: async (request, response, _next, options) => {
     const cfg = await getApiSecurityResolved();
     const ip = getClientIp(request);
@@ -210,7 +210,7 @@ export const paymentCallbackLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => getClientIp(req),
-  message: { message: "Too many payment callback requests. Try again shortly." },
+  message: { message: "Çok fazla ödeme callback isteği. Lütfen kısa süre sonra tekrar deneyin." },
 });
 
 /** Kimlik gerektirmeyen uçlar (auth akışı, sağlık, plan listesi, iletişim). */

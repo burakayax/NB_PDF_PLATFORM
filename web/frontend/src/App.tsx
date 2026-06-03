@@ -143,7 +143,8 @@ type NonLegalView =
   | "web"
   | "admin"
   | "admin_login"
-  | "team_invite";
+  | "team_invite"
+  | "about";
 type LegalView =
   | "terms"
   | "privacy"
@@ -176,6 +177,11 @@ const LoginSuccessPage = lazy(() =>
 const LandingPage = lazy(() =>
   import("./components/landing/LandingPage").then((module) => ({
     default: module.LandingPage,
+  })),
+);
+const AboutPage = lazy(() =>
+  import("./components/landing/AboutPage").then((module) => ({
+    default: module.AboutPage,
   })),
 );
 const LegalPage = lazy(() =>
@@ -3063,6 +3069,7 @@ function App() {
       setLegalBackView(view);
     }
     setView(target);
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
   function openContactModal() {
@@ -4351,6 +4358,27 @@ function App() {
     );
   }
 
+  const contactCopy =
+    language === "tr"
+      ? {
+          title: "İletişim",
+          name: "Ad soyad",
+          email: "E-posta",
+          message: "Mesaj",
+          submit: "Gönder",
+          submitting: "Gönderiliyor…",
+          close: "Kapat",
+        }
+      : {
+          title: "Contact",
+          name: "Name",
+          email: "Email",
+          message: "Message",
+          submit: "Send",
+          submitting: "Sending…",
+          close: "Close",
+        };
+
   if (view === "landing") {
     return (
       <CheckoutCurrencyProvider>
@@ -4372,14 +4400,21 @@ function App() {
             onLogin={() => {
               setAuthError("");
               setView("login");
+              window.scrollTo({ top: 0, behavior: "instant" });
             }}
             onRegister={() => {
               setAuthError("");
               setView("register");
+              window.scrollTo({ top: 0, behavior: "instant" });
             }}
             onOpenTerms={() => openLegalPage("terms")}
             onOpenPrivacy={() => openLegalPage("privacy")}
             onOpenKvkk={() => openLegalPage("kvkk")}
+            onContactClick={openContactModal}
+            onOpenAbout={() => {
+              setView("about");
+              window.scrollTo({ top: 0, behavior: "instant" });
+            }}
             onSelectPlan={(planId) => {
               if (isAuthenticated) {
                 openWorkspace();
@@ -4400,8 +4435,103 @@ function App() {
             onSavePreferences={saveCookiePreferences}
             onOpenPrivacy={() => openLegalPage("privacy")}
           />
+          {contactModalOpen ? (
+            <div
+              className="contact-modal-backdrop"
+              role="presentation"
+              onClick={closeContactModal}
+            >
+              <div
+                className="contact-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="contact-modal-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="contact-modal__header">
+                  <h2 id="contact-modal-title">{contactCopy.title}</h2>
+                  <button
+                    type="button"
+                    className="contact-modal__close"
+                    onClick={closeContactModal}
+                    aria-label={contactCopy.close}
+                  >
+                    ×
+                  </button>
+                </div>
+                <form
+                  className="contact-modal__form"
+                  onSubmit={handleContactModalSubmit}
+                >
+                  <label className="field">
+                    <span>{contactCopy.name}</span>
+                    <input
+                      type="text"
+                      value={contactName}
+                      onChange={(event) => setContactName(event.target.value)}
+                      autoComplete="name"
+                      disabled={contactSubmitting}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>{contactCopy.email}</span>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(event) => setContactEmail(event.target.value)}
+                      autoComplete="email"
+                      disabled={contactSubmitting}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>{contactCopy.message}</span>
+                    <textarea
+                      value={contactMessage}
+                      onChange={(event) => setContactMessage(event.target.value)}
+                      rows={4}
+                      disabled={contactSubmitting}
+                    />
+                  </label>
+                  <input
+                    type="text"
+                    name="website"
+                    style={{ display: "none" }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="submit"
+                    className="contact-modal__button"
+                    disabled={contactSubmitting}
+                  >
+                    {contactSubmitting ? contactCopy.submitting : contactCopy.submit}
+                  </button>
+                  {contactError && (
+                    <p className="contact-modal__error">{contactError}</p>
+                  )}
+                </form>
+              </div>
+            </div>
+          ) : null}
         </>
       </CheckoutCurrencyProvider>
+    );
+  }
+
+  if (view === "about") {
+    return (
+      <>
+        <SeoRouteManager
+          pathname={pathname}
+          view={view}
+          language={language}
+          selectedFeatureId={selectedFeatureId}
+        />
+        <SystemNotificationBanner language={language} />
+        <Suspense fallback={<PageSkeleton />}>
+          <AboutPage language={language} onClose={() => setView("landing")} />
+        </Suspense>
+      </>
     );
   }
 
@@ -4584,27 +4714,6 @@ function App() {
     );
   }
 
-  const contactCopy =
-    language === "tr"
-      ? {
-          title: "İletişim",
-          name: "Ad soyad",
-          email: "E-posta",
-          message: "Mesaj",
-          submit: "Gönder",
-          submitting: "Gönderiliyor…",
-          close: "Kapat",
-        }
-      : {
-          title: "Contact",
-          name: "Name",
-          email: "Email",
-          message: "Message",
-          submit: "Send",
-          submitting: "Sending…",
-          close: "Close",
-        };
-
   if (!user) {
     return (
       <>
@@ -4695,89 +4804,6 @@ function App() {
       <div className="app-shell">
         <PdfApiOfflineBanner />
         <SystemNotificationBanner language={language} />
-        {contactModalOpen ? (
-          <div
-            className="contact-modal-backdrop"
-            role="presentation"
-            onClick={closeContactModal}
-          >
-            <div
-              className="contact-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="contact-modal-title"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="contact-modal__header">
-                <h2 id="contact-modal-title">{contactCopy.title}</h2>
-                <button
-                  type="button"
-                  className="contact-modal__close"
-                  onClick={closeContactModal}
-                  aria-label={contactCopy.close}
-                >
-                  ×
-                </button>
-              </div>
-              <form
-                className="contact-modal__form"
-                onSubmit={handleContactModalSubmit}
-              >
-                <label className="field">
-                  <span>{contactCopy.name}</span>
-                  <input
-                    type="text"
-                    value={contactName}
-                    onChange={(event) => setContactName(event.target.value)}
-                    autoComplete="name"
-                    disabled={contactSubmitting}
-                  />
-                </label>
-                <label className="field">
-                  <span>{contactCopy.email}</span>
-                  <input
-                    type="email"
-                    value={contactEmail}
-                    onChange={(event) => setContactEmail(event.target.value)}
-                    autoComplete="email"
-                    disabled={contactSubmitting}
-                  />
-                </label>
-                <label className="field field--full">
-                  <span>{contactCopy.message}</span>
-                  <textarea
-                    value={contactMessage}
-                    onChange={(event) => setContactMessage(event.target.value)}
-                    rows={5}
-                    disabled={contactSubmitting}
-                  />
-                </label>
-                <label className="contact-modal__honeypot" aria-hidden="true">
-                  <span>Website</span>
-                  <input
-                    type="text"
-                    tabIndex={-1}
-                    autoComplete="off"
-                    value={contactWebsite}
-                    onChange={(event) => setContactWebsite(event.target.value)}
-                  />
-                </label>
-                {contactError ? (
-                  <p className="field-error">{contactError}</p>
-                ) : null}
-                <button
-                  className="primary-action"
-                  type="submit"
-                  disabled={contactSubmitting}
-                >
-                  {contactSubmitting
-                    ? contactCopy.submitting
-                    : contactCopy.submit}
-                </button>
-              </form>
-            </div>
-          </div>
-        ) : null}
 
         <ChangePasswordModal
           open={changePasswordModalOpen}
