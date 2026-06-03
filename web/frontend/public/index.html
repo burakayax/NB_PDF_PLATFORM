@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="content-language" content="tr" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
     <title>PDF editing and conversion platform | PDF PLATFORM</title>
@@ -36,12 +37,9 @@
       (function() {
         try {
           const stored = localStorage.getItem('nbpdf-language');
-          const browserLang = navigator.language.toLowerCase();
-          let lang = 'tr';
-          if (stored === 'en' || (browserLang.startsWith('en') && !browserLang.startsWith('tr'))) {
-            lang = 'en';
-          }
+          let lang = stored === 'en' ? 'en' : 'tr';
           document.documentElement.lang = lang;
+          document.documentElement.setAttribute('lang', lang);
         } catch (e) {}
       })();
     </script>
