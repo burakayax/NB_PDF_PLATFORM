@@ -1226,7 +1226,7 @@ function HowItWorks({ language }: { language: Language }) {
               }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15, duration: 0.5 }}
-              className="group relative flex flex-col items-center text-center p-7 pt-9 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-sm cursor-default overflow-hidden"
+              className="group relative flex flex-col items-center text-center p-7 pt-16 rounded-2xl border border-white/[0.07] bg-gradient-to-b from-white/[0.05] to-transparent backdrop-blur-sm cursor-default overflow-visible"
             >
               {/* Top accent line */}
               <div
