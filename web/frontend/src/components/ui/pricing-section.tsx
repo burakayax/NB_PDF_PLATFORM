@@ -598,7 +598,7 @@ interface PricingSectionProps {
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
-  const { currency: checkoutCurrency } = useCheckoutCurrency();
+  const { currency: checkoutCurrency, loading } = useCheckoutCurrency();
   // EUR kullanıcıya gösterim için, ödeme USD bandıyla işlenir.
   // "USD" fiyatlar gösterildiğinde simge "$" yerine "€" gösterilir.
   const isEurDisplay = checkoutCurrency === "EUR";
@@ -619,7 +619,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         }
       `}</style>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-busy={loading}>
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
