@@ -8,6 +8,7 @@ record-usage) kaldırılmıştır.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Annotated, Any
@@ -386,6 +387,7 @@ async def inspect_pdf(
 
 @router.post("/split")
 async def split_pdf(
+    request: Request,
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
@@ -397,10 +399,10 @@ async def split_pdf(
     ``GET /api/pdf/result/{id}/download``."""
     # background_tasks unused but kept for API compatibility with older clients.
     _ = background_tasks
-    decision = await entitlement_check(token, "split")
-
     workdir = create_workdir()
     try:
+        decision = await entitlement_check(token, "split")
+
         saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
         validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
         pwd = password.strip() or None
@@ -428,6 +430,9 @@ async def split_pdf(
             "has_thumbnail": handle.has_thumbnail,
             "saasGating": _saas_gating_from_check(decision),
         }
+    except asyncio.CancelledError:
+        logger.warning("split_pdf cancelled — client disconnected")
+        raise
     except Exception as error:
         cleanup_and_raise(workdir, error)
     finally:
