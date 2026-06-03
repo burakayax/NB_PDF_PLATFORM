@@ -202,7 +202,7 @@ function Navbar({
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <button
-          onClick={onUseWebApp}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="flex items-center gap-3 group shrink-0"
         >
           <img

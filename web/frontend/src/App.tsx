@@ -3191,17 +3191,6 @@ function App() {
   }
 
   function handleDashboardLogoClick() {
-    if (view === "admin") {
-      setContentPanel("tool");
-      setView("web");
-      window.history.replaceState({}, "", "/workspace");
-      return;
-    }
-    if (view === "web") {
-      setContentPanel("tool");
-      window.history.replaceState({}, "", "/workspace");
-      return;
-    }
     setView("landing");
     window.history.replaceState({}, "", "/");
   }
