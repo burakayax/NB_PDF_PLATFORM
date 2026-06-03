@@ -1246,8 +1246,8 @@ function HowItWorks({ language }: { language: Language }) {
 
               {/* Step number badge */}
               <motion.div
-                className={`absolute -top-5 right-4 w-10 h-10 rounded-full bg-gradient-to-br ${step.badge} flex items-center justify-center text-sm font-bold text-white z-10`}
-                style={{ boxShadow: `0 0 10px rgba(${step.r},0.35)` }}
+                className={`absolute -top-5 right-4 rounded-full bg-gradient-to-br ${step.badge} flex items-center justify-center text-white font-bold z-10`}
+                style={{ width: '40px', height: '40px', fontSize: '16px', lineHeight: '1', boxShadow: `0 0 10px rgba(${step.r},0.35)` }}
                 whileHover={{ scale: 1.25, boxShadow: `0 0 20px rgba(${step.r},0.7)`, transition: { type: "spring", stiffness: 400, damping: 10 } }}
               >
                 {i + 1}
