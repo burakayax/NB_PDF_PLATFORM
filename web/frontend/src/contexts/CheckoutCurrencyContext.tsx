@@ -137,7 +137,13 @@ type Ctx = {
 const CheckoutCurrencyContext = createContext<Ctx | null>(null);
 
 export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrency] = useState<CheckoutCurrency>(() => inferCurrencyFromClientHints());
+  const [currency, setCurrency] = useState<CheckoutCurrency>(() => {
+    const initial = inferCurrencyFromClientHints();
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_INITIAL", initial);
+    }
+    return initial;
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -149,6 +155,10 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
       if (!cancelled) {
         const finalCurrency = mergeGeoAndHints(cc);
         console.log("[CheckoutCurrency] IP geolocation:", cc, "→ currency:", finalCurrency);
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_IP", cc || "null");
+          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_FINAL", finalCurrency);
+        }
         setCurrency(finalCurrency);
         setLoading(false);
       }
@@ -156,6 +166,10 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
       if (!cancelled) {
         const fallbackCurrency = inferCurrencyFromClientHints();
         console.log("[CheckoutCurrency] IP lookup failed, using fallback:", fallbackCurrency, "error:", err);
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_FALLBACK", fallbackCurrency);
+          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_ERROR", String(err));
+        }
         setCurrency(fallbackCurrency);
         setLoading(false);
       }
