@@ -1121,6 +1121,12 @@ async def download_result(
 
     read = get_result(result_id, user_id)
     background_tasks.add_task(delete_result, result_id)
+
+    # S3 backend returns presigned_url; local backend returns payload_path.
+    if read.presigned_url:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=read.presigned_url, status_code=302)
+
     return FileResponse(
         path=str(read.payload_path),
         filename=read.filename,
