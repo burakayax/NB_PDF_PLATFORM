@@ -22,10 +22,10 @@ export function ToolsGrid({
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold text-nb-heading sm:text-xl lg:text-2xl">
+      <h2 className="mb-3 sm:mb-4 text-base sm:text-lg font-semibold text-nb-heading md:text-xl lg:text-2xl">
         {tr ? "Mevcut Araçlar" : "Available Tools"}
       </h2>
-      <div className="grid grid-cols-3 gap-3 lg:grid-cols-4 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-6 2xl:gap-5">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:gap-3 lg:grid-cols-4 lg:gap-4 xl:grid-cols-4 2xl:grid-cols-6 2xl:gap-5">
         {tools.map((tool) => {
           const isActive = tool.id === selectedTool;
           const locked = lockedFeatures?.has(tool.id) ?? false;
@@ -37,14 +37,14 @@ export function ToolsGrid({
               onClick={() => onSelectTool(tool.id)}
               aria-pressed={isActive}
               aria-label={tool.label}
-              className={`nb-transition group flex flex-col items-center gap-2 rounded-2xl border p-3 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45 lg:gap-3 lg:p-4 2xl:p-5 ${
+              className={`nb-transition group flex flex-col items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-2xl border p-2 sm:p-3 md:p-3.5 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45 lg:gap-3 lg:p-4 2xl:p-5 ${
                 isActive
                   ? "border-nb-primary/50 bg-nb-primary/12 shadow-[0_0_28px_-8px_rgba(34,211,238,0.4)]"
                   : "border-white/[0.08] bg-nb-panel/60 hover:scale-[1.03] hover:border-nb-primary/35 hover:bg-nb-panel hover:shadow-lg"
               }`}
             >
               <span
-                className={`flex items-center justify-center rounded-xl p-2 transition-transform duration-200 group-hover:scale-110 lg:rounded-2xl lg:p-2.5 2xl:p-3 ${
+                className={`flex items-center justify-center rounded-lg sm:rounded-xl p-1.5 sm:p-2 transition-transform duration-200 group-hover:scale-110 lg:rounded-2xl lg:p-2.5 2xl:p-3 ${
                   isActive
                     ? "bg-nb-primary/20 text-nb-primary"
                     : locked
@@ -54,7 +54,7 @@ export function ToolsGrid({
               >
                 {locked ? (
                   <svg
-                    className="h-5 w-5 lg:h-6 lg:w-6 2xl:h-7 2xl:w-7"
+                    className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 2xl:h-7 2xl:w-7"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -70,30 +70,30 @@ export function ToolsGrid({
                 ) : (
                   <SidebarToolGlyph
                     id={tool.id}
-                    className="h-5 w-5 lg:h-6 lg:w-6 2xl:h-7 2xl:w-7"
+                    className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 2xl:h-7 2xl:w-7"
                     active={isActive}
                   />
                 )}
               </span>
 
               <span className="flex min-w-0 w-full flex-col items-center gap-0.5">
-                <span className="w-full truncate text-xs font-semibold leading-tight text-nb-text group-hover:text-nb-heading lg:text-[13px] 2xl:text-sm">
+                <span className="w-full truncate text-[11px] sm:text-xs font-semibold leading-tight text-nb-text group-hover:text-nb-heading md:text-[12px] lg:text-[13px] 2xl:text-sm">
                   {tool.label}
                 </span>
                 {tool.description && (
-                  <span className="hidden w-full truncate text-[10px] leading-tight text-nb-muted md:block lg:text-[11px]">
+                  <span className="hidden w-full truncate text-[9px] leading-tight text-nb-muted sm:block sm:text-[10px] lg:text-[11px]">
                     {tool.description}
                   </span>
                 )}
               </span>
 
               {locked && (
-                <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300/95 lg:text-[10px]">
+                <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide text-amber-300/95 lg:text-[10px]">
                   {tr ? "Kilit" : "Locked"}
                 </span>
               )}
               {!locked && tool.isPro && (
-                <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-nb-primary-mid lg:text-[10px]">
+                <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 py-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide text-nb-primary-mid lg:text-[10px]">
                   Pro
                 </span>
               )}

@@ -31,8 +31,8 @@ export function DashboardToolsSection({
 
   return (
     <section aria-label={tr ? "PDF Araçları" : "PDF Tools"}>
-      {/* Mobile / Tablet — dropdown only, no heading */}
-      <div className="block lg:hidden">
+      {/* Mobile (≤640px) — Dropdown only */}
+      <div className="block sm:hidden">
         <ToolsDropdown
           tools={tools}
           selectedTool={selectedTool}
@@ -42,7 +42,21 @@ export function DashboardToolsSection({
         />
       </div>
 
-      {/* Laptop / Desktop — grid */}
+      {/* Tablet (641-1024px) — Dropdown with heading */}
+      <div className="hidden sm:block lg:hidden">
+        <h2 className="mb-3 text-sm font-semibold text-nb-heading">
+          {tr ? "Araç Seç" : "Choose Tool"}
+        </h2>
+        <ToolsDropdown
+          tools={tools}
+          selectedTool={selectedTool}
+          language={language}
+          lockedFeatures={lockedFeatures}
+          onSelectTool={onSelectTool}
+        />
+      </div>
+
+      {/* Desktop (>1024px) — Full grid */}
       <div className="hidden lg:block">
         <ToolsGrid
           tools={tools}

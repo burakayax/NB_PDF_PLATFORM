@@ -169,12 +169,13 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   return response;
 }
 
-export async function loginAuthUser(email: string, password: string) {
+export async function loginAuthUser(email: string, password: string, isAdmin = false) {
   const payload = { email: email.trim().toLowerCase(), password };
+  const endpoint = isAdmin ? "/nbadmin" : "/login";
   if (import.meta.env.DEV) {
-    console.info("[auth] POST /api/auth/login", { email: payload.email });
+    console.info(`[auth] POST /api/auth${endpoint}`, { email: payload.email });
   }
-  const response = await sendAuthRequest<AuthResponse>("/login", payload);
+  const response = await sendAuthRequest<AuthResponse>(endpoint, payload);
   if (!response) {
     throw new Error("Login response was empty.");
   }

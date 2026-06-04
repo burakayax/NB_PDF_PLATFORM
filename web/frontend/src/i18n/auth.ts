@@ -196,6 +196,8 @@ export function translateAuthApiMessage(
       "Yeni şifre mevcut şifrenizden farklı olmalıdır.",
     "An account with this email already exists.":
       "Bu e-posta adresi ile kayıtlı bir hesap zaten var.",
+    "An account with this email already exists. Sign in with your email and password, or use a different Google account.":
+      "Bu e-posta adresi ile kayıtlı bir hesap zaten var. E-posta ve şifrenizle giriş yapın veya farklı bir Google hesabı kullanın.",
     "This email address cannot be used to create an account.":
       "Bu e-posta adresi ile yeni hesap oluşturulamaz.",
     "Password must be at least 8 characters.":

@@ -46,39 +46,74 @@ export function DashboardHeader({
   const tr = language === "tr";
 
   return (
-    <div className="flex items-center justify-between gap-3 sm:gap-4">
-      <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-        <UserAvatar user={user} />
-        <div className="min-w-0">
-          <p className="truncate text-base font-bold text-nb-heading sm:text-lg md:text-xl lg:text-2xl 2xl:text-3xl">
-            {greeting}
-          </p>
-          <p className="mt-0.5 truncate text-xs text-nb-muted sm:text-sm md:text-base">
-            {date}
-          </p>
+    <>
+      {/* Mobile: Minimal header (avatar only, max 56px) */}
+      <div className="flex md:hidden items-center justify-between gap-2 min-h-14 max-h-14">
+        <div className="flex items-center gap-2 min-w-0">
+          <UserAvatar user={user} />
+          <div className="min-w-0 hidden sm:block">
+            <p className="truncate text-xs font-bold text-nb-heading">
+              {user.name?.split(" ")[0] || "User"}
+            </p>
+            <p className="text-[9px] text-nb-muted">{new Date().toLocaleDateString(tr ? "tr-TR" : "en-US", { month: "short", day: "numeric" })}</p>
+          </div>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label={tr ? "Bildirimler" : "Notifications"}
+            className="nb-transition flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text"
+          >
+            <Bell className="h-5 w-5" aria-hidden />
+          </button>
+          {onOpenSettings && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-label={tr ? "Ayarlar" : "Settings"}
+              className="nb-transition flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text"
+            >
+              <Settings className="h-5 w-5" aria-hidden />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-        <button
-          type="button"
-          aria-label={tr ? "Bildirimler" : "Notifications"}
-          className="nb-transition flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text sm:h-10 sm:w-10"
-        >
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
-        </button>
+      {/* Tablet & Desktop: Full header */}
+      <div className="hidden md:flex flex-col items-start justify-between gap-3 sm:gap-4 md:flex-row md:items-center">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3 md:gap-4">
+          <UserAvatar user={user} />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-nb-heading sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
+              {greeting}
+            </p>
+            <p className="mt-0.5 truncate text-[10px] text-nb-muted sm:text-xs md:text-sm lg:text-base">
+              {date}
+            </p>
+          </div>
+        </div>
 
-        {onOpenSettings && (
+        <div className="flex shrink-0 items-center gap-1 sm:gap-1.5 md:gap-2">
           <button
             type="button"
-            onClick={onOpenSettings}
-            aria-label={tr ? "Ayarlar" : "Settings"}
-            className="nb-transition flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text sm:h-10 sm:w-10"
+            aria-label={tr ? "Bildirimler" : "Notifications"}
+            className="nb-transition flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text sm:h-9 sm:w-9 md:h-10 md:w-10 md:rounded-xl"
           >
-            <Settings className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
+            <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" aria-hidden />
           </button>
-        )}
+
+          {onOpenSettings && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              aria-label={tr ? "Ayarlar" : "Settings"}
+              className="nb-transition flex h-8 w-8 items-center justify-center rounded-lg border border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/30 hover:text-nb-text sm:h-9 sm:w-9 md:h-10 md:w-10 md:rounded-xl"
+            >
+              <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5" aria-hidden />
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

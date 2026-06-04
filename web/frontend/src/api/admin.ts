@@ -682,3 +682,22 @@ export async function downloadAdminDownloadLogProof(accessToken: string, id: str
   a.remove();
   URL.revokeObjectURL(url);
 }
+
+export async function adminResetUserRateLimit(
+  accessToken: string,
+  userId: string,
+): Promise<{
+  success: boolean;
+  message: string;
+  note?: string;
+  helpText?: string;
+}> {
+  const r = await adminFetch(accessToken, `/rate-limit/reset/${userId}`, {
+    method: "POST",
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ message: "Failed to reset rate limit" }));
+    throw new Error(err.message ?? "Failed to reset rate limit");
+  }
+  return r.json();
+}

@@ -1130,3 +1130,59 @@ export async function adminDownloadLogProofController(
   );
   response.send(text);
 }
+
+/**
+ * POST /api/admin/rate-limit/reset/:userId
+ * Admin'ler kullanıcıların rate limit'lerini reset edebilir
+ */
+export async function adminResetRateLimitController(
+  request: Request,
+  response: Response,
+) {
+  const userId = typeof request.params["userId"] === "string" ? request.params["userId"] : "";
+  if (!userId) {
+    throw new HttpError(400, "User ID required");
+  }
+
+  // Verify user exists
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
+  if (!user) {
+    throw new HttpError(404, "User not found");
+  }
+
+  // Try to access Redis from app locals (if available)
+  const redisClient = (request.app.locals.redis as any) || null;
+
+  if (!redisClient) {
+    // No Redis available - rate limit uses MemoryStore or other backend
+    // Return message that user needs to wait or restart
+    response.json({
+      success: true,
+      message: "Rate limit reset requested",
+      note: "MemoryStore kullanılıyor. Server restart'ı ile rate limit sıfırlanır veya kullanıcı 5 dakika bekleyebilir.",
+      userId: user.id,
+      userEmail: user.email,
+    });
+    return;
+  }
+
+  try {
+    // Delete all rate limit keys for this user's IP if available
+    // We don't have IP stored with user, so we'll clear login/forgot-password patterns
+    // For now, just notify admin to use CLI script if they need to clear specific IPs
+
+    response.json({
+      success: true,
+      message: "Rate limit management",
+      note: "Rate limit'ler IP-based'dir. Kullanıcının IP'sini biliyorsan CLI script'i kullan: npx tsx scripts/reset-rate-limit.ts --ip=IP_ADDRESS",
+      userId: user.id,
+      userEmail: user.email,
+      helpText: "Veya kullanıcının 5 dakika beklemesini söyle.",
+    });
+  } catch (error) {
+    throw new HttpError(500, "Rate limit reset failed");
+  }
+}

@@ -9,18 +9,30 @@ export const LogoIcon = ({ className, size = 32 }: { className?: string; size?: 
     className={className}
     xmlns="http://www.w3.org/2000/svg"
   >
-    {/* Geometric PDF symbol with cyan accent */}
-    <rect x="12" y="10" width="40" height="44" rx="4" stroke="currentColor" strokeWidth="2.5" />
+    {/* Document Base Geometry with 12px Theme Corner Radius */}
+    <path
+      d="M14 6H38L50 18V54C50 56.2091 48.2091 58 46 58H14C11.7909 58 10 56.2091 10 54V10C10 7.79086 11.7909 6 14 6Z"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinejoin="round"
+    />
+    {/* Folded Corner Page Accent */}
+    <path d="M38 6V18H50" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
 
-    {/* Dynamic transform lines (suggesting movement/processing) */}
-    <path d="M24 28h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    <path d="M24 38h16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    {/* 'N' Shape Dynamic Stroke */}
+    <path d="M20 44V26L28 36V22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    {/* 'B' Shape Dynamic Transformer Line */}
+    <path
+      d="M28 22H36C39.5 22 41 24 41 26.5C41 29 39.5 30.5 36 30.5H28H36C40 30.5 42 32.5 42 35.5C42 38.5 40 40 36 40H20"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
 
-    {/* Accent glow element */}
-    <circle cx="48" cy="20" r="3" fill="currentColor" opacity="0.7" />
-
-    {/* Decorative corner element */}
-    <path d="M42 52l6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+    {/* Tech-forward Data/Transformation Node */}
+    <circle cx="28" cy="22" r="2" fill="currentColor" />
+    <circle cx="20" cy="44" r="2" fill="currentColor" />
   </svg>
 );
 

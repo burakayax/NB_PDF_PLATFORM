@@ -123,8 +123,8 @@ export function useAuthSession() {
   }, [clearSession, persistSession, restoreSession]);
 
   const login = useCallback(
-    async (email: string, password: string) => {
-      const session = await loginAuthUser(email, password);
+    async (email: string, password: string, isAdmin = false) => {
+      const session = await loginAuthUser(email, password, isAdmin);
       persistSession(session.accessToken, session.user);
       return session.user;
     },

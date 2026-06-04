@@ -92,22 +92,22 @@ export function ToolsDropdown({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label={tr ? "PDF aracı seçin" : "Select PDF tool"}
-        className="nb-transition flex h-11 w-full items-center justify-between gap-3 rounded-2xl border border-white/[0.1] bg-nb-panel/80 px-4 text-left text-sm font-medium text-nb-text shadow-sm hover:border-nb-primary/40 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
+        className="nb-transition flex min-h-[52px] sm:min-h-[48px] w-full items-center justify-between gap-2 sm:gap-3 rounded-lg sm:rounded-xl md:rounded-2xl border border-white/[0.1] bg-nb-panel/80 px-3 sm:px-4 text-left text-sm font-medium text-nb-text shadow-sm hover:border-nb-primary/40 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
       >
-        <span className="flex min-w-0 items-center gap-3">
+        <span className="flex min-w-0 items-center gap-2 sm:gap-3">
           {selected ? (
             <>
               <span className="shrink-0 text-nb-primary">
-                <SidebarToolGlyph id={selected.id} className="h-4 w-4" active />
+                <SidebarToolGlyph id={selected.id} className="h-3.5 w-3.5 sm:h-4 sm:w-4" active />
               </span>
-              <span className="truncate">{selected.label}</span>
+              <span className="truncate text-[13px] sm:text-sm">{selected.label}</span>
             </>
           ) : (
-            <span className="text-nb-muted">{placeholder}</span>
+            <span className="text-nb-muted text-[13px] sm:text-sm">{placeholder}</span>
           )}
         </span>
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-nb-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-nb-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           aria-hidden
         />
       </button>
@@ -117,7 +117,7 @@ export function ToolsDropdown({
           ref={listRef}
           role="listbox"
           aria-label={tr ? "PDF Araçları" : "PDF Tools"}
-          className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-80 overflow-y-auto rounded-2xl border border-white/[0.1] bg-nb-bg-elevated/98 py-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md"
+          className="absolute left-0 right-0 top-[calc(100%+6px)] z-50 max-h-60 sm:max-h-80 overflow-y-auto rounded-xl sm:rounded-2xl border border-white/[0.1] bg-nb-bg-elevated/98 py-1 sm:py-1.5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-md"
         >
           {tools.map((tool, idx) => {
             const isSelected = tool.id === selectedTool;
@@ -145,23 +145,23 @@ export function ToolsDropdown({
                   onSelectTool(tool.id);
                   setOpen(false);
                 }}
-                className={`nb-transition flex h-11 cursor-pointer items-center gap-3 px-4 text-sm focus:outline-none focus-visible:bg-nb-primary/10 ${
+                className={`nb-transition flex min-h-[48px] cursor-pointer items-center gap-2 sm:gap-3 px-3 sm:px-4 text-[13px] sm:text-sm focus:outline-none focus-visible:bg-nb-primary/10 ${
                   isSelected
                     ? "bg-nb-primary/15 text-nb-accent"
                     : "text-nb-text hover:bg-white/[0.06]"
                 }`}
               >
                 <span className={isSelected ? "text-nb-primary" : "text-nb-muted"}>
-                  <SidebarToolGlyph id={tool.id} className="h-4 w-4" active={isSelected} />
+                  <SidebarToolGlyph id={tool.id} className="h-3.5 w-3.5 sm:h-4 sm:w-4" active={isSelected} />
                 </span>
                 <span className="min-w-0 flex-1 truncate font-medium">{tool.label}</span>
                 {locked && (
-                  <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
+                  <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
                     {tr ? "Kilit" : "Pro"}
                   </span>
                 )}
                 {!locked && tool.isPro && !isSelected && (
-                  <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-nb-primary-mid">
+                  <span className="shrink-0 rounded-md border border-nb-primary/30 bg-nb-primary/10 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-semibold uppercase tracking-wide text-nb-primary-mid">
                     Pro
                   </span>
                 )}
