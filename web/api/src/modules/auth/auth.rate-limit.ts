@@ -10,6 +10,7 @@ export const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   statusCode: 429,
+  validate: { default: false },
   keyGenerator: (req) => `login:${req.ip ?? "unknown"}`,
   message: {
     message: "Çok fazla giriş denemesi. Lütfen 5 dakika sonra tekrar deneyin.",

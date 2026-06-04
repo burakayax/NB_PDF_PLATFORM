@@ -65,6 +65,7 @@ from app.core.saas_gate import (
     get_user_file_size_limit_bytes,
 )
 from app.limiter import limiter
+from app.core.pdf_security import validate_pdf_before_processing
 import src.pdf_toolkit_extra as ptx
 
 logger = logging.getLogger(__name__)
