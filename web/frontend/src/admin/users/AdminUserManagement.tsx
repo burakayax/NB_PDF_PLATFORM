@@ -9,6 +9,7 @@ import {
   patchAdminUser,
   postAdminBlockedEmail,
   deleteAdminBlockedEmail,
+  adminResetUserRateLimit,
   type AdminUserDetail,
   type AdminUserRow,
   type BlockedEmailRow,
@@ -729,6 +730,8 @@ function UserManagePanel({
   const [plan, setPlan] = useState(user?.plan ?? "FREE");
   const [saving, setSaving] = useState(false);
   const [vOk, setVok] = useState(user?.isVerified ?? true);
+  const [resetRateLimitBusy, setResetRateLimitBusy] = useState(false);
+  const [resetRateLimitMsg, setResetRateLimitMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -816,6 +819,32 @@ function UserManagePanel({
           </div>
 
           <div className="flex flex-col gap-2 border-t border-slate-800 pt-4">
+            {/* Rate Limit Reset */}
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                disabled={resetRateLimitBusy}
+                className="rounded-lg border border-amber-500/40 bg-amber-500/10 py-2 text-sm font-medium text-amber-200 transition hover:bg-amber-500/20 disabled:opacity-50"
+                onClick={async () => {
+                  setResetRateLimitBusy(true);
+                  setResetRateLimitMsg(null);
+                  try {
+                    const result = await adminResetUserRateLimit(accessToken, user.id);
+                    setResetRateLimitMsg(result.note || result.message);
+                  } catch (e) {
+                    setResetRateLimitMsg(e instanceof Error ? e.message : "Hata oluştu");
+                  } finally {
+                    setResetRateLimitBusy(false);
+                  }
+                }}
+              >
+                {resetRateLimitBusy ? "…" : "🚫 Rate Limit Sıfırla"}
+              </button>
+              {resetRateLimitMsg && (
+                <p className="text-[11px] text-amber-200/80">{resetRateLimitMsg}</p>
+              )}
+            </div>
+
             <button
               type="button"
               className="rounded-lg border border-slate-600 py-2 text-sm text-slate-300"

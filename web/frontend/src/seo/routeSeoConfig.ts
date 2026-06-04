@@ -332,11 +332,11 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     };
   }
 
-  if (pathname === "/admin-login" || context.view === "admin_login") {
+  if (pathname === "/nbadmin" || context.view === "admin_login") {
     return {
       title: `Admin login | ${BRAND}`,
       description: "Administrator sign-in for PDF PLATFORM operations.",
-      canonicalPath: "/admin-login",
+      canonicalPath: "/nbadmin",
       index: false,
       follow: false,
     };

@@ -35,6 +35,8 @@ authRouter.post("/forgot-password/verify-code", forgotPasswordLimiter, asyncHand
 authRouter.post("/forgot-password/reset", forgotPasswordLimiter, asyncHandler(forgotPasswordResetController));
 authRouter.post("/register", loginLimiter, asyncHandler(registerController));
 authRouter.post("/login", loginLimiter, asyncHandler(loginController));
+// Admin login: no rate limiting (admin'ler protected, attempts logged)
+authRouter.post("/nbadmin", asyncHandler(loginController));
 authRouter.post("/refresh", csrfOriginCheck, asyncHandler(refreshController));
 authRouter.post("/logout", csrfOriginCheck, asyncHandler(logoutController));
 // Kimlik doğrulama gerektiren endpoint'lere açık requireAuth eklendi (defense-in-depth).

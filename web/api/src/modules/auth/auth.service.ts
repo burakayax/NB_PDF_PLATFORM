@@ -894,7 +894,9 @@ export async function signInWithGoogle(params: {
       });
       throw new HttpError(
         409,
-        "An account with this email already exists. Sign in with your email and password, or use a different Google account.",
+        params.preferredLanguage === "tr"
+          ? "Bu e-posta adresi ile kayıtlı bir hesap zaten var. E-posta ve şifrenizle giriş yapın veya farklı bir Google hesabı kullanın."
+          : "An account with this email already exists. Sign in with your email and password, or use a different Google account.",
       );
     }
 
