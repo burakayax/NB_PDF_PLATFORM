@@ -244,7 +244,7 @@ function isPathAllowedDuringMaintenance(pathname: string): boolean {
   if (pathname === "/login-success" || pathname === "/login-error") {
     return true;
   }
-  if (pathname === "/admin-login") {
+  if (pathname === "/nbadmin") {
     return true;
   }
   if (pathname.startsWith("/fake-payment")) {
@@ -618,7 +618,7 @@ function getTrackedPath(view: AppView) {
     case "web":
       return "/workspace";
     case "admin_login":
-      return "/admin-login";
+      return "/nbadmin";
     case "admin":
       return "/admin";
     case "team_invite":
@@ -658,7 +658,7 @@ function getInitialViewFromLocation(): AppView {
       return "mesafeli-satis";
     case "/workspace":
       return "web";
-    case "/admin-login":
+    case "/nbadmin":
       return "admin_login";
     case "/team-invite":
       return "team_invite";
@@ -1710,7 +1710,7 @@ function App() {
     const selectedFiles = Array.from(event.target.files ?? []);
     const inputElement = event.currentTarget;
     await handleNewFiles(selectedFiles);
-    event.currentTarget.value = "";
+    if (inputElement) inputElement.value = "";
   }
 
   function triggerFilePicker() {
@@ -2100,7 +2100,7 @@ function App() {
     } else if (view === "web") {
       next = workspacePathForFeature(selectedFeatureId);
     } else if (view === "admin_login") {
-      next = "/admin-login";
+      next = "/nbadmin";
     } else {
       next = getTrackedPath(view);
     }
@@ -3251,7 +3251,7 @@ function App() {
         return;
       }
 
-      const loggedInUser = await login(payload.email, payload.password);
+      const loggedInUser = await login(payload.email, payload.password, view === "admin_login");
       if (
         loggedInUser.preferredLanguage &&
         loggedInUser.preferredLanguage !== language
@@ -4742,7 +4742,7 @@ function App() {
   if (view === "admin") {
     if (user.role !== "ADMIN" || !accessToken) {
       if (!isRestoring) {
-        window.history.replaceState({}, "", "/admin-login");
+        window.history.replaceState({}, "", "/nbadmin");
         setView("admin_login");
       }
       return (
