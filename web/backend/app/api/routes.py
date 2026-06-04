@@ -1122,10 +1122,26 @@ async def download_result(
     read = get_result(result_id, user_id)
     background_tasks.add_task(delete_result, result_id)
 
-    # S3 backend returns presigned_url; local backend returns payload_path.
+    # S3 backend: download from S3 and stream to browser (avoids CORS issues).
+    # Local backend: return local file path.
     if read.presigned_url:
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(url=read.presigned_url, status_code=302)
+        from io import BytesIO
+        from fastapi.responses import StreamingResponse
+        from app.core.result_store import _s3_get, _PAYLOAD_FILENAME
+
+        try:
+            payload = _s3_get(f"{result_id}/{_PAYLOAD_FILENAME}")
+            return StreamingResponse(
+                BytesIO(payload),
+                media_type=read.mime,
+                headers={
+                    "Content-Disposition": f'attachment; filename="{read.filename}"',
+                    **(build_pdf_download_headers(saas_gating=_saas_gating_from_consume(cons)) or {}),
+                },
+            )
+        except Exception as e:
+            logger.error("download_result S3 fetch failed result_id=%s: %s", result_id, e)
+            raise HTTPException(status_code=500, detail="Download failed.")
 
     return FileResponse(
         path=str(read.payload_path),
