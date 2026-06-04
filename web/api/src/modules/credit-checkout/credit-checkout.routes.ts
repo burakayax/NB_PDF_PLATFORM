@@ -14,6 +14,7 @@ const validateCouponLimiter = rateLimit({
   limit: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { default: false },
   keyGenerator: (req) => (req as any).authUser?.id ?? req.ip ?? "unknown",
   message: { message: "Too many coupon attempts. Please wait a minute." },
 });
