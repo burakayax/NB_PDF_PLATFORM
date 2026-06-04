@@ -1125,14 +1125,14 @@ async def download_result(
     # S3 backend: download from S3 and stream to browser (avoids CORS issues).
     # Local backend: return local file path.
     if read.presigned_url:
-        from io import BytesIO
         from fastapi.responses import StreamingResponse
-        from app.core.result_store import _s3_get, _PAYLOAD_FILENAME
+        from app.core.result_store import _get_s3, _s3_bucket, _PAYLOAD_FILENAME
 
         try:
-            payload = _s3_get(f"{result_id}/{_PAYLOAD_FILENAME}")
+            s3 = _get_s3()
+            resp = s3.get_object(Bucket=_s3_bucket(), Key=f"{result_id}/{_PAYLOAD_FILENAME}")
             return StreamingResponse(
-                BytesIO(payload),
+                resp["Body"].iter_chunks(8192),
                 media_type=read.mime,
                 headers={
                     "Content-Disposition": f'attachment; filename="{read.filename}"',
