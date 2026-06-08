@@ -4011,23 +4011,31 @@ function App() {
       MAX_FILE_BYTES === Infinity
         ? []
         : rawFiles.filter((f) => f.size > MAX_FILE_BYTES);
+    // Boyutu aşan dosyaları sisteme hiç ekleme; uygun olanları eklemeye devam et.
+    const sizeOkFiles =
+      MAX_FILE_BYTES === Infinity
+        ? rawFiles
+        : rawFiles.filter((f) => f.size <= MAX_FILE_BYTES);
     if (oversized.length > 0) {
       const names = oversized.map((f) => f.name).join(", ");
       showToast(
         "error",
         language === "tr" ? "Dosya çok büyük" : "File too large",
         language === "tr"
-          ? `Maksimum dosya boyutu ${fileSizeLimitMB} MB. Büyük dosya(lar): ${names}`
-          : `Maximum file size is ${fileSizeLimitMB} MB. Oversized: ${names}`,
+          ? `Maksimum dosya boyutu ${fileSizeLimitMB} MB. Eklenmeyen dosya(lar): ${names}`
+          : `Maximum file size is ${fileSizeLimitMB} MB. Not added: ${names}`,
       );
-      return;
+      // Uygun dosya da yoksa burada dur.
+      if (sizeOkFiles.length === 0) {
+        return;
+      }
     }
 
     const existingKeys = new Set(uploads.map((u) => fileIdentityKey(u.file)));
-    const duplicates = rawFiles.filter((f) =>
+    const duplicates = sizeOkFiles.filter((f) =>
       existingKeys.has(fileIdentityKey(f)),
     );
-    const freshFiles = rawFiles.filter(
+    const freshFiles = sizeOkFiles.filter(
       (f) => !existingKeys.has(fileIdentityKey(f)),
     );
 
@@ -5023,7 +5031,7 @@ function App() {
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
           />
-          <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6">
+          <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
                 <QuotaWidget
@@ -5181,6 +5189,26 @@ function App() {
                                   maxFiles={batchMaxFiles}
                                   language={language}
                                   disabled={submitting}
+                                  maxFileBytes={
+                                    (userBalance?.fileSizeLimitMB ?? 200) >= 999999
+                                      ? Infinity
+                                      : (userBalance?.fileSizeLimitMB ?? 200) *
+                                        1024 *
+                                        1024
+                                  }
+                                  onOversized={(names) => {
+                                    const limitMB =
+                                      userBalance?.fileSizeLimitMB ?? 200;
+                                    showToast(
+                                      "error",
+                                      language === "tr"
+                                        ? "Dosya çok büyük"
+                                        : "File too large",
+                                      language === "tr"
+                                        ? `Maksimum dosya boyutu ${limitMB} MB. Eklenmeyen dosya(lar): ${names.join(", ")}`
+                                        : `Maximum file size is ${limitMB} MB. Not added: ${names.join(", ")}`,
+                                    );
+                                  }}
                                 />
                               ) : (
                                 <p className="text-xs text-amber-400 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2">
@@ -5926,7 +5954,23 @@ function App() {
                           <div className="selected-files">
                             <div className="selected-files__header">
                               <div className="selected-files__title-row">
-                                <p>{W.selectedFiles}</p>
+                                <p className="flex items-center gap-2">
+                                  <span>{W.selectedFiles}</span>
+                                  {(selectedFeature.multiple ||
+                                    BATCHABLE_TOOLS.has(selectedFeature.id)) &&
+                                  uploads.length > 0 ? (
+                                    <span
+                                      className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-nb-primary/20 px-2 py-0.5 text-xs font-semibold text-nb-accent"
+                                      aria-label={
+                                        language === "tr"
+                                          ? `${uploads.length} dosya yüklendi`
+                                          : `${uploads.length} files added`
+                                      }
+                                    >
+                                      {uploads.length}
+                                    </span>
+                                  ) : null}
+                                </p>
                                 {uploads.length > 0 ? (
                                   <button
                                     type="button"
