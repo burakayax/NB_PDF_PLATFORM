@@ -103,9 +103,12 @@ export type PreferredLanguageInput = z.infer<typeof preferredLanguageSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
-/** DELETE /api/auth/me — GDPR account deletion: password confirmation required. */
+/** DELETE /api/auth/me — GDPR account deletion: password confirmation required for local accounts. */
 export const deleteAccountSchema = z.object({
-  password: z.string().min(1, "Password is required.").max(128),
+  // Google/OAuth hesaplarının şifresi yoktur; bu durumda şifre alanı boş/atlanmış
+  // gelebilir. Şifre zorunluluğu, hesabın gerçekten bir şifresi olup olmadığına
+  // göre servis katmanında uygulanır (Google için oturum doğrulaması yeterlidir).
+  password: z.string().max(128).optional(),
 });
 
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

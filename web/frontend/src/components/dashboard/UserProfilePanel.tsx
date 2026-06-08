@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY, deleteMyAccount } from "../../api/auth";
+import { userEffectiveHasPassword, type AuthUser, type UpdateProfileInput, AUTH_ACCESS_TOKEN_STORAGE_KEY, deleteMyAccount, exportMyData } from "../../api/auth";
 import { validateNewPasswordPolicy } from "../../lib/passwordPolicy";
 import type { PlanName } from "../../api/entitlement";
 import { localizedPlanDisplayName } from "../../i18n/plans";
@@ -70,6 +70,26 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
     } catch {
       showToast("error", p("toastDeleteError", lang), p("toastDeleteErrorDetail", lang));
       setDeleteSubmitting(false);
+    }
+  };
+
+  // ─── GDPR: verileri dışa aktar ────────────────────────────────────────────
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async () => {
+    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    if (!token) {
+      showToast("error", lang === "tr" ? "Oturum bulunamadı" : "Session not found", lang === "tr" ? "Lütfen tekrar giriş yapın." : "Please sign in again.");
+      return;
+    }
+    setExporting(true);
+    try {
+      await exportMyData(token);
+      showToast("success", lang === "tr" ? "Veriler indirildi" : "Data exported", lang === "tr" ? "Verileriniz JSON olarak indirildi." : "Your data was downloaded as JSON.");
+    } catch {
+      showToast("error", lang === "tr" ? "Dışa aktarma başarısız" : "Export failed", lang === "tr" ? "Verileriniz dışa aktarılamadı. Lütfen tekrar deneyin." : "Could not export your data. Please try again.");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -386,13 +406,16 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
             ? "Profil bilgileri, işlem geçmişi ve indirme kayıtlarınızı makine tarafından okunabilir JSON formatında indirin."
             : "Download your profile information, operation history and download records in machine-readable JSON format."}
         </p>
-        <a
-          href={`${getSaasApiBase()}/api/auth/export-my-data`}
-          download
-          className="mt-5 inline-block rounded-xl border border-nb-primary/30 bg-nb-primary/10 px-5 py-2.5 text-sm font-semibold text-nb-primary transition hover:bg-nb-primary/20"
+        <button
+          type="button"
+          onClick={() => void handleExportData()}
+          disabled={exporting}
+          className="mt-5 inline-block rounded-xl border border-nb-primary/30 bg-nb-primary/10 px-5 py-2.5 text-sm font-semibold text-nb-primary transition hover:bg-nb-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {lang === "tr" ? "JSON Olarak İndir" : "Download as JSON"}
-        </a>
+          {exporting
+            ? (lang === "tr" ? "İndiriliyor…" : "Downloading…")
+            : (lang === "tr" ? "JSON Olarak İndir" : "Download as JSON")}
+        </button>
       </section>
 
       {/* ── Tehlikeli Alan: Hesap Silme (GDPR Madde 17) ──────── */}

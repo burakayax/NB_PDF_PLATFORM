@@ -217,6 +217,39 @@ export async function deleteMyAccount(
   await ensureOk(response, "Account deletion failed.");
 }
 
+/**
+ * GET /api/auth/export-my-data — GDPR Madde 20 veri dışa aktarma.
+ *
+ * Bu uç nokta `requireAuth` ile korunuyor ve token'ı YALNIZCA
+ * `Authorization: Bearer` header'ından okuyor. Bu yüzden basit bir
+ * `<a href download>` ile indirilemez (tarayıcı anchor isteğine Bearer
+ * header ekleyemez, sadece cookie gönderir → 401). Bu fonksiyon fetch ile
+ * token'ı header'a koyar, dönen JSON'u blob olarak istemci tarafında indirir.
+ */
+export async function exportMyData(accessToken: string): Promise<void> {
+  const response = await saasFetch(`/api/auth/export-my-data`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  await ensureOk(response, "Data export failed.");
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const match = /filename="?([^"]+)"?/i.exec(disposition);
+  const filename = match?.[1] ?? `nbpdf-data-export-${Date.now()}.json`;
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  // Object URL'i bir sonraki tick'te serbest bırak (indirme tetiklendikten sonra).
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 export async function fetchAuthenticatedUser(
   accessToken: string,
   options?: { silentUnauthorized?: boolean },

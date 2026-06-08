@@ -195,7 +195,7 @@ async def merge_pdfs(
     if len(files) < 2:
         raise HTTPException(status_code=400, detail="Birleştirme için en az iki PDF seçin.")
 
-    # Merge: kota düşümü indirme GET üzerinden ``entitlement_consume`` ile yapılır.
+    # Merge: kota indirme onayında (frontend ack) düşülür; burada sadece limit kontrolü.
     decision = await entitlement_check(token, "merge")
 
     workdir = create_workdir()
@@ -267,12 +267,13 @@ async def download_job_output(
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
 ):
-    """Akış başlamadan atomik ``entitlement_consume`` — istemci POST’suna güvenilmez."""
-    cons = await entitlement_consume(token, "merge")
-    if cons.get("status") != "ok":
+    # Kota artık indirme ONAYINDA (frontend ack) düşülür; burada sadece limit
+    # dolu mu kontrol edilir. Böylece indirme yarıda kalırsa kullanıcının hakkı yanmaz.
+    decision = await entitlement_check(token, "merge")
+    if not decision.get("allowed"):
         return JSONResponse(
             status_code=402,
-            content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+            content={"error": "payment_required", "saasGating": _saas_gating_from_check(decision)},
         )
     output_path, output_name, _workdir = get_job_download(job_id)
     background_tasks.add_task(cleanup_job, job_id)
@@ -280,7 +281,7 @@ async def download_job_output(
         path=str(output_path),
         filename=output_name,
         media_type="application/pdf",
-        headers=build_pdf_download_headers(saas_gating=_saas_gating_from_consume(cons)) or None,
+        headers=build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or None,
     )
 
 
@@ -1104,7 +1105,8 @@ async def download_result(
     background_tasks: BackgroundTasks,
     token: Annotated[str, Depends(extract_pdf_access_token)],
 ):
-    """``entitlement_consume`` ile kota düşümü; ardından dosya akışı. Sonuç silinir."""
+    """Limit kontrolü (``entitlement_check``) + dosya akışı. Kota indirme onayında
+    (frontend ack) düşülür; bu sayede yarıda kalan indirmede hak yanmaz. Sonuç silinir."""
 
     user_id = await saas_current_user_id(token)
     meta = read_meta_only(result_id)
@@ -1112,11 +1114,14 @@ async def download_result(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     tool = str(meta.get("tool") or "compress")
-    cons = await entitlement_consume(token, tool)
-    if cons.get("status") != "ok":
+    # Kota (günlük/aylık hak) artık indirme ONAYINDA (frontend ack →
+    # POST /api/entitlement/download-log/:id/ack) düşülür. Burada SADECE limitin
+    # dolu olup olmadığı kontrol edilir; böylece indirme yarıda kalırsa hak yanmaz.
+    decision = await entitlement_check(token, tool)
+    if not decision.get("allowed"):
         return JSONResponse(
             status_code=402,
-            content={"error": "payment_required", "saasGating": _saas_gating_from_consume(cons)},
+            content={"error": "payment_required", "saasGating": _saas_gating_from_check(decision)},
         )
 
     read = get_result(result_id, user_id)
@@ -1136,7 +1141,7 @@ async def download_result(
                 media_type=read.mime,
                 headers={
                     "Content-Disposition": f'attachment; filename="{read.filename}"',
-                    **(build_pdf_download_headers(saas_gating=_saas_gating_from_consume(cons)) or {}),
+                    **(build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or {}),
                 },
             )
         except Exception as e:
@@ -1147,5 +1152,5 @@ async def download_result(
         path=str(read.payload_path),
         filename=read.filename,
         media_type=read.mime,
-        headers=build_pdf_download_headers(saas_gating=_saas_gating_from_consume(cons)) or None,
+        headers=build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or None,
     )

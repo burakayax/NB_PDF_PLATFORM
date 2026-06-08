@@ -237,7 +237,16 @@ export async function downloadLogCreateController(
   response.status(201).json({ id: row.id, status: row.status });
 }
 
-/** POST /api/entitlement/download-log/:id/ack */
+/**
+ * POST /api/entitlement/download-log/:id/ack
+ *
+ * Kota (günlük/aylık kullanım) BU NOKTADA düşülür: tarayıcı dosyayı gerçekten
+ * indirdiğini onayladığında. İndirme başında değil — böylece ağ hatası/iptal
+ * durumunda kullanıcının hakkı boşa yanmaz.
+ *
+ * Atomik `updateMany (status != SUCCESS)` ile yalnızca İLK ack kotayı düşürür;
+ * yeniden gönderilen ack'ler (idempotent) tekrar düşürmez.
+ */
 export async function downloadLogAckController(
   request: Request,
   response: Response,
@@ -254,9 +263,38 @@ export async function downloadLogAckController(
     response.status(200).json({ ok: true, already: true });
     return;
   }
-  await prisma.downloadLog.update({
-    where: { id: idParse.data },
+
+  // Yarış koşulunu önle: sadece status henüz SUCCESS değilse SUCCESS'e çek.
+  // count === 0 ise başka bir eşzamanlı ack kazanmıştır → kotayı tekrar düşürme.
+  const claimed = await prisma.downloadLog.updateMany({
+    where: { id: idParse.data, userId, status: { not: "SUCCESS" } },
     data: { status: "SUCCESS", ackedAt: new Date() },
   });
-  response.status(200).json({ ok: true });
+  if (claimed.count === 0) {
+    response.status(200).json({ ok: true, already: true });
+    return;
+  }
+
+  // Onaylanan indirme için kotayı şimdi düş (operasyon kaydı + sayaç artışı).
+  // checkAndIncrementQuota admin/team/ücretsiz organizasyon mantığını içerir;
+  // denied dönerse (örn. arada limit doldu) dosya zaten indirildiği için
+  // bunu engelleyemeyiz — sadece loglar, ack yine başarılı sayılır.
+  let quota: Awaited<ReturnType<typeof checkAndIncrementQuota>> | null = null;
+  try {
+    quota = await checkAndIncrementQuota(userId, found.toolId, 1, 0);
+  } catch (err) {
+    // Kota düşümü başarısız olsa bile ack'i geri almıyoruz (dosya teslim edildi).
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[entitlement] ack-time quota increment failed", err);
+    }
+  }
+
+  response.status(200).json({
+    ok: true,
+    quotaCounted: quota?.allowed ?? false,
+    dailyUsed: quota?.dailyUsed,
+    dailyLimit: quota?.dailyLimit,
+    monthlyUsed: quota?.monthlyUsed,
+    monthlyLimit: quota?.monthlyLimit,
+  });
 }

@@ -7,20 +7,33 @@ interface BatchFileUploadProps {
   maxFiles?: number;
   language?: string;
   disabled?: boolean;
+  /** Plan bazlı dosya boyutu sınırı (bayt). Aşan dosyalar eklenmez. Infinity/atlanmış = sınırsız. */
+  maxFileBytes?: number;
+  /** Boyutu aşan dosyalar reddedildiğinde çağrılır (uyarı göstermek için). */
+  onOversized?: (names: string[], limitBytes: number) => void;
 }
 
-export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr", disabled = false }: BatchFileUploadProps) {
+export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr", disabled = false, maxFileBytes = Infinity, onOversized }: BatchFileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const tr = language === "tr";
 
   function addFiles(incoming: FileList | null) {
     if (disabled || !incoming) return;
     const next = [...files];
+    const oversized: string[] = [];
     for (const f of Array.from(incoming)) {
       if (next.length >= maxFiles) break;
+      // Plan boyut sınırını aşan dosyaları sisteme ekleme.
+      if (Number.isFinite(maxFileBytes) && f.size > maxFileBytes) {
+        oversized.push(f.name);
+        continue;
+      }
       if (!next.some((e) => e.name === f.name && e.size === f.size)) {
         next.push(f);
       }
+    }
+    if (oversized.length > 0) {
+      onOversized?.(oversized, maxFileBytes);
     }
     onChange(next);
   }

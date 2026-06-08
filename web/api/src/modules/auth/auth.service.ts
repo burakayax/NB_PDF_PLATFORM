@@ -629,20 +629,24 @@ export async function logoutUser(refreshToken: string | undefined) {
   await revokeRefreshToken(refreshToken);
 }
 
-export async function deleteUserAccount(userId: string, password: string): Promise<{ email: string; preferredLanguage: Language }> {
+export async function deleteUserAccount(userId: string, password?: string): Promise<{ email: string; preferredLanguage: Language }> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw new HttpError(404, "User account could not be found.");
   }
 
-  // Google-only accounts have no password; reject deletion via this path.
-  if (!user.passwordHash) {
-    throw new HttpError(400, "This account uses Google sign-in and has no password. Contact support to delete your account.");
-  }
-
-  const passwordOk = await verifyPassword(password, user.passwordHash);
-  if (!passwordOk) {
-    throw new HttpError(401, "Incorrect password.");
+  // Şifreli (local) hesaplar için şifre doğrulaması zorunlu. Google/OAuth
+  // hesaplarının şifresi yoktur; bu hesaplarda silme yetkisi, oturumu doğrulayan
+  // requireAuth + istemci tarafındaki "DELETE" onay ifadesiyle sağlanır (GDPR
+  // Madde 17 silme hakkını engellememek için). Şifre olmadan silmeye izin verilir.
+  if (user.passwordHash) {
+    if (!password) {
+      throw new HttpError(400, "Password is required.");
+    }
+    const passwordOk = await verifyPassword(password, user.passwordHash);
+    if (!passwordOk) {
+      throw new HttpError(401, "Incorrect password.");
+    }
   }
 
   // Explicitly delete refresh tokens before the user row so any in-flight
