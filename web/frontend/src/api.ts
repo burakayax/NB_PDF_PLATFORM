@@ -61,10 +61,11 @@ function getPdfApiBase(): string {
   if (import.meta.env.DEV) {
     return "";
   }
+  // Yerel tarayıcı (dev veya herhangi bir portta `vite preview`) → göreli `/api`,
+  // istek Vite preview proxy üzerinden FastAPI'ye gider; mutlak localhost:8000 ile CORS olmaz.
   if (typeof window !== "undefined") {
     const h = window.location.hostname;
-    const p = window.location.port;
-    if ((h === "localhost" || h === "127.0.0.1") && p === "4173") {
+    if (h === "localhost" || h === "127.0.0.1") {
       return "";
     }
   }

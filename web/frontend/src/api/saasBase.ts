@@ -31,10 +31,27 @@ function isLocalhostSaasDevUrl(trimmed: string): boolean {
   }
 }
 
+/** localhost/127.0.0.1 (herhangi bir port) — dev veya `vite preview`. */
+function isLocalBrowserHost(): boolean {
+  if (typeof window === "undefined") {
+    return false;
+  }
+  const h = window.location.hostname;
+  return h === "localhost" || h === "127.0.0.1";
+}
+
 export function getSaasApiBase(): string {
   const trimmed = readSaasApiBaseFromEnv();
 
   const useRemoteSaasInDev = import.meta.env.VITE_USE_REMOTE_SAAS_IN_DEV === "true";
+
+  // Yerel tarayıcıda (dev VE `vite preview`) her zaman göreli `/api` → Vite proxy hedefe iletir.
+  // Üretim derlemesine gömülü mutlak API URL'si (ör. onrender) burada CORS'a takılırdı;
+  // göreli istek preview proxy (vite.config preview.proxy) üzerinden gider, CORS olmaz.
+  // Uzaktaki API'yi yerelde test etmek için açıkça VITE_USE_REMOTE_SAAS_IN_DEV=true gerekir.
+  if (isLocalBrowserHost() && !useRemoteSaasInDev) {
+    return "";
+  }
 
   /**
    * Yerel UI (localhost) iken frontend .env’de üretim API adresi gömülü olabilir — Google OAuth

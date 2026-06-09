@@ -261,8 +261,10 @@ export default defineConfig(({ command, mode, isPreview }) => {
     },
     build: {
       minify: "esbuild",
+      // Modern temel; eski tarayıcılar için gereksiz polyfill/transform üretmez (Lighthouse "legacy JS").
       target: "es2020",
-      sourcemap: false,
+      // 'hidden': üretim için kaynak haritası üretir ama public olarak ifşa etmez (Best Practices).
+      sourcemap: "hidden",
       chunkSizeWarningLimit: 900,
       cssMinify: true,
       rollupOptions: {
@@ -276,6 +278,23 @@ export default defineConfig(({ command, mode, isPreview }) => {
             }
             if (id.includes("node_modules/react/")) {
               return "react";
+            }
+            // Ağır, yalnızca belirli görünümlerde gereken kütüphaneleri ayrı vendor chunk'larına böl:
+            // başlangıç paketini küçültür ve daha iyi önbellekleme sağlar.
+            if (
+              id.includes("node_modules/framer-motion") ||
+              id.includes("node_modules/motion")
+            ) {
+              return "motion";
+            }
+            if (id.includes("node_modules/recharts")) {
+              return "recharts";
+            }
+            if (id.includes("node_modules/@sentry")) {
+              return "sentry";
+            }
+            if (id.includes("node_modules/@hello-pangea")) {
+              return "dnd";
             }
           },
         },

@@ -141,9 +141,11 @@ services:
         source: "/*"
         destination: "/index.html"
     headers:
+      # SAMEORIGIN (DENY değil): admin CMS önizlemesi siteyi aynı-köken iframe'de gömüyor.
+      # Çapraz-köken clickjacking yine CSP frame-ancestors 'self' ile engelli.
       - path: "/*"
         name: X-Frame-Options
-        value: DENY
+        value: SAMEORIGIN
       - path: "/*"
         name: X-Content-Type-Options
         value: nosniff
@@ -156,6 +158,14 @@ services:
       - path: "/*"
         name: Strict-Transport-Security
         value: "max-age=31536000; includeSubDomains; preload"
+      - path: "/*"
+        name: Cross-Origin-Opener-Policy
+        value: same-origin
+      # XSS azaltımı. connect-src API origin'lerini içermeli — kendi VITE_SAAS_API_BASE /
+      # VITE_API_BASE değerlerinizle eşleştiğini doğrulayın (wildcard'lar onrender + pdfplatform.app'i kapsar).
+      - path: "/*"
+        name: Content-Security-Policy
+        value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; img-src 'self' data: blob: https:; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com; worker-src 'self' blob:; manifest-src 'self'; connect-src 'self' https://*.onrender.com https://*.pdfplatform.app https://www.google-analytics.com https://region1.google-analytics.com https://www.googletagmanager.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://ipapi.co https://ipwho.is https://*.iyzipay.com; frame-src 'self' https://*.iyzipay.com; form-action 'self' https://*.iyzipay.com; upgrade-insecure-requests"
       # Asset'ler içerik hash'li — uzun süre cache'lenir
       - path: "/assets/*"
         name: Cache-Control
@@ -164,6 +174,13 @@ services:
       - path: "/index.html"
         name: Cache-Control
         value: "no-cache, no-store, must-revalidate"
+      # Service worker ve manifest cache'lenmemeli ki PWA güncellemeleri hemen yansısın
+      - path: "/sw.js"
+        name: Cache-Control
+        value: "no-cache, no-store, must-revalidate"
+      - path: "/manifest.webmanifest"
+        name: Cache-Control
+        value: "no-cache, must-revalidate"
       - path: "/sitemap.xml"
         name: Cache-Control
         value: "public, max-age=3600"

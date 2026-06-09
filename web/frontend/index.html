@@ -10,11 +10,39 @@
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Render-blocking olmayan font yüklemesi: stil önce preload, yüklenince stylesheet'e çevrilir.
+         display=swap ile metin hemen sistem fontuyla boyanır (FCP/LCP iyileşir, FOIT yok). -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
-    <link rel="icon" type="image/png" href="/web/frontend/public/logo.png" />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF PLATFORM" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iOS -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF PLATFORM" />
+
+    <!-- Windows -->
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <meta name="msapplication-TileImage" content="/icons/icon-144.png" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+
     <title>PDF PLATFORM</title>
   </head>
   <body>
