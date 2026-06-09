@@ -42,7 +42,13 @@
     }
   ],
   "shortcuts": [
-    { "name": "Çalışma Alanı", "short_name": "Çalışma", "url": "/workspace?source=pwa", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Fiyatlandırma", "short_name": "Fiyatlar", "url": "/pricing?source=pwa", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "PDF Birleştir", "short_name": "Birleştir", "url": "/tools/merge-pdf?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "PDF Böl", "short_name": "Böl", "url": "/tools/split-pdf?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "PDF Sıkıştır", "short_name": "Sıkıştır", "url": "/tools/compress?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "PDF'den Word'e", "short_name": "PDF→Word", "url": "/tools/pdf-to-word?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Word'den PDF'e", "short_name": "Word→PDF", "url": "/tools/word-to-pdf?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "PDF'den Resme", "short_name": "PDF→JPG", "url": "/tools/pdf-to-image?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Filigran Ekle", "short_name": "Filigran", "url": "/tools/watermark?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "name": "Sayfa Sil", "short_name": "Sayfa Sil", "url": "/tools/delete-pages?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] }
   ]
 }
