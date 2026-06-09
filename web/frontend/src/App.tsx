@@ -699,6 +699,42 @@ function getInitialViewFromLocation(): AppView {
   return "landing";
 }
 
+/**
+ * Giriş yapılmamış kullanıcı bir araç deep-link'ine (ör. PWA kısayolu /tools/x) gelip
+ * login'e yönlendirildiğinde, giriş sonrası tam o araca dönmek için saklanan hedef.
+ * sessionStorage → yalnızca mevcut oturum; tarayıcı kapanınca temizlenir.
+ */
+const PENDING_TOOL_STORAGE_KEY = "nb_pending_tool";
+
+function savePendingTool(id: FeatureKey): void {
+  try {
+    sessionStorage.setItem(PENDING_TOOL_STORAGE_KEY, id);
+  } catch {
+    /* yoksay */
+  }
+}
+
+function readPendingToolAndClear(): FeatureKey | null {
+  try {
+    const v = sessionStorage.getItem(PENDING_TOOL_STORAGE_KEY);
+    if (v) {
+      sessionStorage.removeItem(PENDING_TOOL_STORAGE_KEY);
+      return v as FeatureKey;
+    }
+  } catch {
+    /* yoksay */
+  }
+  return null;
+}
+
+function clearPendingTool(): void {
+  try {
+    sessionStorage.removeItem(PENDING_TOOL_STORAGE_KEY);
+  } catch {
+    /* yoksay */
+  }
+}
+
 function App() {
   const { language, setLanguage, detectInitialLanguage } =
     usePreferredLanguage();
@@ -1307,14 +1343,18 @@ function App() {
         return;
       }
 
-      url.pathname = "/workspace";
+      // Giriş öncesi bir araca yönlendirildiyse (PWA kısayolu / deep-link) o araca dön.
+      const pendingTool = readPendingToolAndClear();
+      url.pathname = pendingTool
+        ? workspacePathForFeature(pendingTool)
+        : "/workspace";
       window.history.replaceState(
         {},
         "",
         `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`,
       );
-      setSelectedFeatureId("split");
-      setActiveSidebar("split");
+      setSelectedFeatureId(pendingTool ?? "split");
+      setActiveSidebar(pendingTool ?? "split");
       setContentPanel("tool");
       setView("web");
     },
@@ -2615,6 +2655,14 @@ function App() {
 
   useEffect(() => {
     if (!isRestoring && view === "web" && !isAuthenticated) {
+      // Deep-link edilen aracı (ör. PWA kısayolu /tools/x) sakla; giriş sonrası ona dönülür.
+      const toolFromUrl =
+        typeof window !== "undefined"
+          ? parseWorkspaceToolPath(window.location.pathname)
+          : null;
+      if (toolFromUrl) {
+        savePendingTool(toolFromUrl);
+      }
       setView("login");
     }
   }, [isAuthenticated, isRestoring, view]);
@@ -3296,11 +3344,18 @@ function App() {
         return;
       }
 
-      setSelectedFeatureId("split");
-      setActiveSidebar("split");
+      // Giriş öncesi bir araca yönlendirildiyse (PWA kısayolu / deep-link) o araca dön.
+      const pendingTool = readPendingToolAndClear();
+      const targetTool = pendingTool ?? "split";
+      setSelectedFeatureId(targetTool);
+      setActiveSidebar(targetTool);
       setContentPanel("tool");
       setView("web");
-      window.history.replaceState({}, "", "/workspace");
+      window.history.replaceState(
+        {},
+        "",
+        pendingTool ? workspacePathForFeature(pendingTool) : "/workspace",
+      );
 
       const pendingPlan = sessionStorage.getItem("nb_pending_plan");
       if (pendingPlan) {
@@ -3327,6 +3382,7 @@ function App() {
 
   async function handleLogout() {
     clearNbResumeProcess();
+    clearPendingTool();
     await logout();
     setAuthError("");
     setLanguage(detectInitialLanguage());
@@ -5436,32 +5492,18 @@ function App() {
                               </div>
                             ) : null}
 
-                            {/* Sağ sütun satır 2: ayırma modu — her zaman 2. sütunda */}
-                            <div className="field" style={{ gridColumn: "2" }}>
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  gap: "12px",
-                                }}
-                              >
-                                <span
-                                  style={{
-                                    fontSize: "13px",
-                                    fontWeight: 600,
-                                    color: "var(--nb-muted)",
-                                    flexShrink: 0,
-                                  }}
-                                >
+                            {/* Ayırma modu — masaüstünde 2. sütun, mobilde tam genişlik */}
+                            <div className="field col-span-2 sm:col-span-1 sm:col-start-2">
+                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                <span className="shrink-0 text-[13px] font-semibold text-nb-muted">
                                   {W.splitModeLabel}
                                 </span>
-                                <div style={{ display: "flex", gap: "8px" }}>
+                                <div className="flex w-full gap-2 sm:w-auto">
                                   <button
                                     type="button"
                                     onClick={() => setSplitMode("single")}
                                     className={[
-                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      "flex flex-1 sm:flex-none sm:w-[148px] flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px]",
                                       splitMode === "single"
                                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
                                         : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
@@ -5479,7 +5521,7 @@ function App() {
                                     type="button"
                                     onClick={() => setSplitMode("separate")}
                                     className={[
-                                      "flex flex-col items-center justify-center gap-1.5 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px] w-[148px]",
+                                      "flex flex-1 sm:flex-none sm:w-[148px] flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px]",
                                       splitMode === "separate"
                                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
                                         : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { BeforeInstallPromptEvent } from "./types";
 
 const DISMISS_KEY = "nbpdf-pwa-install-dismissed";
-// Kapatma sonrası tekrar gösterme penceresi (ms). Kalıcı değil; bir süre sonra yeniden nazikçe sorar.
-const DISMISS_TTL_MS = 1000 * 60 * 60 * 24 * 14; // 14 gün
+// Kapatma yalnızca MEVCUT OTURUM için hatırlanır (sessionStorage).
+// Kullanıcı sekmeyi/tarayıcıyı kapatıp yeniden ziyaret edince banner tekrar gösterilir.
 
 function isStandalone(): boolean {
   if (typeof window === "undefined") {
@@ -16,17 +16,9 @@ function isStandalone(): boolean {
   );
 }
 
-function recentlyDismissed(): boolean {
+function dismissedThisSession(): boolean {
   try {
-    const raw = localStorage.getItem(DISMISS_KEY);
-    if (!raw) {
-      return false;
-    }
-    const ts = Number(raw);
-    if (!Number.isFinite(ts)) {
-      return true;
-    }
-    return Date.now() - ts < DISMISS_TTL_MS;
+    return sessionStorage.getItem(DISMISS_KEY) === "1";
   } catch {
     return false;
   }
@@ -39,7 +31,7 @@ export interface PwaInstallState {
   iosManual: boolean;
   /** Tarayıcının yükleme penceresini açar. */
   promptInstall: () => Promise<void>;
-  /** Banner'ı kapatır ve süreli olarak hatırlar. */
+  /** Banner'ı kapatır; yalnızca mevcut oturum için gizler (yeni ziyarette tekrar gösterilir). */
   dismiss: () => void;
 }
 
@@ -48,7 +40,7 @@ export function usePwaInstall(): PwaInstallState {
     null,
   );
   const [installed, setInstalled] = useState(isStandalone);
-  const [dismissed, setDismissed] = useState(recentlyDismissed);
+  const [dismissed, setDismissed] = useState(dismissedThisSession);
 
   const iosManual = (() => {
     if (typeof navigator === "undefined") {
@@ -69,7 +61,7 @@ export function usePwaInstall(): PwaInstallState {
       setInstalled(true);
       setDeferred(null);
       try {
-        localStorage.removeItem(DISMISS_KEY);
+        sessionStorage.removeItem(DISMISS_KEY);
       } catch {
         /* yoksay */
       }
@@ -91,7 +83,7 @@ export function usePwaInstall(): PwaInstallState {
     setDeferred(null);
     if (choice.outcome === "dismissed") {
       try {
-        localStorage.setItem(DISMISS_KEY, String(Date.now()));
+        sessionStorage.setItem(DISMISS_KEY, "1");
       } catch {
         /* yoksay */
       }
@@ -102,7 +94,7 @@ export function usePwaInstall(): PwaInstallState {
   const dismiss = useCallback(() => {
     setDismissed(true);
     try {
-      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+      sessionStorage.setItem(DISMISS_KEY, "1");
     } catch {
       /* yoksay */
     }

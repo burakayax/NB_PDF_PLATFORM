@@ -7,7 +7,7 @@
  *   - POST/PUT vb. ve çapraz-köken istekleri: dokunulmaz, tarayıcıya bırakılır
  * Sürüm değişince activate'te eski önbellekler silinir.
  */
-const SW_VERSION = "v1.0.1";
+const SW_VERSION = "v1.0.2";
 const STATIC_CACHE = `nbpdf-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `nbpdf-runtime-${SW_VERSION}`;
 const APP_SHELL_URL = "/";
