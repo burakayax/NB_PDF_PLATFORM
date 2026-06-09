@@ -155,7 +155,7 @@ export function DashboardTopNav({
     const assets = cms?.assets as { logoUrl?: string } | undefined;
     return (
       resolveCmsAssetUrl(assets?.logoUrl, getSaasApiBase()) ??
-      "/logo.png"
+      "/navbar-logo.png"
     );
   }, [cms]);
   const showCreditsCenter =
@@ -194,23 +194,14 @@ export function DashboardTopNav({
       <button
         type="button"
         onClick={onLogoClick}
-        className="nb-transition flex min-w-0 items-center gap-2 rounded-2xl px-1 py-1 text-left hover:scale-[1.01] hover:bg-white/[0.06] hover:shadow-[0_8px_24px_-12px_rgba(0,0,0,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45 sm:gap-3"
+        aria-label="PDF PLATFORM"
+        className="nb-transition flex shrink-0 items-center rounded-2xl px-1 py-1 hover:scale-[1.01] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-nb-primary/35 bg-gradient-to-br from-nb-primary/20 to-nb-primary/8 shadow-[0_0_28px_rgba(59,130,246,0.28)]">
-          <img
-            src={dashboardLogoSrc}
-            alt=""
-            className="h-5 w-5 rounded-md object-cover"
-          />
-        </span>
-        <span className="hidden min-w-0 sm:block">
-          <span className="block text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400">
-            NB Global Studio
-          </span>
-          <span className="block text-[15px] font-semibold tracking-[0.12em] text-nb-text">
-            PDF PLATFORM
-          </span>
-        </span>
+        <img
+          src={dashboardLogoSrc}
+          alt="PDF PLATFORM"
+          className="h-9 w-auto object-contain"
+        />
       </button>
 
       <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">

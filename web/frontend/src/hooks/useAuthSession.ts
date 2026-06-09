@@ -38,9 +38,30 @@ export function useAuthSession() {
 
   const completeOAuthLogin = useCallback(async (rawToken: string) => {
     const token = rawToken.trim();
-    const restoredUser = await fetchAuthenticatedUser(token);
-    persistSession(token, restoredUser);
-    return restoredUser;
+    // Google dönüşünde token doğrulaması (/api/auth/me) takılırsa (kopan bağlantı veya
+    // Render free-tier soğuk başlatma, ~50sn) eskiden istek sonsuza dek asılı kalıp
+    // /login-success ekranını sonsuz spinner'da bırakıyordu. Her denemeye zaman aşımı
+    // koyup yeniden deneriz: ilk deneme uyuyan sunucuyu uyandırır, sonraki deneme hızlı döner.
+    const PER_ATTEMPT_TIMEOUT_MS = 20000;
+    const MAX_ATTEMPTS = 3;
+    let lastErr: unknown;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        const restoredUser = await fetchAuthenticatedUser(token, {
+          timeoutMs: PER_ATTEMPT_TIMEOUT_MS,
+        });
+        persistSession(token, restoredUser);
+        return restoredUser;
+      } catch (e) {
+        lastErr = e;
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, 600 * attempt));
+        }
+      }
+    }
+    throw lastErr instanceof Error
+      ? lastErr
+      : new Error("OAuth login could not be completed.");
   }, [persistSession]);
 
   const restoreSession = useCallback(async () => {
@@ -48,12 +69,20 @@ export function useAuthSession() {
 
     if (storedToken) {
       try {
-        const restoredUser = await fetchAuthenticatedUser(storedToken, { silentUnauthorized: true });
+        // Zaman aşımı: takılan istek açılışı (isRestoring) sonsuza dek bekletmesin.
+        const restoredUser = await fetchAuthenticatedUser(storedToken, {
+          silentUnauthorized: true,
+          timeoutMs: 12000,
+        });
         setAccessToken(storedToken);
         setUser(restoredUser);
         return;
-      } catch {
-        window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+      } catch (e) {
+        // Yalnızca yetkisiz (geçersiz/süresi dolmuş) token'ı sil; zaman aşımı/ağ
+        // hatasında token'ı koru (geçici olabilir) ve refresh akışına düş.
+        if (e instanceof Error && e.message === "Unauthorized") {
+          window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+        }
       }
     }
 

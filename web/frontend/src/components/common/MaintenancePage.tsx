@@ -41,57 +41,26 @@ export function MaintenancePage() {
         />
 
         <div className="relative z-10 flex max-w-lg flex-col items-center text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
+          {/* Uygulama ikonu — yeni marka (yumuşak parıltılı hero) */}
+          <div className="relative">
+            <div
+              className="pointer-events-none absolute -inset-6 -z-10 rounded-[40px] bg-cyan-400/20 blur-3xl"
+              aria-hidden
+            />
+            <img
+              src="/icons/maskable-512.png"
+              alt="PDF PLATFORM"
+              width={144}
+              height={144}
+              className="h-36 w-36 rounded-[28px] shadow-[0_24px_80px_-28px_rgba(34,211,238,0.45)] ring-1 ring-white/10"
+            />
+          </div>
+
+          <p className="mt-9 text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
             PDF PLATFORM
           </p>
 
-          <div className="mt-10 flex h-36 w-36 items-center justify-center rounded-[28px] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/[0.14] to-indigo-600/[0.08] shadow-[0_0_0_1px_rgba(255,255,255,0.04)_inset,0_24px_80px_-28px_rgba(34,211,238,0.35)] ring-1 ring-white/[0.06]">
-            <svg
-              viewBox="0 0 96 96"
-              className="h-24 w-24 text-cyan-200/90"
-              fill="none"
-              aria-hidden
-            >
-              <path
-                d="M28 22h28l14 14v38a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6Z"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                strokeLinejoin="round"
-                className="opacity-95"
-              />
-              <path
-                d="M54 22v14h14"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                strokeLinejoin="round"
-                className="opacity-85"
-              />
-              <path
-                d="M34 46h22M34 54h16"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                opacity="0.55"
-              />
-              <circle
-                cx="72"
-                cy="68"
-                r="14"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="text-cyan-400/50"
-              />
-              <path
-                d="M66 68h12M72 62v12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                className="text-cyan-300/80"
-              />
-            </svg>
-          </div>
-
-          <p className="mt-10 max-w-md text-lg font-medium leading-relaxed tracking-tight text-slate-100 sm:text-xl">
+          <p className="mt-6 max-w-md text-lg font-medium leading-relaxed tracking-tight text-slate-100 sm:text-xl">
             Daha iyi bir deneyim için kısa bir mola verdik. Çok yakında
             buradayız!
           </p>

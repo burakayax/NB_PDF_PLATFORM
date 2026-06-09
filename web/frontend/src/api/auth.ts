@@ -187,9 +187,12 @@ export async function loginAuthUser(email: string, password: string, isAdmin = f
  * Çerez yoksa veya oturum geçersizse 401 beklenir; bu normaldir (misafir veya süresi dolmuş oturum) — konsola uyarı yazılmaz.
  */
 export async function refreshAuthSession(): Promise<AuthResponse | null> {
-  const response = await saasFetch(`/api/auth/refresh`, {
-    method: "POST",
-  });
+  // Zaman aşımı: takılan refresh isteği uygulama açılışını (isRestoring) sonsuza dek bekletmesin.
+  const response = await saasFetch(
+    `/api/auth/refresh`,
+    { method: "POST" },
+    { timeoutMs: 15000 },
+  );
   if (response.status === 401) {
     return null;
   }
@@ -252,13 +255,17 @@ export async function exportMyData(accessToken: string): Promise<void> {
 
 export async function fetchAuthenticatedUser(
   accessToken: string,
-  options?: { silentUnauthorized?: boolean },
+  options?: { silentUnauthorized?: boolean; timeoutMs?: number },
 ) {
-  const response = await saasFetch(`/api/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
+  const response = await saasFetch(
+    `/api/auth/me`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     },
-  });
+    options?.timeoutMs ? { timeoutMs: options.timeoutMs } : undefined,
+  );
 
   if (!response.ok && options?.silentUnauthorized && response.status === 401) {
     throw new Error("Unauthorized");

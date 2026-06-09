@@ -1,4 +1,8 @@
 import { useRef } from "react";
+import {
+  allowedExtensionsFromAccept,
+  fileExtension,
+} from "../../lib/fileTypes";
 
 interface BatchFileUploadProps {
   files: File[];
@@ -11,18 +15,27 @@ interface BatchFileUploadProps {
   maxFileBytes?: number;
   /** Boyutu aşan dosyalar reddedildiğinde çağrılır (uyarı göstermek için). */
   onOversized?: (names: string[], limitBytes: number) => void;
+  /** İzinli uzantı dışındaki dosyalar reddedildiğinde çağrılır (sürükle-bırak/all-files savunması). */
+  onRejectedType?: (names: string[]) => void;
 }
 
-export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr", disabled = false, maxFileBytes = Infinity, onOversized }: BatchFileUploadProps) {
+export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, language = "tr", disabled = false, maxFileBytes = Infinity, onOversized, onRejectedType }: BatchFileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const tr = language === "tr";
 
   function addFiles(incoming: FileList | null) {
     if (disabled || !incoming) return;
+    const allowedExts = allowedExtensionsFromAccept(accept);
     const next = [...files];
     const oversized: string[] = [];
+    const wrongType: string[] = [];
     for (const f of Array.from(incoming)) {
       if (next.length >= maxFiles) break;
+      // İzinli uzantı dışındaki dosyaları (ör. araç PDF beklerken JPEG) sisteme ekleme.
+      if (allowedExts.size > 0 && !allowedExts.has(fileExtension(f.name))) {
+        wrongType.push(f.name);
+        continue;
+      }
       // Plan boyut sınırını aşan dosyaları sisteme ekleme.
       if (Number.isFinite(maxFileBytes) && f.size > maxFileBytes) {
         oversized.push(f.name);
@@ -31,6 +44,9 @@ export function BatchFileUpload({ files, onChange, accept, maxFiles = 50, langua
       if (!next.some((e) => e.name === f.name && e.size === f.size)) {
         next.push(f);
       }
+    }
+    if (wrongType.length > 0) {
+      onRejectedType?.(wrongType);
     }
     if (oversized.length > 0) {
       onOversized?.(oversized, maxFileBytes);

@@ -205,16 +205,14 @@ function Navbar({
         {/* Logo */}
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="flex items-center gap-3 group shrink-0"
+          aria-label={copy.navbar.productLabel}
+          className="flex items-center group shrink-0"
         >
           <img
-            src="/logo.png"
+            src="/navbar-logo.png"
             alt="PDF PLATFORM"
-            className="w-8 h-8 rounded-xl object-contain shadow-[0_0_20px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_28px_rgba(99,102,241,0.7)] transition-shadow"
+            className="h-9 sm:h-10 w-auto object-contain transition-opacity group-hover:opacity-90"
           />
-          <span className="font-bold text-white tracking-tight hidden sm:block">
-            {copy.navbar.productLabel}
-          </span>
         </button>
 
         {/* Nav links */}
@@ -1686,16 +1684,14 @@ function Footer({
         <div className="col-span-2 md:col-span-1">
           <button
             onClick={onUseWebApp}
-            className="flex items-center gap-2.5 mb-4 group"
+            aria-label={copy.navbar.productLabel}
+            className="flex items-center mb-4 group"
           >
             <img
-              src="/logo.png"
+              src="/navbar-logo.png"
               alt="PDF PLATFORM"
-              className="w-8 h-8 rounded-xl object-contain shadow-[0_0_18px_rgba(59,130,246,0.4)]"
+              className="h-9 w-auto object-contain transition-opacity group-hover:opacity-90"
             />
-            <span className="font-bold text-white text-sm">
-              {copy.navbar.productLabel}
-            </span>
           </button>
           <p className="text-xs text-gray-600 leading-relaxed max-w-[200px]">
             {copy.footer.description}
