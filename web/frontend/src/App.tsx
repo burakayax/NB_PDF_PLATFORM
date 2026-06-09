@@ -121,6 +121,11 @@ import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
 import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
+import {
+  allowedExtensionsFromAccept,
+  allowedExtensionsLabel,
+  partitionByAllowedExtensions,
+} from "./lib/fileTypes";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
 import { PLANS } from "./lib/planConfig";
 import {
@@ -3333,6 +3338,25 @@ function App() {
     );
   }
 
+  /**
+   * Hesap kalıcı silindikten sonra: yerel oturumu temizle ve giriş ekranına götür.
+   * Sunucudaki kullanıcı zaten silindiği için /logout çağrılmaz; yalnızca yerel
+   * token/state temizlenir. Silme başarı bildirimi panelde gösterilir, burada
+   * çakışan bir toast eklenmez.
+   */
+  function handleAccountDeleted() {
+    clearNbResumeProcess();
+    clearSession();
+    setSelectedFeatureId("split");
+    setActiveSidebar("split");
+    setContentPanel("tool");
+    setAuthError("");
+    setView("login");
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/login");
+    }
+  }
+
   async function handleLanguageChange(nextLanguage: "tr" | "en") {
     if (!isAuthenticated) {
       setLanguage(nextLanguage);
@@ -4021,18 +4045,39 @@ function App() {
     const rawFiles = Array.from(fileList);
     const L = ws(language);
 
+    // Uzantı doğrulaması: aracın kabul ettiği tür dışındaki dosyaları reddet
+    // (ör. PPT→PDF aracına JPEG eklenmesini engelle). `accept` HTML ipucu sürükle-bırak
+    // veya "tüm dosyalar" seçiminde aşılabildiği için sunucuya gitmeden burada kesilir.
+    const allowedExts = allowedExtensionsFromAccept(selectedFeature.accept);
+    const { accepted: typeOkFiles, rejected: typeRejected } =
+      partitionByAllowedExtensions(rawFiles, allowedExts);
+    if (typeRejected.length > 0) {
+      const names = typeRejected.map((f) => f.name).join(", ");
+      const label = allowedExtensionsLabel(allowedExts);
+      showToast(
+        "error",
+        language === "tr" ? "Geçersiz dosya türü" : "Invalid file type",
+        language === "tr"
+          ? `Bu araç yalnızca ${label} dosyalarını kabul eder. Eklenmeyen: ${names}`
+          : `This tool only accepts ${label} files. Not added: ${names}`,
+      );
+      if (typeOkFiles.length === 0) {
+        return;
+      }
+    }
+
     const fileSizeLimitMB = userBalance?.fileSizeLimitMB ?? 200;
     const MAX_FILE_BYTES =
       fileSizeLimitMB >= 999999 ? Infinity : fileSizeLimitMB * 1024 * 1024;
     const oversized =
       MAX_FILE_BYTES === Infinity
         ? []
-        : rawFiles.filter((f) => f.size > MAX_FILE_BYTES);
+        : typeOkFiles.filter((f) => f.size > MAX_FILE_BYTES);
     // Boyutu aşan dosyaları sisteme hiç ekleme; uygun olanları eklemeye devam et.
     const sizeOkFiles =
       MAX_FILE_BYTES === Infinity
-        ? rawFiles
-        : rawFiles.filter((f) => f.size <= MAX_FILE_BYTES);
+        ? typeOkFiles
+        : typeOkFiles.filter((f) => f.size <= MAX_FILE_BYTES);
     if (oversized.length > 0) {
       const names = oversized.map((f) => f.name).join(", ");
       showToast(
@@ -5113,6 +5158,7 @@ function App() {
                   void refreshSubscriptionState();
                   void refreshSession();
                 }}
+                onLogout={handleAccountDeleted}
               />
             ) : null}
 
@@ -5217,6 +5263,22 @@ function App() {
                                         1024 *
                                         1024
                                   }
+                                  onRejectedType={(names) => {
+                                    const label = allowedExtensionsLabel(
+                                      allowedExtensionsFromAccept(
+                                        selectedFeature.accept,
+                                      ),
+                                    );
+                                    showToast(
+                                      "error",
+                                      language === "tr"
+                                        ? "Geçersiz dosya türü"
+                                        : "Invalid file type",
+                                      language === "tr"
+                                        ? `Bu araç yalnızca ${label} dosyalarını kabul eder. Eklenmeyen: ${names.join(", ")}`
+                                        : `This tool only accepts ${label} files. Not added: ${names.join(", ")}`,
+                                    );
+                                  }}
                                   onOversized={(names) => {
                                     const limitMB =
                                       userBalance?.fileSizeLimitMB ?? 200;
