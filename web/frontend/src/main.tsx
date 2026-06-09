@@ -3,52 +3,43 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { BackToTopButton } from "./components/common/BackToTopButton";
+import { PwaPrompts } from "./components/common/PwaPrompts";
 import { GlobalErrorBoundary } from "./components/common/GlobalErrorBoundary";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards } from "./lib/productionGuards";
+import { getCountryCode } from "./lib/geoCountry";
 import "react-phone-number-input/style.css";
 import "./styles/app.css";
 
-// Set document language based on user location and preference
+// Belge dilini kullanıcı konumu ve tercihine göre ayarlar.
+// Geolokasyon paylaşılan, önbellekli `getCountryCode` ile yapılır (CheckoutCurrency ile tek istek paylaşılır).
 async function setDocumentLanguage() {
   const storedLang = localStorage.getItem("nbpdf-language");
 
-  // If user has a stored preference, use it
+  // Kullanıcının kayıtlı tercihi varsa onu kullan (ağ beklemeden).
   if (storedLang === "tr" || storedLang === "en") {
     document.documentElement.lang = storedLang;
     return;
   }
 
-  // Try to detect from IP geolocation
+  // Önce hızlı tarayıcı sinyaliyle başla; IP gelince gerekirse düzelt.
+  const browserLang = navigator.language.toLowerCase();
+  document.documentElement.lang = browserLang.startsWith("tr") ? "tr" : "en";
+
   try {
-    const response = (await Promise.race([
-      fetch("https://ipapi.co/json/"),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 6000))
-    ])) as Response;
-
-    if (response.ok) {
-      const data = (await response.json()) as { country_code?: string };
-      const cc = data.country_code?.trim().toUpperCase();
-
-      if (cc === "TR") {
-        document.documentElement.lang = "tr";
-        return;
-      }
+    const cc = await getCountryCode();
+    if (cc === "TR") {
+      document.documentElement.lang = "tr";
+    } else if (cc) {
+      document.documentElement.lang = "en";
     }
   } catch {
-    // IP lookup failed, fall back to browser language
-  }
-
-  // Fall back to browser language
-  const browserLang = navigator.language.toLowerCase();
-  if (browserLang.startsWith("tr")) {
-    document.documentElement.lang = "tr";
-  } else {
-    document.documentElement.lang = "en";
+    // IP araması başarısız → tarayıcı dili zaten ayarlı.
   }
 }
 
-setDocumentLanguage();
+// Kritik render yolundan çıkar: ilk boyamayı bloklamasın.
+void setDocumentLanguage();
 
 installProductionGuards();
 
@@ -69,6 +60,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <SettingsProvider>
           <App />
           <BackToTopButton />
+          <PwaPrompts />
         </SettingsProvider>
       </BrowserRouter>
     </GlobalErrorBoundary>

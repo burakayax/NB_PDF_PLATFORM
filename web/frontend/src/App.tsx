@@ -46,7 +46,12 @@ const SplitPagePickerModal = lazy(() =>
     default: module.SplitPagePickerModal,
   })),
 );
-import { GatedResultPreviewModal } from "./components/GatedResultPreviewModal";
+// framer-motion'u (ağır) başlangıç paketinden çıkarır; yalnızca modal açılınca yüklenir.
+const GatedResultPreviewModal = lazy(() =>
+  import("./components/GatedResultPreviewModal").then((module) => ({
+    default: module.GatedResultPreviewModal,
+  })),
+);
 import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
@@ -1166,11 +1171,23 @@ function App() {
   const workspaceBanner = useMemo(() => getCmsWorkspaceBanner(cms), [cms]);
   const serverAnalyticsEnabled = site.analyticsEnabled !== false;
 
-  // Sentry — yalnızca errorMonitoring onayı verilmişse başlat (GDPR Madde 7)
+  // Sentry — yalnızca errorMonitoring onayı verilmişse başlat (GDPR Madde 7).
+  // Boşa-düşme (idle) anına ertelenir: onay verilse bile ağır Sentry paketi (~493 KiB)
+  // + replay/tracing ilk boyama (FCP/LCP/TBT) ile yarışmaz; sayfa interaktif olduktan sonra yüklenir.
   useEffect(() => {
-    if (isCookieConsentReady && cookiePrefs.errorMonitoring) {
-      initSentry(true);
+    if (!isCookieConsentReady || !cookiePrefs.errorMonitoring) {
+      return;
     }
+    const w = window as typeof window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    if (typeof w.requestIdleCallback === "function") {
+      const id = w.requestIdleCallback(() => void initSentry(true), { timeout: 5000 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(() => void initSentry(true), 3000);
+    return () => window.clearTimeout(t);
   }, [isCookieConsentReady, cookiePrefs.errorMonitoring]);
 
   const gaEnabled = GA_TEST_BYPASS_COOKIE_CONSENT || (isCookieConsentReady && cookiePrefs.analytics);
@@ -4896,19 +4913,23 @@ function App() {
           </Suspense>
         ) : null}
 
-        <GatedResultPreviewModal
-          open={gatedHeroModalOpen}
-          onClose={() => {
-            setGatedHeroModalOpen(false);
-            setGatedHeroResultId(null);
-            setGatedHeroMergeJobId(null);
-          }}
-          resultId={gatedHeroResultId}
-          mergeJobId={gatedHeroMergeJobId}
-          accessToken={accessToken}
-          filename={toolProgressSuccess?.filename ?? ""}
-          language={language}
-        />
+        {gatedHeroModalOpen ? (
+          <Suspense fallback={null}>
+            <GatedResultPreviewModal
+              open={gatedHeroModalOpen}
+              onClose={() => {
+                setGatedHeroModalOpen(false);
+                setGatedHeroResultId(null);
+                setGatedHeroMergeJobId(null);
+              }}
+              resultId={gatedHeroResultId}
+              mergeJobId={gatedHeroMergeJobId}
+              accessToken={accessToken}
+              filename={toolProgressSuccess?.filename ?? ""}
+              language={language}
+            />
+          </Suspense>
+        ) : null}
 
         {excelDialogOpen ? (
           <div

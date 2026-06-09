@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getCountryCode } from "../lib/geoCountry";
 export type CheckoutCurrency = "TRY" | "USD" | "EUR";
 
 /** Deprecated: persisted manual overrides from older header toggle; cleared on boot. */
@@ -55,9 +56,7 @@ export function inferCurrencyFromClientHints(): CheckoutCurrency {
   }
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-    console.log("[CheckoutCurrency] Timezone:", tz);
     if (/Istanbul|Türkiye|Turkey/i.test(tz)) {
-      console.log("[CheckoutCurrency] Timezone matched Turkey → TRY");
       return "TRY";
     }
     // Common EU metropolitan zones → EUR pricing band
@@ -65,61 +64,16 @@ export function inferCurrencyFromClientHints(): CheckoutCurrency {
     const euTzPattern =
       /^(Africa\/Ceuta|Etc\/GMT-[01]|Europe\/(Amsterdam|Andorra|Athens|Berlin|Brussels|Budapest|Busingen|Chisinau|Copenhagen|Dublin|Gibraltar|Guernsey|Helsinki|Isle_of_Man|Jersey|Kaliningrad|Kyiv|Lisbon|Ljubljana|London|Luxembourg|Madrid|Malta|Mariehamn|Minsk|Monaco|Moscow|Oslo|Paris|Podgorica|Prague|Riga|Rome|Samara|San_Marino|Sarajevo|Simferopol|Skopje|Sofia|Stockholm|Tallinn|Tirane|Tiraspol|Uzhgorod|Vaduz|Vatican|Vienna|Vilnius|Volgograd|Warsaw|Zagreb|Zaporozhye|Zurich))$/;
     if (euTzPattern.test(tz)) {
-      console.log("[CheckoutCurrency] Timezone matched EU → EUR");
       return "EUR";
     }
-  } catch (e) {
-    console.log("[CheckoutCurrency] Timezone check failed:", e);
+  } catch {
+    /* Intl yoksa dil sinyaline düş */
   }
   const lang = (typeof navigator !== "undefined" ? navigator.language : "").toLowerCase();
-  console.log("[CheckoutCurrency] navigator.language:", lang);
   if (lang === "tr" || lang.startsWith("tr-")) {
-    console.log("[CheckoutCurrency] Language matched Turkish → TRY");
     return "TRY";
   }
-  console.log("[CheckoutCurrency] No match, defaulting to USD");
   return "USD";
-}
-
-async function fetchWithTimeout(resource: string, ms: number): Promise<Response> {
-  const ctrl = new AbortController();
-  const tid = globalThis.setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await fetch(resource, { signal: ctrl.signal });
-  } finally {
-    globalThis.clearTimeout(tid);
-  }
-}
-
-async function fetchCountryFromIp(): Promise<string | null> {
-  const tryProviders: Array<() => Promise<string | null>> = [
-    async () => {
-      const r = await fetchWithTimeout("https://ipapi.co/json/", 6000);
-      if (!r.ok) return null;
-      const j = (await r.json()) as { country_code?: string; error?: boolean };
-      if (j.error || !j.country_code) return null;
-      return j.country_code.trim();
-    },
-    async () => {
-      const r = await fetchWithTimeout("https://ipwho.is/me", 6000);
-      if (!r.ok) return null;
-      const j = (await r.json()) as { success?: boolean; country_code?: string };
-      if (j.success === false || !j.country_code) return null;
-      return String(j.country_code).trim();
-    },
-  ];
-
-  for (const p of tryProviders) {
-    try {
-      const cc = await p();
-      if (cc) {
-        return cc;
-      }
-    } catch {
-      /* try next */
-    }
-  }
-  return null;
 }
 
 function mergeGeoAndHints(geo: string | null): CheckoutCurrency {
@@ -137,13 +91,8 @@ type Ctx = {
 const CheckoutCurrencyContext = createContext<Ctx | null>(null);
 
 export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) {
-  const [currency, setCurrency] = useState<CheckoutCurrency>(() => {
-    const initial = inferCurrencyFromClientHints();
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_INITIAL", initial);
-    }
-    return initial;
-  });
+  // İlk değer ağ beklemeden Intl/dil ipucundan (anında, render bloklamaz).
+  const [currency, setCurrency] = useState<CheckoutCurrency>(inferCurrencyFromClientHints);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -151,29 +100,20 @@ export function CheckoutCurrencyProvider({ children }: { children: ReactNode }) 
     if (typeof localStorage !== "undefined") {
       localStorage.removeItem(LEGACY_STORAGE_KEY);
     }
-    void fetchCountryFromIp().then((cc) => {
-      if (!cancelled) {
-        const finalCurrency = mergeGeoAndHints(cc);
-        console.log("[CheckoutCurrency] IP geolocation:", cc, "→ currency:", finalCurrency);
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_IP", cc || "null");
-          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_FINAL", finalCurrency);
+    // Paylaşılan, 24 saat önbellekli geolokasyon (oturum başına tek istek).
+    void getCountryCode()
+      .then((cc) => {
+        if (!cancelled) {
+          setCurrency(mergeGeoAndHints(cc));
+          setLoading(false);
         }
-        setCurrency(finalCurrency);
-        setLoading(false);
-      }
-    }).catch((err) => {
-      if (!cancelled) {
-        const fallbackCurrency = inferCurrencyFromClientHints();
-        console.log("[CheckoutCurrency] IP lookup failed, using fallback:", fallbackCurrency, "error:", err);
-        if (typeof localStorage !== "undefined") {
-          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_FALLBACK", fallbackCurrency);
-          localStorage.setItem("DEBUG_CHECKOUT_CURRENCY_ERROR", String(err));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCurrency(inferCurrencyFromClientHints());
+          setLoading(false);
         }
-        setCurrency(fallbackCurrency);
-        setLoading(false);
-      }
-    });
+      });
     return () => {
       cancelled = true;
     };

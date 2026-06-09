@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <title>Çevrimdışı · PDF PLATFORM</title>
+    <link rel="icon" type="image/png" href="/icons/favicon-32.png" />
+    <style>
+      :root {
+        --nb-bg: #0f172a;
+        --nb-panel: #1e293b;
+        --nb-border: rgba(148, 163, 184, 0.14);
+        --nb-text: #e2e8f0;
+        --nb-muted: #64748b;
+        --nb-primary: #22d3ee;
+        --nb-primary-hover: #06b6d4;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+        color: var(--nb-text);
+        background:
+          radial-gradient(ellipse 120% 90% at 50% -25%, rgba(34, 211, 238, 0.11), transparent 55%),
+          radial-gradient(ellipse 50% 45% at 100% 0%, rgba(129, 140, 232, 0.1), transparent 48%),
+          var(--nb-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .card {
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        background: linear-gradient(180deg, rgba(30, 41, 59, 0.92) 0%, rgba(15, 23, 42, 0.96) 100%);
+        border: 1px solid var(--nb-border);
+        border-radius: 24px;
+        padding: 40px 28px;
+        box-shadow: 0 28px 56px -16px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      }
+      .logo { width: 64px; height: 64px; margin: 0 auto 20px; display: block; }
+      .icon {
+        width: 56px; height: 56px; margin: 0 auto 8px;
+        color: var(--nb-primary); opacity: 0.9;
+      }
+      h1 { font-size: 20px; font-weight: 700; color: #fff; margin: 8px 0 10px; }
+      p { font-size: 14px; line-height: 1.6; color: var(--nb-muted); margin: 0 0 24px; }
+      button {
+        font: inherit; font-weight: 700; cursor: pointer;
+        color: #0b1220; background: var(--nb-primary);
+        border: 0; border-radius: 14px; padding: 12px 28px;
+        transition: background 200ms ease, transform 120ms ease;
+      }
+      button:hover { background: var(--nb-primary-hover); }
+      button:active { transform: scale(0.97); }
+      .en { display: block; margin-top: 6px; font-size: 12px; color: rgba(100, 116, 139, 0.7); }
+    </style>
+  </head>
+  <body>
+    <main class="card" role="alert">
+      <img class="logo" src="/icons/icon-192.png" alt="PDF PLATFORM" />
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M1 1l22 22" />
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+        <line x1="12" y1="20" x2="12.01" y2="20" />
+      </svg>
+      <h1>Bağlantı yok</h1>
+      <p>
+        İnternet bağlantısı kurulamadı. Lütfen ağınızı kontrol edip yeniden deneyin.
+        <span class="en">No internet connection. Please check your network and retry.</span>
+      </p>
+      <button type="button" onclick="location.reload()">Yeniden dene · Retry</button>
+    </main>
+    <script>
+      // Bağlantı geri gelince otomatik yeniden yükle.
+      window.addEventListener("online", function () { location.reload(); });
+    </script>
+  </body>
+</html>
