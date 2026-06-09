@@ -37,9 +37,14 @@ services:
         value: "24"
       - key: S3_REGION
         sync: false   # Örn. eu-central-1 (AWS) veya auto (Cloudflare R2)
-      # PDF Sandbox: her işlemi ayrı bir subprocess'te izole eder
+      # PDF Sandbox: her işlemi ayrı bir subprocess'te (fork) izole eder.
+      # KAPALI: fork, thread-havuzu thread'inden yapıldığı için Linux'ta deadlock
+      # oluşturuyordu → inspect/araçlar ~10 dk (op timeout) takılıyordu. Kapatınca
+      # yereldeki (Windows = fork yok) ile aynı thread-havuzu yolu kullanılır → çalışır.
+      # İzolasyonu geri istersek spawn + üst-seviye (picklable) fonksiyon ya da
+      # ön-fork edilmiş süreç havuzu ile yeniden kurmak gerekir.
       - key: PDF_SANDBOX_ENABLED
-        value: "true"
+        value: "false"
       - key: PDF_SANDBOX_MEM_MB
         value: "384"    # free 512MB için düşük tutuldu (taşan işlem host'u OOM etmeden kesilir).
                         # Büyük plana geçince 1024'e çıkarılabilir.
