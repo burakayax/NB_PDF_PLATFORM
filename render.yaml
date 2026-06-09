@@ -10,9 +10,11 @@ services:
     # Sistem araçları (tesseract/poppler/wkhtmltopdf/ghostscript) Dockerfile'da kurulur.
     runtime: docker
     region: frankfurt         # EU kullanıcılarına yakın; değiştirilebilir
-    plan: free                # ÜCRETSIZ (bakım/test). AI-OCR (docling/easyocr) için
-                              # gerçek yayında ~2GB+ RAM → standard plan gerekir.
-                              # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
+    plan: starter             # Starter (512MB): UYUMAZ → cold-start yok ("PDF kontrol
+                              # ediliyor" takılması free plan cold-start'ından kaynaklanıyordu).
+                              # Not: AI-OCR (docling/easyocr) ağır işler için ~2GB → 'standard'
+                              # gerekir. Temel PDF araçları Starter'da çalışır; büyük dosya/OCR'da
+                              # OOM olursa 'standard'a yükseltin.
     dockerfilePath: web/backend/Dockerfile
     dockerContext: .          # proje kökü — imaj hem web/backend hem paylaşılan src/ içerir
     healthCheckPath: /api/health   # router prefix="/api" → health endpoint /api/health
