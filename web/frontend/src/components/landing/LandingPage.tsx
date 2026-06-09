@@ -211,7 +211,7 @@ function Navbar({
           <img
             src="/navbar-logo.png"
             alt="PDF PLATFORM"
-            className="h-12 sm:h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
+            className="h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
           />
         </button>
 
@@ -1690,7 +1690,7 @@ function Footer({
             <img
               src="/navbar-logo.png"
               alt="PDF PLATFORM"
-              className="h-12 w-auto object-contain transition-opacity group-hover:opacity-90"
+              className="h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
             />
           </button>
           <p className="text-xs text-gray-600 leading-relaxed max-w-[200px]">

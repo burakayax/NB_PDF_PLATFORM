@@ -200,7 +200,7 @@ export function DashboardTopNav({
         <img
           src={dashboardLogoSrc}
           alt="PDF PLATFORM"
-          className="h-11 w-auto object-contain"
+          className="h-12 w-auto object-contain"
         />
       </button>
 
