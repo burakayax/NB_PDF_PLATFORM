@@ -765,34 +765,89 @@ export async function inspectPdf(
   accessToken?: string | null,
   options?: { signal?: AbortSignal },
 ) {
-  const formData = new FormData();
-  formData.append("file", file);
-  if (password?.trim()) {
-    formData.append("password", password.trim());
+  // PDF kontrolü (inspect) hızlı bir işlemdir; ama takılan istek veya Render free
+  // soğuk başlatma (~50sn) yüzünden eskiden "PDF kontrol ediliyor"da kilitleniyordu
+  // (pdfFetch'in zaman aşımı yok). Her denemeye zaman aşımı koyup yeniden deneriz:
+  // ilk deneme uyuyan sunucuyu uyandırır, sonraki deneme hızlı döner.
+  const PER_ATTEMPT_TIMEOUT_MS = 60000;
+  const MAX_ATTEMPTS = 3;
+  let lastErr: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const formData = new FormData();
+    formData.append("file", file);
+    if (password?.trim()) {
+      formData.append("password", password.trim());
+    }
+    appendSaasAccessToken(formData, accessToken);
+
+    const timeoutCtrl = new AbortController();
+    const timer = setTimeout(
+      () => timeoutCtrl.abort(),
+      PER_ATTEMPT_TIMEOUT_MS,
+    );
+    // Dış sinyal (kullanıcı iptali) ile zaman aşımı sinyalini birleştir.
+    const onExternalAbort = () => timeoutCtrl.abort();
+    if (options?.signal) {
+      if (options.signal.aborted) {
+        timeoutCtrl.abort();
+      } else {
+        options.signal.addEventListener("abort", onExternalAbort, {
+          once: true,
+        });
+      }
+    }
+
+    try {
+      const response = await pdfFetch(`${API_BASE}/api/inspect-pdf`, {
+        method: "POST",
+        body: formData,
+        headers: saasAuthHeaders(accessToken),
+        signal: timeoutCtrl.signal,
+      });
+      await ensureOk(response, "PDF bilgisi okunamadı.");
+      const data = (await response.json()) as {
+        filename: string;
+        encrypted: boolean;
+        page_count: number | null;
+        inspect_error?: string | null;
+        inspect_diagnostic?: Record<string, unknown>;
+      };
+      if (
+        typeof data.inspect_diagnostic !== "undefined" &&
+        typeof console !== "undefined" &&
+        typeof console.debug === "function"
+      ) {
+        console.debug(
+          "[inspect-pdf]",
+          data.filename ?? "?",
+          data.inspect_diagnostic,
+        );
+      }
+      return data;
+    } catch (e) {
+      lastErr = e;
+      // Kullanıcı gerçekten iptal ettiyse (dış sinyal) yeniden deneme.
+      if (options?.signal?.aborted) {
+        throw e;
+      }
+      if (attempt < MAX_ATTEMPTS) {
+        await new Promise((r) => setTimeout(r, 800 * attempt));
+      }
+    } finally {
+      clearTimeout(timer);
+      options?.signal?.removeEventListener("abort", onExternalAbort);
+    }
   }
-  appendSaasAccessToken(formData, accessToken);
-  const response = await pdfFetch(`${API_BASE}/api/inspect-pdf`, {
-    method: "POST",
-    body: formData,
-    headers: saasAuthHeaders(accessToken),
-    signal: options?.signal,
-  });
-  await ensureOk(response, "PDF bilgisi okunamadı.");
-  const data = (await response.json()) as {
-    filename: string;
-    encrypted: boolean;
-    page_count: number | null;
-    inspect_error?: string | null;
-    inspect_diagnostic?: Record<string, unknown>;
-  };
-  if (
-    typeof data.inspect_diagnostic !== "undefined" &&
-    typeof console !== "undefined" &&
-    typeof console.debug === "function"
-  ) {
-    console.debug("[inspect-pdf]", data.filename ?? "?", data.inspect_diagnostic);
+
+  if (lastErr instanceof DOMException && lastErr.name === "AbortError") {
+    throw new Error(
+      "PDF kontrolü zaman aşımına uğradı. Sunucu meşgul veya uykuda olabilir; birkaç saniye sonra tekrar deneyin.",
+    );
   }
-  return data;
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error("PDF bilgisi okunamadı.");
 }
 
 export async function createMergeJob(
