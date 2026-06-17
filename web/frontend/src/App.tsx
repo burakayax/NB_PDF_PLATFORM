@@ -22,6 +22,7 @@ import {
   EntitlementPaymentRequiredError,
   fetchMergeJob,
   fetchMergeJobBlob,
+  fetchResultBlob,
   fetchMergeJobHeroPreviewBlobUrl,
   fetchResultThumbnailBlobUrl,
   inspectPdf,
@@ -1024,6 +1025,8 @@ function App() {
    */
   const [mergeShare, setMergeShare] = useState<{
     jobId?: string;
+    /** Result-store tool source (every non-merge tool) — fetched on demand for the gated-preview "Paylaş". */
+    resultId?: string;
     defaultName: string;
     blob?: Blob;
   } | null>(null);
@@ -1990,11 +1993,22 @@ function App() {
           });
         }
         applyWorkspaceCleanSlateAfterDownload(toolId);
-        showToast(
-          "success",
-          language === "tr" ? "İndirme tamamlandı" : "Download complete",
-          clientFileName,
-        );
+        // Keep the already-downloaded bytes so the user can re-open/share them
+        // without a second fetch/charge — same post-download "Paylaş?" bar as
+        // merge. The bar already confirms the download (Dosyan indirildi + dosya
+        // adı), so skip the redundant timed toast; only fall back to a toast when
+        // we somehow have no bytes to back the bar.
+        const shareBlob = outcome.download.blob ?? null;
+        if (shareBlob) {
+          setMergeShareReady({ blob: shareBlob, filename: clientFileName });
+        } else {
+          showToast(
+            "success",
+            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            clientFileName,
+          );
+        }
+        outcome.download.dispose?.();
         void refreshSubscriptionState();
       } catch (e: unknown) {
         if (isUserAbortError(e)) {
@@ -2188,15 +2202,23 @@ function App() {
         let blob = src.blob ?? null;
         const alreadyDownloaded = !!src.blob;
         if (!blob) {
-          if (!src.jobId) {
+          if (src.jobId) {
+            const fetched = await fetchMergeJobBlob(
+              src.jobId,
+              filename,
+              accessToken,
+            );
+            blob = fetched.blob;
+          } else if (src.resultId) {
+            const fetched = await fetchResultBlob(
+              src.resultId,
+              filename,
+              accessToken,
+            );
+            blob = fetched.blob;
+          } else {
             return;
           }
-          const fetched = await fetchMergeJobBlob(
-            src.jobId,
-            filename,
-            accessToken,
-          );
-          blob = fetched.blob;
         }
         const file = new File([blob], filename, {
           type: blob.type || "application/pdf",
@@ -6892,15 +6914,23 @@ function App() {
                       }
                     }}
                     onShare={
-                      toolProgressSuccess.gatedDownload.mergeJobId &&
-                      isShareApiAvailable()
+                      isShareApiAvailable() &&
+                      (toolProgressSuccess.gatedDownload.mergeJobId ||
+                        toolProgressSuccess.gatedDownload.resultId)
                         ? () => {
                             const gd = toolProgressSuccess.gatedDownload;
-                            if (!gd?.mergeJobId) return;
-                            setMergeShare({
-                              jobId: gd.mergeJobId,
-                              defaultName: gd.fallbackName,
-                            });
+                            if (!gd) return;
+                            if (gd.mergeJobId) {
+                              setMergeShare({
+                                jobId: gd.mergeJobId,
+                                defaultName: gd.fallbackName,
+                              });
+                            } else if (gd.resultId) {
+                              setMergeShare({
+                                resultId: gd.resultId,
+                                defaultName: gd.fallbackName,
+                              });
+                            }
                           }
                         : undefined
                     }
