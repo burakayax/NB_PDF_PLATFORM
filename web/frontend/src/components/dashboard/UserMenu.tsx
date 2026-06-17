@@ -21,6 +21,7 @@ export function UserMenu({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const tr = language === "tr";
   const greeting = userGreetingLine(user, language);
 
   useEffect(() => {
@@ -38,35 +39,37 @@ export function UserMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="nb-transition flex items-center gap-2 rounded-xl border border-white/[0.08] bg-nb-panel/75 px-2 py-1.5 sm:px-3 text-left shadow-sm hover:border-nb-primary/35 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
+        className="nb-transition flex shrink-0 items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-nb-panel/75 p-2 sm:px-3 sm:py-1.5 text-left shadow-sm hover:border-nb-primary/35 hover:bg-nb-panel focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label={tr ? "Hesap menüsü" : "Account menu"}
       >
-        {/* 1. MOBİL İÇİN KÜÇÜK İKON (Sadece mobilde görünür) */}
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-nb-primary/20 text-nb-primary sm:hidden">
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
-        </div>
+        {/* 1. MOBİL/TABLET: modern hamburger (3 çizgi) — açıkken X'e döner */}
+        <svg
+          className="h-5 w-5 shrink-0 text-nb-text lg:hidden"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          {open ? (
+            <path d="M18 6 6 18M6 6l12 12" />
+          ) : (
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          )}
+        </svg>
 
-        {/* 2. KARŞILAMA YAZISI (Mobilde gizli 'hidden', Masaüstünde açık 'sm:block') */}
-        <span className="hidden sm:block max-w-[260px] truncate text-sm font-medium text-nb-text">
+        {/* 2. MASAÜSTÜ: karşılama yazısı */}
+        <span className="hidden lg:block max-w-[260px] truncate text-sm font-medium text-nb-text">
           {greeting}
         </span>
 
-        {/* 3. OK İKONU (Chevron) */}
+        {/* 3. MASAÜSTÜ: chevron */}
         <svg
-          className={`h-4 w-4 shrink-0 text-nb-muted transition duration-200 ${open ? "rotate-180" : ""}`}
+          className={`hidden lg:block h-4 w-4 shrink-0 text-nb-muted transition duration-200 ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
