@@ -1048,6 +1048,36 @@ export async function fetchMergeJobBlob(
 }
 
 /**
+ * Gated result GET that returns the raw blob WITHOUT writing it to disk — the
+ * result-store counterpart of `fetchMergeJobBlob`, used by the "Paylaş" (Web
+ * Share API) flow for every non-merge tool. Hits the same gated download
+ * endpoint, so it consumes entitlement server-side exactly like a download and
+ * callers should treat it as one paid delivery. Throws
+ * `EntitlementPaymentRequiredError` on 402 so the caller can open the upgrade modal.
+ */
+export async function fetchResultBlob(
+  resultId: string,
+  fallbackName: string,
+  accessToken?: string | null,
+  options?: {
+    signal?: AbortSignal;
+    onBeforeReadBody?: () => void | Promise<void>;
+  },
+): Promise<{ blob: Blob; suggestedName: string }> {
+  const id = encodeURIComponent(resultId);
+  const response = await pdfFetch(`${API_BASE}/api/pdf/result/${id}/download`, {
+    headers: saasAuthHeaders(accessToken),
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await throwIfEntitlementPaymentRequired(response);
+  await ensureOk(response, "Dosya indirilemedi.");
+  await options?.onBeforeReadBody?.();
+  const blob = await response.blob();
+  return { blob, suggestedName: extractFilename(response, fallbackName) };
+}
+
+/**
  * Aynı kökende iframe + POST ile tamamlanma bazı tarayıcılarda hiç resolve olmuyor.
  * Bu sınıra kadar fetch + blob ile indirilir (çubuk kapanır, dosya gelir). Çok büyük çıktılarda bellek sınırına dikkat.
  */
