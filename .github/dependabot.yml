@@ -1,0 +1,67 @@
+# Dependabot: bağımlılıkları otomatik tarar ve güncelleme/güvenlik PR'ları açar.
+# Az gürültü için: AYLIK tarama + minor/patch'leri TEK PR'da gruplama.
+# Güvenlik açıkları (advisory) bu takvimden bağımsız, çıkar çıkmaz ayrı PR açılır.
+# Docs: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+updates:
+  # ─── Auth API (Express / Node) ───────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/web/api"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "api"]
+    commit-message:
+      prefix: "deps(api)"
+    groups:
+      # Tüm minor + patch güncellemelerini tek PR'da topla (PR yağmurunu önler).
+      api-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # ─── Frontend (Vite / React) ─────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/web/frontend"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "frontend"]
+    commit-message:
+      prefix: "deps(frontend)"
+    groups:
+      frontend-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # ─── PDF API (Python / pip) ──────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/web/backend"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+    commit-message:
+      prefix: "deps(backend)"
+    groups:
+      backend-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # ─── Masaüstü/paylaşılan Python bağımlılıkları (kök requirements.txt) ─────
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "python-core"]
+    commit-message:
+      prefix: "deps(core)"
+    groups:
+      core-minor-patch:
+        update-types: ["minor", "patch"]
+
+  # ─── GitHub Actions (CI workflow'larındaki action sürümleri) ─────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels: ["dependencies", "ci"]
+    commit-message:
+      prefix: "ci(deps)"
