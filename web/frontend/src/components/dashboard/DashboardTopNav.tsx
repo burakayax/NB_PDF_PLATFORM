@@ -224,10 +224,17 @@ export function DashboardTopNav({
         aria-label="PDF PLATFORM"
         className="nb-transition flex shrink-0 items-center rounded-2xl px-1 py-1 hover:scale-[1.01] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
       >
+        {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
+        <img
+          src="/icons/icon-192.png"
+          alt="PDF PLATFORM"
+          className="h-9 w-9 rounded-xl object-contain lg:hidden"
+        />
+        {/* Masaüstü: tam uzun logo (CMS'ten override edilebilir) */}
         <img
           src={dashboardLogoSrc}
           alt="PDF PLATFORM"
-          className="h-12 w-auto object-contain"
+          className="hidden h-12 w-auto object-contain lg:block"
         />
       </button>
 
