@@ -66,7 +66,7 @@ import { SystemNotificationBanner } from "./components/common/SystemNotification
 import type { SaaSGating } from "./lib/saasGating";
 import {
   DashboardSidebar,
-  DashboardSidebarMobileRail,
+  DashboardSidebarMobileLauncher,
   type SidebarToolId,
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
@@ -1693,6 +1693,11 @@ function App() {
     itemId: string,
   ) {
     if (selectedFeature.id !== "merge") {
+      return;
+    }
+    // Sürükle-bırak yer değiştirme yalnızca fare (PC) ile aktif. Telefon/tablette
+    // dokunmatikte iptal — liste normal kaydırılır, sıralama ↑/↓ butonlarıyla yapılır.
+    if (event.pointerType !== "mouse") {
       return;
     }
     const el = event.target as HTMLElement;
@@ -5491,9 +5496,9 @@ function App() {
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
         />
         <div
-          className={`min-h-screen w-full bg-nb-bg pt-14 md:pl-60 ${bottomToolProgressActive ? "pb-32 md:pb-36" : "pb-56"}`}
+          className={`min-h-screen w-full bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-56"}`}
         >
-          <DashboardSidebarMobileRail
+          <DashboardSidebarMobileLauncher
             active={activeSidebar}
             onSelect={handleSidebarSelect}
             language={language}

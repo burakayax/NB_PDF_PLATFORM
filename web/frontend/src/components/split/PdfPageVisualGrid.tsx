@@ -22,11 +22,30 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 const ZOOM_SLIDER_MIN = 25;
 const ZOOM_SLIDER_MAX = 100;
 
-function zoomToColumns(zoom: number): number {
-  if (zoom <= 25) return 10;
-  if (zoom <= 50) return 7;
-  if (zoom <= 75) return 5;
-  return 3;
+function zoomToColumns(zoom: number, innerWidth: number): number {
+  // Masaüstü temel kolon sayısı (geniş ekran). Zoom büyüdükçe az kolon = büyük sayfa.
+  let base: number;
+  if (zoom <= 25) base = 10;
+  else if (zoom <= 50) base = 7;
+  else if (zoom <= 75) base = 5;
+  else base = 3;
+
+  // Telefon/tablette dar ekranda sabit kolon sayısı sayfaları aşırı küçültüyordu
+  // (örn. ~340px'de max zoom'da bile 3 sütun → ~97px sayfa). Her zoom seviyesi için
+  // bir minimum hücre genişliği belirleyip kolonu buna göre sınırla; böylece dar
+  // ekranda kolon azalır, sayfalar büyür (telefonda max zoom → tek büyük sayfa).
+  // Geniş ekranda `base` zaten sınırlayıcı olduğundan masaüstü davranışı değişmez.
+  let minCellPx: number;
+  if (zoom <= 25) minCellPx = 60;
+  else if (zoom <= 50) minCellPx = 100;
+  else if (zoom <= 75) minCellPx = 150;
+  else minCellPx = 260;
+
+  const maxByWidth = Math.max(
+    1,
+    Math.floor((innerWidth + GAP_PX) / (minCellPx + GAP_PX)),
+  );
+  return Math.max(1, Math.min(base, maxByWidth));
 }
 /** Tailwind gap-6 / satır arası ~gap-7 — rubber-band için nötr alan */
 const GAP_PX = 24;
@@ -443,7 +462,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
 
     const { cols, cellWidth, cardHeight, thumbRasterCssW } = useMemo(() => {
       const clampedZoom = Math.min(ZOOM_SLIDER_MAX, Math.max(ZOOM_SLIDER_MIN, debouncedZoom));
-      const c = zoomToColumns(clampedZoom);
+      const c = zoomToColumns(clampedZoom, innerWidth);
       const cw = (innerWidth - (c - 1) * GAP_PX) / c;
       const ch = Math.round(cw * (4 / 3));
       const rw = Math.min(Math.max(Math.round(cw * 1.12), Math.ceil(cw)), 512);

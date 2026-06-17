@@ -7,7 +7,7 @@ export { ToolsDropdown } from "./ToolsDropdown";
 export { ToolsGrid } from "./ToolsGrid";
 export {
   DashboardSidebar,
-  DashboardSidebarMobileRail,
+  DashboardSidebarMobileLauncher,
 } from "./DashboardSidebar";
 export { DashboardTopNav } from "./DashboardTopNav";
 export type { SidebarToolId } from "./DashboardSidebar";

@@ -2258,6 +2258,22 @@ textarea {
   touch-action: none;
 }
 
+/* Telefon/tablet (dokunmatik): sürükle-bırak yer değiştirme kapalı; kart üzerinden
+   normal sayfa kaydırması çalışsın. Sıralama ↑/↓ butonlarıyla yapılır. */
+@media (hover: none) and (pointer: coarse) {
+  .selected-file-card.merge-row-pointer {
+    touch-action: auto;
+  }
+  .selected-file-card.draggable {
+    cursor: default;
+  }
+  .selected-file-card.draggable:hover {
+    transform: none;
+    border-color: var(--nb-border, rgba(255, 255, 255, 0.1));
+    box-shadow: none;
+  }
+}
+
 .selected-file-card.draggable:hover {
   transform: translateY(-2px) scale(1.01);
   border-color: rgba(34, 211, 238, 0.5);
