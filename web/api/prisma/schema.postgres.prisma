@@ -114,6 +114,10 @@ model Organization {
   iyzicoCustomerId       String?       @unique @map("iyzico_customer_id")
   monthlyOperationLimit  Int           @default(50) @map("monthly_operation_limit")
   dailyOperationLimit    Int?          @map("daily_operation_limit")
+  // Admin: kullanıcıya özel KALICI günlük limit. Doluysa plan limitini (dailyOperationLimit) ezer.
+  customDailyLimit       Int?          @map("custom_daily_limit")
+  // Admin: yalnızca BUGÜN için verilen ekstra işlem hakkı; her yeni günde 0'a sıfırlanır.
+  bonusDailyOperations   Int           @default(0) @map("bonus_daily_operations")
   currentMonthOperations Int           @default(0) @map("current_month_operations")
   currentDayOperations   Int           @default(0) @map("current_day_operations")
   lastDailyReset         DateTime      @default(now()) @map("last_daily_reset")
