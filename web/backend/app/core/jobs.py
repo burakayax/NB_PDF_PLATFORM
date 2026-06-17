@@ -44,8 +44,13 @@ def create_merge_job(
     passwords: dict[str, str],
     workdir: Path,
     output_name: str,
+    watermark_enabled: bool = False,
 ) -> str:
-    """PDF birlestirmeyi arka planda calistirip ilerleme bilgisini hafizada tutar."""
+    """PDF birlestirmeyi arka planda calistirip ilerleme bilgisini hafizada tutar.
+
+    ``watermark_enabled`` → FREE/Starter planda çıktıya görünür marka damgası
+    eklenir; marka metadata'sı her planda gömülür (bkz. ``branding``).
+    """
     job_id = uuid.uuid4().hex
     output_path = workdir / output_name
     job = {
@@ -94,6 +99,13 @@ def create_merge_job(
                 return True
 
             engine.merge_pdfs([str(p) for p in saved_paths], str(output_path), progress_callback=progress_cb, passwords=passwords)
+            # Markalama (non-fatal): iptal edilmediyse görünür filigran (sadece
+            # ücretsiz/Starter) + görünmez metadata (her plan) çıktıya işlenir.
+            with _lock:
+                cancelled_now = bool(job.get("cancelled"))
+            if not cancelled_now:
+                from app.core.branding import brand_pdf_output
+                brand_pdf_output(output_path, watermark_enabled=watermark_enabled)
             with _lock:
                 if job.get("cancelled"):
                     job["status"] = "cancelled"

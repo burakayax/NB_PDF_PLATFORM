@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Download, RefreshCw, Share, X } from "lucide-react";
+import {
+  Download,
+  Maximize2,
+  RefreshCw,
+  Share,
+  WifiOff,
+  X,
+  Zap,
+} from "lucide-react";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 import { usePwaUpdate } from "../../pwa/usePwaUpdate";
 
@@ -25,24 +33,32 @@ function useHtmlLang(): "tr" | "en" {
 const COPY = {
   tr: {
     installTitle: "Uygulamayı yükle",
-    installBody: "PDF PLATFORM'u cihazına ekle — daha hızlı erişim, tam ekran.",
+    installBody:
+      "PDF PLATFORM'u cihazına ekle; tarayıcı sekmesi açmadan tek dokunuşla aç.",
     install: "Yükle",
     later: "Daha sonra",
     iosTitle: "Ana ekrana ekle",
     iosBody: "Paylaş menüsünü açıp “Ana Ekrana Ekle”yi seçerek uygulamayı yükle.",
     close: "Kapat",
+    benefitOffline: "Çevrimdışı erişim",
+    benefitFast: "Anında açılış",
+    benefitFullscreen: "Tam ekran",
     updateTitle: "Yeni sürüm hazır",
     updateBody: "Güncellemeyi uygulamak için yenile.",
     refresh: "Yenile",
   },
   en: {
     installTitle: "Install the app",
-    installBody: "Add PDF PLATFORM to your device — faster access, full screen.",
+    installBody:
+      "Add PDF PLATFORM to your device and open it in one tap — no browser tab.",
     install: "Install",
     later: "Later",
     iosTitle: "Add to Home Screen",
     iosBody: "Open the Share menu and choose “Add to Home Screen” to install.",
     close: "Close",
+    benefitOffline: "Works offline",
+    benefitFast: "Instant launch",
+    benefitFullscreen: "Full screen",
     updateTitle: "New version available",
     updateBody: "Refresh to apply the update.",
     refresh: "Refresh",
@@ -55,54 +71,82 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
   if (!canShow) {
     return null;
   }
+  const benefits = [
+    { icon: WifiOff, label: t.benefitOffline },
+    { icon: Zap, label: t.benefitFast },
+    { icon: Maximize2, label: t.benefitFullscreen },
+  ];
   return (
     <div
       role="dialog"
-      aria-label={t.installTitle}
-      className="fixed inset-x-3 bottom-[max(1rem,env(safe-area-inset-bottom))] z-[60] mx-auto max-w-md rounded-2xl border border-white/[0.12] bg-gradient-to-br from-nb-panel/95 to-nb-bg/95 p-4 shadow-[0_28px_56px_-16px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-xl sm:inset-x-auto sm:right-6"
+      aria-label={iosManual ? t.iosTitle : t.installTitle}
+      className="pwa-install-banner fixed inset-x-0 bottom-0 z-[60] sm:inset-x-auto sm:bottom-6 sm:right-6"
     >
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-nb-primary/35 bg-gradient-to-br from-nb-primary/20 to-nb-primary/8 shadow-[0_0_28px_rgba(34,211,238,0.28)]">
-          <img src="/icons/icon-192.png" alt="" className="h-6 w-6 rounded-md" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">
-            {iosManual ? t.iosTitle : t.installTitle}
-          </p>
-          <p className="mt-0.5 text-[13px] leading-snug text-nb-muted">
-            {iosManual ? t.iosBody : t.installBody}
-          </p>
-          <div className="mt-3 flex items-center gap-2">
-            {iosManual ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-nb-primary/35 bg-nb-primary/10 px-3 py-1.5 text-[13px] font-semibold text-nb-accent">
-                <Share className="h-4 w-4" aria-hidden /> Paylaş
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void promptInstall()}
-                className="nb-transition inline-flex items-center gap-1.5 rounded-xl bg-nb-primary px-3.5 py-1.5 text-[13px] font-bold text-[#0b1220] hover:bg-nb-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
-              >
-                <Download className="h-4 w-4" aria-hidden /> {t.install}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={dismiss}
-              className="nb-transition rounded-xl border border-white/[0.1] px-3 py-1.5 text-[13px] font-semibold text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-            >
-              {t.later}
-            </button>
-          </div>
-        </div>
+      <div className="relative mx-auto w-full max-w-md rounded-t-3xl border border-white/[0.12] border-b-0 bg-gradient-to-br from-nb-panel/97 to-nb-bg/97 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-20px_56px_-16px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-xl sm:rounded-2xl sm:border-b sm:px-5 sm:pb-5 sm:pt-5 sm:shadow-[0_28px_56px_-16px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.05)_inset]">
+        {/* Mobil bottom-sheet tutamacı */}
+        <span
+          className="mx-auto mb-3 block h-1 w-10 rounded-full bg-white/15 sm:hidden"
+          aria-hidden
+        />
         <button
           type="button"
           onClick={dismiss}
           aria-label={t.close}
-          className="nb-transition -mr-1 -mt-1 shrink-0 rounded-lg p-1 text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+          className="nb-transition absolute right-3 top-3 shrink-0 rounded-lg p-1 text-nb-muted hover:bg-white/[0.06] hover:text-nb-text sm:right-4 sm:top-4"
         >
           <X className="h-4 w-4" aria-hidden />
         </button>
+
+        <div className="flex items-start gap-3.5 pr-6">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-nb-primary/35 bg-gradient-to-br from-nb-primary/20 to-nb-primary/[0.06] shadow-[0_0_28px_rgba(34,211,238,0.28)]">
+            <img src="/icons/icon-192.png" alt="" className="h-7 w-7 rounded-lg" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-bold text-white">
+              {iosManual ? t.iosTitle : t.installTitle}
+            </p>
+            <p className="mt-1 text-[13px] leading-snug text-nb-muted">
+              {iosManual ? t.iosBody : t.installBody}
+            </p>
+          </div>
+        </div>
+
+        {!iosManual ? (
+          <div className="mt-3.5 flex flex-wrap gap-1.5">
+            {benefits.map(({ icon: Icon, label }) => (
+              <span
+                key={label}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[11.5px] font-medium text-nb-muted"
+              >
+                <Icon className="h-3.5 w-3.5 text-nb-primary/80" aria-hidden />
+                {label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex items-center gap-2.5">
+          {iosManual ? (
+            <span className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-nb-primary/35 bg-nb-primary/10 px-3 py-2.5 text-[13px] font-semibold text-nb-accent">
+              <Share className="h-4 w-4" aria-hidden /> Paylaş → Ana Ekrana Ekle
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void promptInstall()}
+              className="nb-transition inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary to-nb-primary-hover px-4 py-2.5 text-[14px] font-bold text-[#0b1220] shadow-[0_8px_20px_-8px_rgba(34,211,238,0.6)] hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
+            >
+              <Download className="h-4 w-4" aria-hidden /> {t.install}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={dismiss}
+            className="nb-transition rounded-xl border border-white/[0.1] px-4 py-2.5 text-[13px] font-semibold text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+          >
+            {t.later}
+          </button>
+        </div>
       </div>
     </div>
   );

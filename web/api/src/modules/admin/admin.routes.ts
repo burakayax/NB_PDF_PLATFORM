@@ -17,6 +17,8 @@ import {
   adminListCouponsController,
   adminGetSettingsController,
   adminGrantCreditsController,
+  adminGrantBonusOpsController,
+  adminSetCustomDailyLimitController,
   adminListBlockedEmailsController,
   adminListDownloadLogsController,
   adminListMediaController,
@@ -123,6 +125,10 @@ adminRouter.get("/download-logs/:id/proof", asyncHandler(adminDownloadLogProofCo
 
 adminRouter.post("/credits/grant", asyncHandler(adminGrantCreditsController));
 adminRouter.post("/credits/adjust", asyncHandler(adminAdjustCreditsController));
+
+// Günlük kullanım hakkı: bugünlük bonus (+N) ve kullanıcıya özel kalıcı limit.
+adminRouter.post("/usage/grant-today", asyncHandler(adminGrantBonusOpsController));
+adminRouter.post("/usage/custom-daily-limit", asyncHandler(adminSetCustomDailyLimitController));
 
 adminRouter.post("/payments/:conversationId/refund", asyncHandler(adminIssueRefundController));
 

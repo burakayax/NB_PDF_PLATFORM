@@ -5,9 +5,36 @@ import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
 import { resolveCmsAssetUrl } from "../../lib/landingCmsMerge";
 import { ws } from "../../i18n/workspace";
-import { Coins, ChevronDown } from "lucide-react";
+import { Coins, ChevronDown, Download, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { UserMenu } from "./UserMenu";
+import { usePwaInstall } from "../../pwa/usePwaInstall";
+
+/**
+ * Header'da kalıcı "Uygulamayı Yükle" butonu — sadık kullanıcılar için en yüksek
+ * dönüşümlü PWA kurulum kalıbı (web.dev). Banner kapatılsa da görünür kalır
+ * (`canInstall` dismiss'ten bağımsız); yüklenince/standalone'da gizlenir. iOS'ta
+ * native prompt yok → talimat banner'ını yeniden açar.
+ */
+function HeaderInstallButton({ tr }: { tr: boolean }) {
+  const { canInstall, iosManual, promptInstall, reopen } = usePwaInstall();
+  if (!canInstall) {
+    return null;
+  }
+  const label = tr ? "Uygulamayı yükle" : "Install app";
+  return (
+    <button
+      type="button"
+      onClick={() => (iosManual ? reopen() : void promptInstall())}
+      title={label}
+      aria-label={label}
+      className="nb-transition inline-flex shrink-0 items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-500/12 px-2 py-1 text-[10px] font-bold text-cyan-100 hover:border-cyan-300/55 hover:bg-cyan-500/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40 sm:px-3 sm:py-1.5 sm:text-xs"
+    >
+      <Download className="h-3.5 w-3.5 shrink-0" aria-hidden />
+      <span className="hidden sm:inline">{label}</span>
+    </button>
+  );
+}
 
 const LANG_OPTIONS: { code: Language; flag: string; label: string }[] = [
   { code: "tr", flag: "🇹🇷", label: "Türkçe" },
@@ -279,13 +306,19 @@ export function DashboardTopNav({
               <button
                 type="button"
                 onClick={onUpgradeClick}
-                className="nb-transition shrink-0 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 px-2 py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
+                className="nb-transition inline-flex shrink-0 items-center gap-1 rounded-full border border-cyan-400/45 bg-gradient-to-r from-cyan-500/28 to-indigo-500/25 px-2 py-0.5 sm:px-2.5 sm:py-1 md:px-3 md:py-1.5 text-[8px] sm:text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-cyan-50 shadow-[0_0_22px_-8px_rgba(34,211,238,0.5)] hover:border-cyan-300/55 hover:from-cyan-500/38 hover:to-indigo-500/35"
               >
+                <Sparkles
+                  className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5"
+                  aria-hidden
+                />
                 {W.navbarUpgrade}
               </button>
             ) : null}
           </>
         ) : null}
+
+        <HeaderInstallButton tr={tr} />
 
         <LanguageDropdown
           language={language}

@@ -82,6 +82,14 @@ function FullPdfWatermarkLayer() {
   );
 }
 
+type PdfLinkBox = {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  url: string;
+};
+
 function PdfPageCanvas({
   pdf,
   pageNumber,
@@ -92,6 +100,10 @@ function PdfPageCanvas({
   widthCssPx: number;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // PDF'e gömülü URI link'leri (ör. ücretsiz filigrandaki site linki) → tıklanabilir,
+  // yeni sekmede açılan <a> katmanı. Canvas yalnızca piksel çizdiğinden link'ler
+  // aksi halde tıklanamıyordu.
+  const [links, setLinks] = useState<PdfLinkBox[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +123,37 @@ function PdfPageCanvas({
         return;
       }
       await page.render({ canvasContext: ctx, viewport }).promise;
+      if (cancelled) {
+        return;
+      }
+      try {
+        const annotations = await page.getAnnotations({ intent: "display" });
+        const boxes: PdfLinkBox[] = [];
+        for (const ann of annotations as Array<{
+          subtype?: string;
+          url?: string;
+          rect?: [number, number, number, number];
+        }>) {
+          if (ann.subtype !== "Link" || !ann.url || !ann.rect) {
+            continue;
+          }
+          const [vx1, vy1, vx2, vy2] = viewport.convertToViewportRectangle(
+            ann.rect,
+          );
+          boxes.push({
+            left: Math.min(vx1, vx2),
+            top: Math.min(vy1, vy2),
+            width: Math.abs(vx2 - vx1),
+            height: Math.abs(vy2 - vy1),
+            url: ann.url,
+          });
+        }
+        if (!cancelled) {
+          setLinks(boxes);
+        }
+      } catch {
+        /* link katmanı opsiyonel — yoksay */
+      }
     })();
     return () => {
       cancelled = true;
@@ -118,11 +161,30 @@ function PdfPageCanvas({
   }, [pdf, pageNumber, widthCssPx]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className="h-auto max-w-full rounded-md border border-white/10 bg-slate-950/35"
-      style={{ width: widthCssPx }}
-    />
+    <div className="relative" style={{ width: widthCssPx }}>
+      <canvas
+        ref={canvasRef}
+        className="h-auto max-w-full rounded-md border border-white/10 bg-slate-950/35"
+        style={{ width: widthCssPx }}
+      />
+      {links.map((l, i) => (
+        <a
+          key={`${pageNumber}-${i}`}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={l.url}
+          title={l.url}
+          className="absolute z-20 cursor-pointer rounded-sm transition-colors hover:bg-cyan-400/15"
+          style={{
+            left: l.left,
+            top: l.top,
+            width: l.width,
+            height: l.height,
+          }}
+        />
+      ))}
+    </div>
   );
 }
 

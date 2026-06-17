@@ -21,6 +21,7 @@ import {
   downloadResult,
   EntitlementPaymentRequiredError,
   fetchMergeJob,
+  fetchMergeJobBlob,
   fetchMergeJobHeroPreviewBlobUrl,
   fetchResultThumbnailBlobUrl,
   inspectPdf,
@@ -34,6 +35,13 @@ import {
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { CookieNotice } from "./components/common/CookieNotice";
+import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
+import { ShareResultDialog } from "./components/common/ShareResultDialog";
+import {
+  canShareFile,
+  isShareApiAvailable,
+  shareFileWithPromo,
+} from "./lib/shareFile";
 import {
   MaintenancePage,
   MaintenanceTabTitle,
@@ -226,6 +234,8 @@ type ContentPanel =
   | "team";
 
 type ToastState = {
+  /** Artan kimlik: her showToast'ta değişir → AppToast remount olup ilerleme çizgisi sıfırlanır. */
+  id: number;
   type: ToastType;
   title: string;
   detail: string;
@@ -985,6 +995,7 @@ function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const inspectRunRef = useRef(0);
   const toastTimerRef = useRef<number | null>(null);
+  const toastIdRef = useRef(0);
   const contactSubmitInFlightRef = useRef(false);
   /** Ensures `/fake-payment/success` confirm runs once per navigation to that path. */
   const fakePaymentSuccessHandledRef = useRef(false);
@@ -1006,6 +1017,22 @@ function App() {
   const organizeVisualAutoOpenedForUploadId = useRef<string | null>(null);
   /** Blocks duplicate `/download` akışları (aynı iş için paralel GET). */
   const gatedDownloadInFlightKeysRef = useRef<Set<string>>(new Set());
+  /**
+   * Merge "Paylaş" dialog: filename + source of the bytes to share. `blob` is
+   * set when we already fetched the file (post-download bar) → no re-fetch /
+   * no extra entitlement charge; otherwise `jobId` is fetched on demand.
+   */
+  const [mergeShare, setMergeShare] = useState<{
+    jobId?: string;
+    defaultName: string;
+    blob?: Blob;
+  } | null>(null);
+  const [mergeShareBusy, setMergeShareBusy] = useState(false);
+  /** Post-download "Dosyan indirildi — Paylaş?" bar; holds the already-downloaded bytes. */
+  const [mergeShareReady, setMergeShareReady] = useState<{
+    blob: Blob;
+    filename: string;
+  } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
@@ -1278,11 +1305,12 @@ function App() {
     if (toastTimerRef.current) {
       window.clearTimeout(toastTimerRef.current);
     }
-    setToast({ type, title, detail });
+    toastIdRef.current += 1;
+    setToast({ id: toastIdRef.current, type, title, detail });
     if (type !== "loading") {
       toastTimerRef.current = window.setTimeout(() => {
         setToast(null);
-      }, 9000);
+      }, AUTO_DISMISS_MS);
     }
   }
 
@@ -2068,11 +2096,24 @@ function App() {
           });
         }
         applyWorkspaceCleanSlateAfterDownload("merge");
-        showToast(
-          "success",
-          language === "tr" ? "İndirme tamamlandı" : "Download complete",
-          clientFileName,
-        );
+        // Keep the already-downloaded bytes so the user can re-open/share them
+        // without a second fetch/charge. The post-download bar shows whenever we
+        // have the bytes — Aç/Kapat work everywhere; Paylaş only when Web Share
+        // is available.
+        const showShareBar = !!dl.blob;
+        if (dl.blob) {
+          setMergeShareReady({ blob: dl.blob, filename: clientFileName });
+        }
+        // The bar already confirms the download (Dosyan indirildi + dosya adı),
+        // so skip the redundant timed toast when it will be shown. Only fall back
+        // to a toast when we somehow have no bytes to back the bar.
+        if (!showShareBar) {
+          showToast(
+            "success",
+            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            clientFileName,
+          );
+        }
         void refreshSubscriptionState();
         if (accessToken && user) {
           const balanceCtx = {
@@ -2126,6 +2167,107 @@ function App() {
       void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
     [runMergeJobGatedDownloadWithFilename],
+  );
+
+  /**
+   * Merge "Paylaş": wrap the result bytes in a File named by the user and hand
+   * it to the OS share sheet with the promo text. Bytes come from the
+   * pre-fetched `blob` (post-download bar → no extra charge) or, failing that,
+   * a fresh gated GET via `jobId`. When the browser can't share files (Firefox
+   * / older desktops) we fall back to a plain download so the user still gets
+   * the file.
+   */
+  const runMergeShare = useCallback(
+    async (filename: string) => {
+      const src = mergeShare;
+      if (!src) {
+        return;
+      }
+      setMergeShareBusy(true);
+      try {
+        let blob = src.blob ?? null;
+        const alreadyDownloaded = !!src.blob;
+        if (!blob) {
+          if (!src.jobId) {
+            return;
+          }
+          const fetched = await fetchMergeJobBlob(
+            src.jobId,
+            filename,
+            accessToken,
+          );
+          blob = fetched.blob;
+        }
+        const file = new File([blob], filename, {
+          type: blob.type || "application/pdf",
+        });
+
+        if (canShareFile(file)) {
+          const outcome = await shareFileWithPromo(file, filename);
+          if (outcome === "cancelled") {
+            return; // keep dialog/bar so the user can retry
+          }
+          if (outcome === "error") {
+            showToast(
+              "error",
+              language === "tr" ? "Paylaşım başarısız" : "Share failed",
+              friendlyOperationFailedMessage(language),
+            );
+            return;
+          }
+          // "shared"
+          setMergeShare(null);
+          setMergeShareReady(null);
+          showToast(
+            "success",
+            language === "tr" ? "Paylaşıldı" : "Shared",
+            filename,
+          );
+          void refreshSubscriptionState();
+          return;
+        }
+
+        // Browser can't share files. If the file was already downloaded (post-
+        // download bar) just inform; otherwise save the freshly-fetched blob.
+        if (!alreadyDownloaded) {
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = filename;
+          anchor.rel = "noopener";
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          URL.revokeObjectURL(url);
+        }
+        setMergeShare(null);
+        setMergeShareReady(null);
+        showToast(
+          "info",
+          language === "tr" ? "Paylaşım desteklenmiyor" : "Sharing unavailable",
+          language === "tr"
+            ? "Bu tarayıcı dosya paylaşımını desteklemiyor; dosya indirildi."
+            : "This browser can't share files; the file was downloaded instead.",
+        );
+        void refreshSubscriptionState();
+      } catch (e: unknown) {
+        if (isUserAbortError(e)) {
+          return;
+        }
+        if (e instanceof EntitlementPaymentRequiredError) {
+          setUpgradeModalOpen(true);
+          return;
+        }
+        showToast(
+          "error",
+          language === "tr" ? "Paylaşım başarısız" : "Share failed",
+          friendlyOperationFailedMessage(language),
+        );
+      } finally {
+        setMergeShareBusy(false);
+      }
+    },
+    [mergeShare, accessToken, language, refreshSubscriptionState, showToast],
   );
 
   const openConversionUpgradeModalManual = useCallback(() => {
@@ -3658,7 +3800,10 @@ function App() {
           };
           if (typeof win.showSaveFilePicker === "function") {
             try {
-              const _mergeName = language === "tr" ? "birlestirilmis.pdf" : "merged.pdf";
+              // Kaydetme önerisi tek kaynaktan (paylaşım diyaloğu + backend ile
+              // aynı): Türkçe karakterli "birleştirilmiş.pdf". Eski sabit ASCII
+              // ad Türkçe harfleri düşürüyordu.
+              const _mergeName = selectedFeature.fallbackFilename;
               const handle = await win.showSaveFilePicker({
                 suggestedName: _mergeName,
                 types: showSavePickerTypesFor(_mergeName),
@@ -4232,10 +4377,14 @@ function App() {
                 : "PDF check took too long or stalled. Check your connection or try the file again.",
             );
           } else {
+            // Sunucu anlamlı bir mesaj döndürdüyse (ör. "PDF çok fazla sayfa
+            // içeriyor") onu göster; yoksa genel mesaja düş.
+            const serverMsg =
+              err instanceof Error ? err.message.trim() : "";
             showToast(
               "error",
               L2.inspectFailedTitle,
-              friendlyOperationFailedMessage(language),
+              serverMsg || friendlyOperationFailedMessage(language),
             );
           }
           return {
@@ -4697,10 +4846,12 @@ function App() {
           />
         </Suspense>
         {toast ? (
-          <div className={`toast toast--${toast.type}`}>
-            <div className="toast__title">{toast.title}</div>
-            <div className="toast__detail">{toast.detail}</div>
-          </div>
+          <AppToast
+            key={toast.id}
+            toast={toast}
+            onClose={clearToast}
+            closeLabel={language === "tr" ? "Kapat" : "Close"}
+          />
         ) : null}
         <CookieNotice
           language={language}
@@ -4754,10 +4905,12 @@ function App() {
           />
         </Suspense>
         {toast ? (
-          <div className={`toast toast--${toast.type}`}>
-            <div className="toast__title">{toast.title}</div>
-            <div className="toast__detail">{toast.detail}</div>
-          </div>
+          <AppToast
+            key={toast.id}
+            toast={toast}
+            onClose={clearToast}
+            closeLabel={language === "tr" ? "Kapat" : "Close"}
+          />
         ) : null}
         <CookieNotice
           language={language}
@@ -4887,10 +5040,12 @@ function App() {
         />
         <SystemNotificationBanner language={language} />
         {toast ? (
-          <div className={`toast toast--${toast.type}`}>
-            <div className="toast__title">{toast.title}</div>
-            <div className="toast__detail">{toast.detail}</div>
-          </div>
+          <AppToast
+            key={toast.id}
+            toast={toast}
+            onClose={clearToast}
+            closeLabel={language === "tr" ? "Kapat" : "Close"}
+          />
         ) : null}
         <CookieNotice
           language={language}
@@ -5032,6 +5187,137 @@ function App() {
           </Suspense>
         ) : null}
 
+        <ShareResultDialog
+          open={!!mergeShare}
+          defaultName={mergeShare?.defaultName ?? ""}
+          language={language}
+          busy={mergeShareBusy}
+          onCancel={() => {
+            if (!mergeShareBusy) setMergeShare(null);
+          }}
+          onShare={(filename) => {
+            void runMergeShare(filename);
+          }}
+        />
+
+        {mergeShareReady && !mergeShare ? (
+          <div
+            className="merge-progress-fixed merge-share-bar"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="merge-progress-fixed__inner merge-share-bar__inner">
+              <div className="merge-share-bar__info">
+                <span className="merge-share-bar__icon" aria-hidden="true">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </span>
+                <div className="merge-share-bar__texts">
+                  <span className="merge-share-bar__title">
+                    {language === "tr"
+                      ? "Dosyan indirildi"
+                      : "File downloaded"}
+                  </span>
+                  <span
+                    className="merge-share-bar__name"
+                    title={mergeShareReady.filename}
+                  >
+                    {mergeShareReady.filename}
+                  </span>
+                </div>
+              </div>
+              <div className="merge-share-bar__actions">
+                {isShareApiAvailable() ? (
+                  <button
+                    type="button"
+                    className="merge-share-btn merge-share-btn--share"
+                    onClick={() => {
+                      setMergeShare({
+                        defaultName: mergeShareReady.filename,
+                        blob: mergeShareReady.blob,
+                      });
+                    }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="18" cy="5" r="3" />
+                      <circle cx="6" cy="12" r="3" />
+                      <circle cx="18" cy="19" r="3" />
+                      <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
+                    </svg>
+                    {language === "tr" ? "Paylaş" : "Share"}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="merge-share-btn merge-share-btn--open"
+                  onClick={() => {
+                    const url = URL.createObjectURL(mergeShareReady.blob);
+                    window.open(url, "_blank", "noopener,noreferrer");
+                    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14 21 3" />
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  </svg>
+                  {language === "tr" ? "Aç" : "Open"}
+                </button>
+                <button
+                  type="button"
+                  className="merge-share-btn merge-share-btn--close"
+                  onClick={() => setMergeShareReady(null)}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M18 6 6 18M6 6l12 12" />
+                  </svg>
+                  {language === "tr" ? "Kapat" : "Close"}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
         {excelDialogOpen ? (
           <div
             className="fixed inset-0 z-[11500] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
@@ -5047,12 +5333,34 @@ function App() {
               role="dialog"
               aria-modal="true"
             >
-              <h2 className="text-lg font-semibold text-slate-50">
-                {W.pdfExcelWarningTitle}
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                {W.pdfExcelWarningBody}
-              </p>
+              <div className="flex items-start gap-3.5">
+                <span
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/30 bg-amber-500/12 text-amber-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                  aria-hidden="true"
+                >
+                  <svg
+                    className="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M10.3 3.2 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.2a2 2 0 0 0-3.4 0Z" />
+                    <path d="M12 9v4" />
+                    <path d="M12 17h.01" />
+                  </svg>
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-semibold text-slate-50">
+                    {W.pdfExcelWarningTitle}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                    {W.pdfExcelWarningBody}
+                  </p>
+                </div>
+              </div>
               <div className="mt-5 flex flex-wrap justify-end gap-2">
                 <button
                   type="button"
@@ -5082,10 +5390,12 @@ function App() {
         ) : null}
 
         {toast ? (
-          <div className={`toast toast--${toast.type}`}>
-            <div className="toast__title">{toast.title}</div>
-            <div className="toast__detail">{toast.detail}</div>
-          </div>
+          <AppToast
+            key={toast.id}
+            toast={toast}
+            onClose={clearToast}
+            closeLabel={language === "tr" ? "Kapat" : "Close"}
+          />
         ) : null}
 
         <DashboardTopNav
@@ -5120,8 +5430,25 @@ function App() {
           isTeamMember={isTeamMember}
         />
         {workspaceBanner.enabled ? (
-          <div className="border-b border-cyan-500/30 bg-cyan-950/50 px-4 py-2 text-center text-xs font-medium text-cyan-100 md:text-sm">
-            {workspaceBanner.text}
+          <div
+            className="flex items-center justify-center gap-2.5 border-b border-cyan-500/25 bg-gradient-to-r from-cyan-950/40 via-cyan-900/45 to-cyan-950/40 px-4 py-2.5 text-center text-xs font-medium text-cyan-100/95 md:text-sm"
+            role="status"
+          >
+            <svg
+              className="h-4 w-4 shrink-0 text-cyan-300/90"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 11v5" />
+              <path d="M12 7.6h.01" />
+            </svg>
+            <span>{workspaceBanner.text}</span>
           </div>
         ) : null}
         <DashboardSidebar
@@ -5492,48 +5819,48 @@ function App() {
                               </div>
                             ) : null}
 
-                            {/* Ayırma modu — masaüstünde 2. sütun, mobilde tam genişlik */}
-                            <div className="field col-span-2 sm:col-span-1 sm:col-start-2">
-                              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                                <span className="shrink-0 text-[13px] font-semibold text-nb-muted">
-                                  {W.splitModeLabel}
-                                </span>
-                                <div className="flex w-full gap-2 sm:w-auto">
-                                  <button
-                                    type="button"
-                                    onClick={() => setSplitMode("single")}
-                                    className={[
-                                      "flex flex-1 sm:flex-none sm:w-[148px] flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px]",
-                                      splitMode === "single"
-                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
-                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
-                                    ].join(" ")}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                      <polyline points="14 2 14 8 20 8" />
-                                      <line x1="8" y1="13" x2="16" y2="13" />
-                                      <line x1="8" y1="17" x2="12" y2="17" />
-                                    </svg>
-                                    <span className="leading-tight text-center">{W.splitModeSingle}</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => setSplitMode("separate")}
-                                    className={[
-                                      "flex flex-1 sm:flex-none sm:w-[148px] flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl border-2 text-sm font-medium transition-all duration-150 min-h-[72px]",
-                                      splitMode === "separate"
-                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 shadow-sm"
-                                        : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:border-blue-300 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-900/10",
-                                    ].join(" ")}
-                                  >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                    </svg>
-                                    <span className="leading-tight text-center">{W.splitModeSeparate}</span>
-                                  </button>
-                                </div>
+                            {/* Ayırma modu — diğer araçlar gibi doğal grid akışı.
+                                NOT: col-span-2 / col-start KULLANMA — tek sütunlu grid'de
+                                bunlar gizli bir 2. sütun yaratıp tüm formu bozuyordu. */}
+                            <div className="field">
+                              <span>{W.splitModeLabel}</span>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setSplitMode("single")}
+                                  aria-pressed={splitMode === "single"}
+                                  className={[
+                                    "flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[13px] font-semibold transition-all duration-150",
+                                    splitMode === "single"
+                                      ? "border-nb-primary/70 bg-nb-primary/25 text-white shadow-[0_0_0_1px_rgba(34,211,238,0.32)]"
+                                      : "border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/30 hover:bg-white/[0.09] hover:text-white",
+                                  ].join(" ")}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="8" y1="13" x2="16" y2="13" />
+                                    <line x1="8" y1="17" x2="12" y2="17" />
+                                  </svg>
+                                  <span className="truncate">{W.splitModeSingle}</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setSplitMode("separate")}
+                                  aria-pressed={splitMode === "separate"}
+                                  className={[
+                                    "flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-[13px] font-semibold transition-all duration-150",
+                                    splitMode === "separate"
+                                      ? "border-nb-primary/70 bg-nb-primary/25 text-white shadow-[0_0_0_1px_rgba(34,211,238,0.32)]"
+                                      : "border-white/15 bg-white/[0.05] text-slate-200 hover:border-white/30 hover:bg-white/[0.09] hover:text-white",
+                                  ].join(" ")}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                  </svg>
+                                  <span className="truncate">{W.splitModeSeparate}</span>
+                                </button>
                               </div>
                               <span className="field-hint">
                                 {splitModeDescription}
@@ -6079,20 +6406,46 @@ function App() {
                           <div className="selected-files">
                             <div className="selected-files__header">
                               <div className="selected-files__title-row">
-                                <p className="flex items-center gap-2">
+                                <p className="flex items-center gap-2.5">
+                                  <span
+                                    className="selected-files__title-icon"
+                                    aria-hidden="true"
+                                  >
+                                    <svg
+                                      width="17"
+                                      height="17"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    >
+                                      <path d="M15 2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V6z" />
+                                      <path d="M15 2v4h4" />
+                                      <path d="M8 22h9a2 2 0 0 0 2-2v-1" />
+                                    </svg>
+                                  </span>
                                   <span>{W.selectedFiles}</span>
                                   {(selectedFeature.multiple ||
                                     BATCHABLE_TOOLS.has(selectedFeature.id)) &&
                                   uploads.length > 0 ? (
                                     <span
-                                      className="inline-flex min-w-[1.5rem] items-center justify-center rounded-full bg-nb-primary/20 px-2 py-0.5 text-xs font-semibold text-nb-accent"
+                                      className="selected-files__count"
                                       aria-label={
                                         language === "tr"
                                           ? `${uploads.length} dosya yüklendi`
                                           : `${uploads.length} files added`
                                       }
                                     >
-                                      {uploads.length}
+                                      <span className="selected-files__count-num">
+                                        {uploads.length}
+                                      </span>
+                                      {language === "tr"
+                                        ? "dosya"
+                                        : uploads.length === 1
+                                          ? "file"
+                                          : "files"}
                                     </span>
                                   ) : null}
                                 </p>
@@ -6538,6 +6891,19 @@ function App() {
                         );
                       }
                     }}
+                    onShare={
+                      toolProgressSuccess.gatedDownload.mergeJobId &&
+                      isShareApiAvailable()
+                        ? () => {
+                            const gd = toolProgressSuccess.gatedDownload;
+                            if (!gd?.mergeJobId) return;
+                            setMergeShare({
+                              jobId: gd.mergeJobId,
+                              defaultName: gd.fallbackName,
+                            });
+                          }
+                        : undefined
+                    }
                     onUpgrade={() => openConversionUpgradeModalManual()}
                     onInsufficientCredits={() => {
                       setUpgradeModalOpen(true);

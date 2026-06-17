@@ -75,10 +75,29 @@ async function resetDailyIfNeeded(
   if (isNewDayInTimezone(org.lastDailyReset, timezone)) {
     return prisma.organization.update({
       where: { id: org.id },
-      data: { currentDayOperations: 0, lastDailyReset: new Date() },
+      // Bonus (bugünlük admin hediyesi) de yeni günde sıfırlanır.
+      data: { currentDayOperations: 0, bonusDailyOperations: 0, lastDailyReset: new Date() },
     });
   }
   return org;
+}
+
+/**
+ * Geçerli günlük limit: admin'in kullanıcıya özel KALICI limiti (customDailyLimit)
+ * varsa plan limitini ezer; üstüne yalnızca bugün geçerli bonus eklenir.
+ * `null` → sınırsız (PRO/BUSINESS); bonus uygulanmaz.
+ */
+function effectiveDailyLimit(
+  org: Pick<
+    Organization,
+    "customDailyLimit" | "dailyOperationLimit" | "bonusDailyOperations"
+  >,
+): number | null {
+  const base = org.customDailyLimit ?? org.dailyOperationLimit;
+  if (base === null || base === undefined) {
+    return null;
+  }
+  return base + (org.bonusDailyOperations ?? 0);
 }
 
 async function resetMonthlyIfNeeded(
@@ -183,16 +202,17 @@ export async function checkQuota(
     }
   }
 
-  // Check daily limit
-  if (currentOrg.dailyOperationLimit !== null && currentOrg.dailyOperationLimit !== undefined) {
-    if (currentOrg.currentDayOperations >= currentOrg.dailyOperationLimit) {
+  // Check daily limit (kullanıcıya özel limit + bugünlük bonus dahil)
+  const effDailyLimit = effectiveDailyLimit(currentOrg);
+  if (effDailyLimit !== null) {
+    if (currentOrg.currentDayOperations >= effDailyLimit) {
       const resetAt = getNextMidnightInTimezone(timezone);
       return {
         allowed: false,
         reason: "daily_limit_reached",
         resetAt,
         dailyUsed: currentOrg.currentDayOperations,
-        dailyLimit: currentOrg.dailyOperationLimit,
+        dailyLimit: effDailyLimit,
       };
     }
   }
@@ -212,7 +232,7 @@ export async function checkQuota(
   return {
     allowed: true,
     dailyUsed: currentOrg.currentDayOperations,
-    dailyLimit: currentOrg.dailyOperationLimit,
+    dailyLimit: effDailyLimit,
     monthlyUsed: currentOrg.currentMonthOperations,
     monthlyLimit: currentOrg.monthlyOperationLimit,
     watermarkEnabled: currentOrg.watermarkEnabled,
@@ -294,7 +314,7 @@ export async function checkAndIncrementQuota(
 
     const timezone = user.timezone || "Europe/Istanbul";
     if (isNewDayInTimezone(org.lastDailyReset, timezone)) {
-      org = await tx.organization.update({ where: { id: org.id }, data: { currentDayOperations: 0, lastDailyReset: new Date() } });
+      org = await tx.organization.update({ where: { id: org.id }, data: { currentDayOperations: 0, bonusDailyOperations: 0, lastDailyReset: new Date() } });
     }
     if (isNewMonthInTimezone(org.lastMonthlyReset, timezone)) {
       org = await tx.organization.update({ where: { id: org.id }, data: { currentMonthOperations: 0, lastMonthlyReset: new Date() } });
@@ -307,10 +327,11 @@ export async function checkAndIncrementQuota(
       if (fileCount > org.batchLimit) return { allowed: false, reason: "batch_limit_exceeded" };
     }
 
-    if (org.dailyOperationLimit !== null && org.dailyOperationLimit !== undefined) {
-      if (org.currentDayOperations >= org.dailyOperationLimit) {
+    const effDailyLimit = effectiveDailyLimit(org);
+    if (effDailyLimit !== null) {
+      if (org.currentDayOperations >= effDailyLimit) {
         const resetAt = getNextMidnightInTimezone(timezone);
-        return { allowed: false, reason: "daily_limit_reached", resetAt, dailyUsed: org.currentDayOperations, dailyLimit: org.dailyOperationLimit };
+        return { allowed: false, reason: "daily_limit_reached", resetAt, dailyUsed: org.currentDayOperations, dailyLimit: effDailyLimit };
       }
     }
 
@@ -333,13 +354,71 @@ export async function checkAndIncrementQuota(
     return {
       allowed: true,
       dailyUsed: org.currentDayOperations + 1,
-      dailyLimit: org.dailyOperationLimit,
+      dailyLimit: effDailyLimit,
       monthlyUsed: org.currentMonthOperations + 1,
       monthlyLimit: org.monthlyOperationLimit,
       watermarkEnabled: org.watermarkEnabled,
       fileSizeLimitMB: org.fileSizeLimitMB,
     };
   });
+}
+
+/**
+ * Admin: kullanıcıya YALNIZCA BUGÜN için ekstra işlem hakkı ekler.
+ * Gün döndüyse önce sıfırlar (eklenen bonusun sonradan reset ile silinmemesi için),
+ * sonra bonusu artırır. Gece limit sıfırlanınca bonus da sıfırlanır.
+ */
+export async function grantBonusOpsToday(userId: string, amount: number) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { organization: true },
+  });
+  if (!user) throw new Error("user not found");
+  let org = user.organization;
+  if (!org) {
+    org = await createOrganizationForUser(userId, user.name ?? user.email, "FREE");
+  }
+  const timezone = user.timezone || "Europe/Istanbul";
+  org = await resetDailyIfNeeded(org, timezone);
+  org = await resetMonthlyIfNeeded(org, timezone);
+
+  const bonusBefore = org.bonusDailyOperations ?? 0;
+  const updated = await prisma.organization.update({
+    where: { id: org.id },
+    data: { bonusDailyOperations: { increment: amount } },
+  });
+  return {
+    bonusBefore,
+    bonusAfter: updated.bonusDailyOperations,
+    usedToday: updated.currentDayOperations,
+    effectiveDailyLimit: effectiveDailyLimit(updated),
+  };
+}
+
+/**
+ * Admin: kullanıcıya özel KALICI günlük limit atar (plan limitini ezer) ya da
+ * `null` ile kaldırır (plan limitine döner).
+ */
+export async function setCustomDailyLimit(userId: string, limit: number | null) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { organization: true },
+  });
+  if (!user) throw new Error("user not found");
+  let org = user.organization;
+  if (!org) {
+    org = await createOrganizationForUser(userId, user.name ?? user.email, "FREE");
+  }
+  const updated = await prisma.organization.update({
+    where: { id: org.id },
+    data: { customDailyLimit: limit },
+  });
+  return {
+    customDailyLimit: updated.customDailyLimit,
+    planDailyLimit: updated.dailyOperationLimit,
+    effectiveDailyLimit: effectiveDailyLimit(updated),
+    usedToday: updated.currentDayOperations,
+  };
 }
 
 export async function getQuotaSummary(userId: string) {
@@ -350,8 +429,13 @@ export async function getQuotaSummary(userId: string) {
 
   if (!user || !user.organization) return null;
 
-  const org = user.organization;
   const timezone = user.timezone || "Europe/Istanbul";
+
+  // Günlük/aylık sayaçları okumadan ÖNCE gün/ay sınırı geçtiyse sıfırla.
+  // Aksi halde yeni günde ilk girişte navbar dünkü (bayat) sayacı gösterir;
+  // sayaç ancak bir işlem (check/consume) DB'yi sıfırladıktan sonra düzelir.
+  let org = await resetDailyIfNeeded(user.organization, timezone);
+  org = await resetMonthlyIfNeeded(org, timezone);
   const resetAt = getNextMidnightInTimezone(timezone);
 
   // Admin → tüm sınırlar kaldırılmış
@@ -387,7 +471,7 @@ export async function getQuotaSummary(userId: string) {
     plan: org.plan,
     daily: {
       used: org.currentDayOperations,
-      limit: org.dailyOperationLimit,
+      limit: effectiveDailyLimit(org),
       resetAt,
     },
     monthly: {

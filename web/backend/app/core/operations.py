@@ -282,6 +282,23 @@ def build_pdf_download_headers(
     return headers if headers else None
 
 
+def content_disposition(filename: str, *, disposition: str = "attachment") -> str:
+    """RFC 5987 uyumlu ``Content-Disposition`` değeri üretir.
+
+    HTTP header'ları latin-1 ile kodlandığından, Türkçe karakter (ş, ı, ğ ...)
+    içeren dosya adlarını ham olarak ``filename="..."`` içine koymak
+    ``'latin-1' codec can't encode character`` hatasına yol açar. Bu helper
+    ASCII fallback + UTF-8 percent-encoded ``filename*`` üreterek bunu önler.
+    """
+    from urllib.parse import quote
+
+    name = filename or "download"
+    # ASCII fallback: latin-1'e sığmayan karakterleri "_" ile değiştir
+    ascii_name = name.encode("ascii", "replace").decode("ascii").replace("?", "_")
+    quoted = quote(name, safe="")
+    return f"{disposition}; filename=\"{ascii_name}\"; filename*=UTF-8''{quoted}"
+
+
 def download_response(
     path: Path,
     filename: str,
@@ -293,8 +310,12 @@ def download_response(
 ):
     """Stream a single output file and clean up the temp dir when done."""
     background_tasks.add_task(cleanup_path, cleanup_target)
-    hdrs = build_pdf_download_headers(saas_gating=saas_gating)
-    return FileResponse(path=path, filename=filename, media_type=media_type, headers=hdrs)
+    # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback);
+    # Türkçe karakterli varsayılan adların ("çıktı.pdf" vb.) tarayıcıda mojibake
+    # olmasını engeller. Bkz. content_disposition().
+    hdrs = build_pdf_download_headers(saas_gating=saas_gating) or {}
+    hdrs["Content-Disposition"] = content_disposition(filename)
+    return FileResponse(path=path, media_type=media_type, headers=hdrs)
 
 
 def parse_pages_text(pages_text: str, max_page: int | None = None) -> list[int]:

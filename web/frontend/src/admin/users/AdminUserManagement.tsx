@@ -10,6 +10,8 @@ import {
   postAdminBlockedEmail,
   deleteAdminBlockedEmail,
   adminResetUserRateLimit,
+  postAdminGrantBonusOpsToday,
+  postAdminSetCustomDailyLimit,
   type AdminUserDetail,
   type AdminUserRow,
   type BlockedEmailRow,
@@ -550,9 +552,174 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
         detail={detailData}
         loading={detailLoading}
         tab={detailTab}
+        accessToken={accessToken}
         onTabChange={setDetailTab}
         onClose={() => { setDetailUser(null); setDetailData(null); }}
       />
+    </div>
+  );
+}
+
+type UsageInfo = NonNullable<AdminUserDetail["usage"]>;
+
+function UsageGrantSection({
+  accessToken,
+  userId,
+  usage,
+}: {
+  accessToken: string;
+  userId: string;
+  usage: UsageInfo | null;
+}) {
+  const [bonus, setBonus] = useState(5);
+  const [customLimit, setCustomLimit] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState<null | "bonus" | "limit" | "clear">(null);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [cur, setCur] = useState<UsageInfo | null>(usage);
+
+  // Detay yüklenince/değişince mevcut durumu eşitle.
+  useEffect(() => setCur(usage), [usage]);
+
+  async function run(kind: "bonus" | "limit" | "clear", fn: () => Promise<string>) {
+    setBusy(kind);
+    setMsg(null);
+    try {
+      setMsg({ ok: true, text: await fn() });
+    } catch (e) {
+      setMsg({ ok: false, text: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  const fmtLimit = (n: number | null | undefined) =>
+    n === null || n === undefined ? "∞" : String(n);
+
+  return (
+    <div className="rounded-xl border border-cyan-500/20 bg-cyan-950/15 p-3">
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-cyan-300/90">
+        Günlük kullanım hakkı
+      </p>
+
+      {cur ? (
+        <div className="mb-3 grid grid-cols-2 gap-x-4 gap-y-1 rounded-lg bg-slate-900/40 px-3 py-2 text-[11px] sm:grid-cols-3">
+          <span className="text-slate-500">Plan limiti: <span className="font-semibold text-slate-200">{fmtLimit(cur.planDailyLimit)}</span></span>
+          <span className="text-slate-500">Özel limit: <span className={`font-semibold ${cur.customDailyLimit != null ? "text-cyan-200" : "text-slate-400"}`}>{cur.customDailyLimit != null ? cur.customDailyLimit : "—"}</span></span>
+          <span className="text-slate-500">Bugünkü bonus: <span className={`font-semibold ${cur.bonusDailyOperations > 0 ? "text-emerald-300" : "text-slate-400"}`}>{cur.bonusDailyOperations > 0 ? `+${cur.bonusDailyOperations}` : "—"}</span></span>
+          <span className="text-slate-500">Efektif limit: <span className="font-semibold text-amber-200">{fmtLimit(cur.effectiveDailyLimit)}</span></span>
+          <span className="text-slate-500">Bugün kullanılan: <span className="font-semibold text-slate-200">{cur.currentDayOperations}</span></span>
+        </div>
+      ) : null}
+
+      <AdminField label="İşlem nedeni (opsiyonel, audit log'a yazılır)" htmlFor="usg-reason">
+        <input
+          id="usg-reason"
+          className={adminInputClass}
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="örn. destek talebi / jest"
+        />
+      </AdminField>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {/* Bugünlük +N işlem */}
+        <div className="rounded-lg border border-slate-800/60 bg-slate-900/40 p-2.5">
+          <p className="mb-1.5 text-[11px] font-medium text-slate-300">Bugün için ekstra işlem</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={10000}
+              className={`${adminInputClass} w-20`}
+              value={bonus}
+              onChange={(e) => setBonus(Math.max(1, Number(e.target.value) || 1))}
+            />
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() =>
+                void run("bonus", async () => {
+                  const r = await postAdminGrantBonusOpsToday(accessToken, userId, bonus, reason);
+                  setCur((p) =>
+                    p
+                      ? { ...p, bonusDailyOperations: r.bonusAfter, currentDayOperations: r.usedToday, effectiveDailyLimit: r.effectiveDailyLimit }
+                      : p,
+                  );
+                  return `Bugün +${bonus} işlem eklendi. Bugünkü limit: ${r.effectiveDailyLimit ?? "∞"} (kullanılan: ${r.usedToday}).`;
+                })
+              }
+              className="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-500/25 disabled:opacity-50"
+            >
+              {busy === "bonus" ? "…" : "Ekle"}
+            </button>
+          </div>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-500">Sadece bugün geçerli; gece sıfırlanır.</p>
+        </div>
+
+        {/* Kalıcı özel günlük limit */}
+        <div className="rounded-lg border border-slate-800/60 bg-slate-900/40 p-2.5">
+          <p className="mb-1.5 text-[11px] font-medium text-slate-300">Kalıcı özel günlük limit</p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0}
+              max={100000}
+              className={`${adminInputClass} w-20`}
+              value={customLimit}
+              onChange={(e) => setCustomLimit(e.target.value)}
+              placeholder="örn. 10"
+            />
+            <button
+              type="button"
+              disabled={busy !== null || customLimit.trim() === ""}
+              onClick={() =>
+                void run("limit", async () => {
+                  const lim = Math.max(0, Number(customLimit) || 0);
+                  const r = await postAdminSetCustomDailyLimit(accessToken, userId, lim, reason);
+                  setCur((p) => ({
+                    planDailyLimit: r.planDailyLimit,
+                    customDailyLimit: r.customDailyLimit,
+                    bonusDailyOperations: p?.bonusDailyOperations ?? 0,
+                    currentDayOperations: r.usedToday,
+                    effectiveDailyLimit: r.effectiveDailyLimit,
+                  }));
+                  return `Özel günlük limit ${lim} olarak ayarlandı (efektif: ${r.effectiveDailyLimit ?? "∞"}).`;
+                })
+              }
+              className="rounded-lg border border-cyan-500/40 bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 hover:bg-cyan-500/25 disabled:opacity-50"
+            >
+              {busy === "limit" ? "…" : "Kaydet"}
+            </button>
+            <button
+              type="button"
+              disabled={busy !== null}
+              onClick={() =>
+                void run("clear", async () => {
+                  const r = await postAdminSetCustomDailyLimit(accessToken, userId, null, reason);
+                  setCustomLimit("");
+                  setCur((p) => ({
+                    planDailyLimit: r.planDailyLimit,
+                    customDailyLimit: r.customDailyLimit,
+                    bonusDailyOperations: p?.bonusDailyOperations ?? 0,
+                    currentDayOperations: r.usedToday,
+                    effectiveDailyLimit: r.effectiveDailyLimit,
+                  }));
+                  return "Özel limit kaldırıldı; kullanıcı plan limitine döndü.";
+                })
+              }
+              className="rounded-lg border border-slate-600/50 bg-slate-800/60 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700/60 disabled:opacity-50"
+            >
+              {busy === "clear" ? "…" : "Kaldır"}
+            </button>
+          </div>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-500">Plan limitini ezer; her gün geçerli.</p>
+        </div>
+      </div>
+
+      {msg ? (
+        <p className={`mt-2.5 text-xs ${msg.ok ? "text-emerald-300" : "text-rose-300"}`}>{msg.text}</p>
+      ) : null}
     </div>
   );
 }
@@ -562,6 +729,7 @@ function UserDetailPanel({
   detail,
   loading,
   tab,
+  accessToken,
   onTabChange,
   onClose,
 }: {
@@ -569,6 +737,7 @@ function UserDetailPanel({
   detail: AdminUserDetail | null;
   loading: boolean;
   tab: "payments" | "tools";
+  accessToken: string;
   onTabChange: (t: "payments" | "tools") => void;
   onClose: () => void;
 }) {
@@ -585,6 +754,8 @@ function UserDetailPanel({
     >
       {user ? (
         <div className="flex flex-col gap-4">
+          <UsageGrantSection accessToken={accessToken} userId={user.id} usage={detail?.usage ?? null} />
+
           <div className="flex gap-1 rounded-xl bg-slate-900/60 p-1">
             {(["payments", "tools"] as const).map((t) => (
               <button
