@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -58,7 +59,7 @@ export function DashboardSidebar({
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
   return (
-    <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 md:flex">
+    <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
         className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
@@ -186,53 +187,187 @@ export function DashboardSidebar({
   );
 }
 
-export function DashboardSidebarMobileRail({
+/**
+ * Telefon + tablet (lg altı) araç gezgini: yatay pill şeridi yerine macOS
+ * Launchpad / klasör tarzı bir ızgara. Hamburger'a basılınca amblemli araç
+ * kartları (2–3+ sütun) açılır; bir araç seçilince kapanır.
+ */
+export function DashboardSidebarMobileLauncher({
   active,
   onSelect,
   language,
   lockedFeatures,
-  userRole,
   enabledToolIds,
   resolveToolLabel,
 }: DashboardSidebarProps) {
   const L = ws(language);
+  const tr = language === "tr";
+  const [open, setOpen] = useState(false);
   const toolOrder = enabledToolIds?.length
     ? enabledToolIds
     : SIDEBAR_TOOL_ORDER;
   const labelForTool =
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
-  const labelFor = (id: FeatureKey) => labelForTool(id);
+
+  const activeIsTool = toolOrder.includes(active as FeatureKey);
+  const activeLabel = activeIsTool
+    ? labelForTool(active as FeatureKey)
+    : tr
+      ? "Menü"
+      : "Menu";
+
+  // ESC ile kapat
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  const handlePick = (id: SidebarToolId) => {
+    onSelect(id);
+    setOpen(false);
+  };
 
   return (
-    <div className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md md:hidden">
-      <div className="flex gap-1 overflow-x-auto py-2 px-2 sm:gap-1.5 sm:px-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {toolOrder.map((id) => {
-          const isActive = active === id;
-          const locked = lockedFeatures.has(id);
-          const short = labelForTool(id).replace(/\s+/g, "");
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onSelect(id)}
-              title={locked ? L.lockedFeatureTooltip : undefined}
-              aria-label={
-                locked
-                  ? `${labelFor(id)}. ${L.lockedFeatureTooltip}`
-                  : undefined
-              }
-              className={`nb-transition shrink-0 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold whitespace-nowrap ${
-                isActive
-                  ? "border-nb-primary/45 bg-nb-primary/15 text-nb-accent"
-                  : "border-white/[0.08] bg-nb-panel/60 text-nb-muted hover:border-nb-primary/25 hover:text-nb-text"
-              } ${locked ? "ring-1 ring-amber-400/40 shadow-[0_0_18px_-6px_rgba(245,158,11,0.55)] hover:ring-amber-400/55" : ""}`}
-            >
-              {short}
-              {locked ? " ⧉" : ""}
-            </button>
-          );
-        })}
-      </div>
+    <div className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden">
+      {/* Tetikleyici: hamburger + aktif araç adı */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="nb-transition flex w-full items-center gap-3 px-3 py-2.5 text-left sm:px-4"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-nb-panel/70 text-nb-text">
+          <svg
+            className="h-5 w-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            {open ? (
+              <path d="M18 6 6 18M6 6l12 12" />
+            ) : (
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            )}
+          </svg>
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-nb-muted">
+            {tr ? "Araçlar" : "Tools"}
+          </span>
+          <span className="truncate text-sm font-bold text-nb-text">
+            {activeLabel}
+          </span>
+        </span>
+        <svg
+          className={`ml-auto h-4 w-4 shrink-0 text-nb-muted transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {/* Açılır Launchpad ızgarası */}
+      {open ? (
+        <div className="absolute inset-x-0 top-full">
+          <button
+            type="button"
+            aria-label={tr ? "Kapat" : "Close"}
+            tabIndex={-1}
+            className="fixed inset-x-0 bottom-0 top-14 -z-10 cursor-default bg-black/45 backdrop-blur-[2px]"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            role="menu"
+            aria-label={tr ? "Araçlar" : "Tools"}
+            className="max-h-[72vh] overflow-y-auto border-b border-white/[0.08] bg-nb-bg-elevated/98 px-3 py-3 shadow-[0_28px_56px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md sm:px-4"
+          >
+            {/* Her telefona otomatik uyum: sabit sütun yerine min. kart genişliğine göre
+                auto-fill — 320px'de 3, normal/büyük telefonlarda 4–5, tablette daha fazla
+                sütun; kartlar her zaman dokunmaya uygun min. boyutta kalır. */}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
+              {toolOrder.map((id) => {
+                const isActive = active === id;
+                const locked = lockedFeatures.has(id);
+                const label = labelForTool(id);
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handlePick(id)}
+                    title={locked ? L.lockedFeatureTooltip : undefined}
+                    aria-label={
+                      locked ? `${label}. ${L.lockedFeatureTooltip}` : label
+                    }
+                    className={`nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center ${
+                      isActive
+                        ? "border-nb-primary/45 bg-nb-primary/14 shadow-[0_0_24px_-8px_rgba(59,130,246,0.45)]"
+                        : "border-white/[0.08] bg-nb-panel/55 hover:border-nb-primary/25 hover:bg-white/[0.06]"
+                    } ${locked ? "ring-1 ring-amber-400/35" : ""}`}
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04]">
+                      {locked ? (
+                        <svg
+                          className="h-5 w-5 text-amber-300/90"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={1.75}
+                          aria-hidden
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      ) : (
+                        <SidebarToolGlyph
+                          id={id}
+                          className="h-5 w-5"
+                          active={isActive}
+                        />
+                      )}
+                    </span>
+                    <span
+                      className={`line-clamp-2 text-[10px] font-semibold leading-tight ${
+                        isActive ? "text-nb-accent" : "text-nb-muted"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                    {locked ? (
+                      <span
+                        className="absolute right-1 top-1 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-300/95"
+                        aria-hidden
+                      >
+                        {L.featureLockedBadge}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
