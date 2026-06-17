@@ -1,8 +1,8 @@
 {
   "id": "/?source=pwa",
-  "name": "PDF PLATFORM — NB Global Studio",
+  "name": "PDF PLATFORM",
   "short_name": "PDF PLATFORM",
-  "description": "Profesyonel PDF iş akışı platformu: birleştir, böl, sıkıştır, dönüştür, imzala ve daha fazlası. A professional PDF workflow platform for office teams and business operations.",
+  "description": "Birleştir, böl, sıkıştır, dönüştür ve düzenle — hızlı, güvenli, profesyonel PDF araçları.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",

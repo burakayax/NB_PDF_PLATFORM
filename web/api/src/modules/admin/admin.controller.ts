@@ -16,6 +16,8 @@ import {
   adminCouponPatchSchema,
   adminDeleteUserQuerySchema,
   adminGrantCreditsSchema,
+  adminGrantBonusOpsSchema,
+  adminSetCustomDailyLimitSchema,
   adminListUsersQuerySchema,
   adminPatchSettingsSchema,
   adminPaymentPricesBodySchema,
@@ -31,6 +33,10 @@ import {
   grantCredits,
   subtractCreditsByAdmin,
 } from "../subscription/entitlement.engine.js";
+import {
+  grantBonusOpsToday,
+  setCustomDailyLimit,
+} from "../../lib/quota.js";
 import {
   adminAddBlockedEmailRaw,
   adminPutPaymentPrices,
@@ -183,6 +189,14 @@ export async function adminGetUserDetailController(
       role: true,
       createdAt: true,
       toolUsageCountsJson: true,
+      organization: {
+        select: {
+          dailyOperationLimit: true,
+          customDailyLimit: true,
+          bonusDailyOperations: true,
+          currentDayOperations: true,
+        },
+      },
       paymentCheckouts: {
         orderBy: { createdAt: "desc" },
         take: 20,
@@ -210,7 +224,20 @@ export async function adminGetUserDetailController(
   } catch {
     /* ignore */
   }
-  response.json({ ...user, toolUsageCounts });
+  // Günlük kullanım hakkı paneli için özet (efektif = (özel ?? plan) + bugünkü bonus).
+  const org = user.organization;
+  const base = org?.customDailyLimit ?? org?.dailyOperationLimit ?? null;
+  const usage = org
+    ? {
+        planDailyLimit: org.dailyOperationLimit,
+        customDailyLimit: org.customDailyLimit,
+        bonusDailyOperations: org.bonusDailyOperations,
+        currentDayOperations: org.currentDayOperations,
+        effectiveDailyLimit:
+          base === null ? null : base + (org.bonusDailyOperations ?? 0),
+      }
+    : null;
+  response.json({ ...user, toolUsageCounts, usage });
 }
 
 export async function adminListBlockedEmailsController(
@@ -669,6 +696,83 @@ export async function adminGrantCreditsController(
     creditsBefore: result.creditsBefore,
     creditsAfter: result.creditsAfter,
   });
+}
+
+/**
+ * Admin: kullanıcıya YALNIZCA BUGÜN için ekstra işlem hakkı verir (günlük limit
+ * üstüne bonus). Gece limit sıfırlanınca bonus da sıfırlanır. FREE kullanıcı
+ * günlük limitini doldurduğunda "inisiyatif" jest için.
+ */
+export async function adminGrantBonusOpsController(
+  request: Request,
+  response: Response,
+) {
+  const parsed = adminGrantBonusOpsSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { userId, amount, reason } = parsed.data;
+  const actor = adminActor(request);
+
+  let result;
+  try {
+    result = await grantBonusOpsToday(userId, amount);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("user not found")) {
+      throw new HttpError(404, "User not found.");
+    }
+    throw new HttpError(400, message);
+  }
+
+  await logAdminAudit(
+    actor,
+    "usage.grant_bonus_today",
+    userId,
+    `Admin granted ${amount} bonus operations for today (reason: ${reason || "-"})`,
+    { amount, reason, ...result },
+  );
+
+  response.status(200).json({ ok: true, userId, amount, reason, ...result });
+}
+
+/**
+ * Admin: kullanıcıya özel KALICI günlük limit atar (plan limitini ezer) veya
+ * `dailyLimit: null` ile kaldırır (plan limitine döner).
+ */
+export async function adminSetCustomDailyLimitController(
+  request: Request,
+  response: Response,
+) {
+  const parsed = adminSetCustomDailyLimitSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const { userId, dailyLimit, reason } = parsed.data;
+  const actor = adminActor(request);
+
+  let result;
+  try {
+    result = await setCustomDailyLimit(userId, dailyLimit);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("user not found")) {
+      throw new HttpError(404, "User not found.");
+    }
+    throw new HttpError(400, message);
+  }
+
+  await logAdminAudit(
+    actor,
+    "usage.set_custom_daily_limit",
+    userId,
+    dailyLimit === null
+      ? `Admin cleared custom daily limit (reason: ${reason || "-"})`
+      : `Admin set custom daily limit to ${dailyLimit} (reason: ${reason || "-"})`,
+    { dailyLimit, reason, ...result },
+  );
+
+  response.status(200).json({ ok: true, userId, dailyLimit, reason, ...result });
 }
 
 export async function adminListToolRegistryController(

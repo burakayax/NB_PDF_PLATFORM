@@ -954,16 +954,18 @@ textarea {
 
 .progress-bar {
   width: 100%;
-  height: 14px;
+  height: 10px;
   border-radius: 999px;
   overflow: hidden;
   background: var(--nb-bg);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
 .progress-bar__fill {
   height: 100%;
   border-radius: 999px;
+  box-shadow: 0 0 12px -2px rgba(34, 211, 238, 0.45);
   background:
     linear-gradient(
       120deg,
@@ -1526,6 +1528,203 @@ textarea {
 }
 
 /* ---------------------------------------------------------------------------
+ * Post-download share bar
+ *
+ * Shown after a gated download succeeds (bytes still in memory). Lets the user
+ * Share / Open / Close the freshly-created file without re-fetching it. Built
+ * as a softened, card-like variant of the fixed bottom progress bar.
+ * ------------------------------------------------------------------------- */
+
+.merge-share-bar {
+  padding: 14px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  border-top: none;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.merge-share-bar__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 18px;
+  padding: 14px 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 32%),
+    rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  box-shadow:
+    0 18px 48px -18px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.merge-share-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.merge-share-bar__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  color: #6ee7b7;
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(16, 185, 129, 0.22) 0%,
+    rgba(5, 150, 105, 0.32) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.merge-share-bar__texts {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+
+.merge-share-bar__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nb-text);
+}
+
+.merge-share-bar__name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nb-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.merge-share-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.merge-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    transform var(--nb-transition-premium),
+    box-shadow var(--nb-transition-premium),
+    background var(--nb-transition-premium),
+    filter var(--nb-transition-premium);
+}
+
+.merge-share-btn svg {
+  flex-shrink: 0;
+}
+
+.merge-share-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+
+.merge-share-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(15, 23, 42, 0.95),
+    0 0 0 4px currentColor;
+}
+
+/* Paylaş — primary action, cyan/sky */
+.merge-share-btn--share {
+  border-color: rgba(56, 189, 248, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.32) 0%,
+    rgba(2, 132, 199, 0.55) 100%
+  );
+  color: #f0f9ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 8px 20px -10px rgba(56, 189, 248, 0.6);
+}
+
+.merge-share-btn--share:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 12px 26px -12px rgba(56, 189, 248, 0.7);
+}
+
+/* Aç — view file, emerald/green */
+.merge-share-btn--open {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(16, 185, 129, 0.3) 0%,
+    rgba(5, 150, 105, 0.52) 100%
+  );
+  color: #ecfdf5;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 8px 20px -10px rgba(16, 185, 129, 0.55);
+}
+
+.merge-share-btn--open:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 12px 26px -12px rgba(16, 185, 129, 0.65);
+}
+
+/* Kapat — neutral / muted */
+.merge-share-btn--close {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.merge-share-btn--close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.26);
+  filter: none;
+}
+
+@media (max-width: 560px) {
+  .merge-share-bar__inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .merge-share-bar__actions {
+    justify-content: stretch;
+  }
+
+  .merge-share-btn {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+}
+
+/* ---------------------------------------------------------------------------
  * SaaS UI gating layer
  *
  * These rules style the `SaasGatedPreview` component. They only handle the
@@ -1938,6 +2137,60 @@ textarea {
 .selected-files__title-row p {
   margin: 0 !important;
   font-weight: 700;
+}
+
+.selected-files__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nb-accent);
+  opacity: 0.9;
+}
+
+/* Seçilen dosya sayacı — rafine çip: vurgu rengi sayı + soluk birim kelime */
+.selected-files__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  background: rgba(34, 211, 238, 0.1);
+  color: rgba(165, 243, 252, 0.78);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.selected-files__count-num {
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--nb-accent);
+}
+
+/* PWA yükleme banner'ı — mobilde alttan kayan bottom-sheet, masaüstünde yumuşak yükseliş */
+.pwa-install-banner {
+  animation: pwa-install-up 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pwa-install-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pwa-install-banner {
+    animation: none;
+  }
 }
 
 .selected-files__info {
@@ -2362,16 +2615,32 @@ textarea {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * Toasts — Sonner / Vercel style: neutral elevated surface, leading type icon,
+ * title + detail, a quiet close button, and an auto-dismiss progress line.
+ * The type only colors the icon badge + progress line, not the whole card.
+ * ------------------------------------------------------------------------- */
 .toast {
   position: fixed;
   right: 24px;
   bottom: 24px;
   z-index: 200;
-  width: min(360px, calc(100% - 32px));
-  padding: 16px 18px;
+  width: min(384px, calc(100% - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  overflow: hidden;
+  padding: 14px 14px 15px;
   border-radius: var(--nb-radius-lg);
-  border: 1px solid var(--nb-border-subtle);
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%),
+    rgba(17, 24, 39, 0.96);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow:
+    0 24px 48px -14px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   animation: toast-in var(--nb-duration-slow) var(--nb-ease) both;
 }
 
@@ -2386,36 +2655,139 @@ textarea {
   }
 }
 
+.toast__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.toast__spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(34, 211, 238, 0.28);
+  border-top-color: var(--nb-primary);
+  animation: toast-spin 0.7s linear infinite;
+}
+
+@keyframes toast-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+  padding-top: 1px;
+}
+
 .toast__title {
   font-size: 14px;
-  font-weight: 700;
-  margin-bottom: 5px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--nb-text);
 }
 
 .toast__detail {
+  margin-top: 3px;
   font-size: 13px;
   line-height: 1.45;
-  color: #e7eef8;
+  color: rgba(203, 213, 225, 0.82);
+  overflow-wrap: anywhere;
 }
 
-.toast--success {
-  background: #173626;
-  border-color: #25543b;
+.toast__close {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin: -2px -2px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--nb-muted);
+  cursor: pointer;
+  transition:
+    background var(--nb-duration) var(--nb-ease),
+    color var(--nb-duration) var(--nb-ease);
 }
 
-.toast--error {
-  background: #402121;
-  border-color: #6a3333;
+.toast__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--nb-text);
 }
 
-.toast--loading {
-  background: rgba(30, 58, 138, 0.35);
-  border-color: rgba(34, 211, 238, 0.35);
+.toast__close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.5);
 }
 
-.toast--info {
-  background: rgba(30, 41, 59, 0.92);
-  border-color: rgba(100, 116, 139, 0.5);
+.toast__progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2.5px;
+  width: 100%;
+  transform-origin: left center;
+  opacity: 0.85;
+  animation: toast-progress 9s linear forwards;
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Per-type accents — icon badge + progress line only */
+.toast--success .toast__icon {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.18);
+}
+.toast--success .toast__progress {
+  background: #34d399;
+}
+
+.toast--error .toast__icon {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.18);
+}
+.toast--error .toast__progress {
+  background: #f87171;
+}
+
+.toast--info .toast__icon {
+  color: #7dd3fc;
+  background: rgba(56, 189, 248, 0.16);
+}
+.toast--info .toast__progress {
+  background: #38bdf8;
+}
+
+.toast--loading .toast__icon {
+  background: rgba(34, 211, 238, 0.14);
+}
+
+@media (max-width: 640px) {
+  .toast {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+  }
 }
 
 /* Premium upgrade conversion modal */

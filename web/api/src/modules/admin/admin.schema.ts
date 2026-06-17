@@ -98,6 +98,20 @@ export const adminGrantCreditsSchema = z.object({
   reason: z.string().trim().min(1).max(500),
 });
 
+/** Yalnızca BUGÜN için kullanıcıya ekstra işlem hakkı (günlük limit üstüne). */
+export const adminGrantBonusOpsSchema = z.object({
+  userId: z.string().min(1).max(200),
+  amount: z.number().int().positive().max(10_000),
+  reason: z.string().trim().max(500).optional().default(""),
+});
+
+/** Kullanıcıya özel KALICI günlük limit; `null` → özel limiti kaldır (plana dön). */
+export const adminSetCustomDailyLimitSchema = z.object({
+  userId: z.string().min(1).max(200),
+  dailyLimit: z.number().int().min(0).max(100_000).nullable(),
+  reason: z.string().trim().max(500).optional().default(""),
+});
+
 export const adminResetBodySchema = z.object({
   scopes: z.array(z.string().min(1).max(120)).min(1).max(16),
   confirm: z.literal("RESET"),

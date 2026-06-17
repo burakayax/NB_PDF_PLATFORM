@@ -26,6 +26,12 @@ export type SaasGatedPreviewProps = {
   thumbnailUrl: string | null;
   /** Fired when the state resolves to `action === "download"`. */
   onDownload: () => void;
+  /**
+   * Optional "Paylaş" (Web Share) action. Only rendered when supplied AND the
+   * file is currently downloadable (sharing fetches the file, so it follows the
+   * same entitlement gate as a download).
+   */
+  onShare?: () => void;
   /** Fired when `action === "upgrade"`. */
   onUpgrade: () => void;
   /**
@@ -77,6 +83,7 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
     filename,
     thumbnailUrl,
     onDownload,
+    onShare,
     onUpgrade,
     onInsufficientCredits,
     onRetry,
@@ -238,6 +245,15 @@ export function SaasGatedPreview(props: SaasGatedPreviewProps) {
         >
           {copy.primaryActionLabel}
         </button>
+        {onShare && !isDownloadDisabled ? (
+          <button
+            type="button"
+            className="merge-progress-fixed__download merge-progress-fixed__download--secondary"
+            onClick={onShare}
+          >
+            {language === "tr" ? "Paylaş" : "Share"}
+          </button>
+        ) : null}
         {onDismiss ? (
           <button
             type="button"

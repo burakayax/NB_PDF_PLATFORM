@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from app.api.pdf_auth import extract_bearer_header_only, extract_pdf_access_token
 from app.core.operations import (
     build_pdf_download_headers,
+    content_disposition,
     cleanup_and_raise,
     cleanup_path,
     create_workdir,
@@ -123,27 +124,25 @@ def _saas_gating_from_consume(d: dict[str, Any]) -> dict[str, Any]:
 
 
 def _maybe_watermark_pdf(p: Path, enabled: bool) -> None:
-    """Plan-level watermark: FREE/Starter çıktılarına NB PDF Platform damgası ekler."""
+    """Plan-level markalama: FREE/Starter (PDF Birleştir dışı) çıktılarına
+    PDF PLATFORM alt-bilgi damgasını ekler.
+
+    Merge ile AYNI markalamayı (``app.core.branding.brand_pdf_output``) kullanır:
+    her sayfanın alt-sağına gri açıklama + mavi tıklanabilir site adı + görünmez
+    metadata. Non-fatal — başarısız olsa bile kullanıcının dosyası teslim edilir.
+
+    NOT: Eski sürüm ``engine.add_watermark_text`` çağırıyordu; o fonksiyon
+    ``src.pdf_engine``'de değil ``src.pdf_toolkit_extra``'da olduğundan her seferinde
+    sessizce patlıyordu (markalama hiç uygulanmıyordu).
+    """
     if not enabled:
         return
-    import os as _os
-    tmp = p.parent / (p.stem + "__wm_tmp.pdf")
     try:
-        engine.add_watermark_text(
-            str(p), str(tmp),
-            watermark_text="NB PDF Platform",
-            opacity=0.12,
-            font_name="helv",
-            watermark_color="#8C8C8C",
-        )
-        _os.replace(str(tmp), str(p))
+        from app.core.branding import brand_pdf_output
+
+        brand_pdf_output(p, watermark_enabled=True)
     except Exception as exc:
         logger.warning("Plan watermark başarısız (non-fatal): %s", exc)
-        try:
-            if tmp.exists():
-                tmp.unlink(missing_ok=True)
-        except Exception:
-            pass
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +231,13 @@ async def merge_pdfs(
                         passwords[str(saved)] = password
 
         output_name = "birleştirilmiş.pdf"
-        job_id = create_merge_job(saved_paths, passwords, workdir, output_name)
+        job_id = create_merge_job(
+            saved_paths,
+            passwords,
+            workdir,
+            output_name,
+            watermark_enabled=bool(decision.get("watermarkEnabled", False)),
+        )
         return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
     except Exception as error:
         cleanup_and_raise(workdir, error)
@@ -277,11 +282,16 @@ async def download_job_output(
         )
     output_path, output_name, _workdir = get_job_download(job_id)
     background_tasks.add_task(cleanup_job, job_id)
+    # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback).
+    # Starlette'in FileResponse(filename=) varsayılanı bazı sürümlerde Türkçe adı
+    # ham ``filename="..."`` olarak gömüp tarayıcıda mojibake ("birleÅtirilmiÅ")
+    # üretebiliyor; helper bunu engeller.
+    download_headers = build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or {}
+    download_headers["Content-Disposition"] = content_disposition(output_name)
     return FileResponse(
         path=str(output_path),
-        filename=output_name,
         media_type="application/pdf",
-        headers=build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or None,
+        headers=download_headers,
     )
 
 
@@ -309,7 +319,7 @@ async def preview_merge_job_pdf(
     """Tam PDF önizlemesi (inline); kota düşmez — düşüm onaylı indirmede."""
     await saas_session_ok(token)
     output_path, output_name, _workdir = get_job_download(job_id)
-    disp_headers = {"Content-Disposition": f'inline; filename="{output_name}"'}
+    disp_headers = {"Content-Disposition": content_disposition(output_name, disposition="inline")}
     return FileResponse(
         path=str(output_path),
         filename=output_name,
@@ -837,7 +847,7 @@ async def batch_process(
                 elif tool_type == "watermark":
                     out_name = format_derived_filename(orig_name, "Filigran", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.add_watermark_text(sp, str(out_path), watermark_text=wm_text, watermark_color=wm_color, font_name=wm_font, opacity=float(wm_opacity), password=pwd)
+                    ptx.add_watermark_text(sp, str(out_path), wm_text, opacity=float(wm_opacity), password=pwd, font_name=wm_font, font_color=wm_color)
                     return out_path, out_name
                 elif tool_type == "image-to-pdf":
                     out_name = format_derived_filename(orig_name, "PDF", "pdf")
@@ -1090,7 +1100,7 @@ async def preview_result_pdf(
     read = get_result(result_id, user_id)
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
-    disp = {"Content-Disposition": f'inline; filename="{read.filename}"'}
+    disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}
     return FileResponse(
         path=str(read.payload_path),
         filename=read.filename,
@@ -1140,7 +1150,7 @@ async def download_result(
                 resp["Body"].iter_chunks(8192),
                 media_type=read.mime,
                 headers={
-                    "Content-Disposition": f'attachment; filename="{read.filename}"',
+                    "Content-Disposition": content_disposition(read.filename),
                     **(build_pdf_download_headers(saas_gating=_saas_gating_from_check(decision)) or {}),
                 },
             )

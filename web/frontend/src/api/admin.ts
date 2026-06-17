@@ -161,6 +161,14 @@ export type AdminUserDetail = {
     createdAt: string;
     completedAt: string | null;
   }[];
+  /** Günlük kullanım hakkı özeti (efektif = (özel ?? plan) + bugünkü bonus). */
+  usage?: {
+    planDailyLimit: number | null;
+    customDailyLimit: number | null;
+    bonusDailyOperations: number;
+    currentDayOperations: number;
+    effectiveDailyLimit: number | null;
+  } | null;
 };
 
 export async function fetchAdminUserDetail(accessToken: string, userId: string): Promise<AdminUserDetail> {
@@ -534,6 +542,52 @@ export async function putAdminAppSettings(
     throw new Error(await r.text());
   }
   return r.json() as Promise<AppSettingsPayload>;
+}
+
+/** Kullanıcıya YALNIZCA BUGÜN için +N işlem hakkı verir (günlük limit üstüne bonus). */
+export async function postAdminGrantBonusOpsToday(
+  accessToken: string,
+  userId: string,
+  amount: number,
+  reason: string,
+): Promise<{
+  ok: boolean;
+  bonusBefore: number;
+  bonusAfter: number;
+  usedToday: number;
+  effectiveDailyLimit: number | null;
+}> {
+  const r = await adminFetch(accessToken, "/usage/grant-today", {
+    method: "POST",
+    body: JSON.stringify({ userId, amount, reason }),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json();
+}
+
+/** Kullanıcıya özel KALICI günlük limit atar; `dailyLimit: null` → özel limiti kaldırır. */
+export async function postAdminSetCustomDailyLimit(
+  accessToken: string,
+  userId: string,
+  dailyLimit: number | null,
+  reason: string,
+): Promise<{
+  ok: boolean;
+  customDailyLimit: number | null;
+  planDailyLimit: number | null;
+  effectiveDailyLimit: number | null;
+  usedToday: number;
+}> {
+  const r = await adminFetch(accessToken, "/usage/custom-daily-limit", {
+    method: "POST",
+    body: JSON.stringify({ userId, dailyLimit, reason }),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json();
 }
 
 export async function postAdminAdjustCredits(

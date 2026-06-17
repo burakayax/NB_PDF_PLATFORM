@@ -579,6 +579,14 @@ export type ToolDownloadResult = {
   /** Bellekteki object URL’yi serbest bırakır; panel kapanırken çağrılmalı. */
   dispose?: () => void;
   /**
+   * The delivered file content — only present when `retainBlob` was requested.
+   * Lets callers re-use the already-downloaded bytes (e.g. Web Share) without a
+   * second server round-trip / entitlement charge.
+   */
+  blob?: Blob;
+  /** Final file name used for the download (client override or server-derived). */
+  filename?: string;
+  /**
    * Entitlement decision the Node engine produced for this run, relayed by
    * the Python backend via the `X-SaaS-Gating` response header. `null` when
    * the header is absent (older backends, third-party-origin responses that
@@ -632,7 +640,7 @@ async function deliverBlobAsDownload(
   blob: Blob,
   filename: string,
   retainForReplay: boolean,
-): Promise<Pick<ToolDownloadResult, "replay" | "dispose">> {
+): Promise<Pick<ToolDownloadResult, "replay" | "dispose" | "blob" | "filename">> {
   const w = window as ShowSavePickerWindow;
   let objectUrl: string | null = null;
   const storedBlob = blob;
@@ -712,7 +720,7 @@ async function deliverBlobAsDownload(
       URL.revokeObjectURL(objectUrl);
     }
   };
-  return { replay, dispose };
+  return { replay, dispose, blob: storedBlob, filename: storedName };
 }
 
 async function triggerDownloadFromResponse(
@@ -746,11 +754,11 @@ async function triggerDownloadFromResponse(
     ? options.clientDownloadName.trim()
     : extractFilename(response, fallbackName);
   const retain = !!options?.retainBlob;
-  const { replay, dispose } = await deliverBlobAsDownload(blob, filename, retain);
+  const delivered = await deliverBlobAsDownload(blob, filename, retain);
   if (!retain) {
     return { saasGating };
   }
-  return { replay, dispose, saasGating };
+  return { ...delivered, saasGating };
 }
 
 export async function fetchCapabilities() {
@@ -805,7 +813,21 @@ export async function inspectPdf(
         headers: saasAuthHeaders(accessToken),
         signal: timeoutCtrl.signal,
       });
-      await ensureOk(response, "PDF bilgisi okunamadı.");
+      if (!response.ok) {
+        // 4xx (sayfa limiti aşıldı, bozuk dosya vb.) kalıcı bir reddir; yeniden
+        // denemek sunucuyu boşuna meşgul eder ve gerçek hata mesajını geciktirir.
+        // Yalnızca 408/429 ve 5xx geçici sayılır.
+        const s = response.status;
+        const permanent = s >= 400 && s < 500 && s !== 408 && s !== 429;
+        try {
+          await ensureOk(response, "PDF bilgisi okunamadı.");
+        } catch (err) {
+          if (permanent && err instanceof Error) {
+            (err as Error & { permanent?: boolean }).permanent = true;
+          }
+          throw err;
+        }
+      }
       const data = (await response.json()) as {
         filename: string;
         encrypted: boolean;
@@ -829,6 +851,10 @@ export async function inspectPdf(
       lastErr = e;
       // Kullanıcı gerçekten iptal ettiyse (dış sinyal) yeniden deneme.
       if (options?.signal?.aborted) {
+        throw e;
+      }
+      // 4xx kalıcı reddi: hemen yüzeye çıkar, retry döngüsüne girme.
+      if (e instanceof Error && (e as Error & { permanent?: boolean }).permanent) {
         throw e;
       }
       if (attempt < MAX_ATTEMPTS) {
@@ -991,6 +1017,34 @@ export async function downloadMergeJob(
   await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
   await options?.onBeforeReadBody?.();
   return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+}
+
+/**
+ * Gated merge GET that returns the raw blob WITHOUT writing it to disk — used by
+ * the "Paylaş" (Web Share API) flow, where the file is handed to the OS share
+ * sheet instead of being saved. Consumes entitlement server-side exactly like a
+ * download (same endpoint), so callers should treat it as one paid delivery.
+ */
+export async function fetchMergeJobBlob(
+  jobId: string,
+  fallbackName = "birleştirilmiş.pdf",
+  accessToken?: string | null,
+  options?: {
+    signal?: AbortSignal;
+    onBeforeReadBody?: () => void | Promise<void>;
+  },
+): Promise<{ blob: Blob; suggestedName: string }> {
+  const href = mergeJobDownloadUrl(jobId);
+  const response = await pdfFetch(href, {
+    headers: accessToken?.trim() ? saasAuthHeaders(accessToken) : undefined,
+    cache: "no-store",
+    signal: options?.signal,
+  });
+  await throwIfEntitlementPaymentRequired(response);
+  await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
+  await options?.onBeforeReadBody?.();
+  const blob = await response.blob();
+  return { blob, suggestedName: extractFilename(response, fallbackName) };
 }
 
 /**
