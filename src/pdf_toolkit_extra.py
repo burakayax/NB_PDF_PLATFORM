@@ -8,6 +8,7 @@ from __future__ import annotations
 import io
 import os
 import shutil
+import subprocess
 import tempfile
 import zipfile
 from typing import Dict, List, Optional
@@ -460,28 +461,39 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
     """
     wk = shutil.which("wkhtmltopdf")
     if wk:
+        # NOT: pdfkit (Python sarmalayıcısı) CVE-2025-26240 nedeniyle kaldırıldı;
+        # wkhtmltopdf ikilisini doğrudan çağırıyoruz. --disable-javascript ile
+        # sayfa içi JavaScript çalıştırılması engellenir (zafiyetin kök nedeni).
         try:
-            import pdfkit
-
-            cfg = pdfkit.configuration(wkhtmltopdf=wk)
-            pdfkit.from_string(
-                html or "<html><body></body></html>",
-                output_path,
-                configuration=cfg,
-                options={
-                    "quiet": "",
-                    "enable-local-file-access": "",
-                    "disable-smart-shrinking": "",
-                },
+            html_bytes = (html or "<html><body></body></html>").encode("utf-8")
+            proc = subprocess.run(
+                [
+                    wk,
+                    "--quiet",
+                    "--disable-javascript",
+                    "--enable-local-file-access",
+                    "--disable-smart-shrinking",
+                    "-",  # HTML'i stdin'den oku
+                    output_path,
+                ],
+                input=html_bytes,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=120,
             )
-            if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
+            if (
+                proc.returncode == 0
+                and os.path.isfile(output_path)
+                and os.path.getsize(output_path) > 32
+            ):
                 return True
         except Exception:
-            if os.path.isfile(output_path):
-                try:
-                    os.remove(output_path)
-                except OSError:
-                    pass
+            pass
+        if os.path.isfile(output_path) and os.path.getsize(output_path) <= 32:
+            try:
+                os.remove(output_path)
+            except OSError:
+                pass
     try:
         from xhtml2pdf import pisa
     except ImportError as e:
