@@ -462,8 +462,13 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
     wk = shutil.which("wkhtmltopdf")
     if wk:
         # NOT: pdfkit (Python sarmalayıcısı) CVE-2025-26240 nedeniyle kaldırıldı;
-        # wkhtmltopdf ikilisini doğrudan çağırıyoruz. --disable-javascript ile
-        # sayfa içi JavaScript çalıştırılması engellenir (zafiyetin kök nedeni).
+        # wkhtmltopdf ikilisini doğrudan çağırıyoruz.
+        # GÜVENLİK: Girdi (ham HTML veya çekilen URL içeriği) tamamen kullanıcı
+        # kontrolünde. Güvenilmeyen girdi için wkhtmltopdf sıkılaştırması:
+        #   --disable-javascript      → sayfa içi JS çalıştırılmaz (CVE kök nedeni)
+        #   --disable-local-file-access → file:// ile yerel dosya sızdırma (LFI)
+        #     engellenir; URL yolundaki SSRF korumasını render katmanında tamamlar.
+        # Uzak http(s) CSS/görseller bu bayraklarla yine yüklenir.
         try:
             html_bytes = (html or "<html><body></body></html>").encode("utf-8")
             proc = subprocess.run(
@@ -471,7 +476,7 @@ def html_to_pdf_file(html: str, output_path: str, base_url: Optional[str] = None
                     wk,
                     "--quiet",
                     "--disable-javascript",
-                    "--enable-local-file-access",
+                    "--disable-local-file-access",
                     "--disable-smart-shrinking",
                     "-",  # HTML'i stdin'den oku
                     output_path,
