@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED=1 \
     PDF_API_PORT=8000
 
 # Sistem bağımlılıkları (native Python runtime'da apt-get çalışmadığı için Docker şart):
-#   wkhtmltopdf  → pdfkit | tesseract-ocr(+tur) → pytesseract | poppler-utils → pdf2image
+#   wkhtmltopdf  → HTML→PDF (subprocess) | tesseract-ocr(+tur) → pytesseract | poppler-utils → pdf2image
 #   ghostscript  → ocrmypdf | libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
 RUN apt-get update && apt-get install -y --no-install-recommends \
       wkhtmltopdf \

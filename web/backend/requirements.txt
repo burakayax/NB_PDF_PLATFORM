@@ -30,7 +30,8 @@ reportlab
 pdfplumber
 python-pptx
 xhtml2pdf
-pdfkit
+# NOT: pdfkit kaldırıldı (CVE-2025-26240). HTML→PDF için wkhtmltopdf ikilisi
+# artık doğrudan subprocess ile çağrılıyor (bkz. src/pdf_toolkit_extra.py).
 img2pdf
 
 # S3-uyumlu nesne depolama (AWS S3 / Cloudflare R2)
