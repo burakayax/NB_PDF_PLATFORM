@@ -49,7 +49,7 @@ function MobileDrawerNav({
   const labelFor = resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
 
   return (
-    <nav className="flex flex-col gap-2 overflow-y-auto px-3 py-4" aria-label="Tools">
+    <nav className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-4" aria-label="Tools">
       {toolOrder.map((id) => {
         const isActive = selectedTool === id;
         const locked = lockedFeatures.has(id);
