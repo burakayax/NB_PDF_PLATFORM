@@ -1,6 +1,33 @@
+import type { FeatureKey } from "../api/subscription";
+
 export type PlanId = "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS";
 export type Currency = "TRY" | "USD";
 export type BillingCycle = "MONTHLY" | "YEARLY";
+
+/**
+ * Starter planında erişilebilen araçlar. Backend kaynağı:
+ * `web/api/src/modules/subscription/subscription.config.ts` → STARTER_TOOLS.
+ * Pazarlama kartındaki araç sayısı ve "araçları gör" modalı bu listeden türetilir;
+ * iki taraf değişirse ikisi birlikte güncellenmelidir.
+ */
+export const STARTER_TOOL_IDS: FeatureKey[] = [
+  "split",
+  "merge",
+  "compress",
+  "delete-pages",
+  "rotate-pdf",
+  "organize-pdf",
+  "unlock-pdf",
+  "pdf-to-text",
+  "encrypt",
+  "pdf-to-image",
+  "image-to-pdf",
+  "page-numbers",
+  "watermark",
+];
+
+/** Tüm araç kataloğundaki toplam araç sayısı (Plus ve üzeri tüm araçları içerir). */
+export const TOTAL_TOOL_COUNT = 22;
 
 export interface PlanDefinition {
   id: PlanId;
@@ -74,7 +101,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "25 işlem/gün",
       "250 işlem/ay",
-      "15 araç",
+      "13 araç",
       "100 MB dosya",
       "2 batch",
       "Hafif filigran",
@@ -83,7 +110,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "25 ops/day",
       "250 ops/month",
-      "15 tools",
+      "13 tools",
       "100 MB files",
       "Batch 2",
       "Light watermark",
@@ -113,7 +140,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Sınırsız günlük",
       "600 işlem/ay",
-      "21 araç",
+      "Tüm araçlar",
       "250 MB dosya",
       "5 batch",
       "Filigran yok",
@@ -123,7 +150,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "Unlimited daily",
       "600 ops/month",
-      "21 tools",
+      "All tools",
       "250 MB files",
       "Batch 5",
       "No watermark",
@@ -154,7 +181,7 @@ export const PLANS: PlanDefinition[] = [
     featuresTr: [
       "Sınırsız günlük",
       "1000 işlem/ay",
-      "21 araç + API",
+      "Tüm araçlar",
       "500 MB dosya",
       "25 batch",
       "Filigran yok",
@@ -165,7 +192,7 @@ export const PLANS: PlanDefinition[] = [
     featuresEn: [
       "Unlimited daily",
       "1000 ops/month",
-      "21 tools + API",
+      "All tools",
       "500 MB files",
       "Batch 25",
       "No watermark",
@@ -203,7 +230,7 @@ export const PLANS: PlanDefinition[] = [
       "Ticari hak",
       "5+ kişi",
       "Admin dashboard",
-      "API destek",
+      "Öncelikli destek",
       "Özel entegrasyon",
     ],
     featuresEn: [
@@ -215,7 +242,7 @@ export const PLANS: PlanDefinition[] = [
       "Commercial rights",
       "5+ team",
       "Admin dashboard",
-      "API support",
+      "Priority support",
       "Custom integration",
     ],
     dailyOpsLimit: null,

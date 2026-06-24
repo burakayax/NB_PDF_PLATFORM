@@ -9,6 +9,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from modules.desktop_auth import DesktopAuthClient, DesktopAuthError, DesktopNetworkError
+from modules.ui_notifications import show_toast
 from modules.i18n import t
 from modules.ui_theme import theme
 
@@ -172,7 +173,7 @@ class ContactDialog(ctk.CTkToplevel):
             if not msg:
                 msg = t("contact.success_body")
             self.btn_submit.configure(state="normal", text=t("contact.submit"))
-            messagebox.showinfo(t("contact.success_title"), msg)
+            show_toast(self, msg, kind="info")
             self._on_close()
         elif kind == "network_err":
             self.btn_submit.configure(state="normal", text=t("contact.submit"))
@@ -184,4 +185,4 @@ class ContactDialog(ctk.CTkToplevel):
                 self._open_web_contact()
         elif kind == "err":
             self.btn_submit.configure(state="normal", text=t("contact.submit"))
-            messagebox.showerror(t("contact.error_title"), item[1])
+            show_toast(self, item[1], kind="error")

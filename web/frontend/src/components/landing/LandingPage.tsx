@@ -407,8 +407,8 @@ function Hero({
           </span>
           <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-blue-300">
             {tr
-              ? "Web + Masaüstü · PDF Araçları Platformu"
-              : "Web + Desktop · PDF Tools Platform"}
+              ? "Web PDF Araçları Platformu"
+              : "Web PDF Tools Platform"}
           </span>
         </motion.div>
 
@@ -737,7 +737,7 @@ function DesktopChrome({
         {screenshot ? (
           <img
             src="/screenshots/desktop-app.png"
-            alt="PDF PLATFORM masaüstü uygulaması"
+            alt="PDF PLATFORM masaüstü uygulaması (yakında)"
             className="w-full h-full object-cover object-top"
             draggable={false}
           />
@@ -876,8 +876,8 @@ function ProductShowcase({
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             {tr
-              ? "Güçlü bir web uygulaması ve yerel Windows masaüstü uygulaması — tek ekosistem."
-              : "A powerful web app and a native Windows desktop app — one seamless ecosystem."}
+              ? "Güçlü bir web uygulaması — yerel Windows masaüstü sürümü çok yakında."
+              : "A powerful web app — a native Windows desktop version is coming soon."}
           </p>
         </motion.div>
 
@@ -935,7 +935,7 @@ function ProductShowcase({
                   )}
                 </span>
                 <span className="relative">
-                  {tab === "web" ? "Web App" : "Desktop App"}
+                  {tab === "web" ? "Web App" : (tr ? "Masaüstü · Yakında" : "Desktop · Soon")}
                 </span>
               </button>
             ))}
@@ -1039,7 +1039,7 @@ function ProductShowcase({
           >
             <div className="relative">
               <span className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 opacity-50 cursor-not-allowed">
-                {tr ? "Masaüstü Uygulaması" : "View Live Demo"}
+                {tr ? "Masaüstü · Çok Yakında" : "Desktop · Coming Soon"}
                 <svg
                   className="w-4 h-4"
                   fill="none"
@@ -1351,8 +1351,8 @@ const TESTIMONIALS = (tr: boolean) => [
     initials: tr ? "MD" : "JL",
     color: "from-cyan-600 to-blue-700",
     quote: tr
-      ? "Windows uygulaması internet bağlantısı olmadan da çalışıyor. Saha ekiplerimiz için çok kritik."
-      : "The Windows app works offline. Critical for our field teams who often lack internet access.",
+      ? "Web uygulaması tarayıcıdan anında açılıyor; ekiplerimiz kurulum yapmadan her yerden erişiyor. İş akışımız için çok kritik."
+      : "The web app opens instantly in any browser — our teams access it anywhere with zero installation. Critical for our workflow.",
   },
   {
     name: tr ? "Zeynep Şahin" : "Emily Ross",
@@ -1469,17 +1469,17 @@ function Faq({ language }: { language: Language }) {
           {
             question: "PDF'lerimi yüklediğimde verilerim güvende mi?",
             answer:
-              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir ve 1 saat sonra otomatik olarak silinir. Windows uygulamasında dosyalar hiç sunucuya gönderilmez.",
+              "Evet. Yüklenen dosyalar şifreli bağlantı üzerinden iletilir ve 1 saat sonra otomatik olarak silinir. Yakında çıkacak masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek.",
           },
           {
-            question: "Masaüstü uygulama çevrimdışı çalışıyor mu?",
+            question: "Masaüstü uygulaması çevrimdışı çalışacak mı?",
             answer:
-              "Evet. Windows masaüstü uygulaması internet bağlantısı olmadan da tam işlevsellikle çalışır.",
+              "Yakında geliyor. Windows masaüstü uygulaması internet bağlantısı olmadan da tam işlevsellikle çalışacak.",
           },
           {
             question: "Dosyalarım sunucularda ne kadar süre saklanıyor?",
             answer:
-              "Web işlemlerinde dosyalar 1 saat sonra kalıcı olarak silinir. Masaüstü uygulamasında hiç sunucuya gönderilmez.",
+              "Web işlemlerinde dosyalar 1 saat sonra kalıcı olarak silinir. Yakında çıkacak masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek.",
           },
           {
             question: "Planımı istediğim zaman değiştirebilir miyim?",
@@ -1489,7 +1489,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Dosya boyutu sınırı var mı?",
             answer:
-              "Web uygulamasında 100 MB'a kadar dosya desteklenmektedir. Windows uygulamasında pratik limit çok daha yüksektir.",
+              "Web uygulamasında 100 MB'a kadar dosya desteklenmektedir. Yakında çıkacak masaüstü uygulamasında pratik limit çok daha yüksek olacaktır.",
           },
           {
             question: "Ücretsiz deneme sunuyor musunuz?",
@@ -1501,17 +1501,17 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Is my data secure when I upload PDFs?",
             answer:
-              "Yes. Files are transferred over encrypted connections and permanently deleted after 1 hour. With the Windows app, files never leave your device.",
+              "Yes. Files are transferred over encrypted connections and permanently deleted after 1 hour. With the upcoming desktop app, files will never leave your device.",
           },
           {
-            question: "Does the desktop app work offline?",
+            question: "Will the desktop app work offline?",
             answer:
-              "Yes. The Windows desktop app works fully offline with no internet connection required.",
+              "Coming soon. The Windows desktop app will work fully offline with no internet connection required.",
           },
           {
             question: "How long are my files stored on your servers?",
             answer:
-              "Web-processed files are permanently deleted after 1 hour. Desktop app files are never sent to a server.",
+              "Web-processed files are permanently deleted after 1 hour. The upcoming desktop app will process files without sending them to a server.",
           },
           {
             question: "Can I switch plans at any time?",
@@ -1521,7 +1521,7 @@ function Faq({ language }: { language: Language }) {
           {
             question: "Is there a file size limit?",
             answer:
-              "The web app supports files up to 100 MB. The Windows desktop app handles much larger files locally.",
+              "The web app supports files up to 100 MB. The upcoming Windows desktop app will handle much larger files locally.",
           },
           {
             question: "Do you offer a free trial?",
@@ -1676,6 +1676,37 @@ function FinalCta({
 
 // ─── Footer ───────────────────────────────────────────────────────────────────
 
+/** Sosyal medya URL'sinden okunabilir platform etiketi üretir (footer + aria). */
+function socialLabelFromUrl(url: string): string {
+  let host = "";
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "Bağlantı";
+  }
+  const map: Array<[RegExp, string]> = [
+    [/(^|\.)x\.com$/, "X"],
+    [/(^|\.)twitter\.com$/, "X"],
+    [/(^|\.)instagram\.com$/, "Instagram"],
+    [/(^|\.)linkedin\.com$/, "LinkedIn"],
+    [/(^|\.)(facebook\.com|fb\.com)$/, "Facebook"],
+    [/(^|\.)(youtube\.com|youtu\.be)$/, "YouTube"],
+    [/(^|\.)github\.com$/, "GitHub"],
+    [/(^|\.)tiktok\.com$/, "TikTok"],
+    [/(^|\.)(t\.me|telegram\.(me|org))$/, "Telegram"],
+    [/(^|\.)pinterest\.(com|[a-z]{2})$/, "Pinterest"],
+    [/(^|\.)threads\.(net|com)$/, "Threads"],
+    [/(^|\.)(reddit\.com)$/, "Reddit"],
+    [/(^|\.)(medium\.com)$/, "Medium"],
+  ];
+  for (const [re, label] of map) {
+    if (re.test(host)) {
+      return label;
+    }
+  }
+  return host;
+}
+
 function Footer({
   language,
   onOpenTerms,
@@ -1695,6 +1726,8 @@ function Footer({
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
+  const { site } = useSettings();
+  const socialLinks = site.socialLinks ?? [];
 
   const cols = [
     {
@@ -1743,6 +1776,29 @@ function Footer({
           <p className="text-xs text-gray-600 leading-relaxed max-w-[200px]">
             {copy.footer.description}
           </p>
+          {socialLinks.length > 0 ? (
+            <nav
+              aria-label={tr ? "Sosyal medya" : "Social media"}
+              className="mt-5 flex flex-wrap gap-2"
+            >
+              {socialLinks.map((url) => {
+                const label = socialLabelFromUrl(url);
+                return (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="me noopener noreferrer"
+                    aria-label={label}
+                    title={label}
+                    className="rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:border-white/25 hover:text-gray-200"
+                  >
+                    {label}
+                  </a>
+                );
+              })}
+            </nav>
+          ) : null}
         </div>
 
         {/* Link columns */}

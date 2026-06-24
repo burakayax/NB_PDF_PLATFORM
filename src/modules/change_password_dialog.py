@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 import tkinter.messagebox as messagebox
+from modules.ui_notifications import show_toast
 
 import customtkinter as ctk
 
@@ -125,7 +126,7 @@ class ChangePasswordDialog(ctk.CTkToplevel):
         threading.Thread(target=worker, daemon=True).start()
 
     def _ok(self) -> None:
-        messagebox.showinfo(t("change_password.title"), t("change_password.success"), parent=self)
+        show_toast(self, t("change_password.success"), kind="info")
         self.destroy()
 
     def _fail(self, msg: str) -> None:

@@ -5,19 +5,21 @@ import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { sendWelcomeEmailToUser } from "../../lib/email-service.js";
 
 export type EmailAutomationConfig = {
-  lowCreditEnabled: boolean;
+  /** Yeni kayıt olan kullanıcıya hoş geldin e-postası. */
   welcomeEnabled: boolean;
-  lowCreditThreshold: number;
-  lowCreditCooldownDays: number;
-  discountCtaUrl: string;
+  /** Dönüşmeyen FREE kullanıcılara zamanlı yaşam-döngüsü (drip) serisi. */
+  lifecycleEnabled: boolean;
+  /** Lifecycle e-postalarındaki ana CTA hedefi (boşsa /workspace). */
+  upgradeCtaUrl: string;
+  /** Win-back e-postasında öne çıkarılacak kupon kodu (boşsa indirim gösterilmez, değer-odaklı kalır). */
+  winbackCouponCode: string;
 };
 
 const defaultConfig: EmailAutomationConfig = {
-  lowCreditEnabled: true,
   welcomeEnabled: true,
-  lowCreditThreshold: 5,
-  lowCreditCooldownDays: 7,
-  discountCtaUrl: "",
+  lifecycleEnabled: true,
+  upgradeCtaUrl: "",
+  winbackCouponCode: "",
 };
 
 function mergeConfig(raw: unknown): EmailAutomationConfig {
@@ -26,11 +28,10 @@ function mergeConfig(raw: unknown): EmailAutomationConfig {
   }
   const o = raw as Record<string, unknown>;
   return {
-    lowCreditEnabled: o.lowCreditEnabled !== false,
     welcomeEnabled: o.welcomeEnabled !== false,
-    lowCreditThreshold: Math.max(0, Math.min(1_000, Number(o.lowCreditThreshold ?? 5) || 5)),
-    lowCreditCooldownDays: Math.max(1, Math.min(30, Number(o.lowCreditCooldownDays ?? 7) || 7)),
-    discountCtaUrl: typeof o.discountCtaUrl === "string" ? o.discountCtaUrl : "",
+    lifecycleEnabled: o.lifecycleEnabled !== false,
+    upgradeCtaUrl: typeof o.upgradeCtaUrl === "string" ? o.upgradeCtaUrl : "",
+    winbackCouponCode: typeof o.winbackCouponCode === "string" ? o.winbackCouponCode.trim().toUpperCase() : "",
   };
 }
 
@@ -65,12 +66,4 @@ export async function trySendWelcomeAfterRegistration(user: {
   } catch (e) {
     console.warn("welcome email failed", e);
   }
-}
-
-/**
- * Quota tükendikten sonra nudge gönder (low-credit nudge artık quota bazlı).
- * lowCreditNudgeAt alanı kaldırıldığı için bu fonksiyon sessizce devre dışı.
- */
-export async function queueLowCreditNudgeAfterConsume(_userId: string, _creditsAfter: number) {
-  // lowCreditNudgeAt User modelinden kaldırıldı — nudge devre dışı
 }

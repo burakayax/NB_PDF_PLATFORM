@@ -35,6 +35,16 @@ from modules.desktop_security_runtime import (
 from modules.device_identity import get_device_id
 
 
+def _dpapi_available() -> bool:
+    """Windows DPAPI (CryptProtectData) bu platformda var mı?
+
+    Uygulama tasarımı gereği Windows'a yöneliktir; macOS/Linux'ta ``ctypes.windll``
+    yoktur. Burada erken ve nazik tespit ederiz ki düz-metin token diske yazılmasın
+    ve uygulama AttributeError ile çökmesin.
+    """
+    return hasattr(ctypes, "windll")
+
+
 class _DataBlob(ctypes.Structure):
     _fields_ = [("cbData", ctypes.c_uint), ("pbData", ctypes.POINTER(ctypes.c_char))]
 
@@ -226,6 +236,19 @@ class DesktopSessionStore:
             return None
 
     def save(self, session_data: dict[str, Any]) -> None:
+        # DPAPI yoksa (Windows dışı) token'ı ASLA düz metin yazma — oturum yalnızca
+        # bu çalışma için bellekte kalır; bir sonraki açılışta tekrar giriş istenir.
+        if not _dpapi_available():
+            try:
+                from modules.desktop_logging import get_logger
+
+                get_logger("auth").warning(
+                    "DPAPI yok (Windows dışı) — oturum diske güvenli yazılamıyor; "
+                    "kalıcı oturum devre dışı."
+                )
+            except Exception:
+                pass
+            return
         self.session_path.parent.mkdir(parents=True, exist_ok=True)
         raw = json.dumps(session_data, ensure_ascii=False).encode("utf-8")
         encrypted = _protect_bytes(raw)

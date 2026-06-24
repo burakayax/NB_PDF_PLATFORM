@@ -37,6 +37,7 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../api/auth";
 import { getSaasApiBase } from "../api/saasBase";
 import { CMS_PREVIEW_QUERY, postAdminPreviewHighlight, writeCmsPreviewDraft } from "../lib/cmsPreview";
 import { WORKSPACE_TOOL_IDS } from "../lib/workspaceFeatures";
+import { STARTER_TOOL_IDS } from "../lib/planConfig";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { SiteForm } from "./command/centerParts";
@@ -60,6 +61,7 @@ import {
 } from "./mosaic/adminPrimitives";
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
 import { SystemControlTab } from "./SystemControlTab";
+import { AdminToaster } from "./AdminToaster";
 
 type AdminTabId =
   | "dashboard"
@@ -419,7 +421,7 @@ export function AdminPanel({
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <h2 className="text-sm font-semibold tracking-tight text-white">E-posta otomasyonu</h2>
-                <p className="mt-1 text-xs text-slate-500">Hoş geldin ve düşük kredi tetikleyicileri</p>
+                <p className="mt-1 text-xs text-slate-500">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
                 <div className="mt-5 space-y-4">
                   <AdminToggle
                     id="mkt-welcome"
@@ -429,44 +431,37 @@ export function AdminPanel({
                     onChange={(welcomeEnabled) => setCmdMkt({ ...cmdMkt, welcomeEnabled })}
                   />
                   <AdminToggle
-                    id="mkt-low"
-                    label="Düşük kredi uyarısı"
-                    description="Eşiğin altında hatırlatma"
-                    checked={cmdMkt.lowCreditEnabled}
-                    onChange={(lowCreditEnabled) => setCmdMkt({ ...cmdMkt, lowCreditEnabled })}
+                    id="mkt-lifecycle"
+                    label="Lifecycle drip serisi"
+                    description="Dönüşmeyen FREE kullanıcılara 2/6/13. gün e-postaları"
+                    checked={cmdMkt.lifecycleEnabled}
+                    onChange={(lifecycleEnabled) => setCmdMkt({ ...cmdMkt, lifecycleEnabled })}
                   />
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <AdminField label="Eşik" description="Kalan kredi bu değerin altına düşünce uyar.">
+                <div className="mt-5">
+                  <AdminField label="Upgrade CTA URL" description="Lifecycle e-postalarındaki buton hedefi (boş → /#pricing)">
                     <input
                       className={adminInputClass}
-                      type="number"
-                      value={cmdMkt.lowCreditThreshold}
-                      onChange={(e) =>
-                        setCmdMkt({ ...cmdMkt, lowCreditThreshold: Math.max(0, Number(e.target.value) || 0) })
-                      }
-                    />
-                  </AdminField>
-                  <AdminField label="Bekleme (gün)" description="Aynı kullanıcıya tekrar aralığı">
-                    <input
-                      className={adminInputClass}
-                      type="number"
-                      value={cmdMkt.lowCreditCooldownDays}
-                      onChange={(e) =>
-                        setCmdMkt({ ...cmdMkt, lowCreditCooldownDays: Math.max(1, Number(e.target.value) || 1) })
-                      }
+                      value={cmdMkt.upgradeCtaUrl}
+                      onChange={(e) => setCmdMkt({ ...cmdMkt, upgradeCtaUrl: e.target.value })}
+                      placeholder="https://pdfplatform.app/#pricing"
                     />
                   </AdminField>
                 </div>
-                <div className="mt-2">
-                  <AdminField label="CTA URL" description="Düşük kredi e-postasındaki buton hedefi">
+                <div className="mt-3">
+                  <AdminField label="Win-back kupon kodu" description="13. gün e-postasında öne çıkar (boş → indirimsiz, değer-odaklı)">
                     <input
                       className={adminInputClass}
-                      value={cmdMkt.discountCtaUrl}
-                      onChange={(e) => setCmdMkt({ ...cmdMkt, discountCtaUrl: e.target.value })}
+                      value={cmdMkt.winbackCouponCode}
+                      onChange={(e) => setCmdMkt({ ...cmdMkt, winbackCouponCode: e.target.value.toUpperCase() })}
+                      placeholder="WELCOME20"
                     />
                   </AdminField>
                 </div>
+                <p className="mt-3 rounded-xl border border-slate-700/60 bg-slate-800/30 px-3 py-2.5 text-[11px] leading-relaxed text-slate-400">
+                  ℹ️ <strong className="text-slate-300">Exit-intent indirimi</strong> (kullanıcı ödeme penceresini kapatınca çıkan teklif) ayrı ve otomatik bir sistemdir:
+                  sabit <strong className="text-slate-300">%15</strong>, yalnızca ilk satışta geçerli, faturaya iskonto olarak yansır. Bu alandan yönetilmez; senin kişisel kuponlarından bağımsızdır.
+                </p>
                 <button
                   type="button"
                   className="mt-4 w-full rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-500"
@@ -556,6 +551,7 @@ export function AdminPanel({
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
+      <AdminToaster />
     </MosaicLayout>
   );
 }
@@ -584,6 +580,8 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
   const [mkNotes, setMkNotes] = useState("");
   const [mkBusy, setMkBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
+  const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
+  const [cardBusy, setCardBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loadTick, setLoadTick] = useState(0);
   type PlanForm = {
@@ -612,6 +610,16 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           m && typeof m === "object" && m !== null ? (m as Record<string, unknown>) : { upgradeCtaHeadline: "", notes: "" };
         setMkHeadline(String(mObj.upgradeCtaHeadline ?? ""));
         setMkNotes(String(mObj.notes ?? ""));
+        const cardsObj =
+          mObj.cards && typeof mObj.cards === "object" && !Array.isArray(mObj.cards)
+            ? (mObj.cards as Record<string, unknown>)
+            : null;
+        const savedStarter = cardsObj?.starterTools;
+        setCardStarterTools(
+          Array.isArray(savedStarter) && savedStarter.length
+            ? savedStarter.filter((x): x is string => typeof x === "string")
+            : [...STARTER_TOOL_IDS],
+        );
         const { upgradeCtaHeadline: _mh, notes: _mn, ...mRest } = mObj;
         marketingExtraRef.current = mRest;
         const ov = d.plansOverride;
@@ -951,6 +959,101 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
         >
           {mkBusy ? "Kaydediliyor…" : "Pazarlama metnini kaydet"}
+        </button>
+      </AdminSection>
+
+      <AdminSection
+        title="Kart görünümü — Başlangıç paketi araçları"
+        description="Fiyat sayfasındaki Başlangıç kartında ve «Hangileri?» listesinde gösterilecek araçlar. Bu yalnızca GÖRÜNÜMÜ değiştirir; bir aracın gerçekten açık/kapalı olması yukarıdaki «Paket kuralları»ndan (gerçek erişim) yönetilir. Böylece bir aracı geçici kapatsanız bile kart aynı kalabilir."
+        variant="violet"
+      >
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="rounded-lg bg-violet-500/15 px-3 py-1 text-xs font-semibold text-violet-200">
+            Seçili: {cardStarterTools.length} araç
+          </span>
+          <button
+            type="button"
+            onClick={() => setCardStarterTools([...STARTER_TOOL_IDS])}
+            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]"
+          >
+            Varsayılana dön
+          </button>
+          <button
+            type="button"
+            onClick={() => setCardStarterTools([...featureCatalogList])}
+            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]"
+          >
+            Tümünü seç
+          </button>
+          <button
+            type="button"
+            onClick={() => setCardStarterTools([])}
+            className="rounded-lg border border-white/[0.12] px-3 py-1 text-xs font-semibold text-slate-300 hover:bg-white/[0.05]"
+          >
+            Temizle
+          </button>
+        </div>
+        <AdminField
+          label="Kartta gösterilen araçlar"
+          description="İşaretli araçlar Başlangıç kartının araç sayısına ve listesine yansır. Kartların geri kalanında «Tüm araçlar» yazdığı için bu ayar yalnızca Başlangıç paketini etkiler."
+        >
+          <div className="mt-2 flex flex-wrap gap-2">
+            {featureCatalogList.map((fk) => (
+              <label
+                key={`card-${fk}`}
+                className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/[0.08] bg-black/30 px-3 py-2 text-[12px] text-slate-200"
+              >
+                <input
+                  type="checkbox"
+                  checked={cardStarterTools.includes(fk)}
+                  onChange={() => {
+                    setCardStarterTools((prev) => {
+                      const set = new Set(prev);
+                      if (set.has(fk)) set.delete(fk);
+                      else set.add(fk);
+                      return [...set];
+                    });
+                  }}
+                  className="h-3.5 w-3.5 rounded border-white/25"
+                />
+                <span>{pdfToolLabelTr(fk)}</span>
+              </label>
+            ))}
+          </div>
+        </AdminField>
+        <button
+          type="button"
+          disabled={cardBusy}
+          onClick={async () => {
+            setCardBusy(true);
+            setMsg(null);
+            try {
+              const prevCards =
+                marketingExtraRef.current.cards &&
+                typeof marketingExtraRef.current.cards === "object" &&
+                !Array.isArray(marketingExtraRef.current.cards)
+                  ? (marketingExtraRef.current.cards as Record<string, unknown>)
+                  : {};
+              const merged = {
+                ...marketingExtraRef.current,
+                upgradeCtaHeadline: mkHeadline,
+                notes: mkNotes,
+                cards: { ...prevCards, starterTools: cardStarterTools },
+              };
+              await putAdminPackagesMarketing(accessToken, merged);
+              const { upgradeCtaHeadline: _u, notes: _n, ...rest } = merged as Record<string, unknown>;
+              marketingExtraRef.current = rest;
+              setMsg("Kart görünümü kaydedildi. Fiyat sayfası birkaç saniye içinde güncellenir.");
+              notifyRuntimeRefresh();
+            } catch (e) {
+              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+            } finally {
+              setCardBusy(false);
+            }
+          }}
+          className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-600 disabled:opacity-40"
+        >
+          {cardBusy ? "Kaydediliyor…" : "Kart görünümünü kaydet"}
         </button>
       </AdminSection>
 

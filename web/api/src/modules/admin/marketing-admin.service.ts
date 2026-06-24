@@ -15,7 +15,7 @@ export async function putMarketingAutomation(cfg: EmailAutomationConfig, actor: 
     actor,
     "email.automation.update",
     "Email automation config updated",
-    { lowCreditEnabled: cfg.lowCreditEnabled, welcomeEnabled: cfg.welcomeEnabled },
+    { welcomeEnabled: cfg.welcomeEnabled, lifecycleEnabled: cfg.lifecycleEnabled },
   );
 }
 

@@ -15,7 +15,56 @@ const planPaymentBodySchema = z.object({
   couponCode: z.string().optional().nullable(),
   extraSeats: z.number().int().min(0).max(95).optional().default(0),
   seatsOnly: z.boolean().optional().default(false),
+  /** Ödeme penceresinde çıkış-niyeti (exit-intent) indirimini uygula. Sunucu uygunluğu yeniden doğrular. */
+  applyExitIntentDiscount: z.boolean().optional().default(false),
 });
+
+/**
+ * Çıkış-niyeti (exit-intent) indirimi — kullanıcı ödeme penceresini kapatmaya
+ * çalıştığında sunulan, araştırmaya dayalı SABİT oran. Admin kuponlarından
+ * tamamen bağımsızdır (couponId=null ile işlenir, CouponUse kaydı oluşmaz).
+ *
+ * Oran neden %15: exit-intent indirimleri tipik %10–15 bandında en iyi geri
+ * kazanımı verir; %10 kolay göz ardı edilir, %20+ kullanıcıyı "her zaman
+ * indirim bekle" davranışına iter. İlk-satışa kilitlendiği için (aşağıdaki
+ * uygunluk kuralı) %15 hem ikna edici hem suistimale kapalıdır.
+ */
+export const EXIT_INTENT_DISCOUNT_PERCENT = 15;
+
+/**
+ * Suistimal engeli: indirim YALNIZCA ilk ücretli satışta verilir.
+ * Kullanıcı FREE planda olmalı ve daha önce tamamlanmış bir ödemesi olmamalı.
+ * Böylece kullanıcı pencereyi tekrar tekrar açıp indirimi sömüremez; ödeme
+ * gerçekleştiğinde (ilk kez) hak biter.
+ */
+export async function getExitIntentEligibility(
+  userId: string,
+): Promise<{ eligible: boolean; discountPercent: number }> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true },
+  });
+  if (!user || user.plan !== "FREE") {
+    return { eligible: false, discountPercent: 0 };
+  }
+  const priorPaid = await prisma.paymentCheckout.count({
+    where: { userId, status: "completed" },
+  });
+  if (priorPaid > 0) {
+    return { eligible: false, discountPercent: 0 };
+  }
+  return { eligible: true, discountPercent: EXIT_INTENT_DISCOUNT_PERCENT };
+}
+
+/** GET /api/payments/exit-intent-offer — istemci teklifi göstermeden önce uygunluğu sorar. */
+export async function getExitIntentOfferController(request: Request, response: Response): Promise<void> {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "Authentication is required.");
+  }
+  const offer = await getExitIntentEligibility(userId);
+  response.status(200).json(offer);
+}
 
 /** Extra seat monthly prices (net, excluding VAT) */
 const EXTRA_SEAT_PRICE_TRY = 199; // ₺199/kişi/ay
@@ -63,7 +112,7 @@ export async function initializePaymentsController(request: Request, response: R
     throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid request body.");
   }
 
-  const { planId, billingCycle, couponCode, extraSeats, seatsOnly } = parsed.data;
+  const { planId, billingCycle, couponCode, extraSeats, seatsOnly, applyExitIntentDiscount } = parsed.data;
   const rawCurrency = parsed.data.currency;
   // EUR: iyzico USD fiyat bandıyla işler; kullanıcıya fiyat ekranda EUR olarak gösterilir
   // ama ödeme teknik olarak USD üzerinden gerçekleşir. Bu durum checkout sayfasında
@@ -126,6 +175,16 @@ export async function initializePaymentsController(request: Request, response: R
     const netPrice = parseFloat(basePrice);
     const discountedNet = Math.round(netPrice * (1 - v.coupon.discountPercent / 100) * 100) / 100;
     basePrice = Math.max(discountedNet, 0.01).toFixed(2);
+  } else if (applyExitIntentDiscount && !seatsOnly) {
+    // Çıkış-niyeti indirimi — kupon YOKSA ve kullanıcı uygunsa uygulanır.
+    // Kupon ile asla birlikte (stacking) çalışmaz; couponId=null kalır.
+    const elig = await getExitIntentEligibility(userId);
+    if (elig.eligible && elig.discountPercent > 0) {
+      appliedDiscountPercent = elig.discountPercent;
+      const netPrice = parseFloat(basePrice);
+      const discountedNet = Math.round(netPrice * (1 - elig.discountPercent / 100) * 100) / 100;
+      basePrice = Math.max(discountedNet, 0.01).toFixed(2);
+    }
   }
 
   // TC Kimlik No validasyonu — geçersiz TC ile ödeme başlatılamaz
@@ -169,7 +228,8 @@ export async function initializePaymentsController(request: Request, response: R
     basketItemName: seatsOnly ? undefined : `${BASKET_NAMES_TR[planId]} (${isYearly ? "1 yıl" : "1 ay"})`, // seatsOnly: basket adı payment.service içinde otomatik üretilir
     couponId: appliedCouponId,
     discountPercent: appliedDiscountPercent,
-    originalNetAmount: appliedCouponId ? originalBasePrice : null,
+    // İskonto uygulandıysa (kupon VEYA exit-intent) liste fiyatını gönder → faturada iskonto satırı.
+    originalNetAmount: appliedDiscountPercent != null ? originalBasePrice : null,
     extraSeats: extraSeats ?? 0,
     seatsOnly: seatsOnly ?? false,
   });
