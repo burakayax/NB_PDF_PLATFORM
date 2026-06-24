@@ -4498,7 +4498,12 @@ function App() {
     pathname === "/login-error" ||
     pathname.startsWith("/fake-payment");
 
-  /** Until runtime JSON is known, avoid mounting workspace (prevents maintenance flicker on reload). */
+  /**
+   * Runtime JSON (public/runtime) bilinene kadar landing/workspace mount edilmez —
+   * bakım modunda "önce landing görünüp sonra bakım sayfasına atlama" (flicker) bunu önler.
+   * Cold-start kaynaklı uzun bekleme, auth-api'nin starter plan'da tutulmasıyla (uyumaz) çözülür;
+   * starter ile bu splash tipik olarak <500ms görünür.
+   */
   if (!bootstrapFastRoutes && !runtimeHydrated) {
     if (user?.role !== "ADMIN" && readMaintenanceHint() === true) {
       return (
@@ -4515,25 +4520,19 @@ function App() {
         </>
       );
     }
-    // Landing prerender'lıdır ve `public/runtime` çağrısına bağımlı değildir. auth-api yavaş/cold-start
-    // ise ziyaretçiyi beyaz splash'ta bekletmek yerine içeriği HEMEN göster; runtime arka planda
-    // hidrate olunca ayarlar güncellenir (yukarıdaki maintenance-hint koruması bozulmaz).
-    // Workspace/admin gibi runtime'a bağlı görünümler beklemeyi sürdürür.
-    if (view !== "landing") {
-      return (
-        <>
-          <RuntimeBootstrapSplash />
-          <CookieNotice
-            language={language}
-            visible={shouldShowCookieNotice}
-            onAcceptAll={acceptAllCookies}
-            onAcceptNecessaryOnly={acceptNecessaryOnly}
-            onSavePreferences={saveCookiePreferences}
-            onOpenPrivacy={() => openLegalPage("privacy")}
-          />
-        </>
-      );
-    }
+    return (
+      <>
+        <RuntimeBootstrapSplash />
+        <CookieNotice
+          language={language}
+          visible={shouldShowCookieNotice}
+          onAcceptAll={acceptAllCookies}
+          onAcceptNecessaryOnly={acceptNecessaryOnly}
+          onSavePreferences={saveCookiePreferences}
+          onOpenPrivacy={() => openLegalPage("privacy")}
+        />
+      </>
+    );
   }
 
   if (view === "team_invite") {
