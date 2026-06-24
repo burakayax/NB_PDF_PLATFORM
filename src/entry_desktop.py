@@ -35,6 +35,17 @@ def main() -> None:
             except OSError:
                 pass
 
+    # Üretim loglaması + global çökme yakalama — UI kurulmadan önce devreye girer
+    # ki erken (splash/import) hataları da dosyaya yazılsın.
+    try:
+        from modules.desktop_logging import get_logger, install_crash_handlers
+
+        log = get_logger()
+        install_crash_handlers(show_dialog=True)
+        log.info("uygulama başlatılıyor frozen=%s", bool(getattr(sys, "frozen", False)))
+    except Exception:
+        log = None
+
     splash = None
     try:
         from modules.splash_screen import show_splash
@@ -56,7 +67,23 @@ def main() -> None:
                 pass
 
     app = main_module.NBPDFApp()
-    app.mainloop()
+
+    # Tkinter event-loop içindeki yakalanmayan hataları da dosyaya köprüle.
+    try:
+        from modules.desktop_logging import install_tk_exception_bridge
+
+        install_tk_exception_bridge(app, show_dialog=True)
+    except Exception:
+        pass
+
+    try:
+        app.mainloop()
+    except Exception:
+        # mainloop seviyesinde sızan hata: crash hook zaten loglar; yeniden yükselt
+        # ki sys.excepthook diyaloğu göstersin ve çıkış kodu hatayı yansıtsın.
+        if log is not None:
+            log.critical("mainloop beklenmedik şekilde sonlandı", exc_info=True)
+        raise
 
 
 if __name__ == "__main__":

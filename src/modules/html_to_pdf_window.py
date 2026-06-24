@@ -5,6 +5,7 @@ import threading
 from queue import Queue, Empty
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_tool_ui import build_tool_header
 from modules.progress_dialog import ProgressDialog
 from modules.ui_theme import theme
@@ -97,11 +98,11 @@ class HtmlToPdfWindow(ctk.CTkToplevel):
         if tab == "url":
             url = (self.url_entry.get() or "").strip()
             if not url:
-                messagebox.showwarning(t("app.warning"), t("html_to_pdf.missing_input"))
+                show_toast(self, t("html_to_pdf.missing_input"), kind="warning")
                 return
         else:
             if not self.selected_html_file:
-                messagebox.showwarning(t("app.warning"), t("html_to_pdf.missing_input"))
+                show_toast(self, t("html_to_pdf.missing_input"), kind="warning")
                 return
 
         save_path = filedialog.asksaveasfilename(parent=self, title=t("html_to_pdf.save_title"), defaultextension=".pdf", filetypes=[("PDF", "*.pdf")])
@@ -146,7 +147,7 @@ class HtmlToPdfWindow(ctk.CTkToplevel):
                     elif msg[0] == "error":
                         finished["value"] = True
                         progress_dialog.destroy()
-                        messagebox.showerror(t("app.error"), str(msg[1]))
+                        show_toast(self, str(msg[1]), kind="error")
                         self.btn_run.configure(state="normal", fg_color=self.ui["accent"])
                         return
             except Empty:

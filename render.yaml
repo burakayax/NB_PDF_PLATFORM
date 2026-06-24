@@ -69,8 +69,8 @@ services:
     branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
     runtime: node
     region: frankfurt
-    plan: free                # ÜCRETSIZ (bakım/test dönemi). Gerçek yayında: starter
-                              # Uyarı: free plan 15 dk işlem olmazsa uyur (~50 sn cold start)
+    plan: starter             # Starter: UYUMAZ → cold-start yok. Site açılışı (public/runtime)
+                              # bu servisi beklediği için free plan ~30-50 sn loading'e yol açıyordu.
     rootDir: web/api
     # PostgreSQL şeması (schema.postgres.prisma) ile generate + db push.
     # Not: migrations/ klasörü SQLite diyalektinde olduğu için Postgres'e

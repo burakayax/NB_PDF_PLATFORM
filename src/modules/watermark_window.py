@@ -7,6 +7,7 @@ from queue import Queue, Empty
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_password_dialog import PdfPasswordDialog
 from modules.pdf_tool_ui import build_drop_zone, build_file_card, build_tool_header
 from modules.progress_dialog import ProgressDialog
@@ -260,7 +261,7 @@ class WatermarkWindow(ctk.CTkToplevel):
             self.selected_is_encrypted = is_encrypted
             self.update_ui()
         except Exception as e:
-            messagebox.showerror(t("app.error"), str(e))
+            show_toast(self, str(e), kind="error")
         self.lift()
 
     def select_file(self):
@@ -315,7 +316,7 @@ class WatermarkWindow(ctk.CTkToplevel):
     def run_watermark(self):
         text = (self.text_entry.get() or "").strip()
         if not text:
-            messagebox.showwarning(t("app.warning"), t("watermark.missing_text"))
+            show_toast(self, t("watermark.missing_text"), kind="warning")
             return
         color = self._color_hex
         font = self.font_var.get()
@@ -362,7 +363,7 @@ class WatermarkWindow(ctk.CTkToplevel):
                     elif msg[0] == "error":
                         finished["value"] = True
                         progress_dialog.destroy()
-                        messagebox.showerror(t("app.error"), str(msg[1]))
+                        show_toast(self, str(msg[1]), kind="error")
                         self.btn_run.configure(state="normal", fg_color=self.ui["accent"])
                         return
             except Empty:

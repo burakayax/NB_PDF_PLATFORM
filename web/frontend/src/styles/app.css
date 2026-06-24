@@ -2480,9 +2480,9 @@ textarea {
   border-radius: var(--nb-radius);
   background: linear-gradient(
     180deg,
-    #3d8bf7 0%,
-    var(--nb-primary-mid) 42%,
-    var(--nb-primary) 100%
+    #2563c9 0%,
+    #1480a6 52%,
+    #0e7490 100%
   );
   color: #fff;
   font-weight: 700;
@@ -2490,7 +2490,7 @@ textarea {
   cursor: pointer;
   box-shadow:
     var(--nb-shadow-float),
-    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   transition:
     transform var(--nb-transition-premium),
     box-shadow var(--nb-transition-premium),
@@ -2499,10 +2499,10 @@ textarea {
 
 .primary-action:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
-  filter: brightness(1.07);
+  filter: brightness(1.04);
   box-shadow:
     var(--nb-glow-primary-active),
-    0 24px 48px -12px rgba(34, 211, 238, 0.55);
+    0 24px 48px -12px rgba(14, 116, 144, 0.5);
 }
 
 .primary-action:focus-visible:not(:disabled) {

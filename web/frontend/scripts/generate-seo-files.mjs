@@ -1,28 +1,40 @@
 /**
- * Production SEO assets:
+ * Production SEO assets (TR birincil, EN ikincil):
  * - robots.txt
- * - sitemap.xml
- * - prerendered static HTML snapshots for public crawl routes
+ * - sitemap.xml (lastmod dahil)
+ * - prerendered static HTML snapshots (gerçek görünür gövde + zengin JSON-LD)
+ *
+ * Tüm metin/şema içeriği TEK kaynaktan gelir: src/seo/seoContent.mjs
+ * Böylece Google'ın gördüğü statik HTML, tarayıcıda enjekte edilen runtime
+ * meta verileriyle hiçbir zaman ayrışmaz.
  */
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  FEATURE_IDS,
-  STATIC_PUBLIC_ROUTES,
-  toolSlugForFeature,
-} from "./seo-routes.mjs";
+  BRAND,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_OG_IMAGE_WIDTH,
+  DEFAULT_OG_IMAGE_HEIGHT,
+  TOOL_SLUGS,
+  TOOL_SEO,
+  LANDING_SEO,
+  PRICING_SEO,
+  LEGAL_SEO,
+  SOFTWARE_FEATURE_LIST,
+} from "../src/seo/seoContent.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
 const publicDir = join(frontendRoot, "public");
 
+/** Statik prerender birincil dili. Hedef pazar Türkiye → "tr". */
+const PRIMARY_LANG = "tr";
+
 function readEnvBaseUrl() {
   let base =
     String(
-      process.env.VITE_PUBLIC_SITE_URL ||
-        process.env.NEXT_PUBLIC_SITE_URL ||
-        "",
+      process.env.VITE_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "",
     ).trim() || "";
   const envFile = join(frontendRoot, ".env");
   if (!base && existsSync(envFile)) {
@@ -76,6 +88,16 @@ function escapeXml(s) {
     .replace(/"/g, "&quot;");
 }
 
+/** HTML metin içeriği için kaçış (görünür gövde + attribute). */
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function ensurePublicFilePathForRoute(routePath) {
   if (routePath === "/") {
     return join(publicDir, "index.html");
@@ -83,172 +105,299 @@ function ensurePublicFilePathForRoute(routePath) {
   return join(publicDir, routePath.replace(/^\//, ""), "index.html");
 }
 
+const todayIso = new Date().toISOString().slice(0, 10);
+
+// ─── Route → SEO meta (TR birincil) ──────────────────────────────────────────
 function pageMetaForRoute(routePath) {
+  const lang = PRIMARY_LANG;
+
   if (routePath === "/") {
+    const c = LANDING_SEO[lang];
     return {
-      title: "PDF editing and conversion platform | PDF PLATFORM",
-      description:
-        "Use PDF editing, PDF converter, merge PDF, and compress PDF workflows in one professional platform.",
+      ...c,
+      kind: "landing",
       index: true,
       follow: true,
-      includeProductSchema: true,
+      includeSoftware: true,
+      includeFaq: true,
     };
   }
+
   if (routePath.startsWith("/tools/")) {
     const slug = routePath.slice("/tools/".length);
-    const toolNames = {
-      "merge-pdf": "Merge PDF",
-      "split-pdf": "Split PDF",
-      compress: "Compress PDF",
-      "pdf-to-word": "PDF to Word",
-      "word-to-pdf": "Word to PDF",
-      "pdf-to-excel": "PDF to Excel",
-      "excel-to-pdf": "Excel to PDF",
-      "pdf-to-ppt": "PDF to PowerPoint",
-      "ppt-to-pdf": "PowerPoint to PDF",
-      "pdf-to-image": "PDF to Image",
-      "image-to-pdf": "Image to PDF",
-      "html-to-pdf": "HTML to PDF",
-      "rotate-pdf": "Rotate PDF",
-      "delete-pages": "Delete PDF Pages",
-      "organize-pdf": "Organize PDF Pages",
-      watermark: "Add Watermark to PDF",
-      "page-numbers": "Add Page Numbers to PDF",
-      encrypt: "Encrypt PDF",
-      "unlock-pdf": "Unlock PDF",
-      "repair-pdf": "Repair PDF",
-      "pdf-to-text": "PDF to Text",
-      "flatten-pdf": "Flatten PDF",
-    };
-    const readable =
-      toolNames[slug] ||
-      slug
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c) => c.toUpperCase())
-        .replace(/\bPdf\b/g, "PDF")
-        .replace(/\bPpt\b/g, "PPT");
+    const c = TOOL_SEO[slug]?.[lang];
+    if (c) {
+      return {
+        ...c,
+        kind: "tool",
+        slug,
+        index: true,
+        follow: true,
+        includeSoftware: true,
+        includeFaq: true,
+        breadcrumb: true,
+      };
+    }
+    // Eşlenmemiş araç — jenerik
+    const label = slug.replace(/-/g, " ");
     return {
-      title: `${readable} | PDF PLATFORM`,
-      description: `Use the ${readable} tool in a secure, professional PDF platform.`,
+      title: `${label} | ${BRAND}`,
+      description: `${label} işlemini güvenli, profesyonel bir PDF platformunda gerçekleştirin.`,
+      h1: label,
+      intro: `${label} aracını kullanın; dosyanızı yükleyin, işleyin ve sonucu indirin.`,
+      keywords: [],
+      faq: [],
+      kind: "tool",
+      slug,
       index: true,
       follow: true,
-      includeProductSchema: true,
+      includeSoftware: true,
     };
   }
+
   if (routePath === "/pricing") {
-    return {
-      title: "Pricing | PDF PLATFORM",
-      description: "Explore plans and credit packs for PDF workflows.",
-      index: true,
-      follow: true,
-    };
+    const c = PRICING_SEO[lang];
+    return { ...c, kind: "pricing", index: true, follow: true, includePricing: true };
   }
-  if (routePath === "/terms") {
-    return {
-      title: "Terms of service | PDF PLATFORM",
-      description: "Read the PDF PLATFORM terms of service.",
-      index: true,
-      follow: true,
-    };
+
+  for (const key of ["terms", "privacy", "kvkk"]) {
+    if (routePath === `/${key}`) {
+      const c = LEGAL_SEO[key][lang];
+      return { ...c, kind: "legal", index: true, follow: true };
+    }
   }
-  if (routePath === "/privacy") {
-    return {
-      title: "Privacy policy | PDF PLATFORM",
-      description: "Read the PDF PLATFORM privacy policy.",
-      index: true,
-      follow: true,
-    };
-  }
-  if (routePath === "/kvkk") {
-    return {
-      title: "KVKK | PDF PLATFORM",
-      description: "Read PDF PLATFORM KVKK information.",
-      index: true,
-      follow: true,
-    };
-  }
+
   return {
-    title: "PDF PLATFORM",
-    description: "Professional PDF platform.",
+    title: BRAND,
+    description: "Profesyonel PDF platformu.",
+    h1: BRAND,
+    intro: "Profesyonel PDF araçları.",
+    keywords: [],
+    faq: [],
+    kind: "other",
     index: false,
     follow: false,
   };
 }
 
+// ─── JSON-LD ──────────────────────────────────────────────────────────────────
 function renderStructuredData(baseUrl, routePath, meta) {
-  const canonicalUrl = `${baseUrl}${routePath}`;
-  const website = {
+  const lang = PRIMARY_LANG;
+  const canonicalUrl = `${baseUrl}${routePath === "/" ? "" : routePath}` || baseUrl;
+  const orgId = `${baseUrl}/#organization`;
+  const nodes = [];
+
+  nodes.push({
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "PDF PLATFORM",
-    url: canonicalUrl,
-  };
-  const org = {
+    "@id": `${baseUrl}/#website`,
+    name: BRAND,
+    url: baseUrl,
+    inLanguage: "tr-TR",
+    description: LANDING_SEO[lang].description,
+    publisher: { "@id": orgId },
+  });
+
+  nodes.push({
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "PDF PLATFORM",
+    "@id": orgId,
+    name: BRAND,
     url: baseUrl,
-    logo: `${baseUrl}/logo.png`,
-  };
-  const all = [website, org];
-  if (meta.includeProductSchema) {
-    all.push({
+    logo: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/logo.png`,
+      width: 192,
+      height: 192,
+    },
+    description:
+      "Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.",
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer support",
+      availableLanguage: ["Turkish", "English"],
+    },
+    sameAs: [],
+  });
+
+  if (meta.includeSoftware) {
+    nodes.push({
       "@context": "https://schema.org",
-      "@type": "Product",
-      name: meta.title,
-      description: meta.description,
-      category: "PDF software",
-      brand: { "@type": "Brand", name: "PDF PLATFORM" },
+      "@type": "SoftwareApplication",
+      name: meta.h1 || BRAND,
       url: canonicalUrl,
+      description: meta.description,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web Browser",
+      browserRequirements:
+        "Requires JavaScript. Works in Chrome, Firefox, Edge, Safari.",
+      inLanguage: [
+        { "@type": "Language", name: "Turkish" },
+        { "@type": "Language", name: "English" },
+      ],
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "TRY",
+        availability: "https://schema.org/InStock",
+        description:
+          "Ücretsiz plan mevcut. Ücretsiz paket ve aylık abonelik seçenekleri sunulmaktadır.",
+      },
+      brand: { "@type": "Brand", name: BRAND },
+      publisher: { "@id": orgId },
+      featureList: SOFTWARE_FEATURE_LIST[lang],
     });
   }
-  return all
+
+  if (meta.breadcrumb && meta.kind === "tool") {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: BRAND, item: baseUrl },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: meta.h1,
+          item: canonicalUrl,
+        },
+      ],
+    });
+  }
+
+  if (meta.includePricing) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "Offer",
+      name: "PDF PLATFORM — Abonelik Planları",
+      description:
+        "Ücretsiz plan dahil aylık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi.",
+      url: canonicalUrl,
+      priceCurrency: "TRY",
+      availability: "https://schema.org/InStock",
+      seller: { "@id": orgId },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        name: "7 Gün Para İade Garantisi",
+        description:
+          "Satın alma tarihinden itibaren 7 gün içinde tam iade. Gerekçe belirtmenize gerek yoktur.",
+        returnPolicyCategory:
+          "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        refundType: "https://schema.org/FullRefund",
+        returnFees: "https://schema.org/FreeReturn",
+      },
+    });
+  }
+
+  // FAQPage — rich result Mayıs 2026'da kaldırıldı ancak AI Overviews / AEO için
+  // hâlâ değerli; schema geçerli olduğundan korunur.
+  if (meta.includeFaq && Array.isArray(meta.faq) && meta.faq.length > 0) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: meta.faq.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: { "@type": "Answer", text: item.a },
+      })),
+    });
+  }
+
+  return nodes
     .map(
       (node) =>
         `<script type="application/ld+json">${JSON.stringify(node)}</script>`,
     )
-    .join("\n");
+    .join("\n    ");
 }
 
+// ─── Görünür gövde (crawler + AI motorları + ilk boya içeriği) ────────────────
+// İçerik #root içine yazılır; React createRoot mount olunca temizleyip yeniden
+// render eder (çift içerik olmaz). Crawler JS çalıştırmasa bile içeriği görür.
+function renderVisibleBody(baseUrl, meta) {
+  const parts = [];
+  parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
+  parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
+
+  // Araç ve landing sayfalarında tüm araçlara iç bağlantı (crawl + sitelink sinyali)
+  if (meta.kind === "tool" || meta.kind === "landing") {
+    const links = TOOL_SLUGS.map((slug) => {
+      const c = TOOL_SEO[slug]?.[PRIMARY_LANG];
+      const label = c ? c.h1 : slug.replace(/-/g, " ");
+      return `<li><a href="/tools/${slug}">${escapeHtml(label)}</a></li>`;
+    }).join("");
+    parts.push(
+      `<nav aria-label="PDF araçları" class="seo-tools"><h2>Tüm PDF Araçları</h2><ul>${links}</ul></nav>`,
+    );
+  }
+
+  if (meta.kind === "pricing") {
+    parts.push(
+      `<p><a href="/register">Ücretsiz başlayın</a> veya <a href="/">tüm PDF araçlarını</a> inceleyin.</p>`,
+    );
+  }
+
+  // SSS bölümü (görünür) — FAQPage schema ile birebir aynı metin
+  if (Array.isArray(meta.faq) && meta.faq.length > 0) {
+    const items = meta.faq
+      .map(
+        (f) =>
+          `<div class="seo-faq-item"><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`,
+      )
+      .join("");
+    parts.push(
+      `<section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2>${items}</section>`,
+    );
+  }
+
+  return `<div id="root"><main class="seo-prerender">${parts.join("")}</main></div>`;
+}
+
+// ─── Tam HTML ─────────────────────────────────────────────────────────────────
 function renderPrerenderHtml(baseUrl, routePath) {
   const meta = pageMetaForRoute(routePath);
-  const canonicalUrl = `${baseUrl}${routePath}`;
+  const canonicalUrl = `${baseUrl}${routePath === "/" ? "" : routePath}` || baseUrl;
   const robots = meta.index
     ? meta.follow
-      ? "index, follow"
+      ? "index, follow, max-image-preview:large"
       : "index, nofollow"
     : "noindex, nofollow";
-  const title = meta.title;
-  const description = meta.description;
+  const title = escapeHtml(meta.title);
+  const description = escapeHtml(meta.description);
+  const ogImage = `${baseUrl}${DEFAULT_OG_IMAGE}`;
 
   return `<!doctype html>
-<html lang="en">
+<html lang="${PRIMARY_LANG}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="${BRAND}" />
     <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="PDF PLATFORM" />
+    <meta name="apple-mobile-web-app-title" content="${BRAND}" />
     <meta name="msapplication-TileColor" content="#0f172a" />
     <title>${title}</title>
     <meta name="description" content="${description}" />
     <meta name="robots" content="${robots}" />
+    <meta name="googlebot" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
     <link rel="alternate" hreflang="tr" href="${canonicalUrl}" />
     <link rel="alternate" hreflang="en" href="${canonicalUrl}" />
     <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="PDF PLATFORM" />
+    <meta property="og:site_name" content="${BRAND}" />
     <meta property="og:title" content="${title}" />
     <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${baseUrl}/app-preview-main.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image" content="${ogImage}" />
+    <meta property="og:image:width" content="${DEFAULT_OG_IMAGE_WIDTH}" />
+    <meta property="og:image:height" content="${DEFAULT_OG_IMAGE_HEIGHT}" />
     <meta property="og:image:alt" content="${title}" />
     <meta property="og:url" content="${canonicalUrl}" />
     <meta property="og:locale" content="tr_TR" />
@@ -258,21 +407,31 @@ function renderPrerenderHtml(baseUrl, routePath) {
     <meta name="twitter:creator" content="@nbglobalstudio" />
     <meta name="twitter:title" content="${title}" />
     <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${baseUrl}/app-preview-main.png" />
+    <meta name="twitter:image" content="${ogImage}" />
     <meta name="twitter:image:alt" content="${title}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      .seo-prerender{max-width:880px;margin:0 auto;padding:32px 20px;font-family:Inter,system-ui,sans-serif;color:#0f172a;line-height:1.6}
+      .seo-prerender h1{font-size:1.9rem;margin:0 0 12px}
+      .seo-prerender h2{font-size:1.25rem;margin:28px 0 12px}
+      .seo-prerender h3{font-size:1rem;margin:16px 0 4px}
+      .seo-prerender .seo-intro{font-size:1.05rem;color:#334155}
+      .seo-prerender ul{padding-left:18px}
+      .seo-prerender a{color:#2563eb;text-decoration:none}
+    </style>
     ${renderStructuredData(baseUrl, routePath, meta)}
   </head>
   <body>
-    <div id="root"></div>
+    ${renderVisibleBody(baseUrl, meta)}
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
 }
 
+// ─── robots.txt & sitemap.xml ─────────────────────────────────────────────────
 const blockIndexing = readBlockSearchIndexing();
 const base = readEnvBaseUrl();
 mkdirSync(publicDir, { recursive: true });
@@ -286,7 +445,9 @@ Disallow: /
   robots = `User-agent: *
 Disallow: /workspace
 Disallow: /admin
+Disallow: /nbadmin
 Disallow: /admin-login
+Disallow: /login-success
 Disallow: /api/
 
 Sitemap: ${base}/sitemap.xml
@@ -300,24 +461,24 @@ if (blockIndexing) {
 </urlset>
 `;
 } else {
-  const AUTH_ROUTES = [
+  const STATIC_ROUTES = [
+    { path: "/", changefreq: "weekly", priority: "1.0" },
+    { path: "/pricing", changefreq: "weekly", priority: "0.8" },
+    { path: "/terms", changefreq: "monthly", priority: "0.4" },
+    { path: "/privacy", changefreq: "monthly", priority: "0.4" },
+    { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
     { path: "/login", changefreq: "monthly", priority: "0.5" },
     { path: "/register", changefreq: "monthly", priority: "0.5" },
   ];
 
   const urls = [
-    ...STATIC_PUBLIC_ROUTES.map((route) => ({
+    ...STATIC_ROUTES.map((route) => ({
       loc: `${base}${route.path}`,
       changefreq: route.changefreq,
       priority: route.priority,
     })),
-    ...AUTH_ROUTES.map((route) => ({
-      loc: `${base}${route.path}`,
-      changefreq: route.changefreq,
-      priority: route.priority,
-    })),
-    ...FEATURE_IDS.map((id) => ({
-      loc: `${base}/tools/${toolSlugForFeature(id)}`,
+    ...TOOL_SLUGS.map((slug) => ({
+      loc: `${base}/tools/${slug}`,
       changefreq: "weekly",
       priority: "0.9",
     })),
@@ -339,6 +500,7 @@ ${urls
     (u) => `  <url>
     <loc>${escapeXml(u.loc)}</loc>
 ${renderHreflang(u.loc)}
+    <lastmod>${todayIso}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`,
@@ -351,13 +513,14 @@ ${renderHreflang(u.loc)}
 writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
 
+// ─── Prerendered HTML snapshots ───────────────────────────────────────────────
 const prerenderRoutes = [
   "/",
   "/pricing",
   "/terms",
   "/privacy",
   "/kvkk",
-  ...FEATURE_IDS.map((id) => `/tools/${toolSlugForFeature(id)}`),
+  ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
 ];
 
 for (const routePath of prerenderRoutes) {
@@ -369,4 +532,5 @@ for (const routePath of prerenderRoutes) {
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",
   blockIndexing ? "(block indexing)" : base,
+  `| ${prerenderRoutes.length} pages, lang=${PRIMARY_LANG}`,
 );

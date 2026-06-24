@@ -2,6 +2,30 @@ import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "nbpdf-cookie-consent-v3";
 
+/**
+ * Çerez kararı değişince (kabul/red/kaydet) aynı sekmedeki diğer bağımsız
+ * tüketicileri (ör. main.tsx'teki PwaPrompts) uyarmak için yayınlanan olay.
+ * localStorage `storage` olayını aynı sekmede tetiklemez; bu yüzden gerek var.
+ */
+export const COOKIE_CONSENT_CHANGED_EVENT = "nb-cookie-consent-changed";
+
+function notifyCookieConsentChanged(): void {
+  try {
+    window.dispatchEvent(new Event(COOKIE_CONSENT_CHANGED_EVENT));
+  } catch {
+    /* yoksay */
+  }
+}
+
+/** Kullanıcı çerez tercihini verdi mi? (App dışı bileşenler için senkron okuma) */
+export function isCookieConsentDecided(): boolean {
+  try {
+    return readStored().decided;
+  } catch {
+    return false;
+  }
+}
+
 export type CookieConsentPreferences = {
   necessary: true;          // Her zaman true — zorunlu; reddedilemez
   analytics: boolean;       // Google Analytics GA4
@@ -81,6 +105,7 @@ export function useCookieConsent() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ decided: true, ...p }));
     setPrefs(p);
     setDecided(true);
+    notifyCookieConsentChanged();
   }
 
   /** Yalnızca zorunlu çerezleri kabul et */
@@ -95,6 +120,7 @@ export function useCookieConsent() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ decided: true, ...p }));
     setPrefs(p);
     setDecided(true);
+    notifyCookieConsentChanged();
   }
 
   /** Özel tercihlerle kaydet */
@@ -103,6 +129,7 @@ export function useCookieConsent() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ decided: true, ...p }));
     setPrefs(p);
     setDecided(true);
+    notifyCookieConsentChanged();
   }
 
   const hasConsent = decided;

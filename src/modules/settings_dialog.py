@@ -1,5 +1,6 @@
 import threading
 import tkinter.messagebox as messagebox
+from modules.ui_notifications import show_toast
 
 import customtkinter as ctk
 
@@ -293,10 +294,10 @@ class SettingsDialog(ctk.CTkToplevel):
         fn = (self._entry_fn.get() or "").strip()
         ln = (self._entry_ln.get() or "").strip()
         if not fn:
-            messagebox.showwarning(t("app.warning"), t("settings.first_name_required"), parent=self)
+            show_toast(self, t("settings.first_name_required"), kind="warning")
             return
         if not ln:
-            messagebox.showwarning(t("app.warning"), t("settings.last_name_required"), parent=self)
+            show_toast(self, t("settings.last_name_required"), kind="warning")
             return
         self._btn_save.configure(state="disabled")
 
@@ -313,7 +314,7 @@ class SettingsDialog(ctk.CTkToplevel):
 
     def _on_saved_ok(self, user: dict) -> None:
         self._btn_save.configure(state="normal")
-        messagebox.showinfo(t("settings.title"), t("settings.profile_saved"), parent=self)
+        show_toast(self, t("settings.profile_saved"), kind="info")
         if self.on_saved:
             try:
                 self.on_saved(user)
@@ -322,4 +323,4 @@ class SettingsDialog(ctk.CTkToplevel):
 
     def _on_saved_fail(self, msg: str) -> None:
         self._btn_save.configure(state="normal")
-        messagebox.showerror(t("app.error"), msg[:400], parent=self)
+        show_toast(self, msg[:400], kind="error")

@@ -5,6 +5,7 @@ import threading
 from queue import Queue, Empty
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_tool_ui import build_drop_zone, build_file_card, build_tool_header
 from modules.progress_dialog import ProgressDialog
 from modules.ui_theme import theme
@@ -86,7 +87,7 @@ class UnlockPdfWindow(ctk.CTkToplevel):
     def run_unlock(self):
         password = (self.password_entry.get() or "").strip()
         if not password:
-            messagebox.showwarning(t("app.warning"), t("unlock_pdf.missing_password"))
+            show_toast(self, t("unlock_pdf.missing_password"), kind="warning")
             return
 
         save_path = filedialog.asksaveasfilename(parent=self, title=t("unlock_pdf.save_title"), defaultextension=".pdf", filetypes=[("PDF", "*.pdf")])
@@ -124,7 +125,7 @@ class UnlockPdfWindow(ctk.CTkToplevel):
                     elif msg[0] == "error":
                         finished["value"] = True
                         progress_dialog.destroy()
-                        messagebox.showerror(t("app.error"), str(msg[1]))
+                        show_toast(self, str(msg[1]), kind="error")
                         self.btn_run.configure(state="normal", fg_color=self.ui["accent"])
                         return
             except Empty:

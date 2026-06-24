@@ -9,6 +9,8 @@ type SchemaInput = {
   includePricingOffer?: boolean;
   includeFaq?: Array<{ question: string; answer: string }>;
   breadcrumb?: Array<{ name: string; url: string }>;
+  /** Sosyal medya profil URL'leri — Organization sameAs (E-E-A-T / entity). */
+  sameAs?: string[];
 };
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -64,8 +66,8 @@ function buildOrganization(input: SchemaInput): JsonLdNode {
       contactType: "customer support",
       availableLanguage: ["Turkish", "English"],
     },
-    // Update sameAs if/when social profiles are created
-    sameAs: [],
+    // Sosyal medya profilleri admin panelinden eklenir (site.settings.socialLinks).
+    sameAs: input.sameAs && input.sameAs.length > 0 ? input.sameAs : [],
   };
 }
 

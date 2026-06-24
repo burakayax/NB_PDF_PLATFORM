@@ -71,6 +71,7 @@ import {
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { QuotaWidget } from "./components/dashboard/QuotaWidget";
+import { DashboardLifecycleNudge } from "./components/dashboard/DashboardLifecycleNudge";
 import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
@@ -4497,7 +4498,7 @@ function App() {
     pathname === "/login-error" ||
     pathname.startsWith("/fake-payment");
 
-  /** Until runtime JSON is known, avoid mounting landing/workspace (prevents maintenance flicker on reload). */
+  /** Until runtime JSON is known, avoid mounting workspace (prevents maintenance flicker on reload). */
   if (!bootstrapFastRoutes && !runtimeHydrated) {
     if (user?.role !== "ADMIN" && readMaintenanceHint() === true) {
       return (
@@ -4514,19 +4515,25 @@ function App() {
         </>
       );
     }
-    return (
-      <>
-        <RuntimeBootstrapSplash />
-        <CookieNotice
-          language={language}
-          visible={shouldShowCookieNotice}
-          onAcceptAll={acceptAllCookies}
-          onAcceptNecessaryOnly={acceptNecessaryOnly}
-          onSavePreferences={saveCookiePreferences}
-          onOpenPrivacy={() => openLegalPage("privacy")}
-        />
-      </>
-    );
+    // Landing prerender'lıdır ve `public/runtime` çağrısına bağımlı değildir. auth-api yavaş/cold-start
+    // ise ziyaretçiyi beyaz splash'ta bekletmek yerine içeriği HEMEN göster; runtime arka planda
+    // hidrate olunca ayarlar güncellenir (yukarıdaki maintenance-hint koruması bozulmaz).
+    // Workspace/admin gibi runtime'a bağlı görünümler beklemeyi sürdürür.
+    if (view !== "landing") {
+      return (
+        <>
+          <RuntimeBootstrapSplash />
+          <CookieNotice
+            language={language}
+            visible={shouldShowCookieNotice}
+            onAcceptAll={acceptAllCookies}
+            onAcceptNecessaryOnly={acceptNecessaryOnly}
+            onSavePreferences={saveCookiePreferences}
+            onOpenPrivacy={() => openLegalPage("privacy")}
+          />
+        </>
+      );
+    }
   }
 
   if (view === "team_invite") {
@@ -5508,6 +5515,14 @@ function App() {
             resolveToolLabel={resolveToolLabel}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
+            {isAuthenticated && contentPanel !== "tool" && !isTeamMember ? (
+              <DashboardLifecycleNudge
+                language={language}
+                accessToken={accessToken}
+                isTeamMember={isTeamMember}
+                onUpgrade={() => setUpgradeModalOpen(true)}
+              />
+            ) : null}
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
                 <QuotaWidget
@@ -5723,7 +5738,11 @@ function App() {
                           )}
 
                         {toolNeedsUpload ? (
-                          <label className="field">
+                          /* NOT: <label> yerine <div> — input bir label içinde olunca
+                             butona dokununca picker hem buton onClick'i hem label'ın
+                             implicit aktivasyonuyla İKİ kez açılıyordu; bu mobilde çoklu
+                             dosya seçimini bozuyordu. Artık picker'ı yalnızca buton açar. */
+                          <div className="field">
                             <span>{W.filePick}</span>
                             <div className="file-picker-row flex-wrap">
                               <button
@@ -5752,7 +5771,7 @@ function App() {
                               onChange={onFilesChange}
                               disabled={submitting}
                             />
-                          </label>
+                          </div>
                         ) : null}
 
                         {selectedFeature.id === "split" ? (

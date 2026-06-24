@@ -13,6 +13,7 @@ from tkinter import messagebox
 import customtkinter as ctk
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.support_api_client import SupportApiClient, SupportApiError
 from modules.support_config import load_support_config
 from modules.ui_theme import theme
@@ -334,9 +335,9 @@ class FeedbackDialog(ctk.CTkToplevel):
             for m in item[1]:
                 self._ingest_server_message(m)
         elif kind == "send_err":
-            messagebox.showerror(t("feedback.send_error"), item[1])
+            show_toast(self, item[1], kind="error")
         elif kind == "handoff_err":
-            messagebox.showerror(t("feedback.support_error"), item[1])
+            show_toast(self, item[1], kind="error")
         elif kind == "handoff_ok":
             self._handoff_done = True
             self.btn_handoff.configure(state="disabled")
@@ -441,7 +442,7 @@ class FeedbackDialog(ctk.CTkToplevel):
         if not text:
             return
         if not self._session_id:
-            messagebox.showwarning(t("feedback.support_error"), t("feedback.session_not_ready"))
+            show_toast(self, t("feedback.session_not_ready"), kind="warning")
             return
         self.entry.delete(0, "end")
         self._add_bubble("user", text)

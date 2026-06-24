@@ -6,6 +6,7 @@ import threading
 from queue import Queue, Empty
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_password_dialog import PdfPasswordDialog
 from modules.pdf_tool_ui import build_drop_zone, build_merge_file_row, build_tool_header, register_file_drop
 from modules.progress_dialog import ProgressDialog
@@ -141,10 +142,7 @@ class MergeWindow(ctk.CTkToplevel):
             if f not in self.file_list:
                 self.file_list.append(f)
         except Exception as e:
-            messagebox.showerror(
-                t("app.error"),
-                t("merge.file_read_error", file=os.path.basename(f), error=e),
-            )
+            show_toast(self, t("merge.file_read_error", file=os.path.basename(f), error=e), kind="error")
 
     def _bind_merge_row_drag(self, root, path):
         def walk(w):
@@ -290,7 +288,7 @@ class MergeWindow(ctk.CTkToplevel):
 
         self.file_passwords[path] = password
         if show_success:
-                    messagebox.showinfo(t("app.name"), f"{os.path.basename(path)}: {t('app.encrypted_badge').strip()}")
+                    show_toast(self, f"{os.path.basename(path)}: {t('app.encrypted_badge').strip()}", kind="info")
         if path in self.file_list:
             self.update_ui()
         return True
@@ -452,10 +450,7 @@ class MergeWindow(ctk.CTkToplevel):
             return
         locked_files = [os.path.basename(p) for p in self.file_list if self.file_encrypted.get(p) and not self.file_passwords.get(p)]
         if locked_files:
-            messagebox.showwarning(
-                t("merge.password_missing_title"),
-                t("merge.password_missing_body", files="\n".join(locked_files)),
-            )
+            show_toast(self, t("merge.password_missing_body", files="\n".join(locked_files)), kind="warning")
             return
         save_path = filedialog.asksaveasfilename(parent=self, title=t("merge.save_title"),
                                                  defaultextension=".pdf",
@@ -512,7 +507,7 @@ class MergeWindow(ctk.CTkToplevel):
                         elif kind == "error":
                             finished["value"] = True
                             progress_dialog.destroy()
-                            messagebox.showerror(t("app.error"), msg[1])
+                            show_toast(self, msg[1], kind="error")
                             self.btn_run.configure(state="normal", fg_color=self.ui["success"], text_color="#1a1a1a")
                             return
                 except Empty:
