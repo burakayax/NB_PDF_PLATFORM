@@ -7,7 +7,7 @@
  *   - POST/PUT vb. ve çapraz-köken istekleri: dokunulmaz, tarayıcıya bırakılır
  * Sürüm değişince activate'te eski önbellekler silinir.
  */
-const SW_VERSION = "v1.0.2";
+const SW_VERSION = "v1.0.3";
 const STATIC_CACHE = `nbpdf-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `nbpdf-runtime-${SW_VERSION}`;
 const APP_SHELL_URL = "/";
@@ -24,6 +24,11 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
+  // Yeni SW'yi BEKLEMEDEN etkinleştir: aksi halde eski SW "waiting"de kalıp eski
+  // (cache-first) varlıkları servis etmeye devam ediyor ve güncellemeler —özellikle
+  // telefona kurulu PWA'da— kullanıcıya hiç ulaşmıyordu. activate'teki clients.claim
+  // + registerServiceWorker'daki controllerchange→reload ile yeni sürüm anında geçerli olur.
+  self.skipWaiting();
   event.waitUntil(
     caches.open(STATIC_CACHE).then(async (cache) => {
       // Tek tek ekle: biri 404 olsa bile install'ı bozma.
