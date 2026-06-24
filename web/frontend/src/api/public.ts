@@ -20,6 +20,8 @@ export type PublicSiteConfig = {
   betaFeatures?: Record<string, boolean>;
   featureFlags?: Record<string, boolean>;
   notifications?: SystemNotificationsPayload;
+  /** Sosyal medya profil URL'leri — Organization JSON-LD sameAs + footer. */
+  socialLinks?: string[];
 };
 
 export async function fetchPublicCms(): Promise<{ content: Record<string, unknown> }> {
@@ -55,12 +57,19 @@ export type PublicPricingPayload = {
   internationalCheckoutNote: { en: string; tr: string };
 };
 
+/** Fiyat kartı pazarlama görünümü (gerçek erişimden bağımsız). */
+export type PublicCardsConfig = {
+  /** Başlangıç kartında listelenecek araçların feature key'leri. */
+  starterTools: string[];
+};
+
 export type PublicRuntimePayload = {
   cms: Record<string, unknown>;
   site: PublicSiteConfig;
   plans: PlanDefinition[];
   TOOLSPublic: PublicTOOLSPublicSlice;
   pricing: PublicPricingPayload;
+  cards: PublicCardsConfig;
   flags: {
     maintenanceMode: boolean;
     betaFeatures: Record<string, boolean>;

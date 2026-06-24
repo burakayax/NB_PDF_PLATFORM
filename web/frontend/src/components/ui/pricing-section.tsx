@@ -3,9 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
 import { pricingSectionCopy } from "../../i18n/pricingSection";
-import { PLANS } from "../../lib/planConfig";
+import { PLANS, STARTER_TOOL_IDS, TOTAL_TOOL_COUNT } from "../../lib/planConfig";
 import type { Currency, BillingCycle, PlanDefinition } from "../../lib/planConfig";
+import { sidebarToolLabel } from "../../i18n/workspace";
+import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
+import { useSettings } from "../../contexts/SettingsContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -80,7 +83,15 @@ function CardBillingToggle({
 
 // ─── Feature Check Row ────────────────────────────────────────────────────────
 
-function Feature({ text, highlight }: { text: string; highlight: boolean }) {
+function Feature({
+  text,
+  highlight,
+  action,
+}: {
+  text: string;
+  highlight: boolean;
+  action?: React.ReactNode;
+}) {
   return (
     <li className="flex items-start gap-2.5 text-sm">
       <div
@@ -92,9 +103,93 @@ function Feature({ text, highlight }: { text: string; highlight: boolean }) {
           ✓
         </span>
       </div>
-      <span className={highlight ? "text-gray-200" : "text-gray-400"}>{text}</span>
+      <span className={`flex flex-wrap items-center gap-1.5 ${highlight ? "text-gray-200" : "text-gray-400"}`}>
+        {text}
+        {action}
+      </span>
     </li>
   );
+}
+
+// ─── Starter Tools Modal ──────────────────────────────────────────────────────
+
+/** Starter planındaki araçların listesini gösteren modal. */
+function StarterToolsModal({
+  lang,
+  tools,
+  onClose,
+}: {
+  lang: Language;
+  tools: FeatureKey[];
+  onClose: () => void;
+}) {
+  const tr = lang === "tr";
+  const remaining = Math.max(0, TOTAL_TOOL_COUNT - tools.length);
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 12 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-slate-950 p-6 shadow-2xl"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label={tr ? "Kapat" : "Close"}
+          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+        >
+          ✕
+        </button>
+
+        <div className="mb-1 flex items-center gap-2">
+          <span className="text-xl">⚡</span>
+          <h3 className="text-lg font-bold text-white">
+            {tr ? "Başlangıç planındaki araçlar" : "Tools in the Starter plan"}
+          </h3>
+        </div>
+        <p className="mb-5 text-sm text-gray-500">
+          {tr
+            ? `Başlangıç planı şu ${tools.length} araca erişim sağlar:`
+            : `The Starter plan gives access to these ${tools.length} tools:`}
+        </p>
+
+        <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {tools.map((id) => (
+            <li key={id} className="flex items-center gap-2 text-sm text-gray-300">
+              <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-[9px] font-bold text-emerald-300">
+                ✓
+              </span>
+              {sidebarToolLabel(id, lang)}
+            </li>
+          ))}
+        </ul>
+
+        {remaining > 0 && (
+          <p className="mt-5 rounded-xl border border-blue-500/20 bg-blue-500/[0.06] px-4 py-3 text-xs text-blue-300/80">
+            {tr
+              ? `${remaining} araç daha (PDF → Word, Excel, PowerPoint dönüşümleri ve fazlası) Plus ve üzeri planlarda mevcuttur.`
+              : `${remaining} more tools (PDF → Word, Excel, PowerPoint conversions and more) are available on Plus and higher plans.`}
+          </p>
+        )}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** "13 araç" / "13 tools" gibi araç sayısı satırını yakalar. */
+function isToolCountFeature(text: string): boolean {
+  return /^\d+\s*(araç|tools)\b/i.test(text.trim());
 }
 
 // ─── Plan Cards ───────────────────────────────────────────────────────────────
@@ -151,6 +246,7 @@ function MonthlyOnlyCard({
   delay,
   displaySymbol,
   onCta,
+  starterTools = [],
 }: {
   plan: PlanDefinition;
   currency: Currency;
@@ -158,12 +254,15 @@ function MonthlyOnlyCard({
   delay: number;
   displaySymbol?: string;
   onCta: () => void;
+  starterTools?: FeatureKey[];
 }) {
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
   const price = faceValue(plan.pricing.monthly[currency]);
   const sym = displaySymbol ?? (currency === "TRY" ? "₺" : "$");
   const isPlus = plan.id === "PLUS";
+  const isStarter = plan.id === "STARTER";
+  const [showTools, setShowTools] = useState(false);
 
   return (
     <motion.div
@@ -225,8 +324,41 @@ function MonthlyOnlyCard({
       </div>
 
       <ul className="space-y-2.5 flex-1 mb-7">
-        {features.map((f) => <Feature key={f} text={f} highlight={isPlus} />)}
+        {features.map((f) =>
+          isStarter && isToolCountFeature(f) ? (
+            <Feature
+              key={f}
+              text={
+                starterTools.length > 0
+                  ? `${starterTools.length} ${tr ? "araç" : "tools"}`
+                  : f
+              }
+              highlight={isPlus}
+              action={
+                <button
+                  type="button"
+                  onClick={() => setShowTools(true)}
+                  className="inline-flex items-center gap-1 rounded-full border border-blue-500/40 bg-blue-500/10 px-2 py-0.5 text-[11px] font-semibold text-blue-300 hover:bg-blue-500/20 transition-colors"
+                >
+                  {tr ? "Hangileri?" : "Which?"}
+                </button>
+              }
+            />
+          ) : (
+            <Feature key={f} text={f} highlight={isPlus} />
+          ),
+        )}
       </ul>
+
+      <AnimatePresence>
+        {showTools && (
+          <StarterToolsModal
+            lang={lang}
+            tools={starterTools}
+            onClose={() => setShowTools(false)}
+          />
+        )}
+      </AnimatePresence>
 
       <button
         onClick={onCta}
@@ -488,7 +620,7 @@ function PricingFaq({ language }: { language: Language }) {
         },
         {
           q: "İşlenen dosyalarım ne kadar süre saklanıyor?",
-          a: "Web uygulamasında işlenen dosyalar 1 saat sonra kalıcı olarak silinir. Windows masaüstü uygulamasında dosyalar hiç sunucuya gönderilmez — tüm işlem cihazınızda gerçekleşir.",
+          a: "Web uygulamasında işlenen dosyalar 1 saat sonra kalıcı olarak silinir. Yakında çıkacak Windows masaüstü uygulamasında dosyalar hiç sunucuya gönderilmeyecek — tüm işlem cihazınızda gerçekleşecek.",
         },
       ]
     : [
@@ -518,7 +650,7 @@ function PricingFaq({ language }: { language: Language }) {
         },
         {
           q: "How long are my processed files stored?",
-          a: "Files processed via the web app are permanently deleted after 1 hour. With the Windows desktop app, files never leave your device — all processing happens locally.",
+          a: "Files processed via the web app are permanently deleted after 1 hour. With the upcoming Windows desktop app, files will never leave your device — all processing happens locally.",
         },
       ];
 
@@ -598,6 +730,10 @@ interface PricingSectionProps {
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
+  const { cards } = useSettings();
+  const starterTools: FeatureKey[] = (
+    cards?.starterTools?.length ? cards.starterTools : STARTER_TOOL_IDS
+  ) as FeatureKey[];
   const { currency: checkoutCurrency, loading } = useCheckoutCurrency();
   // EUR kullanıcıya gösterim için, ödeme USD bandıyla işlenir.
   // "USD" fiyatlar gösterildiğinde simge "$" yerine "€" gösterilir.
@@ -673,6 +809,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             lang={language}
             delay={0.04}
             displaySymbol={currencySymbol}
+            starterTools={starterTools}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
           <MonthlyOnlyCard

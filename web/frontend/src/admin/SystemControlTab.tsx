@@ -68,6 +68,9 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
   const [featureMap, setFeatureMap] = useState<Record<string, boolean>>({});
   const [betaMap, setBetaMap] = useState<Record<string, boolean>>({});
   const [notif, setNotif] = useState(DEFAULT_NOTIF);
+  // Site ayarları (site.settings) — sosyal medya hesaplarını düzenlemek için.
+  const [siteRoot, setSiteRoot] = useState<Record<string, unknown>>({});
+  const [social, setSocial] = useState<string[]>([]);
   const [audit, setAudit] = useState<AdminAuditRow[]>([]);
   const [revScope, setRevScope] = useState<string>("site.settings");
   const [revisions, setRevisions] = useState<AdminRevisionRow[]>([]);
@@ -108,6 +111,16 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
     } else {
       setNotif({ ...DEFAULT_NOTIF });
     }
+
+    const ss = all["site.settings"];
+    const ssRoot =
+      ss && typeof ss === "object" && !Array.isArray(ss) ? { ...(ss as Record<string, unknown>) } : {};
+    setSiteRoot(ssRoot);
+    setSocial(
+      Array.isArray(ssRoot.socialLinks)
+        ? (ssRoot.socialLinks as unknown[]).filter((x): x is string => typeof x === "string")
+        : [],
+    );
   }, [accessToken, meta]);
 
   const reloadAudit = useCallback(async () => {
@@ -187,6 +200,26 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       });
       setFlagsRoot(nextFlags);
       setMsg("Bayraklar ve sistem bildirimi kaydedildi.");
+      notifyRuntimeRefresh();
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveSocial = async () => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      // Boşları at, baştaki/sondaki boşlukları temizle; mevcut site.settings ile
+      // birleştirerek (diğer alanları ezmeden) tam blob'u yaz.
+      const cleaned = social.map((s) => s.trim()).filter(Boolean);
+      const next = { ...siteRoot, socialLinks: cleaned };
+      await putAdminSettingsPatches(accessToken, { "site.settings": next });
+      setSiteRoot(next);
+      setSocial(cleaned);
+      setMsg("Sosyal medya hesapları kaydedildi.");
       notifyRuntimeRefresh();
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
@@ -297,6 +330,57 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
             <input className={adminInputClass} value={notif.linkLabelTr} onChange={(e) => setNotif((n) => ({ ...n, linkLabelTr: e.target.value }))} />
           </AdminField>
         </div>
+      </AdminSection>
+
+      <AdminSection
+        title="Sosyal medya hesapları"
+        description="Tam profil URL'si girin (https://…). Kaydedilen hesaplar hem sayfa alt bilgisinde (footer) görünür hem de Organization JSON-LD sameAs alanına eklenir — arama motorları ve AI markanızı bu profillerle eşleştirir."
+        variant="sky"
+      >
+        <div className="space-y-2">
+          {social.length === 0 ? (
+            <p className="text-xs text-slate-500">Henüz hesap eklenmedi. “Hesap ekle” ile başlayın.</p>
+          ) : null}
+          {social.map((url, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                className={adminInputClass}
+                value={url}
+                placeholder="https://instagram.com/kullaniciadi"
+                onChange={(e) =>
+                  setSocial((prev) => prev.map((u, idx) => (idx === i ? e.target.value : u)))
+                }
+              />
+              <button
+                type="button"
+                onClick={() => setSocial((prev) => prev.filter((_, idx) => idx !== i))}
+                className="shrink-0 rounded-lg border border-white/[0.12] px-3 text-xs font-semibold text-slate-300 hover:border-red-400/40 hover:text-red-200"
+              >
+                Sil
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSocial((prev) => [...prev, ""])}
+            className="rounded-lg border border-white/[0.12] px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-white/25"
+          >
+            + Hesap ekle
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void saveSocial()}
+            className="rounded-xl bg-sky-600/75 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"
+          >
+            {busy ? "Kaydediliyor…" : "Sosyal medyayı kaydet"}
+          </button>
+        </div>
+        <AdminMutedBox>
+          Desteklenen URL'ler otomatik etiketlenir (Instagram, X, LinkedIn, YouTube, Facebook, TikTok, GitHub, Telegram, Pinterest…). Geçersiz veya http(s) olmayan adresler sunucuda elenir.
+        </AdminMutedBox>
       </AdminSection>
 
       <AdminSection title="Özellik bayrakları" description="İstemci bu anahtarları okuyarak davranışı açıp kapatabilir (ör. iletişim formu)." variant="emerald">

@@ -1,6 +1,7 @@
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 import { getSaasApiBase } from "./saasBase";
 import { saasAuthorizedFetch } from "./subscription";
+import { emitAdminToast, readAdminErrorMessage } from "../admin/lib/adminToast";
 
 function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
@@ -9,19 +10,51 @@ function readLatestAccessToken(fallback: string): string {
   return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
 }
 
+/** Mutasyon (kaydet/sil/oluştur) isteklerinin sonucunu panel geneli toast olarak bildirir. */
+async function notifyMutation(method: string, res: Response): Promise<void> {
+  const m = method.toUpperCase();
+  if (m === "GET" || m === "HEAD") {
+    return;
+  }
+  if (res.ok) {
+    emitAdminToast({ type: "success", message: m === "DELETE" ? "Silindi" : "Kaydedildi" });
+    return;
+  }
+  let detail = "";
+  try {
+    detail = readAdminErrorMessage(await res.clone().text());
+  } catch {
+    /* ignore */
+  }
+  emitAdminToast({
+    type: "error",
+    message: detail ? `İşlem başarısız: ${detail}` : "İşlem başarısız",
+  });
+}
+
 async function adminFetch(accessToken: string, path: string, init?: RequestInit): Promise<Response> {
   const token = readLatestAccessToken(accessToken);
-  return saasAuthorizedFetch(token, (t) =>
-    fetch(`${getSaasApiBase()}/api/admin${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${t}`,
-        ...(init?.body ? { "Content-Type": "application/json" } : {}),
-        ...init?.headers,
-      },
-      credentials: "include",
-    }),
-  );
+  const method = (init?.method ?? "GET").toUpperCase();
+  try {
+    const res = await saasAuthorizedFetch(token, (t) =>
+      fetch(`${getSaasApiBase()}/api/admin${path}`, {
+        ...init,
+        headers: {
+          Authorization: `Bearer ${t}`,
+          ...(init?.body ? { "Content-Type": "application/json" } : {}),
+          ...init?.headers,
+        },
+        credentials: "include",
+      }),
+    );
+    await notifyMutation(method, res);
+    return res;
+  } catch (e) {
+    if (method !== "GET" && method !== "HEAD") {
+      emitAdminToast({ type: "error", message: e instanceof Error ? e.message : "Ağ hatası" });
+    }
+    throw e;
+  }
 }
 
 export type AdminOverview = {
@@ -380,17 +413,27 @@ export async function uploadAdminMedia(accessToken: string, file: File): Promise
   const token = readLatestAccessToken(accessToken);
   const fd = new FormData();
   fd.set("file", file);
-  const r = await saasAuthorizedFetch(token, (t) =>
-    fetch(`${getSaasApiBase()}/api/admin/media`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${t}` },
-      body: fd,
-      credentials: "include",
-    }),
-  );
-  if (!r.ok) {
-    throw new Error(await r.text());
+  let r: Response;
+  try {
+    r = await saasAuthorizedFetch(token, (t) =>
+      fetch(`${getSaasApiBase()}/api/admin/media`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${t}` },
+        body: fd,
+        credentials: "include",
+      }),
+    );
+  } catch (e) {
+    emitAdminToast({ type: "error", message: e instanceof Error ? e.message : "Ağ hatası" });
+    throw e;
   }
+  if (!r.ok) {
+    const text = await r.text();
+    const detail = readAdminErrorMessage(text);
+    emitAdminToast({ type: "error", message: detail ? `İşlem başarısız: ${detail}` : "Yükleme başarısız" });
+    throw new Error(text);
+  }
+  emitAdminToast({ type: "success", message: "Yüklendi" });
   return r.json() as Promise<AdminMediaItem>;
 }
 
@@ -617,11 +660,10 @@ export async function postAdminAdjustCredits(
 }
 
 export type EmailAutomationConfig = {
-  lowCreditEnabled: boolean;
   welcomeEnabled: boolean;
-  lowCreditThreshold: number;
-  lowCreditCooldownDays: number;
-  discountCtaUrl: string;
+  lifecycleEnabled: boolean;
+  upgradeCtaUrl: string;
+  winbackCouponCode: string;
 };
 
 export async function fetchAdminMarketing(

@@ -274,3 +274,160 @@ def thin_accent_line(parent, ui: dict, width: int = 520, height: int = 3) -> tk.
         fb = ctk.CTkFrame(parent, fg_color=left, height=h, corner_radius=0)
         fb.pack_propagate(False)
         return fb
+
+
+class ToolCard(ctk.CTkFrame):
+    """Profesyonel araç kartı: ikon-chip + başlık + açıklama.
+
+    CTkButton'ın düz emoji+metin görünümünün yerine geçer. Tüm yüzeyde (kart +
+    tüm çocuk widget'lar) tıklama ve hover yakalanır; ``set_locked()`` ile kilitli
+    durum (uyarı kenarlık + rozet) gösterilir. Bir ``CTkFrame`` olduğundan
+    ``stagger_raise_buttons`` / dim animasyonlarıyla ``configure(fg_color=...)``
+    üzerinden uyumludur.
+    """
+
+    def __init__(
+        self,
+        parent,
+        ui: dict,
+        *,
+        icon: str,
+        title: str,
+        description: str = "",
+        command=None,
+        height: int = 150,
+    ):
+        super().__init__(
+            parent,
+            height=height,
+            corner_radius=ui.get("radius_md", 12),
+            fg_color=ui["panel"],
+            border_width=1,
+            border_color=ui.get("border_subtle", ui["border"]),
+        )
+        self.ui = ui
+        self._command = command
+        self._locked = False
+        self._base_fg = ui["panel"]
+        self._hover_fg = ui.get("panel_alt", ui["panel"])
+        self._base_border = ui.get("border_subtle", ui["border"])
+        self._hover_border = ui.get("accent_mid", ui["accent"])
+        self.pack_propagate(False)
+
+        self._chip = ctk.CTkLabel(
+            self,
+            text=icon,
+            font=("Segoe UI Emoji", 21),
+            fg_color=ui.get("panel_alt", ui["panel"]),
+            text_color=ui.get("accent_soft", ui["accent"]),
+            corner_radius=10,
+            width=44,
+            height=44,
+        )
+        self._chip.pack(anchor="w", padx=14, pady=(14, 8))
+
+        self._title_lbl = ctk.CTkLabel(
+            self,
+            text=title,
+            font=("Segoe UI Semibold", 12, "bold"),
+            text_color=ui["text"],
+            anchor="w",
+            justify="left",
+            wraplength=150,
+        )
+        self._title_lbl.pack(anchor="w", padx=14)
+
+        self._desc_lbl = None
+        if description:
+            self._desc_lbl = ctk.CTkLabel(
+                self,
+                text=description,
+                font=("Segoe UI", 10),
+                text_color=ui.get("muted", "#94a3b8"),
+                anchor="w",
+                justify="left",
+                wraplength=160,
+            )
+            self._desc_lbl.pack(anchor="w", padx=14, pady=(3, 0))
+
+        self._badge = ctk.CTkLabel(
+            self,
+            text="",
+            font=("Segoe UI Semibold", 9, "bold"),
+            text_color=ui.get("warning", "#eab308"),
+            anchor="w",
+        )
+
+        self._bind_surface()
+
+    # ── iç yardımcılar ─────────────────────────────────────────────────────
+    def _all_widgets(self) -> list:
+        out: list = [self]
+        stack = list(self.winfo_children())
+        while stack:
+            w = stack.pop()
+            out.append(w)
+            stack.extend(w.winfo_children())
+        return out
+
+    def _bind_surface(self) -> None:
+        for w in self._all_widgets():
+            w.bind("<Button-1>", self._on_click, add="+")
+            w.bind("<Enter>", self._on_enter, add="+")
+            w.bind("<Leave>", self._on_leave, add="+")
+
+    def _pointer_inside(self) -> bool:
+        try:
+            x, y = self.winfo_pointerxy()
+            w = self.winfo_containing(x, y)
+        except Exception:
+            return False
+        while w is not None:
+            if w == self:
+                return True
+            w = getattr(w, "master", None)
+        return False
+
+    def _on_click(self, _e=None):
+        if not self._locked and self._command:
+            self._command()
+
+    def _on_enter(self, _e=None):
+        if self._locked:
+            return
+        try:
+            self.configure(fg_color=self._hover_fg, border_color=self._hover_border, border_width=2)
+        except Exception:
+            pass
+
+    def _on_leave(self, _e=None):
+        if self._locked or self._pointer_inside():
+            return
+        try:
+            self.configure(fg_color=self._base_fg, border_color=self._base_border, border_width=1)
+        except Exception:
+            pass
+
+    # ── public ─────────────────────────────────────────────────────────────
+    def set_locked(self, locked: bool, locked_label: str = "") -> None:
+        self._locked = bool(locked)
+        if self._locked:
+            self.configure(
+                fg_color=self.ui.get("panel_alt", self.ui["panel"]),
+                border_color=self.ui.get("warning", self.ui["border"]),
+                border_width=1,
+            )
+            self._title_lbl.configure(text_color=self.ui.get("muted", self.ui["text"]))
+            self._chip.configure(text_color=self.ui.get("muted", self.ui["text"]))
+            if locked_label:
+                self._badge.configure(text=f"🔒 {locked_label}")
+                self._badge.pack(anchor="w", padx=14, pady=(4, 0))
+        else:
+            self.configure(
+                fg_color=self._base_fg,
+                border_color=self._base_border,
+                border_width=1,
+            )
+            self._title_lbl.configure(text_color=self.ui["text"])
+            self._chip.configure(text_color=self.ui.get("accent_soft", self.ui["accent"]))
+            self._badge.pack_forget()

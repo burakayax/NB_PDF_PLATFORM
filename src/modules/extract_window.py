@@ -3,6 +3,7 @@ from tkinter import filedialog, messagebox
 import os
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_password_dialog import PdfPasswordDialog
 from modules.pdf_tool_ui import build_drop_zone, build_file_card, build_tool_header
 from modules.pdf_visual_grid import PdfVisualGrid
@@ -115,7 +116,7 @@ class ExtractWindow(ctk.CTkToplevel):
             self.selected_is_encrypted = is_encrypted
             self.update_ui()
         except Exception as e:
-            messagebox.showerror(t("app.error"), t("extract.file_read_error", error=e))
+            show_toast(self, t("extract.file_read_error", error=e), kind="error")
         self.lift()
 
     def select_file(self):
@@ -166,7 +167,7 @@ class ExtractWindow(ctk.CTkToplevel):
             return
         pages_list = self.visual_grid.get_selected()
         if not pages_list:
-            messagebox.showwarning(t("app.warning"), t("extract.invalid_format"))
+            show_toast(self, t("extract.invalid_format"), kind="warning")
             return
 
         save_mode = self.segment_mode.get()
@@ -208,7 +209,7 @@ class ExtractWindow(ctk.CTkToplevel):
                     self.destroy()
                     self.success_dialog(self.master, os.path.abspath(folder_path), self.ortalama_func)
         except Exception as e:
-            messagebox.showerror(t("app.error"), str(e))
+            show_toast(self, str(e), kind="error")
 
     def _on_close(self):
         if self.visual_grid:

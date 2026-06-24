@@ -8,6 +8,7 @@ import {
 import { isCmsPreviewActive, readCmsPreviewDraft } from "../lib/cmsPreview";
 import { persistMaintenanceHint } from "../lib/maintenanceHint";
 import { RUNTIME_REFRESH_BROADCAST, RUNTIME_REFRESH_EVENT } from "../lib/runtimeRefreshEvents";
+import { STARTER_TOOL_IDS } from "../lib/planConfig";
 
 const defaultNotifications: SystemNotificationsPayload = {
   enabled: false,
@@ -43,10 +44,12 @@ const defaultPayload: PublicRuntimePayload = {
     betaFeatures: {},
     featureFlags: {},
     notifications: defaultNotifications,
+    socialLinks: [],
   },
   plans: [],
   TOOLSPublic: { disabledFeatures: [], displayFreeDailyLimit: null },
   pricing: defaultPricing,
+  cards: { starterTools: [...STARTER_TOOL_IDS] },
   flags: { maintenanceMode: false, betaFeatures: {}, featureFlags: {} },
   notifications: defaultNotifications,
 };

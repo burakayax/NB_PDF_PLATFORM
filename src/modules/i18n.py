@@ -31,12 +31,58 @@ def reload_translation_files() -> None:
 
 
 def detect_system_language() -> str:
-    lang = ""
+    """Kullanıcının sistem/arayüz dilini tespit eder: Türkçe ise ``tr``, aksi halde ``en``.
+
+    Türkiye/Türkçe kurulumlu cihazlar Türkçe; diğer tüm bölgeler İngilizce başlar.
+    Öncelik sırası (en güvenilirden en zayıfa):
+      1. Windows kullanıcı varsayılan locale adı (``GetUserDefaultLocaleName`` → ``tr-TR``).
+      2. POSIX ortam değişkenleri (``LANGUAGE``/``LC_ALL``/``LC_MESSAGES``/``LANG``) — Linux/macOS.
+      3. ``locale.getlocale()`` / ``getdefaultlocale()`` — son çare (3.15'te kalkacak; uyarı bastırılır).
+    Hiçbir kaynak Türkçe demiyorsa güvenli varsayılan ``en``.
+    """
+    candidates: list[str] = []
+
+    # 1) Windows: kullanıcının seçtiği bölge (en güvenilir; deprecation'dan etkilenmez).
     try:
-        lang = (locale.getdefaultlocale()[0] or "").lower()
+        import ctypes
+
+        if hasattr(ctypes, "windll"):
+            buf = ctypes.create_unicode_buffer(85)  # LOCALE_NAME_MAX_LENGTH
+            if ctypes.windll.kernel32.GetUserDefaultLocaleName(buf, 85):
+                candidates.append(buf.value)
     except Exception:
-        lang = ""
-    return "tr" if lang.startswith("tr") else "en"
+        pass
+
+    # 2) POSIX ortam değişkenleri (Windows dışı sistemler).
+    for var in ("LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"):
+        val = os.environ.get(var)
+        if val:
+            candidates.append(val)
+
+    # 3) Python locale API — son çare; getdefaultlocale 3.15'te kalkacağı için uyarı bastırılır.
+    try:
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            loc = locale.getlocale()[0] or ""
+            if loc:
+                candidates.append(loc)
+            try:
+                dl = locale.getdefaultlocale()[0] or ""
+            except Exception:
+                dl = ""
+            if dl:
+                candidates.append(dl)
+    except Exception:
+        pass
+
+    for c in candidates:
+        cl = c.strip().lower()
+        # 'tr', 'tr-TR', 'tr_TR' ve Windows'ın 'Turkish_Türkiye' biçimini de yakalar.
+        if cl.startswith("tr") or cl.startswith("turkish"):
+            return "tr"
+    return "en"
 
 
 def _preferences_path() -> Path:

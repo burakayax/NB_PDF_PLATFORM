@@ -5,6 +5,7 @@ import threading
 from queue import Queue, Empty
 
 from modules.i18n import t
+from modules.ui_notifications import show_toast
 from modules.pdf_tool_ui import build_tool_header
 from modules.progress_dialog import ProgressDialog
 from modules.ui_theme import theme
@@ -83,7 +84,7 @@ class ImageToPdfWindow(ctk.CTkToplevel):
 
     def run_convert(self):
         if not self.image_paths:
-            messagebox.showwarning(t("app.warning"), t("image_to_pdf.no_images"))
+            show_toast(self, t("image_to_pdf.no_images"), kind="warning")
             return
         save_path = filedialog.asksaveasfilename(parent=self, title=t("image_to_pdf.save_title"), defaultextension=".pdf", filetypes=[("PDF", "*.pdf")])
         if not save_path:
@@ -121,7 +122,7 @@ class ImageToPdfWindow(ctk.CTkToplevel):
                     elif msg[0] == "error":
                         finished["value"] = True
                         progress_dialog.destroy()
-                        messagebox.showerror(t("app.error"), str(msg[1]))
+                        show_toast(self, str(msg[1]), kind="error")
                         self.btn_run.configure(state="normal", fg_color=self.ui["accent"])
                         return
             except Empty:

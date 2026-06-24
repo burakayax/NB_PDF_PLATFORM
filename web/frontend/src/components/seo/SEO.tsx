@@ -34,6 +34,8 @@ type SEOProps = {
   breadcrumb?: Array<{ name: string; url: string }>;
   /** Absolute URLs for hreflang alternates */
   hreflang?: Array<{ lang: string; href: string }>;
+  /** Sosyal medya profil URL'leri — Organization sameAs. */
+  sameAs?: string[];
 };
 
 // ─── head helpers ─────────────────────────────────────────────────────────────
@@ -127,6 +129,7 @@ export function SEO({
   faqSchema,
   breadcrumb,
   hreflang,
+  sameAs,
 }: SEOProps) {
   useEffect(() => {
     const canonicalUrl = toAbsoluteUrl(canonical);
@@ -154,8 +157,8 @@ export function SEO({
     upsertMeta("og:title", ogTitle, "property");
     upsertMeta("og:description", ogDescription, "property");
     upsertMeta("og:image", ogImage, "property");
-    upsertMeta("og:image:width", og?.imageWidth ?? "1200", "property");
-    upsertMeta("og:image:height", og?.imageHeight ?? "630", "property");
+    upsertMeta("og:image:width", og?.imageWidth ?? "1280", "property");
+    upsertMeta("og:image:height", og?.imageHeight ?? "720", "property");
     upsertMeta("og:image:alt", ogTitle, "property");
     upsertMeta("og:url", ogUrl, "property");
     upsertMeta("og:locale", ogLocale, "property");
@@ -186,6 +189,7 @@ export function SEO({
       includePricingOffer: includePricingOfferSchema,
       includeFaq: faqSchema,
       breadcrumb,
+      sameAs,
     });
     nodes.forEach((entry, index) => appendJsonLd(index, entry));
   }, [
@@ -201,6 +205,7 @@ export function SEO({
     robots,
     title,
     twitter,
+    sameAs,
   ]);
 
   return null;

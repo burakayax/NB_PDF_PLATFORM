@@ -151,8 +151,7 @@ export default function PdfToolsSection({
               <AnimatedCardOptions
                 options={cat.tools}
                 columns={4}
-                onSelect={(tool) => {
-                  console.debug("Tool selected:", tool.name);
+                onSelect={() => {
                   onUseWebApp();
                 }}
               />

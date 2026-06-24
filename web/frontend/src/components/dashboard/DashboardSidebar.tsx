@@ -1,9 +1,59 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
-import { SIDEBAR_TOOL_ORDER, sidebarToolLabel, ws } from "../../i18n/workspace";
+import {
+  SIDEBAR_TOOL_ORDER,
+  groupToolsByCategory,
+  sidebarToolLabel,
+  toolCategoryLabel,
+  ws,
+  type ToolCategoryId,
+} from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
+
+/** Kategori başına vurgu paleti — mobil araç gezgini bölüm başlıklarında kullanılır. */
+const CATEGORY_ACCENT: Record<
+  ToolCategoryId | "other",
+  { dot: string; text: string; ring: string; glow: string }
+> = {
+  organize: {
+    dot: "bg-sky-400",
+    text: "text-sky-300",
+    ring: "ring-sky-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(56,189,248,0.55)]",
+  },
+  convert: {
+    dot: "bg-violet-400",
+    text: "text-violet-300",
+    ring: "ring-violet-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(167,139,250,0.55)]",
+  },
+  optimize: {
+    dot: "bg-emerald-400",
+    text: "text-emerald-300",
+    ring: "ring-emerald-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(52,211,153,0.55)]",
+  },
+  annotate: {
+    dot: "bg-amber-400",
+    text: "text-amber-300",
+    ring: "ring-amber-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(251,191,36,0.55)]",
+  },
+  secure: {
+    dot: "bg-rose-400",
+    text: "text-rose-300",
+    ring: "ring-rose-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(251,113,133,0.55)]",
+  },
+  other: {
+    dot: "bg-slate-400",
+    text: "text-slate-300",
+    ring: "ring-slate-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(148,163,184,0.5)]",
+  },
+};
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -188,9 +238,10 @@ export function DashboardSidebar({
 }
 
 /**
- * Telefon + tablet (lg altı) araç gezgini: yatay pill şeridi yerine macOS
- * Launchpad / klasör tarzı bir ızgara. Hamburger'a basılınca amblemli araç
- * kartları (2–3+ sütun) açılır; bir araç seçilince kapanır.
+ * Telefon + tablet (lg altı) araç gezgini: araçlar kategori bölümlerine ayrılmış
+ * bir Launchpad ızgarasında sunulur. Hamburger'a basılınca açılır; üstte hızlı
+ * arama, altında "Düzenle / Dönüştür / İyileştir / İşaretle / Güvenlik" başlıklı
+ * bölümler bulunur. Bir araç seçilince kapanır.
  */
 export function DashboardSidebarMobileLauncher({
   active,
@@ -203,6 +254,7 @@ export function DashboardSidebarMobileLauncher({
   const L = ws(language);
   const tr = language === "tr";
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const toolOrder = enabledToolIds?.length
     ? enabledToolIds
     : SIDEBAR_TOOL_ORDER;
@@ -216,6 +268,28 @@ export function DashboardSidebarMobileLauncher({
       ? "Menü"
       : "Menu";
 
+  const groups = useMemo(() => groupToolsByCategory(toolOrder), [toolOrder]);
+
+  // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
+  const filteredGroups = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase(tr ? "tr" : "en");
+    if (!q) {
+      return groups;
+    }
+    return groups
+      .map((g) => ({
+        ...g,
+        tools: g.tools.filter((id) =>
+          labelForTool(id).toLocaleLowerCase(tr ? "tr" : "en").includes(q),
+        ),
+      }))
+      .filter((g) => g.tools.length > 0);
+    // labelForTool kararlı (prop/dil); query + groups değiştiğinde yeniden hesapla
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [groups, query, tr]);
+
+  const hasResults = filteredGroups.length > 0;
+
   // ESC ile kapat
   useEffect(() => {
     if (!open) {
@@ -228,6 +302,13 @@ export function DashboardSidebarMobileLauncher({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Menü kapanınca aramayı sıfırla
+  useEffect(() => {
+    if (!open) {
+      setQuery("");
+    }
   }, [open]);
 
   const handlePick = (id: SidebarToolId) => {
@@ -245,7 +326,13 @@ export function DashboardSidebarMobileLauncher({
         aria-haspopup="menu"
         className="nb-transition flex w-full items-center gap-3 px-3 py-2.5 text-left sm:px-4"
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/[0.1] bg-nb-panel/70 text-nb-text">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-nb-text transition-colors ${
+            open
+              ? "border-nb-primary/45 bg-nb-primary/14 text-nb-accent"
+              : "border-white/[0.1] bg-nb-panel/70"
+          }`}
+        >
           <svg
             className="h-5 w-5"
             fill="none"
@@ -283,7 +370,7 @@ export function DashboardSidebarMobileLauncher({
         </svg>
       </button>
 
-      {/* Açılır Launchpad ızgarası */}
+      {/* Açılır, kategorili Launchpad */}
       {open ? (
         <div className="absolute inset-x-0 top-full">
           <button
@@ -296,74 +383,190 @@ export function DashboardSidebarMobileLauncher({
           <div
             role="menu"
             aria-label={tr ? "Araçlar" : "Tools"}
-            className="max-h-[72vh] overflow-y-auto border-b border-white/[0.08] bg-nb-bg-elevated/98 px-3 py-3 shadow-[0_28px_56px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md sm:px-4"
+            className="max-h-[78vh] overflow-y-auto border-b border-white/[0.08] bg-nb-bg-elevated/98 shadow-[0_28px_56px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md"
           >
-            {/* Her telefona otomatik uyum: sabit sütun yerine min. kart genişliğine göre
-                auto-fill — 320px'de 3, normal/büyük telefonlarda 4–5, tablette daha fazla
-                sütun; kartlar her zaman dokunmaya uygun min. boyutta kalır. */}
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
-              {toolOrder.map((id) => {
-                const isActive = active === id;
-                const locked = lockedFeatures.has(id);
-                const label = labelForTool(id);
-                return (
+            {/* Yapışkan arama çubuğu */}
+            <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-nb-bg-elevated/95 px-3 py-3 backdrop-blur-md sm:px-4">
+              <div className="relative">
+                <svg
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-nb-muted"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                  />
+                </svg>
+                <input
+                  type="text"
+                  inputMode="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={tr ? "Araç ara…" : "Search tools…"}
+                  aria-label={tr ? "Araç ara" : "Search tools"}
+                  className="nb-transition w-full rounded-xl border border-white/[0.1] bg-nb-panel/60 py-2.5 pl-9 pr-9 text-sm text-nb-text placeholder:text-nb-muted/70 focus:border-nb-primary/45 focus:outline-none focus:ring-2 focus:ring-nb-primary/20"
+                />
+                {query ? (
                   <button
-                    key={id}
                     type="button"
-                    role="menuitem"
-                    onClick={() => handlePick(id)}
-                    title={locked ? L.lockedFeatureTooltip : undefined}
-                    aria-label={
-                      locked ? `${label}. ${L.lockedFeatureTooltip}` : label
-                    }
-                    className={`nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center ${
-                      isActive
-                        ? "border-nb-primary/45 bg-nb-primary/14 shadow-[0_0_24px_-8px_rgba(59,130,246,0.45)]"
-                        : "border-white/[0.08] bg-nb-panel/55 hover:border-nb-primary/25 hover:bg-white/[0.06]"
-                    } ${locked ? "ring-1 ring-amber-400/35" : ""}`}
+                    onClick={() => setQuery("")}
+                    aria-label={tr ? "Temizle" : "Clear"}
+                    className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg text-nb-muted hover:bg-white/[0.08] hover:text-nb-text"
                   >
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04]">
-                      {locked ? (
-                        <svg
-                          className="h-5 w-5 text-amber-300/90"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.75}
-                          aria-hidden
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                      ) : (
-                        <SidebarToolGlyph
-                          id={id}
-                          className="h-5 w-5"
-                          active={isActive}
-                        />
-                      )}
-                    </span>
-                    <span
-                      className={`line-clamp-2 text-[10px] font-semibold leading-tight ${
-                        isActive ? "text-nb-accent" : "text-nb-muted"
-                      }`}
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
                     >
-                      {label}
-                    </span>
-                    {locked ? (
-                      <span
-                        className="absolute right-1 top-1 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-300/95"
-                        aria-hidden
-                      >
-                        {L.featureLockedBadge}
-                      </span>
-                    ) : null}
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
                   </button>
-                );
-              })}
+                ) : null}
+              </div>
+            </div>
+
+            <div className="px-3 py-3 sm:px-4">
+              {hasResults ? (
+                <div className="flex flex-col gap-5">
+                  {filteredGroups.map((group) => {
+                    const accent = CATEGORY_ACCENT[group.id];
+                    const heading =
+                      group.id === "other"
+                        ? tr
+                          ? "Diğer"
+                          : "Other"
+                        : toolCategoryLabel(group.id, language);
+                    return (
+                      <section key={group.id}>
+                        {/* Kategori başlığı */}
+                        <div className="mb-2.5 flex items-center gap-2 px-0.5">
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${accent.dot} ${accent.glow}`}
+                            aria-hidden
+                          />
+                          <h3
+                            className={`text-[11px] font-bold uppercase tracking-wider ${accent.text}`}
+                          >
+                            {heading}
+                          </h3>
+                          <span className="text-[10px] font-semibold text-nb-muted/70">
+                            {group.tools.length}
+                          </span>
+                          <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
+                        </div>
+
+                        {/* Araç kartları — telefona otomatik uyum (auto-fill) */}
+                        <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
+                          {group.tools.map((id) => {
+                            const isActive = active === id;
+                            const locked = lockedFeatures.has(id);
+                            const label = labelForTool(id);
+                            return (
+                              <button
+                                key={id}
+                                type="button"
+                                role="menuitem"
+                                onClick={() => handlePick(id)}
+                                title={
+                                  locked ? L.lockedFeatureTooltip : undefined
+                                }
+                                aria-label={
+                                  locked
+                                    ? `${label}. ${L.lockedFeatureTooltip}`
+                                    : label
+                                }
+                                className={`nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center active:scale-[0.97] ${
+                                  isActive
+                                    ? "border-nb-primary/45 bg-nb-primary/14 shadow-[0_0_24px_-8px_rgba(59,130,246,0.45)]"
+                                    : "border-white/[0.08] bg-nb-panel/55 hover:border-nb-primary/25 hover:bg-white/[0.06]"
+                                } ${locked ? `ring-1 ${accent.ring}` : ""}`}
+                              >
+                                <span
+                                  className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                                    isActive
+                                      ? "bg-nb-primary/15"
+                                      : "bg-white/[0.04] group-hover:bg-white/[0.07]"
+                                  }`}
+                                >
+                                  {locked ? (
+                                    <svg
+                                      className="h-5 w-5 text-amber-300/90"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                      strokeWidth={1.75}
+                                      aria-hidden
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                      />
+                                    </svg>
+                                  ) : (
+                                    <SidebarToolGlyph
+                                      id={id}
+                                      className="h-5 w-5"
+                                      active={isActive}
+                                    />
+                                  )}
+                                </span>
+                                <span
+                                  className={`line-clamp-2 text-[10px] font-bold leading-tight ${
+                                    isActive ? "text-nb-accent" : "text-nb-text/90"
+                                  }`}
+                                >
+                                  {label}
+                                </span>
+                                {locked ? (
+                                  <span
+                                    className="absolute right-1 top-1 rounded-md border border-amber-400/35 bg-amber-500/10 px-1 py-0.5 text-[8px] font-bold uppercase tracking-wide text-amber-300/95"
+                                    aria-hidden
+                                  >
+                                    {L.featureLockedBadge}
+                                  </span>
+                                ) : null}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2 py-10 text-center">
+                  <svg
+                    className="h-8 w-8 text-nb-muted/60"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.75}
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+                    />
+                  </svg>
+                  <p className="text-sm font-medium text-nb-muted">
+                    {tr
+                      ? `"${query}" için araç bulunamadı`
+                      : `No tools found for "${query}"`}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
