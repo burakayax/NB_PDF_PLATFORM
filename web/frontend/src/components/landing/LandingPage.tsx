@@ -245,10 +245,17 @@ function Navbar({
           aria-label={copy.navbar.productLabel}
           className="flex items-center group shrink-0"
         >
+          {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
+          <img
+            src="/icons/icon-192.png"
+            alt="PDF PLATFORM"
+            className="h-10 w-10 rounded-xl object-contain lg:hidden"
+          />
+          {/* Masaüstü: tam uzun logo */}
           <img
             src="/navbar-logo.png"
             alt="PDF PLATFORM"
-            className="h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
+            className="hidden h-14 w-auto object-contain transition-opacity group-hover:opacity-90 lg:block"
           />
         </button>
 
