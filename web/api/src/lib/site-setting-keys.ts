@@ -17,7 +17,7 @@ export const SITE_SETTING_KEYS = {
   PACKAGES_MARKETING_LEGACY: "packages.marketing",
   /** @deprecated */
   PAYMENT_PRICES_LEGACY: "payment.prices",
-  /** Email marketing automation: JSON { lowCreditEnabled, welcomeEnabled, lowCreditThreshold, ... } */
+  /** Marketing automation: JSON { welcomeEnabled, lifecycleEnabled, upgradeCtaUrl, winbackCouponCode, exitIntentCouponCode, exitIntentDiscountPercent } */
   EMAIL_AUTOMATION: "email.automation",
 } as const;
 

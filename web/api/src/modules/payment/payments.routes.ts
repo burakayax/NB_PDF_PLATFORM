@@ -3,6 +3,7 @@ import { asyncHandler } from "../../lib/async-handler.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./payment.controller.js";
 import { paymentCallbackLimiter } from "../../middleware/api-security.middleware.js";
 import {
+  getExitIntentOfferController,
   getPaymentsPricingPublicController,
   initializePaymentsController,
 } from "./payments.controller.js";
@@ -11,5 +12,6 @@ import {
 export const paymentsRouter = Router();
 
 paymentsRouter.get("/pricing", asyncHandler(getPaymentsPricingPublicController));
+paymentsRouter.get("/exit-intent-offer", asyncHandler(getExitIntentOfferController));
 paymentsRouter.post("/initialize", asyncHandler(initializePaymentsController));
 paymentsRouter.post("/callback", paymentCallbackLimiter, paymentCallbackUrlencoded, asyncHandler(paymentCallbackController));

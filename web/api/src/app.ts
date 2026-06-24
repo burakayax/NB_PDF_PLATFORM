@@ -22,6 +22,7 @@ import { apiRouter } from "./routes/index.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
 import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
+import { registerLifecycleEmailJobs } from "./jobs/lifecycleEmailJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
 /**
@@ -168,6 +169,7 @@ app.use("/api", apiRouter);
 registerTeamJobs();
 registerDataRetentionJobs();
 registerSubscriptionJobs();
+registerLifecycleEmailJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.

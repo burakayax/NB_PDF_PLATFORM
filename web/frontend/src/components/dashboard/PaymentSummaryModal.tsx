@@ -41,6 +41,7 @@ async function initializePlanPayment(
   couponCode?: string | null,
   _extraSeats = 0,
   _seatsOnly = false,
+  applyExitIntentDiscount = false,
 ): Promise<PlanCheckoutResponse> {
   const token = readToken(accessToken);
   const response = await saasAuthorizedFetch(token, (t) =>
@@ -51,7 +52,7 @@ async function initializePlanPayment(
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify({ planId, currency, billingCycle, couponCode: couponCode || undefined, extraSeats: _extraSeats, seatsOnly: _seatsOnly }),
+      body: JSON.stringify({ planId, currency, billingCycle, couponCode: couponCode || undefined, extraSeats: _extraSeats, seatsOnly: _seatsOnly, applyExitIntentDiscount }),
     }),
   );
   if (!response.ok) {
@@ -59,6 +60,24 @@ async function initializePlanPayment(
     throw new Error(text || `Payment init failed (${response.status}).`);
   }
   return response.json() as Promise<PlanCheckoutResponse>;
+}
+
+/** Çıkış-niyeti indirimi uygunluğunu sunucudan sorgular (sunucu otoritedir). */
+async function fetchExitIntentOffer(
+  accessToken: string,
+): Promise<{ eligible: boolean; discountPercent: number }> {
+  const token = readToken(accessToken);
+  const response = await saasAuthorizedFetch(token, (t) =>
+    fetch(`${getSaasApiBase()}/api/payments/exit-intent-offer`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${t}` },
+      credentials: "include",
+    }),
+  );
+  if (!response.ok) {
+    return { eligible: false, discountPercent: 0 };
+  }
+  return response.json() as Promise<{ eligible: boolean; discountPercent: number }>;
 }
 
 async function validateCouponCode(
@@ -119,6 +138,11 @@ export function PaymentSummaryModal({
   const [legalOverlay, setLegalOverlay] = useState<null | "terms" | "kvkk">(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Exit-intent: kullanıcı kapatmaya çalıştığında bir kez indirim teklifi gösterilir.
+  const [exitOfferShown, setExitOfferShown] = useState(false);
+  const [showExitOffer, setShowExitOffer] = useState(false);
+  // Exit-intent indirimi aktif mi (kupon DEĞİL — ayrı, sabit sistem indirimi).
+  const [exitIntentActive, setExitIntentActive] = useState(false);
 
   const tr = language === "tr";
   const { currency: checkoutCurrency } = useCheckoutCurrency();
@@ -182,6 +206,9 @@ export function PaymentSummaryModal({
       setLegalAccepted(false);
       setLegalOverlay(null);
       setSuccessMessage(null);
+      setExitOfferShown(false);
+      setShowExitOffer(false);
+      setExitIntentActive(false);
       if (successCloseTimer.current) {
         clearTimeout(successCloseTimer.current);
         successCloseTimer.current = null;
@@ -208,14 +235,42 @@ export function PaymentSummaryModal({
     [],
   );
 
+  /**
+   * Çıkış-niyeti (exit-intent): kullanıcı kapatmaya çalıştığında, sunucu
+   * uygunluğu onaylarsa (FREE plan + ilk satış), kapatmak yerine tek seferlik
+   * sabit indirim teklifi gösterir. Bu indirim admin kuponlarından bağımsızdır;
+   * gerçek indirim sunucuda /payments/initialize sırasında uygulanır.
+   */
+  const attemptClose = useCallback(() => {
+    if (!promoApplied && !exitOfferShown && !successMessage && !seatsOnly) {
+      setExitOfferShown(true);
+      void (async () => {
+        try {
+          const offer = await fetchExitIntentOffer(accessToken);
+          if (offer.eligible && offer.discountPercent > 0) {
+            setExitIntentActive(true);
+            setPromoApplied({ discountPercent: offer.discountPercent });
+            setShowExitOffer(true);
+            return;
+          }
+        } catch {
+          /* uygunluk alınamadı → normal kapat */
+        }
+        onClose();
+      })();
+      return;
+    }
+    onClose();
+  }, [promoApplied, exitOfferShown, successMessage, seatsOnly, accessToken, onClose]);
+
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") attemptClose();
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, onClose]);
+  }, [open, attemptClose]);
 
   const handleApplyPromo = useCallback(async () => {
     const code = promoInput.trim();
@@ -247,7 +302,10 @@ export function PaymentSummaryModal({
     setPaying(true);
     setPromoError(null);
     try {
-      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency, billingCycle, promoApplied ? promoInput.trim() : null, extraSeats, seatsOnly);
+      // Exit-intent indirimi yalnızca manuel kupon girilmediyse uygulanır (stacking yok).
+      const useExitIntent = exitIntentActive && !promoInput.trim();
+      const couponToSend = useExitIntent ? null : (promoApplied ? promoInput.trim() : null);
+      const session = await initializePlanPayment(accessToken, planId, checkoutCurrency, billingCycle, couponToSend, extraSeats, seatsOnly, useExitIntent);
       if (session.mode === "fake") {
         onBeforeExternalCheckout?.();
         const result = await confirmFakeCheckout(accessToken, session.sessionId);
@@ -276,13 +334,13 @@ export function PaymentSummaryModal({
         msg || (tr ? "Ödeme başlatılamadı. Daha sonra tekrar deneyin." : "Payment could not start. Please try again later."),
       );
     }
-  }, [legalAccepted, tr, accessToken, planId, checkoutCurrency, billingCycle, promoApplied, promoInput, onBeforeExternalCheckout, onPurchaseSuccess]);
+  }, [legalAccepted, tr, accessToken, planId, checkoutCurrency, billingCycle, promoApplied, promoInput, exitIntentActive, extraSeats, seatsOnly, onBeforeExternalCheckout, onPurchaseSuccess]);
 
   const handleBackdropMouseDown = useCallback(
     (event: MouseEvent) => {
-      if (event.target === event.currentTarget) onClose();
+      if (event.target === event.currentTarget) attemptClose();
     },
-    [onClose],
+    [attemptClose],
   );
 
   if (!open || (!plan && !seatsOnly)) return null;
@@ -317,7 +375,7 @@ export function PaymentSummaryModal({
               type="button"
               className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-lg text-slate-400 transition hover:bg-white/[0.1] hover:text-slate-200"
               aria-label={tr ? "Kapat" : "Close"}
-              onClick={onClose}
+              onClick={attemptClose}
             >
               ×
             </button>
@@ -364,6 +422,29 @@ export function PaymentSummaryModal({
               </div>
             ) : (
               <>
+                {/* Exit-intent indirim teklifi */}
+                {showExitOffer && promoApplied ? (
+                  <div className="mb-3 rounded-2xl border border-emerald-500/45 bg-gradient-to-b from-emerald-500/15 to-emerald-500/[0.06] px-4 py-3.5 text-center" role="status">
+                    <p className="text-sm font-extrabold text-emerald-100">
+                      🎁 {tr
+                        ? `Bekleyin! Size özel %${promoApplied.discountPercent} indirim uyguladık.`
+                        : `Wait! We applied a special ${promoApplied.discountPercent}% discount for you.`}
+                    </p>
+                    <p className="mt-1 text-[12px] text-emerald-200/75">
+                      {tr
+                        ? "İndirimli fiyatınız aşağıda hazır — bu fırsatı kaçırmayın."
+                        : "Your discounted price is ready below — don't miss this offer."}
+                    </p>
+                    <button
+                      type="button"
+                      className="mt-2 text-[11px] font-medium text-emerald-200/60 underline underline-offset-2 transition hover:text-emerald-100"
+                      onClick={onClose}
+                    >
+                      {tr ? "Yine de çık" : "Leave anyway"}
+                    </button>
+                  </div>
+                ) : null}
+
                 {/* Price block — KDV dökümüyle */}
                 <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-5 py-4">
                   {vatBreakdown ? (

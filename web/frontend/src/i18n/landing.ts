@@ -179,15 +179,15 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // Also used as meta description — MUST stay ≤155 characters.
       // Current length: 151 chars ✓
       description:
-        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation needed — works in your browser and on Windows.",
+        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation needed — works right in your browser. A Windows desktop app is coming soon.",
 
       primaryCta: "Start Free",
-      secondaryCta: "Download for Windows",
+      secondaryCta: "Desktop App — Coming Soon",
 
       highlights: [
         { label: "Built for", value: "Business-critical document handling" },
         { label: "Core value", value: "Less manual work, fewer file errors" },
-        { label: "Deployment", value: "Web browser + Windows desktop app" },
+        { label: "Deployment", value: "Web browser (Windows desktop app coming soon)" },
       ],
 
       quickStats: [
@@ -312,9 +312,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       points: [
         {
           // H3 — local processing = privacy signal (trust + differentiation)
-          title: "Your PDF files never leave your device (Windows app)",
+          title: "Your PDF files never leave your device (Windows app — coming soon)",
           description:
-            "The Windows application processes all files locally on your device — sensitive business documents stay under your direct control at all times.",
+            "The upcoming Windows application will process all files locally on your device — sensitive business documents stay under your direct control at all times.",
         },
         {
           // H3 — encryption keyword
@@ -342,17 +342,17 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     finalCta: {
       kicker: "Start with the right PDF workflow for your team",
       title:
-        "Start instantly in your browser or download for full desktop control.",
+        "Start instantly in your browser — a dedicated desktop app is on the way.",
       description:
-        "Open the web version for immediate PDF access, or install the Windows app for an offline, dedicated desktop workflow.",
+        "Open the web version for immediate PDF access. A Windows desktop app for offline, dedicated workflows is coming soon.",
       primaryCta: "Use Web Version",
-      secondaryCta: "Download Windows App",
+      secondaryCta: "Desktop App — Coming Soon",
     },
 
     footer: {
       description:
         "Professional PDF management software — merge, convert, compress, and sign PDFs for business workflows.",
-      availability: "Web + Windows",
+      availability: "Web · Windows app coming soon",
       security: "Secure document operations",
       contact: "Contact",
       termsLabel: "Terms of Service",
@@ -420,12 +420,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Is my PDF data secure when using an online PDF tool?",
         answer:
-          "PDF PLATFORM does not retain processed document contents. The Windows app processes files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
+          "PDF PLATFORM does not retain processed document contents. The upcoming Windows app will process files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
       },
       {
         question: "Does PDF PLATFORM work without installing software?",
         answer:
-          "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app is also available for offline use and higher-volume document operations.",
+          "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon.",
       },
     ],
   },
@@ -468,10 +468,10 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // meta description olarak da kullanılır — ≤155 karakter.
       // Mevcut uzunluk: 148 karakter ✓
       description:
-        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan ve Windows'tan çalışır.",
+        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan çalışır. Masaüstü uygulaması çok yakında.",
 
       primaryCta: "Ücretsiz Başla",
-      secondaryCta: "Windows Uygulamasını İndir",
+      secondaryCta: "Masaüstü Sürümü — Çok Yakında",
 
       highlights: [
         {
@@ -484,7 +484,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         },
         {
           label: "Erişim modeli",
-          value: "Web tarayıcısı + Windows masaüstü uygulaması",
+          value: "Web tarayıcısı (Windows masaüstü uygulaması çok yakında)",
         },
       ],
 
@@ -611,9 +611,9 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           // H3 — yerel işleme = gizlilik sinyali (güven + farklılaşma)
           // DÜZELTİLDİ: Önceki sürümde ASCII karakterler kullanılmıştı (cikmaz, uygulamasi)
-          title: "PDF dosyalarınız cihazınızdan çıkmaz (Windows uygulaması)",
+          title: "PDF dosyalarınız cihazınızdan çıkmaz (Windows uygulaması — çok yakında)",
           description:
-            "Windows uygulaması tüm dosyaları cihazınızda yerel olarak işler; hassas iş belgeleri her zaman doğrudan sizin kontrolünüzde kalır.",
+            "Yakında çıkacak Windows uygulaması tüm dosyaları cihazınızda yerel olarak işleyecek; hassas iş belgeleri her zaman doğrudan sizin kontrolünüzde kalacak.",
         },
         {
           // H3 — şifreleme keyword'ü
@@ -641,17 +641,17 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
     finalCta: {
       kicker: "Ekibiniz için doğru PDF iş akışını seçin",
-      title: "Hemen tarayıcıdan başlayın veya masaüstü kontrolü için indirin.",
+      title: "Hemen tarayıcıdan başlayın — özel masaüstü uygulaması çok yakında.",
       description:
-        "Anında PDF erişimi için web sürümünü açın ya da çevrimdışı ve yüksek hacimli işlemler için Windows uygulamasını indirin.",
+        "Anında PDF erişimi için web sürümünü açın. Çevrimdışı ve yüksek hacimli işlemler için Windows uygulaması çok yakında geliyor.",
       primaryCta: "Web Sürümünü Aç",
-      secondaryCta: "Windows Uygulamasını İndir",
+      secondaryCta: "Masaüstü Sürümü — Çok Yakında",
     },
 
     footer: {
       description:
         "Profesyonel PDF yönetim yazılımı — iş süreçleri için PDF birleştirme, dönüştürme, sıkıştırma ve imzalama.",
-      availability: "Web + Windows",
+      availability: "Web · Windows uygulaması çok yakında",
       security: "Güvenli belge operasyonları",
       contact: "İletişim",
       termsLabel: "Hizmet Şartları",
@@ -719,12 +719,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Online PDF aracı kullanırken verilerim güvende mi?",
         answer:
-          "PDF PLATFORM işlenen belge içeriklerini saklamaz. Windows uygulaması dosyaları tamamen cihazınızda işler; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmaz. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
+          "PDF PLATFORM işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
       },
       {
         question: "PDF PLATFORM yazılım yüklemeden çalışır mı?",
         answer:
-          "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması da mevcuttur.",
+          "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor.",
       },
     ],
   },

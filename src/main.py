@@ -57,6 +57,7 @@ try:
     from modules.success_dialog import SuccessDialog
     from modules.ui_polish import (
         LoadingPulseDots,
+        ToolCard,
         ToolTip,
         attach_feature_button_polish,
         stagger_raise_buttons,
@@ -65,11 +66,18 @@ try:
     )
     from modules.app_paths import resource_path
     from modules.ui_theme import add_footer, theme
+    from modules.ui_notifications import show_toast, confirm
+    from modules.desktop_logging import get_logger
     from modules.word_to_pdf_window import WordToPdfWindow
     from modules.word_window import WordWindow
     from version_info import __version__, get_version_string
 except ImportError as e:
     print(f"Modül Yükleme Hatası: {e}")
+
+try:
+    _log = get_logger("main")
+except Exception:  # logger henüz kurulmadıysa main yine de çalışmalı
+    _log = None
 
 
 def merge_subscription_status(license_info: dict, sub: dict) -> dict:
@@ -105,6 +113,11 @@ class NBPDFApp(ctk.CTk):
         self.guest_action_button = None
         self.is_refreshing_license = False
         self.awaiting_upgrade_return = False
+        # Offline grace: son başarılı sunucu authorize sonucu + yerel günlük sayaç
+        # (FREE planın offline'da günlük limiti bypass etmesini önler).
+        self._last_authorize_result = None
+        self._last_authorize_time = None
+        self._offline_ops_used = 0
         self.periodic_validation_after_id = None
         self.active_sidebar_key = "split"
         self.profile_menu_window = None
@@ -169,6 +182,8 @@ class NBPDFApp(ctk.CTk):
         self._auth_queue_after_id = self.after(100, self._process_auth_queue)
         self.show_loading_screen(t("main.loading_title"), t("main.loading_detail"))
         self.after(150, self.bootstrap_session)
+        # Açılışta sessiz güncelleme kontrolü (yalnız yeni sürümde toast).
+        self.after(4000, self._auto_check_updates_on_launch)
 
     def _ui_alive(self) -> bool:
         if getattr(self, "_closing", False):
@@ -311,7 +326,7 @@ class NBPDFApp(ctk.CTk):
             return
         u = (self.current_session or {}).get("user") or {}
         if (u.get("authProvider") or "local").lower() == "google":
-            messagebox.showinfo(t("settings.title"), t("settings.password_google_only"))
+            show_toast(self, t("settings.password_google_only"), kind="info")
             return
         ChangePasswordDialog(self, self.ekran_ortala, self.auth_client, self.current_session["accessToken"])
 
@@ -321,7 +336,7 @@ class NBPDFApp(ctk.CTk):
 
     def open_subscription_workspace(self) -> None:
         if not self._is_authenticated_session():
-            messagebox.showinfo(t("main.upgrade"), t("main.guest_sign_in_required"))
+            show_toast(self, t("main.guest_sign_in_required"), kind="info")
             return
         self.awaiting_upgrade_return = True
         SubscriptionWorkspaceModal(
@@ -576,24 +591,61 @@ class NBPDFApp(ctk.CTk):
     def _check_for_updates_dialog(self):
         url = (self.auth_config.get("update_manifest_url") or "").strip()
         if not url:
-            messagebox.showinfo(t("app.name"), t("settings.update_no_manifest"))
+            show_toast(self, t("settings.update_no_manifest"), kind="info")
             return
         try:
             from modules.auto_update import check_manifest
 
             has_new, remote_ver, download_url = check_manifest(url)
         except Exception as exc:
-            messagebox.showwarning(t("app.warning"), t("settings.update_error", detail=str(exc)))
+            show_toast(self, t("settings.update_error", detail=str(exc)), kind="error")
             return
         if has_new and remote_ver:
             msg = t("settings.update_available", version=remote_ver, current=__version__)
             if download_url:
                 msg = f"{msg}\n\n{t('settings.update_open_browser')}"
-            if messagebox.askyesno(t("settings.update_title"), msg):
+            if confirm(
+                self,
+                t("settings.update_title"),
+                msg,
+                confirm_text=t("settings.update_download"),
+                cancel_text=t("app.cancel"),
+                center_fn=self.ekran_ortala,
+            ):
                 if download_url:
                     webbrowser.open(download_url)
         else:
-            messagebox.showinfo(t("settings.update_title"), t("settings.update_uptodate", version=__version__))
+            show_toast(self, t("settings.update_uptodate", version=__version__), kind="success")
+
+    def _auto_check_updates_on_launch(self):
+        """Açılışta sessiz güncelleme kontrolü — yalnızca yeni sürüm varsa toast gösterir.
+
+        Modal açmaz (kullanıcıyı bloklamaz); ağ hatasını sessizce yutar.
+        """
+        url = (self.auth_config.get("update_manifest_url") or "").strip()
+        if not url:
+            return
+
+        def worker():
+            try:
+                from modules.auto_update import check_manifest
+
+                has_new, remote_ver, download_url = check_manifest(url)
+            except Exception:
+                return  # sessiz: açılışta güncelleme kontrolü kullanıcıyı rahatsız etmemeli
+            if has_new and remote_ver:
+                def show():
+                    if not self._ui_alive():
+                        return
+                    show_toast(
+                        self,
+                        t("settings.update_available", version=remote_ver, current=__version__),
+                        kind="info",
+                        duration_ms=7000,
+                    )
+                self.after(0, show)
+
+        threading.Thread(target=worker, daemon=True).start()
 
     def _build_language_bar(self):
         for child in self.lang_bar.winfo_children():
@@ -1174,48 +1226,33 @@ class NBPDFApp(ctk.CTk):
 
         for i, spec in enumerate(self.feature_specs):
             isim = self._feature_label(spec)
-            ikon = spec["icon"]
-            btn = ctk.CTkButton(
+            desc = t(spec.get("tip_key", "")) if spec.get("tip_key") else ""
+            card = ToolCard(
                 self.button_frame,
-                text=f"{ikon}\n{isim}",
-                width=120,
-                height=120,
-                corner_radius=self.ui.get("radius_lg", 16),
-                font=("Segoe UI Semibold", 12, "bold"),
-                fg_color=self.ui["panel"],
-                hover_color=self.ui["accent"],
-                text_color=self.ui["text"],
-                border_width=1,
-                border_color=self.ui["border_subtle"],
+                self.ui,
+                icon=spec["icon"],
+                title=isim,
+                description=desc,
                 command=lambda key=spec["key"], label=isim: self._grid_tool_launch(key, label),
             )
-            btn.grid(row=i // 4, column=i % 4, padx=8, pady=10, sticky="nsew")
-            self.feature_buttons[spec["key"]] = btn
+            card.grid(row=i // 4, column=i % 4, padx=8, pady=10, sticky="nsew")
+            self.feature_buttons[spec["key"]] = card
 
         self._apply_license_visuals()
 
         _blocked = set()
         if self.license_info and not self.license_info.get("guest"):
             _blocked = set((self.license_info.get("entitlements") or {}).get("blockedFeatures") or [])
-        _unlock_btns = []
+        _unlock_cards = []
         for spec in self.feature_specs:
             k = spec["key"]
             if k in _blocked:
                 continue
-            b = self.feature_buttons.get(k)
-            if b:
-                b.configure(fg_color=self.ui["panel_alt"])
-                _unlock_btns.append(b)
-        stagger_raise_buttons(self, _unlock_btns, self.ui, self.ui["panel_alt"], self.ui["panel"], 36)
-        for spec in self.feature_specs:
-            btn = self.feature_buttons.get(spec["key"])
-            if not btn:
-                continue
-            if spec["key"] not in _blocked:
-                attach_feature_button_polish(btn, self.ui)
-            tip_text = t(spec.get("tip_key", "")) if spec.get("tip_key") else ""
-            if tip_text:
-                ToolTip(btn, tip_text, self.ui)
+            c = self.feature_buttons.get(k)
+            if c:
+                _unlock_cards.append(c)
+        # ToolCard bir CTkFrame'dir → stagger fg_color animasyonu olduğu gibi çalışır.
+        stagger_raise_buttons(self, _unlock_cards, self.ui, self.ui["panel_alt"], self.ui["panel"], 36)
         self._set_footer(
             t("app.name"),
             f"{t('app.footer_byline')} · v{get_version_string()}",
@@ -1249,14 +1286,10 @@ class NBPDFApp(ctk.CTk):
             if self.nav_upgrade_btn:
                 self.nav_upgrade_btn.pack_forget()
             for spec in self.feature_specs:
-                button = self.feature_buttons.get(spec["key"])
-                if button:
-                    button.configure(
-                        fg_color=self.ui["panel"],
-                        hover_color=self.ui["accent"],
-                        border_color=self.ui.get("border_subtle", self.ui["border"]),
-                        text=f"{spec['icon']}\n{self._feature_label(spec)}",
-                    )
+                card = self.feature_buttons.get(spec["key"])
+                if card:
+                    # Misafir modunda tüm araçlar açık görünür (kilit yok).
+                    card.set_locked(False)
             return
         user = self.current_session.get("user", {}) if self.current_session else {}
         plan = self.license_info.get("plan", user.get("plan", "-"))
@@ -1311,23 +1344,13 @@ class NBPDFApp(ctk.CTk):
 
         blocked = set(entitlements.get("blockedFeatures", []))
         for spec in self.feature_specs:
-            button = self.feature_buttons.get(spec["key"])
-            if not button:
+            card = self.feature_buttons.get(spec["key"])
+            if not card:
                 continue
             if spec["key"] in blocked:
-                button.configure(
-                    fg_color=self.ui["panel_alt"],
-                    hover_color=self.ui["panel_soft"],
-                    border_color=self.ui["warning"],
-                    text=f"{spec['icon']}\n{self._feature_label(spec)}\n{t('desktop.locked_badge')}",
-                )
+                card.set_locked(True, t("desktop.locked_badge"))
             else:
-                button.configure(
-                    fg_color=self.ui["panel"],
-                    hover_color=self.ui["accent"],
-                    border_color=self.ui.get("border_subtle", self.ui["border"]),
-                    text=f"{spec['icon']}\n{self._feature_label(spec)}",
-                )
+                card.set_locked(False)
 
     def bootstrap_session(self):
         """If no access token → login. Otherwise re-validate on the server (never trust cached plan on disk)."""
@@ -1476,7 +1499,7 @@ class NBPDFApp(ctk.CTk):
             self._handle_click_after_sync(feature_key, isim)
         elif kind == "handle_click_error":
             _, message = item
-            messagebox.showwarning(t("app.warning"), message)
+            show_toast(self, message, kind="warning")
 
     def start_google_login(self):
         self.login_error_label.configure(text="")
@@ -1545,6 +1568,18 @@ class NBPDFApp(ctk.CTk):
         threading.Thread(target=worker, daemon=True).start()
 
     def logout(self):
+        # Kullanıcı tetikli çıkış: yıkıcı sayılır → temalı onay iste.
+        self._close_profile_menu()
+        if not confirm(
+            self,
+            t("desktop.profile_logout"),
+            t("main.logout_confirm"),
+            confirm_text=t("desktop.profile_logout"),
+            cancel_text=t("app.cancel"),
+            danger=True,
+            center_fn=self.ekran_ortala,
+        ):
+            return
         self._cancel_periodic_validation()
         self._cancel_focus_refresh_schedule()
         self.session_store.clear()
@@ -1752,7 +1787,8 @@ class NBPDFApp(ctk.CTk):
             if self.license_notice:
                 self.license_notice.configure(text=t("main.payment_return_hint"))
         except Exception:
-            pass
+            if _log is not None:
+                _log.exception("kota/yükseltme modalı açılamadı")
 
     def _offer_upgrade_for_server_error(self, message: str) -> None:
         self._open_upgrade_modal_quota_limit(detail=message)
@@ -1782,6 +1818,8 @@ class NBPDFApp(ctk.CTk):
             # Başarılı yanıtı önbelleğe al (offline grace period için)
             self._last_authorize_result = result
             self._last_authorize_time = time.monotonic()
+            # Sunucu gerçek günlük sayacı tuttu → offline yerel sayacı sıfırla.
+            self._offline_ops_used = 0
         except DesktopAuthExpiredError as error:
             self.force_logout(t("main.session_expired"))
             raise DesktopAuthError(str(error)) from error
@@ -1789,12 +1827,27 @@ class NBPDFApp(ctk.CTk):
             self.force_logout(t("main.device_blocked"))
             raise DesktopAuthError(str(error)) from error
         except DesktopNetworkError:
-            # İnternet yok — önbellek geçerliyse offline çalışmaya izin ver
+            # İnternet yok — önbellek geçerliyse offline çalışmaya izin ver.
             cached = getattr(self, "_last_authorize_result", None)
             cached_time = getattr(self, "_last_authorize_time", None)
-            if cached and cached_time and (time.monotonic() - cached_time) < self._OFFLINE_GRACE_SECONDS:
-                return cached
-            raise DesktopAuthError(t("desktop.offline_no_cache"))
+            within_grace = bool(
+                cached
+                and cached_time is not None
+                and (time.monotonic() - cached_time) < self._OFFLINE_GRACE_SECONDS
+            )
+            if not within_grace:
+                raise DesktopAuthError(t("desktop.offline_no_cache"))
+            # Offline'da da plan günlük limitini YEREL olarak uygula: aksi halde
+            # FREE kullanıcı interneti kesip sınırsız işlem yapabilirdi (limit bypass).
+            # dailyLimit None ise (ücretli/sınırsız plan) offline da sınırsızdır.
+            entitlements = cached.get("entitlements") if isinstance(cached, dict) else None
+            daily_limit = (entitlements or {}).get("dailyLimit")
+            if daily_limit is not None:
+                used_offline = getattr(self, "_offline_ops_used", 0)
+                if used_offline >= int(daily_limit):
+                    raise DesktopAuthError(t("desktop.offline_limit_reached"))
+                self._offline_ops_used = used_offline + 1
+            return cached
         except DesktopAuthError as error:
             msg = str(error)
             if self._server_error_suggests_upgrade(msg):
@@ -1813,7 +1866,7 @@ class NBPDFApp(ctk.CTk):
 
     def _show_upgrade_required(self):
         message = (self.license_info or {}).get("upgradeMessage") or t("main.upgrade_required")
-        messagebox.showinfo(t("main.upgrade"), message)
+        show_toast(self, message, kind="info")
 
     def handle_click(self, feature_key, isim):
         if self._is_authenticated_session():
@@ -1830,7 +1883,7 @@ class NBPDFApp(ctk.CTk):
 
     def _handle_click_after_sync(self, feature_key, isim):
         if not self.license_info:
-            messagebox.showwarning(t("app.warning"), t("main.license_missing"))
+            show_toast(self, t("main.license_missing"), kind="warning")
             return
 
         if self.license_info.get("status") != "active":
@@ -1842,7 +1895,7 @@ class NBPDFApp(ctk.CTk):
             if self._is_authenticated_session():
                 self.open_subscription_workspace()
             else:
-                messagebox.showinfo(t("main.upgrade"), t("main.guest_sign_in_required"))
+                show_toast(self, t("main.guest_sign_in_required"), kind="info")
             return
 
         if self._is_authenticated_session() and self._free_plan_daily_quota_exhausted():
@@ -1894,7 +1947,7 @@ class NBPDFApp(ctk.CTk):
         elif feature_key == "repair-pdf":
             RepairPdfWindow(self, self.ekran_ortala, pdf_engine, SuccessDialog, access_controller=self)
         else:
-            messagebox.showinfo(t("app.name"), f"{isim.replace('\n', ' ')}")
+            show_toast(self, isim.replace("\n", " "), kind="info")
 
     def _launch_with_animation(self, factory_fn):
         try:
@@ -1927,7 +1980,7 @@ class NBPDFApp(ctk.CTk):
         try:
             open_register_page(self.auth_config.get("register_url", ""))
         except DesktopAuthError as error:
-            messagebox.showerror(t("main.create_account"), str(error))
+            show_toast(self, str(error), kind="error")
 
     def open_upgrade_page(self):
         self.open_subscription_workspace()

@@ -24,7 +24,9 @@
     "lang_display_en": "English",
     "kvkk": "KVKK",
     "privacy": "Gizlilik Politikası",
-    "terms": "Kullanım Şartları"
+    "terms": "Kullanım Şartları",
+    "info": "Bilgi",
+    "ok": "Tamam"
   },
   "tool_ui": {
     "drop_title": "Dosyaları buraya bırakın",
@@ -140,7 +142,8 @@
     "tip_page_numbers": "PDF sayfalarına otomatik sayfa numarası ekleyin.",
     "tip_repair_pdf": "Bozuk veya sorunlu PDF dosyasını onarmayı deneyin.",
     "guest_file_blocked": "Dosya yüklemek için oturum açmanız gerekiyor.",
-    "guest_file_blocked_hint": "Misafir modunda araçları açabilirsiniz, ancak dosya seçimi giriş gerektiriyor."
+    "guest_file_blocked_hint": "Misafir modunda araçları açabilirsiniz, ancak dosya seçimi giriş gerektiriyor.",
+    "offline_limit_reached": "Çevrimdışı kullanım için günlük işlem sınırına ulaştınız. Devam etmek için internete bağlanın."
   },
   "settings": {
     "title": "Ayarlar",
@@ -170,7 +173,8 @@
     "section_security": "Güvenlik",
     "change_password": "Şifre değiştir",
     "password_google_only": "Google hesabınızla giriş yaptınız. Şifre yönetimi Google hesabınız üzerinden yapılır.",
-    "password_hint_local": "Hesap şifrenizi güncellemek için aşağıdaki düğmeyi kullanın."
+    "password_hint_local": "Hesap şifrenizi güncellemek için aşağıdaki düğmeyi kullanın.",
+    "update_download": "İndir"
   },
   "subscription_workspace": {
     "window_title": "Planım ve kullanım",
@@ -194,7 +198,10 @@
     "ops_per_day": "Günlük {n} işlem",
     "paid_hint": "Plan değişikliği faturalama veya satış ekibi üzerinden yapılır; web çalışma alanıyla aynı kurallar geçerlidir.",
     "refresh": "Aboneliği yenile",
-    "open_web_same": "Web’de çalışma alanını aç"
+    "open_web_same": "Web’de çalışma alanını aç",
+    "upgrade_on_web": "Planları Yükselt (web'de güvenli ödeme)",
+    "web_manage_hint": "Abonelik, ödeme ve fatura bilgileriniz (TC kimlik, adres, KDV) güvenli web hesabınızda yönetilir. 'Yükselt'e bastığınızda tarayıcıda güvenli ödeme sayfası açılır; kart bilgileri bu uygulamada hiçbir zaman işlenmez.",
+    "invoices_web": "Faturalarım (web)"
   },
   "change_password": {
     "title": "Şifre değiştir",
@@ -315,7 +322,8 @@
     "feature_unlock_pdf": "PDF KİLİDİ\nAÇ",
     "feature_watermark": "FİLİGRAN\nEKLE",
     "feature_page_numbers": "SAYFA\nNUMARASI",
-    "feature_repair_pdf": "PDF\nONAR"
+    "feature_repair_pdf": "PDF\nONAR",
+    "logout_confirm": "Oturumu kapatmak istediğinize emin misiniz? Devam etmek için tekrar giriş yapmanız gerekir."
   },
   "merge": {
     "window_title": "PaperFlow - PDF Birleştirme",

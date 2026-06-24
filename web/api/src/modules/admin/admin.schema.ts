@@ -162,11 +162,10 @@ export const adminRefundBodySchema = z.object({
 });
 
 export const emailAutomationBodySchema = z.object({
-  lowCreditEnabled: z.boolean().optional(),
   welcomeEnabled: z.boolean().optional(),
-  lowCreditThreshold: z.coerce.number().int().min(0).max(1000).optional(),
-  lowCreditCooldownDays: z.coerce.number().int().min(1).max(30).optional(),
-  discountCtaUrl: z.string().max(2000).optional(),
+  lifecycleEnabled: z.boolean().optional(),
+  upgradeCtaUrl: z.string().max(2000).optional(),
+  winbackCouponCode: z.string().max(64).optional(),
 });
 
 export const marketingBroadcastBodySchema = z.object({

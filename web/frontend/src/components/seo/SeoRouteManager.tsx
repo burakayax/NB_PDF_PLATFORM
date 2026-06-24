@@ -3,6 +3,7 @@ import type { FeatureKey } from "../../api/subscription";
 import { resolveRouteSeo, toAbsoluteUrl } from "../../seo/routeSeoConfig";
 import { getPublicSiteOrigin } from "../../lib/siteOrigin";
 import { landingTranslations } from "../../i18n/landing";
+import { useSettings } from "../../contexts/SettingsContext";
 import { SEO } from "./SEO";
 
 type SeoRouteManagerProps = {
@@ -27,6 +28,9 @@ export function SeoRouteManager({
 }: SeoRouteManagerProps) {
   // Origin verilmediyse merkezi yardımcıdan al — hreflang her zaman üretilebilsin.
   const siteOrigin = siteOriginProp || getPublicSiteOrigin();
+  // Admin panelinden yönetilen sosyal medya profilleri → Organization sameAs.
+  const { site } = useSettings();
+  const sameAs = site.socialLinks ?? [];
   // ── Resolve route-specific SEO config ─────────────────────────────────────
   const seo = resolveRouteSeo({
     pathname,
@@ -85,8 +89,8 @@ export function SeoRouteManager({
         title: seo.title,
         description: seo.description,
         image: seo.ogImage ?? "/app-preview-main.png",
-        imageWidth: "1200",
-        imageHeight: "630",
+        imageWidth: "1280",
+        imageHeight: "720",
         url: seo.canonicalPath,
         locale: seo.ogLocale,
         localeAlternate: seo.ogLocaleAlternate,
@@ -102,6 +106,7 @@ export function SeoRouteManager({
       faqSchema={faqSchema}
       breadcrumb={breadcrumb}
       hreflang={hreflang}
+      sameAs={sameAs}
     />
   );
 }

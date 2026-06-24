@@ -7,6 +7,8 @@ import { DEFAULT_GLOBAL_NOTIFICATIONS } from "../admin/admin-system-defaults.js"
 import { getCmsContent } from "../admin/admin.service.js";
 import { getPaymentPricesTry } from "../payment/payment-pricing.js";
 import { getPlanDefinitionsResolved } from "../subscription/plan-runtime.js";
+import { getResolvedPackagesConfig } from "../../lib/packages-config.service.js";
+import { planDefinitions, isFeatureKey } from "../subscription/subscription.config.js";
 
 const FALLBACK_SITE_SETTINGS = {
   analyticsEnabled: true,
@@ -57,6 +59,8 @@ export async function getPublicSiteConfig() {
   const notifRaw = await getSetting(SITE_SETTING_KEYS.GLOBAL_NOTIFICATIONS);
   const notifications = mergePublicNotifications(notifRaw);
 
+  const socialLinks = sanitizeSocialLinks(site.socialLinks);
+
   return {
     analyticsEnabled,
     theme,
@@ -66,7 +70,44 @@ export async function getPublicSiteConfig() {
     betaFeatures,
     featureFlags,
     notifications,
+    socialLinks,
   };
+}
+
+/**
+ * Sosyal medya profil URL'leri (Organization JSON-LD `sameAs` + footer).
+ * Admin panelinden `site.settings.socialLinks` olarak yönetilir. Yalnızca
+ * geçerli http(s) URL'ler kabul edilir; en fazla 12 adet.
+ */
+function sanitizeSocialLinks(raw: unknown): string[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  const out: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== "string") {
+      continue;
+    }
+    const url = item.trim();
+    if (!url) {
+      continue;
+    }
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        continue;
+      }
+      if (!out.includes(url)) {
+        out.push(url);
+      }
+    } catch {
+      /* geçersiz URL — atla */
+    }
+    if (out.length >= 12) {
+      break;
+    }
+  }
+  return out;
 }
 
 function mergePublicNotifications(raw: unknown) {
@@ -179,13 +220,47 @@ export async function getPublicTOOLSSlice(): Promise<PublicTOOLSSlice> {
   return { disabledFeatures: disabled, displayFreeDailyLimit };
 }
 
+/**
+ * Fiyat kartlarının pazarlama görünümü — gerçek erişimden (plansOverride) bağımsızdır.
+ * `packages.config.marketing.cards.starterTools` admin panelinden yönetilir; geçersiz
+ * veya boşsa kod varsayılanı (STARTER planının yerleşik araç listesi) döner.
+ */
+export type PublicCardsConfig = {
+  starterTools: string[];
+};
+
+export async function getPublicCardsConfig(): Promise<PublicCardsConfig> {
+  const starterDefault = [...planDefinitions.STARTER.allowedFeatures] as string[];
+  try {
+    const { marketing } = await getResolvedPackagesConfig();
+    if (marketing && typeof marketing === "object" && !Array.isArray(marketing)) {
+      const cards = (marketing as Record<string, unknown>).cards;
+      if (cards && typeof cards === "object" && !Array.isArray(cards)) {
+        const st = (cards as Record<string, unknown>).starterTools;
+        if (Array.isArray(st)) {
+          const filtered = st.filter(
+            (x): x is string => typeof x === "string" && isFeatureKey(x),
+          );
+          if (filtered.length) {
+            return { starterTools: filtered };
+          }
+        }
+      }
+    }
+  } catch {
+    /* fall through to default */
+  }
+  return { starterTools: starterDefault };
+}
+
 export async function getPublicRuntimePayload(request: Request) {
-  const [cms, site, plansPayload, TOOLSPublic, tryPrices] = await Promise.all([
+  const [cms, site, plansPayload, TOOLSPublic, tryPrices, cards] = await Promise.all([
     getCmsContent(),
     getPublicSiteConfig(),
     getPublicPlansPayload(),
     getPublicTOOLSSlice(),
     getPaymentPricesTry(),
+    getPublicCardsConfig(),
   ]);
   const pricing = buildPublicPricingPayload(tryPrices, request);
   return {
@@ -194,6 +269,7 @@ export async function getPublicRuntimePayload(request: Request) {
     plans: plansPayload.plans,
     TOOLSPublic,
     pricing,
+    cards,
     flags: {
       maintenanceMode: site.maintenanceMode === true,
       betaFeatures: site.betaFeatures ?? {},

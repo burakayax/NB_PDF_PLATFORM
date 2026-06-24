@@ -30,6 +30,95 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
 export const PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG =
   "En az bir sayfa kalmalıdır. Tüm sayfaları silemezsiniz.";
 
+/** Araç kategorileri — mobil/tablet araç gezgini bunları başlıklı bölümlere ayırır. */
+export type ToolCategoryId =
+  | "organize"
+  | "convert"
+  | "optimize"
+  | "annotate"
+  | "secure";
+
+export const TOOL_CATEGORY_LABELS: Record<
+  ToolCategoryId,
+  { tr: string; en: string }
+> = {
+  organize: { tr: "Düzenle", en: "Organize" },
+  convert: { tr: "Dönüştür", en: "Convert" },
+  optimize: { tr: "İyileştir", en: "Optimize" },
+  annotate: { tr: "İşaretle", en: "Annotate" },
+  secure: { tr: "Güvenlik", en: "Security" },
+};
+
+/**
+ * Araçların kategori → araç eşlemesi. Sıralama hem kategorilerin hem de
+ * kategori içindeki araçların gösterim sırasını belirler.
+ */
+export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
+  {
+    id: "organize",
+    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf"],
+  },
+  {
+    id: "convert",
+    tools: [
+      "pdf-to-word",
+      "word-to-pdf",
+      "pdf-to-excel",
+      "excel-to-pdf",
+      "pdf-to-ppt",
+      "ppt-to-pdf",
+      "pdf-to-image",
+      "image-to-pdf",
+      "html-to-pdf",
+      "pdf-to-text",
+    ],
+  },
+  {
+    id: "optimize",
+    tools: ["compress", "flatten-pdf", "repair-pdf"],
+  },
+  {
+    id: "annotate",
+    tools: ["watermark", "page-numbers"],
+  },
+  {
+    id: "secure",
+    tools: ["encrypt", "unlock-pdf"],
+  },
+];
+
+export function toolCategoryLabel(id: ToolCategoryId, lang: Language): string {
+  return TOOL_CATEGORY_LABELS[id][lang];
+}
+
+/**
+ * Verilen (etkin/görünür) araç listesini kategori bölümlerine ayırır. Yalnızca
+ * `toolOrder` içinde bulunan araçlar dahil edilir; hiçbir kategoriye girmeyen
+ * araçlar listenin sonunda "other" bölümünde toplanır. Boş kategoriler atlanır.
+ */
+export function groupToolsByCategory(
+  toolOrder: FeatureKey[],
+): { id: ToolCategoryId | "other"; tools: FeatureKey[] }[] {
+  const visible = new Set(toolOrder);
+  const used = new Set<FeatureKey>();
+  const groups: { id: ToolCategoryId | "other"; tools: FeatureKey[] }[] = [];
+
+  for (const cat of TOOL_CATEGORIES) {
+    const tools = cat.tools.filter((t) => visible.has(t));
+    tools.forEach((t) => used.add(t));
+    if (tools.length) {
+      groups.push({ id: cat.id, tools });
+    }
+  }
+
+  const leftovers = toolOrder.filter((t) => !used.has(t));
+  if (leftovers.length) {
+    groups.push({ id: "other", tools: leftovers });
+  }
+
+  return groups;
+}
+
 const SB: Record<FeatureKey, { tr: string; en: string }> = {
   split: { tr: "PDF Ayır", en: "Split PDF" },
   merge: { tr: "PDF Birleştir", en: "Merge PDF" },
@@ -273,10 +362,6 @@ export function ws(lang: Language) {
     },
     resultCreatedUtc: (s: string) =>
       tr ? `Oluşturulma (UTC): ${s}` : `Created (UTC): ${s}`,
-    lowCreditBanner: (n: number) =>
-      tr
-        ? `Kredi bakiyeniz düşük! İşlemlerinizin yarıda kalmaması için kredi yüklemenizi öneririz.`
-        : `Your credit balance is low! Top up now to avoid any interruption to your tasks.`,
     pdfExcelWarningTitle: tr
       ? "Tablo yapısı uyarısı"
       : "Table structure notice",

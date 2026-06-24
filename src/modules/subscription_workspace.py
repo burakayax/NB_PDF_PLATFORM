@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import threading
 import tkinter.messagebox as messagebox
+from modules.ui_notifications import show_toast
 import webbrowser
 
 import customtkinter as ctk
@@ -16,8 +17,11 @@ from modules.desktop_auth import (
     DesktopNetworkError,
     open_payment_checkout_in_browser,
 )
+from modules.desktop_logging import get_logger
 from modules.i18n import t
 from modules.ui_theme import theme
+
+_log = get_logger("subscription")
 
 
 def _plan_label(name: str) -> str:
@@ -254,28 +258,26 @@ class SubscriptionWorkspaceModal(ctk.CTkToplevel):
         cta = ctk.CTkFrame(self._body, fg_color="transparent")
         cta.pack(fill="x", pady=(4, 8))
         if current_name == "FREE":
+            # Ödeme + fatura (TC kimlik/KDV/adres) tek kaynak olarak web'de toplanır.
+            # Masaüstü yalnızca güvenli web checkout'unu tarayıcıda açar (PCI + KVKK).
             ctk.CTkButton(
                 cta,
-                text=t("upgrade_modal.cta_pro"),
+                text=t("subscription_workspace.upgrade_on_web"),
                 height=48,
                 font=("Segoe UI Semibold", 14, "bold"),
                 fg_color=ui["accent"],
                 hover_color=ui["accent_hover"],
                 text_color=ui["button_text"],
-                command=lambda: self._checkout("PRO"),
-            ).pack(side="left", fill="x", expand=True, padx=(0, 8))
-            ctk.CTkButton(
+                command=self._open_web_upgrade,
+            ).pack(fill="x", expand=True)
+            ctk.CTkLabel(
                 cta,
-                text=t("upgrade_modal.cta_business"),
-                height=48,
-                font=("Segoe UI Semibold", 14, "bold"),
-                fg_color=ui["panel_soft"],
-                hover_color=ui["border"],
-                text_color=ui["text"],
-                border_width=1,
-                border_color=ui.get("border_subtle", ui["border"]),
-                command=lambda: self._checkout("BUSINESS"),
-            ).pack(side="left", fill="x", expand=True)
+                text=t("subscription_workspace.web_manage_hint"),
+                font=self.ui["small_font"],
+                text_color=ui["muted"],
+                wraplength=820,
+                justify="left",
+            ).pack(anchor="w", pady=(8, 0))
         else:
             ctk.CTkLabel(
                 cta,
@@ -309,6 +311,16 @@ class SubscriptionWorkspaceModal(ctk.CTkToplevel):
                 height=36,
                 command=self._open_web_workspace,
             ).pack(side="left", padx=(0, 10))
+            ctk.CTkButton(
+                bottom,
+                text=t("subscription_workspace.invoices_web"),
+                fg_color="transparent",
+                border_width=1,
+                border_color=ui.get("border_subtle", ui["border"]),
+                text_color=ui["muted"],
+                height=36,
+                command=self._open_web_invoices,
+            ).pack(side="left", padx=(0, 10))
         ctk.CTkButton(
             bottom,
             text=t("app.close"),
@@ -319,16 +331,45 @@ class SubscriptionWorkspaceModal(ctk.CTkToplevel):
             command=self.destroy,
         ).pack(side="right")
 
-    def _checkout(self, plan: str) -> None:
+    def _open_web_upgrade(self) -> None:
+        """Yükseltme + fatura akışını web'de açar (katmanlı fiyat, kupon, yıllık, KDV faturası).
+
+        web_app_url yoksa (örn. yalın dev) eski doğrudan iyzico akışına düşer ki
+        ödeme yine de mümkün olsun.
+        """
+        if self.web_app_url:
+            base = self.web_app_url.split("#")[0].rstrip("/")
+            url = f"{base}/workspace"
+            _log.info("upgrade web'e yönlendirildi url=%s", url)
+            webbrowser.open(url)
+            self._after_checkout()
+            return
+        # Geri-uyumluluk: web adresi tanımlı değilse eski doğrudan checkout.
+        _log.warning("web_app_url yok — eski doğrudan iyzico checkout'una düşülüyor")
+        self._legacy_checkout("PRO")
+
+    def _open_web_invoices(self) -> None:
+        """Fatura geçmişi/durumu web hesabında yönetilir."""
+        if not self.web_app_url:
+            show_toast(self, t("subscription_workspace.web_manage_hint"), kind="info")
+            return
+        base = self.web_app_url.split("#")[0].rstrip("/")
+        url = f"{base}/workspace"
+        _log.info("faturalar web'de açıldı url=%s", url)
+        webbrowser.open(url)
+
+    def _legacy_checkout(self, plan: str) -> None:
         def worker():
             try:
                 result = self.auth_client.create_payment_checkout(self.access_token, plan)
                 open_payment_checkout_in_browser(result)
                 self.after(0, self._after_checkout)
             except (DesktopAuthError, DesktopNetworkError) as e:
-                self.after(0, lambda: messagebox.showerror(t("app.error"), str(e), parent=self))
+                _log.warning("legacy checkout başarısız: %s", e)
+                self.after(0, lambda: show_toast(self, str(e), kind="error"))
             except Exception as e:
-                self.after(0, lambda: messagebox.showerror(t("app.error"), str(e), parent=self))
+                _log.exception("legacy checkout beklenmeyen hata")
+                self.after(0, lambda: show_toast(self, str(e), kind="error"))
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -339,18 +380,18 @@ class SubscriptionWorkspaceModal(ctk.CTkToplevel):
             try:
                 self._on_refresh_license()
             except Exception:
-                pass
+                _log.exception("on_refresh_license çağrısı başarısız (kritik değil)")
         try:
             self.destroy()
         except Exception:
-            pass
+            _log.debug("modal destroy hatası (yoksayıldı)", exc_info=True)
 
     def _refresh_click(self) -> None:
         if self._on_refresh_license:
             try:
                 self._on_refresh_license()
             except Exception:
-                pass
+                _log.exception("on_refresh_license (refresh) başarısız (kritik değil)")
         for w in self._body.winfo_children():
             w.destroy()
         ctk.CTkLabel(

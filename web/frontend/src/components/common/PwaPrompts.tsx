@@ -10,6 +10,51 @@ import {
 } from "lucide-react";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 import { usePwaUpdate } from "../../pwa/usePwaUpdate";
+import {
+  COOKIE_CONSENT_CHANGED_EVENT,
+  isCookieConsentDecided,
+} from "../../hooks/useCookieConsent";
+
+/**
+ * Yükleme banner'ı yalnızca kullanıcı çerez tercihini verdikten SONRA çıkmalı:
+ * aksi halde çerez bildirimi (App, alt-orta) ile aynı anda görünüp çakışıyordu.
+ * Çerez kararı verilince kısa bir gecikmeyle hazır olur (iki banner'ın aynı karede
+ * görünmesini önler). Geri dönen ziyaretçide karar kalıcı olduğundan hemen hazırdır.
+ */
+function useInstallBannerGate(): boolean {
+  const [decided, setDecided] = useState<boolean>(() =>
+    isCookieConsentDecided(),
+  );
+  const [ready, setReady] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (decided) {
+      return;
+    }
+    const sync = () => {
+      if (isCookieConsentDecided()) {
+        setDecided(true);
+      }
+    };
+    window.addEventListener(COOKIE_CONSENT_CHANGED_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(COOKIE_CONSENT_CHANGED_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [decided]);
+
+  useEffect(() => {
+    if (!decided) {
+      setReady(false);
+      return;
+    }
+    const id = window.setTimeout(() => setReady(true), 600);
+    return () => window.clearTimeout(id);
+  }, [decided]);
+
+  return ready;
+}
 
 // Global bileşenler (BackToTopButton gibi) Router/context dışında render edildiğinden
 // dili i18n context yerine <html lang> üzerinden okur ve değişimini izler.
@@ -67,8 +112,10 @@ const COPY = {
 
 function InstallBanner({ lang }: { lang: "tr" | "en" }) {
   const { canShow, iosManual, promptInstall, dismiss } = usePwaInstall();
+  const consentReady = useInstallBannerGate();
   const t = COPY[lang];
-  if (!canShow) {
+  // Çerez onayı verilene (ve kısa gecikme geçene) kadar gösterme — çakışmayı önler.
+  if (!canShow || !consentReady) {
     return null;
   }
   const benefits = [

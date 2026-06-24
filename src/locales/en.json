@@ -24,7 +24,9 @@
     "lang_display_en": "English",
     "kvkk": "KVKK",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "info": "Info",
+    "ok": "OK"
   },
   "tool_ui": {
     "drop_title": "Drop files here",
@@ -140,7 +142,8 @@
     "tip_page_numbers": "Automatically add page numbers to a PDF.",
     "tip_repair_pdf": "Attempt to repair a corrupted or damaged PDF file.",
     "guest_file_blocked": "Please sign in to upload files.",
-    "guest_file_blocked_hint": "In guest mode you can open tools, but file selection requires a login."
+    "guest_file_blocked_hint": "In guest mode you can open tools, but file selection requires a login.",
+    "offline_limit_reached": "You have reached the daily operation limit for offline use. Connect to the internet to continue."
   },
   "settings": {
     "title": "Settings",
@@ -170,7 +173,8 @@
     "section_security": "Security",
     "change_password": "Change password",
     "password_google_only": "You signed in with Google. Password is managed in your Google account.",
-    "password_hint_local": "Use the button below to update your account password."
+    "password_hint_local": "Use the button below to update your account password.",
+    "update_download": "Download"
   },
   "subscription_workspace": {
     "window_title": "My plan & usage",
@@ -194,7 +198,10 @@
     "ops_per_day": "{n} ops/day",
     "paid_hint": "Plan changes are handled via billing or sales — same rules as the web workspace.",
     "refresh": "Refresh subscription",
-    "open_web_same": "Open web workspace"
+    "open_web_same": "Open web workspace",
+    "upgrade_on_web": "Upgrade plans (secure web checkout)",
+    "web_manage_hint": "Your subscription, payment and invoice details (national ID, address, VAT) are managed in your secure web account. 'Upgrade' opens the secure checkout in your browser; card details are never handled in this app.",
+    "invoices_web": "My invoices (web)"
   },
   "change_password": {
     "title": "Change password",
@@ -315,7 +322,8 @@
     "feature_unlock_pdf": "UNLOCK\nPDF",
     "feature_watermark": "ADD\nWATERMARK",
     "feature_page_numbers": "PAGE\nNUMBERS",
-    "feature_repair_pdf": "REPAIR\nPDF"
+    "feature_repair_pdf": "REPAIR\nPDF",
+    "logout_confirm": "Are you sure you want to sign out? You will need to sign in again to continue."
   },
   "merge": {
     "window_title": "PaperFlow - Merge PDF",
