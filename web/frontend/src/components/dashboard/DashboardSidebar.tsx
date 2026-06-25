@@ -11,12 +11,64 @@ import {
   type ToolCategoryId,
 } from "../../i18n/workspace";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
+import { useFavoriteTools } from "../../hooks/useFavoriteTools";
+
+/** Araç satırının sağındaki favori (yıldız) düğmesi. Buton-içinde-buton olmaması için span. */
+export function FavoriteStar({
+  active,
+  label,
+  onToggle,
+  alwaysVisible = false,
+}: {
+  active: boolean;
+  label: string;
+  onToggle: () => void;
+  /** Mobilde hover olmadığı için yıldız her zaman görünür olmalı. */
+  alwaysVisible?: boolean;
+}) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label={active ? `${label} favorilerden çıkar` : `${label} favorilere ekle`}
+      aria-pressed={active}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.stopPropagation();
+          onToggle();
+        }
+      }}
+      className={`nb-transition flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+        active
+          ? "text-amber-300 hover:text-amber-200"
+          : alwaysVisible
+            ? "text-nb-muted/60 hover:text-amber-300"
+            : "text-nb-muted/50 opacity-0 hover:text-amber-300 group-hover:opacity-100"
+      }`}
+    >
+      <svg className="h-4 w-4" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.75} aria-hidden>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.5a.56.56 0 011.04 0l2.06 4.18 4.61.67c.46.07.64.63.31.95l-3.34 3.25.79 4.59c.08.45-.4.8-.81.59L12 16.35l-4.13 2.17c-.41.21-.89-.14-.81-.59l.79-4.59-3.34-3.25c-.33-.32-.15-.88.31-.95l4.61-.67L11.48 3.5z" />
+      </svg>
+    </span>
+  );
+}
 
 /** Kategori başına vurgu paleti — mobil araç gezgini bölüm başlıklarında kullanılır. */
 const CATEGORY_ACCENT: Record<
-  ToolCategoryId | "other",
+  ToolCategoryId | "other" | "favorites",
   { dot: string; text: string; ring: string; glow: string }
 > = {
+  favorites: {
+    dot: "bg-amber-400",
+    text: "text-amber-300",
+    ring: "ring-amber-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(251,191,36,0.55)]",
+  },
   organize: {
     dot: "bg-sky-400",
     text: "text-sky-300",
@@ -105,8 +157,59 @@ export function DashboardSidebar({
     : SIDEBAR_TOOL_ORDER;
   const labelForTool =
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
+  const { isFavorite, toggleFavorite } = useFavoriteTools();
+  const tr = language === "tr";
+  const favTools = toolOrder.filter((id) => isFavorite(id));
   const showVipStrip =
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
+
+  const renderTool = (id: FeatureKey, keyPrefix = "") => {
+    const isActive = active === id;
+    const locked = lockedFeatures.has(id);
+    const label = labelForTool(id);
+    return (
+      <button
+        key={`${keyPrefix}${id}`}
+        type="button"
+        onClick={() => onSelect(id)}
+        title={locked ? L.lockedFeatureTooltip : undefined}
+        aria-label={locked ? `${label}. ${L.lockedFeatureTooltip}` : undefined}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${
+          isActive
+            ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_28px_-8px_rgba(59,130,246,0.45)]"
+            : "border border-transparent text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        } ${
+          locked
+            ? "ring-1 ring-amber-400/35 shadow-[0_0_28px_-10px_rgba(245,158,11,0.55),inset_0_1px_0_rgba(255,255,255,0.04)] hover:ring-amber-400/50 hover:shadow-[0_0_36px_-8px_rgba(245,158,11,0.6)]"
+            : ""
+        }`}
+      >
+        <span className={isActive ? "text-nb-primary-mid" : "text-nb-muted"}>
+          {locked ? (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          ) : (
+            <SidebarToolGlyph id={id} className="h-5 w-5" active={isActive} />
+          )}
+        </span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <span className="flex shrink-0 items-center gap-1.5">
+            {locked ? (
+              <span
+                className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
+                aria-hidden
+              >
+                {L.featureLockedBadge}
+              </span>
+            ) : null}
+            <FavoriteStar active={isFavorite(id)} label={label} onToggle={() => toggleFavorite(id)} />
+          </span>
+        </span>
+      </button>
+    );
+  };
 
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
@@ -114,72 +217,16 @@ export function DashboardSidebar({
         className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
-        {toolOrder.map((id) => {
-          const isActive = active === id;
-          const locked = lockedFeatures.has(id);
-          const label = labelForTool(id);
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => onSelect(id)}
-              title={locked ? L.lockedFeatureTooltip : undefined}
-              aria-label={
-                locked ? `${label}. ${L.lockedFeatureTooltip}` : undefined
-              }
-              className={`nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${
-                isActive
-                  ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_28px_-8px_rgba(59,130,246,0.45)]"
-                  : "border border-transparent text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
-              } ${
-                locked
-                  ? "ring-1 ring-amber-400/35 shadow-[0_0_28px_-10px_rgba(245,158,11,0.55),inset_0_1px_0_rgba(255,255,255,0.04)] hover:ring-amber-400/50 hover:shadow-[0_0_36px_-8px_rgba(245,158,11,0.6)]"
-                  : ""
-              }`}
-            >
-              <span
-                className={isActive ? "text-nb-primary-mid" : "text-nb-muted"}
-              >
-                {locked ? (
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.75}
-                    aria-hidden
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                ) : (
-                  <SidebarToolGlyph
-                    id={id}
-                    className="h-5 w-5"
-                    active={isActive}
-                  />
-                )}
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col items-stretch justify-center gap-0.5 text-left">
-                <span className="flex min-w-0 items-center justify-between gap-2">
-                  <span className="truncate">{label}</span>
-                  {locked ? (
-                    <span
-                      className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95 shadow-[0_0_12px_-4px_rgba(251,191,36,0.45)]"
-                      aria-hidden
-                    >
-                      {L.featureLockedBadge}
-                    </span>
-                  ) : null}
-                </span>
-                {null}
-              </span>
-            </button>
-          );
-        })}
+        {favTools.length > 0 ? (
+          <div className="mb-1">
+            <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
+              ★ {tr ? "Favoriler" : "Favorites"}
+            </p>
+            {favTools.map((id) => renderTool(id, "fav-"))}
+            <div className="my-2 h-px bg-white/[0.06]" />
+          </div>
+        ) : null}
+        {toolOrder.map((id) => renderTool(id))}
       </nav>
 
       {showVipStrip ? (
@@ -268,7 +315,17 @@ export function DashboardSidebarMobileLauncher({
       ? "Menü"
       : "Menu";
 
-  const groups = useMemo(() => groupToolsByCategory(toolOrder), [toolOrder]);
+  const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
+  const groups = useMemo(() => {
+    const base = groupToolsByCategory(toolOrder) as Array<{
+      id: ToolCategoryId | "other" | "favorites";
+      tools: FeatureKey[];
+    }>;
+    const fav = toolOrder.filter((id) => isFavorite(id));
+    return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
+    // favorites listesi değişince yeniden grupla
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolOrder, favorites]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -302,6 +359,33 @@ export function DashboardSidebarMobileLauncher({
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
+  // Launchpad açıkken arka plan (çalışma sayfası) scroll'unu KİLİTLE.
+  // iOS Safari `overflow:hidden`'ı yok sayar → body position:fixle sabitlenir;
+  // mevcut scroll konumu korunup kapanınca geri yüklenir. Aksi halde launchpad
+  // listesinin sonuna gelince kaydırma arka plana zincirleniyordu.
+  useEffect(() => {
+    if (!open) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
+    };
   }, [open]);
 
   // Menü kapanınca aramayı sıfırla
@@ -383,7 +467,7 @@ export function DashboardSidebarMobileLauncher({
           <div
             role="menu"
             aria-label={tr ? "Araçlar" : "Tools"}
-            className="max-h-[78vh] overflow-y-auto border-b border-white/[0.08] bg-nb-bg-elevated/98 shadow-[0_28px_56px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md"
+            className="max-h-[78vh] overflow-y-auto overscroll-contain border-b border-white/[0.08] bg-nb-bg-elevated/98 shadow-[0_28px_56px_-12px_rgba(0,0,0,0.65)] backdrop-blur-md"
           >
             {/* Yapışkan arama çubuğu */}
             <div className="sticky top-0 z-10 border-b border-white/[0.06] bg-nb-bg-elevated/95 px-3 py-3 backdrop-blur-md sm:px-4">
@@ -441,11 +525,15 @@ export function DashboardSidebarMobileLauncher({
                   {filteredGroups.map((group) => {
                     const accent = CATEGORY_ACCENT[group.id];
                     const heading =
-                      group.id === "other"
+                      group.id === "favorites"
                         ? tr
-                          ? "Diğer"
-                          : "Other"
-                        : toolCategoryLabel(group.id, language);
+                          ? "★ Favoriler"
+                          : "★ Favorites"
+                        : group.id === "other"
+                          ? tr
+                            ? "Diğer"
+                            : "Other"
+                          : toolCategoryLabel(group.id as ToolCategoryId, language);
                     return (
                       <section key={group.id}>
                         {/* Kategori başlığı */}
@@ -473,7 +561,7 @@ export function DashboardSidebarMobileLauncher({
                             const label = labelForTool(id);
                             return (
                               <button
-                                key={id}
+                                key={`${group.id}-${id}`}
                                 type="button"
                                 role="menuitem"
                                 onClick={() => handlePick(id)}
@@ -536,6 +624,14 @@ export function DashboardSidebarMobileLauncher({
                                     {L.featureLockedBadge}
                                   </span>
                                 ) : null}
+                                <span className="absolute left-1 top-1">
+                                  <FavoriteStar
+                                    alwaysVisible
+                                    active={isFavorite(id)}
+                                    label={label}
+                                    onToggle={() => toggleFavorite(id)}
+                                  />
+                                </span>
                               </button>
                             );
                           })}

@@ -5,7 +5,8 @@ import type { Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { SidebarToolId } from "./DashboardSidebar";
-import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardSidebar, FavoriteStar } from "./DashboardSidebar";
+import { useFavoriteTools } from "../../hooks/useFavoriteTools";
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardStatsCards } from "./DashboardStatsCards";
 import { DashboardRecentActivity } from "./DashboardRecentActivity";
@@ -45,46 +46,64 @@ function MobileDrawerNav({
   onSelect: (id: SidebarToolId) => void;
 }) {
   const L = ws(language);
+  const tr = language === "tr";
   const toolOrder = enabledToolIds?.length ? enabledToolIds : SIDEBAR_TOOL_ORDER;
   const labelFor = resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
+  const { isFavorite, toggleFavorite } = useFavoriteTools();
+  const favTools = toolOrder.filter((id) => isFavorite(id));
+
+  const renderTool = (id: FeatureKey, keyPrefix = "") => {
+    const isActive = selectedTool === id;
+    const locked = lockedFeatures.has(id);
+    const label = labelFor(id);
+    return (
+      <button
+        key={`${keyPrefix}${id}`}
+        type="button"
+        onClick={() => onSelect(id)}
+        title={locked ? L.lockedFeatureTooltip : undefined}
+        className={`group nb-transition flex min-h-[52px] w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium ${
+          isActive
+            ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+            : "border border-transparent text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+        } ${locked ? "ring-1 ring-amber-400/35 shadow-[0_0_28px_-10px_rgba(245,158,11,0.55)]" : ""}`}
+      >
+        <span className={isActive ? "text-nb-primary-mid" : "text-nb-muted"}>
+          {locked ? (
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          ) : (
+            <SidebarToolGlyph id={id} className="h-5 w-5" active={isActive} />
+          )}
+        </span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <span className="flex shrink-0 items-center gap-1.5">
+            {locked && (
+              <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
+                {L.featureLockedBadge}
+              </span>
+            )}
+            <FavoriteStar active={isFavorite(id)} label={label} onToggle={() => toggleFavorite(id)} />
+          </span>
+        </span>
+      </button>
+    );
+  };
 
   return (
     <nav className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain px-3 py-4" aria-label="Tools">
-      {toolOrder.map((id) => {
-        const isActive = selectedTool === id;
-        const locked = lockedFeatures.has(id);
-        return (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onSelect(id)}
-            title={locked ? L.lockedFeatureTooltip : undefined}
-            className={`nb-transition flex min-h-[52px] w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium ${
-              isActive
-                ? "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
-                : "border border-transparent text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-            } ${locked ? "ring-1 ring-amber-400/35 shadow-[0_0_28px_-10px_rgba(245,158,11,0.55)]" : ""}`}
-          >
-            <span className={isActive ? "text-nb-primary-mid" : "text-nb-muted"}>
-              {locked ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75} aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              ) : (
-                <SidebarToolGlyph id={id} className="h-5 w-5" active={isActive} />
-              )}
-            </span>
-            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-              <span className="truncate">{labelFor(id)}</span>
-              {locked && (
-                <span className="shrink-0 rounded-md border border-amber-400/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300/95">
-                  {L.featureLockedBadge}
-                </span>
-              )}
-            </span>
-          </button>
-        );
-      })}
+      {favTools.length > 0 ? (
+        <div className="mb-1">
+          <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
+            ★ {tr ? "Favoriler" : "Favorites"}
+          </p>
+          {favTools.map((id) => renderTool(id, "fav-"))}
+          <div className="my-2 h-px bg-white/[0.06]" />
+        </div>
+      ) : null}
+      {toolOrder.map((id) => renderTool(id))}
     </nav>
   );
 }
