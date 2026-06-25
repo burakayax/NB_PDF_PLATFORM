@@ -4735,6 +4735,16 @@ function App() {
             }}
             />
           </Suspense>
+          {/* Toast landing'de de gösterilir: logout sonrası kullanıcı buraya döndüğünde
+              "Oturum kapatıldı" bildirimi anında görünür (önceden yalnız giriş ekranında çıkıyordu). */}
+          {toast ? (
+            <AppToast
+              key={toast.id}
+              toast={toast}
+              onClose={clearToast}
+              closeLabel={language === "tr" ? "Kapat" : "Close"}
+            />
+          ) : null}
           <CookieNotice
             language={language}
             visible={shouldShowCookieNotice}
