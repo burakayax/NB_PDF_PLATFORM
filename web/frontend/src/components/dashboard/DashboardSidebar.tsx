@@ -47,7 +47,7 @@ export function FavoriteStar({
         active
           ? "text-amber-300 hover:text-amber-200"
           : alwaysVisible
-            ? "text-nb-muted/60 hover:text-amber-300"
+            ? "text-slate-400/80 hover:text-amber-300"
             : "text-nb-muted/50 opacity-0 hover:text-amber-300 group-hover:opacity-100"
       }`}
     >
@@ -204,7 +204,7 @@ export function DashboardSidebar({
                 {L.featureLockedBadge}
               </span>
             ) : null}
-            <FavoriteStar active={isFavorite(id)} label={label} onToggle={() => toggleFavorite(id)} />
+            <FavoriteStar alwaysVisible active={isFavorite(id)} label={label} onToggle={() => toggleFavorite(id)} />
           </span>
         </span>
       </button>
