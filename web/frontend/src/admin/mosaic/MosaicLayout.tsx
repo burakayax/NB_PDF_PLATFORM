@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Mail,
+  Menu,
   Package,
   PanelLeft,
   Radio,
@@ -17,6 +18,7 @@ import {
   Ticket,
   Users,
   Wrench,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -75,8 +77,31 @@ export function MosaicLayout({
   onSimpleMode,
 }: Props) {
   const [hover, setHover] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
   const userRef = useRef<HTMLDivElement>(null);
+
+  // Mobil drawer açıkken arka plan scroll'unu kilitle (iOS dahil position:fixed).
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const prev = { position: body.style.position, top: body.style.top, width: body.style.width, overflow: body.style.overflow };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    return () => {
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, [mobileNavOpen]);
+
+  // Sidebar genişler (etiketler görünür): masaüstünde hover ile, mobilde drawer açıkken.
+  const expanded = hover || mobileNavOpen;
 
   const closeUser = useCallback(() => setUserOpen(false), []);
   useEffect(() => {
@@ -92,7 +117,7 @@ export function MosaicLayout({
     return () => document.removeEventListener("mousedown", handle);
   }, [userOpen]);
 
-  const sidebarW = hover ? "w-60" : "w-[72px]";
+  const lgSidebarW = hover ? "lg:w-60" : "lg:w-[72px]";
   const initials = userEmail
     .split("@")[0]
     ?.slice(0, 2)
@@ -100,8 +125,17 @@ export function MosaicLayout({
 
   return (
     <div className="fixed inset-0 z-[60] flex bg-slate-950 font-sans text-slate-100 antialiased">
+      {/* Mobil drawer karartma katmanı */}
+      {mobileNavOpen ? (
+        <div
+          className="fixed inset-0 z-30 bg-black/70 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden
+        />
+      ) : null}
+      {/* Sidebar: masaüstünde hover ile genişleyen sabit panel, mobilde soldan kayan drawer. */}
       <aside
-        className={`relative z-20 flex shrink-0 flex-col border-r border-slate-800/80 bg-slate-900 transition-[width] duration-200 ease-out ${sidebarW}`}
+        className={`fixed inset-y-0 left-0 z-40 flex w-[260px] shrink-0 flex-col border-r border-slate-800/80 bg-slate-900 transition-transform duration-200 ease-out lg:relative lg:z-20 lg:translate-x-0 lg:transition-[width] ${lgSidebarW} ${mobileNavOpen ? "translate-x-0" : "-translate-x-full"}`}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
@@ -109,16 +143,24 @@ export function MosaicLayout({
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-sm font-bold text-cyan-300 ring-1 ring-cyan-500/30">
             NB
           </div>
-          <div className={`min-w-0 flex-1 overflow-hidden transition-opacity ${hover ? "opacity-100" : "opacity-0"}`}>
+          <div className={`min-w-0 flex-1 overflow-hidden transition-opacity ${expanded ? "opacity-100" : "opacity-0"}`}>
             <p className="truncate text-xs font-semibold text-white">Admin</p>
             <p className="truncate text-[10px] text-slate-500">Mosaic</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-slate-200 lg:hidden"
+            aria-label="Menüyü kapat"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
         <nav className="flex-1 space-y-6 overflow-y-auto py-3">
           {navGroups.map((g) => (
             <div key={g.title}>
               <p
-                className={`px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 transition-opacity ${hover ? "opacity-100" : "opacity-0"}`}
+                className={`px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 transition-opacity ${expanded ? "opacity-100" : "opacity-0"}`}
               >
                 {g.title}
               </p>
@@ -130,7 +172,10 @@ export function MosaicLayout({
                     <li key={item.id}>
                       <button
                         type="button"
-                        onClick={() => onNavigate(item.id)}
+                        onClick={() => {
+                          onNavigate(item.id);
+                          setMobileNavOpen(false);
+                        }}
                         title={item.label}
                         className={`group flex w-full items-center gap-3 rounded-lg py-2.5 pl-2.5 pr-2 text-left transition ${
                           act
@@ -140,7 +185,7 @@ export function MosaicLayout({
                       >
                         <Ic className={`h-[18px] w-[18px] shrink-0 ${act ? "text-cyan-300" : "text-slate-500 group-hover:text-slate-300"}`} />
                         <span
-                          className={`truncate text-sm font-medium transition-opacity ${hover ? "opacity-100" : "w-0 opacity-0"}`}
+                          className={`truncate text-sm font-medium transition-opacity ${expanded ? "opacity-100" : "w-0 opacity-0"}`}
                         >
                           {item.label}
                         </span>
@@ -156,9 +201,20 @@ export function MosaicLayout({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-slate-800/80 bg-slate-900/50 px-4 backdrop-blur md:px-8">
-          <div className="min-w-0">
-            <h1 className="truncate text-lg font-semibold tracking-tight text-white md:text-xl">{pageTitle}</h1>
-            {pageSubtitle ? <p className="mt-0.5 truncate text-sm text-slate-500">{pageSubtitle}</p> : null}
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-700/50 text-slate-300 transition hover:bg-slate-800 lg:hidden"
+              aria-label="Menüyü aç"
+              aria-expanded={mobileNavOpen}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold tracking-tight text-white md:text-xl">{pageTitle}</h1>
+              {pageSubtitle ? <p className="mt-0.5 truncate text-sm text-slate-500">{pageSubtitle}</p> : null}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <button
