@@ -1,5 +1,6 @@
 import type { Request } from "express";
 import { env } from "../../config/env.js";
+import { prisma } from "../../lib/prisma.js";
 import { inferPricingRegionFromRequest } from "../../lib/pricing-region.js";
 import { getSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
@@ -42,7 +43,15 @@ export async function getPublicSiteConfig() {
         ? flags.freeDailyLimitDisplay
         : FALLBACK_SITE_SETTINGS.freeDailyLimitDisplay;
 
-  const maintenanceMode = env.maintenanceModeEnabled;
+  // Bakım modu kaynağı:
+  //  - DB (AppSettings.globalMaintenanceMode): admin panelinden tek-tıkla aç/kapat (asıl kontrol).
+  //  - env (MAINTENANCE_MODE=true): acil override — admin paneli erişilemezse zorla bakım.
+  // env normalde false/boş bırakılır; site bakımı admin'den yönetilir.
+  const appSettingsRow = await prisma.appSettings
+    .findUnique({ where: { id: 1 }, select: { globalMaintenanceMode: true } })
+    .catch(() => null);
+  const maintenanceMode =
+    env.maintenanceModeEnabled || appSettingsRow?.globalMaintenanceMode === true;
   const betaFeatures =
     (flags.betaFeatures as Record<string, boolean> | undefined) ??
     (site.betaFeatures as Record<string, boolean> | undefined) ??

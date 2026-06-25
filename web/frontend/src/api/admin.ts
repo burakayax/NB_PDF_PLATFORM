@@ -551,7 +551,10 @@ export type AppSettingsPayload = {
   id: number;
   siteName: string;
   logoUrl: string | null;
+  /** Admin tek-tık bakım modu (DB). Public runtime bunu okur — redeploy gerekmez. */
   globalMaintenanceMode: boolean;
+  /** `MAINTENANCE_MODE` env acil override'ı açıksa true; bu kapatılsa bile site bakımda kalır. */
+  maintenanceForcedByEnv?: boolean;
   seoTitle: string | null;
   seoDescription: string | null;
   seoKeywords: string | null;
