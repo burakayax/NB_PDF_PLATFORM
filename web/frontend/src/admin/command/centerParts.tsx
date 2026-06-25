@@ -109,6 +109,7 @@ export function SiteForm({
             const next = await putAdminAppSettings(accessToken, {
               siteName: form.siteName,
               logoUrl: form.logoUrl,
+              globalMaintenanceMode: form.globalMaintenanceMode,
               seoTitle: form.seoTitle,
               seoDescription: form.seoDescription,
               seoKeywords: form.seoKeywords,
@@ -133,14 +134,36 @@ export function SiteForm({
           onChange={(e) => setK("logoUrl")(e.target.value.trim() === "" ? null : e.target.value)}
         />
       </AdminField>
-      <div className="rounded-lg border border-slate-700/80 bg-slate-900/40 px-3 py-2 text-xs text-slate-300">
-        <span className="font-medium text-slate-200">Global maintenance</span> is controlled by the API host env{" "}
-        <code className="rounded bg-black/40 px-1">MAINTENANCE_MODE</code> (redeploy to apply). Displayed value reflects
-        the current API:{" "}
-        <span className={form.globalMaintenanceMode ? "text-amber-300" : "text-emerald-400"}>
-          {form.globalMaintenanceMode ? "on" : "off"}
-        </span>
-        .
+      <div className="rounded-lg border border-slate-700/80 bg-slate-900/40 px-3 py-3">
+        <label className="flex cursor-pointer items-center justify-between gap-3">
+          <span>
+            <span className="font-medium text-slate-200">Bakım modu</span>
+            <span className="mt-0.5 block text-xs text-slate-400">
+              Açıkken ziyaretçilere bakım sayfası gösterilir. Tek tıkla aç/kapat — redeploy gerekmez.
+              Mevcut durum:{" "}
+              <span className={form.globalMaintenanceMode ? "text-amber-300" : "text-emerald-400"}>
+                {form.globalMaintenanceMode ? "AÇIK" : "kapalı"}
+              </span>
+            </span>
+          </span>
+          <input
+            type="checkbox"
+            checked={!!form.globalMaintenanceMode}
+            onChange={(e) => setK("globalMaintenanceMode")(e.target.checked)}
+            className="h-5 w-5 shrink-0 cursor-pointer accent-amber-500"
+            aria-label="Bakım modu"
+          />
+        </label>
+        {form.maintenanceForcedByEnv ? (
+          <p className="mt-2 rounded bg-amber-500/10 px-2 py-1.5 text-xs text-amber-300">
+            ⚠ <code className="rounded bg-black/40 px-1">MAINTENANCE_MODE</code> env'i açık — bu anahtar
+            kapatılsa bile site bakımda kalır. Normal kullanım için Render'da env'i kapatın; env yalnızca
+            acil override içindir.
+          </p>
+        ) : null}
+        <p className="mt-2 text-[11px] text-slate-500">
+          Değişikliği uygulamak için aşağıdaki <span className="text-slate-300">Save</span>'e basın.
+        </p>
       </div>
       <AdminField label="SEO title">
         <input className={adminInputClass} value={form.seoTitle ?? ""} onChange={(e) => setK("seoTitle")(e.target.value || null)} />

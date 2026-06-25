@@ -916,7 +916,10 @@ export async function getAppSettingsForAdmin() {
     id: row.id,
     siteName: row.siteName,
     logoUrl: row.logoUrl,
-    globalMaintenanceMode: env.maintenanceModeEnabled,
+    // DB değeri = admin'in tek-tıkla yönettiği bakım modu.
+    globalMaintenanceMode: row.globalMaintenanceMode,
+    // env override aktifse admin kapatsa bile site bakımda kalır; UI bunu uyarır.
+    maintenanceForcedByEnv: env.maintenanceModeEnabled,
     seoTitle: row.seoTitle,
     seoDescription: row.seoDescription,
     seoKeywords: row.seoKeywords,
@@ -928,7 +931,7 @@ export async function updateAppSettingsForAdmin(
   data: {
     siteName?: string;
     logoUrl?: string | null;
-    /** @deprecated Ignored — set `MAINTENANCE_MODE` on the API host and redeploy. */
+    /** Tek-tıkla bakım modu — DB'de saklanır, public runtime bunu okur (redeploy gerekmez). */
     globalMaintenanceMode?: boolean;
     seoTitle?: string | null;
     seoDescription?: string | null;
@@ -942,6 +945,7 @@ export async function updateAppSettingsForAdmin(
       id: APP_SETTINGS_SINGLETON_ID,
       ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
       ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
       ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
       ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
       ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
@@ -949,6 +953,7 @@ export async function updateAppSettingsForAdmin(
     update: {
       ...(data.siteName !== undefined ? { siteName: data.siteName } : {}),
       ...(data.logoUrl !== undefined ? { logoUrl: data.logoUrl } : {}),
+      ...(data.globalMaintenanceMode !== undefined ? { globalMaintenanceMode: data.globalMaintenanceMode } : {}),
       ...(data.seoTitle !== undefined ? { seoTitle: data.seoTitle } : {}),
       ...(data.seoDescription !== undefined ? { seoDescription: data.seoDescription } : {}),
       ...(data.seoKeywords !== undefined ? { seoKeywords: data.seoKeywords } : {}),
@@ -961,7 +966,8 @@ export async function updateAppSettingsForAdmin(
     id: next.id,
     siteName: next.siteName,
     logoUrl: next.logoUrl,
-    globalMaintenanceMode: env.maintenanceModeEnabled,
+    globalMaintenanceMode: next.globalMaintenanceMode,
+    maintenanceForcedByEnv: env.maintenanceModeEnabled,
     seoTitle: next.seoTitle,
     seoDescription: next.seoDescription,
     seoKeywords: next.seoKeywords,
