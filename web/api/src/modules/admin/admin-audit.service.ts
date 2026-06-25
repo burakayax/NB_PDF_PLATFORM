@@ -93,18 +93,8 @@ export async function recordSettingRevision(
   await trimOldRevisions(scope);
 }
 
-/** Mirrors `MAINTENANCE_MODE` into `AppSettings` for legacy reads; not the source of truth for public API. */
-async function syncGlobalMaintenanceToAppSettingsRow(): Promise<void> {
-  try {
-    await prisma.appSettings.upsert({
-      where: { id: 1 },
-      create: { id: 1, globalMaintenanceMode: env.maintenanceModeEnabled },
-      update: { globalMaintenanceMode: env.maintenanceModeEnabled },
-    });
-  } catch (err) {
-    console.error("[admin-audit] syncGlobalMaintenanceToAppSettingsRow failed", err);
-  }
-}
+// (kaldırıldı) Eskiden `MAINTENANCE_MODE` env'ini AppSettings'e aynalayan sync. Bakım modu
+// artık admin panelinden DB üzerinden yönetildiği için bu ayna, admin'in toggle değerini ezerdi.
 
 function runPatchSideEffectsForKey(key: string) {
   if (key === "plans.override") {
@@ -119,9 +109,6 @@ function runPatchSideEffectsForKey(key: string) {
   }
   if (key === SITE_SETTING_KEYS.TOOLS_CONFIG) {
     invalidateTOOLSConfigCache();
-  }
-  if (key === SITE_SETTING_KEYS.GLOBAL_FLAGS) {
-    void syncGlobalMaintenanceToAppSettingsRow();
   }
 }
 
