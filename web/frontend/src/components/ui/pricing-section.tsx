@@ -4,7 +4,8 @@ import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
 import { pricingSectionCopy } from "../../i18n/pricingSection";
 import { PLANS, STARTER_TOOL_IDS, TOTAL_TOOL_COUNT } from "../../lib/planConfig";
-import type { Currency, BillingCycle, PlanDefinition } from "../../lib/planConfig";
+import type { Currency, BillingCycle, PlanDefinition, PlanId } from "../../lib/planConfig";
+import { PlanPerksModal } from "../pricing/PlanPerksModal";
 import { sidebarToolLabel } from "../../i18n/workspace";
 import type { FeatureKey } from "../../api/subscription";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
@@ -247,6 +248,7 @@ function MonthlyOnlyCard({
   displaySymbol,
   onCta,
   comingSoon = false,
+  onShowPerks,
   starterTools = [],
 }: {
   plan: PlanDefinition;
@@ -256,6 +258,7 @@ function MonthlyOnlyCard({
   displaySymbol?: string;
   onCta: () => void;
   comingSoon?: boolean;
+  onShowPerks?: () => void;
   starterTools?: FeatureKey[];
 }) {
   const tr = lang === "tr";
@@ -377,6 +380,15 @@ function MonthlyOnlyCard({
           ? (tr ? "Yakında" : "Coming soon")
           : isPlus ? (tr ? "Plus'ı Başlat" : "Start Plus") : (tr ? "Başlangıç'ı Başlat" : "Start Starter")}
       </button>
+      {onShowPerks && (
+        <button
+          type="button"
+          onClick={onShowPerks}
+          className="mt-2 w-full text-center text-[12px] font-semibold text-blue-300/90 underline-offset-2 transition hover:text-blue-200 hover:underline"
+        >
+          {tr ? "Tüm ayrıcalıkları gör →" : "See all perks →"}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -393,6 +405,7 @@ function CycleAwareCard({
   displaySymbol,
   onCta,
   comingSoon = false,
+  onShowPerks,
 }: {
   plan: PlanDefinition;
   currency: Currency;
@@ -401,6 +414,7 @@ function CycleAwareCard({
   displaySymbol?: string;
   onCta: (cycle: BillingCycle, extraSeats: number) => void;
   comingSoon?: boolean;
+  onShowPerks?: () => void;
 }) {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
   const [extraSeats, setExtraSeats] = useState(0);
@@ -596,6 +610,17 @@ function CycleAwareCard({
               ? `Business'ı Başlat${extraSeats > 0 ? ` · ${5 + extraSeats} Kişi` : ""}`
               : `Start Business${extraSeats > 0 ? ` · ${5 + extraSeats} Seats` : ""}`)}
       </button>
+      {onShowPerks && (
+        <button
+          type="button"
+          onClick={onShowPerks}
+          className={`mt-2 w-full text-center text-[12px] font-semibold underline-offset-2 transition hover:underline ${
+            isPro ? "text-amber-300/90 hover:text-amber-200" : "text-violet-300/90 hover:text-violet-200"
+          }`}
+        >
+          {tr ? "Tüm ayrıcalıkları gör →" : "See all perks →"}
+        </button>
+      )}
     </motion.div>
   );
 }
@@ -748,6 +773,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
   const comingSoon = flags?.featureFlags?.paymentsDisabled !== false;
+  // "Tüm ayrıcalıkları gör" popup'ı — hangi planın detayı açık.
+  const [perksPlan, setPerksPlan] = useState<PlanId | null>(null);
   const starterTools: FeatureKey[] = (
     cards?.starterTools?.length ? cards.starterTools : STARTER_TOOL_IDS
   ) as FeatureKey[];
@@ -837,6 +864,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.08}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onShowPerks={() => setPerksPlan("PLUS")}
             onCta={onSelectPlan ? () => onSelectPlan("PLUS", "MONTHLY") : onUseWebApp}
           />
           <CycleAwareCard
@@ -846,6 +874,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.12}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onShowPerks={() => setPerksPlan("PRO")}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
           />
           <CycleAwareCard
@@ -855,6 +884,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.16}
             displaySymbol={currencySymbol}
             comingSoon={comingSoon}
+            onShowPerks={() => setPerksPlan("BUSINESS")}
             onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
           />
         </div>
@@ -893,6 +923,13 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         {/* Premium FAQ */}
         <PricingFaq language={language} />
       </div>
+
+      <PlanPerksModal
+        open={perksPlan !== null}
+        planId={perksPlan}
+        language={language}
+        onClose={() => setPerksPlan(null)}
+      />
     </section>
   );
 }
