@@ -17,6 +17,7 @@ import {
 import type { CheckoutCurrency } from "./pricing-matrix.js";
 import { getPaymentPricesTry } from "./payment-pricing.js";
 import { buildCheckoutPricing, resolveEffectiveCountry } from "../../lib/vat.js";
+import { decryptField } from "../../lib/encryption.js";
 import { createTeamForOwner } from "../team/team.service.js";
 import IyzipayImport from "iyzipay";
 import iyziUtilsImport from "iyzipay/lib/utils.js";
@@ -328,8 +329,28 @@ function splitBuyerName(user: User): { name: string; surname: string } {
   return { name: full, surname: "User" };
 }
 
-function gsmNumberForCheckout(user: User): string {
-  const raw = user.phone?.trim();
+/**
+ * Faturalandırma formu (saveBillingInfo) phone/adres/taxId alanlarını
+ * "ivHex:tagHex:ctHex" formatında ŞİFRELİ saklar; auth/profil akışı ise
+ * düz metin (E.164) yazar. İki olasılığı da güvenle ele al — şifreli blob'u
+ * çözmeden iyzico'ya göndermek "gsmNumber 25 karakterden fazla olamaz"
+ * hatasına yol açıyor (hex rakamları telefon sanılıyor).
+ */
+function decryptBillingField(value: string | null | undefined): string {
+  const v = value?.trim();
+  if (!v) return "";
+  if (/^[0-9a-f]+:[0-9a-f]+:[0-9a-f]+$/i.test(v)) {
+    try {
+      return decryptField(v).trim();
+    } catch {
+      return "";
+    }
+  }
+  return v;
+}
+
+function gsmNumberForCheckout(user: Pick<User, "phone">): string {
+  const raw = decryptBillingField(user.phone);
   if (!raw) {
     return env.IYZICO_BUYER_GSM;
   }
@@ -355,7 +376,7 @@ function buyerVenueFromUser(user: User): {
   zipCode: string;
   gsmNumber: string;
 } {
-  const street = user.billingAddressLine?.trim() || BUYER_DUMMY_STREET;
+  const street = decryptBillingField(user.billingAddressLine) || BUYER_DUMMY_STREET;
   const city = user.city?.trim() || "Istanbul";
   const country = user.country?.trim() || "Turkey";
   const zipCode = user.billingPostalCode?.trim() || "34696";
@@ -868,13 +889,13 @@ async function triggerInvoiceGeneration(
         name,
         surname,
         email: user.email,
-        gsmNumber: user.phone ?? "",
+        gsmNumber: gsmNumberForCheckout(user),
         identityNumber: nationalId ?? "",
-        registrationAddress: user.billingAddressLine ?? "",
+        registrationAddress: decryptBillingField(user.billingAddressLine),
         city: user.city ?? "",
         country: countryCode === "TR" ? "Turkey" : countryCode,
         invoiceType: user.invoiceType ?? "individual",
-        taxId: user.taxId ?? "",
+        taxId: decryptBillingField(user.taxId),
         taxOffice: user.taxOffice ?? "",
       },
       basketItems: [
@@ -1635,13 +1656,13 @@ async function triggerCreditNote(
       name,
       surname,
       email: user.email,
-      gsmNumber: user.phone ?? "",
+      gsmNumber: gsmNumberForCheckout(user),
       identityNumber: nationalId ?? "",
-      registrationAddress: user.billingAddressLine ?? "",
+      registrationAddress: decryptBillingField(user.billingAddressLine),
       city: user.city ?? "",
       country: invoice.customerCountry === "TR" ? "Turkey" : (invoice.customerCountry ?? "Turkey"),
       invoiceType: user.invoiceType ?? "individual",
-      taxId: user.taxId ?? "",
+      taxId: decryptBillingField(user.taxId),
       taxOffice: user.taxOffice ?? "",
     },
     basketItems: [
