@@ -186,7 +186,7 @@ export const PLANS: PlanDefinition[] = [
       "25 batch",
       "Filigran yok",
       "Max öncelik",
-      "24/7 sohbet",
+      "Öncelikli destek",
       "Analitik",
     ],
     featuresEn: [
@@ -197,7 +197,7 @@ export const PLANS: PlanDefinition[] = [
       "Batch 25",
       "No watermark",
       "Max priority",
-      "24/7 chat",
+      "Priority support",
       "Analytics",
     ],
     dailyOpsLimit: null,
