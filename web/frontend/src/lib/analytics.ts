@@ -38,11 +38,17 @@ export function initializeGA(): boolean {
   }
 
   window.dataLayer = window.dataLayer ?? [];
-  window.gtag =
-    window.gtag ||
-    function gtag(...args: unknown[]) {
-      window.dataLayer.push(args);
+  // KRİTİK: gtag.js, dataLayer'a push edilen her komut kaydının `arguments` NESNESİ
+  // olmasını bekler. Rest-param ile gerçek bir Array push edilirse (eski hata) gtag.js
+  // `js`/`config` komutlarını TANIMAZ → page_view/collect hiç gönderilmez. Bu yüzden
+  // Google'ın resmi snippet'i `dataLayer.push(arguments)` kullanır; biz de aynısını yaparız.
+  if (!window.gtag) {
+    const gtag: (...args: unknown[]) => void = function () {
+      // eslint-disable-next-line prefer-rest-params
+      window.dataLayer.push(arguments);
     };
+    window.gtag = gtag;
+  }
 
   window.gtag("js", new Date());
   window.gtag("config", id);
