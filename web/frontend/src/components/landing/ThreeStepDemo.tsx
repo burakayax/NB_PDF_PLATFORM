@@ -38,9 +38,17 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           hl: { left: 16, top: 25, width: 30, height: 14 },
         },
         {
-          img: "/demo/step3.png",
-          title: "İndir & Paylaş",
-          caption: "İşlem biter; Paylaş, Aç veya indir — saniyeler içinde.",
+          img: "/demo/step3.jpg",
+          title: "Sayfaları Seç & Düzenle",
+          caption: "Sayfaları görsel olarak seç, sil, sırala veya döndür.",
+          accent: "236,72,153",
+          hl: { left: 3, top: 16, width: 34, height: 62 },
+        },
+        {
+          img: "/demo/step4.png",
+          title: "Otomatik İndir & Paylaş",
+          caption:
+            "İşlem biter ve dosyan otomatik indirilir — ayrıca Paylaş ya da Aç. Kaydet'e gerek yok!",
           accent: "6,182,212",
           hl: { left: 67, top: 85, width: 32, height: 12 },
         },
@@ -61,9 +69,17 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           hl: { left: 16, top: 25, width: 30, height: 14 },
         },
         {
-          img: "/demo/step3.png",
-          title: "Download & share",
-          caption: "It's done — share, open or download in seconds.",
+          img: "/demo/step3.jpg",
+          title: "Select & arrange pages",
+          caption: "Visually select, delete, reorder or rotate pages.",
+          accent: "236,72,153",
+          hl: { left: 3, top: 16, width: 34, height: 62 },
+        },
+        {
+          img: "/demo/step4.png",
+          title: "Auto-download & share",
+          caption:
+            "It's done and saved automatically — plus Share or Open. No Save button needed!",
           accent: "6,182,212",
           hl: { left: 67, top: 85, width: 32, height: 12 },
         },
@@ -154,7 +170,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
       </div>
 
       {/* Adım sekmeleri */}
-      <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
         {steps.map((s, i) => {
           const isActive = i === active;
           return (
