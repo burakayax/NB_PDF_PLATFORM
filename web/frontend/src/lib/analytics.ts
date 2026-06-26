@@ -62,6 +62,25 @@ export function initializeGA(): boolean {
   return true;
 }
 
+/**
+ * GA4 özel olay (event) gönderir. Çerez onayı verilip gtag.js yüklenene kadar
+ * sessizce yok sayılır. Ödeme hunisi (view_pricing → select_plan → add_payment_info
+ * → purchase) ve terk (checkout_abandoned) olaylarını izlemek için kullanılır.
+ *
+ * GA4'te: Yönetici → Etkinlikler altında görünür; Keşfet → Huni Keşfi ile
+ * adım-adım düşüş (kim hangi adımda vazgeçti) raporlanır.
+ */
+export function trackGAEvent(
+  name: string,
+  params?: Record<string, string | number | boolean | undefined>,
+): void {
+  const id = getGaMeasurementId();
+  if (!id || typeof window.gtag !== "function") {
+    return;
+  }
+  window.gtag("event", name, params ?? {});
+}
+
 /** SPA rota / sorgu değişiminde page_view gönderir (özellikle /tools/&lt;slug&gt;). */
 export function trackGAPageView(pagePath: string, pageTitle?: string): void {
   const id = getGaMeasurementId();

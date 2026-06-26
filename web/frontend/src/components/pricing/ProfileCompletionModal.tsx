@@ -256,7 +256,7 @@ export function ProfileCompletionModal({
             <label className="block">
               <span className="mb-2 block text-sm font-medium text-nb-muted">{tr ? "Cep telefonu" : "Mobile phone"}</span>
               <NbPhoneInput
-                className="[&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-white/[0.08] [&_.PhoneInput]:bg-nb-bg-soft/60 [&_.PhoneInputInput]:rounded-r-xl [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:py-3 [&_.PhoneInputInput]:text-sm [&_.PhoneInputInput]:text-nb-text"
+                language={tr ? "tr" : "en"}
                 value={phone}
                 onChange={(v) => setPhone(v)}
                 disabled={submitting}

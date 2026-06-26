@@ -96,6 +96,7 @@ import {
   PAYMENT_CHECKOUT_NOT_FOUND,
   resolveFakePaymentRedirect,
 } from "./api/fakePayment";
+import { trackGAEvent } from "./lib/analytics";
 import {
   buildResumeDownloadUrl,
   canResumeAfterPayment,
@@ -2397,6 +2398,8 @@ function App() {
     );
 
     if (payment === "success") {
+      // Huni son adım: gerçek iyzico ödemesi başarıyla tamamlandı.
+      trackGAEvent("purchase", { plan: plan ?? undefined });
       const seats = url.searchParams.get("seats");
       url.searchParams.delete("seats");
       window.history.replaceState(
@@ -2425,6 +2428,8 @@ function App() {
     }
 
     if (payment === "failed") {
+      // İyzico'dan iptal/başarısız dönüş — "ödeme iptal / son anda vazgeçti".
+      trackGAEvent("checkout_abandoned", { step: "payment_failed", plan: plan ?? undefined });
       showToast(
         "error",
         language === "tr" ? "Ödeme başarısız" : "Payment failed",

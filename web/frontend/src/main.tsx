@@ -8,7 +8,6 @@ import { GlobalErrorBoundary } from "./components/common/GlobalErrorBoundary";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards } from "./lib/productionGuards";
 import { getCountryCode } from "./lib/geoCountry";
-import "react-phone-number-input/style.css";
 import "./styles/app.css";
 
 // Belge dilini kullanıcı konumu ve tercihine göre ayarlar.
