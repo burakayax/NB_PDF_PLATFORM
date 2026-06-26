@@ -6,6 +6,7 @@ import {
   creditCheckoutStartController,
   creditCheckoutValidateCouponController,
 } from "./credit-checkout.controller.js";
+import { requirePaymentsEnabled } from "../payment/payments-gate.middleware.js";
 
 export const creditCheckoutRouter = Router();
 
@@ -20,5 +21,5 @@ const validateCouponLimiter = rateLimit({
 });
 
 creditCheckoutRouter.post("/preview", asyncHandler(creditCheckoutPreviewController));
-creditCheckoutRouter.post("/start", asyncHandler(creditCheckoutStartController));
+creditCheckoutRouter.post("/start", requirePaymentsEnabled, asyncHandler(creditCheckoutStartController));
 creditCheckoutRouter.post("/validate-coupon", validateCouponLimiter, asyncHandler(creditCheckoutValidateCouponController));
