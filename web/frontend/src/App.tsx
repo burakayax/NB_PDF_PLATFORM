@@ -5308,14 +5308,16 @@ function App() {
                 <div className="merge-share-bar__texts">
                   <span className="merge-share-bar__title">
                     {language === "tr"
-                      ? "Dosyan indirildi"
-                      : "File downloaded"}
+                      ? "Dosyan otomatik indirildi ✓"
+                      : "Auto-downloaded ✓"}
                   </span>
                   <span
                     className="merge-share-bar__name"
                     title={mergeShareReady.filename}
                   >
-                    {mergeShareReady.filename}
+                    {language === "tr"
+                      ? `${mergeShareReady.filename} · İndirilenler klasöründe`
+                      : `${mergeShareReady.filename} · in your Downloads`}
                   </span>
                 </div>
               </div>
