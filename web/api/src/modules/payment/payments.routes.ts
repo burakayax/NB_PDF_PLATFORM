@@ -7,11 +7,12 @@ import {
   getPaymentsPricingPublicController,
   initializePaymentsController,
 } from "./payments.controller.js";
+import { requirePaymentsEnabled } from "./payments-gate.middleware.js";
 
 /** `/api/payments/initialize` — pricing tiers; GET `/api/payments/pricing` — canonical TRY amounts; `/api/payments/callback` — iyzico POST alias. */
 export const paymentsRouter = Router();
 
 paymentsRouter.get("/pricing", asyncHandler(getPaymentsPricingPublicController));
 paymentsRouter.get("/exit-intent-offer", asyncHandler(getExitIntentOfferController));
-paymentsRouter.post("/initialize", asyncHandler(initializePaymentsController));
+paymentsRouter.post("/initialize", requirePaymentsEnabled, asyncHandler(initializePaymentsController));
 paymentsRouter.post("/callback", paymentCallbackLimiter, paymentCallbackUrlencoded, asyncHandler(paymentCallbackController));

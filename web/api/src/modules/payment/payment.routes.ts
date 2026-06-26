@@ -8,10 +8,11 @@ import {
   paymentRefundWebhookController,
 } from "./payment.controller.js";
 import { paymentCallbackLimiter } from "../../middleware/api-security.middleware.js";
+import { requirePaymentsEnabled } from "./payments-gate.middleware.js";
 
 export const paymentRouter = Router();
 
 paymentRouter.post("/callback", paymentCallbackLimiter, paymentCallbackUrlencoded, asyncHandler(paymentCallbackController));
-paymentRouter.post("/create", asyncHandler(createPaymentController));
+paymentRouter.post("/create", requirePaymentsEnabled, asyncHandler(createPaymentController));
 // iyzico iade bildirimi — JSON body kabul eder
 paymentRouter.post("/refund-notify", express.json(), asyncHandler(paymentRefundWebhookController));
