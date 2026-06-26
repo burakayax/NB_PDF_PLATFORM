@@ -884,71 +884,10 @@ function ProductShowcase({
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             {tr
-              ? "Güçlü bir web uygulaması — yerel Windows masaüstü sürümü çok yakında."
-              : "A powerful web app — a native Windows desktop version is coming soon."}
+              ? "Tarayıcıdan çalışan güçlü bir PDF platformu — kurulum gerekmez."
+              : "A powerful PDF platform right in your browser — no install needed."}
           </p>
         </motion.div>
-
-        {/* Tab switcher */}
-        <div className="flex justify-center mb-10">
-          <div
-            role="tablist"
-            aria-label={tr ? "Platform seçimi" : "Platform tabs"}
-            className="inline-flex items-center rounded-[14px] border border-white/[0.07] bg-white/[0.03] p-1 backdrop-blur-md"
-          >
-            {(["web", "desktop"] as ShowcaseTab[]).map((tab) => (
-              <button
-                key={tab}
-                role="tab"
-                aria-selected={activeTab === tab}
-                onClick={() => setActiveTab(tab)}
-                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-[10px] text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 ${activeTab === tab ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
-              >
-                {activeTab === tab && (
-                  <motion.div
-                    layoutId="showcase-tab"
-                    className="absolute inset-0 rounded-[10px] border border-indigo-400/20 bg-gradient-to-b from-indigo-500/30 to-indigo-700/20 shadow-[0_0_20px_rgba(99,102,241,0.25),inset_0_1px_0_rgba(255,255,255,0.1)]"
-                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                  />
-                )}
-                <span className="relative" aria-hidden="true">
-                  {tab === "web" ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.8}
-                        d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.8}
-                        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  )}
-                </span>
-                <span className="relative">
-                  {tab === "web" ? "Web App" : (tr ? "Masaüstü · Yakında" : "Desktop · Soon")}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Frame + pills */}
         <div className="relative px-4 sm:px-8 lg:px-16">
@@ -1040,34 +979,6 @@ function ProductShowcase({
               {tr ? "Ücretsiz Dene" : "Start Free Trial"}
             </span>
           </motion.button>
-          <motion.div
-            whileHover={{ y: -4 }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 18 }}
-          >
-            <div className="relative">
-              <span className="inline-flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/[0.05] px-8 font-medium text-gray-300 opacity-50 cursor-not-allowed">
-                {tr ? "Masaüstü · Çok Yakında" : "Desktop · Coming Soon"}
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </span>
-              <span className="absolute -top-2 -right-1 bg-amber-500 text-black text-[11px] font-bold px-2 py-1 rounded">
-                {tr ? "Yakında" : "Coming"}
-              </span>
-            </div>
-          </motion.div>
         </div>
       </div>
     </section>
