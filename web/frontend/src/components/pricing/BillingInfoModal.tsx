@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
+import { NbPhoneInput } from "../common/NbPhoneInput";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -588,10 +589,15 @@ export function BillingInfoModal({
                 </div>
               </div>
 
-              {/* FIX 5: TC No — "isteğe bağlı" ifadesi kaldırıldı, AES-256 güvenlik mesajı eklendi */}
+              {/* TC No — bireysel kullanıcı için opsiyonel; boş bırakılırsa fatura GİB standart 11111111111 ile kesilir */}
               {isTurkish && form.invoiceType === "individual" && (
                 <div>
-                  <label className={lbl}>TC Kimlik No</label>
+                  <label className={lbl}>
+                    TC Kimlik No{" "}
+                    <span className="font-normal text-slate-500">
+                      {tr ? "(opsiyonel)" : "(optional)"}
+                    </span>
+                  </label>
                   <input
                     className={inp}
                     type="text"
@@ -604,13 +610,13 @@ export function BillingInfoModal({
                         tcKimlikNo: e.target.value.replace(/\D/g, ""),
                       }))
                     }
-                    placeholder="11 haneli TC Kimlik No"
+                    placeholder={tr ? "11 haneli TC Kimlik No (boş bırakabilirsiniz)" : "11-digit national ID (optional)"}
                     autoComplete="off"
                   />
                   <p className="mt-1 text-[11px] text-slate-500">
                     {tr
-                      ? "TC Kimlik No'nuz AES-256-GCM şifrelemesiyle güvenle saklanır ve yalnızca yasal e-arşiv fatura düzenlenmesi amacıyla kullanılır."
-                      : "Your national ID is encrypted with AES-256-GCM and used solely for legal e-invoice generation."}
+                      ? "İsteğe bağlıdır — boş bırakırsanız faturanız yasal olarak nihai tüketici (11111111111) adına düzenlenir. Girerseniz AES-256-GCM ile şifrelenir ve yalnızca e-arşiv fatura için kullanılır."
+                      : "Optional — if left blank, your invoice is issued to a final consumer (11111111111) as permitted by law. If provided, it is encrypted with AES-256-GCM and used solely for e-invoice generation."}
                   </p>
                 </div>
               )}
@@ -729,19 +735,13 @@ export function BillingInfoModal({
                 </div>
               </div>
 
-              {/* Telefon */}
+              {/* Telefon — ülke kodu bayraklı açılır menüden seçilir, IP'den otomatik tespit edilir */}
               <div>
                 <label className={lbl}>{tr ? "Telefon" : "Phone"}</label>
-                <input
-                  className={inp}
-                  type="tel"
+                <NbPhoneInput
+                  className="[&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-white/[0.08] [&_.PhoneInput]:bg-white/[0.03] [&_.PhoneInput]:px-3 [&_.PhoneInputInput]:rounded-r-xl [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:py-2.5 [&_.PhoneInputInput]:text-sm [&_.PhoneInputInput]:text-slate-100 [&_.PhoneInputInput]:outline-none"
                   value={form.phone}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, phone: e.target.value }))
-                  }
-                  placeholder={
-                    isTurkish ? "+90 5XX XXX XXXX" : "+1 234 567 8900"
-                  }
+                  onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
                 />
               </div>
 
