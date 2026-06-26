@@ -86,3 +86,6 @@ web/frontend/playwright-report/
 web/frontend/test-results/
 test_output.pptx
 *.pptx
+
+# Ham ekran görüntüleri (PII içerebilir — repoya girmez; işlenmişler public/ altında)
+_screenshots/

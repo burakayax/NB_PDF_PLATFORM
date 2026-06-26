@@ -53,9 +53,14 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
         },
         {
           label: tr ? "Sınırsız günlük kullanım" : "Unlimited daily usage",
-          detail: tr
-            ? "Gün içinde işlem sayısı kısıtı yok — sadece aylık kotan geçerli."
-            : "No daily cap — only your monthly quota applies.",
+          detail:
+            plan.monthlyOpsLimit == null
+              ? tr
+                ? "Ne günlük ne aylık işlem limiti yok — dilediğin kadar kullan."
+                : "No daily or monthly cap — use it as much as you want."
+              : tr
+                ? "Gün içinde işlem sayısı kısıtı yok; yalnızca aylık kotan geçerli."
+                : "No daily cap; only your monthly quota applies.",
         },
         {
           label: fileSize,
@@ -180,14 +185,23 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
               : "Email support"
             : planId === "PRO"
               ? tr
-                ? "7/24 canlı sohbet desteği"
-                : "24/7 live chat support"
+                ? "Öncelikli e-posta desteği"
+                : "Priority email support"
               : tr
-                ? "Öncelikli özel destek"
-                : "Priority dedicated support",
-        detail: tr
-          ? "Sorularına hızlı ve gerçek bir insandan yanıt."
-          : "Fast answers from a real human.",
+                ? "Öncelikli destek"
+                : "Priority support",
+        detail:
+          planId === "PLUS"
+            ? tr
+              ? "Sorularına e-posta ile gerçek bir insandan yanıt."
+              : "Real-human answers to your questions by email."
+            : planId === "PRO"
+              ? tr
+                ? "E-postaların öncelikli sırada, daha hızlı yanıtlanır."
+                : "Your emails are prioritized for faster replies."
+              : tr
+                ? "Talepleriniz en üst öncelikte ele alınır."
+                : "Your requests are handled at the highest priority.",
       },
     ],
   });

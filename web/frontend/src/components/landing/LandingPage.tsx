@@ -14,6 +14,7 @@ import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { LandingIcon } from "./LandingIcon";
+import { ThreeStepDemo } from "./ThreeStepDemo";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 
 /**
@@ -1254,6 +1255,9 @@ function HowItWorks({ language }: { language: Language }) {
             {tr ? "3 Adımda Tamamla" : "As Simple as 1-2-3"}
           </h2>
         </motion.div>
+
+        {/* Gerçek ekran görüntüleriyle canlı, vurgulu demo */}
+        <ThreeStepDemo language={language} />
 
         <div className="grid md:grid-cols-3 gap-6 relative">
           {/* Glowing gradient connector */}
