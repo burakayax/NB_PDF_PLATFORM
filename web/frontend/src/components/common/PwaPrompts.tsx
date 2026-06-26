@@ -145,9 +145,11 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
         </button>
 
         <div className="flex items-start gap-3.5 pr-6">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-nb-primary/35 bg-gradient-to-br from-nb-primary/20 to-nb-primary/[0.06] shadow-[0_0_28px_rgba(34,211,238,0.28)]">
-            <img src="/icons/icon-192.png" alt="" className="h-7 w-7 rounded-lg" />
-          </span>
+          <img
+            src="/emblem.png"
+            alt=""
+            className="h-12 w-12 shrink-0 object-contain"
+          />
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold text-white">
               {iosManual ? t.iosTitle : t.installTitle}

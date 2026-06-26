@@ -739,7 +739,7 @@ export function BillingInfoModal({
               <div>
                 <label className={lbl}>{tr ? "Telefon" : "Phone"}</label>
                 <NbPhoneInput
-                  className="[&_.PhoneInput]:rounded-xl [&_.PhoneInput]:border [&_.PhoneInput]:border-white/[0.08] [&_.PhoneInput]:bg-white/[0.03] [&_.PhoneInput]:px-3 [&_.PhoneInputInput]:rounded-r-xl [&_.PhoneInputInput]:border-0 [&_.PhoneInputInput]:bg-transparent [&_.PhoneInputInput]:py-2.5 [&_.PhoneInputInput]:text-sm [&_.PhoneInputInput]:text-slate-100 [&_.PhoneInputInput]:outline-none"
+                  language={language}
                   value={form.phone}
                   onChange={(v) => setForm((p) => ({ ...p, phone: v }))}
                 />

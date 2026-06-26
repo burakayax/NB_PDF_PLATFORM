@@ -226,9 +226,9 @@ export function DashboardTopNav({
       >
         {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
         <img
-          src="/icons/icon-192.png"
+          src="/emblem.png"
           alt="PDF PLATFORM"
-          className="h-9 w-9 rounded-xl object-contain lg:hidden"
+          className="h-9 w-9 object-contain lg:hidden"
         />
         {/* Masaüstü: tam uzun logo (CMS'ten override edilebilir) */}
         <img
