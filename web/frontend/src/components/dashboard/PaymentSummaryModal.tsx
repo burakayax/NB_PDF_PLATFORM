@@ -6,6 +6,7 @@ import { confirmFakeCheckout, resolveFakePaymentRedirect } from "../../api/fakeP
 import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 import { useCheckoutCurrency } from "../../contexts/CheckoutCurrencyContext";
 import { getSaasApiBase } from "../../api/saasBase";
+import { trackGAEvent } from "../../lib/analytics";
 import { saasAuthorizedFetch } from "../../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { LegalDocumentBody } from "../legal/LegalPage";
@@ -301,6 +302,8 @@ export function PaymentSummaryModal({
     }
     setPaying(true);
     setPromoError(null);
+    // Huni 4. adım: kullanıcı "Güvenli ödemeye geç"e bastı (iyzico/ödeme başlatılıyor).
+    trackGAEvent("payment_started", { plan: planId, billing_cycle: billingCycle });
     try {
       // Exit-intent indirimi yalnızca manuel kupon girilmediyse uygulanır (stacking yok).
       const useExitIntent = exitIntentActive && !promoInput.trim();

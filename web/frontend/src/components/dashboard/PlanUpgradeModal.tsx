@@ -6,6 +6,7 @@ import type { PlanId } from "../../lib/planConfig";
 import { BillingInfoModal } from "../pricing/BillingInfoModal";
 import { PaymentSummaryModal } from "./PaymentSummaryModal";
 import PricingSection from "../ui/pricing-section";
+import { trackGAEvent } from "../../lib/analytics";
 
 interface PlanUpgradeModalProps {
   open: boolean;
@@ -41,6 +42,8 @@ export function PlanUpgradeModal({
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    // Huni 1. adım: kullanıcı paketleri/fiyatları görüntüledi.
+    trackGAEvent("view_pricing");
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
@@ -56,6 +59,8 @@ export function PlanUpgradeModal({
   const handleSelectPlan = useCallback(
     (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS", billingCycle: "MONTHLY" | "YEARLY" = "MONTHLY", extraSeats = 0) => {
       if (!accessToken || !user) return;
+      // Huni 2. adım: kullanıcı bir plan seçti (fatura adımına geçiyor).
+      trackGAEvent("select_plan", { plan: planId, billing_cycle: billingCycle });
       setBillingInfoPlanId(planId);
       setSelectedBillingCycle(billingCycle);
       setSelectedExtraSeats(extraSeats);
@@ -67,6 +72,8 @@ export function PlanUpgradeModal({
   const handleBillingInfoComplete = useCallback(() => {
     setBillingInfoOpen(false);
     if (billingInfoPlanId) {
+      // Huni 3. adım: fatura bilgileri tamamlandı, ödeme özeti açılıyor.
+      trackGAEvent("add_payment_info", { plan: billingInfoPlanId });
       setSelectedPlanId(billingInfoPlanId);
       setSummaryOpen(true);
     }
@@ -106,7 +113,12 @@ export function PlanUpgradeModal({
           open={billingInfoOpen}
           accessToken={accessToken}
           language={language}
-          onClose={() => { setBillingInfoOpen(false); setBillingInfoPlanId(null); }}
+          onClose={() => {
+            // Fatura adımında vazgeçti (onComplete'i tetiklemeden kapattı).
+            trackGAEvent("checkout_abandoned", { step: "billing_info", plan: billingInfoPlanId });
+            setBillingInfoOpen(false);
+            setBillingInfoPlanId(null);
+          }}
           onComplete={handleBillingInfoComplete}
         />
       ) : null}
@@ -119,8 +131,15 @@ export function PlanUpgradeModal({
           extraSeats={selectedExtraSeats}
           accessToken={accessToken}
           language={language}
-          onClose={() => { setSummaryOpen(false); setSelectedPlanId(null); }}
+          onClose={() => {
+            // Ödeme özeti adımında vazgeçti (ödemeyi tamamlamadan kapattı).
+            trackGAEvent("checkout_abandoned", { step: "payment_summary", plan: selectedPlanId });
+            setSummaryOpen(false);
+            setSelectedPlanId(null);
+          }}
           onPurchaseSuccess={() => {
+            // Modal-içi (fake) ödeme başarısı. Gerçek iyzico başarısı App.tsx'te izlenir.
+            trackGAEvent("purchase", { plan: selectedPlanId, billing_cycle: selectedBillingCycle });
             setSummaryOpen(false);
             setSelectedPlanId(null);
             onClose();
