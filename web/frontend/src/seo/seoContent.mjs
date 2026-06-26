@@ -367,7 +367,7 @@ export const TOOL_SEO = {
 
   "pdf-to-image": {
     tr: T(
-      "PDF'den JPG'ye Dönüştürme — sayfaları görsele çevir",
+      "PDF'den JPG'ye Dönüştürme — görsele çevir",
       "PDF sayfalarını yüksek çözünürlüklü JPG/PNG görsellerine dönüştürün. Her sayfayı ayrı görsel olarak indirin — online ücretsiz.",
       "PDF'den Görüntüye (JPG/PNG) Dönüştürme",
       "PDF sayfalarını yüksek kaliteli JPG veya PNG görsellerine dönüştürün. Her sayfa ayrı bir görsel olarak indirilir; sunum ve web kullanımı için idealdir.",
@@ -392,7 +392,7 @@ export const TOOL_SEO = {
 
   "image-to-pdf": {
     tr: T(
-      "JPG'den PDF'e Dönüştürme — görselleri birleştir",
+      "JPG'den PDF'e Dönüştürme — görselleri ekle",
       "JPG, PNG ve WebP görsellerini tek bir PDF dosyasında toplayın. Fotoğraf ve taramaları PDF'e çevirin — online ve ücretsiz.",
       "Görüntüden (JPG/PNG) PDF'e Dönüştürme",
       "Birden fazla JPG, PNG veya WebP görselini tek bir PDF'te birleştirin. Sırayı düzenleyin; fotoğraf, tarama ve ekran görüntülerini paylaşıma hazır PDF yapın.",
