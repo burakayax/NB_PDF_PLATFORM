@@ -247,9 +247,9 @@ function Navbar({
         >
           {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
           <img
-            src="/icons/icon-192.png"
+            src="/emblem.png"
             alt="PDF PLATFORM"
-            className="h-10 w-10 rounded-xl object-contain lg:hidden"
+            className="h-10 w-10 object-contain lg:hidden"
           />
           {/* Masaüstü: tam uzun logo */}
           <img
