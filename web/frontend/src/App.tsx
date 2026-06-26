@@ -97,6 +97,8 @@ import {
   resolveFakePaymentRedirect,
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
+import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
+import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   buildResumeDownloadUrl,
   canResumeAfterPayment,
@@ -2835,12 +2837,18 @@ function App() {
         typeof window !== "undefined"
           ? parseWorkspaceToolPath(window.location.pathname)
           : null;
+      // Madde 1: araç deep-link'i + tanıtım içeriği varsa LOGIN'e atma — public
+      // tanıtım sayfası gösterilir (aşağıdaki erken-return). Yalnızca tanıtımı
+      // olmayan deep-link veya çıplak /workspace login'e yönlendirilir.
+      if (toolFromUrl && getToolSeo(toolSlugForFeature(toolFromUrl), language)) {
+        return;
+      }
       if (toolFromUrl) {
         savePendingTool(toolFromUrl);
       }
       setView("login");
     }
-  }, [isAuthenticated, isRestoring, view]);
+  }, [isAuthenticated, isRestoring, view, language]);
 
   /**
    * Completes redirect-based fake checkout: user lands on
@@ -4691,6 +4699,33 @@ function App() {
           submitting: "Sending…",
           close: "Close",
         };
+
+  // Madde 1: Giriş yapmamış kullanıcı /tools/<slug> deep-link'ine geldiğinde
+  // login'e atılmaz; aracın PUBLIC tanıtım sayfasını (prerender ile aynı içerik)
+  // görür. Aracı kullanmak için CTA → giriş/üyelik akışı (pending-tool saklanır).
+  if (
+    view === "web" &&
+    !isAuthenticated &&
+    !isRestoring &&
+    pathname.startsWith("/tools/") &&
+    getToolSeo(toolSlugForFeature(selectedFeatureId), language)
+  ) {
+    const toolSlug = toolSlugForFeature(selectedFeatureId);
+    return (
+      <ToolPublicLanding
+        slug={toolSlug}
+        language={language}
+        onUse={() => {
+          savePendingTool(selectedFeatureId);
+          setView("register");
+        }}
+        onLogin={() => {
+          savePendingTool(selectedFeatureId);
+          setView("login");
+        }}
+      />
+    );
+  }
 
   if (view === "landing") {
     return (
