@@ -246,6 +246,7 @@ function MonthlyOnlyCard({
   delay,
   displaySymbol,
   onCta,
+  comingSoon = false,
   starterTools = [],
 }: {
   plan: PlanDefinition;
@@ -254,6 +255,7 @@ function MonthlyOnlyCard({
   delay: number;
   displaySymbol?: string;
   onCta: () => void;
+  comingSoon?: boolean;
   starterTools?: FeatureKey[];
 }) {
   const tr = lang === "tr";
@@ -361,14 +363,19 @@ function MonthlyOnlyCard({
       </AnimatePresence>
 
       <button
-        onClick={onCta}
+        onClick={comingSoon ? undefined : onCta}
+        disabled={comingSoon}
         className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${
-          isPlus
-            ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/30 py-3.5"
-            : "border border-white/20 text-white hover:bg-white/8"
+          comingSoon
+            ? "border border-white/15 text-gray-400 cursor-not-allowed"
+            : isPlus
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-lg shadow-blue-500/30 py-3.5"
+              : "border border-white/20 text-white hover:bg-white/8"
         }`}
       >
-        {isPlus ? (tr ? "Plus'ı Başlat" : "Start Plus") : (tr ? "Başlangıç'ı Başlat" : "Start Starter")}
+        {comingSoon
+          ? (tr ? "Yakında" : "Coming soon")
+          : isPlus ? (tr ? "Plus'ı Başlat" : "Start Plus") : (tr ? "Başlangıç'ı Başlat" : "Start Starter")}
       </button>
     </motion.div>
   );
@@ -385,6 +392,7 @@ function CycleAwareCard({
   delay,
   displaySymbol,
   onCta,
+  comingSoon = false,
 }: {
   plan: PlanDefinition;
   currency: Currency;
@@ -392,6 +400,7 @@ function CycleAwareCard({
   delay: number;
   displaySymbol?: string;
   onCta: (cycle: BillingCycle, extraSeats: number) => void;
+  comingSoon?: boolean;
 }) {
   const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
   const [extraSeats, setExtraSeats] = useState(0);
@@ -569,14 +578,19 @@ function CycleAwareCard({
       </p>
 
       <button
-        onClick={() => onCta(cycle, isPro ? 0 : extraSeats)}
+        onClick={comingSoon ? undefined : () => onCta(cycle, isPro ? 0 : extraSeats)}
+        disabled={comingSoon}
         className={`w-full py-3 rounded-xl text-sm font-semibold transition-all ${
-          isPro
-            ? "border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
-            : "border border-violet-500/40 text-violet-300 hover:bg-violet-500/10"
+          comingSoon
+            ? "border border-white/15 text-gray-400 cursor-not-allowed"
+            : isPro
+              ? "border border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+              : "border border-violet-500/40 text-violet-300 hover:bg-violet-500/10"
         }`}
       >
-        {isPro
+        {comingSoon
+          ? (tr ? "Yakında" : "Coming soon")
+          : isPro
           ? (tr ? "Pro'ya Geç" : "Go Pro")
           : (tr
               ? `Business'ı Başlat${extraSeats > 0 ? ` · ${5 + extraSeats} Kişi` : ""}`
@@ -730,7 +744,10 @@ interface PricingSectionProps {
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
-  const { cards } = useSettings();
+  const { cards, flags } = useSettings();
+  // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
+  // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
+  const comingSoon = flags?.featureFlags?.paymentsDisabled !== false;
   const starterTools: FeatureKey[] = (
     cards?.starterTools?.length ? cards.starterTools : STARTER_TOOL_IDS
   ) as FeatureKey[];
@@ -810,6 +827,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             delay={0.04}
             displaySymbol={currencySymbol}
             starterTools={starterTools}
+            comingSoon={comingSoon}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
           <MonthlyOnlyCard
@@ -818,6 +836,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             lang={language}
             delay={0.08}
             displaySymbol={currencySymbol}
+            comingSoon={comingSoon}
             onCta={onSelectPlan ? () => onSelectPlan("PLUS", "MONTHLY") : onUseWebApp}
           />
           <CycleAwareCard
@@ -826,6 +845,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             lang={language}
             delay={0.12}
             displaySymbol={currencySymbol}
+            comingSoon={comingSoon}
             onCta={onSelectPlan ? (cycle) => onSelectPlan("PRO", cycle, 0) : () => onUseWebApp()}
           />
           <CycleAwareCard
@@ -834,6 +854,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             lang={language}
             delay={0.16}
             displaySymbol={currencySymbol}
+            comingSoon={comingSoon}
             onCta={onSelectPlan ? (cycle, extraSeats) => onSelectPlan("BUSINESS", cycle, extraSeats) : () => onUseWebApp()}
           />
         </div>
