@@ -60,6 +60,7 @@ export const FEATURE_FLAG_CATALOG = [
   { key: "googleOAuth", label: "Google ile giriş", description: "OAuth yapılandırması sunucuda doluysa kullanılabilir." },
   { key: "contactForm", label: "İletişim formu", description: "Karşılama sayfasındaki iletişim bölümü." },
   { key: "workspaceTOOLS", label: "Çalışma alanı araçları", description: "Kapatıldığında üst düzeyde araçlara erişim kısıtlanabilir (istemci kontrolü)." },
+  { key: "paymentsDisabled", label: "🔒 Ödemeleri kapat (ücretsiz lansman)", description: "AÇIK iken planlar 'Yakında' görünür ve hiçbir ödeme alınmaz (sandbox dahil). Güvenli varsayılan AÇIK. Şirket + gerçek iyzico hazır olunca BU ANAHTARI KAPAT." },
 ] as const;
 
 export const BETA_FLAG_CATALOG = [
