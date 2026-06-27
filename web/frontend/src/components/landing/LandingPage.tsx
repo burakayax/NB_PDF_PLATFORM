@@ -15,6 +15,7 @@ import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
+import { langAsset, langAssetFallback } from "../../lib/langAsset";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 
 /**
@@ -639,7 +640,7 @@ const SHOWCASE_PILLS = (tr: boolean) => [
   },
 ];
 
-function BrowserChrome({ screenshot }: { screenshot?: boolean }) {
+function BrowserChrome({ screenshot, language }: { screenshot?: boolean; language: Language }) {
   return (
     <div className="rounded-[16px] overflow-hidden border border-white/[0.1] bg-[#0D1117] shadow-[0_0_80px_rgba(59,130,246,0.15),0_40px_100px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.06)]">
       {/* Chrome bar */}
@@ -680,7 +681,8 @@ function BrowserChrome({ screenshot }: { screenshot?: boolean }) {
       <div className="relative aspect-[1366/657] overflow-hidden">
         {screenshot ? (
           <img
-            src="/screenshots/web-app.png"
+            src={langAsset("/screenshots/web-app.png", language)}
+            onError={langAssetFallback("/screenshots/web-app.png")}
             alt="PDF PLATFORM web uygulaması"
             className="w-full h-full object-cover object-top"
             draggable={false}
@@ -941,7 +943,7 @@ function ProductShowcase({
               exit={{ opacity: 0, y: -12, transition: { duration: 0.2 } }}
             >
               {activeTab === "web" ? (
-                <BrowserChrome screenshot={webOk} />
+                <BrowserChrome screenshot={webOk} language={language} />
               ) : (
                 <DesktopChrome screenshot={deskOk} name={organizationName} />
               )}

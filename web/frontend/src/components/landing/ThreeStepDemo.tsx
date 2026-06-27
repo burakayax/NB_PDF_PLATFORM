@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Language } from "../../i18n/landing";
+import { langAsset, langAssetFallback } from "../../lib/langAsset";
 
 type Highlight = { left: number; top: number; width: number; height: number };
 type Step = {
@@ -111,7 +112,8 @@ export function ThreeStepDemo({ language }: { language: Language }) {
         <AnimatePresence mode="wait">
           <motion.img
             key={active}
-            src={step.img}
+            src={langAsset(step.img, language)}
+            onError={langAssetFallback(step.img)}
             alt={step.title}
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
