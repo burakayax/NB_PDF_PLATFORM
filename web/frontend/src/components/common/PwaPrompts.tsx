@@ -79,7 +79,7 @@ const COPY = {
   tr: {
     installTitle: "Uygulamayı yükle",
     installBody:
-      "PDF PLATFORM'u cihazına ekle; tarayıcı sekmesi açmadan tek dokunuşla aç.",
+      "PDF Platform'u cihazına ekle; tarayıcı sekmesi açmadan tek dokunuşla aç.",
     install: "Yükle",
     later: "Daha sonra",
     iosTitle: "Ana ekrana ekle",
@@ -95,7 +95,7 @@ const COPY = {
   en: {
     installTitle: "Install the app",
     installBody:
-      "Add PDF PLATFORM to your device and open it in one tap — no browser tab.",
+      "Add PDF Platform to your device and open it in one tap — no browser tab.",
     install: "Install",
     later: "Later",
     iosTitle: "Add to Home Screen",

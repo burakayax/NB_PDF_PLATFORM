@@ -269,7 +269,7 @@ function renderStructuredData(baseUrl, routePath, meta) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "Offer",
-      name: "PDF PLATFORM — Abonelik Planları",
+      name: "PDF Platform — Abonelik Planları",
       description:
         "Ücretsiz plan dahil aylık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi.",
       url: canonicalUrl,

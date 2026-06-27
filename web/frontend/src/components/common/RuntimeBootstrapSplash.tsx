@@ -32,7 +32,7 @@ export function RuntimeBootstrapSplash() {
         />
         <img
           src="/navbar-logo.png"
-          alt="PDF PLATFORM"
+          alt="PDF Platform"
           className="relative h-16 w-auto object-contain drop-shadow-[0_8px_28px_rgba(34,211,238,0.25)]"
         />
         <span className="relative mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-slate-500">

@@ -182,7 +182,7 @@ function BrowserChrome({ screenshot }: { screenshot?: string }) {
               />
             </svg>
             <span className="text-[11px] text-slate-300 whitespace-nowrap">
-              PDF PLATFORM
+              PDF Platform
             </span>
           </div>
         </div>
@@ -355,7 +355,7 @@ function FeaturePills({
 export default function ProductShowcase({
   webScreenshot,
   desktopScreenshot,
-  productName = "PDF PLATFORM",
+  productName = "PDF Platform",
   headline = "Every PDF workflow,\nperfected in one place",
   subtext = "From the browser to your desktop — a seamless PDF experience built for professionals.",
   features,
