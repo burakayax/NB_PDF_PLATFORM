@@ -8,7 +8,7 @@ type Step = {
   title: string;
   caption: string;
   accent: string; // rgb triplet
-  hl: Highlight;
+  hl?: Highlight; // vurgu kutusu (opsiyonel — bazı adımlarda yok)
 };
 
 const AUTO_MS = 3000;
@@ -35,14 +35,13 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           title: "Dosyanı Yükle",
           caption: "Sürükle-bırak ya da “Dosya Seç” ile dosyanı ekle.",
           accent: "139,92,246",
-          hl: { left: 16, top: 25, width: 30, height: 14 },
+          hl: { left: 23, top: 24, width: 12, height: 10 },
         },
         {
           img: "/demo/step3.jpg",
           title: "Sayfaları Seç & Düzenle",
           caption: "Sayfaları görsel olarak seç, sil, sırala veya döndür.",
           accent: "236,72,153",
-          hl: { left: 3, top: 16, width: 34, height: 62 },
         },
         {
           img: "/demo/step4.png",
@@ -50,7 +49,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           caption:
             "İşlem biter ve dosyan otomatik indirilir — ayrıca Paylaş ya da Aç. Kaydet'e gerek yok!",
           accent: "6,182,212",
-          hl: { left: 67, top: 85, width: 32, height: 12 },
+          hl: { left: 65.5, top: 89.5, width: 24, height: 8.5 },
         },
       ]
     : [
@@ -66,14 +65,13 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           title: "Upload your file",
           caption: "Drag & drop or click “Select file” to add your file.",
           accent: "139,92,246",
-          hl: { left: 16, top: 25, width: 30, height: 14 },
+          hl: { left: 23, top: 24, width: 12, height: 10 },
         },
         {
           img: "/demo/step3.jpg",
           title: "Select & arrange pages",
           caption: "Visually select, delete, reorder or rotate pages.",
           accent: "236,72,153",
-          hl: { left: 3, top: 16, width: 34, height: 62 },
         },
         {
           img: "/demo/step4.png",
@@ -81,7 +79,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           caption:
             "It's done and saved automatically — plus Share or Open. No Save button needed!",
           accent: "6,182,212",
-          hl: { left: 67, top: 85, width: 32, height: 12 },
+          hl: { left: 65.5, top: 89.5, width: 24, height: 8.5 },
         },
       ];
 
@@ -119,36 +117,38 @@ export function ThreeStepDemo({ language }: { language: Language }) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-contain"
             loading="lazy"
             draggable={false}
           />
         </AnimatePresence>
 
-        {/* Vurgu çerçevesi — ilgili bölgeyi işaretler, nabız gibi parlar */}
-        <motion.div
-          key={`hl-${active}`}
-          className="pointer-events-none absolute rounded-xl"
-          style={{
-            left: `${step.hl.left}%`,
-            top: `${step.hl.top}%`,
-            width: `${step.hl.width}%`,
-            height: `${step.hl.height}%`,
-            border: `2px solid rgba(${step.accent},0.95)`,
-          }}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: 1,
-            boxShadow: [
-              `0 0 0 0 rgba(${step.accent},0.5), 0 0 22px rgba(${step.accent},0.35)`,
-              `0 0 0 8px rgba(${step.accent},0), 0 0 30px rgba(${step.accent},0.5)`,
-            ],
-          }}
-          transition={{
-            opacity: { duration: 0.4 },
-            boxShadow: { duration: 1.4, repeat: Infinity, repeatType: "reverse" },
-          }}
-        />
+        {/* Vurgu çerçevesi — ilgili bölgeyi işaretler, nabız gibi parlar (varsa) */}
+        {step.hl && (
+          <motion.div
+            key={`hl-${active}`}
+            className="pointer-events-none absolute rounded-xl"
+            style={{
+              left: `${step.hl.left}%`,
+              top: `${step.hl.top}%`,
+              width: `${step.hl.width}%`,
+              height: `${step.hl.height}%`,
+              border: `2px solid rgba(${step.accent},0.95)`,
+            }}
+            initial={{ opacity: 0 }}
+            animate={{
+              opacity: 1,
+              boxShadow: [
+                `0 0 0 0 rgba(${step.accent},0.5), 0 0 22px rgba(${step.accent},0.35)`,
+                `0 0 0 8px rgba(${step.accent},0), 0 0 30px rgba(${step.accent},0.5)`,
+              ],
+            }}
+            transition={{
+              opacity: { duration: 0.4 },
+              boxShadow: { duration: 1.4, repeat: Infinity, repeatType: "reverse" },
+            }}
+          />
+        )}
 
         {/* Adım rozeti + açıklama (alt şerit) */}
         <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/80 via-black/55 to-transparent px-4 py-3 sm:px-5">
