@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import type { Language } from "../../i18n/landing";
 import { PLANS, type PlanId } from "../../lib/planConfig";
+import { langAsset } from "../../lib/langAsset";
 
 type Perk = { label: string; detail: string };
 type PerkCategory = { icon: string; title: string; perks: Perk[] };
@@ -281,12 +282,19 @@ export function PlanPerksModal({
           {planId === "BUSINESS" && (
             <div className="overflow-hidden rounded-2xl border border-violet-500/25 bg-violet-500/[0.05]">
               <img
-                src="/admin-preview.png"
+                src={langAsset("/admin-preview.png", language)}
                 alt={tr ? "Yönetim paneli önizleme" : "Admin panel preview"}
                 className="w-full object-cover"
                 onError={(e) => {
-                  // Görsel henüz yoksa kapsayıcıyı gizle (ekran görüntüsü eklenince görünür).
-                  const box = (e.currentTarget.parentElement as HTMLElement) ?? null;
+                  const img = e.currentTarget;
+                  // 1) EN görsel yoksa Türkçesine düş.
+                  if (img.dataset.langFallback !== "1") {
+                    img.dataset.langFallback = "1";
+                    img.src = "/admin-preview.png";
+                    return;
+                  }
+                  // 2) Türkçe de yoksa kapsayıcıyı gizle.
+                  const box = (img.parentElement as HTMLElement) ?? null;
                   if (box) box.style.display = "none";
                 }}
               />
