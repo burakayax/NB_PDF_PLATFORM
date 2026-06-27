@@ -28,6 +28,20 @@ export function getGaMeasurementId(): string | null {
   return normalizeMeasurementId(import.meta.env.VITE_GA_MEASUREMENT_ID);
 }
 
+/**
+ * Uygulama tarayıcıdan mı yoksa **kurulu PWA** (ana ekrana eklenmiş "app")
+ * olarak mı açıldı? `standalone` = kullanıcı siteyi program gibi yüklemiş.
+ */
+export function getDisplayMode(): "standalone" | "browser" {
+  if (typeof window === "undefined") return "browser";
+  const mm = window.matchMedia;
+  const standalone =
+    (mm && mm("(display-mode: standalone)").matches) ||
+    (mm && mm("(display-mode: window-controls-overlay)").matches) ||
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+  return standalone ? "standalone" : "browser";
+}
+
 let gaInitialized = false;
 
 /** gtag.js ekler ve ilk config ile GA4’ü başlatır. Çoklu çağrıda yalnızca bir kez çalışır. */
@@ -52,6 +66,12 @@ export function initializeGA(): boolean {
 
   window.gtag("js", new Date());
   window.gtag("config", id);
+
+  // "App olarak mı, tarayıcıdan mı açıldı?" — her oturuma kullanıcı-özelliği olarak
+  // etiket (GA4'te boyut/segment) + bir kez `app_open` olayı (kurulu app açılışları).
+  const mode = getDisplayMode();
+  window.gtag("set", "user_properties", { display_mode: mode });
+  window.gtag("event", "app_open", { display_mode: mode });
 
   const script = document.createElement("script");
   script.async = true;

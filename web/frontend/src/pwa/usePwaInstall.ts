@@ -1,5 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react";
 import type { BeforeInstallPromptEvent } from "./types";
+import { trackGAEvent } from "../lib/analytics";
 
 const DISMISS_KEY = "nbpdf-pwa-install-dismissed";
 // Kapatma yalnızca MEVCUT OTURUM için hatırlanır (sessionStorage).
@@ -86,6 +87,8 @@ function bindGlobalListeners(): void {
     } catch {
       /* yoksay */
     }
+    // GA4: kullanıcı siteyi "program olarak" kurdu (ana ekrana ekledi).
+    trackGAEvent("pwa_installed");
     publish();
   });
 }
