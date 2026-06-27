@@ -145,7 +145,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
   en: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "PDF PLATFORM",
+      productLabel: "PDF Platform",
       platformTag: "Professional PDF Workflow Platform",
       contact: "Contact",
       languageLabel: "Language",
@@ -304,7 +304,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trust: {
-      kicker: "Why teams trust PDF PLATFORM",
+      kicker: "Why teams trust PDF Platform",
       // H2 — E-E-A-T focus: accuracy + security
       title: "Built to reduce document errors and protect sensitive files.",
       description:
@@ -405,25 +405,25 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "How do I merge PDF files online for free?",
         answer:
-          "With PDF PLATFORM you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required.",
+          "With PDF Platform you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required.",
       },
       {
         question: "Can I convert PDF to Word without losing formatting?",
         answer:
-          "Yes. The PDF converter in PDF PLATFORM preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing.",
+          "Yes. The PDF converter in PDF Platform preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing.",
       },
       {
         question: "How do I compress a PDF to reduce its file size?",
         answer:
-          "Upload your PDF, choose a compression level, and download the optimized file. PDF PLATFORM reduces file size while keeping text and images sharp for email attachments and portal uploads.",
+          "Upload your PDF, choose a compression level, and download the optimized file. PDF Platform reduces file size while keeping text and images sharp for email attachments and portal uploads.",
       },
       {
         question: "Is my PDF data secure when using an online PDF tool?",
         answer:
-          "PDF PLATFORM does not retain processed document contents. The upcoming Windows app will process files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
+          "PDF Platform does not retain processed document contents. The upcoming Windows app will process files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers.",
       },
       {
-        question: "Does PDF PLATFORM work without installing software?",
+        question: "Does PDF Platform work without installing software?",
         answer:
           "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon.",
       },
@@ -434,7 +434,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
   tr: {
     navbar: {
       studioTagline: "NB Global Studio",
-      productLabel: "PDF PLATFORM",
+      productLabel: "PDF Platform",
       platformTag: "Profesyonel PDF İş Akışı Platformu",
       contact: "İletişim",
       languageLabel: "Dil",
@@ -601,7 +601,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trust: {
-      kicker: "Ekipler neden PDF PLATFORM'a güveniyor",
+      kicker: "Ekipler neden PDF Platform'a güveniyor",
       // H2 — E-E-A-T sinyali: doğruluk + güvenlik
       title:
         "Belge hatalarını azaltmak ve hassas dosyaları korumak için tasarlandı.",
@@ -703,26 +703,26 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF dosyaları nasıl ücretsiz birleştirilir?",
         answer:
-          "PDF PLATFORM ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez.",
+          "PDF Platform ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez.",
       },
       {
         question:
           "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?",
         answer:
-          "PDF PLATFORM'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir.",
+          "PDF Platform'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir.",
       },
       {
         question: "PDF dosyasının boyutu nasıl küçültülür?",
         answer:
-          "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF PLATFORM, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür.",
+          "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF Platform, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür.",
       },
       {
         question: "Online PDF aracı kullanırken verilerim güvende mi?",
         answer:
-          "PDF PLATFORM işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
+          "PDF Platform işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
       },
       {
-        question: "PDF PLATFORM yazılım yüklemeden çalışır mı?",
+        question: "PDF Platform yazılım yüklemeden çalışır mı?",
         answer:
           "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor.",
       },

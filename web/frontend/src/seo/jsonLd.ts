@@ -28,7 +28,7 @@ function buildWebSite(input: SchemaInput): JsonLdNode {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "@id": `${origin(input.canonicalUrl)}/#website`,
-    name: "PDF PLATFORM",
+    name: "PDF Platform",
     url: origin(input.canonicalUrl),
     inLanguage: input.language === "tr" ? "tr-TR" : "en-US",
     description: input.pageDescription,
@@ -49,7 +49,7 @@ function buildOrganization(input: SchemaInput): JsonLdNode {
     "@context": "https://schema.org",
     "@type": "Organization",
     "@id": `${origin(input.canonicalUrl)}/#organization`,
-    name: "PDF PLATFORM",
+    name: "PDF Platform",
     url: origin(input.canonicalUrl),
     logo: {
       "@type": "ImageObject",
@@ -76,7 +76,7 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "PDF PLATFORM",
+    name: "PDF Platform",
     url: input.canonicalUrl,
     description: input.pageDescription,
     applicationCategory: "BusinessApplication",
@@ -99,7 +99,7 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
     },
     brand: {
       "@type": "Brand",
-      name: "PDF PLATFORM",
+      name: "PDF Platform",
     },
     publisher: {
       "@id": `${origin(input.canonicalUrl)}/#organization`,
@@ -136,8 +136,8 @@ function buildPricingOffer(input: SchemaInput): JsonLdNode {
     "@context": "https://schema.org",
     "@type": "Offer",
     name: isTr
-      ? "PDF PLATFORM — Abonelik Planları"
-      : "PDF PLATFORM — Subscription Plans",
+      ? "PDF Platform — Abonelik Planları"
+      : "PDF Platform — Subscription Plans",
     description: isTr
       ? "Ücretsiz plan dahil aylık ve yıllık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi."
       : "Monthly and annual subscription plans including a free tier. 7-day no-questions-asked money-back guarantee.",

@@ -41,11 +41,11 @@ export function ToolPublicLanding({
           type="button"
           onClick={onLogin}
           className="flex items-center gap-2"
-          aria-label="PDF PLATFORM"
+          aria-label="PDF Platform"
         >
           <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
           <span className="text-sm font-bold tracking-tight text-white">
-            PDF PLATFORM
+            PDF Platform
           </span>
         </button>
         <button
