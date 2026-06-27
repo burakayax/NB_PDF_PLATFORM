@@ -35,7 +35,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           title: "Dosyanı Yükle",
           caption: "Sürükle-bırak ya da “Dosya Seç” ile dosyanı ekle.",
           accent: "139,92,246",
-          hl: { left: 23, top: 24, width: 12, height: 10 },
+          hl: { left: 23, top: 22, width: 12, height: 10 },
         },
         {
           img: "/demo/step3.jpg",
@@ -65,7 +65,7 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           title: "Upload your file",
           caption: "Drag & drop or click “Select file” to add your file.",
           accent: "139,92,246",
-          hl: { left: 23, top: 24, width: 12, height: 10 },
+          hl: { left: 23, top: 22, width: 12, height: 10 },
         },
         {
           img: "/demo/step3.jpg",
@@ -150,19 +150,19 @@ export function ThreeStepDemo({ language }: { language: Language }) {
           />
         )}
 
-        {/* Adım rozeti + açıklama (alt şerit) */}
-        <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-gradient-to-t from-black/80 via-black/55 to-transparent px-4 py-3 sm:px-5">
+        {/* Adım rozeti + açıklama (kompakt kart — alt-sağdaki butonları karartmaz) */}
+        <div className="absolute bottom-3 left-3 flex max-w-[72%] items-center gap-2.5 rounded-xl border border-white/10 bg-black/70 px-3 py-2 backdrop-blur-md">
           <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold text-white sm:h-8 sm:w-8 sm:text-sm"
             style={{ background: `rgb(${step.accent})` }}
           >
             {active + 1}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-white sm:text-base">
+            <p className="text-[13px] font-bold leading-tight text-white sm:text-sm">
               {step.title}
             </p>
-            <p className="truncate text-[11px] text-slate-300 sm:text-xs">
+            <p className="text-[10px] leading-snug text-slate-300 sm:text-[11px]">
               {step.caption}
             </p>
           </div>
