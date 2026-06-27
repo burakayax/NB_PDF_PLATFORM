@@ -20,7 +20,7 @@ export function LegalDocumentBody({
   return (
     <>
       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-nb-accent sm:text-sm">
-        PDF PLATFORM
+        PDF Platform
       </p>
       <h2 className="mt-3 text-2xl font-semibold tracking-tight text-nb-text sm:text-3xl">
         {document.title}

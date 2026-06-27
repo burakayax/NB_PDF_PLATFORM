@@ -221,19 +221,19 @@ export function DashboardTopNav({
       <button
         type="button"
         onClick={onLogoClick}
-        aria-label="PDF PLATFORM"
+        aria-label="PDF Platform"
         className="nb-transition flex shrink-0 items-center rounded-2xl px-1 py-1 hover:scale-[1.01] hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/45"
       >
         {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
         <img
           src="/emblem.png"
-          alt="PDF PLATFORM"
+          alt="PDF Platform"
           className="h-9 w-9 object-contain lg:hidden"
         />
         {/* Masaüstü: tam uzun logo (CMS'ten override edilebilir) */}
         <img
           src={dashboardLogoSrc}
-          alt="PDF PLATFORM"
+          alt="PDF Platform"
           className="hidden h-12 w-auto object-contain lg:block"
         />
       </button>

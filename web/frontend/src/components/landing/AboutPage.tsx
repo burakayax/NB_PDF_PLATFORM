@@ -144,7 +144,7 @@ export function AboutPage({ language, onClose }: { language: Language; onClose: 
         {JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "PDF PLATFORM",
+          name: "PDF Platform",
           url: "https://pdfplatform.app",
           logo: "https://pdfplatform.app/logo.png",
           description: tr
