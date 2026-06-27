@@ -50,7 +50,7 @@ export function SeoRouteManager({
     view === "web" && selectedFeatureId
       ? [
           {
-            name: "PDF PLATFORM",
+            name: "PDF Platform",
             url: siteOrigin || toAbsoluteUrl("/"),
           },
           {

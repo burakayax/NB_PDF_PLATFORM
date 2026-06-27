@@ -35,21 +35,21 @@ export const legalDocuments: Record<
     terms: {
       title: "Terms of Service",
       summary:
-        "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF PLATFORM. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
+        "These Terms of Service (“Terms”) form a binding agreement between you and NB Global Studio regarding PDF Platform. They set out how you may use the product, what we expect from you, how subscriptions work, and the limits of our liability. They do not replace our Privacy Policy, which covers personal data only.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
         {
           title: "1. Who we are and what you accept",
           paragraphs: [
-            "PDF PLATFORM is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
+            "PDF Platform is operated by NB Global Studio (“we”, “us”). By creating an account, subscribing, or otherwise using the service, you confirm that you have read these Terms and agree to be bound by them.",
             "If you use the service on behalf of a company, you represent that you are authorized to accept these Terms for that organization.",
           ],
         },
         {
           title: "2. The service",
           paragraphs: [
-            "PDF PLATFORM provides software and web-based TOOLS for working with PDF and related documents (for example merge, split, conversion, compression, and encryption), together with account, authentication, and subscription features.",
+            "PDF Platform provides software and web-based TOOLS for working with PDF and related documents (for example merge, split, conversion, compression, and encryption), together with account, authentication, and subscription features.",
             "We may change, suspend, or discontinue parts of the service for security, legal, operational, or product reasons. We do not guarantee uninterrupted or error-free operation.",
           ],
         },
@@ -90,7 +90,7 @@ export const legalDocuments: Record<
         {
           title: "7. Intellectual property",
           paragraphs: [
-            "PDF PLATFORM, its branding, software, documentation, and related materials are owned by NB Global Studio or its licensors. These Terms do not grant you ownership of any intellectual property rights beyond the limited right to use the service as offered.",
+            "PDF Platform, its branding, software, documentation, and related materials are owned by NB Global Studio or its licensors. These Terms do not grant you ownership of any intellectual property rights beyond the limited right to use the service as offered.",
             "You retain rights in your own content. You grant us only the rights reasonably necessary to operate the service (for example processing files you submit and hosting account data).",
           ],
         },
@@ -120,14 +120,14 @@ export const legalDocuments: Record<
     privacy: {
       title: "Privacy Policy",
       summary:
-        "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF PLATFORM (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
+        "This Privacy Policy describes how NB Global Studio collects, uses, stores, and protects personal information when you use PDF Platform (web application, authentication, and related services). It does not govern your contractual rights to use the product; see our Terms of Service for usage, subscriptions, and liability.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
         {
           title: "1. Data controller",
           paragraphs: [
-            "The data controller responsible for personal data processed in connection with PDF PLATFORM is NB Global Studio. For privacy requests, use the contact email at the end of this policy.",
+            "The data controller responsible for personal data processed in connection with PDF Platform is NB Global Studio. For privacy requests, use the contact email at the end of this policy.",
           ],
         },
         {
@@ -212,7 +212,7 @@ export const legalDocuments: Record<
         {
           title: "10. Children",
           paragraphs: [
-            "PDF PLATFORM is not directed at children under the age where parental consent is required in their jurisdiction. We do not knowingly collect personal data from such children.",
+            "PDF Platform is not directed at children under the age where parental consent is required in their jurisdiction. We do not knowingly collect personal data from such children.",
           ],
         },
         {
@@ -230,7 +230,7 @@ export const legalDocuments: Record<
     kvkk: {
       title: "Privacy disclosure per Turkish Law No. 6698 (KVKK)",
       summary:
-        "This notice summarizes how NB Global Studio processes personal data in PDF PLATFORM checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
+        "This notice summarizes how NB Global Studio processes personal data in PDF Platform checkout-related flows (billing identity, contact telephone and postal addresses forwarded for PSP-hosted settlement via İyzico). It complements—not replaces—the Privacy Policy and Terms.",
       effectiveDateLabel: "Effective date",
       effectiveDate: "24 March 2026",
       sections: [
@@ -268,13 +268,13 @@ export const legalDocuments: Record<
             "Seller: NB Global Studio",
             "Email: nbglobalstudio@gmail.com",
             "Website: nbglobalstudio.com",
-            "Service: PDF PLATFORM — cloud-based PDF processing services",
+            "Service: PDF Platform — cloud-based PDF processing services",
           ],
         },
         {
           title: "2. Key Features of the Service",
           paragraphs: [
-            "PDF PLATFORM is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.",
+            "PDF Platform is a cloud-based SaaS (Software as a Service) subscription offering tools for PDF merging, splitting, compression, conversion, encryption, and other PDF processing operations.",
             "Different usage limits, file size limits, and features apply depending on the subscription plan. Visit nbpdf.app/pricing for details.",
           ],
         },
@@ -320,7 +320,7 @@ export const legalDocuments: Record<
         {
           title: "2. Subject of the Agreement",
           paragraphs: [
-            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF PLATFORM digital service subscription for the plan selected by the BUYER at nbpdf.app.",
+            "The subject of this agreement is to regulate the terms and conditions relating to the purchase of a PDF Platform digital service subscription for the plan selected by the BUYER at nbpdf.app.",
             "Service content and features vary by the selected plan.",
           ],
         },
@@ -376,21 +376,21 @@ export const legalDocuments: Record<
     terms: {
       title: "Hizmet Şartları",
       summary:
-        "İşbu Hizmet Şartları (“Şartlar”), PDF PLATFORM’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
+        "İşbu Hizmet Şartları (“Şartlar”), PDF Platform’un kullanımına ilişkin sizinle NB Global Studio arasında bağlayıcı bir sözleşmedir. Ürünü nasıl kullanabileceğinizi, abonelik kurallarını, yükümlülüklerinizi ve sorumluluğumuzun sınırlarını düzenler. Kişisel veriler yalnızca Gizlilik Politikamızda açıklanır; bu metin onun yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
       effectiveDate: "24 Mart 2026",
       sections: [
         {
           title: "1. Taraflar ve kabul",
           paragraphs: [
-            "PDF PLATFORM, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
+            "PDF Platform, NB Global Studio (“biz”) tarafından işletilir. Hesap oluşturarak, abone olarak veya hizmeti başka şekilde kullanarak bu Şartları okuduğunuzu ve bunlara uymayı kabul ettiğinizi beyan edersiniz.",
             "Hizmeti bir işletme adına kullanıyorsanız, bu Şartları o kuruluş adına kabul etmeye yetkili olduğunuzu taahhüt edersiniz.",
           ],
         },
         {
           title: "2. Hizmetin kapsamı",
           paragraphs: [
-            "PDF PLATFORM; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar.",
+            "PDF Platform; PDF ve ilgili belgeler üzerinde çalışmayı sağlayan yazılım ve web tabanlı araçlar (örneğin birleştirme, ayırma, dönüştürme, sıkıştırma ve şifreleme) ile hesap, kimlik doğrulama ve abonelik özelliklerini sunar.",
             "Güvenlik, yasal zorunluluklar, operasyon veya ürün gerekçeleriyle hizmetin bölümlerini değiştirebilir, askıya alabilir veya sonlandırabiliriz. Kesintisiz veya hatasız çalışma garantisi vermeyiz.",
           ],
         },
@@ -431,7 +431,7 @@ export const legalDocuments: Record<
         {
           title: "7. Fikri mülkiyet",
           paragraphs: [
-            "PDF PLATFORM, markalar, yazılım, dokümantasyon ve ilgili materyaller NB Global Studio veya lisans verenlerinin mülkiyetindedir. Bu Şartlar, sunulan hizmeti kullanma dışında mülkiyet hakkı vermez.",
+            "PDF Platform, markalar, yazılım, dokümantasyon ve ilgili materyaller NB Global Studio veya lisans verenlerinin mülkiyetindedir. Bu Şartlar, sunulan hizmeti kullanma dışında mülkiyet hakkı vermez.",
             "Kendi içeriğinizdeki haklar size aittir. Hizmeti işletmek için makul ölçüde gerekli hakları (örneğin gönderdiğiniz dosyaları işleme ve hesap verilerini barındırma) bize tanırsınız.",
           ],
         },
@@ -461,14 +461,14 @@ export const legalDocuments: Record<
     privacy: {
       title: "Gizlilik Politikası",
       summary:
-        "Bu Gizlilik Politikası, PDF PLATFORM’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
+        "Bu Gizlilik Politikası, PDF Platform’u (web uygulaması, kimlik doğrulama ve ilgili hizmetler) kullandığınızda NB Global Studio’nun kişisel verileri nasıl topladığını, kullandığını, sakladığını ve koruduğunu açıklar. Ürünü kullanma hakkınız, abonelikler ve sorumluluk sınırları Hizmet Şartlarımızda düzenlenir; bu metin onların yerine geçmez.",
       effectiveDateLabel: "Yürürlük tarihi",
       effectiveDate: "24 Mart 2026",
       sections: [
         {
           title: "1. Veri sorumlusu",
           paragraphs: [
-            "PDF PLATFORM ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu NB Global Studio’dur. Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
+            "PDF Platform ile bağlantılı olarak işlenen kişisel verilerden sorumlu veri sorumlusu NB Global Studio’dur. Talepler için bu politikanın sonundaki iletişim adresini kullanabilirsiniz.",
           ],
         },
         {
@@ -553,7 +553,7 @@ export const legalDocuments: Record<
         {
           title: "10. Çocuklar",
           paragraphs: [
-            "PDF PLATFORM, bulunduğu ülkede ebeveyn onayı gerektiren yaşın altındaki çocuklara yönelik değildir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
+            "PDF Platform, bulunduğu ülkede ebeveyn onayı gerektiren yaşın altındaki çocuklara yönelik değildir. Bu yaş grubundan bilerek kişisel veri toplamayız.",
           ],
         },
         {
@@ -656,13 +656,13 @@ export const legalDocuments: Record<
             "Satıcı: NB Global Studio",
             "E-posta: nbglobalstudio@gmail.com",
             "Web sitesi: nbglobalstudio.com",
-            "Hizmet: PDF PLATFORM — bulut tabanlı PDF işleme hizmetleri",
+            "Hizmet: PDF Platform — bulut tabanlı PDF işleme hizmetleri",
           ],
         },
         {
           title: "2. Hizmetin Temel Özellikleri",
           paragraphs: [
-            "PDF PLATFORM; PDF birleştirme, bölme, sıkıştırma, dönüştürme, şifreleme ve diğer PDF işleme araçlarını içeren bulut tabanlı bir SaaS (Hizmet Olarak Yazılım) abonelik hizmetidir.",
+            "PDF Platform; PDF birleştirme, bölme, sıkıştırma, dönüştürme, şifreleme ve diğer PDF işleme araçlarını içeren bulut tabanlı bir SaaS (Hizmet Olarak Yazılım) abonelik hizmetidir.",
             "Abonelik planlarına göre farklı işlem limitleri, dosya boyutu limitleri ve özellikler uygulanmaktadır. Detaylar için nbpdf.app/pricing adresini ziyaret ediniz.",
           ],
         },
@@ -708,7 +708,7 @@ export const legalDocuments: Record<
         {
           title: "2. Sözleşme Konusu",
           paragraphs: [
-            "Bu sözleşmenin konusu; ALICI'nın nbpdf.app adresinden seçtiği abonelik planına ait PDF PLATFORM dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
+            "Bu sözleşmenin konusu; ALICI'nın nbpdf.app adresinden seçtiği abonelik planına ait PDF Platform dijital hizmet aboneliğinin satın alınmasına ilişkin koşulları düzenlemektir.",
             "Hizmet içeriği ve özellikleri seçilen plana göre değişmektedir.",
           ],
         },

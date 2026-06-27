@@ -326,7 +326,7 @@ function InvitePageWrapper({
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-cyan-500/70">
-            NB PDF PLATFORM
+            NB PDF Platform
           </p>
           <h1 className="mt-2 text-2xl font-bold text-white">{title}</h1>
         </div>

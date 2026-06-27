@@ -77,13 +77,13 @@ describe("GlobalErrorBoundary — Türkçe fallback (varsayılan dil)", () => {
     expect(screen.getByRole("button", { name: /Sayfayı Yenile/i })).toBeInTheDocument();
   });
 
-  it("badge metni PDF PLATFORM gösterir", () => {
+  it("badge metni PDF Platform gösterir", () => {
     render(
       <GlobalErrorBoundary language="tr">
         <ErrorThrower shouldThrow />
       </GlobalErrorBoundary>,
     );
-    expect(screen.getByText("PDF PLATFORM")).toBeInTheDocument();
+    expect(screen.getByText("PDF Platform")).toBeInTheDocument();
   });
 });
 

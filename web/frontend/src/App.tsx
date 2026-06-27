@@ -4604,7 +4604,7 @@ function App() {
           <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-[#05080f] px-6 py-12 font-sans text-nb-text antialiased">
             <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-                PDF PLATFORM
+                PDF Platform
               </p>
               <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
                 Oturum doğrulanıyor
@@ -5054,7 +5054,7 @@ function App() {
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-[28px] border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-[0_50px_100px_-24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              PDF PLATFORM
+              PDF Platform
             </p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">
               Oturum doğrulanıyor
@@ -5082,7 +5082,7 @@ function App() {
         <div className="min-h-screen bg-nb-bg px-6 py-12 font-sans text-nb-text antialiased">
           <div className="mx-auto flex max-w-md flex-col items-center justify-center rounded-2xl border border-white/[0.08] bg-nb-panel/55 px-10 py-16 text-center shadow-xl backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-cyan-300">
-              PDF PLATFORM
+              PDF Platform
             </p>
             <p className="mt-4 text-base text-nb-muted">
               Oturum bilgileri yükleniyor…
@@ -7252,7 +7252,7 @@ function App() {
         </div>
 
         <footer className="footer-bar">
-          <span>PDF PLATFORM</span>
+          <span>PDF Platform</span>
           <span>by NB Global Studio</span>
           <div className="footer-bar__right">
             <span>Web Edition</span>

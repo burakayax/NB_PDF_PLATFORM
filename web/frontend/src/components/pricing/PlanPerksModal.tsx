@@ -97,8 +97,8 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
         {
           label: tr ? "Filigran yok" : "No watermark",
           detail: tr
-            ? "Çıktı dosyalarında PDF PLATFORM filigranı bulunmaz — temiz, profesyonel."
-            : "No PDF PLATFORM watermark on your output — clean and professional.",
+            ? "Çıktı dosyalarında PDF Platform filigranı bulunmaz — temiz, profesyonel."
+            : "No PDF Platform watermark on your output — clean and professional.",
         },
       ],
     },

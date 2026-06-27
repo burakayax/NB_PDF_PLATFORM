@@ -20,7 +20,7 @@
  *  .d.mts kardeş dosyası TS tarafına tip sağlar; tsc bu .mjs'i derlemez.
  */
 
-export const BRAND = "PDF PLATFORM";
+export const BRAND = "PDF Platform";
 
 /** Gerçek, var olan ürün görseli (1280×720). Sosyal paylaşım önizlemesi.
  *  public/app-preview-main.png — landing showcase ve runtime SEO ile aynı dosya. */
@@ -624,13 +624,13 @@ export const LANDING_SEO = {
       "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan çalışır. Masaüstü uygulaması çok yakında.",
     h1: "PDF Birleştir, Dönüştür, Sıkıştır ve Düzenle — Tüm PDF Araçları Tek Platformda",
     intro:
-      "PDF PLATFORM; PDF birleştirme, ayırma, sıkıştırma, Word/Excel/PowerPoint dönüştürme, filigran, şifreleme ve daha fazlasını tek profesyonel platformda sunar. Kurulum gerekmez, tarayıcıdan çalışır; Windows masaüstü uygulaması çok yakında geliyor.",
+      "PDF Platform; PDF birleştirme, ayırma, sıkıştırma, Word/Excel/PowerPoint dönüştürme, filigran, şifreleme ve daha fazlasını tek profesyonel platformda sunar. Kurulum gerekmez, tarayıcıdan çalışır; Windows masaüstü uygulaması çok yakında geliyor.",
     faq: [
-      { q: "PDF dosyaları nasıl ücretsiz birleştirilir?", a: "PDF PLATFORM ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez." },
-      { q: "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?", a: "PDF PLATFORM'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir." },
-      { q: "PDF dosyasının boyutu nasıl küçültülür?", a: "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF PLATFORM, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür." },
-      { q: "Online PDF aracı kullanırken verilerim güvende mi?", a: "PDF PLATFORM işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır." },
-      { q: "PDF PLATFORM yazılım yüklemeden çalışır mı?", a: "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor." },
+      { q: "PDF dosyaları nasıl ücretsiz birleştirilir?", a: "PDF Platform ile PDF dosyalarınızı tarayıcınızda ücretsiz olarak birleştirebilirsiniz. Dosyaları yükleyin, sayfa sırasını sürükleyerek düzenleyin ve birleştirilmiş PDF'i saniyeler içinde indirin — kurulum gerekmez." },
+      { q: "PDF'i Word'e biçimlendirme kaybolmadan nasıl dönüştürebilirim?", a: "PDF Platform'daki PDF dönüştürücü, PDF'i Word'e (.docx) çevirirken yazı tipleri, tablolar ve düzeni korur. Sonuç, düzenlemeye hazır tam anlamıyla düzenlenebilir bir belgedir." },
+      { q: "PDF dosyasının boyutu nasıl küçültülür?", a: "PDF'inizi yükleyin, sıkıştırma seviyesini seçin ve optimize edilmiş dosyayı indirin. PDF Platform, metin ve görselleri net tutarken dosya boyutunu e-posta ekleri ve portal yüklemeleri için küçültür." },
+      { q: "Online PDF aracı kullanırken verilerim güvende mi?", a: "PDF Platform işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır." },
+      { q: "PDF Platform yazılım yüklemeden çalışır mı?", a: "Evet. Web sürümü tamamen tarayıcınızda çalışır — kurulum veya eklenti gerekmez. Çevrimdışı kullanım ve yüksek hacimli işlemler için Windows masaüstü uygulaması çok yakında geliyor." },
     ],
   },
   en: {
@@ -639,13 +639,13 @@ export const LANDING_SEO = {
       "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation needed — works right in your browser. A Windows desktop app is coming soon.",
     h1: "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
     intro:
-      "PDF PLATFORM brings PDF merge, split, compress, Word/Excel/PowerPoint conversion, watermarking, encryption and more into one professional platform. No installation needed — it runs in your browser; a Windows desktop app is coming soon.",
+      "PDF Platform brings PDF merge, split, compress, Word/Excel/PowerPoint conversion, watermarking, encryption and more into one professional platform. No installation needed — it runs in your browser; a Windows desktop app is coming soon.",
     faq: [
-      { q: "How do I merge PDF files online for free?", a: "With PDF PLATFORM you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required." },
-      { q: "Can I convert PDF to Word without losing formatting?", a: "Yes. The PDF converter in PDF PLATFORM preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing." },
-      { q: "How do I compress a PDF to reduce its file size?", a: "Upload your PDF, choose a compression level, and download the optimized file. PDF PLATFORM reduces file size while keeping text and images sharp for email attachments and portal uploads." },
-      { q: "Is my PDF data secure when using an online PDF tool?", a: "PDF PLATFORM does not retain processed document contents. The upcoming Windows app will process files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers." },
-      { q: "Does PDF PLATFORM work without installing software?", a: "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon." },
+      { q: "How do I merge PDF files online for free?", a: "With PDF Platform you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required." },
+      { q: "Can I convert PDF to Word without losing formatting?", a: "Yes. The PDF converter in PDF Platform preserves fonts, tables, and layout when converting PDF to Word (.docx). The result is a fully editable document ready for further editing." },
+      { q: "How do I compress a PDF to reduce its file size?", a: "Upload your PDF, choose a compression level, and download the optimized file. PDF Platform reduces file size while keeping text and images sharp for email attachments and portal uploads." },
+      { q: "Is my PDF data secure when using an online PDF tool?", a: "PDF Platform does not retain processed document contents. The upcoming Windows app will process files entirely on your device — your PDFs never leave your machine. The web version uses secure, encrypted connections for all transfers." },
+      { q: "Does PDF Platform work without installing software?", a: "Yes. The web version runs entirely in your browser — no installation, no plugins. A Windows desktop app for offline use and higher-volume operations is coming soon." },
     ],
   },
 };
@@ -656,7 +656,7 @@ export const PRICING_SEO = {
     title: `PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi | ${BRAND}`,
     description:
       "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün koşulsuz para iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin.",
-    h1: "PDF PLATFORM Fiyatlandırma — Planlar ve Kredi Paketleri",
+    h1: "PDF Platform Fiyatlandırma — Planlar ve Kredi Paketleri",
     intro:
       "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlar 7 gün koşulsuz para iade garantisiyle gelir; istediğiniz zaman iptal edebilirsiniz.",
   },
@@ -664,7 +664,7 @@ export const PRICING_SEO = {
     title: `PDF Tools Pricing — 7-Day Money-Back Guarantee | ${BRAND}`,
     description:
       "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, cancel anytime. Start free today.",
-    h1: "PDF PLATFORM Pricing — Plans and Credit Packs",
+    h1: "PDF Platform Pricing — Plans and Credit Packs",
     intro:
       "Compare monthly subscriptions and credit packs, including a free plan. Every plan comes with a 7-day no-questions-asked money-back guarantee, and you can cancel anytime.",
   },
@@ -675,27 +675,27 @@ export const LEGAL_SEO = {
   terms: {
     tr: {
       title: `Hizmet Şartları | ${BRAND}`,
-      description: "PDF PLATFORM hizmet şartlarını okuyun.",
+      description: "PDF Platform hizmet şartlarını okuyun.",
       h1: "Hizmet Şartları",
-      intro: "PDF PLATFORM hizmetlerinin kullanımına ilişkin şartlar ve koşullar.",
+      intro: "PDF Platform hizmetlerinin kullanımına ilişkin şartlar ve koşullar.",
     },
     en: {
       title: `Terms of Service | ${BRAND}`,
-      description: "Read the terms of service for PDF PLATFORM.",
+      description: "Read the terms of service for PDF Platform.",
       h1: "Terms of Service",
-      intro: "Terms and conditions for using PDF PLATFORM services.",
+      intro: "Terms and conditions for using PDF Platform services.",
     },
   },
   privacy: {
     tr: {
       title: `Gizlilik Politikası | ${BRAND}`,
-      description: "PDF PLATFORM gizlilik politikasını okuyun.",
+      description: "PDF Platform gizlilik politikasını okuyun.",
       h1: "Gizlilik Politikası",
       intro: "Kişisel verilerinizin nasıl işlendiğine ve korunduğuna dair gizlilik politikamız.",
     },
     en: {
       title: `Privacy Policy | ${BRAND}`,
-      description: "Read the privacy policy for PDF PLATFORM.",
+      description: "Read the privacy policy for PDF Platform.",
       h1: "Privacy Policy",
       intro: "Our privacy policy on how your personal data is processed and protected.",
     },
@@ -704,13 +704,13 @@ export const LEGAL_SEO = {
     tr: {
       title: `KVKK Aydınlatma Metni | ${BRAND}`,
       description:
-        "PDF PLATFORM kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
+        "PDF Platform kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
       h1: "KVKK Aydınlatma Metni",
       intro: "6698 sayılı KVKK kapsamında kişisel verilerin işlenmesine ilişkin aydınlatma metni.",
     },
     en: {
       title: `KVKK Notice | ${BRAND}`,
-      description: "Read PDF PLATFORM's KVKK personal data processing notice.",
+      description: "Read PDF Platform's KVKK personal data processing notice.",
       h1: "KVKK Notice",
       intro: "Information notice on the processing of personal data under Turkish KVKK law (No. 6698).",
     },

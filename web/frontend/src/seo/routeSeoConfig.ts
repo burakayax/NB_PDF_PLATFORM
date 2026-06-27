@@ -29,7 +29,7 @@ export type SeoRouteContext = {
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const BRAND = "PDF PLATFORM";
+const BRAND = "PDF Platform";
 
 const LOCALE: Record<Language, string> = {
   tr: "tr_TR",
@@ -128,8 +128,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
           : `About | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "PDF PLATFORM hakkında, vizyon, misyon ve değerlerimiz."
-          : "Learn about PDF PLATFORM, our vision, mission and values.",
+          ? "PDF Platform hakkında, vizyon, misyon ve değerlerimiz."
+          : "Learn about PDF Platform, our vision, mission and values.",
       canonicalPath: "/about",
       index: true,
       follow: true,
@@ -165,8 +165,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       title: `${context.language === "tr" ? "Hizmet Şartları" : "Terms of Service"} | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "PDF PLATFORM hizmet şartlarını okuyun."
-          : "Read the terms of service for PDF PLATFORM.",
+          ? "PDF Platform hizmet şartlarını okuyun."
+          : "Read the terms of service for PDF Platform.",
       canonicalPath: "/terms",
       index: true,
       follow: true,
@@ -181,8 +181,8 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       title: `${context.language === "tr" ? "Gizlilik Politikası" : "Privacy Policy"} | ${BRAND}`,
       description:
         context.language === "tr"
-          ? "PDF PLATFORM gizlilik politikasını okuyun."
-          : "Read the privacy policy for PDF PLATFORM.",
+          ? "PDF Platform gizlilik politikasını okuyun."
+          : "Read the privacy policy for PDF Platform.",
       canonicalPath: "/privacy",
       index: true,
       follow: true,
@@ -196,7 +196,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     return {
       title: `KVKK Aydınlatma Metni | ${BRAND}`,
       description:
-        "PDF PLATFORM kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
+        "PDF Platform kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
       canonicalPath: "/kvkk",
       index: true,
       follow: true,
@@ -228,7 +228,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   if (pathname === "/nbadmin" || context.view === "admin_login") {
     return {
       title: `Admin login | ${BRAND}`,
-      description: "Administrator sign-in for PDF PLATFORM operations.",
+      description: "Administrator sign-in for PDF Platform operations.",
       canonicalPath: "/nbadmin",
       index: false,
       follow: false,

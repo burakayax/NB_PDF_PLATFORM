@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const MAINTENANCE_TAB_TITLE = "Bakım Çalışması | PDF PLATFORM";
+const MAINTENANCE_TAB_TITLE = "Bakım Çalışması | PDF Platform";
 
 /** Tab title during maintenance block; restores previous title on unmount (e.g. admin bypass → normal page titles). */
 export function MaintenanceTabTitle() {
@@ -49,7 +49,7 @@ export function MaintenancePage() {
             />
             <img
               src="/icons/maskable-512.png"
-              alt="PDF PLATFORM"
+              alt="PDF Platform"
               width={144}
               height={144}
               className="h-36 w-36 rounded-[28px] shadow-[0_24px_80px_-28px_rgba(34,211,238,0.45)] ring-1 ring-white/10"
@@ -57,7 +57,7 @@ export function MaintenancePage() {
           </div>
 
           <p className="mt-9 text-[11px] font-semibold uppercase tracking-[0.42em] text-cyan-300/95">
-            PDF PLATFORM
+            PDF Platform
           </p>
 
           <p className="mt-6 max-w-md text-lg font-medium leading-relaxed tracking-tight text-slate-100 sm:text-xl">

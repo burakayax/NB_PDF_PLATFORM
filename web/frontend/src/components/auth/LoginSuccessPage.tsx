@@ -80,7 +80,7 @@ export function LoginSuccessPage({
         {phase === "loading" || phase === "redirecting" ? (
           <>
             <div className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-nb-accent">
-              PDF PLATFORM
+              PDF Platform
             </div>
             <h1 className="text-xl font-semibold text-nb-text">
               {phase === "redirecting"

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { AnimatedCardOptions, type CardOption } from "./animated-card-options";
 import type { Language } from "../../i18n/landing";
 
-// ─── Gerçek araç listesi (PDF PLATFORM) ───────────────────────────────────
+// ─── Gerçek araç listesi (PDF Platform) ───────────────────────────────────
 
 const toolCategories = (lang: Language) => [
   {

@@ -3,7 +3,7 @@ import type { Language } from "../../i18n/landing";
 import { buildBaseStructuredData } from "../../seo/jsonLd";
 import { toAbsoluteUrl } from "../../seo/routeSeoConfig";
 
-const SITE_NAME = "PDF PLATFORM";
+const SITE_NAME = "PDF Platform";
 
 type SEOProps = {
   title: string;

@@ -250,13 +250,13 @@ function Navbar({
           {/* Telefon + tablet: sadece amblem (kare ikon) — uzun logo dar ekrana sığmıyor */}
           <img
             src="/emblem.png"
-            alt="PDF PLATFORM"
+            alt="PDF Platform"
             className="h-10 w-10 object-contain lg:hidden"
           />
           {/* Masaüstü: tam uzun logo */}
           <img
             src="/navbar-logo.png"
-            alt="PDF PLATFORM"
+            alt="PDF Platform"
             className="hidden h-14 w-auto object-contain transition-opacity group-hover:opacity-90 lg:block"
           />
         </button>
@@ -683,7 +683,7 @@ function BrowserChrome({ screenshot, language }: { screenshot?: boolean; languag
           <img
             src={langAsset("/screenshots/web-app.png", language)}
             onError={langAssetFallback("/screenshots/web-app.png")}
-            alt="PDF PLATFORM web uygulaması"
+            alt="PDF Platform web uygulaması"
             className="w-full h-full object-cover object-top"
             draggable={false}
           />
@@ -747,7 +747,7 @@ function DesktopChrome({
         {screenshot ? (
           <img
             src="/screenshots/desktop-app.png"
-            alt="PDF PLATFORM masaüstü uygulaması (yakında)"
+            alt="PDF Platform masaüstü uygulaması (yakında)"
             className="w-full h-full object-cover object-top"
             draggable={false}
           />
@@ -1693,7 +1693,7 @@ function Footer({
           >
             <img
               src="/navbar-logo.png"
-              alt="PDF PLATFORM"
+              alt="PDF Platform"
               className="h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
             />
           </button>
@@ -1783,7 +1783,7 @@ export function LandingPage({
   onOpenKvkk,
   onOpenAbout,
   onContactClick,
-  organizationName = "PDF PLATFORM",
+  organizationName = "PDF Platform",
   onSelectPlan,
 }: LandingPageProps) {
   const { cms: cmsContent } = useSettings();

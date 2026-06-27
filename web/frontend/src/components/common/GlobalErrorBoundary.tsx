@@ -46,13 +46,13 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     const copy =
       lang === "tr"
         ? {
-            badge: "PDF PLATFORM",
+            badge: "PDF Platform",
             title: "Beklenmedik bir hata oluştu",
             body: "Bir şeyler ters gitti. Sayfayı yenileyerek tekrar deneyin. Sorun devam ederse lütfen bizimle iletişime geçin.",
             reload: "Sayfayı Yenile",
           }
         : {
-            badge: "PDF PLATFORM",
+            badge: "PDF Platform",
             title: "Something went wrong",
             body: "An unexpected error occurred. Please reload the page to try again. If the issue persists, feel free to contact us.",
             reload: "Reload Page",
