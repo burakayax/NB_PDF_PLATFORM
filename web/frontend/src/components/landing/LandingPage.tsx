@@ -676,8 +676,8 @@ function BrowserChrome({ screenshot }: { screenshot?: boolean }) {
           ))}
         </div>
       </div>
-      {/* Viewport */}
-      <div className="relative aspect-video overflow-hidden">
+      {/* Viewport — oran görsele eşitlendi ki object-cover kırpmasın, sol araç menüsü görünsün */}
+      <div className="relative aspect-[1366/657] overflow-hidden">
         {screenshot ? (
           <img
             src="/screenshots/web-app.png"
