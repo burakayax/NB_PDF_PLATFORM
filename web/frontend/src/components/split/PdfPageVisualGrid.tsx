@@ -789,6 +789,10 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           const task = pdfjsLib.getDocument({
             url: blobUrl,
             password: password.trim() || undefined,
+            // CSP 'unsafe-eval' içermez (bilinçli güvenlik). pdf.js varsayılan olarak
+            // font/performans için eval/new Function dener → konsolda CSP uyarısı.
+            // Kapatınca uyarı gider; pdf.js eval'siz (tam çalışan) yola düşer.
+            isEvalSupported: false,
           });
           activeTask = task;
           const pdf = await task.promise;
