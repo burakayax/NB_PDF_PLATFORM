@@ -836,17 +836,12 @@ function ProductShowcase({
   // /screenshots/web-app.png var mı? Vite'da runtime check mümkün değil.
   // Dosyayı public/screenshots/ altına koyduk — eğer varsa img yüklenecek, yoksa onerror gizler.
   const [webOk, setWebOk] = useState(true);
-  const [deskOk, setDeskOk] = useState(false);
 
   useEffect(() => {
     const img = new Image();
     img.src = "/screenshots/web-app.png";
     img.onload = () => setWebOk(true);
     img.onerror = () => setWebOk(false);
-    const dImg = new Image();
-    dImg.src = "/screenshots/desktop-app.png";
-    dImg.onload = () => setDeskOk(true);
-    dImg.onerror = () => setDeskOk(false);
   }, []);
 
   const pills = SHOWCASE_PILLS(tr);
@@ -942,11 +937,7 @@ function ProductShowcase({
               }}
               exit={{ opacity: 0, y: -12, transition: { duration: 0.2 } }}
             >
-              {activeTab === "web" ? (
-                <BrowserChrome screenshot={webOk} language={language} />
-              ) : (
-                <DesktopChrome screenshot={deskOk} name={organizationName} />
-              )}
+              <BrowserChrome screenshot={webOk} language={language} />
             </motion.div>
           </AnimatePresence>
 
