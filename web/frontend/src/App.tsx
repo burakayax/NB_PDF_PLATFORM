@@ -99,6 +99,12 @@ import {
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { getToolSeo } from "./seo/seoContent.mjs";
+import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
+import {
+  isClientPdfEnabled,
+  isClientCapableTool,
+  CLIENT_PDF_MAX_BYTES,
+} from "./lib/clientPdfFlag";
 import {
   buildResumeDownloadUrl,
   canResumeAfterPayment,
@@ -3816,6 +3822,59 @@ function App() {
       clearNbResumeProcess();
       disposeToolProgressSuccess();
       clearToast();
+
+      // ── Client-side (tarayıcı) işleme — DARK LAUNCH (varsayılan kapalı; ?clientpdf=1).
+      // Dosyalar SUNUCUYA GİTMEDEN cihazda işlenir: anında + gizli + sıfır maliyet.
+      // Başarılıysa erken döner; şifreli / çok büyük / desteklenmeyen → sunucu akışı sürer.
+      // NOT (pilot): limit/kota enforcement client yolunda HENÜZ yok — bayrak gizli
+      // olduğundan yalnızca test eden etkilenir; herkese AÇMADAN ÖNCE eklenecek (plan B).
+      if (isClientPdfEnabled() && isClientCapableTool(selectedFeature.id)) {
+        const totalBytes = uploads.reduce((s, u) => s + u.file.size, 0);
+        const anyPassword = uploads.some((u) => u.password.trim().length > 0);
+        if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
+          try {
+            setSubmitting(true);
+            let resultBytes: Uint8Array | null = null;
+            if (selectedFeature.id === "merge") {
+              const buffers = await Promise.all(
+                uploads.map((u) => u.file.arrayBuffer()),
+              );
+              resultBytes = await mergePdfs(buffers);
+            } else if (selectedFeature.id === "image-to-pdf") {
+              const imgs = await Promise.all(
+                uploads.map(async (u) => ({
+                  bytes: await u.file.arrayBuffer(),
+                  mime: u.file.type,
+                })),
+              );
+              resultBytes = await imagesToPdf(imgs);
+            }
+            if (resultBytes) {
+              const filename = selectedFeature.fallbackFilename;
+              const blob = pdfBytesToBlob(resultBytes);
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 15000);
+              setMergeShareReady({ blob, filename });
+              applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+              setSubmitting(false);
+              return;
+            }
+            setSubmitting(false);
+          } catch (err) {
+            setSubmitting(false);
+            // Şifreli/işlenemez → sessizce sunucu akışına düş (aşağıda devam eder).
+            if (!(err instanceof PdfEncryptedError)) {
+              console.warn("[clientpdf] sunucuya düşülüyor:", err);
+            }
+          }
+        }
+      }
 
       if (selectedFeature.id === "merge") {
         if (
