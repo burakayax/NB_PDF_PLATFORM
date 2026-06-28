@@ -56,14 +56,13 @@
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
     <style>
-      html.nb-maint .seo-prerender{visibility:hidden}
-      .seo-prerender{max-width:880px;margin:0 auto;padding:32px 20px;font-family:Inter,system-ui,sans-serif;color:#0f172a;line-height:1.6}
-      .seo-prerender h1{font-size:1.9rem;margin:0 0 12px}
-      .seo-prerender h2{font-size:1.25rem;margin:28px 0 12px}
-      .seo-prerender h3{font-size:1rem;margin:16px 0 4px}
-      .seo-prerender .seo-intro{font-size:1.05rem;color:#334155}
-      .seo-prerender ul{padding-left:18px}
-      .seo-prerender a{color:#2563eb;text-decoration:none}
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
     </style>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://pdfplatform.app/#website","name":"PDF Platform","url":"https://pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan çalışır. Masaüstü uygulaması çok yakında.","publisher":{"@id":"https://pdfplatform.app/#organization"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://pdfplatform.app/#organization","name":"PDF Platform","url":"https://pdfplatform.app","logo":{"@type":"ImageObject","url":"https://pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
