@@ -18,6 +18,9 @@ import { registerSaasSessionSync } from "../api/subscription";
 import { clearPersistedWorkspaceTool } from "../lib/workspaceToolSelection";
 import type { Language } from "../i18n/landing";
 
+/** "Daha önce giriş yapıldı" ipucu — açılışta gereksiz refresh 401'lerini önler. */
+const SESSION_HINT_KEY = "nb_session_hint";
+
 export function useAuthSession() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -27,12 +30,16 @@ export function useAuthSession() {
     setAccessToken(nextAccessToken);
     setUser(nextUser);
     window.localStorage.setItem(AUTH_ACCESS_TOKEN_STORAGE_KEY, nextAccessToken);
+    // Oturum ipucu: httpOnly refresh çerezi JS'ten okunamaz; bu işaret, açılışta
+    // "daha önce giriş yapıldı mı"yı bilip gereksiz /api/auth/refresh 401'lerini önler.
+    window.localStorage.setItem(SESSION_HINT_KEY, "1");
   }, []);
 
   const clearSession = useCallback(() => {
     setAccessToken(null);
     setUser(null);
     window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(SESSION_HINT_KEY);
     clearPersistedWorkspaceTool();
   }, []);
 
@@ -86,6 +93,12 @@ export function useAuthSession() {
       }
     }
 
+    // Hiç giriş yapmamış ziyaretçide (oturum ipucu yok) refresh denemeyiz → gereksiz
+    // 401 konsol hatası üretilmez. Daha önce giriş yapmış kullanıcıda ipucu durur ve
+    // refresh denenir; başarısız olursa clearSession ipucu temizler (kendini onarır).
+    if (window.localStorage.getItem(SESSION_HINT_KEY) !== "1") {
+      return;
+    }
     try {
       const refreshed = await refreshAuthSession();
       if (refreshed) {
