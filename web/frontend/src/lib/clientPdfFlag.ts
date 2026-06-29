@@ -8,8 +8,20 @@
  * açılır.
  */
 
-// Şimdilik pilot kapsam: yapısal araçlar (sayfa-durumu gerektirmeyenler).
+// Dosya-listesi araçları (sayfa-durumu gerektirmeyen) — GuestToolCore.
 const CLIENT_PDF_TOOLS = new Set<string>(["merge", "image-to-pdf"]);
+
+// Sayfa-seviyeli (thumbnail grid) misafir araçları — GuestPageTool.
+const GUEST_PAGE_TOOLS = new Set<string>([
+  "rotate-pdf",
+  "delete-pages",
+  "organize-pdf",
+]);
+
+/** Misafirde grid'li sayfa aracı olarak çalışır mı (döndür/sil/düzenle)? */
+export function isGuestPageTool(id: string): boolean {
+  return GUEST_PAGE_TOOLS.has(id);
+}
 
 /** Mobil bellek koruması: bu boyutun üstü sunucu yoluna düşer. */
 export const CLIENT_PDF_MAX_BYTES = 80 * 1024 * 1024; // 80 MB

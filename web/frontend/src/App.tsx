@@ -99,11 +99,13 @@ import {
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
+import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
 import {
   isClientPdfEnabled,
   isClientCapableTool,
+  isGuestPageTool,
   CLIENT_PDF_MAX_BYTES,
 } from "./lib/clientPdfFlag";
 import {
@@ -4794,6 +4796,23 @@ function App() {
         <GuestPdfTool
           slug={toolSlug}
           tool={selectedFeatureId as GuestToolId}
+          language={language}
+          onLogin={() => {
+            savePendingTool(selectedFeatureId);
+            setView("login");
+          }}
+          onRegister={() => {
+            savePendingTool(selectedFeatureId);
+            setView("register");
+          }}
+        />
+      );
+    }
+    if (isGuestPageTool(selectedFeatureId)) {
+      return (
+        <GuestPageTool
+          slug={toolSlug}
+          tool={selectedFeatureId as PageToolId}
           language={language}
           onLogin={() => {
             savePendingTool(selectedFeatureId);

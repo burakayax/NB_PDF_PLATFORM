@@ -31,16 +31,19 @@ const toolCategories = (lang: Language) => [
         id: "rotate-pdf",
         icon: "🔄",
         name: lang === "tr" ? "PDF Döndür" : "Rotate PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
         id: "delete-pages",
         icon: "🗑️",
         name: lang === "tr" ? "Sayfa Sil" : "Delete Pages",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
         id: "organize-pdf",
         icon: "⇅",
         name: lang === "tr" ? "Sayfaları Düzenle" : "Organize Pages",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
         id: "page-numbers",
