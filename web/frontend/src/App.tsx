@@ -98,6 +98,7 @@ import {
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
+import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
 import {
@@ -4759,9 +4760,10 @@ function App() {
           close: "Close",
         };
 
-  // Madde 1: Giriş yapmamış kullanıcı /tools/<slug> deep-link'ine geldiğinde
-  // login'e atılmaz; aracın PUBLIC tanıtım sayfasını (prerender ile aynı içerik)
-  // görür. Aracı kullanmak için CTA → giriş/üyelik akışı (pending-tool saklanır).
+  // MİSAFİR-ÖNCELİKLİ: Giriş yapmamış kullanıcı /tools/<slug>'a geldiğinde login'e
+  // ATILMAZ. Client-side çalışabilen araçlarda (birleştir/görsel→PDF) aracı
+  // DOĞRUDAN MİSAFİR olarak kullanır (cihazda, login yok); diğer (sunucu) araçlarda
+  // tanıtım + üyelik CTA görür. İçerik prerender ile aynı (SEO korunur).
   if (
     view === "web" &&
     !isAuthenticated &&
@@ -4770,6 +4772,23 @@ function App() {
     getToolSeo(toolSlugForFeature(selectedFeatureId), language)
   ) {
     const toolSlug = toolSlugForFeature(selectedFeatureId);
+    if (isClientCapableTool(selectedFeatureId)) {
+      return (
+        <GuestPdfTool
+          slug={toolSlug}
+          tool={selectedFeatureId as GuestToolId}
+          language={language}
+          onLogin={() => {
+            savePendingTool(selectedFeatureId);
+            setView("login");
+          }}
+          onRegister={() => {
+            savePendingTool(selectedFeatureId);
+            setView("register");
+          }}
+        />
+      );
+    }
     return (
       <ToolPublicLanding
         slug={toolSlug}
