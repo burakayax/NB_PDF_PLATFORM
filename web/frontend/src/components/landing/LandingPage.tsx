@@ -485,10 +485,10 @@ function Hero({
           className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500"
         >
           {[
-            "🔒 SSL " + (tr ? "Şifreli" : "Encrypted"),
-            "⭐ 4.9/5 " + (tr ? "Puan" : "Rating"),
-            "👥 1,000+ " + (tr ? "Kullanıcı" : "Users"),
-            "🔄 99.9% " + (tr ? "Çalışma Süresi" : "Uptime"),
+            tr ? "🔒 Dosyan cihazından çıkmaz" : "🔒 Files stay on your device",
+            tr ? "⚡ Anında işlem" : "⚡ Instant",
+            tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
+            tr ? "🆓 Üyelik gerekmez" : "🆓 No sign-up",
           ].map((item) => (
             <span key={item}>{item}</span>
           ))}
@@ -525,23 +525,18 @@ function StatsBar({ language }: { language: Language }) {
   const inView = useInViewOnce(ref as React.RefObject<Element>);
 
   const stats = [
-    {
-      value: 1000,
-      suffix: "+",
-      label: tr ? "Aktif Kullanıcı" : "Active Users",
-    },
     { value: 20, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
-      value: 99.9,
-      suffix: "%",
-      label: tr ? "Çalışma Süresi" : "Uptime SLA",
-      decimals: 1,
+      value: 80,
+      suffix: " MB",
+      label: tr ? "Ücretsiz Dosya" : "Free File Size",
     },
     {
       value: 100,
       suffix: "%",
       label: tr ? "Tarayıcı Tabanlı" : "Browser-Based",
     },
+    { value: 0, suffix: "₺", label: tr ? "Ücretsiz Araçlar" : "Free Tools" },
   ];
 
   return (
@@ -562,11 +557,6 @@ function StatsBar({ language }: { language: Language }) {
               {inView ? (
                 <NumberFlow
                   value={s.value}
-                  format={
-                    s.decimals
-                      ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
-                      : {}
-                  }
                   className="text-4xl sm:text-5xl font-black text-white"
                   style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   transformTiming={{ duration: 800, easing: "ease-out" }}
@@ -596,18 +586,18 @@ function StatsBar({ language }: { language: Language }) {
 const SHOWCASE_PILLS = (tr: boolean) => [
   {
     pos: "absolute -top-4 left-[8%] sm:-top-5 sm:left-[5%]",
-    icon: "🔄",
-    label: tr ? "Gerçek Zamanlı" : "Real-time Sync",
+    icon: "⚡",
+    label: tr ? "Anında" : "Instant",
   },
   {
     pos: "absolute -top-4 right-[8%] sm:-top-5 sm:right-[5%]",
     icon: "🔒",
-    label: tr ? "256-bit Şifre" : "256-bit Encryption",
+    label: tr ? "Cihazda İşlenir" : "On-device",
   },
   {
     pos: "absolute -bottom-4 left-[8%] sm:-bottom-5 sm:left-[5%]",
-    icon: "☁️",
-    label: tr ? "Bulut Depolama" : "Cloud Storage",
+    icon: "🆓",
+    label: tr ? "Üyeliksiz" : "No sign-up",
   },
   {
     pos: "absolute -bottom-4 right-[8%] sm:-bottom-5 sm:right-[5%]",
@@ -1804,7 +1794,9 @@ export function LandingPage({
           onUseWebApp={onUseWebApp}
           onSelectPlan={onSelectPlan}
         />
-        <Testimonials language={language} />
+        {/* Testimonials: GERÇEK kullanıcı yorumu olmadığı için gösterilmiyor —
+            uydurma referans dürüstlük + yasal (sahte endorsement) + Google E-E-A-T
+            açısından riskli. Gerçek yorumlar toplanınca <Testimonials /> geri eklenir. */}
         <Faq language={language} />
         <FinalCta
           language={language}

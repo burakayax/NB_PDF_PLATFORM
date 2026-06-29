@@ -8,6 +8,7 @@ import {
   FileText,
   Image as ImageIcon,
   Loader2,
+  Share2,
   Trash2,
   UploadCloud,
 } from "lucide-react";
@@ -134,6 +135,26 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       );
       return;
     }
+    // Kaydetme yerini SOR (Dashboard'daki gibi) — kullanıcı aktivasyonu hâlâ
+    // geçerliyken, ağır işlemden ÖNCE. Desteklenmiyorsa indirmeye düşülür.
+    let saveHandle: FileSystemFileHandle | null = null;
+    const win = window as unknown as {
+      showSaveFilePicker?: (o: {
+        suggestedName?: string;
+        types?: Array<{ description: string; accept: Record<string, string[]> }>;
+      }) => Promise<FileSystemFileHandle>;
+    };
+    if (typeof win.showSaveFilePicker === "function") {
+      try {
+        saveHandle = await win.showSaveFilePicker({
+          suggestedName: outName,
+          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
+        });
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
+        // desteklenmiyor / güvenli bağlam değil → indirmeye düşülür
+      }
+    }
     try {
       setBusy(true);
       let bytes: Uint8Array;
@@ -146,7 +167,13 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
         bytes = await mergePdfs(await Promise.all(files.map((f) => f.file.arrayBuffer())));
       }
       const blob = pdfBytesToBlob(bytes);
-      downloadBlob(blob, outName);
+      if (saveHandle) {
+        const w = await saveHandle.createWritable();
+        await w.write(blob);
+        await w.close();
+      } else {
+        downloadBlob(blob, outName);
+      }
       setResult({ blob, filename: outName });
     } catch (e) {
       setError(
@@ -174,6 +201,27 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
     setTimeout(() => URL.revokeObjectURL(url), 15000);
   }
 
+  // Web Share API — tarayıcı özelliği, LOGIN GEREKTİRMEZ (çoğunlukla mobil).
+  const canShare =
+    typeof navigator !== "undefined" &&
+    typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function";
+
+  async function shareResult() {
+    if (!result) return;
+    const file = new File([result.blob], result.filename, { type: "application/pdf" });
+    const nav = navigator as Navigator & {
+      canShare?: (d: { files: File[] }) => boolean;
+      share?: (d: { files: File[]; title?: string }) => Promise<void>;
+    };
+    try {
+      if (nav.canShare?.({ files: [file] }) && nav.share) {
+        await nav.share({ files: [file], title: result.filename });
+      }
+    } catch {
+      /* iptal / desteklenmiyor */
+    }
+  }
+
   if (result) {
     return (
       <motion.div
@@ -185,7 +233,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
           <Check className="h-8 w-8" />
         </div>
         <p className="mt-4 text-xl font-bold text-white">
-          {tr ? "Hazır! Dosyan indirildi 🎉" : "Done! Your file downloaded 🎉"}
+          {tr ? "Hazır! Dosyan kaydedildi 🎉" : "Done! Your file is ready 🎉"}
         </p>
         <p className="mt-1 text-sm text-slate-400">
           {tr
@@ -199,8 +247,18 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
             className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500"
           >
             <Download className="h-4 w-4" />
-            {tr ? "Tekrar indir" : "Download again"}
+            {tr ? "İndir" : "Download"}
           </button>
+          {canShare && (
+            <button
+              type="button"
+              onClick={() => void shareResult()}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+            >
+              <Share2 className="h-4 w-4" />
+              {tr ? "Paylaş" : "Share"}
+            </button>
+          )}
           <button
             type="button"
             onClick={reset}
@@ -216,8 +274,8 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
             </p>
             <p className="mt-0.5 text-[13px] text-slate-400">
               {tr
-                ? "Ücretsiz üye ol: geçmişin kaydedilsin, Word/Excel dönüştürme, OCR ve daha fazlası."
-                : "Sign up free: save history, unlock Word/Excel conversion, OCR and more."}
+                ? "Ücretsiz üye ol: Word/Excel/PowerPoint'e dönüştür, sıkıştır, şifrele — tüm araçlara eriş ve daha büyük dosyalar işle."
+                : "Sign up free: convert to Word/Excel/PowerPoint, compress, encrypt — unlock all tools and larger files."}
             </p>
             <button
               type="button"
