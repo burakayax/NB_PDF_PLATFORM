@@ -5,6 +5,7 @@
   Dosyalar bu konuma yerleştirildiğinde sayfa otomatik olarak gösterir.
 */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
@@ -14,8 +15,9 @@ import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
-import { GuestToolCore } from "../tools/GuestToolCore";
+import { GuestToolCore, type GuestToolId } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
+import { X } from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
@@ -415,7 +417,9 @@ function Hero({
     },
   });
 
-  const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
+  const [freeTool, setFreeTool] = useState<GuestToolId>("merge");
+  const [pageModal, setPageModal] = useState<PageToolId | null>(null);
+  const pageModalName = FREE_TOOLS.find((t) => t.id === pageModal);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -481,38 +485,67 @@ function Hero({
             AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
         <motion.div {...stagger(3)} className="mt-10 mx-auto w-full max-w-xl">
           <div className="mb-4 flex flex-wrap justify-center gap-2">
-            {FREE_TOOLS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setFreeTool(t.id)}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  freeTool === t.id
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
-                    : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
-                }`}
-              >
-                {tr ? t.tr : t.en}
-              </button>
-            ))}
+            {FREE_TOOLS.map((t) => {
+              const active = isPageToolId(t.id) ? pageModal === t.id : freeTool === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() =>
+                    isPageToolId(t.id)
+                      ? setPageModal(t.id)
+                      : setFreeTool(t.id as GuestToolId)
+                  }
+                  className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                    active
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
+                      : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  {tr ? t.tr : t.en}
+                </button>
+              );
+            })}
           </div>
           <div className="text-left">
-            {isPageToolId(freeTool) ? (
-              <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
-            ) : (
-              <GuestToolCore
-                key={freeTool}
-                tool={freeTool}
-                language={language}
-                autoDetect={freeTool === "merge"}
-                onRegister={onRegister}
-              />
-            )}
+            <GuestToolCore
+              key={freeTool}
+              tool={freeTool}
+              language={language}
+              autoDetect={freeTool === "merge"}
+              onRegister={onRegister}
+            />
           </div>
           <p className="mt-4 text-center text-[13px] text-slate-500">
             {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>
+
+        {/* Sayfa araçları (döndür/sil/düzenle) — dashboard'daki gibi TAM-EKRAN
+            görsel seçici. Portal ile body'ye render → ancestor transform/overflow
+            kırpmaz; geniş alan = sayfalar düzgün görünür + butonlar yerinde. */}
+        {pageModal &&
+          createPortal(
+            <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#070b14]/96 backdrop-blur-sm">
+              <div className="mx-auto min-h-dvh max-w-4xl px-4 py-5 sm:px-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-white">
+                    {tr ? pageModalName?.tr : pageModalName?.en}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setPageModal(null)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                  >
+                    <X className="h-4 w-4" />
+                    {tr ? "Kapat" : "Close"}
+                  </button>
+                </div>
+                <GuestPageToolCore key={pageModal} tool={pageModal} language={language} />
+              </div>
+            </div>,
+            document.body,
+          )}
 
         {/* Trust bar */}
         <motion.div
