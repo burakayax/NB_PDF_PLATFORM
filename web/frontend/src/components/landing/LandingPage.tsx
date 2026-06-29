@@ -15,6 +15,21 @@ import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { GuestToolCore } from "../tools/GuestToolCore";
+import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
+
+/** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
+export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
+const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf"]);
+const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
+export const isFreeToolId = (id: string): id is FreeToolId =>
+  id === "merge" || id === "image-to-pdf" || PAGE_TOOL_IDS.has(id);
+const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
+  { id: "merge", tr: "Birleştir", en: "Merge" },
+  { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
+  { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
+  { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
+  { id: "organize-pdf", tr: "Düzenle", en: "Organize" },
+];
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
@@ -400,6 +415,8 @@ function Hero({
     },
   });
 
+  const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto">
@@ -460,22 +477,40 @@ function Hero({
           {copy.hero.description}
         </motion.p>
 
-        {/* Çalışan araç — ANA SAYFADA, login YOK. Misafir dosyalarını sürükler,
-            cihazda işlenir, biter. PDF → birleştir, görsel bırakılırsa → görsel→PDF. */}
-        <motion.div
-          {...stagger(3)}
-          className="mt-10 mx-auto w-full max-w-xl text-left"
-        >
-          <GuestToolCore
-            tool="merge"
-            language={language}
-            autoDetect
-            onRegister={onRegister}
-          />
+        {/* Hızlı araç seçici + ÇALIŞAN araç — ANA SAYFADA, login YOK, sayfadan
+            AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
+        <motion.div {...stagger(3)} className="mt-10 mx-auto w-full max-w-xl">
+          <div className="mb-4 flex flex-wrap justify-center gap-2">
+            {FREE_TOOLS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setFreeTool(t.id)}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                  freeTool === t.id
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
+                    : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                }`}
+              >
+                {tr ? t.tr : t.en}
+              </button>
+            ))}
+          </div>
+          <div className="text-left">
+            {isPageToolId(freeTool) ? (
+              <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
+            ) : (
+              <GuestToolCore
+                key={freeTool}
+                tool={freeTool}
+                language={language}
+                autoDetect={freeTool === "merge"}
+                onRegister={onRegister}
+              />
+            )}
+          </div>
           <p className="mt-4 text-center text-[13px] text-slate-500">
-            {tr
-              ? "PDF veya görsel bırak — ya da ↓ tüm araçlar"
-              : "Drop a PDF or image — or ↓ all tools"}
+            {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>
 

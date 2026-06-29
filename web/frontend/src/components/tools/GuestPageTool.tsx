@@ -40,17 +40,19 @@ function canShare(): boolean {
   );
 }
 
-type Props = {
-  slug: string;
+/**
+ * Sayfa aracı ÇEKİRDEĞİ (gömülebilir) — tek PDF dropzone + PdfPageVisualGrid +
+ * pdf-lib işleme + kaydet/paylaş. Hem GuestPageTool (tam sayfa) hem ana sayfa
+ * hero'su kullanır → kod tekrarı yok. Dosyalar SUNUCUYA GİTMEZ (cihazda).
+ */
+export function GuestPageToolCore({
+  tool,
+  language,
+}: {
   tool: PageToolId;
   language: Language;
-  onLogin: () => void;
-  onRegister: () => void;
-};
-
-export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Props) {
+}) {
   const tr = language === "tr";
-  const seo = getToolSeo(slug, language);
   const mode: PdfPageVisualMode =
     tool === "rotate-pdf" ? "rotate" : tool === "delete-pages" ? "delete" : "organize";
 
@@ -120,8 +122,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Pro
     if (!file || numPages === 0) return;
     setError(null);
 
-    // Mod doğrulaması
-    let rot0: Record<number, number> = {};
+    const rot0: Record<number, number> = {};
     let del0: number[] = [];
     let order0: number[] = [];
     if (mode === "rotate") {
@@ -213,6 +214,196 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Pro
           ? "Sayfaları sürükleyerek yeniden sırala, sonra «Kaydet»."
           : "Drag pages to reorder, then «Save».";
 
+  if (result) {
+    return (
+      <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
+          <Check className="h-8 w-8" />
+        </div>
+        <p className="mt-4 text-xl font-bold">
+          {tr ? "Hazır! Dosyan kaydedildi 🎉" : "Done! Your file is ready 🎉"}
+        </p>
+        <p className="mt-1 text-sm text-slate-400">
+          {tr ? "Dosyan cihazından hiç çıkmadı." : "Your file never left your device."}
+        </p>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => downloadBlob(result.blob, result.filename)}
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+          >
+            <Download className="h-4 w-4" />
+            {tr ? "İndir" : "Download"}
+          </button>
+          {canShare() && (
+            <button
+              type="button"
+              onClick={() => void shareResult()}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+            >
+              <Share2 className="h-4 w-4" />
+              {tr ? "Paylaş" : "Share"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setFile(null);
+              setResult(null);
+            }}
+            className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
+          >
+            {tr ? "Yeni işlem" : "New task"}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!file) {
+    return (
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          pickFile(e.dataTransfer.files[0]);
+        }}
+        onClick={() => inputRef.current?.click()}
+        className={`group cursor-pointer rounded-3xl border-2 border-dashed p-12 text-center transition ${
+          dragOver
+            ? "border-cyan-400/70 bg-cyan-400/[0.06]"
+            : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            pickFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
+          <UploadCloud className="h-7 w-7" />
+        </div>
+        <p className="mt-4 text-base font-semibold">
+          {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
+        </p>
+        <p className="mt-1 text-[13px] text-slate-400">
+          {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
+      <div className="mb-2 flex items-center justify-between gap-3 px-1">
+        <p className="text-[13px] text-slate-300">{hint}</p>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.max(25, z - 25))}
+            className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
+            aria-label="Uzaklaştır"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="w-9 text-center text-xs text-slate-400">{zoom}%</span>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.min(100, z + 25))}
+            className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
+            aria-label="Yakınlaştır"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+      <div className="h-[58vh] min-h-[420px] overflow-hidden rounded-xl">
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center text-slate-500">
+              <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          }
+        >
+          <PdfPageVisualGrid
+            file={file}
+            password=""
+            maxPage={numPages || null}
+            language={language}
+            mode={mode}
+            pagesText={pagesText}
+            onPagesTextChange={setPagesText}
+            onPagesErrorClear={() => setError(null)}
+            pageRotations={pageRotations}
+            onPageRotationsChange={setPageRotations}
+            pageOrder={pageOrder}
+            onPageOrderChange={setPageOrder}
+            zoomPercent={zoom}
+            onStatsChange={(s) => setNumPages(s.totalPages)}
+          />
+        </Suspense>
+      </div>
+
+      {error && (
+        <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            setFile(null);
+            setError(null);
+          }}
+          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-400 transition hover:text-white"
+        >
+          {tr ? "← Başka dosya" : "← Other file"}
+        </button>
+        <button
+          type="button"
+          onClick={() => void run()}
+          disabled={busy || numPages === 0}
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+        >
+          {busy ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {tr ? "İşleniyor…" : "Processing…"}
+            </>
+          ) : (
+            <>{tr ? "Kaydet" : "Save"} →</>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+type Props = {
+  slug: string;
+  tool: PageToolId;
+  language: Language;
+  onLogin: () => void;
+  onRegister: () => void;
+};
+
+/** Tam sayfa misafir aracı (SEO için /tools/<slug>). Çekirdek + sayfa çerçevesi. */
+export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Props) {
+  const tr = language === "tr";
+  const seo = getToolSeo(slug, language);
+
   return (
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
@@ -252,173 +443,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Pro
         </div>
 
         <div className="mt-8">
-          {result ? (
-            <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
-                <Check className="h-8 w-8" />
-              </div>
-              <p className="mt-4 text-xl font-bold">
-                {tr ? "Hazır! Dosyan kaydedildi 🎉" : "Done! Your file is ready 🎉"}
-              </p>
-              <p className="mt-1 text-sm text-slate-400">
-                {tr ? "Dosyan cihazından hiç çıkmadı." : "Your file never left your device."}
-              </p>
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => downloadBlob(result.blob, result.filename)}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
-                >
-                  <Download className="h-4 w-4" />
-                  {tr ? "İndir" : "Download"}
-                </button>
-                {canShare() && (
-                  <button
-                    type="button"
-                    onClick={() => void shareResult()}
-                    className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    {tr ? "Paylaş" : "Share"}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setResult(null);
-                  }}
-                  className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-                >
-                  {tr ? "Yeni işlem" : "New task"}
-                </button>
-              </div>
-            </div>
-          ) : !file ? (
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                pickFile(e.dataTransfer.files[0]);
-              }}
-              onClick={() => inputRef.current?.click()}
-              className={`group cursor-pointer rounded-3xl border-2 border-dashed p-12 text-center transition ${
-                dragOver
-                  ? "border-cyan-400/70 bg-cyan-400/[0.06]"
-                  : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
-              }`}
-            >
-              <input
-                ref={inputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  pickFile(e.target.files?.[0]);
-                  e.target.value = "";
-                }}
-              />
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
-                <UploadCloud className="h-7 w-7" />
-              </div>
-              <p className="mt-4 text-base font-semibold">
-                {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
-              </p>
-              <p className="mt-1 text-[13px] text-slate-400">
-                {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
-              </p>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
-              <div className="mb-2 flex items-center justify-between gap-3 px-1">
-                <p className="text-[13px] text-slate-300">{hint}</p>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setZoom((z) => Math.max(25, z - 25))}
-                    className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-                    aria-label="Uzaklaştır"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-9 text-center text-xs text-slate-400">{zoom}%</span>
-                  <button
-                    type="button"
-                    onClick={() => setZoom((z) => Math.min(100, z + 25))}
-                    className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-                    aria-label="Yakınlaştır"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="h-[58vh] min-h-[420px] overflow-hidden rounded-xl">
-                <Suspense
-                  fallback={
-                    <div className="flex h-full items-center justify-center text-slate-500">
-                      <Loader2 className="h-6 w-6 animate-spin" />
-                    </div>
-                  }
-                >
-                  <PdfPageVisualGrid
-                    file={file}
-                    password=""
-                    maxPage={numPages || null}
-                    language={language}
-                    mode={mode}
-                    pagesText={pagesText}
-                    onPagesTextChange={setPagesText}
-                    onPagesErrorClear={() => setError(null)}
-                    pageRotations={pageRotations}
-                    onPageRotationsChange={setPageRotations}
-                    pageOrder={pageOrder}
-                    onPageOrderChange={setPageOrder}
-                    zoomPercent={zoom}
-                    onStatsChange={(s) => setNumPages(s.totalPages)}
-                  />
-                </Suspense>
-              </div>
-
-              {error && (
-                <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-                  {error}
-                </p>
-              )}
-
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFile(null);
-                    setError(null);
-                  }}
-                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-400 transition hover:text-white"
-                >
-                  {tr ? "← Başka dosya" : "← Other file"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void run()}
-                  disabled={busy || numPages === 0}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
-                >
-                  {busy ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      {tr ? "İşleniyor…" : "Processing…"}
-                    </>
-                  ) : (
-                    <>{tr ? "Kaydet" : "Save"} →</>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
+          <GuestPageToolCore tool={tool} language={language} />
         </div>
 
         <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
