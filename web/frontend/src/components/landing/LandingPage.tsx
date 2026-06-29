@@ -14,6 +14,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
+import { GuestToolCore } from "../tools/GuestToolCore";
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
@@ -376,11 +377,11 @@ function Navbar({
 
 function Hero({
   language,
-  onUseWebApp,
-  windowsDownloadUrl,
+  onRegister,
 }: {
   language: Language;
   onUseWebApp: () => void;
+  onRegister: () => void;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -459,50 +460,23 @@ function Hero({
           {copy.hero.description}
         </motion.p>
 
-        {/* CTAs */}
+        {/* Çalışan araç — ANA SAYFADA, login YOK. Misafir dosyalarını sürükler,
+            cihazda işlenir, biter. PDF → birleştir, görsel bırakılırsa → görsel→PDF. */}
         <motion.div
           {...stagger(3)}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-10 mx-auto w-full max-w-xl text-left"
         >
-          <motion.button
-            onClick={onUseWebApp}
-            whileHover={{ y: -4, boxShadow: "0 24px 60px rgba(59,130,246,0.55), 0 0 0 1px rgba(99,102,241,0.35)" }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 18 }}
-            className="group relative inline-flex h-13 items-center justify-center px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-base shadow-2xl shadow-blue-500/30 hover:from-blue-500 hover:to-indigo-500 transition-colors overflow-hidden"
-          >
-            <div
-              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
-              aria-hidden="true"
-            />
-            <span className="relative">
-              {tr
-                ? "Ücretsiz Başla — Kredi Kartı Gerekmez"
-                : "Start Free — No Credit Card"}
-            </span>
-          </motion.button>
-          <div className="relative">
-            <span className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base opacity-50 cursor-not-allowed">
-              <svg
-                className="w-5 h-5 text-blue-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.8}
-                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                />
-              </svg>
-              {copy.hero.secondaryCta}
-            </span>
-            <span className="absolute -top-2 -right-1 bg-amber-500 text-[11px] font-bold text-white px-2 py-0.5 rounded-full whitespace-nowrap">
-              {tr ? "Yakında" : "Coming"}
-            </span>
-          </div>
+          <GuestToolCore
+            tool="merge"
+            language={language}
+            autoDetect
+            onRegister={onRegister}
+          />
+          <p className="mt-4 text-center text-[13px] text-slate-500">
+            {tr
+              ? "PDF veya görsel bırak — ya da ↓ tüm araçlar"
+              : "Drop a PDF or image — or ↓ all tools"}
+          </p>
         </motion.div>
 
         {/* Trust bar */}
@@ -1806,6 +1780,7 @@ export function LandingPage({
         <Hero
           language={language}
           onUseWebApp={onUseWebApp}
+          onRegister={onRegister}
           windowsDownloadUrl={windowsDownloadUrl}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
