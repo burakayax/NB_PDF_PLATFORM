@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
+import type { FeatureKey } from "../../api/subscription";
 import { getWindowsDownloadUrlFromCms } from "../../lib/landingCmsMerge";
 import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
@@ -60,6 +61,7 @@ type LandingPageProps = {
   language: Language;
   onLanguageChange: (language: Language) => void;
   onUseWebApp: () => void;
+  onOpenTool: (id: FeatureKey) => void;
   isAuthenticated: boolean;
   authGreeting?: string;
   onLogin: () => void;
@@ -1765,6 +1767,7 @@ export function LandingPage({
   language,
   onLanguageChange,
   onUseWebApp,
+  onOpenTool,
   isAuthenticated,
   authGreeting,
   onLogin,
@@ -1805,6 +1808,13 @@ export function LandingPage({
           onUseWebApp={onUseWebApp}
           windowsDownloadUrl={windowsDownloadUrl}
         />
+        {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
+            açmaz ücretsiz araçlara tıklayıp (login'siz) kullanabilir. */}
+        <PdfToolsSection
+          language={language}
+          onUseWebApp={onUseWebApp}
+          onOpenTool={onOpenTool}
+        />
         <StatsBar language={language} />
         <ProductShowcase
           language={language}
@@ -1814,7 +1824,6 @@ export function LandingPage({
         />
         <Features language={language} />
         <HowItWorks language={language} />
-        <PdfToolsSection language={language} onUseWebApp={onUseWebApp} />
         <PricingSection
           language={language}
           onUseWebApp={onUseWebApp}

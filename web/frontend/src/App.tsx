@@ -3444,6 +3444,23 @@ function App() {
     setView(isAuthenticated ? "web" : "login");
   }
 
+  // MİSAFİR-ÖNCELİKLİ: Bir araca DOĞRUDAN git → /tools/<slug> URL'i + "web"
+  // görünümü. Giriş YAPMAMIŞSA login'e ATILMAZ; guest-block devreye girer
+  // (client-capable araçta GuestPdfTool, diğerinde tanıtım). Giriş yapmışsa
+  // workspace'te o araç açılır.
+  function navigateToTool(featureId: FeatureId) {
+    setSelectedFeatureId(featureId);
+    setActiveSidebar(featureId as unknown as SidebarToolId);
+    setContentPanel("tool");
+    setAuthError("");
+    if (isAuthenticated && user?.preferredLanguage) {
+      setLanguage(user.preferredLanguage);
+    }
+    window.history.pushState({}, "", `/tools/${toolSlugForFeature(featureId)}`);
+    setView("web");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
     if (id !== "subscription" && lockedFeatures.has(id)) {
@@ -4821,6 +4838,7 @@ function App() {
             language={language}
             onLanguageChange={handleLanguageChange}
             onUseWebApp={openWorkspace}
+            onOpenTool={navigateToTool}
             isAuthenticated={isAuthenticated}
             authGreeting={user ? userGreetingLine(user, language) : undefined}
             onLogin={() => {

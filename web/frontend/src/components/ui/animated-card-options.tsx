@@ -6,6 +6,8 @@ export interface CardOption {
   id: string;
   icon: ReactNode;
   name: string;
+  /** İsteğe bağlı küçük rozet (ör. "Üyeliksiz"). */
+  badge?: string;
 }
 
 interface AnimatedCardOptionsProps {
@@ -76,7 +78,12 @@ export function AnimatedCardOptions({ options, columns = 4, onSelect }: Animated
                 onClick={() => handleCardClick(option)}
               >
                 <motion.div variants={hoverVariants}>
-                  <Card className="h-24 w-full border border-white/10 hover:border-white/25 transition-colors duration-200 bg-white/[0.04] backdrop-blur-sm">
+                  <Card className="relative h-24 w-full border border-white/10 hover:border-white/25 transition-colors duration-200 bg-white/[0.04] backdrop-blur-sm">
+                    {option.badge && (
+                      <span className="absolute top-1.5 right-1.5 z-10 rounded-full border border-emerald-500/25 bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-300">
+                        {option.badge}
+                      </span>
+                    )}
                     <div className="flex items-center h-full px-3 sm:px-4 space-x-2 sm:space-x-3">
                       <div className="text-xl sm:text-2xl opacity-80 group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
                         {option.icon}
