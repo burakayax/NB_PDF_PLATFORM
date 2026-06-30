@@ -107,7 +107,9 @@ import {
   rotatePdf,
   deletePages,
   reorderPages,
+  splitPagesToZip,
   pdfBytesToBlob,
+  zipBytesToBlob,
   PdfEncryptedError,
 } from "./lib/clientPdf";
 import {
@@ -3898,6 +3900,31 @@ function App() {
                   src,
                   organizePageOrder.map((p) => p - 1),
                 );
+              } else if (cid === "split" && pc > 0) {
+                const pages1 = expandPagesString(pagesText, pc, language) ?? [];
+                if (pages1.length > 0) {
+                  const p0 = pages1.map((p) => p - 1);
+                  const splitBlob =
+                    splitMode === "separate"
+                      ? zipBytesToBlob(await splitPagesToZip(src, p0, "sayfa"))
+                      : pdfBytesToBlob(await reorderPages(src, p0));
+                  const splitName =
+                    splitMode === "separate"
+                      ? "sayfalar.zip"
+                      : selectedFeature.fallbackFilename;
+                  const url = URL.createObjectURL(splitBlob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = splitName;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  setTimeout(() => URL.revokeObjectURL(url), 15000);
+                  setMergeShareReady({ blob: splitBlob, filename: splitName });
+                  applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+                  setSubmitting(false);
+                  return;
+                }
               }
             }
             if (resultBytes) {

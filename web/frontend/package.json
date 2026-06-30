@@ -27,6 +27,7 @@
     "@sentry/react": "^10.55.0",
     "@tanstack/react-virtual": "^3.13.2",
     "clsx": "^2.1.1",
+    "fflate": "^0.8.3",
     "framer-motion": "^12.38.0",
     "libphonenumber-js": "^1.12.42",
     "lucide-react": "^0.460.0",

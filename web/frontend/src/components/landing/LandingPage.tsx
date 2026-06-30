@@ -19,12 +19,13 @@ import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
-const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf"]);
+const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf", "split"]);
 const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
 export const isFreeToolId = (id: string): id is FreeToolId =>
   id === "merge" || id === "image-to-pdf" || PAGE_TOOL_IDS.has(id);
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
+  { id: "split", tr: "Böl", en: "Split" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
