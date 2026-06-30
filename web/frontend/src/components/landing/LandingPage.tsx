@@ -16,6 +16,7 @@ import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { GuestToolCore } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
+import { AiPdfTool } from "../tools/AiPdfTool";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
@@ -91,6 +92,9 @@ type LandingPageProps = {
   canonicalBaseUrl?: string;
   organizationName?: string;
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
+  /** AI araçları için (giriş yapan kullanıcı token'ı + yükseltme tetikleyici). */
+  accessToken?: string | null;
+  onUpgrade?: () => void;
 };
 
 type ShowcaseTab = "web" | "desktop";
@@ -394,10 +398,16 @@ function Navbar({
 function Hero({
   language,
   onRegister,
+  onLogin,
+  accessToken,
+  onUpgrade,
 }: {
   language: Language;
   onUseWebApp: () => void;
   onRegister: () => void;
+  onLogin: () => void;
+  accessToken: string | null;
+  onUpgrade: () => void;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -417,6 +427,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
+  const [aiTool, setAiTool] = useState<"summarize" | "chat" | null>(null);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -486,9 +497,12 @@ function Hero({
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setFreeTool(t.id)}
+                onClick={() => {
+                  setFreeTool(t.id);
+                  setAiTool(null);
+                }}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  freeTool === t.id
+                  !aiTool && freeTool === t.id
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
                     : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
                 }`}
@@ -496,11 +510,40 @@ function Hero({
                 {tr ? t.tr : t.en}
               </button>
             ))}
+            {/* AI araçları (Pro) — yapay zekâ özet + sohbet */}
+            {(
+              [
+                ["summarize", tr ? "✨ AI Özet" : "✨ AI Summary"],
+                ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAiTool(id)}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                  aiTool === id
+                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.7)]"
+                    : "border border-violet-400/25 bg-violet-500/[0.06] text-violet-200 hover:bg-violet-500/[0.12]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
           <div className="text-left">
-            {isPageToolId(freeTool) ? (
+            {aiTool ? (
+              <AiPdfTool
+                key={aiTool}
+                mode={aiTool}
+                language={language}
+                accessToken={accessToken}
+                onLogin={onLogin}
+                onUpgrade={onUpgrade}
+              />
+            ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
             ) : (
               <GuestToolCore
@@ -1780,6 +1823,8 @@ export function LandingPage({
   onContactClick,
   organizationName = "PDF Platform",
   onSelectPlan,
+  accessToken,
+  onUpgrade,
 }: LandingPageProps) {
   const { cms: cmsContent } = useSettings();
   const windowsDownloadUrl = getWindowsDownloadUrlFromCms(cmsContent);
@@ -1808,6 +1853,9 @@ export function LandingPage({
           language={language}
           onUseWebApp={onUseWebApp}
           onRegister={onRegister}
+          onLogin={onLogin}
+          accessToken={accessToken ?? null}
+          onUpgrade={onUpgrade ?? onRegister}
           windowsDownloadUrl={windowsDownloadUrl}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar

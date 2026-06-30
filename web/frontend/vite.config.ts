@@ -215,6 +215,7 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "public",
     "media",
     "billing",
+    "ai",
     "team",
   ];
 
