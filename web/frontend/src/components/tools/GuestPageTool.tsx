@@ -139,6 +139,35 @@ export function GuestPageToolCore({
     setTimeout(() => URL.revokeObjectURL(url), 15000);
   }
 
+  // "İndir": dashboard'daki gibi KAYDETME YERİNİ SORAR (File System Access).
+  // İndir tıklaması kullanıcı aktivasyonudur; blob hazır olduğundan picker direkt
+  // çağrılır. Desteklemeyen tarayıcıda (Firefox/Safari/mobil) İndirilenler'e iner.
+  async function saveResult() {
+    if (!result) return;
+    const win = window as unknown as {
+      showSaveFilePicker?: (o: {
+        suggestedName?: string;
+        types?: Array<{ description: string; accept: Record<string, string[]> }>;
+      }) => Promise<FileSystemFileHandle>;
+    };
+    if (typeof win.showSaveFilePicker === "function") {
+      try {
+        const handle = await win.showSaveFilePicker({
+          suggestedName: result.filename,
+          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
+        });
+        const w = await handle.createWritable();
+        await w.write(result.blob);
+        await w.close();
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
+        // desteklenmiyor / hata → indirmeye düş
+      }
+    }
+    downloadBlob(result.blob, result.filename);
+  }
+
   function openResult() {
     if (!result) return;
     const url = URL.createObjectURL(result.blob);
@@ -229,7 +258,7 @@ export function GuestPageToolCore({
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
-            onClick={() => downloadBlob(result.blob, result.filename)}
+            onClick={() => void saveResult()}
             className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
           >
             <Download className="h-4 w-4" />
