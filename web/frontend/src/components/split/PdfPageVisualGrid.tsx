@@ -253,15 +253,27 @@ function PdfPageCardImage({
   onImageFailed: (page: number) => void;
   lowResPlaceholder?: boolean;
 }) {
+  // Döndürülmüş (90/270) sayfanın kutuya OTURMASI için: container-query birimleriyle
+  // en/boy sınırlarını takas et + ortala. Böylece dik hale getirilen yatay sayfa
+  // kareye sığar, bir tarafı boş bırakıp diğerine sıkışmaz.
+  const r = ((rot % 360) + 360) % 360;
+  const quarter = r === 90 || r === 270;
   return (
-    <div className="relative min-h-0 flex-1 w-full overflow-hidden bg-slate-950/60">
+    <div
+      className="relative min-h-0 flex-1 w-full overflow-hidden bg-slate-950/60"
+      style={{ containerType: "size" }}
+    >
       <img
         src={url}
         alt=""
         loading="eager"
         decoding="async"
-        className={`h-full w-full object-contain object-top transition-[filter] duration-150 ${lowResPlaceholder ? "blur-[0.35px]" : ""}`}
-        style={{ transform: rot ? `rotate(${rot}deg)` : undefined }}
+        className={`absolute left-1/2 top-1/2 transition-[filter] duration-150 ${lowResPlaceholder ? "blur-[0.35px]" : ""}`}
+        style={{
+          transform: `translate(-50%, -50%)${r ? ` rotate(${r}deg)` : ""}`,
+          maxWidth: quarter ? "100cqh" : "100cqw",
+          maxHeight: quarter ? "100cqw" : "100cqh",
+        }}
         onError={() => onImageFailed(page1)}
       />
       <span className="sr-only" role="status">
