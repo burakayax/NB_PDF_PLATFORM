@@ -101,11 +101,19 @@ import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
-import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
 import {
-  isClientPdfEnabled,
+  mergePdfs,
+  imagesToPdf,
+  rotatePdf,
+  deletePages,
+  reorderPages,
+  pdfBytesToBlob,
+  PdfEncryptedError,
+} from "./lib/clientPdf";
+import {
   isClientCapableTool,
   isGuestPageTool,
+  isWorkspaceClientTool,
   CLIENT_PDF_MAX_BYTES,
 } from "./lib/clientPdfFlag";
 import {
@@ -3843,24 +3851,24 @@ function App() {
       disposeToolProgressSuccess();
       clearToast();
 
-      // ── Client-side (tarayıcı) işleme — DARK LAUNCH (varsayılan kapalı; ?clientpdf=1).
-      // Dosyalar SUNUCUYA GİTMEDEN cihazda işlenir: anında + gizli + sıfır maliyet.
-      // Başarılıysa erken döner; şifreli / çok büyük / desteklenmeyen → sunucu akışı sürer.
-      // NOT (pilot): limit/kota enforcement client yolunda HENÜZ yok — bayrak gizli
-      // olduğundan yalnızca test eden etkilenir; herkese AÇMADAN ÖNCE eklenecek (plan B).
-      if (isClientPdfEnabled() && isClientCapableTool(selectedFeature.id)) {
+      // ── Client-side (tarayıcı) işleme — YAPISAL araçlar SUNUCUYA GİTMEDEN cihazda.
+      // Anında + gizli + SIFIR maliyet → günlük limite SAYMAZ (yapısal araçlar
+      // herkese sınırsız: birleştir/görsel→PDF/döndür/sil/düzenle). Şifreli / çok
+      // büyük / seçim yok → sunucu akışına düşülür.
+      if (isWorkspaceClientTool(selectedFeature.id)) {
         const totalBytes = uploads.reduce((s, u) => s + u.file.size, 0);
         const anyPassword = uploads.some((u) => u.password.trim().length > 0);
         if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
           try {
             setSubmitting(true);
             let resultBytes: Uint8Array | null = null;
-            if (selectedFeature.id === "merge") {
+            const cid = selectedFeature.id;
+            if (cid === "merge") {
               const buffers = await Promise.all(
                 uploads.map((u) => u.file.arrayBuffer()),
               );
               resultBytes = await mergePdfs(buffers);
-            } else if (selectedFeature.id === "image-to-pdf") {
+            } else if (cid === "image-to-pdf") {
               const imgs = await Promise.all(
                 uploads.map(async (u) => ({
                   bytes: await u.file.arrayBuffer(),
@@ -3868,6 +3876,29 @@ function App() {
                 })),
               );
               resultBytes = await imagesToPdf(imgs);
+            } else if (uploads[0]) {
+              // Tek-dosya sayfa araçları — seçim grid state'inden okunur (1-tabanlı
+              // → clientPdf 0-tabanlı). Seçim yoksa resultBytes null → sunucuya düşer.
+              const src = new Uint8Array(await uploads[0].file.arrayBuffer());
+              const pc = uploads[0].pageCount ?? 0;
+              if (cid === "rotate-pdf") {
+                const r0: Record<number, number> = {};
+                for (const [p1, deg] of Object.entries(rotatePageRotations)) {
+                  const d = Number(deg);
+                  if (d % 360 !== 0) r0[Number(p1) - 1] = d;
+                }
+                if (Object.keys(r0).length > 0) resultBytes = await rotatePdf(src, r0);
+              } else if (cid === "delete-pages" && pc > 0) {
+                const pages1 = expandPagesString(deletePagesText, pc, language) ?? [];
+                if (pages1.length > 0 && pages1.length < pc) {
+                  resultBytes = await deletePages(src, pages1.map((p) => p - 1));
+                }
+              } else if (cid === "organize-pdf" && organizePageOrder.length > 0) {
+                resultBytes = await reorderPages(
+                  src,
+                  organizePageOrder.map((p) => p - 1),
+                );
+              }
             }
             if (resultBytes) {
               const filename = selectedFeature.fallbackFilename;
