@@ -377,7 +377,18 @@ export function GuestPageToolCore({
             pageOrder={pageOrder}
             onPageOrderChange={setPageOrder}
             zoomPercent={zoom}
-            onStatsChange={(s) => setNumPages(s.totalPages)}
+            onStatsChange={(s) => {
+              setNumPages(s.totalPages);
+              // Organize modunda grid pageOrder.length kadar sayfa gösterir →
+              // PDF yüklenince [1..n] ile başlat, yoksa boş görünür.
+              if (mode === "organize" && s.totalPages > 0) {
+                setPageOrder((prev) =>
+                  prev.length === s.totalPages
+                    ? prev
+                    : Array.from({ length: s.totalPages }, (_, i) => i + 1),
+                );
+              }
+            }}
           />
         </Suspense>
       </div>
