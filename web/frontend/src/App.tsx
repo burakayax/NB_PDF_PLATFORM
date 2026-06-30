@@ -4932,6 +4932,17 @@ function App() {
             onOpenPrivacy={() => openLegalPage("privacy")}
             onOpenKvkk={() => openLegalPage("kvkk")}
             onContactClick={openContactModal}
+            accessToken={accessToken}
+            onUpgrade={() => {
+              if (isAuthenticated) {
+                openWorkspace();
+                setUpgradeModalOpen(true);
+              } else {
+                setAuthError("");
+                setView("register");
+                window.scrollTo({ top: 0, behavior: "instant" });
+              }
+            }}
             onOpenAbout={() => {
               setView("about");
               window.scrollTo({ top: 0, behavior: "instant" });
