@@ -3,12 +3,12 @@ import { createPortal } from "react-dom";
 import {
   Check,
   Download,
+  ExternalLink,
   Loader2,
   Lock,
-  Minus,
-  Plus,
   Share2,
   ShieldCheck,
+  Sliders,
   Sparkles,
   UploadCloud,
   X,
@@ -21,16 +21,19 @@ import {
   rotatePdf,
   deletePages,
   reorderPages,
+  getPdfPageCount,
   pdfBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdf";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
-const PdfPageVisualGrid = lazy(() =>
-  import("../split/PdfPageVisualGrid").then((m) => ({ default: m.PdfPageVisualGrid })),
+// Dashboard'ın görsel seçici modalının BİREBİR aynısı.
+const SplitPagePickerModal = lazy(() =>
+  import("../split/SplitPagePickerModal").then((m) => ({
+    default: m.SplitPagePickerModal,
+  })),
 );
 
-/** Sayfa-seviyeli (grid'li) client-side misafir araçları. */
 export type PageToolId = "rotate-pdf" | "delete-pages" | "organize-pdf";
 
 const MAX_BYTES = 80 * 1024 * 1024;
@@ -43,9 +46,11 @@ function canShare(): boolean {
 }
 
 /**
- * Sayfa aracı ÇEKİRDEĞİ (gömülebilir) — tek PDF dropzone + PdfPageVisualGrid +
- * pdf-lib işleme + kaydet/paylaş. Hem GuestPageTool (tam sayfa) hem ana sayfa
- * hero'su kullanır → kod tekrarı yok. Dosyalar SUNUCUYA GİTMEZ (cihazda).
+ * Sayfa aracı ÇEKİRDEĞİ. Akış (dashboard mantığı):
+ * 1) PDF yüklenir → SplitPagePickerModal (dashboard'ın aynısı) açılır.
+ * 2) Kullanıcı işlemi yapar → «Tamam» → modal kapanır (seçim state'te).
+ * 3) «PDF'i Hazırla» → cihazda işlenir → sonuç: İndir / Paylaş / Aç / Kapat.
+ * Görsel seçicinin indirmeyle ilişkisi YOK; kaydetme yeri SORULMAZ.
  */
 export function GuestPageToolCore({
   tool,
@@ -59,11 +64,11 @@ export function GuestPageToolCore({
     tool === "rotate-pdf" ? "rotate" : tool === "delete-pages" ? "delete" : "organize";
 
   const [file, setFile] = useState<File | null>(null);
-  const [numPages, setNumPages] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
   const [pagesText, setPagesText] = useState("");
   const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
   const [pageOrder, setPageOrder] = useState<number[]>([]);
-  const [zoom, setZoom] = useState(50);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -72,14 +77,8 @@ export function GuestPageToolCore({
 
   const outName =
     mode === "rotate" ? "dondurulmus.pdf" : mode === "delete" ? "silinmis.pdf" : "duzenlenmis.pdf";
-  const modeName =
-    mode === "rotate"
-      ? tr ? "PDF Döndür" : "Rotate PDF"
-      : mode === "delete"
-        ? tr ? "Sayfa Sil" : "Delete Pages"
-        : tr ? "Sayfaları Düzenle" : "Organize Pages";
 
-  function pickFile(f: File | undefined) {
+  async function pickFile(f: File | undefined) {
     setError(null);
     if (!f) return;
     if (f.type !== "application/pdf") {
@@ -94,11 +93,37 @@ export function GuestPageToolCore({
       );
       return;
     }
-    setFile(f);
+    try {
+      const n = await getPdfPageCount(await f.arrayBuffer());
+      setFile(f);
+      setPageCount(n);
+      setPagesText("");
+      setPageRotations({});
+      setPageOrder(mode === "organize" ? Array.from({ length: n }, (_, i) => i + 1) : []);
+      setResult(null);
+      setModalOpen(true); // dosya yüklenince görsel seçici açılır
+    } catch (e) {
+      setError(
+        e instanceof PdfEncryptedError
+          ? tr
+            ? "Bu PDF şifre korumalı. Şifreli dosyalar için giriş yapın."
+            : "This PDF is password-protected. Log in to process it."
+          : tr
+            ? "PDF okunamadı."
+            : "Could not read the PDF.",
+      );
+    }
+  }
+
+  function reset() {
+    setFile(null);
+    setPageCount(0);
+    setModalOpen(false);
+    setResult(null);
+    setError(null);
     setPagesText("");
     setPageRotations({});
     setPageOrder([]);
-    setResult(null);
   }
 
   function downloadBlob(blob: Blob, name: string) {
@@ -112,6 +137,13 @@ export function GuestPageToolCore({
     setTimeout(() => URL.revokeObjectURL(url), 15000);
   }
 
+  function openResult() {
+    if (!result) return;
+    const url = URL.createObjectURL(result.blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
   async function shareResult() {
     if (!result) return;
     const f = new File([result.blob], result.filename, { type: "application/pdf" });
@@ -120,16 +152,17 @@ export function GuestPageToolCore({
       share?: (d: { files: File[]; title?: string }) => Promise<void>;
     };
     try {
-      if (nav.canShare?.({ files: [f] }) && nav.share) await nav.share({ files: [f], title: result.filename });
+      if (nav.canShare?.({ files: [f] }) && nav.share)
+        await nav.share({ files: [f], title: result.filename });
     } catch {
       /* iptal */
     }
   }
 
-  const run = async () => {
-    if (!file || numPages === 0) return;
+  // «PDF'i Hazırla» — görsel seçicideki seçimi cihazda uygular (indirme DEĞİL).
+  const prepare = async () => {
+    if (!file || pageCount === 0) return;
     setError(null);
-
     const rot0: Record<number, number> = {};
     let del0: number[] = [];
     let order0: number[] = [];
@@ -139,44 +172,24 @@ export function GuestPageToolCore({
         if (d % 360 !== 0) rot0[Number(p1) - 1] = d;
       }
       if (Object.keys(rot0).length === 0) {
-        setError(tr ? "Döndürmek için en az bir sayfayı çevir." : "Rotate at least one page.");
+        setError(tr ? "Önce görsel seçicide en az bir sayfayı döndür." : "Rotate at least one page first.");
         return;
       }
     } else if (mode === "delete") {
-      const pages1 = expandPagesString(pagesText, numPages, language) ?? [];
+      const pages1 = expandPagesString(pagesText, pageCount, language) ?? [];
       if (pages1.length === 0) {
-        setError(tr ? "Silinecek sayfa(lar) seç." : "Select page(s) to delete.");
+        setError(tr ? "Önce görsel seçicide silinecek sayfaları seç." : "Select pages to delete first.");
         return;
       }
-      if (pages1.length >= numPages) {
+      if (pages1.length >= pageCount) {
         setError(tr ? "Tüm sayfalar silinemez." : "Cannot delete every page.");
         return;
       }
       del0 = pages1.map((p) => p - 1);
     } else {
-      const order1 = pageOrder.length ? pageOrder : Array.from({ length: numPages }, (_, i) => i + 1);
+      const order1 = pageOrder.length ? pageOrder : Array.from({ length: pageCount }, (_, i) => i + 1);
       order0 = order1.map((p) => p - 1);
     }
-
-    // Kaydetme yerini SOR (kullanıcı aktivasyonu hâlâ geçerli)
-    let saveHandle: FileSystemFileHandle | null = null;
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: {
-        suggestedName?: string;
-        types?: Array<{ description: string; accept: Record<string, string[]> }>;
-      }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        saveHandle = await win.showSaveFilePicker({
-          suggestedName: outName,
-          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
-        });
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-      }
-    }
-
     try {
       setBusy(true);
       const src = new Uint8Array(await file.arrayBuffer());
@@ -184,22 +197,13 @@ export function GuestPageToolCore({
       if (mode === "rotate") out = await rotatePdf(src, rot0);
       else if (mode === "delete") out = await deletePages(src, del0);
       else out = await reorderPages(src, order0);
-
-      const blob = pdfBytesToBlob(out);
-      if (saveHandle) {
-        const w = await saveHandle.createWritable();
-        await w.write(blob);
-        await w.close();
-      } else {
-        downloadBlob(blob, outName);
-      }
-      setResult({ blob, filename: outName });
+      setResult({ blob: pdfBytesToBlob(out), filename: outName });
     } catch (e) {
       setError(
         e instanceof PdfEncryptedError
           ? tr
-            ? "Bu PDF şifre korumalı. Şifreli dosyalar için giriş yapın."
-            : "This PDF is password-protected. Log in to process it."
+            ? "Bu PDF şifre korumalı."
+            : "This PDF is password-protected."
           : tr
             ? "İşlem sırasında bir hata oluştu."
             : "Something went wrong.",
@@ -209,32 +213,18 @@ export function GuestPageToolCore({
     }
   };
 
-  const hint =
-    mode === "rotate"
-      ? tr
-        ? "Her sayfanın altındaki ok ile döndür, sonra «Kaydet»."
-        : "Rotate each page with the arrows, then «Save»."
-      : mode === "delete"
-        ? tr
-          ? "Silmek istediğin sayfaları seç, sonra «Kaydet»."
-          : "Select the pages to delete, then «Save»."
-        : tr
-          ? "Sayfaları sürükleyerek yeniden sırala, sonra «Kaydet»."
-          : "Drag pages to reorder, then «Save».";
-
+  // ── Sonuç: İndir / Paylaş / Aç / Kapat ──
   if (result) {
     return (
       <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
           <Check className="h-8 w-8" />
         </div>
-        <p className="mt-4 text-xl font-bold">
-          {tr ? "Hazır! Dosyan kaydedildi 🎉" : "Done! Your file is ready 🎉"}
-        </p>
+        <p className="mt-4 text-xl font-bold">{tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}</p>
         <p className="mt-1 text-sm text-slate-400">
           {tr ? "Dosyan cihazından hiç çıkmadı." : "Your file never left your device."}
         </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
             onClick={() => downloadBlob(result.blob, result.filename)}
@@ -255,179 +245,155 @@ export function GuestPageToolCore({
           )}
           <button
             type="button"
-            onClick={() => {
-              setFile(null);
-              setResult(null);
-            }}
-            className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
+            onClick={openResult}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
           >
-            {tr ? "Yeni işlem" : "New task"}
+            <ExternalLink className="h-4 w-4" />
+            {tr ? "Aç" : "Open"}
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!file) {
-    return (
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          pickFile(e.dataTransfer.files[0]);
-        }}
-        onClick={() => inputRef.current?.click()}
-        className={`group cursor-pointer rounded-3xl border-2 border-dashed p-12 text-center transition ${
-          dragOver
-            ? "border-cyan-400/70 bg-cyan-400/[0.06]"
-            : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={(e) => {
-            pickFile(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
-          <UploadCloud className="h-7 w-7" />
-        </div>
-        <p className="mt-4 text-base font-semibold">
-          {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
-        </p>
-        <p className="mt-1 text-[13px] text-slate-400">
-          {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
-        </p>
-      </div>
-    );
-  }
-
-  // Dosya seçilince → dashboard'daki gibi GENİŞ POPUP (görsel seçici). Dropzone
-  // yerinde (hero'da) kalır; popup YALNIZCA dosya yüklenince açılır.
-  return createPortal(
-    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#070b14]/96 backdrop-blur-sm">
-      <div className="mx-auto min-h-dvh max-w-5xl px-4 py-5 sm:px-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">{modeName}</h2>
           <button
             type="button"
-            onClick={() => {
-              setFile(null);
-              setError(null);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+            onClick={reset}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
           >
             <X className="h-4 w-4" />
             {tr ? "Kapat" : "Close"}
           </button>
         </div>
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
-          {/* Üst aksiyon barı — "Kaydet" HER ZAMAN görünür. */}
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            setFile(null);
-            setError(null);
+      </div>
+    );
+  }
+
+  // ── Dosya seçili değil: dropzone (yerinde) ──
+  if (!file) {
+    return (
+      <>
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
           }}
-          className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-400 transition hover:text-white"
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            void pickFile(e.dataTransfer.files[0]);
+          }}
+          onClick={() => inputRef.current?.click()}
+          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-12 text-center transition ${
+            dragOver
+              ? "border-cyan-400/70 bg-cyan-400/[0.06]"
+              : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
+          }`}
         >
-          {tr ? "← Başka dosya" : "← Other file"}
-        </button>
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setZoom((z) => Math.max(25, z - 25))}
-              className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-              aria-label="Uzaklaştır"
-            >
-              <Minus className="h-4 w-4" />
-            </button>
-            <span className="w-9 text-center text-xs text-slate-400">{zoom}%</span>
-            <button
-              type="button"
-              onClick={() => setZoom((z) => Math.min(100, z + 25))}
-              className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-              aria-label="Yakınlaştır"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/pdf"
+            className="hidden"
+            onChange={(e) => {
+              void pickFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
+            <UploadCloud className="h-7 w-7" />
           </div>
+          <p className="mt-4 text-base font-semibold">
+            {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
+          </p>
+          <p className="mt-1 text-[13px] text-slate-400">
+            {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
+          </p>
+        </div>
+        {error && (
+          <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+            {error}
+          </p>
+        )}
+      </>
+    );
+  }
+
+  // ── Dosya seçili (modal kapalı): "PDF'i Hazırla" + görsel seçiciyi aç ──
+  return (
+    <>
+      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 text-center">
+        <p className="text-sm font-semibold text-slate-100">{file.name}</p>
+        <p className="mt-0.5 text-[12px] text-slate-500">
+          {pageCount} {tr ? "sayfa" : "pages"}
+        </p>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
-            onClick={() => void run()}
-            disabled={busy || numPages === 0}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+            onClick={() => setModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+          >
+            <Sliders className="h-4 w-4" />
+            {tr ? "Görsel seçici" : "Visual selector"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void prepare()}
+            disabled={busy}
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
           >
             {busy ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                {tr ? "İşleniyor…" : "Processing…"}
+                {tr ? "Hazırlanıyor…" : "Preparing…"}
               </>
             ) : (
-              <>{tr ? "Kaydet" : "Save"} →</>
+              <>{tr ? "PDF'i Hazırla" : "Prepare PDF"} →</>
             )}
           </button>
         </div>
-      </div>
-      <p className="mb-2 px-1 text-[13px] text-slate-400">{hint}</p>
-      <div className="h-[54vh] min-h-[380px] overflow-hidden rounded-xl">
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-slate-500">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          }
+        <button
+          type="button"
+          onClick={reset}
+          className="mt-4 text-[13px] font-semibold text-slate-500 transition hover:text-white"
         >
-          <PdfPageVisualGrid
-            file={file}
-            password=""
-            maxPage={numPages || null}
-            language={language}
-            mode={mode}
-            pagesText={pagesText}
-            onPagesTextChange={setPagesText}
-            onPagesErrorClear={() => setError(null)}
-            pageRotations={pageRotations}
-            onPageRotationsChange={setPageRotations}
-            pageOrder={pageOrder}
-            onPageOrderChange={setPageOrder}
-            zoomPercent={zoom}
-            onStatsChange={(s) => {
-              setNumPages(s.totalPages);
-              // Organize modunda grid pageOrder.length kadar sayfa gösterir →
-              // PDF yüklenince [1..n] ile başlat, yoksa boş görünür.
-              if (mode === "organize" && s.totalPages > 0) {
-                setPageOrder((prev) =>
-                  prev.length === s.totalPages
-                    ? prev
-                    : Array.from({ length: s.totalPages }, (_, i) => i + 1),
-                );
-              }
-            }}
-          />
-        </Suspense>
+          {tr ? "← Başka dosya" : "← Other file"}
+        </button>
+        {error && (
+          <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+            {error}
+          </p>
+        )}
       </div>
 
-          {error && (
-            <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-              {error}
-            </p>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body,
+      {/* Dashboard'ın BİREBİR görsel seçici modalı — createPortal ile body'ye
+          (Hero'nun transform'u 'fixed'i bozmasın → tam ekran kaplasın). */}
+      {createPortal(
+        <Suspense fallback={null}>
+          <SplitPagePickerModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+          onReset={() => {
+            setPagesText("");
+            setPageRotations({});
+            setPageOrder(
+              mode === "organize" ? Array.from({ length: pageCount }, (_, i) => i + 1) : [],
+            );
+          }}
+          file={file}
+          password=""
+          maxPage={pageCount}
+          language={language}
+          mode={mode}
+          pagesText={pagesText}
+          onPagesTextChange={setPagesText}
+          onPagesErrorClear={() => setError(null)}
+          pageRotations={pageRotations}
+          onPageRotationsChange={setPageRotations}
+          pageOrder={pageOrder}
+          onPageOrderChange={setPageOrder}
+            strictTurkishForDeleteUi={mode === "delete"}
+          />
+        </Suspense>,
+        document.body,
+      )}
+    </>
   );
 }
 
@@ -471,7 +437,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Pro
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-5 pb-24 pt-10 sm:pt-14">
+      <main className="mx-auto max-w-2xl px-5 pb-24 pt-10 sm:pt-14">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[12px] font-semibold text-cyan-300">
             <Sparkles className="h-3.5 w-3.5" />

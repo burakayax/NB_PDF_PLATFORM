@@ -108,6 +108,15 @@ export async function reorderPages(
   return out.save();
 }
 
+/** PDF sayfa sayısı (şifreliyse `PdfEncryptedError` fırlatır). Görsel seçici
+ * modalı `maxPage`'i önceden ister. */
+export async function getPdfPageCount(
+  bytes: ArrayBuffer | Uint8Array,
+): Promise<number> {
+  const doc = await loadPdf(bytes);
+  return doc.getPageCount();
+}
+
 /** Yardımcı: Uint8Array → indirilebilir Blob (application/pdf). */
 export function pdfBytesToBlob(bytes: Uint8Array): Blob {
   return new Blob([bytes as BlobPart], { type: "application/pdf" });
