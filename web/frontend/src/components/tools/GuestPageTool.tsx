@@ -1,4 +1,5 @@
 import { lazy, Suspense, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Check,
   Download,
@@ -10,6 +11,7 @@ import {
   ShieldCheck,
   Sparkles,
   UploadCloud,
+  X,
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -70,6 +72,12 @@ export function GuestPageToolCore({
 
   const outName =
     mode === "rotate" ? "dondurulmus.pdf" : mode === "delete" ? "silinmis.pdf" : "duzenlenmis.pdf";
+  const modeName =
+    mode === "rotate"
+      ? tr ? "PDF Döndür" : "Rotate PDF"
+      : mode === "delete"
+        ? tr ? "Sayfa Sil" : "Delete Pages"
+        : tr ? "Sayfaları Düzenle" : "Organize Pages";
 
   function pickFile(f: File | undefined) {
     setError(null);
@@ -303,10 +311,28 @@ export function GuestPageToolCore({
     );
   }
 
-  return (
-    <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
-      {/* Üst aksiyon barı — "Kaydet" HER ZAMAN görünür (grid uzun, alta gömülmesin). */}
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+  // Dosya seçilince → dashboard'daki gibi GENİŞ POPUP (görsel seçici). Dropzone
+  // yerinde (hero'da) kalır; popup YALNIZCA dosya yüklenince açılır.
+  return createPortal(
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#070b14]/96 backdrop-blur-sm">
+      <div className="mx-auto min-h-dvh max-w-5xl px-4 py-5 sm:px-6">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-white">{modeName}</h2>
+          <button
+            type="button"
+            onClick={() => {
+              setFile(null);
+              setError(null);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-1.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+          >
+            <X className="h-4 w-4" />
+            {tr ? "Kapat" : "Close"}
+          </button>
+        </div>
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
+          {/* Üst aksiyon barı — "Kaydet" HER ZAMAN görünür. */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => {
@@ -393,12 +419,15 @@ export function GuestPageToolCore({
         </Suspense>
       </div>
 
-      {error && (
-        <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-          {error}
-        </p>
-      )}
-    </div>
+          {error && (
+            <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+              {error}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
