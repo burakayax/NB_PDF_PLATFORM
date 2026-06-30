@@ -1,26 +1,14 @@
 import { motion } from "framer-motion";
 import { AnimatedCardOptions, type CardOption } from "./animated-card-options";
 import type { Language } from "../../i18n/landing";
+import type { FeatureKey } from "../../api/subscription";
 
 // ─── Gerçek araç listesi (PDF Platform) ───────────────────────────────────
+// NOT: `id` alanları GERÇEK featureId'dir → karta tıklayınca /tools/<slug>'a
+// gidilir (misafir client-capable araçta login'siz kullanır). 🆓 = client-side,
+// üyeliksiz anında çalışan araçlar.
 
 const toolCategories = (lang: Language) => [
-  {
-    id: "convert",
-    label: lang === "tr" ? "Dönüştür" : "Convert",
-    badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    divider: "bg-blue-500/15",
-    tools: [
-      { id: "c1", icon: "📄", name: "PDF → Word" },
-      { id: "c2", icon: "📊", name: "PDF → Excel" },
-      { id: "c3", icon: "📑", name: "PDF → PowerPoint" },
-      { id: "c4", icon: "🖼️", name: "PDF → Görsel" },
-      { id: "c5", icon: "🔤", name: "Word → PDF" },
-      { id: "c6", icon: "📈", name: "Excel → PDF" },
-      { id: "c7", icon: "🎨", name: "Görsel → PDF" },
-      { id: "c8", icon: "🌐", name: "HTML → PDF" },
-    ] satisfies CardOption[],
-  },
   {
     id: "edit",
     label: lang === "tr" ? "Düzenle" : "Edit",
@@ -28,41 +16,66 @@ const toolCategories = (lang: Language) => [
     divider: "bg-violet-500/15",
     tools: [
       {
-        id: "e1",
+        id: "merge",
         icon: "🔗",
         name: lang === "tr" ? "PDF Birleştir" : "Merge PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
-      { id: "e2", icon: "✂️", name: lang === "tr" ? "PDF Böl" : "Split PDF" },
+      { id: "split", icon: "✂️", name: lang === "tr" ? "PDF Böl" : "Split PDF" },
       {
-        id: "e3",
+        id: "compress",
         icon: "📦",
         name: lang === "tr" ? "PDF Sıkıştır" : "Compress PDF",
       },
       {
-        id: "e4",
+        id: "rotate-pdf",
         icon: "🔄",
         name: lang === "tr" ? "PDF Döndür" : "Rotate PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
-        id: "e5",
+        id: "delete-pages",
         icon: "🗑️",
         name: lang === "tr" ? "Sayfa Sil" : "Delete Pages",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
-        id: "e6",
+        id: "organize-pdf",
         icon: "⇅",
         name: lang === "tr" ? "Sayfaları Düzenle" : "Organize Pages",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
-        id: "e7",
+        id: "page-numbers",
         icon: "#️⃣",
         name: lang === "tr" ? "Sayfa Numarası Ekle" : "Add Page Numbers",
       },
       {
-        id: "e8",
+        id: "watermark",
         icon: "💧",
         name: lang === "tr" ? "Filigran Ekle" : "Add Watermark",
       },
+    ] satisfies CardOption[],
+  },
+  {
+    id: "convert",
+    label: lang === "tr" ? "Dönüştür" : "Convert",
+    badge: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    divider: "bg-blue-500/15",
+    tools: [
+      {
+        id: "image-to-pdf",
+        icon: "🎨",
+        name: lang === "tr" ? "Görsel → PDF" : "Image → PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      { id: "pdf-to-word", icon: "📄", name: "PDF → Word" },
+      { id: "pdf-to-excel", icon: "📊", name: "PDF → Excel" },
+      { id: "pdf-to-ppt", icon: "📑", name: "PDF → PowerPoint" },
+      { id: "pdf-to-image", icon: "🖼️", name: "PDF → Görsel" },
+      { id: "word-to-pdf", icon: "🔤", name: "Word → PDF" },
+      { id: "excel-to-pdf", icon: "📈", name: "Excel → PDF" },
+      { id: "html-to-pdf", icon: "🌐", name: "HTML → PDF" },
     ] satisfies CardOption[],
   },
   {
@@ -72,16 +85,16 @@ const toolCategories = (lang: Language) => [
     divider: "bg-emerald-500/15",
     tools: [
       {
-        id: "s1",
+        id: "encrypt",
         icon: "🔒",
         name: lang === "tr" ? "PDF Şifrele" : "Encrypt PDF",
       },
       {
-        id: "s2",
+        id: "unlock-pdf",
         icon: "🔓",
         name: lang === "tr" ? "Şifre Kaldır" : "Unlock PDF",
       },
-      { id: "s3", icon: "🛠️", name: lang === "tr" ? "PDF Onar" : "Repair PDF" },
+      { id: "repair-pdf", icon: "🛠️", name: lang === "tr" ? "PDF Onar" : "Repair PDF" },
     ] satisfies CardOption[],
   },
 ];
@@ -89,11 +102,13 @@ const toolCategories = (lang: Language) => [
 interface PdfToolsSectionProps {
   language: Language;
   onUseWebApp: () => void;
+  onOpenTool: (id: FeatureKey) => void;
 }
 
 export default function PdfToolsSection({
   language,
   onUseWebApp,
+  onOpenTool,
 }: PdfToolsSectionProps) {
   const categories = toolCategories(language);
 
@@ -151,9 +166,7 @@ export default function PdfToolsSection({
               <AnimatedCardOptions
                 options={cat.tools}
                 columns={4}
-                onSelect={() => {
-                  onUseWebApp();
-                }}
+                onSelect={(opt) => onOpenTool(opt.id as FeatureKey)}
               />
             </motion.div>
           ))}
