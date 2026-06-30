@@ -315,28 +315,61 @@ export function GuestPageToolCore({
     );
   }
 
-  // ── Dosya seçili (modal kapalı): "PDF'i Hazırla" + görsel seçiciyi aç ──
+  // ── Dosya seçili (modal kapalı): aşağıda "Sayfaları …" + "PDF'i Hazırla" ──
+  const selectorLabel =
+    mode === "rotate"
+      ? tr ? "Sayfaları Döndür" : "Rotate pages"
+      : mode === "delete"
+        ? tr ? "Sayfaları Sil" : "Delete pages"
+        : tr ? "Sayfaları Düzenle" : "Reorder pages";
+  // Görsel seçicide işlem yapıldı mı → "PDF'i Hazırla" o zaman aktif olur.
+  const hasSelection =
+    mode === "rotate"
+      ? Object.values(pageRotations).some((d) => d % 360 !== 0)
+      : mode === "delete"
+        ? (expandPagesString(pagesText, pageCount, language) ?? []).length > 0
+        : pageOrder.length === pageCount && pageOrder.some((p, i) => p !== i + 1);
+
   return (
     <>
-      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 text-center">
-        <p className="text-sm font-semibold text-slate-100">{file.name}</p>
-        <p className="mt-0.5 text-[12px] text-slate-500">
-          {pageCount} {tr ? "sayfa" : "pages"}
-        </p>
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6">
+        <div className="text-center">
+          <p className="text-sm font-semibold text-slate-100">{file.name}</p>
+          <p className="mt-0.5 text-[12px] text-slate-500">
+            {pageCount} {tr ? "sayfa" : "pages"}
+          </p>
+          <p className="mt-3 text-[13px] text-slate-400">
+            {hasSelection
+              ? tr
+                ? "Hazır — «PDF'i Hazırla» ile sonucu oluştur."
+                : "Ready — click «Prepare PDF»."
+              : tr
+                ? `«${selectorLabel}» ile işlemini yap, sonra PDF'i hazırla.`
+                : `Use «${selectorLabel}» first, then prepare the PDF.`}
+          </p>
+        </div>
+
+        {error && (
+          <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-center text-[13px] text-red-300">
+            {error}
+          </p>
+        )}
+
+        {/* Aşağıda: görsel seçici (araç adıyla) + PDF'i Hazırla (seçim olana dek pasif). */}
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
           >
             <Sliders className="h-4 w-4" />
-            {tr ? "Görsel seçici" : "Visual selector"}
+            {selectorLabel}
           </button>
           <button
             type="button"
             onClick={() => void prepare()}
-            disabled={busy}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+            disabled={busy || !hasSelection}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
           >
             {busy ? (
               <>
@@ -348,18 +381,16 @@ export function GuestPageToolCore({
             )}
           </button>
         </div>
-        <button
-          type="button"
-          onClick={reset}
-          className="mt-4 text-[13px] font-semibold text-slate-500 transition hover:text-white"
-        >
-          {tr ? "← Başka dosya" : "← Other file"}
-        </button>
-        {error && (
-          <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-            {error}
-          </p>
-        )}
+
+        <div className="mt-3 text-center">
+          <button
+            type="button"
+            onClick={reset}
+            className="text-[13px] font-semibold text-slate-500 transition hover:text-white"
+          >
+            {tr ? "← Başka dosya" : "← Other file"}
+          </button>
+        </div>
       </div>
 
       {/* Dashboard'ın BİREBİR görsel seçici modalı — createPortal ile body'ye
