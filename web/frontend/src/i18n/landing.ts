@@ -205,7 +205,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trustedText: {
-      trusted: "Trusted by 1,000+ users",
+      trusted: "Your files never leave your device — 100% private",
       payment: "Secure checkout",
       freePlan: "Pay-As-You-Go — Credit packs & monthly subscription plans",
     },
@@ -503,7 +503,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     trustedText: {
-      trusted: "1.000'den fazla kullanıcı tarafından güveniliyor",
+      trusted: "Dosyalarınız cihazınızdan çıkmaz — %100 gizli",
       payment: "Güvenli Ödeme",
       freePlan: "Kullandığın Kadar Öde — Kredi Paketi & Aylık Abonelik",
     },

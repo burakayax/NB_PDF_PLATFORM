@@ -98,7 +98,16 @@ import {
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
+import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
+import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
+import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
+import {
+  isClientPdfEnabled,
+  isClientCapableTool,
+  isGuestPageTool,
+  CLIENT_PDF_MAX_BYTES,
+} from "./lib/clientPdfFlag";
 import {
   buildResumeDownloadUrl,
   canResumeAfterPayment,
@@ -3437,6 +3446,23 @@ function App() {
     setView(isAuthenticated ? "web" : "login");
   }
 
+  // MİSAFİR-ÖNCELİKLİ: Bir araca DOĞRUDAN git → /tools/<slug> URL'i + "web"
+  // görünümü. Giriş YAPMAMIŞSA login'e ATILMAZ; guest-block devreye girer
+  // (client-capable araçta GuestPdfTool, diğerinde tanıtım). Giriş yapmışsa
+  // workspace'te o araç açılır.
+  function navigateToTool(featureId: FeatureId) {
+    setSelectedFeatureId(featureId);
+    setActiveSidebar(featureId as unknown as SidebarToolId);
+    setContentPanel("tool");
+    setAuthError("");
+    if (isAuthenticated && user?.preferredLanguage) {
+      setLanguage(user.preferredLanguage);
+    }
+    window.history.pushState({}, "", `/tools/${toolSlugForFeature(featureId)}`);
+    setView("web");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
     if (id !== "subscription" && lockedFeatures.has(id)) {
@@ -3816,6 +3842,59 @@ function App() {
       clearNbResumeProcess();
       disposeToolProgressSuccess();
       clearToast();
+
+      // ── Client-side (tarayıcı) işleme — DARK LAUNCH (varsayılan kapalı; ?clientpdf=1).
+      // Dosyalar SUNUCUYA GİTMEDEN cihazda işlenir: anında + gizli + sıfır maliyet.
+      // Başarılıysa erken döner; şifreli / çok büyük / desteklenmeyen → sunucu akışı sürer.
+      // NOT (pilot): limit/kota enforcement client yolunda HENÜZ yok — bayrak gizli
+      // olduğundan yalnızca test eden etkilenir; herkese AÇMADAN ÖNCE eklenecek (plan B).
+      if (isClientPdfEnabled() && isClientCapableTool(selectedFeature.id)) {
+        const totalBytes = uploads.reduce((s, u) => s + u.file.size, 0);
+        const anyPassword = uploads.some((u) => u.password.trim().length > 0);
+        if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
+          try {
+            setSubmitting(true);
+            let resultBytes: Uint8Array | null = null;
+            if (selectedFeature.id === "merge") {
+              const buffers = await Promise.all(
+                uploads.map((u) => u.file.arrayBuffer()),
+              );
+              resultBytes = await mergePdfs(buffers);
+            } else if (selectedFeature.id === "image-to-pdf") {
+              const imgs = await Promise.all(
+                uploads.map(async (u) => ({
+                  bytes: await u.file.arrayBuffer(),
+                  mime: u.file.type,
+                })),
+              );
+              resultBytes = await imagesToPdf(imgs);
+            }
+            if (resultBytes) {
+              const filename = selectedFeature.fallbackFilename;
+              const blob = pdfBytesToBlob(resultBytes);
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              setTimeout(() => URL.revokeObjectURL(url), 15000);
+              setMergeShareReady({ blob, filename });
+              applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+              setSubmitting(false);
+              return;
+            }
+            setSubmitting(false);
+          } catch (err) {
+            setSubmitting(false);
+            // Şifreli/işlenemez → sessizce sunucu akışına düş (aşağıda devam eder).
+            if (!(err instanceof PdfEncryptedError)) {
+              console.warn("[clientpdf] sunucuya düşülüyor:", err);
+            }
+          }
+        }
+      }
 
       if (selectedFeature.id === "merge") {
         if (
@@ -4700,9 +4779,10 @@ function App() {
           close: "Close",
         };
 
-  // Madde 1: Giriş yapmamış kullanıcı /tools/<slug> deep-link'ine geldiğinde
-  // login'e atılmaz; aracın PUBLIC tanıtım sayfasını (prerender ile aynı içerik)
-  // görür. Aracı kullanmak için CTA → giriş/üyelik akışı (pending-tool saklanır).
+  // MİSAFİR-ÖNCELİKLİ: Giriş yapmamış kullanıcı /tools/<slug>'a geldiğinde login'e
+  // ATILMAZ. Client-side çalışabilen araçlarda (birleştir/görsel→PDF) aracı
+  // DOĞRUDAN MİSAFİR olarak kullanır (cihazda, login yok); diğer (sunucu) araçlarda
+  // tanıtım + üyelik CTA görür. İçerik prerender ile aynı (SEO korunur).
   if (
     view === "web" &&
     !isAuthenticated &&
@@ -4711,6 +4791,40 @@ function App() {
     getToolSeo(toolSlugForFeature(selectedFeatureId), language)
   ) {
     const toolSlug = toolSlugForFeature(selectedFeatureId);
+    if (isClientCapableTool(selectedFeatureId)) {
+      return (
+        <GuestPdfTool
+          slug={toolSlug}
+          tool={selectedFeatureId as GuestToolId}
+          language={language}
+          onLogin={() => {
+            savePendingTool(selectedFeatureId);
+            setView("login");
+          }}
+          onRegister={() => {
+            savePendingTool(selectedFeatureId);
+            setView("register");
+          }}
+        />
+      );
+    }
+    if (isGuestPageTool(selectedFeatureId)) {
+      return (
+        <GuestPageTool
+          slug={toolSlug}
+          tool={selectedFeatureId as PageToolId}
+          language={language}
+          onLogin={() => {
+            savePendingTool(selectedFeatureId);
+            setView("login");
+          }}
+          onRegister={() => {
+            savePendingTool(selectedFeatureId);
+            setView("register");
+          }}
+        />
+      );
+    }
     return (
       <ToolPublicLanding
         slug={toolSlug}
@@ -4743,6 +4857,7 @@ function App() {
             language={language}
             onLanguageChange={handleLanguageChange}
             onUseWebApp={openWorkspace}
+            onOpenTool={navigateToTool}
             isAuthenticated={isAuthenticated}
             authGreeting={user ? userGreetingLine(user, language) : undefined}
             onLogin={() => {

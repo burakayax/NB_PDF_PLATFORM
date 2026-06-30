@@ -8,11 +8,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
+import type { FeatureKey } from "../../api/subscription";
 import { getWindowsDownloadUrlFromCms } from "../../lib/landingCmsMerge";
 import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
+import { GuestToolCore } from "../tools/GuestToolCore";
+import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
+
+/** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
+export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
+const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf"]);
+const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
+export const isFreeToolId = (id: string): id is FreeToolId =>
+  id === "merge" || id === "image-to-pdf" || PAGE_TOOL_IDS.has(id);
+const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
+  { id: "merge", tr: "Birleştir", en: "Merge" },
+  { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
+  { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
+  { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
+  { id: "organize-pdf", tr: "Düzenle", en: "Organize" },
+];
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
@@ -60,6 +77,7 @@ type LandingPageProps = {
   language: Language;
   onLanguageChange: (language: Language) => void;
   onUseWebApp: () => void;
+  onOpenTool: (id: FeatureKey) => void;
   isAuthenticated: boolean;
   authGreeting?: string;
   onLogin: () => void;
@@ -374,11 +392,11 @@ function Navbar({
 
 function Hero({
   language,
-  onUseWebApp,
-  windowsDownloadUrl,
+  onRegister,
 }: {
   language: Language;
   onUseWebApp: () => void;
+  onRegister: () => void;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -396,6 +414,8 @@ function Hero({
       },
     },
   });
+
+  const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -457,50 +477,43 @@ function Hero({
           {copy.hero.description}
         </motion.p>
 
-        {/* CTAs */}
-        <motion.div
-          {...stagger(3)}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
-        >
-          <motion.button
-            onClick={onUseWebApp}
-            whileHover={{ y: -4, boxShadow: "0 24px 60px rgba(59,130,246,0.55), 0 0 0 1px rgba(99,102,241,0.35)" }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 18 }}
-            className="group relative inline-flex h-13 items-center justify-center px-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-base shadow-2xl shadow-blue-500/30 hover:from-blue-500 hover:to-indigo-500 transition-colors overflow-hidden"
-          >
-            <div
-              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
-              aria-hidden="true"
-            />
-            <span className="relative">
-              {tr
-                ? "Ücretsiz Başla — Kredi Kartı Gerekmez"
-                : "Start Free — No Credit Card"}
-            </span>
-          </motion.button>
-          <div className="relative">
-            <span className="inline-flex h-13 items-center gap-3 px-8 rounded-2xl border border-white/15 bg-white/[0.05] text-white font-semibold text-base opacity-50 cursor-not-allowed">
-              <svg
-                className="w-5 h-5 text-blue-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
+        {/* Hızlı araç seçici + ÇALIŞAN araç — ANA SAYFADA, login YOK, sayfadan
+            AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
+        <motion.div {...stagger(3)} className="mt-10 mx-auto w-full max-w-xl">
+          <div className="mb-4 flex flex-wrap justify-center gap-2">
+            {FREE_TOOLS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setFreeTool(t.id)}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                  freeTool === t.id
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
+                    : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                }`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.8}
-                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                />
-              </svg>
-              {copy.hero.secondaryCta}
-            </span>
-            <span className="absolute -top-2 -right-1 bg-amber-500 text-[11px] font-bold text-white px-2 py-0.5 rounded-full whitespace-nowrap">
-              {tr ? "Yakında" : "Coming"}
-            </span>
+                {tr ? t.tr : t.en}
+              </button>
+            ))}
           </div>
+          {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
+              dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
+          <div className="text-left">
+            {isPageToolId(freeTool) ? (
+              <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
+            ) : (
+              <GuestToolCore
+                key={freeTool}
+                tool={freeTool}
+                language={language}
+                autoDetect={freeTool === "merge"}
+                onRegister={onRegister}
+              />
+            )}
+          </div>
+          <p className="mt-4 text-center text-[13px] text-slate-500">
+            {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
+          </p>
         </motion.div>
 
         {/* Trust bar */}
@@ -509,10 +522,10 @@ function Hero({
           className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500"
         >
           {[
-            "🔒 SSL " + (tr ? "Şifreli" : "Encrypted"),
-            "⭐ 4.9/5 " + (tr ? "Puan" : "Rating"),
-            "👥 1,000+ " + (tr ? "Kullanıcı" : "Users"),
-            "🔄 99.9% " + (tr ? "Çalışma Süresi" : "Uptime"),
+            tr ? "🔒 Dosyan cihazından çıkmaz" : "🔒 Files stay on your device",
+            tr ? "⚡ Anında işlem" : "⚡ Instant",
+            tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
+            tr ? "🆓 Üyelik gerekmez" : "🆓 No sign-up",
           ].map((item) => (
             <span key={item}>{item}</span>
           ))}
@@ -549,23 +562,18 @@ function StatsBar({ language }: { language: Language }) {
   const inView = useInViewOnce(ref as React.RefObject<Element>);
 
   const stats = [
-    {
-      value: 1000,
-      suffix: "+",
-      label: tr ? "Aktif Kullanıcı" : "Active Users",
-    },
     { value: 20, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
-      value: 99.9,
-      suffix: "%",
-      label: tr ? "Çalışma Süresi" : "Uptime SLA",
-      decimals: 1,
+      value: 80,
+      suffix: " MB",
+      label: tr ? "Ücretsiz Dosya" : "Free File Size",
     },
     {
       value: 100,
       suffix: "%",
       label: tr ? "Tarayıcı Tabanlı" : "Browser-Based",
     },
+    { value: 0, suffix: "₺", label: tr ? "Ücretsiz Araçlar" : "Free Tools" },
   ];
 
   return (
@@ -586,11 +594,6 @@ function StatsBar({ language }: { language: Language }) {
               {inView ? (
                 <NumberFlow
                   value={s.value}
-                  format={
-                    s.decimals
-                      ? { minimumFractionDigits: 1, maximumFractionDigits: 1 }
-                      : {}
-                  }
                   className="text-4xl sm:text-5xl font-black text-white"
                   style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                   transformTiming={{ duration: 800, easing: "ease-out" }}
@@ -620,18 +623,18 @@ function StatsBar({ language }: { language: Language }) {
 const SHOWCASE_PILLS = (tr: boolean) => [
   {
     pos: "absolute -top-4 left-[8%] sm:-top-5 sm:left-[5%]",
-    icon: "🔄",
-    label: tr ? "Gerçek Zamanlı" : "Real-time Sync",
+    icon: "⚡",
+    label: tr ? "Anında" : "Instant",
   },
   {
     pos: "absolute -top-4 right-[8%] sm:-top-5 sm:right-[5%]",
     icon: "🔒",
-    label: tr ? "256-bit Şifre" : "256-bit Encryption",
+    label: tr ? "Cihazda İşlenir" : "On-device",
   },
   {
     pos: "absolute -bottom-4 left-[8%] sm:-bottom-5 sm:left-[5%]",
-    icon: "☁️",
-    label: tr ? "Bulut Depolama" : "Cloud Storage",
+    icon: "🆓",
+    label: tr ? "Üyeliksiz" : "No sign-up",
   },
   {
     pos: "absolute -bottom-4 right-[8%] sm:-bottom-5 sm:right-[5%]",
@@ -1765,6 +1768,7 @@ export function LandingPage({
   language,
   onLanguageChange,
   onUseWebApp,
+  onOpenTool,
   isAuthenticated,
   authGreeting,
   onLogin,
@@ -1803,7 +1807,15 @@ export function LandingPage({
         <Hero
           language={language}
           onUseWebApp={onUseWebApp}
+          onRegister={onRegister}
           windowsDownloadUrl={windowsDownloadUrl}
+        />
+        {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
+            açmaz ücretsiz araçlara tıklayıp (login'siz) kullanabilir. */}
+        <PdfToolsSection
+          language={language}
+          onUseWebApp={onUseWebApp}
+          onOpenTool={onOpenTool}
         />
         <StatsBar language={language} />
         <ProductShowcase
@@ -1814,13 +1826,14 @@ export function LandingPage({
         />
         <Features language={language} />
         <HowItWorks language={language} />
-        <PdfToolsSection language={language} onUseWebApp={onUseWebApp} />
         <PricingSection
           language={language}
           onUseWebApp={onUseWebApp}
           onSelectPlan={onSelectPlan}
         />
-        <Testimonials language={language} />
+        {/* Testimonials: GERÇEK kullanıcı yorumu olmadığı için gösterilmiyor —
+            uydurma referans dürüstlük + yasal (sahte endorsement) + Google E-E-A-T
+            açısından riskli. Gerçek yorumlar toplanınca <Testimonials /> geri eklenir. */}
         <Faq language={language} />
         <FinalCta
           language={language}
