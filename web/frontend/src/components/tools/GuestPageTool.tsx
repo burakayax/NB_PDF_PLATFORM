@@ -4,12 +4,14 @@ import {
   Check,
   Download,
   ExternalLink,
+  FileText,
   Loader2,
   Lock,
   Share2,
   ShieldCheck,
   Sliders,
   Sparkles,
+  Trash2,
   UploadCloud,
   X,
   Zap,
@@ -264,58 +266,7 @@ export function GuestPageToolCore({
     );
   }
 
-  // ── Dosya seçili değil: dropzone (yerinde) ──
-  if (!file) {
-    return (
-      <>
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            void pickFile(e.dataTransfer.files[0]);
-          }}
-          onClick={() => inputRef.current?.click()}
-          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-12 text-center transition ${
-            dragOver
-              ? "border-cyan-400/70 bg-cyan-400/[0.06]"
-              : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
-          }`}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            accept="application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              void pickFile(e.target.files?.[0]);
-              e.target.value = "";
-            }}
-          />
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
-            <UploadCloud className="h-7 w-7" />
-          </div>
-          <p className="mt-4 text-base font-semibold">
-            {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
-          </p>
-          <p className="mt-1 text-[13px] text-slate-400">
-            {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
-          </p>
-        </div>
-        {error && (
-          <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-            {error}
-          </p>
-        )}
-      </>
-    );
-  }
-
-  // ── Dosya seçili (modal kapalı): aşağıda "Sayfaları …" + "PDF'i Hazırla" ──
+  // ── Sonuç yok: dropzone + (dosya satırı) + butonlar HER ZAMAN altta (merge gibi) ──
   const selectorLabel =
     mode === "rotate"
       ? tr ? "Sayfaları Döndür" : "Rotate pages"
@@ -332,73 +283,111 @@ export function GuestPageToolCore({
 
   return (
     <>
-      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6">
-        <div className="text-center">
-          <p className="text-sm font-semibold text-slate-100">{file.name}</p>
-          <p className="mt-0.5 text-[12px] text-slate-500">
-            {pageCount} {tr ? "sayfa" : "pages"}
-          </p>
-          <p className="mt-3 text-[13px] text-slate-400">
-            {hasSelection
-              ? tr
-                ? "Hazır — «PDF'i Hazırla» ile sonucu oluştur."
-                : "Ready — click «Prepare PDF»."
-              : tr
-                ? `«${selectorLabel}» ile işlemini yap, sonra PDF'i hazırla.`
-                : `Use «${selectorLabel}» first, then prepare the PDF.`}
-          </p>
+      {/* Dropzone — her zaman görünür */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          void pickFile(e.dataTransfer.files[0]);
+        }}
+        onClick={() => inputRef.current?.click()}
+        className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition ${
+          dragOver
+            ? "border-cyan-400/70 bg-cyan-400/[0.06]"
+            : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={(e) => {
+            void pickFile(e.target.files?.[0]);
+            e.target.value = "";
+          }}
+        />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
+          <UploadCloud className="h-7 w-7" />
         </div>
+        <p className="mt-4 text-base font-semibold text-white">
+          {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
+        </p>
+        <p className="mt-1 text-[13px] text-slate-400">
+          {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
+        </p>
+      </div>
 
-        {error && (
-          <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-center text-[13px] text-red-300">
-            {error}
-          </p>
-        )}
-
-        {/* Aşağıda: görsel seçici (araç adıyla) + PDF'i Hazırla (seçim olana dek pasif). */}
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
-          >
-            <Sliders className="h-4 w-4" />
-            {selectorLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => void prepare()}
-            disabled={busy || !hasSelection}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
-          >
-            {busy ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {tr ? "Hazırlanıyor…" : "Preparing…"}
-              </>
-            ) : (
-              <>{tr ? "PDF'i Hazırla" : "Prepare PDF"} →</>
-            )}
-          </button>
-        </div>
-
-        <div className="mt-3 text-center">
+      {/* Seçili dosya satırı (merge'deki dosya listesi gibi) */}
+      {file && (
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-cyan-300">
+            <FileText className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
+            <p className="text-[11px] text-slate-500">
+              {pageCount} {tr ? "sayfa" : "pages"}
+              {hasSelection ? (tr ? " · düzenlendi ✓" : " · edited ✓") : ""}
+            </p>
+          </div>
           <button
             type="button"
             onClick={reset}
-            className="text-[13px] font-semibold text-slate-500 transition hover:text-white"
+            className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+            aria-label={tr ? "Kaldır" : "Remove"}
           >
-            {tr ? "← Başka dosya" : "← Other file"}
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
+      )}
+
+      {error && (
+        <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+          {error}
+        </p>
+      )}
+
+      {/* Butonlar — HER ZAMAN altta, tam genişlik (merge gibi). Hazırla seçim olana dek pasif. */}
+      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          disabled={!file}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-4 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08] disabled:pointer-events-none disabled:opacity-40"
+        >
+          <Sliders className="h-4 w-4" />
+          {selectorLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => void prepare()}
+          disabled={busy || !hasSelection}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+        >
+          {busy ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              {tr ? "Hazırlanıyor…" : "Preparing…"}
+            </>
+          ) : (
+            <>{tr ? "PDF'i Hazırla" : "Prepare PDF"} →</>
+          )}
+        </button>
       </div>
 
       {/* Dashboard'ın BİREBİR görsel seçici modalı — createPortal ile body'ye
           (Hero'nun transform'u 'fixed'i bozmasın → tam ekran kaplasın). */}
-      {createPortal(
-        <Suspense fallback={null}>
-          <SplitPagePickerModal
-            open={modalOpen}
+      {file &&
+        createPortal(
+          <Suspense fallback={null}>
+            <SplitPagePickerModal
+              open={modalOpen}
             onClose={() => setModalOpen(false)}
           onReset={() => {
             setPagesText("");
