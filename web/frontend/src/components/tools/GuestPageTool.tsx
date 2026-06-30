@@ -305,29 +305,57 @@ export function GuestPageToolCore({
 
   return (
     <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
-      <div className="mb-2 flex items-center justify-between gap-3 px-1">
-        <p className="text-[13px] text-slate-300">{hint}</p>
-        <div className="flex items-center gap-1.5">
+      {/* Üst aksiyon barı — "Kaydet" HER ZAMAN görünür (grid uzun, alta gömülmesin). */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setFile(null);
+            setError(null);
+          }}
+          className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-400 transition hover:text-white"
+        >
+          {tr ? "← Başka dosya" : "← Other file"}
+        </button>
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(25, z - 25))}
+              className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
+              aria-label="Uzaklaştır"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-9 text-center text-xs text-slate-400">{zoom}%</span>
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(100, z + 25))}
+              className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
+              aria-label="Yakınlaştır"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => setZoom((z) => Math.max(25, z - 25))}
-            className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-            aria-label="Uzaklaştır"
+            onClick={() => void run()}
+            disabled={busy || numPages === 0}
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-2.5 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
           >
-            <Minus className="h-4 w-4" />
-          </button>
-          <span className="w-9 text-center text-xs text-slate-400">{zoom}%</span>
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.min(100, z + 25))}
-            className="rounded-md border border-white/10 p-1 text-slate-300 hover:bg-white/10"
-            aria-label="Yakınlaştır"
-          >
-            <Plus className="h-4 w-4" />
+            {busy ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                {tr ? "İşleniyor…" : "Processing…"}
+              </>
+            ) : (
+              <>{tr ? "Kaydet" : "Save"} →</>
+            )}
           </button>
         </div>
       </div>
-      <div className="h-[58vh] min-h-[420px] overflow-hidden rounded-xl">
+      <p className="mb-2 px-1 text-[13px] text-slate-400">{hint}</p>
+      <div className="h-[54vh] min-h-[380px] overflow-hidden rounded-xl">
         <Suspense
           fallback={
             <div className="flex h-full items-center justify-center text-slate-500">
@@ -359,34 +387,6 @@ export function GuestPageToolCore({
           {error}
         </p>
       )}
-
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setFile(null);
-            setError(null);
-          }}
-          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-400 transition hover:text-white"
-        >
-          {tr ? "← Başka dosya" : "← Other file"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void run()}
-          disabled={busy || numPages === 0}
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 text-[15px] font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
-        >
-          {busy ? (
-            <>
-              <Loader2 className="h-5 w-5 animate-spin" />
-              {tr ? "İşleniyor…" : "Processing…"}
-            </>
-          ) : (
-            <>{tr ? "Kaydet" : "Save"} →</>
-          )}
-        </button>
-      </div>
     </div>
   );
 }
