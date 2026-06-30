@@ -506,7 +506,6 @@ function Hero({
                 key={freeTool}
                 tool={freeTool}
                 language={language}
-                autoDetect={freeTool === "merge"}
                 onRegister={onRegister}
               />
             )}

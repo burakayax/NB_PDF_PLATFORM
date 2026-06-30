@@ -456,21 +456,24 @@ export function AuthPage({
             </div>
 
             <div>
+              {/* Başlık satırı (forgot-password butonu) label'ın DIŞINDA — yoksa
+                  buton label'ın ilk labelable elemanı olup boş alana tıklayınca
+                  tetikleniyordu. */}
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="block text-sm font-medium text-nb-muted">
+                  {copy.shared.passwordLabel}
+                </span>
+                {mode === "login" && onForgotPassword ? (
+                  <button
+                    type="button"
+                    onClick={onForgotPassword}
+                    className="text-xs font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
+                  >
+                    {authTranslations[language].login.forgotPassword}
+                  </button>
+                ) : null}
+              </div>
               <label className="block">
-                <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="block text-sm font-medium text-nb-muted">
-                    {copy.shared.passwordLabel}
-                  </span>
-                  {mode === "login" && onForgotPassword ? (
-                    <button
-                      type="button"
-                      onClick={onForgotPassword}
-                      className="text-xs font-semibold text-cyan-300 transition duration-200 hover:text-cyan-200"
-                    >
-                      {authTranslations[language].login.forgotPassword}
-                    </button>
-                  ) : null}
-                </div>
                 <input
                   type="password"
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
