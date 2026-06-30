@@ -79,16 +79,16 @@ export function QuotaWidget({
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-3">
       {/* Daily limit full banner */}
       {dailyFull && quota.plan === "FREE" && (
-        <div className="rounded-lg bg-red-500/15 border border-red-500/30 px-4 py-3 text-sm">
-          <p className="text-red-300 font-semibold mb-1">
+        <div className="rounded-lg bg-amber-500/15 border border-amber-500/30 px-4 py-3 text-sm">
+          <p className="text-amber-200 font-semibold mb-1">
             {tr
-              ? "Bugünkü ücretsiz işlem kotanız doldu."
-              : "You've used all your free daily operations."}
+              ? "Bugünkü ücretsiz dönüştürme/gelişmiş işlem hakkın doldu."
+              : "Your free daily conversion/advanced quota is used up."}
           </p>
-          <p className="text-red-400/70 text-xs">
+          <p className="text-amber-300/70 text-xs">
             {tr
-              ? "Sınırsız günlük kullanım için Plus planına geçin."
-              : "Upgrade to Plus for unlimited daily usage."}
+              ? "Birleştir, böl, döndür gibi temel araçlar sınırsız. Dönüştürme/OCR için Plus'a geç."
+              : "Basic tools (merge, split, rotate…) stay unlimited. Upgrade to Plus for conversions/OCR."}
           </p>
         </div>
       )}
@@ -115,6 +115,14 @@ export function QuotaWidget({
             {resetAt && <QuotaCountdown resetAt={resetAt} timezone={timezone} />}
           </div>
           <ProgressBar value={quota.daily.used} max={quota.daily.limit} warn={dailyPct >= 80} />
+          {quota.plan === "FREE" && (
+            <p className="mt-2 text-[11px] leading-snug text-emerald-300/80">
+              ✓{" "}
+              {tr
+                ? "Temel araçlar sınırsız: birleştir, böl, döndür, sayfa sil/düzenle, görsel→PDF. Bu kota yalnız dönüştürme/OCR gibi araçlar içindir."
+                : "Basic tools are unlimited: merge, split, rotate, delete/organize pages, image→PDF. This quota only applies to conversions/OCR."}
+            </p>
+          )}
         </div>
       )}
 
