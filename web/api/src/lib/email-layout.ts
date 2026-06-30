@@ -22,10 +22,10 @@ export function renderCorporateEmail({
   logoUrl,
 }: CorporateEmailLayoutInput): string {
   const origin = (env as any).FRONTEND_ORIGIN?.replace(/\/$/, "") ?? "";
-  const resolvedLogo = logoUrl ?? (origin ? `${origin}/logo.png` : "");
+  const resolvedLogo = logoUrl ?? (origin ? `${origin}/emblem.png` : "");
 
   const logoImg = resolvedLogo
-    ? `<img src="${resolvedLogo}" width="40" height="40" alt="${productName}" style="display:block;border-radius:10px;border:1px solid rgba(139,92,246,0.3);" />`
+    ? `<img src="${resolvedLogo}" height="40" alt="${productName}" style="display:block;height:40px;width:auto;max-width:180px;border-radius:10px;" />`
     : `<div style="width:40px;height:40px;border-radius:10px;border:1px dashed #8b5cf6;background:rgba(139,92,246,0.12);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:0.1em;color:#a78bfa;text-transform:uppercase;">PDF</div>`;
 
   return `
@@ -91,8 +91,8 @@ export function renderCorporateEmail({
                   <div style="margin-top:6px;font-size:12px;line-height:1.6;color:#374151;">${footerText}</div>
                 </td>
                 <td align="right" style="vertical-align:top;">
-                  <div style="font-size:11px;color:#1e2d45;font-weight:600;">PDF PLATFORM</div>
-                  <div style="font-size:10px;color:#1e2d45;margin-top:2px;">© 2026</div>
+                  <div style="font-size:11px;color:#475569;font-weight:600;">PDF Platform</div>
+                  <div style="font-size:10px;color:#374151;margin-top:2px;">© 2026</div>
                 </td>
               </tr>
             </table>
