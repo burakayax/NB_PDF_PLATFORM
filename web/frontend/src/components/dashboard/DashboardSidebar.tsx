@@ -157,9 +157,19 @@ export function DashboardSidebar({
     : SIDEBAR_TOOL_ORDER;
   const labelForTool =
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
-  const { isFavorite, toggleFavorite } = useFavoriteTools();
+  const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const tr = language === "tr";
-  const favTools = toolOrder.filter((id) => isFavorite(id));
+  // Masaüstü sidebar: araçlar kategori bölümlerine ayrılır (Düzenle / Dönüştür /
+  // İyileştir / İşaretle / Güvenlik) — mobil launcher ile aynı gruplama.
+  const sidebarGroups = useMemo(() => {
+    const base = groupToolsByCategory(toolOrder) as Array<{
+      id: ToolCategoryId | "other" | "favorites";
+      tools: FeatureKey[];
+    }>;
+    const fav = toolOrder.filter((id) => isFavorite(id));
+    return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolOrder, favorites]);
   const showVipStrip =
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
@@ -214,19 +224,36 @@ export function DashboardSidebar({
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
-        className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+        className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
-        {favTools.length > 0 ? (
-          <div className="mb-1">
-            <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
-              ★ {tr ? "Favoriler" : "Favorites"}
-            </p>
-            {favTools.map((id) => renderTool(id, "fav-"))}
-            <div className="my-2 h-px bg-white/[0.06]" />
-          </div>
-        ) : null}
-        {toolOrder.map((id) => renderTool(id))}
+        {sidebarGroups.map((group) => {
+          const accent = CATEGORY_ACCENT[group.id];
+          const heading =
+            group.id === "favorites"
+              ? tr ? "★ Favoriler" : "★ Favorites"
+              : group.id === "other"
+                ? tr ? "Diğer" : "Other"
+                : toolCategoryLabel(group.id as ToolCategoryId, language);
+          return (
+            <section key={group.id}>
+              {/* Kategori başlığı (renk noktası + etiket + ayraç) */}
+              <div className="mb-1.5 flex items-center gap-2 px-2">
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot} ${accent.glow}`}
+                  aria-hidden
+                />
+                <h3 className={`text-[10px] font-bold uppercase tracking-wider ${accent.text}`}>
+                  {heading}
+                </h3>
+                <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
+              </div>
+              <div className="flex flex-col gap-1">
+                {group.tools.map((id) => renderTool(id, `${group.id}-`))}
+              </div>
+            </section>
+          );
+        })}
       </nav>
 
       {showVipStrip ? (
