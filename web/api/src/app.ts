@@ -17,6 +17,7 @@ import { verifyEmailController } from "./modules/auth/auth.controller.js";
 import { submitContactController } from "./modules/contact/contact.controller.js";
 import { contactPostLimiter } from "./modules/contact/contact.rate-limit.js";
 import { fakePaymentRouter } from "./modules/fake-payment/index.js";
+import { requirePaymentsEnabled } from "./modules/payment/payments-gate.middleware.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
@@ -132,12 +133,16 @@ app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 app.use(cookieParser());
 
-/** Fake PSP: JWT + same abuse/rate limits as `/api`; mounted here so paths are explicit in `app`. */
+/** Fake PSP: JWT + same abuse/rate limits as `/api`; mounted here so paths are explicit in `app`.
+ * GÜVENLİK: `requirePaymentsEnabled` ile korunur — ödemeler KAPALIYKEN (paymentsDisabled)
+ * fake-payment plan VEREMEZ. Aksi halde herhangi bir kullanıcı ödeme yapmadan Pro/Business
+ * olup ücretli (AI vb.) özellikleri bedavaya kullanabilirdi. */
 app.use(
   "/api/fake-payment",
   abuseBlockMiddleware,
   globalApiLimiter,
   requireAuth,
+  requirePaymentsEnabled,
   fakePaymentRouter,
 );
 
