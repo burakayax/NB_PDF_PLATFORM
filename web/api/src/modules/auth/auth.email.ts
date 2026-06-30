@@ -51,28 +51,28 @@ export function createAdminNotificationEmailTemplate({
   registeredAt,
   productName,
 }: AdminNotificationEmailTemplateInput) {
-  const subject = `New registration — ${productName}`;
+  const subject = `🎉 Yeni kayıt — ${productName}`;
   const safeEmail = escapeHtml(userEmail);
   const safeDate = escapeHtml(registeredAt);
   const safeProduct = escapeHtml(productName);
 
   const html = renderCorporateEmail({
-    eyebrow: "Admin",
-    title: "New user registered",
-    intro: `A new account was created on ${safeProduct}. The user must verify their email before they can sign in.`,
+    eyebrow: "Yönetici Bildirimi",
+    title: "🎉 Yeni bir kullanıcı kaydoldu",
+    intro: `${safeProduct}'a yeni bir hesap oluşturuldu. Kullanıcı giriş yapabilmek için e-posta adresini doğrulamalı.`,
     bodyHtml: detailTable([
-      { label: "Email", value: safeEmail },
-      { label: "Registered at", value: safeDate },
+      { label: "E-posta", value: safeEmail },
+      { label: "Kayıt zamanı", value: safeDate },
     ]),
-    footerText: `This notification was sent to the configured administrator for ${safeProduct}.`,
+    footerText: `Bu bildirim ${safeProduct} yöneticisine gönderildi.`,
     productName: safeProduct,
   });
 
   const text = [
-    `New user registered — ${productName}`,
+    `Yeni bir kullanıcı kaydoldu — ${productName}`,
     "",
-    `Email: ${userEmail}`,
-    `Registered at: ${registeredAt}`,
+    `E-posta: ${userEmail}`,
+    `Kayıt zamanı: ${registeredAt}`,
   ].join("\n");
 
   return { subject, html, text };
