@@ -9,6 +9,7 @@
  * için sunucu yoluna düşülür (çağıran taraf `PdfEncryptedError`'ı yakalar).
  */
 import { PDFDocument, degrees } from "pdf-lib";
+import { zipSync } from "fflate";
 
 export class PdfEncryptedError extends Error {
   constructor() {
@@ -117,7 +118,30 @@ export async function getPdfPageCount(
   return doc.getPageCount();
 }
 
+/** AYIR — her seçili sayfayı AYRI PDF yapıp tek ZIP'e toplar. `pages0`: 0-tabanlı
+ * sayfa index'leri. (Tek-PDF "single" modu için `reorderPages` kullanılır.) */
+export async function splitPagesToZip(
+  bytes: ArrayBuffer | Uint8Array,
+  pages0: number[],
+  baseName = "sayfa",
+): Promise<Uint8Array> {
+  const src = await loadPdf(bytes);
+  const files: Record<string, Uint8Array> = {};
+  for (const i of pages0) {
+    const out = await PDFDocument.create();
+    const copied = await out.copyPages(src, [i]);
+    copied.forEach((p) => out.addPage(p));
+    files[`${baseName}_${i + 1}.pdf`] = await out.save();
+  }
+  return zipSync(files);
+}
+
 /** Yardımcı: Uint8Array → indirilebilir Blob (application/pdf). */
 export function pdfBytesToBlob(bytes: Uint8Array): Blob {
   return new Blob([bytes as BlobPart], { type: "application/pdf" });
+}
+
+/** Yardımcı: ZIP bytes → Blob (application/zip). */
+export function zipBytesToBlob(bytes: Uint8Array): Blob {
+  return new Blob([bytes as BlobPart], { type: "application/zip" });
 }

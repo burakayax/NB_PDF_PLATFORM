@@ -23,8 +23,10 @@ import {
   rotatePdf,
   deletePages,
   reorderPages,
+  splitPagesToZip,
   getPdfPageCount,
   pdfBytesToBlob,
+  zipBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdf";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
@@ -36,7 +38,7 @@ const SplitPagePickerModal = lazy(() =>
   })),
 );
 
-export type PageToolId = "rotate-pdf" | "delete-pages" | "organize-pdf";
+export type PageToolId = "rotate-pdf" | "delete-pages" | "organize-pdf" | "split";
 
 const MAX_BYTES = 80 * 1024 * 1024;
 
@@ -63,7 +65,13 @@ export function GuestPageToolCore({
 }) {
   const tr = language === "tr";
   const mode: PdfPageVisualMode =
-    tool === "rotate-pdf" ? "rotate" : tool === "delete-pages" ? "delete" : "organize";
+    tool === "rotate-pdf"
+      ? "rotate"
+      : tool === "delete-pages"
+        ? "delete"
+        : tool === "split"
+          ? "split"
+          : "organize";
 
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
@@ -71,6 +79,8 @@ export function GuestPageToolCore({
   const [pagesText, setPagesText] = useState("");
   const [pageRotations, setPageRotations] = useState<Record<number, number>>({});
   const [pageOrder, setPageOrder] = useState<number[]>([]);
+  // AYIR modu: "single" = seçili sayfalar tek PDF; "separate" = her sayfa ayrı, ZIP.
+  const [splitMode, setSplitMode] = useState<"single" | "separate">("single");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -78,7 +88,16 @@ export function GuestPageToolCore({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const outName =
-    mode === "rotate" ? "dondurulmus.pdf" : mode === "delete" ? "silinmis.pdf" : "duzenlenmis.pdf";
+    mode === "rotate"
+      ? "dondurulmus.pdf"
+      : mode === "delete"
+        ? "silinmis.pdf"
+        : mode === "split"
+          ? splitMode === "separate"
+            ? "sayfalar.zip"
+            : "secili-sayfalar.pdf"
+          : "duzenlenmis.pdf";
+  const resultIsZip = result?.filename.endsWith(".zip") ?? false;
 
   async function pickFile(f: File | undefined) {
     setError(null);
@@ -197,6 +216,7 @@ export function GuestPageToolCore({
     const rot0: Record<number, number> = {};
     let del0: number[] = [];
     let order0: number[] = [];
+    let split0: number[] = [];
     if (mode === "rotate") {
       for (const [p1, deg] of Object.entries(pageRotations)) {
         const d = Number(deg);
@@ -217,6 +237,13 @@ export function GuestPageToolCore({
         return;
       }
       del0 = pages1.map((p) => p - 1);
+    } else if (mode === "split") {
+      const pages1 = expandPagesString(pagesText, pageCount, language) ?? [];
+      if (pages1.length === 0) {
+        setError(tr ? "Önce görsel seçicide ayrılacak sayfaları seç." : "Select pages to split first.");
+        return;
+      }
+      split0 = pages1.map((p) => p - 1);
     } else {
       const order1 = pageOrder.length ? pageOrder : Array.from({ length: pageCount }, (_, i) => i + 1);
       order0 = order1.map((p) => p - 1);
@@ -224,11 +251,16 @@ export function GuestPageToolCore({
     try {
       setBusy(true);
       const src = new Uint8Array(await file.arrayBuffer());
-      let out: Uint8Array;
-      if (mode === "rotate") out = await rotatePdf(src, rot0);
-      else if (mode === "delete") out = await deletePages(src, del0);
-      else out = await reorderPages(src, order0);
-      setResult({ blob: pdfBytesToBlob(out), filename: outName });
+      let blob: Blob;
+      if (mode === "rotate") blob = pdfBytesToBlob(await rotatePdf(src, rot0));
+      else if (mode === "delete") blob = pdfBytesToBlob(await deletePages(src, del0));
+      else if (mode === "split")
+        blob =
+          splitMode === "separate"
+            ? zipBytesToBlob(await splitPagesToZip(src, split0, "sayfa"))
+            : pdfBytesToBlob(await reorderPages(src, split0));
+      else blob = pdfBytesToBlob(await reorderPages(src, order0));
+      setResult({ blob, filename: outName });
     } catch (e) {
       setError(
         e instanceof PdfEncryptedError
@@ -251,7 +283,11 @@ export function GuestPageToolCore({
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
           <Check className="h-8 w-8" />
         </div>
-        <p className="mt-4 text-xl font-bold">{tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}</p>
+        <p className="mt-4 text-xl font-bold">
+          {resultIsZip
+            ? tr ? "Dosyaların hazır 🎉 (ZIP)" : "Your files are ready 🎉 (ZIP)"
+            : tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}
+        </p>
         <p className="mt-1 text-sm text-slate-400">
           {tr ? "Dosyan cihazından hiç çıkmadı." : "Your file never left your device."}
         </p>
@@ -274,14 +310,16 @@ export function GuestPageToolCore({
               {tr ? "Paylaş" : "Share"}
             </button>
           )}
-          <button
-            type="button"
-            onClick={openResult}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-          >
-            <ExternalLink className="h-4 w-4" />
-            {tr ? "Aç" : "Open"}
-          </button>
+          {!resultIsZip && (
+            <button
+              type="button"
+              onClick={openResult}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+            >
+              <ExternalLink className="h-4 w-4" />
+              {tr ? "Aç" : "Open"}
+            </button>
+          )}
           <button
             type="button"
             onClick={reset}
@@ -301,12 +339,14 @@ export function GuestPageToolCore({
       ? tr ? "Sayfaları Döndür" : "Rotate pages"
       : mode === "delete"
         ? tr ? "Sayfaları Sil" : "Delete pages"
-        : tr ? "Sayfaları Düzenle" : "Reorder pages";
+        : mode === "split"
+          ? tr ? "Ayrılacak Sayfalar" : "Select pages"
+          : tr ? "Sayfaları Düzenle" : "Reorder pages";
   // Görsel seçicide işlem yapıldı mı → "PDF'i Hazırla" o zaman aktif olur.
   const hasSelection =
     mode === "rotate"
       ? Object.values(pageRotations).some((d) => d % 360 !== 0)
-      : mode === "delete"
+      : mode === "delete" || mode === "split"
         ? (expandPagesString(pagesText, pageCount, language) ?? []).length > 0
         : pageOrder.length === pageCount && pageOrder.some((p, i) => p !== i + 1);
 
@@ -380,6 +420,41 @@ export function GuestPageToolCore({
         <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
           {error}
         </p>
+      )}
+
+      {/* AYIR modu seçici (yalnız split): tek PDF mi, ayrı dosyalar (ZIP) mı */}
+      {mode === "split" && (
+        <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1.5">
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => setSplitMode("single")}
+              className={`rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                splitMode === "single"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  : "text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              {tr ? "Tek PDF" : "Single PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSplitMode("separate")}
+              className={`rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                splitMode === "separate"
+                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                  : "text-slate-300 hover:bg-white/[0.06]"
+              }`}
+            >
+              {tr ? "Ayrı dosyalar (ZIP)" : "Separate files (ZIP)"}
+            </button>
+          </div>
+          <p className="px-2 py-1.5 text-center text-[11px] text-slate-500">
+            {splitMode === "single"
+              ? tr ? "Seçili sayfalar tek bir PDF'te birleşir." : "Selected pages merged into one PDF."
+              : tr ? "Her seçili sayfa ayrı PDF olur, ZIP ile iner." : "Each selected page becomes a separate PDF in a ZIP."}
+          </p>
+        </div>
       )}
 
       {/* Butonlar — HER ZAMAN altta, tam genişlik (merge gibi). Hazırla seçim olana dek pasif. */}

@@ -21,7 +21,12 @@ const toolCategories = (lang: Language) => [
         name: lang === "tr" ? "PDF Birleştir" : "Merge PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
-      { id: "split", icon: "✂️", name: lang === "tr" ? "PDF Böl" : "Split PDF" },
+      {
+        id: "split",
+        icon: "✂️",
+        name: lang === "tr" ? "PDF Böl" : "Split PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
       {
         id: "compress",
         icon: "📦",

@@ -16,6 +16,7 @@ const GUEST_PAGE_TOOLS = new Set<string>([
   "rotate-pdf",
   "delete-pages",
   "organize-pdf",
+  "split",
 ]);
 
 /** Misafirde grid'li sayfa aracı olarak çalışır mı (döndür/sil/düzenle)? */
