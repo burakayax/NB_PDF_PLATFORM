@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Check,
   Clock,
@@ -21,7 +21,14 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
-import { aiSummarize, aiChat, type AiError, type ChatTurn } from "../../api/ai";
+import {
+  aiSummarize,
+  aiChat,
+  fetchAiQuota,
+  type AiError,
+  type AiQuota,
+  type ChatTurn,
+} from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 
 type AiMode = "summarize" | "chat";
@@ -54,6 +61,19 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   // Sohbet
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [question, setQuestion] = useState("");
+  // Aylık AI kotası (kalan hak göstergesi)
+  const [quota, setQuota] = useState<AiQuota | null>(null);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    let alive = true;
+    void fetchAiQuota(accessToken).then((q) => {
+      if (alive) setQuota(q);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [accessToken]);
 
   const charCount = docText.length;
   const readTime = Math.max(1, Math.round(charCount / 1000));
@@ -69,6 +89,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
         tr
           ? "Yapay zekâ özellikleri Pro ve Business planlarına özeldir."
           : "AI features are exclusive to Pro and Business plans.",
+      );
+    } else if (err?.status === 429 || err?.code === "quota_exceeded") {
+      if (err.quota) setQuota(err.quota);
+      setError(
+        tr
+          ? "Bu ayki yapay zekâ kotan doldu — ay başında otomatik yenilenir."
+          : "Your monthly AI quota is used up — it resets at the start of the month.",
       );
     } else if (err?.status === 503) {
       setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable.");
@@ -113,8 +140,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setGate(null);
     try {
       setBusy(true);
-      const s = await aiSummarize(docText, tr ? "tr" : "en", accessToken);
+      const { summary: s, quota: q } = await aiSummarize(docText, tr ? "tr" : "en", accessToken);
       setSummary(s);
+      if (q) setQuota(q);
     } catch (e) {
       handleAiError(e);
     } finally {
@@ -132,8 +160,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setQuestion("");
     try {
       setBusy(true);
-      const a = await aiChat(docText, q, history, tr ? "tr" : "en", accessToken);
-      setMessages((m) => [...m, { role: "assistant", content: a }]);
+      const { answer, quota: newQuota } = await aiChat(docText, q, history, tr ? "tr" : "en", accessToken);
+      setMessages((m) => [...m, { role: "assistant", content: answer }]);
+      if (newQuota) setQuota(newQuota);
     } catch (e) {
       handleAiError(e);
       setMessages((m) => m.slice(0, -1));
@@ -221,6 +250,22 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
             <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
               Pro
             </span>
+            {quota ? (
+              <span
+                title={tr ? "Bu ayki AI hakkın" : "Your monthly AI allowance"}
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                  !quota.unlimited && (quota.remaining ?? 0) <= 0
+                    ? "border-red-400/35 bg-red-500/10 text-red-300"
+                    : "border-white/10 bg-white/[0.04] text-slate-300"
+                }`}
+              >
+                {quota.unlimited
+                  ? tr ? "Sınırsız" : "Unlimited"
+                  : tr
+                    ? `Bu ay: ${quota.remaining}/${quota.limit}`
+                    : `This month: ${quota.remaining}/${quota.limit}`}
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
         </div>
