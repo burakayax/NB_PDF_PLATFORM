@@ -5773,16 +5773,14 @@ function App() {
               />
             ) : null}
             {contentPanel === "ai" && aiModal ? (
-              <section className="mx-auto max-w-2xl">
-                <div className="rounded-3xl border border-white/10 bg-nb-panel/40 p-5 sm:p-6">
-                  <AiPdfTool
-                    mode={aiModal}
-                    language={language}
-                    accessToken={accessToken}
-                    onLogin={() => setView("login")}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
-                  />
-                </div>
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <AiPdfTool
+                  mode={aiModal}
+                  language={language}
+                  accessToken={accessToken}
+                  onLogin={() => setView("login")}
+                  onUpgrade={() => setUpgradeModalOpen(true)}
+                />
               </section>
             ) : null}
 
