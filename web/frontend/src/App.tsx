@@ -101,6 +101,7 @@ import {
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
+import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
@@ -682,6 +683,16 @@ function getInitialViewFromLocation(): AppView {
   }
   const rawPath = window.location.pathname.replace(/\/$/, "") || "/";
   if (parseWorkspaceToolPath(rawPath)) {
+    return "web";
+  }
+  // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama "web" görünümü
+  // (App.tsx'teki özel handler bunları tam sayfa render eder; landing'e reset olmaz).
+  if (
+    rawPath === "/tools/pdf-ozetle" ||
+    rawPath === "/tools/pdf-sohbet" ||
+    rawPath === "/tools/pdf-duzenle" ||
+    rawPath === "/tools/taranmis-pdf-ocr"
+  ) {
     return "web";
   }
   if (rawPath === "/login-success" || rawPath === "/login-error") {
@@ -2856,6 +2867,20 @@ function App() {
 
   useEffect(() => {
     if (!isRestoring && view === "web" && !isAuthenticated) {
+      // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama misafir
+      // kullanabilir; login'e ATMA (üstteki özel handler tam sayfa render eder).
+      const p =
+        typeof window !== "undefined"
+          ? window.location.pathname.replace(/\/+$/, "")
+          : "";
+      if (
+        p === "/tools/pdf-ozetle" ||
+        p === "/tools/pdf-sohbet" ||
+        p === "/tools/pdf-duzenle" ||
+        p === "/tools/taranmis-pdf-ocr"
+      ) {
+        return;
+      }
       // Deep-link edilen aracı (ör. PWA kısayolu /tools/x) sakla; giriş sonrası ona dönülür.
       const toolFromUrl =
         typeof window !== "undefined"
@@ -4648,6 +4673,35 @@ function App() {
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
+
+  // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil; tam sayfa + SEO.
+  // EN ÜSTTE: view/redirect mantığından ÖNCE yakalanır (misafir + giriş yapan).
+  if (pathname.startsWith("/tools/")) {
+    const seoSlug = pathname.split("/tools/")[1] ?? "";
+    const goLogin = () => setView("login");
+    const goRegister = () => setView("register");
+    if (seoSlug === "pdf-duzenle") {
+      return (
+        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <PdfEditor language={language} />
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "pdf-ozetle" || seoSlug === "pdf-sohbet" || seoSlug === "taranmis-pdf-ocr") {
+      return (
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister}>
+          <AiPdfTool
+            mode={seoSlug === "pdf-sohbet" ? "chat" : "summarize"}
+            language={language}
+            accessToken={accessToken}
+            onLogin={goLogin}
+            onUpgrade={goRegister}
+          />
+        </GuestSeoToolPage>
+      );
+    }
+  }
+
   const bootstrapFastRoutes =
     pathname === "/login-success" ||
     pathname === "/login-error" ||
@@ -4841,6 +4895,7 @@ function App() {
           submitting: "Sending…",
           close: "Close",
         };
+
 
   // MİSAFİR-ÖNCELİKLİ: Giriş yapmamış kullanıcı /tools/<slug>'a geldiğinde login'e
   // ATILMAZ. Client-side çalışabilen araçlarda (birleştir/görsel→PDF) aracı
