@@ -30,12 +30,29 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
   return nodes;
 }
 
+/** Altında içerik olmayan başlıkları atar (AI bazen boş başlık bırakıyor). */
+function stripEmptySections(md: string): string {
+  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const isHeading = (s: string) => /^#{1,6}\s+/.test(s.trim());
+  const kept: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (isHeading(lines[i])) {
+      let j = i + 1;
+      while (j < lines.length && lines[j].trim() === "") j++;
+      // Sonraki dolu satır yine başlık ya da metin bitti → bu başlık boş, atla.
+      if (j >= lines.length || isHeading(lines[j])) continue;
+    }
+    kept.push(lines[i]);
+  }
+  return kept.join("\n");
+}
+
 /**
  * Hafif markdown renderer (bağımlılıksız) — AI özet/yanıt çıktısı için.
  * Destekler: #/##/### başlık, - / * / 1. liste, **kalın**, `kod`, paragraf, --- ayraç.
  */
 export function SimpleMarkdown({ text }: { text: string }) {
-  const lines = text.replace(/\r\n/g, "\n").split("\n");
+  const lines = stripEmptySections(text).split("\n");
   const blocks: ReactNode[] = [];
   let list: { ordered: boolean; items: string[] } | null = null;
   let key = 0;

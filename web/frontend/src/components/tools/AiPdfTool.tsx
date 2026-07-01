@@ -10,7 +10,6 @@ import {
   Lock,
   MessageSquare,
   RefreshCw,
-  ScanText,
   Send,
   Share2,
   ShieldCheck,
@@ -43,6 +42,38 @@ type Props = {
   onUpgrade: () => void;
 };
 
+/** Şık ilerleme şeridi — `ratio` verilirse yüzdeli (OCR), null ise kayan/indeterminate (özet). */
+function StatusStrip({ label, ratio }: { label: string; ratio: number | null }) {
+  return (
+    <div className="rounded-2xl border border-fuchsia-400/20 bg-gradient-to-r from-fuchsia-500/[0.07] to-violet-500/[0.05] px-5 py-4">
+      <div className="mb-2.5 flex items-center justify-between">
+        <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-200">
+          <Sparkles className="h-4 w-4 animate-pulse" />
+          {label}
+        </span>
+        {ratio !== null ? (
+          <span className="text-[12px] font-bold tabular-nums text-slate-300">%{Math.round(ratio * 100)}</span>
+        ) : null}
+      </div>
+      {ratio !== null ? (
+        <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-fuchsia-400 via-violet-400 to-indigo-400 transition-all duration-300"
+            style={{ width: `${Math.max(4, Math.round(ratio * 100))}%` }}
+          />
+        </div>
+      ) : (
+        <div className="relative h-2.5 overflow-hidden rounded-full bg-white/10">
+          <div
+            className="absolute inset-y-0 w-2/5 rounded-full bg-gradient-to-r from-fuchsia-400 via-violet-400 to-indigo-400"
+            style={{ animation: "nb-indeterminate 1.15s ease-in-out infinite" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * AI aracı (Pro/Business): PDF metni CİHAZDA çıkarılır (pdf.js), yalnız metin
  * sunucuya gider → Claude. Özetle veya belgeyle Sohbet. 401→giriş, 403→yükselt.
@@ -56,8 +87,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
-  // Taranmış PDF: OCR akışı
-  const [scannedFile, setScannedFile] = useState<File | null>(null);
+  // Taranmış PDF → cihazda sessiz hazırlama (OCR) ilerlemesi
   const [ocrProgress, setOcrProgress] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -114,7 +144,6 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setGate(null);
     setSummary("");
     setMessages([]);
-    setScannedFile(null);
     if (!f) return;
     if (f.type !== "application/pdf") {
       setError(tr ? "Lütfen bir PDF seçin." : "Please choose a PDF.");
@@ -124,9 +153,10 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       setBusy(true);
       const { text, likelyScanned } = await extractPdfText(f);
       if (likelyScanned) {
-        // Metin yok → taranmış; OCR akışını öner (çöp özet üretme).
-        setScannedFile(f);
+        // Metin çıkmadı (taranmış/görüntü) → cihazda SESSİZCE hazırla. Kullanıcıya
+        // teknik detay (OCR) gösterme; sadece "hazırlanıyor" şeridi.
         setBusy(false);
+        await prepareScanned(f);
         return;
       }
       setFileName(f.name);
@@ -138,28 +168,25 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     }
   }
 
-  async function runOcr() {
-    if (!scannedFile) return;
+  // Taranmış belgeyi cihazda metne çevirir (arka planda; kullanıcıya "OCR" denmez).
+  async function prepareScanned(f: File) {
     setError(null);
     try {
-      setBusy(true);
       setOcrProgress(0);
-      const text = await ocrPdfToText(scannedFile, (p) => setOcrProgress(p.ratio));
-      if (text.length < 20) {
+      const text = await ocrPdfToText(f, (p) => setOcrProgress(p.ratio));
+      if (text.trim().length < 20) {
         setError(
           tr
-            ? "OCR ile de metin okunamadı — belge çok düşük çözünürlüklü olabilir."
-            : "OCR couldn't read text either — the document may be very low resolution.",
+            ? "Bu belgeden metin okunamadı — çok düşük çözünürlüklü olabilir."
+            : "Couldn't read text from this document — it may be very low resolution.",
         );
         return;
       }
-      setFileName(scannedFile.name);
+      setFileName(f.name);
       setDocText(text);
-      setScannedFile(null);
     } catch {
-      setError(tr ? "OCR sırasında bir hata oluştu." : "Something went wrong during OCR.");
+      setError(tr ? "Belge hazırlanırken bir sorun oluştu." : "Something went wrong preparing the document.");
     } finally {
-      setBusy(false);
       setOcrProgress(null);
     }
   }
@@ -242,7 +269,6 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setMessages([]);
     setError(null);
     setGate(null);
-    setScannedFile(null);
     setOcrProgress(null);
   }
 
@@ -302,59 +328,15 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
         </div>
       </div>
 
-      {/* ── Taranmış PDF → cihazda OCR ── */}
-      {scannedFile ? (
-        <div className="rounded-3xl border border-amber-400/25 bg-gradient-to-b from-amber-500/[0.08] to-transparent p-8 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30">
-            <ScanText className="h-8 w-8" />
-          </div>
-          <p className="mt-4 text-lg font-bold text-white">
-            {tr ? "Taranmış PDF algılandı" : "Scanned PDF detected"}
-          </p>
-          <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-400">
+      {/* ── Cihazda hazırlanıyor (taranmış belge sessizce metne çevriliyor) ── */}
+      {ocrProgress !== null ? (
+        <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-6 sm:p-8">
+          <StatusStrip label={tr ? "Belge hazırlanıyor…" : "Preparing document…"} ratio={ocrProgress} />
+          <p className="mt-3 text-center text-[12px] text-slate-500">
             {tr
-              ? "Bu belge görüntü tabanlı — yazı, metin değil resim. Okuyabilmek için OCR (görüntüden metin) gerekiyor. Cihazında yapılır, ücretsiz ve gizli."
-              : "This document is image-based — the text is a picture, not selectable text. OCR is needed to read it. Runs on your device, free and private."}
+              ? "Belge okunuyor, birkaç saniye sürebilir."
+              : "Reading the document, this may take a few seconds."}
           </p>
-          <p className="mt-1 text-[12px] text-slate-500 truncate">{scannedFile.name}</p>
-
-          {ocrProgress !== null ? (
-            <div className="mx-auto mt-6 max-w-sm">
-              <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-300"
-                  style={{ width: `${Math.round(ocrProgress * 100)}%` }}
-                />
-              </div>
-              <p className="mt-2 flex items-center justify-center gap-2 text-[12px] font-medium text-amber-200">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                {tr
-                  ? `Metin okunuyor… %${Math.round(ocrProgress * 100)}`
-                  : `Reading text… ${Math.round(ocrProgress * 100)}%`}
-              </p>
-              <p className="mt-1 text-[11px] text-slate-500">
-                {tr ? "İlk kullanımda dil verisi bir kez iner; sonraki belgeler daha hızlı." : "Language data downloads once on first use; later documents are faster."}
-              </p>
-            </div>
-          ) : (
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={() => void runOcr()}
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110"
-              >
-                <ScanText className="h-4 w-4" />
-                {tr ? "OCR ile Metni Oku" : "Read Text with OCR"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setScannedFile(null)}
-                className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
-              >
-                {tr ? "Vazgeç" : "Cancel"}
-              </button>
-            </div>
-          )}
         </div>
       ) : /* ── Dosya yok → premium yükleme ── */
       !fileName ? (
@@ -466,12 +448,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
                   <SimpleMarkdown text={summary} />
                 </div>
               </div>
+            ) : busy ? (
+              <StatusStrip label={tr ? "Özet hazırlanıyor…" : "Preparing summary…"} ratio={null} />
             ) : (
-              <button type="button" onClick={() => void runSummarize()} disabled={busy}
-                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:opacity-50">
-                {busy
-                  ? <><Loader2 className="h-5 w-5 animate-spin" />{tr ? "Özet hazırlanıyor…" : "Preparing summary…"}</>
-                  : <><Sparkles className="h-5 w-5" />{tr ? "Profesyonel Özet Oluştur" : "Generate Professional Summary"}</>}
+              <button type="button" onClick={() => void runSummarize()}
+                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                <Sparkles className="h-5 w-5" />
+                {tr ? "Profesyonel Özet Oluştur" : "Generate Professional Summary"}
               </button>
             )
           ) : (

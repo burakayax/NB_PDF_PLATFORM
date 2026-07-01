@@ -101,7 +101,7 @@ BELGE TÜRÜNE GÖRE ODAK ÖRNEKLERİ:
 - Akademik (makale/tez) → araştırma sorusu, yöntem, bulgular, sonuç, katkı.
 - Mali rapor → dönem, gelir/gider, kâr/zarar, dikkat çeken kalemler, öngörüler.
 
-KURALLAR: YALNIZCA belgedeki bilgiyi kullan, ASLA uydurma. Emin olmadığın veriyi yazma. Akıcı, profesyonel ve nesnel dil. Gereksiz tekrar yok.`
+KURALLAR: YALNIZCA belgedeki bilgiyi kullan, ASLA uydurma. Emin olmadığın veriyi yazma. Bir başlığın altına yazacak SOMUT bilgi yoksa o başlığı HİÇ yazma — ASLA boş başlık bırakma. Akıcı, profesyonel ve nesnel dil. Gereksiz tekrar yok.`
       : `You are a senior document analyst and summarization expert. Summarize the given PDF in ENGLISH, PROFESSIONALLY and COMPREHENSIVELY.
 
 FIRST determine the document TYPE and who it concerns (e.g. tender/RFP, contract, court filing/decision, academic paper/thesis, financial report, presentation, manual, CV, medical report, official letter...). THEN surface the information MOST USEFUL to that type and reader. Do NOT write empty/irrelevant sections.
@@ -133,7 +133,7 @@ FOCUS EXAMPLES BY TYPE:
 - Academic → research question, method, findings, conclusion, contribution.
 - Financial → period, income/expense, profit/loss, notable items, projections.
 
-RULES: Use ONLY info from the document, NEVER invent. Don't state data you're unsure about. Fluent, professional, objective tone. No redundancy.`;
+RULES: Use ONLY info from the document, NEVER invent. Don't state data you're unsure about. If a section has no concrete information, OMIT that heading entirely — NEVER leave an empty heading. Fluent, professional, objective tone. No redundancy.`;
   return callClaude(system, [{ role: "user", content: doc }], 2500);
 }
 

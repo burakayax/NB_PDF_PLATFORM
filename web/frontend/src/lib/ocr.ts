@@ -24,10 +24,18 @@ export async function ocrPdfToText(
   const doc = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
   const totalPages = Math.min(doc.numPages, MAX_OCR_PAGES);
 
+  let completedPages = 0;
   const worker = await createWorker("tur+eng", 1, {
     workerPath: "/tesseract/worker.min.js",
     corePath: "/tesseract/core",
     langPath: "/tesseract/lang",
+    // Sayfa-içi ilerlemeyi de yansıt → şerit akıcı ilerler (0'da takılı kalmaz).
+    logger: (m) => {
+      if (m.status === "recognizing text" && typeof m.progress === "number") {
+        const ratio = Math.min(1, (completedPages + m.progress) / totalPages);
+        onProgress?.({ page: completedPages + 1, totalPages, ratio });
+      }
+    },
   });
 
   let out = "";
@@ -45,6 +53,7 @@ export async function ocrPdfToText(
         data: { text },
       } = await worker.recognize(canvas);
       out += text + "\n\n";
+      completedPages = i;
       onProgress?.({ page: i, totalPages, ratio: i / totalPages });
       canvas.width = 0;
       canvas.height = 0; // belleği serbest bırak
