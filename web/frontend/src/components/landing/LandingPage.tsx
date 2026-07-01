@@ -1060,6 +1060,9 @@ const FEAT_COLORS: Record<string, { r: string; iconBg: string; iconText: string 
   compress: { r: "245,158,11",  iconBg: "bg-amber-500/15",   iconText: "text-amber-300"   },
   excel:    { r: "34,197,94",   iconBg: "bg-green-500/15",   iconText: "text-green-300"   },
   session:  { r: "6,182,212",   iconBg: "bg-cyan-500/15",    iconText: "text-cyan-300"    },
+  ai:       { r: "217,70,239",  iconBg: "bg-fuchsia-500/15", iconText: "text-fuchsia-300" },
+  ocr:      { r: "245,158,11",  iconBg: "bg-amber-500/15",   iconText: "text-amber-300"   },
+  edit:     { r: "6,182,212",   iconBg: "bg-cyan-500/15",    iconText: "text-cyan-300"    },
 };
 
 function Features({ language }: { language: Language }) {
