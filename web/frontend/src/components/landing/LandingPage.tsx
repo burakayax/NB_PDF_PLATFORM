@@ -17,6 +17,7 @@ import PricingSection from "../ui/pricing-section";
 import { GuestToolCore } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
+import { PdfEditor } from "../tools/PdfEditor";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
@@ -428,6 +429,7 @@ function Hero({
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
   const [aiTool, setAiTool] = useState<"summarize" | "chat" | null>(null);
+  const [editorOn, setEditorOn] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -491,7 +493,10 @@ function Hero({
 
         {/* Hızlı araç seçici + ÇALIŞAN araç — ANA SAYFADA, login YOK, sayfadan
             AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
-        <motion.div {...stagger(3)} className="mt-10 mx-auto w-full max-w-xl">
+        <motion.div
+          {...stagger(3)}
+          className={`mt-10 mx-auto w-full ${aiTool || editorOn ? "max-w-4xl" : "max-w-xl"}`}
+        >
           <div className="mb-4 flex flex-wrap justify-center gap-2">
             {FREE_TOOLS.map((t) => (
               <button
@@ -500,9 +505,10 @@ function Hero({
                 onClick={() => {
                   setFreeTool(t.id);
                   setAiTool(null);
+                  setEditorOn(false);
                 }}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  !aiTool && freeTool === t.id
+                  !aiTool && !editorOn && freeTool === t.id
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
                     : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
                 }`}
@@ -520,7 +526,10 @@ function Hero({
               <button
                 key={id}
                 type="button"
-                onClick={() => setAiTool(id)}
+                onClick={() => {
+                  setAiTool(id);
+                  setEditorOn(false);
+                }}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
                   aiTool === id
                     ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.7)]"
@@ -530,11 +539,28 @@ function Hero({
                 {label}
               </button>
             ))}
+            {/* PDF Düzenle — cihazda editör */}
+            <button
+              type="button"
+              onClick={() => {
+                setEditorOn(true);
+                setAiTool(null);
+              }}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                editorOn
+                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_24px_-8px_rgba(6,182,212,0.7)]"
+                  : "border border-cyan-400/25 bg-cyan-500/[0.06] text-cyan-200 hover:bg-cyan-500/[0.12]"
+              }`}
+            >
+              {tr ? "✏️ PDF Düzenle" : "✏️ Edit PDF"}
+            </button>
           </div>
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
           <div className="text-left">
-            {aiTool ? (
+            {editorOn ? (
+              <PdfEditor language={language} />
+            ) : aiTool ? (
               <AiPdfTool
                 key={aiTool}
                 mode={aiTool}
