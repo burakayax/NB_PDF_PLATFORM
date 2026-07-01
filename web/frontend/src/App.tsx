@@ -33,8 +33,10 @@ import {
   showSavePickerTypesFor,
   type MergeJobStatus,
 } from "./api";
+import { createPortal } from "react-dom";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
+import { AiPdfTool } from "./components/tools/AiPdfTool";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
@@ -1003,6 +1005,7 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -5736,7 +5739,46 @@ function App() {
           isTeamMember={isTeamMember}
           isManagerMember={user?.teamMemberRole === "MANAGER"}
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
+          onOpenAi={(mode) => setAiModal(mode)}
         />
+        {aiModal
+          ? createPortal(
+              <div
+                className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:p-8"
+                onClick={() => setAiModal(null)}
+              >
+                <div
+                  className="relative mt-4 w-full max-w-2xl rounded-3xl border border-white/10 bg-nb-bg-elevated p-6 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.7)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setAiModal(null)}
+                    aria-label={language === "tr" ? "Kapat" : "Close"}
+                    className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <AiPdfTool
+                    mode={aiModal}
+                    language={language}
+                    accessToken={accessToken}
+                    onLogin={() => {
+                      setAiModal(null);
+                      setView("login");
+                    }}
+                    onUpgrade={() => {
+                      setAiModal(null);
+                      setUpgradeModalOpen(true);
+                    }}
+                  />
+                </div>
+              </div>,
+              document.body,
+            )
+          : null}
         <div
           className={`min-h-[calc(100dvh-3.5rem)] w-full bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-12"}`}
         >
@@ -5748,6 +5790,7 @@ function App() {
             userRole={user?.role}
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
+            onOpenAi={(mode) => setAiModal(mode)}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated && contentPanel !== "tool" && !isTeamMember ? (
