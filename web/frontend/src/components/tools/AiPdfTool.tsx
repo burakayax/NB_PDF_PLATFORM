@@ -303,7 +303,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
             {[
               tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
               tr ? "🔒 Gizli" : "🔒 Private",
-              tr ? "✨ Claude AI" : "✨ Claude AI",
+              tr ? "✨ Güçlü yapay zekâ" : "✨ Powerful AI",
             ].map((c) => (
               <span key={c} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{c}</span>
             ))}

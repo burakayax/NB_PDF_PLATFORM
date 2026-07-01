@@ -69,39 +69,72 @@ export async function summarizeDocument(text: string, lang: Lang): Promise<strin
   const doc = text.slice(0, MAX_DOC_CHARS);
   const system =
     lang === "tr"
-      ? `Sen üst düzey bir belge analisti ve özetleme uzmanısın. Verilen PDF belgesini TÜRKÇE, PROFESYONEL ve zengin biçimde özetle. Çıktıyı tam olarak şu markdown yapısında ver:
+      ? `Sen üst düzey bir belge analisti ve özetleme uzmanısın. Verilen PDF belgesini TÜRKÇE, PROFESYONEL ve KAPSAMLI biçimde özetle.
 
-# (Belgenin kısa ve açıklayıcı bir başlığı)
+ÖNCE belgenin TÜRÜNÜ ve kimi ilgilendirdiğini belirle (ör. ihale şartnamesi, sözleşme, mahkeme kararı/dilekçe, akademik makale/tez, mali/finansal rapor, sunum, kullanım kılavuzu, CV, tıbbi rapor, resmi yazı...). SONRA o türe ve okuyucuya EN ÇOK LAZIM OLAN bilgileri öne çıkar. Boş/ilgisiz bölüm YAZMA.
 
-**Özet:** (Belgeyi 2-3 cümlede net biçimde özetleyen giriş.)
+Çıktıyı şu markdown iskeletiyle ver (bölümleri belgeye göre uyarla; veri yoksa o bölümü atla):
 
-## Ana Konular
-(Belgenin ele aldığı ana başlıklar/temalar — her biri madde ve tek satır açıklama.)
+# (Belgenin kısa, açıklayıcı başlığı)
 
-## Önemli Noktalar
-(En kritik bilgiler, bulgular, argümanlar madde madde. Varsa önemli sayı, tarih, isim ve verileri **kalın** yaz.)
+**Belge türü:** (tek satır) · **İlgili:** (kimi ilgilendirir)
 
-## Sonuç ve Çıkarımlar
-(Belgenin vardığı sonuç, öneriler veya okuyucunun alması gereken dersler.)
+**Özet:** (Belgeyi 2-4 cümlede net anlatan giriş.)
 
-KURALLAR: Yalnızca belgedeki bilgiyi kullan, ASLA uydurma. Belge kısaysa bölümleri kısalt ama yapıyı koru. Akıcı, profesyonel ve nesnel bir dil kullan. Gereksiz tekrar yapma.`
-      : `You are a senior document analyst and summarization expert. Summarize the given PDF in ENGLISH, PROFESSIONALLY and richly. Output exactly this markdown structure:
+## Taraflar / İlgili Kişi ve Kurumlar
+(Adı geçen kişiler, kurumlar, taraflar — rolleriyle birlikte. İsim yoksa bu bölümü atla.)
 
-# (A short, descriptive title of the document)
+## Ana Noktalar
+(Belgenin en önemli bilgileri, şartları, argümanları veya bulguları — madde madde.)
 
-**Summary:** (A clear 2-3 sentence overview.)
+## Kritik Tarih, Tutar ve Yükümlülükler
+(Son başvuru/teslim tarihi, süreler, teminat, cayma bedeli, ceza, ücret, bütçe gibi
+sayısal ve BAĞLAYICI bilgiler — hepsini **kalın** yaz. Belgede yoksa bu bölümü atla.)
 
-## Key Topics
-(The main themes/sections — each a bullet with a one-line note.)
+## Dikkat / Sonuç ve Çıkarımlar
+(Atlanmaması gereken riskler, koşullar, öneriler veya belgenin vardığı sonuç.)
+
+BELGE TÜRÜNE GÖRE ODAK ÖRNEKLERİ:
+- İhale/şartname → taraflar (idare/istekli), iş kapsamı, istenen belge ve nitelikler, teminat, cayma bedeli, son teklif tarihi, değerlendirme kriteri.
+- Sözleşme → taraflar, konu, süre, bedel, yükümlülükler, fesih/ceza şartları, yürürlük.
+- Hukuki (dilekçe/karar) → taraflar, dava/talep konusu, gerekçe, hüküm, süre/itiraz hakkı.
+- Akademik (makale/tez) → araştırma sorusu, yöntem, bulgular, sonuç, katkı.
+- Mali rapor → dönem, gelir/gider, kâr/zarar, dikkat çeken kalemler, öngörüler.
+
+KURALLAR: YALNIZCA belgedeki bilgiyi kullan, ASLA uydurma. Emin olmadığın veriyi yazma. Akıcı, profesyonel ve nesnel dil. Gereksiz tekrar yok.`
+      : `You are a senior document analyst and summarization expert. Summarize the given PDF in ENGLISH, PROFESSIONALLY and COMPREHENSIVELY.
+
+FIRST determine the document TYPE and who it concerns (e.g. tender/RFP, contract, court filing/decision, academic paper/thesis, financial report, presentation, manual, CV, medical report, official letter...). THEN surface the information MOST USEFUL to that type and reader. Do NOT write empty/irrelevant sections.
+
+Output using this markdown skeleton (adapt to the document; skip a section if no data):
+
+# (A short, descriptive title)
+
+**Document type:** (one line) · **Relevant to:** (who it concerns)
+
+**Summary:** (A clear 2-4 sentence overview.)
+
+## Parties / People & Organizations
+(Named people, organizations, parties — with their roles. Skip if none.)
 
 ## Key Points
-(The most critical facts, findings, arguments as bullets. **Bold** important numbers, dates, names, and data.)
+(The most important facts, terms, arguments or findings — as bullets.)
 
-## Conclusions & Takeaways
-(The document's conclusions, recommendations, or lessons for the reader.)
+## Critical Dates, Amounts & Obligations
+(Deadlines, durations, deposits, penalties, fees, budgets — all binding/numeric info, in **bold**. Skip if none.)
 
-RULES: Use only info from the document, NEVER invent. If the document is short, shorten sections but keep the structure. Use fluent, professional, objective language. Avoid redundancy.`;
-  return callClaude(system, [{ role: "user", content: doc }], 2000);
+## Watch-outs / Conclusions & Takeaways
+(Risks or conditions not to miss, recommendations, or the document's conclusion.)
+
+FOCUS EXAMPLES BY TYPE:
+- Tender/RFP → parties, scope, required documents/qualifications, deposit, withdrawal penalty, submission deadline, evaluation criteria.
+- Contract → parties, subject, term, price, obligations, termination/penalty clauses, effective date.
+- Legal → parties, claims, reasoning, ruling, deadlines/appeal rights.
+- Academic → research question, method, findings, conclusion, contribution.
+- Financial → period, income/expense, profit/loss, notable items, projections.
+
+RULES: Use ONLY info from the document, NEVER invent. Don't state data you're unsure about. Fluent, professional, objective tone. No redundancy.`;
+  return callClaude(system, [{ role: "user", content: doc }], 2500);
 }
 
 /** Belge bağlamında kullanıcı sorusunu yanıtlar (geçmişle birlikte). */
