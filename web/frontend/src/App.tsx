@@ -36,6 +36,7 @@ import {
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { AiPdfTool } from "./components/tools/AiPdfTool";
+import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
@@ -257,7 +258,8 @@ type ContentPanel =
   | "pricing"
   | "home"
   | "team"
-  | "ai";
+  | "ai"
+  | "editor";
 
 type ToastState = {
   /** Artan kimlik: her showToast'ta değişir → AppToast remount olup ilerleme çizgisi sıfırlanır. */
@@ -1995,7 +1997,7 @@ function App() {
             "unlock-pdf": "PDF Kilidi Aç",
             "delete-pages": "Sayfa Sil",
             "rotate-pdf": "PDF Döndür",
-            "organize-pdf": "PDF Düzenle",
+            "organize-pdf": "Sayfa Sırala",
             watermark: "Filigran",
             "page-numbers": "Sayfa Numarası",
             "repair-pdf": "PDF Onar",
@@ -4339,7 +4341,7 @@ function App() {
           "unlock-pdf": "PDF Kilidi Aç",
           "delete-pages": "Sayfa Sil",
           "rotate-pdf": "PDF Döndür",
-          "organize-pdf": "PDF Düzenle",
+          "organize-pdf": "Sayfa Sırala",
           watermark: "Filigran",
           "page-numbers": "Sayfa Numarası",
           "repair-pdf": "PDF Onar",
@@ -5743,6 +5745,7 @@ function App() {
             setAiModal(mode);
             setContentPanel("ai");
           }}
+          onOpenEditor={() => setContentPanel("editor")}
         />
         <div
           className={`min-h-[calc(100dvh-3.5rem)] w-full bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-12"}`}
@@ -5759,6 +5762,7 @@ function App() {
             setAiModal(mode);
             setContentPanel("ai");
           }}
+          onOpenEditor={() => setContentPanel("editor")}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
@@ -5781,6 +5785,12 @@ function App() {
                   onLogin={() => setView("login")}
                   onUpgrade={() => setUpgradeModalOpen(true)}
                 />
+              </section>
+            ) : null}
+
+            {contentPanel === "editor" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <PdfEditor language={language} />
               </section>
             ) : null}
 

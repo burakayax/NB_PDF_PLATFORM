@@ -142,6 +142,8 @@ type DashboardSidebarProps = {
   onTeamClick?: () => void;
   /** AI aracı aç (Özetle / Sohbet) — ayrı AI kategorisi için. */
   onOpenAi?: (mode: "summarize" | "chat") => void;
+  /** PDF Düzenle aracını aç (cihazda editör). */
+  onOpenEditor?: () => void;
 };
 
 /**
@@ -165,6 +167,7 @@ export function DashboardSidebar({
   isManagerMember,
   onTeamClick,
   onOpenAi,
+  onOpenEditor,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -301,6 +304,18 @@ export function DashboardSidebar({
           </section>
         ) : null}
 
+        {/* PDF Düzenle — cihazda editör (FeatureKey değil, kendi panelini açar) */}
+        {onOpenEditor ? (
+          <button
+            type="button"
+            onClick={onOpenEditor}
+            className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-cyan-400/40 hover:bg-cyan-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(6,182,212,0.6)]"
+          >
+            <span className="text-base text-cyan-300" aria-hidden>✏️</span>
+            <span className="truncate">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
+          </button>
+        ) : null}
+
         {sidebarGroups.map((group) => {
           const accent = CATEGORY_ACCENT[group.id];
           const open = openCats.has(group.id);
@@ -413,6 +428,7 @@ export function DashboardSidebarMobileLauncher({
   enabledToolIds,
   resolveToolLabel,
   onOpenAi,
+  onOpenEditor,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const tr = language === "tr";
@@ -675,6 +691,20 @@ export function DashboardSidebarMobileLauncher({
                         ))}
                       </div>
                     </section>
+                  ) : null}
+                  {/* PDF Düzenle (arama boşken) */}
+                  {onOpenEditor && !query.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenEditor();
+                        setOpen(false);
+                      }}
+                      className="nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] px-3 py-3 text-left hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.99]"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg" aria-hidden>✏️</span>
+                      <span className="text-[13px] font-bold text-cyan-100">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
+                    </button>
                   ) : null}
                   {filteredGroups.map((group) => {
                     const accent = CATEGORY_ACCENT[group.id];
