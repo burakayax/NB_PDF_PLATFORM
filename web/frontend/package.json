@@ -7,8 +7,8 @@
     "node": "20.x"
   },
   "scripts": {
-    "prebuild": "node scripts/generate-seo-files.mjs",
-    "predev": "node scripts/generate-seo-files.mjs",
+    "prebuild": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs",
+    "predev": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -39,7 +39,8 @@
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.1",
-    "tailwind-merge": "^3.6.0"
+    "tailwind-merge": "^3.6.0",
+    "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

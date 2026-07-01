@@ -89,3 +89,6 @@ test_output.pptx
 
 # Ham ekran görüntüleri (PII içerebilir — repoya girmez; işlenmişler public/ altında)
 _screenshots/
+
+# Tesseract OCR asset'leri (build-zamanı üretilir: scripts/setup-tesseract.mjs)
+web/frontend/public/tesseract/
