@@ -64,14 +64,44 @@ async function callClaude(
   return data.content?.[0]?.text?.trim() ?? "";
 }
 
-/** PDF metnini yapılandırılmış biçimde özetler. */
+/** PDF metnini profesyonel, zengin ve yapılandırılmış biçimde özetler. */
 export async function summarizeDocument(text: string, lang: Lang): Promise<string> {
   const doc = text.slice(0, MAX_DOC_CHARS);
   const system =
     lang === "tr"
-      ? "Sen bir PDF özetleme asistanısın. Verilen belgeyi TÜRKÇE, öz ve yapılandırılmış biçimde özetle. Markdown kullan: kısa bir genel bakış, ardından '## Ana Noktalar' altında madde işaretleri, gerekiyorsa '## Sonuç'. Yalnızca belgedeki bilgiyi kullan, uydurma."
-      : "You are a PDF summarization assistant. Summarize the document in ENGLISH, concise and structured. Use markdown: a short overview, then '## Key Points' as bullets, and '## Conclusion' if relevant. Use only information from the document; do not invent.";
-  return callClaude(system, [{ role: "user", content: doc }], 1200);
+      ? `Sen üst düzey bir belge analisti ve özetleme uzmanısın. Verilen PDF belgesini TÜRKÇE, PROFESYONEL ve zengin biçimde özetle. Çıktıyı tam olarak şu markdown yapısında ver:
+
+# (Belgenin kısa ve açıklayıcı bir başlığı)
+
+**Özet:** (Belgeyi 2-3 cümlede net biçimde özetleyen giriş.)
+
+## Ana Konular
+(Belgenin ele aldığı ana başlıklar/temalar — her biri madde ve tek satır açıklama.)
+
+## Önemli Noktalar
+(En kritik bilgiler, bulgular, argümanlar madde madde. Varsa önemli sayı, tarih, isim ve verileri **kalın** yaz.)
+
+## Sonuç ve Çıkarımlar
+(Belgenin vardığı sonuç, öneriler veya okuyucunun alması gereken dersler.)
+
+KURALLAR: Yalnızca belgedeki bilgiyi kullan, ASLA uydurma. Belge kısaysa bölümleri kısalt ama yapıyı koru. Akıcı, profesyonel ve nesnel bir dil kullan. Gereksiz tekrar yapma.`
+      : `You are a senior document analyst and summarization expert. Summarize the given PDF in ENGLISH, PROFESSIONALLY and richly. Output exactly this markdown structure:
+
+# (A short, descriptive title of the document)
+
+**Summary:** (A clear 2-3 sentence overview.)
+
+## Key Topics
+(The main themes/sections — each a bullet with a one-line note.)
+
+## Key Points
+(The most critical facts, findings, arguments as bullets. **Bold** important numbers, dates, names, and data.)
+
+## Conclusions & Takeaways
+(The document's conclusions, recommendations, or lessons for the reader.)
+
+RULES: Use only info from the document, NEVER invent. If the document is short, shorten sections but keep the structure. Use fluent, professional, objective language. Avoid redundancy.`;
+  return callClaude(system, [{ role: "user", content: doc }], 2000);
 }
 
 /** Belge bağlamında kullanıcı sorusunu yanıtlar (geçmişle birlikte). */

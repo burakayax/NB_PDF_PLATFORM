@@ -1,15 +1,21 @@
 import { useRef, useState } from "react";
 import {
+  Check,
+  Copy,
+  Download,
   FileText,
   Loader2,
   Lock,
+  RefreshCw,
   Send,
+  Share2,
   Sparkles,
   UploadCloud,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { aiSummarize, aiChat, type AiError, type ChatTurn } from "../../api/ai";
+import { SimpleMarkdown } from "../common/SimpleMarkdown";
 
 type AiMode = "summarize" | "chat";
 
@@ -33,6 +39,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [dragOver, setDragOver] = useState(false);
+  const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Özet
@@ -40,6 +47,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   // Sohbet
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [question, setQuestion] = useState("");
+
+  const charCount = docText.length;
+  const readTime = Math.max(1, Math.round(charCount / 1000));
 
   function handleAiError(e: unknown) {
     const err = e as AiError;
@@ -119,118 +129,234 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       setMessages((m) => [...m, { role: "assistant", content: a }]);
     } catch (e) {
       handleAiError(e);
-      setMessages((m) => m.slice(0, -1)); // soruyu geri al (hata)
+      setMessages((m) => m.slice(0, -1));
       setQuestion(q);
     } finally {
       setBusy(false);
     }
   }
 
-  const gateBox = gate && (
-    <div className="mt-4 rounded-2xl border border-amber-400/30 bg-amber-500/[0.08] p-4 text-center">
-      <p className="text-sm font-semibold text-amber-200">
-        {gate === "login"
-          ? tr ? "Giriş gerekli" : "Login required"
-          : tr ? "Pro / Business gerekli" : "Pro / Business required"}
-      </p>
-      <button
-        type="button"
-        onClick={gate === "login" ? onLogin : onUpgrade}
-        className="mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110"
-      >
-        {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
-      </button>
-    </div>
-  );
+  function copySummary() {
+    void navigator.clipboard?.writeText(summary).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
+  function downloadSummary() {
+    const blob = new Blob([summary], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(fileName || "ozet").replace(/\.pdf$/i, "")}-ozet.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+  }
+
+  const canShare =
+    typeof navigator !== "undefined" && typeof navigator.share === "function";
+
+  function shareSummary() {
+    const payload = {
+      title: fileName ? `${fileName} — ${tr ? "Özet" : "Summary"}` : tr ? "PDF Özeti" : "PDF Summary",
+      text: summary,
+    };
+    if (canShare) {
+      void navigator.share(payload).catch(() => {});
+    } else {
+      copySummary(); // paylaşım desteklenmiyorsa panoya kopyala
+    }
+  }
+
+  function reset() {
+    setFileName(null);
+    setDocText("");
+    setSummary("");
+    setMessages([]);
+    setError(null);
+    setGate(null);
+  }
+
+  const title =
+    mode === "summarize"
+      ? tr ? "PDF Özetle" : "Summarize PDF"
+      : tr ? "PDF ile Sohbet" : "Chat with PDF";
+  const subtitle =
+    mode === "summarize"
+      ? tr ? "Uzun belgeyi saniyeler içinde profesyonel bir özete çevir." : "Turn long documents into a professional summary in seconds."
+      : tr ? "Belgeye soru sor, yanıtı anında al." : "Ask questions and get instant answers from your document.";
 
   return (
-    <div className="text-left">
-      {/* Başlık */}
-      <div className="mb-3 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/25 bg-violet-500/10 px-3 py-1 text-[12px] font-semibold text-violet-200">
-          <Sparkles className="h-3.5 w-3.5" />
-          {mode === "summarize"
-            ? tr ? "PDF Özetle (AI)" : "Summarize PDF (AI)"
-            : tr ? "PDF ile Sohbet (AI)" : "Chat with PDF (AI)"}
-        </span>
-        <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-300">
-          Pro
-        </span>
+    <div className="mx-auto w-full max-w-3xl text-left">
+      {/* ── Premium başlık ── */}
+      <div className="mb-6 flex items-start gap-4">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-500/25 via-violet-500/20 to-indigo-600/20 text-fuchsia-200 ring-1 ring-fuchsia-400/30 shadow-[0_0_30px_-8px_rgba(232,121,249,0.6)]">
+          <Sparkles className="h-7 w-7" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight text-white">{title}</h1>
+            <span className="rounded-full border border-fuchsia-400/35 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
+              Pro
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
+        </div>
       </div>
 
-      {/* Dosya yok → dropzone */}
+      {/* ── Dosya yok → premium yükleme ── */}
       {!fileName ? (
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); void pickFile(e.dataTransfer.files[0]); }}
-          onClick={() => inputRef.current?.click()}
-          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition ${
-            dragOver ? "border-violet-400/70 bg-violet-400/[0.06]" : "border-white/15 bg-white/[0.02] hover:border-violet-400/40 hover:bg-white/[0.04]"
+          onClick={() => !busy && inputRef.current?.click()}
+          className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-12 text-center transition ${
+            dragOver
+              ? "border-fuchsia-400/70 bg-fuchsia-400/[0.07]"
+              : "border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent hover:border-fuchsia-400/40 hover:bg-white/[0.04]"
           }`}
         >
+          <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-fuchsia-500/10 blur-3xl" />
           <input ref={inputRef} type="file" accept="application/pdf" className="hidden"
             onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-600/20 text-violet-300 ring-1 ring-white/10">
-            {busy ? <Loader2 className="h-7 w-7 animate-spin" /> : <UploadCloud className="h-7 w-7" />}
+          <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500/20 to-indigo-600/20 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+            {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <UploadCloud className="h-9 w-9" />}
           </div>
-          <p className="mt-4 text-base font-semibold text-white">
-            {busy ? (tr ? "Metin çıkarılıyor…" : "Extracting text…") : tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
+          <p className="relative mt-5 text-lg font-bold text-white">
+            {busy
+              ? tr ? "Belge okunuyor…" : "Reading document…"
+              : tr ? "PDF'i buraya sürükle veya seç" : "Drag your PDF here or browse"}
           </p>
-          <p className="mt-1 text-[13px] text-slate-400">
-            {tr ? "Metin cihazda çıkarılır; AI işlemi sunucuda yapılır." : "Text is extracted on-device; AI runs on the server."}
+          <p className="relative mt-1.5 text-[13px] text-slate-400">
+            {tr ? "Metin cihazında çıkarılır — dosyan sunucuya yüklenmez." : "Text is extracted on your device — the file is never uploaded."}
           </p>
+          <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
+            {[
+              tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
+              tr ? "🔒 Gizli" : "🔒 Private",
+              tr ? "✨ Claude AI" : "✨ Claude AI",
+            ].map((c) => (
+              <span key={c} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{c}</span>
+            ))}
+          </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/[0.06] text-violet-300">
-              <FileText className="h-4 w-4" />
+        <div>
+          {/* Dosya bilgi çubuğu */}
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-fuchsia-500/12 text-fuchsia-300">
+              <FileText className="h-5 w-5" />
             </span>
-            <p className="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-100">{fileName}</p>
-            <button type="button" onClick={() => { setFileName(null); setDocText(""); setSummary(""); setMessages([]); }}
-              className="text-[12px] font-semibold text-slate-500 hover:text-white">
-              {tr ? "Değiştir" : "Change"}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-slate-100">{fileName}</p>
+              <p className="text-[11px] text-slate-500">
+                {tr
+                  ? `~${(charCount / 1000).toFixed(1)}K karakter · ~${readTime} dk okuma`
+                  : `~${(charCount / 1000).toFixed(1)}K chars · ~${readTime} min read`}
+              </p>
+            </div>
+            <button type="button" onClick={reset}
+              className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">
+              {tr ? "Yeni PDF" : "New PDF"}
             </button>
           </div>
 
           {mode === "summarize" ? (
-            <div className="mt-4">
-              {summary ? (
-                <div className="max-h-[46vh] overflow-y-auto whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 text-[14px] leading-relaxed text-slate-200">
-                  {summary}
+            summary ? (
+              <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
+                {/* Aksiyon çubuğu */}
+                <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
+                  <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300">
+                    <Sparkles className="h-4 w-4" />
+                    {tr ? "AI Özeti" : "AI Summary"}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={copySummary} title={tr ? "Kopyala" : "Copy"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      <span className="hidden sm:inline">{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}</span>
+                    </button>
+                    <button type="button" onClick={downloadSummary} title={tr ? "İndir (.md)" : "Download (.md)"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      <Download className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">{tr ? "İndir" : "Download"}</span>
+                    </button>
+                    <button type="button" onClick={shareSummary} title={tr ? "Paylaş" : "Share"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      <Share2 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">{tr ? "Paylaş" : "Share"}</span>
+                    </button>
+                    <button type="button" onClick={() => void runSummarize()} disabled={busy} title={tr ? "Yeniden" : "Regenerate"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40">
+                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
+                      <span className="hidden sm:inline">{tr ? "Yeniden" : "Regenerate"}</span>
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <button type="button" onClick={() => void runSummarize()} disabled={busy}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 py-3.5 text-[15px] font-bold text-white transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40">
-                  {busy ? <><Loader2 className="h-5 w-5 animate-spin" />{tr ? "Özetleniyor…" : "Summarizing…"}</> : <><Sparkles className="h-4 w-4" />{tr ? "Özetle" : "Summarize"}</>}
-                </button>
-              )}
-            </div>
+                {/* Belge kartı — markdown */}
+                <div className="max-h-[62vh] overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
+                  <SimpleMarkdown text={summary} />
+                </div>
+              </div>
+            ) : (
+              <button type="button" onClick={() => void runSummarize()} disabled={busy}
+                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:opacity-50">
+                {busy
+                  ? <><Loader2 className="h-5 w-5 animate-spin" />{tr ? "Özet hazırlanıyor…" : "Preparing summary…"}</>
+                  : <><Sparkles className="h-5 w-5" />{tr ? "Profesyonel Özet Oluştur" : "Generate Professional Summary"}</>}
+              </button>
+            )
           ) : (
-            <div className="mt-4">
-              <div className="mb-3 max-h-[40vh] space-y-2 overflow-y-auto">
+            <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-4 sm:p-5">
+              <div className="mb-3 max-h-[52vh] space-y-3 overflow-y-auto pr-1">
                 {messages.length === 0 && (
-                  <p className="py-6 text-center text-[13px] text-slate-500">
-                    {tr ? "Belge hakkında bir soru sor." : "Ask a question about the document."}
-                  </p>
+                  <div className="py-10 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-fuchsia-500/10 text-fuchsia-300">
+                      <Sparkles className="h-6 w-6" />
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-slate-300">
+                      {tr ? "Belge hazır. Bir soru sor 👇" : "Document ready. Ask a question 👇"}
+                    </p>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2">
+                      {(tr
+                        ? ["Bu belge neyi anlatıyor?", "Ana noktaları özetle", "Önemli tarihler neler?"]
+                        : ["What is this about?", "Summarize key points", "What are the key dates?"]
+                      ).map((s) => (
+                        <button key={s} type="button" onClick={() => setQuestion(s)}
+                          className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] text-slate-300 transition hover:border-fuchsia-400/30 hover:bg-fuchsia-500/[0.08] hover:text-white">
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
                 {messages.map((m, i) => (
-                  <div key={i} className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-[14px] leading-relaxed ${
-                    m.role === "user" ? "ml-auto bg-violet-600/30 text-violet-50" : "mr-auto whitespace-pre-wrap bg-white/[0.05] text-slate-200"
-                  }`}>
-                    {m.content}
+                  <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                    <div className={`max-w-[88%] rounded-2xl px-4 py-3 text-[14px] leading-relaxed ${
+                      m.role === "user"
+                        ? "bg-gradient-to-br from-fuchsia-600/40 to-violet-600/30 text-white"
+                        : "border border-white/[0.06] bg-white/[0.04] text-slate-200"
+                    }`}>
+                      {m.role === "assistant" ? <SimpleMarkdown text={m.content} /> : m.content}
+                    </div>
                   </div>
                 ))}
-                {busy && <div className="mr-auto flex items-center gap-2 px-2 text-slate-400"><Loader2 className="h-4 w-4 animate-spin" />{tr ? "Yazıyor…" : "Thinking…"}</div>}
+                {busy && (
+                  <div className="flex items-center gap-2 px-2 text-slate-400">
+                    <Loader2 className="h-4 w-4 animate-spin" />{tr ? "Yanıt yazılıyor…" : "Thinking…"}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 border-t border-white/[0.06] pt-3">
                 <input value={question} onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") void sendQuestion(); }}
-                  placeholder={tr ? "Sorunu yaz…" : "Type your question…"}
-                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-violet-400/50 focus:outline-none" />
+                  placeholder={tr ? "Belge hakkında bir soru yaz…" : "Ask about the document…"}
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/15" />
                 <button type="button" onClick={() => void sendQuestion()} disabled={busy || !question.trim()}
-                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white transition hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40">
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white transition hover:brightness-110 disabled:opacity-40">
                   <Send className="h-4 w-4" />
                 </button>
               </div>
@@ -240,12 +366,24 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       )}
 
       {error && (
-        <p className="mt-3 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
-          <Lock className="h-3.5 w-3.5 shrink-0" />
+        <p className="mt-4 flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-[13px] text-red-300">
+          <Lock className="h-4 w-4 shrink-0" />
           {error}
         </p>
       )}
-      {gateBox}
+      {gate && (
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-amber-400/30 bg-gradient-to-b from-amber-500/[0.1] to-transparent p-5 text-center">
+          <p className="text-sm font-semibold text-amber-100">
+            {gate === "login"
+              ? tr ? "Devam etmek için giriş yap" : "Log in to continue"
+              : tr ? "Bu bir Pro / Business özelliğidir" : "This is a Pro / Business feature"}
+          </p>
+          <button type="button" onClick={gate === "login" ? onLogin : onUpgrade}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110">
+            {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
