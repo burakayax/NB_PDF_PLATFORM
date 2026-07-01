@@ -1,16 +1,23 @@
 import { useRef, useState } from "react";
 import {
   Check,
+  Clock,
   Copy,
   Download,
   FileText,
+  ListChecks,
   Loader2,
   Lock,
+  MessageSquare,
   RefreshCw,
   Send,
   Share2,
+  ShieldCheck,
   Sparkles,
+  Target,
   UploadCloud,
+  Zap,
+  type LucideIcon,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
@@ -185,8 +192,21 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       : tr ? "PDF ile Sohbet" : "Chat with PDF";
   const subtitle =
     mode === "summarize"
-      ? tr ? "Uzun belgeyi saniyeler içinde profesyonel bir özete çevir." : "Turn long documents into a professional summary in seconds."
-      : tr ? "Belgeye soru sor, yanıtı anında al." : "Ask questions and get instant answers from your document.";
+      ? tr ? "PDF'inizi baştan sona okumadan; başlık, ana konular ve önemli noktalarıyla profesyonel bir özete çevirir." : "Turns your PDF into a professional summary — title, key topics and key points — without reading it end to end."
+      : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
+
+  const benefits: { icon: LucideIcon; title: string; desc: string }[] =
+    mode === "summarize"
+      ? [
+          { icon: Zap, title: tr ? "Saniyeler içinde kavra" : "Grasp it in seconds", desc: tr ? "Uzun raporu, sözleşmeyi ya da makaleyi baştan sona okumadan ana fikri al." : "Get the gist of a long report, contract or article without reading it all." },
+          { icon: ListChecks, title: tr ? "Yapılandırılmış özet" : "Structured output", desc: tr ? "Başlık, ana konular, önemli noktalar ve sonuç — düzenli ve profesyonel." : "Title, key topics, key points and conclusion — clean and professional." },
+          { icon: ShieldCheck, title: tr ? "Gizli & güvenli" : "Private & secure", desc: tr ? "Belgen cihazından çıkmaz; yalnızca metni yapay zekâya gönderilir." : "Your file stays on device; only its text is sent to the AI." },
+        ]
+      : [
+          { icon: MessageSquare, title: tr ? "Doğal dille sor" : "Ask naturally", desc: tr ? "Belgene istediğin soruyu sor, sohbet eder gibi anında yanıt al." : "Ask any question and get an instant, conversational answer." },
+          { icon: Target, title: tr ? "Yalnızca belgeye dayalı" : "Grounded answers", desc: tr ? "Yanıtlar yalnızca belgedeki bilgiden gelir — uydurma yok." : "Answers come only from the document — no made-up facts." },
+          { icon: Clock, title: tr ? "Zamandan kazan" : "Save time", desc: tr ? "Uzun belgeleri baştan sona okumadan aradığın cevabı bul." : "Find what you need without reading the whole document." },
+        ];
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -208,6 +228,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
 
       {/* ── Dosya yok → premium yükleme ── */}
       {!fileName ? (
+        <>
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
@@ -243,6 +264,20 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
             ))}
           </div>
         </div>
+
+        {/* Ne işe yarar / kullanınca ne olur */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {benefits.map((b) => (
+            <div key={b.title} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 transition hover:border-fuchsia-400/25 hover:bg-white/[0.03]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-300">
+                <b.icon className="h-4 w-4" />
+              </span>
+              <p className="mt-2.5 text-[13px] font-bold text-white">{b.title}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-400">{b.desc}</p>
+            </div>
+          ))}
+        </div>
+        </>
       ) : (
         <div>
           {/* Dosya bilgi çubuğu */}
