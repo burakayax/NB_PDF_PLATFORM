@@ -116,12 +116,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     }
     try {
       setBusy(true);
-      const text = await extractPdfText(f);
-      if (text.length < 20) {
+      const { text, likelyScanned } = await extractPdfText(f);
+      if (likelyScanned) {
         setError(
           tr
-            ? "Bu PDF'ten metin çıkarılamadı (taranmış/görsel olabilir). OCR yakında."
-            : "No text could be extracted (scanned/image PDF). OCR coming soon.",
+            ? "Bu PDF taranmış/görüntü ağırlıklı görünüyor; içerikten yeterli metin okunamadı. Bu tür belgelerde metni okuyabilmek için OCR desteği çok yakında ekleniyor."
+            : "This looks like a scanned/image PDF; not enough readable text was found. OCR support for such documents is coming very soon.",
         );
         setBusy(false);
         return;
