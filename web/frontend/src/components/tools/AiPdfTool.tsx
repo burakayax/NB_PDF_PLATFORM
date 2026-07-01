@@ -22,6 +22,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
+import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
 import {
   aiSummarize,
   aiChat,
@@ -87,6 +88,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [exporting, setExporting] = useState(false);
   // Taranmış PDF → cihazda sessiz hazırlama (OCR) ilerlemesi
   const [ocrProgress, setOcrProgress] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -235,30 +237,61 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     });
   }
 
-  function downloadSummary() {
-    const blob = new Blob([summary], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(fileName || "ozet").replace(/\.pdf$/i, "")}-ozet.md`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 8000);
+  const pdfBaseName = `${(fileName || "ozet").replace(/\.pdf$/i, "")}-ozet`;
+  const pdfTitle = fileName
+    ? `${fileName.replace(/\.pdf$/i, "")} — ${tr ? "Özet" : "Summary"}`
+    : tr ? "PDF Özeti" : "PDF Summary";
+
+  async function downloadSummary() {
+    if (exporting) return;
+    try {
+      setExporting(true);
+      const blob = pdfBytesToBlob(await summaryToPdf(summary, pdfTitle));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${pdfBaseName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+    } catch {
+      setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
+    } finally {
+      setExporting(false);
+    }
   }
 
-  const canShare =
-    typeof navigator !== "undefined" && typeof navigator.share === "function";
-
-  function shareSummary() {
-    const payload = {
-      title: fileName ? `${fileName} — ${tr ? "Özet" : "Summary"}` : tr ? "PDF Özeti" : "PDF Summary",
-      text: summary,
-    };
-    if (canShare) {
-      void navigator.share(payload).catch(() => {});
-    } else {
-      copySummary(); // paylaşım desteklenmiyorsa panoya kopyala
+  async function shareSummary() {
+    if (exporting) return;
+    try {
+      setExporting(true);
+      const blob = pdfBytesToBlob(await summaryToPdf(summary, pdfTitle));
+      const file = new File([blob], `${pdfBaseName}.pdf`, { type: "application/pdf" });
+      const nav = navigator as Navigator & {
+        canShare?: (data?: unknown) => boolean;
+      };
+      if (typeof nav.share === "function" && nav.canShare?.({ files: [file] })) {
+        try {
+          await nav.share({ files: [file], title: pdfTitle });
+          return;
+        } catch {
+          /* kullanıcı iptal etti → dosyayı indir */
+        }
+      }
+      // Paylaşım (dosya) desteklenmiyorsa PDF'i indir.
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+    } catch {
+      setError(tr ? "PDF paylaşılamadı." : "Couldn't share the PDF.");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -426,13 +459,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
                       {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                       <span className="hidden sm:inline">{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}</span>
                     </button>
-                    <button type="button" onClick={downloadSummary} title={tr ? "İndir (.md)" : "Download (.md)"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
-                      <Download className="h-3.5 w-3.5" />
-                      <span className="hidden sm:inline">{tr ? "İndir" : "Download"}</span>
+                    <button type="button" onClick={() => void downloadSummary()} disabled={exporting} title={tr ? "PDF indir" : "Download PDF"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">
+                      {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                      <span className="hidden sm:inline">{tr ? "PDF İndir" : "Download PDF"}</span>
                     </button>
-                    <button type="button" onClick={shareSummary} title={tr ? "Paylaş" : "Share"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                    <button type="button" onClick={() => void shareSummary()} disabled={exporting} title={tr ? "PDF olarak paylaş" : "Share as PDF"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">
                       <Share2 className="h-3.5 w-3.5" />
                       <span className="hidden sm:inline">{tr ? "Paylaş" : "Share"}</span>
                     </button>
