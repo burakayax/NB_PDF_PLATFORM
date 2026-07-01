@@ -4,9 +4,9 @@ import fontkit from "@pdf-lib/fontkit";
 /** Tüm koordinatlar 0..1 normalize (sayfa genişlik/yüksekliğine göre). */
 export type EditAnno =
   | { id: string; page: number; type: "text"; x: number; y: number; text: string; size: number; color: string }
-  | { id: string; page: number; type: "whiteout"; x: number; y: number; w: number; h: number }
   | { id: string; page: number; type: "highlight"; x: number; y: number; w: number; h: number; color: string }
-  | { id: string; page: number; type: "pen"; points: { x: number; y: number }[]; color: string; width: number };
+  | { id: string; page: number; type: "pen"; points: { x: number; y: number }[]; color: string; width: number }
+  | { id: string; page: number; type: "image"; x: number; y: number; w: number; h: number; dataUrl: string };
 
 let robotoBuf: ArrayBuffer | null = null;
 async function loadFont(): Promise<ArrayBuffer> {
@@ -41,14 +41,20 @@ export async function exportEditedPdf(
     if (!page) continue;
     const { width: W, height: H } = page.getSize();
 
-    if (a.type === "whiteout") {
-      page.drawRectangle({
-        x: a.x * W,
-        y: H - (a.y + a.h) * H,
-        width: a.w * W,
-        height: a.h * H,
-        color: rgb(1, 1, 1),
-      });
+    if (a.type === "image") {
+      try {
+        const isPng = a.dataUrl.startsWith("data:image/png");
+        const bytes = Uint8Array.from(atob(a.dataUrl.split(",")[1]), (c) => c.charCodeAt(0));
+        const img = isPng ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+        page.drawImage(img, {
+          x: a.x * W,
+          y: H - (a.y + a.h) * H,
+          width: a.w * W,
+          height: a.h * H,
+        });
+      } catch {
+        /* gömülemeyen görseli atla */
+      }
     } else if (a.type === "highlight") {
       const [r, g, b] = hexToRgb(a.color);
       page.drawRectangle({
