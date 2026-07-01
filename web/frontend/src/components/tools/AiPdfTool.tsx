@@ -10,6 +10,7 @@ import {
   Lock,
   MessageSquare,
   RefreshCw,
+  ScanText,
   Send,
   Share2,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
+import { ocrPdfToText } from "../../lib/ocr";
 import {
   aiSummarize,
   aiChat,
@@ -54,6 +56,9 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [dragOver, setDragOver] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Taranmış PDF: OCR akışı
+  const [scannedFile, setScannedFile] = useState<File | null>(null);
+  const [ocrProgress, setOcrProgress] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Özet
@@ -109,6 +114,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setGate(null);
     setSummary("");
     setMessages([]);
+    setScannedFile(null);
     if (!f) return;
     if (f.type !== "application/pdf") {
       setError(tr ? "Lütfen bir PDF seçin." : "Please choose a PDF.");
@@ -118,11 +124,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       setBusy(true);
       const { text, likelyScanned } = await extractPdfText(f);
       if (likelyScanned) {
-        setError(
-          tr
-            ? "Bu PDF taranmış/görüntü ağırlıklı görünüyor; içerikten yeterli metin okunamadı. Bu tür belgelerde metni okuyabilmek için OCR desteği çok yakında ekleniyor."
-            : "This looks like a scanned/image PDF; not enough readable text was found. OCR support for such documents is coming very soon.",
-        );
+        // Metin yok → taranmış; OCR akışını öner (çöp özet üretme).
+        setScannedFile(f);
         setBusy(false);
         return;
       }
@@ -132,6 +135,32 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
       setError(tr ? "PDF okunamadı." : "Could not read the PDF.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function runOcr() {
+    if (!scannedFile) return;
+    setError(null);
+    try {
+      setBusy(true);
+      setOcrProgress(0);
+      const text = await ocrPdfToText(scannedFile, (p) => setOcrProgress(p.ratio));
+      if (text.length < 20) {
+        setError(
+          tr
+            ? "OCR ile de metin okunamadı — belge çok düşük çözünürlüklü olabilir."
+            : "OCR couldn't read text either — the document may be very low resolution.",
+        );
+        return;
+      }
+      setFileName(scannedFile.name);
+      setDocText(text);
+      setScannedFile(null);
+    } catch {
+      setError(tr ? "OCR sırasında bir hata oluştu." : "Something went wrong during OCR.");
+    } finally {
+      setBusy(false);
+      setOcrProgress(null);
     }
   }
 
@@ -213,6 +242,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
     setMessages([]);
     setError(null);
     setGate(null);
+    setScannedFile(null);
+    setOcrProgress(null);
   }
 
   const title =
@@ -271,8 +302,62 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
         </div>
       </div>
 
-      {/* ── Dosya yok → premium yükleme ── */}
-      {!fileName ? (
+      {/* ── Taranmış PDF → cihazda OCR ── */}
+      {scannedFile ? (
+        <div className="rounded-3xl border border-amber-400/25 bg-gradient-to-b from-amber-500/[0.08] to-transparent p-8 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30">
+            <ScanText className="h-8 w-8" />
+          </div>
+          <p className="mt-4 text-lg font-bold text-white">
+            {tr ? "Taranmış PDF algılandı" : "Scanned PDF detected"}
+          </p>
+          <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-400">
+            {tr
+              ? "Bu belge görüntü tabanlı — yazı, metin değil resim. Okuyabilmek için OCR (görüntüden metin) gerekiyor. Cihazında yapılır, ücretsiz ve gizli."
+              : "This document is image-based — the text is a picture, not selectable text. OCR is needed to read it. Runs on your device, free and private."}
+          </p>
+          <p className="mt-1 text-[12px] text-slate-500 truncate">{scannedFile.name}</p>
+
+          {ocrProgress !== null ? (
+            <div className="mx-auto mt-6 max-w-sm">
+              <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-300"
+                  style={{ width: `${Math.round(ocrProgress * 100)}%` }}
+                />
+              </div>
+              <p className="mt-2 flex items-center justify-center gap-2 text-[12px] font-medium text-amber-200">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {tr
+                  ? `Metin okunuyor… %${Math.round(ocrProgress * 100)}`
+                  : `Reading text… ${Math.round(ocrProgress * 100)}%`}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500">
+                {tr ? "İlk kullanımda dil verisi bir kez iner; sonraki belgeler daha hızlı." : "Language data downloads once on first use; later documents are faster."}
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => void runOcr()}
+                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-3 text-sm font-bold text-slate-950 transition hover:brightness-110"
+              >
+                <ScanText className="h-4 w-4" />
+                {tr ? "OCR ile Metni Oku" : "Read Text with OCR"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScannedFile(null)}
+                className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+              >
+                {tr ? "Vazgeç" : "Cancel"}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : /* ── Dosya yok → premium yükleme ── */
+      !fileName ? (
         <>
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
