@@ -100,7 +100,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: `/tools/${slug}`,
       index: true,
       follow: true,
-      ogImage: "/app-preview-main.png",
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -113,7 +113,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/",
       index: true,
       follow: true,
-      ogImage: "/app-preview-main.png",
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -133,7 +133,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/about",
       index: true,
       follow: true,
-      ogImage: "/app-preview-main.png",
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -153,7 +153,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
       canonicalPath: "/pricing",
       index: true,
       follow: true,
-      ogImage: "/app-preview-main.png",
+      ogImage: "/og-image.png",
       ogLocale: locale,
       ogLocaleAlternate: localeAlt,
     };
@@ -241,7 +241,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
     canonicalPath: "/",
     index: true,
     follow: true,
-    ogImage: "/app-preview-main.png",
+    ogImage: "/og-image.png",
     ogLocale: locale,
     ogLocaleAlternate: localeAlt,
   };

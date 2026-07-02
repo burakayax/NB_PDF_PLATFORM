@@ -22,11 +22,11 @@
 
 export const BRAND = "PDF Platform";
 
-/** Gerçek, var olan ürün görseli (1280×720). Sosyal paylaşım önizlemesi.
- *  public/app-preview-main.png — landing showcase ve runtime SEO ile aynı dosya. */
-export const DEFAULT_OG_IMAGE = "/app-preview-main.png";
-export const DEFAULT_OG_IMAGE_WIDTH = "1280";
-export const DEFAULT_OG_IMAGE_HEIGHT = "720";
+/** Markalı sosyal paylaşım görseli (1200×630 — WhatsApp/OG standardı).
+ *  public/og-image.png — amblem + "PDF PLATFORM" + slogan + domain. */
+export const DEFAULT_OG_IMAGE = "/og-image.png";
+export const DEFAULT_OG_IMAGE_WIDTH = "1200";
+export const DEFAULT_OG_IMAGE_HEIGHT = "630";
 
 /** Diziye göre sitemap araç sırası — toolSlugForFeature çıktılarıyla aynı. */
 export const TOOL_SLUGS = [
