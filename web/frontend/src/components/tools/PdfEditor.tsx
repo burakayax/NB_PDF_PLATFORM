@@ -107,6 +107,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const pageEls = analysis?.pages[current]?.elements ?? [];
   const pageAdded = added.filter((a) => a.page === current);
   const editCount = edits.size + added.length;
+  // Taranmış PDF: hiç metin katmanı yok (yalnız görsel) → var olan yazı düzenlenemez.
+  const scanned = !!analysis && !analysis.pages.some((p) => p.elements.some((e) => e.type === "text"));
 
   async function pickFile(f: File | undefined) {
     setError(null);
@@ -348,6 +350,15 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
         <p><b>{tr ? "Bu araç farklı:" : "Different tool:"}</b> {tr ? "Gerçek düzenleme için dosyanız güvenli sunucumuzda işlenir (diğer araçlar cihazınızda), işlem biter bitmez silinir." : "For real editing, your file is processed on our secure server (other tools run on your device) and deleted right after."}</p>
       </div>
 
+      {scanned && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-orange-400/30 bg-orange-500/[0.08] px-4 py-3 text-[13px] text-orange-200">
+          <FileText className="mt-0.5 h-4 w-4 shrink-0" />
+          <p>{tr
+            ? "Bu PDF taranmış görünüyor: sayfalar resim, düzenlenecek metin katmanı yok. Mevcut yazılar resmin parçası olduğu için metin olarak düzeltilemez. Yine de görselleri silebilir ve «Metin Ekle» ile üzerine yeni yazı ekleyebilirsiniz."
+            : "This PDF looks scanned: pages are images with no text layer. Existing words are part of the image and can't be edited as text. You can still delete images and add new text with «Add Text»."}</p>
+        </div>
+      )}
+
       {result ? (
         <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"><Check className="h-8 w-8" /></div>
@@ -465,8 +476,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                           onInput={(t) => setEdit(el.id, { text: t })}
                           onClick={(e) => { e.stopPropagation(); selectEl(el); }}
                           onFocus={() => selectEl(el)}
-                          className={`relative leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
+                          className={`relative outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
+                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, lineHeight: `${eb.height}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
                       </div>
                     );
                   })}
