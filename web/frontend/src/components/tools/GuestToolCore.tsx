@@ -100,6 +100,14 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     : tr ? "Birleştir" : "Merge";
   const outName = isImages ? "gorseller.pdf" : "birlestirilmis.pdf";
 
+  // Zengin özet — kullanıcıya her şeyi anlat: kaç dosya, kaçı geçerli, toplam sayfa/boyut,
+  // sonuçta ne oluşacak.
+  const okList = files.filter((f) => f.status === "ok");
+  const badCount = files.filter((f) => f.status !== "ok" && f.status !== "checking").length;
+  const checkingCount = files.filter((f) => f.status === "checking").length;
+  const totalPages = okList.reduce((s, f) => s + (f.pages ?? 0), 0);
+  const totalSize = okList.reduce((s, f) => s + f.file.size, 0);
+
   const addFiles = useCallback(
     (incoming: FileList | File[]) => {
       setError(null);
@@ -424,17 +432,38 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
 
       {files.length > 0 && (
         <>
-        <div className="mt-4 mb-2 flex items-center justify-between px-1">
-          <span className="text-[12px] font-semibold text-slate-300">
-            {files.length} {tr ? "dosya" : "file(s)"}
-            {files.some((f) => f.status !== "ok" && f.status !== "checking") && (
-              <span className="ml-1.5 text-amber-300">· {files.filter((f) => f.status !== "ok" && f.status !== "checking").length} {tr ? "sorunlu" : "with issues"}</span>
-            )}
-          </span>
-          <button type="button" onClick={clearAll}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
-            <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
-          </button>
+        <div className="mt-4 mb-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px]">
+              <span className="font-bold text-white">{files.length} {tr ? "dosya" : "files"}</span>
+              {okList.length > 0 && (
+                <span className="inline-flex items-center gap-1 text-emerald-300"><Check className="h-3.5 w-3.5" />{okList.length} {tr ? "geçerli" : "valid"}</span>
+              )}
+              {badCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-amber-300"><AlertTriangle className="h-3.5 w-3.5" />{badCount} {tr ? "sorunlu" : "with issues"}</span>
+              )}
+              {checkingCount > 0 && (
+                <span className="inline-flex items-center gap-1 text-cyan-300"><Loader2 className="h-3.5 w-3.5 animate-spin" />{tr ? "denetleniyor" : "checking"}</span>
+              )}
+              {!isImages && totalPages > 0 && (
+                <span className="text-slate-400">{totalPages} {tr ? "sayfa" : "pages"}</span>
+              )}
+              {totalSize > 0 && <span className="text-slate-400">{humanSize(totalSize)}</span>}
+            </div>
+            <button type="button" onClick={clearAll}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+              <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
+            </button>
+          </div>
+          {/* Sonuç önizlemesi — ne oluşacağını önceden söyle */}
+          {okList.length >= minFiles && (
+            <p className="mt-1.5 flex items-center gap-1.5 border-t border-white/[0.05] pt-1.5 text-[12px] text-slate-400">
+              <ArrowDown className="h-3.5 w-3.5 -rotate-90 text-cyan-400" />
+              {isImages
+                ? tr ? `${okList.length} görsel tek PDF'e dönüşecek (${okList.length} sayfa)` : `${okList.length} images → one PDF (${okList.length} pages)`
+                : tr ? `Birleşince ${totalPages || "?"} sayfalık tek PDF oluşacak · cihazında işlenir, gizli` : `Merges into one ${totalPages || "?"}-page PDF · processed on-device, private`}
+            </p>
+          )}
         </div>
         <ul ref={listRef} className="space-y-2">
           {files.map((f, i) => {
@@ -459,7 +488,16 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-500"}`}>{statusText}</p>
+                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-500"}`}>
+                  {f.status === "locked" ? (
+                    <>
+                      {tr ? "Şifre korumalı — " : "Password-protected — "}
+                      <a href="/tools/unlock-pdf" className="underline decoration-amber-400/50 underline-offset-2 hover:text-amber-100">
+                        {tr ? "«PDF Kilidini Aç» aracını kullanın" : "use the «Unlock PDF» tool"}
+                      </a>
+                    </>
+                  ) : statusText}
+                </p>
               </div>
               {!isImages && files.length > 1 && (
                 <span className="flex shrink-0 items-center">
