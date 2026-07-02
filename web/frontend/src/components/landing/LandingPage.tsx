@@ -18,6 +18,7 @@ import { GuestToolCore } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
 import { PdfEditor } from "../tools/PdfEditor";
+import { toolAccent } from "../tools/ToolDropzone";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
@@ -498,24 +499,30 @@ function Hero({
           className={`mt-10 mx-auto w-full ${aiTool || editorOn ? "max-w-4xl" : "max-w-xl"}`}
         >
           <div className="mb-4 flex flex-wrap justify-center gap-2">
-            {FREE_TOOLS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => {
-                  setFreeTool(t.id);
-                  setAiTool(null);
-                  setEditorOn(false);
-                }}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  !aiTool && !editorOn && freeTool === t.id
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
-                    : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
-                }`}
-              >
-                {tr ? t.tr : t.en}
-              </button>
-            ))}
+            {FREE_TOOLS.map((t) => {
+              const A = toolAccent(t.id);
+              const Icon = A.icon;
+              const active = !aiTool && !editorOn && freeTool === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    setFreeTool(t.id);
+                    setAiTool(null);
+                    setEditorOn(false);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                    active
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
+                      : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                  }`}
+                >
+                  <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : A.text}`} />
+                  {tr ? t.tr : t.en}
+                </button>
+              );
+            })}
             {/* AI araçları (Pro) — yapay zekâ özet + sohbet */}
             {(
               [

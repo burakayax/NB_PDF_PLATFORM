@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
@@ -12,11 +12,11 @@ import {
   Sliders,
   Sparkles,
   Trash2,
-  UploadCloud,
   X,
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { ToolDropzone } from "./ToolDropzone";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { expandPagesString } from "../../i18n/workspace";
 import {
@@ -83,9 +83,7 @@ export function GuestPageToolCore({
   const [splitMode, setSplitMode] = useState<"single" | "separate">("single");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const outName =
     mode === "rotate"
@@ -352,45 +350,18 @@ export function GuestPageToolCore({
 
   return (
     <>
-      {/* Dropzone — her zaman görünür */}
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          void pickFile(e.dataTransfer.files[0]);
-        }}
-        onClick={() => inputRef.current?.click()}
-        className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition ${
-          dragOver
-            ? "border-cyan-400/70 bg-cyan-400/[0.06]"
-            : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept="application/pdf"
-          className="hidden"
-          onChange={(e) => {
-            void pickFile(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10">
-          <UploadCloud className="h-7 w-7" />
-        </div>
-        <p className="mt-4 text-base font-semibold text-white">
-          {tr ? "PDF'i buraya sürükle" : "Drag your PDF here"}
-        </p>
-        <p className="mt-1 text-[13px] text-slate-400">
-          {tr ? "ya da tıklayıp seç · 80 MB'a kadar" : "or click to choose · up to 80 MB"}
-        </p>
-      </div>
+      {/* Dropzone — her zaman görünür (premium, AI aracıyla aynı dil) */}
+      <ToolDropzone
+        toolId={tool}
+        tr={tr}
+        accept="application/pdf"
+        showBenefits={!file}
+        onFiles={(fl) => void pickFile(fl[0])}
+        titleTr="PDF'i buraya sürükle"
+        titleEn="Drag your PDF here"
+        hintTr="ya da tıklayıp seç · 80 MB'a kadar"
+        hintEn="or click to choose · up to 80 MB"
+      />
 
       {/* Seçili dosya satırı (merge'deki dosya listesi gibi) */}
       {file && (
