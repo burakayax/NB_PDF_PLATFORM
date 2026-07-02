@@ -431,6 +431,10 @@ function Hero({
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
   const [aiTool, setAiTool] = useState<"summarize" | "chat" | null>(null);
   const [editorOn, setEditorOn] = useState(false);
+  // Ödemeler kapalıyken AI araçları "Yakında" durumunda (fiyat kartlarıyla aynı sinyal).
+  // Admin ödemeleri açınca (paymentsDisabled === false) AI otomatik aktifleşir.
+  const { flags } = useSettings();
+  const aiComingSoon = flags?.featureFlags?.paymentsDisabled !== false;
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -575,6 +579,7 @@ function Hero({
                 accessToken={accessToken}
                 onLogin={onLogin}
                 onUpgrade={onUpgrade}
+                comingSoon={aiComingSoon}
               />
             ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />

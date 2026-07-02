@@ -41,6 +41,8 @@ type Props = {
   accessToken: string | null;
   onLogin: () => void;
   onUpgrade: () => void;
+  /** Ödemeler kapalıyken: yükleme yerine şık "Yakında" durumu göster. */
+  comingSoon?: boolean;
 };
 
 /** Şık ilerleme şeridi — `ratio` verilirse yüzdeli (OCR), null ise kayan/indeterminate (özet). */
@@ -79,7 +81,7 @@ function StatusStrip({ label, ratio }: { label: string; ratio: number | null }) 
  * AI aracı (Pro/Business): PDF metni CİHAZDA çıkarılır (pdf.js), yalnız metin
  * sunucuya gider → Claude. Özetle veya belgeyle Sohbet. 401→giriş, 403→yükselt.
  */
-export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: Props) {
+export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, comingSoon }: Props) {
   const tr = language === "tr";
   const [fileName, setFileName] = useState<string | null>(null);
   const [docText, setDocText] = useState("");
@@ -361,8 +363,39 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade }: P
         </div>
       </div>
 
-      {/* ── Cihazda hazırlanıyor (taranmış belge sessizce metne çevriliyor) ── */}
-      {ocrProgress !== null ? (
+      {/* ── Yakında (ödemeler kapalıyken): yükleme yerine şık bekleme durumu ── */}
+      {comingSoon ? (
+        <div className="overflow-hidden rounded-3xl border-2 border-dashed border-fuchsia-400/30 bg-gradient-to-b from-fuchsia-500/[0.06] to-transparent p-8 text-center sm:p-12">
+          <div className="relative">
+            <div className="pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-fuchsia-500/15 blur-3xl" />
+            <span className="relative inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-3.5 py-1 text-[12px] font-bold uppercase tracking-wide text-fuchsia-200">
+              <Sparkles className="h-3.5 w-3.5" />{tr ? "Çok Yakında" : "Coming Soon"}
+            </span>
+            <div className="relative mx-auto mt-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-fuchsia-500/25 to-indigo-600/25 text-fuchsia-200 ring-1 ring-white/10">
+              <Sparkles className="h-9 w-9" />
+            </div>
+            <p className="relative mt-5 text-xl font-black text-white">{title}</p>
+            <p className="relative mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-slate-300">
+              {mode === "summarize"
+                ? tr ? "Uzun belgeleri saniyeler içinde özetleyen yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that summarizes long documents in seconds is coming very soon. We're putting on the finishing touches."
+                : tr ? "Belgelerinle sohbet edip anında cevap alacağın yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that lets you chat with your documents is coming very soon. We're putting on the finishing touches."}
+            </p>
+          </div>
+          <div className="mt-6 grid gap-3 text-left sm:grid-cols-3">
+            {benefits.map((b) => (
+              <div key={b.title} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-fuchsia-500/10 text-fuchsia-300"><b.icon className="h-4 w-4" /></span>
+                <p className="mt-2.5 text-[13px] font-bold text-white">{b.title}</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-slate-400">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-[12px] text-slate-500">
+            {tr ? "Bu sırada tüm PDF araçlarımız ücretsiz ve sınırsız — yukarıdan deneyebilirsin." : "Meanwhile, all our PDF tools are free and unlimited — try them above."}
+          </p>
+        </div>
+      ) : /* ── Cihazda hazırlanıyor (taranmış belge sessizce metne çevriliyor) ── */
+      ocrProgress !== null ? (
         <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-6 sm:p-8">
           <StatusStrip label={tr ? "Belge hazırlanıyor…" : "Preparing document…"} ratio={ocrProgress} />
           <p className="mt-3 text-center text-[12px] text-slate-500">
