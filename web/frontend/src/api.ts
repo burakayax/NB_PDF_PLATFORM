@@ -113,15 +113,19 @@ function appendSaasAccessToken(formData: FormData, accessToken: string | null | 
   }
 }
 
+export type PdfFontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
+
 export type PdfTextEdit = {
   page: number;
   bbox: [number, number, number, number];
   text: string;
   size: number;
   color?: string;
-  font?: "sans" | "serif" | "mono";
+  font?: PdfFontKey;
   /** Silinen bölgenin arka plan rengi (#RRGGBB) — redaction fill; boşsa beyaz. */
   bg?: string;
+  /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
+  by?: number;
 };
 
 export type PdfElement = {
@@ -131,6 +135,8 @@ export type PdfElement = {
   text?: string;
   size?: number;
   color?: string;
+  /** Metin span'inin gerçek taban çizgisi (origin.y). */
+  by?: number;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];

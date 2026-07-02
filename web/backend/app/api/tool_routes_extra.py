@@ -321,6 +321,10 @@ _EDIT_FONTS = {
     "sans": str(_ASSETS / "Roboto-Regular.ttf"),
     "serif": str(_ASSETS / "NotoSerif-Regular.ttf"),
     "mono": str(_ASSETS / "RobotoMono-Regular.ttf"),
+    "lato": str(_ASSETS / "Lato-Regular.ttf"),
+    "montserrat": str(_ASSETS / "Montserrat-Regular.ttf"),
+    "merriweather": str(_ASSETS / "Merriweather-Regular.ttf"),
+    "oswald": str(_ASSETS / "Oswald-Regular.ttf"),
 }
 
 
@@ -401,12 +405,14 @@ async def tool_edit_text(
                             continue
                         x0, y0, x1, y1 = (float(v) for v in op["bbox"])
                         fs = float(op.get("size") or 11)
-                        # insert_text (nokta bazlı, baseline) — kutu sığma zorunluluğu
-                        # yok, metin her zaman yerleşir. Baseline'ı kutu üstünden fs kadar aşağı al.
+                        # Taban çizgisi: analyze'dan gelen gerçek origin.y (by) varsa onu kullan
+                        # → metin orijinaliyle tam aynı yere oturur. Yoksa y0+fs'e düş.
+                        by = op.get("by")
+                        baseline = float(by) if by is not None else (y0 + fs)
                         col = _hex_to_rgb01(op.get("color"))
                         fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
                         page.insert_text(
-                            _fitz.Point(x0, y0 + fs),
+                            _fitz.Point(x0, baseline),
                             t, fontsize=fs, color=col,
                             fontname=fkey, fontfile=_EDIT_FONTS[fkey],
                         )
@@ -472,11 +478,14 @@ async def tool_pdf_analyze(
                                     continue
                                 x0, y0, x1, y1 = span["bbox"]
                                 c = int(span.get("color", 0))
+                                # Gerçek taban çizgisi (origin.y) — hem önizleme hem export
+                                # bu değerle orijinal metnin tam yerine oturur.
+                                oy = float(span.get("origin", (x0, y1))[1])
                                 els.append({
                                     "id": f"t{pi}_{ei}", "type": "text",
                                     "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
                                     "text": txt, "size": round(float(span.get("size", 11)), 1),
-                                    "color": f"#{c & 0xFFFFFF:06x}",
+                                    "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
                                 })
                                 ei += 1
                     for img in page.get_image_info():
