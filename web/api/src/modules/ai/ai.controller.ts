@@ -4,6 +4,7 @@ import {
   summarizeDocument,
   chatWithDocument,
   extractData,
+  translateDocument,
   type ChatTurn,
 } from "./ai.service.js";
 import { getAiQuota, consumeAiQuota } from "./ai.quota.js";
@@ -80,6 +81,22 @@ export async function extractController(req: Request, res: Response): Promise<vo
   await consumeAiQuota(u.id);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ data, quota });
+}
+
+/** POST /api/ai/translate — { text, target } → { translation, quota } */
+export async function translateController(req: Request, res: Response): Promise<void> {
+  const text = typeof req.body?.text === "string" ? req.body.text : "";
+  const target = typeof req.body?.target === "string" ? req.body.target : "en";
+  if (!text.trim()) {
+    throw new HttpError(400, "Çevrilecek metin boş. PDF'ten metin çıkarılamamış olabilir.");
+  }
+  if (await blockedByQuota(req, res)) return;
+
+  const translation = await translateDocument(text.slice(0, MAX_TEXT), target);
+  const u = req.authUser!;
+  await consumeAiQuota(u.id);
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ translation, quota });
 }
 
 /** POST /api/ai/chat — { text, question, history?, lang? } → { answer, quota } */

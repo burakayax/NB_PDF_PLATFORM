@@ -87,6 +87,32 @@ export async function aiExtract(
   };
 }
 
+/** Desteklenen çeviri hedef dilleri (kod → TR/EN görünen ad). */
+export const TRANSLATE_TARGETS: Array<{ code: string; tr: string; en: string }> = [
+  { code: "en", tr: "İngilizce", en: "English" },
+  { code: "tr", tr: "Türkçe", en: "Turkish" },
+  { code: "de", tr: "Almanca", en: "German" },
+  { code: "fr", tr: "Fransızca", en: "French" },
+  { code: "es", tr: "İspanyolca", en: "Spanish" },
+  { code: "it", tr: "İtalyanca", en: "Italian" },
+  { code: "pt", tr: "Portekizce", en: "Portuguese" },
+  { code: "ru", tr: "Rusça", en: "Russian" },
+  { code: "ar", tr: "Arapça", en: "Arabic" },
+  { code: "zh", tr: "Çince", en: "Chinese" },
+  { code: "ja", tr: "Japonca", en: "Japanese" },
+  { code: "nl", tr: "Felemenkçe", en: "Dutch" },
+];
+
+/** PDF metnini hedef dile çevirir (yapı korunur). */
+export async function aiTranslate(
+  text: string,
+  target: string,
+  token: string | null,
+): Promise<{ translation: string; quota?: AiQuota }> {
+  const d = await postAi<{ translation?: string; quota?: AiQuota }>("translate", { text, target }, token);
+  return { translation: d.translation ?? "", quota: d.quota };
+}
+
 /** Belge bağlamında soru yanıtlar. */
 export async function aiChat(
   text: string,
