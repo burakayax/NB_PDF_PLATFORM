@@ -4977,6 +4977,12 @@ function App() {
             onUseWebApp={openWorkspace}
             onOpenTool={navigateToTool}
             isAuthenticated={isAuthenticated}
+            aiAllowed={
+              user?.role === "ADMIN" ||
+              userBalance?.isAdmin === true ||
+              userBalance?.plan === "PRO" ||
+              userBalance?.plan === "BUSINESS"
+            }
             authGreeting={user ? userGreetingLine(user, language) : undefined}
             onLogin={() => {
               setAuthError("");
