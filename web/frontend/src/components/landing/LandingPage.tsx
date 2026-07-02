@@ -98,6 +98,9 @@ type LandingPageProps = {
   /** AI araçları için (giriş yapan kullanıcı token'ı + yükseltme tetikleyici). */
   accessToken?: string | null;
   onUpgrade?: () => void;
+  /** Kullanıcı zaten AI'a yetkili mi (ADMIN / PRO / BUSINESS) → ödemeler kapalı olsa
+   *  bile AI "Yakında" gösterme, gerçek araçları aç. */
+  aiAllowed?: boolean;
 };
 
 type ShowcaseTab = "web" | "desktop";
@@ -404,6 +407,7 @@ function Hero({
   onLogin,
   accessToken,
   onUpgrade,
+  aiAllowed,
 }: {
   language: Language;
   onUseWebApp: () => void;
@@ -411,6 +415,7 @@ function Hero({
   onLogin: () => void;
   accessToken: string | null;
   onUpgrade: () => void;
+  aiAllowed?: boolean;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -432,10 +437,11 @@ function Hero({
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
   const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | null>(null);
   const [editorOn, setEditorOn] = useState(false);
-  // Ödemeler kapalıyken AI araçları "Yakında" durumunda (fiyat kartlarıyla aynı sinyal).
-  // Admin ödemeleri açınca (paymentsDisabled === false) AI otomatik aktifleşir.
+  // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
+  // zaten AI'a yetkili kullanıcı (ADMIN / PRO / BUSINESS) — backend erişim veriyor —
+  // gerçek araçları görür; ödemeleri açmaya gerek yok.
   const { flags } = useSettings();
-  const aiComingSoon = flags?.featureFlags?.paymentsDisabled !== false;
+  const aiComingSoon = flags?.featureFlags?.paymentsDisabled !== false && !aiAllowed;
   // Yüklenen dosyalar araç başına Hero'da tutulur → kullanıcı yanlışlıkla başka araca
   // geçip geri dönünce dosyaları yerinde kalır (remount'ta kaybolmaz).
   const [toolFiles, setToolFiles] = useState<Record<string, GuestPickedFile[]>>({});
@@ -1889,6 +1895,7 @@ export function LandingPage({
   onSelectPlan,
   accessToken,
   onUpgrade,
+  aiAllowed,
 }: LandingPageProps) {
   const { cms: cmsContent } = useSettings();
   const windowsDownloadUrl = getWindowsDownloadUrlFromCms(cmsContent);
@@ -1920,6 +1927,7 @@ export function LandingPage({
           onLogin={onLogin}
           accessToken={accessToken ?? null}
           onUpgrade={onUpgrade ?? onRegister}
+          aiAllowed={aiAllowed}
           windowsDownloadUrl={windowsDownloadUrl}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
