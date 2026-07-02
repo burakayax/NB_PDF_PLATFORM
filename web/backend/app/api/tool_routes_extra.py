@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import Response
 from app.limiter import limiter
 
 from app.api.pdf_auth import extract_pdf_access_token
@@ -308,6 +309,101 @@ async def tool_delete_pages(
         raise
     except Exception as e:
         cleanup_and_raise(workdir, e, filename=file.filename or "<?>", client_ip=_client_ip(request), operation="delete-pages")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+# Gerçek metin düzenleme için gömülü Türkçe font (Roboto).
+_EDIT_FONT_PATH = str(Path(__file__).resolve().parent.parent / "assets" / "Roboto-Regular.ttf")
+
+
+@router.post("/edit-text")
+@limiter.limit("15/minute")
+async def tool_edit_text(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    edits: str = Form("[]"),
+    password: str = Form(""),
+):
+    """Sunucu tarafı GERÇEK metin düzenleme: seçili bölgedeki mevcut metni PyMuPDF
+    redaction ile GERÇEKTEN siler (örtmez), yerine yeni metni yazar. `edits`:
+    JSON [{page, bbox:[x0,y0,x1,y1] (PDF nokta, üst-sol origin), text, size}].
+    NOT: bu araçta dosya sunucuya yüklenir (frontend'de gizlilik uyarısı gösterilir)."""
+    import json as _json
+
+    decision = {"fileSizeLimitMB": 50}
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        try:
+            ops = _json.loads(edits or "[]")
+            if not isinstance(ops, list):
+                ops = []
+        except Exception:
+            ops = []
+        pwd = password.strip() or None
+        sp = str(saved)
+        out_p = workdir / format_derived_filename(file.filename or saved.name, "Duzenlenmis", "pdf")
+
+        def _run() -> bytes:
+            import fitz as _fitz
+
+            doc = _fitz.open(sp)
+            try:
+                if doc.needs_pass:
+                    if not pwd or not doc.authenticate(pwd):
+                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+                n = doc.page_count
+                by_page: dict[int, list] = {}
+                for op in ops:
+                    try:
+                        pi = int(op.get("page", 0))
+                        bb = op.get("bbox") or []
+                        if 0 <= pi < n and len(bb) == 4:
+                            by_page.setdefault(pi, []).append(op)
+                    except Exception:
+                        continue
+                for pi, page_ops in by_page.items():
+                    page = doc[pi]
+                    # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır.
+                    for op in page_ops:
+                        x0, y0, x1, y1 = (float(v) for v in op["bbox"])
+                        page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1))
+                    page.apply_redactions()
+                    # 2) Yeni metinleri aynı bölgeye yaz (varsa).
+                    for op in page_ops:
+                        t = (op.get("text") or "").strip()
+                        if not t:
+                            continue
+                        x0, y0, x1, y1 = (float(v) for v in op["bbox"])
+                        fs = float(op.get("size") or 11)
+                        rect = _fitz.Rect(x0, y0, max(x1, x0 + 6), max(y1, y0 + fs + 2))
+                        page.insert_textbox(
+                            rect, t, fontsize=fs, color=(0, 0, 0),
+                            fontname="roboto", fontfile=_EDIT_FONT_PATH, align=0,
+                        )
+                doc.save(str(out_p), garbage=3, deflate=True)
+                return out_p.read_bytes()
+            finally:
+                doc.close()
+
+        pdf_bytes = await run_sandboxed(_run)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{out_p.name}"'},
+        )
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except HTTPException:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=file.filename or "<?>", client_ip=_client_ip(request), operation="edit-text")
     finally:
         if workdir.exists():
             cleanup_path(workdir)
