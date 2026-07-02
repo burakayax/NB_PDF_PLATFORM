@@ -474,8 +474,11 @@ export function AuthPage({
                 ) : null}
               </div>
               <label className="block">
+                {/* Etiket metni yukarıda (label DIŞINDA, forgot-password butonu için);
+                    input'un erişilebilir adını aria-label ile veriyoruz (a11y + test). */}
                 <input
                   type="password"
+                  aria-label={copy.shared.passwordLabel}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                   value={password}
                   onChange={(event) => { setPassword(event.target.value); setPasswordErr(""); }}
