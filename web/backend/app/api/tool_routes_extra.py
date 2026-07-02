@@ -387,9 +387,12 @@ async def tool_edit_text(
                 for pi, page_ops in by_page.items():
                     page = doc[pi]
                     # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır.
+                    #    Redaction fill = frontend'in canvas'tan örneklediği ARKA PLAN rengi
+                    #    (varsayılan beyaz yerine) → kırmızı/siyah/renkli zeminde beyaz kutu kalmaz.
                     for op in page_ops:
                         x0, y0, x1, y1 = (float(v) for v in op["bbox"])
-                        page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1))
+                        fill = _hex_to_rgb01(op.get("bg")) if op.get("bg") else (1.0, 1.0, 1.0)
+                        page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1), fill=fill)
                     page.apply_redactions()
                     # 2) Yeni metinleri aynı bölgeye yaz (varsa).
                     for op in page_ops:

@@ -96,6 +96,9 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
   const [shared, setShared] = useState(false);
+  // Öğe id → örneklenen arka plan rengi (#RRGGBB). Silgi/redaction bu renkle doldurulur
+  // (beyaz varsayım yerine) → kırmızı/siyah/resimli zeminde beyaz kutu kalmaz.
+  const [bgMap, setBgMap] = useState<Map<string, string>>(new Map());
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -189,10 +192,45 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   function elSize(el: PdfElement): number { return edits.get(el.id)?.size ?? el.size ?? 12; }
   function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? "sans"; }
   const isDeleted = (id: string) => edits.get(id)?.deleted === true;
+  const bgFor = (id: string) => bgMap.get(id) ?? "#ffffff";
+
+  /** Canvas'tan öğe bbox'ının çevresindeki baskın rengi örnekle → silgi/redaction fill.
+   * Metin gövdesi yerine kenar/dış-halka noktalarından örnekler (glyph'e denk gelmesin),
+   * en sık görülen rengi (mode) döndürür → düz zeminde birebir, resimde en iyi tahmin. */
+  function sampleBgColor(x0: number, y0: number, x1: number, y1: number): string {
+    const cv = canvasRef.current;
+    if (!cv) return "#ffffff";
+    const ctx = cv.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return "#ffffff";
+    const L = Math.round(x0 * scale), T = Math.round(y0 * scale);
+    const R = Math.round(x1 * scale), B = Math.round(y1 * scale);
+    const m = 2;
+    const pts: Array<[number, number]> = [];
+    for (let i = 1; i <= 3; i++) { const fx = L + ((R - L) * i) / 4; pts.push([fx, T - m], [fx, B + m]); }
+    for (let i = 1; i <= 3; i++) { const fy = T + ((B - T) * i) / 4; pts.push([L - m, fy], [R + m, fy]); }
+    pts.push([L, T], [R, T], [L, B], [R, B]);
+    const counts = new Map<string, number>();
+    for (const [px, py] of pts) {
+      if (px < 0 || py < 0 || px >= cv.width || py >= cv.height) continue;
+      const d = ctx.getImageData(px, py, 1, 1).data;
+      const key = `${d[0]},${d[1]},${d[2]}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    let best = "255,255,255", bc = 0;
+    for (const [k, c] of counts) if (c > bc) { bc = c; best = k; }
+    const [r, g, b] = best.split(",").map(Number);
+    return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+  }
+  function ensureBg(el: PdfElement) {
+    if (bgMap.has(el.id)) return;
+    const c = sampleBgColor(el.bbox[0], el.bbox[1], el.bbox[2], el.bbox[3]);
+    setBgMap((mp) => { const n = new Map(mp); n.set(el.id, c); return n; });
+  }
 
   function selectEl(el: PdfElement) {
     setSelected(el.id);
     setAddMode(false);
+    ensureBg(el);
     if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); setFont(elFont(el)); }
   }
   function applyFont(fk: FontKey) {
@@ -258,11 +296,12 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
       const p = pageOf(id);
       const el = analysis?.pages[p]?.elements.find((x) => x.id === id);
       if (!el) continue;
-      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
+      const bg = bgMap.get(id);
+      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
       else if (ed.text !== undefined && ed.text !== el.text)
-        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
+        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
       else if (ed.color || ed.size || ed.font)
-        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
+        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
     }
     for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font });
     if (ops.length === 0) { setError(tr ? "Henüz bir düzenleme yapmadınız." : "No edits yet."); return; }
@@ -401,16 +440,16 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                     const sel = selected === el.id;
                     if (el.type === "image") {
                       const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
-                      // Silinmiş görsel → beyaz kapat (anında yok olmuş görünür); tıkla → geri al
-                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-white ring-1 ring-dashed ring-slate-300" style={style} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      // Silinmiş görsel → arka plan rengiyle kapat (anında yok olmuş görünür); tıkla → geri al
+                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300" style={{ ...style, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, Delete ile sil" : "Image — select, Delete to remove"} />;
                     }
                     // Metin öğesi. Silgi kutusu = ORİJİNAL bbox (metin kısalıp temizlense de
                     // alttaki orijinal asla görünmesin). Boyut, içerikten BAĞIMSIZ.
                     const eb = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 4), height: Math.max((y1 - y0) * scale, 6) } as const;
                     if (del) {
-                      // Silinmiş metin → orijinali beyazla kapat, düzenleme yok (tıkla → geri al)
-                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-white ring-1 ring-dashed ring-slate-300/70" style={eb} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      // Silinmiş metin → orijinali arka plan rengiyle kapat, düzenleme yok (tıkla → geri al)
+                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300/70" style={{ ...eb, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                     }
                     // Değişmemiş VE seçili değil → sadece şeffaf tıklama hedefi; canvas'taki
                     // NET orijinal metin görünür (üstüne HTML yazı basmıyoruz → çift görüntü yok).
@@ -421,13 +460,13 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                     // Aktif (seçili ya da düzenlenmiş) → orijinali TAM kapla + düzenlenebilir katman üstte
                     return (
                       <div key={el.id} className="absolute" style={{ left: eb.left, top: eb.top }}>
-                        <div className="absolute bg-white" style={{ left: -1, top: -1, width: eb.width + 2, height: eb.height + 2 }} />
+                        <div className="absolute" style={{ left: -1, top: -1, width: eb.width + 2, height: eb.height + 2, backgroundColor: bgFor(el.id) }} />
                         <AutoText id={el.id} initial={elText(el)} autoFocus={sel && !edits.has(el.id)}
                           onInput={(t) => setEdit(el.id, { text: t })}
                           onClick={(e) => { e.stopPropagation(); selectEl(el); }}
                           onFocus={() => selectEl(el)}
-                          className={`relative bg-white leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0 }} />
+                          className={`relative leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
+                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
                       </div>
                     );
                   })}
