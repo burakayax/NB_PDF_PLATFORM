@@ -298,4 +298,31 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://pdfplatform.app/tools/pdf-veri-cikar</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-veri-cikar"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-veri-cikar"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-veri-cikar"/>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/tools/pdf-ceviri</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/pdf-ceviri"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/pdf-ceviri"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/pdf-ceviri"/>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://pdfplatform.app/tools/ai-toplu-islem</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://pdfplatform.app/tools/ai-toplu-islem"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pdfplatform.app/tools/ai-toplu-islem"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://pdfplatform.app/tools/ai-toplu-islem"/>
+    <lastmod>2026-07-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
