@@ -120,6 +120,8 @@ export type PdfTextEdit = {
   size: number;
   color?: string;
   font?: "sans" | "serif" | "mono";
+  /** Silinen bölgenin arka plan rengi (#RRGGBB) — redaction fill; boşsa beyaz. */
+  bg?: string;
 };
 
 export type PdfElement = {
