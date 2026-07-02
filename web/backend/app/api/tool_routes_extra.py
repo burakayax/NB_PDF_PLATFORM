@@ -314,8 +314,14 @@ async def tool_delete_pages(
             cleanup_path(workdir)
 
 
-# Gerçek metin düzenleme için gömülü Türkçe font (Roboto).
-_EDIT_FONT_PATH = str(Path(__file__).resolve().parent.parent / "assets" / "Roboto-Regular.ttf")
+# Gerçek metin düzenleme için gömülü Türkçe fontlar (hepsi Türkçe destekli).
+_ASSETS = Path(__file__).resolve().parent.parent / "assets"
+_EDIT_FONT_PATH = str(_ASSETS / "Roboto-Regular.ttf")
+_EDIT_FONTS = {
+    "sans": str(_ASSETS / "Roboto-Regular.ttf"),
+    "serif": str(_ASSETS / "NotoSerif-Regular.ttf"),
+    "mono": str(_ASSETS / "RobotoMono-Regular.ttf"),
+}
 
 
 def _hex_to_rgb01(hex_str: str | None) -> tuple[float, float, float]:
@@ -395,10 +401,11 @@ async def tool_edit_text(
                         # insert_text (nokta bazlı, baseline) — kutu sığma zorunluluğu
                         # yok, metin her zaman yerleşir. Baseline'ı kutu üstünden fs kadar aşağı al.
                         col = _hex_to_rgb01(op.get("color"))
+                        fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
                         page.insert_text(
                             _fitz.Point(x0, y0 + fs),
                             t, fontsize=fs, color=col,
-                            fontname="roboto", fontfile=_EDIT_FONT_PATH,
+                            fontname=fkey, fontfile=_EDIT_FONTS[fkey],
                         )
                 doc.save(str(out_p), garbage=3, deflate=True)
                 return out_p.read_bytes()
