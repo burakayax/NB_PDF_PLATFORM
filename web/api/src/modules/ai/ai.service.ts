@@ -137,6 +137,70 @@ RULES: Use ONLY info from the document, NEVER invent. Don't state data you're un
   return callClaude(system, [{ role: "user", content: doc }], 2500);
 }
 
+/** Çıkarılan yapılandırılmış veri şeması (frontend ile paylaşılır). */
+export type ExtractedData = {
+  docType: string;
+  fields: Array<{ label: string; value: string }>;
+  tables: Array<{ title?: string; columns: string[]; rows: string[][] }>;
+  note?: string;
+};
+
+/** PDF'ten yapılandırılmış veri çıkarır (fatura/ihale/tablo → alanlar + kalemler). */
+export async function extractData(text: string, lang: Lang): Promise<ExtractedData> {
+  const doc = text.slice(0, MAX_DOC_CHARS);
+  const system =
+    lang === "tr"
+      ? `Sen bir belge veri-çıkarma uzmanısın. Verilen PDF metninden yapılandırılmış veriyi çıkar.
+ÖNCE belge türünü belirle (fatura, irsaliye, ihale şartnamesi, sözleşme, banka ekstresi, form, tablo, makbuz...).
+SONRA o türe göre EN ÖNEMLİ alanları (anahtar-değer) ve varsa satır kalemlerini/tabloyu çıkar.
+Örnek alanlar: fatura no, tarih, satıcı, alıcı, vergi no, ara toplam, KDV, genel toplam, son ödeme tarihi, taraflar, teminat, sözleşme bedeli...
+Satır kalemleri varsa (ürün/hizmet listesi, tablolar) tablo olarak çıkar.
+
+YALNIZCA aşağıdaki JSON şemasında, başka HİÇBİR metin olmadan (markdown/backtick YOK) yanıt ver:
+{"docType":"...","fields":[{"label":"...","value":"..."}],"tables":[{"title":"...","columns":["..."],"rows":[["..."]]}],"note":"..."}
+
+KURALLAR: Yalnızca belgedeki bilgiyi kullan, ASLA uydurma. Bulunmayan alanı yazma. Para/tarih değerlerini belgedeki gibi bırak. tables boşsa []. note kısa (bir cümle) veya boş.`
+      : `You are a document data-extraction expert. Extract structured data from the given PDF text.
+FIRST determine the document type (invoice, delivery note, tender/RFP, contract, bank statement, form, table, receipt...).
+THEN extract the MOST IMPORTANT fields (key-value) and any line items/tables for that type.
+Example fields: invoice no, date, seller, buyer, tax id, subtotal, VAT, total, due date, parties, deposit, contract value...
+If there are line items (product/service lists, tables), extract them as a table.
+
+Respond ONLY with the following JSON schema, with NO other text (NO markdown/backticks):
+{"docType":"...","fields":[{"label":"...","value":"..."}],"tables":[{"title":"...","columns":["..."],"rows":[["..."]]}],"note":"..."}
+
+RULES: Use only info from the document, NEVER invent. Skip fields not present. Keep money/date values as in the document. tables = [] if none. note is short (one sentence) or empty.`;
+  const raw = await callClaude(system, [{ role: "user", content: doc }], 2500);
+  // Model bazen ``` ile sarar — temizle, sonra ilk { ... } bloğunu ayıkla.
+  let jsonText = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  const first = jsonText.indexOf("{");
+  const last = jsonText.lastIndexOf("}");
+  if (first >= 0 && last > first) jsonText = jsonText.slice(first, last + 1);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error("AI_EXTRACT_PARSE");
+  }
+  const p = parsed as Partial<ExtractedData>;
+  return {
+    docType: typeof p.docType === "string" ? p.docType : "",
+    fields: Array.isArray(p.fields)
+      ? p.fields.filter((f) => f && typeof f.label === "string").map((f) => ({ label: String(f.label), value: String(f.value ?? "") }))
+      : [],
+    tables: Array.isArray(p.tables)
+      ? p.tables
+          .filter((t) => t && Array.isArray(t.columns) && Array.isArray(t.rows))
+          .map((t) => ({
+            title: typeof t.title === "string" ? t.title : undefined,
+            columns: t.columns.map((c) => String(c)),
+            rows: t.rows.map((r) => (Array.isArray(r) ? r.map((c) => String(c)) : [])),
+          }))
+      : [],
+    note: typeof p.note === "string" && p.note.trim() ? p.note.trim() : undefined,
+  };
+}
+
 /** Belge bağlamında kullanıcı sorusunu yanıtlar (geçmişle birlikte). */
 export async function chatWithDocument(
   text: string,

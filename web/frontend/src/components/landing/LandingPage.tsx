@@ -429,7 +429,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
-  const [aiTool, setAiTool] = useState<"summarize" | "chat" | null>(null);
+  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | null>(null);
   const [editorOn, setEditorOn] = useState(false);
   // Ödemeler kapalıyken AI araçları "Yakında" durumunda (fiyat kartlarıyla aynı sinyal).
   // Admin ödemeleri açınca (paymentsDisabled === false) AI otomatik aktifleşir.
@@ -530,11 +530,12 @@ function Hero({
                 </button>
               );
             })}
-            {/* AI araçları (Pro) — yapay zekâ özet + sohbet */}
+            {/* AI araçları (Pro) — yapay zekâ özet + sohbet + veri çıkarma */}
             {(
               [
                 ["summarize", tr ? "✨ AI Özet" : "✨ AI Summary"],
                 ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
+                ["extract", tr ? "✨ AI Veri Çıkar" : "✨ AI Extract"],
               ] as const
             ).map(([id, label]) => (
               <button

@@ -3,6 +3,7 @@ import { HttpError } from "../../lib/http-error.js";
 import {
   summarizeDocument,
   chatWithDocument,
+  extractData,
   type ChatTurn,
 } from "./ai.service.js";
 import { getAiQuota, consumeAiQuota } from "./ai.quota.js";
@@ -56,6 +57,29 @@ export async function summarizeController(req: Request, res: Response): Promise<
   await consumeAiQuota(u.id);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ summary, quota });
+}
+
+/** POST /api/ai/extract — { text, lang? } → { data, quota } */
+export async function extractController(req: Request, res: Response): Promise<void> {
+  const text = typeof req.body?.text === "string" ? req.body.text : "";
+  if (!text.trim()) {
+    throw new HttpError(400, "Veri çıkarılacak metin boş. PDF'ten metin çıkarılamamış olabilir.");
+  }
+  if (await blockedByQuota(req, res)) return;
+
+  let data;
+  try {
+    data = await extractData(text.slice(0, MAX_TEXT), getLang(req));
+  } catch (e) {
+    if (e instanceof Error && e.message === "AI_EXTRACT_PARSE") {
+      throw new HttpError(422, "Belgeden yapılandırılmış veri çıkarılamadı. Farklı bir belge deneyin.");
+    }
+    throw e;
+  }
+  const u = req.authUser!;
+  await consumeAiQuota(u.id);
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ data, quota });
 }
 
 /** POST /api/ai/chat — { text, question, history?, lang? } → { answer, quota } */
