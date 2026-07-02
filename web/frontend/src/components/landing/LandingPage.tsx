@@ -496,7 +496,7 @@ function Hero({
             AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
         <motion.div
           {...stagger(3)}
-          className={`mt-10 mx-auto w-full ${aiTool || editorOn ? "max-w-4xl" : "max-w-xl"}`}
+          className="mt-10 mx-auto w-full max-w-4xl"
         >
           <div className="mb-4 flex flex-wrap justify-center gap-2">
             {FREE_TOOLS.map((t) => {
