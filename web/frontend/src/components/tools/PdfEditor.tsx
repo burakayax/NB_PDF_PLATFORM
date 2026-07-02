@@ -7,14 +7,11 @@ import {
   Check,
   Download,
   FileText,
-  ImageOff,
   Loader2,
   Pencil,
-  RotateCcw,
   Share2,
   ShieldAlert,
   Sparkles,
-  Trash2,
   Type,
   UploadCloud,
   X,
@@ -31,8 +28,33 @@ import {
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const uid = () => Math.random().toString(36).slice(2, 9);
-type Edit = { text?: string; deleted?: boolean; size?: number; color?: string };
-type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string };
+type FontKey = "sans" | "serif" | "mono";
+type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey };
+type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey };
+
+const FONT_CSS: Record<FontKey, string> = {
+  sans: "Roboto, system-ui, sans-serif",
+  serif: "'Noto Serif', Georgia, serif",
+  mono: "'Roboto Mono', ui-monospace, monospace",
+};
+const FONT_LABEL: Record<FontKey, string> = { sans: "Sans", serif: "Serif", mono: "Mono" };
+
+/** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
+ * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
+function AutoText({ id, initial, className, style, onInput, onClick, onFocus }: {
+  id: string; initial: string; className?: string; style?: React.CSSProperties;
+  onInput: (t: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (ref.current) ref.current.textContent = initial; }, []);
+  return (
+    <div ref={ref} data-tid={id} data-op="1" contentEditable suppressContentEditableWarning role="textbox"
+      onInput={() => onInput(ref.current?.textContent ?? "")}
+      onClick={onClick} onFocus={onFocus}
+      className={className}
+      style={{ whiteSpace: "pre", display: "inline-block", minWidth: "6px", ...style }} />
+  );
+}
 
 export function PdfEditor({ language, accessToken }: { language: Language; accessToken?: string | null }) {
   const tr = language === "tr";
@@ -49,6 +71,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const [addMode, setAddMode] = useState(false);
   const [color, setColor] = useState("#111111");
   const [size, setSize] = useState(14);
+  const [font, setFont] = useState<FontKey>("sans");
   const [editorOpen, setEditorOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState<string | null>(null);
@@ -149,20 +172,44 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   function elText(el: PdfElement): string { return edits.get(el.id)?.text ?? el.text ?? ""; }
   function elColor(el: PdfElement): string { return edits.get(el.id)?.color ?? el.color ?? "#111111"; }
   function elSize(el: PdfElement): number { return edits.get(el.id)?.size ?? el.size ?? 12; }
+  function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? "sans"; }
   const isDeleted = (id: string) => edits.get(id)?.deleted === true;
 
   function selectEl(el: PdfElement) {
     setSelected(el.id);
     setAddMode(false);
-    if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); }
+    if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); setFont(elFont(el)); }
   }
+  function applyFont(fk: FontKey) {
+    setFont(fk);
+    if (!selected) return;
+    if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.map((x) => (x.id === selected ? { ...x, font: fk } : x)));
+    else setEdit(selected, { font: fk });
+  }
+
+  // Klavye ile silme: bir GÖRSEL seçiliyken Delete/Backspace → hemen sil (beyazla kapat).
+  useEffect(() => {
+    if (!editorOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const tag = (document.activeElement?.tagName || "").toLowerCase();
+      const editing = tag === "textarea" || tag === "input" || (document.activeElement as HTMLElement)?.isContentEditable;
+      if (editing || !selected) return;
+      const el = analysis?.pages[current]?.elements.find((x) => x.id === selected);
+      if (el?.type === "image") { e.preventDefault(); setEdit(el.id, { deleted: true }); setSelected(null); }
+      else if (pageAdded.find((a) => a.id === selected)) { e.preventDefault(); setAdded((a) => a.filter((x) => x.id !== selected)); setSelected(null); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorOpen, selected, current, analysis, pageAdded]);
 
   function onCanvasClick(e: React.MouseEvent) {
     if (!addMode) return;
     const r = overlayRef.current!.getBoundingClientRect();
     const x = (e.clientX - r.left) / scale, y = (e.clientY - r.top) / scale;
     const id = uid();
-    setAdded((a) => [...a, { id, page: current, bbox: [x, y, x + 140, y + size + 4], text: "", size, color }]);
+    setAdded((a) => [...a, { id, page: current, bbox: [x, y, x + 140, y + size + 4], text: "", size, color, font }]);
     setSelected(id);
     setTimeout(() => document.querySelector<HTMLTextAreaElement>(`[data-tid="${id}"]`)?.focus(), 20);
   }
@@ -187,13 +234,6 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
     if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.map((x) => (x.id === selected ? { ...x, size: s } : x)));
     else setEdit(selected, { size: s });
   }
-  function deleteSelected() {
-    if (!selected) return;
-    if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.filter((x) => x.id !== selected));
-    else setEdit(selected, { deleted: true, text: "" });
-    setSelected(null);
-  }
-
   async function preparePdf() {
     if (!file) return;
     const ops: PdfTextEdit[] = [];
@@ -203,13 +243,13 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
       const p = pageOf(id);
       const el = analysis?.pages[p]?.elements.find((x) => x.id === id);
       if (!el) continue;
-      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color });
+      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
       else if (ed.text !== undefined && ed.text !== el.text)
-        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color });
-      else if (ed.color || ed.size)
-        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color });
+        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
+      else if (ed.color || ed.size || ed.font)
+        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans" });
     }
-    for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color });
+    for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font });
     if (ops.length === 0) { setError(tr ? "Henüz bir düzenleme yapmadınız." : "No edits yet."); return; }
     try {
       setBusy(true);
@@ -298,22 +338,24 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
             {selInfo?.kind === "text" && (
               <>
                 <span className="mx-1 h-5 w-px bg-white/10" />
-                <label className="flex items-center gap-1.5 text-[12px] text-slate-300" title={tr ? "Renk" : "Color"}>
+                <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
+                  {tr ? "Renk" : "Color"}
                   <input type="color" value={color} onChange={(e) => applyColor(e.target.value)} className="h-7 w-7 cursor-pointer rounded-lg border border-white/10 bg-transparent" />
                 </label>
-                <label className="flex items-center gap-1 text-[12px] text-slate-300" title={tr ? "Boyut" : "Size"}>
+                <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
+                  {tr ? "Font" : "Font"}
+                  <select value={font} onChange={(e) => applyFont(e.target.value as FontKey)} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white">
+                    {(["sans", "serif", "mono"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black">{FONT_LABEL[f]}</option>)}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
+                  {tr ? "Boyut" : "Size"}
                   <input type="number" min={6} max={72} value={size} onChange={(e) => applySize(Math.max(6, Math.min(72, +e.target.value || 12)))} className="w-14 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white" />
-                  <span className="hidden sm:inline">pt</span>
                 </label>
               </>
             )}
-            {selInfo && (
-              <button type="button" onClick={deleteSelected} className="flex items-center gap-1.5 rounded-xl bg-rose-500/15 px-2.5 py-2 text-[12px] font-semibold text-rose-300 ring-1 ring-rose-400/30 transition hover:bg-rose-500/25">
-                {selInfo.kind === "image" ? <ImageOff className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}{tr ? "Sil" : "Delete"}
-              </button>
-            )}
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden text-[11px] text-slate-500 md:inline">{tr ? "Öğeye tıkla → düzenle/sil" : "Click an element → edit/delete"} · {editCount} {tr ? "değişiklik" : "edits"}</span>
+              <span className="hidden text-[11px] text-slate-500 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · {editCount} {tr ? "değişiklik" : "edits"}</span>
               <button type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
               <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
             </div>
@@ -340,28 +382,35 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                   {/* Mevcut öğeler */}
                   {pageEls.map((el) => {
                     const [x0, y0, x1, y1] = el.bbox;
-                    const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
                     const del = isDeleted(el.id);
                     const sel = selected === el.id;
                     if (el.type === "image") {
-                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${del ? "bg-rose-500/40 ring-2 ring-rose-500" : sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "ring-1 ring-cyan-400/0 hover:ring-cyan-400/60 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel" : "Image"}>{del && <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-rose-100">✕</span>}</div>;
+                      const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
+                      // Silinmiş görsel → beyaz kapat (anında yok olmuş görünür); tıkla → geri al
+                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-white ring-1 ring-dashed ring-slate-300" style={style} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, Delete ile sil" : "Image — select, Delete to remove"} />;
                     }
-                    if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-rose-500/25 ring-1 ring-rose-500/60" style={style} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                    if (del) return null;
                     return (
-                      <textarea key={el.id} data-tid={el.id} value={elText(el)} onClick={(e) => { e.stopPropagation(); selectEl(el); }} onChange={(e) => setEdit(el.id, { text: e.target.value })}
-                        className={`absolute resize-none overflow-hidden bg-white leading-none outline-none transition-shadow ${sel ? "ring-2 ring-cyan-500" : "hover:ring-1 hover:ring-cyan-400/60"}`}
-                        style={{ ...style, color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: "Roboto, system-ui, sans-serif", padding: 0 }} />
+                      <AutoText key={el.id} id={el.id} initial={elText(el)}
+                        onInput={(t) => setEdit(el.id, { text: t })}
+                        onClick={(e) => { e.stopPropagation(); selectEl(el); }}
+                        onFocus={() => selectEl(el)}
+                        className={`absolute bg-white leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "hover:ring-1 hover:ring-cyan-400/60"}`}
+                        style={{ left: x0 * scale, top: y0 * scale, color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0 }} />
                     );
                   })}
                   {/* Eklenen metinler */}
                   {pageAdded.map((a) => {
-                    const [x0, y0, x1, y1] = a.bbox;
+                    const [x0, y0] = a.bbox;
                     const sel = selected === a.id;
                     return (
-                      <textarea key={a.id} data-tid={a.id} value={a.text} onClick={(e) => { e.stopPropagation(); setSelected(a.id); setColor(a.color); setSize(a.size); setAddMode(false); }} onChange={(e) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: e.target.value } : x)))}
-                        placeholder={tr ? "yaz…" : "type…"}
-                        className={`absolute resize-none overflow-hidden bg-white/90 leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/50"}`}
-                        style={{ left: x0 * scale, top: y0 * scale, width: (x1 - x0) * scale, minHeight: (y1 - y0) * scale, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: "Roboto, system-ui, sans-serif", padding: 0 }} />
+                      <AutoText key={a.id} id={a.id} initial={a.text}
+                        onInput={(t) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: t } : x)))}
+                        onClick={(e) => { e.stopPropagation(); setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAddMode(false); }}
+                        onFocus={() => { setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); }}
+                        className={`absolute bg-white/90 leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/50"}`}
+                        style={{ left: x0 * scale, top: y0 * scale, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: FONT_CSS[a.font], padding: 0 }} />
                     );
                   })}
                 </div>

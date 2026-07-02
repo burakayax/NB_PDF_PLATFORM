@@ -119,6 +119,7 @@ export type PdfTextEdit = {
   text: string;
   size: number;
   color?: string;
+  font?: "sans" | "serif" | "mono";
 };
 
 export type PdfElement = {
