@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowDown,
@@ -53,7 +53,14 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
   const [files, setFiles] = useState<Picked[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
+  const [result, setResult] = useState<{ blob: Blob; filename: string; saved: "picker" | "download" } | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+
+  // Dosya eklenince listeyi görünüme kaydır — kullanıcı "bir şey olmadı" sanmasın
+  // (liste dropzone'un altında kaldığı için ekran dışında kalabiliyordu).
+  useEffect(() => {
+    if (files.length > 0) listRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [files.length]);
 
   const isImages = activeTool === "image-to-pdf";
   const accept = autoDetect
@@ -169,10 +176,11 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
         const w = await saveHandle.createWritable();
         await w.write(blob);
         await w.close();
+        setResult({ blob, filename: outName, saved: "picker" });
       } else {
         downloadBlob(blob, outName);
+        setResult({ blob, filename: outName, saved: "download" });
       }
-      setResult({ blob, filename: outName });
     } catch (e) {
       setError(
         e instanceof PdfEncryptedError
@@ -231,9 +239,24 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
           <Check className="h-8 w-8" />
         </div>
         <p className="mt-4 text-xl font-bold text-white">
-          {tr ? "Hazır! Dosyan kaydedildi 🎉" : "Done! Your file is ready 🎉"}
+          {tr
+            ? result.saved === "picker" ? "Kaydedildi! 🎉" : "İndirildi! 🎉"
+            : result.saved === "picker" ? "Saved! 🎉" : "Downloaded! 🎉"}
         </p>
-        <p className="mt-1 text-sm text-slate-400">
+        {/* Net "indi/kaydedildi" işareti — kullanıcı tekrar indirmeye gerek olmadığını görsün */}
+        <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3.5 py-2 text-[13px] font-medium text-emerald-200">
+          <Check className="h-4 w-4 shrink-0" />
+          <span className="truncate">
+            {tr
+              ? result.saved === "picker"
+                ? `«${result.filename}» seçtiğin konuma kaydedildi`
+                : `«${result.filename}» İndirilenler klasörüne indirildi`
+              : result.saved === "picker"
+                ? `«${result.filename}» saved to your chosen location`
+                : `«${result.filename}» saved to your Downloads folder`}
+          </span>
+        </div>
+        <p className="mt-2 text-sm text-slate-400">
           {tr
             ? "Dosyan cihazından hiç çıkmadı — tamamen gizli."
             : "Your file never left your device — fully private."}
@@ -242,10 +265,10 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
           <button
             type="button"
             onClick={() => downloadBlob(result.blob, result.filename)}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-[0_14px_36px_-10px_rgba(79,70,229,0.6)] transition hover:from-blue-500 hover:to-indigo-500"
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
           >
             <Download className="h-4 w-4" />
-            {tr ? "İndir" : "Download"}
+            {tr ? "Tekrar indir" : "Download again"}
           </button>
           {canShare && (
             <button
@@ -305,7 +328,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       />
 
       {files.length > 0 && (
-        <ul className="mt-4 space-y-2">
+        <ul ref={listRef} className="mt-4 space-y-2">
           {files.map((f, i) => (
             <motion.li
               key={f.id}

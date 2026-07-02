@@ -128,6 +128,10 @@ export function ToolDropzone({
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Dosya eklenince (showBenefits=false) dropzone küçülür → eklenen liste hemen
+  // görünür kalır (kullanıcı "bir şey olmadı" sanmasın, aşağı kaydırmak gerekmesin).
+  const compact = showBenefits === false;
+
   return (
     <>
       <div
@@ -135,31 +139,44 @@ export function ToolDropzone({
         onDragLeave={() => setDragOver(false)}
         onDrop={(e) => { e.preventDefault(); setDragOver(false); if (e.dataTransfer.files.length) onFiles(e.dataTransfer.files); }}
         onClick={() => !busy && inputRef.current?.click()}
-        className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-10 text-center transition sm:p-12 ${
-          dragOver ? "border-white/60 bg-white/[0.06]" : `border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent ${a.hover}`
-        }`}
+        className={`group relative cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed text-center transition ${
+          compact ? "p-5" : "p-10 sm:p-12"
+        } ${dragOver ? "border-white/60 bg-white/[0.06]" : `border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent ${a.hover}`}`}
       >
         <div className={`pointer-events-none absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-gradient-to-b ${a.grad} opacity-40 blur-3xl`} />
         <input ref={inputRef} type="file" accept={accept} multiple={multiple} className="hidden"
           onChange={(e) => { if (e.target.files?.length) onFiles(e.target.files); e.target.value = ""; }} />
-        <div className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br ${a.grad} ${a.text} ring-1 ring-white/10 transition group-hover:scale-105`}>
-          {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-9 w-9" />}
-        </div>
-        <p className="relative mt-5 text-lg font-bold text-white">
-          {busy ? (tr ? "İşleniyor…" : "Processing…") : tr ? (titleTr ?? "Dosyaları buraya sürükle") : (titleEn ?? "Drag your files here")}
-        </p>
-        <p className="relative mt-1.5 text-[13px] text-slate-400">
-          {tr ? (hintTr ?? "ya da tıklayıp seç") : (hintEn ?? "or click to choose")}
-        </p>
-        <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
-          {[
-            tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
-            tr ? "🔒 Cihazında, gizli" : "🔒 On-device, private",
-            tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
-          ].map((c) => (
-            <span key={c} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{c}</span>
-          ))}
-        </div>
+        {compact ? (
+          <div className="relative flex items-center justify-center gap-2.5 text-slate-300">
+            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${a.grad} ${a.text}`}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
+            </span>
+            <span className="text-[13px] font-semibold text-white">
+              {busy ? (tr ? "İşleniyor…" : "Processing…") : tr ? "+ Dosya ekle" : "+ Add file"}
+            </span>
+          </div>
+        ) : (
+          <>
+            <div className={`relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br ${a.grad} ${a.text} ring-1 ring-white/10 transition group-hover:scale-105`}>
+              {busy ? <Loader2 className="h-9 w-9 animate-spin" /> : <Icon className="h-9 w-9" />}
+            </div>
+            <p className="relative mt-5 text-lg font-bold text-white">
+              {busy ? (tr ? "İşleniyor…" : "Processing…") : tr ? (titleTr ?? "Dosyaları buraya sürükle") : (titleEn ?? "Drag your files here")}
+            </p>
+            <p className="relative mt-1.5 text-[13px] text-slate-400">
+              {tr ? (hintTr ?? "ya da tıklayıp seç") : (hintEn ?? "or click to choose")}
+            </p>
+            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
+              {[
+                tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
+                tr ? "🔒 Cihazında, gizli" : "🔒 On-device, private",
+                tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
+              ].map((c) => (
+                <span key={c} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{c}</span>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {showBenefits && (
