@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowUp,
   Check,
@@ -8,6 +9,7 @@ import {
   FileText,
   Image as ImageIcon,
   Loader2,
+  Lock,
   Share2,
   Trash2,
 } from "lucide-react";
@@ -17,6 +19,7 @@ import {
   mergePdfs,
   imagesToPdf,
   pdfBytesToBlob,
+  getPdfPageCount,
   PdfEncryptedError,
 } from "../../lib/clientPdf";
 
@@ -24,12 +27,29 @@ export type GuestToolId = "merge" | "image-to-pdf";
 
 const MAX_BYTES = 80 * 1024 * 1024; // 80 MB
 
-type Picked = { id: string; file: File };
+/** Dosya durumu — kullanıcıya net geri bildirim için. */
+type FileStatus = "checking" | "ok" | "empty" | "corrupt" | "locked" | "toobig";
+export type Picked = { id: string; file: File; status: FileStatus; pages?: number };
 const uid = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 function humanSize(b: number): string {
   if (b < 1024) return `${b} B`;
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** Bir PDF'i cihazda denetler: boş / bozuk / şifreli / kaç sayfa. */
+async function inspectPdf(file: File): Promise<{ status: FileStatus; pages?: number }> {
+  if (file.size === 0) return { status: "empty" };
+  if (file.size > MAX_BYTES) return { status: "toobig" };
+  try {
+    const buf = await file.arrayBuffer();
+    const pages = await getPdfPageCount(new Uint8Array(buf));
+    if (!pages || pages < 1) return { status: "corrupt" };
+    return { status: "ok", pages };
+  } catch (e) {
+    if (e instanceof PdfEncryptedError) return { status: "locked" };
+    return { status: "corrupt" };
+  }
 }
 
 type Props = {
@@ -40,6 +60,9 @@ type Props = {
   autoDetect?: boolean;
   /** Sonuç sonrası "üye ol" nazik yönlendirmesi (verilmezse gizlenir). */
   onRegister?: () => void;
+  /** Dışarıdan kontrollü dosya durumu — araç değiştirince dosyalar korunsun diye
+   *  (verilmezse bileşen kendi iç state'ini kullanır). */
+  filesState?: [Picked[], Dispatch<SetStateAction<Picked[]>>];
 };
 
 /**
@@ -47,14 +70,17 @@ type Props = {
  * Dosyalar SUNUCUYA GİTMEDEN cihazda işlenir (pdf-lib). Hem ana sayfa hero'sunda
  * hem tam araç sayfasında (GuestPdfTool) kullanılır → kod tekrarı yok.
  */
-export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props) {
+export function GuestToolCore({ tool, language, autoDetect, onRegister, filesState }: Props) {
   const tr = language === "tr";
   const [activeTool, setActiveTool] = useState<GuestToolId>(tool);
-  const [files, setFiles] = useState<Picked[]>([]);
+  const internalFiles = useState<Picked[]>([]);
+  const [files, setFiles] = filesState ?? internalFiles;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ blob: Blob; filename: string; saved: "picker" | "download" } | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  // Son kaydetme yeri — "Tekrar indir" aynı konuma yazsın (yeni işleme dek hafızada).
+  const saveHandleRef = useRef<FileSystemFileHandle | null>(null);
 
   // Dosya eklenince listeyi görünüme kaydır — kullanıcı "bir şey olmadı" sanmasın
   // (liste dropzone'un altında kaldığı için ekran dışında kalabiliyordu).
@@ -87,23 +113,43 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
         next = imgs.length > pdfs.length ? "image-to-pdf" : "merge";
         setActiveTool(next);
       }
+      // Reddedilen türler hakkında bilgilendir (sessizce yutma).
+      const rejected = list.filter((f) => !imgs.includes(f) && !pdfs.includes(f));
       const wantImages = next === "image-to-pdf";
       const accepted = wantImages ? imgs : pdfs;
+      const wrongType = wantImages ? pdfs : imgs; // aracın istemediği ama bilinen tür
       if (accepted.length === 0) {
         setError(
           tr
             ? wantImages
-              ? "Lütfen görsel (JPG/PNG) ekleyin."
-              : "Lütfen PDF dosyası ekleyin."
+              ? "Lütfen görsel (JPG/PNG) ekleyin — PDF bu araca uymaz."
+              : "Lütfen PDF dosyası ekleyin — görseller «Görsel → PDF» aracına uyar."
             : wantImages
               ? "Please add image files."
               : "Please add PDF files.",
         );
         return;
       }
-      setFiles((prev) => [...prev, ...accepted.map((file) => ({ id: uid(), file }))]);
+      if (rejected.length || wrongType.length) {
+        setError(tr
+          ? `${rejected.length + wrongType.length} dosya atlandı — bu araç yalnız ${wantImages ? "görsel (JPG/PNG)" : "PDF"} kabul eder.`
+          : `${rejected.length + wrongType.length} file(s) skipped — this tool only accepts ${wantImages ? "images (JPG/PNG)" : "PDF"}.`);
+      }
+      // Görseller: hafif kontrol (0 bayt engelle). PDF'ler: cihazda denetle (boş/bozuk/şifreli/sayfa).
+      const fresh: Picked[] = accepted.map((file) => ({
+        id: uid(), file, status: (file.size === 0 ? "empty" : wantImages ? "ok" : "checking") as FileStatus,
+      }));
+      setFiles((prev) => [...prev, ...fresh]);
+      if (!wantImages) {
+        for (const p of fresh) {
+          if (p.status !== "checking") continue;
+          void inspectPdf(p.file).then((res) => {
+            setFiles((prev) => prev.map((x) => (x.id === p.id ? { ...x, status: res.status, pages: res.pages } : x)));
+          });
+        }
+      }
     },
-    [activeTool, autoDetect, files.length, tr],
+    [activeTool, autoDetect, files.length, tr, setFiles],
   );
 
   const move = (i: number, dir: -1 | 1) =>
@@ -115,24 +161,39 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       return n;
     });
   const remove = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
+  const clearAll = () => { setFiles([]); setError(null); };
   const reset = () => {
     setFiles([]);
     setResult(null);
     setError(null);
+    saveHandleRef.current = null;
     if (autoDetect) setActiveTool(tool);
   };
 
   const run = async () => {
     setError(null);
-    if (files.length < minFiles) {
+    // Yalnız GEÇERLİ (ok) dosyalarla işle; kusurluları net anlat.
+    const okFiles = files.filter((f) => f.status === "ok");
+    const bad = files.filter((f) => f.status !== "ok" && f.status !== "checking");
+    if (files.some((f) => f.status === "checking")) {
+      setError(tr ? "Dosyalar denetleniyor, birkaç saniye…" : "Checking files, a moment…");
+      return;
+    }
+    if (bad.length) {
+      setError(tr
+        ? `${bad.length} dosya kullanılamıyor (boş/bozuk/şifreli). Listeden çıkarın ya da düzeltin.`
+        : `${bad.length} file(s) can't be used (empty/corrupt/locked). Remove or fix them.`);
+      return;
+    }
+    if (okFiles.length < minFiles) {
       setError(
         tr
-          ? isImages ? "En az 1 görsel ekleyin." : "Birleştirmek için en az 2 PDF ekleyin."
-          : isImages ? "Add at least 1 image." : "Add at least 2 PDFs to merge.",
+          ? isImages ? "En az 1 görsel ekleyin." : "Birleştirmek için en az 2 geçerli PDF gerekli."
+          : isImages ? "Add at least 1 image." : "Add at least 2 valid PDFs to merge.",
       );
       return;
     }
-    if (files.reduce((s, f) => s + f.file.size, 0) > MAX_BYTES) {
+    if (okFiles.reduce((s, f) => s + f.file.size, 0) > MAX_BYTES) {
       setError(
         tr
           ? "Toplam boyut 80 MB'ı aşıyor. Daha büyüğü için ücretsiz üye olun."
@@ -165,18 +226,20 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       let bytes: Uint8Array;
       if (isImages) {
         const imgs = await Promise.all(
-          files.map(async (f) => ({ bytes: await f.file.arrayBuffer(), mime: f.file.type })),
+          okFiles.map(async (f) => ({ bytes: await f.file.arrayBuffer(), mime: f.file.type })),
         );
         bytes = await imagesToPdf(imgs);
       } else {
-        bytes = await mergePdfs(await Promise.all(files.map((f) => f.file.arrayBuffer())));
+        bytes = await mergePdfs(await Promise.all(okFiles.map((f) => f.file.arrayBuffer())));
       }
       const blob = pdfBytesToBlob(bytes);
       if (saveHandle) {
         const w = await saveHandle.createWritable();
         await w.write(blob);
         await w.close();
-        setResult({ blob, filename: outName, saved: "picker" });
+        saveHandleRef.current = saveHandle; // "Tekrar indir" aynı yere yazsın
+        // Bildirimde KULLANICININ girdiği gerçek isim gösterilsin.
+        setResult({ blob, filename: saveHandle.name || outName, saved: "picker" });
       } else {
         downloadBlob(blob, outName);
         setResult({ blob, filename: outName, saved: "download" });
@@ -205,6 +268,38 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 15000);
+  }
+
+  const [reSaved, setReSaved] = useState(false);
+  // "Tekrar indir": önce SON kaydetme konumuna yaz (hafızada). Konum yoksa yeniden SOR —
+  // sessizce İndirilenler'e atma.
+  async function redownload() {
+    if (!result) return;
+    const h = saveHandleRef.current;
+    if (h) {
+      try {
+        const w = await h.createWritable();
+        await w.write(result.blob);
+        await w.close();
+        setReSaved(true);
+        setTimeout(() => setReSaved(false), 2500);
+        return;
+      } catch { /* izin düştü → yeniden sor */ }
+    }
+    const win = window as unknown as {
+      showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+    };
+    if (typeof win.showSaveFilePicker === "function") {
+      try {
+        const nh = await win.showSaveFilePicker({ suggestedName: result.filename, types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }] });
+        const w = await nh.createWritable(); await w.write(result.blob); await w.close();
+        saveHandleRef.current = nh;
+        setReSaved(true);
+        setTimeout(() => setReSaved(false), 2500);
+        return;
+      } catch (e) { if (e instanceof DOMException && e.name === "AbortError") return; }
+    }
+    downloadBlob(result.blob, result.filename);
   }
 
   // Web Share API — tarayıcı özelliği, LOGIN GEREKTİRMEZ (çoğunlukla mobil).
@@ -264,11 +359,11 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={() => downloadBlob(result.blob, result.filename)}
+            onClick={() => void redownload()}
             className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
           >
-            <Download className="h-4 w-4" />
-            {tr ? "Tekrar indir" : "Download again"}
+            {reSaved ? <Check className="h-4 w-4 text-emerald-400" /> : <Download className="h-4 w-4" />}
+            {reSaved ? (tr ? "Tekrar kaydedildi ✓" : "Saved again ✓") : (tr ? "Tekrar indir" : "Download again")}
           </button>
           {canShare && (
             <button
@@ -328,21 +423,43 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       />
 
       {files.length > 0 && (
-        <ul ref={listRef} className="mt-4 space-y-2">
-          {files.map((f, i) => (
+        <>
+        <div className="mt-4 mb-2 flex items-center justify-between px-1">
+          <span className="text-[12px] font-semibold text-slate-300">
+            {files.length} {tr ? "dosya" : "file(s)"}
+            {files.some((f) => f.status !== "ok" && f.status !== "checking") && (
+              <span className="ml-1.5 text-amber-300">· {files.filter((f) => f.status !== "ok" && f.status !== "checking").length} {tr ? "sorunlu" : "with issues"}</span>
+            )}
+          </span>
+          <button type="button" onClick={clearAll}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
+            <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
+          </button>
+        </div>
+        <ul ref={listRef} className="space-y-2">
+          {files.map((f, i) => {
+            const bad = f.status !== "ok" && f.status !== "checking";
+            const statusText =
+              f.status === "checking" ? (tr ? "Denetleniyor…" : "Checking…")
+              : f.status === "ok" ? (f.pages ? `${f.pages} ${tr ? "sayfa" : "pages"} · ${humanSize(f.file.size)}` : humanSize(f.file.size))
+              : f.status === "empty" ? (tr ? "Boş dosya (0 KB) — kullanılamaz" : "Empty file (0 KB) — unusable")
+              : f.status === "corrupt" ? (tr ? "Bozuk/okunamayan PDF" : "Corrupt/unreadable PDF")
+              : f.status === "toobig" ? (tr ? "80 MB sınırını aşıyor" : "Exceeds 80 MB limit")
+              : (tr ? "Şifre korumalı — cihazda açılamıyor" : "Password-protected — can't open on device");
+            return (
             <motion.li
               key={f.id}
               layout
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5"
+              className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${bad ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.03]"}`}
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-cyan-300">
-                {isImages ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.status === "locked" ? "bg-amber-500/10 text-amber-300" : bad ? "bg-red-500/10 text-red-300" : "bg-white/[0.06] text-cyan-300"}`}>
+                {f.status === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : f.status === "locked" ? <Lock className="h-4 w-4" /> : bad ? <AlertTriangle className="h-4 w-4" /> : isImages ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                <p className="text-[11px] text-slate-500">{humanSize(f.file.size)}</p>
+                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-500"}`}>{statusText}</p>
               </div>
               {!isImages && files.length > 1 && (
                 <span className="flex shrink-0 items-center">
@@ -375,8 +492,10 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
                 <Trash2 className="h-4 w-4" />
               </button>
             </motion.li>
-          ))}
+            );
+          })}
         </ul>
+        </>
       )}
 
       {error && (
@@ -388,7 +507,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
       <button
         type="button"
         onClick={() => void run()}
-        disabled={busy || files.length < minFiles}
+        disabled={busy || files.filter((f) => f.status === "ok").length < minFiles}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
       >
         {busy ? (

@@ -14,7 +14,7 @@ import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
-import { GuestToolCore } from "../tools/GuestToolCore";
+import { GuestToolCore, type Picked as GuestPickedFile } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
 import { PdfEditor } from "../tools/PdfEditor";
@@ -435,6 +435,9 @@ function Hero({
   // Admin ödemeleri açınca (paymentsDisabled === false) AI otomatik aktifleşir.
   const { flags } = useSettings();
   const aiComingSoon = flags?.featureFlags?.paymentsDisabled !== false;
+  // Yüklenen dosyalar araç başına Hero'da tutulur → kullanıcı yanlışlıkla başka araca
+  // geçip geri dönünce dosyaları yerinde kalır (remount'ta kaybolmaz).
+  const [toolFiles, setToolFiles] = useState<Record<string, GuestPickedFile[]>>({});
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -589,6 +592,14 @@ function Hero({
                 tool={freeTool}
                 language={language}
                 onRegister={onRegister}
+                filesState={[
+                  toolFiles[freeTool] ?? [],
+                  (upd) =>
+                    setToolFiles((m) => ({
+                      ...m,
+                      [freeTool]: typeof upd === "function" ? upd(m[freeTool] ?? []) : upd,
+                    })),
+                ]}
               />
             )}
           </div>
