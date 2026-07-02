@@ -6,6 +6,7 @@ import {
   Download,
   FileText,
   ListChecks,
+  Languages,
   Loader2,
   Lock,
   MessageSquare,
@@ -28,7 +29,9 @@ import {
   aiSummarize,
   aiChat,
   aiExtract,
+  aiTranslate,
   fetchAiQuota,
+  TRANSLATE_TARGETS,
   type AiError,
   type AiQuota,
   type ChatTurn,
@@ -36,7 +39,7 @@ import {
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 
-type AiMode = "summarize" | "chat" | "extract";
+type AiMode = "summarize" | "chat" | "extract" | "translate";
 
 type Props = {
   mode: AiMode;
@@ -101,6 +104,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   // Özet
   const [summary, setSummary] = useState("");
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
+  const [translation, setTranslation] = useState("");
+  const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
   // Sohbet
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [question, setQuestion] = useState("");
@@ -152,6 +157,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setGate(null);
     setSummary("");
     setExtracted(null);
+    setTranslation("");
     setMessages([]);
     if (!f) return;
     if (f.type !== "application/pdf") {
@@ -227,6 +233,52 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       handleAiError(e);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function runTranslate() {
+    setError(null);
+    setGate(null);
+    try {
+      setBusy(true);
+      const { translation: t, quota: q } = await aiTranslate(docText, targetLang, accessToken);
+      setTranslation(t);
+      if (q) setQuota(q);
+    } catch (e) {
+      handleAiError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copyTranslation() {
+    void navigator.clipboard?.writeText(translation).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
+  async function downloadTranslation() {
+    if (exporting) return;
+    try {
+      setExporting(true);
+      const langName = TRANSLATE_TARGETS.find((l) => l.code === targetLang);
+      const ttl = fileName
+        ? `${fileName.replace(/\.pdf$/i, "")} — ${tr ? "Çeviri" : "Translation"}`
+        : tr ? "PDF Çeviri" : "PDF Translation";
+      const blob = pdfBytesToBlob(await summaryToPdf(translation, ttl));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+    } catch {
+      setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -356,6 +408,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setDocText("");
     setSummary("");
     setExtracted(null);
+    setTranslation("");
     setMessages([]);
     setError(null);
     setGate(null);
@@ -367,13 +420,17 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       ? tr ? "PDF Özetle" : "Summarize PDF"
       : mode === "extract"
         ? tr ? "PDF Veri Çıkar" : "Extract PDF Data"
-        : tr ? "PDF ile Sohbet" : "Chat with PDF";
+        : mode === "translate"
+          ? tr ? "PDF Çevir" : "Translate PDF"
+          : tr ? "PDF ile Sohbet" : "Chat with PDF";
   const subtitle =
     mode === "summarize"
       ? tr ? "PDF'inizi baştan sona okumadan; başlık, ana konular ve önemli noktalarıyla profesyonel bir özete çevirir." : "Turns your PDF into a professional summary — title, key topics and key points — without reading it end to end."
       : mode === "extract"
         ? tr ? "Fatura, ihale, sözleşme ya da tablodaki bilgileri otomatik olarak yapılandırılmış veriye çevirir — alanlar + kalemler, tabloya dök, CSV indir." : "Turns invoices, tenders, contracts or tables into structured data — fields + line items, view as a table, export CSV."
-        : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
+        : mode === "translate"
+          ? tr ? "PDF'inizi seçtiğiniz dile çevirir — anlam, ton ve yapı korunur; sonucu PDF olarak indirin." : "Translates your PDF into the language you choose — meaning, tone and structure preserved; download as PDF."
+          : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
 
   const benefits: { icon: LucideIcon; title: string; desc: string }[] =
     mode === "summarize"
@@ -387,6 +444,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           { icon: Table2, title: tr ? "Alanlar + kalemler" : "Fields + line items", desc: tr ? "Fatura no, tarih, taraflar, toplam, KDV ve satır kalemlerini otomatik ayıklar." : "Auto-extracts invoice no, date, parties, total, VAT and line items." },
           { icon: Download, title: tr ? "CSV / JSON dışa aktar" : "Export CSV / JSON", desc: tr ? "Çıkan veriyi Excel'e ya da sistemine tek tıkla aktar." : "Push the extracted data to Excel or your system in one click." },
           { icon: ShieldCheck, title: tr ? "Yalnızca belgeden" : "Only from the document", desc: tr ? "Yalnızca belgedeki bilgi kullanılır — uydurma yok; dosya cihazından çıkmaz." : "Uses only what's in the document — no made-up data; file stays on device." },
+        ]
+      : mode === "translate"
+      ? [
+          { icon: Languages, title: tr ? "12+ dil" : "12+ languages", desc: tr ? "İngilizce, Almanca, Fransızca, Arapça ve daha fazlasına anında çevir." : "Instantly translate to English, German, French, Arabic and more." },
+          { icon: ListChecks, title: tr ? "Yapı korunur" : "Structure preserved", desc: tr ? "Başlık, liste ve tablolar korunarak çevrilir — dağılmaz." : "Headings, lists and tables are kept intact — no mess." },
+          { icon: Download, title: tr ? "PDF olarak indir" : "Download as PDF", desc: tr ? "Çeviriyi tek tıkla düzgün bir PDF olarak al." : "Get the translation as a clean PDF in one click." },
         ]
       : [
           { icon: MessageSquare, title: tr ? "Doğal dille sor" : "Ask naturally", desc: tr ? "Belgene istediğin soruyu sor, sohbet eder gibi anında yanıt al." : "Ask any question and get an instant, conversational answer." },
@@ -445,6 +508,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 ? tr ? "Uzun belgeleri saniyeler içinde özetleyen yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that summarizes long documents in seconds is coming very soon. We're putting on the finishing touches."
                 : mode === "extract"
                 ? tr ? "Fatura, ihale ve tablolardan yapılandırılmış veri çıkaran yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that extracts structured data from invoices, tenders and tables is coming very soon. We're putting on the finishing touches."
+                : mode === "translate"
+                ? tr ? "PDF'inizi anlamı ve yapısı korunarak istediğiniz dile çeviren yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that translates your PDF into any language while preserving meaning and structure is coming very soon. We're putting on the finishing touches."
                 : tr ? "Belgelerinle sohbet edip anında cevap alacağın yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that lets you chat with your documents is coming very soon. We're putting on the finishing touches."}
             </p>
           </div>
@@ -662,6 +727,61 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 <Table2 className="h-5 w-5" />
                 {tr ? "Veriyi Çıkar" : "Extract Data"}
               </button>
+            )
+          ) : mode === "translate" ? (
+            translation ? (
+              <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
+                  <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300">
+                    <Languages className="h-4 w-4" />
+                    {tr ? "Çeviri" : "Translation"}
+                    <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">
+                      {(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {})[tr ? "tr" : "en"]}
+                    </span>
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
+                      className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[12px] text-white">
+                      {TRANSLATE_TARGETS.map((l) => <option key={l.code} value={l.code} className="text-black">{tr ? l.tr : l.en}</option>)}
+                    </select>
+                    <button type="button" onClick={copyTranslation} title={tr ? "Kopyala" : "Copy"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      <span className="hidden sm:inline">{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}</span>
+                    </button>
+                    <button type="button" onClick={() => void downloadTranslation()} disabled={exporting} title={tr ? "PDF indir" : "Download PDF"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">
+                      {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                      <span className="hidden sm:inline">PDF</span>
+                    </button>
+                    <button type="button" onClick={() => void runTranslate()} disabled={busy} title={tr ? "Yeniden çevir" : "Retranslate"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40">
+                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
+                      <span className="hidden sm:inline">{tr ? "Yeniden" : "Redo"}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-[62vh] overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
+                  <SimpleMarkdown text={translation} />
+                </div>
+              </div>
+            ) : busy ? (
+              <StatusStrip label={tr ? "Çevriliyor…" : "Translating…"} ratio={null} />
+            ) : (
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+                  <span className="text-[13px] font-semibold text-slate-300">{tr ? "Hedef dil:" : "Target language:"}</span>
+                  <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
+                    className="rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] text-white">
+                    {TRANSLATE_TARGETS.map((l) => <option key={l.code} value={l.code} className="text-black">{tr ? l.tr : l.en}</option>)}
+                  </select>
+                </div>
+                <button type="button" onClick={() => void runTranslate()}
+                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                  <Languages className="h-5 w-5" />
+                  {tr ? `${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).tr} diline çevir` : `Translate to ${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).en}`}
+                </button>
+              </div>
             )
           ) : (
             <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-4 sm:p-5">

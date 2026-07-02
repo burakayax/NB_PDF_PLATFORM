@@ -201,6 +201,22 @@ RULES: Use only info from the document, NEVER invent. Skip fields not present. K
   };
 }
 
+/** Desteklenen hedef diller (kod → İngilizce ad; prompt netliği için). */
+const TRANSLATE_LANGS: Record<string, string> = {
+  en: "English", tr: "Turkish", de: "German", fr: "French", es: "Spanish",
+  it: "Italian", pt: "Portuguese", ru: "Russian", ar: "Arabic",
+  zh: "Chinese (Simplified)", ja: "Japanese", nl: "Dutch",
+};
+
+/** PDF metnini hedef dile çevirir; yapı/format korunur. */
+export async function translateDocument(text: string, targetCode: string): Promise<string> {
+  const doc = text.slice(0, MAX_DOC_CHARS);
+  const target = TRANSLATE_LANGS[targetCode] ?? "English";
+  const system = `You are a professional translator. Translate the document below into ${target}.
+Preserve the meaning, tone, structure and layout: keep headings, paragraphs, lists and tables (use markdown for structure). Translate names/terms naturally; keep numbers, dates, codes and proper nouns intact. Do NOT add any commentary, notes or explanations. Output ONLY the translated document.`;
+  return callClaude(system, [{ role: "user", content: doc }], 8000);
+}
+
 /** Belge bağlamında kullanıcı sorusunu yanıtlar (geçmişle birlikte). */
 export async function chatWithDocument(
   text: string,
