@@ -19,6 +19,7 @@ import orgRouter from "../modules/organization/organization.routes.js";
 import billingRouter from "../modules/billing/billing.routes.js";
 import teamRouter from "../modules/team/team.controller.js";
 import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout.routes.js";
+import { aiRouter } from "../modules/ai/ai.routes.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -70,3 +71,4 @@ apiRouter.use("/org", orgRouter);
 apiRouter.use("/billing", billingRouter);
 apiRouter.use("/team", teamRouter);
 apiRouter.use("/credit-checkout", creditCheckoutRouter);
+apiRouter.use("/ai", aiRouter);

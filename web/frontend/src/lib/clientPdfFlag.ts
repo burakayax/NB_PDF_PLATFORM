@@ -16,11 +16,19 @@ const GUEST_PAGE_TOOLS = new Set<string>([
   "rotate-pdf",
   "delete-pages",
   "organize-pdf",
+  "split",
 ]);
 
 /** Misafirde grid'li sayfa aracı olarak çalışır mı (döndür/sil/düzenle)? */
 export function isGuestPageTool(id: string): boolean {
   return GUEST_PAGE_TOOLS.has(id);
+}
+
+/** Giriş yapan workspace'te de client-side (cihazda) işlenebilen yapısal araçlar
+ * — sunucuya gitmez, günlük limite saymaz. Birleştir + görsel→PDF + döndür/sil/
+ * düzenle. (Guest routing'i bozmamak için isClientCapableTool'dan AYRI.) */
+export function isWorkspaceClientTool(id: string): boolean {
+  return CLIENT_PDF_TOOLS.has(id) || GUEST_PAGE_TOOLS.has(id);
 }
 
 /** Mobil bellek koruması: bu boyutun üstü sunucu yoluna düşer. */

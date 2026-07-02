@@ -16,15 +16,18 @@ import PdfToolsSection from "../ui/pdf-tools-section";
 import PricingSection from "../ui/pricing-section";
 import { GuestToolCore } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
+import { AiPdfTool } from "../tools/AiPdfTool";
+import { PdfEditor } from "../tools/PdfEditor";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
-const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf"]);
+const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf", "split"]);
 const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
 export const isFreeToolId = (id: string): id is FreeToolId =>
   id === "merge" || id === "image-to-pdf" || PAGE_TOOL_IDS.has(id);
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
+  { id: "split", tr: "Böl", en: "Split" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
@@ -90,6 +93,9 @@ type LandingPageProps = {
   canonicalBaseUrl?: string;
   organizationName?: string;
   onSelectPlan?: (planId: "STARTER" | "PLUS" | "PRO" | "BUSINESS") => void;
+  /** AI araçları için (giriş yapan kullanıcı token'ı + yükseltme tetikleyici). */
+  accessToken?: string | null;
+  onUpgrade?: () => void;
 };
 
 type ShowcaseTab = "web" | "desktop";
@@ -393,10 +399,16 @@ function Navbar({
 function Hero({
   language,
   onRegister,
+  onLogin,
+  accessToken,
+  onUpgrade,
 }: {
   language: Language;
   onUseWebApp: () => void;
   onRegister: () => void;
+  onLogin: () => void;
+  accessToken: string | null;
+  onUpgrade: () => void;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -416,6 +428,8 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
+  const [aiTool, setAiTool] = useState<"summarize" | "chat" | null>(null);
+  const [editorOn, setEditorOn] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
@@ -479,15 +493,22 @@ function Hero({
 
         {/* Hızlı araç seçici + ÇALIŞAN araç — ANA SAYFADA, login YOK, sayfadan
             AYRILMADAN. Butona bas → araç alanı o araca dönüşür, işlemi orada yap. */}
-        <motion.div {...stagger(3)} className="mt-10 mx-auto w-full max-w-xl">
+        <motion.div
+          {...stagger(3)}
+          className={`mt-10 mx-auto w-full ${aiTool || editorOn ? "max-w-4xl" : "max-w-xl"}`}
+        >
           <div className="mb-4 flex flex-wrap justify-center gap-2">
             {FREE_TOOLS.map((t) => (
               <button
                 key={t.id}
                 type="button"
-                onClick={() => setFreeTool(t.id)}
+                onClick={() => {
+                  setFreeTool(t.id);
+                  setAiTool(null);
+                  setEditorOn(false);
+                }}
                 className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  freeTool === t.id
+                  !aiTool && !editorOn && freeTool === t.id
                     ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
                     : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
                 }`}
@@ -495,18 +516,66 @@ function Hero({
                 {tr ? t.tr : t.en}
               </button>
             ))}
+            {/* AI araçları (Pro) — yapay zekâ özet + sohbet */}
+            {(
+              [
+                ["summarize", tr ? "✨ AI Özet" : "✨ AI Summary"],
+                ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setAiTool(id);
+                  setEditorOn(false);
+                }}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                  aiTool === id
+                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.7)]"
+                    : "border border-violet-400/25 bg-violet-500/[0.06] text-violet-200 hover:bg-violet-500/[0.12]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            {/* PDF Düzenle — cihazda editör */}
+            <button
+              type="button"
+              onClick={() => {
+                setEditorOn(true);
+                setAiTool(null);
+              }}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                editorOn
+                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_24px_-8px_rgba(6,182,212,0.7)]"
+                  : "border border-cyan-400/25 bg-cyan-500/[0.06] text-cyan-200 hover:bg-cyan-500/[0.12]"
+              }`}
+            >
+              {tr ? "✏️ PDF Düzenle" : "✏️ Edit PDF"}
+            </button>
           </div>
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
           <div className="text-left">
-            {isPageToolId(freeTool) ? (
+            {editorOn ? (
+              <PdfEditor language={language} accessToken={accessToken} />
+            ) : aiTool ? (
+              <AiPdfTool
+                key={aiTool}
+                mode={aiTool}
+                language={language}
+                accessToken={accessToken}
+                onLogin={onLogin}
+                onUpgrade={onUpgrade}
+              />
+            ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
             ) : (
               <GuestToolCore
                 key={freeTool}
                 tool={freeTool}
                 language={language}
-                autoDetect={freeTool === "merge"}
                 onRegister={onRegister}
               />
             )}
@@ -991,6 +1060,9 @@ const FEAT_COLORS: Record<string, { r: string; iconBg: string; iconText: string 
   compress: { r: "245,158,11",  iconBg: "bg-amber-500/15",   iconText: "text-amber-300"   },
   excel:    { r: "34,197,94",   iconBg: "bg-green-500/15",   iconText: "text-green-300"   },
   session:  { r: "6,182,212",   iconBg: "bg-cyan-500/15",    iconText: "text-cyan-300"    },
+  ai:       { r: "217,70,239",  iconBg: "bg-fuchsia-500/15", iconText: "text-fuchsia-300" },
+  ocr:      { r: "245,158,11",  iconBg: "bg-amber-500/15",   iconText: "text-amber-300"   },
+  edit:     { r: "6,182,212",   iconBg: "bg-cyan-500/15",    iconText: "text-cyan-300"    },
 };
 
 function Features({ language }: { language: Language }) {
@@ -1780,6 +1852,8 @@ export function LandingPage({
   onContactClick,
   organizationName = "PDF Platform",
   onSelectPlan,
+  accessToken,
+  onUpgrade,
 }: LandingPageProps) {
   const { cms: cmsContent } = useSettings();
   const windowsDownloadUrl = getWindowsDownloadUrlFromCms(cmsContent);
@@ -1808,6 +1882,9 @@ export function LandingPage({
           language={language}
           onUseWebApp={onUseWebApp}
           onRegister={onRegister}
+          onLogin={onLogin}
+          accessToken={accessToken ?? null}
+          onUpgrade={onUpgrade ?? onRegister}
           windowsDownloadUrl={windowsDownloadUrl}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar

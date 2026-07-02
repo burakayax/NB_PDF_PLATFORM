@@ -35,6 +35,8 @@ import {
 } from "./api";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
+import { AiPdfTool } from "./components/tools/AiPdfTool";
+import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
@@ -99,13 +101,24 @@ import {
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
+import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
-import { mergePdfs, imagesToPdf, pdfBytesToBlob, PdfEncryptedError } from "./lib/clientPdf";
 import {
-  isClientPdfEnabled,
+  mergePdfs,
+  imagesToPdf,
+  rotatePdf,
+  deletePages,
+  reorderPages,
+  splitPagesToZip,
+  pdfBytesToBlob,
+  zipBytesToBlob,
+  PdfEncryptedError,
+} from "./lib/clientPdf";
+import {
   isClientCapableTool,
   isGuestPageTool,
+  isWorkspaceClientTool,
   CLIENT_PDF_MAX_BYTES,
 } from "./lib/clientPdfFlag";
 import {
@@ -245,7 +258,9 @@ type ContentPanel =
   | "profile"
   | "pricing"
   | "home"
-  | "team";
+  | "team"
+  | "ai"
+  | "editor";
 
 type ToastState = {
   /** Artan kimlik: her showToast'ta değişir → AppToast remount olup ilerleme çizgisi sıfırlanır. */
@@ -670,6 +685,16 @@ function getInitialViewFromLocation(): AppView {
   if (parseWorkspaceToolPath(rawPath)) {
     return "web";
   }
+  // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama "web" görünümü
+  // (App.tsx'teki özel handler bunları tam sayfa render eder; landing'e reset olmaz).
+  if (
+    rawPath === "/tools/pdf-ozetle" ||
+    rawPath === "/tools/pdf-sohbet" ||
+    rawPath === "/tools/pdf-duzenle" ||
+    rawPath === "/tools/taranmis-pdf-ocr"
+  ) {
+    return "web";
+  }
   if (rawPath === "/login-success" || rawPath === "/login-error") {
     return "landing";
   }
@@ -993,6 +1018,7 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -1982,7 +2008,7 @@ function App() {
             "unlock-pdf": "PDF Kilidi Aç",
             "delete-pages": "Sayfa Sil",
             "rotate-pdf": "PDF Döndür",
-            "organize-pdf": "PDF Düzenle",
+            "organize-pdf": "Sayfa Sırala",
             watermark: "Filigran",
             "page-numbers": "Sayfa Numarası",
             "repair-pdf": "PDF Onar",
@@ -2841,6 +2867,20 @@ function App() {
 
   useEffect(() => {
     if (!isRestoring && view === "web" && !isAuthenticated) {
+      // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama misafir
+      // kullanabilir; login'e ATMA (üstteki özel handler tam sayfa render eder).
+      const p =
+        typeof window !== "undefined"
+          ? window.location.pathname.replace(/\/+$/, "")
+          : "";
+      if (
+        p === "/tools/pdf-ozetle" ||
+        p === "/tools/pdf-sohbet" ||
+        p === "/tools/pdf-duzenle" ||
+        p === "/tools/taranmis-pdf-ocr"
+      ) {
+        return;
+      }
       // Deep-link edilen aracı (ör. PWA kısayolu /tools/x) sakla; giriş sonrası ona dönülür.
       const toolFromUrl =
         typeof window !== "undefined"
@@ -3843,24 +3883,24 @@ function App() {
       disposeToolProgressSuccess();
       clearToast();
 
-      // ── Client-side (tarayıcı) işleme — DARK LAUNCH (varsayılan kapalı; ?clientpdf=1).
-      // Dosyalar SUNUCUYA GİTMEDEN cihazda işlenir: anında + gizli + sıfır maliyet.
-      // Başarılıysa erken döner; şifreli / çok büyük / desteklenmeyen → sunucu akışı sürer.
-      // NOT (pilot): limit/kota enforcement client yolunda HENÜZ yok — bayrak gizli
-      // olduğundan yalnızca test eden etkilenir; herkese AÇMADAN ÖNCE eklenecek (plan B).
-      if (isClientPdfEnabled() && isClientCapableTool(selectedFeature.id)) {
+      // ── Client-side (tarayıcı) işleme — YAPISAL araçlar SUNUCUYA GİTMEDEN cihazda.
+      // Anında + gizli + SIFIR maliyet → günlük limite SAYMAZ (yapısal araçlar
+      // herkese sınırsız: birleştir/görsel→PDF/döndür/sil/düzenle). Şifreli / çok
+      // büyük / seçim yok → sunucu akışına düşülür.
+      if (isWorkspaceClientTool(selectedFeature.id)) {
         const totalBytes = uploads.reduce((s, u) => s + u.file.size, 0);
         const anyPassword = uploads.some((u) => u.password.trim().length > 0);
         if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
           try {
             setSubmitting(true);
             let resultBytes: Uint8Array | null = null;
-            if (selectedFeature.id === "merge") {
+            const cid = selectedFeature.id;
+            if (cid === "merge") {
               const buffers = await Promise.all(
                 uploads.map((u) => u.file.arrayBuffer()),
               );
               resultBytes = await mergePdfs(buffers);
-            } else if (selectedFeature.id === "image-to-pdf") {
+            } else if (cid === "image-to-pdf") {
               const imgs = await Promise.all(
                 uploads.map(async (u) => ({
                   bytes: await u.file.arrayBuffer(),
@@ -3868,6 +3908,54 @@ function App() {
                 })),
               );
               resultBytes = await imagesToPdf(imgs);
+            } else if (uploads[0]) {
+              // Tek-dosya sayfa araçları — seçim grid state'inden okunur (1-tabanlı
+              // → clientPdf 0-tabanlı). Seçim yoksa resultBytes null → sunucuya düşer.
+              const src = new Uint8Array(await uploads[0].file.arrayBuffer());
+              const pc = uploads[0].pageCount ?? 0;
+              if (cid === "rotate-pdf") {
+                const r0: Record<number, number> = {};
+                for (const [p1, deg] of Object.entries(rotatePageRotations)) {
+                  const d = Number(deg);
+                  if (d % 360 !== 0) r0[Number(p1) - 1] = d;
+                }
+                if (Object.keys(r0).length > 0) resultBytes = await rotatePdf(src, r0);
+              } else if (cid === "delete-pages" && pc > 0) {
+                const pages1 = expandPagesString(deletePagesText, pc, language) ?? [];
+                if (pages1.length > 0 && pages1.length < pc) {
+                  resultBytes = await deletePages(src, pages1.map((p) => p - 1));
+                }
+              } else if (cid === "organize-pdf" && organizePageOrder.length > 0) {
+                resultBytes = await reorderPages(
+                  src,
+                  organizePageOrder.map((p) => p - 1),
+                );
+              } else if (cid === "split" && pc > 0) {
+                const pages1 = expandPagesString(pagesText, pc, language) ?? [];
+                if (pages1.length > 0) {
+                  const p0 = pages1.map((p) => p - 1);
+                  const splitBlob =
+                    splitMode === "separate"
+                      ? zipBytesToBlob(await splitPagesToZip(src, p0, "sayfa"))
+                      : pdfBytesToBlob(await reorderPages(src, p0));
+                  const splitName =
+                    splitMode === "separate"
+                      ? "sayfalar.zip"
+                      : selectedFeature.fallbackFilename;
+                  const url = URL.createObjectURL(splitBlob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = splitName;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  setTimeout(() => URL.revokeObjectURL(url), 15000);
+                  setMergeShareReady({ blob: splitBlob, filename: splitName });
+                  applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+                  setSubmitting(false);
+                  return;
+                }
+              }
             }
             if (resultBytes) {
               const filename = selectedFeature.fallbackFilename;
@@ -4278,7 +4366,7 @@ function App() {
           "unlock-pdf": "PDF Kilidi Aç",
           "delete-pages": "Sayfa Sil",
           "rotate-pdf": "PDF Döndür",
-          "organize-pdf": "PDF Düzenle",
+          "organize-pdf": "Sayfa Sırala",
           watermark: "Filigran",
           "page-numbers": "Sayfa Numarası",
           "repair-pdf": "PDF Onar",
@@ -4585,6 +4673,35 @@ function App() {
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
+
+  // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil; tam sayfa + SEO.
+  // EN ÜSTTE: view/redirect mantığından ÖNCE yakalanır (misafir + giriş yapan).
+  if (pathname.startsWith("/tools/")) {
+    const seoSlug = pathname.split("/tools/")[1] ?? "";
+    const goLogin = () => setView("login");
+    const goRegister = () => setView("register");
+    if (seoSlug === "pdf-duzenle") {
+      return (
+        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <PdfEditor language={language} accessToken={accessToken} />
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "pdf-ozetle" || seoSlug === "pdf-sohbet" || seoSlug === "taranmis-pdf-ocr") {
+      return (
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister}>
+          <AiPdfTool
+            mode={seoSlug === "pdf-sohbet" ? "chat" : "summarize"}
+            language={language}
+            accessToken={accessToken}
+            onLogin={goLogin}
+            onUpgrade={goRegister}
+          />
+        </GuestSeoToolPage>
+      );
+    }
+  }
+
   const bootstrapFastRoutes =
     pathname === "/login-success" ||
     pathname === "/login-error" ||
@@ -4779,6 +4896,7 @@ function App() {
           close: "Close",
         };
 
+
   // MİSAFİR-ÖNCELİKLİ: Giriş yapmamış kullanıcı /tools/<slug>'a geldiğinde login'e
   // ATILMAZ. Client-side çalışabilen araçlarda (birleştir/görsel→PDF) aracı
   // DOĞRUDAN MİSAFİR olarak kullanır (cihazda, login yok); diğer (sunucu) araçlarda
@@ -4874,6 +4992,17 @@ function App() {
             onOpenPrivacy={() => openLegalPage("privacy")}
             onOpenKvkk={() => openLegalPage("kvkk")}
             onContactClick={openContactModal}
+            accessToken={accessToken}
+            onUpgrade={() => {
+              if (isAuthenticated) {
+                openWorkspace();
+                setUpgradeModalOpen(true);
+              } else {
+                setAuthError("");
+                setView("register");
+                window.scrollTo({ top: 0, behavior: "instant" });
+              }
+            }}
             onOpenAbout={() => {
               setView("about");
               window.scrollTo({ top: 0, behavior: "instant" });
@@ -5667,6 +5796,11 @@ function App() {
           isTeamMember={isTeamMember}
           isManagerMember={user?.teamMemberRole === "MANAGER"}
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
+          onOpenAi={(mode) => {
+            setAiModal(mode);
+            setContentPanel("ai");
+          }}
+          onOpenEditor={() => setContentPanel("editor")}
         />
         <div
           className={`min-h-[calc(100dvh-3.5rem)] w-full bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-12"}`}
@@ -5679,9 +5813,17 @@ function App() {
             userRole={user?.role}
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
+            onOpenAi={(mode) => {
+            setAiModal(mode);
+            setContentPanel("ai");
+          }}
+          onOpenEditor={() => setContentPanel("editor")}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
-            {isAuthenticated && contentPanel !== "tool" && !isTeamMember ? (
+            {isAuthenticated &&
+            contentPanel !== "tool" &&
+            contentPanel !== "ai" &&
+            !isTeamMember ? (
               <DashboardLifecycleNudge
                 language={language}
                 accessToken={accessToken}
@@ -5689,6 +5831,24 @@ function App() {
                 onUpgrade={() => setUpgradeModalOpen(true)}
               />
             ) : null}
+            {contentPanel === "ai" && aiModal ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <AiPdfTool
+                  mode={aiModal}
+                  language={language}
+                  accessToken={accessToken}
+                  onLogin={() => setView("login")}
+                  onUpgrade={() => setUpgradeModalOpen(true)}
+                />
+              </section>
+            ) : null}
+
+            {contentPanel === "editor" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <PdfEditor language={language} accessToken={accessToken} />
+              </section>
+            ) : null}
+
             {contentPanel === "subscription" ? (
               <section className="subscription-card space-y-4">
                 <QuotaWidget

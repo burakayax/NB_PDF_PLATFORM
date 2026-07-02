@@ -112,6 +112,15 @@ const rawEnvSchema = z
     /** Web "Google ile devam et" OAuth; boş bırakılırsa Google girişi devre dışı kalır. */
     GOOGLE_CLIENT_ID: z.string().optional().default(""),
     GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
+    /** Claude API anahtarı — AI özellikleri (PDF Özetle / PDF ile Sohbet) için.
+     * Boşsa AI tamamen devre dışı (uçlar 503 döner). console.anthropic.com'dan alınır. */
+    ANTHROPIC_API_KEY: z.string().optional().default(""),
+    /** AI modeli — varsayılan ucuz/hızlı Haiku. */
+    AI_MODEL: z.string().min(1).default("claude-haiku-4-5-20251001"),
+    /** Aylık AI işlem kotası (adil kullanım) — plan başına. ADMIN sınırsız.
+     * Ay başında sıfırlanır. Değiştirmek için env'i güncelle (ör. Render). */
+    AI_MONTHLY_LIMIT_PRO: z.coerce.number().int().nonnegative().default(100),
+    AI_MONTHLY_LIMIT_BUSINESS: z.coerce.number().int().nonnegative().default(500),
     /** Günlük dosyası yolu (göreli veya mutlak); üst dizin başlangıçta oluşturulur. */
     LOG_FILE_PATH: z.string().min(1).default("logs/nb-pdf-TOOLS-api.log"),
     LOG_FILE_ENABLED: z.enum(["true", "false"]).optional().default("true"),
