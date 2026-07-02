@@ -213,8 +213,36 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     features: {
       kicker: "Business Benefits",
       // H2 — secondary keyword cluster: speed, accuracy, control
-      title: "PDF tools built for document speed, accuracy, and control.",
+      title: "AI, OCR and editing — built for speed, accuracy, and control.",
       items: [
+        {
+          icon: "ai",
+          // H3 — target: "summarize pdf", "chat with pdf", "ai pdf"
+          title: "Summarize PDFs & chat with your documents using AI",
+          benefit:
+            "Get a professional summary — parties, dates, key points — without reading a long report, contract or tender end to end, or ask the document questions directly.",
+        },
+        {
+          icon: "ocr",
+          // H3 — target: "scanned pdf to text", "ocr pdf"
+          title: "Turn scanned PDFs into readable text (OCR)",
+          benefit:
+            "Convert text inside photo/scanned documents into real text on your device — invoices, official papers and more. Turkish + English.",
+        },
+        {
+          icon: "edit",
+          // H3 — target: "edit pdf", "write on pdf"
+          title: "Write on, erase and edit your PDF",
+          benefit:
+            "White out existing text and type new, add text, highlight or draw — right in your browser, no install.",
+        },
+        {
+          icon: "secure",
+          // H3 — target: "private pdf processing", "pdf without upload"
+          title: "Your file is processed without leaving your device",
+          benefit:
+            "Merge, split, rotate, delete, edit and OCR run in your browser — files are never uploaded. Private, instant and unlimited.",
+        },
         {
           icon: "merge",
           // H3 — target: "merge PDF files"
@@ -403,6 +431,26 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     // Questions mirror actual search queries (informational intent).
     faq: [
       {
+        question: "Can I summarize my PDF with AI?",
+        answer:
+          "Yes. The Summarize PDF tool reads your document, detects its type (tender, contract, academic, financial…) and produces a professional summary with parties, key dates, amounts and takeaways. You can also ask the document questions with Chat with PDF. Text is extracted on your device; the AI step runs on the server.",
+      },
+      {
+        question: "Can you read text in scanned (photo) PDFs?",
+        answer:
+          "Yes. Our OCR turns text inside scanned or image-based PDFs into real, readable text in your browser (Turkish + English) — so you can summarize, search and edit invoices, official papers and more.",
+      },
+      {
+        question: "Can I edit and erase text on a PDF?",
+        answer:
+          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw. It all runs in your browser with no install, and your file never leaves your device.",
+      },
+      {
+        question: "Are my files uploaded to a server? Is it private?",
+        answer:
+          "Core tools (merge, split, rotate, delete, edit, OCR) run entirely in your browser — your files are never uploaded, so operations are instant, private and unlimited. Only the AI features securely process the document's text to generate answers.",
+      },
+      {
         question: "How do I merge PDF files online for free?",
         answer:
           "With PDF Platform you can merge PDF files directly in your browser at no cost. Upload your files, drag to reorder pages, and download the combined PDF in seconds — no installation required.",
@@ -511,8 +559,36 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     features: {
       kicker: "İş Faydası",
       // H2 — ikincil keyword kümesi: hız, doğruluk, kontrol
-      title: "Hız, doğruluk ve kontrol odaklı PDF araçları.",
+      title: "Yapay zekâ, OCR ve düzenleme — hız, doğruluk ve kontrol.",
       items: [
+        {
+          icon: "ai",
+          // H3 — hedef: "pdf özetleme", "pdf ile sohbet", "yapay zeka pdf"
+          title: "Yapay zekâ ile PDF özetle ve belgeyle sohbet et",
+          benefit:
+            "Uzun raporu, sözleşmeyi ya da ihaleyi baştan sona okumadan; taraflar, tarihler ve önemli noktalarıyla profesyonel bir özet alın veya belgeye doğrudan soru sorun.",
+        },
+        {
+          icon: "ocr",
+          // H3 — hedef: "taranmış pdf metne çevir", "ocr pdf"
+          title: "Taranmış PDF'leri okunur metne çevirin (OCR)",
+          benefit:
+            "Fotoğraf/tarama belgelerdeki yazıyı cihazınızda metne dönüştürün — gazete, tapu, fatura ve resmi evrak dâhil. Türkçe destekli.",
+        },
+        {
+          icon: "edit",
+          // H3 — hedef: "pdf düzenleme", "pdf üzerine yaz"
+          title: "PDF üzerine yazın, silin ve düzenleyin",
+          benefit:
+            "Mevcut yazıyı beyazla kapatıp yenisini yazın, metin ekleyin, vurgulayın veya çizin — tarayıcıda, kurulum olmadan.",
+        },
+        {
+          icon: "secure",
+          // H3 — hedef: "gizli pdf işleme", "dosya yüklemeden pdf"
+          title: "Dosyanız cihazınızdan çıkmadan işlenir",
+          benefit:
+            "Birleştir, böl, döndür, sil, düzenle ve OCR işlemleri tarayıcınızda yapılır — dosyalar sunucuya yüklenmez. Gizli, anında ve sınırsız.",
+        },
         {
           icon: "merge",
           // H3 — hedef: "PDF birleştirme", "PDF birleştir"
@@ -700,6 +776,26 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     // ── SSS — sayfada görünür + FAQPage şemasına enjekte edilir ──────────────
     // Sorular gerçek arama sorgularını yansıtır (bilgi arama niyeti).
     faq: [
+      {
+        question: "PDF'imi yapay zekâ ile özetleyebilir miyim?",
+        answer:
+          "Evet. PDF Özetle aracı belgenizi okuyup türünü tanır (ihale, sözleşme, akademik, mali…) ve taraflar, önemli tarihler, tutarlar ve çıkarımlarla profesyonel bir özet üretir. Ayrıca PDF ile Sohbet aracıyla belgeye doğrudan soru sorabilirsiniz. Metin cihazınızda çıkarılır; yapay zekâ işlemi sunucuda yapılır.",
+      },
+      {
+        question: "Taranmış (fotoğraf) PDF'lerdeki yazıları okuyabiliyor musunuz?",
+        answer:
+          "Evet. OCR desteğimiz, taranmış veya fotoğraf tabanlı PDF'lerdeki yazıyı tarayıcınızda gerçek metne çevirir (Türkçe + İngilizce). Böylece gazete, tapu, fatura ve resmi evrak gibi belgeleri özetleyebilir, arayabilir ve düzenleyebilirsiniz.",
+      },
+      {
+        question: "PDF üzerindeki yazıları düzenleyip silebilir miyim?",
+        answer:
+          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Tümü tarayıcıda çalışır, kurulum gerekmez ve dosyanız cihazınızdan çıkmaz.",
+      },
+      {
+        question: "Dosyalarım sunucuya yükleniyor mu? Güvenli mi?",
+        answer:
+          "Temel araçlar (birleştir, böl, döndür, sil, düzenle, OCR) tamamen tarayıcınızda çalışır — dosyalarınız sunucuya yüklenmez. Bu sayede işlemler anında, gizli ve sınırsızdır. Yalnızca yapay zekâ özellikleri, yanıt üretmek için belgenin metnini güvenli biçimde işler.",
+      },
       {
         question: "PDF dosyaları nasıl ücretsiz birleştirilir?",
         answer:

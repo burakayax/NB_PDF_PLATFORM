@@ -131,7 +131,7 @@ export function TeamDashboard({ language: _language, accessToken, isOwner = true
       });
       await fetchDashboard();
       setRevokeInfoMsg(
-        "Çıkardığınız üyenin erişimi bu fatura döneminin sonuna kadar devam edecektir. Gelecek ay faturanız güncel kişi sayısına göre güncellenecektir.",
+        "Üye ekipten çıkarıldı ve Business erişimi hemen sonlandırıldı (Ücretsiz plana döndü). Koltuk yeniden kullanılabilir; dilersen başka birini davet edebilirsin.",
       );
     },
     [accessToken, fetchDashboard],

@@ -60,9 +60,15 @@ export function FavoriteStar({
 
 /** Kategori başına vurgu paleti — mobil araç gezgini bölüm başlıklarında kullanılır. */
 const CATEGORY_ACCENT: Record<
-  ToolCategoryId | "other" | "favorites",
+  ToolCategoryId | "other" | "favorites" | "ai",
   { dot: string; text: string; ring: string; glow: string }
 > = {
+  ai: {
+    dot: "bg-fuchsia-400",
+    text: "text-fuchsia-300",
+    ring: "ring-fuchsia-400/30",
+    glow: "shadow-[0_0_18px_-6px_rgba(232,121,249,0.6)]",
+  },
   favorites: {
     dot: "bg-amber-400",
     text: "text-amber-300",
@@ -107,6 +113,12 @@ const CATEGORY_ACCENT: Record<
   },
 };
 
+/** AI kategorisi öğeleri — FeatureKey DEĞİL; kendi modal'ını açar (onOpenAi). */
+const AI_TOOLS: { mode: "summarize" | "chat"; tr: string; en: string }[] = [
+  { mode: "summarize", tr: "PDF Özetle", en: "Summarize PDF" },
+  { mode: "chat", tr: "PDF ile Sohbet", en: "Chat with PDF" },
+];
+
 export type SidebarToolId = FeatureKey | "subscription";
 
 type DashboardSidebarProps = {
@@ -128,6 +140,10 @@ type DashboardSidebarProps = {
   isTeamMember?: boolean;
   isManagerMember?: boolean;
   onTeamClick?: () => void;
+  /** AI aracı aç (Özetle / Sohbet) — ayrı AI kategorisi için. */
+  onOpenAi?: (mode: "summarize" | "chat") => void;
+  /** PDF Düzenle aracını aç (cihazda editör). */
+  onOpenEditor?: () => void;
 };
 
 /**
@@ -150,6 +166,8 @@ export function DashboardSidebar({
   isTeamMember,
   isManagerMember,
   onTeamClick,
+  onOpenAi,
+  onOpenEditor,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -157,9 +175,31 @@ export function DashboardSidebar({
     : SIDEBAR_TOOL_ORDER;
   const labelForTool =
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
-  const { isFavorite, toggleFavorite } = useFavoriteTools();
+  const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const tr = language === "tr";
-  const favTools = toolOrder.filter((id) => isFavorite(id));
+  // Masaüstü sidebar: araçlar kategori bölümlerine ayrılır (Düzenle / Dönüştür /
+  // İyileştir / İşaretle / Güvenlik) — mobil launcher ile aynı gruplama.
+  const sidebarGroups = useMemo(() => {
+    const base = groupToolsByCategory(toolOrder) as Array<{
+      id: ToolCategoryId | "other" | "favorites";
+      tools: FeatureKey[];
+    }>;
+    const fav = toolOrder.filter((id) => isFavorite(id));
+    return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolOrder, favorites]);
+  // Accordion: varsayılan olarak yalnız "Düzenle" + AI (+ favoriler) açık; diğer
+  // kategoriler kapalı gelir, kullanıcı başlığa tıklayınca açılır/kapanır.
+  const [openCats, setOpenCats] = useState<Set<string>>(
+    () => new Set(["favorites", "organize", "ai"]),
+  );
+  const toggleCat = (id: string) =>
+    setOpenCats((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const showVipStrip =
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
@@ -214,19 +254,109 @@ export function DashboardSidebar({
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
-        className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+        className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
-        {favTools.length > 0 ? (
-          <div className="mb-1">
-            <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
-              ★ {tr ? "Favoriler" : "Favorites"}
-            </p>
-            {favTools.map((id) => renderTool(id, "fav-"))}
-            <div className="my-2 h-px bg-white/[0.06]" />
-          </div>
+        {/* ── Ayrı AI kategorisi (Özetle + Sohbet) — kendi modal'ını açar ── */}
+        {onOpenAi ? (
+          <section>
+            <button
+              type="button"
+              onClick={() => toggleCat("ai")}
+              aria-expanded={openCats.has("ai")}
+              className="mb-1.5 flex w-full items-center gap-2 px-2"
+            >
+              <span
+                className={`h-1.5 w-1.5 shrink-0 rounded-full ${CATEGORY_ACCENT.ai.dot} ${CATEGORY_ACCENT.ai.glow}`}
+                aria-hidden
+              />
+              <h3 className={`text-[10px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
+                {tr ? "✨ Yapay Zekâ" : "✨ AI"}
+              </h3>
+              <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
+              <svg
+                className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${openCats.has("ai") ? "rotate-180" : ""}`}
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openCats.has("ai") ? (
+              <div className="flex flex-col gap-1">
+                {AI_TOOLS.map((t) => (
+                  <button
+                    key={t.mode}
+                    type="button"
+                    onClick={() => onOpenAi(t.mode)}
+                    className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-fuchsia-400/40 hover:bg-fuchsia-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(232,121,249,0.6)]"
+                  >
+                    <span className="text-base text-fuchsia-300" aria-hidden>✨</span>
+                    <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                      <span className="truncate">{tr ? t.tr : t.en}</span>
+                      <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
+                        Pro
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
         ) : null}
-        {toolOrder.map((id) => renderTool(id))}
+
+        {/* PDF Düzenle — cihazda editör (FeatureKey değil, kendi panelini açar) */}
+        {onOpenEditor ? (
+          <button
+            type="button"
+            onClick={onOpenEditor}
+            className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-cyan-400/40 hover:bg-cyan-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(6,182,212,0.6)]"
+          >
+            <span className="text-base text-cyan-300" aria-hidden>✏️</span>
+            <span className="truncate">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
+          </button>
+        ) : null}
+
+        {sidebarGroups.map((group) => {
+          const accent = CATEGORY_ACCENT[group.id];
+          const open = openCats.has(group.id);
+          const heading =
+            group.id === "favorites"
+              ? tr ? "★ Favoriler" : "★ Favorites"
+              : group.id === "other"
+                ? tr ? "Diğer" : "Other"
+                : toolCategoryLabel(group.id as ToolCategoryId, language);
+          return (
+            <section key={group.id}>
+              {/* Kategori başlığı — tıklayınca açılır/kapanır (accordion) */}
+              <button
+                type="button"
+                onClick={() => toggleCat(group.id)}
+                aria-expanded={open}
+                className="mb-1.5 flex w-full items-center gap-2 px-2"
+              >
+                <span
+                  className={`h-1.5 w-1.5 shrink-0 rounded-full ${accent.dot} ${accent.glow}`}
+                  aria-hidden
+                />
+                <h3 className={`text-[10px] font-bold uppercase tracking-wider ${accent.text}`}>
+                  {heading}
+                </h3>
+                <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
+                <svg
+                  className={`h-3.5 w-3.5 shrink-0 text-nb-muted/70 transition-transform ${open ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {open ? (
+                <div className="flex flex-col gap-1">
+                  {group.tools.map((id) => renderTool(id, `${group.id}-`))}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
       </nav>
 
       {showVipStrip ? (
@@ -297,6 +427,8 @@ export function DashboardSidebarMobileLauncher({
   lockedFeatures,
   enabledToolIds,
   resolveToolLabel,
+  onOpenAi,
+  onOpenEditor,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const tr = language === "tr";
@@ -522,6 +654,58 @@ export function DashboardSidebarMobileLauncher({
             <div className="px-3 py-3 sm:px-4">
               {hasResults ? (
                 <div className="flex flex-col gap-5">
+                  {/* AI kategorisi (arama boşken) */}
+                  {onOpenAi && !query.trim() ? (
+                    <section>
+                      <div className="mb-2.5 flex items-center gap-2 px-0.5">
+                        <span
+                          className={`h-2 w-2 shrink-0 rounded-full ${CATEGORY_ACCENT.ai.dot} ${CATEGORY_ACCENT.ai.glow}`}
+                          aria-hidden
+                        />
+                        <h3 className={`text-[11px] font-bold uppercase tracking-wider ${CATEGORY_ACCENT.ai.text}`}>
+                          {tr ? "✨ Yapay Zekâ" : "✨ AI"}
+                        </h3>
+                        <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
+                      </div>
+                      <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
+                        {AI_TOOLS.map((t) => (
+                          <button
+                            key={t.mode}
+                            type="button"
+                            onClick={() => {
+                              onOpenAi(t.mode);
+                              setOpen(false);
+                            }}
+                            className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-2 text-center hover:border-fuchsia-400/45 hover:bg-fuchsia-500/[0.12] active:scale-[0.97]"
+                          >
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/10 text-lg" aria-hidden>
+                              ✨
+                            </span>
+                            <span className="line-clamp-2 text-[10px] font-bold leading-tight text-fuchsia-100">
+                              {tr ? t.tr : t.en}
+                            </span>
+                            <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[8px] font-bold uppercase text-fuchsia-300">
+                              Pro
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  ) : null}
+                  {/* PDF Düzenle (arama boşken) */}
+                  {onOpenEditor && !query.trim() ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onOpenEditor();
+                        setOpen(false);
+                      }}
+                      className="nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] px-3 py-3 text-left hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.99]"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg" aria-hidden>✏️</span>
+                      <span className="text-[13px] font-bold text-cyan-100">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
+                    </button>
+                  ) : null}
                   {filteredGroups.map((group) => {
                     const accent = CATEGORY_ACCENT[group.id];
                     const heading =

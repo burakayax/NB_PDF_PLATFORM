@@ -4428,3 +4428,9 @@ textarea {
   stroke: var(--nb-accent);
   filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.6));
 }
+
+/* AI belirsiz (indeterminate) ilerleme şeridi — kayan gradient */
+@keyframes nb-indeterminate {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}

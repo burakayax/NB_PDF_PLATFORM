@@ -52,6 +52,10 @@ export const TOOL_SLUGS = [
   "encrypt",
   "pdf-to-text",
   "flatten-pdf",
+  "pdf-ozetle",
+  "pdf-sohbet",
+  "pdf-duzenle",
+  "taranmis-pdf-ocr",
 ];
 
 const T = (title, description, h1, intro, keywords, faq) => ({
@@ -611,6 +615,108 @@ export const TOOL_SEO = {
       [
         { q: "Why should I flatten a PDF?", a: "Flattening embeds form fields and annotations into the page, preventing accidental edits and fixing the appearance on every device." },
         { q: "Can a flattened form be edited again?", a: "No. Flattening is permanent; fields can no longer be edited individually. Keep a backup first." },
+      ],
+    ),
+  },
+
+  "pdf-ozetle": {
+    tr: T(
+      "PDF Özetle — Yapay Zekâ ile PDF Özeti",
+      "PDF'inizi yapay zekâ ile saniyeler içinde özetleyin. Taraflar, önemli tarihler, tutarlar ve çıkarımlarla profesyonel bir özet — ihale, sözleşme, rapor ve daha fazlası.",
+      "Yapay Zekâ ile PDF Özetle",
+      "Uzun raporu, sözleşmeyi ya da ihaleyi baştan sona okumadan; belgenin türünü tanıyıp taraflar, önemli tarihler, tutarlar ve sonuçlarla profesyonel bir özet çıkarın. Metin cihazınızda okunur; özet indirilebilir ve paylaşılabilir. Taranmış belgelerde OCR devreye girer.",
+      ["pdf özetle", "pdf özetleme", "yapay zeka pdf özet", "ai ile pdf özeti", "belge özetleme", "sözleşme özetleme", "ihale özetleme"],
+      [
+        { q: "PDF nasıl yapay zekâ ile özetlenir?", a: "PDF'i yükleyin; araç belgeyi okur, türünü (ihale, sözleşme, akademik…) tanır ve taraflar, tarihler, tutarlar ve çıkarımlarla yapılandırılmış bir özet üretir." },
+        { q: "Taranmış PDF'i özetleyebilir miyim?", a: "Evet. Taranmış/fotoğraf PDF'lerde OCR otomatik devreye girip yazıyı metne çevirir, ardından özet çıkarılır." },
+      ],
+    ),
+    en: T(
+      "Summarize PDF — AI PDF Summary",
+      "Summarize your PDF with AI in seconds. A professional summary with parties, key dates, amounts and takeaways — tenders, contracts, reports and more.",
+      "Summarize PDF with AI",
+      "Get a professional summary of a long report, contract or tender without reading it end to end — the tool detects the document type and surfaces parties, key dates, amounts and conclusions. Text is read on your device; the summary can be downloaded or shared. Scanned documents are handled with OCR.",
+      ["summarize pdf", "ai pdf summary", "pdf summarizer", "summarize contract", "document summary ai"],
+      [
+        { q: "How do I summarize a PDF with AI?", a: "Upload the PDF; the tool reads it, detects its type (tender, contract, academic…) and produces a structured summary with parties, dates, amounts and takeaways." },
+        { q: "Can I summarize a scanned PDF?", a: "Yes. For scanned/image PDFs, OCR kicks in automatically to turn the image into text, then the summary is generated." },
+      ],
+    ),
+  },
+
+  "pdf-sohbet": {
+    tr: T(
+      "PDF ile Sohbet — Belgeye Soru Sor (Yapay Zekâ)",
+      "PDF'inize doğal dille soru sorun, yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlasın. Uzun belgelerden aradığınız cevabı okumadan bulun.",
+      "PDF ile Sohbet Et",
+      "Belgenize istediğiniz soruyu sohbet eder gibi sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak yanıtlar — uydurma yok. Uzun sözleşme, rapor veya kılavuzda aradığınızı okumadan bulun. Taranmış belgelerde OCR ile metin çıkarılır.",
+      ["pdf ile sohbet", "pdf chat", "belgeye soru sor", "pdf soru cevap", "yapay zeka pdf sohbet"],
+      [
+        { q: "PDF ile sohbet nasıl çalışır?", a: "PDF'i yükleyin ve doğal dille soru sorun. Yapay zekâ yalnızca belgedeki bilgiye dayanarak yanıtlar; belgede yoksa 'belgede yok' der." },
+        { q: "Yanıtlar güvenilir mi?", a: "Yanıtlar yalnızca yüklediğiniz belgeden gelir, uydurma yapılmaz. Böylece kaynağı belgeniz olan doğru cevaplar alırsınız." },
+      ],
+    ),
+    en: T(
+      "Chat with PDF — Ask Your Document (AI)",
+      "Ask your PDF questions in plain language and let AI answer instantly, based only on the document. Find answers in long documents without reading them.",
+      "Chat with your PDF",
+      "Ask your document anything, conversationally; the AI answers based only on the document's content — no made-up facts. Find what you need in a long contract, report or manual without reading it. Scanned documents are read with OCR.",
+      ["chat with pdf", "ask pdf questions", "pdf chat ai", "pdf q&a", "talk to pdf"],
+      [
+        { q: "How does chatting with a PDF work?", a: "Upload the PDF and ask questions in plain language. The AI answers based only on the document; if the answer isn't there, it says so." },
+        { q: "Are the answers reliable?", a: "Answers come only from your uploaded document, with no fabrication — so you get accurate answers grounded in your file." },
+      ],
+    ),
+  },
+
+  "pdf-duzenle": {
+    tr: T(
+      "PDF Düzenle — Mevcut Metni Sil ve Değiştir (online)",
+      "PDF'teki mevcut yazıyı gerçekten silin ve yerine yenisini yazın. Metin ekleyin, düzenleyin — Türkçe destekli, online ve kolay.",
+      "PDF Düzenle — Metni Gerçekten Değiştir",
+      "PDF'teki mevcut yazının üstüne kutu çizin; o metin gerçekten silinsin ve yerine yenisini yazın (örtme değil, gerçek düzenleme). Yeni metin de ekleyebilirsiniz. Türkçe karakterler tam desteklenir; sonucu düzenlenmiş PDF olarak indirin. Not: güvenli düzenleme için dosyanız sunucumuzda işlenir ve işlem biter bitmez silinir.",
+      ["pdf düzenle", "pdf metni değiştir", "pdf yazı sil", "pdf metin düzenleme", "pdf'te metni değiştir", "online pdf editör", "pdf üzerinde yazı değiştirme"],
+      [
+        { q: "PDF'teki mevcut yazıyı nasıl silip değiştiririm?", a: "PDF'i yükleyin, editör tam ekran açılır. 'Metni Değiştir' ile değiştirmek istediğiniz yazının üstüne kutu çizin — o metin gelir, yenisini yazın (boş bırakırsanız silinir). «Tamam» → «PDF'i Hazırla» → indirin." },
+        { q: "Metin gerçekten siliniyor mu, yoksa üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile seçili bölgedeki metin PDF'ten kaldırılır (örtme değil), yerine yeni metin yazılır." },
+        { q: "Dosyam güvende mi?", a: "Evet. Gerçek metin düzenleme için dosya güvenli sunucumuzda işlenir ve işlem biter bitmez silinir, saklanmaz. (Diğer araçlarımız cihazınızda çalışır.)" },
+      ],
+    ),
+    en: T(
+      "Edit PDF — Delete & Replace Existing Text (online)",
+      "Truly delete existing text in a PDF and type a replacement. Add and edit text — online and easy.",
+      "Edit PDF — Really Change the Text",
+      "Draw a box over existing text in the PDF; it is truly deleted and you type a replacement (not a cover-up — real editing). You can also add new text. Download the edited PDF. Note: for secure editing your file is processed on our server and deleted right after.",
+      ["edit pdf", "change pdf text", "delete text from pdf", "edit pdf text", "replace text in pdf", "online pdf editor"],
+      [
+        { q: "How do I delete and change existing text in a PDF?", a: "Upload the PDF and the editor opens full-screen. With 'Replace Text', draw a box over the text you want to change — it's captured, then type the new text (leave empty to delete). Click 'Done' → 'Prepare PDF' → download." },
+        { q: "Is the text truly deleted or just covered?", a: "Truly deleted. Using PyMuPDF redaction, the text in the selected area is removed from the PDF (not covered), and new text is written in its place." },
+        { q: "Is my file safe?", a: "Yes. For real text editing the file is processed on our secure server and deleted right after — never stored. (Our other tools run on your device.)" },
+      ],
+    ),
+  },
+
+  "taranmis-pdf-ocr": {
+    tr: T(
+      "Taranmış PDF'i Metne Çevir (OCR)",
+      "Taranmış veya fotoğraf tabanlı PDF'lerdeki yazıyı OCR ile gerçek metne çevirin — Türkçe ve İngilizce destekli, tarayıcınızda ve ücretsiz.",
+      "Taranmış PDF → Metin (OCR)",
+      "Fotoğraf/tarama belgelerdeki yazı aslında resimdir; OCR bu yazıyı cihazınızda gerçek metne çevirir (Türkçe + İngilizce). Böylece gazete, tapu, fatura ve resmi evrakı özetleyebilir, arayabilir ve düzenleyebilirsiniz.",
+      ["taranmış pdf metne çevir", "ocr pdf", "pdf ocr türkçe", "resimden metin", "taranmış belge okuma"],
+      [
+        { q: "Taranmış PDF'teki yazıyı nasıl metne çeviririm?", a: "PDF'i yükleyin; OCR sayfa görüntülerindeki yazıyı tarayıcınızda gerçek metne dönüştürür. Sonra özetleyebilir, arayabilir veya düzenleyebilirsiniz." },
+        { q: "OCR hangi dilleri destekliyor?", a: "Türkçe ve İngilizce desteklenir. İşlem cihazınızda yapılır; belgeniz sunucuya yüklenmez." },
+      ],
+    ),
+    en: T(
+      "Scanned PDF to Text (OCR)",
+      "Turn text inside scanned or photo-based PDFs into real text with OCR — Turkish and English, in your browser and free.",
+      "Scanned PDF → Text (OCR)",
+      "Text inside photo/scanned documents is actually an image; OCR converts it into real text on your device (Turkish + English). So you can summarize, search and edit invoices, official papers and more.",
+      ["scanned pdf to text", "ocr pdf", "pdf ocr", "image to text pdf", "read scanned document"],
+      [
+        { q: "How do I convert a scanned PDF to text?", a: "Upload the PDF; OCR turns the text in the page images into real text in your browser. You can then summarize, search or edit it." },
+        { q: "Which languages does OCR support?", a: "Turkish and English are supported. Processing happens on your device; your document is not uploaded to a server." },
       ],
     ),
   },

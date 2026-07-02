@@ -10,6 +10,38 @@ import type { FeatureKey } from "../../api/subscription";
 
 const toolCategories = (lang: Language) => [
   {
+    id: "ai",
+    label: lang === "tr" ? "Yapay Zekâ & Düzenleme" : "AI & Editing",
+    badge: "bg-fuchsia-500/10 text-fuchsia-400 border-fuchsia-500/20",
+    divider: "bg-fuchsia-500/15",
+    tools: [
+      {
+        id: "pdf-ozetle",
+        icon: "✨",
+        name: lang === "tr" ? "PDF Özetle" : "Summarize PDF",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
+        id: "pdf-sohbet",
+        icon: "💬",
+        name: lang === "tr" ? "PDF ile Sohbet" : "Chat with PDF",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
+        id: "pdf-duzenle",
+        icon: "✏️",
+        name: lang === "tr" ? "PDF Düzenle" : "Edit PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
+        id: "taranmis-pdf-ocr",
+        icon: "🔎",
+        name: lang === "tr" ? "Taranmış PDF (OCR)" : "Scanned PDF (OCR)",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+    ],
+  },
+  {
     id: "edit",
     label: lang === "tr" ? "Düzenle" : "Edit",
     badge: "bg-violet-500/10 text-violet-400 border-violet-500/20",
@@ -21,7 +53,12 @@ const toolCategories = (lang: Language) => [
         name: lang === "tr" ? "PDF Birleştir" : "Merge PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
-      { id: "split", icon: "✂️", name: lang === "tr" ? "PDF Böl" : "Split PDF" },
+      {
+        id: "split",
+        icon: "✂️",
+        name: lang === "tr" ? "PDF Böl" : "Split PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
       {
         id: "compress",
         icon: "📦",
@@ -166,7 +203,21 @@ export default function PdfToolsSection({
               <AnimatedCardOptions
                 options={cat.tools}
                 columns={4}
-                onSelect={(opt) => onOpenTool(opt.id as FeatureKey)}
+                onSelect={(opt) => {
+                  // Yeni AI/Editör/OCR araçları FeatureKey değil → özel SEO sayfasına git.
+                  if (
+                    opt.id === "pdf-ozetle" ||
+                    opt.id === "pdf-sohbet" ||
+                    opt.id === "pdf-duzenle" ||
+                    opt.id === "taranmis-pdf-ocr"
+                  ) {
+                    if (typeof window !== "undefined") {
+                      window.location.href = `/tools/${opt.id}`;
+                    }
+                    return;
+                  }
+                  onOpenTool(opt.id as FeatureKey);
+                }}
               />
             </motion.div>
           ))}
