@@ -322,11 +322,12 @@ _EDIT_FONT_PATH = str(Path(__file__).resolve().parent.parent / "assets" / "Robot
 @limiter.limit("15/minute")
 async def tool_edit_text(
     request: Request,
-    token: Annotated[str, Depends(extract_pdf_access_token)],
     file: UploadFile = File(...),
     edits: str = Form("[]"),
     password: str = Form(""),
 ):
+    # Not: bu araç misafire de açık (token gerekmez). Kötüye kullanımı boyut (50MB),
+    # oran (15/dk) ve sandbox sınırları önler; entitlement/kredi tüketmez.
     """Sunucu tarafı GERÇEK metin düzenleme: seçili bölgedeki mevcut metni PyMuPDF
     redaction ile GERÇEKTEN siler (örtmez), yerine yeni metni yazar. `edits`:
     JSON [{page, bbox:[x0,y0,x1,y1] (PDF nokta, üst-sol origin), text, size}].
@@ -380,10 +381,12 @@ async def tool_edit_text(
                             continue
                         x0, y0, x1, y1 = (float(v) for v in op["bbox"])
                         fs = float(op.get("size") or 11)
-                        rect = _fitz.Rect(x0, y0, max(x1, x0 + 6), max(y1, y0 + fs + 2))
-                        page.insert_textbox(
-                            rect, t, fontsize=fs, color=(0, 0, 0),
-                            fontname="roboto", fontfile=_EDIT_FONT_PATH, align=0,
+                        # insert_text (nokta bazlı, baseline) — kutu sığma zorunluluğu
+                        # yok, metin her zaman yerleşir. Baseline'ı kutu üstünden fs kadar aşağı al.
+                        page.insert_text(
+                            _fitz.Point(x0, y0 + fs),
+                            t, fontsize=fs, color=(0, 0, 0),
+                            fontname="roboto", fontfile=_EDIT_FONT_PATH,
                         )
                 doc.save(str(out_p), garbage=3, deflate=True)
                 return out_p.read_bytes()

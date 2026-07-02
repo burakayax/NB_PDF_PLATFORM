@@ -559,7 +559,7 @@ function Hero({
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
           <div className="text-left">
             {editorOn ? (
-              <PdfEditor language={language} />
+              <PdfEditor language={language} accessToken={accessToken} />
             ) : aiTool ? (
               <AiPdfTool
                 key={aiTool}

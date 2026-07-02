@@ -113,6 +113,42 @@ function appendSaasAccessToken(formData: FormData, accessToken: string | null | 
   }
 }
 
+export type PdfTextEdit = {
+  page: number;
+  bbox: [number, number, number, number];
+  text: string;
+  size: number;
+};
+
+/** Sunucu tarafı GERÇEK metin düzenleme — seçili bölgedeki mevcut metni PyMuPDF ile
+ * gerçekten siler ve yerine yeni metni yazar. Bu araçta dosya SUNUCUYA yüklenir. */
+export async function editPdfText(
+  file: File,
+  edits: PdfTextEdit[],
+  accessToken?: string | null,
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("edits", JSON.stringify(edits));
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetch(`${API_BASE}/api/edit-text`, {
+    method: "POST",
+    body: formData,
+    headers: saasAuthHeaders(accessToken),
+  });
+  if (!response.ok) {
+    let msg = "Düzenleme başarısız oldu.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch {
+      /* JSON değilse varsayılan mesaj */
+    }
+    throw new Error(msg);
+  }
+  return response.blob();
+}
+
 async function pdfFetch(url: string, init?: RequestInit): Promise<Response> {
   try {
     return await fetch(url, init);

@@ -4683,7 +4683,7 @@ function App() {
     if (seoSlug === "pdf-duzenle") {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <PdfEditor language={language} />
+          <PdfEditor language={language} accessToken={accessToken} />
         </GuestSeoToolPage>
       );
     }
@@ -5845,7 +5845,7 @@ function App() {
 
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
-                <PdfEditor language={language} />
+                <PdfEditor language={language} accessToken={accessToken} />
               </section>
             ) : null}
 
