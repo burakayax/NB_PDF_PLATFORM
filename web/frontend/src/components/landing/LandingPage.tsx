@@ -17,6 +17,7 @@ import PricingSection from "../ui/pricing-section";
 import { GuestToolCore, type Picked as GuestPickedFile } from "../tools/GuestToolCore";
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
+import { AiBatchTool } from "../tools/AiBatchTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { toolAccent } from "../tools/ToolDropzone";
 
@@ -429,7 +430,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
-  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | null>(null);
+  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | null>(null);
   const [editorOn, setEditorOn] = useState(false);
   // Ödemeler kapalıyken AI araçları "Yakında" durumunda (fiyat kartlarıyla aynı sinyal).
   // Admin ödemeleri açınca (paymentsDisabled === false) AI otomatik aktifleşir.
@@ -537,6 +538,7 @@ function Hero({
                 ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
                 ["extract", tr ? "✨ AI Veri Çıkar" : "✨ AI Extract"],
                 ["translate", tr ? "✨ AI Çeviri" : "✨ AI Translate"],
+                ["batch", tr ? "✨ AI Toplu İşlem" : "✨ AI Batch"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -576,6 +578,14 @@ function Hero({
           <div className="text-left">
             {editorOn ? (
               <PdfEditor language={language} accessToken={accessToken} />
+            ) : aiTool === "batch" ? (
+              <AiBatchTool
+                language={language}
+                accessToken={accessToken}
+                onLogin={onLogin}
+                onUpgrade={onUpgrade}
+                comingSoon={aiComingSoon}
+              />
             ) : aiTool ? (
               <AiPdfTool
                 key={aiTool}
