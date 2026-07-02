@@ -36,6 +36,7 @@ import {
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { AiPdfTool } from "./components/tools/AiPdfTool";
+import { AiBatchTool } from "./components/tools/AiBatchTool";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
@@ -691,7 +692,10 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-ozetle" ||
     rawPath === "/tools/pdf-sohbet" ||
     rawPath === "/tools/pdf-duzenle" ||
-    rawPath === "/tools/taranmis-pdf-ocr"
+    rawPath === "/tools/taranmis-pdf-ocr" ||
+    rawPath === "/tools/pdf-veri-cikar" ||
+    rawPath === "/tools/pdf-ceviri" ||
+    rawPath === "/tools/ai-toplu-islem"
   ) {
     return "web";
   }
@@ -2877,7 +2881,10 @@ function App() {
         p === "/tools/pdf-ozetle" ||
         p === "/tools/pdf-sohbet" ||
         p === "/tools/pdf-duzenle" ||
-        p === "/tools/taranmis-pdf-ocr"
+        p === "/tools/taranmis-pdf-ocr" ||
+        p === "/tools/pdf-veri-cikar" ||
+        p === "/tools/pdf-ceviri" ||
+        p === "/tools/ai-toplu-islem"
       ) {
         return;
       }
@@ -4687,11 +4694,28 @@ function App() {
         </GuestSeoToolPage>
       );
     }
-    if (seoSlug === "pdf-ozetle" || seoSlug === "pdf-sohbet" || seoSlug === "taranmis-pdf-ocr") {
+    if (seoSlug === "ai-toplu-islem") {
+      return (
+        <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+        </GuestSeoToolPage>
+      );
+    }
+    if (
+      seoSlug === "pdf-ozetle" ||
+      seoSlug === "pdf-sohbet" ||
+      seoSlug === "taranmis-pdf-ocr" ||
+      seoSlug === "pdf-veri-cikar" ||
+      seoSlug === "pdf-ceviri"
+    ) {
+      const aiMode =
+        seoSlug === "pdf-sohbet" ? "chat" :
+        seoSlug === "pdf-veri-cikar" ? "extract" :
+        seoSlug === "pdf-ceviri" ? "translate" : "summarize";
       return (
         <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister}>
           <AiPdfTool
-            mode={seoSlug === "pdf-sohbet" ? "chat" : "summarize"}
+            mode={aiMode}
             language={language}
             accessToken={accessToken}
             onLogin={goLogin}

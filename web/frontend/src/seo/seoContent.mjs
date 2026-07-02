@@ -56,6 +56,9 @@ export const TOOL_SLUGS = [
   "pdf-sohbet",
   "pdf-duzenle",
   "taranmis-pdf-ocr",
+  "pdf-veri-cikar",
+  "pdf-ceviri",
+  "ai-toplu-islem",
 ];
 
 const T = (title, description, h1, intro, keywords, faq) => ({
@@ -717,6 +720,81 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a scanned PDF to text?", a: "Upload the PDF; OCR turns the text in the page images into real text in your browser. You can then summarize, search or edit it." },
         { q: "Which languages does OCR support?", a: "Turkish and English are supported. Processing happens on your device; your document is not uploaded to a server." },
+      ],
+    ),
+  },
+
+  "pdf-veri-cikar": {
+    tr: T(
+      "PDF Veri Çıkarma — Fatura ve Tablodan Veri (Yapay Zekâ)",
+      "Fatura, ihale, sözleşme ya da tablodaki bilgileri yapay zekâ ile yapılandırılmış veriye çevirin: alanlar + satır kalemleri, tabloya dökün, CSV indirin.",
+      "PDF'ten Veri Çıkar (Yapay Zekâ)",
+      "Fatura, irsaliye, ihale ya da tablodaki bilgileri okumadan otomatik çıkarın: belge türü, fatura no, tarih, taraflar, vergi no, ara toplam, KDV, genel toplam ve satır kalemleri yapılandırılmış veri olarak gelir. Sonucu tabloda görün, CSV veya JSON olarak dışa aktarın. Metin cihazınızda okunur; taranmış belgelerde OCR devreye girer.",
+      ["pdf veri çıkarma", "faturadan veri çıkarma", "pdf tablo çıkarma", "pdf'ten excel", "fatura okuma yapay zeka", "pdf veri ayıklama", "belgeden veri çıkarma"],
+      [
+        { q: "Faturadan veri nasıl çıkarılır?", a: "PDF'i yükleyin; yapay zekâ belge türünü tanır ve fatura no, tarih, taraflar, toplam, KDV gibi alanları ve satır kalemlerini yapılandırılmış olarak çıkarır. CSV/JSON indirebilirsiniz." },
+        { q: "Birden çok faturayı tek tabloya alabilir miyim?", a: "Evet. «AI Toplu İşlem» aracıyla onlarca faturayı işleyip hepsini tek bir CSV tablosunda birleştirebilirsiniz." },
+      ],
+    ),
+    en: T(
+      "PDF Data Extraction — Invoices & Tables (AI)",
+      "Turn invoices, tenders, contracts or tables into structured data with AI: fields + line items, view as a table, export CSV.",
+      "Extract Data from PDF (AI)",
+      "Extract information from invoices, delivery notes, tenders or tables automatically: document type, invoice no, date, parties, tax id, subtotal, VAT, total and line items come back as structured data. View it as a table and export CSV or JSON. Text is read on your device; scanned documents are handled with OCR.",
+      ["pdf data extraction", "extract data from invoice", "pdf table extraction", "pdf to excel data", "invoice parsing ai", "document data extraction"],
+      [
+        { q: "How do I extract data from an invoice?", a: "Upload the PDF; the AI detects the document type and extracts fields like invoice no, date, parties, total, VAT and line items as structured data. You can download CSV/JSON." },
+        { q: "Can I extract many invoices into one table?", a: "Yes. With the «AI Batch» tool you can process dozens of invoices and merge them all into a single CSV table." },
+      ],
+    ),
+  },
+
+  "pdf-ceviri": {
+    tr: T(
+      "PDF Çeviri — PDF'i Yapay Zekâ ile Çevir (12+ Dil)",
+      "PDF belgenizi yapay zekâ ile istediğiniz dile çevirin — anlam, ton ve yapı korunur. İngilizce, Almanca, Fransızca, Arapça ve daha fazlası; sonucu PDF indirin.",
+      "PDF'i Yapay Zekâ ile Çevir",
+      "PDF belgenizi 12'den fazla dile çevirin; başlık, liste ve tablolar korunur, sayı ve tarihler bozulmaz. İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, Arapça, Rusça ve daha fazlası. Metin cihazınızda okunur; çeviriyi düzgün bir PDF olarak indirin.",
+      ["pdf çeviri", "pdf çevir", "pdf tercüme", "belge çevirisi", "yapay zeka pdf çeviri", "ingilizce pdf çevir", "pdf dil çevirme"],
+      [
+        { q: "PDF nasıl başka dile çevrilir?", a: "PDF'i yükleyin, hedef dili seçin ve «Çevir» deyin. Yapay zekâ belgeyi anlam ve yapısını koruyarak çevirir; sonucu PDF olarak indirebilirsiniz." },
+        { q: "Çeviride belgenin düzeni korunur mu?", a: "Evet. Başlıklar, listeler ve tablolar korunarak çevrilir; sayı, tarih ve özel isimler olduğu gibi kalır." },
+      ],
+    ),
+    en: T(
+      "Translate PDF — Translate PDF with AI (12+ Languages)",
+      "Translate your PDF into any language with AI — meaning, tone and structure preserved. English, German, French, Arabic and more; download the result as PDF.",
+      "Translate PDF with AI",
+      "Translate your PDF into 12+ languages; headings, lists and tables are preserved and numbers/dates stay intact. English, Turkish, German, French, Spanish, Arabic, Russian and more. Text is read on your device; download the translation as a clean PDF.",
+      ["translate pdf", "pdf translator", "translate pdf online", "document translation ai", "translate pdf to english", "ai pdf translation"],
+      [
+        { q: "How do I translate a PDF into another language?", a: "Upload the PDF, pick a target language and click 'Translate'. The AI translates while preserving meaning and structure; you can download the result as a PDF." },
+        { q: "Is the layout preserved in translation?", a: "Yes. Headings, lists and tables are kept, and numbers, dates and proper nouns stay intact." },
+      ],
+    ),
+  },
+
+  "ai-toplu-islem": {
+    tr: T(
+      "AI Toplu İşlem — Çok Sayıda PDF'i Tek Seferde İşle",
+      "Onlarca PDF'i tek seferde yapay zekâ ile işleyin: her belgeyi özetleyin, verisini çıkarın veya çevirin; sonuçları tek CSV/PDF olarak indirin.",
+      "PDF'leri Toplu İşle (Yapay Zekâ)",
+      "Bir klasör dolusu PDF'i tek seferde işleyin: her faturayı, sözleşmeyi ya da raporu özetleyin, verisini çıkarın veya çevirin. Onlarca faturanın verisini tek bir CSV tablosunda birleştirin. Metin cihazınızda okunur; dosya başına ilerleme gösterilir.",
+      ["toplu pdf işleme", "çoklu pdf özet", "toplu fatura okuma", "çoklu pdf çeviri", "pdf toplu veri çıkarma", "birden fazla pdf işleme"],
+      [
+        { q: "Birden çok PDF'i tek seferde nasıl işlerim?", a: "PDF'leri toplu yükleyin, işlemi (özet / veri çıkar / çeviri) seçin ve başlatın. Her dosya sırayla işlenir; sonuçları tek CSV veya PDF olarak indirebilirsiniz." },
+        { q: "Faturaları tek tabloda birleştirebilir miyim?", a: "Evet. Veri çıkarma modunda tüm faturaların alanları birleştirilip, her satırı bir dosya olan tek bir CSV tablosu oluşturulur." },
+      ],
+    ),
+    en: T(
+      "AI Batch — Process Many PDFs at Once",
+      "Process dozens of PDFs at once with AI: summarize, extract data or translate each; export results as one CSV/PDF.",
+      "Batch Process PDFs (AI)",
+      "Process a whole folder of PDFs at once: summarize, extract data from or translate each invoice, contract or report. Merge the data of dozens of invoices into a single CSV table. Text is read on your device; per-file progress is shown.",
+      ["batch pdf processing", "bulk pdf summary", "batch invoice extraction", "multiple pdf translation", "bulk pdf data extraction", "process multiple pdfs"],
+      [
+        { q: "How do I process multiple PDFs at once?", a: "Upload the PDFs in bulk, choose the operation (summarize / extract / translate) and start. Each file is processed in turn; you can export the results as one CSV or PDF." },
+        { q: "Can I merge invoices into one table?", a: "Yes. In extract mode, the fields of all invoices are merged into a single CSV table with one row per file." },
       ],
     ),
   },
