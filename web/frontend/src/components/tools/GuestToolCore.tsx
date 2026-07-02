@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowDown,
@@ -10,9 +10,9 @@ import {
   Loader2,
   Share2,
   Trash2,
-  UploadCloud,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { ToolDropzone } from "./ToolDropzone";
 import {
   mergePdfs,
   imagesToPdf,
@@ -51,11 +51,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
   const tr = language === "tr";
   const [activeTool, setActiveTool] = useState<GuestToolId>(tool);
   const [files, setFiles] = useState<Picked[]>([]);
-  const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const isImages = activeTool === "image-to-pdf";
   const accept = autoDetect
@@ -292,47 +290,19 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister }: Props)
 
   return (
     <div>
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setDragOver(true);
-        }}
-        onDragLeave={() => setDragOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setDragOver(false);
-          addFiles(e.dataTransfer.files);
-        }}
-        onClick={() => inputRef.current?.click()}
-        className={`group relative cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition ${
-          dragOver
-            ? "border-cyan-400/70 bg-cyan-400/[0.06]"
-            : "border-white/15 bg-white/[0.02] hover:border-cyan-400/40 hover:bg-white/[0.04]"
-        }`}
-      >
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          multiple
-          className="hidden"
-          onChange={(e) => {
-            if (e.target.files) addFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 text-cyan-300 ring-1 ring-white/10 transition group-hover:scale-105">
-          <UploadCloud className="h-7 w-7" />
-        </div>
-        <p className="mt-4 text-base font-semibold text-white">
-          {tr ? "Dosyaları buraya sürükle" : "Drag your files here"}
-        </p>
-        <p className="mt-1 text-[13px] text-slate-400">
-          {tr ? "ya da tıklayıp seç" : "or click to choose"} ·{" "}
-          {autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} ·{" "}
-          {tr ? "80 MB'a kadar" : "up to 80 MB"}
-        </p>
-      </div>
+      <ToolDropzone
+        toolId={activeTool}
+        tr={tr}
+        accept={accept}
+        multiple
+        busy={busy}
+        showBenefits={files.length === 0}
+        onFiles={(fl) => addFiles(fl)}
+        titleTr={isImages ? "Görselleri buraya sürükle" : "PDF'leri buraya sürükle"}
+        titleEn={isImages ? "Drag your images here" : "Drag your PDFs here"}
+        hintTr={`ya da tıklayıp seç · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · 80 MB'a kadar`}
+        hintEn={`or click to choose · ${autoDetect ? "PDF, JPG, PNG" : isImages ? "JPG, PNG" : "PDF"} · up to 80 MB`}
+      />
 
       {files.length > 0 && (
         <ul className="mt-4 space-y-2">
