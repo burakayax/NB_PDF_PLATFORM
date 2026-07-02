@@ -41,12 +41,27 @@ const FONT_LABEL: Record<FontKey, string> = { sans: "Sans", serif: "Serif", mono
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
  * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
-function AutoText({ id, initial, className, style, onInput, onClick, onFocus }: {
+function AutoText({ id, initial, className, style, onInput, onClick, onFocus, autoFocus }: {
   id: string; initial: string; className?: string; style?: React.CSSProperties;
-  onInput: (t: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void;
+  onInput: (t: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void; autoFocus?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (ref.current) ref.current.textContent = initial; }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.textContent = initial;
+    if (autoFocus) {
+      el.focus();
+      // İmleci metnin sonuna taşı
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const selc = window.getSelection();
+      selc?.removeAllRanges();
+      selc?.addRange(range);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div ref={ref} data-tid={id} data-op="1" contentEditable suppressContentEditableWarning role="textbox"
       onInput={() => onInput(ref.current?.textContent ?? "")}
@@ -390,14 +405,30 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                       if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-white ring-1 ring-dashed ring-slate-300" style={style} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, Delete ile sil" : "Image — select, Delete to remove"} />;
                     }
-                    if (del) return null;
+                    // Metin öğesi. Silgi kutusu = ORİJİNAL bbox (metin kısalıp temizlense de
+                    // alttaki orijinal asla görünmesin). Boyut, içerikten BAĞIMSIZ.
+                    const eb = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 4), height: Math.max((y1 - y0) * scale, 6) } as const;
+                    if (del) {
+                      // Silinmiş metin → orijinali beyazla kapat, düzenleme yok (tıkla → geri al)
+                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer bg-white ring-1 ring-dashed ring-slate-300/70" style={eb} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                    }
+                    // Değişmemiş VE seçili değil → sadece şeffaf tıklama hedefi; canvas'taki
+                    // NET orijinal metin görünür (üstüne HTML yazı basmıyoruz → çift görüntü yok).
+                    const active = sel || edits.has(el.id);
+                    if (!active) {
+                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className="absolute cursor-text rounded-[2px] transition hover:bg-cyan-400/10 hover:ring-1 hover:ring-cyan-400/50" style={eb} title={tr ? "Düzenlemek için tıkla" : "Click to edit"} />;
+                    }
+                    // Aktif (seçili ya da düzenlenmiş) → orijinali TAM kapla + düzenlenebilir katman üstte
                     return (
-                      <AutoText key={el.id} id={el.id} initial={elText(el)}
-                        onInput={(t) => setEdit(el.id, { text: t })}
-                        onClick={(e) => { e.stopPropagation(); selectEl(el); }}
-                        onFocus={() => selectEl(el)}
-                        className={`absolute bg-white leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "hover:ring-1 hover:ring-cyan-400/60"}`}
-                        style={{ left: x0 * scale, top: y0 * scale, color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0 }} />
+                      <div key={el.id} className="absolute" style={{ left: eb.left, top: eb.top }}>
+                        <div className="absolute bg-white" style={{ left: -1, top: -1, width: eb.width + 2, height: eb.height + 2 }} />
+                        <AutoText id={el.id} initial={elText(el)} autoFocus={sel && !edits.has(el.id)}
+                          onInput={(t) => setEdit(el.id, { text: t })}
+                          onClick={(e) => { e.stopPropagation(); selectEl(el); }}
+                          onFocus={() => selectEl(el)}
+                          className={`relative bg-white leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
+                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0 }} />
+                      </div>
                     );
                   })}
                   {/* Eklenen metinler */}
