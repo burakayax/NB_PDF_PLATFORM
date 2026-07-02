@@ -8,6 +8,7 @@ import {
   Download,
   FileText,
   Loader2,
+  Move,
   Pencil,
   Share2,
   ShieldAlert,
@@ -28,7 +29,7 @@ import {
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const uid = () => Math.random().toString(36).slice(2, 9);
-type FontKey = "sans" | "serif" | "mono";
+type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
 type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey };
 type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey };
 
@@ -36,8 +37,21 @@ const FONT_CSS: Record<FontKey, string> = {
   sans: "Roboto, system-ui, sans-serif",
   serif: "'Noto Serif', Georgia, serif",
   mono: "'Roboto Mono', ui-monospace, monospace",
+  lato: "Lato, system-ui, sans-serif",
+  montserrat: "Montserrat, system-ui, sans-serif",
+  merriweather: "Merriweather, Georgia, serif",
+  oswald: "Oswald, 'Arial Narrow', sans-serif",
 };
-const FONT_LABEL: Record<FontKey, string> = { sans: "Sans", serif: "Serif", mono: "Mono" };
+const FONT_LABEL: Record<FontKey, string> = {
+  sans: "Roboto", serif: "Noto Serif", mono: "Roboto Mono",
+  lato: "Lato", montserrat: "Montserrat", merriweather: "Merriweather", oswald: "Oswald",
+};
+// Baseline'ı orijinaline oturtmak için: bir metin öğesinin taban çizgisi (origin.y)
+// bilinmiyorsa yaklaşık ascent oranı (Roboto ~0.80). Font-family bazında ufak farklar
+// olsa da göze batmaz; asıl hiza gerçek "by" değeriyle sağlanır.
+const ASCENT_RATIO = 0.8;
+// Hazır renk paleti — hızlı seçim.
+const PRESET_COLORS = ["#111111", "#ffffff", "#e11d48", "#f59e0b", "#16a34a", "#2563eb", "#7c3aed", "#0891b2", "#6b7280", "#000000"];
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
  * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
@@ -99,6 +113,20 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   // Öğe id → örneklenen arka plan rengi (#RRGGBB). Silgi/redaction bu renkle doldurulur
   // (beyaz varsayım yerine) → kırmızı/siyah/resimli zeminde beyaz kutu kalmaz.
   const [bgMap, setBgMap] = useState<Map<string, string>>(new Map());
+  // Eklenen metni serbest sürükleme (taşıma tutamacı).
+  const [drag, setDrag] = useState<{ id: string; sx: number; sy: number; ox: number; oy: number } | null>(null);
+
+  // Editör font seçenekleri — önizleme gömülü TTF'lerle birebir olsun diye webfont'ları
+  // yükle (yalnız editör açılınca, glyph kullanılınca iner). Her rotada çalışır.
+  useEffect(() => {
+    const id = "pdf-editor-fonts";
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Serif:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Merriweather:wght@400;700&family=Oswald:wght@400;500;600&display=swap";
+    document.head.appendChild(link);
+  }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -223,6 +251,25 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
     const [r, g, b] = best.split(",").map(Number);
     return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
   }
+  // Sürükleme sürerken pencere düzeyinde takip et → eklenen metin serbestçe konumlanır.
+  useEffect(() => {
+    if (!drag) return;
+    const onMove = (e: PointerEvent) => {
+      const dx = (e.clientX - drag.sx) / scale;
+      const dy = (e.clientY - drag.sy) / scale;
+      setAdded((arr) => arr.map((x) => {
+        if (x.id !== drag.id) return x;
+        const w = x.bbox[2] - x.bbox[0], h = x.bbox[3] - x.bbox[1];
+        const nx = Math.max(0, drag.ox + dx), ny = Math.max(0, drag.oy + dy);
+        return { ...x, bbox: [nx, ny, nx + w, ny + h] };
+      }));
+    };
+    const onUp = () => setDrag(null);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+  }, [drag, scale]);
+
   function ensureBg(el: PdfElement) {
     if (bgMap.has(el.id)) return;
     const c = sampleBgColor(el.bbox[0], el.bbox[1], el.bbox[2], el.bbox[3]);
@@ -299,11 +346,12 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
       const el = analysis?.pages[p]?.elements.find((x) => x.id === id);
       if (!el) continue;
       const bg = bgMap.get(id);
-      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
+      const by = el.by;
+      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
       else if (ed.text !== undefined && ed.text !== el.text)
-        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
+        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
       else if (ed.color || ed.size || ed.font)
-        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg });
+        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
     }
     for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font });
     if (ops.length === 0) { setError(tr ? "Henüz bir düzenleme yapmadınız." : "No edits yet."); return; }
@@ -405,12 +453,19 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                 <span className="mx-1 h-5 w-px bg-white/10" />
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Renk" : "Color"}
-                  <input type="color" value={color} onChange={(e) => applyColor(e.target.value)} className="h-7 w-7 cursor-pointer rounded-lg border border-white/10 bg-transparent" />
+                  <span className="flex items-center gap-1">
+                    {PRESET_COLORS.map((c) => (
+                      <button key={c} type="button" onClick={() => applyColor(c)} title={c}
+                        className={`h-5 w-5 rounded-md border transition hover:scale-110 ${color.toLowerCase() === c.toLowerCase() ? "border-white ring-2 ring-cyan-400" : "border-white/20"}`}
+                        style={{ backgroundColor: c }} />
+                    ))}
+                  </span>
+                  <input type="color" value={color} onChange={(e) => applyColor(e.target.value)} className="h-7 w-7 cursor-pointer rounded-lg border border-white/10 bg-transparent" title={tr ? "Özel renk" : "Custom color"} />
                 </label>
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Font" : "Font"}
                   <select value={font} onChange={(e) => applyFont(e.target.value as FontKey)} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white">
-                    {(["sans", "serif", "mono"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black">{FONT_LABEL[f]}</option>)}
+                    {(["sans", "serif", "mono", "lato", "montserrat", "merriweather", "oswald"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black" style={{ fontFamily: FONT_CSS[f] }}>{FONT_LABEL[f]}</option>)}
                   </select>
                 </label>
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
@@ -420,7 +475,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
               </>
             )}
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden text-[11px] text-slate-500 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · {editCount} {tr ? "değişiklik" : "edits"}</span>
+              <span className="hidden text-[12px] font-semibold text-slate-300 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · <span className="text-cyan-300">{editCount} {tr ? "değişiklik" : "edits"}</span></span>
               <button type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
               <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
             </div>
@@ -451,8 +506,9 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                     const sel = selected === el.id;
                     if (el.type === "image") {
                       const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
-                      // Silinmiş görsel → arka plan rengiyle kapat (anında yok olmuş görünür); tıkla → geri al
-                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300" style={{ ...style, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
+                      // Silinmiş görsel → arka plan rengiyle kapat. Silgiyi bbox'tan ~3px taşır:
+                      // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
+                      if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300" style={{ left: style.left - 3, top: style.top - 3, width: style.width + 6, height: style.height + 6, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, Delete ile sil" : "Image — select, Delete to remove"} />;
                     }
                     // Metin öğesi. Silgi kutusu = ORİJİNAL bbox (metin kısalıp temizlense de
@@ -468,7 +524,12 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                     if (!active) {
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className="absolute cursor-text rounded-[2px] transition hover:bg-cyan-400/10 hover:ring-1 hover:ring-cyan-400/50" style={eb} title={tr ? "Düzenlemek için tıkla" : "Click to edit"} />;
                     }
-                    // Aktif (seçili ya da düzenlenmiş) → orijinali TAM kapla + düzenlenebilir katman üstte
+                    // Aktif (seçili ya da düzenlenmiş) → orijinali TAM kapla + düzenlenebilir katman üstte.
+                    // Metni GERÇEK taban çizgisine (by) hizala → "bir tık aşağı" kayması biter,
+                    // önizleme indirilen PDF ile birebir.
+                    const fsPx = elSize(el) * scale;
+                    const baselinePt = el.by ?? (y0 + (el.size ?? 12));
+                    const textTop = (baselinePt - y0) * scale - ASCENT_RATIO * fsPx;
                     return (
                       <div key={el.id} className="absolute" style={{ left: eb.left, top: eb.top }}>
                         <div className="absolute" style={{ left: -1, top: -1, width: eb.width + 2, height: eb.height + 2, backgroundColor: bgFor(el.id) }} />
@@ -476,22 +537,33 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                           onInput={(t) => setEdit(el.id, { text: t })}
                           onClick={(e) => { e.stopPropagation(); selectEl(el); }}
                           onFocus={() => selectEl(el)}
-                          className={`relative outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ color: elColor(el), fontSize: `${elSize(el) * scale}px`, lineHeight: `${eb.height}px`, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
+                          className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
+                          style={{ position: "absolute", left: 0, top: textTop, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
                       </div>
                     );
                   })}
-                  {/* Eklenen metinler */}
+                  {/* Eklenen metinler — serbest sürüklenebilir (taşıma tutamacı) */}
                   {pageAdded.map((a) => {
                     const [x0, y0] = a.bbox;
                     const sel = selected === a.id;
                     return (
-                      <AutoText key={a.id} id={a.id} initial={a.text}
-                        onInput={(t) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: t } : x)))}
-                        onClick={(e) => { e.stopPropagation(); setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAddMode(false); }}
-                        onFocus={() => { setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); }}
-                        className={`absolute bg-white/90 leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/50"}`}
-                        style={{ left: x0 * scale, top: y0 * scale, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: FONT_CSS[a.font], padding: 0 }} />
+                      <div key={a.id} className="absolute" style={{ left: x0 * scale, top: y0 * scale }}>
+                        {sel && (
+                          <span
+                            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDrag({ id: a.id, sx: e.clientX, sy: e.clientY, ox: x0, oy: y0 }); }}
+                            className="absolute -top-7 left-0 z-10 inline-flex cursor-move items-center gap-1 rounded-md bg-cyan-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-lg select-none"
+                            title={tr ? "Sürükleyerek taşı" : "Drag to move"}
+                          >
+                            <Move className="h-3 w-3" />{tr ? "Taşı" : "Move"}
+                          </span>
+                        )}
+                        <AutoText id={a.id} initial={a.text}
+                          onInput={(t) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: t } : x)))}
+                          onClick={(e) => { e.stopPropagation(); setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAddMode(false); }}
+                          onFocus={() => { setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); }}
+                          className={`bg-white/90 leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/50"}`}
+                          style={{ position: "absolute", left: 0, top: 0, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: FONT_CSS[a.font], padding: 0 }} />
+                      </div>
                     );
                   })}
                 </div>
