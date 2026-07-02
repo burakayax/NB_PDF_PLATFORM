@@ -118,7 +118,46 @@ export type PdfTextEdit = {
   bbox: [number, number, number, number];
   text: string;
   size: number;
+  color?: string;
 };
+
+export type PdfElement = {
+  id: string;
+  type: "text" | "image";
+  bbox: [number, number, number, number];
+  text?: string;
+  size?: number;
+  color?: string;
+};
+export type PdfAnalysis = {
+  pages: { width: number; height: number; elements: PdfElement[] }[];
+};
+
+/** PDF'in her sayfasındaki öğeleri (metin+görsel, bbox/renk/boyut) döndürür. */
+export async function analyzePdf(
+  file: File,
+  accessToken?: string | null,
+): Promise<PdfAnalysis> {
+  const formData = new FormData();
+  formData.append("file", file);
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetch(`${API_BASE}/api/pdf-analyze`, {
+    method: "POST",
+    body: formData,
+    headers: saasAuthHeaders(accessToken),
+  });
+  if (!response.ok) {
+    let msg = "PDF analizi başarısız oldu.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
+  return response.json();
+}
 
 /** Sunucu tarafı GERÇEK metin düzenleme — seçili bölgedeki mevcut metni PyMuPDF ile
  * gerçekten siler ve yerine yeni metni yazar. Bu araçta dosya SUNUCUYA yüklenir. */

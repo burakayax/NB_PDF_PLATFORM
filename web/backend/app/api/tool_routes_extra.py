@@ -318,6 +318,17 @@ async def tool_delete_pages(
 _EDIT_FONT_PATH = str(Path(__file__).resolve().parent.parent / "assets" / "Roboto-Regular.ttf")
 
 
+def _hex_to_rgb01(hex_str: str | None) -> tuple[float, float, float]:
+    """'#RRGGBB' → (r,g,b) 0..1. Geçersizse siyah."""
+    try:
+        h = (hex_str or "").lstrip("#")
+        if len(h) == 6:
+            return (int(h[0:2], 16) / 255, int(h[2:4], 16) / 255, int(h[4:6], 16) / 255)
+    except Exception:
+        pass
+    return (0.0, 0.0, 0.0)
+
+
 @router.post("/edit-text")
 @limiter.limit("15/minute")
 async def tool_edit_text(
@@ -383,9 +394,10 @@ async def tool_edit_text(
                         fs = float(op.get("size") or 11)
                         # insert_text (nokta bazlı, baseline) — kutu sığma zorunluluğu
                         # yok, metin her zaman yerleşir. Baseline'ı kutu üstünden fs kadar aşağı al.
+                        col = _hex_to_rgb01(op.get("color"))
                         page.insert_text(
                             _fitz.Point(x0, y0 + fs),
-                            t, fontsize=fs, color=(0, 0, 0),
+                            t, fontsize=fs, color=col,
                             fontname="roboto", fontfile=_EDIT_FONT_PATH,
                         )
                 doc.save(str(out_p), garbage=3, deflate=True)
@@ -407,6 +419,83 @@ async def tool_edit_text(
         raise
     except Exception as e:
         cleanup_and_raise(workdir, e, filename=file.filename or "<?>", client_ip=_client_ip(request), operation="edit-text")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/pdf-analyze")
+@limiter.limit("20/minute")
+async def tool_pdf_analyze(
+    request: Request,
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    """Her sayfadaki öğeleri (metin span'leri + görseller) bbox/renk/boyutla döndürür
+    → frontend her öğeyi tıklanıp düzenlenebilir/silinebilir yapar. Misafire açık."""
+    decision = {"fileSizeLimitMB": 50}
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        pwd = password.strip() or None
+        sp = str(saved)
+
+        def _run() -> dict[str, Any]:
+            import fitz as _fitz
+
+            doc = _fitz.open(sp)
+            try:
+                if doc.needs_pass:
+                    if not pwd or not doc.authenticate(pwd):
+                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+                pages: list[dict[str, Any]] = []
+                for pi in range(doc.page_count):
+                    page = doc[pi]
+                    els: list[dict[str, Any]] = []
+                    ei = 0
+                    for bl in page.get_text("dict").get("blocks", []):
+                        for ln in bl.get("lines", []):
+                            for span in ln.get("spans", []):
+                                txt = span.get("text", "")
+                                if not txt.strip():
+                                    continue
+                                x0, y0, x1, y1 = span["bbox"]
+                                c = int(span.get("color", 0))
+                                els.append({
+                                    "id": f"t{pi}_{ei}", "type": "text",
+                                    "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
+                                    "text": txt, "size": round(float(span.get("size", 11)), 1),
+                                    "color": f"#{c & 0xFFFFFF:06x}",
+                                })
+                                ei += 1
+                    for img in page.get_image_info():
+                        x0, y0, x1, y1 = img["bbox"]
+                        if (x1 - x0) < 4 or (y1 - y0) < 4:
+                            continue
+                        els.append({
+                            "id": f"i{pi}_{ei}", "type": "image",
+                            "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
+                        })
+                        ei += 1
+                    pages.append({
+                        "width": round(page.rect.width, 1),
+                        "height": round(page.rect.height, 1),
+                        "elements": els,
+                    })
+                return {"pages": pages}
+            finally:
+                doc.close()
+
+        return await run_sandboxed(_run)
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except HTTPException:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=file.filename or "<?>", client_ip=_client_ip(request), operation="pdf-analyze")
     finally:
         if workdir.exists():
             cleanup_path(workdir)
