@@ -14,6 +14,7 @@ import {
   Share2,
   ShieldCheck,
   Sparkles,
+  Table2,
   Target,
   UploadCloud,
   Zap,
@@ -26,14 +27,16 @@ import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
 import {
   aiSummarize,
   aiChat,
+  aiExtract,
   fetchAiQuota,
   type AiError,
   type AiQuota,
   type ChatTurn,
+  type ExtractedData,
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
 
-type AiMode = "summarize" | "chat";
+type AiMode = "summarize" | "chat" | "extract";
 
 type Props = {
   mode: AiMode;
@@ -97,6 +100,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
 
   // Özet
   const [summary, setSummary] = useState("");
+  const [extracted, setExtracted] = useState<ExtractedData | null>(null);
   // Sohbet
   const [messages, setMessages] = useState<ChatTurn[]>([]);
   const [question, setQuestion] = useState("");
@@ -147,6 +151,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setError(null);
     setGate(null);
     setSummary("");
+    setExtracted(null);
     setMessages([]);
     if (!f) return;
     if (f.type !== "application/pdf") {
@@ -208,6 +213,55 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     } finally {
       setBusy(false);
     }
+  }
+
+  async function runExtract() {
+    setError(null);
+    setGate(null);
+    try {
+      setBusy(true);
+      const { data, quota: q } = await aiExtract(docText, tr ? "tr" : "en", accessToken);
+      setExtracted(data);
+      if (q) setQuota(q);
+    } catch (e) {
+      handleAiError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function copyExtracted() {
+    if (!extracted) return;
+    void navigator.clipboard?.writeText(JSON.stringify(extracted, null, 2)).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    });
+  }
+
+  function downloadExtractedCsv() {
+    if (!extracted) return;
+    const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
+    const lines: string[] = [];
+    if (extracted.fields.length) {
+      lines.push(`${esc(tr ? "Alan" : "Field")},${esc(tr ? "Değer" : "Value")}`);
+      for (const f of extracted.fields) lines.push(`${esc(f.label)},${esc(f.value)}`);
+      lines.push("");
+    }
+    for (const t of extracted.tables) {
+      if (t.title) lines.push(esc(t.title));
+      lines.push(t.columns.map(esc).join(","));
+      for (const r of t.rows) lines.push(r.map(esc).join(","));
+      lines.push("");
+    }
+    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(fileName || "veri").replace(/\.pdf$/i, "")}-veri.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
   }
 
   async function sendQuestion() {
@@ -301,6 +355,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setFileName(null);
     setDocText("");
     setSummary("");
+    setExtracted(null);
     setMessages([]);
     setError(null);
     setGate(null);
@@ -310,11 +365,15 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   const title =
     mode === "summarize"
       ? tr ? "PDF Özetle" : "Summarize PDF"
-      : tr ? "PDF ile Sohbet" : "Chat with PDF";
+      : mode === "extract"
+        ? tr ? "PDF Veri Çıkar" : "Extract PDF Data"
+        : tr ? "PDF ile Sohbet" : "Chat with PDF";
   const subtitle =
     mode === "summarize"
       ? tr ? "PDF'inizi baştan sona okumadan; başlık, ana konular ve önemli noktalarıyla profesyonel bir özete çevirir." : "Turns your PDF into a professional summary — title, key topics and key points — without reading it end to end."
-      : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
+      : mode === "extract"
+        ? tr ? "Fatura, ihale, sözleşme ya da tablodaki bilgileri otomatik olarak yapılandırılmış veriye çevirir — alanlar + kalemler, tabloya dök, CSV indir." : "Turns invoices, tenders, contracts or tables into structured data — fields + line items, view as a table, export CSV."
+        : tr ? "PDF'inize doğal dille soru sorun; yapay zekâ yalnızca belgedeki bilgiye dayanarak anında yanıtlar." : "Ask your PDF questions in plain language; the AI answers instantly, based only on the document.";
 
   const benefits: { icon: LucideIcon; title: string; desc: string }[] =
     mode === "summarize"
@@ -322,6 +381,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           { icon: Zap, title: tr ? "Saniyeler içinde kavra" : "Grasp it in seconds", desc: tr ? "Uzun raporu, sözleşmeyi ya da makaleyi baştan sona okumadan ana fikri al." : "Get the gist of a long report, contract or article without reading it all." },
           { icon: ListChecks, title: tr ? "Yapılandırılmış özet" : "Structured output", desc: tr ? "Başlık, ana konular, önemli noktalar ve sonuç — düzenli ve profesyonel." : "Title, key topics, key points and conclusion — clean and professional." },
           { icon: ShieldCheck, title: tr ? "Gizli & güvenli" : "Private & secure", desc: tr ? "Belgen cihazından çıkmaz; yalnızca metni yapay zekâya gönderilir." : "Your file stays on device; only its text is sent to the AI." },
+        ]
+      : mode === "extract"
+      ? [
+          { icon: Table2, title: tr ? "Alanlar + kalemler" : "Fields + line items", desc: tr ? "Fatura no, tarih, taraflar, toplam, KDV ve satır kalemlerini otomatik ayıklar." : "Auto-extracts invoice no, date, parties, total, VAT and line items." },
+          { icon: Download, title: tr ? "CSV / JSON dışa aktar" : "Export CSV / JSON", desc: tr ? "Çıkan veriyi Excel'e ya da sistemine tek tıkla aktar." : "Push the extracted data to Excel or your system in one click." },
+          { icon: ShieldCheck, title: tr ? "Yalnızca belgeden" : "Only from the document", desc: tr ? "Yalnızca belgedeki bilgi kullanılır — uydurma yok; dosya cihazından çıkmaz." : "Uses only what's in the document — no made-up data; file stays on device." },
         ]
       : [
           { icon: MessageSquare, title: tr ? "Doğal dille sor" : "Ask naturally", desc: tr ? "Belgene istediğin soruyu sor, sohbet eder gibi anında yanıt al." : "Ask any question and get an instant, conversational answer." },
@@ -378,6 +443,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             <p className="relative mx-auto mt-2 max-w-md text-[14px] leading-relaxed text-slate-300">
               {mode === "summarize"
                 ? tr ? "Uzun belgeleri saniyeler içinde özetleyen yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that summarizes long documents in seconds is coming very soon. We're putting on the finishing touches."
+                : mode === "extract"
+                ? tr ? "Fatura, ihale ve tablolardan yapılandırılmış veri çıkaran yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that extracts structured data from invoices, tenders and tables is coming very soon. We're putting on the finishing touches."
                 : tr ? "Belgelerinle sohbet edip anında cevap alacağın yapay zekâ çok yakında açılıyor. Hazırlıkların son aşamasındayız." : "AI that lets you chat with your documents is coming very soon. We're putting on the finishing touches."}
             </p>
           </div>
@@ -521,6 +588,79 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
                 <Sparkles className="h-5 w-5" />
                 {tr ? "Profesyonel Özet Oluştur" : "Generate Professional Summary"}
+              </button>
+            )
+          ) : mode === "extract" ? (
+            extracted ? (
+              <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
+                <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
+                  <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300">
+                    <Table2 className="h-4 w-4" />
+                    {tr ? "Çıkarılan Veri" : "Extracted Data"}
+                    {extracted.docType && <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">{extracted.docType}</span>}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={copyExtracted} title="JSON"
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      <span className="hidden sm:inline">JSON</span>
+                    </button>
+                    <button type="button" onClick={downloadExtractedCsv} title="CSV"
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
+                      <Download className="h-3.5 w-3.5" /><span className="hidden sm:inline">CSV</span>
+                    </button>
+                    <button type="button" onClick={() => void runExtract()} disabled={busy} title={tr ? "Yeniden" : "Regenerate"}
+                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40">
+                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
+                      <span className="hidden sm:inline">{tr ? "Yeniden" : "Regenerate"}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="max-h-[62vh] space-y-5 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+                  {extracted.fields.length > 0 && (
+                    <div className="overflow-hidden rounded-xl border border-white/[0.08]">
+                      {extracted.fields.map((f, i) => (
+                        <div key={i} className={`flex gap-3 px-4 py-2.5 text-[13px] ${i % 2 ? "bg-white/[0.015]" : ""}`}>
+                          <span className="w-40 shrink-0 font-semibold text-slate-400">{f.label}</span>
+                          <span className="min-w-0 flex-1 break-words text-slate-100">{f.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {extracted.tables.map((t, ti) => (
+                    <div key={ti}>
+                      {t.title && <p className="mb-1.5 text-[13px] font-bold text-white">{t.title}</p>}
+                      <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
+                        <table className="w-full text-left text-[12px]">
+                          <thead>
+                            <tr className="bg-white/[0.04] text-slate-300">
+                              {t.columns.map((c, ci) => <th key={ci} className="whitespace-nowrap px-3 py-2 font-semibold">{c}</th>)}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {t.rows.map((r, ri) => (
+                              <tr key={ri} className="border-t border-white/[0.05]">
+                                {r.map((c, ci) => <td key={ci} className="px-3 py-2 text-slate-200">{c}</td>)}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
+                  {extracted.fields.length === 0 && extracted.tables.length === 0 && (
+                    <p className="text-center text-[13px] text-slate-400">{tr ? "Bu belgeden yapılandırılmış veri bulunamadı." : "No structured data found in this document."}</p>
+                  )}
+                  {extracted.note && <p className="text-[12px] italic text-slate-500">{extracted.note}</p>}
+                </div>
+              </div>
+            ) : busy ? (
+              <StatusStrip label={tr ? "Veri çıkarılıyor…" : "Extracting data…"} ratio={null} />
+            ) : (
+              <button type="button" onClick={() => void runExtract()}
+                className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                <Table2 className="h-5 w-5" />
+                {tr ? "Veriyi Çıkar" : "Extract Data"}
               </button>
             )
           ) : (

@@ -66,6 +66,27 @@ export async function aiSummarize(
   return { summary: d.summary ?? "", quota: d.quota };
 }
 
+/** Yapılandırılmış veri çıkarma sonucu (backend ExtractedData ile aynı). */
+export type ExtractedData = {
+  docType: string;
+  fields: Array<{ label: string; value: string }>;
+  tables: Array<{ title?: string; columns: string[]; rows: string[][] }>;
+  note?: string;
+};
+
+/** PDF'ten yapılandırılmış veri çıkarır (fatura/ihale/tablo → alanlar + kalemler). */
+export async function aiExtract(
+  text: string,
+  lang: "tr" | "en",
+  token: string | null,
+): Promise<{ data: ExtractedData; quota?: AiQuota }> {
+  const d = await postAi<{ data?: ExtractedData; quota?: AiQuota }>("extract", { text, lang }, token);
+  return {
+    data: d.data ?? { docType: "", fields: [], tables: [] },
+    quota: d.quota,
+  };
+}
+
 /** Belge bağlamında soru yanıtlar. */
 export async function aiChat(
   text: string,

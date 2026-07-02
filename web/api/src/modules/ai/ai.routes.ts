@@ -5,6 +5,7 @@ import { requireAiAccess } from "./ai.middleware.js";
 import {
   summarizeController,
   chatController,
+  extractController,
   quotaController,
 } from "./ai.controller.js";
 
@@ -21,3 +22,4 @@ aiRouter.post(
   asyncHandler(summarizeController),
 );
 aiRouter.post("/chat", requireAuth, requireAiAccess, asyncHandler(chatController));
+aiRouter.post("/extract", requireAuth, requireAiAccess, asyncHandler(extractController));
