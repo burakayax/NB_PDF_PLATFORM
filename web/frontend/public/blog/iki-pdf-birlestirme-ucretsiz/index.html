@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz) — PDF Platform</title>
+    <meta name="description" content="Birden fazla PDF&#39;i tek dosyada, üyeliksiz ve ücretsiz birleştirin. Dosyalarınız tarayıcınızdan çıkmadan, cihazınızda işlenir — kurulum gerekmez." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz) — PDF Platform" />
+    <meta property="og:description" content="Birden fazla PDF&#39;i tek dosyada, üyeliksiz ve ücretsiz birleştirin. Dosyalarınız tarayıcınızdan çıkmadan, cihazınızda işlenir — kurulum gerekmez." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz) — PDF Platform" />
+    <meta name="twitter:description" content="Birden fazla PDF&#39;i tek dosyada, üyeliksiz ve ücretsiz birleştirin. Dosyalarınız tarayıcınızdan çıkmadan, cihazınızda işlenir — kurulum gerekmez." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"İki veya Daha Fazla PDF'i Ücretsiz Birleştirme (Kurulumsuz)","description":"Birden fazla PDF'i tek dosyada, üyeliksiz ve ücretsiz birleştirin. Dosyalarınız tarayıcınızdan çıkmadan, cihazınızda işlenir — kurulum gerekmez.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF birleştirmek için üye olmam gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Birleştirme aracı üyeliksiz ve ücretsizdir; işlem tarayıcınızda çalışır, dosyalarınız sunucuya yüklenmez."}},{"@type":"Question","name":"Dosya boyutu sınırı nedir?","acceptedAnswer":{"@type":"Answer","text":"Web'de toplam 80 MB'a kadar dosya birleştirebilirsiniz. Dosya sayısında bir sınır yoktur."}},{"@type":"Question","name":"Dosyalarım güvende mi?","acceptedAnswer":{"@type":"Answer","text":"Evet. Birleştirme cihazınızda gerçekleşir; dosyalarınız internete hiç gönderilmez."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>İki veya Daha Fazla PDF&#39;i Ücretsiz Birleştirme (Kurulumsuz)</h1><p class="seo-intro">Birden fazla PDF&#39;i tek belgeye birleştirmenin en kolay yolu. Üyeliksiz, ücretsiz ve dosyalarınız cihazınızdan hiç çıkmadan — adım adım.</p><article class="seo-article"><p class="seo-lead">Sözleşme ekleri, taranmış evraklar ya da birden çok raporu tek PDF&#39;te toplamanız gerektiğinde, işi karmaşıklaştırmaya gerek yok. İşte üyelik ve kurulum olmadan, tamamen tarayıcınızda birleştirmenin yolu.</p><h2>Neden &quot;cihazda&quot; birleştirmek önemli?</h2><p>Çoğu online araç dosyanızı sunucularına yükler. PDF Platform&#39;da birleştirme işlemi tamamen tarayıcınızda (cihazınızda) çalışır — dosyalarınız internete hiç gönderilmez. Bu hem gizlilik hem hız demektir: yükleme beklemez, anında sonuç alırsınız.</p><h2>Adım adım birleştirme</h2><ol><li><strong>PDF&#39;leri ekleyin:</strong> Birleştirme aracına birden çok PDF&#39;i sürükleyip bırakın ya da seçin. 80 MB&#39;a kadar, dosya sayısı sınırı yok.</li><li><strong>Sırayı ayarlayın:</strong> Dosyaların yukarı/aşağı okla sırasını değiştirin; belge bu sırayla birleşecek.</li><li><strong>Birleştirin ve indirin:</strong> &quot;Birleştir&quot; deyin; tek PDF anında hazırlanır ve seçtiğiniz konuma kaydedilir.</li></ol><p><a href="/tools/merge-pdf"><strong>PDF Birleştir</strong> — Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — ücretsiz.</a></p><h2>Sık sorulan pratik ipuçları</h2><ul><li>Görselleri (JPG/PNG) PDF yapmak istiyorsanız &quot;Görsel → PDF&quot; aracını kullanın.</li><li>Sadece belirli sayfaları almak için önce &quot;Böl&quot; aracıyla ayırabilirsiniz.</li><li>İşlem cihazınızda olduğu için internet kesilse bile çalışır.</li></ul><p>Şifre korumalı bir PDF&#39;i birleştirmek isterseniz önce &quot;PDF Kilidini Aç&quot; aracıyla şifreyi kaldırmanız gerekir.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF birleştirmek için üye olmam gerekir mi?</h3><p>Hayır. Birleştirme aracı üyeliksiz ve ücretsizdir; işlem tarayıcınızda çalışır, dosyalarınız sunucuya yüklenmez.</p></div><div class="seo-faq-item"><h3>Dosya boyutu sınırı nedir?</h3><p>Web&#39;de toplam 80 MB&#39;a kadar dosya birleştirebilirsiniz. Dosya sayısında bir sınır yoktur.</p></div><div class="seo-faq-item"><h3>Dosyalarım güvende mi?</h3><p>Evet. Birleştirme cihazınızda gerçekleşir; dosyalarınız internete hiç gönderilmez.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

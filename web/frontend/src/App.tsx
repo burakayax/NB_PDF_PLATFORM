@@ -37,6 +37,7 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
 import { AiPdfTool } from "./components/tools/AiPdfTool";
 import { AiBatchTool } from "./components/tools/AiBatchTool";
+import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
@@ -695,7 +696,9 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/taranmis-pdf-ocr" ||
     rawPath === "/tools/pdf-veri-cikar" ||
     rawPath === "/tools/pdf-ceviri" ||
-    rawPath === "/tools/ai-toplu-islem"
+    rawPath === "/tools/ai-toplu-islem" ||
+    rawPath === "/blog" ||
+    rawPath.startsWith("/blog/")
   ) {
     return "web";
   }
@@ -2884,7 +2887,9 @@ function App() {
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
         p === "/tools/pdf-ceviri" ||
-        p === "/tools/ai-toplu-islem"
+        p === "/tools/ai-toplu-islem" ||
+        p === "/blog" ||
+        p.startsWith("/blog/")
       ) {
         return;
       }
@@ -4680,6 +4685,18 @@ function App() {
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
+
+  // Blog — tam sayfa SEO içerik (index + yazı).
+  if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+    const goLogin = () => setView("login");
+    const goRegister = () => setView("register");
+    const blogSlug = pathname === "/blog" ? "" : pathname.split("/blog/")[1] ?? "";
+    return blogSlug ? (
+      <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} />
+    ) : (
+      <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} />
+    );
+  }
 
   // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil; tam sayfa + SEO.
   // EN ÜSTTE: view/redirect mantığından ÖNCE yakalanır (misafir + giriş yapan).
