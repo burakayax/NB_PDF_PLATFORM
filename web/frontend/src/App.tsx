@@ -42,6 +42,7 @@ import { AiRedactTool } from "./components/tools/AiRedactTool";
 import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
 import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
 import { DeveloperApiPage } from "./components/DeveloperApiPage";
+import { ApiDocsPage } from "./components/ApiDocsPage";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
@@ -705,6 +706,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
     rawPath === "/pdf-api" ||
+    rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
     rawPath.startsWith("/blog/")
   ) {
@@ -2899,6 +2901,7 @@ function App() {
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
         p === "/pdf-api" ||
+        p.startsWith("/pdf-api/") ||
         p === "/blog" ||
         p.startsWith("/blog/")
       ) {
@@ -4696,6 +4699,13 @@ function App() {
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
+
+  // Geliştirici API dokümantasyonu (detaylı kullanım kılavuzu).
+  if (pathname === "/pdf-api/docs") {
+    return (
+      <ApiDocsPage language={language} onLogin={() => setView("login")} onRegister={() => setView("register")} />
+    );
+  }
 
   // Geliştirici API landing (SEO).
   if (pathname === "/pdf-api") {

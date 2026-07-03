@@ -172,8 +172,9 @@ app.use(
 
 app.use("/api", apiRouter);
 
-// B2B programatik API — API anahtarıyla doğrulanır (JWT/public middleware'inden bağımsız).
-app.use("/v1", abuseBlockMiddleware, globalApiLimiter, v1Router);
+// B2B programatik API — API anahtarıyla doğrulanır (JWT'den bağımsız). Kendi per-anahtar
+// rate-limiter'ı var; yalnız IP-bazlı abuse bloğu eklenir (defense-in-depth).
+app.use("/v1", abuseBlockMiddleware, v1Router);
 
 registerTeamJobs();
 registerDataRetentionJobs();
