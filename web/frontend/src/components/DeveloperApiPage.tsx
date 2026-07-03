@@ -78,6 +78,7 @@ export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing 
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button type="button" onClick={onRegister} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><KeyRound className="h-4 w-4" />{tr ? "Ücretsiz API anahtarı al" : "Get a free API key"}</button>
+            <a href="/pdf-api/docs" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"><Code2 className="h-4 w-4" />{tr ? "Dokümantasyon" : "Documentation"}</a>
             {onOpenPricing && <button type="button" onClick={onOpenPricing} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]">{tr ? "Fiyatlandırma" : "Pricing"}</button>}
           </div>
         </div>

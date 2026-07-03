@@ -107,6 +107,7 @@ export function ApiKeysPanel({ language, accessToken }: { language: Language; ac
         <p className="flex items-center gap-2 text-[14px] font-bold text-white"><Code2 className="h-4 w-4 text-cyan-300" />{tr ? "Hızlı başlangıç" : "Quick start"}</p>
         <p className="mt-1 text-[12px] text-nb-muted">{tr ? "Uç noktalar (API anahtarıyla): " : "Endpoints (with API key): "}<code className="text-slate-300">/v1/extract</code>, <code className="text-slate-300">/v1/summarize</code>, <code className="text-slate-300">/v1/translate</code>, <code className="text-slate-300">/v1/me</code></p>
         <pre className="mt-3 overflow-x-auto rounded-xl bg-black/50 p-4 text-[12px] leading-relaxed text-slate-200"><code>{curl}</code></pre>
+        <a href="/pdf-api/docs" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-cyan-300 hover:text-cyan-200">{tr ? "Tam dokümantasyon →" : "Full documentation →"}</a>
         <p className="mt-3 flex items-start gap-2 text-[12px] text-amber-300"><TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />{tr ? "Her başarılı istek 1 AI kredisi harcar. Kredi bitince /v1 uçları 429 döner — top-up ile kredi ekleyin." : "Each successful request uses 1 AI credit. When out, /v1 returns 429 — add credits via top-up."}</p>
       </div>
     </section>
