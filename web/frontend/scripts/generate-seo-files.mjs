@@ -20,6 +20,7 @@ import {
   TOOL_SEO,
   LANDING_SEO,
   PRICING_SEO,
+  API_SEO,
   LEGAL_SEO,
   SOFTWARE_FEATURE_LIST,
 } from "../src/seo/seoContent.mjs";
@@ -159,6 +160,11 @@ function pageMetaForRoute(routePath) {
   if (routePath === "/pricing") {
     const c = PRICING_SEO[lang];
     return { ...c, kind: "pricing", index: true, follow: true, includePricing: true };
+  }
+
+  if (routePath === "/pdf-api") {
+    const c = API_SEO[lang];
+    return { ...c, kind: "apilanding", index: true, follow: true, includeFaq: true };
   }
 
   if (routePath === "/blog") {
@@ -580,6 +586,7 @@ if (blockIndexing) {
       changefreq: "weekly",
       priority: "0.9",
     })),
+    { loc: `${base}/pdf-api`, changefreq: "monthly", priority: "0.7" },
     { loc: `${base}/blog`, changefreq: "weekly", priority: "0.7" },
     ...BLOG_POSTS.map((p) => ({
       loc: `${base}/blog/${p.slug}`,
@@ -625,6 +632,7 @@ const prerenderRoutes = [
   "/privacy",
   "/kvkk",
   ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
+  "/pdf-api",
   "/blog",
   ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];

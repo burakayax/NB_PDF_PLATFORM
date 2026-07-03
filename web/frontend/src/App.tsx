@@ -41,6 +41,7 @@ import { AiCompareTool } from "./components/tools/AiCompareTool";
 import { AiRedactTool } from "./components/tools/AiRedactTool";
 import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
 import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
+import { DeveloperApiPage } from "./components/DeveloperApiPage";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
@@ -703,6 +704,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/ai-toplu-islem" ||
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
+    rawPath === "/pdf-api" ||
     rawPath === "/blog" ||
     rawPath.startsWith("/blog/")
   ) {
@@ -2896,6 +2898,7 @@ function App() {
         p === "/tools/ai-toplu-islem" ||
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
+        p === "/pdf-api" ||
         p === "/blog" ||
         p.startsWith("/blog/")
       ) {
@@ -4693,6 +4696,18 @@ function App() {
     typeof window !== "undefined"
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
+
+  // Geliştirici API landing (SEO).
+  if (pathname === "/pdf-api") {
+    return (
+      <DeveloperApiPage
+        language={language}
+        onLogin={() => setView("login")}
+        onRegister={() => setView("register")}
+        onOpenPricing={() => { window.location.href = "/#pricing"; }}
+      />
+    );
+  }
 
   // Blog — tam sayfa SEO içerik (index + yazı).
   if (pathname === "/blog" || pathname.startsWith("/blog/")) {

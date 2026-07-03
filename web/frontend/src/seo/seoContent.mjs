@@ -910,6 +910,38 @@ export const PRICING_SEO = {
   },
 };
 
+// ─── Geliştirici API landing ──────────────────────────────────────────────────
+export const API_SEO = {
+  tr: {
+    title: `PDF & Yapay Zekâ API — Belge İşlemeyi Yazılımınıza Gömün | ${BRAND}`,
+    description:
+      "PDF veri çıkarma, özetleme ve çeviriyi tek API ile kendi yazılımınıza entegre edin. Fatura okuma, sözleşme özeti, belge çevirisi — yapılandırılmış JSON, API anahtarıyla.",
+    h1: "PDF & Yapay Zekâ API — Geliştiriciler İçin",
+    intro:
+      "PDF Platform API'siyle belge işlemeyi kendi ürününüze gömün: fatura/tablo verisi çıkarın, uzun belgeleri özetleyin, 12+ dile çevirin. API anahtarı alın, /v1 uçlarını çağırın, yapılandırılmış JSON alın. Kullanım kredi bazlıdır.",
+    keywords: ["pdf api", "belge işleme api", "fatura okuma api", "pdf veri çıkarma api", "yapay zeka pdf api", "pdf özetleme api", "document ai api"],
+    faq: [
+      { q: "PDF Platform API'si ne yapar?", a: "PDF/belge metninden yapılandırılmış veri çıkarma, özetleme ve çeviriyi programatik sunar. /v1 uçlarını API anahtarınızla çağırır, JSON yanıt alırsınız." },
+      { q: "Nasıl başlarım?", a: "Hesap açın, panelden bir API anahtarı üretin ve /v1/extract, /v1/summarize, /v1/translate uçlarını çağırın. Her istek AI kredinizden düşer." },
+      { q: "Faturalandırma nasıl?", a: "Kullanım kredi bazlıdır: kredi paketi (top-up) alır, her API çağrısında 1 kredi harcarsınız. Fatura otomatik kesilir." },
+    ],
+  },
+  en: {
+    title: `PDF & AI API — Embed Document Processing in Your Software | ${BRAND}`,
+    description:
+      "Integrate PDF data extraction, summarization and translation into your own software with one API. Invoice parsing, contract summaries, document translation — structured JSON, with an API key.",
+    h1: "PDF & AI API — For Developers",
+    intro:
+      "Embed document processing into your product with the PDF Platform API: extract invoice/table data, summarize long documents, translate to 12+ languages. Get an API key, call the /v1 endpoints, receive structured JSON. Usage is credit-based.",
+    keywords: ["pdf api", "document processing api", "invoice extraction api", "pdf data extraction api", "document ai api", "pdf summarization api"],
+    faq: [
+      { q: "What does the PDF Platform API do?", a: "It offers programmatic structured-data extraction, summarization and translation from PDF/document text. Call the /v1 endpoints with your API key and get JSON responses." },
+      { q: "How do I get started?", a: "Create an account, generate an API key from the dashboard, and call /v1/extract, /v1/summarize, /v1/translate. Each request uses one AI credit." },
+      { q: "How is it billed?", a: "Usage is credit-based: buy a credit pack (top-up) and spend 1 credit per API call. Invoices are issued automatically." },
+    ],
+  },
+};
+
 // ─── Hukuki sayfalar ──────────────────────────────────────────────────────────
 export const LEGAL_SEO = {
   terms: {
