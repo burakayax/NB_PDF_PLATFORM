@@ -20,6 +20,7 @@ import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { requirePaymentsEnabled } from "./modules/payment/payments-gate.middleware.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
+import { v1Router } from "./modules/v1/v1.routes.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
 import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
@@ -170,6 +171,9 @@ app.use(
 );
 
 app.use("/api", apiRouter);
+
+// B2B programatik API — API anahtarıyla doğrulanır (JWT/public middleware'inden bağımsız).
+app.use("/v1", abuseBlockMiddleware, globalApiLimiter, v1Router);
 
 registerTeamJobs();
 registerDataRetentionJobs();

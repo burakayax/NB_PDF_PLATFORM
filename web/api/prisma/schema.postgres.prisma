@@ -226,6 +226,7 @@ model User {
   refreshTokens RefreshToken[]
   dailyUsages  DailyUsage[]
   aiUsages     AiUsage[]
+  apiKeys      ApiKey[]
   verificationTokens EmailVerificationToken[]
   pageViews    PageView[]
   clientErrorLogs ClientErrorLog[]
@@ -445,6 +446,23 @@ model AiUsage {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, yearMonth])
+  @@index([userId])
+}
+
+// API anahtarları (B2B programatik erişim). Ham anahtar yalnız üretimde bir kez
+// gösterilir; DB'de yalnız SHA-256 hash saklanır. Kullanım AI kredisinden düşülür.
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String    @map("user_id")
+  name       String
+  keyHash    String    @unique @map("key_hash")
+  prefix     String    @map("prefix")
+  last4      String    @map("last4")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime? @map("last_used_at")
+  revokedAt  DateTime? @map("revoked_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 

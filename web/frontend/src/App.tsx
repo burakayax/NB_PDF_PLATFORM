@@ -40,6 +40,7 @@ import { AiBatchTool } from "./components/tools/AiBatchTool";
 import { AiCompareTool } from "./components/tools/AiCompareTool";
 import { AiRedactTool } from "./components/tools/AiRedactTool";
 import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
+import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
@@ -264,7 +265,8 @@ type ContentPanel =
   | "home"
   | "team"
   | "ai"
-  | "editor";
+  | "editor"
+  | "api";
 
 type ToastState = {
   /** Artan kimlik: her showToast'ta değişir → AppToast remount olup ilerleme çizgisi sıfırlanır. */
@@ -5812,6 +5814,7 @@ function App() {
           onLogoClick={handleDashboardLogoClick}
           onProfile={handleNavProfile}
           onPassword={handleNavPassword}
+          onApi={() => { openWorkspace(); setContentPanel("api"); }}
           onLogout={() => void handleLogout()}
           onUpgradeClick={
             isTeamMember || limitsizProActive
@@ -5938,6 +5941,10 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <PdfEditor language={language} accessToken={accessToken} />
               </section>
+            ) : null}
+
+            {contentPanel === "api" ? (
+              <ApiKeysPanel language={language} accessToken={accessToken} />
             ) : null}
 
             {contentPanel === "subscription" ? (
