@@ -52,7 +52,7 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.3",
     "pdfjs-dist": "^4.9.155",
-    "prisma": "^6.6.0",
+    "prisma": "^7.8.0",
     "redis": "^6.0.0",
     "stripe": "^17.7.0",
     "tsx": "^4.19.3",
