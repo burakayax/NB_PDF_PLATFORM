@@ -38,6 +38,7 @@ import {
   type ExtractedData,
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
+import { TopUpModal } from "./TopUpModal";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
 
@@ -49,6 +50,8 @@ type Props = {
   onUpgrade: () => void;
   /** Ödemeler kapalıyken: yükleme yerine şık "Yakında" durumu göster. */
   comingSoon?: boolean;
+  /** Admin → top-up penceresinde test için kredi ekleyebilir. */
+  isAdmin?: boolean;
 };
 
 /** Şık ilerleme şeridi — `ratio` verilirse yüzdeli (OCR), null ise kayan/indeterminate (özet). */
@@ -87,8 +90,9 @@ function StatusStrip({ label, ratio }: { label: string; ratio: number | null }) 
  * AI aracı (Pro/Business): PDF metni CİHAZDA çıkarılır (pdf.js), yalnız metin
  * sunucuya gider → Claude. Özetle veya belgeyle Sohbet. 401→giriş, 403→yükselt.
  */
-export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, comingSoon }: Props) {
+export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, comingSoon, isAdmin }: Props) {
   const tr = language === "tr";
+  const [topUpOpen, setTopUpOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [docText, setDocText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -482,9 +486,15 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 {quota.unlimited
                   ? tr ? "Sınırsız" : "Unlimited"
                   : tr
-                    ? `Bu ay: ${quota.remaining}/${quota.limit}`
-                    : `This month: ${quota.remaining}/${quota.limit}`}
+                    ? `Bu ay: ${quota.remaining}/${quota.limit}${quota.bonus ? ` (+${quota.bonus})` : ""}`
+                    : `This month: ${quota.remaining}/${quota.limit}${quota.bonus ? ` (+${quota.bonus})` : ""}`}
               </span>
+            ) : null}
+            {quota && !quota.unlimited ? (
+              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
+                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
+                + {tr ? "Kredi" : "Credits"}
+              </button>
             ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{subtitle}</p>
@@ -857,6 +867,16 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
           </button>
         </div>
+      )}
+      {topUpOpen && (
+        <TopUpModal
+          language={language}
+          accessToken={accessToken}
+          isAdmin={isAdmin}
+          bonus={quota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={() => { void fetchAiQuota(accessToken).then((q) => q && setQuota(q)); }}
+        />
       )}
     </div>
   );

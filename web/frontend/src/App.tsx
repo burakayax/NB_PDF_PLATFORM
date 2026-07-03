@@ -5928,6 +5928,7 @@ function App() {
                     accessToken={accessToken}
                     onLogin={() => setView("login")}
                     onUpgrade={() => setUpgradeModalOpen(true)}
+                    isAdmin={user?.role === "ADMIN"}
                   />
                 )}
               </section>

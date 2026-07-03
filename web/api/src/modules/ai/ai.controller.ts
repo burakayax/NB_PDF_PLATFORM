@@ -9,7 +9,7 @@ import {
   detectSensitive,
   type ChatTurn,
 } from "./ai.service.js";
-import { getAiQuota, consumeAiQuota } from "./ai.quota.js";
+import { getAiQuota, consumeAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
 
 /** Gönderilebilecek ham metin üst sınırı (service ayrıca 60K'ya kırpar). */
 const MAX_TEXT = 200_000;
@@ -37,6 +37,26 @@ async function blockedByQuota(req: Request, res: Response): Promise<boolean> {
   return false;
 }
 
+/** GET /api/ai/topup/packs → { packs } — ek AI kredisi paketleri. */
+export async function topupPacksController(_req: Request, res: Response): Promise<void> {
+  res.json({ packs: TOPUP_PACKS });
+}
+
+/** POST /api/ai/topup/grant → { userId?, packId } — ADMIN: kredi ver (manuel/test).
+ * Ödeme entegrasyonu açılınca gerçek satın alma callback'i grantAiCredits'i çağıracak. */
+export async function topupGrantController(req: Request, res: Response): Promise<void> {
+  const u = req.authUser;
+  if (!u) throw new HttpError(401, "Oturum gerekli.");
+  if (u.role !== "ADMIN") throw new HttpError(403, "Bu işlem yalnız admin içindir.");
+  const packId = typeof req.body?.packId === "string" ? req.body.packId : "";
+  const pack = topupPackById(packId);
+  if (!pack) throw new HttpError(400, "Geçersiz paket.");
+  const targetUserId = typeof req.body?.userId === "string" && req.body.userId ? req.body.userId : u.id;
+  await grantAiCredits(targetUserId, pack.credits);
+  const quota = await getAiQuota(targetUserId, u.plan, u.role);
+  res.json({ granted: pack.credits, quota });
+}
+
 /** GET /api/ai/quota → { quota } */
 export async function quotaController(req: Request, res: Response): Promise<void> {
   const u = req.authUser;
@@ -57,7 +77,7 @@ export async function summarizeController(req: Request, res: Response): Promise<
 
   const summary = await summarizeDocument(text.slice(0, MAX_TEXT), getLang(req));
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ summary, quota });
 }
@@ -80,7 +100,7 @@ export async function extractController(req: Request, res: Response): Promise<vo
     throw e;
   }
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ data, quota });
 }
@@ -96,7 +116,7 @@ export async function translateController(req: Request, res: Response): Promise<
 
   const translation = await translateDocument(text.slice(0, MAX_TEXT), target);
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ translation, quota });
 }
@@ -120,7 +140,7 @@ export async function compareController(req: Request, res: Response): Promise<vo
     throw e;
   }
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ result, quota });
 }
@@ -135,7 +155,7 @@ export async function detectSensitiveController(req: Request, res: Response): Pr
 
   const items = await detectSensitive(text.slice(0, MAX_TEXT), getLang(req));
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ items, quota });
 }
@@ -171,7 +191,7 @@ export async function chatController(req: Request, res: Response): Promise<void>
     getLang(req),
   );
   const u = req.authUser!;
-  await consumeAiQuota(u.id);
+  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ answer, quota });
 }

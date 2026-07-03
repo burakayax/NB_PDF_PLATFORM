@@ -10,6 +10,8 @@ import {
   compareController,
   detectSensitiveController,
   quotaController,
+  topupPacksController,
+  topupGrantController,
 } from "./ai.controller.js";
 
 export const aiRouter = Router();
@@ -29,3 +31,7 @@ aiRouter.post("/extract", requireAuth, requireAiAccess, asyncHandler(extractCont
 aiRouter.post("/translate", requireAuth, requireAiAccess, asyncHandler(translateController));
 aiRouter.post("/compare", requireAuth, requireAiAccess, asyncHandler(compareController));
 aiRouter.post("/detect-sensitive", requireAuth, requireAiAccess, asyncHandler(detectSensitiveController));
+
+// Top-up (ek AI kredisi paketleri) — katalog herkese açık; grant admin-gated (controller içinde).
+aiRouter.get("/topup/packs", requireAuth, asyncHandler(topupPacksController));
+aiRouter.post("/topup/grant", requireAuth, asyncHandler(topupGrantController));
