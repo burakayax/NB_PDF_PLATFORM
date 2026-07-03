@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler — PDF Platform</title>
+    <meta name="description" content="Kira sözleşmesi imzalamadan önce bakmanız gereken maddeler: kira artışı, depozito, tahliye, aidat, sözleşme süresi. Yapay zekâ ile kontratı hızlıca anlayın." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler — PDF Platform" />
+    <meta property="og:description" content="Kira sözleşmesi imzalamadan önce bakmanız gereken maddeler: kira artışı, depozito, tahliye, aidat, sözleşme süresi. Yapay zekâ ile kontratı hızlıca anlayın." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler — PDF Platform" />
+    <meta name="twitter:description" content="Kira sözleşmesi imzalamadan önce bakmanız gereken maddeler: kira artışı, depozito, tahliye, aidat, sözleşme süresi. Yapay zekâ ile kontratı hızlıca anlayın." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler","description":"Kira sözleşmesi imzalamadan önce bakmanız gereken maddeler: kira artışı, depozito, tahliye, aidat, sözleşme süresi. Yapay zekâ ile kontratı hızlıca anlayın.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Kira kontratında en önemli maddeler nelerdir?","acceptedAnswer":{"@type":"Answer","text":"Kira artış oranı, depozito iade koşulları, sözleşme süresi, tahliye/fesih şartları ve aidat/tadilat sorumlulukları."}},{"@type":"Question","name":"Sözleşmedeki bir maddeyi yapay zekâya sorabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. AI Sohbet aracına kontratı yükleyip doğrudan soru sorabilirsiniz; yanıtlar yalnızca belgedeki bilgiye dayanır."}},{"@type":"Question","name":"Yapay zekâ hukuki tavsiye verir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Belgeyi anlamanıza yardımcı olur ama hukuki danışmanlık yerine geçmez; bağlayıcı konularda avukata danışın."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler</h1><p class="seo-intro">Kira kontratını hızlıca imzalamadan önce birkaç madde ileride büyük fark yaratır. Nelere bakmalısınız ve yapay zekâ nasıl yardımcı olur?</p><article class="seo-article"><p class="seo-lead">Kira sözleşmeleri genelde standart görünür, ama depozito iadesi, kira artış oranı ve tahliye şartları gibi maddeler ileride ciddi anlaşmazlıklara yol açabilir. İmzalamadan önce şu noktalara bakın.</p><h2>Kira kontratında kontrol listesi</h2><ul><li>Kira bedeli, ödeme günü ve ödeme şekli.</li><li>Kira artış oranı ve hangi endekse bağlı olduğu.</li><li>Depozito tutarı ve iade koşulları.</li><li>Sözleşme süresi ve yenileme/fesih şartları.</li><li>Aidat, fatura ve tadilat sorumlulukları kimde?</li><li>Tahliye koşulları ve bildirim süreleri.</li><li>Demirbaş listesi ve mevcut hasarların kaydı.</li></ul><h2>Yapay zekâya kontratı sorun</h2><p>Uzun bir sözleşmede aradığınız maddeyi bulmak zaman alır. PDF Platform&#39;un AI Sohbet aracıyla kontratı yükleyip doğrudan soru sorabilirsiniz: &quot;Kira artışı hangi orana bağlı?&quot;, &quot;Depozito ne zaman iade ediliyor?&quot;. Yapay zekâ yalnızca sözleşmedeki bilgiye dayanarak yanıtlar.</p><p><a href="/tools/pdf-sohbet"><strong>Sözleşmeye Soru Sor</strong> — Kira kontratını yükleyip merak ettiğiniz maddeyi doğrudan sorun.</a></p><p>Yapay zekâ, sözleşmeyi anlamanıza yardımcı olur; hukuki bağlayıcılık ve anlaşmazlık durumunda bir avukata danışın. Bu araç hukuki danışmanlık yerine geçmez.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Kira kontratında en önemli maddeler nelerdir?</h3><p>Kira artış oranı, depozito iade koşulları, sözleşme süresi, tahliye/fesih şartları ve aidat/tadilat sorumlulukları.</p></div><div class="seo-faq-item"><h3>Sözleşmedeki bir maddeyi yapay zekâya sorabilir miyim?</h3><p>Evet. AI Sohbet aracına kontratı yükleyip doğrudan soru sorabilirsiniz; yanıtlar yalnızca belgedeki bilgiye dayanır.</p></div><div class="seo-faq-item"><h3>Yapay zekâ hukuki tavsiye verir mi?</h3><p>Hayır. Belgeyi anlamanıza yardımcı olur ama hukuki danışmanlık yerine geçmez; bağlayıcı konularda avukata danışın.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

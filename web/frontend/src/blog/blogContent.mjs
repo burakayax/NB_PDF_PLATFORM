@@ -570,6 +570,354 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "ihale-sartnamesi-nasil-okunur",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 6,
+      tags: { tr: ["İhale", "Yapay Zekâ"], en: ["Tenders", "AI"] }, accent: "fuchsia", tool: "/tools/pdf-ozetle",
+    },
+    {
+      title: "İhale Şartnamesi Nasıl Okunur? Nelere Dikkat Etmeli",
+      description: "İhale şartnamesindeki kritik maddeleri kaçırmadan okuyun: teminat, cayma bedeli, son teklif tarihi, istenen belgeler. Yapay zekâ ile şartnameyi dakikalar yerine saniyelerde kavrayın.",
+      excerpt: "Onlarca sayfalık bir ihale şartnamesinde asıl önemli olan birkaç maddeyi kaçırmak pahalıya patlar. Yapay zekânın şartnameyi nasıl okunur hale getirdiğini anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "İhale şartnameleri uzun, teknik ve yoğundur; ama başarı ya da eleme çoğu zaman birkaç kritik maddeye bağlıdır. Bu yazıda bir şartnamede mutlaka bakmanız gerekenleri ve süreci nasıl hızlandıracağınızı anlatıyoruz." },
+        { t: "h2", x: "Bir şartnamede mutlaka bakılması gerekenler" },
+        { t: "ul", items: [
+          "Taraflar: idare (ihaleyi açan) ve istekliden beklenenler.",
+          "İş kapsamı: tam olarak ne isteniyor, teslim koşulları.",
+          "İstenen belgeler ve yeterlilik kriterleri (iş deneyimi, kapasite).",
+          "Teminat tutarı ve türü (geçici/kesin teminat).",
+          "Son teklif tarihi ve saati — kaçırılırsa elenirsiniz.",
+          "Cayma bedeli, gecikme cezası ve fesih şartları.",
+          "Değerlendirme kriteri: en düşük fiyat mı, ekonomik açıdan en avantajlı teklif mi?",
+        ] },
+        { t: "h2", x: "Yapay zekâ ile şartnameyi saniyelerde kavrayın" },
+        { t: "p", x: "PDF Platform'un AI Özet aracı belgenin ihale şartnamesi olduğunu tanır ve tam da yukarıdaki maddeleri — taraflar, teminat, son tarih, cayma bedeli, değerlendirme kriteri — öne çıkararak yapılandırılmış bir özet verir. Böylece 40 sayfayı okumadan neye teklif verdiğinizi görürsünüz." },
+        { t: "steps", items: [
+          { title: "Şartname PDF'ini yükleyin", x: "Metin cihazınızda okunur; taranmışsa OCR devreye girer." },
+          { title: "\"Özet Oluştur\" deyin", x: "Taraflar, kritik tarih/tutarlar ve yükümlülükler vurgulanarak özet çıkar." },
+          { title: "Belirsiz noktaları sorun", x: "\"Teminat oranı nedir?\" gibi bir sorunuz varsa AI Sohbet ile doğrudan belgeye sorabilirsiniz." },
+        ] },
+        { t: "cta", title: "AI ile Şartname Özeti", x: "İhale şartnamesindeki kritik maddeleri saniyeler içinde görün.", btn: "Aracı aç", tool: "/tools/pdf-ozetle" },
+        { t: "tip", x: "Yapay zekâ özeti hızlı bir kavrayış içindir; nihai teklif ve hukuki değerlendirme için şartnamenin ilgili maddelerini asıl metninden teyit edin." },
+      ],
+      faq: [
+        { q: "İhale şartnamesinde en çok neye dikkat edilmeli?", a: "Son teklif tarihi, teminat, istenen belgeler/yeterlilik, cayma bedeli ve değerlendirme kriteri. Bunları kaçırmak elenmeye yol açabilir." },
+        { q: "Yapay zekâ şartnameyi özetleyebilir mi?", a: "Evet. AI Özet aracı şartnameyi tanır ve taraflar, teminat, son tarih, cayma bedeli gibi kritik maddeleri öne çıkarır." },
+        { q: "Özet yeterli mi, asıl metni okumalı mıyım?", a: "Özet hızlı kavrayış içindir. Teklif vermeden önce kritik maddeleri şartnamenin asıl metninden teyit etmeniz önerilir." },
+      ],
+    },
+    {
+      title: "How to Read a Tender Document (RFP): What to Watch For",
+      description: "Read the critical clauses in a tender/RFP without missing them: deposit, penalty, submission deadline, required documents. Grasp it in seconds with AI.",
+      excerpt: "Missing a few key clauses in a long tender document is costly. Here's how AI makes an RFP readable in seconds.",
+      blocks: [
+        { t: "lead", x: "Tender documents are long, technical and dense; yet winning or being disqualified often hinges on a few critical clauses. This post covers what to always check and how to speed up the process." },
+        { t: "h2", x: "What to always check in a tender" },
+        { t: "ul", items: [
+          "Parties: the awarding body and what's expected from the bidder.",
+          "Scope: exactly what's required and delivery terms.",
+          "Required documents and qualification criteria (experience, capacity).",
+          "Deposit amount and type (bid/performance bond).",
+          "Submission deadline and time — miss it and you're out.",
+          "Withdrawal penalty, late penalties and termination clauses.",
+          "Evaluation criteria: lowest price or most economically advantageous?",
+        ] },
+        { t: "h2", x: "Grasp the tender in seconds with AI" },
+        { t: "p", x: "PDF Platform's AI Summarize tool recognizes the document as a tender and surfaces exactly those clauses — parties, deposit, deadline, penalty, evaluation criteria — as a structured summary. So you see what you're bidding on without reading 40 pages." },
+        { t: "steps", items: [
+          { title: "Upload the tender PDF", x: "Text is read on your device; OCR kicks in if scanned." },
+          { title: "Click \"Generate Summary\"", x: "Get a summary highlighting parties, critical dates/amounts and obligations." },
+          { title: "Ask about unclear points", x: "For a question like \"What's the deposit rate?\", use AI Chat to ask the document directly." },
+        ] },
+        { t: "cta", title: "AI Tender Summary", x: "See the critical clauses of a tender in seconds.", btn: "Open the tool", tool: "/tools/pdf-ozetle" },
+        { t: "tip", x: "The AI summary is for quick comprehension; verify critical clauses in the original text before bidding or making a legal assessment." },
+      ],
+      faq: [
+        { q: "What matters most in a tender document?", a: "Submission deadline, deposit, required documents/qualifications, penalties and evaluation criteria. Missing these can disqualify you." },
+        { q: "Can AI summarize a tender?", a: "Yes. The AI Summarize tool recognizes tenders and surfaces critical clauses like parties, deposit, deadline and penalties." },
+        { q: "Is the summary enough, or should I read the original?", a: "The summary is for quick comprehension. Verify critical clauses in the original text before bidding." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "kira-kontrati-dikkat-edilecek-maddeler",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 6,
+      tags: { tr: ["Sözleşme", "Yapay Zekâ"], en: ["Contracts", "AI"] }, accent: "blue", tool: "/tools/pdf-sohbet",
+    },
+    {
+      title: "Kira Kontratı İmzalamadan Önce Dikkat Edilecek Maddeler",
+      description: "Kira sözleşmesi imzalamadan önce bakmanız gereken maddeler: kira artışı, depozito, tahliye, aidat, sözleşme süresi. Yapay zekâ ile kontratı hızlıca anlayın.",
+      excerpt: "Kira kontratını hızlıca imzalamadan önce birkaç madde ileride büyük fark yaratır. Nelere bakmalısınız ve yapay zekâ nasıl yardımcı olur?",
+      blocks: [
+        { t: "lead", x: "Kira sözleşmeleri genelde standart görünür, ama depozito iadesi, kira artış oranı ve tahliye şartları gibi maddeler ileride ciddi anlaşmazlıklara yol açabilir. İmzalamadan önce şu noktalara bakın." },
+        { t: "h2", x: "Kira kontratında kontrol listesi" },
+        { t: "ul", items: [
+          "Kira bedeli, ödeme günü ve ödeme şekli.",
+          "Kira artış oranı ve hangi endekse bağlı olduğu.",
+          "Depozito tutarı ve iade koşulları.",
+          "Sözleşme süresi ve yenileme/fesih şartları.",
+          "Aidat, fatura ve tadilat sorumlulukları kimde?",
+          "Tahliye koşulları ve bildirim süreleri.",
+          "Demirbaş listesi ve mevcut hasarların kaydı.",
+        ] },
+        { t: "h2", x: "Yapay zekâya kontratı sorun" },
+        { t: "p", x: "Uzun bir sözleşmede aradığınız maddeyi bulmak zaman alır. PDF Platform'un AI Sohbet aracıyla kontratı yükleyip doğrudan soru sorabilirsiniz: \"Kira artışı hangi orana bağlı?\", \"Depozito ne zaman iade ediliyor?\". Yapay zekâ yalnızca sözleşmedeki bilgiye dayanarak yanıtlar." },
+        { t: "cta", title: "Sözleşmeye Soru Sor", x: "Kira kontratını yükleyip merak ettiğiniz maddeyi doğrudan sorun.", btn: "AI Sohbet'i aç", tool: "/tools/pdf-sohbet" },
+        { t: "tip", x: "Yapay zekâ, sözleşmeyi anlamanıza yardımcı olur; hukuki bağlayıcılık ve anlaşmazlık durumunda bir avukata danışın. Bu araç hukuki danışmanlık yerine geçmez." },
+      ],
+      faq: [
+        { q: "Kira kontratında en önemli maddeler nelerdir?", a: "Kira artış oranı, depozito iade koşulları, sözleşme süresi, tahliye/fesih şartları ve aidat/tadilat sorumlulukları." },
+        { q: "Sözleşmedeki bir maddeyi yapay zekâya sorabilir miyim?", a: "Evet. AI Sohbet aracına kontratı yükleyip doğrudan soru sorabilirsiniz; yanıtlar yalnızca belgedeki bilgiye dayanır." },
+        { q: "Yapay zekâ hukuki tavsiye verir mi?", a: "Hayır. Belgeyi anlamanıza yardımcı olur ama hukuki danışmanlık yerine geçmez; bağlayıcı konularda avukata danışın." },
+      ],
+    },
+    {
+      title: "What to Check Before Signing a Lease Agreement",
+      description: "Clauses to review before signing a lease: rent increase, deposit, eviction, dues, term. Understand the contract quickly with AI.",
+      excerpt: "Before quickly signing a lease, a few clauses make a big difference later. What to look for, and how AI helps.",
+      blocks: [
+        { t: "lead", x: "Leases often look standard, but clauses like deposit return, rent increase rate and eviction terms can cause serious disputes later. Check these before signing." },
+        { t: "h2", x: "Lease checklist" },
+        { t: "ul", items: [
+          "Rent amount, payment day and method.",
+          "Rent increase rate and which index it's tied to.",
+          "Deposit amount and return conditions.",
+          "Term and renewal/termination clauses.",
+          "Who's responsible for dues, bills and repairs?",
+          "Eviction conditions and notice periods.",
+          "Inventory list and record of existing damage.",
+        ] },
+        { t: "h2", x: "Ask the AI about the contract" },
+        { t: "p", x: "Finding a specific clause in a long contract takes time. With PDF Platform's AI Chat tool you can upload the lease and ask directly: \"What's the rent increase tied to?\", \"When is the deposit returned?\". The AI answers based only on the contract." },
+        { t: "cta", title: "Ask Your Contract", x: "Upload the lease and ask the clause you care about directly.", btn: "Open AI Chat", tool: "/tools/pdf-sohbet" },
+        { t: "tip", x: "AI helps you understand the contract; for legal validity and disputes, consult a lawyer. This tool is not a substitute for legal advice." },
+      ],
+      faq: [
+        { q: "What are the most important clauses in a lease?", a: "Rent increase rate, deposit return conditions, term, eviction/termination clauses, and responsibility for dues/repairs." },
+        { q: "Can I ask AI about a clause in the contract?", a: "Yes. Upload the lease to AI Chat and ask directly; answers rely only on the document's content." },
+        { q: "Does AI give legal advice?", a: "No. It helps you understand the document but isn't a substitute for legal advice; consult a lawyer on binding matters." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "banka-ekstresi-excele-aktarma",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 5,
+      tags: { tr: ["Muhasebe", "Veri Çıkarma"], en: ["Accounting", "Data"] }, accent: "emerald", tool: "/tools/pdf-veri-cikar",
+    },
+    {
+      title: "Banka Ekstresini (PDF) Excel'e Aktarma",
+      description: "PDF banka ekstresindeki hareketleri Excel'e (CSV) aktarın — tarih, açıklama, tutar sütunlarıyla. Yapay zekâ ile elle yazmadan, hızlı ve düzenli.",
+      excerpt: "PDF banka ekstresindeki yüzlerce hareketi elle Excel'e girmek işkence. Yapay zekâ ile bunu nasıl düzenli bir tabloya dökeceğinizi gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Muhasebe kapanışı, harcama takibi ya da bütçe için banka ekstresindeki hareketleri Excel'de görmek gerekir. Ama bankaların PDF ekstresi düzgün bir tablo olarak gelmez; kopyala-yapıştır hizayı bozar." },
+        { t: "h2", x: "Neden PDF ekstre Excel'e zor aktarılır?" },
+        { t: "p", x: "PDF ekstrede satırlar göze düzenli görünse de arkada tablo yapısı yoktur. Bu yüzden kopyaladığınızda tarih, açıklama ve tutarlar tek hücreye ya da yanlış sütunlara düşer. Yapay zekâ bu yapıyı tanıyıp doğru sütunlara ayırır." },
+        { t: "h2", x: "Adım adım ekstre → Excel" },
+        { t: "steps", items: [
+          { title: "Ekstre PDF'ini yükleyin", x: "AI Veri Çıkar aracına banka ekstrenizi ekleyin. Metin cihazınızda okunur." },
+          { title: "\"Veriyi Çıkar\" deyin", x: "Yapay zekâ hareketleri tarih, açıklama ve tutar olarak yapılandırılmış tabloya döker." },
+          { title: "CSV indirin", x: "Sonucu CSV olarak indirip Excel'de açın; artık filtreleyip toplayabilirsiniz." },
+        ] },
+        { t: "cta", title: "Ekstreyi Excel'e Aktar", x: "Banka ekstresindeki hareketleri düzenli bir tabloya dökün.", btn: "Aracı aç", tool: "/tools/pdf-veri-cikar" },
+        { t: "tip", x: "Birden çok aya ait ekstreniz varsa AI Toplu İşlem ile hepsini işleyip tek CSV'de birleştirebilirsiniz." },
+      ],
+      faq: [
+        { q: "PDF banka ekstresi Excel'e nasıl aktarılır?", a: "Ekstreyi AI Veri Çıkar aracına yükleyin; yapay zekâ hareketleri tarih/açıklama/tutar sütunlarına ayırır ve CSV olarak indirirsiniz." },
+        { q: "Hareketler doğru sütunlara ayrılıyor mu?", a: "Evet. Yapay zekâ ekstrenin yapısını tanıyıp verileri ilgili sütunlara yerleştirir; kopyala-yapıştırdaki hiza bozulması yaşanmaz." },
+        { q: "Verilerim güvende mi?", a: "PDF'inizin metni cihazınızda çıkarılır ve yalnızca metin işleme gider; dosyanın kendisi karşıya yüklenmez." },
+      ],
+    },
+    {
+      title: "Export a Bank Statement (PDF) to Excel",
+      description: "Export transactions from a PDF bank statement into Excel (CSV) — with date, description and amount columns. Fast and tidy with AI, no manual typing.",
+      excerpt: "Typing hundreds of transactions from a PDF bank statement into Excel is painful. Here's how AI turns it into a tidy table.",
+      blocks: [
+        { t: "lead", x: "For month-end accounting, expense tracking or budgeting, you need bank statement transactions in Excel. But banks' PDF statements don't come as a clean table; copy-paste breaks the alignment." },
+        { t: "h2", x: "Why is a PDF statement hard to export?" },
+        { t: "p", x: "Even if rows look organized in the PDF, there's no table structure behind them. So when you copy, dates, descriptions and amounts land in one cell or the wrong columns. AI recognizes the structure and splits it into the right columns." },
+        { t: "h2", x: "Statement → Excel step by step" },
+        { t: "steps", items: [
+          { title: "Upload the statement PDF", x: "Add your bank statement to the Extract Data tool. Text is read on your device." },
+          { title: "Click \"Extract Data\"", x: "The AI turns transactions into a structured table of date, description and amount." },
+          { title: "Download CSV", x: "Download as CSV and open in Excel; now you can filter and total." },
+        ] },
+        { t: "cta", title: "Export Statement to Excel", x: "Turn bank statement transactions into a tidy table.", btn: "Open the tool", tool: "/tools/pdf-veri-cikar" },
+        { t: "tip", x: "If you have statements for several months, use AI Batch to process them all and merge into one CSV." },
+      ],
+      faq: [
+        { q: "How do I export a PDF bank statement to Excel?", a: "Upload it to the Extract Data tool; the AI splits transactions into date/description/amount columns and you download CSV." },
+        { q: "Are transactions split into the right columns?", a: "Yes. The AI recognizes the statement structure and places data into the right columns — no copy-paste misalignment." },
+        { q: "Is my data safe?", a: "Your PDF's text is extracted on your device and only text is processed; the file itself isn't uploaded." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "yabanci-dildeki-sozlesmeyi-anlama",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 5,
+      tags: { tr: ["Çeviri", "Sözleşme"], en: ["Translation", "Contracts"] }, accent: "violet", tool: "/tools/pdf-ceviri",
+    },
+    {
+      title: "Yabancı Dildeki Sözleşmeyi Anlamanın Hızlı Yolu",
+      description: "İngilizce ya da başka dildeki bir sözleşmeyi, raporu veya e-postayı hızlıca anlamak için pratik yöntem: yapay zekâ ile çeviri + özet, yapı korunarak.",
+      excerpt: "Elinize yabancı dilde bir sözleşme geçti ve içeriğini hızlıca anlamanız mı gerekiyor? Çeviri ve özetin birlikte nasıl işe yaradığını anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "İş dünyasında yabancı dilde sözleşme, teklif ya da teknik doküman sıkça karşınıza çıkar. Her satırı sözlükle çevirmek yerine, belgeyi yapıyı bozmadan çevirip ana noktalarını çıkarabilirsiniz." },
+        { t: "h2", x: "Önce çevir, sonra özetle" },
+        { t: "p", x: "En verimli yaklaşım iki adımlıdır: (1) belgeyi anadilinize çevirin, (2) uzun ise ana noktalarını özetleyin. PDF Platform'da ikisini de yapabilirsiniz — çeviri yapıyı (başlık, liste, tablo) korur; özet ise taraflar, tarihler ve yükümlülükleri öne çıkarır." },
+        { t: "steps", items: [
+          { title: "Belgeyi çevirin", x: "AI Çeviri aracına PDF'i yükleyin, hedef dili seçin; yapı korunarak çevrilir, PDF olarak indirebilirsiniz." },
+          { title: "Uzun ise özetleyin", x: "AI Özet ile çevrilmiş belgenin ana noktalarını, taraflarını ve kritik maddelerini çıkarın." },
+          { title: "Takıldığınız yeri sorun", x: "Belirli bir maddeyi anlamak için AI Sohbet ile doğrudan soru sorun." },
+        ] },
+        { t: "cta", title: "AI Çeviri", x: "Yabancı dildeki belgeyi yapısını koruyarak çevirin.", btn: "Aracı aç", tool: "/tools/pdf-ceviri" },
+        { t: "tip", x: "Yapay zekâ çevirisi hızlı anlama içindir; resmî/hukuki geçerlilik gereken belgelerde yeminli tercüman şarttır." },
+      ],
+      faq: [
+        { q: "Yabancı dildeki sözleşmeyi nasıl hızlı anlarım?", a: "Önce AI Çeviri ile anadilinize çevirin, uzun ise AI Özet ile ana noktalarını çıkarın; takıldığınız maddeyi AI Sohbet'e sorabilirsiniz." },
+        { q: "Çeviride sözleşmenin düzeni korunur mu?", a: "Evet. Başlıklar, listeler ve tablolar korunarak çevrilir; sonucu PDF olarak indirebilirsiniz." },
+        { q: "Resmî işlemler için yeterli mi?", a: "Hızlı anlama için idealdir; noter/mahkeme gibi resmî geçerlilik gereken yerlerde yeminli tercüman gerekir." },
+      ],
+    },
+    {
+      title: "The Fast Way to Understand a Contract in a Foreign Language",
+      description: "A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved.",
+      excerpt: "Got a contract in a foreign language and need to grasp it fast? Here's how translation and summary work together.",
+      blocks: [
+        { t: "lead", x: "In business you often face contracts, proposals or technical docs in a foreign language. Instead of translating every line with a dictionary, you can translate the document without breaking its structure and extract its key points." },
+        { t: "h2", x: "Translate first, then summarize" },
+        { t: "p", x: "The most efficient approach is two steps: (1) translate the document into your language, (2) if it's long, summarize the key points. On PDF Platform you can do both — translation preserves structure (headings, lists, tables); the summary surfaces parties, dates and obligations." },
+        { t: "steps", items: [
+          { title: "Translate the document", x: "Upload the PDF to AI Translate, pick a target language; it translates preserving structure and you can download a PDF." },
+          { title: "Summarize if long", x: "Use AI Summarize to extract the key points, parties and critical clauses of the translated document." },
+          { title: "Ask about tricky parts", x: "Use AI Chat to ask directly about a specific clause you want to understand." },
+        ] },
+        { t: "cta", title: "AI Translate", x: "Translate a foreign-language document while preserving structure.", btn: "Open the tool", tool: "/tools/pdf-ceviri" },
+        { t: "tip", x: "AI translation is for fast comprehension; documents needing official/legal validity require a sworn translator." },
+      ],
+      faq: [
+        { q: "How do I quickly understand a foreign-language contract?", a: "First translate it with AI Translate, then if long extract key points with AI Summarize; ask AI Chat about any clause you're stuck on." },
+        { q: "Is the layout preserved in translation?", a: "Yes. Headings, lists and tables are kept, and you can download the result as a PDF." },
+        { q: "Is it enough for official use?", a: "It's ideal for fast understanding; official validity (notary/court) requires a sworn translator." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "akademik-makale-ozetleme-literatur",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 5,
+      tags: { tr: ["Akademik", "Özetleme"], en: ["Academic", "Summarize"] }, accent: "cyan", tool: "/tools/pdf-ozetle",
+    },
+    {
+      title: "Akademik Makaleleri Hızlı Özetleme (Literatür Taraması İçin)",
+      description: "Onlarca akademik makaleyi literatür taraması için hızlıca eleyin: araştırma sorusu, yöntem, bulgular ve sonucu yapay zekâ ile saniyeler içinde çıkarın.",
+      excerpt: "Literatür taramasında en çok zaman, ilgisiz makaleleri elemekle kaybedilir. Yapay zekâ ile bir makalenin işinize yarayıp yaramadığını saniyelerde anlayın.",
+      blocks: [
+        { t: "lead", x: "Tez, ödev ya da araştırma için literatür taraması yaparken onlarca makaleyi tek tek okumak imkânsıza yakındır. Asıl beceri, hangi makalenin işinize yaradığını hızlıca ayıklamaktır." },
+        { t: "h2", x: "Bir makalede hızlıca bakılacaklar" },
+        { t: "ul", items: [
+          "Araştırma sorusu / hipotez: ne soruyor?",
+          "Yöntem: nasıl bir çalışma (deney, anket, meta-analiz)?",
+          "Bulgular: ne buldu?",
+          "Sonuç ve katkı: alana ne ekliyor, sınırlılıkları neler?",
+        ] },
+        { t: "h2", x: "Yapay zekâ ile eleme" },
+        { t: "p", x: "PDF Platform'un AI Özet aracı akademik metni tanır ve araştırma sorusu, yöntem, bulgular ve sonuç ekseninde yapılandırılmış bir özet verir. Bir makalenin taramanıza uygun olup olmadığını okumadan görürsünüz." },
+        { t: "cta", title: "AI Özet", x: "Makalenin işinize yarayıp yaramadığını saniyelerde görün.", btn: "Aracı aç", tool: "/tools/pdf-ozetle" },
+        { t: "tip", x: "Çok sayıda makaleniz varsa AI Toplu İşlem ile hepsini birden özetleyip tek bir belgede toplayabilir, taramanızı hızlandırabilirsiniz. İntihal/atıf kurallarına dikkat edin — özet, kaynağı okumak ve doğru atıf yapmak yerine geçmez." },
+      ],
+      faq: [
+        { q: "Akademik makale nasıl hızlı özetlenir?", a: "PDF'i AI Özet aracına yükleyin; araştırma sorusu, yöntem, bulgular ve sonuç ekseninde yapılandırılmış bir özet alırsınız." },
+        { q: "Onlarca makaleyi birden özetleyebilir miyim?", a: "Evet. AI Toplu İşlem ile birçok makaleyi işleyip sonuçları tek belgede toplayabilirsiniz." },
+        { q: "Özet, makaleyi okumanın yerine geçer mi?", a: "Hayır. Eleme ve hızlı kavrayış için idealdir; atıf yapacağınız kaynakları asıl metninden okumanız gerekir." },
+      ],
+    },
+    {
+      title: "Quickly Summarize Academic Papers (for Literature Review)",
+      description: "Screen dozens of academic papers for a literature review fast: extract the research question, method, findings and conclusion with AI in seconds.",
+      excerpt: "In a literature review, most time is lost screening out irrelevant papers. Use AI to tell in seconds whether a paper is useful.",
+      blocks: [
+        { t: "lead", x: "For a thesis, assignment or research, reading dozens of papers one by one is nearly impossible. The real skill is quickly screening which paper is useful to you." },
+        { t: "h2", x: "What to check quickly in a paper" },
+        { t: "ul", items: [
+          "Research question / hypothesis: what does it ask?",
+          "Method: what kind of study (experiment, survey, meta-analysis)?",
+          "Findings: what did it find?",
+          "Conclusion and contribution: what does it add, what are the limitations?",
+        ] },
+        { t: "h2", x: "Screening with AI" },
+        { t: "p", x: "PDF Platform's AI Summarize tool recognizes academic text and gives a structured summary around research question, method, findings and conclusion. You see whether a paper fits your review without reading it." },
+        { t: "cta", title: "AI Summarize", x: "See in seconds whether a paper is useful to you.", btn: "Open the tool", tool: "/tools/pdf-ozetle" },
+        { t: "tip", x: "If you have many papers, use AI Batch to summarize them all and gather the results in one document to speed up your review. Mind plagiarism/citation rules — a summary is not a substitute for reading the source and citing correctly." },
+      ],
+      faq: [
+        { q: "How do I quickly summarize an academic paper?", a: "Upload the PDF to AI Summarize; you get a structured summary around research question, method, findings and conclusion." },
+        { q: "Can I summarize dozens of papers at once?", a: "Yes. With AI Batch you can process many papers and gather the results in one document." },
+        { q: "Does a summary replace reading the paper?", a: "No. It's ideal for screening and quick comprehension; sources you cite must be read in full." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "faturalari-toplu-muhasebeye-hazirlama",
+      date: "2026-07-03", updated: "2026-07-03", readMinutes: 5,
+      tags: { tr: ["Muhasebe", "Toplu İşlem"], en: ["Accounting", "Batch"] }, accent: "amber", tool: "/tools/ai-toplu-islem",
+    },
+    {
+      title: "Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem)",
+      description: "Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin.",
+      excerpt: "Ay sonu geldi, elinizde onlarca PDF fatura var ve hepsini tek tek muhasebeye girmeniz gerekiyor. Bunu toplu işlemle nasıl dakikalara indireceğinizi anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Küçük işletmeler ve serbest çalışanlar için ay sonu, PDF faturaları tek tek açıp muhasebe tablosuna girmekle geçer. Toplu işlemle bu iş, her faturayı ayrı ayrı açmadan, tek adımda hallolur." },
+        { t: "h2", x: "Toplu işlem neyi çözer?" },
+        { t: "p", x: "Tek fatura işlemek kolaydır; asıl dert onlarca faturayı arka arkaya işlemektir. AI Toplu İşlem, bir klasör dolusu faturayı sırayla işleyip her birinin verisini (fatura no, tarih, satıcı, tutar, KDV) çıkarır ve hepsini tek bir CSV tablosunda — her satır bir fatura olacak şekilde — birleştirir." },
+        { t: "steps", items: [
+          { title: "Faturaları toplu yükleyin", x: "AI Toplu İşlem aracına PDF faturalarınızı ekleyin (en fazla 25 dosya)." },
+          { title: "\"Veri Çıkar\" modunu seçin", x: "İşlemi başlatın; her fatura için canlı ilerleme görürsünüz." },
+          { title: "Tek CSV indirin", x: "Tüm faturaların verisi tek tabloda birleşir; Excel'de açıp muhasebeye aktarın." },
+        ] },
+        { t: "cta", title: "AI Toplu İşlem", x: "Onlarca faturayı tek seferde işleyip tek CSV olarak indirin.", btn: "Aracı aç", tool: "/tools/ai-toplu-islem" },
+        { t: "tip", x: "Metin faturaların yanında taranmış faturalarınız varsa OCR otomatik devreye girer; yine de sonuçları kritik tutarlar açısından bir kez gözden geçirmeniz önerilir." },
+      ],
+      faq: [
+        { q: "Onlarca faturayı tek seferde nasıl işlerim?", a: "AI Toplu İşlem aracına faturaları toplu yükleyin, \"Veri Çıkar\" modunu seçin ve başlatın; tüm faturaların verisi tek CSV'de birleşir." },
+        { q: "Kaç fatura işleyebilirim?", a: "Tek seferde en fazla 25 dosya işlenebilir; daha fazlası için işlemi tekrarlayabilirsiniz." },
+        { q: "Sonuçlar güvenilir mi?", a: "Yapay zekâ yalnızca belgedeki bilgiyi kullanır; yine de muhasebe kaydından önce kritik tutarları gözden geçirmeniz önerilir." },
+      ],
+    },
+    {
+      title: "Prepare Dozens of Invoices for Accounting (Batch)",
+      description: "Process a whole folder of PDF invoices at once and gather their data into one Excel (CSV) table. Cut month-end accounting from hours to minutes.",
+      excerpt: "Month-end is here, you have dozens of PDF invoices, and you need to enter them all into accounting. Here's how batch processing cuts it to minutes.",
+      blocks: [
+        { t: "lead", x: "For small businesses and freelancers, month-end is spent opening PDF invoices one by one and entering them into an accounting sheet. Batch processing handles this in one step, without opening each invoice separately." },
+        { t: "h2", x: "What does batch solve?" },
+        { t: "p", x: "Processing one invoice is easy; the real pain is dozens in a row. AI Batch processes a whole folder of invoices in turn, extracts each one's data (invoice no, date, seller, amount, VAT) and merges them into one CSV table — one row per invoice." },
+        { t: "steps", items: [
+          { title: "Bulk-upload invoices", x: "Add your PDF invoices to the AI Batch tool (up to 25 files)." },
+          { title: "Choose \"Extract\" mode", x: "Start; you see live progress per invoice." },
+          { title: "Download one CSV", x: "All invoices' data merge into one table; open in Excel and import into accounting." },
+        ] },
+        { t: "cta", title: "AI Batch", x: "Process dozens of invoices at once and download one CSV.", btn: "Open the tool", tool: "/tools/ai-toplu-islem" },
+        { t: "tip", x: "If you have scanned invoices alongside text ones, OCR kicks in automatically; still, review results for critical amounts once." },
+      ],
+      faq: [
+        { q: "How do I process dozens of invoices at once?", a: "Bulk-upload them to AI Batch, choose \"Extract\" mode and start; all invoices' data merge into one CSV." },
+        { q: "How many invoices can I process?", a: "Up to 25 files at once; repeat for more." },
+        { q: "Are the results reliable?", a: "The AI uses only the document's content; still, review critical amounts before posting to accounting." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
