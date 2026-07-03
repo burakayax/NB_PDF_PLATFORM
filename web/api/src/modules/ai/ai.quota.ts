@@ -102,6 +102,10 @@ export async function grantAiCredits(userId: string, amount: number): Promise<vo
 /** Ek AI kredisi paketleri (top-up). Fiyatlar ödeme açılınca kullanılır; kredi aylar
  * arası kalıcıdır ve aylık kota bitince devreye girer. */
 export const TOPUP_PACKS = [
+  // Pay-per-use — abone olmayan kullanıcı için tek/az işlem.
+  { id: "ai-1", credits: 1, priceUSD: 0.99, priceTRY: 29 },
+  { id: "ai-5", credits: 5, priceUSD: 3.49, priceTRY: 89 },
+  // Toplu paketler (top-up).
   { id: "ai-50", credits: 50, priceUSD: 4.99, priceTRY: 149 },
   { id: "ai-150", credits: 150, priceUSD: 11.99, priceTRY: 349, popular: true },
   { id: "ai-500", credits: 500, priceUSD: 29.99, priceTRY: 899 },

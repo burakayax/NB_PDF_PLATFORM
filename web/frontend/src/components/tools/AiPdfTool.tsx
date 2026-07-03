@@ -862,10 +862,18 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               ? tr ? "Devam etmek için giriş yap" : "Log in to continue"
               : tr ? "Bu bir Pro / Business özelliğidir" : "This is a Pro / Business feature"}
           </p>
-          <button type="button" onClick={gate === "login" ? onLogin : onUpgrade}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110">
-            {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button type="button" onClick={gate === "login" ? onLogin : onUpgrade}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-110">
+              {gate === "login" ? (tr ? "Giriş yap" : "Log in") : tr ? "Planı yükselt" : "Upgrade"}
+            </button>
+            {gate === "upgrade" && (
+              <button type="button" onClick={() => setTopUpOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-fuchsia-400/40 bg-fuchsia-500/10 px-5 py-2.5 text-sm font-bold text-fuchsia-100 transition hover:bg-fuchsia-500/20">
+                {tr ? "Tek işlem satın al" : "Buy a single use"}
+              </button>
+            )}
+          </div>
         </div>
       )}
       {topUpOpen && (
