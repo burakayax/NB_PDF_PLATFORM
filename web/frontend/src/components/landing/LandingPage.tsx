@@ -1797,6 +1797,7 @@ function Footer({
         { label: tr ? "Hakkımızda" : "About", action: onOpenAbout },
         { label: tr ? "İletişim" : "Contact", action: onContactClick },
         { label: "Blog", href: "/blog" },
+        { label: tr ? "Geliştirici API" : "Developer API", href: "/pdf-api" },
       ],
     },
     {
