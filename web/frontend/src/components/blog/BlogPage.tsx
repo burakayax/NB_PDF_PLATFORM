@@ -9,6 +9,9 @@ const ACCENTS: Record<string, Accent> = {
   fuchsia: { grad: "from-fuchsia-500 to-violet-600", soft: "from-fuchsia-500/20 to-violet-600/20", text: "text-fuchsia-300", ring: "border-fuchsia-400/30", chip: "border-fuchsia-400/25 bg-fuchsia-500/10 text-fuchsia-200" },
   blue: { grad: "from-blue-500 to-indigo-600", soft: "from-blue-500/20 to-indigo-600/20", text: "text-blue-300", ring: "border-blue-400/30", chip: "border-blue-400/25 bg-blue-500/10 text-blue-200" },
   violet: { grad: "from-violet-500 to-purple-600", soft: "from-violet-500/20 to-purple-600/20", text: "text-violet-300", ring: "border-violet-400/30", chip: "border-violet-400/25 bg-violet-500/10 text-violet-200" },
+  cyan: { grad: "from-cyan-500 to-blue-600", soft: "from-cyan-500/20 to-blue-600/20", text: "text-cyan-300", ring: "border-cyan-400/30", chip: "border-cyan-400/25 bg-cyan-500/10 text-cyan-200" },
+  emerald: { grad: "from-emerald-500 to-teal-600", soft: "from-emerald-500/20 to-teal-600/20", text: "text-emerald-300", ring: "border-emerald-400/30", chip: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200" },
+  amber: { grad: "from-amber-500 to-orange-600", soft: "from-amber-500/20 to-orange-600/20", text: "text-amber-300", ring: "border-amber-400/30", chip: "border-amber-400/25 bg-amber-500/10 text-amber-200" },
 };
 const accentOf = (a: string) => ACCENTS[a] ?? ACCENTS.fuchsia;
 

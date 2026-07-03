@@ -299,6 +299,7 @@ function Navbar({
             ["#showcase", tr ? "Önizleme" : "Preview"],
             ["#tools", tr ? "Araçlar" : "Tools"],
             ["#pricing", tr ? "Fiyat" : "Pricing"],
+            ["/blog", "Blog"],
             ["#faq", "FAQ"],
           ].map(([href, label]) => (
             <CrawlableLink
