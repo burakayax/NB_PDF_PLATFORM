@@ -52,14 +52,14 @@ export async function createTopupCheckoutController(request: Request, response: 
     throw new HttpError(400, "Geçersiz paket.");
   }
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
-  const plan = user?.plan;
-  if (plan !== "PRO" && plan !== "BUSINESS") {
-    throw new HttpError(403, "Ek AI kredisi için aktif bir Pro/Business aboneliği gerekir.");
-  }
+  // Pay-per-use: FREE kullanıcı da işlem kredisi satın alabilir (e-posta doğrulaması
+  // createPaymentCheckoutSession içinde zorunlu — fatura için yeterli). Plan yalnız
+  // PaymentCheckout kaydına yazılır; top-up'ta aktive EDİLMEZ → geçerli bir placeholder.
+  const placeholderPlan = user?.plan === "BUSINESS" ? "BUSINESS" : "PRO";
 
   const session = await createPaymentCheckoutSession({
     userId,
-    plan,
+    plan: placeholderPlan,
     billing: "monthly",
     clientIp: getClientIp(request),
     priceTryOverride: String(pack.priceTRY),
