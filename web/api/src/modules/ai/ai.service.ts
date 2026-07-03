@@ -201,6 +201,40 @@ RULES: Use only info from the document, NEVER invent. Skip fields not present. K
   };
 }
 
+/** Hassas veri tespiti sonucu. */
+export type SensitiveItem = { type: string; value: string };
+
+/** Belgedeki hassas/kişisel verileri bulur (isim, adres, kimlik, hesap no vb.).
+ * Regex'in kaçırdığı bağlamsal PII için. Döndürülen value'lar belgede GEÇTİĞİ gibi olmalı. */
+export async function detectSensitive(text: string, lang: Lang): Promise<SensitiveItem[]> {
+  const doc = text.slice(0, MAX_DOC_CHARS);
+  const system =
+    lang === "tr"
+      ? `Bir belgedeki KİŞİSEL/HASSAS verileri tespit eden bir uzmansın. Verilen metinden kişi adları, adresler, kimlik/pasaport numaraları, hesap/IBAN, telefon, e-posta, doğum tarihi, plaka gibi hassas bilgileri bul.
+YALNIZCA şu JSON şemasında, başka HİÇBİR metin olmadan (markdown/backtick YOK) yanıt ver:
+{"items":[{"type":"isim|adres|kimlik|hesap|telefon|eposta|tarih|diger","value":"..."}]}
+ÇOK ÖNEMLİ: value, metinde GEÇTİĞİ GİBİ birebir olmalı (kırpma/biçim değiştirme yok) — aksi halde gizlenemez. Hassas olmayan genel kelimeleri EKLEME. Yoksa items: [].`
+      : `You detect PERSONAL/SENSITIVE data in a document. From the given text, find sensitive information like person names, addresses, ID/passport numbers, account/IBAN, phone, email, date of birth, license plates.
+Respond ONLY with this JSON schema, with NO other text (NO markdown/backticks):
+{"items":[{"type":"name|address|id|account|phone|email|date|other","value":"..."}]}
+VERY IMPORTANT: value must be EXACTLY as it appears in the text (no trimming/reformatting) — otherwise it can't be redacted. Do NOT include generic non-sensitive words. If none, items: [].`;
+  const raw = await callClaude(system, [{ role: "user", content: doc }], 1500);
+  let jsonText = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  const first = jsonText.indexOf("{");
+  const last = jsonText.lastIndexOf("}");
+  if (first >= 0 && last > first) jsonText = jsonText.slice(first, last + 1);
+  let parsed: { items?: unknown };
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    return [];
+  }
+  const rawItems: Array<{ type?: unknown; value?: unknown }> = Array.isArray(parsed.items) ? parsed.items : [];
+  return rawItems
+    .filter((i) => i && typeof i.value === "string" && i.value.trim().length > 1)
+    .map((i) => ({ type: typeof i.type === "string" ? i.type : "diger", value: String(i.value) }));
+}
+
 /** İki belge karşılaştırma sonucu (frontend ile paylaşılır). */
 export type CompareResult = {
   summary: string;

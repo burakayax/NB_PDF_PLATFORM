@@ -6,6 +6,7 @@ import {
   extractData,
   translateDocument,
   compareDocuments,
+  detectSensitive,
   type ChatTurn,
 } from "./ai.service.js";
 import { getAiQuota, consumeAiQuota } from "./ai.quota.js";
@@ -122,6 +123,21 @@ export async function compareController(req: Request, res: Response): Promise<vo
   await consumeAiQuota(u.id);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ result, quota });
+}
+
+/** POST /api/ai/detect-sensitive — { text, lang? } → { items, quota } */
+export async function detectSensitiveController(req: Request, res: Response): Promise<void> {
+  const text = typeof req.body?.text === "string" ? req.body.text : "";
+  if (!text.trim()) {
+    throw new HttpError(400, "Metin boş.");
+  }
+  if (await blockedByQuota(req, res)) return;
+
+  const items = await detectSensitive(text.slice(0, MAX_TEXT), getLang(req));
+  const u = req.authUser!;
+  await consumeAiQuota(u.id);
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ items, quota });
 }
 
 /** POST /api/ai/chat — { text, question, history?, lang? } → { answer, quota } */

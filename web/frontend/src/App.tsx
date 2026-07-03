@@ -38,6 +38,7 @@ import { submitContactForm } from "./api/contact";
 import { AiPdfTool } from "./components/tools/AiPdfTool";
 import { AiBatchTool } from "./components/tools/AiBatchTool";
 import { AiCompareTool } from "./components/tools/AiCompareTool";
+import { AiRedactTool } from "./components/tools/AiRedactTool";
 import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
 import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
@@ -699,6 +700,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-ceviri" ||
     rawPath === "/tools/ai-toplu-islem" ||
     rawPath === "/tools/pdf-karsilastir" ||
+    rawPath === "/tools/hassas-veri-gizle" ||
     rawPath === "/blog" ||
     rawPath.startsWith("/blog/")
   ) {
@@ -1027,7 +1029,7 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | null>(null);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -2891,6 +2893,7 @@ function App() {
         p === "/tools/pdf-ceviri" ||
         p === "/tools/ai-toplu-islem" ||
         p === "/tools/pdf-karsilastir" ||
+        p === "/tools/hassas-veri-gizle" ||
         p === "/blog" ||
         p.startsWith("/blog/")
       ) {
@@ -4728,6 +4731,13 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "hassas-veri-gizle") {
+      return (
+        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+        </GuestSeoToolPage>
+      );
+    }
     if (
       seoSlug === "pdf-ozetle" ||
       seoSlug === "pdf-sohbet" ||
@@ -5899,6 +5909,13 @@ function App() {
                   />
                 ) : aiModal === "compare" ? (
                   <AiCompareTool
+                    language={language}
+                    accessToken={accessToken}
+                    onLogin={() => setView("login")}
+                    onUpgrade={() => setUpgradeModalOpen(true)}
+                  />
+                ) : aiModal === "redact" ? (
+                  <AiRedactTool
                     language={language}
                     accessToken={accessToken}
                     onLogin={() => setView("login")}

@@ -60,6 +60,7 @@ export const TOOL_SLUGS = [
   "pdf-ceviri",
   "ai-toplu-islem",
   "pdf-karsilastir",
+  "hassas-veri-gizle",
 ];
 
 const T = (title, description, h1, intro, keywords, faq) => ({
@@ -771,6 +772,33 @@ export const TOOL_SEO = {
       [
         { q: "How do I translate a PDF into another language?", a: "Upload the PDF, pick a target language and click 'Translate'. The AI translates while preserving meaning and structure; you can download the result as a PDF." },
         { q: "Is the layout preserved in translation?", a: "Yes. Headings, lists and tables are kept, and numbers, dates and proper nouns stay intact." },
+      ],
+    ),
+  },
+
+  "hassas-veri-gizle": {
+    tr: T(
+      "PDF'te Hassas Veri Gizleme (Redaction) — KVKK Dostu",
+      "PDF'teki kişisel/hassas verileri (TC, IBAN, telefon, e-posta, isim, adres) bulup kalıcı olarak kaldırın — örtme değil, gerçek redaction. KVKK uyumlu paylaşım için.",
+      "PDF'te Hassas Veriyi Gizle (Redaction)",
+      "Bir belgeyi paylaşmadan önce kişisel verileri kaldırmak KVKK açısından kritiktir. Bu araç TC kimlik, IBAN, telefon ve e-postayı cihazınızda otomatik bulur; isim ve adresleri yapay zekâ ile tespit eder. Onayladığınız bilgiler PDF'ten GERÇEKTEN silinir (üstü örtülmez), böylece PDF'in ham verisinden bile okunamaz.",
+      ["pdf hassas veri gizleme", "pdf redaction", "kvkk pdf", "pdf'te tc gizleme", "pdf kişisel veri kaldırma", "pdf karartma", "belgeden bilgi silme"],
+      [
+        { q: "PDF'teki hassas veri nasıl gizlenir?", a: "PDF'i yükleyin; araç TC/IBAN/telefon/e-postayı cihazınızda, isim/adresi yapay zekâ ile bulur. Onayladıklarınız sunucuda gerçek redaction ile PDF'ten kalıcı kaldırılır." },
+        { q: "Veriler gerçekten siliniyor mu, üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile veri PDF'in içeriğinden kaldırılır; üstüne siyah kutu konulup altında metin kalması gibi bir durum olmaz." },
+        { q: "KVKK için uygun mu?", a: "Kişisel verileri kalıcı olarak kaldırmanıza yardımcı olur. Yine de kritik belgelerde sonucu gözden geçirmeniz ve kurumsal veri politikanıza uymanız önerilir." },
+      ],
+    ),
+    en: T(
+      "Redact Sensitive Data in PDF — GDPR/KVKK Friendly",
+      "Find and permanently remove personal/sensitive data (ID, IBAN, phone, email, names, addresses) from a PDF — true redaction, not just covering.",
+      "Redact Sensitive Data in a PDF",
+      "Removing personal data before sharing a document is critical for privacy compliance. This tool auto-detects national ID, IBAN, phone and email on your device and finds names/addresses with AI. What you confirm is truly removed from the PDF (not covered), so it can't be read even from the raw data.",
+      ["pdf redaction", "redact pdf", "remove sensitive data pdf", "gdpr pdf", "hide personal data pdf", "black out pdf text"],
+      [
+        { q: "How do I redact sensitive data in a PDF?", a: "Upload the PDF; the tool finds ID/IBAN/phone/email on your device and names/addresses with AI. What you confirm is permanently removed via true server-side redaction." },
+        { q: "Is the data truly removed or just covered?", a: "Truly removed. With PyMuPDF redaction the data is stripped from the PDF's content; there's no black box with readable text underneath." },
+        { q: "Is it suitable for GDPR/KVKK?", a: "It helps you permanently remove personal data. Still, review the result on critical documents and follow your organization's data policy." },
       ],
     ),
   },
