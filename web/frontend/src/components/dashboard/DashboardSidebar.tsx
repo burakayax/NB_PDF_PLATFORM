@@ -113,10 +113,14 @@ const CATEGORY_ACCENT: Record<
   },
 };
 
-/** AI kategorisi öğeleri — FeatureKey DEĞİL; kendi modal'ını açar (onOpenAi). */
-const AI_TOOLS: { mode: "summarize" | "chat"; tr: string; en: string }[] = [
+/** AI araç modları — FeatureKey DEĞİL; kendi modal'ını açar (onOpenAi). */
+export type AiToolMode = "summarize" | "chat" | "extract" | "translate" | "batch";
+const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "summarize", tr: "PDF Özetle", en: "Summarize PDF" },
   { mode: "chat", tr: "PDF ile Sohbet", en: "Chat with PDF" },
+  { mode: "extract", tr: "PDF Veri Çıkar", en: "Extract Data" },
+  { mode: "translate", tr: "PDF Çevir", en: "Translate PDF" },
+  { mode: "batch", tr: "AI Toplu İşlem", en: "AI Batch" },
 ];
 
 export type SidebarToolId = FeatureKey | "subscription";
@@ -140,8 +144,8 @@ type DashboardSidebarProps = {
   isTeamMember?: boolean;
   isManagerMember?: boolean;
   onTeamClick?: () => void;
-  /** AI aracı aç (Özetle / Sohbet) — ayrı AI kategorisi için. */
-  onOpenAi?: (mode: "summarize" | "chat") => void;
+  /** AI aracı aç (Özetle / Sohbet / Veri Çıkar / Çeviri / Toplu İşlem). */
+  onOpenAi?: (mode: AiToolMode) => void;
   /** PDF Düzenle aracını aç (cihazda editör). */
   onOpenEditor?: () => void;
 };
