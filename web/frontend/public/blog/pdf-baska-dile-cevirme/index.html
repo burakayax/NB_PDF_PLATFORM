@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan) — PDF Platform</title>
+    <meta name="description" content="PDF belgenizi yapay zekâ ile 12+ dile çevirin — başlık, liste ve tablolar korunur. Sonucu düzgün bir PDF olarak indirin. Adım adım rehber." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan) — PDF Platform" />
+    <meta property="og:description" content="PDF belgenizi yapay zekâ ile 12+ dile çevirin — başlık, liste ve tablolar korunur. Sonucu düzgün bir PDF olarak indirin. Adım adım rehber." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan) — PDF Platform" />
+    <meta name="twitter:description" content="PDF belgenizi yapay zekâ ile 12+ dile çevirin — başlık, liste ve tablolar korunur. Sonucu düzgün bir PDF olarak indirin. Adım adım rehber." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF'i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan)","description":"PDF belgenizi yapay zekâ ile 12+ dile çevirin — başlık, liste ve tablolar korunur. Sonucu düzgün bir PDF olarak indirin. Adım adım rehber.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF nasıl başka dile çevrilir?","acceptedAnswer":{"@type":"Answer","text":"PDF'i AI Çeviri aracına yükleyin, hedef dili seçin ve \"Çevir\" deyin. Yapay zekâ belgeyi anlam ve yapısını koruyarak çevirir; sonucu PDF olarak indirebilirsiniz."}},{"@type":"Question","name":"Çeviride belgenin düzeni korunur mu?","acceptedAnswer":{"@type":"Answer","text":"Evet. Başlıklar, listeler ve tablolar korunarak çevrilir; sayı, tarih ve özel isimler olduğu gibi kalır."}},{"@type":"Question","name":"Hangi diller destekleniyor?","acceptedAnswer":{"@type":"Answer","text":"İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, İtalyanca, Portekizce, Rusça, Arapça, Çince, Japonca ve Felemenkçe dahil 12'den fazla dil."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF&#39;i Başka Dile Çevirmenin En Hızlı Yolu (Yapıyı Bozmadan)</h1><p class="seo-intro">Bir PDF&#39;i başka dile çevirirken en büyük dert, düzenin bozulmasıdır. Yapay zekâ ile anlamı ve yapıyı koruyarak nasıl çevireceğinizi anlatıyoruz.</p><article class="seo-article"><p class="seo-lead">Yabancı dildeki bir sözleşmeyi, makaleyi ya da kılavuzu anlamak için çeviri şart. Ama çoğu yöntem belgenin düzenini dağıtır. İşte anlamı ve yapıyı koruyarak çevirmenin pratik yolu.</p><h2>Kopyala-yapıştır çeviri neden yetersiz?</h2><p>Metni kopyalayıp bir çeviri sitesine yapıştırdığınızda başlıklar, listeler ve tablolar kaybolur; uzun belgelerde bu iş içinden çıkılmaz hale gelir. Ayrıca sayı, tarih ve özel isimlerin olduğu gibi kalması gerekir.</p><h2>Yapay zekâ ile çeviri — yapıyı koruyarak</h2><p>PDF Platform&#39;un AI Çeviri aracı belgeyi anlamı ve düzeniyle birlikte çevirir:</p><ol><li><strong>PDF&#39;i yükleyin:</strong> Metin cihazınızda okunur; taranmış belgede OCR devreye girer. Dosyanız karşıya yüklenmez, yalnızca metni çeviriye gider.</li><li><strong>Hedef dili seçin:</strong> İngilizce, Almanca, Fransızca, İspanyolca, Arapça, Rusça dahil 12&#39;den fazla dil arasından seçin.</li><li><strong>Çevirin ve PDF indirin:</strong> Başlık, liste ve tablolar korunarak çevrilir; sonucu kopyalayabilir ya da düzgün bir PDF olarak indirebilirsiniz.</li></ol><p><a href="/tools/pdf-ceviri"><strong>AI Çeviri</strong> — PDF&#39;inizi seçtiğiniz dile çevirin — yapı korunur, PDF olarak indirin.</a></p><h2>Ne zaman insan çevirmen gerekir?</h2><p>Yapay zekâ çevirisi hız ve anlama için mükemmeldir. Ancak resmî/hukuki geçerlilik gereken belgelerde (noter, mahkeme, resmî başvuru) yeminli tercüman şarttır. Yapay zekâ bu tür işlerde hızlı bir ön-anlama ve taslak için idealdir.</p><p>Çeviriden önce belgenin ne anlattığını hızlıca kavramak isterseniz AI Özet aracıyla önce bir özet çıkarabilirsiniz.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF nasıl başka dile çevrilir?</h3><p>PDF&#39;i AI Çeviri aracına yükleyin, hedef dili seçin ve &quot;Çevir&quot; deyin. Yapay zekâ belgeyi anlam ve yapısını koruyarak çevirir; sonucu PDF olarak indirebilirsiniz.</p></div><div class="seo-faq-item"><h3>Çeviride belgenin düzeni korunur mu?</h3><p>Evet. Başlıklar, listeler ve tablolar korunarak çevrilir; sayı, tarih ve özel isimler olduğu gibi kalır.</p></div><div class="seo-faq-item"><h3>Hangi diller destekleniyor?</h3><p>İngilizce, Türkçe, Almanca, Fransızca, İspanyolca, İtalyanca, Portekizce, Rusça, Arapça, Çince, Japonca ve Felemenkçe dahil 12&#39;den fazla dil.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

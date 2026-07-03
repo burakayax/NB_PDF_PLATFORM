@@ -325,4 +325,40 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/iki-pdf-birlestirme-ucretsiz"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-baska-dile-cevirme"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

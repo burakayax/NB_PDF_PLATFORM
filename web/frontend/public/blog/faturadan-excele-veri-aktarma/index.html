@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem) — PDF Platform</title>
+    <meta name="description" content="PDF faturalardaki verileri Excel&#39;e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya nasıl dökeceğinizi adım adım anlatıyoruz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem) — PDF Platform" />
+    <meta property="og:description" content="PDF faturalardaki verileri Excel&#39;e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya nasıl dökeceğinizi adım adım anlatıyoruz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem) — PDF Platform" />
+    <meta name="twitter:description" content="PDF faturalardaki verileri Excel&#39;e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya nasıl dökeceğinizi adım adım anlatıyoruz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Faturadan Excel'e Veri Aktarma: 2026 Rehberi (3 Yöntem)","description":"PDF faturalardaki verileri Excel'e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya nasıl dökeceğinizi adım adım anlatıyoruz.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Faturadan Excel'e veri nasıl aktarılır?","acceptedAnswer":{"@type":"Answer","text":"PDF'i AI Veri Çıkar aracına yükleyin; yapay zekâ fatura no, tarih, taraflar, tutar ve kalemleri yapılandırılmış olarak çıkarır. Ardından tek tıkla CSV (Excel) olarak indirebilirsiniz."}},{"@type":"Question","name":"Taranmış faturalarda çalışır mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. Taranmış/fotoğraf faturalarda OCR otomatik devreye girip yazıyı cihazınızda metne çevirir, sonra veri çıkarılır."}},{"@type":"Question","name":"Birden çok faturayı tek tabloya alabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. AI Toplu İşlem aracıyla onlarca faturayı işleyip hepsini, her satırı bir dosya olan tek bir CSV tablosunda birleştirebilirsiniz."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Faturadan Excel&#39;e Veri Aktarma: 2026 Rehberi (3 Yöntem)</h1><p class="seo-intro">PDF faturaları elle Excel&#39;e girmek yavaş ve hataya açık. Bu rehberde faturadan veri aktarmanın 3 yöntemini karşılaştırıp, onlarca faturayı tek tabloya saniyeler içinde nasıl dökeceğinizi gösteriyoruz.</p><article class="seo-article"><p class="seo-lead">Muhasebe, satın alma veya finans ekiplerinin en çok zaman kaybettiği işlerden biri: PDF faturalardaki bilgileri tek tek Excel&#39;e girmek. Bu yazıda üç yöntemi dürüstçe karşılaştırıyor ve en hızlısını adım adım gösteriyoruz.</p><h2>Neden zor bir iş?</h2><p>PDF, görüntüleme için tasarlanmış bir formattır — verinin &quot;tablo&quot; olarak dışa aktarılması için değil. Fatura no, tarih, tutar ve kalemler sayfada görünse de arkada düzenli bir tablo olarak durmaz. Üstelik her tedarikçinin fatura düzeni farklıdır. Bu yüzden kopyala-yapıştır çoğu zaman bozuk hizalama ve hatalı hücrelerle sonuçlanır.</p><h2>Yöntem 1 — Elle giriş</h2><p>En bilinen yol: faturayı açıp değerleri tek tek Excel&#39;e yazmak. Tek bir fatura için işe yarar, ama onlarca faturada hem çok zaman alır hem de dikkat hatası kaçınılmazdır.</p><ul><li>Artı: ek araç gerekmez.</li><li>Eksi: yavaş, yorucu ve hataya açık.</li><li>Ne zaman: ayda birkaç fatura.</li></ul><h2>Yöntem 2 — OCR ile metin çıkarıp düzenleme</h2><p>Taranmış (fotoğraf/görüntü) faturalarda önce OCR ile yazıyı metne çevirmeniz gerekir; ardından metni elle tabloya düzenlersiniz. OCR metni verir ama yapıyı (hangi sayı hangi alan) sizin kurmanız gerekir.</p><p>Taranmış bir PDF&#39;iniz varsa, OCR aracımız yazıyı tamamen cihazınızda gerçek metne çevirir (Türkçe + İngilizce). Dosya sunucuya yüklenmez.</p><h2>Yöntem 3 — Yapay zekâ ile otomatik veri çıkarma (en hızlısı)</h2><p>En pratik yöntem, belgeyi anlayan bir yapay zekânın alanları ve satır kalemlerini sizin yerinize ayıklamasıdır. PDF Platform&#39;un AI Veri Çıkar aracı tam olarak bunu yapar:</p><ol><li><strong>PDF&#39;i yükleyin:</strong> Fatura, irsaliye ya da tablo içeren belgenizi seçin. Metin cihazınızda okunur; taranmışsa OCR otomatik devreye girer.</li><li><strong>&quot;Veriyi Çıkar&quot; deyin:</strong> Yapay zekâ belge türünü tanır ve fatura no, tarih, satıcı/alıcı, vergi no, ara toplam, KDV, genel toplam gibi alanları — ve varsa satır kalemlerini — yapılandırılmış olarak çıkarır.</li><li><strong>Tabloda görün, CSV indirin:</strong> Sonucu alanlar + tablolar olarak görün; tek tıkla CSV (Excel) veya JSON olarak dışa aktarın.</li></ol><p><a href="/tools/pdf-veri-cikar"><strong>AI Veri Çıkar</strong> — Bir faturayı deneyin — alanlar ve kalemler saniyeler içinde tabloya dönüşsün.</a></p><h2>Onlarca faturayı tek tabloda birleştirme</h2><p>Tek fatura güzel, ama asıl zaman kazancı toplu işlemede. AI Toplu İşlem aracıyla bir klasör dolusu faturayı arka arkaya işleyip hepsinin verisini tek bir CSV tablosunda birleştirebilirsiniz — her satır bir fatura olacak şekilde.</p><ul><li>En fazla 25 dosyayı tek seferde işleyin.</li><li>Her dosya için canlı ilerleme görün.</li><li>Tüm faturaların alanları tek CSV başlığında birleşir.</li></ul><p><a href="/tools/ai-toplu-islem"><strong>AI Toplu İşlem</strong> — Birden çok faturayı tek seferde işleyip tek CSV olarak indirin.</a></p><h2>Gizlilik notu</h2><p>Bu araçlarda PDF&#39;inizin metni cihazınızda çıkarılır ve yapay zekâya yalnızca metin gönderilir; dosyanızın kendisi karşıya yüklenmez. Yapısal araçlarımızın çoğu ise (birleştirme, sıkıştırma vb.) tamamen tarayıcınızda çalışır.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Faturadan Excel&#39;e veri nasıl aktarılır?</h3><p>PDF&#39;i AI Veri Çıkar aracına yükleyin; yapay zekâ fatura no, tarih, taraflar, tutar ve kalemleri yapılandırılmış olarak çıkarır. Ardından tek tıkla CSV (Excel) olarak indirebilirsiniz.</p></div><div class="seo-faq-item"><h3>Taranmış faturalarda çalışır mı?</h3><p>Evet. Taranmış/fotoğraf faturalarda OCR otomatik devreye girip yazıyı cihazınızda metne çevirir, sonra veri çıkarılır.</p></div><div class="seo-faq-item"><h3>Birden çok faturayı tek tabloya alabilir miyim?</h3><p>Evet. AI Toplu İşlem aracıyla onlarca faturayı işleyip hepsini, her satırı bir dosya olan tek bir CSV tablosunda birleştirebilirsiniz.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -23,6 +23,7 @@ import {
   LEGAL_SEO,
   SOFTWARE_FEATURE_LIST,
 } from "../src/seo/seoContent.mjs";
+import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -160,6 +161,42 @@ function pageMetaForRoute(routePath) {
     return { ...c, kind: "pricing", index: true, follow: true, includePricing: true };
   }
 
+  if (routePath === "/blog") {
+    return {
+      title: `Blog — Rehberler & İpuçları | ${BRAND}`,
+      description: "PDF işlerini hızlandıran pratik rehberler: birleştirme, veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştırın.",
+      h1: "PDF Platform Blog",
+      intro: "PDF birleştirme, faturadan veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştıran pratik rehberler.",
+      keywords: [],
+      faq: [],
+      kind: "blogindex",
+      index: true,
+      follow: true,
+    };
+  }
+
+  if (routePath.startsWith("/blog/")) {
+    const slug = routePath.slice("/blog/".length);
+    const p = BLOG_POSTS.find((x) => x.slug === slug);
+    if (p) {
+      const c = p[lang];
+      return {
+        title: `${c.title} — ${BRAND}`,
+        description: c.description,
+        h1: c.title,
+        intro: c.excerpt,
+        keywords: p.tags[lang] || [],
+        faq: c.faq || [],
+        kind: "blogpost",
+        post: p,
+        blocks: c.blocks,
+        index: true,
+        follow: true,
+        includeFaq: true,
+      };
+    }
+  }
+
   for (const key of ["terms", "privacy", "kvkk"]) {
     if (routePath === `/${key}`) {
       const c = LEGAL_SEO[key][lang];
@@ -290,6 +327,23 @@ function renderStructuredData(baseUrl, routePath, meta) {
     });
   }
 
+  // BlogPosting — blog yazıları için makale şeması.
+  if (meta.kind === "blogpost" && meta.post) {
+    nodes.push({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: meta.title.replace(` — ${BRAND}`, ""),
+      description: meta.description,
+      datePublished: meta.post.date,
+      dateModified: meta.post.updated,
+      inLanguage: lang,
+      mainEntityOfPage: canonicalUrl,
+      author: { "@type": "Organization", name: BRAND, "@id": orgId },
+      publisher: { "@id": orgId },
+      image: `${baseUrl}${DEFAULT_OG_IMAGE}`,
+    });
+  }
+
   // FAQPage — rich result Mayıs 2026'da kaldırıldı ancak AI Overviews / AEO için
   // hâlâ değerli; schema geçerli olduğundan korunur.
   if (meta.includeFaq && Array.isArray(meta.faq) && meta.faq.length > 0) {
@@ -315,10 +369,43 @@ function renderStructuredData(baseUrl, routePath, meta) {
 // ─── Görünür gövde (crawler + AI motorları + ilk boya içeriği) ────────────────
 // İçerik #root içine yazılır; React createRoot mount olunca temizleyip yeniden
 // render eder (çift içerik olmaz). Crawler JS çalıştırmasa bile içeriği görür.
+/** Blog bloklarını crawler-dostu semantik HTML'e çevirir. */
+function renderBlogBlocksHtml(blocks) {
+  return blocks
+    .map((b) => {
+      if (b.t === "lead") return `<p class="seo-lead">${escapeHtml(b.x)}</p>`;
+      if (b.t === "p" || b.t === "tip") return `<p>${escapeHtml(b.x)}</p>`;
+      if (b.t === "h2") return `<h2>${escapeHtml(b.x)}</h2>`;
+      if (b.t === "h3") return `<h3>${escapeHtml(b.x)}</h3>`;
+      if (b.t === "ul") return `<ul>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
+      if (b.t === "ol") return `<ol>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ol>`;
+      if (b.t === "steps") return `<ol>${b.items.map((s) => `<li><strong>${escapeHtml(s.title)}:</strong> ${escapeHtml(s.x)}</li>`).join("")}</ol>`;
+      if (b.t === "cta") return `<p><a href="${escapeHtml(b.tool)}"><strong>${escapeHtml(b.title)}</strong> — ${escapeHtml(b.x)}</a></p>`;
+      return "";
+    })
+    .join("");
+}
+
 function renderVisibleBody(baseUrl, meta) {
   const parts = [];
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
   parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
+
+  // Blog yazısı — tam makale gövdesi (crawler görünür metin)
+  if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
+    parts.push(`<article class="seo-article">${renderBlogBlocksHtml(meta.blocks)}</article>`);
+  }
+
+  // Blog index — yazı kartlarına iç bağlantı
+  if (meta.kind === "blogindex") {
+    const links = getBlogPostsSorted()
+      .map((p) => {
+        const c = p[PRIMARY_LANG];
+        return `<li><a href="/blog/${p.slug}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
+      })
+      .join("");
+    parts.push(`<nav aria-label="Blog yazıları" class="seo-posts"><h2>Tüm Yazılar</h2><ul>${links}</ul></nav>`);
+  }
 
   // Araç ve landing sayfalarında tüm araçlara iç bağlantı (crawl + sitelink sinyali)
   if (meta.kind === "tool" || meta.kind === "landing") {
@@ -493,6 +580,12 @@ if (blockIndexing) {
       changefreq: "weekly",
       priority: "0.9",
     })),
+    { loc: `${base}/blog`, changefreq: "weekly", priority: "0.7" },
+    ...BLOG_POSTS.map((p) => ({
+      loc: `${base}/blog/${p.slug}`,
+      changefreq: "monthly",
+      priority: "0.7",
+    })),
   ];
 
   function renderHreflang(loc) {
@@ -532,6 +625,8 @@ const prerenderRoutes = [
   "/privacy",
   "/kvkk",
   ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
+  "/blog",
+  ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];
 
 for (const routePath of prerenderRoutes) {
