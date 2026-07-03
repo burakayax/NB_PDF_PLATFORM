@@ -6,4 +6,4 @@ Disallow: /admin-login
 Disallow: /login-success
 Disallow: /api/
 
-Sitemap: https://pdfplatform.app/sitemap.xml
+Sitemap: https://www.pdfplatform.app/sitemap.xml
