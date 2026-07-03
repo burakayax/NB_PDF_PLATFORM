@@ -4,9 +4,27 @@ export type AiQuota = {
   used: number;
   limit: number | null; // null = sınırsız (admin)
   remaining: number | null;
+  bonus?: number; // top-up ile alınan ek kredi (kalıcı)
   unlimited: boolean;
   resetAt: string;
 };
+
+export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean };
+
+/** Ek AI kredisi paketleri. */
+export async function fetchTopupPacks(token: string | null): Promise<TopupPack[]> {
+  try {
+    const res = await fetch(`${getSaasApiBase()}/api/ai/topup/packs`, { headers: authHeaders(token), credentials: "include" });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { packs?: TopupPack[] };
+    return data.packs ?? [];
+  } catch { return []; }
+}
+
+/** ADMIN: paket kadar kredi ver (manuel/test). Ödeme açılınca callback grantAiCredits çağıracak. */
+export async function topupGrant(packId: string, token: string | null): Promise<{ quota?: AiQuota }> {
+  return postAi<{ quota?: AiQuota }>("topup/grant", { packId }, token);
+}
 export type AiError = Error & { status?: number; code?: string; quota?: AiQuota };
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 

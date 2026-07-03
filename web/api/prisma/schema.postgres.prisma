@@ -220,6 +220,8 @@ model User {
   teamOwnerId     String?          @map("team_owner_id")
   teamMemberRole  TeamMemberRole?  @map("team_member_role")
   lastLoginAt     DateTime?        @map("last_login_at")
+  // Top-up ile satın alınan ek AI kredisi (aylık kota bitince kullanılır, aylar arası kalıcı).
+  bonusAiCredits  Int              @default(0) @map("bonus_ai_credits")
 
   refreshTokens RefreshToken[]
   dailyUsages  DailyUsage[]
