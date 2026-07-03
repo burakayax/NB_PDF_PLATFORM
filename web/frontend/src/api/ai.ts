@@ -113,6 +113,23 @@ export async function aiTranslate(
   return { translation: d.translation ?? "", quota: d.quota };
 }
 
+/** İki belge karşılaştırma sonucu. */
+export type CompareResult = {
+  summary: string;
+  changes: Array<{ type: "added" | "removed" | "changed"; title: string; detail: string }>;
+};
+
+/** İki PDF'i karşılaştırır (farkları çıkarır). */
+export async function aiCompare(
+  textA: string,
+  textB: string,
+  lang: "tr" | "en",
+  token: string | null,
+): Promise<{ result: CompareResult; quota?: AiQuota }> {
+  const d = await postAi<{ result?: CompareResult; quota?: AiQuota }>("compare", { textA, textB, lang }, token);
+  return { result: d.result ?? { summary: "", changes: [] }, quota: d.quota };
+}
+
 /** Belge bağlamında soru yanıtlar. */
 export async function aiChat(
   text: string,

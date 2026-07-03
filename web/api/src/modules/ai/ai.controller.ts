@@ -5,6 +5,7 @@ import {
   chatWithDocument,
   extractData,
   translateDocument,
+  compareDocuments,
   type ChatTurn,
 } from "./ai.service.js";
 import { getAiQuota, consumeAiQuota } from "./ai.quota.js";
@@ -97,6 +98,30 @@ export async function translateController(req: Request, res: Response): Promise<
   await consumeAiQuota(u.id);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ translation, quota });
+}
+
+/** POST /api/ai/compare — { textA, textB, lang? } → { result, quota } */
+export async function compareController(req: Request, res: Response): Promise<void> {
+  const textA = typeof req.body?.textA === "string" ? req.body.textA : "";
+  const textB = typeof req.body?.textB === "string" ? req.body.textB : "";
+  if (!textA.trim() || !textB.trim()) {
+    throw new HttpError(400, "Karşılaştırmak için iki belge metni de gerekli.");
+  }
+  if (await blockedByQuota(req, res)) return;
+
+  let result;
+  try {
+    result = await compareDocuments(textA.slice(0, MAX_TEXT), textB.slice(0, MAX_TEXT), getLang(req));
+  } catch (e) {
+    if (e instanceof Error && e.message === "AI_COMPARE_PARSE") {
+      throw new HttpError(422, "Belgeler karşılaştırılamadı. Farklı belgeler deneyin.");
+    }
+    throw e;
+  }
+  const u = req.authUser!;
+  await consumeAiQuota(u.id);
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ result, quota });
 }
 
 /** POST /api/ai/chat — { text, question, history?, lang? } → { answer, quota } */
