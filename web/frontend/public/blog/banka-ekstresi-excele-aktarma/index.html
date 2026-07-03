@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Banka Ekstresini (PDF) Excel&#39;e Aktarma — PDF Platform</title>
+    <meta name="description" content="PDF banka ekstresindeki hareketleri Excel&#39;e (CSV) aktarın — tarih, açıklama, tutar sütunlarıyla. Yapay zekâ ile elle yazmadan, hızlı ve düzenli." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Banka Ekstresini (PDF) Excel&#39;e Aktarma — PDF Platform" />
+    <meta property="og:description" content="PDF banka ekstresindeki hareketleri Excel&#39;e (CSV) aktarın — tarih, açıklama, tutar sütunlarıyla. Yapay zekâ ile elle yazmadan, hızlı ve düzenli." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Banka Ekstresini (PDF) Excel&#39;e Aktarma — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Banka Ekstresini (PDF) Excel&#39;e Aktarma — PDF Platform" />
+    <meta name="twitter:description" content="PDF banka ekstresindeki hareketleri Excel&#39;e (CSV) aktarın — tarih, açıklama, tutar sütunlarıyla. Yapay zekâ ile elle yazmadan, hızlı ve düzenli." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Banka Ekstresini (PDF) Excel&#39;e Aktarma — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Banka Ekstresini (PDF) Excel'e Aktarma","description":"PDF banka ekstresindeki hareketleri Excel'e (CSV) aktarın — tarih, açıklama, tutar sütunlarıyla. Yapay zekâ ile elle yazmadan, hızlı ve düzenli.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/banka-ekstresi-excele-aktarma","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF banka ekstresi Excel'e nasıl aktarılır?","acceptedAnswer":{"@type":"Answer","text":"Ekstreyi AI Veri Çıkar aracına yükleyin; yapay zekâ hareketleri tarih/açıklama/tutar sütunlarına ayırır ve CSV olarak indirirsiniz."}},{"@type":"Question","name":"Hareketler doğru sütunlara ayrılıyor mu?","acceptedAnswer":{"@type":"Answer","text":"Evet. Yapay zekâ ekstrenin yapısını tanıyıp verileri ilgili sütunlara yerleştirir; kopyala-yapıştırdaki hiza bozulması yaşanmaz."}},{"@type":"Question","name":"Verilerim güvende mi?","acceptedAnswer":{"@type":"Answer","text":"PDF'inizin metni cihazınızda çıkarılır ve yalnızca metin işleme gider; dosyanın kendisi karşıya yüklenmez."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Banka Ekstresini (PDF) Excel&#39;e Aktarma</h1><p class="seo-intro">PDF banka ekstresindeki yüzlerce hareketi elle Excel&#39;e girmek işkence. Yapay zekâ ile bunu nasıl düzenli bir tabloya dökeceğinizi gösteriyoruz.</p><article class="seo-article"><p class="seo-lead">Muhasebe kapanışı, harcama takibi ya da bütçe için banka ekstresindeki hareketleri Excel&#39;de görmek gerekir. Ama bankaların PDF ekstresi düzgün bir tablo olarak gelmez; kopyala-yapıştır hizayı bozar.</p><h2>Neden PDF ekstre Excel&#39;e zor aktarılır?</h2><p>PDF ekstrede satırlar göze düzenli görünse de arkada tablo yapısı yoktur. Bu yüzden kopyaladığınızda tarih, açıklama ve tutarlar tek hücreye ya da yanlış sütunlara düşer. Yapay zekâ bu yapıyı tanıyıp doğru sütunlara ayırır.</p><h2>Adım adım ekstre → Excel</h2><ol><li><strong>Ekstre PDF&#39;ini yükleyin:</strong> AI Veri Çıkar aracına banka ekstrenizi ekleyin. Metin cihazınızda okunur.</li><li><strong>&quot;Veriyi Çıkar&quot; deyin:</strong> Yapay zekâ hareketleri tarih, açıklama ve tutar olarak yapılandırılmış tabloya döker.</li><li><strong>CSV indirin:</strong> Sonucu CSV olarak indirip Excel&#39;de açın; artık filtreleyip toplayabilirsiniz.</li></ol><p><a href="/tools/pdf-veri-cikar"><strong>Ekstreyi Excel&#39;e Aktar</strong> — Banka ekstresindeki hareketleri düzenli bir tabloya dökün.</a></p><p>Birden çok aya ait ekstreniz varsa AI Toplu İşlem ile hepsini işleyip tek CSV&#39;de birleştirebilirsiniz.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF banka ekstresi Excel&#39;e nasıl aktarılır?</h3><p>Ekstreyi AI Veri Çıkar aracına yükleyin; yapay zekâ hareketleri tarih/açıklama/tutar sütunlarına ayırır ve CSV olarak indirirsiniz.</p></div><div class="seo-faq-item"><h3>Hareketler doğru sütunlara ayrılıyor mu?</h3><p>Evet. Yapay zekâ ekstrenin yapısını tanıyıp verileri ilgili sütunlara yerleştirir; kopyala-yapıştırdaki hiza bozulması yaşanmaz.</p></div><div class="seo-faq-item"><h3>Verilerim güvende mi?</h3><p>PDF&#39;inizin metni cihazınızda çıkarılır ve yalnızca metin işleme gider; dosyanın kendisi karşıya yüklenmez.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

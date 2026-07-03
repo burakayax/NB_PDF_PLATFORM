@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem) — PDF Platform</title>
+    <meta name="description" content="Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama" />
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem) — PDF Platform" />
+    <meta property="og:description" content="Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem) — PDF Platform" />
+    <meta name="twitter:description" content="Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem)","description":"Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/faturalari-toplu-muhasebeye-hazirlama","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Onlarca faturayı tek seferde nasıl işlerim?","acceptedAnswer":{"@type":"Answer","text":"AI Toplu İşlem aracına faturaları toplu yükleyin, \"Veri Çıkar\" modunu seçin ve başlatın; tüm faturaların verisi tek CSV'de birleşir."}},{"@type":"Question","name":"Kaç fatura işleyebilirim?","acceptedAnswer":{"@type":"Answer","text":"Tek seferde en fazla 25 dosya işlenebilir; daha fazlası için işlemi tekrarlayabilirsiniz."}},{"@type":"Question","name":"Sonuçlar güvenilir mi?","acceptedAnswer":{"@type":"Answer","text":"Yapay zekâ yalnızca belgedeki bilgiyi kullanır; yine de muhasebe kaydından önce kritik tutarları gözden geçirmeniz önerilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem)</h1><p class="seo-intro">Ay sonu geldi, elinizde onlarca PDF fatura var ve hepsini tek tek muhasebeye girmeniz gerekiyor. Bunu toplu işlemle nasıl dakikalara indireceğinizi anlatıyoruz.</p><article class="seo-article"><p class="seo-lead">Küçük işletmeler ve serbest çalışanlar için ay sonu, PDF faturaları tek tek açıp muhasebe tablosuna girmekle geçer. Toplu işlemle bu iş, her faturayı ayrı ayrı açmadan, tek adımda hallolur.</p><h2>Toplu işlem neyi çözer?</h2><p>Tek fatura işlemek kolaydır; asıl dert onlarca faturayı arka arkaya işlemektir. AI Toplu İşlem, bir klasör dolusu faturayı sırayla işleyip her birinin verisini (fatura no, tarih, satıcı, tutar, KDV) çıkarır ve hepsini tek bir CSV tablosunda — her satır bir fatura olacak şekilde — birleştirir.</p><ol><li><strong>Faturaları toplu yükleyin:</strong> AI Toplu İşlem aracına PDF faturalarınızı ekleyin (en fazla 25 dosya).</li><li><strong>&quot;Veri Çıkar&quot; modunu seçin:</strong> İşlemi başlatın; her fatura için canlı ilerleme görürsünüz.</li><li><strong>Tek CSV indirin:</strong> Tüm faturaların verisi tek tabloda birleşir; Excel&#39;de açıp muhasebeye aktarın.</li></ol><p><a href="/tools/ai-toplu-islem"><strong>AI Toplu İşlem</strong> — Onlarca faturayı tek seferde işleyip tek CSV olarak indirin.</a></p><p>Metin faturaların yanında taranmış faturalarınız varsa OCR otomatik devreye girer; yine de sonuçları kritik tutarlar açısından bir kez gözden geçirmeniz önerilir.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Onlarca faturayı tek seferde nasıl işlerim?</h3><p>AI Toplu İşlem aracına faturaları toplu yükleyin, &quot;Veri Çıkar&quot; modunu seçin ve başlatın; tüm faturaların verisi tek CSV&#39;de birleşir.</p></div><div class="seo-faq-item"><h3>Kaç fatura işleyebilirim?</h3><p>Tek seferde en fazla 25 dosya işlenebilir; daha fazlası için işlemi tekrarlayabilirsiniz.</p></div><div class="seo-faq-item"><h3>Sonuçlar güvenilir mi?</h3><p>Yapay zekâ yalnızca belgedeki bilgiyi kullanır; yine de muhasebe kaydından önce kritik tutarları gözden geçirmeniz önerilir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
