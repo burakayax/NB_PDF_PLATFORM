@@ -50,7 +50,7 @@ function readEnvBaseUrl() {
     }
   }
   if (!base) {
-    base = "https://pdfplatform.app";
+    base = "https://www.pdfplatform.app";
   }
   return base.replace(/\/$/, "");
 }
