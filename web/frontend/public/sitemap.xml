@@ -361,4 +361,58 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-word-donusturme</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-word-donusturme"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/pdf-word-donusturme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-word-donusturme"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-boyutu-kucultme-sikistirma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-boyutu-kucultme-sikistirma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/pdf-boyutu-kucultme-sikistirma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-boyutu-kucultme-sikistirma"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-sifre-kaldirma-koyma"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/resimleri-pdf-yapma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/resimleri-pdf-yapma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/resimleri-pdf-yapma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/resimleri-pdf-yapma"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/uzun-belgeleri-ai-ile-ozetleme</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/uzun-belgeleri-ai-ile-ozetleme"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/uzun-belgeleri-ai-ile-ozetleme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/uzun-belgeleri-ai-ile-ozetleme"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr"/>
+    <lastmod>2026-07-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
