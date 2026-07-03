@@ -46,3 +46,21 @@ export async function createPaymentCheckout(
   await ensureOk(response, "Payment could not be started.");
   return response.json() as Promise<CreatePaymentResponse>;
 }
+
+/** Ek AI kredisi (top-up) satın alma oturumu başlatır. Ödeme açık olmalı (aksi 403). */
+export async function createTopupCheckout(
+  accessToken: string,
+  packId: string,
+): Promise<CreatePaymentResponse> {
+  const response = await fetch(`${getSaasApiBase()}/api/payment/topup`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ packId }),
+  });
+  await ensureOk(response, "Payment could not be started.");
+  return response.json() as Promise<CreatePaymentResponse>;
+}

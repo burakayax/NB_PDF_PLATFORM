@@ -4,6 +4,8 @@ import { Check, Loader2, Sparkles, X, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { useSettings } from "../../hooks/useSettings";
 import { fetchTopupPacks, topupGrant, type TopupPack } from "../../api/ai";
+import { createTopupCheckout } from "../../api/payment";
+import { launchIyzicoCheckout } from "../../lib/iyzicoLaunch";
 
 type Props = {
   language: Language;
@@ -42,6 +44,18 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
       onGranted?.();
     } catch { setMsg(tr ? "Eklenemedi." : "Failed."); }
     finally { setBusy(null); }
+  }
+
+  async function buy(p: TopupPack) {
+    if (!accessToken) return;
+    setBusy(p.id); setMsg(null);
+    try {
+      const session = await createTopupCheckout(accessToken, p.id);
+      launchIyzicoCheckout(session); // iyzico formuna/sayfasına yönlendirir
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : tr ? "Ödeme başlatılamadı." : "Couldn't start payment.");
+      setBusy(null);
+    }
   }
 
   const price = (p: TopupPack) => (tr ? `${p.priceTRY.toLocaleString("tr-TR")} ₺` : `$${p.priceUSD}`);
@@ -83,8 +97,9 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
                   <span className="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[13px] font-bold text-slate-400">{tr ? "Yakında" : "Coming soon"}</span>
                 )
               ) : (
-                <button type="button" className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110">
-                  {tr ? "Satın Al" : "Buy"}
+                <button type="button" onClick={() => void buy(p)} disabled={busy === p.id}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
+                  {busy === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{tr ? "Satın Al" : "Buy"}
                 </button>
               )}
             </div>

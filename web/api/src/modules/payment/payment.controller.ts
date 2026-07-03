@@ -4,6 +4,8 @@ import express from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentBodySchema } from "./payment.schema.js";
+import { prisma } from "../../lib/prisma.js";
+import { topupPackById, topupInvoiceLabel } from "../ai/ai.quota.js";
 import {
   createPaymentCheckoutSession,
   paymentWorkspaceRedirectUrl,
@@ -31,6 +33,39 @@ export async function createPaymentController(request: Request, response: Respon
     plan: parsed.data.plan,
     billing: parsed.data.billing ?? "monthly",
     clientIp: getClientIp(request),
+  });
+
+  response.status(200).json(session);
+}
+
+/** POST /api/payment/topup — ek AI kredisi (top-up) satın alma. Abonelik checkout'unu
+ * yeniden kullanır; callback plan yerine kredi ekler ve faturayı "Ek AI Hizmet Bedeli"
+ * kalemiyle keser. Sadece aktif Pro/Business aboneleri satın alabilir. */
+export async function createTopupCheckoutController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "Authentication is required.");
+  }
+  const packId = typeof request.body?.packId === "string" ? request.body.packId : "";
+  const pack = topupPackById(packId);
+  if (!pack) {
+    throw new HttpError(400, "Geçersiz paket.");
+  }
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  const plan = user?.plan;
+  if (plan !== "PRO" && plan !== "BUSINESS") {
+    throw new HttpError(403, "Ek AI kredisi için aktif bir Pro/Business aboneliği gerekir.");
+  }
+
+  const session = await createPaymentCheckoutSession({
+    userId,
+    plan,
+    billing: "monthly",
+    clientIp: getClientIp(request),
+    priceTryOverride: String(pack.priceTRY),
+    checkoutCurrency: "TRY",
+    topupCredits: pack.credits,
+    basketItemName: topupInvoiceLabel(pack),
   });
 
   response.status(200).json(session);
