@@ -114,13 +114,14 @@ const CATEGORY_ACCENT: Record<
 };
 
 /** AI araç modları — FeatureKey DEĞİL; kendi modal'ını açar (onOpenAi). */
-export type AiToolMode = "summarize" | "chat" | "extract" | "translate" | "batch" | "compare";
+export type AiToolMode = "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact";
 const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "summarize", tr: "PDF Özetle", en: "Summarize PDF" },
   { mode: "chat", tr: "PDF ile Sohbet", en: "Chat with PDF" },
   { mode: "extract", tr: "PDF Veri Çıkar", en: "Extract Data" },
   { mode: "translate", tr: "PDF Çevir", en: "Translate PDF" },
   { mode: "compare", tr: "PDF Karşılaştır", en: "Compare PDFs" },
+  { mode: "redact", tr: "Hassas Veri Gizle", en: "Redact Data" },
   { mode: "batch", tr: "AI Toplu İşlem", en: "AI Batch" },
 ];
 

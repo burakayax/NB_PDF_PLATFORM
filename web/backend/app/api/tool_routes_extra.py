@@ -440,6 +440,80 @@ async def tool_edit_text(
             cleanup_path(workdir)
 
 
+@router.post("/redact-pdf")
+@limiter.limit("15/minute")
+async def tool_redact_pdf(
+    request: Request,
+    file: UploadFile = File(...),
+    terms: str = Form("[]"),
+    password: str = Form(""),
+):
+    """Hassas veri gizleme: verilen metin parçalarını (TC/IBAN/telefon/e-posta/isim…)
+    PyMuPDF ile TÜM sayfalarda bulup GERÇEKTEN kaldırır (redaction — siyah kutu + veri
+    PDF'ten silinir, örtme değil). `terms`: JSON string listesi. Misafire açık (token yok);
+    boyut/oran/sandbox korur. NOT: dosya sunucuya yüklenir (frontend'de gizlilik uyarısı)."""
+    import json as _json
+
+    decision = {"fileSizeLimitMB": 50}
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        try:
+            raw_terms = _json.loads(terms or "[]")
+            term_list = [str(t) for t in raw_terms if isinstance(t, (str, int, float)) and str(t).strip()]
+        except Exception:
+            term_list = []
+        # Uzun terimler önce (kısa alt-dizeleri gereksiz eşlemeyi azalt); tekilleştir.
+        term_list = sorted(set(term_list), key=len, reverse=True)
+        pwd = password.strip() or None
+        sp = str(saved)
+        out_p = workdir / format_derived_filename(file.filename or saved.name, "Gizlenmis", "pdf")
+
+        def _run() -> bytes:
+            import fitz as _fitz
+
+            doc = _fitz.open(sp)
+            try:
+                if doc.needs_pass:
+                    if not pwd or not doc.authenticate(pwd):
+                        raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
+                for page in doc:
+                    found = False
+                    for term in term_list:
+                        try:
+                            rects = page.search_for(term, quads=False)
+                        except Exception:
+                            rects = []
+                        for r in rects:
+                            page.add_redact_annot(r, fill=(0, 0, 0))
+                            found = True
+                    if found:
+                        page.apply_redactions()
+                doc.save(str(out_p), garbage=3, deflate=True)
+                return out_p.read_bytes()
+            finally:
+                doc.close()
+
+        pdf_bytes = await run_sandboxed(_run)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": f'attachment; filename="{out_p.name}"'},
+        )
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except HTTPException:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=file.filename or "<?>", client_ip=_client_ip(request), operation="redact-pdf")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
 @router.post("/pdf-analyze")
 @limiter.limit("20/minute")
 async def tool_pdf_analyze(

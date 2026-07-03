@@ -113,6 +113,19 @@ export async function aiTranslate(
   return { translation: d.translation ?? "", quota: d.quota };
 }
 
+/** Hassas veri tespiti öğesi. */
+export type SensitiveItem = { type: string; value: string };
+
+/** Belgedeki hassas verileri (isim/adres vb.) yapay zekâ ile tespit eder. */
+export async function aiDetectSensitive(
+  text: string,
+  lang: "tr" | "en",
+  token: string | null,
+): Promise<{ items: SensitiveItem[]; quota?: AiQuota }> {
+  const d = await postAi<{ items?: SensitiveItem[]; quota?: AiQuota }>("detect-sensitive", { text, lang }, token);
+  return { items: Array.isArray(d.items) ? d.items : [], quota: d.quota };
+}
+
 /** İki belge karşılaştırma sonucu. */
 export type CompareResult = {
   summary: string;

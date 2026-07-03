@@ -197,6 +197,32 @@ export async function editPdfText(
   return response.blob();
 }
 
+/** Verilen metin parçalarını PDF'te bulup GERÇEKTEN karartır (redaction). */
+export async function redactPdf(
+  file: File,
+  terms: string[],
+  accessToken?: string | null,
+): Promise<Blob> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("terms", JSON.stringify(terms));
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetch(`${API_BASE}/api/redact-pdf`, {
+    method: "POST",
+    body: formData,
+    headers: saasAuthHeaders(accessToken),
+  });
+  if (!response.ok) {
+    let msg = "Gizleme başarısız oldu.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch { /* JSON değilse varsayılan */ }
+    throw new Error(msg);
+  }
+  return response.blob();
+}
+
 async function pdfFetch(url: string, init?: RequestInit): Promise<Response> {
   try {
     return await fetch(url, init);
