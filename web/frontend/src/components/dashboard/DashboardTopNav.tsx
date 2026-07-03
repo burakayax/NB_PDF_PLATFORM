@@ -147,6 +147,7 @@ type DashboardTopNavProps = {
   onLogoClick: () => void;
   onProfile: () => void;
   onPassword: () => void;
+  onApi?: () => void;
   onLogout: () => void;
   onUpgradeClick?: () => void;
   /** Opens credits / subscription panel (workspace). */
@@ -168,6 +169,7 @@ export function DashboardTopNav({
   onLogoClick,
   onProfile,
   onPassword,
+  onApi,
   onLogout,
   onUpgradeClick,
   onOpenCreditsPanel,
@@ -347,6 +349,7 @@ export function DashboardTopNav({
           language={language}
           onProfile={onProfile}
           onPassword={onPassword}
+          onApi={onApi}
           onLogout={onLogout}
         />
       </div>

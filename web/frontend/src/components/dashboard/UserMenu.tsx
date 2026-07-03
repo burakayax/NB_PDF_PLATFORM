@@ -8,6 +8,7 @@ type UserMenuProps = {
   language: Language;
   onProfile: () => void;
   onPassword: () => void;
+  onApi?: () => void;
   onLogout: () => void;
 };
 
@@ -16,6 +17,7 @@ export function UserMenu({
   language,
   onProfile,
   onPassword,
+  onApi,
   onLogout,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
@@ -111,6 +113,19 @@ export function UserMenu({
           >
             Şifre Değiştir
           </button>
+          {onApi ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-4 py-2.5 text-left text-sm text-nb-text transition duration-200 hover:bg-nb-primary/10"
+              onClick={() => {
+                setOpen(false);
+                onApi();
+              }}
+            >
+              {tr ? "API Erişimi" : "API Access"}
+            </button>
+          ) : null}
           <div className="my-1 h-px bg-white/[0.08]" />
           <button
             type="button"
