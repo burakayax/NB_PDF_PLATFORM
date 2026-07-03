@@ -474,6 +474,8 @@ export async function createPaymentCheckoutSession(params: {
   extraSeats?: number;
   /** True: mevcut Business sahibi sadece koltuk genişletiyor — plan aboneliği değişmiyor */
   seatsOnly?: boolean;
+  /** Top-up: ek AI kredisi satın alması. Doluysa callback planı aktive etmez, kredi ekler. */
+  topupCredits?: number;
 }): Promise<{
   token: string;
   checkoutFormContent: string;
@@ -550,6 +552,7 @@ export async function createPaymentCheckoutSession(params: {
       originalNetAmount: params.originalNetAmount ?? null,
       extraSeats: params.extraSeats ?? 0,
       seatsOnly: params.seatsOnly ?? false,
+      bonusAiCredits: params.topupCredits ?? null,
     },
   });
 
@@ -789,6 +792,7 @@ async function triggerInvoiceGeneration(
     couponId?: string | null;
     discountPercent?: number | null;
     originalNetAmount?: string | null;
+    bonusAiCredits?: number | null;
   },
   retrieveResult: IyzicoRetrieveResult,
 ): Promise<void> {
@@ -899,13 +903,21 @@ async function triggerInvoiceGeneration(
         taxOffice: user.taxOffice ?? "",
       },
       basketItems: [
-        {
-          id: checkout.plan,
-          name: `PDF PLATFORM ${checkout.plan} Abonelik`,
-          category1: "Subscription",
-          itemType: "VIRTUAL",
-          price: actualPaidPrice,
-        },
+        checkout.bonusAiCredits != null
+          ? {
+              id: "ai-topup",
+              name: `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi)`,
+              category1: "AI Credits",
+              itemType: "VIRTUAL",
+              price: actualPaidPrice,
+            }
+          : {
+              id: checkout.plan,
+              name: `PDF PLATFORM ${checkout.plan} Abonelik`,
+              category1: "Subscription",
+              itemType: "VIRTUAL",
+              price: actualPaidPrice,
+            },
       ],
       // Kupon / iskonto bilgisi — webhook_handler.py faturada iskonto satırı için kullanır
       discountPercent: checkout.discountPercent ?? 0,
@@ -1170,25 +1182,33 @@ export async function processPaymentCallback(
           return;
         }
 
-        // seatsOnly: sadece koltuk ekleme — kullanıcı planı değişmez, sadece ekip koltuğu güncellenir
-        const updatedUser = await tx.user.update({
-          where: { id: current.userId },
-          data: current.seatsOnly ? {} : { plan: current.plan },
-          select: { organizationId: true },
-        });
-
-        // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
-        const orgId = current.organizationId ?? updatedUser.organizationId;
-        if (orgId && !current.seatsOnly) {
-          await tx.organization.update({
-            where: { id: orgId },
-            data: {
-              plan: current.plan,
-              subscriptionStatus: "active",
-              subscriptionExpiry: expiry,
-              ...planLimits,
-            },
+        if (current.bonusAiCredits != null) {
+          // TOP-UP: plan/org değişmez — kullanıcıya ek AI kredisi eklenir.
+          await tx.user.update({
+            where: { id: current.userId },
+            data: { bonusAiCredits: { increment: current.bonusAiCredits } },
           });
+        } else {
+          // ABONELİK: seatsOnly ise sadece koltuk; değilse planı aktive et.
+          const updatedUser = await tx.user.update({
+            where: { id: current.userId },
+            data: current.seatsOnly ? {} : { plan: current.plan },
+            select: { organizationId: true },
+          });
+
+          // Kullanıcının organizasyonunu güncelle (getQuotaSummary org.plan okur)
+          const orgId = current.organizationId ?? updatedUser.organizationId;
+          if (orgId && !current.seatsOnly) {
+            await tx.organization.update({
+              where: { id: orgId },
+              data: {
+                plan: current.plan,
+                subscriptionStatus: "active",
+                subscriptionExpiry: expiry,
+                ...planLimits,
+              },
+            });
+          }
         }
 
         await tx.paymentCheckout.update({
@@ -1231,7 +1251,8 @@ export async function processPaymentCallback(
       });
 
       // Auto-create team for new BUSINESS subscribers (idempotent — returns existing if already created).
-      if (pending.plan === "BUSINESS") {
+      // Top-up satın almasında (bonusAiCredits) plan değişmediği için ekip oluşturulmaz.
+      if (pending.plan === "BUSINESS" && pending.bonusAiCredits == null) {
         try {
           const owner = await prisma.user.findUnique({
             where: { id: pending.userId },
@@ -1277,9 +1298,11 @@ export async function processPaymentCallback(
 
     logger.info("payment",`${PC_LOG} subscription updated successfully`, { conversationId, plan: pending.plan });
 
-    // Ödeme başarısı / abonelik aktif e-postası (non-fatal — ödeme zaten tamamlandı).
+    // Ödeme başarısı / abonelik aktif e-postası (non-fatal). Top-up satın almasında
+    // abonelik e-postası gönderilmez (plan değişmedi; fatura + kredi yeterli).
     void (async () => {
       try {
+        if (pending.bonusAiCredits != null) return;
         const buyer = await prisma.user.findUnique({
           where: { id: pending.userId },
           select: { email: true, preferredLanguage: true },

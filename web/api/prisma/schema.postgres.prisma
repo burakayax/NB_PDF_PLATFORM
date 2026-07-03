@@ -309,6 +309,8 @@ model PaymentCheckout {
   originalNetAmount           String?   @map("original_net_amount")
   extraSeats                  Int       @default(0)     @map("extra_seats")
   seatsOnly                   Boolean   @default(false) @map("seats_only")
+  // Top-up (ek AI kredisi) satın alması → bu değer doluysa plan aktive edilmez, kredi eklenir.
+  bonusAiCredits              Int?      @map("bonus_ai_credits")
   createdAt        DateTime  @default(now())
   completedAt      DateTime?
   refundedAt       DateTime? @map("refunded_at")
