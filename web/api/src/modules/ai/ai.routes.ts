@@ -7,6 +7,7 @@ import {
   chatController,
   extractController,
   translateController,
+  compareController,
   quotaController,
 } from "./ai.controller.js";
 
@@ -25,3 +26,4 @@ aiRouter.post(
 aiRouter.post("/chat", requireAuth, requireAiAccess, asyncHandler(chatController));
 aiRouter.post("/extract", requireAuth, requireAiAccess, asyncHandler(extractController));
 aiRouter.post("/translate", requireAuth, requireAiAccess, asyncHandler(translateController));
+aiRouter.post("/compare", requireAuth, requireAiAccess, asyncHandler(compareController));

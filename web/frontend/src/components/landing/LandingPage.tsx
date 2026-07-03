@@ -18,6 +18,7 @@ import { GuestToolCore, type Picked as GuestPickedFile } from "../tools/GuestToo
 import { GuestPageToolCore, type PageToolId } from "../tools/GuestPageTool";
 import { AiPdfTool } from "../tools/AiPdfTool";
 import { AiBatchTool } from "../tools/AiBatchTool";
+import { AiCompareTool } from "../tools/AiCompareTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { toolAccent } from "../tools/ToolDropzone";
 
@@ -436,7 +437,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
-  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | null>(null);
+  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | null>(null);
   const [editorOn, setEditorOn] = useState(false);
   // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
   // zaten AI'a yetkili kullanıcı (ADMIN / PRO / BUSINESS) — backend erişim veriyor —
@@ -546,6 +547,7 @@ function Hero({
                 ["extract", tr ? "✨ AI Veri Çıkar" : "✨ AI Extract"],
                 ["translate", tr ? "✨ AI Çeviri" : "✨ AI Translate"],
                 ["batch", tr ? "✨ AI Toplu İşlem" : "✨ AI Batch"],
+                ["compare", tr ? "✨ AI Karşılaştır" : "✨ AI Compare"],
               ] as const
             ).map(([id, label]) => (
               <button
@@ -587,6 +589,14 @@ function Hero({
               <PdfEditor language={language} accessToken={accessToken} />
             ) : aiTool === "batch" ? (
               <AiBatchTool
+                language={language}
+                accessToken={accessToken}
+                onLogin={onLogin}
+                onUpgrade={onUpgrade}
+                comingSoon={aiComingSoon}
+              />
+            ) : aiTool === "compare" ? (
+              <AiCompareTool
                 language={language}
                 accessToken={accessToken}
                 onLogin={onLogin}

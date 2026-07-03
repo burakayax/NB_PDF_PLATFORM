@@ -201,6 +201,49 @@ RULES: Use only info from the document, NEVER invent. Skip fields not present. K
   };
 }
 
+/** İki belge karşılaştırma sonucu (frontend ile paylaşılır). */
+export type CompareResult = {
+  summary: string;
+  changes: Array<{ type: "added" | "removed" | "changed"; title: string; detail: string }>;
+};
+
+/** İki belgeyi karşılaştırır; anlamlı farkları (eklenen/çıkarılan/değişen) çıkarır. */
+export async function compareDocuments(textA: string, textB: string, lang: Lang): Promise<CompareResult> {
+  const a = textA.slice(0, 30_000);
+  const b = textB.slice(0, 30_000);
+  const system =
+    lang === "tr"
+      ? `İki belgeyi (A = eski/ilk sürüm, B = yeni/ikinci sürüm) karşılaştıran bir analiz uzmanısın.
+ANLAMLI farkları bul: eklenen maddeler/bölümler, çıkarılanlar ve değiştirilenler (özellikle tutar, tarih, süre, taraf, yükümlülük, ceza gibi bağlayıcı değişiklikler). Biçimsel/önemsiz farkları (boşluk, sayfa no) YOK say.
+YALNIZCA şu JSON şemasında, başka HİÇBİR metin olmadan (markdown/backtick YOK) yanıt ver:
+{"summary":"...","changes":[{"type":"added|removed|changed","title":"...","detail":"..."}]}
+type: "added" (B'de var, A'da yok), "removed" (A'da var, B'de yok), "changed" (ikisinde de var ama farklı). title kısa başlık; detail A→B değişimini net anlatır. summary bir-iki cümle genel değerlendirme. Fark yoksa changes: [].`
+      : `You are an analyst comparing two documents (A = old/first version, B = new/second version).
+Find MEANINGFUL differences: added clauses/sections, removed ones, and changed ones (especially binding changes to amounts, dates, terms, parties, obligations, penalties). Ignore trivial/formatting differences (whitespace, page numbers).
+Respond ONLY with this JSON schema, with NO other text (NO markdown/backticks):
+{"summary":"...","changes":[{"type":"added|removed|changed","title":"...","detail":"..."}]}
+type: "added" (in B, not in A), "removed" (in A, not in B), "changed" (in both but different). title is a short heading; detail clearly describes the A→B change. summary is a one-two sentence overall assessment. If no differences, changes: [].`;
+  const raw = await callClaude(system, [{ role: "user", content: `--- BELGE A ---\n${a}\n\n--- BELGE B ---\n${b}` }], 3000);
+  let jsonText = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+  const first = jsonText.indexOf("{");
+  const last = jsonText.lastIndexOf("}");
+  if (first >= 0 && last > first) jsonText = jsonText.slice(first, last + 1);
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    throw new Error("AI_COMPARE_PARSE");
+  }
+  const p = parsed as { summary?: unknown; changes?: unknown };
+  const rawChanges: Array<{ type?: unknown; title?: unknown; detail?: unknown }> = Array.isArray(p.changes) ? p.changes : [];
+  return {
+    summary: typeof p.summary === "string" ? p.summary : "",
+    changes: rawChanges
+      .filter((c) => c && (c.type === "added" || c.type === "removed" || c.type === "changed"))
+      .map((c) => ({ type: c.type as "added" | "removed" | "changed", title: String(c.title ?? ""), detail: String(c.detail ?? "") })),
+  };
+}
+
 /** Desteklenen hedef diller (kod → İngilizce ad; prompt netliği için). */
 const TRANSLATE_LANGS: Record<string, string> = {
   en: "English", tr: "Turkish", de: "German", fr: "French", es: "Spanish",

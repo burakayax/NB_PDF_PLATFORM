@@ -59,6 +59,7 @@ export const TOOL_SLUGS = [
   "pdf-veri-cikar",
   "pdf-ceviri",
   "ai-toplu-islem",
+  "pdf-karsilastir",
 ];
 
 const T = (title, description, h1, intro, keywords, faq) => ({
@@ -770,6 +771,31 @@ export const TOOL_SEO = {
       [
         { q: "How do I translate a PDF into another language?", a: "Upload the PDF, pick a target language and click 'Translate'. The AI translates while preserving meaning and structure; you can download the result as a PDF." },
         { q: "Is the layout preserved in translation?", a: "Yes. Headings, lists and tables are kept, and numbers, dates and proper nouns stay intact." },
+      ],
+    ),
+  },
+
+  "pdf-karsilastir": {
+    tr: T(
+      "PDF Karşılaştırma — İki Belgenin Farkını Bul (Yapay Zekâ)",
+      "İki PDF'i (ör. sözleşmenin iki sürümü) yapay zekâ ile karşılaştırın; eklenen, çıkarılan ve değişen maddeleri saniyeler içinde çıkarın.",
+      "İki PDF'i Yapay Zekâ ile Karşılaştır",
+      "Bir sözleşmenin, teklifin ya da raporun iki sürümü arasındaki anlamlı farkları elle satır satır aramadan bulun. Yapay zekâ; eklenen, çıkarılan ve değişen maddeleri (özellikle tutar, tarih, süre, yükümlülük gibi bağlayıcı değişiklikleri) çıkarır. Metin cihazınızda okunur.",
+      ["pdf karşılaştırma", "iki pdf karşılaştır", "belge karşılaştırma", "sözleşme karşılaştırma", "pdf fark bulma", "pdf diff"],
+      [
+        { q: "İki PDF nasıl karşılaştırılır?", a: "İki belgeyi (A: eski, B: yeni) yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarır ve renk kodlu olarak listeler." },
+        { q: "Hangi farkları yakalar?", a: "Özellikle bağlayıcı değişiklikleri: tutar, tarih, süre, taraf, yükümlülük ve ceza maddelerini. Biçimsel/önemsiz farkları yok sayar." },
+      ],
+    ),
+    en: T(
+      "Compare PDFs — Find the Difference Between Two Documents (AI)",
+      "Compare two PDFs (e.g. two versions of a contract) with AI; extract added, removed and changed clauses in seconds.",
+      "Compare Two PDFs with AI",
+      "Find the meaningful differences between two versions of a contract, proposal or report without scanning line by line. AI extracts added, removed and changed clauses — especially binding changes to amounts, dates, terms and obligations. Text is read on your device.",
+      ["compare pdf", "pdf comparison", "compare two pdfs", "document comparison", "contract comparison", "pdf diff"],
+      [
+        { q: "How do I compare two PDFs?", a: "Upload two documents (A: old, B: new); the AI extracts added, removed and changed clauses and lists them color-coded." },
+        { q: "Which differences does it catch?", a: "Especially binding changes: amounts, dates, terms, parties, obligations and penalties. It ignores trivial/formatting differences." },
       ],
     ),
   },
