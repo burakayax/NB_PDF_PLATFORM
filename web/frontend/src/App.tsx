@@ -1025,7 +1025,7 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [aiModal, setAiModal] = useState<"summarize" | "chat" | null>(null);
+  const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
   const [upgradeNudgePostSuccessHidden, setUpgradeNudgePostSuccessHidden] =
@@ -5880,13 +5880,22 @@ function App() {
             ) : null}
             {contentPanel === "ai" && aiModal ? (
               <section className="mx-auto w-full max-w-4xl py-2">
-                <AiPdfTool
-                  mode={aiModal}
-                  language={language}
-                  accessToken={accessToken}
-                  onLogin={() => setView("login")}
-                  onUpgrade={() => setUpgradeModalOpen(true)}
-                />
+                {aiModal === "batch" ? (
+                  <AiBatchTool
+                    language={language}
+                    accessToken={accessToken}
+                    onLogin={() => setView("login")}
+                    onUpgrade={() => setUpgradeModalOpen(true)}
+                  />
+                ) : (
+                  <AiPdfTool
+                    mode={aiModal}
+                    language={language}
+                    accessToken={accessToken}
+                    onLogin={() => setView("login")}
+                    onUpgrade={() => setUpgradeModalOpen(true)}
+                  />
+                )}
               </section>
             ) : null}
 
