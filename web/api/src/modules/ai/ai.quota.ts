@@ -107,6 +107,13 @@ export const TOPUP_PACKS = [
   { id: "ai-500", credits: 500, priceUSD: 29.99, priceTRY: 899 },
 ] as const;
 
+/** Fatura kalem adı — top-up ödeme akışı bağlanınca payment.service basketItemName /
+ * triggerInvoiceGeneration'a bu geçilecek (KDV + bireysel/kurumsal fatura zaten destekli). */
+export const TOPUP_INVOICE_LABEL = "Ek AI Hizmet Bedeli";
+export function topupInvoiceLabel(pack: { credits: number }): string {
+  return `${TOPUP_INVOICE_LABEL} (${pack.credits} kredi)`;
+}
+
 export function topupPackById(id: string) {
   return TOPUP_PACKS.find((p) => p.id === id) ?? null;
 }
