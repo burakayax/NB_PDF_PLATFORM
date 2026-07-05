@@ -25,6 +25,7 @@ export function ApiDocsPage({ language, onLogin, onRegister }: { language: Langu
     ["idempotency", "Idempotency"],
     ["credits", tr ? "Krediler & faturalama" : "Credits & billing"],
     ["openapi", "OpenAPI"],
+    ["tools", tr ? "Postman & SDK" : "Postman & SDKs"],
   ];
 
   const errorRows: [string, string, string][] = [
@@ -155,6 +156,18 @@ Retry-After: 42   (429 durumunda)`}</Code>
 
           <H id="openapi">OpenAPI</H>
           <p className="mt-2 text-[14px] text-slate-300">{tr ? "Makine-okur tanım: " : "Machine-readable spec: "}<a href={`${API}/v1/openapi.json`} className="text-cyan-300 underline">{API}/v1/openapi.json</a></p>
+
+          <H id="tools">{tr ? "Postman & SDK" : "Postman & SDKs"}</H>
+          <p className="mt-2 text-[14px] leading-relaxed text-slate-300">
+            {tr
+              ? "OpenAPI tanımımız hazır araçlarla çalışır — ayrı bir dosya gerekmez:"
+              : "Our OpenAPI spec works with standard tooling — no separate files needed:"}
+          </p>
+          <ul className="mt-2 space-y-1.5 text-[14px] text-slate-300">
+            <li className="flex gap-2"><span className="text-cyan-400">•</span>{tr ? <span><b className="text-white">Postman:</b> Import → «Link» sekmesine <code className="text-slate-200">{`${API}/v1/openapi.json`}</code> yapıştırın; tüm uçlar hazır gelir.</span> : <span><b className="text-white">Postman:</b> Import → «Link» and paste <code className="text-slate-200">{`${API}/v1/openapi.json`}</code>; all endpoints load automatically.</span>}</li>
+            <li className="flex gap-2"><span className="text-cyan-400">•</span>{tr ? <span><b className="text-white">SDK üretimi:</b> OpenAPI Generator ile Node, Python, Java, C# ve daha fazlası için istemci kütüphanesi üretin (aynı URL'den).</span> : <span><b className="text-white">SDK generation:</b> Use OpenAPI Generator to produce a client library for Node, Python, Java, C# and more (from the same URL).</span>}</li>
+          </ul>
+          <p className="mt-2 text-[13px] text-slate-500">{tr ? "Resmi SDK paketlerine ihtiyaç duyarsanız bize yazın." : "Need official SDK packages? Contact us."}</p>
 
           <div className="mt-12 rounded-2xl border border-cyan-400/25 bg-gradient-to-b from-cyan-500/[0.1] to-transparent p-6 text-center">
             <p className="text-[15px] font-bold text-white">{tr ? "Başlamaya hazır mısınız?" : "Ready to start?"}</p>
