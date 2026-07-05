@@ -546,12 +546,12 @@ if (blockIndexing) {
 Disallow: /
 `;
 } else {
+  // Google önerisi: bir sayfayı indeksten çıkarmak için robots.txt ile ENGELLEME —
+  // engelliyse Google `noindex` etiketini/başlığını göremez ("engelli ama indeksli" uyarısı).
+  // Özel HTML rotaları (workspace/admin/nbadmin/admin-login/login-success) render.yaml'de
+  // `X-Robots-Tag: noindex` başlığıyla ele alınır; burada taramaya izin veriyoruz.
+  // /api/ HTML değil (SEO içeriği yok) → geleneksel olarak engelli bırakılır.
   robots = `User-agent: *
-Disallow: /workspace
-Disallow: /admin
-Disallow: /nbadmin
-Disallow: /admin-login
-Disallow: /login-success
 Disallow: /api/
 
 Sitemap: ${base}/sitemap.xml
