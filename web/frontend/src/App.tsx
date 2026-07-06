@@ -2369,6 +2369,17 @@ function App() {
     if (path === "/login-success") {
       return;
     }
+    // Public tam-sayfa rotaları (workspace aracı DEĞİL) — giriş yapılmış olsa da
+    // URL'i /workspace'e YENİDEN YAZMA. Aksi halde oturum açık kullanıcı /pdf-api,
+    // /pdf-api/docs, /blog'a gittiğinde dashboard'a atılıyordu.
+    if (
+      path === "/pdf-api" ||
+      path.startsWith("/pdf-api/") ||
+      path === "/blog" ||
+      path.startsWith("/blog/")
+    ) {
+      return;
+    }
     if (view === "web" && (!isAuthenticated || isRestoring)) {
       return;
     }

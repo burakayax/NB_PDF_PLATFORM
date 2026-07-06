@@ -42,6 +42,48 @@ import { TopUpModal } from "./TopUpModal";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
 
+/**
+ * Dosyayı kaydeder. Destekleyen tarayıcılarda (Chrome/Edge) kaydetme konumunu
+ * SORAR (File System Access API); diğerlerinde klasik indirmeye düşer. Kullanıcı
+ * iptal ederse sessizce çıkar. showSaveFilePicker, ilk await olduğu için
+ * kullanıcı hareketi (tık) bağlamı korunur.
+ */
+async function saveBlobWithPicker(
+  blob: Blob,
+  suggestedName: string,
+  acceptType?: { description: string; accept: Record<string, string[]> },
+): Promise<void> {
+  const picker = (window as unknown as {
+    showSaveFilePicker?: (opts: {
+      suggestedName?: string;
+      types?: { description: string; accept: Record<string, string[]> }[];
+    }) => Promise<{ createWritable: () => Promise<{ write: (d: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+  }).showSaveFilePicker;
+  if (typeof picker === "function") {
+    try {
+      const handle = await picker({
+        suggestedName,
+        types: acceptType ? [acceptType] : undefined,
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (e) {
+      // Kullanıcı iptal etti → hiçbir şey yapma. Diğer hatada klasik indirmeye düş.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = suggestedName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 8000);
+}
+
 type Props = {
   mode: AiMode;
   language: Language;
@@ -271,14 +313,11 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         ? `${fileName.replace(/\.pdf$/i, "")} — ${tr ? "Çeviri" : "Translation"}`
         : tr ? "PDF Çeviri" : "PDF Translation";
       const blob = pdfBytesToBlob(await summaryToPdf(translation, ttl));
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      await saveBlobWithPicker(
+        blob,
+        `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`,
+        { description: "PDF", accept: { "application/pdf": [".pdf"] } },
+      );
     } catch {
       setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
     } finally {
@@ -294,30 +333,35 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     });
   }
 
-  function downloadExtractedCsv() {
+  async function downloadExtractedCsv() {
     if (!extracted) return;
-    const esc = (s: string) => `"${String(s).replace(/"/g, '""')}"`;
+    // Türkçe Excel liste ayracı olarak NOKTALI VİRGÜL bekler; virgül kullanınca
+    // tüm satır tek hücrede kalıyordu. `;` + UTF-8 BOM ile Excel otomatik olarak
+    // düzgün sütunlara böler ve Türkçe karakterler bozulmaz.
+    const SEP = ";";
+    const esc = (s: unknown) => {
+      const v = String(s ?? "");
+      return /[";\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+    };
     const lines: string[] = [];
     if (extracted.fields.length) {
-      lines.push(`${esc(tr ? "Alan" : "Field")},${esc(tr ? "Değer" : "Value")}`);
-      for (const f of extracted.fields) lines.push(`${esc(f.label)},${esc(f.value)}`);
+      lines.push(`${esc(tr ? "Alan" : "Field")}${SEP}${esc(tr ? "Değer" : "Value")}`);
+      for (const f of extracted.fields) lines.push(`${esc(f.label)}${SEP}${esc(f.value)}`);
       lines.push("");
     }
     for (const t of extracted.tables) {
       if (t.title) lines.push(esc(t.title));
-      lines.push(t.columns.map(esc).join(","));
-      for (const r of t.rows) lines.push(r.map(esc).join(","));
+      lines.push(t.columns.map(esc).join(SEP));
+      for (const r of t.rows) lines.push(r.map(esc).join(SEP));
       lines.push("");
     }
-    const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${(fileName || "veri").replace(/\.pdf$/i, "")}-veri.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    const content = "﻿" + lines.join("\r\n");
+    const suggestedName = `${(fileName || "veri").replace(/\.pdf$/i, "")}-veri.csv`;
+    await saveBlobWithPicker(
+      new Blob([content], { type: "text/csv;charset=utf-8" }),
+      suggestedName,
+      { description: "CSV (Excel)", accept: { "text/csv": [".csv"] } },
+    );
   }
 
   async function sendQuestion() {
@@ -359,14 +403,10 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     try {
       setExporting(true);
       const blob = pdfBytesToBlob(await summaryToPdf(summary, pdfTitle));
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${pdfBaseName}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      await saveBlobWithPicker(blob, `${pdfBaseName}.pdf`, {
+        description: "PDF",
+        accept: { "application/pdf": [".pdf"] },
+      });
     } catch {
       setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
     } finally {
@@ -680,7 +720,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                       {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                       <span className="hidden sm:inline">JSON</span>
                     </button>
-                    <button type="button" onClick={downloadExtractedCsv} title="CSV"
+                    <button type="button" onClick={() => void downloadExtractedCsv()} title="CSV (Excel)"
                       className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
                       <Download className="h-3.5 w-3.5" /><span className="hidden sm:inline">CSV</span>
                     </button>
