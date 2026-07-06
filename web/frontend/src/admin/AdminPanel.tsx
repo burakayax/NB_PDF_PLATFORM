@@ -1347,11 +1347,11 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-white">Araçlar ve limitler</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-lg font-semibold text-white">Araçlar — bakım & istatistik</h2>
+          <p className="mt-1 max-w-2xl text-sm text-slate-500">
             {advanced
-              ? "Hangi araçların kapalı olacağı ve yükseltme mesajları buradan yönetilir."
-              : "Kota dolduğunda gösterilen yükseltme metinleri. Bakım için araç kapatma ve istatistikler Gelişmiş moddadır."}
+              ? "Bir aracı geçici KAPATMA (bakım) ve her aracın kullanım istatistiği. Aşağıdaki liste TÜM araçları içerir; kullanım sayısı yalnız kullanılan araçlarda görünür."
+              : "Araç kullanım istatistikleri. Araç açma/kapama Gelişmiş moddadır. (Not: günlük kota kaldırıldı — araçlar sınırsız.)"}
           </p>
         </div>
         <button
@@ -1371,8 +1371,8 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
 
       {advanced ? (
       <section className="rounded-2xl border border-white/[0.08] bg-black/25 p-4">
-        <h3 className="text-sm font-semibold text-white">Günlük kullanım özeti</h3>
-        <p className="mt-1 text-[12px] text-slate-500">Her araç için bugüne yakın dönemde kayıtlı işlem ve kullanıcı-gün satırı sayısı (salt okunur).</p>
+        <h3 className="text-sm font-semibold text-white">Araç kullanım özeti (tüm araçlar)</h3>
+        <p className="mt-1 text-[12px] text-slate-500">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[400px] text-left text-xs">
             <thead className="border-b border-white/[0.08] text-slate-500">
