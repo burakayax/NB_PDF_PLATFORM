@@ -110,6 +110,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
       if (err?.status === 401) setGate("login");
       else if (err?.status === 403) setGate("upgrade");
       else if (err?.status === 429) { if (err.quota) setQuota(err.quota); setError(tr ? "Bu ayki AI kotan doldu." : "Monthly AI quota reached."); }
+      else if (err?.status === 503) setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable.");
       else setError(err?.message || (tr ? "Bir hata oluştu." : "Something went wrong."));
     } finally { setAiBusy(false); }
   }
