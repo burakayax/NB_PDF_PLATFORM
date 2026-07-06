@@ -31,6 +31,10 @@ export async function validateCouponForUser(
   if (!coupon) {
     return { ok: false, reason: "invalid" };
   }
+  // Son kullanma tarihi geçmişse geçersiz (admin kupon oluştururken tarih girebilir).
+  if (coupon.expiresAt && coupon.expiresAt.getTime() < Date.now()) {
+    return { ok: false, reason: "expired" };
+  }
   const uses = await countCouponUsesByUser(coupon.id, userId);
   if (uses >= coupon.usageLimitPerUser) {
     return { ok: false, reason: "limit" };
