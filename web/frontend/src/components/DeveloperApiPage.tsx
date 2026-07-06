@@ -4,14 +4,22 @@ import type { Language } from "../i18n/landing";
 
 type Props = {
   language: Language;
+  isAuthenticated?: boolean;
   onLogin: () => void;
   onRegister: () => void;
+  onOpenApiKeys?: () => void;
   onOpenPricing?: () => void;
 };
 
-export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing }: Props) {
+export function DeveloperApiPage({ language, isAuthenticated, onLogin, onRegister, onOpenApiKeys, onOpenPricing }: Props) {
   const tr = language === "tr";
   useEffect(() => { document.title = tr ? "PDF & Yapay Zekâ API — PDF Platform" : "PDF & AI API — PDF Platform"; }, [tr]);
+
+  // Oturum açıksa birincil eylem: panelde anahtar oluştur. Değilse: ücretsiz kaydol.
+  const primaryAction = isAuthenticated ? (onOpenApiKeys ?? onRegister) : onRegister;
+  const primaryLabel = isAuthenticated
+    ? (tr ? "Panelde API anahtarı oluştur" : "Create an API key in your dashboard")
+    : (tr ? "Ücretsiz kaydol & anahtar oluştur" : "Sign up free & create a key");
 
   const curl = `curl -X POST https://api.pdfplatform.app/v1/extract \\
   -H "Authorization: Bearer nb_live_xxx" \\
@@ -45,12 +53,12 @@ export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing 
   const faq = tr
     ? [
         { q: "API'yi nasıl kullanmaya başlarım?", a: "Ücretsiz hesap açın, dashboard'da hesap menüsünden «API Erişimi» ile bir anahtar üretin ve /v1 uçlarını çağırın." },
-        { q: "Faturalandırma nasıl işliyor?", a: "Kullanım kredi bazlıdır. Kredi paketi (top-up) alır, her başarılı API çağrısında 1 kredi harcarsınız; kredi bitince uçlar 429 döner. Fatura otomatik kesilir." },
+        { q: "Faturalandırma nasıl işliyor?", a: "Kullanım kredi bazlıdır. Hesap açmak ve anahtar oluşturmak ücretsizdir; her başarılı API çağrısında 1 AI kredisi harcanır. Krediler kredi paketi (top-up) ya da Pro/Business aboneliğiyle gelir; kredi bitince uçlar 402 (insufficient_credits) döner. Fatura otomatik kesilir." },
         { q: "Hangi işlemler var?", a: "Şu an /v1/extract (veri çıkarma), /v1/summarize (özet), /v1/translate (çeviri) ve /v1/me (anahtar/kota kontrolü)." },
       ]
     : [
         { q: "How do I start using the API?", a: "Create a free account, generate a key via «API Access» in the dashboard account menu, and call the /v1 endpoints." },
-        { q: "How does billing work?", a: "Usage is credit-based. Buy a credit pack (top-up) and spend 1 credit per successful API call; when out, endpoints return 429. Invoices are issued automatically." },
+        { q: "How does billing work?", a: "Usage is credit-based. Creating an account and a key is free; each successful API call spends 1 AI credit. Credits come from a top-up pack or a Pro/Business plan; when out, endpoints return 402 (insufficient_credits). Invoices are issued automatically." },
         { q: "Which operations are available?", a: "Currently /v1/extract (data extraction), /v1/summarize, /v1/translate, and /v1/me (key/quota check)." },
       ];
 
@@ -60,8 +68,14 @@ export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing 
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
           <a href="/" className="flex items-center gap-2"><img src="/emblem.png" alt="" className="h-8 w-8 object-contain" /><span className="text-sm font-bold tracking-tight text-white">PDF Platform</span></a>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
-            <button type="button" onClick={onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:brightness-110">{tr ? "Ücretsiz anahtar al" : "Get a free key"}</button>
+            {isAuthenticated ? (
+              <button type="button" onClick={primaryAction} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:brightness-110">{tr ? "API anahtarlarım" : "My API keys"}</button>
+            ) : (
+              <>
+                <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
+                <button type="button" onClick={onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white transition hover:brightness-110">{tr ? "Ücretsiz kaydol" : "Sign up free"}</button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -77,10 +91,16 @@ export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing 
             {tr ? "PDF veri çıkarma, özetleme ve çeviriyi tek API ile ürününüze entegre edin. Yapılandırılmış JSON, API anahtarıyla, kredi bazlı." : "Integrate PDF data extraction, summarization and translation with one API. Structured JSON, with an API key, credit-based."}
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button type="button" onClick={onRegister} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><KeyRound className="h-4 w-4" />{tr ? "Ücretsiz API anahtarı al" : "Get a free API key"}</button>
+            <button type="button" onClick={primaryAction} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><KeyRound className="h-4 w-4" />{primaryLabel}</button>
             <a href="/pdf-api/docs" className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"><Code2 className="h-4 w-4" />{tr ? "Dokümantasyon" : "Documentation"}</a>
             {onOpenPricing && <button type="button" onClick={onOpenPricing} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]">{tr ? "Fiyatlandırma" : "Pricing"}</button>}
           </div>
+          {/* Fiyat şeffaflığı — anahtar ücretsiz, kullanım kredi bazlı */}
+          <p className="mx-auto mt-4 max-w-xl text-[12.5px] leading-relaxed text-slate-500">
+            {tr
+              ? "Hesap açmak ve anahtar oluşturmak ücretsizdir. Her başarılı API çağrısı 1 AI kredisi harcar — krediler kredi paketi (top-up) ya da Pro/Business aboneliğiyle gelir."
+              : "Creating an account and a key is free. Each successful API call spends 1 AI credit — credits come from a top-up pack or a Pro/Business plan."}
+          </p>
         </div>
 
         {/* Kod örneği */}
@@ -140,7 +160,7 @@ export function DeveloperApiPage({ language, onLogin, onRegister, onOpenPricing 
         <div className="mt-14 rounded-3xl border border-cyan-400/25 bg-gradient-to-b from-cyan-500/[0.1] to-transparent p-8 text-center">
           <p className="text-lg font-black text-white">{tr ? "Bugün entegre etmeye başla" : "Start integrating today"}</p>
           <p className="mx-auto mt-1 max-w-md text-[14px] text-slate-300">{tr ? "Ücretsiz hesap aç, anahtarını üret ve ilk isteğini dakikalar içinde gönder." : "Create a free account, generate your key and send your first request in minutes."}</p>
-          <button type="button" onClick={onRegister} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110">{tr ? "Ücretsiz başla" : "Start free"}<ArrowRight className="h-4 w-4" /></button>
+          <button type="button" onClick={primaryAction} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110">{primaryLabel}<ArrowRight className="h-4 w-4" /></button>
         </div>
       </main>
     </div>

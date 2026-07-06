@@ -4711,10 +4711,35 @@ function App() {
       ? window.location.pathname.replace(/\/$/, "") || "/"
       : "/";
 
+  // API sayfalarından gezinme: /pdf-api erken-return'ü setView'i bastırdığı için
+  // URL'i de DEĞİŞTİRMELİYİZ (pushState) ki pathname değişip doğru görünüm render olsun.
+  const apiPageGoRegister = () => {
+    window.history.pushState({}, "", "/register");
+    setView("register");
+  };
+  const apiPageGoLogin = () => {
+    window.history.pushState({}, "", "/login");
+    setView("login");
+  };
+  // Oturum açık kullanıcıyı doğrudan panel → API anahtarı bölümüne götür.
+  const apiPageOpenKeys = () => {
+    window.history.pushState({}, "", "/workspace");
+    setSelectedFeatureId("split");
+    setActiveSidebar("split");
+    setContentPanel("api");
+    setView("web");
+  };
+
   // Geliştirici API dokümantasyonu (detaylı kullanım kılavuzu).
   if (pathname === "/pdf-api/docs") {
     return (
-      <ApiDocsPage language={language} onLogin={() => setView("login")} onRegister={() => setView("register")} />
+      <ApiDocsPage
+        language={language}
+        isAuthenticated={isAuthenticated}
+        onLogin={apiPageGoLogin}
+        onRegister={apiPageGoRegister}
+        onOpenApiKeys={apiPageOpenKeys}
+      />
     );
   }
 
@@ -4723,8 +4748,10 @@ function App() {
     return (
       <DeveloperApiPage
         language={language}
-        onLogin={() => setView("login")}
-        onRegister={() => setView("register")}
+        isAuthenticated={isAuthenticated}
+        onLogin={apiPageGoLogin}
+        onRegister={apiPageGoRegister}
+        onOpenApiKeys={apiPageOpenKeys}
         onOpenPricing={() => { window.location.href = "/#pricing"; }}
       />
     );
