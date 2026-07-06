@@ -44,6 +44,7 @@ import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
 import { EmailCampaignManager } from "./emails/EmailCampaignManager";
+import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { AdminToolCatalog } from "./tools/AdminToolCatalog";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
@@ -381,6 +382,7 @@ export function AdminPanel({
       onSimpleMode={() => undefined}
     >
       <div className="px-4 py-6 md:px-8">
+        <SectionIntro tab={tab} />
         {cmdErr && ["cmd-tools", "cmd-site", "cmd-mkt", "cmd-coupons"].includes(tab) ? (
           <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">{cmdErr}</p>
         ) : null}

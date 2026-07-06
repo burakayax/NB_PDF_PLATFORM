@@ -215,10 +215,11 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
       />
 
       {advanced ? (
-        <AdminImpactCard title="Yönetim notu">
+        <AdminImpactCard title="Dikkat">
           <p>
-            Plan, rol ve e-posta doğrulama <strong className="text-slate-100">anında</strong> yürürlüğe girer. Kredi düzenlemesi
-            muhasebe izi bırakır. Sil + engel kalıcıdır.
+            Bir kullanıcının planını, rolünü veya e-posta doğrulamasını değiştirdiğinde
+            <strong className="text-slate-100"> hemen aktif olur</strong> (beklemeye gerek yok).
+            Verdiğin/aldığın krediler kayda geçer. <strong className="text-slate-100">Hesap silme ve engelleme geri alınamaz</strong> — dikkatli ol.
           </p>
         </AdminImpactCard>
       ) : (
