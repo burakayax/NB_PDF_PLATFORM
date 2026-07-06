@@ -1072,6 +1072,7 @@ export async function adminListCouponsController(
       discountPercent: c.discountPercent,
       isActive: c.isActive,
       usageLimitPerUser: c.usageLimitPerUser,
+      expiresAt: c.expiresAt ? c.expiresAt.toISOString() : null,
       totalUses: c._count.uses,
       createdAt: c.createdAt.toISOString(),
     })),
@@ -1097,6 +1098,7 @@ export async function adminCreateCouponController(
         discountPercent: parsed.data.discountPercent,
         isActive: parsed.data.isActive ?? true,
         usageLimitPerUser: parsed.data.usageLimitPerUser ?? 1,
+        expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
       },
     });
     response.status(201).json({
@@ -1105,6 +1107,7 @@ export async function adminCreateCouponController(
       discountPercent: created.discountPercent,
       isActive: created.isActive,
       usageLimitPerUser: created.usageLimitPerUser,
+      expiresAt: created.expiresAt ? created.expiresAt.toISOString() : null,
       totalUses: 0,
       createdAt: created.createdAt.toISOString(),
     });

@@ -23,6 +23,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
   const [newCode, setNewCode] = useState("");
   const [newDisc, setNewDisc] = useState(10);
   const [newLimit, setNewLimit] = useState(1);
+  const [newExpiry, setNewExpiry] = useState(""); // YYYY-MM-DD; boş = süresiz
 
   const filtered =
     items?.filter(
@@ -79,6 +80,15 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
               onChange={(e) => setNewLimit(Math.min(1000, Math.max(1, Number(e.target.value) || 1)))}
             />
           </div>
+          <div className="w-40">
+            <span className="text-xs text-slate-500">Son kullanma (opsiyonel)</span>
+            <input
+              className={adminInputClass}
+              type="date"
+              value={newExpiry}
+              onChange={(e) => setNewExpiry(e.target.value)}
+            />
+          </div>
           <button
             type="button"
             disabled={busy || newCode.trim().length < 2}
@@ -86,9 +96,15 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
             onClick={() => {
               onBusy(true);
               onError(null);
-              void postAdminCoupon(accessToken, { code: newCode.trim(), discountPercent: newDisc, usageLimitPerUser: newLimit })
+              void postAdminCoupon(accessToken, {
+                code: newCode.trim(),
+                discountPercent: newDisc,
+                usageLimitPerUser: newLimit,
+                expiresAt: newExpiry ? new Date(`${newExpiry}T23:59:59`).toISOString() : null,
+              })
                 .then(() => {
                   setNewCode("");
+                  setNewExpiry("");
                   return fetchAdminCoupons(accessToken);
                 })
                 .then((r) => onUpdateList(r.items))
@@ -169,7 +185,15 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                     <Calendar className="h-3.5 w-3.5 shrink-0" />
-                    <span>Bitiş tarihi: veri yok (süresiz kupon)</span>
+                    {c.expiresAt ? (
+                      new Date(c.expiresAt).getTime() < Date.now() ? (
+                        <span className="font-semibold text-rose-300">Süresi doldu · {formatDate(c.expiresAt)}</span>
+                      ) : (
+                        <span>Bitiş: {formatDate(c.expiresAt)}</span>
+                      )
+                    ) : (
+                      <span>Süresiz kupon</span>
+                    )}
                   </div>
                   <div className="border-t border-slate-800/50 pt-3">
                     <AdminToggle

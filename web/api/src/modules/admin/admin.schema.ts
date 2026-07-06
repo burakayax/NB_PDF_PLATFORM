@@ -179,6 +179,8 @@ export const adminCouponCreateSchema = z.object({
   discountPercent: z.coerce.number().int().min(1).max(100),
   isActive: z.boolean().optional(),
   usageLimitPerUser: z.coerce.number().int().min(1).max(1000).optional(),
+  /** ISO tarih; boş/atlanırsa süresiz. Geçmiş tarih girilirse kupon baştan geçersiz. */
+  expiresAt: z.string().datetime().optional().nullable(),
 });
 
 export const adminCouponPatchSchema = z.object({
