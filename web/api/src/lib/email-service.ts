@@ -28,9 +28,9 @@ export async function sendWelcomeEmailToUser(
   const shopUrl = `${env.FRONTEND_ORIGIN.replace(/\/$/, "")}/workspace`;
 
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#e2e8f0;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#cbd5e1;">${t.welcome_body()}</p>
-    <p style="margin:0;font-size:14px;line-height:1.75;color:#94a3b8;">${t.welcome_footer}</p>
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${t.welcome_body()}</p>
+    <p style="margin:0;font-size:14px;line-height:1.75;color:#64748b;">${t.welcome_footer}</p>
     ${ctaButton(shopUrl, t.welcome_cta)}
   `;
 
@@ -83,19 +83,22 @@ export async function sendLifecycleEmail(
   const couponBlock =
     stage === "winback" && vars.couponCode
       ? `<div style="margin:18px 0 4px;padding:16px 18px;border:1px solid rgba(16,185,129,0.35);border-radius:14px;background:rgba(16,185,129,0.08);">
-           <p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:0.04em;color:#6ee7b7;text-transform:uppercase;">${lc.couponLabel}</p>
-           <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:0.12em;color:#a7f3d0;">${escapeHtml(vars.couponCode)}</p>
+           <p style="margin:0 0 6px;font-size:13px;font-weight:700;letter-spacing:0.04em;color:#047857;text-transform:uppercase;">${lc.couponLabel}</p>
+           <p style="margin:0;font-size:22px;font-weight:800;letter-spacing:0.12em;color:#065f46;">${escapeHtml(vars.couponCode)}</p>
          </div>`
       : "";
 
   const bodyHtml = `
-    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#e2e8f0;">${t.greeting(name)}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#cbd5e1;">${lc.body}</p>
-    ${lc.bullets ? `<ul style="margin:0 0 8px;padding:0 0 0 18px;color:#cbd5e1;font-size:14px;line-height:1.9;">${lc.bullets.map((b) => `<li>${b}</li>`).join("")}</ul>` : ""}
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${lc.body}</p>
+    ${lc.bullets ? `<ul style="margin:0 0 8px;padding:0 0 0 18px;color:#334155;font-size:14px;line-height:1.9;">${lc.bullets.map((b) => `<li>${b}</li>`).join("")}</ul>` : ""}
     ${couponBlock}
     ${ctaButton(ctaUrl, lc.cta)}
   `;
 
+  // Pazarlama e-postası → hukuki olarak abonelikten çıkış yolu ZORUNLU (6563/İYS + KVKK).
+  // Kalıcı endpoint gelene kadar mailto ile honore edilir.
+  const unsubscribeUrl = `mailto:${env.SMTP_FROM_EMAIL}?subject=${encodeURIComponent("Ticari e-postalardan çıkmak istiyorum")}`;
   const html = renderCorporateEmail({
     eyebrow: lc.eyebrow,
     title: lc.title,
@@ -103,6 +106,7 @@ export async function sendLifecycleEmail(
     bodyHtml,
     footerText: lc.footer,
     productName: product(),
+    unsubscribeUrl,
   });
 
   const subject = lc.subject(product());
@@ -130,13 +134,15 @@ export async function sendMassCampaignEmail(
   };
   const safeSubject = applyTemplateVars(subject, safe);
   const inner = applyTemplateVars(bodyHtml, safe);
+  const unsubscribeUrl = `mailto:${env.SMTP_FROM_EMAIL}?subject=${encodeURIComponent("Ticari e-postalardan çıkmak istiyorum")}`;
   const wrapped = renderCorporateEmail({
     eyebrow: t.newsletter_eyebrow,
     title: t.newsletter_title,
     intro: " ",
-    bodyHtml: `<div style="font-size:15px;line-height:1.75;color:#e2e8f0;">${inner}</div>`,
+    bodyHtml: `<div style="font-size:15px;line-height:1.75;color:#334155;">${inner}</div>`,
     footerText: t.newsletter_footer,
     productName: product(),
+    unsubscribeUrl,
   });
   await sendMail({
     to: toEmail,
