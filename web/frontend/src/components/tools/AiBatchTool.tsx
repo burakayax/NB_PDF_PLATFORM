@@ -104,6 +104,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
       setError(tr ? "Bu ayki AI kotan doldu — kalan dosyalar atlandı." : "Monthly AI quota reached — remaining files skipped.");
       return "quota";
     }
+    if (err?.status === 503) { setError(tr ? "AI şu an kullanılamıyor." : "AI is currently unavailable."); return "other"; }
     setError(err?.message || (tr ? "Bir hata oluştu." : "Something went wrong."));
     return "other";
   }
