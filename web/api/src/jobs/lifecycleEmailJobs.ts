@@ -67,6 +67,10 @@ async function runLifecycleStage(
       createdAt: { gte: start, lte: end },
       // Ücretli bir ekibin üyesi olanlar (erişimi org'dan gelir) dışarıda tutulur.
       teamMembership: { is: null },
+      // HUKUKİ: yalnız pazarlama iznini VEREN ve çıkmayan kullanıcılara gönder
+      // (GDPR/CASL/6563 opt-in). İzin yoksa lifecycle e-postası gitmez.
+      marketingConsent: true,
+      marketingUnsubscribedAt: null,
     },
     select: {
       id: true,

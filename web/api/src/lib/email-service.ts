@@ -4,6 +4,7 @@ import { renderCorporateEmail, ctaButton } from "./email-layout.js";
 import { sendMail } from "./mailer.js";
 import { logAutomationEmailAudit } from "../modules/admin/admin-audit.service.js";
 import { emailT, type Locale } from "./email-i18n.js";
+import { unsubscribeUrlFor } from "../modules/email/email-unsubscribe.service.js";
 
 const product = () => env.SMTP_FROM_NAME;
 
@@ -96,9 +97,9 @@ export async function sendLifecycleEmail(
     ${ctaButton(ctaUrl, lc.cta)}
   `;
 
-  // Pazarlama e-postası → hukuki olarak abonelikten çıkış yolu ZORUNLU (6563/İYS + KVKK).
-  // Kalıcı endpoint gelene kadar mailto ile honore edilir.
-  const unsubscribeUrl = `mailto:${env.SMTP_FROM_EMAIL}?subject=${encodeURIComponent("Ticari e-postalardan çıkmak istiyorum")}`;
+  // Pazarlama e-postası → hukuki olarak abonelikten çıkış yolu ZORUNLU
+  // (GDPR/CASL/CAN-SPAM/6563). Token'lı gerçek https endpoint (tek-tık uyumlu).
+  const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
   const html = renderCorporateEmail({
     eyebrow: lc.eyebrow,
     title: lc.title,
@@ -110,7 +111,7 @@ export async function sendLifecycleEmail(
   });
 
   const subject = lc.subject(product());
-  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${ctaUrl}`) });
+  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
   await logAutomationEmailAudit(`email.lifecycle.${stage}`, vars.userId, `Lifecycle ${stage} → ${toEmail}`, {
     template: `lifecycle_${stage}`,
     ctaUrl,

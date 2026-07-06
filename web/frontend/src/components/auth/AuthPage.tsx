@@ -27,6 +27,7 @@ type AuthSubmitPayload = {
   lastName?: string;
   phone?: string;
   city?: string;
+  marketingConsent?: boolean;
 };
 
 type AuthPageProps = {
@@ -97,6 +98,7 @@ export function AuthPage({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [registerCity, setRegisterCity] = useState("");
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [urlAuthError, setUrlAuthError] = useState("");
   const [urlEmailVerifiedNotice, setUrlEmailVerifiedNotice] = useState(false);
 
@@ -213,12 +215,14 @@ export function AuthPage({
           email,
           password,
           city: registerCity.trim() || undefined,
+          marketingConsent,
         });
         setFirstName("");
         setLastName("");
         setRegisterCity("");
         setEmail("");
         setPassword("");
+        setMarketingConsent(false);
       } else {
         await onSubmit({ email, password });
       }
@@ -493,6 +497,22 @@ export function AuthPage({
               <p className="text-xs leading-snug text-rose-400" role="alert">
                 {generalDisplayError}
               </p>
+            ) : null}
+
+            {mode === "register" ? (
+              <label className="flex cursor-pointer items-start gap-2.5 text-left">
+                <input
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500"
+                />
+                <span className="text-[12px] leading-relaxed text-slate-400">
+                  {language === "tr"
+                    ? "Kampanya, ipucu ve yeniliklerden e-posta ile haberdar olmak istiyorum. (İsteğe bağlı — istediğiniz zaman tek tıkla çıkabilirsiniz.)"
+                    : "I'd like to receive emails about campaigns, tips and updates. (Optional — you can unsubscribe anytime with one click.)"}
+                </span>
+              </label>
             ) : null}
 
             <button

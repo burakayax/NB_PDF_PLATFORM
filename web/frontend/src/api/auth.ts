@@ -119,11 +119,13 @@ export type RegisterAuthPayload = {
   phone?: string;
   /** Optional at sign-up; Turkish province name when set */
   city?: string;
+  /** Ticari/pazarlama e-posta opt-in izni (isteğe bağlı kutu). */
+  marketingConsent?: boolean;
 };
 
 type RegisterPayload = RegisterAuthPayload;
 
-async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<string, string>): Promise<T | null> {
+async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<string, string | boolean | Language>): Promise<T | null> {
   const response = await saasFetch(`/api/auth${path}`, {
     method: "POST",
     headers: body ? { "Content-Type": "application/json" } : undefined,
@@ -139,7 +141,7 @@ async function sendAuthRequest<T>(path: string, body?: RegisterPayload | Record<
 }
 
 export async function registerAuthUser(payload: RegisterAuthPayload) {
-  const body: Record<string, string | Language> = {
+  const body: Record<string, string | Language | boolean> = {
     firstName: payload.firstName.trim(),
     lastName: payload.lastName.trim(),
     email: payload.email.trim().toLowerCase(),
@@ -154,12 +156,15 @@ export async function registerAuthUser(payload: RegisterAuthPayload) {
   if (ct) {
     body.city = ct;
   }
+  if (payload.marketingConsent) {
+    body.marketingConsent = true;
+  }
   if (import.meta.env.DEV) {
     console.info("[auth] POST /api/auth/register", {
       email: body.email,
       preferredLanguage: body.preferredLanguage,
-      hasPhone: Boolean(body.phone?.trim()),
-      hasCity: Boolean(body.city?.trim()),
+      hasPhone: Boolean(body.phone),
+      hasCity: Boolean(body.city),
     });
   }
   const response = await sendAuthRequest<RegisterResponse>("/register", body);

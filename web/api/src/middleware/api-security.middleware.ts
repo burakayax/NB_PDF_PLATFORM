@@ -221,6 +221,8 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p.startsWith("/public/") && method === "GET") return true;
   if (p === "/analytics/page-view" && method === "POST") return true;
   if (p === "/contact" && method === "POST") return true;
+  // Abonelikten çıkış — token ile yetkilendirilir (JWT gerekmez; e-postadan tıklanır).
+  if (p === "/email/unsubscribe") return true;
   if (p.startsWith("/auth/")) {
     if (p === "/auth/register" && method === "POST") return true;
     if (p === "/auth/login" && method === "POST") return true;
