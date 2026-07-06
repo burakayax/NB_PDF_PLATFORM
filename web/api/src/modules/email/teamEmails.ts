@@ -85,10 +85,10 @@ export async function sendTeamInviteEmail(params: {
 
   const features = [
     "Tüm PDF araçlarına tam erişim",
-    "Filigransız çıktı",
-    "Öncelikli işlem kuyruğu",
-    "Büyük dosya desteği",
-    "Toplu işlem (batch) desteği",
+    "Yapay zekâ araçları — özetle, veri çıkar, çeviri, karşılaştır",
+    "Toplu işlem (batch) ve büyük dosya desteği",
+    "Geliştirici API erişimi",
+    "Ekip yönetimi ve merkezi faturalama",
     "Kurumsal güvenlik standartları",
   ];
 
@@ -219,9 +219,9 @@ export async function sendSubscriptionExpiryWarningEmail(params: {
     : `⏳ Paketiniz ${daysRemaining} gün içinde sona eriyor — ${teamName}`;
 
   const consequences = [
-    "Tüm ekip üyeleri premium erişimini kaybeder",
-    "Büyük dosya ve toplu işlem desteği devre dışı kalır",
-    "Ücretsiz plan limitleri ve filigran uygulanmaya başlar",
+    "Tüm ekip üyeleri yapay zekâ araçlarına (özetle, veri çıkar, çeviri) erişimini kaybeder",
+    "Toplu işlem, büyük dosya ve geliştirici API erişimi devre dışı kalır",
+    "Ekip ücretsiz plana döner — temel PDF araçları çalışmaya devam eder",
   ];
 
   const body = `
