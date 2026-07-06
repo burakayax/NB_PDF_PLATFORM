@@ -47,9 +47,10 @@ function userStatus(
     return { label: "Onaysız", className: "bg-amber-500/20 text-amber-100 ring-amber-500/35" };
   }
   if (u.plan === "FREE") {
-    return { label: "Deneme", className: "bg-slate-500/20 text-slate-200 ring-slate-500/35" };
+    return { label: "Ücretsiz", className: "bg-slate-500/20 text-slate-200 ring-slate-500/35" };
   }
-  return { label: "Aktif", className: "bg-emerald-500/20 text-emerald-200 ring-emerald-500/30" };
+  // Ücretli abone — planı göster (Pro / Business).
+  return { label: u.plan === "BUSINESS" ? "Business" : "Pro", className: "bg-emerald-500/20 text-emerald-200 ring-emerald-500/30" };
 }
 
 const PAGE_SIZE = 20;
@@ -755,7 +756,7 @@ function UserDetailPanel({
     >
       {user ? (
         <div className="flex flex-col gap-4">
-          <UsageGrantSection accessToken={accessToken} userId={user.id} usage={detail?.usage ?? null} />
+          {/* Günlük kota sistemi kaldırıldı (araçlar sınırsız) — eski UsageGrantSection çıkarıldı. */}
 
           <div className="flex gap-1 rounded-xl bg-slate-900/60 p-1">
             {(["payments", "tools"] as const).map((t) => (
