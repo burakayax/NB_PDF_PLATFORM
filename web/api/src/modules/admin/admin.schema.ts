@@ -183,6 +183,27 @@ export const adminCouponCreateSchema = z.object({
   expiresAt: z.string().datetime().optional().nullable(),
 });
 
+export const adminCampaignCreateSchema = z.object({
+  name: z.string().min(1).max(120),
+  enabled: z.boolean().optional(),
+  triggerDays: z.coerce.number().int().min(0).max(365),
+  subjectTr: z.string().min(1).max(200),
+  subjectEn: z.string().min(1).max(200),
+  eyebrowTr: z.string().max(60).optional(),
+  eyebrowEn: z.string().max(60).optional(),
+  titleTr: z.string().min(1).max(200),
+  titleEn: z.string().min(1).max(200),
+  introTr: z.string().max(600).optional(),
+  introEn: z.string().max(600).optional(),
+  bodyTr: z.string().min(1).max(8000),
+  bodyEn: z.string().min(1).max(8000),
+  ctaLabelTr: z.string().max(60).optional(),
+  ctaLabelEn: z.string().max(60).optional(),
+  ctaUrl: z.string().max(300).optional(),
+  couponCode: z.string().max(40).optional().nullable(),
+});
+export const adminCampaignPatchSchema = adminCampaignCreateSchema.partial();
+
 export const adminCouponPatchSchema = z.object({
   isActive: z.boolean().optional(),
   discountPercent: z.coerce.number().int().min(1).max(100).optional(),

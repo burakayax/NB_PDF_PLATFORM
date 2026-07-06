@@ -8,6 +8,11 @@ import {
   adminAuditLogController,
   adminControlMetaController,
   adminCreateCouponController,
+  adminListCampaignsController,
+  adminCreateCampaignController,
+  adminUpdateCampaignController,
+  adminDeleteCampaignController,
+  adminTestCampaignController,
   adminCreateUserController,
   adminDeleteUserController,
   adminDownloadLogProofController,
@@ -84,6 +89,13 @@ adminRouter.patch("/users/:id", asyncHandler(adminUpdateUserController));
 adminRouter.get("/coupons", asyncHandler(adminListCouponsController));
 adminRouter.post("/coupons", asyncHandler(adminCreateCouponController));
 adminRouter.patch("/coupons/:id", asyncHandler(adminPatchCouponController));
+
+// Pazarlama e-posta kampanyaları (admin CMS)
+adminRouter.get("/email-campaigns", asyncHandler(adminListCampaignsController));
+adminRouter.post("/email-campaigns", asyncHandler(adminCreateCampaignController));
+adminRouter.patch("/email-campaigns/:id", asyncHandler(adminUpdateCampaignController));
+adminRouter.delete("/email-campaigns/:id", asyncHandler(adminDeleteCampaignController));
+adminRouter.post("/email-campaigns/:id/test", asyncHandler(adminTestCampaignController));
 
 adminRouter.get("/blocked-emails", asyncHandler(adminListBlockedEmailsController));
 adminRouter.post("/blocked-emails", asyncHandler(adminAddBlockedEmailController));

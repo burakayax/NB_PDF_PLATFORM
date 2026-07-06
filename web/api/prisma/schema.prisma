@@ -727,3 +727,29 @@ model TeamInvoice {
   @@index([teamId])
   @@map("team_invoices")
 }
+
+/// Admin-yönetimli pazarlama e-postası (lifecycle drip). Zamanlayıcı DB'den okur.
+model EmailCampaign {
+  id          String   @id @default(cuid())
+  name        String
+  enabled     Boolean  @default(true)
+  triggerDays Int      @default(3)
+  subjectTr   String
+  subjectEn   String
+  eyebrowTr   String   @default("")
+  eyebrowEn   String   @default("")
+  titleTr     String
+  titleEn     String
+  introTr     String   @default("")
+  introEn     String   @default("")
+  bodyTr      String
+  bodyEn      String
+  ctaLabelTr  String   @default("")
+  ctaLabelEn  String   @default("")
+  ctaUrl      String   @default("")
+  couponCode  String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("email_campaigns")
+}

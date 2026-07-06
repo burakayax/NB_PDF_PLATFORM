@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
+import { env } from "../../config/env.js";
+import { sendCampaignTest } from "../email/emailCampaign.service.js";
 import { normalizeCouponCode } from "../coupon/coupon.service.js";
 import {
   adminAdjustCreditsBodySchema,
@@ -14,6 +16,8 @@ import {
   adminCreateUserSchema,
   adminCouponCreateSchema,
   adminCouponPatchSchema,
+  adminCampaignCreateSchema,
+  adminCampaignPatchSchema,
   adminDeleteUserQuerySchema,
   adminGrantCreditsSchema,
   adminGrantBonusOpsSchema,
@@ -1157,6 +1161,52 @@ export async function adminPatchCouponController(
     totalUses,
     createdAt: updated.createdAt.toISOString(),
   });
+}
+
+// ─── Pazarlama E-posta Kampanyaları (admin CMS) ──────────────────────────────
+
+export async function adminListCampaignsController(_request: Request, response: Response) {
+  const items = await prisma.emailCampaign.findMany({ orderBy: { triggerDays: "asc" } });
+  response.json({ items });
+}
+
+export async function adminCreateCampaignController(request: Request, response: Response) {
+  const parsed = adminCampaignCreateSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const created = await prisma.emailCampaign.create({ data: parsed.data });
+  response.status(201).json(created);
+}
+
+export async function adminUpdateCampaignController(request: Request, response: Response) {
+  const id = typeof request.params["id"] === "string" ? request.params["id"] : "";
+  if (!id) throw new HttpError(400, "Missing campaign id.");
+  const parsed = adminCampaignPatchSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  if (Object.keys(parsed.data).length === 0) throw new HttpError(400, "No fields to update.");
+  const updated = await prisma.emailCampaign.update({ where: { id }, data: parsed.data });
+  response.json(updated);
+}
+
+export async function adminDeleteCampaignController(request: Request, response: Response) {
+  const id = typeof request.params["id"] === "string" ? request.params["id"] : "";
+  if (!id) throw new HttpError(400, "Missing campaign id.");
+  await prisma.emailCampaign.delete({ where: { id } });
+  response.json({ ok: true });
+}
+
+/** Kampanyanın önizlemesini admin e-postasına gönderir. */
+export async function adminTestCampaignController(request: Request, response: Response) {
+  const id = typeof request.params["id"] === "string" ? request.params["id"] : "";
+  if (!id) throw new HttpError(400, "Missing campaign id.");
+  const c = await prisma.emailCampaign.findUnique({ where: { id } });
+  if (!c) throw new HttpError(404, "Campaign not found.");
+  const locale = (request.body as { locale?: string } | undefined)?.locale === "en" ? "en" : "tr";
+  await sendCampaignTest(c, env.ADMIN_EMAIL, locale);
+  response.json({ ok: true, sentTo: env.ADMIN_EMAIL });
 }
 
 /** Son 1 yıllık indirme denemeleri; yönetim listesi. */
