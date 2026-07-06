@@ -241,7 +241,9 @@ export async function adminGetUserDetailController(
           base === null ? null : base + (org.bonusDailyOperations ?? 0),
       }
     : null;
-  response.json({ ...user, toolUsageCounts, usage });
+  // creditPackCheckouts: ayrı model yok (top-up'lar PaymentCheckout'ta). Frontend bu
+  // alana eriştiği için boş dizi döndürülür (undefined → çökme "beklenmedik hata" idi).
+  response.json({ ...user, toolUsageCounts, usage, creditPackCheckouts: [] });
 }
 
 export async function adminListBlockedEmailsController(
