@@ -199,6 +199,10 @@ model User {
   billingCountryCode  String?   @map("billing_country_code")
   isKvkkConsented     Boolean   @default(false) @map("is_kvkk_consented")
   kvkkConsentedAt     DateTime? @map("kvkk_consented_at")
+  // Ticari/pazarlama e-posta izni (GDPR/CASL/6563 opt-in) — KVKK'dan AYRI tutulur.
+  marketingConsent        Boolean   @default(false) @map("marketing_consent")
+  marketingConsentAt      DateTime? @map("marketing_consent_at")
+  marketingUnsubscribedAt DateTime? @map("marketing_unsubscribed_at")
   distanceSalesConsentedAt DateTime? @map("distance_sales_consented_at")
   withdrawalWaivedAt  DateTime? @map("withdrawal_waived_at")
   totalRefunds        Int       @default(0)     @map("total_refunds")
@@ -484,6 +488,7 @@ model Coupon {
   discountPercent   Int
   isActive          Boolean  @default(true)
   usageLimitPerUser Int      @default(1)
+  expiresAt         DateTime? @map("expires_at")
   createdAt         DateTime @default(now()) @map("created_at")
   uses              CouponUse[]
 

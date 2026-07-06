@@ -35,8 +35,14 @@ export function renderCorporateEmail({
     ? `<img src="${resolvedLogo}" height="36" alt="${productName}" style="display:block;height:36px;width:auto;max-width:180px;" />`
     : `<div style="width:36px;height:36px;border-radius:9px;background:#4f46e5;display:inline-block;text-align:center;line-height:36px;font-size:9px;font-weight:800;letter-spacing:0.08em;color:#ffffff;">PDF</div>`;
 
+  // Fiziksel posta adresi — CAN-SPAM (ABD) ve CASL (Kanada) tanıtım e-postalarında ZORUNLU.
+  // COMPANY_POSTAL_ADDRESS env'i ile ayarlanır; boşsa satır gizlenir.
+  const postalAddress = (process.env.COMPANY_POSTAL_ADDRESS ?? "").trim();
+  const addressLine = unsubscribeUrl && postalAddress
+    ? `<div style="margin-top:6px;font-size:11px;line-height:1.6;color:#94a3b8;">${postalAddress}</div>`
+    : "";
   const unsubscribeLine = unsubscribeUrl
-    ? `<div style="margin-top:10px;font-size:11px;line-height:1.6;color:#94a3b8;">Bu bir tanıtım e-postasıdır. <a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline;">Ticari e-postalardan çık</a>.</div>`
+    ? `<div style="margin-top:10px;font-size:11px;line-height:1.6;color:#94a3b8;">Bu bir tanıtım e-postasıdır. <a href="${unsubscribeUrl}" style="color:#64748b;text-decoration:underline;">E-posta aboneliğinden çık</a>.</div>${addressLine}`
     : "";
 
   return `

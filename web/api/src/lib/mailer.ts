@@ -31,14 +31,24 @@ export type SendMailInput = {
   text: string;
   /** İsteğe bağlı Yanıtla adresi (ör. iletişim formunu gönderen kişi). */
   replyTo?: string;
+  /** Pazarlama e-postalarında tek-tık abonelikten çıkış URL'i (RFC 8058, Gmail/Yahoo zorunlu). */
+  listUnsubscribeUrl?: string;
 };
 
 export async function sendMail(input: SendMailInput) {
   try {
+    // RFC 8058 tek-tık abonelikten çıkış — toplu gönderende Gmail/Yahoo (2024) zorunlu.
+    const unsubHeaders = input.listUnsubscribeUrl
+      ? {
+          "List-Unsubscribe": `<${input.listUnsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+      : undefined;
     await transporter.sendMail({
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
       to: input.to,
       ...(input.replyTo ? { replyTo: input.replyTo } : {}),
+      ...(unsubHeaders ? { headers: unsubHeaders } : {}),
       subject: input.subject,
       html: input.html,
       text: input.text,
