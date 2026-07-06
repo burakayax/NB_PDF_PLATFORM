@@ -35,15 +35,7 @@ import {
 } from "./api";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, type AuthUser } from "./api/auth";
 import { submitContactForm } from "./api/contact";
-import { AiPdfTool } from "./components/tools/AiPdfTool";
-import { AiBatchTool } from "./components/tools/AiBatchTool";
-import { AiCompareTool } from "./components/tools/AiCompareTool";
-import { AiRedactTool } from "./components/tools/AiRedactTool";
-import { BlogIndexPage, BlogPostPage } from "./components/blog/BlogPage";
 import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
-import { DeveloperApiPage } from "./components/DeveloperApiPage";
-import { ApiDocsPage } from "./components/ApiDocsPage";
-import { PdfEditor } from "./components/tools/PdfEditor";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
@@ -257,6 +249,37 @@ const TeamInviteAcceptPageLazy = lazy(() =>
   import("./components/team/TeamInviteAcceptPage").then((m) => ({
     default: m.TeamInviteAcceptPage,
   })),
+);
+
+// Rota-izole ağır bileşenler — ana bundle'dan çıkarıldı (landing/blog ziyaretçisine
+// inmez; yalnız ilgili rota/panelde talep üzerine yüklenir). pdf-lib/fontkit/pdf
+// metin çıkarma gibi ağır bağımlılıklar bu chunk'lara taşınır.
+const AiPdfTool = lazy(() =>
+  import("./components/tools/AiPdfTool").then((m) => ({ default: m.AiPdfTool })),
+);
+const AiBatchTool = lazy(() =>
+  import("./components/tools/AiBatchTool").then((m) => ({ default: m.AiBatchTool })),
+);
+const AiCompareTool = lazy(() =>
+  import("./components/tools/AiCompareTool").then((m) => ({ default: m.AiCompareTool })),
+);
+const AiRedactTool = lazy(() =>
+  import("./components/tools/AiRedactTool").then((m) => ({ default: m.AiRedactTool })),
+);
+const PdfEditor = lazy(() =>
+  import("./components/tools/PdfEditor").then((m) => ({ default: m.PdfEditor })),
+);
+const BlogIndexPage = lazy(() =>
+  import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
+);
+const BlogPostPage = lazy(() =>
+  import("./components/blog/BlogPage").then((m) => ({ default: m.BlogPostPage })),
+);
+const DeveloperApiPage = lazy(() =>
+  import("./components/DeveloperApiPage").then((m) => ({ default: m.DeveloperApiPage })),
+);
+const ApiDocsPage = lazy(() =>
+  import("./components/ApiDocsPage").then((m) => ({ default: m.ApiDocsPage })),
 );
 
 type ContentPanel =
@@ -4733,27 +4756,31 @@ function App() {
   // Geliştirici API dokümantasyonu (detaylı kullanım kılavuzu).
   if (pathname === "/pdf-api/docs") {
     return (
-      <ApiDocsPage
-        language={language}
-        isAuthenticated={isAuthenticated}
-        onLogin={apiPageGoLogin}
-        onRegister={apiPageGoRegister}
-        onOpenApiKeys={apiPageOpenKeys}
-      />
+      <Suspense fallback={<PageSkeleton />}>
+        <ApiDocsPage
+          language={language}
+          isAuthenticated={isAuthenticated}
+          onLogin={apiPageGoLogin}
+          onRegister={apiPageGoRegister}
+          onOpenApiKeys={apiPageOpenKeys}
+        />
+      </Suspense>
     );
   }
 
   // Geliştirici API landing (SEO).
   if (pathname === "/pdf-api") {
     return (
-      <DeveloperApiPage
-        language={language}
-        isAuthenticated={isAuthenticated}
-        onLogin={apiPageGoLogin}
-        onRegister={apiPageGoRegister}
-        onOpenApiKeys={apiPageOpenKeys}
-        onOpenPricing={() => { window.location.href = "/#pricing"; }}
-      />
+      <Suspense fallback={<PageSkeleton />}>
+        <DeveloperApiPage
+          language={language}
+          isAuthenticated={isAuthenticated}
+          onLogin={apiPageGoLogin}
+          onRegister={apiPageGoRegister}
+          onOpenApiKeys={apiPageOpenKeys}
+          onOpenPricing={() => { window.location.href = "/#pricing"; }}
+        />
+      </Suspense>
     );
   }
 
@@ -4762,10 +4789,14 @@ function App() {
     const goLogin = () => setView("login");
     const goRegister = () => setView("register");
     const blogSlug = pathname === "/blog" ? "" : pathname.split("/blog/")[1] ?? "";
-    return blogSlug ? (
-      <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} />
-    ) : (
-      <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} />
+    return (
+      <Suspense fallback={<PageSkeleton />}>
+        {blogSlug ? (
+          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} />
+        ) : (
+          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} />
+        )}
+      </Suspense>
     );
   }
 
@@ -4778,28 +4809,36 @@ function App() {
     if (seoSlug === "pdf-duzenle") {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <PdfEditor language={language} accessToken={accessToken} />
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfEditor language={language} accessToken={accessToken} />
+          </Suspense>
         </GuestSeoToolPage>
       );
     }
     if (seoSlug === "ai-toplu-islem") {
       return (
         <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          <Suspense fallback={<PageSkeleton />}>
+            <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          </Suspense>
         </GuestSeoToolPage>
       );
     }
     if (seoSlug === "pdf-karsilastir") {
       return (
         <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          <Suspense fallback={<PageSkeleton />}>
+            <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          </Suspense>
         </GuestSeoToolPage>
       );
     }
     if (seoSlug === "hassas-veri-gizle") {
       return (
         <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          <Suspense fallback={<PageSkeleton />}>
+            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+          </Suspense>
         </GuestSeoToolPage>
       );
     }
@@ -4816,13 +4855,15 @@ function App() {
         seoSlug === "pdf-ceviri" ? "translate" : "summarize";
       return (
         <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister}>
-          <AiPdfTool
-            mode={aiMode}
-            language={language}
-            accessToken={accessToken}
-            onLogin={goLogin}
-            onUpgrade={goRegister}
-          />
+          <Suspense fallback={<PageSkeleton />}>
+            <AiPdfTool
+              mode={aiMode}
+              language={language}
+              accessToken={accessToken}
+              onLogin={goLogin}
+              onUpgrade={goRegister}
+            />
+          </Suspense>
         </GuestSeoToolPage>
       );
     }
@@ -5966,43 +6007,47 @@ function App() {
             ) : null}
             {contentPanel === "ai" && aiModal ? (
               <section className="mx-auto w-full max-w-4xl py-2">
-                {aiModal === "batch" ? (
-                  <AiBatchTool
-                    language={language}
-                    accessToken={accessToken}
-                    onLogin={() => setView("login")}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
-                  />
-                ) : aiModal === "compare" ? (
-                  <AiCompareTool
-                    language={language}
-                    accessToken={accessToken}
-                    onLogin={() => setView("login")}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
-                  />
-                ) : aiModal === "redact" ? (
-                  <AiRedactTool
-                    language={language}
-                    accessToken={accessToken}
-                    onLogin={() => setView("login")}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
-                  />
-                ) : (
-                  <AiPdfTool
-                    mode={aiModal}
-                    language={language}
-                    accessToken={accessToken}
-                    onLogin={() => setView("login")}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
-                    isAdmin={user?.role === "ADMIN"}
-                  />
-                )}
+                <Suspense fallback={<PageSkeleton />}>
+                  {aiModal === "batch" ? (
+                    <AiBatchTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                    />
+                  ) : aiModal === "compare" ? (
+                    <AiCompareTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                    />
+                  ) : aiModal === "redact" ? (
+                    <AiRedactTool
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                    />
+                  ) : (
+                    <AiPdfTool
+                      mode={aiModal}
+                      language={language}
+                      accessToken={accessToken}
+                      onLogin={() => setView("login")}
+                      onUpgrade={() => setUpgradeModalOpen(true)}
+                      isAdmin={user?.role === "ADMIN"}
+                    />
+                  )}
+                </Suspense>
               </section>
             ) : null}
 
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
-                <PdfEditor language={language} accessToken={accessToken} />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfEditor language={language} accessToken={accessToken} />
+                </Suspense>
               </section>
             ) : null}
 
