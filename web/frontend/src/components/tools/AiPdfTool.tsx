@@ -24,7 +24,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
-import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
+import { summaryToPdf, translationToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
 import {
   aiSummarize,
   aiChat,
@@ -312,7 +312,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       const ttl = fileName
         ? `${fileName.replace(/\.pdf$/i, "")} — ${tr ? "Çeviri" : "Translation"}`
         : tr ? "PDF Çeviri" : "PDF Translation";
-      const blob = pdfBytesToBlob(await summaryToPdf(translation, ttl));
+      const langLabel = langName ? (tr ? langName.tr : langName.en) : targetLang;
+      const blob = pdfBytesToBlob(
+        await translationToPdf(translation, {
+          title: ttl,
+          languageLabel: `${tr ? "Çeviri" : "Translation"} • ${langLabel}`,
+        }),
+      );
       await saveBlobWithPicker(
         blob,
         `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`,
