@@ -61,6 +61,8 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
   const [qDebounced, setQDebounced] = useState("");
   const [plan, setPlan] = useState<"all" | "FREE" | "PRO" | "BUSINESS">("all");
   const [verified, setVerified] = useState<"all" | "yes" | "no">("all");
+  // Sıralama — backend createdAt/email/plan (asc/desc) destekler.
+  const [sortKey, setSortKey] = useState<"createdAt-desc" | "createdAt-asc" | "plan-desc" | "email-asc">("createdAt-desc");
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState<AdminUserRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -132,12 +134,13 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
     setLoading(true);
     setErr(null);
     try {
+      const [sort, dir] = sortKey.split("-") as ["createdAt" | "email" | "plan", "asc" | "desc"];
       const res = await fetchAdminUsers(accessToken, {
         q: qDebounced.trim() || undefined,
         page,
         pageSize: PAGE_SIZE,
-        sort: "createdAt",
-        dir: "desc",
+        sort,
+        dir,
         plan: plan === "all" ? "all" : plan,
         verified,
       });
@@ -149,7 +152,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [accessToken, qDebounced, page, plan, verified]);
+  }, [accessToken, qDebounced, page, plan, verified, sortKey]);
 
   useEffect(() => {
     void load();
@@ -258,6 +261,20 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
               <option value="all">E-posta: tümü</option>
               <option value="yes">Doğrulanmış</option>
               <option value="no">Doğrulanmamış</option>
+            </select>
+            <select
+              className="rounded-lg border border-slate-600/50 bg-slate-900/80 px-2.5 py-1.5 text-xs font-medium text-slate-200"
+              value={sortKey}
+              onChange={(e) => {
+                setPage(1);
+                setSortKey(e.target.value as typeof sortKey);
+              }}
+              title="Sıralama"
+            >
+              <option value="createdAt-desc">Kayıt: yeni → eski</option>
+              <option value="createdAt-asc">Kayıt: eski → yeni</option>
+              <option value="plan-desc">Plana göre (abone önce)</option>
+              <option value="email-asc">E-postaya göre (A→Z)</option>
             </select>
           </>
         }
@@ -372,7 +389,7 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
             <div className="w-28 shrink-0 hidden xl:block">Kayıt tarihi</div>
             <div className="w-24 shrink-0">Durum</div>
             <div className="w-20 shrink-0">Plan</div>
-            <div className="w-20 shrink-0 text-right">İşlem</div>
+            <div className="w-[132px] shrink-0 text-right">İşlem</div>
           </div>
           <ul>
             {rows.map((u) => {
@@ -433,26 +450,29 @@ export function AdminUserManagement({ accessToken, uiMode }: Props) {
                       {new Date(u.createdAt).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" })}
                     </span>
                   </div>
-                  <div className="flex w-full min-w-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
-                    <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${st.className}`}>
-                      {st.label}
-                    </span>
-                    <span className="shrink-0 font-mono text-xs text-slate-400 sm:w-20">{u.plan}</span>
-                    <button
-                      type="button"
-                      onClick={() => void openDetail(u)}
-                      className="shrink-0 rounded-lg bg-violet-500/15 px-2.5 py-1.5 text-xs font-semibold text-violet-200 ring-1 ring-violet-500/30 transition hover:bg-violet-500/25"
-                      title="Detaylar ve geçmiş"
-                    >
-                      Detay
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectOpen(u)}
-                      className="shrink-0 rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 ring-1 ring-cyan-500/30 transition hover:bg-cyan-500/25"
-                    >
-                      Yönet
-                    </button>
+                  {/* Masaüstü (sm+): header ile birebir hizalı sabit sütunlar */}
+                  <div className="hidden w-24 shrink-0 sm:block">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${st.className}`}>{st.label}</span>
+                  </div>
+                  <div className="hidden w-20 shrink-0 font-mono text-xs text-slate-400 sm:block">{u.plan}</div>
+                  <div className="hidden w-[132px] shrink-0 items-center justify-end gap-2 sm:flex">
+                    <button type="button" onClick={() => void openDetail(u)} title="Detaylar ve geçmiş"
+                      className="shrink-0 rounded-lg bg-violet-500/15 px-2.5 py-1.5 text-xs font-semibold text-violet-200 ring-1 ring-violet-500/30 transition hover:bg-violet-500/25">Detay</button>
+                    <button type="button" onClick={() => setSelectOpen(u)}
+                      className="shrink-0 rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 ring-1 ring-cyan-500/30 transition hover:bg-cyan-500/25">Yönet</button>
+                  </div>
+                  {/* Mobil (< sm): hepsi tek satırda */}
+                  <div className="flex w-full items-center justify-between gap-2 sm:hidden">
+                    <div className="flex items-center gap-2">
+                      <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${st.className}`}>{st.label}</span>
+                      <span className="shrink-0 font-mono text-xs text-slate-400">{u.plan}</span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button type="button" onClick={() => void openDetail(u)}
+                        className="rounded-lg bg-violet-500/15 px-2.5 py-1.5 text-xs font-semibold text-violet-200 ring-1 ring-violet-500/30">Detay</button>
+                      <button type="button" onClick={() => setSelectOpen(u)}
+                        className="rounded-lg bg-cyan-500/15 px-3 py-1.5 text-xs font-semibold text-cyan-100 ring-1 ring-cyan-500/30">Yönet</button>
+                    </div>
                   </div>
                 </li>
               );
