@@ -4753,6 +4753,18 @@ function App() {
     setView("web");
   };
 
+  // AI erişim/gösterim — landing ile AYNI kural (tutarlılık). Ödemeler kapalıyken
+  // yetkili olmayan kullanıcı (ADMIN/PRO/BUSINESS değil) AI araçlarında "Çok Yakında"
+  // görür; yetkili kullanıcı gerçek aracı kullanır. Admin, ödeme açmadan erişir.
+  const aiAllowed =
+    user?.role === "ADMIN" ||
+    userBalance?.isAdmin === true ||
+    userBalance?.plan === "PRO" ||
+    userBalance?.plan === "BUSINESS";
+  const aiComingSoon =
+    flags?.featureFlags?.paymentsDisabled !== false && !aiAllowed;
+  const aiIsAdmin = user?.role === "ADMIN" || userBalance?.isAdmin === true;
+
   // Geliştirici API dokümantasyonu (detaylı kullanım kılavuzu).
   if (pathname === "/pdf-api/docs") {
     return (
@@ -4819,7 +4831,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+            <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -4828,7 +4840,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+            <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -4837,7 +4849,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} />
+            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -4862,6 +4874,8 @@ function App() {
               accessToken={accessToken}
               onLogin={goLogin}
               onUpgrade={goRegister}
+              comingSoon={aiComingSoon}
+              isAdmin={aiIsAdmin}
             />
           </Suspense>
         </GuestSeoToolPage>
@@ -6014,6 +6028,7 @@ function App() {
                       accessToken={accessToken}
                       onLogin={() => setView("login")}
                       onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
                     />
                   ) : aiModal === "compare" ? (
                     <AiCompareTool
@@ -6021,6 +6036,7 @@ function App() {
                       accessToken={accessToken}
                       onLogin={() => setView("login")}
                       onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
                     />
                   ) : aiModal === "redact" ? (
                     <AiRedactTool
@@ -6028,6 +6044,7 @@ function App() {
                       accessToken={accessToken}
                       onLogin={() => setView("login")}
                       onUpgrade={() => setUpgradeModalOpen(true)}
+                      comingSoon={aiComingSoon}
                     />
                   ) : (
                     <AiPdfTool
@@ -6036,7 +6053,8 @@ function App() {
                       accessToken={accessToken}
                       onLogin={() => setView("login")}
                       onUpgrade={() => setUpgradeModalOpen(true)}
-                      isAdmin={user?.role === "ADMIN"}
+                      comingSoon={aiComingSoon}
+                      isAdmin={aiIsAdmin}
                     />
                   )}
                 </Suspense>
