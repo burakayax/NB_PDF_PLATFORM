@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import type { Language } from "../../i18n/landing";
@@ -769,7 +769,7 @@ interface PricingSectionProps {
 export default function PricingSection({ language, onUseWebApp, onSelectPlan }: PricingSectionProps) {
   const tr = language === "tr";
   const copy = pricingSectionCopy(language);
-  const { cards, flags } = useSettings();
+  const { cards, flags, pricing } = useSettings();
   // "Ödemeleri kapat" kill-switch'i (varsayılan açık) → ücretli planlar "Yakında".
   // Yalnızca admin anahtarı açıkça KAPATINCA (paymentsDisabled === false) satın alma açılır.
   const comingSoon = flags?.featureFlags?.paymentsDisabled !== false;
@@ -785,7 +785,31 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   const currency: Currency = checkoutCurrency === "TRY" ? "TRY" : "USD";
   const currencySymbol = checkoutCurrency === "TRY" ? "₺" : checkoutCurrency === "EUR" ? "€" : "$";
 
-  const [free, starter, plus, pro, business] = PLANS;
+  // ADMIN FİYATINA BAĞLAMA (sadece TRY, PRO/BUSINESS): ana sayfada GÖRÜLEN fiyat,
+  // admin paneline girilen ödeme (checkout) tutarıyla AYNI olsun. Aksi halde müşteri
+  // bir fiyat görüp başka ödenir. USD/EUR statik kalır (admin yalnız TRY yönetir).
+  const plansAdjusted = useMemo<PlanDefinition[]>(() => {
+    const tp = pricing?.tryPrices;
+    if (!tp) return PLANS;
+    const toCents = (s: string) => {
+      const n = Math.round(parseFloat(s) * 100);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    };
+    const proM = toCents(tp.proMonthly);
+    const proY = toCents(tp.proAnnual);
+    const bizM = toCents(tp.businessMonthly);
+    return PLANS.map((p) => {
+      if (p.id === "PRO" && proM) {
+        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: proM }, yearly: { ...p.pricing.yearly, TRY: proY ?? p.pricing.yearly.TRY } } };
+      }
+      if (p.id === "BUSINESS" && bizM) {
+        // Business yıllık admin'de yok → aylık×12 (indirimsiz, dürüst).
+        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 12 } } };
+      }
+      return p;
+    });
+  }, [pricing]);
+  const [free, starter, plus, pro, business] = plansAdjusted;
 
   return (
     <section id="pricing" className="relative py-20 md:py-28 overflow-hidden">
