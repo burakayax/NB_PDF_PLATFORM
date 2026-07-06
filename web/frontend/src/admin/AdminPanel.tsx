@@ -672,9 +672,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         <div>
           <h2 className="text-lg font-semibold text-white">Paketler ve ödeme</h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-400">
-            {advanced
-              ? "Plan isimleri, açıklamalar, günlük limitler ve aylık fiyatlar buradan yönetilir. Kaydettiğinizde ödeme ekranı ve site birkaç saniye içinde güncellenir."
-              : "Aylık fiyatlar ve kısa pazarlama metinleri. Paket kurallarını (limitler, hangi araçlar açık) düzenlemek için Gelişmiş moda geçin."}
+            Bu bölüm kullanıcıların gerçek <strong className="text-slate-200">erişim/haklarını</strong> (hangi araçlar açık, limitler) ve <strong className="text-slate-200">ödeme (checkout) tutarını</strong> belirler.
           </p>
         </div>
         <button
@@ -684,6 +682,17 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         >
           Sunucudan yenile
         </button>
+      </div>
+
+      {/* Landing bağlantısı — dürüst açıklama */}
+      <div className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.06] px-4 py-3.5 text-[13px] leading-relaxed text-amber-100/90">
+        <p className="font-bold text-amber-200">⚠️ Ana sayfadaki fiyat kartlarıyla bağlantı</p>
+        <ul className="mt-1.5 space-y-1 text-amber-100/80">
+          <li>• <strong>Fiyat (aşağıda):</strong> Ödeme ekranında (checkout) tahsil edilen tutarı belirler.</li>
+          <li>• <strong>Ana sayfada GÖRÜNEN fiyat + plan metinleri</strong> şu an ayrı, sabit bir kaynaktan gelir (kod içi plan tanımları + çeviri). Yani buradaki plan adı/açıklama/özellik metnini değiştirmek <strong>ana sayfa kartını DEĞİŞTİRMEZ</strong>.</li>
+          <li>• Şu an ana sayfaya akan tek şey: <strong>Başlangıç planında hangi araçların açık olduğu</strong> (marketing kartları).</li>
+          <li>• <strong>Öneri:</strong> Buradaki fiyatı, ana sayfada yazan fiyatla <strong>aynı tut</strong> — yoksa müşteri farklı fiyat görüp farklı ödenir. Kartları buradan yönetilebilir hale getirmemi istersen söyle, bağlarım.</li>
+        </ul>
       </div>
 
       {advanced ? (
@@ -894,19 +903,19 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
       ) : null}
 
       <AdminSection
-        title="Aylık abonelik fiyatları (TRY, KDV hariç)"
-        description="Ondalık için nokta kullanın (örn. 199.99). Yeni ödeme oturumları bu tutarlarla açılır."
+        title="Ödeme (checkout) fiyatları — aylık, TRY, KDV hariç"
+        description="Ödeme ekranında TAHSİL edilen tutar. Ana sayfada yazan fiyatla AYNI olmasına dikkat edin (ana sayfa fiyatı şu an ayrı/sabit kaynaktan gelir). Ondalık için nokta: 199.99"
         variant="emerald"
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <AdminField label="PRO — aylık fiyat" description="Pro paketinin kartta ve ödeme adımında görünen tutarı.">
+          <AdminField label="PRO — ödeme tutarı" description="Pro aboneliğinde ödeme adımında tahsil edilen aylık tutar.">
             <input
               value={proPrice}
               onChange={(e) => setProPrice(e.target.value)}
               className={`${adminInputClass} font-mono`}
             />
           </AdminField>
-          <AdminField label="Business — aylık fiyat" description="İş paketi için aylık tutar.">
+          <AdminField label="Business — ödeme tutarı" description="Business aboneliğinde tahsil edilen aylık tutar.">
             <input
               value={businessPrice}
               onChange={(e) => setBusinessPrice(e.target.value)}
