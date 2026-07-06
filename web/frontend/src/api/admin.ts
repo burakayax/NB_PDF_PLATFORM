@@ -746,6 +746,55 @@ export async function patchAdminCoupon(
   return r.json() as Promise<AdminCouponRow>;
 }
 
+// ─── Pazarlama e-posta kampanyaları ──────────────────────────────────────────
+export type AdminCampaignRow = {
+  id: string;
+  name: string;
+  enabled: boolean;
+  triggerDays: number;
+  subjectTr: string; subjectEn: string;
+  eyebrowTr: string; eyebrowEn: string;
+  titleTr: string; titleEn: string;
+  introTr: string; introEn: string;
+  bodyTr: string; bodyEn: string;
+  ctaLabelTr: string; ctaLabelEn: string;
+  ctaUrl: string;
+  couponCode: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminCampaignInput = Omit<AdminCampaignRow, "id" | "createdAt" | "updatedAt">;
+
+export async function fetchAdminCampaigns(accessToken: string): Promise<{ items: AdminCampaignRow[] }> {
+  const r = await adminFetch(accessToken, "/email-campaigns");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ items: AdminCampaignRow[] }>;
+}
+
+export async function createAdminCampaign(accessToken: string, body: Partial<AdminCampaignInput>): Promise<AdminCampaignRow> {
+  const r = await adminFetch(accessToken, "/email-campaigns", { method: "POST", body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<AdminCampaignRow>;
+}
+
+export async function updateAdminCampaign(accessToken: string, id: string, body: Partial<AdminCampaignInput>): Promise<AdminCampaignRow> {
+  const r = await adminFetch(accessToken, `/email-campaigns/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<AdminCampaignRow>;
+}
+
+export async function deleteAdminCampaign(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/email-campaigns/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+export async function testAdminCampaign(accessToken: string, id: string, locale: "tr" | "en"): Promise<{ sentTo: string }> {
+  const r = await adminFetch(accessToken, `/email-campaigns/${encodeURIComponent(id)}/test`, { method: "POST", body: JSON.stringify({ locale }) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ sentTo: string }>;
+}
+
 export type AdminDownloadLogRow = {
   id: string;
   userId: string;

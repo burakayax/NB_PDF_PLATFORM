@@ -43,6 +43,7 @@ import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
+import { EmailCampaignManager } from "./emails/EmailCampaignManager";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { AdminToolCatalog } from "./tools/AdminToolCatalog";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
@@ -70,6 +71,7 @@ type AdminTabId =
   | "cmd-site"
   | "cmd-mkt"
   | "cmd-coupons"
+  | "cmd-emails"
   | "packages"
   | "TOOLS"
   | "content"
@@ -106,6 +108,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-site", label: "Uygulama & SEO" },
       { id: "cmd-mkt", label: "Pazarlama" },
       { id: "cmd-coupons", label: "Kuponlar" },
+      { id: "cmd-emails", label: "E-postalar" },
     ],
   },
   {
@@ -532,6 +535,8 @@ export function AdminPanel({
             onBusy={setCBusy}
           />
         ) : null}
+
+        {tab === "cmd-emails" ? <EmailCampaignManager accessToken={accessToken} /> : null}
 
         {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
         {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}
