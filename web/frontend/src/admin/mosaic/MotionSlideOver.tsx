@@ -53,8 +53,10 @@ export function MotionSlideOver({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           />
-          <div className="absolute inset-0 flex justify-end">
+          {/* Boşluğa (panel dışına) tıklayınca kapanır; panelin içine tıklama kapatmaz. */}
+          <div className="absolute inset-0 flex justify-end" onClick={onClose}>
             <motion.aside
+              onClick={(e) => e.stopPropagation()}
               className={`flex h-full w-full ${widthClassName} flex-col border-l border-slate-700/50 bg-slate-900/98 shadow-2xl ring-1 ring-white/[0.06]`}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
