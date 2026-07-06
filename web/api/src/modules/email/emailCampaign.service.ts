@@ -86,12 +86,10 @@ export async function sendCampaignTest(c: EmailCampaign, toEmail: string, locale
   await sendMail({ to: toEmail, subject: `[TEST] ${subject}`, html, text: subject, listUnsubscribeUrl: unsubscribeUrl });
 }
 
-/** Tablo boşsa varsayılan 3 lifecycle kampanyasını (tips/value/winback) oluşturur. */
+/** Varsayılan lifecycle kampanyalarını ekler — İSME GÖRE idempotent (var olanı bozmaz,
+ * yalnız eksik olanları ekler; böylece yeni varsayılanlar deploy'da otomatik gelir). */
 export async function seedDefaultCampaigns(): Promise<void> {
-  const count = await prisma.emailCampaign.count();
-  if (count > 0) return;
-  await prisma.emailCampaign.createMany({
-    data: [
+  const defaults: Array<Parameters<typeof prisma.emailCampaign.create>[0]["data"]> = [
       {
         name: "İpuçları (2. gün)",
         triggerDays: 2,
@@ -135,6 +133,52 @@ export async function seedDefaultCampaigns(): Promise<void> {
         ctaUrl: "",
         couponCode: null,
       },
-    ],
-  });
+      {
+        name: "Hoş geldin — ilk adımlar (1. gün)",
+        triggerDays: 1,
+        subjectTr: "İlk PDF'ini 30 saniyede hallet",
+        subjectEn: "Get your first PDF done in 30 seconds",
+        eyebrowTr: "Başlangıç", eyebrowEn: "Getting started",
+        titleTr: "Hadi ilk işini yapalım", titleEn: "Let's do your first task",
+        introTr: "Kurulum yok, üyelik derdi yok — en çok kullanılan araçlarla başla.",
+        introEn: "No install, no hassle — start with the most-used tools.",
+        bodyTr: "En popüler 3 araçla saniyeler içinde sonuç al:\n\n**PDF Birleştir** — birden çok dosyayı tek PDF yap.\n**PDF Sıkıştır** — e-postaya sığması için küçült.\n**PDF → Word** — düzenlenebilir belgeye çevir.\n\nBirleştirme gibi araçlar tamamen tarayıcında çalışır; dosyan yüklenmez.",
+        bodyEn: "Get results in seconds with the 3 most popular tools:\n\n**Merge PDF** — combine files into one.\n**Compress PDF** — shrink to fit email limits.\n**PDF → Word** — convert to an editable doc.\n\nTools like merge run entirely in your browser; your file is not uploaded.",
+        ctaLabelTr: "Çalışma alanını aç", ctaLabelEn: "Open workspace",
+        ctaUrl: "",
+      },
+      {
+        name: "Özellik keşfi — bilmediklerin (4. gün)",
+        triggerDays: 4,
+        subjectTr: "Bunları biliyor muydun? 3 gizli PDF numarası",
+        subjectEn: "Did you know? 3 hidden PDF tricks",
+        eyebrowTr: "İpucu", eyebrowEn: "Tip",
+        titleTr: "Muhtemelen kaçırdığın 3 araç", titleEn: "3 tools you probably missed",
+        introTr: "Çoğu kişi bunları bilmiyor — ama işini ciddi hızlandırır.",
+        introEn: "Most people don't know these — but they seriously speed you up.",
+        bodyTr: "**PDF Düzenle** — metni, imzayı, damgayı doğrudan tarayıcıda ekle/çıkar.\n**Taranmış PDF → Metin (OCR)** — fotoğraf/taranmış belgedeki yazıyı gerçek metne çevir.\n**Sayfa Sil / Sırala** — istemediğin sayfaları at, sırayı düzelt.\n\nHepsi ücretsiz ve çoğu cihazında çalışır.",
+        bodyEn: "**Edit PDF** — add/remove text, signatures and stamps right in the browser.\n**Scanned PDF → Text (OCR)** — turn text in a photo/scan into real text.\n**Delete / Reorder pages** — drop unwanted pages, fix the order.\n\nAll free, and most run on your device.",
+        ctaLabelTr: "Araçları keşfet", ctaLabelEn: "Explore tools",
+        ctaUrl: "",
+      },
+      {
+        name: "Kilometre taşı — 1 ay (30. gün)",
+        triggerDays: 30,
+        subjectTr: "Bir aydır bizimlesin 🎉",
+        subjectEn: "One month with us 🎉",
+        eyebrowTr: "Teşekkürler", eyebrowEn: "Thank you",
+        titleTr: "İşini kolaylaştırdığımıza sevindik", titleEn: "Glad we made your work easier",
+        introTr: "Bir aydır PDF Platform'u kullanıyorsun — teşekkürler!",
+        introEn: "You've been using PDF Platform for a month — thank you!",
+        bodyTr: "Daha da ileri gitmek istersen: yapay zekâ araçlarımız uzun belgeleri özetliyor, faturalardan Excel'e veri çıkarıyor ve belgeleri çeviriyor. Bir dahaki büyük işinde denemeye değer.\n\nBir sorunun mu var? Bu e-postayı yanıtla, yardımcı olalım.",
+        bodyEn: "Want to go further? Our AI tools summarize long documents, extract data from invoices into Excel, and translate documents. Worth a try on your next big task.\n\nHave a question? Just reply to this email and we'll help.",
+        ctaLabelTr: "AI araçlarını gör", ctaLabelEn: "See AI tools",
+        ctaUrl: "",
+      },
+    ];
+
+    for (const data of defaults) {
+      const exists = await prisma.emailCampaign.findFirst({ where: { name: data.name }, select: { id: true } });
+      if (!exists) await prisma.emailCampaign.create({ data });
+    }
 }
