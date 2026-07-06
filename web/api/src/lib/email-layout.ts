@@ -37,7 +37,8 @@ export function renderCorporateEmail({
 
   // Fiziksel posta adresi — CAN-SPAM (ABD) ve CASL (Kanada) tanıtım e-postalarında ZORUNLU.
   // COMPANY_POSTAL_ADDRESS env'i ile ayarlanır; boşsa satır gizlenir.
-  const postalAddress = (process.env.COMPANY_POSTAL_ADDRESS ?? "").trim();
+  const postalAddress = (process.env.COMPANY_POSTAL_ADDRESS
+    ?? "NB Global Studio · Toklu Mah. Devlet Sahil Yolu Cad. Gürpınar Sok. ParkOrman Konutları A Blok Kat:6 D:26, Ortahisar/Trabzon, Türkiye").trim();
   const addressLine = unsubscribeUrl && postalAddress
     ? `<div style="margin-top:6px;font-size:11px;line-height:1.6;color:#94a3b8;">${postalAddress}</div>`
     : "";

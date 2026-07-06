@@ -3596,6 +3596,7 @@ function App() {
     lastName?: string;
     phone?: string;
     city?: string;
+    marketingConsent?: boolean;
   }) {
     try {
       setAuthSubmitting(true);
@@ -3620,6 +3621,7 @@ function App() {
           preferredLanguage: language,
           phone: payload.phone?.trim() || undefined,
           city: payload.city?.trim() || undefined,
+          marketingConsent: payload.marketingConsent === true,
         });
         setRegistrationSuccessBanner(
           language === "tr"

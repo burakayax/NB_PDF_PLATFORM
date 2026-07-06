@@ -21,6 +21,7 @@ import teamRouter from "../modules/team/team.controller.js";
 import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout.routes.js";
 import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
+import { emailRouter } from "../modules/email/email.routes.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -57,6 +58,7 @@ apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/contact", contactRouter);
+apiRouter.use("/email", emailRouter);
 apiRouter.use("/device", deviceRouter);
 apiRouter.use("/entitlement", entitlementRouter);
 apiRouter.use("/errors", monitoringRouter);

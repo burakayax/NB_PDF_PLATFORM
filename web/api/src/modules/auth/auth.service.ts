@@ -415,6 +415,10 @@ export async function registerUser(
       isVerified: options?.skipEmailVerification === true,
       preferredLanguage: input.preferredLanguage ?? "en",
       plan: resolvedRole === "ADMIN" ? "BUSINESS" : "FREE",
+      // Pazarlama e-posta izni (opt-in) — yalnız kutu işaretlenmişse kaydedilir.
+      ...(input.marketingConsent
+        ? { marketingConsent: true, marketingConsentAt: new Date() }
+        : {}),
     },
   });
 

@@ -52,6 +52,8 @@ export const registerSchema = z.object({
   /** Client should send E.164; server normalizes again. */
   phone: z.string().optional(),
   city: z.string().trim().max(80, "City name is too long.").optional(),
+  /** Ticari/pazarlama e-posta opt-in izni (GDPR/CASL/6563). Varsayılan izinsiz. */
+  marketingConsent: z.boolean().optional(),
 });
 
 export const preferredLanguageSchema = z.object({
