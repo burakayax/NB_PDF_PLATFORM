@@ -918,6 +918,398 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "pdf-sayfa-silme",
+      date: "2026-07-06",
+      updated: "2026-07-06",
+      readMinutes: 5,
+      tags: { tr: ["PDF Düzenle", "Sayfa Sil", "Ücretsiz"], en: ["Edit PDF", "Delete Pages", "Free"] },
+      accent: "blue",
+      tool: "/tools/delete-pages",
+    },
+    {
+      title: "PDF'ten Sayfa Silme: Üyeliksiz, Ücretsiz ve Cihazınızda (2026)",
+      description:
+        "PDF'ten istediğiniz sayfaları silmenin en kolay yolu — üyeliksiz, ücretsiz ve dosyanız cihazınızdan çıkmadan. Boş, gereksiz ya da hatalı sayfaları saniyeler içinde çıkarın.",
+      excerpt:
+        "Bir PDF'te boş, tekrar eden ya da istemediğiniz sayfalar mı var? Bunları silmek için pahalı programa veya üyeliğe gerek yok. İşte tamamen tarayıcınızda, adım adım.",
+      blocks: [
+        { t: "lead", x: "Taranmış bir evrakın arasına karışan boş sayfa, iki kez gelen bir belge ya da paylaşmadan önce çıkarmak istediğiniz bir bölüm… PDF'ten sayfa silmek çok yaygın bir ihtiyaç. İyi haber: bunun için ne program kurmanız ne de üye olmanız gerekiyor." },
+
+        { t: "h2", x: "Ne zaman sayfa silmek gerekir?" },
+        { t: "ul", items: [
+          "Tarayıcının eklediği boş veya çift sayfaları temizlemek.",
+          "Bir raporu paylaşmadan önce iç/gizli sayfaları çıkarmak.",
+          "Birleştirdiğiniz belgede tekrar eden kapak sayfalarını atmak.",
+          "Yalnızca gereken bölümü bırakıp gerisini silmek.",
+        ] },
+
+        { t: "h2", x: "Cihazda silmek neden daha iyi?" },
+        { t: "p", x: "Çoğu online araç dosyanızı sunucusuna yükler. PDF Platform'da (giriş yapmadan, misafir olarak) sayfa silme işlemi tamamen tarayıcınızda çalışır — dosyanız internete hiç gönderilmez. Bu hem gizlilik hem hız demektir: yükleme beklemezsiniz, internet kesilse bile çalışır." },
+
+        { t: "h2", x: "Adım adım: PDF'ten sayfa silme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "\"Sayfa Sil\" aracına PDF'inizi sürükleyin. Tüm sayfalar küçük önizlemeler halinde listelenir." },
+          { title: "Silinecek sayfaları seçin", x: "Çıkarmak istediğiniz sayfaların üzerine tıklayarak işaretleyin. Kalan sayfaların yeni sırasını anında görürsünüz." },
+          { title: "İndirin", x: "Onaylayın ve temizlenmiş PDF'i indirin. Orijinal dosyanız değişmez; yeni bir kopya oluşturulur." },
+        ] },
+
+        { t: "cta", title: "Sayfa Sil", x: "Boş ya da gereksiz sayfaları saniyeler içinde çıkarın — üyeliksiz, cihazınızda.", btn: "Aracı aç", tool: "/tools/delete-pages" },
+
+        { t: "h2", x: "İpuçları" },
+        { t: "tip", x: "Çok sayfalı bir belgede yalnızca birkaç sayfayı tutmak istiyorsanız, silmek yerine \"PDF Böl\" aracıyla o sayfaları ayırmak daha hızlı olabilir." },
+        { t: "ul", items: [
+          "Sayfaların sırasını da değiştirmek istiyorsanız \"Sayfa Sırala\" aracını kullanın.",
+          "Yanlışlıkla yanlış sayfayı seçerseniz, indirmeden önce seçimi kaldırabilirsiniz.",
+          "İşlem cihazınızda olduğu için dosya boyutu makulse anında sonuç alırsınız.",
+        ] },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "Bu araç misafir olarak kullanıldığında tamamen tarayıcınızda çalışır; PDF'iniz sunucuya yüklenmez. Yapısal araçlarımızın çoğu (birleştir, böl, döndür, sırala) aynı şekilde cihazınızda çalışır." },
+      ],
+      faq: [
+        { q: "PDF'ten sayfa silmek ücretsiz mi?", a: "Evet. Sayfa Sil aracı üyeliksiz ve ücretsizdir; işlem tarayıcınızda gerçekleşir, dosyanız yüklenmez." },
+        { q: "Silinen sayfalar orijinal dosyayı bozar mı?", a: "Hayır. Orijinal PDF'iniz değişmeden kalır; araç, seçtiğiniz sayfalar çıkarılmış yeni bir kopya oluşturur." },
+        { q: "Aynı anda birden çok sayfa silebilir miyim?", a: "Evet. İstediğiniz kadar sayfayı işaretleyip tek seferde çıkarabilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Delete Pages from a PDF: Free, No Signup, On Your Device (2026)",
+      description:
+        "The easiest way to delete pages from a PDF — free, no signup and your file never leaves your device. Remove blank, duplicate or unwanted pages in seconds.",
+      excerpt:
+        "Got blank, duplicate or unwanted pages in a PDF? You don't need expensive software or an account to remove them. Here's how, entirely in your browser.",
+      blocks: [
+        { t: "lead", x: "A blank page from a scanner, a document that came in twice, or a section you want to remove before sharing… deleting PDF pages is a very common need. The good news: you don't have to install anything or sign up." },
+
+        { t: "h2", x: "When do you need to delete pages?" },
+        { t: "ul", items: [
+          "Cleaning up blank or duplicate pages a scanner added.",
+          "Removing internal/confidential pages before sharing a report.",
+          "Dropping repeated cover pages in a merged document.",
+          "Keeping only the section you need and removing the rest.",
+        ] },
+
+        { t: "h2", x: "Why deleting on your device is better" },
+        { t: "p", x: "Most online tools upload your file to their servers. On PDF Platform (as a guest, no login) page deletion runs entirely in your browser — your file is never sent over the internet. That means both privacy and speed: no upload wait, and it works even offline." },
+
+        { t: "h2", x: "Step by step: delete pages from a PDF" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drop your PDF into the \"Delete Pages\" tool. Every page shows up as a thumbnail." },
+          { title: "Select pages to remove", x: "Click the pages you want to drop. You'll instantly see the new order of the remaining pages." },
+          { title: "Download", x: "Confirm and download the cleaned PDF. Your original file stays untouched; a new copy is created." },
+        ] },
+
+        { t: "cta", title: "Delete Pages", x: "Remove blank or unwanted pages in seconds — no signup, on your device.", btn: "Open the tool", tool: "/tools/delete-pages" },
+
+        { t: "h2", x: "Tips" },
+        { t: "tip", x: "If you only want to keep a few pages out of many, splitting those pages out with \"Split PDF\" may be faster than deleting the rest." },
+        { t: "ul", items: [
+          "To reorder pages too, use the \"Organize pages\" tool.",
+          "Picked the wrong page? Just deselect it before downloading.",
+          "Because it runs on your device, reasonably sized files finish instantly.",
+        ] },
+
+        { t: "h2", x: "Privacy note" },
+        { t: "p", x: "Used as a guest, this tool runs entirely in your browser; your PDF is not uploaded. Most of our structural tools (merge, split, rotate, organize) work the same way, on your device." },
+      ],
+      faq: [
+        { q: "Is deleting PDF pages free?", a: "Yes. The Delete Pages tool is free and needs no signup; it runs in your browser and your file isn't uploaded." },
+        { q: "Does deleting pages damage the original file?", a: "No. Your original PDF stays unchanged; the tool creates a new copy with the selected pages removed." },
+        { q: "Can I delete multiple pages at once?", a: "Yes. Select as many pages as you like and remove them in one go." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-dondurme-kaydetme",
+      date: "2026-07-06",
+      updated: "2026-07-06",
+      readMinutes: 5,
+      tags: { tr: ["PDF Düzenle", "Döndürme", "Ücretsiz"], en: ["Edit PDF", "Rotate", "Free"] },
+      accent: "emerald",
+      tool: "/tools/rotate-pdf",
+    },
+    {
+      title: "Yan Dönmüş PDF'i Düzeltme: PDF Döndürme ve Kalıcı Kaydetme (2026)",
+      description:
+        "Yan ya da ters taranmış bir PDF'i doğru yöne çevirip kalıcı olarak kaydedin — üyeliksiz, ücretsiz ve cihazınızda. Tek sayfa ya da tüm belgeyi saniyeler içinde düzeltin.",
+      excerpt:
+        "Taradığınız belge yan mı çıktı? Görüntüleyicide çevirdiğinizde tekrar bozuluyor mu? PDF'i kalıcı olarak döndürüp doğru yönde kaydetmenin yolu — tamamen tarayıcınızda.",
+      blocks: [
+        { t: "lead", x: "Bir belgeyi tarayınca ya da telefonla çekince sayfaların yan veya ters çıkması çok sık yaşanır. PDF görüntüleyicide \"döndür\" demek çoğu zaman kalıcı olmaz — dosyayı bir daha açtığınızda yine yan durur. Kalıcı çözüm, sayfaları döndürüp öyle kaydetmektir." },
+
+        { t: "h2", x: "Neden görüntüleyicide döndürmek yetmez?" },
+        { t: "p", x: "Çoğu PDF görüntüleyicide döndürme yalnızca o anki görünümü değiştirir; dosyanın içindeki sayfa yönü değişmez. Bu yüzden dosyayı paylaştığınızda veya yazdırdığınızda yine yan görünür. Sayfayı gerçekten döndürüp kaydetmeniz gerekir." },
+
+        { t: "h2", x: "Adım adım: PDF döndürme ve kaydetme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "\"PDF Döndür\" aracına dosyanızı sürükleyin. Her sayfa küçük önizleme olarak gelir." },
+          { title: "Yönü ayarlayın", x: "Her kartın üzerindeki sola/sağa döndür düğmeleriyle sayfaları 90°'lik adımlarla çevirin. Yalnızca yan olan sayfaları ya da tümünü düzeltebilirsiniz." },
+          { title: "Kalıcı olarak indirin", x: "Onaylayıp indirin — yeni PDF artık doğru yönde kaydedilir; her açılışta düzgün görünür." },
+        ] },
+
+        { t: "cta", title: "PDF Döndür", x: "Yan taranmış sayfaları doğru yöne çevirip kalıcı kaydedin — cihazınızda, üyeliksiz.", btn: "Aracı aç", tool: "/tools/rotate-pdf" },
+
+        { t: "h2", x: "İpuçları" },
+        { t: "ul", items: [
+          "Tek bir sayfa yan ise yalnızca onu döndürebilirsiniz; tüm belgeyi çevirmeniz gerekmez.",
+          "Ters (180°) sayfaları iki kez döndürerek düzeltin.",
+          "Döndürdükten sonra gereksiz sayfalar varsa \"Sayfa Sil\" aracıyla temizleyin.",
+        ] },
+        { t: "tip", x: "Döndürme işlemi misafir olarak tamamen tarayıcınızda çalışır; dosyanız sunucuya yüklenmez, internet kesilse bile çalışır." },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "PDF Döndür aracı cihazınızda çalışır; belgeniz karşıya gönderilmez. Aynı şekilde birleştir, böl, sil ve sırala araçları da yapısal işlemleri tarayıcınızda yapar." },
+      ],
+      faq: [
+        { q: "PDF döndürme kalıcı olur mu?", a: "Evet. Araç sayfayı gerçekten döndürüp öyle kaydeder; indirdiğiniz PDF her açılışta doğru yönde görünür." },
+        { q: "Sadece bir sayfayı döndürebilir miyim?", a: "Evet. Her sayfayı ayrı ayrı sola/sağa döndürebilir ya da tümünü birden çevirebilirsiniz." },
+        { q: "Dosyam yüklenmiyor mu?", a: "Misafir olarak kullanıldığında döndürme tarayıcınızda gerçekleşir; dosyanız internete gönderilmez." },
+      ],
+    },
+    {
+      title: "Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)",
+      description:
+        "Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds.",
+      excerpt:
+        "Did your scan come out sideways? Does rotating in the viewer reset every time? Here's how to rotate a PDF permanently and save it the right way up — entirely in your browser.",
+      blocks: [
+        { t: "lead", x: "When you scan or photograph a document, pages often come out sideways or upside-down. Hitting \"rotate\" in a PDF viewer usually isn't permanent — reopen the file and it's sideways again. The real fix is to rotate the pages and save them that way." },
+
+        { t: "h2", x: "Why rotating in the viewer isn't enough" },
+        { t: "p", x: "In most viewers, rotate only changes the current view; the page orientation inside the file stays the same. So when you share or print it, it looks sideways again. You need to actually rotate the page and save it." },
+
+        { t: "h2", x: "Step by step: rotate and save a PDF" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drop your file into the \"Rotate PDF\" tool. Each page appears as a thumbnail." },
+          { title: "Set the orientation", x: "Use the rotate-left/right buttons on each card to turn pages in 90° steps. Fix only the sideways pages, or all of them." },
+          { title: "Download permanently", x: "Confirm and download — the new PDF is saved in the correct orientation and looks right every time." },
+        ] },
+
+        { t: "cta", title: "Rotate PDF", x: "Turn sideways scans the right way up and save permanently — on your device, no signup.", btn: "Open the tool", tool: "/tools/rotate-pdf" },
+
+        { t: "h2", x: "Tips" },
+        { t: "ul", items: [
+          "If only one page is sideways, rotate just that page — no need to turn the whole file.",
+          "Fix upside-down (180°) pages by rotating twice.",
+          "After rotating, clean up any unwanted pages with the \"Delete Pages\" tool.",
+        ] },
+        { t: "tip", x: "As a guest, rotation runs entirely in your browser; your file is not uploaded and it works even if your connection drops." },
+
+        { t: "h2", x: "Privacy note" },
+        { t: "p", x: "The Rotate PDF tool runs on your device; your document is not sent anywhere. Merge, split, delete and organize tools handle their structural work in your browser the same way." },
+      ],
+      faq: [
+        { q: "Is PDF rotation permanent?", a: "Yes. The tool actually rotates the page and saves it that way; the downloaded PDF shows the right orientation every time you open it." },
+        { q: "Can I rotate just one page?", a: "Yes. Rotate each page individually left/right, or turn them all at once." },
+        { q: "Is my file uploaded?", a: "Used as a guest, rotation happens in your browser; your file isn't sent over the internet." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-sayfa-sirasi-degistirme",
+      date: "2026-07-06",
+      updated: "2026-07-06",
+      readMinutes: 5,
+      tags: { tr: ["PDF Düzenle", "Sayfa Sırala", "Ücretsiz"], en: ["Edit PDF", "Organize", "Free"] },
+      accent: "violet",
+      tool: "/tools/organize-pdf",
+    },
+    {
+      title: "PDF Sayfa Sırasını Değiştirme: Sayfaları Yeniden Düzenleme (2026)",
+      description:
+        "PDF sayfalarını sürükleyerek yeniden sıralayın, karışık taranmış belgeleri düzeltin — üyeliksiz, ücretsiz ve cihazınızda. Adım adım rehber.",
+      excerpt:
+        "Sayfalar yanlış sırada mı tarandı? Bir sayfayı başa ya da sona mı almak istiyorsunuz? PDF sayfalarını yeniden düzenlemenin en kolay yolu — tamamen tarayıcınızda.",
+      blocks: [
+        { t: "lead", x: "Toplu tarayıcıdan ters sırayla çıkan belgeler, sonradan araya eklenmesi gereken bir sayfa ya da yalnızca daha mantıklı bir akış… PDF sayfalarının sırasını değiştirmek düşündüğünüzden çok daha kolay." },
+
+        { t: "h2", x: "Ne zaman sayfa sıralamak gerekir?" },
+        { t: "ul", items: [
+          "Otomatik tarayıcının ters sırayla verdiği sayfaları düzeltmek.",
+          "Bir eki ya da kapağı belgenin başına/sonuna taşımak.",
+          "Birden çok belgeyi birleştirdikten sonra akışı düzenlemek.",
+          "Sunumdan önce bölümleri mantıklı bir sıraya koymak.",
+        ] },
+
+        { t: "h2", x: "Adım adım: sayfaları yeniden düzenleme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "\"Sayfa Sırala\" aracına dosyanızı sürükleyin. Sayfalar numaralı önizlemeler olarak gelir." },
+          { title: "Yeni sırayı belirleyin", x: "Sayfaları yukarı/aşağı düğmeleriyle taşıyın ya da hedef konum numarasını girin. Yeni sırayı anında görürsünüz." },
+          { title: "İndirin", x: "Onaylayın ve yeniden düzenlenmiş PDF'i indirin. Orijinal dosyanız değişmez." },
+        ] },
+
+        { t: "cta", title: "Sayfa Sırala", x: "Sayfaları saniyeler içinde yeniden düzenleyin — üyeliksiz, cihazınızda.", btn: "Aracı aç", tool: "/tools/organize-pdf" },
+
+        { t: "h2", x: "İlgili araçlar" },
+        { t: "ul", items: [
+          "Sayfa çıkarmak istiyorsanız \"Sayfa Sil\" aracını kullanın.",
+          "Yan sayfaları düzeltmek için \"PDF Döndür\".",
+          "İki belgeyi tek dosyada toplamak için \"PDF Birleştir\".",
+        ] },
+        { t: "tip", x: "Sıralama işlemi misafir olarak tamamen tarayıcınızda çalışır; dosyanız sunucuya yüklenmez." },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "Sayfa Sırala aracı cihazınızda çalışır; PDF'iniz karşıya gönderilmez. Yapısal araçlarımızın çoğu aynı gizlilik ilkesiyle tarayıcınızda çalışır." },
+      ],
+      faq: [
+        { q: "PDF sayfalarının sırasını nasıl değiştiririm?", a: "Sayfa Sırala aracına PDF'i yükleyin, sayfaları yukarı/aşağı taşıyın ya da konum numarası girin, ardından yeniden düzenlenmiş dosyayı indirin." },
+        { q: "Orijinal dosyam bozulur mu?", a: "Hayır. Orijinal PDF değişmez; araç yeni sıraya göre yeni bir kopya oluşturur." },
+        { q: "Ücretsiz mi?", a: "Evet, üyeliksiz ve ücretsizdir; işlem tarayıcınızda gerçekleşir." },
+      ],
+    },
+    {
+      title: "Reorder PDF Pages: Rearrange a Document Easily (2026)",
+      description:
+        "Reorder PDF pages by moving them around, fix documents scanned out of order — free, no signup and on your device. A step-by-step guide.",
+      excerpt:
+        "Pages scanned in the wrong order? Want to move a page to the front or back? Here's the easiest way to rearrange PDF pages — entirely in your browser.",
+      blocks: [
+        { t: "lead", x: "Documents that come out of a batch scanner in reverse, a page that needs to be inserted later, or just a more logical flow… reordering PDF pages is far easier than you might think." },
+
+        { t: "h2", x: "When do you need to reorder pages?" },
+        { t: "ul", items: [
+          "Fixing pages a batch scanner delivered in reverse order.",
+          "Moving an annex or cover to the front/back of the document.",
+          "Tidying the flow after merging several documents.",
+          "Putting sections in a logical order before a presentation.",
+        ] },
+
+        { t: "h2", x: "Step by step: rearrange pages" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drop your file into the \"Organize pages\" tool. Pages appear as numbered thumbnails." },
+          { title: "Set the new order", x: "Move pages with the up/down buttons or type a target position number. You'll see the new order instantly." },
+          { title: "Download", x: "Confirm and download the rearranged PDF. Your original file stays unchanged." },
+        ] },
+
+        { t: "cta", title: "Organize pages", x: "Rearrange pages in seconds — no signup, on your device.", btn: "Open the tool", tool: "/tools/organize-pdf" },
+
+        { t: "h2", x: "Related tools" },
+        { t: "ul", items: [
+          "To remove pages, use the \"Delete Pages\" tool.",
+          "To fix sideways pages, use \"Rotate PDF\".",
+          "To combine two documents into one, use \"Merge PDF\".",
+        ] },
+        { t: "tip", x: "As a guest, reordering runs entirely in your browser; your file is not uploaded." },
+
+        { t: "h2", x: "Privacy note" },
+        { t: "p", x: "The Organize pages tool runs on your device; your PDF is not sent anywhere. Most of our structural tools follow the same privacy principle and work in your browser." },
+      ],
+      faq: [
+        { q: "How do I change the order of PDF pages?", a: "Upload the PDF to the Organize pages tool, move pages up/down or type a position number, then download the rearranged file." },
+        { q: "Will my original file be damaged?", a: "No. The original PDF stays unchanged; the tool creates a new copy in the new order." },
+        { q: "Is it free?", a: "Yes, free and no signup; the work happens in your browser." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-bolme-sayfalara-ayirma",
+      date: "2026-07-06",
+      updated: "2026-07-06",
+      readMinutes: 6,
+      tags: { tr: ["PDF Düzenle", "Böl", "Ücretsiz"], en: ["Edit PDF", "Split", "Free"] },
+      accent: "cyan",
+      tool: "/tools/split-pdf",
+    },
+    {
+      title: "PDF Bölme: Bir PDF'i Sayfalara veya Parçalara Ayırma (2026)",
+      description:
+        "Büyük bir PDF'i tek tek sayfalara ya da belirli aralıklara bölün — üyeliksiz, ücretsiz ve cihazınızda. İstediğiniz sayfaları ayrı dosya olarak çıkarın.",
+      excerpt:
+        "Kalın bir PDF'ten yalnızca birkaç sayfa mı lazım? Belgeyi bölümlere mi ayırmak istiyorsunuz? PDF bölmenin en kolay yolu — tamamen tarayıcınızda, adım adım.",
+      blocks: [
+        { t: "lead", x: "Bazen bir belgenin tamamına değil, yalnızca birkaç sayfasına ihtiyacınız olur: bir sözleşmenin imza sayfası, bir raporun tek bölümü ya da e-postayla göndermek için küçük bir parça. PDF bölme tam da bunun için var." },
+
+        { t: "h2", x: "PDF bölmenin yaygın kullanımları" },
+        { t: "ul", items: [
+          "Kalın bir belgeden yalnızca gereken sayfaları çıkarmak.",
+          "Tek PDF'i bölümlere ayırıp ayrı ayrı paylaşmak.",
+          "E-posta eki için büyük dosyayı küçük parçalara bölmek.",
+          "Her sayfayı ayrı bir PDF olarak kaydetmek.",
+        ] },
+
+        { t: "h2", x: "Adım adım: PDF bölme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "\"PDF Böl\" aracına dosyanızı sürükleyin. Sayfalar önizleme ızgarasında listelenir." },
+          { title: "Sayfaları/aralığı seçin", x: "Çıkarmak istediğiniz sayfaları işaretleyin. Seçtiğiniz sayfalar tek bir PDF'te toplanabilir ya da her biri ayrı dosya olarak hazırlanabilir." },
+          { title: "İndirin", x: "Sonucu tek PDF olarak ya da ayrı dosyaları ZIP içinde indirin." },
+        ] },
+
+        { t: "cta", title: "PDF Böl", x: "İstediğiniz sayfaları ayırın — üyeliksiz, cihazınızda, saniyeler içinde.", btn: "Aracı aç", tool: "/tools/split-pdf" },
+
+        { t: "h2", x: "Bölmek mi, silmek mi?" },
+        { t: "p", x: "Yalnızca birkaç sayfayı tutmak istiyorsanız \"Böl\" aracıyla o sayfaları ayırmak en pratiğidir. Tersine, çoğu sayfayı tutup birkaçını atacaksanız \"Sayfa Sil\" daha hızlıdır. İkisi de cihazınızda çalışır." },
+
+        { t: "h2", x: "İpuçları" },
+        { t: "ul", items: [
+          "Böldükten sonra parçaları tekrar tek dosyada toplamak için \"PDF Birleştir\" aracını kullanın.",
+          "Sayfalar yanlış sıradaysa önce \"Sayfa Sırala\" ile düzeltin.",
+          "İşlem tarayıcınızda olduğu için dosyanız internete gönderilmez.",
+        ] },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "PDF Böl aracı misafir olarak tamamen tarayıcınızda çalışır; dosyanız sunucuya yüklenmez. Yapısal araçlarımızın çoğu aynı ilkeyle cihazınızda çalışır." },
+      ],
+      faq: [
+        { q: "PDF nasıl bölünür?", a: "PDF Böl aracına dosyayı yükleyin, çıkarmak istediğiniz sayfaları seçin ve tek PDF ya da ayrı dosyalar (ZIP) olarak indirin. İşlem tarayıcınızda gerçekleşir." },
+        { q: "Her sayfayı ayrı PDF yapabilir miyim?", a: "Evet. Seçtiğiniz sayfaları ayrı dosyalar olarak hazırlayıp ZIP içinde indirebilirsiniz." },
+        { q: "Ücretsiz ve gizli mi?", a: "Evet. Üyeliksiz, ücretsiz ve dosyanız cihazınızdan çıkmadan çalışır." },
+      ],
+    },
+    {
+      title: "Split a PDF: Separate a PDF into Pages or Parts (2026)",
+      description:
+        "Split a large PDF into single pages or specific ranges — free, no signup and on your device. Extract exactly the pages you need as separate files.",
+      excerpt:
+        "Need only a few pages from a thick PDF? Want to break a document into parts? Here's the easiest way to split a PDF — entirely in your browser, step by step.",
+      blocks: [
+        { t: "lead", x: "Sometimes you don't need a whole document, just a few pages: the signature page of a contract, a single section of a report, or a small part to email. Splitting a PDF is exactly for that." },
+
+        { t: "h2", x: "Common uses for splitting a PDF" },
+        { t: "ul", items: [
+          "Extracting only the pages you need from a thick document.",
+          "Breaking one PDF into sections to share separately.",
+          "Splitting a large file into smaller parts for an email attachment.",
+          "Saving each page as its own PDF.",
+        ] },
+
+        { t: "h2", x: "Step by step: split a PDF" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drop your file into the \"Split PDF\" tool. Pages are listed in a preview grid." },
+          { title: "Select pages/range", x: "Mark the pages you want. Selected pages can be combined into one PDF, or each saved as a separate file." },
+          { title: "Download", x: "Download the result as a single PDF, or separate files inside a ZIP." },
+        ] },
+
+        { t: "cta", title: "Split PDF", x: "Pull out the pages you need — no signup, on your device, in seconds.", btn: "Open the tool", tool: "/tools/split-pdf" },
+
+        { t: "h2", x: "Split or delete?" },
+        { t: "p", x: "If you want to keep just a few pages, splitting them out is the most practical. Conversely, if you want to keep most pages and drop a few, \"Delete Pages\" is faster. Both run on your device." },
+
+        { t: "h2", x: "Tips" },
+        { t: "ul", items: [
+          "To recombine parts into one file, use the \"Merge PDF\" tool.",
+          "If pages are out of order, fix them first with \"Organize pages\".",
+          "Because it runs in your browser, your file is not sent over the internet.",
+        ] },
+
+        { t: "h2", x: "Privacy note" },
+        { t: "p", x: "As a guest, the Split PDF tool runs entirely in your browser; your file is not uploaded. Most of our structural tools follow the same principle and work on your device." },
+      ],
+      faq: [
+        { q: "How do I split a PDF?", a: "Upload the file to the Split PDF tool, select the pages you want, and download as a single PDF or separate files (ZIP). The work happens in your browser." },
+        { q: "Can I save each page as a separate PDF?", a: "Yes. You can prepare the selected pages as separate files and download them inside a ZIP." },
+        { q: "Is it free and private?", a: "Yes. Free, no signup, and your file never leaves your device." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
