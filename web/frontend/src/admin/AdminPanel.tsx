@@ -39,6 +39,11 @@ import { CMS_PREVIEW_QUERY, postAdminPreviewHighlight, writeCmsPreviewDraft } fr
 import { WORKSPACE_TOOL_IDS } from "../lib/workspaceFeatures";
 import { STARTER_TOOL_IDS } from "../lib/planConfig";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
+import { landingTranslations } from "../i18n/landing";
+
+/** İçerik editörü için canlı VARSAYILAN metinler (TR) — kutu boşsa bunlar gösterilir
+ * ki admin siteden kopyalamak zorunda kalmadan gerçek metnin üzerinde değişiklik yapsın. */
+const LIVE = landingTranslations.tr;
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
@@ -1726,8 +1731,8 @@ function ContentTab({
         <AdminSaveStrip state={saveStrip} detail={saveDetail} />
 
         <AdminMutedBox>
-          Görselleri <strong className="text-slate-200">Medya</strong> sekmesinden yükleyip burada adrese yapıştırın veya «Medya kütüphanesi» ile doğrudan seçin.
-          {!advanced ? " İngilizce / Türkçe ayrı metinler ve özellik kartları Gelişmiş moddadır." : null}
+          Kutular <strong className="text-slate-200">canlıdaki gerçek metinle dolu</strong> gelir — üzerine yazarak değiştir. Bir kutuyu tamamen boşaltırsan o alan otomatik <strong className="text-slate-200">varsayılana</strong> döner. Her kutunun altında <strong className="text-slate-200">ne değiştirdiği</strong> yazar. Kaydedince ana sayfaya yansır.
+          {!advanced ? " (İngilizce metinler + özellik kartları «Gelişmiş» moddadır.)" : null}
         </AdminMutedBox>
 
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="hero">
@@ -1742,28 +1747,28 @@ function ContentTab({
           >
             <div className="grid gap-5 sm:grid-cols-2">
               <AdminField
-                label="Başlık"
-                description="En büyük satır; çoğu ziyaretçi bunu ilk görür."
-                hint="Örn. İş belgelerinizi tek yerden yönetin"
+                label="Ana başlık"
+                description="Ana sayfanın en üstündeki büyük başlık (hero). Ziyaretçinin ilk gördüğü satır."
+                hint="Boş bırakırsan canlıdaki varsayılan metin kullanılır."
               >
                 <input
                   className={cmsInputClass}
-                  placeholder="Örn. PDF iş akışınızı hızlandırın"
-                  value={cmsGetStr(cms, ["homepage", "heroTitle"])}
+                  placeholder={LIVE.hero.headline}
+                  value={cmsGetStr(cms, ["homepage", "heroTitle"]) || LIVE.hero.headline}
                   onChange={(e) => patch((p) => cmsSetStr(p, ["homepage", "heroTitle"], e.target.value))}
                 />
               </AdminField>
               <AdminField
                 label="Alt başlık"
-                description="Başlığın hemen altındaki kısa açıklama."
-                hint="Ürünün faydasını bir cümlede özetleyin."
+                description="Ana başlığın hemen altındaki açıklama cümlesi (hero)."
+                hint="Boş bırakırsan varsayılan kullanılır."
                 htmlFor="cms-hero-sub"
               >
                 <input
                   id="cms-hero-sub"
                   className={cmsInputClass}
-                  placeholder="Örn. Birleştir, dönüştür, güvence altına al"
-                  value={cmsGetStr(cms, ["homepage", "heroSubtitle"])}
+                  placeholder={LIVE.hero.description}
+                  value={cmsGetStr(cms, ["homepage", "heroSubtitle"]) || LIVE.hero.description}
                   onChange={(e) => patch((p) => cmsSetStr(p, ["homepage", "heroSubtitle"], e.target.value))}
                 />
               </AdminField>
@@ -1775,11 +1780,11 @@ function ContentTab({
                       {lang === "tr" ? "Türkçe" : "English"} — üst alan
                     </p>
                     <div className="grid gap-5 sm:grid-cols-2">
-                      <AdminField label="Menüde görünen ürün adı" description="Gezinme çubuğundaki kısa etiket.">
+                      <AdminField label="Menüde görünen ürün adı" description="Üst gezinme çubuğundaki logo yanı marka etiketi.">
                         <input
                           className={cmsInputClass}
-                          placeholder={lang === "tr" ? "Örn. NB PDF" : "e.g. NB PDF"}
-                          value={cmsGetStr(cms, ["landing", lang, "navbar", "productLabel"])}
+                          placeholder={landingTranslations[lang].navbar.productLabel}
+                          value={cmsGetStr(cms, ["landing", lang, "navbar", "productLabel"]) || landingTranslations[lang].navbar.productLabel}
                           onChange={(e) => patch((p) => cmsSetStr(p, ["landing", lang, "navbar", "productLabel"], e.target.value))}
                         />
                       </AdminField>
@@ -1807,21 +1812,21 @@ function ContentTab({
         </CmsPreviewAnchor>
 
         <CmsPreviewAnchor iframeRef={previewIframeRef} section="hero-buttons">
-          <AdminSection title="Üst bölüm — düğmeler" description="İki ana eylem düğmesinin metinleri.">
+          <AdminSection title="Üst bölümdeki düğmeler" description="Ana sayfa hero alanındaki iki büyük buton.">
             <div className="grid gap-5 sm:grid-cols-2">
-              <AdminField label="Birincil düğme" description="Ana çağrı — örn. Ücretsiz başla.">
+              <AdminField label="Birincil (dolu) düğme" description="Hero'daki ana buton — genelde 'Ücretsiz başla' / 'Web sürümünü aç'.">
                 <input
                   className={cmsInputClass}
-                  placeholder="Örn. Web sürümünü aç"
-                  value={cmsGetStr(cms, ["homepage", "primaryCta"])}
+                  placeholder={LIVE.hero.primaryCta}
+                  value={cmsGetStr(cms, ["homepage", "primaryCta"]) || LIVE.hero.primaryCta}
                   onChange={(e) => patch((p) => cmsSetStr(p, ["homepage", "primaryCta"], e.target.value))}
                 />
               </AdminField>
-              <AdminField label="İkincil düğme" description="Yanındaki ikinci seçenek — örn. Fiyatlar.">
+              <AdminField label="İkincil (çerçeveli) düğme" description="Yanındaki ikinci buton — genelde 'Fiyatları gör'.">
                 <input
                   className={cmsInputClass}
-                  placeholder="Örn. Fiyatları gör"
-                  value={cmsGetStr(cms, ["homepage", "secondaryCta"])}
+                  placeholder={LIVE.hero.secondaryCta}
+                  value={cmsGetStr(cms, ["homepage", "secondaryCta"]) || LIVE.hero.secondaryCta}
                   onChange={(e) => patch((p) => cmsSetStr(p, ["homepage", "secondaryCta"], e.target.value))}
                 />
               </AdminField>
@@ -1836,11 +1841,11 @@ function ContentTab({
             description="Araçlar ızgarasının üstündeki başlık ve dil bazlı kart metinleri (ilk üç kart)."
             variant="sky"
           >
-            <AdminField label="Bölüm başlığı" description="Özellik kartlarının üstündeki ana başlık.">
+            <AdminField label="Araçlar bölümü başlığı" description="Ana sayfadaki araç kartları ızgarasının üstündeki başlık.">
               <input
                 className={cmsInputClass}
-                placeholder="Örn. Tüm PDF araçları tek yerde"
-                value={cmsGetStr(cms, ["TOOLSStrip", "headline"])}
+                placeholder={LIVE.features.title}
+                value={cmsGetStr(cms, ["TOOLSStrip", "headline"]) || LIVE.features.title}
                 onChange={(e) => patch((p) => cmsSetStr(p, ["TOOLSStrip", "headline"], e.target.value))}
               />
             </AdminField>
