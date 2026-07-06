@@ -707,6 +707,7 @@ export type AdminCouponRow = {
   discountPercent: number;
   isActive: boolean;
   usageLimitPerUser: number;
+  expiresAt?: string | null;
   totalUses: number;
   createdAt: string;
 };
@@ -721,7 +722,7 @@ export async function fetchAdminCoupons(accessToken: string): Promise<{ items: A
 
 export async function postAdminCoupon(
   accessToken: string,
-  body: { code: string; discountPercent: number; isActive?: boolean; usageLimitPerUser?: number },
+  body: { code: string; discountPercent: number; isActive?: boolean; usageLimitPerUser?: number; expiresAt?: string | null },
 ): Promise<AdminCouponRow> {
   const r = await adminFetch(accessToken, "/coupons", { method: "POST", body: JSON.stringify(body) });
   if (!r.ok) {
