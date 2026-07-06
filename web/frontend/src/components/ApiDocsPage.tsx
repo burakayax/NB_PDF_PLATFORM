@@ -10,7 +10,7 @@ function H({ id, children }: { id: string; children: string }) {
   return <h2 id={id} className="!mt-12 scroll-mt-20 text-[22px] font-extrabold tracking-tight text-white">{children}</h2>;
 }
 
-export function ApiDocsPage({ language, onLogin, onRegister }: { language: Language; onLogin: () => void; onRegister: () => void }) {
+export function ApiDocsPage({ language, isAuthenticated, onLogin, onRegister, onOpenApiKeys }: { language: Language; isAuthenticated?: boolean; onLogin: () => void; onRegister: () => void; onOpenApiKeys?: () => void }) {
   const tr = language === "tr";
   useEffect(() => { document.title = tr ? "API Dokümantasyonu — PDF Platform" : "API Documentation — PDF Platform"; }, [tr]);
 
@@ -45,8 +45,14 @@ export function ApiDocsPage({ language, onLogin, onRegister }: { language: Langu
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
           <a href="/pdf-api" className="flex items-center gap-2"><img src="/emblem.png" alt="" className="h-8 w-8 object-contain" /><span className="text-sm font-bold text-white">PDF Platform <span className="text-slate-500">/ API</span></span></a>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-white">{tr ? "Giriş" : "Log in"}</button>
-            <button type="button" onClick={onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white">{tr ? "Anahtar al" : "Get a key"}</button>
+            {isAuthenticated ? (
+              <button type="button" onClick={onOpenApiKeys ?? onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white">{tr ? "API anahtarlarım" : "My API keys"}</button>
+            ) : (
+              <>
+                <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-white">{tr ? "Giriş" : "Log in"}</button>
+                <button type="button" onClick={onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white">{tr ? "Ücretsiz kaydol" : "Sign up free"}</button>
+              </>
+            )}
           </div>
         </div>
       </header>
