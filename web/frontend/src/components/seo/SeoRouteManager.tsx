@@ -61,13 +61,13 @@ export function SeoRouteManager({
       : undefined;
 
   // ── hreflang ──────────────────────────────────────────────────────────────
-  // Bu SPA'da dil URL'ye değil client tercihine bağlıdır; aynı kanonik URL hem
-  // TR hem EN içeriği sunar. Bu yüzden her iki dil de aynı sayfaya işaret eder.
+  // Tek URL, TR-birincil (prerender içeriği Türkçe); ayrı /en/ URL'i yok. Aynı
+  // URL'e işaret eden yanıltıcı hreflang="en" kaldırıldı — prerender/sitemap ile
+  // tutarlı: tr + x-default self-referans.
   const canonicalAbsolute = `${siteOrigin}${seo.canonicalPath === "/" ? "" : seo.canonicalPath}` || "/";
   const hreflang = siteOrigin
     ? [
         { lang: "tr", href: canonicalAbsolute || `${siteOrigin}/` },
-        { lang: "en", href: canonicalAbsolute || `${siteOrigin}/` },
         { lang: "x-default", href: canonicalAbsolute || `${siteOrigin}/` },
       ]
     : undefined;

@@ -1,6 +1,42 @@
 import { Component, createRef, type ErrorInfo, type ReactNode } from "react";
 import { reportErrorToSentry } from "../../lib/sentry";
 
+/**
+ * Yeni deploy sonrası eski sayfayı açık tutan kullanıcı, hash'i değişmiş bir lazy
+ * chunk'a gitmeye çalışınca "dynamically imported module" hatası alır. Bu, kod
+ * hatası değil — sadece eski asset yok. Bir kez otomatik yenilemek kullanıcıyı
+ * beyaz ekran/manuel tıklamadan kurtarır.
+ */
+function isChunkLoadError(error: unknown): boolean {
+  const e = error as { name?: string; message?: string } | null;
+  const s = `${e?.name ?? ""} ${e?.message ?? ""}`.toLowerCase();
+  return (
+    s.includes("chunkloaderror") ||
+    s.includes("loading chunk") ||
+    s.includes("dynamically imported module") ||
+    s.includes("failed to fetch dynamically imported") ||
+    s.includes("importing a module script failed")
+  );
+}
+
+/** Döngü koruması: en fazla 10 saniyede bir otomatik yenile. Kalıcı bozuksa
+ * bir denemeden sonra manuel yeniden-yükle UI'sine düşer. */
+function maybeReloadForChunkError(error: unknown): boolean {
+  if (!isChunkLoadError(error)) return false;
+  try {
+    const KEY = "nb_chunk_reload_ts";
+    const last = Number(window.sessionStorage.getItem(KEY) || 0);
+    if (Date.now() - last > 10_000) {
+      window.sessionStorage.setItem(KEY, String(Date.now()));
+      window.location.reload();
+      return true;
+    }
+  } catch {
+    /* sessionStorage yoksa yoksay */
+  }
+  return false;
+}
+
 interface Props {
   children: ReactNode;
   language?: "tr" | "en";
@@ -22,6 +58,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    // Eski deploy'un lazy chunk'ı yüklenemediyse (kod hatası değil) bir kez
+    // otomatik yenile — Sentry'yi gürültüyle doldurma, kullanıcıyı kurtar.
+    if (maybeReloadForChunkError(error)) return;
     reportErrorToSentry(error, {
       componentStack: info.componentStack ?? undefined,
     });

@@ -492,8 +492,9 @@ function renderPrerenderHtml(baseUrl, routePath) {
     <meta name="robots" content="${robots}" />
     <meta name="googlebot" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
+         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
     <link rel="alternate" hreflang="tr" href="${canonicalUrl}" />
-    <link rel="alternate" hreflang="en" href="${canonicalUrl}" />
     <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${BRAND}" />
@@ -596,9 +597,10 @@ if (blockIndexing) {
   ];
 
   function renderHreflang(loc) {
+    // Tek URL, TR-birincil — ayrı /en/ URL'i yok. Yanıltıcı hreflang="en"
+    // (aynı URL'e) kaldırıldı; tr + x-default self-referans (HTML meta ile aynı).
     return [
       `    <xhtml:link rel="alternate" hreflang="tr" href="${escapeXml(loc)}"/>`,
-      `    <xhtml:link rel="alternate" hreflang="en" href="${escapeXml(loc)}"/>`,
       `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(loc)}"/>`,
     ].join("\n");
   }
