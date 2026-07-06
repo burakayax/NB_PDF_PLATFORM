@@ -77,8 +77,11 @@ test.describe("Landing Page — SEO ve Erişilebilirlik", () => {
     const response = await page.goto("/robots.txt");
     expect(response?.status()).toBe(200);
     const body = await response?.text();
-    expect(body).toContain("Disallow: /workspace");
-    expect(body).toContain("Disallow: /admin");
+    // Google önerisi: özel HTML rotaları robots.txt ile ENGELLENMEZ (engelliyse
+    // noindex görülemez) — render.yaml'de X-Robots-Tag: noindex ile korunur.
+    // robots.txt yalnızca /api/'yi engeller (HTML değil, SEO içeriği yok).
+    expect(body).toContain("Disallow: /api/");
+    expect(body).not.toContain("Disallow: /workspace");
     expect(body).toContain("Sitemap:");
   });
 });
