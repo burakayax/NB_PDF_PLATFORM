@@ -23,6 +23,8 @@ export function aiLimitForPlan(
   if (role === "ADMIN") return null;
   if (plan === "BUSINESS") return env.AI_MONTHLY_LIMIT_BUSINESS;
   if (plan === "PRO") return env.AI_MONTHLY_LIMIT_PRO;
+  if (plan === "PLUS") return env.AI_MONTHLY_LIMIT_PLUS;
+  if (plan === "STARTER") return env.AI_MONTHLY_LIMIT_STARTER;
   return 0;
 }
 
