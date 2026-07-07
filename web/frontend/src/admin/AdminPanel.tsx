@@ -44,6 +44,12 @@ import { landingTranslations } from "../i18n/landing";
 /** İçerik editörü için canlı VARSAYILAN metinler (TR) — kutu boşsa bunlar gösterilir
  * ki admin siteden kopyalamak zorunda kalmadan gerçek metnin üzerinde değişiklik yapsın. */
 const LIVE = landingTranslations.tr;
+
+/** Plan Kartı CMS — plan başına iki-dilli metin. features'lar satır-sonu ile ayrılır. */
+type PlanCardEdit = { nameTr: string; nameEn: string; taglineTr: string; taglineEn: string; featuresTr: string; featuresEn: string };
+/** Ana sayfada özellik listesi olan planlar (FREE hariç). */
+const EDITABLE_PLAN_CARDS = ["STARTER", "PLUS", "PRO", "BUSINESS"] as const;
+const emptyPlanCard = (): PlanCardEdit => ({ nameTr: "", nameEn: "", taglineTr: "", taglineEn: "", featuresTr: "", featuresEn: "" });
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
@@ -593,6 +599,9 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
   const [mkBusy, setMkBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
+  // Plan Kartı CMS — plan başına TR/EN isim/açıklama/özellik (ana sayfa fiyat kartlarını yönetir).
+  const [planCards, setPlanCards] = useState<Record<string, PlanCardEdit>>({});
+  const [planCardsBusy, setPlanCardsBusy] = useState(false);
   const [cardBusy, setCardBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [loadTick, setLoadTick] = useState(0);
@@ -632,6 +641,21 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
             ? savedStarter.filter((x): x is string => typeof x === "string")
             : [...STARTER_TOOL_IDS],
         );
+        // Plan kartları — kayıtlı iki-dilli metinleri düzenleyiciye doldur.
+        const savedPlanCards = cardsObj?.planCards;
+        const pcRec = savedPlanCards && typeof savedPlanCards === "object" && !Array.isArray(savedPlanCards)
+          ? (savedPlanCards as Record<string, Record<string, unknown>>) : {};
+        const nextPc: Record<string, PlanCardEdit> = {};
+        for (const id of EDITABLE_PLAN_CARDS) {
+          const c = pcRec[id] ?? {};
+          const arr = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").join("\n") : "";
+          nextPc[id] = {
+            nameTr: String(c.nameTr ?? ""), nameEn: String(c.nameEn ?? ""),
+            taglineTr: String(c.taglineTr ?? ""), taglineEn: String(c.taglineEn ?? ""),
+            featuresTr: arr(c.featuresTr), featuresEn: arr(c.featuresEn),
+          };
+        }
+        setPlanCards(nextPc);
         const { upgradeCtaHeadline: _mh, notes: _mn, ...mRest } = mObj;
         marketingExtraRef.current = mRest;
         const ov = d.plansOverride;
@@ -1075,6 +1099,74 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-600 disabled:opacity-40"
         >
           {cardBusy ? "Kaydediliyor…" : "Kart görünümünü kaydet"}
+        </button>
+      </AdminSection>
+
+      {/* ── Plan Kartı CMS — ana sayfa fiyat kartlarının İSİM/AÇIKLAMA/ÖZELLİK metinleri (TR/EN) ── */}
+      <AdminSection
+        title="Ana sayfa plan kartları — metin ve özellikler"
+        description="Ana sayfa fiyat kartlarındaki plan adı, kısa açıklama ve özellik maddeleri (her plan için TR + EN). Boş bırakılan alan varsayılan (kod içi) metni kullanır. Fiyat üstteki 'Ödeme fiyatları'ndan gelir."
+        variant="sky"
+      >
+        <div className="space-y-4">
+          {EDITABLE_PLAN_CARDS.map((id) => {
+            const e = planCards[id] ?? emptyPlanCard();
+            const setPc = (patch: Partial<PlanCardEdit>) => setPlanCards((prev) => ({ ...prev, [id]: { ...emptyPlanCard(), ...prev[id], ...patch } }));
+            return (
+              <div key={id} className="rounded-xl border border-white/[0.07] bg-black/20 p-4">
+                <p className="mb-3 text-xs font-bold uppercase tracking-wide text-sky-300/90">{id}</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <AdminField label="İsim (TR)"><input className={cmsInputClass} value={e.nameTr} onChange={(ev) => setPc({ nameTr: ev.target.value })} /></AdminField>
+                  <AdminField label="Name (EN)"><input className={cmsInputClass} value={e.nameEn} onChange={(ev) => setPc({ nameEn: ev.target.value })} /></AdminField>
+                  <AdminField label="Kısa açıklama (TR)"><input className={cmsInputClass} value={e.taglineTr} onChange={(ev) => setPc({ taglineTr: ev.target.value })} /></AdminField>
+                  <AdminField label="Tagline (EN)"><input className={cmsInputClass} value={e.taglineEn} onChange={(ev) => setPc({ taglineEn: ev.target.value })} /></AdminField>
+                  <AdminField label="Özellikler (TR) — her satır bir madde"><textarea className={`${cmsInputClass} min-h-[110px]`} value={e.featuresTr} onChange={(ev) => setPc({ featuresTr: ev.target.value })} /></AdminField>
+                  <AdminField label="Features (EN) — one per line"><textarea className={`${cmsInputClass} min-h-[110px]`} value={e.featuresEn} onChange={(ev) => setPc({ featuresEn: ev.target.value })} /></AdminField>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          disabled={planCardsBusy}
+          onClick={async () => {
+            setPlanCardsBusy(true);
+            setMsg(null);
+            try {
+              const pcOut: Record<string, unknown> = {};
+              for (const id of EDITABLE_PLAN_CARDS) {
+                const e = planCards[id] ?? emptyPlanCard();
+                const lines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+                pcOut[id] = {
+                  nameTr: e.nameTr.trim(), nameEn: e.nameEn.trim(),
+                  taglineTr: e.taglineTr.trim(), taglineEn: e.taglineEn.trim(),
+                  featuresTr: lines(e.featuresTr), featuresEn: lines(e.featuresEn),
+                };
+              }
+              const prevCards =
+                marketingExtraRef.current.cards && typeof marketingExtraRef.current.cards === "object" && !Array.isArray(marketingExtraRef.current.cards)
+                  ? (marketingExtraRef.current.cards as Record<string, unknown>) : {};
+              const merged = {
+                ...marketingExtraRef.current,
+                upgradeCtaHeadline: mkHeadline,
+                notes: mkNotes,
+                cards: { ...prevCards, starterTools: cardStarterTools, planCards: pcOut },
+              };
+              await putAdminPackagesMarketing(accessToken, merged);
+              const { upgradeCtaHeadline: _u, notes: _n, ...rest } = merged as Record<string, unknown>;
+              marketingExtraRef.current = rest;
+              setMsg("Plan kartı metinleri kaydedildi. Ana sayfa birkaç saniye içinde güncellenir.");
+              notifyRuntimeRefresh();
+            } catch (e) {
+              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+            } finally {
+              setPlanCardsBusy(false);
+            }
+          }}
+          className="mt-4 rounded-xl bg-sky-600/80 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-600 disabled:opacity-40"
+        >
+          {planCardsBusy ? "Kaydediliyor…" : "Plan kartı metinlerini kaydet"}
         </button>
       </AdminSection>
 
