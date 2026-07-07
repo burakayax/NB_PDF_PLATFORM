@@ -741,6 +741,22 @@ export function setPendingSaveHandle(handle: FileSystemFileHandle | null): void 
   _pendingSaveHandle = handle;
 }
 
+/** True when a save handle was pre-acquired (via `setPendingSaveHandle`) and
+ *  not yet consumed. Lets a later download path skip re-prompting the user. */
+export function hasPendingSaveHandle(): boolean {
+  return _pendingSaveHandle !== null;
+}
+
+/**
+ * Delivers an in-memory blob (client-side/device-processed results) to the user.
+ * Consumes a pre-acquired save handle when present (native "Save as…" dialog),
+ * otherwise prompts via `showSaveFilePicker`, and finally falls back to an
+ * `<a download>` anchor. Mirrors the delivery used for server responses.
+ */
+export async function saveBlobToUser(blob: Blob, filename: string): Promise<void> {
+  await deliverBlobAsDownload(blob, filename, false);
+}
+
 /**
  * Delivers a blob to the user: uses a pre-acquired FileSystemFileHandle when available
  * (ensures native save dialog appears even after long async operations), otherwise

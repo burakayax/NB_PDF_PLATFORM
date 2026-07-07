@@ -13,7 +13,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
-import { redactPdf } from "../../api";
+import { redactPdf, saveBlobToUser } from "../../api";
 import { aiDetectSensitive, fetchAiQuota, type AiError, type AiQuota } from "../../api/ai";
 
 type Item = { id: string; type: string; label: string; value: string; checked: boolean };
@@ -130,11 +130,9 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
 
   function download() {
     if (!result || !file) return;
-    const url = URL.createObjectURL(result);
-    const a = document.createElement("a");
-    a.href = url; a.download = `${file.name.replace(/\.pdf$/i, "")}-gizlenmis.pdf`;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    const name = `${file.name.replace(/\.pdf$/i, "")}-gizlenmis.pdf`;
+    // İndirme konumunu sorar (destekleyen tarayıcıda); değilse klasik indirmeye düşer.
+    void saveBlobToUser(result, name).catch(() => {});
   }
 
   const selectedCount = items.filter((i) => i.checked).length;

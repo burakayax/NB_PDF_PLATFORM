@@ -29,6 +29,8 @@ import {
   MergeJobNotFoundError,
   postToolToResult,
   requestMergeJobCancel,
+  hasPendingSaveHandle,
+  saveBlobToUser,
   setPendingSaveHandle,
   showSavePickerTypesFor,
   type MergeJobStatus,
@@ -3964,6 +3966,33 @@ function App() {
             setSubmitting(true);
             let resultBytes: Uint8Array | null = null;
             const cid = selectedFeature.id;
+            // İndirme yeri sorusu, cihaz-içi işleme await'lerinden ÖNCE alınmalı
+            // (user activation hâlâ geçerliyken). Aksi halde bu araçlar sonucu
+            // doğrudan indirir ve "nereye kaydedilsin?" diyaloğu hiç görünmez.
+            {
+              const win = window as unknown as {
+                showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
+              };
+              if (typeof win.showSaveFilePicker === "function") {
+                try {
+                  const suggestedName =
+                    cid === "split" && splitMode === "separate"
+                      ? "sayfalar.zip"
+                      : selectedFeature.fallbackFilename;
+                  const handle = await win.showSaveFilePicker({
+                    suggestedName,
+                    types: showSavePickerTypesFor(suggestedName),
+                  });
+                  setPendingSaveHandle(handle);
+                } catch (e: unknown) {
+                  if (e instanceof DOMException && e.name === "AbortError") {
+                    setSubmitting(false);
+                    return; // kullanıcı kaydetme diyalogunu iptal etti
+                  }
+                  // desteklenmiyor / güvenli bağlam değil — anchor fallback ile devam
+                }
+              }
+            }
             if (cid === "merge") {
               const buffers = await Promise.all(
                 uploads.map((u) => u.file.arrayBuffer()),
@@ -4011,14 +4040,7 @@ function App() {
                     splitMode === "separate"
                       ? "sayfalar.zip"
                       : selectedFeature.fallbackFilename;
-                  const url = URL.createObjectURL(splitBlob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = splitName;
-                  document.body.appendChild(a);
-                  a.click();
-                  a.remove();
-                  setTimeout(() => URL.revokeObjectURL(url), 15000);
+                  await saveBlobToUser(splitBlob, splitName);
                   setMergeShareReady({ blob: splitBlob, filename: splitName });
                   applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
                   setSubmitting(false);
@@ -4029,14 +4051,7 @@ function App() {
             if (resultBytes) {
               const filename = selectedFeature.fallbackFilename;
               const blob = pdfBytesToBlob(resultBytes);
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              a.remove();
-              setTimeout(() => URL.revokeObjectURL(url), 15000);
+              await saveBlobToUser(blob, filename);
               setMergeShareReady({ blob, filename });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
@@ -4075,7 +4090,9 @@ function App() {
           const win = window as unknown as {
             showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
           };
-          if (typeof win.showSaveFilePicker === "function") {
+          // Cihaz-içi yol zaten bir handle aldıysa (ör. şifreli/büyük dosya
+          // yüzünden sunucuya düşüldüyse) tekrar sorma.
+          if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
             try {
               // Kaydetme önerisi tek kaynaktan (paylaşım diyaloğu + backend ile
               // aynı): Türkçe karakterli "birleştirilmiş.pdf". Eski sabit ASCII
@@ -4156,7 +4173,8 @@ function App() {
         const win = window as unknown as {
           showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
         };
-        if (typeof win.showSaveFilePicker === "function") {
+        // Cihaz-içi yol zaten bir handle aldıysa (sunucuya düşülen durum) tekrar sorma.
+        if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
           try {
             const suggestedSaveName =
               selectedFeature.id === "split" && splitMode === "separate"
