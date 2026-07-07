@@ -2,9 +2,10 @@ import { getSetting, registerPackagesMergedInvalidator, setSetting } from "./sit
 import { SITE_SETTING_KEYS } from "./site-setting-keys.js";
 
 export const DEFAULT_PAYMENT_PRICES_TRY: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string> = {
-  BUSINESS: "79.00",
-  PRO: "129.00",
-  PRO_ANNUAL: "799.00",
+  BUSINESS: "499.00",
+  PRO: "249.00",
+  // Yıllık PRO = 10 ay fiyatına (2 ay bedava, ~%17 indirim). Yıllık TOPLAM tutar.
+  PRO_ANNUAL: "2490.00",
 };
 
 type UnifiedPackagesShape = {

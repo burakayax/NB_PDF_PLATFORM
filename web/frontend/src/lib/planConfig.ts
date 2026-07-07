@@ -99,8 +99,8 @@ export const PLANS: PlanDefinition[] = [
       color: "green",
     },
     pricing: {
-      monthly: { TRY: 4900, USD: 1599 },
-      yearly: { TRY: 49000, USD: 15900 },
+      monthly: { TRY: 4900, USD: 399 },
+      yearly: { TRY: 49000, USD: 3990 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -138,8 +138,8 @@ export const PLANS: PlanDefinition[] = [
       color: "blue",
     },
     pricing: {
-      monthly: { TRY: 14900, USD: 4799 },
-      yearly: { TRY: 149000, USD: 47990 },
+      monthly: { TRY: 9900, USD: 899 },
+      yearly: { TRY: 99000, USD: 8990 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -177,8 +177,8 @@ export const PLANS: PlanDefinition[] = [
       color: "amber",
     },
     pricing: {
-      monthly: { TRY: 29900, USD: 9799 },
-      yearly: { TRY: 299000, USD: 97990 },
+      monthly: { TRY: 24900, USD: 1499 },
+      yearly: { TRY: 249000, USD: 14990 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
@@ -218,8 +218,8 @@ export const PLANS: PlanDefinition[] = [
       color: "violet",
     },
     pricing: {
-      monthly: { TRY: 79900, USD: 25000 },
-      yearly: { TRY: 799000, USD: 250000 },
+      monthly: { TRY: 49900, USD: 2999 },
+      yearly: { TRY: 499000, USD: 29990 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
