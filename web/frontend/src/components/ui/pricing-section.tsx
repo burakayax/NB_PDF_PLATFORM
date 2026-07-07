@@ -311,9 +311,9 @@ function MonthlyOnlyCard({
       <div className="text-2xl mb-3 mt-2">{isPlus ? "🚀" : "⚡"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
       <p className={`text-sm mb-5 ${isPlus ? "text-blue-300/70" : "text-gray-500"}`}>
-        {isPlus
+        {(tr ? plan.taglineTr : plan.taglineEn) || (isPlus
           ? (tr ? "Bireyler için akıllı seçim." : "The smart choice for individuals.")
-          : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started.")}
+          : (tr ? "PDF işine yeni başlayanlar için." : "Perfect for getting started."))}
       </p>
 
       <div className="mb-6 flex items-baseline gap-1.5">
@@ -464,9 +464,9 @@ function CycleAwareCard({
       <div className="text-2xl mb-3 mt-2">{isPro ? "💎" : "🏢"}</div>
       <h3 className="text-xl font-bold text-white mb-1">{tr ? plan.nameTr : plan.nameEn}</h3>
       <p className="text-gray-500 text-sm mb-3">
-        {isPro
+        {(tr ? plan.taglineTr : plan.taglineEn) || (isPro
           ? (tr ? "Düzenli kullananlar için en iyi seçim." : "For power users who stay.")
-          : (tr ? "Kurumsal ekipler ve organizasyonlar için." : "Built for enterprise teams and organizations.")}
+          : (tr ? "Kurumsal ekipler ve organizasyonlar için." : "Built for enterprise teams and organizations."))}
       </p>
 
       {/* Per-card billing toggle */}
@@ -806,6 +806,8 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         ...p,
         nameTr: c.nameTr || p.nameTr,
         nameEn: c.nameEn || p.nameEn,
+        taglineTr: c.taglineTr || p.taglineTr,
+        taglineEn: c.taglineEn || p.taglineEn,
         featuresTr: c.featuresTr?.length ? c.featuresTr : p.featuresTr,
         featuresEn: c.featuresEn?.length ? c.featuresEn : p.featuresEn,
       };

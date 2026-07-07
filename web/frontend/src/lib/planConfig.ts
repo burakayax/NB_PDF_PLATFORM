@@ -33,6 +33,9 @@ export interface PlanDefinition {
   id: PlanId;
   nameTr: string;
   nameEn: string;
+  /** Kart adının altındaki kısa açıklama — admin Plan Kartı CMS'inden override edilir. */
+  taglineTr?: string;
+  taglineEn?: string;
   badge?: { textTr: string; textEn: string; color: string };
   pricing: {
     monthly: { TRY: number; USD: number };
