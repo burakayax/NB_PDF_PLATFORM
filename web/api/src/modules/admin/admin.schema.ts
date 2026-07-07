@@ -56,6 +56,8 @@ export const adminDeleteUserQuerySchema = z.object({
 export const adminPaymentPricesBodySchema = z.object({
   PRO: z.string().min(1).max(32),
   BUSINESS: z.string().min(1).max(32),
+  // Pro yıllık toplam tutar (opsiyonel — gönderilmezse mevcut değer korunur).
+  PRO_ANNUAL: z.string().min(1).max(32).optional(),
 });
 
 export const adminBlockedEmailBodySchema = z.object({

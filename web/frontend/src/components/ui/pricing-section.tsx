@@ -469,14 +469,16 @@ function CycleAwareCard({
           : (tr ? "Kurumsal ekipler ve organizasyonlar için." : "Built for enterprise teams and organizations."))}
       </p>
 
-      {/* Per-card billing toggle */}
-      <CardBillingToggle
-        cycle={cycle}
-        onChange={setCycle}
-        lang={lang}
-        savePct={savePct}
-        cardId={plan.id}
-      />
+      {/* Per-card billing toggle — sadece yıllık seçeneği olan planlarda (Business aylık) */}
+      {!plan.monthlyOnlyBilling && (
+        <CardBillingToggle
+          cycle={cycle}
+          onChange={setCycle}
+          lang={lang}
+          savePct={savePct}
+          cardId={plan.id}
+        />
+      )}
 
       {/* Extra seats stepper — Business only */}
       {!isPro && (

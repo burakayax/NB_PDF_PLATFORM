@@ -25,13 +25,13 @@ function copy(language: Language) {
       ? [
           "Daha fazla aylık işlem",
           "Daha büyük dosya boyutu",
-          "Filigransız çıktı",
+          "✨ Yapay zekâ araçları (özetle, veri çıkar…)",
           "Öncelikli işlem kuyruğu",
         ]
       : [
           "More monthly operations",
           "Larger file size support",
-          "Output without watermark",
+          "✨ AI tools (summarize, extract…)",
           "Priority processing queue",
         ],
     usageLine: (ops: number) =>
