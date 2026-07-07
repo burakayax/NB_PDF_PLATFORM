@@ -5991,7 +5991,7 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
         />
         <div
-          className={`w-full bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-6"}`}
+          className={`w-full flex-1 bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-6"}`}
         >
           <DashboardSidebarMobileLauncher
             active={activeSidebar}
