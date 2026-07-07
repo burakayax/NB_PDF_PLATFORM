@@ -123,6 +123,21 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
     },
   ];
 
+  // Pro & Business: Yapay Zekâ araçları (asıl satış kancası)
+  if (planId === "PRO" || planId === "BUSINESS") {
+    categories.push({
+      icon: "✨",
+      title: tr ? "Yapay Zekâ Araçları" : "AI Tools",
+      perks: [
+        { label: tr ? "PDF Özetle" : "Summarize PDF", detail: tr ? "Uzun sözleşme ve raporları saniyeler içinde özetler." : "Summarizes long contracts and reports in seconds." },
+        { label: tr ? "Veri Çıkar (fatura → Excel)" : "Extract Data (invoice → Excel)", detail: tr ? "Fatura ve tablolardan Excel'e hazır yapılandırılmış veri." : "Structured data from invoices and tables, ready for Excel." },
+        { label: tr ? "Çeviri & Karşılaştırma" : "Translate & Compare", detail: tr ? "Belgeleri çevir; iki sürüm arasındaki farkı bul." : "Translate documents; diff two versions." },
+        { label: tr ? "Hassas Veri Gizle + AI Toplu İşlem" : "Redact + AI Batch", detail: tr ? "Kişisel verileri otomatik gizle; onlarca belgeyi toplu işle." : "Auto-redact personal data; process dozens of documents in bulk." },
+        { label: tr ? "Geliştirici API erişimi" : "Developer API access", detail: tr ? "AI araçlarını kendi yazılımından çağır." : "Call the AI tools from your own software." },
+      ],
+    });
+  }
+
   // Pro & Business: analitik
   if (planId === "PRO" || planId === "BUSINESS") {
     categories.push({

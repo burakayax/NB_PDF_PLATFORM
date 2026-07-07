@@ -893,6 +893,7 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             displaySymbol={currencySymbol}
             starterTools={starterTools}
             comingSoon={comingSoon}
+            onShowPerks={() => setPerksPlan("STARTER")}
             onCta={onSelectPlan ? () => onSelectPlan("STARTER", "MONTHLY") : onUseWebApp}
           />
           <MonthlyOnlyCard
