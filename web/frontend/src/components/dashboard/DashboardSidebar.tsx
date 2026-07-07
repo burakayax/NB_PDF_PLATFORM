@@ -125,6 +125,9 @@ const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
   { mode: "batch", tr: "AI Toplu İşlem", en: "AI Batch" },
 ];
 
+/** PDF Düzenle (cihazda editör) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
+const EDITOR_FAV_ID = "edit-pdf";
+
 export type SidebarToolId = FeatureKey | "subscription";
 
 type DashboardSidebarProps = {
@@ -185,15 +188,20 @@ export function DashboardSidebar({
   const tr = language === "tr";
   // Masaüstü sidebar: araçlar kategori bölümlerine ayrılır (Düzenle / Dönüştür /
   // İyileştir / İşaretle / Güvenlik) — mobil launcher ile aynı gruplama.
+  // PDF Düzenle de favori olabilir (FeatureKey olmadığı için ayrı bayrak).
+  const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const sidebarGroups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
+    // Favoriler bölümü: en az bir araç VEYA editör favorilenmişse görünür.
+    return fav.length > 0 || editorFavorited
+      ? [{ id: "favorites" as const, tools: fav }, ...base]
+      : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites]);
+  }, [toolOrder, favorites, editorFavorited]);
   // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
   // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
@@ -252,6 +260,31 @@ export function DashboardSidebar({
             ) : null}
             <FavoriteStar alwaysVisible active={isFavorite(id)} label={label} onToggle={() => toggleFavorite(id)} />
           </span>
+        </span>
+      </button>
+    );
+  };
+
+  // PDF Düzenle satırı — favori yıldızlı, hem Favoriler hem Düzenle grubunda kullanılır.
+  const renderEditorRow = (keyPrefix = "") => {
+    if (!onOpenEditor) return null;
+    const label = tr ? "PDF Düzenle" : "Edit PDF";
+    return (
+      <button
+        key={`${keyPrefix}editor`}
+        type="button"
+        onClick={onOpenEditor}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+      >
+        <span className="text-base text-cyan-400" aria-hidden>✏️</span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <FavoriteStar
+            alwaysVisible
+            active={isFavorite(EDITOR_FAV_ID)}
+            label={label}
+            onToggle={() => toggleFavorite(EDITOR_FAV_ID)}
+          />
         </span>
       </button>
     );
@@ -345,17 +378,9 @@ export function DashboardSidebar({
               </button>
               {open ? (
                 <div className="flex flex-col gap-1">
-                  {/* PDF Düzenle — cihazda editör, Düzenle kategorisinin ilk aracı */}
-                  {group.id === "organize" && onOpenEditor ? (
-                    <button
-                      type="button"
-                      onClick={onOpenEditor}
-                      className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
-                    >
-                      <span className="text-base text-cyan-400" aria-hidden>✏️</span>
-                      <span className="truncate">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
-                    </button>
-                  ) : null}
+                  {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
+                  {group.id === "organize" ? renderEditorRow("organize-") : null}
+                  {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
@@ -453,16 +478,19 @@ export function DashboardSidebarMobileLauncher({
       : "Menu";
 
   const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
+  const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const groups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
+    return fav.length > 0 || editorFavorited
+      ? [{ id: "favorites" as const, tools: fav }, ...base]
+      : base;
     // favorites listesi değişince yeniden grupla
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites]);
+  }, [toolOrder, favorites, editorFavorited]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -730,8 +758,9 @@ export function DashboardSidebarMobileLauncher({
 
                         {/* Araç kartları — telefona otomatik uyum (auto-fill) */}
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
-                          {/* PDF Düzenle — Düzenle kategorisinin ilk kartı */}
-                          {group.id === "organize" && onOpenEditor && !query.trim() ? (
+                          {/* PDF Düzenle kartı — Düzenle grubunda her zaman, Favoriler'de favoriyse */}
+                          {onOpenEditor && !query.trim() &&
+                          (group.id === "organize" || (group.id === "favorites" && editorFavorited)) ? (
                             <button
                               type="button"
                               onClick={() => {
@@ -743,6 +772,14 @@ export function DashboardSidebarMobileLauncher({
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>✏️</span>
                               <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "PDF Düzenle" : "Edit PDF"}
+                              </span>
+                              <span className="absolute left-1 top-1">
+                                <FavoriteStar
+                                  alwaysVisible
+                                  active={isFavorite(EDITOR_FAV_ID)}
+                                  label={tr ? "PDF Düzenle" : "Edit PDF"}
+                                  onToggle={() => toggleFavorite(EDITOR_FAV_ID)}
+                                />
                               </span>
                             </button>
                           ) : null}
