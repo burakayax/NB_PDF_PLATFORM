@@ -119,6 +119,8 @@ const rawEnvSchema = z
     AI_MODEL: z.string().min(1).default("claude-haiku-4-5-20251001"),
     /** Aylık AI işlem kotası (adil kullanım) — plan başına. ADMIN sınırsız.
      * Ay başında sıfırlanır. Değiştirmek için env'i güncelle (ör. Render). */
+    AI_MONTHLY_LIMIT_STARTER: z.coerce.number().int().nonnegative().default(10),
+    AI_MONTHLY_LIMIT_PLUS: z.coerce.number().int().nonnegative().default(30),
     AI_MONTHLY_LIMIT_PRO: z.coerce.number().int().nonnegative().default(100),
     AI_MONTHLY_LIMIT_BUSINESS: z.coerce.number().int().nonnegative().default(500),
     /** Günlük dosyası yolu (göreli veya mutlak); üst dizin başlangıçta oluşturulur. */

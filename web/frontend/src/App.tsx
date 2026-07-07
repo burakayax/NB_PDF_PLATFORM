@@ -4761,8 +4761,7 @@ function App() {
   const aiAllowed =
     user?.role === "ADMIN" ||
     userBalance?.isAdmin === true ||
-    userBalance?.plan === "PRO" ||
-    userBalance?.plan === "BUSINESS";
+    ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(userBalance?.plan ?? "");
   const aiComingSoon =
     flags?.featureFlags?.paymentsDisabled !== false && !aiAllowed;
   const aiIsAdmin = user?.role === "ADMIN" || userBalance?.isAdmin === true;
@@ -5163,8 +5162,7 @@ function App() {
             aiAllowed={
               user?.role === "ADMIN" ||
               userBalance?.isAdmin === true ||
-              userBalance?.plan === "PRO" ||
-              userBalance?.plan === "BUSINESS"
+              ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(userBalance?.plan ?? "")
             }
             authGreeting={user ? userGreetingLine(user, language) : undefined}
             onLogin={() => {
