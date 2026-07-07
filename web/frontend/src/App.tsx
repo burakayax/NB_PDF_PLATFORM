@@ -861,11 +861,18 @@ function App() {
       : "split",
   );
   const [contentPanel, setContentPanel] = useState<ContentPanel>("tool");
+  // Dashboard içerik bölgesi kaydırma kabı (sayfa değil, bu bölge kayar).
+  const dashboardScrollRef = useRef<HTMLDivElement>(null);
   const [activeSidebar, setActiveSidebar] = useState<SidebarToolId>(() =>
     typeof window !== "undefined"
       ? readInitialWorkspaceToolSelection(window.location.pathname)
       : "split",
   );
+  // Araç/panel değişince içerik bölgesini en üste al (sayfa artık kaymadığı için
+  // window.scrollTo yetmez; kaydırma .app-shell__scroll bölgesinde oluyor).
+  useEffect(() => {
+    dashboardScrollRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [contentPanel, activeSidebar]);
   const [submitting, setSubmitting] = useState(false);
   const [authSubmitting, setAuthSubmitting] = useState(false);
   const [authError, setAuthError] = useState("");
@@ -5990,6 +5997,7 @@ function App() {
           }}
           onOpenEditor={() => setContentPanel("editor")}
         />
+        <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
           className={`w-full flex-1 bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
@@ -7769,6 +7777,7 @@ function App() {
             </button>
           </div>
         </footer>
+        </div>
 
         <CookieNotice
           language={language}

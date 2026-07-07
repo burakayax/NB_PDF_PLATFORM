@@ -152,15 +152,25 @@ textarea {
 }
 
 .app-shell {
-  /* 100vh yerine 100dvh: 100vh bazı tarayıcı/zoom durumlarında gerçek görünür
-     yükseklikten birkaç px fazla ölçülür ve footer altında boş, kaydırılabilir bir
-     şerit bırakır. dvh gerçek görünür yüksekliği verir → gereksiz mini scroll gider. */
-  min-height: 100dvh;
+  /* Kabuk TAM viewport yüksekliği ve sayfa seviyesinde asla kaydırılamaz.
+     Böylece 100vh/dvh subpixel (Windows ölçekleme) farkından doğan "footer altında
+     birkaç px'lik boş kaydırma şeridi" tamamen ortadan kalkar. Kaydırma, gerektiğinde
+     yalnızca iç içerik bölgesinde (.app-shell__scroll) olur; footer hep altta sabittir. */
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  /* İçindeki bir öğe yatayda taşarsa görünmez yatay scrollbar dikey alanı yiyip
-     ikincil dikey scrollbar üretmesin diye yatayı kırp (scroll-container yaratmaz). */
+  overflow: hidden;
+}
+
+/* İçerik + footer'ı barındıran, gerektiğinde kayan tek bölge. */
+.app-shell__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   overflow-x: clip;
+  overscroll-behavior: contain;
 }
 
 .page {
