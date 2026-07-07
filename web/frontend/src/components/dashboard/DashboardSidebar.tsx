@@ -194,10 +194,10 @@ export function DashboardSidebar({
     return fav.length > 0 ? [{ id: "favorites" as const, tools: fav }, ...base] : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolOrder, favorites]);
-  // Accordion: varsayılan olarak yalnız "Düzenle" + AI (+ favoriler) açık; diğer
-  // kategoriler kapalı gelir, kullanıcı başlığa tıklayınca açılır/kapanır.
+  // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
+  // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
-    () => new Set(["favorites", "organize", "ai"]),
+    () => new Set(favorites.length > 0 ? ["favorites"] : []),
   );
   const toggleCat = (id: string) =>
     setOpenCats((prev) => {
@@ -310,27 +310,6 @@ export function DashboardSidebar({
           </section>
         ) : null}
 
-        {/* PDF Düzenle — cihazda editör (AI DEĞİL; kendi "Editör" bölümü) */}
-        {onOpenEditor ? (
-          <section>
-            <div className="mb-1.5 flex items-center gap-2 px-1">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.7)]" aria-hidden />
-              <h3 className="text-[10px] font-bold uppercase tracking-wider text-cyan-300">
-                {tr ? "✏️ Editör" : "✏️ Editor"}
-              </h3>
-              <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
-            </div>
-            <button
-              type="button"
-              onClick={onOpenEditor}
-              className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-cyan-400/40 hover:bg-cyan-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(6,182,212,0.6)]"
-            >
-              <span className="text-base text-cyan-300" aria-hidden>✏️</span>
-              <span className="truncate">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
-            </button>
-          </section>
-        ) : null}
-
         {sidebarGroups.map((group) => {
           const accent = CATEGORY_ACCENT[group.id];
           const open = openCats.has(group.id);
@@ -366,6 +345,17 @@ export function DashboardSidebar({
               </button>
               {open ? (
                 <div className="flex flex-col gap-1">
+                  {/* PDF Düzenle — cihazda editör, Düzenle kategorisinin ilk aracı */}
+                  {group.id === "organize" && onOpenEditor ? (
+                    <button
+                      type="button"
+                      onClick={onOpenEditor}
+                      className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+                    >
+                      <span className="text-base text-cyan-400" aria-hidden>✏️</span>
+                      <span className="truncate">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
+                    </button>
+                  ) : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
@@ -707,29 +697,6 @@ export function DashboardSidebarMobileLauncher({
                       </div>
                     </section>
                   ) : null}
-                  {/* PDF Düzenle — kendi "Editör" bölümü (AI DEĞİL) */}
-                  {onOpenEditor && !query.trim() ? (
-                    <section>
-                      <div className="mb-2.5 flex items-center gap-2 px-0.5">
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.7)]" aria-hidden />
-                        <h3 className="text-[11px] font-bold uppercase tracking-wider text-cyan-300">
-                          {tr ? "✏️ Editör" : "✏️ Editor"}
-                        </h3>
-                        <span className="ml-1 h-px flex-1 bg-gradient-to-r from-white/[0.08] to-transparent" />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          onOpenEditor();
-                          setOpen(false);
-                        }}
-                        className="nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] px-3 py-3 text-left hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.99]"
-                      >
-                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg" aria-hidden>✏️</span>
-                        <span className="text-[13px] font-bold text-cyan-100">{tr ? "PDF Düzenle" : "Edit PDF"}</span>
-                      </button>
-                    </section>
-                  ) : null}
                   {filteredGroups.map((group) => {
                     const accent = CATEGORY_ACCENT[group.id];
                     const heading =
@@ -763,6 +730,22 @@ export function DashboardSidebarMobileLauncher({
 
                         {/* Araç kartları — telefona otomatik uyum (auto-fill) */}
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
+                          {/* PDF Düzenle — Düzenle kategorisinin ilk kartı */}
+                          {group.id === "organize" && onOpenEditor && !query.trim() ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenEditor();
+                                setOpen(false);
+                              }}
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-cyan-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
+                            >
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>✏️</span>
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                                {tr ? "PDF Düzenle" : "Edit PDF"}
+                              </span>
+                            </button>
+                          ) : null}
                           {group.tools.map((id) => {
                             const isActive = active === id;
                             const locked = lockedFeatures.has(id);
