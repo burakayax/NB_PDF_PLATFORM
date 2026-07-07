@@ -37,7 +37,7 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../api/auth";
 import { getSaasApiBase } from "../api/saasBase";
 import { CMS_PREVIEW_QUERY, postAdminPreviewHighlight, writeCmsPreviewDraft } from "../lib/cmsPreview";
 import { WORKSPACE_TOOL_IDS } from "../lib/workspaceFeatures";
-import { STARTER_TOOL_IDS } from "../lib/planConfig";
+import { STARTER_TOOL_IDS, PLANS } from "../lib/planConfig";
 import { resolveCmsAssetUrl } from "../lib/landingCmsMerge";
 import { landingTranslations } from "../i18n/landing";
 
@@ -50,6 +50,23 @@ type PlanCardEdit = { nameTr: string; nameEn: string; taglineTr: string; tagline
 /** Ana sayfada özellik listesi olan planlar (FREE hariç). */
 const EDITABLE_PLAN_CARDS = ["STARTER", "PLUS", "PRO", "BUSINESS"] as const;
 const emptyPlanCard = (): PlanCardEdit => ({ nameTr: "", nameEn: "", taglineTr: "", taglineEn: "", featuresTr: "", featuresEn: "" });
+/** Kart alt-satırı planConfig'te yok; ana sayfadaki sabit metinler (pre-fill için). */
+const DEFAULT_TAGLINES: Record<string, { tr: string; en: string }> = {
+  STARTER: { tr: "PDF işine yeni başlayanlar için.", en: "Perfect for getting started." },
+  PLUS: { tr: "Bireyler için akıllı seçim.", en: "The smart choice for individuals." },
+  PRO: { tr: "Düzenli kullananlar için en iyi seçim.", en: "For power users who stay." },
+  BUSINESS: { tr: "Kurumsal ekipler ve organizasyonlar için.", en: "Built for enterprise teams and organizations." },
+};
+/** Bir plan kartının CANLI varsayılan metni (kutu boşsa gösterilir → admin üzerine yazar). */
+function planCardDefault(id: string): PlanCardEdit {
+  const p = PLANS.find((x) => x.id === id);
+  const tg = DEFAULT_TAGLINES[id] ?? { tr: "", en: "" };
+  return {
+    nameTr: p?.nameTr ?? "", nameEn: p?.nameEn ?? "",
+    taglineTr: tg.tr, taglineEn: tg.en,
+    featuresTr: (p?.featuresTr ?? []).join("\n"), featuresEn: (p?.featuresEn ?? []).join("\n"),
+  };
+}
 import { notifyRuntimeRefresh } from "../lib/runtimeRefreshEvents";
 import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
@@ -648,11 +665,15 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         const nextPc: Record<string, PlanCardEdit> = {};
         for (const id of EDITABLE_PLAN_CARDS) {
           const c = pcRec[id] ?? {};
+          const def = planCardDefault(id);
           const arr = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === "string").join("\n") : "";
+          const s = (v: unknown, fb: string) => (typeof v === "string" && v.trim() ? v : fb);
+          const a = (v: unknown, fb: string) => { const j = arr(v); return j.trim() ? j : fb; };
+          // Kayıtlı değer varsa onu, yoksa CANLI varsayılanı göster (kutular dolu gelir).
           nextPc[id] = {
-            nameTr: String(c.nameTr ?? ""), nameEn: String(c.nameEn ?? ""),
-            taglineTr: String(c.taglineTr ?? ""), taglineEn: String(c.taglineEn ?? ""),
-            featuresTr: arr(c.featuresTr), featuresEn: arr(c.featuresEn),
+            nameTr: s(c.nameTr, def.nameTr), nameEn: s(c.nameEn, def.nameEn),
+            taglineTr: s(c.taglineTr, def.taglineTr), taglineEn: s(c.taglineEn, def.taglineEn),
+            featuresTr: a(c.featuresTr, def.featuresTr), featuresEn: a(c.featuresEn, def.featuresEn),
           };
         }
         setPlanCards(nextPc);
