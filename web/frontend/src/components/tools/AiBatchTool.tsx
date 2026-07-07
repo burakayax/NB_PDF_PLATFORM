@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { saveBlobToUser } from "../../api";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
@@ -197,14 +198,8 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
   }
 
   function dl(blob: Blob, name: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    // İndirme konumunu sorar (destekleyen tarayıcıda); değilse klasik indirmeye düşer.
+    void saveBlobToUser(blob, name).catch(() => {});
   }
 
   const OPS: Array<{ id: BatchOp; icon: typeof Table2; tr: string; en: string }> = [

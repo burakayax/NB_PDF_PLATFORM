@@ -21,6 +21,7 @@ import type { Language } from "../../i18n/landing";
 import {
   analyzePdf,
   editPdfText,
+  saveBlobToUser,
   type PdfAnalysis,
   type PdfElement,
   type PdfTextEdit,
@@ -365,9 +366,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
 
   function downloadResult() {
     if (!result) return;
-    const url = URL.createObjectURL(result.blob);
-    const a = document.createElement("a"); a.href = url; a.download = result.filename;
-    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 8000);
+    // İndirme konumunu sorar (destekleyen tarayıcıda); değilse klasik indirmeye düşer.
+    void saveBlobToUser(result.blob, result.filename).catch(() => {});
   }
   async function shareResult() {
     if (!result) return;

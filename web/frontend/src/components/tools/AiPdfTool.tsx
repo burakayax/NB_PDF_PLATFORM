@@ -437,15 +437,11 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           /* kullanıcı iptal etti → dosyayı indir */
         }
       }
-      // Paylaşım (dosya) desteklenmiyorsa PDF'i indir.
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      // Paylaşım (dosya) desteklenmiyorsa PDF'i indir — konumu sorar, değilse klasik indirme.
+      await saveBlobWithPicker(blob, file.name, {
+        description: "PDF",
+        accept: { "application/pdf": [".pdf"] },
+      });
     } catch {
       setError(tr ? "PDF paylaşılamadı." : "Couldn't share the PDF.");
     } finally {
