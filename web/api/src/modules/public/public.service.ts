@@ -234,9 +234,35 @@ export async function getPublicTOOLSSlice(): Promise<PublicTOOLSSlice> {
  * `packages.config.marketing.cards.starterTools` admin panelinden yönetilir; geçersiz
  * veya boşsa kod varsayılanı (STARTER planının yerleşik araç listesi) döner.
  */
+/** Plan kartı metni (iki-dilli) — admin panelinden yönetilir; landing varsayılana fallback yapar. */
+export type PublicPlanCard = {
+  nameTr?: string; nameEn?: string;
+  taglineTr?: string; taglineEn?: string;
+  featuresTr?: string[]; featuresEn?: string[];
+};
+
 export type PublicCardsConfig = {
   starterTools: string[];
+  planCards?: Record<string, PublicPlanCard>;
 };
+
+/** marketing.cards.planCards → yalnız string/string[] alanları güvenle süz. */
+function sanitizePlanCards(raw: unknown): Record<string, PublicPlanCard> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+  const out: Record<string, PublicPlanCard> = {};
+  const strArr = (v: unknown) => Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : undefined;
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  for (const [id, val] of Object.entries(raw as Record<string, unknown>)) {
+    if (!val || typeof val !== "object") continue;
+    const c = val as Record<string, unknown>;
+    out[id] = {
+      nameTr: str(c.nameTr), nameEn: str(c.nameEn),
+      taglineTr: str(c.taglineTr), taglineEn: str(c.taglineEn),
+      featuresTr: strArr(c.featuresTr), featuresEn: strArr(c.featuresEn),
+    };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
 
 export async function getPublicCardsConfig(): Promise<PublicCardsConfig> {
   const starterDefault = [...planDefinitions.STARTER.allowedFeatures] as string[];
@@ -245,15 +271,15 @@ export async function getPublicCardsConfig(): Promise<PublicCardsConfig> {
     if (marketing && typeof marketing === "object" && !Array.isArray(marketing)) {
       const cards = (marketing as Record<string, unknown>).cards;
       if (cards && typeof cards === "object" && !Array.isArray(cards)) {
-        const st = (cards as Record<string, unknown>).starterTools;
+        const cardsRec = cards as Record<string, unknown>;
+        const st = cardsRec.starterTools;
+        const planCards = sanitizePlanCards(cardsRec.planCards);
+        let starterTools = starterDefault;
         if (Array.isArray(st)) {
-          const filtered = st.filter(
-            (x): x is string => typeof x === "string" && isFeatureKey(x),
-          );
-          if (filtered.length) {
-            return { starterTools: filtered };
-          }
+          const filtered = st.filter((x): x is string => typeof x === "string" && isFeatureKey(x));
+          if (filtered.length) starterTools = filtered;
         }
+        return { starterTools, planCards };
       }
     }
   } catch {

@@ -58,9 +58,17 @@ export type PublicPricingPayload = {
 };
 
 /** Fiyat kartı pazarlama görünümü (gerçek erişimden bağımsız). */
+export type PublicPlanCard = {
+  nameTr?: string; nameEn?: string;
+  taglineTr?: string; taglineEn?: string;
+  featuresTr?: string[]; featuresEn?: string[];
+};
+
 export type PublicCardsConfig = {
   /** Başlangıç kartında listelenecek araçların feature key'leri. */
   starterTools: string[];
+  /** Plan başına iki-dilli kart metni (admin panelinden). Boşsa kod varsayılanı kullanılır. */
+  planCards?: Record<string, PublicPlanCard>;
 };
 
 export type PublicRuntimePayload = {

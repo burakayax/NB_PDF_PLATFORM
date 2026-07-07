@@ -790,25 +790,37 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
   // bir fiyat görüp başka ödenir. USD/EUR statik kalır (admin yalnız TRY yönetir).
   const plansAdjusted = useMemo<PlanDefinition[]>(() => {
     const tp = pricing?.tryPrices;
-    if (!tp) return PLANS;
+    const pc = cards?.planCards;
     const toCents = (s: string) => {
       const n = Math.round(parseFloat(s) * 100);
       return Number.isFinite(n) && n > 0 ? n : null;
     };
-    const proM = toCents(tp.proMonthly);
-    const proY = toCents(tp.proAnnual);
-    const bizM = toCents(tp.businessMonthly);
-    return PLANS.map((p) => {
+    const proM = tp ? toCents(tp.proMonthly) : null;
+    const proY = tp ? toCents(tp.proAnnual) : null;
+    const bizM = tp ? toCents(tp.businessMonthly) : null;
+    // Admin plan kartı metni varsa varsayılanın üzerine yaz (boş alan = varsayılan).
+    const withCard = (p: PlanDefinition): PlanDefinition => {
+      const c = pc?.[p.id];
+      if (!c) return p;
+      return {
+        ...p,
+        nameTr: c.nameTr || p.nameTr,
+        nameEn: c.nameEn || p.nameEn,
+        featuresTr: c.featuresTr?.length ? c.featuresTr : p.featuresTr,
+        featuresEn: c.featuresEn?.length ? c.featuresEn : p.featuresEn,
+      };
+    };
+    return PLANS.map((p0) => {
+      const p = withCard(p0);
       if (p.id === "PRO" && proM) {
         return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: proM }, yearly: { ...p.pricing.yearly, TRY: proY ?? p.pricing.yearly.TRY } } };
       }
       if (p.id === "BUSINESS" && bizM) {
-        // Business yıllık admin'de yok → aylık×12 (indirimsiz, dürüst).
         return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 12 } } };
       }
       return p;
     });
-  }, [pricing]);
+  }, [pricing, cards]);
   const [free, starter, plus, pro, business] = plansAdjusted;
 
   return (
