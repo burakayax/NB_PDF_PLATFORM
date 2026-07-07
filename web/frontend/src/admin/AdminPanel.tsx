@@ -52,10 +52,10 @@ const EDITABLE_PLAN_CARDS = ["STARTER", "PLUS", "PRO", "BUSINESS"] as const;
 const emptyPlanCard = (): PlanCardEdit => ({ nameTr: "", nameEn: "", taglineTr: "", taglineEn: "", featuresTr: "", featuresEn: "" });
 /** Kart alt-satırı planConfig'te yok; ana sayfadaki sabit metinler (pre-fill için). */
 const DEFAULT_TAGLINES: Record<string, { tr: string; en: string }> = {
-  STARTER: { tr: "PDF işine yeni başlayanlar için.", en: "Perfect for getting started." },
-  PLUS: { tr: "Bireyler için akıllı seçim.", en: "The smart choice for individuals." },
-  PRO: { tr: "Düzenli kullananlar için en iyi seçim.", en: "For power users who stay." },
-  BUSINESS: { tr: "Kurumsal ekipler ve organizasyonlar için.", en: "Built for enterprise teams and organizations." },
+  STARTER: { tr: "Ara sıra dönüştürme yapanlar için.", en: "For occasional converters." },
+  PLUS: { tr: "Düzenli PDF işi olanlar için.", en: "For regular PDF work." },
+  PRO: { tr: "Yapay zekâ ve API isteyenler için.", en: "For AI tools and API access." },
+  BUSINESS: { tr: "Ekipler ve kurumlar için.", en: "For teams and organizations." },
 };
 /** Bir plan kartının CANLI varsayılan metni (kutu boşsa gösterilir → admin üzerine yazar). */
 function planCardDefault(id: string): PlanCardEdit {
