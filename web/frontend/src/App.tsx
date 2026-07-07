@@ -5991,7 +5991,7 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
         />
         <div
-          className={`w-full flex-1 bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-6"}`}
+          className={`w-full flex-1 bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
           <DashboardSidebarMobileLauncher
             active={activeSidebar}
@@ -6007,7 +6007,7 @@ function App() {
           }}
           onOpenEditor={() => setContentPanel("editor")}
           />
-          <div className="mx-auto w-full max-w-5xl px-2 py-3 sm:px-4 sm:py-5 md:px-8 md:py-6 lg:max-w-6xl xl:max-w-7xl">
+          <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
             contentPanel !== "tool" &&
             contentPanel !== "ai" &&
