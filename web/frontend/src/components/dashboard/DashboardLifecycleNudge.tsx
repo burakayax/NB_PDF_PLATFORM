@@ -22,7 +22,7 @@ interface QuotaSummary {
   isAdmin?: boolean;
 }
 
-type NudgeVariant = "daily_limit" | "monthly_warning" | "watermark_value" | "pro_value";
+type NudgeVariant = "daily_limit" | "monthly_warning" | "ai_value" | "pro_value";
 
 const SNOOZE_DAYS = 3;
 const SNOOZE_MS = SNOOZE_DAYS * 24 * 60 * 60 * 1000;
@@ -53,8 +53,8 @@ function copyFor(variant: NudgeVariant, tr: boolean, pct: number) {
         icon: "🚀",
         title: tr ? "Bugünkü ücretsiz limitin doldu" : "You've hit today's free limit",
         body: tr
-          ? "Plus ile günlük limit olmadan kaldığın yerden devam et — filigran da yok."
-          : "With Plus, keep going with no daily cap — and no watermark.",
+          ? "Plus ile günlük limit olmadan kaldığın yerden devam et — üstelik yapay zekâ araçları da açılır."
+          : "With Plus, keep going with no daily cap — plus AI tools unlock.",
         cta: tr ? "Sınırsıza geç" : "Go unlimited",
         tone: "strong" as const,
       };
@@ -68,14 +68,14 @@ function copyFor(variant: NudgeVariant, tr: boolean, pct: number) {
         cta: tr ? "Planları gör" : "View plans",
         tone: "warn" as const,
       };
-    case "watermark_value":
+    case "ai_value":
       return {
         icon: "✨",
-        title: tr ? "Çıktıların filigranlı" : "Your output has a watermark",
+        title: tr ? "Yapay zekâyı denedin mi?" : "Have you tried AI yet?",
         body: tr
-          ? "Temiz, filigransız PDF'ler ve sınırsız günlük işlem için Plus'a geç."
-          : "Upgrade to Plus for clean, watermark-free PDFs and unlimited daily use.",
-        cta: tr ? "Filigranı kaldır" : "Remove watermark",
+          ? "Başlangıç planıyla PDF'lerini özetle, veri çıkar ve çevir — aylık 10 yapay zekâ işlemi dahil."
+          : "With Starter, summarize, extract and translate your PDFs — 10 AI operations/month included.",
+        cta: tr ? "Yapay zekâyı aç" : "Unlock AI",
         tone: "value" as const,
       };
     case "pro_value":
@@ -146,7 +146,7 @@ export function DashboardLifecycleNudge({
     if (plan === "FREE") {
       if (dailyFull) variant = "daily_limit";
       else if (monthlyPct >= 80) variant = "monthly_warning";
-      else if (quota.watermarkEnabled && quota.monthly.used >= 3) variant = "watermark_value";
+      else if (quota.monthly.used >= 3) variant = "ai_value";
     } else if (plan === "PLUS") {
       if (monthlyPct >= 80) variant = "pro_value";
     }

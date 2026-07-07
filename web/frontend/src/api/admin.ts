@@ -263,7 +263,7 @@ export async function deleteAdminBlockedEmail(accessToken: string, email: string
   }
 }
 
-export async function putAdminPlanPricing(accessToken: string, prices: { PRO: string; BUSINESS: string }): Promise<void> {
+export async function putAdminPlanPricing(accessToken: string, prices: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string }): Promise<void> {
   const r = await adminFetch(accessToken, "/plans/pricing", {
     method: "PUT",
     body: JSON.stringify(prices),

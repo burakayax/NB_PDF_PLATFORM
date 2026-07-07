@@ -603,17 +603,15 @@ type AdminPlansPayload = {
   checkoutStats: Record<string, { completed: number; pending: number }>;
   marketing: unknown;
   plansOverride: unknown;
-  paymentPrices?: { PRO: string; BUSINESS: string };
+  paymentPrices?: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string };
 };
 
 function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("200.00");
-  const [businessPrice, setBusinessPrice] = useState("400.00");
+  const [proPrice, setProPrice] = useState("249.00");
+  const [businessPrice, setBusinessPrice] = useState("499.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("2490.00");
   const [pricingBusy, setPricingBusy] = useState(false);
-  const [mkHeadline, setMkHeadline] = useState("");
-  const [mkNotes, setMkNotes] = useState("");
-  const [mkBusy, setMkBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
   // Plan Kartı CMS — plan başına TR/EN isim/açıklama/özellik (ana sayfa fiyat kartlarını yönetir).
@@ -642,12 +640,11 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         if (d.paymentPrices) {
           setProPrice(d.paymentPrices.PRO);
           setBusinessPrice(d.paymentPrices.BUSINESS);
+          if (d.paymentPrices.PRO_ANNUAL) setProAnnualPrice(d.paymentPrices.PRO_ANNUAL);
         }
         const m = d.marketing;
         const mObj =
-          m && typeof m === "object" && m !== null ? (m as Record<string, unknown>) : { upgradeCtaHeadline: "", notes: "" };
-        setMkHeadline(String(mObj.upgradeCtaHeadline ?? ""));
-        setMkNotes(String(mObj.notes ?? ""));
+          m && typeof m === "object" && m !== null ? (m as Record<string, unknown>) : {};
         const cardsObj =
           mObj.cards && typeof mObj.cards === "object" && !Array.isArray(mObj.cards)
             ? (mObj.cards as Record<string, unknown>)
@@ -677,8 +674,8 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           };
         }
         setPlanCards(nextPc);
-        const { upgradeCtaHeadline: _mh, notes: _mn, ...mRest } = mObj;
-        marketingExtraRef.current = mRest;
+        // Kart/planCards kaydederken diğer marketing anahtarlarını korumak için sakla.
+        marketingExtraRef.current = { ...mObj };
         const ov = d.plansOverride;
         const ovRec = ov && typeof ov === "object" && !Array.isArray(ov) ? (ov as Record<string, unknown>) : {};
         const keys = Array.from(new Set((d.plans ?? []).flatMap((p) => p.allowedFeatures))).sort();
@@ -729,14 +726,14 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         </button>
       </div>
 
-      {/* Landing bağlantısı — dürüst açıklama */}
-      <div className="rounded-2xl border border-amber-400/25 bg-amber-500/[0.06] px-4 py-3.5 text-[13px] leading-relaxed text-amber-100/90">
-        <p className="font-bold text-amber-200">⚠️ Ana sayfadaki fiyat kartlarıyla bağlantı</p>
-        <ul className="mt-1.5 space-y-1 text-amber-100/80">
-          <li>• <strong>Fiyat (aşağıda):</strong> Ödeme ekranında (checkout) tahsil edilen tutarı belirler.</li>
-          <li>• <strong>Ana sayfada GÖRÜNEN fiyat + plan metinleri</strong> şu an ayrı, sabit bir kaynaktan gelir (kod içi plan tanımları + çeviri). Yani buradaki plan adı/açıklama/özellik metnini değiştirmek <strong>ana sayfa kartını DEĞİŞTİRMEZ</strong>.</li>
-          <li>• Şu an ana sayfaya akan tek şey: <strong>Başlangıç planında hangi araçların açık olduğu</strong> (marketing kartları).</li>
-          <li>• <strong>Öneri:</strong> Buradaki fiyatı, ana sayfada yazan fiyatla <strong>aynı tut</strong> — yoksa müşteri farklı fiyat görüp farklı ödenir. Kartları buradan yönetilebilir hale getirmemi istersen söyle, bağlarım.</li>
+      {/* Landing bağlantısı — hangi kutu neyi değiştirir */}
+      <div className="rounded-2xl border border-sky-400/25 bg-sky-500/[0.06] px-4 py-3.5 text-[13px] leading-relaxed text-sky-100/90">
+        <p className="font-bold text-sky-200">🔗 Bu sayfadaki her bölüm neyi değiştirir?</p>
+        <ul className="mt-1.5 space-y-1 text-sky-100/80">
+          <li>• <strong>Ödeme fiyatları:</strong> Kartta müşteriden <strong>gerçekten tahsil edilen</strong> tutar (Pro aylık/yıllık, Business aylık).</li>
+          <li>• <strong>Ana sayfa plan kartları (aşağıda):</strong> Fiyat sayfasındaki plan <strong>adı, tagline ve özellik maddelerini</strong> yönetir — kaydettiğinizde ana sayfaya yansır.</li>
+          <li>• <strong>Başlangıç kartı araçları:</strong> Yalnızca «Başlangıç» kartında listelenen araç sayısını/adlarını değiştirir (görünüm).</li>
+          <li>• <strong>Önemli:</strong> Ana sayfada yazan aylık fiyat ile buradaki «Ödeme fiyatı» <strong>aynı olmalı</strong> — yoksa müşteri gördüğünden farklı öder.</li>
         </ul>
       </div>
 
@@ -948,84 +945,95 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
       ) : null}
 
       <AdminSection
-        title="Ödeme (checkout) fiyatları — aylık, TRY, KDV hariç"
-        description="Ödeme ekranında TAHSİL edilen tutar. Ana sayfada yazan fiyatla AYNI olmasına dikkat edin (ana sayfa fiyatı şu an ayrı/sabit kaynaktan gelir). Ondalık için nokta: 199.99"
+        title="Ödeme fiyatları — kartta tahsil edilen tutar (₺, KDV hariç)"
+        description="Ödeme ekranında müşteriden TAHSİL edilen tutar. Aylık ana sayfa kartındaki fiyatla AYNI olmalı; Pro yıllık, yıllık toplam tutardır (12 ay için tek seferde). Ondalık için nokta kullanın: 249.00"
         variant="emerald"
       >
-        <div className="grid gap-4 sm:grid-cols-2">
-          <AdminField label="PRO — ödeme tutarı" description="Pro aboneliğinde ödeme adımında tahsil edilen aylık tutar.">
-            <input
-              value={proPrice}
-              onChange={(e) => setProPrice(e.target.value)}
-              className={`${adminInputClass} font-mono`}
-            />
-          </AdminField>
-          <AdminField label="Business — ödeme tutarı" description="Business aboneliğinde tahsil edilen aylık tutar.">
-            <input
-              value={businessPrice}
-              onChange={(e) => setBusinessPrice(e.target.value)}
-              className={`${adminInputClass} font-mono`}
-            />
-          </AdminField>
-        </div>
-        <button
-          type="button"
-          disabled={pricingBusy}
-          onClick={async () => {
-            setPricingBusy(true);
-            setMsg(null);
-            try {
-              await putAdminPlanPricing(accessToken, { PRO: proPrice.trim(), BUSINESS: businessPrice.trim() });
-              setMsg("Fiyatlar kaydedildi. Ödeme ve plan listesi birkaç saniye içinde yeni tutarları kullanır.");
-              notifyRuntimeRefresh();
-            } catch (e) {
-              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-            } finally {
-              setPricingBusy(false);
-            }
-          }}
-          className="rounded-xl bg-emerald-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-40"
-        >
-          {pricingBusy ? "Kaydediliyor…" : "Fiyatları kaydet"}
-        </button>
-      </AdminSection>
+        {(() => {
+          const parse = (s: string) => {
+            const n = Number.parseFloat(s.replace(",", "."));
+            return Number.isFinite(n) ? n : 0;
+          };
+          const proM = parse(proPrice);
+          const proA = parse(proAnnualPrice);
+          const proYearFull = proM * 12;
+          const annualSave = proYearFull - proA;
+          const annualPct = proYearFull > 0 ? Math.round((annualSave / proYearFull) * 100) : 0;
+          const fmt = (n: number) => `₺${Math.round(n).toLocaleString("tr-TR")}`;
+          return (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <AdminField label="Pro — aylık" description="Pro aboneliğinde her ay tahsil edilen tutar.">
+                  <input
+                    value={proPrice}
+                    onChange={(e) => setProPrice(e.target.value)}
+                    className={`${adminInputClass} font-mono`}
+                    inputMode="decimal"
+                  />
+                </AdminField>
+                <AdminField label="Pro — yıllık (toplam)" description="Yılda tek seferde tahsil. Boş bırakılamaz.">
+                  <input
+                    value={proAnnualPrice}
+                    onChange={(e) => setProAnnualPrice(e.target.value)}
+                    className={`${adminInputClass} font-mono`}
+                    inputMode="decimal"
+                  />
+                </AdminField>
+                <AdminField label="Business — aylık" description="Business aboneliğinde her ay tahsil edilen tutar. (Yıllık yok.)">
+                  <input
+                    value={businessPrice}
+                    onChange={(e) => setBusinessPrice(e.target.value)}
+                    className={`${adminInputClass} font-mono`}
+                    inputMode="decimal"
+                  />
+                </AdminField>
+              </div>
 
-      <AdminSection
-        title="Pazarlama metinleri"
-        description="Ücretsiz kota veya gecikme sonrası kullanıcıya gösterilen kısa yükseltme başlığı ve notlar."
-        variant="violet"
-      >
-        <div className="grid gap-5">
-          <AdminField label="Yükseltme başlığı" description="Kısa, dikkat çekici CTA metni (örn. Pro’ya geçin).">
-            <input value={mkHeadline} onChange={(e) => setMkHeadline(e.target.value)} className={adminInputClass} />
-          </AdminField>
-          <AdminField label="Notlar" description="Alt açıklama; API yanıtlarında ve dönüşüm metinlerinde kullanılabilir.">
-            <textarea value={mkNotes} onChange={(e) => setMkNotes(e.target.value)} rows={3} className={adminInputClass} />
-          </AdminField>
-        </div>
-        <button
-          type="button"
-          disabled={mkBusy}
-          onClick={async () => {
-            setMkBusy(true);
-            setMsg(null);
-            try {
-              const merged = { ...marketingExtraRef.current, upgradeCtaHeadline: mkHeadline, notes: mkNotes };
-              await putAdminPackagesMarketing(accessToken, merged);
-              const { upgradeCtaHeadline: _u, notes: _n, ...rest } = merged as Record<string, unknown>;
-              marketingExtraRef.current = rest;
-              setMsg("Pazarlama metinleri kaydedildi.");
-              notifyRuntimeRefresh();
-            } catch (e) {
-              setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
-            } finally {
-              setMkBusy(false);
-            }
-          }}
-          className="rounded-xl bg-violet-600/70 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
-        >
-          {mkBusy ? "Kaydediliyor…" : "Pazarlama metnini kaydet"}
-        </button>
+              {/* Canlı önizleme — müşteri ne öder, yıllık indirim ne kadar */}
+              <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-4 py-3 text-[13px] leading-relaxed text-emerald-100/90">
+                <p className="font-bold text-emerald-200">Müşteri ne görecek?</p>
+                <ul className="mt-1.5 space-y-1 text-emerald-100/80">
+                  <li>• Pro aylık: <strong>{fmt(proM)}/ay</strong> · Business aylık: <strong>{fmt(parse(businessPrice))}/ay</strong></li>
+                  <li>
+                    • Pro yıllık: <strong>{fmt(proA)}/yıl</strong>{" "}
+                    {annualSave > 0 ? (
+                      <span className="text-emerald-300">
+                        (aylık {fmt(proA / 12)} — 12×aylığa göre {fmt(annualSave)} / %{annualPct} indirim)
+                      </span>
+                    ) : (
+                      <span className="text-amber-300">(yıllık, aylık×12'den ucuz değil — indirim görünmez)</span>
+                    )}
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                type="button"
+                disabled={pricingBusy}
+                onClick={async () => {
+                  setPricingBusy(true);
+                  setMsg(null);
+                  try {
+                    await putAdminPlanPricing(accessToken, {
+                      PRO: proPrice.trim(),
+                      BUSINESS: businessPrice.trim(),
+                      PRO_ANNUAL: proAnnualPrice.trim(),
+                    });
+                    setMsg("Fiyatlar kaydedildi. Ödeme ve plan listesi birkaç saniye içinde yeni tutarları kullanır.");
+                    notifyRuntimeRefresh();
+                  } catch (e) {
+                    setMsg(e instanceof Error ? e.message : "Kayıt başarısız");
+                  } finally {
+                    setPricingBusy(false);
+                  }
+                }}
+                className="mt-4 rounded-xl bg-emerald-600/70 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-40"
+              >
+                {pricingBusy ? "Kaydediliyor…" : "Fiyatları kaydet"}
+              </button>
+            </>
+          );
+        })()}
       </AdminSection>
 
       <AdminSection
@@ -1102,13 +1110,10 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                   : {};
               const merged = {
                 ...marketingExtraRef.current,
-                upgradeCtaHeadline: mkHeadline,
-                notes: mkNotes,
                 cards: { ...prevCards, starterTools: cardStarterTools },
               };
               await putAdminPackagesMarketing(accessToken, merged);
-              const { upgradeCtaHeadline: _u, notes: _n, ...rest } = merged as Record<string, unknown>;
-              marketingExtraRef.current = rest;
+              marketingExtraRef.current = { ...merged };
               setMsg("Kart görünümü kaydedildi. Fiyat sayfası birkaç saniye içinde güncellenir.");
               notifyRuntimeRefresh();
             } catch (e) {
@@ -1170,13 +1175,10 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                   ? (marketingExtraRef.current.cards as Record<string, unknown>) : {};
               const merged = {
                 ...marketingExtraRef.current,
-                upgradeCtaHeadline: mkHeadline,
-                notes: mkNotes,
                 cards: { ...prevCards, starterTools: cardStarterTools, planCards: pcOut },
               };
               await putAdminPackagesMarketing(accessToken, merged);
-              const { upgradeCtaHeadline: _u, notes: _n, ...rest } = merged as Record<string, unknown>;
-              marketingExtraRef.current = rest;
+              marketingExtraRef.current = { ...merged };
               setMsg("Plan kartı metinleri kaydedildi. Ana sayfa birkaç saniye içinde güncellenir.");
               notifyRuntimeRefresh();
             } catch (e) {

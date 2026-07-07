@@ -615,10 +615,18 @@ export async function adminRemoveBlockedEmailRaw(email: string) {
   }
 }
 
-export async function adminPutPaymentPrices(prices: Record<"PRO" | "BUSINESS", string>, actor: AdminActor) {
+export async function adminPutPaymentPrices(
+  prices: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string },
+  actor: AdminActor,
+) {
   try {
+    const patch: { PRO: string; BUSINESS: string; PRO_ANNUAL?: string } = {
+      PRO: prices.PRO,
+      BUSINESS: prices.BUSINESS,
+    };
+    if (prices.PRO_ANNUAL !== undefined) patch.PRO_ANNUAL = prices.PRO_ANNUAL;
     await auditedPackagesPartial(
-      { prices: { PRO: prices.PRO, BUSINESS: prices.BUSINESS } },
+      { prices: patch },
       actor,
       "plans.pricing",
       "Ödeme fiyatları güncellendi",
