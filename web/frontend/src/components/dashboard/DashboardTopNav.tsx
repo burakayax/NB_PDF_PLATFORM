@@ -6,9 +6,25 @@ import type { Language } from "../../i18n/landing";
 import { resolveCmsAssetUrl } from "../../lib/landingCmsMerge";
 import { ws } from "../../i18n/workspace";
 import { Coins, ChevronDown, Download, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { UserMenu } from "./UserMenu";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
+import rawFlags from "react-phone-number-input/flags";
+
+// Emoji bayraklar Windows'ta harf olarak görünür → gerçek SVG bayraklar kullanılır.
+type FlagComponent = ComponentType<{ title?: string }>;
+const flagComponents = rawFlags as unknown as Record<string, FlagComponent | undefined>;
+
+/** Küçük, yuvarlatılmış SVG bayrak (react-phone-number-input flag seti). */
+function FlagGlyph({ country, title }: { country: string; title?: string }) {
+  const Flag = flagComponents[country];
+  if (!Flag) return null;
+  return (
+    <span className="flex h-3.5 w-5 shrink-0 items-center overflow-hidden rounded-[2px] ring-1 ring-white/10">
+      <Flag title={title} />
+    </span>
+  );
+}
 
 /**
  * Header'da kalıcı "Uygulamayı Yükle" butonu — sadık kullanıcılar için en yüksek
@@ -36,9 +52,9 @@ function HeaderInstallButton({ tr }: { tr: boolean }) {
   );
 }
 
-const LANG_OPTIONS: { code: Language; flag: string; label: string }[] = [
-  { code: "tr", flag: "🇹🇷", label: "Türkçe" },
-  { code: "en", flag: "🇬🇧", label: "English" },
+const LANG_OPTIONS: { code: Language; country: string; label: string }[] = [
+  { code: "tr", country: "TR", label: "Türkçe" },
+  { code: "en", country: "GB", label: "English" },
 ];
 
 function LanguageDropdown({
@@ -82,9 +98,7 @@ function LanguageDropdown({
         aria-haspopup="listbox"
         className="nb-transition inline-flex items-center gap-1 sm:gap-1.5 rounded-xl border border-white/[0.1] bg-nb-bg-soft/90 px-1.5 py-0.5 sm:px-2.5 sm:py-1.5 text-[9px] sm:text-xs font-semibold text-nb-text shadow-sm hover:border-white/[0.16] hover:bg-white/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/40"
       >
-        <span className="text-base leading-none" aria-hidden>
-          {current.flag}
-        </span>
+        <FlagGlyph country={current.country} title={current.label} />
         <span className="font-bold tracking-wide">
           {current.code.toUpperCase()}
         </span>
@@ -116,9 +130,7 @@ function LanguageDropdown({
                   setOpen(false);
                 }}
               >
-                <span className="text-lg leading-none" aria-hidden>
-                  {opt.flag}
-                </span>
+                <FlagGlyph country={opt.country} title={opt.label} />
                 <span>{opt.label}</span>
                 <span className="ml-auto text-[10px] font-bold uppercase tracking-wider text-nb-muted">
                   {opt.code}
