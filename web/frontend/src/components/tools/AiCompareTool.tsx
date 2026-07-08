@@ -17,6 +17,7 @@ import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { aiCompare, fetchAiQuota, type AiError, type AiQuota, type CompareResult } from "../../api/ai";
+import { TopUpModal } from "./TopUpModal";
 
 type Slot = { name: string; text: string; status: "empty" | "reading" | "ready" | "error" };
 const EMPTY: Slot = { name: "", text: "", status: "empty" };
@@ -40,6 +41,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<CompareResult | null>(null);
   const [quota, setQuota] = useState<AiQuota | null>(null);
+  const [topUpOpen, setTopUpOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [copied, setCopied] = useState(false);
@@ -141,6 +143,12 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
                 {quota.unlimited ? (tr ? "Sınırsız" : "Unlimited") : tr ? `Bu ay: ${quota.remaining}/${quota.limit}` : `This month: ${quota.remaining}/${quota.limit}`}
               </span>
             ) : null}
+            {quota && !quota.unlimited && !comingSoon ? (
+              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
+                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
+                + {tr ? "Kredi" : "Credits"}
+              </button>
+            ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{tr ? "İki belgeyi (ör. sözleşmenin iki sürümü) yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarsın." : "Upload two documents (e.g. two versions of a contract); AI extracts added, removed and changed clauses."}</p>
         </div>
@@ -208,6 +216,15 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
             <ShieldCheck className="h-3.5 w-3.5" />{tr ? "Metin cihazınızda çıkarılır; yalnız metin AI'a gider." : "Text is extracted on your device; only text is sent to the AI."}
           </p>
         </>
+      )}
+      {topUpOpen && (
+        <TopUpModal
+          language={language}
+          accessToken={accessToken}
+          bonus={quota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={() => { void fetchAiQuota(accessToken).then((q) => q && setQuota(q)); }}
+        />
       )}
     </div>
   );

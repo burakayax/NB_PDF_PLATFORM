@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { saveBlobToUser } from "../../api";
+import { TopUpModal } from "./TopUpModal";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
@@ -66,6 +67,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [quota, setQuota] = useState<AiQuota | null>(null);
+  const [topUpOpen, setTopUpOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const [dragOver, setDragOver] = useState(false);
@@ -235,6 +237,12 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                 {quota.unlimited ? (tr ? "Sınırsız" : "Unlimited") : tr ? `Bu ay: ${quota.remaining}/${quota.limit}` : `This month: ${quota.remaining}/${quota.limit}`}
               </span>
             ) : null}
+            {quota && !quota.unlimited && !comingSoon ? (
+              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
+                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
+                + {tr ? "Kredi" : "Credits"}
+              </button>
+            ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">
             {tr ? "Bir klasör dolusu PDF'i tek seferde işle: her belgeyi özetle, verisini çıkar ya da çevir; sonuçları tek CSV/PDF olarak indir." : "Process a whole folder of PDFs at once: summarize, extract data or translate each; export results as one CSV/PDF."}
@@ -388,6 +396,15 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
             </>
           )}
         </>
+      )}
+      {topUpOpen && (
+        <TopUpModal
+          language={language}
+          accessToken={accessToken}
+          bonus={quota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={() => { void fetchAiQuota(accessToken).then((q) => q && setQuota(q)); }}
+        />
       )}
     </div>
   );

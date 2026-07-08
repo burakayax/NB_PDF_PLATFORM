@@ -51,19 +51,31 @@ export async function createTopupCheckoutController(request: Request, response: 
   if (!pack) {
     throw new HttpError(400, "Geçersiz paket.");
   }
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { plan: true } });
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { plan: true, billingCountryCode: true },
+  });
   // Pay-per-use: FREE kullanıcı da işlem kredisi satın alabilir (e-posta doğrulaması
   // createPaymentCheckoutSession içinde zorunlu — fatura için yeterli). Plan yalnız
   // PaymentCheckout kaydına yazılır; top-up'ta aktive EDİLMEZ → geçerli bir placeholder.
   const placeholderPlan = user?.plan === "BUSINESS" ? "BUSINESS" : "PRO";
+
+  // Yurtiçi/yurtdışı KDV — abonelikle AYNI güvenli-taraf kuralı:
+  //   beyan edilen yabancı ülke → USD + ihracat istisnası (KDV %0)
+  //   TR / bilinmiyor          → TRY + KDV %20 (şüphede vergi al)
+  // (Eskiden TRY'ye sabitti → yurtdışı müşteriye de yanlışlıkla KDV kesiliyordu.)
+  const country = (user?.billingCountryCode ?? "").toUpperCase().trim();
+  const isForeign = country !== "" && country !== "TR";
+  const checkoutCurrency: "TRY" | "USD" = isForeign ? "USD" : "TRY";
+  const price = isForeign ? pack.priceUSD : pack.priceTRY;
 
   const session = await createPaymentCheckoutSession({
     userId,
     plan: placeholderPlan,
     billing: "monthly",
     clientIp: getClientIp(request),
-    priceTryOverride: String(pack.priceTRY),
-    checkoutCurrency: "TRY",
+    priceTryOverride: String(price),
+    checkoutCurrency,
     topupCredits: pack.credits,
     basketItemName: topupInvoiceLabel(pack),
   });
