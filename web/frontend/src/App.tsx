@@ -5946,6 +5946,7 @@ function App() {
           plan={
             user?.role !== "ADMIN" ? (userBalance?.plan ?? null) : undefined
           }
+          accessToken={accessToken}
           creditBalance={
             user?.role !== "ADMIN"
               ? (userBalance?.creditBalance ?? null)
@@ -6096,7 +6097,18 @@ function App() {
             ) : null}
 
             {contentPanel === "api" ? (
-              <ApiKeysPanel language={language} accessToken={accessToken} />
+              <ApiKeysPanel
+                language={language}
+                accessToken={accessToken}
+                hasApiAccess={
+                  user?.role === "ADMIN" ||
+                  userBalance?.isAdmin === true ||
+                  ["PRO", "BUSINESS"].includes(userBalance?.plan ?? "")
+                }
+                onUpgrade={
+                  isTeamMember ? undefined : () => setUpgradeModalOpen(true)
+                }
+              />
             ) : null}
 
             {contentPanel === "subscription" ? (
