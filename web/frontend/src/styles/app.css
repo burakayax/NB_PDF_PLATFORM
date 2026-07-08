@@ -1553,31 +1553,71 @@ textarea {
 
 .merge-share-bar {
   padding: 14px 16px;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
   border-top: none;
   background: transparent;
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   box-shadow: none;
+  pointer-events: none;
+}
+
+@keyframes merge-share-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .merge-share-bar__inner {
+  pointer-events: auto;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 14px 18px;
-  padding: 14px 18px;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 15px 18px 15px 22px;
+  border-radius: 20px;
+  border: 1px solid rgba(52, 211, 153, 0.34);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 32%),
-    rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(22px) saturate(1.2);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+    radial-gradient(120% 140% at 0% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 30%),
+    rgba(11, 18, 32, 0.97);
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
   box-shadow:
-    0 18px 48px -18px rgba(0, 0, 0, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 24px 60px -20px rgba(0, 0, 0, 0.78),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 0 34px -14px rgba(16, 185, 129, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: merge-share-bar-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Sol kenarda ince yeşil "başarı" vurgu şeridi — kartı diğer içerikten ayırır. */
+.merge-share-bar__inner::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+  box-shadow: 0 0 12px -1px rgba(16, 185, 129, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .merge-share-bar__inner {
+    animation: none;
+  }
 }
 
 .merge-share-bar__info {
@@ -1614,9 +1654,10 @@ textarea {
 }
 
 .merge-share-bar__title {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--nb-text);
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--nb-heading, #f8fafc);
 }
 
 .merge-share-bar__name {

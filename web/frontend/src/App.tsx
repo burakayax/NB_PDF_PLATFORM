@@ -2093,7 +2093,9 @@ function App() {
         // we somehow have no bytes to back the bar.
         const shareBlob = outcome.download.blob ?? null;
         if (shareBlob) {
-          setMergeShareReady({ blob: shareBlob, filename: clientFileName });
+          // Kullanıcı native diyalogda dosyayı yeniden adlandırmış olabilir —
+          // şeritte gerçek kaydedilen ismi göster (yoksa istenen isme düş).
+          setMergeShareReady({ blob: shareBlob, filename: outcome.download.filename ?? clientFileName });
         } else {
           showToast(
             "success",
@@ -2209,7 +2211,7 @@ function App() {
         // is available.
         const showShareBar = !!dl.blob;
         if (dl.blob) {
-          setMergeShareReady({ blob: dl.blob, filename: clientFileName });
+          setMergeShareReady({ blob: dl.blob, filename: dl.filename ?? clientFileName });
         }
         // The bar already confirms the download (Dosyan indirildi + dosya adı),
         // so skip the redundant timed toast when it will be shown. Only fall back
@@ -4040,8 +4042,8 @@ function App() {
                     splitMode === "separate"
                       ? "sayfalar.zip"
                       : selectedFeature.fallbackFilename;
-                  await saveBlobToUser(splitBlob, splitName);
-                  setMergeShareReady({ blob: splitBlob, filename: splitName });
+                  const savedSplitName = await saveBlobToUser(splitBlob, splitName);
+                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName });
                   applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
                   setSubmitting(false);
                   return;
@@ -4051,8 +4053,8 @@ function App() {
             if (resultBytes) {
               const filename = selectedFeature.fallbackFilename;
               const blob = pdfBytesToBlob(resultBytes);
-              await saveBlobToUser(blob, filename);
-              setMergeShareReady({ blob, filename });
+              const savedName = await saveBlobToUser(blob, filename);
+              setMergeShareReady({ blob, filename: savedName });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
               return;
@@ -5764,16 +5766,14 @@ function App() {
                 <div className="merge-share-bar__texts">
                   <span className="merge-share-bar__title">
                     {language === "tr"
-                      ? "Dosyan otomatik indirildi ✓"
-                      : "Auto-downloaded ✓"}
+                      ? "Dosyan kaydedildi ✓"
+                      : "File saved ✓"}
                   </span>
                   <span
                     className="merge-share-bar__name"
                     title={mergeShareReady.filename}
                   >
-                    {language === "tr"
-                      ? `${mergeShareReady.filename} · İndirilenler klasöründe`
-                      : `${mergeShareReady.filename} · in your Downloads`}
+                    {mergeShareReady.filename}
                   </span>
                 </div>
               </div>

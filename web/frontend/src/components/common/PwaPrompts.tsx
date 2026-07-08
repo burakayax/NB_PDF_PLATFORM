@@ -83,7 +83,11 @@ const COPY = {
     install: "Yükle",
     later: "Daha sonra",
     iosTitle: "Ana ekrana ekle",
-    iosBody: "Paylaş menüsünü açıp “Ana Ekrana Ekle”yi seçerek uygulamayı yükle.",
+    iosBody: "iPhone/iPad'de birkaç saniyede ana ekranına ekle:",
+    iosStep1: "Safari'nin altındaki Paylaş simgesine dokun",
+    iosStep2: "Menüde “Ana Ekrana Ekle”yi seç",
+    iosStep3: "Sağ üstten “Ekle”ye dokun",
+    iosGotIt: "Anladım",
     close: "Kapat",
     benefitOffline: "Çevrimdışı erişim",
     benefitFast: "Anında açılış",
@@ -99,7 +103,11 @@ const COPY = {
     install: "Install",
     later: "Later",
     iosTitle: "Add to Home Screen",
-    iosBody: "Open the Share menu and choose “Add to Home Screen” to install.",
+    iosBody: "Add it to your iPhone/iPad home screen in a few seconds:",
+    iosStep1: "Tap the Share icon at the bottom of Safari",
+    iosStep2: "Choose “Add to Home Screen” in the menu",
+    iosStep3: "Tap “Add” in the top-right",
+    iosGotIt: "Got it",
     close: "Close",
     benefitOffline: "Works offline",
     benefitFast: "Instant launch",
@@ -160,7 +168,27 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
           </div>
         </div>
 
-        {!iosManual ? (
+        {iosManual ? (
+          /* iOS Safari programatik kurulumu desteklemez → net, adım adım yönerge.
+             (Sahte "buton" yerine ne yapılacağını açıkça gösterir.) */
+          <ol className="mt-3.5 space-y-2">
+            {[
+              { n: 1, label: t.iosStep1, icon: <Share className="h-3.5 w-3.5 text-nb-primary" aria-hidden /> },
+              { n: 2, label: t.iosStep2, icon: null },
+              { n: 3, label: t.iosStep3, icon: null },
+            ].map((step) => (
+              <li key={step.n} className="flex items-center gap-2.5">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-nb-primary/15 text-[11px] font-bold text-nb-accent">
+                  {step.n}
+                </span>
+                <span className="flex items-center gap-1.5 text-[13px] leading-snug text-nb-text">
+                  {step.label}
+                  {step.icon}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
           <div className="mt-3.5 flex flex-wrap gap-1.5">
             {benefits.map(({ icon: Icon, label }) => (
               <span
@@ -172,29 +200,35 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
               </span>
             ))}
           </div>
-        ) : null}
+        )}
 
         <div className="mt-4 flex items-center gap-2.5">
           {iosManual ? (
-            <span className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-nb-primary/35 bg-nb-primary/10 px-3 py-2.5 text-[13px] font-semibold text-nb-accent">
-              <Share className="h-4 w-4" aria-hidden /> Paylaş → Ana Ekrana Ekle
-            </span>
-          ) : (
             <button
               type="button"
-              onClick={() => void promptInstall()}
+              onClick={dismiss}
               className="nb-transition inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary to-nb-primary-hover px-4 py-2.5 text-[14px] font-bold text-[#0b1220] shadow-[0_8px_20px_-8px_rgba(34,211,238,0.6)] hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
             >
-              <Download className="h-4 w-4" aria-hidden /> {t.install}
+              {t.iosGotIt}
             </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => void promptInstall()}
+                className="nb-transition inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-nb-primary to-nb-primary-hover px-4 py-2.5 text-[14px] font-bold text-[#0b1220] shadow-[0_8px_20px_-8px_rgba(34,211,238,0.6)] hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
+              >
+                <Download className="h-4 w-4" aria-hidden /> {t.install}
+              </button>
+              <button
+                type="button"
+                onClick={dismiss}
+                className="nb-transition rounded-xl border border-white/[0.1] px-4 py-2.5 text-[13px] font-semibold text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+              >
+                {t.later}
+              </button>
+            </>
           )}
-          <button
-            type="button"
-            onClick={dismiss}
-            className="nb-transition rounded-xl border border-white/[0.1] px-4 py-2.5 text-[13px] font-semibold text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-          >
-            {t.later}
-          </button>
         </div>
       </div>
     </div>
