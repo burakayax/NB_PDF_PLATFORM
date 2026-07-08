@@ -6,6 +6,9 @@ import { localizedPlanDisplayName } from "../../i18n/plans";
 import type { Language } from "../../i18n/landing";
 import { p } from "../../i18n/profile";
 import { getSaasApiBase } from "../../api/saasBase";
+import { fetchAiQuota, type AiQuota } from "../../api/ai";
+import { TopUpModal } from "../tools/TopUpModal";
+import { Sparkles, Zap } from "lucide-react";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -20,6 +23,8 @@ type UserProfilePanelProps = {
   subscriptionExpiry?: string | null;
   subscriptionStartedAt?: string | null;
   onLogout?: () => void;
+  /** AI kotası (kalan hak) göstergesi için JWT. */
+  accessToken?: string | null;
 };
 
 const inputClass =
@@ -47,7 +52,7 @@ function splitFromName(name: string | null | undefined): { first: string; last: 
   return { first: t.slice(0, i).trim(), last: t.slice(i + 1).trim() };
 }
 
-export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt, onLogout }: UserProfilePanelProps) {
+export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt, onLogout, accessToken }: UserProfilePanelProps) {
   const lang = language;
 
   // ─── Danger zone: hesap silme ─────────────────────────────────────────────
@@ -238,6 +243,36 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const renewalDate = formatDate(effectiveExpiry, language);
   const startedAtDate = formatDate(subscriptionStartedAt, language);
 
+  // ── Yapay Zekâ kullanımı (kalan hak) — mobil kullanıcı buradan da görebilir. ──
+  const aiToken = accessToken ?? (typeof window !== "undefined" ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) : null);
+  const hasAiAccess =
+    user.role === "ADMIN" || ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(planName);
+  const [aiQuota, setAiQuota] = useState<AiQuota | null>(null);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const reloadAiQuota = () => {
+    if (!hasAiAccess) return;
+    void fetchAiQuota(aiToken).then(setAiQuota);
+  };
+  useEffect(() => {
+    if (!hasAiAccess) {
+      setAiQuota(null);
+      return;
+    }
+    let alive = true;
+    void fetchAiQuota(aiToken).then((q) => {
+      if (alive) setAiQuota(q);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [hasAiAccess, aiToken]);
+
+  const aiUnlimited = aiQuota?.unlimited === true;
+  const aiLimit = aiQuota?.limit ?? 0;
+  const aiRemaining = aiQuota?.remaining ?? 0;
+  const aiUsedPct = aiUnlimited || aiLimit <= 0 ? 0 : Math.min(100, Math.round(((aiLimit - aiRemaining) / aiLimit) * 100));
+  const aiLow = !!aiQuota && !aiUnlimited && aiLimit > 0 && aiRemaining <= Math.max(5, Math.ceil(aiLimit * 0.15));
+
   return (
     <div className="space-y-8">
       {/* ── Kişisel bilgiler ─────────────────────────────────── */}
@@ -392,6 +427,71 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           </>
         )}
       </section>
+
+      {/* ── Yapay Zekâ kullanımı (kalan hak + ek AI) ─────────── */}
+      {hasAiAccess && (
+        <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/50 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-fuchsia-300/70">
+            {lang === "tr" ? "Yapay Zekâ" : "Artificial Intelligence"}
+          </p>
+          <div className="mt-1 flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-fuchsia-300" aria-hidden />
+            <h2 className="text-xl font-semibold tracking-tight text-nb-text">{lang === "tr" ? "AI Kullanımı" : "AI Usage"}</h2>
+          </div>
+
+          {aiUnlimited ? (
+            <p className="mt-4 inline-flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-4 py-2.5 text-sm font-semibold text-emerald-200">
+              <Sparkles className="h-4 w-4" aria-hidden /> {lang === "tr" ? "Sınırsız AI işlemi" : "Unlimited AI operations"}
+            </p>
+          ) : aiQuota ? (
+            <>
+              <div className="mt-4 flex items-baseline justify-between gap-2">
+                <span className="text-sm text-slate-400">{lang === "tr" ? "Bu ay kalan hak" : "Remaining this month"}</span>
+                <span className={`text-lg font-bold ${aiRemaining <= 0 ? "text-red-400" : "text-nb-text"}`}>
+                  {aiRemaining}
+                  <span className="text-sm font-medium text-slate-500">/{aiLimit}</span>
+                </span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${aiUsedPct >= 100 ? "bg-red-500" : aiUsedPct >= 85 ? "bg-amber-500" : "bg-fuchsia-500"}`}
+                  style={{ width: `${aiUsedPct}%` }}
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiRemaining}/${aiLimit}` : `Used: ${aiLimit - aiRemaining}/${aiLimit}`}</span>
+                {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
+              </div>
+              {typeof aiQuota.bonus === "number" && aiQuota.bonus > 0 && (
+                <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+                  +{aiQuota.bonus} {lang === "tr" ? "bonus kredi (ek AI)" : "bonus credits"}
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
+          )}
+
+          {!aiUnlimited && (
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setTopUpOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_24px_-10px_rgba(217,70,239,0.7)] transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/50"
+              >
+                <Zap className="h-4 w-4" aria-hidden /> {lang === "tr" ? "Ek AI Kredisi Al" : "Buy Extra AI Credits"}
+              </button>
+              {aiLow && (
+                <span className="text-xs font-semibold text-amber-300">
+                  {aiRemaining <= 0
+                    ? (lang === "tr" ? "AI hakkın doldu — ek kredi alarak devam et." : "AI quota reached — buy credits to continue.")
+                    : (lang === "tr" ? "AI hakkın azaldı." : "AI quota running low.")}
+                </span>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ── GDPR Madde 20: Verileri Dışa Aktar ──────────────── */}
       <section className="rounded-2xl border border-white/[0.08] bg-nb-panel/40 p-6 shadow-[0_24px_48px_-12px_rgba(0,0,0,0.45)] backdrop-blur-sm">
@@ -556,6 +656,17 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           </div>
         )}
       </section>
+
+      {topUpOpen && (
+        <TopUpModal
+          language={language}
+          accessToken={aiToken}
+          isAdmin={user.role === "ADMIN"}
+          bonus={aiQuota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={reloadAiQuota}
+        />
+      )}
     </div>
   );
 }

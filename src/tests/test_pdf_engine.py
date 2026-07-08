@@ -34,7 +34,7 @@ class TestPdfEngine(unittest.TestCase):
         fake_reader = Mock()
         fake_reader.pages = [1, 2, 3, 4, 5]
         fake_reader.is_encrypted = False
-        with patch('PyPDF2.PdfReader', return_value=fake_reader):
+        with patch('pdf_engine.PyPDF2.PdfReader', return_value=fake_reader):
             with patch('builtins.open', mock_open(read_data=b'%PDF-1.4')):
                 n = pdf_engine.get_num_pages('dummy.pdf')
                 self.assertEqual(n, 5)
@@ -44,7 +44,7 @@ class TestPdfEngine(unittest.TestCase):
         fake_reader.is_encrypted = True
         fake_reader.pages = [1, 2, 3]
         fake_reader.decrypt.return_value = 0
-        with patch('PyPDF2.PdfReader', return_value=fake_reader):
+        with patch('pdf_engine.PyPDF2.PdfReader', return_value=fake_reader):
             with patch('builtins.open', mock_open(read_data=b'%PDF-1.4')):
                 with self.assertRaises(Exception) as cm:
                     pdf_engine.get_num_pages('secret.pdf')
@@ -55,7 +55,7 @@ class TestPdfEngine(unittest.TestCase):
         fake_reader.is_encrypted = True
         fake_reader.decrypt.return_value = 1
         fake_reader.pages = [1, 2, 3]
-        with patch('PyPDF2.PdfReader', return_value=fake_reader):
+        with patch('pdf_engine.PyPDF2.PdfReader', return_value=fake_reader):
             with patch('builtins.open', mock_open(read_data=b'%PDF-1.4')):
                 n = pdf_engine.get_num_pages('secret.pdf', password='1234')
                 self.assertEqual(n, 3)
@@ -65,7 +65,7 @@ class TestPdfEngine(unittest.TestCase):
         fake_reader = Mock()
         fake_reader.is_encrypted = True
         fake_reader.decrypt.return_value = True
-        with patch('PyPDF2.PdfReader', return_value=fake_reader):
+        with patch('pdf_engine.PyPDF2.PdfReader', return_value=fake_reader):
             with patch('builtins.open', mock_open(read_data=b'%PDF-1.4')):
                 self.assertTrue(pdf_engine.validate_pdf_password('secret.pdf', '1234'))
 
