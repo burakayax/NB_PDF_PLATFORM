@@ -6159,6 +6159,7 @@ function App() {
               <UserProfilePanel
                 user={user}
                 language={language}
+                accessToken={accessToken}
                 updateProfile={updateProfile}
                 showToast={showToast}
                 onOpenChangePassword={() => setChangePasswordModalOpen(true)}

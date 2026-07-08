@@ -20,7 +20,6 @@ Asagidaki Python kutuphaneleri ve harici programlar eksiksiz kurulmalidir.
 - pytesseract
 - pdf2image
 - python-docx
-- PyPDF2
 - docx2pdf
 - pywin32
 - openpyxl

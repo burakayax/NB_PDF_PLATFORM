@@ -23,7 +23,6 @@ pypdf>=6
 python-docx
 Pillow
 lxml
-PyPDF2
 pdf2image
 openpyxl
 reportlab

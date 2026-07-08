@@ -6,7 +6,12 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from PIL import Image, ImageOps
-import PyPDF2
+# PyPDF2 EOL + güvenlik açığı (PYSEC-2026-1835: hazırlanmış PDF ile sonsuz döngü).
+# pypdf, PyPDF2'nin bakımı süren API-uyumlu ardılı → onu `PyPDF2` adıyla kullanırız.
+try:
+    import pypdf as PyPDF2
+except ImportError:  # pragma: no cover
+    import PyPDF2  # yedek (eski ortam)
 import io
 import os
 import platform
