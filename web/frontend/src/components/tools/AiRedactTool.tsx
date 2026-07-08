@@ -15,6 +15,7 @@ import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { redactPdf, saveBlobToUser } from "../../api";
 import { aiDetectSensitive, fetchAiQuota, type AiError, type AiQuota } from "../../api/ai";
+import { TopUpModal } from "./TopUpModal";
 
 type Item = { id: string; type: string; label: string; value: string; checked: boolean };
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -50,6 +51,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
   const [aiDone, setAiDone] = useState(false);
   const [result, setResult] = useState<Blob | null>(null);
   const [quota, setQuota] = useState<AiQuota | null>(null);
+  const [topUpOpen, setTopUpOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gate, setGate] = useState<null | "login" | "upgrade">(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -151,6 +153,12 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
                 {quota.unlimited ? (tr ? "Sınırsız" : "Unlimited") : tr ? `Bu ay: ${quota.remaining}/${quota.limit}` : `This month: ${quota.remaining}/${quota.limit}`}
               </span>
             ) : null}
+            {quota && !quota.unlimited && !comingSoon ? (
+              <button type="button" onClick={() => setTopUpOpen(true)} title={tr ? "Ek AI kredisi al" : "Get extra AI credits"}
+                className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200 transition hover:bg-fuchsia-500/20">
+                + {tr ? "Kredi" : "Credits"}
+              </button>
+            ) : null}
           </div>
           <p className="mt-1 text-sm text-slate-400">{tr ? "TC, IBAN, telefon ve e-postayı cihazda bulur; isim/adresi yapay zekâ ile tespit eder; onayladıklarınızı PDF'ten GERÇEKTEN kaldırır (örtme değil)." : "Finds ID, IBAN, phone and email on your device; detects names/addresses with AI; truly removes what you confirm (not just covers)."}</p>
         </div>
@@ -235,6 +243,15 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
             </>
           )}
         </>
+      )}
+      {topUpOpen && (
+        <TopUpModal
+          language={language}
+          accessToken={accessToken}
+          bonus={quota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={() => { void fetchAiQuota(accessToken).then((q) => q && setQuota(q)); }}
+        />
       )}
     </div>
   );

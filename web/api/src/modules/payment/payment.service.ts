@@ -1648,14 +1648,17 @@ async function triggerCreditNote(
   // Checkout'tan plan adı ve iskonto bilgisini al
   const checkout = await prisma.paymentCheckout.findUnique({
     where: { id: checkoutId },
-    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true },
+    select: { plan: true, discountPercent: true, originalNetAmount: true, billingCycle: true, subscriptionDays: true, bonusAiCredits: true },
   });
 
   const planLabel = checkout?.plan ?? "PRO";
   // billingCycle eski kayıtlarda MONTHLY default olabilir — subscriptionDays daha güvenilir
   const isYearly = checkout?.billingCycle === "YEARLY" || (checkout?.subscriptionDays ?? 30) >= 365;
   const billingLabel = isYearly ? "(1 yıl)" : "(1 ay)";
-  const productName = `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
+  // Top-up (ek AI) iadesi abonelik değil → kalem adı da öyle olmalı.
+  const productName = checkout?.bonusAiCredits != null
+    ? `Ek AI Hizmet Bedeli (${checkout.bonusAiCredits} kredi) İadesi`
+    : `PDF Platform ${planLabel} Abonelik ${billingLabel} İadesi`;
 
   const paidPrice  = parseFloat(invoice.grossAmount);
   // kdvRate: eski kayıtlarda sütun migration ile 0.0 set edilmiş olabilir.
