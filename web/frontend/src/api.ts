@@ -753,8 +753,9 @@ export function hasPendingSaveHandle(): boolean {
  * otherwise prompts via `showSaveFilePicker`, and finally falls back to an
  * `<a download>` anchor. Mirrors the delivery used for server responses.
  */
-export async function saveBlobToUser(blob: Blob, filename: string): Promise<void> {
-  await deliverBlobAsDownload(blob, filename, false);
+export async function saveBlobToUser(blob: Blob, filename: string): Promise<string> {
+  const delivered = await deliverBlobAsDownload(blob, filename, false);
+  return delivered.filename ?? filename;
 }
 
 /**
@@ -770,14 +771,23 @@ async function deliverBlobAsDownload(
   const w = window as ShowSavePickerWindow;
   let objectUrl: string | null = null;
   const storedBlob = blob;
-  const storedName = filename;
+
+  // 1. Pre-acquired handle (chosen within user activation before the API call).
+  // The user may have RENAMED the file in that native dialog, so `handle.name`
+  // is the authoritative filename — honour it for the write AND for any anchor
+  // fallback, so a browser that shows the picker but blocks the write (Brave,
+  // some enterprise/PWA contexts) never silently saves under the default name.
+  const preHandle = _pendingSaveHandle;
+  _pendingSaveHandle = null;
+  const effectiveName = preHandle?.name?.trim() || filename;
+  const storedName = effectiveName;
 
   const anchorDownload = () => {
     const u = URL.createObjectURL(blob);
     objectUrl = u;
     const anchor = document.createElement("a");
     anchor.href = u;
-    anchor.download = filename;
+    anchor.download = effectiveName;
     anchor.rel = "noopener";
     document.body.appendChild(anchor);
     anchor.click();
@@ -786,9 +796,6 @@ async function deliverBlobAsDownload(
 
   let usedNativeSave = false;
 
-  // 1. Try pre-acquired handle (obtained within user activation before API call)
-  const preHandle = _pendingSaveHandle;
-  _pendingSaveHandle = null;
   if (preHandle) {
     try {
       const writable = await preHandle.createWritable();
@@ -835,7 +842,7 @@ async function deliverBlobAsDownload(
     if (objectUrl) {
       URL.revokeObjectURL(objectUrl);
     }
-    return {};
+    return { filename: storedName };
   }
 
   const replay = () => {

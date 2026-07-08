@@ -8,6 +8,20 @@ import type { FeatureKey } from "../../api/subscription";
 // gidilir (misafir client-capable araçta login'siz kullanır). 🆓 = client-side,
 // üyeliksiz anında çalışan araçlar.
 
+// FeatureKey OLMAYAN araçlar (AI/özel SEO sayfaları) → /tools/<slug>'a gider.
+// FeatureKey araçları (merge, split…) uygulama içinde açılır.
+const SEO_SLUG_TOOLS = new Set<string>([
+  "pdf-ozetle",
+  "pdf-sohbet",
+  "pdf-ceviri",
+  "pdf-karsilastir",
+  "pdf-veri-cikar",
+  "ai-toplu-islem",
+  "pdf-duzenle",
+  "hassas-veri-gizle",
+  "taranmis-pdf-ocr",
+]);
+
 const toolCategories = (lang: Language) => [
   {
     id: "ai",
@@ -28,10 +42,40 @@ const toolCategories = (lang: Language) => [
         badge: lang === "tr" ? "Yapay Zekâ" : "AI",
       },
       {
+        id: "pdf-ceviri",
+        icon: "🌍",
+        name: lang === "tr" ? "PDF Çeviri" : "Translate PDF",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
+        id: "pdf-karsilastir",
+        icon: "⚖️",
+        name: lang === "tr" ? "PDF Karşılaştır" : "Compare PDFs",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
+        id: "pdf-veri-cikar",
+        icon: "📋",
+        name: lang === "tr" ? "PDF Veri Çıkar" : "Extract Data",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
+        id: "ai-toplu-islem",
+        icon: "📚",
+        name: lang === "tr" ? "Toplu İşle" : "Batch Process",
+        badge: lang === "tr" ? "Yapay Zekâ" : "AI",
+      },
+      {
         id: "pdf-duzenle",
         icon: "✏️",
         name: lang === "tr" ? "PDF Düzenle" : "Edit PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
+        id: "hassas-veri-gizle",
+        icon: "🛡️",
+        name: lang === "tr" ? "Hassas Veri Gizle" : "Redact PDF",
+        badge: "Pro",
       },
       {
         id: "taranmis-pdf-ocr",
@@ -63,6 +107,11 @@ const toolCategories = (lang: Language) => [
         id: "compress",
         icon: "📦",
         name: lang === "tr" ? "PDF Sıkıştır" : "Compress PDF",
+      },
+      {
+        id: "flatten-pdf",
+        icon: "📃",
+        name: lang === "tr" ? "PDF Düzleştir" : "Flatten PDF",
       },
       {
         id: "rotate-pdf",
@@ -109,10 +158,16 @@ const toolCategories = (lang: Language) => [
       { id: "pdf-to-word", icon: "📄", name: "PDF → Word" },
       { id: "pdf-to-excel", icon: "📊", name: "PDF → Excel" },
       { id: "pdf-to-ppt", icon: "📑", name: "PDF → PowerPoint" },
+      { id: "ppt-to-pdf", icon: "📽️", name: "PowerPoint → PDF" },
       { id: "pdf-to-image", icon: "🖼️", name: "PDF → Görsel" },
       { id: "word-to-pdf", icon: "🔤", name: "Word → PDF" },
       { id: "excel-to-pdf", icon: "📈", name: "Excel → PDF" },
       { id: "html-to-pdf", icon: "🌐", name: "HTML → PDF" },
+      {
+        id: "pdf-to-text",
+        icon: "📝",
+        name: lang === "tr" ? "PDF → Metin" : "PDF → Text",
+      },
     ] satisfies CardOption[],
   },
   {
@@ -157,8 +212,7 @@ export default function PdfToolsSection({
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           className="text-center mb-14"
         >
@@ -175,8 +229,8 @@ export default function PdfToolsSection({
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             {language === "tr"
-              ? "20+ profesyonel PDF aracı. Web ve masaüstü. Uygulama değiştirmeden."
-              : "20+ professional PDF tools. Web and desktop. No app-switching."}
+              ? "25+ profesyonel PDF aracı. Web ve masaüstü. Uygulama değiştirmeden."
+              : "25+ professional PDF tools. Web and desktop. No app-switching."}
           </p>
         </motion.div>
 
@@ -186,8 +240,7 @@ export default function PdfToolsSection({
             <motion.div
               key={cat.id}
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: catIdx * 0.1 }}
             >
               {/* Category header */}
@@ -204,13 +257,8 @@ export default function PdfToolsSection({
                 options={cat.tools}
                 columns={4}
                 onSelect={(opt) => {
-                  // Yeni AI/Editör/OCR araçları FeatureKey değil → özel SEO sayfasına git.
-                  if (
-                    opt.id === "pdf-ozetle" ||
-                    opt.id === "pdf-sohbet" ||
-                    opt.id === "pdf-duzenle" ||
-                    opt.id === "taranmis-pdf-ocr"
-                  ) {
+                  // AI/Editör/OCR araçları FeatureKey değil → özel SEO sayfasına git.
+                  if (SEO_SLUG_TOOLS.has(opt.id)) {
                     if (typeof window !== "undefined") {
                       window.location.href = `/tools/${opt.id}`;
                     }
@@ -226,8 +274,7 @@ export default function PdfToolsSection({
         {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="text-center mt-14"
         >
