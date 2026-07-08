@@ -6,6 +6,15 @@ import { createApiKey, listApiKeys, revokeApiKey } from "./api-keys.service.js";
 export async function createApiKeyController(req: Request, res: Response): Promise<void> {
   const userId = req.authUser?.id;
   if (!userId) throw new HttpError(401, "Oturum gerekli.");
+  // API erişimi yalnız Pro/Business (+admin). Free/Starter/Plus anahtar üretemez.
+  const plan = req.authUser?.plan;
+  const isAdmin = req.authUser?.role === "ADMIN";
+  if (!isAdmin && plan !== "PRO" && plan !== "BUSINESS") {
+    throw new HttpError(
+      403,
+      "API erişimi Pro ve Business planlarına özeldir. Anahtar oluşturmak için planınızı yükseltin.",
+    );
+  }
   const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
   try {
     const key = await createApiKey(userId, name);

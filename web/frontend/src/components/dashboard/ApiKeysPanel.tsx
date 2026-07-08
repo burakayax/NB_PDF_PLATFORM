@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { Check, Code2, Copy, KeyRound, Loader2, Plus, Trash2, TriangleAlert } from "lucide-react";
+import { ArrowRight, Check, Code2, Copy, KeyRound, Loader2, Plus, Sparkles, Trash2, TriangleAlert } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { listApiKeys, createApiKey, revokeApiKey, type ApiKeyRow, type CreatedApiKey } from "../../api/apiKeys";
 
-export function ApiKeysPanel({ language, accessToken }: { language: Language; accessToken: string | null }) {
+export function ApiKeysPanel({
+  language,
+  accessToken,
+  hasApiAccess = true,
+  onUpgrade,
+}: {
+  language: Language;
+  accessToken: string | null;
+  /** API erişimi yalnız Pro/Business (+admin). Aksi halde yükseltme yönlendirmesi. */
+  hasApiAccess?: boolean;
+  onUpgrade?: () => void;
+}) {
   const tr = language === "tr";
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +35,7 @@ export function ApiKeysPanel({ language, accessToken }: { language: Language; ac
   useEffect(() => { void refresh(); /* eslint-disable-next-line */ }, [accessToken]);
 
   async function create() {
+    if (!hasApiAccess) { onUpgrade?.(); return; }
     if (!name.trim() || creating) return;
     setCreating(true); setError(null);
     try {
@@ -70,37 +82,58 @@ export function ApiKeysPanel({ language, accessToken }: { language: Language; ac
         </div>
       )}
 
-      {/* Oluştur */}
+      {/* Pro'ya özel — bilgilendirme + yükseltme yönlendirmesi */}
+      {!hasApiAccess && (
+        <div className="mb-4 flex flex-col gap-3 rounded-2xl border border-cyan-400/25 bg-gradient-to-br from-cyan-500/[0.08] via-blue-600/[0.05] to-transparent p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/30 to-blue-600/25 text-cyan-100 ring-1 ring-cyan-400/40"><Sparkles className="h-5 w-5" /></div>
+            <div className="min-w-0">
+              <p className="text-[14px] font-black text-white">{tr ? "API erişimi Pro planına özel" : "API access is a Pro feature"}</p>
+              <p className="mt-0.5 text-[12.5px] leading-snug text-nb-muted">{tr ? "Anahtar oluşturup /v1 uçlarını kendi yazılımınızdan çağırmak için Pro veya Business'a geçin." : "Upgrade to Pro or Business to create keys and call /v1 endpoints from your own software."}</p>
+            </div>
+          </div>
+          {onUpgrade && (
+            <button type="button" onClick={() => onUpgrade()} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2.5 text-[13px] font-bold text-white shadow-[0_8px_24px_-10px_rgba(34,211,238,0.7)] transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/50">
+              {tr ? "Pro'ya Yükselt" : "Upgrade to Pro"} <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Oluştur — Pro değilse buton AKTİF kalır ve yükseltmeye yönlendirir. */}
       <div className="mb-5 flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3">
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr ? "Anahtar adı (ör. Muhasebe entegrasyonu)" : "Key name (e.g. Accounting integration)"}
           onKeyDown={(e) => { if (e.key === "Enter") void create(); }}
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-500" />
-        <button type="button" onClick={() => void create()} disabled={creating || !name.trim()}
+          disabled={!hasApiAccess}
+          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-500 disabled:opacity-60" />
+        <button type="button" onClick={() => void create()} disabled={hasApiAccess && (creating || !name.trim())}
           className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
-          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{tr ? "Anahtar oluştur" : "Create key"}
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : hasApiAccess ? <Plus className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}{tr ? "Anahtar oluştur" : "Create key"}
         </button>
       </div>
       {error && <p className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">{error}</p>}
 
-      {/* Liste */}
-      <div className="mb-8 space-y-2">
-        {loading ? (
-          <p className="text-[13px] text-nb-muted"><Loader2 className="inline h-4 w-4 animate-spin" /> {tr ? "Yükleniyor…" : "Loading…"}</p>
-        ) : keys.length === 0 ? (
-          <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-center text-[13px] text-nb-muted">{tr ? "Henüz API anahtarınız yok." : "No API keys yet."}</p>
-        ) : keys.map((k) => (
-          <div key={k.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${k.revokedAt ? "border-white/[0.05] bg-white/[0.01] opacity-60" : "border-white/[0.08] bg-white/[0.03]"}`}>
-            <KeyRound className="h-4 w-4 shrink-0 text-cyan-300" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold text-slate-100">{k.name} {k.revokedAt && <span className="text-red-300">· {tr ? "iptal" : "revoked"}</span>}</p>
-              <p className="font-mono text-[11px] text-slate-500">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
+      {/* Liste — yalnız erişimi olanlarda */}
+      {hasApiAccess && (
+        <div className="mb-8 space-y-2">
+          {loading ? (
+            <p className="text-[13px] text-nb-muted"><Loader2 className="inline h-4 w-4 animate-spin" /> {tr ? "Yükleniyor…" : "Loading…"}</p>
+          ) : keys.length === 0 ? (
+            <p className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-4 text-center text-[13px] text-nb-muted">{tr ? "Henüz API anahtarınız yok." : "No API keys yet."}</p>
+          ) : keys.map((k) => (
+            <div key={k.id} className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${k.revokedAt ? "border-white/[0.05] bg-white/[0.01] opacity-60" : "border-white/[0.08] bg-white/[0.03]"}`}>
+              <KeyRound className="h-4 w-4 shrink-0 text-cyan-300" />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold text-slate-100">{k.name} {k.revokedAt && <span className="text-red-300">· {tr ? "iptal" : "revoked"}</span>}</p>
+                <p className="font-mono text-[11px] text-slate-500">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
+              </div>
+              {!k.revokedAt && (
+                <button type="button" onClick={() => void revoke(k.id)} title={tr ? "İptal et" : "Revoke"} className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+              )}
             </div>
-            {!k.revokedAt && (
-              <button type="button" onClick={() => void revoke(k.id)} title={tr ? "İptal et" : "Revoke"} className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Dokümantasyon */}
       <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5">

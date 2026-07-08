@@ -1,13 +1,15 @@
 import type { AuthUser } from "../../api/auth";
 import type { PlanName } from "../../api/entitlement";
+import { fetchAiQuota, type AiQuota } from "../../api/ai";
 import { getSaasApiBase } from "../../api/saasBase";
 import { useSettings } from "../../hooks/useSettings";
 import type { Language } from "../../i18n/landing";
 import { resolveCmsAssetUrl } from "../../lib/landingCmsMerge";
 import { ws } from "../../i18n/workspace";
-import { Coins, ChevronDown, Download, Sparkles } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { Coins, ChevronDown, Download, Sparkles, Zap } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { UserMenu } from "./UserMenu";
+import { TopUpModal } from "../tools/TopUpModal";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
 import rawFlags from "react-phone-number-input/flags";
 
@@ -150,6 +152,8 @@ type DashboardTopNavProps = {
   onLanguageChange: (language: Language) => void;
   /** Current plan name from entitlement balance. */
   plan?: PlanName | null;
+  /** JWT — AI kotası (navbar rozeti) için gerekir. */
+  accessToken?: string | null;
   /** Remaining ops / credit balance for the chip. */
   creditBalance?: number | null;
   creditBalanceLoading?: boolean;
@@ -174,6 +178,7 @@ export function DashboardTopNav({
   language,
   onLanguageChange,
   plan,
+  accessToken,
   creditBalance,
   creditBalanceLoading,
   hasActiveSubscription,
@@ -214,21 +219,78 @@ export function DashboardTopNav({
     onOpenCreditsPanel && user.role !== "ADMIN",
   );
 
-  const isLimitExhausted = !hasActiveSubscription && !limitsizProActive && (creditBalance ?? 0) <= 0 && plan === "FREE";
+  // AI erişimi olan planlar (temel PDF araçları herkeste sınırsız; navbar rozeti
+  // artık FREE'de "günlük limit" DEĞİL, AI erişimi olanlarda AI işlem hakkını gösterir).
+  const AI_ACCESS_PLANS: PlanName[] = ["STARTER", "PLUS", "PRO", "BUSINESS"];
+  const hasAiAccess = !isTeamMember && !!plan && AI_ACCESS_PLANS.includes(plan);
 
-  const centerLabel = () => {
-    if (creditBalanceLoading) return "…";
-    if (limitsizProActive) return W.unlimitedAccessActive;
+  const [aiQuota, setAiQuota] = useState<AiQuota | null>(null);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+
+  const reloadAiQuota = useCallback(async () => {
+    if (!hasAiAccess) {
+      setAiQuota(null);
+      return;
+    }
+    const q = await fetchAiQuota(accessToken ?? null);
+    setAiQuota(q);
+  }, [hasAiAccess, accessToken]);
+
+  useEffect(() => {
+    if (!hasAiAccess) {
+      setAiQuota(null);
+      return;
+    }
+    let alive = true;
+    const load = () =>
+      fetchAiQuota(accessToken ?? null).then((q) => {
+        if (alive) setAiQuota(q);
+      });
+    void load();
+    const id = window.setInterval(() => void load(), 60_000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [hasAiAccess, accessToken]);
+
+  const aiExhausted =
+    hasAiAccess && !!aiQuota && !aiQuota.unlimited && (aiQuota.remaining ?? 0) <= 0;
+  // "Az kaldı": kalan ≤ limitin %15'i ya da ≤ 5 (bitmiş de dahil) → Ek AI butonu çıkar.
+  const aiLow =
+    hasAiAccess &&
+    !!aiQuota &&
+    !aiQuota.unlimited &&
+    aiQuota.limit !== null &&
+    (aiQuota.remaining ?? 0) <= Math.max(5, Math.ceil((aiQuota.limit ?? 0) * 0.15));
+  // FREE günlük-limit kırmızısı kaldırıldı; kırmızı yalnız AI hakkı bitince.
+  const isLimitExhausted = aiExhausted;
+
+  const planLabel = () => {
     if (plan === "BUSINESS") return tr ? "Business Planı" : "Business Plan";
     if (plan === "PRO") return tr ? "Pro Planı" : "Pro Plan";
     if (plan === "PLUS") return tr ? "Plus Planı" : "Plus Plan";
     if (plan === "STARTER") return tr ? "Başlangıç Planı" : "Starter Plan";
-    if (hasActiveSubscription) return W.usageUnlimited;
-    // FREE plan – show remaining ops count
-    const ops = (creditBalance ?? 0).toLocaleString(tr ? "tr-TR" : "en-US");
-    if (isLimitExhausted) return tr ? "Günlük limit doldu" : "Daily limit reached";
-    return tr ? `Ücretsiz · ${ops} işlem kaldı` : `Free · ${ops} ops left`;
+    return tr ? "Ücretsiz" : "Free";
   };
+
+  const centerLabel = () => {
+    if (creditBalanceLoading) return "…";
+    // AI erişimi olan HERKES (PRO/limitsiz dahil): AI işlem hakkını göster.
+    if (hasAiAccess) {
+      if (!aiQuota) return planLabel();
+      if (aiQuota.unlimited) return tr ? "AI · Sınırsız" : "AI · Unlimited";
+      if (aiExhausted) return tr ? "AI hakkın doldu" : "AI quota reached";
+      return `AI · ${aiQuota.remaining}/${aiQuota.limit}`;
+    }
+    if (limitsizProActive) return W.unlimitedAccessActive;
+    if (hasActiveSubscription) return W.usageUnlimited;
+    // AI erişimi olmayan (FREE): temel araçlar sınırsız → günlük limit SAYISI gösterme.
+    return tr ? "Ücretsiz" : "Free";
+  };
+
+  // AI erişimi olanlarda AI rozeti (Sparkles), diğerlerinde kredi (Coins).
+  const PillIcon = hasAiAccess ? Sparkles : Coins;
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 flex h-14 items-center justify-between gap-4 border-b border-white/[0.1] bg-gradient-to-r from-nb-bg/90 via-nb-bg-elevated/92 to-nb-bg/90 px-3 shadow-[0_4px_28px_-6px_rgba(0,0,0,0.5)] backdrop-blur-xl backdrop-saturate-150 md:px-6">
@@ -255,39 +317,7 @@ export function DashboardTopNav({
       <div className="ml-auto flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-1 sm:gap-2 md:gap-3 lg:gap-4">
         {showCreditsCenter ? (
           <>
-            {limitsizProActive ? (
-              creditsPanelVisible ? (
-                <button
-                  type="button"
-                  onClick={() => onOpenCreditsPanel?.()}
-                  className="inline-flex max-w-[min(100vw-8rem,12rem)] sm:max-w-[min(100vw-12rem,18rem)] md:max-w-[22rem] items-center gap-2 truncate rounded-full border border-white/[0.06] bg-slate-800/95 px-2 sm:px-3.5 py-1.5 text-left text-[11px] sm:text-[13px] font-semibold tabular-nums tracking-tight text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] ring-1 ring-black/20 transition hover:bg-slate-700/95 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/35"
-                >
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-amber-200 sm:text-xs">
-                    <Coins
-                      className="h-3.5 w-3.5 shrink-0 text-amber-300/95"
-                      aria-hidden
-                    />
-                    {W.unlimitedSidebarBadge}
-                  </span>
-                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">
-                    {W.unlimitedAccessActive}
-                  </span>
-                </button>
-              ) : (
-                <span className="inline-flex max-w-[min(100%,17rem)] flex-col items-start gap-0.5 rounded-full border border-amber-400/35 bg-gradient-to-r from-amber-500/12 to-emerald-600/10 px-3 py-1.5 text-left shadow-[0_0_20px_-8px_rgba(245,158,11,0.35)] sm:flex-row sm:items-center sm:gap-2">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-tight text-amber-200 sm:text-xs">
-                    <Coins
-                      className="h-3.5 w-3.5 shrink-0 text-amber-300/95"
-                      aria-hidden
-                    />
-                    {W.unlimitedSidebarBadge}
-                  </span>
-                  <span className="text-[10px] font-semibold leading-tight text-emerald-100/95 sm:text-[11px]">
-                    {W.unlimitedAccessActive}
-                  </span>
-                </span>
-              )
-            ) : creditsPanelVisible ? (
+            {creditsPanelVisible ? (
               <button
                 type="button"
                 onClick={() => onOpenCreditsPanel?.()}
@@ -302,7 +332,7 @@ export function DashboardTopNav({
                     : `Credits: ${centerLabel()}`
                 }
               >
-                <Coins
+                <PillIcon
                   className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
@@ -310,12 +340,12 @@ export function DashboardTopNav({
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </button>
             ) : (
-              <span className={`inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
+              <span className={`hidden sm:inline-flex max-w-[min(100vw-12rem,18rem)] items-center gap-2 truncate rounded-full px-3.5 py-1.5 text-[13px] font-semibold tabular-nums ring-1 ring-black/20 sm:max-w-[22rem] ${
                 isLimitExhausted
                   ? "border border-red-500/50 bg-red-950/80 text-red-200"
                   : "border border-white/[0.06] bg-slate-800/95 text-slate-100"
               }`}>
-                <Coins
+                <PillIcon
                   className={`h-4 w-4 shrink-0 ${isLimitExhausted ? "text-red-400" : "text-amber-300/90"}`}
                   strokeWidth={2.25}
                   aria-hidden
@@ -323,6 +353,18 @@ export function DashboardTopNav({
                 <span className="min-w-0 truncate">{centerLabel()}</span>
               </span>
             )}
+            {aiLow ? (
+              <button
+                type="button"
+                onClick={() => setTopUpOpen(true)}
+                title={tr ? "Ek AI kredisi al" : "Buy extra AI credits"}
+                aria-label={tr ? "Ek AI kredisi al" : "Buy extra AI credits"}
+                className="nb-transition hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full border border-fuchsia-400/45 bg-gradient-to-r from-fuchsia-500/25 to-indigo-500/25 px-2.5 py-1 md:px-3 md:py-1.5 text-[9px] md:text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.06em] text-fuchsia-50 shadow-[0_0_22px_-8px_rgba(217,70,239,0.55)] hover:border-fuchsia-300/60 hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-400/45"
+              >
+                <Zap className="h-3 w-3 shrink-0 sm:h-3.5 sm:w-3.5" aria-hidden />
+                {tr ? "Ek AI" : "Add AI"}
+              </button>
+            ) : null}
             {upgradeVisible ? (
               <button
                 type="button"
@@ -365,6 +407,17 @@ export function DashboardTopNav({
           onLogout={onLogout}
         />
       </div>
+
+      {topUpOpen ? (
+        <TopUpModal
+          language={language}
+          accessToken={accessToken ?? null}
+          isAdmin={user.role === "ADMIN"}
+          bonus={aiQuota?.bonus}
+          onClose={() => setTopUpOpen(false)}
+          onGranted={() => void reloadAiQuota()}
+        />
+      ) : null}
     </header>
   );
 }
