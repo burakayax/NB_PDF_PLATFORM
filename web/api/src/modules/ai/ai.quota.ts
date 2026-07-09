@@ -35,7 +35,21 @@ export type AiQuota = {
   bonus: number; // top-up ile alınan ek kredi (kalıcı)
   unlimited: boolean;
   resetAt: string;
+  /** Bu ay araç bazında istek sayıları: { summarize: 5, chat: 3, ... } */
+  byOp: Record<string, number>;
 };
+
+/** Json alanını güvenle Record<string, number>'a çevirir. */
+function normalizeOpCounts(v: unknown): Record<string, number> {
+  if (v && typeof v === "object" && !Array.isArray(v)) {
+    const out: Record<string, number> = {};
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (typeof val === "number" && Number.isFinite(val)) out[k] = val;
+    }
+    return out;
+  }
+  return {};
+}
 
 export async function getAiQuota(
   userId: string,
@@ -59,6 +73,7 @@ export async function getAiQuota(
     bonus,
     unlimited: limit === null,
     resetAt: nextMonthResetAt(),
+    byOp: normalizeOpCounts(row?.operationCounts),
   };
 }
 
@@ -75,23 +90,30 @@ export async function hasAiQuota(
 }
 
 /** Başarılı AI işleminden SONRA tüket: aylık kota varsa onu, bittiyse bonus krediyi düş. */
-export async function consumeAiQuota(userId: string, plan?: string, role?: string): Promise<void> {
+export async function consumeAiQuota(userId: string, plan?: string, role?: string, op?: string): Promise<void> {
   const yearMonth = currentYearMonth();
   const limit = aiLimitForPlan(plan, role);
-  if (limit !== null) {
-    const row = await prisma.aiUsage.findUnique({ where: { userId_yearMonth: { userId, yearMonth } } });
-    const used = row?.count ?? 0;
-    if (used >= limit) {
-      // Aylık kota dolu → bonus krediden düş (0'ın altına inme).
-      await prisma.user.updateMany({ where: { id: userId, bonusAiCredits: { gt: 0 } }, data: { bonusAiCredits: { decrement: 1 } } });
-      return;
+  const row = await prisma.aiUsage.findUnique({ where: { userId_yearMonth: { userId, yearMonth } } });
+  const used = row?.count ?? 0;
+
+  // Araç bazında istek sayacı — her durumda (bonus dahil) güncellenir.
+  const counts = normalizeOpCounts(row?.operationCounts);
+  if (op) counts[op] = (counts[op] ?? 0) + 1;
+
+  if (limit !== null && used >= limit) {
+    // Aylık kota dolu → bonus krediden düş (0'ın altına inme). Aylık count artmaz;
+    // ama araç sayacını yine de yaz (row mevcut, çünkü used >= limit > 0).
+    await prisma.user.updateMany({ where: { id: userId, bonusAiCredits: { gt: 0 } }, data: { bonusAiCredits: { decrement: 1 } } });
+    if (op && row) {
+      await prisma.aiUsage.update({ where: { userId_yearMonth: { userId, yearMonth } }, data: { operationCounts: counts } });
     }
+    return;
   }
-  // Aylık sayacı artır (admin dahil — analitik için).
+  // Aylık sayacı artır (admin dahil — analitik için) + araç sayacı.
   await prisma.aiUsage.upsert({
     where: { userId_yearMonth: { userId, yearMonth } },
-    create: { userId, yearMonth, count: 1 },
-    update: { count: { increment: 1 } },
+    create: { userId, yearMonth, count: 1, operationCounts: op ? { [op]: 1 } : undefined },
+    update: { count: { increment: 1 }, operationCounts: op ? counts : undefined },
   });
 }
 
