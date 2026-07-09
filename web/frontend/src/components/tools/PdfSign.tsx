@@ -4,7 +4,7 @@ import * as pdfjsLib from "pdfjs-dist";
 // eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
-  Check,
+  Calendar,
   Download,
   Loader2,
   PenLine,
@@ -23,7 +23,16 @@ import { saveBlobToUser } from "../../api";
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type SigSource = { dataUrl: string; bytes: Uint8Array; aspect: number };
-type Placement = SigSource & { id: string; page: number; xNorm: number; yNorm: number; wNorm: number };
+type Placement = SigSource & {
+  id: string;
+  page: number;
+  xNorm: number;
+  yNorm: number;
+  wNorm: number;
+  /** Metin/tarih alanı ise dolu; imza görselinde undefined. Düzenlenebilir. */
+  text?: string;
+  color?: string;
+};
 type Drag =
   | { id: string; mode: "move"; sx: number; sy: number; ox: number; oy: number }
   | { id: string; mode: "resize"; sx: number; ow: number }
@@ -35,6 +44,33 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
+}
+
+/** Metin/tarih alanını yüksek çözünürlüklü şeffaf PNG'ye çizer (Türkçe tam destekli). */
+function renderTextToPng(text: string, color = "#0b2447"): SigSource {
+  const t = text && text.trim() ? text : " ";
+  const scale = 3;
+  const fontPx = 40;
+  const font = `600 ${fontPx}px "Segoe UI", Arial, "Helvetica Neue", sans-serif`;
+  const measure = document.createElement("canvas").getContext("2d")!;
+  measure.font = font;
+  const w = Math.ceil(measure.measureText(t).width) + 24;
+  const h = Math.ceil(fontPx * 1.5);
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, w * scale);
+  c.height = Math.max(1, h * scale);
+  const ctx = c.getContext("2d")!;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = color;
+  ctx.font = font;
+  ctx.textBaseline = "middle";
+  ctx.fillText(t, 12, h / 2);
+  const dataUrl = c.toDataURL("image/png");
+  return { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect: w / h };
+}
+
+function todayStr(): string {
+  return new Date().toLocaleDateString();
 }
 
 export function PdfSign({ language }: { language: Language; accessToken?: string | null }) {
@@ -236,6 +272,29 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     }
   }
 
+  // Metin/tarih alanı ekle — sayfanın ortasına, düzenlenebilir.
+  function addTextField(defaultText: string) {
+    const r = renderTextToPng(defaultText);
+    const wNorm = 0.3;
+    const hNorm = (wNorm * (dims.w || 1)) / (r.aspect || 1) / (dims.h || 1);
+    const xNorm = Math.max(0, Math.min(1 - wNorm, 0.5 - wNorm / 2));
+    const yNorm = Math.max(0, Math.min(1 - hNorm, 0.5 - hNorm / 2));
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setPlacements((ps) => [...ps, { ...r, id, page: current, xNorm, yNorm, wNorm, text: defaultText, color: "#0b2447" }]);
+    setSelected(id);
+  }
+
+  function updateTextField(id: string, newText: string) {
+    setPlacements((ps) =>
+      ps.map((p) => {
+        if (p.id !== id || p.text === undefined) return p;
+        const r = renderTextToPng(newText, p.color);
+        return { ...p, text: newText, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
+      }),
+    );
+  }
+
+  const selectedPlacement = placements.find((p) => p.id === selected) ?? null;
   const pagePlacements = placements.filter((p) => p.page === current);
 
   return (
@@ -315,6 +374,33 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 </span>
               )}
 
+              <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
+              <button
+                type="button"
+                onClick={() => addTextField(tr ? "Metin" : "Text")}
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+              >
+                <TypeIcon className="h-4 w-4" />
+                {tr ? "Metin" : "Text"}
+              </button>
+              <button
+                type="button"
+                onClick={() => addTextField(todayStr())}
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+              >
+                <Calendar className="h-4 w-4" />
+                {tr ? "Tarih" : "Date"}
+              </button>
+              {selectedPlacement?.text !== undefined && (
+                <input
+                  autoFocus
+                  value={selectedPlacement.text}
+                  onChange={(e) => updateTextField(selectedPlacement.id, e.target.value)}
+                  placeholder={tr ? "Metni düzenle…" : "Edit text…"}
+                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
+                />
+              )}
+
               <div className="ml-auto flex items-center gap-3">
                 <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
                   <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
@@ -325,7 +411,7 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                     <ZoomIn className="h-4 w-4" />
                   </button>
                 </div>
-                <span className="hidden text-[12px] font-semibold text-cyan-300 md:inline">{placements.length} {tr ? "imza" : "signatures"}</span>
+                <span className="hidden text-[12px] font-semibold text-cyan-300 md:inline">{placements.length} {tr ? "öğe" : "items"}</span>
                 <button
                   type="button"
                   disabled={busy || placements.length === 0}
