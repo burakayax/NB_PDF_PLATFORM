@@ -65,6 +65,48 @@ export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
   return out.save();
 }
 
+/**
+ * İmza/alan yerleşimi — koordinatlar sayfaya oranlı (0..1), ZOOM'dan bağımsız.
+ * `yNorm` ÜST-tabanlıdır (sol-üst köşe); pdf-lib alt-sol origin'e çevrilir.
+ */
+export type SignatureItem = {
+  pngBytes: Uint8Array;
+  aspect: number; // görselin en/boy oranı (w/h)
+  page: number; // 0-tabanlı sayfa
+  xNorm: number; // sol-üst x / sayfa genişliği
+  yNorm: number; // sol-üst y / sayfa yüksekliği (üstten)
+  wNorm: number; // genişlik / sayfa genişliği
+};
+
+/**
+ * İmza (ve metin) görsellerini PDF'e GÖMER — cihazda, düzleştirilmiş çıktı.
+ * Aynı görsel birden çok yerde kullanılıyorsa bir kez embed edilir (boyut).
+ */
+export async function applySignatures(
+  pdfBytes: ArrayBuffer | Uint8Array,
+  items: SignatureItem[],
+): Promise<Uint8Array> {
+  const doc = await loadPdf(pdfBytes);
+  const pages = doc.getPages();
+  const embedCache = new Map<Uint8Array, Awaited<ReturnType<typeof doc.embedPng>>>();
+  for (const it of items) {
+    const page = pages[it.page];
+    if (!page) continue;
+    let img = embedCache.get(it.pngBytes);
+    if (!img) {
+      img = await doc.embedPng(it.pngBytes);
+      embedCache.set(it.pngBytes, img);
+    }
+    const { width: pw, height: ph } = page.getSize();
+    const w = it.wNorm * pw;
+    const h = it.aspect > 0 ? w / it.aspect : w;
+    const x = it.xNorm * pw;
+    const y = ph - it.yNorm * ph - h; // üst-tabanlı → pdf-lib alt-sol origin
+    page.drawImage(img, { x, y, width: w, height: h });
+  }
+  return doc.save();
+}
+
 /** Sayfaları döndürür. `rotations`: sayfa index → derece (0/90/180/270). */
 export async function rotatePdf(
   bytes: ArrayBuffer | Uint8Array,

@@ -272,6 +272,9 @@ const AiRedactTool = lazy(() =>
 const PdfEditor = lazy(() =>
   import("./components/tools/PdfEditor").then((m) => ({ default: m.PdfEditor })),
 );
+const PdfSign = lazy(() =>
+  import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
+);
 const BlogIndexPage = lazy(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -725,6 +728,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-ozetle" ||
     rawPath === "/tools/pdf-sohbet" ||
     rawPath === "/tools/pdf-duzenle" ||
+    rawPath === "/tools/pdf-imzala" ||
     rawPath === "/tools/taranmis-pdf-ocr" ||
     rawPath === "/tools/pdf-veri-cikar" ||
     rawPath === "/tools/pdf-ceviri" ||
@@ -2941,6 +2945,7 @@ function App() {
         p === "/tools/pdf-ozetle" ||
         p === "/tools/pdf-sohbet" ||
         p === "/tools/pdf-duzenle" ||
+        p === "/tools/pdf-imzala" ||
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
         p === "/tools/pdf-ceviri" ||
@@ -4853,6 +4858,15 @@ function App() {
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfEditor language={language} accessToken={accessToken} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "pdf-imzala") {
+      return (
+        <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfSign language={language} accessToken={accessToken} />
           </Suspense>
         </GuestSeoToolPage>
       );
