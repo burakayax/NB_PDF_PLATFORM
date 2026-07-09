@@ -127,6 +127,8 @@ const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
 
 /** PDF Düzenle (cihazda editör) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
 const EDITOR_FAV_ID = "edit-pdf";
+/** PDF İmzala (cihazda imza) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
+const SIGN_FAV_ID = "sign-pdf";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -153,6 +155,8 @@ type DashboardSidebarProps = {
   onOpenAi?: (mode: AiToolMode) => void;
   /** PDF Düzenle aracını aç (cihazda editör). */
   onOpenEditor?: () => void;
+  /** PDF İmzala aracını aç (cihazda imza). */
+  onOpenSign?: () => void;
 };
 
 /**
@@ -177,6 +181,7 @@ export function DashboardSidebar({
   onTeamClick,
   onOpenAi,
   onOpenEditor,
+  onOpenSign,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -190,18 +195,19 @@ export function DashboardSidebar({
   // İyileştir / İşaretle / Güvenlik) — mobil launcher ile aynı gruplama.
   // PDF Düzenle de favori olabilir (FeatureKey olmadığı için ayrı bayrak).
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
+  const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
   const sidebarGroups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    // Favoriler bölümü: en az bir araç VEYA editör favorilenmişse görünür.
-    return fav.length > 0 || editorFavorited
+    // Favoriler bölümü: en az bir araç VEYA editör/imza favorilenmişse görünür.
+    return fav.length > 0 || editorFavorited || signFavorited
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited]);
   // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
   // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
@@ -284,6 +290,31 @@ export function DashboardSidebar({
             active={isFavorite(EDITOR_FAV_ID)}
             label={label}
             onToggle={() => toggleFavorite(EDITOR_FAV_ID)}
+          />
+        </span>
+      </button>
+    );
+  };
+
+  // PDF İmzala satırı — favori yıldızlı, hem Favoriler hem İşaretle grubunda kullanılır.
+  const renderSignRow = (keyPrefix = "") => {
+    if (!onOpenSign) return null;
+    const label = tr ? "PDF İmzala" : "Sign PDF";
+    return (
+      <button
+        key={`${keyPrefix}sign`}
+        type="button"
+        onClick={onOpenSign}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+      >
+        <span className="text-base text-amber-300" aria-hidden>✍️</span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <FavoriteStar
+            alwaysVisible
+            active={isFavorite(SIGN_FAV_ID)}
+            label={label}
+            onToggle={() => toggleFavorite(SIGN_FAV_ID)}
           />
         </span>
       </button>
@@ -381,6 +412,9 @@ export function DashboardSidebar({
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
+                  {/* PDF İmzala — İşaretle grubunda her zaman ilk; Favoriler'de favoriyse */}
+                  {group.id === "annotate" ? renderSignRow("annotate-") : null}
+                  {group.id === "favorites" && signFavorited ? renderSignRow("fav-") : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
@@ -459,6 +493,7 @@ export function DashboardSidebarMobileLauncher({
   resolveToolLabel,
   onOpenAi,
   onOpenEditor,
+  onOpenSign,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const tr = language === "tr";
@@ -479,18 +514,19 @@ export function DashboardSidebarMobileLauncher({
 
   const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
+  const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
   const groups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 || editorFavorited
+    return fav.length > 0 || editorFavorited || signFavorited
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // favorites listesi değişince yeniden grupla
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -779,6 +815,31 @@ export function DashboardSidebarMobileLauncher({
                                   active={isFavorite(EDITOR_FAV_ID)}
                                   label={tr ? "PDF Düzenle" : "Edit PDF"}
                                   onToggle={() => toggleFavorite(EDITOR_FAV_ID)}
+                                />
+                              </span>
+                            </button>
+                          ) : null}
+                          {/* PDF İmzala kartı — İşaretle grubunda her zaman, Favoriler'de favoriyse */}
+                          {onOpenSign && !query.trim() &&
+                          (group.id === "annotate" || (group.id === "favorites" && signFavorited)) ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenSign();
+                                setOpen(false);
+                              }}
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-amber-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
+                            >
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>✍️</span>
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                                {tr ? "PDF İmzala" : "Sign PDF"}
+                              </span>
+                              <span className="absolute left-1 top-1">
+                                <FavoriteStar
+                                  alwaysVisible
+                                  active={isFavorite(SIGN_FAV_ID)}
+                                  label={tr ? "PDF İmzala" : "Sign PDF"}
+                                  onToggle={() => toggleFavorite(SIGN_FAV_ID)}
                                 />
                               </span>
                             </button>

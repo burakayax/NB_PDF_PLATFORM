@@ -297,6 +297,7 @@ type ContentPanel =
   | "team"
   | "ai"
   | "editor"
+  | "sign"
   | "api";
 
 type ToastState = {
@@ -6140,6 +6141,7 @@ function App() {
             setContentPanel("ai");
           }}
           onOpenEditor={() => setContentPanel("editor")}
+          onOpenSign={() => setContentPanel("sign")}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
@@ -6158,6 +6160,7 @@ function App() {
             setContentPanel("ai");
           }}
           onOpenEditor={() => setContentPanel("editor")}
+          onOpenSign={() => setContentPanel("sign")}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
@@ -6217,6 +6220,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfEditor language={language} accessToken={accessToken} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "sign" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfSign language={language} accessToken={accessToken} />
                 </Suspense>
               </section>
             ) : null}
