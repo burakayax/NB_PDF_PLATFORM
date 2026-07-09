@@ -16,6 +16,8 @@ import {
   Type,
   UploadCloud,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import {
@@ -94,6 +96,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const [pageCount, setPageCount] = useState(0);
   const [current, setCurrent] = useState(0);
   const [scale, setScale] = useState(1);
+  // Kullanıcı yakınlaştırma faktörü — 1 = sayfayı genişliğe sığdır ("100%").
+  const [zoom, setZoom] = useState(1);
   const [dims, setDims] = useState({ w: 0, h: 0 });
   const [edits, setEdits] = useState<Map<string, Edit>>(new Map());
   const [added, setAdded] = useState<Added[]>([]);
@@ -198,7 +202,9 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
         const base = page.getViewport({ scale: 1 });
         const container = overlayRef.current?.parentElement?.parentElement;
         const availW = Math.min((container?.clientWidth ?? 700) - 24, 820);
-        const s = Math.max(0.4, availW / base.width);
+        // Sayfayı genişliğe sığdır (fit) × kullanıcı zoom faktörü.
+        const fit = Math.max(0.4, availW / base.width);
+        const s = fit * zoom;
         const vp = page.getViewport({ scale: s });
         const canvas = canvasRef.current;
         if (!canvas || cancelled) return;
@@ -211,7 +217,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
       finally { if (!cancelled) setRendering(false); }
     })();
     return () => { cancelled = true; };
-  }, [doc, current, editorOpen]);
+  }, [doc, current, editorOpen, zoom]);
 
   const setEdit = useCallback((id: string, patch: Edit) => {
     setEdits((m) => { const n = new Map(m); n.set(id, { ...n.get(id), ...patch }); return n; });
@@ -378,7 +384,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
     }
     downloadResult();
   }
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setResult(null); setError(null); setEditorOpen(false); setThumbs([]); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setResult(null); setError(null); setEditorOpen(false); setThumbs([]); setZoom(1); }
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -475,6 +481,13 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
               </>
             )}
             <div className="ml-auto flex items-center gap-3">
+              {/* Yakınlaştırma — görsel seçicideki gibi */}
+              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
+                <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-4 w-4" /></button>
+                <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-24 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
+                <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
+              </div>
               <span className="hidden text-[12px] font-semibold text-slate-300 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · <span className="text-cyan-300">{editCount} {tr ? "değişiklik" : "edits"}</span></span>
               <button type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
               <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
