@@ -25,6 +25,10 @@ type UserProfilePanelProps = {
   onLogout?: () => void;
   /** AI kotası (kalan hak) göstergesi için JWT. */
   accessToken?: string | null;
+  /** Süreli (geçici) plan bitiş tarihi (ISO) — yoksa null. */
+  overrideExpiresAt?: string | null;
+  /** Geçici plan bitince dönülecek plan — yoksa null. */
+  basePlan?: string | null;
 };
 
 const inputClass =
@@ -52,7 +56,7 @@ function splitFromName(name: string | null | undefined): { first: string; last: 
   return { first: t.slice(0, i).trim(), last: t.slice(i + 1).trim() };
 }
 
-export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt, onLogout, accessToken }: UserProfilePanelProps) {
+export function UserProfilePanel({ user, language, updateProfile, showToast, onOpenChangePassword, setInitialPassword, onSubscriptionCancelled, subscriptionExpiry, subscriptionStartedAt, onLogout, accessToken, overrideExpiresAt, basePlan }: UserProfilePanelProps) {
   const lang = language;
 
   // ─── Danger zone: hesap silme ─────────────────────────────────────────────
@@ -376,6 +380,21 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 </div>
               )}
             </dl>
+
+            {overrideExpiresAt && new Date(overrideExpiresAt).getTime() > Date.now() ? (
+              <div className="mt-3 rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/[0.07] px-4 py-3 text-sm">
+                <p className="font-semibold text-fuchsia-200">
+                  {lang === "tr"
+                    ? `Geçici ${localizedPlanDisplayName(planName, language)} planındasın`
+                    : `You're on a temporary ${localizedPlanDisplayName(planName, language)} plan`}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-fuchsia-200/70">
+                  {lang === "tr"
+                    ? `${formatDate(overrideExpiresAt, language)} tarihine kadar geçerli; sonra ${localizedPlanDisplayName(planNameFromUser(basePlan ?? "FREE"), language)} planına dönersin. Mevcut aboneliğinin süresi bu sürede işlemeye devam eder.`
+                    : `Valid until ${formatDate(overrideExpiresAt, language)}; then you return to ${localizedPlanDisplayName(planNameFromUser(basePlan ?? "FREE"), language)}. Your existing subscription keeps counting down meanwhile.`}
+                </p>
+              </div>
+            ) : null}
 
             {isPaidPlan && renewalDate !== "—" && (
               <p className="mt-3 text-xs leading-relaxed text-slate-500">{p("autoRenewNote", lang)}</p>

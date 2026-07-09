@@ -405,6 +405,7 @@ export async function listUsersForAdmin(params: {
         city: true,
         isTeamMember: true,
         teamOwnerId: true,
+        organization: { select: { overrideExpiresAt: true, basePlan: true } },
         _count: { select: { dailyUsages: true } },
         dailyUsages: {
           where: { usageDate: usageToday },
@@ -439,6 +440,9 @@ export async function listUsersForAdmin(params: {
       city: u.city,
       isTeamMember: u.isTeamMember,
       teamOwnerId: u.teamOwnerId,
+      // Süreli (geçici) plan: bitiş tarihi + dönülecek plan (yoksa null).
+      overrideExpiresAt: u.organization?.overrideExpiresAt?.toISOString() ?? null,
+      basePlan: u.organization?.basePlan ?? null,
       _count: u._count,
       usageToday: d
         ? {

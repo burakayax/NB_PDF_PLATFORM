@@ -165,6 +165,9 @@ export async function entitlementBalanceController(
     isAdmin: summary.isAdmin,
     subscriptionExpiry,
     subscriptionStartedAt,
+    // Süreli (geçici) plan: bitiş tarihi + bitince dönülecek plan (yoksa null).
+    overrideExpiresAt: summary.overrideExpiresAt,
+    basePlan: summary.basePlan,
   });
 }
 

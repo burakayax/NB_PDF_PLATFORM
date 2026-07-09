@@ -116,6 +116,10 @@ export type AdminUserRow = {
   city: string | null;
   isTeamMember: boolean;
   teamOwnerId: string | null;
+  /** Süreli (geçici) plan bitiş tarihi (ISO) — yoksa null. */
+  overrideExpiresAt: string | null;
+  /** Geçici plan bitince dönülecek plan — yoksa null. */
+  basePlan: string | null;
   usageToday: {
     operationsCount: number;
     postLimitExtraOps: number;

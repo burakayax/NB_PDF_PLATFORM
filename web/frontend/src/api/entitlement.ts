@@ -21,6 +21,8 @@ export type EntitlementBalanceWire = {
   isAdmin: boolean;
   subscriptionExpiry?: string | null;
   subscriptionStartedAt?: string | null;
+  overrideExpiresAt?: string | null;
+  basePlan?: PlanName | null;
 };
 
 export type UserBalance = {
@@ -40,6 +42,10 @@ export type UserBalance = {
   monthly: { used: number; limit: number | null };
   watermarkEnabled: boolean;
   fileSizeLimitMB: number;
+  /** Süreli (geçici) plan bitiş tarihi (ISO) — yoksa null. */
+  overrideExpiresAt: string | null;
+  /** Geçici plan bitince dönülecek plan — yoksa null. */
+  basePlan: PlanName | null;
 };
 
 export function normalizeUserBalance(
@@ -66,6 +72,8 @@ export function normalizeUserBalance(
     fileSizeLimitMB: wire.fileSizeLimitMB ?? 999999,
     subscriptionExpiry: wire.subscriptionExpiry ?? null,
     subscriptionStartedAt: wire.subscriptionStartedAt ?? null,
+    overrideExpiresAt: wire.overrideExpiresAt ?? null,
+    basePlan: wire.basePlan ?? null,
   };
 }
 

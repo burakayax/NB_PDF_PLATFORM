@@ -450,6 +450,8 @@ export async function getQuotaSummary(userId: string) {
       batchLimit: 999,
       fileSizeLimitMB: 999999,
       isAdmin: true,
+      overrideExpiresAt: null,
+      basePlan: null,
     };
   }
 
@@ -465,6 +467,8 @@ export async function getQuotaSummary(userId: string) {
         batchLimit: 100,
         fileSizeLimitMB: 500,
         isAdmin: false,
+        overrideExpiresAt: null,
+        basePlan: null,
       };
     }
   }
@@ -484,5 +488,8 @@ export async function getQuotaSummary(userId: string) {
     batchLimit: org.batchLimit,
     fileSizeLimitMB: org.fileSizeLimitMB,
     isAdmin: false,
+    // Süreli (geçici) plan aktifse: ne zaman bitip hangi plana döneceği.
+    overrideExpiresAt: org.overrideExpiresAt?.toISOString() ?? null,
+    basePlan: org.basePlan ?? null,
   };
 }
