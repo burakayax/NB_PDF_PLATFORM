@@ -1009,6 +1009,13 @@ function UserManagePanel({
           {/* Süreli (geçici) plan — N gün sonra mevcut plana döner */}
           <div className="space-y-3 rounded-2xl border border-fuchsia-500/25 bg-fuchsia-500/[0.05] p-4">
             <p className="text-[10px] font-bold uppercase tracking-widest text-fuchsia-300/80">Süreli (geçici) plan</p>
+            {user.overrideExpiresAt && new Date(user.overrideExpiresAt).getTime() > Date.now() ? (
+              <div className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 px-3 py-2 text-[12px] text-fuchsia-100">
+                <span className="font-bold">Aktif:</span> {user.plan} planı{" "}
+                <span className="font-semibold">{new Date(user.overrideExpiresAt).toLocaleString("tr-TR")}</span>{" "}
+                tarihinde bitiyor → sonra <span className="font-semibold">{user.basePlan ?? "FREE"}</span> planına döner.
+              </div>
+            ) : null}
             <p className="text-[11px] leading-snug text-slate-400">
               N günlük plan tanımla; süre bitince kullanıcı önceki planına döner. Mevcut aboneliğinin süresi bu süreçte <span className="text-slate-300">durmaz</span>.
             </p>

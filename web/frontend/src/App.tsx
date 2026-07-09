@@ -6161,6 +6161,8 @@ function App() {
                 user={user}
                 language={language}
                 accessToken={accessToken}
+                overrideExpiresAt={userBalance?.overrideExpiresAt ?? null}
+                basePlan={userBalance?.basePlan ?? null}
                 updateProfile={updateProfile}
                 showToast={showToast}
                 onOpenChangePassword={() => setChangePasswordModalOpen(true)}
