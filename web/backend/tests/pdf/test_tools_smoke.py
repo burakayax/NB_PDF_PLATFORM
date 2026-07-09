@@ -78,7 +78,9 @@ def _nonempty(path: str, minsize: int = 50) -> bool:
 @pytest.fixture(scope="module")
 def assets(tmp_path_factory):
     d = tmp_path_factory.mktemp("tools_smoke")
-    pdf = d / "in.pdf"
+    # Farklı basename'ler: LibreOffice ofis→pdf çıktısı kaynak basename'iyle üretildiği
+    # için (sheet.xlsx → sheet.pdf) kaynak PDF ile çakışma olmasın.
+    pdf = d / "source.pdf"
     doc = fitz.open()
     for i in range(3):
         pg = doc.new_page()
@@ -96,13 +98,13 @@ def assets(tmp_path_factory):
     Image.new("RGB", (400, 300), (200, 180, 140)).save(str(png))
 
     from docx import Document
-    docx = d / "in.docx"
+    docx = d / "letter.docx"
     doc2 = Document()
     doc2.add_paragraph("Smoke test Word belgesi - ABC 123")
     doc2.save(str(docx))
 
     from openpyxl import Workbook
-    xlsx = d / "in.xlsx"
+    xlsx = d / "sheet.xlsx"
     wb = Workbook()
     ws = wb.active
     ws.append(["Ad", "Tutar"])

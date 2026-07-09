@@ -652,16 +652,18 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
         if not soffice:
             return False
         pptx_abs = os.path.abspath(pptx_path)
-        out_dir = os.path.dirname(os.path.abspath(pdf_path))
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(pdf_path)), exist_ok=True)
         # İzole kullanıcı profili: eşzamanlı dönüşümlerde profil kilidini önler.
         profile_dir = tempfile.mkdtemp(prefix="lo_profile_")
+        # İzole çıktı dizini: LibreOffice çıktıyı kaynak basename'iyle üretir →
+        # hedef dizindeki aynı isimli mevcut dosyayı ezmesin diye ayrı dizine üretilir.
+        conv_dir = tempfile.mkdtemp(prefix="lo_out_")
         try:
             subprocess.run(
                 [
                     soffice,
                     f"-env:UserInstallation=file://{profile_dir}",
-                    "--headless", "--convert-to", "pdf", "--outdir", out_dir, pptx_abs,
+                    "--headless", "--convert-to", "pdf", "--outdir", conv_dir, pptx_abs,
                 ],
                 check=True,
                 timeout=timeout_sec,
@@ -669,15 +671,18 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
                 text=True,
             )
         except subprocess.CalledProcessError as e:
+            shutil.rmtree(conv_dir, ignore_errors=True)
             raise Exception(f"LibreOffice dönüşümü başarısız: {e.stderr or e}") from e
         finally:
             shutil.rmtree(profile_dir, ignore_errors=True)
         base = os.path.splitext(os.path.basename(pptx_abs))[0]
-        produced = os.path.join(out_dir, base + ".pdf")
-        if not os.path.isfile(produced):
-            raise Exception("LibreOffice çıktı dosyası oluşmadı.")
-        if os.path.abspath(produced) != os.path.abspath(pdf_path):
+        produced = os.path.join(conv_dir, base + ".pdf")
+        try:
+            if not os.path.isfile(produced):
+                raise Exception("LibreOffice çıktı dosyası oluşmadı.")
             shutil.move(produced, pdf_path)
+        finally:
+            shutil.rmtree(conv_dir, ignore_errors=True)
         return os.path.isfile(pdf_path)
 
     if os.name == "nt":
