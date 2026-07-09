@@ -284,8 +284,16 @@ def test_ppt_to_pdf(assets):
     # LibreOffice gerekir → yoksa SKIP.
     if not (shutil.which("soffice") or shutil.which("libreoffice")):
         pytest.skip("LibreOffice (soffice) yok")
-    src_pptx = _out(assets, "src.pptx")
-    ptx.pdf_to_pptx(assets["pdf"], src_pptx)
+    # pptx'i doğrudan python-pptx ile üret (pdf_to_pptx/poppler'a bağımlı kalma).
+    from pptx import Presentation
+    src_pptx = _out(assets, "deck.pptx")
+    prs = Presentation()
+    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    try:
+        slide.shapes.title.text = "Smoke test"
+    except Exception:
+        pass
+    prs.save(src_pptx)
     o = _out(assets, "ptp.pdf")
     _run(lambda: ptx.pptx_to_pdf(src_pptx, o))
     assert _valid_pdf(o)
