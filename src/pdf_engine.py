@@ -469,25 +469,32 @@ def _libreoffice_convert_to_pdf(src_path: str, pdf_path: str) -> bool:
     # İzole kullanıcı profili: eşzamanlı dönüşümlerde profil kilidi ("soffice already
     # running") ve konteynerde ilk-çalıştırma sorunlarını önler. Her çağrı ayrı profil.
     profile_dir = tempfile.mkdtemp(prefix="lo_profile_")
+    # İzole ÇIKTI dizini: LibreOffice çıktıyı kaynak basename'iyle üretir
+    # (ör. in.xlsx → in.pdf). Doğrudan hedef dizine yazarsak aynı isimli mevcut bir
+    # dosyayı (ör. kaynak in.pdf) ezebilir. Ayrı dizine üretip sonra taşırız.
+    conv_dir = tempfile.mkdtemp(prefix="lo_out_")
     try:
         subprocess.run(
             [
                 soffice,
                 # Linux sunucu yolu: profile_dir "/tmp/..." → "file:///tmp/..."
                 f"-env:UserInstallation=file://{profile_dir}",
-                "--headless", "--convert-to", "pdf", "--outdir", out_dir, src_abs,
+                "--headless", "--convert-to", "pdf", "--outdir", conv_dir, src_abs,
             ],
             check=True, timeout=timeout_sec, capture_output=True, text=True,
         )
     except subprocess.CalledProcessError as e:
+        shutil.rmtree(conv_dir, ignore_errors=True)
         raise Exception(f"LibreOffice dönüşümü başarısız: {e.stderr or e}") from e
     finally:
         shutil.rmtree(profile_dir, ignore_errors=True)
-    produced = os.path.join(out_dir, os.path.splitext(os.path.basename(src_abs))[0] + ".pdf")
-    if not os.path.isfile(produced):
-        raise Exception("LibreOffice çıktı dosyası oluşmadı.")
-    if os.path.abspath(produced) != os.path.abspath(pdf_path):
+    produced = os.path.join(conv_dir, os.path.splitext(os.path.basename(src_abs))[0] + ".pdf")
+    try:
+        if not os.path.isfile(produced):
+            raise Exception("LibreOffice çıktı dosyası oluşmadı.")
         shutil.move(produced, pdf_path)
+    finally:
+        shutil.rmtree(conv_dir, ignore_errors=True)
     return os.path.isfile(pdf_path)
 
 
