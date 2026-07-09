@@ -87,8 +87,11 @@ def _open_pdf_reader(pdf_path: str, password: Optional[str] = None, context: str
     basename = os.path.basename(pdf_path)
     reader: PyPDF2.PdfReader
     try:
+        # pypdf sayfaları TEMBEL okur; dosya kapanınca "seek of closed file" verir.
+        # Bu yüzden baytları belleğe alıp BytesIO ile açıyoruz (stream canlı kalır).
         with open(pdf_path, "rb") as fh:
-            reader = PyPDF2.PdfReader(fh, strict=False)
+            _pdf_bytes = fh.read()
+        reader = PyPDF2.PdfReader(io.BytesIO(_pdf_bytes), strict=False)
     except _PdfReadError as e:
         raise Exception(_pdf_open_user_message("pypdf.PdfReader", e, basename)) from e
     except OSError as e:
