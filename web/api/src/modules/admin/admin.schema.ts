@@ -33,6 +33,12 @@ export const adminUpdateUserSchema = z.object({
   subscriptionExpiry: z.union([z.string(), z.null()]).optional(),
 });
 
+/** Süreli (geçici) plan tanımı: N gün sonra kullanıcı önceki planına döner. */
+export const adminGrantTempPlanSchema = z.object({
+  plan: z.enum(["PRO", "BUSINESS"]),
+  days: z.coerce.number().int().min(1).max(365),
+});
+
 export const adminPatchSettingsSchema = z.object({
   patches: z.record(z.unknown()),
 });

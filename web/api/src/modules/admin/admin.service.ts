@@ -6,6 +6,7 @@ import { HttpError } from "../../lib/http-error.js";
 import { hashPassword } from "../../lib/password.js";
 import { prisma } from "../../lib/prisma.js";
 import { getResolvedPackagesConfig } from "../../lib/packages-config.service.js";
+import { applyTemporaryPlan } from "../organization/organization.service.js";
 import { getSetting, setSetting } from "../../lib/site-config.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import type { AdminActor } from "./admin-audit.service.js";
@@ -500,10 +501,81 @@ export async function updateUserForAdmin(
       isVerified: true,
     },
   });
+
+  // Plan değiştiyse ORGANİZASYONU da güncelle. Entitlement/navbar/gerçek kotalar ve
+  // AI erişimi org.plan'dan (getQuotaSummary) okunur; yalnız user.plan güncellenirse
+  // profil "Pro" görünürken navbar "Ücretsiz" kalır ve kullanıcı Pro haklarını alamaz.
+  // Ekip üyelerinde plan ekip aboneliğinden gelir → onların org'unu değiştirme.
+  if (data.plan !== undefined && existing.organizationId && !existing.isTeamMember) {
+    const planConfig = await prisma.planConfig.findUnique({ where: { plan: data.plan } });
+    if (planConfig) {
+      const isFree = data.plan === "FREE";
+      await prisma.organization.update({
+        where: { id: existing.organizationId },
+        data: {
+          plan: data.plan,
+          dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+          monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
+          fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
+          batchLimit: planConfig.batchLimit,
+          watermarkEnabled: planConfig.watermarkEnabled,
+          queuePriority: planConfig.queuePriority,
+          maxSeats: planConfig.maxSeats,
+          subscriptionStatus: isFree ? "none" : "active",
+          // Admin hediyesi: uzak bir bitiş tarihi (otomatik düşürme/iyzico yenilemesi yok).
+          subscriptionExpiry: isFree
+            ? null
+            : new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000),
+          // Kalıcı plan değişimi varsa geçici (süreli) plan tanımını temizle.
+          basePlan: null,
+          overrideExpiresAt: null,
+        },
+      });
+    }
+  }
+
   await logAdminAudit(actor, "user.update", userId, `Kullanıcı güncellendi: ${existing.email}`, {
     fields: Object.keys(data),
   });
   return updated;
+}
+
+/**
+ * Kullanıcıya SÜRELİ (geçici) plan tanımlar — ör. 3 günlük Pro. Süre bitince
+ * cron/lazy revert ile önceki planına döner; mevcut aboneliğinin süresi bu
+ * süreçte DURMAZ. Ekip üyelerine uygulanmaz (plan ekip aboneliğinden gelir).
+ */
+export async function grantTemporaryPlanForAdmin(
+  userId: string,
+  plan: Plan,
+  days: number,
+  actor: AdminActor,
+) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new HttpError(404, "User not found.");
+  }
+  if (user.isTeamMember) {
+    throw new HttpError(400, "Ekip üyelerine süreli plan tanımlanamaz; plan ekip aboneliğinden gelir.");
+  }
+  if (!user.organizationId) {
+    throw new HttpError(400, "Kullanıcının organizasyonu yok.");
+  }
+  const { basePlan, overrideExpiresAt } = await applyTemporaryPlan(user.organizationId, plan, days);
+  await prisma.user.update({ where: { id: userId }, data: { plan } });
+  await logAdminAudit(
+    actor,
+    "user.update",
+    userId,
+    `Süreli plan tanımlandı: ${plan} (${days} gün) — bitince ${basePlan} planına döner`,
+    { plan, days, basePlan, overrideExpiresAt: overrideExpiresAt.toISOString() },
+  );
+  return {
+    plan,
+    days,
+    basePlan,
+    overrideExpiresAt: overrideExpiresAt.toISOString(),
+  };
 }
 
 export async function createUserForAdmin(input: {

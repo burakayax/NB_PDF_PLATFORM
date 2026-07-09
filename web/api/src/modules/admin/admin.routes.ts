@@ -48,6 +48,7 @@ import {
   adminSystemResetController,
   adminTOOLSController,
   adminUpdateUserController,
+  adminGrantTempPlanController,
   adminUploadMediaController,
   adminUsageExportController,
   adminUsageSeriesController,
@@ -85,6 +86,7 @@ adminRouter.post("/users", asyncHandler(adminCreateUserController));
 adminRouter.get("/users/:id/detail", asyncHandler(adminGetUserDetailController));
 adminRouter.delete("/users/:id", asyncHandler(adminDeleteUserController));
 adminRouter.patch("/users/:id", asyncHandler(adminUpdateUserController));
+adminRouter.post("/users/:id/temp-plan", asyncHandler(adminGrantTempPlanController));
 
 adminRouter.get("/coupons", asyncHandler(adminListCouponsController));
 adminRouter.post("/coupons", asyncHandler(adminCreateCouponController));

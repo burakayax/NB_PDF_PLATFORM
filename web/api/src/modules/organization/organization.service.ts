@@ -1,4 +1,4 @@
-import type { OrgRole, Plan } from "@prisma/client";
+import type { OrgRole, Organization, Plan } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import crypto from "crypto";
 import { sendMail } from "../../lib/mailer.js";
@@ -259,4 +259,96 @@ export async function applyPlanLimitsToOrg(orgId: string, plan: Plan) {
     where: { organizationId: orgId },
     data: { plan },
   });
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Süreli (geçici) plan tanımlar — ör. "3 günlük Pro". Süre bitince `basePlan`'a
+ * dönülür (cron veya lazy revert). Mevcut aboneliğin `subscriptionExpiry`'sine
+ * DOKUNULMAZ → base abonelik timeline'ı bu süreçte durmadan işler.
+ */
+export async function applyTemporaryPlan(orgId: string, tempPlan: Plan, days: number) {
+  const org = await prisma.organization.findUnique({ where: { id: orgId } });
+  if (!org) throw new Error("Organization not found");
+  const planConfig = await prisma.planConfig.findUnique({ where: { plan: tempPlan } });
+  if (!planConfig) throw new Error("Plan config not found");
+
+  const now = Date.now();
+  const overrideActive = org.overrideExpiresAt != null && org.overrideExpiresAt.getTime() > now;
+  // Zaten aktif bir override varsa ORİJİNAL base korunur (üst üste tanımda kayıp olmasın);
+  // yoksa mevcut gerçek plan snapshot'lanır.
+  const basePlan: Plan = overrideActive ? (org.basePlan ?? org.plan) : org.plan;
+  const overrideExpiresAt = new Date(now + Math.max(1, Math.round(days)) * DAY_MS);
+
+  await prisma.organization.update({
+    where: { id: orgId },
+    data: {
+      plan: tempPlan,
+      dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+      monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
+      fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
+      batchLimit: planConfig.batchLimit,
+      watermarkEnabled: planConfig.watermarkEnabled,
+      queuePriority: planConfig.queuePriority,
+      maxSeats: planConfig.maxSeats,
+      subscriptionStatus: "active",
+      basePlan,
+      overrideExpiresAt,
+      // subscriptionExpiry'ye DOKUNULMAZ — base abonelik süresi işlemeye devam eder.
+    },
+  });
+  await prisma.user.updateMany({ where: { organizationId: orgId }, data: { plan: tempPlan } });
+  return { basePlan, overrideExpiresAt };
+}
+
+/**
+ * Geçici plan süresi dolduysa `basePlan`'a geri döner. Süre içinde base abonelik de
+ * dolduysa (subscriptionExpiry geçmişte) FREE'ye düşer. Süre dolmadıysa org olduğu
+ * gibi döner. Hem cron hem de okuma yolunda (getQuotaSummary) lazy olarak çağrılır.
+ */
+export async function revertExpiredOverride(org: Organization): Promise<Organization> {
+  if (!org.overrideExpiresAt || org.overrideExpiresAt.getTime() > Date.now()) {
+    return org;
+  }
+  let revertPlan: Plan = org.basePlan ?? "FREE";
+  if (revertPlan !== "FREE" && org.subscriptionExpiry && org.subscriptionExpiry.getTime() < Date.now()) {
+    revertPlan = "FREE"; // base abonelik comp sırasında doldu
+  }
+  const planConfig = await prisma.planConfig.findUnique({ where: { plan: revertPlan } });
+  const updated = await prisma.organization.update({
+    where: { id: org.id },
+    data: {
+      plan: revertPlan,
+      ...(planConfig
+        ? {
+            dailyOperationLimit: planConfig.dailyOperationLimit ?? undefined,
+            monthlyOperationLimit: planConfig.monthlyOperationLimit ?? undefined,
+            fileSizeLimitMB: planConfig.fileSizeLimitMB ?? undefined,
+            batchLimit: planConfig.batchLimit,
+            watermarkEnabled: planConfig.watermarkEnabled,
+            queuePriority: planConfig.queuePriority,
+            maxSeats: planConfig.maxSeats,
+          }
+        : {}),
+      subscriptionStatus: revertPlan === "FREE" ? "none" : "active",
+      basePlan: null,
+      overrideExpiresAt: null,
+    },
+  });
+  await prisma.user.updateMany({ where: { organizationId: org.id }, data: { plan: revertPlan } });
+  return updated;
+}
+
+/** Cron: süresi dolmuş tüm geçici planları base plana döndürür. Döndürülen sayıyı verir. */
+export async function revertAllExpiredOverrides(): Promise<number> {
+  const expired = await prisma.organization.findMany({
+    where: { overrideExpiresAt: { not: null, lte: new Date() } },
+    select: { id: true },
+  });
+  for (const { id } of expired) {
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (org) await revertExpiredOverride(org);
+  }
+  return expired.length;
 }

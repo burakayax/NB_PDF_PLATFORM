@@ -1,6 +1,6 @@
 import type { Organization, User } from "@prisma/client";
 import { prisma } from "./prisma.js";
-import { createOrganizationForUser } from "../modules/organization/organization.service.js";
+import { createOrganizationForUser, revertExpiredOverride } from "../modules/organization/organization.service.js";
 
 export interface QuotaCheckResult {
   allowed: boolean;
@@ -436,6 +436,8 @@ export async function getQuotaSummary(userId: string) {
   // sayaç ancak bir işlem (check/consume) DB'yi sıfırladıktan sonra düzelir.
   let org = await resetDailyIfNeeded(user.organization, timezone);
   org = await resetMonthlyIfNeeded(org, timezone);
+  // Süreli (geçici) plan bittiyse base plana dön — cron gecikse bile navbar/limitler doğru.
+  org = await revertExpiredOverride(org);
   const resetAt = getNextMidnightInTimezone(timezone);
 
   // Admin → tüm sınırlar kaldırılmış

@@ -27,6 +27,7 @@ import {
   adminPaymentPricesBodySchema,
   adminResetBodySchema,
   adminRevisionsQuerySchema,
+  adminGrantTempPlanSchema,
   adminRollbackBodySchema,
   adminToolRegistryPutSchema,
   adminUpdateUserSchema,
@@ -62,6 +63,7 @@ import {
   putCmsContent,
   putPackagesMarketing,
   putPlansOverride,
+  grantTemporaryPlanForAdmin,
   putTOOLSConfig,
   updateAppSettingsForAdmin,
   updateToolRegistryForAdmin,
@@ -155,6 +157,30 @@ export async function adminUpdateUserController(
   const actor = adminActor(request);
   const updated = await updateUserForAdmin(userId, parsed.data, actor);
   response.json(updated);
+}
+
+/** POST /admin/users/:id/temp-plan — kullanıcıya N günlük geçici plan tanımlar. */
+export async function adminGrantTempPlanController(
+  request: Request,
+  response: Response,
+) {
+  const raw = request.params.id;
+  const userId = Array.isArray(raw) ? raw[0] : raw;
+  if (!userId) {
+    throw new HttpError(400, "User id is required.");
+  }
+  const parsed = adminGrantTempPlanSchema.safeParse(request.body);
+  if (!parsed.success) {
+    throw new HttpError(400, parsed.error.issues[0]?.message ?? "Invalid body.");
+  }
+  const actor = adminActor(request);
+  const result = await grantTemporaryPlanForAdmin(
+    userId,
+    parsed.data.plan,
+    parsed.data.days,
+    actor,
+  );
+  response.json(result);
 }
 
 export async function adminDeleteUserController(

@@ -129,6 +129,10 @@ model Organization {
   maxSeats               Int           @default(1) @map("max_seats")
   subscriptionExpiry     DateTime?     @map("subscription_expiry")
   subscriptionStatus     SubscriptionStatus @default(none) @map("subscription_status")
+  // Admin: süreli geçici plan (ör. 3 günlük Pro). Süre bitince `basePlan`'a dönülür.
+  // Bu sırada `subscriptionExpiry` (mevcut abonelik) DURMAZ — sabit tarih olarak işler.
+  basePlan               Plan?         @map("base_plan")
+  overrideExpiresAt      DateTime?     @map("override_expires_at")
   createdAt              DateTime      @default(now()) @map("created_at")
   updatedAt              DateTime      @updatedAt @map("updated_at")
 
