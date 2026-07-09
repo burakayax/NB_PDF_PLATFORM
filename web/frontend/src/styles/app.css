@@ -881,6 +881,48 @@ textarea {
   grid-column: 1 / -1;
 }
 
+/* Sürükle-bırak yükleme alanı — tüm dashboard araçları için. Butonla seçim
+   korunur; alanın tamamı damla hedefidir. */
+.upload-dropzone {
+  position: relative;
+  padding: 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.upload-dropzone:hover {
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+.upload-dropzone--over {
+  border-color: rgba(34, 211, 238, 0.7);
+  border-style: solid;
+  background: rgba(34, 211, 238, 0.08);
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14), 0 12px 30px -14px rgba(34, 211, 238, 0.5);
+}
+
+/* Damla sırasında iç öğeler dragleave titremesine yol açmasın. */
+.upload-dropzone--over * {
+  pointer-events: none;
+}
+
+.upload-dropzone__hint {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--nb-muted);
+}
+
+.upload-dropzone--over .upload-dropzone__hint {
+  color: var(--nb-primary, #22d3ee);
+  font-weight: 700;
+}
+
 .field span {
   font-size: 13px;
   color: var(--nb-muted);

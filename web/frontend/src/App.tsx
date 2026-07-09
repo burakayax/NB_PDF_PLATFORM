@@ -1125,6 +1125,7 @@ function App() {
     filename: string;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
+  const [uploadDragOver, setUploadDragOver] = useState(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
     null,
@@ -6331,7 +6332,26 @@ function App() {
                              butona dokununca picker hem buton onClick'i hem label'ın
                              implicit aktivasyonuyla İKİ kez açılıyordu; bu mobilde çoklu
                              dosya seçimini bozuyordu. Artık picker'ı yalnızca buton açar. */
-                          <div className="field">
+                          <div
+                            className={`field upload-dropzone${uploadDragOver ? " upload-dropzone--over" : ""}`}
+                            onDragOver={(e) => {
+                              if (submitting) return;
+                              e.preventDefault();
+                              if (!uploadDragOver) setUploadDragOver(true);
+                            }}
+                            onDragLeave={(e) => {
+                              // Yalnız alanı gerçekten terk edince kapat (iç öğelere geçişte titremesin).
+                              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+                              setUploadDragOver(false);
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setUploadDragOver(false);
+                              if (submitting) return;
+                              const dropped = Array.from(e.dataTransfer.files ?? []);
+                              if (dropped.length) void handleNewFiles(dropped);
+                            }}
+                          >
                             <span>{W.filePick}</span>
                             <div className="file-picker-row flex-wrap">
                               <button
@@ -6350,6 +6370,15 @@ function App() {
                                   : W.filePickNoteSingle}
                               </span>
                             </div>
+                            <p className="upload-dropzone__hint">
+                              {uploadDragOver
+                                ? language === "tr"
+                                  ? "Bırak, ekleyelim"
+                                  : "Drop to add"
+                                : language === "tr"
+                                  ? "veya dosyayı buraya sürükleyip bırak"
+                                  : "or drag & drop your file here"}
+                            </p>
                             <input
                               key={selectedFeatureId}
                               ref={fileInputRef}
