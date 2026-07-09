@@ -453,18 +453,52 @@ def _word_to_pdf_win32com(docx_path: str, pdf_path: str) -> None:
             pass
 
 
+def _libreoffice_convert_to_pdf(src_path: str, pdf_path: str) -> bool:
+    """LibreOffice (soffice --headless) ile ofis belgesini PDF'e çevirir.
+    Sunucu (Linux) tarafında Word/PowerPoint/Excel → PDF dönüşümlerinin ortak yolu."""
+    soffice = shutil.which("soffice") or shutil.which("libreoffice")
+    if not soffice:
+        raise Exception(
+            "LibreOffice (soffice) bulunamadı. Sunucu imajında kurulu olmalıdır "
+            "(word/excel/ppt → PDF için gerekir)."
+        )
+    src_abs = os.path.abspath(src_path)
+    out_dir = os.path.dirname(os.path.abspath(pdf_path))
+    os.makedirs(out_dir, exist_ok=True)
+    timeout_sec = max(30, int(os.environ.get("NB_PDF_TOOL_TIMEOUT_SEC", "300")))
+    # İzole kullanıcı profili: eşzamanlı dönüşümlerde profil kilidi ("soffice already
+    # running") ve konteynerde ilk-çalıştırma sorunlarını önler. Her çağrı ayrı profil.
+    profile_dir = tempfile.mkdtemp(prefix="lo_profile_")
+    try:
+        subprocess.run(
+            [
+                soffice,
+                # Linux sunucu yolu: profile_dir "/tmp/..." → "file:///tmp/..."
+                f"-env:UserInstallation=file://{profile_dir}",
+                "--headless", "--convert-to", "pdf", "--outdir", out_dir, src_abs,
+            ],
+            check=True, timeout=timeout_sec, capture_output=True, text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"LibreOffice dönüşümü başarısız: {e.stderr or e}") from e
+    finally:
+        shutil.rmtree(profile_dir, ignore_errors=True)
+    produced = os.path.join(out_dir, os.path.splitext(os.path.basename(src_abs))[0] + ".pdf")
+    if not os.path.isfile(produced):
+        raise Exception("LibreOffice çıktı dosyası oluşmadı.")
+    if os.path.abspath(produced) != os.path.abspath(pdf_path):
+        shutil.move(produced, pdf_path)
+    return os.path.isfile(pdf_path)
+
+
 def word_to_pdf(docx_path: str, pdf_path: str, progress_callback=None) -> bool:
     """
     Word belgesini PDF'e çevirir.
 
     Windows: Microsoft Word gerekir. Önce docx2pdf, yoksa pywin32 (COM) denenir.
     macOS: Microsoft Word + docx2pdf.
+    Linux (sunucu): LibreOffice headless.
     """
-    if sys.platform not in ("win32", "darwin"):
-        raise Exception(
-            "Word'den PDF dönüşümü şu an yalnızca Windows veya macOS üzerinde "
-            "Microsoft Word yüklüyken desteklenir."
-        )
     if not os.path.isfile(docx_path):
         raise FileNotFoundError(f"Dosya bulunamadı: {docx_path}")
     ext = os.path.splitext(docx_path)[1].lower()
@@ -475,6 +509,15 @@ def word_to_pdf(docx_path: str, pdf_path: str, progress_callback=None) -> bool:
     out_dir = os.path.dirname(pdf_path)
     if out_dir and not os.path.isdir(out_dir):
         raise FileNotFoundError(f"Hedef klasör bulunamadı: {out_dir}")
+
+    # Linux sunucu (Docker): Microsoft Word yok → LibreOffice headless ile dönüştür.
+    if sys.platform not in ("win32", "darwin"):
+        if progress_callback:
+            progress_callback(1, 2, "LibreOffice ile PDF oluşturuluyor...")
+        ok = _libreoffice_convert_to_pdf(docx_path, pdf_path)
+        if progress_callback:
+            progress_callback(2, 2, "Tamamlandı")
+        return ok
 
     if progress_callback:
         progress_callback(0, 2, "Microsoft Word ile PDF oluşturuluyor...")
@@ -2483,10 +2526,14 @@ def excel_to_pdf(xlsx_path: str, pdf_path: str, progress_callback=None) -> bool:
                     f"Ayrıntı: {e2}"
                 ) from e2
     else:
+        # Linux sunucu: yüksek-sadakat için LibreOffice; yoksa reportlab yedeği.
         try:
-            _excel_to_pdf_reportlab(xlsx_path, pdf_path)
-        except Exception as e:
-            raise Exception(f"Excel -> PDF Hatası: {e}") from e
+            _libreoffice_convert_to_pdf(xlsx_path, pdf_path)
+        except Exception:
+            try:
+                _excel_to_pdf_reportlab(xlsx_path, pdf_path)
+            except Exception as e:
+                raise Exception(f"Excel -> PDF Hatası: {e}") from e
 
     if not os.path.isfile(pdf_path):
         raise Exception("PDF dosyası oluşmadı.")

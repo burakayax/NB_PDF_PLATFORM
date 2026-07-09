@@ -78,7 +78,8 @@ jobs:
             libcairo2-dev pkg-config \
             poppler-utils \
             tesseract-ocr \
-            wkhtmltopdf
+            wkhtmltopdf \
+            libreoffice-writer libreoffice-calc libreoffice-impress fonts-liberation
 
       - name: Install dependencies
         working-directory: web/backend

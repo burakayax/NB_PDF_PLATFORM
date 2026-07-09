@@ -152,11 +152,18 @@ class TestPdfEngine(unittest.TestCase):
             for p in paths:
                 self.assertTrue(p.endswith('.pdf'))
 
-    def test_word_to_pdf_unsupported_platform(self):
-        with patch.object(sys, 'platform', 'linux'):
-            with self.assertRaises(Exception) as cm:
-                pdf_engine.word_to_pdf('/x/a.docx', '/x/a.pdf')
-            self.assertIn('Windows', str(cm.exception))
+    def test_word_to_pdf_linux_requires_libreoffice(self):
+        # Linux (sunucu) yolu LibreOffice kullanır; soffice yoksa açıklayıcı hata verir.
+        with tempfile.TemporaryDirectory() as tmp:
+            docx = os.path.join(tmp, 'a.docx')
+            with open(docx, 'wb') as f:
+                f.write(b'PK\x03\x04')  # dosyanın var olması yeterli
+            out = os.path.join(tmp, 'a.pdf')
+            with patch.object(sys, 'platform', 'linux'):
+                with patch('pdf_engine.shutil.which', return_value=None):
+                    with self.assertRaises(Exception) as cm:
+                        pdf_engine.word_to_pdf(docx, out)
+            self.assertIn('LibreOffice', str(cm.exception))
 
     def test_word_to_pdf_success_with_fake_docx2pdf(self):
         def fake_convert(src, dst):
