@@ -47,8 +47,11 @@ else:
         "https://github.com/UB-Mannheim/tesseract/wiki"
     )
 base_dir = os.path.dirname(os.path.abspath(__file__))
-# Poppler klasörünün proje ana dizinindeki Library/bin içinde olduğu varsayılır
-poppler_bin_path = os.path.join(base_dir, "..", "Library", "bin")
+# Poppler: Windows'ta proje kökündeki Library/bin (conda bundle) kullanılır.
+# Linux/macOS'ta None → pdf2image sistem PATH'inden bulur (poppler-utils). Library/bin
+# dizini git'te var ama içi Windows DLL/exe → Linux'ta ASLA kullanılmamalı (aksi halde
+# pdfinfo bulunamaz). Bu yüzden yalnız Windows'ta set edilir.
+poppler_bin_path = os.path.join(base_dir, "..", "Library", "bin") if os.name == "nt" else None
 
 # Taranmış form / ekran görüntüsü PDF'ler için sayfa bölümleme (PSM 3: otomatik)
 _TESSERACT_CONFIG = r"--oem 3 --psm 3"
