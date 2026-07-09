@@ -16,6 +16,9 @@ ENV PYTHONUNBUFFERED=1 \
 # Sistem bağımlılıkları (native Python runtime'da apt-get çalışmadığı için Docker şart):
 #   wkhtmltopdf  → HTML→PDF (subprocess) | tesseract-ocr(+tur) → pytesseract | poppler-utils → pdf2image
 #   ghostscript  → ocrmypdf | libcairo2 → pycairo/svglib | libgl1/libglib2.0-0 → opencv
+#   libreoffice-{writer,calc,impress} → word/excel/ppt → PDF (soffice --headless).
+#     Yalın kurulum: yalnız gerekli bileşenler + --no-install-recommends (tam meta paketten küçük).
+#     fonts-liberation → dönüşümlerde temel yazı tipleri (Arial/Times benzeri metrikler).
 RUN apt-get update && apt-get install -y --no-install-recommends \
       wkhtmltopdf \
       tesseract-ocr \
@@ -25,6 +28,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libcairo2 \
       libgl1 \
       libglib2.0-0 \
+      libreoffice-writer \
+      libreoffice-calc \
+      libreoffice-impress \
+      fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

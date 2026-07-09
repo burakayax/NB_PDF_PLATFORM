@@ -654,9 +654,15 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
         pptx_abs = os.path.abspath(pptx_path)
         out_dir = os.path.dirname(os.path.abspath(pdf_path))
         os.makedirs(out_dir, exist_ok=True)
+        # İzole kullanıcı profili: eşzamanlı dönüşümlerde profil kilidini önler.
+        profile_dir = tempfile.mkdtemp(prefix="lo_profile_")
         try:
             subprocess.run(
-                [soffice, "--headless", "--convert-to", "pdf", "--outdir", out_dir, pptx_abs],
+                [
+                    soffice,
+                    f"-env:UserInstallation=file://{profile_dir}",
+                    "--headless", "--convert-to", "pdf", "--outdir", out_dir, pptx_abs,
+                ],
                 check=True,
                 timeout=timeout_sec,
                 capture_output=True,
@@ -664,6 +670,8 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
             )
         except subprocess.CalledProcessError as e:
             raise Exception(f"LibreOffice dönüşümü başarısız: {e.stderr or e}") from e
+        finally:
+            shutil.rmtree(profile_dir, ignore_errors=True)
         base = os.path.splitext(os.path.basename(pptx_abs))[0]
         produced = os.path.join(out_dir, base + ".pdf")
         if not os.path.isfile(produced):
