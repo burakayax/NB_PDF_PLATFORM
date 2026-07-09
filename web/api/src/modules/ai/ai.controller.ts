@@ -77,7 +77,7 @@ export async function summarizeController(req: Request, res: Response): Promise<
 
   const summary = await summarizeDocument(text.slice(0, MAX_TEXT), getLang(req));
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "summarize");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ summary, quota });
 }
@@ -100,7 +100,7 @@ export async function extractController(req: Request, res: Response): Promise<vo
     throw e;
   }
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "extract");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ data, quota });
 }
@@ -116,7 +116,7 @@ export async function translateController(req: Request, res: Response): Promise<
 
   const translation = await translateDocument(text.slice(0, MAX_TEXT), target);
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "translate");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ translation, quota });
 }
@@ -140,7 +140,7 @@ export async function compareController(req: Request, res: Response): Promise<vo
     throw e;
   }
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "compare");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ result, quota });
 }
@@ -155,7 +155,7 @@ export async function detectSensitiveController(req: Request, res: Response): Pr
 
   const items = await detectSensitive(text.slice(0, MAX_TEXT), getLang(req));
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "redact");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ items, quota });
 }
@@ -191,7 +191,7 @@ export async function chatController(req: Request, res: Response): Promise<void>
     getLang(req),
   );
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role);
+  await consumeAiQuota(u.id, u.plan, u.role, "chat");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ answer, quota });
 }

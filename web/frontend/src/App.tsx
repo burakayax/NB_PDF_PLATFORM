@@ -74,6 +74,7 @@ import {
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
 import { QuotaWidget } from "./components/dashboard/QuotaWidget";
+import { AiUsageBreakdown } from "./components/dashboard/AiUsageBreakdown";
 import { DashboardLifecycleNudge } from "./components/dashboard/DashboardLifecycleNudge";
 import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
@@ -6122,6 +6123,9 @@ function App() {
                   }
                   isTeamMember={isTeamMember}
                 />
+                {aiAllowed ? (
+                  <AiUsageBreakdown language={language} accessToken={accessToken} />
+                ) : null}
               </section>
             ) : null}
 

@@ -7,6 +7,8 @@ export type AiQuota = {
   bonus?: number; // top-up ile alınan ek kredi (kalıcı)
   unlimited: boolean;
   resetAt: string;
+  /** Bu ay araç bazında istek sayıları: { summarize: 5, chat: 3, ... } */
+  byOp?: Record<string, number>;
 };
 
 export type TopupPack = { id: string; credits: number; priceUSD: number; priceTRY: number; popular?: boolean };
