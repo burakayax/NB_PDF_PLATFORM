@@ -226,6 +226,23 @@ export async function patchAdminUser(
   }
 }
 
+/** Kullanıcıya süreli (geçici) plan tanımlar; N gün sonra önceki planına döner. */
+export async function grantAdminTempPlan(
+  accessToken: string,
+  userId: string,
+  plan: "PRO" | "BUSINESS",
+  days: number,
+): Promise<{ plan: string; days: number; basePlan: string; overrideExpiresAt: string }> {
+  const r = await adminFetch(accessToken, `/users/${encodeURIComponent(userId)}/temp-plan`, {
+    method: "POST",
+    body: JSON.stringify({ plan, days }),
+  });
+  if (!r.ok) {
+    throw new Error(await r.text());
+  }
+  return r.json();
+}
+
 export async function deleteAdminUser(accessToken: string, userId: string, blockEmail: boolean): Promise<void> {
   const q = blockEmail ? "?blockEmail=true" : "";
   const r = await adminFetch(accessToken, `/users/${encodeURIComponent(userId)}${q}`, { method: "DELETE" });

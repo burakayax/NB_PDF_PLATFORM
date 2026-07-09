@@ -7,6 +7,7 @@ import {
   fetchAdminUserDetail,
   fetchAdminUsers,
   patchAdminUser,
+  grantAdminTempPlan,
   postAdminBlockedEmail,
   deleteAdminBlockedEmail,
   adminResetUserRateLimit,
@@ -923,6 +924,10 @@ function UserManagePanel({
   const [plan, setPlan] = useState(user?.plan ?? "FREE");
   const [saving, setSaving] = useState(false);
   const [vOk, setVok] = useState(user?.isVerified ?? true);
+  const [tempPlan, setTempPlan] = useState<"PRO" | "BUSINESS">("PRO");
+  const [tempDays, setTempDays] = useState(3);
+  const [tempBusy, setTempBusy] = useState(false);
+  const [tempMsg, setTempMsg] = useState<string | null>(null);
   const [resetRateLimitBusy, setResetRateLimitBusy] = useState(false);
   const [resetRateLimitMsg, setResetRateLimitMsg] = useState<string | null>(null);
 
@@ -930,6 +935,7 @@ function UserManagePanel({
     if (user) {
       setPlan(user.plan);
       setVok(user.isVerified);
+      setTempMsg(null);
     }
   }, [user]);
 
@@ -998,6 +1004,58 @@ function UserManagePanel({
             >
               {saving ? "…" : "Değişiklikleri kaydet"}
             </button>
+          </div>
+
+          {/* Süreli (geçici) plan — N gün sonra mevcut plana döner */}
+          <div className="space-y-3 rounded-2xl border border-fuchsia-500/25 bg-fuchsia-500/[0.05] p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-fuchsia-300/80">Süreli (geçici) plan</p>
+            <p className="text-[11px] leading-snug text-slate-400">
+              N günlük plan tanımla; süre bitince kullanıcı önceki planına döner. Mevcut aboneliğinin süresi bu süreçte <span className="text-slate-300">durmaz</span>.
+            </p>
+            <div className="flex gap-2">
+              <AdminField label="Plan">
+                <select
+                  className={adminInputClass}
+                  value={tempPlan}
+                  onChange={(e) => setTempPlan(e.target.value as "PRO" | "BUSINESS")}
+                >
+                  <option value="PRO">PRO</option>
+                  <option value="BUSINESS">BUSINESS</option>
+                </select>
+              </AdminField>
+              <AdminField label="Gün">
+                <input
+                  type="number"
+                  min={1}
+                  max={365}
+                  className={adminInputClass}
+                  value={tempDays}
+                  onChange={(e) => setTempDays(Math.max(1, Math.min(365, Number(e.target.value) || 1)))}
+                />
+              </AdminField>
+            </div>
+            <button
+              type="button"
+              disabled={tempBusy}
+              onClick={async () => {
+                setTempBusy(true);
+                setTempMsg(null);
+                try {
+                  const res = await grantAdminTempPlan(accessToken, user.id, tempPlan, tempDays);
+                  const until = new Date(res.overrideExpiresAt).toLocaleString();
+                  setTempMsg(`${tempPlan} · ${tempDays} gün tanımlandı — ${until} tarihine kadar; sonra ${res.basePlan} planına döner.`);
+                  onRefresh();
+                } catch (e) {
+                  setTempMsg(e instanceof Error ? e.message : "Hata");
+                } finally {
+                  setTempBusy(false);
+                }
+              }}
+              className="w-full rounded-xl border border-fuchsia-500/40 bg-fuchsia-500/15 py-2.5 text-sm font-semibold text-fuchsia-100 transition hover:bg-fuchsia-500/25 disabled:opacity-50"
+            >
+              {tempBusy ? "…" : `${tempDays} günlük ${tempPlan} tanımla`}
+            </button>
+            {tempMsg ? <p className="text-[11px] leading-snug text-fuchsia-200/90">{tempMsg}</p> : null}
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-[11px]">
