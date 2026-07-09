@@ -199,8 +199,11 @@ def classify_pdf_password_requirement(pdf_path: str) -> Tuple[bool, Dict[str, An
 
     reader: Optional[PyPDF2.PdfReader] = None
     try:
+        # reader `with` bloğundan SONRA (is_encrypted/decrypt) kullanılıyor →
+        # dosyayı kapatmadan önce belleğe al (pypdf tembel okur; kapalı dosya hatası).
         with open(pdf_path, "rb") as fh:
-            reader = PyPDF2.PdfReader(fh, strict=False)
+            _pdf_bytes = fh.read()
+        reader = PyPDF2.PdfReader(io.BytesIO(_pdf_bytes), strict=False)
     except _PdfReadError as e:
         diagnostics["engines"]["pypdf"] = {
             "open_ok": False,
