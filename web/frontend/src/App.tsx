@@ -519,6 +519,34 @@ function mergeToolPhaseLabel(
   return W.toolProgressPhaseFinishing;
 }
 
+/**
+ * Araç zincirleme — bir araç PDF çıktısı ürettiğinde önerilecek MANTIKLI sonraki
+ * araçlar. Ters/gereksiz çiftler (pdf→word sonrası word→pdf gibi) ve çıktısı PDF
+ * olmayan araçlar (pdf-to-word/excel/ppt/image/text) bilinçli olarak dışlanır.
+ * Öneriler yalnızca PDF-girdili workspace araçlarıdır; her biri "kaydetme yeri sor"
+ * dahil normal boru hattından geçer.
+ */
+const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
+  merge: ["compress", "page-numbers", "watermark", "split"],
+  split: ["compress", "watermark", "page-numbers"],
+  compress: ["merge", "page-numbers", "watermark", "encrypt"],
+  "rotate-pdf": ["compress", "page-numbers", "watermark"],
+  "delete-pages": ["compress", "page-numbers", "merge"],
+  "organize-pdf": ["page-numbers", "compress", "watermark"],
+  watermark: ["compress", "page-numbers", "encrypt"],
+  "page-numbers": ["compress", "watermark", "encrypt"],
+  "repair-pdf": ["compress", "page-numbers", "pdf-to-word"],
+  "unlock-pdf": ["compress", "watermark", "page-numbers", "pdf-to-word"],
+  "flatten-pdf": ["compress", "page-numbers", "encrypt"],
+  "image-to-pdf": ["compress", "merge", "page-numbers", "watermark"],
+  "word-to-pdf": ["compress", "merge", "watermark", "encrypt"],
+  "excel-to-pdf": ["compress", "merge", "watermark"],
+  "ppt-to-pdf": ["compress", "merge", "watermark"],
+  "html-to-pdf": ["compress", "page-numbers", "watermark"],
+  // encrypt → çıktı şifreli (zincir parola ister) → öneri yok.
+  // pdf-to-word/excel/ppt/image/text → çıktı PDF değil → zincirleme yok.
+};
+
 function createUploadItems(fileList: File[]) {
   // Tarayıcı File listesini arayüz state modeline çevirir; her öğeye kararlı id ve şifre alanı ekler.
   // Birleştirme sırası ve liste render'ı bu yapı üzerinden yürüdüğünden tutarlı şema gereklidir.
@@ -1128,8 +1156,10 @@ function App() {
   const [mergeShareReady, setMergeShareReady] = useState<{
     blob: Blob;
     filename: string;
+    toolId?: FeatureId;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
+  const chainPendingRef = useRef<{ file: File; toolId: FeatureId } | null>(null);
   const [uploadDragOver, setUploadDragOver] = useState(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
@@ -1617,6 +1647,31 @@ function App() {
     }
   }, []);
 
+  // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
+  const chainToTool = useCallback(
+    (targetId: FeatureId, blob: Blob, filename: string) => {
+      const f = new File([blob], filename, { type: "application/pdf" });
+      chainPendingRef.current = { file: f, toolId: targetId };
+      setMergeShareReady(null);
+      setMergeShare(null);
+      resetForm(true); // temiz başla (araç değişmez)
+      setContentPanel("tool");
+      setActiveSidebar(targetId);
+      setSelectedFeatureId(targetId);
+    },
+    [resetForm],
+  );
+
+  // Bekleyen zincir dosyası, hedef araca geçildikten SONRA (temiz state ile) yüklenir.
+  useEffect(() => {
+    const pend = chainPendingRef.current;
+    if (pend && pend.toolId === selectedFeatureId) {
+      chainPendingRef.current = null;
+      void handleNewFiles([pend.file]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNewFiles güncel closure'dan alınır; yalnız araç değişince tetiklenmeli
+  }, [selectedFeatureId]);
+
   function setUploadPassword(targetId: string, value: string) {
     setUploads((current) =>
       current.map((item) =>
@@ -2101,7 +2156,7 @@ function App() {
         if (shareBlob) {
           // Kullanıcı native diyalogda dosyayı yeniden adlandırmış olabilir —
           // şeritte gerçek kaydedilen ismi göster (yoksa istenen isme düş).
-          setMergeShareReady({ blob: shareBlob, filename: outcome.download.filename ?? clientFileName });
+          setMergeShareReady({ blob: shareBlob, filename: outcome.download.filename ?? clientFileName, toolId });
         } else {
           showToast(
             "success",
@@ -2217,7 +2272,7 @@ function App() {
         // is available.
         const showShareBar = !!dl.blob;
         if (dl.blob) {
-          setMergeShareReady({ blob: dl.blob, filename: dl.filename ?? clientFileName });
+          setMergeShareReady({ blob: dl.blob, filename: dl.filename ?? clientFileName, toolId: "merge" });
         }
         // The bar already confirms the download (Dosyan indirildi + dosya adı),
         // so skip the redundant timed toast when it will be shown. Only fall back
@@ -3408,6 +3463,24 @@ function App() {
 
   const splitInputDisabled = uploads.length === 0;
   const toolNeedsUpload = selectedFeature.requiresUpload !== false;
+
+  // İşlem bitince gösterilecek "sıradaki adım" önerileri: yalnız PDF çıktısı olan
+  // araçlar için, ilgili (ters/anlamsız olmayan) araçlardan görünür + kilitsiz olanlar.
+  const chainSuggestions = useMemo<Feature[]>(() => {
+    const r = mergeShareReady;
+    if (!r?.toolId) return [];
+    if (!/\.pdf$/i.test(r.filename)) return []; // .zip/.docx vb. çıktılar zincirlenmez
+    const raw = CHAIN_SUGGESTIONS[r.toolId] ?? [];
+    const byId = new Map(workspaceFeatures.map((f) => [f.id, f]));
+    const out: Feature[] = [];
+    for (const id of raw) {
+      if (id === r.toolId || lockedFeatures.has(id)) continue;
+      const f = byId.get(id);
+      if (f) out.push(f);
+      if (out.length >= 3) break;
+    }
+    return out;
+  }, [mergeShareReady, workspaceFeatures, lockedFeatures]);
   const submitDisabled =
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
@@ -4050,7 +4123,7 @@ function App() {
                       ? "sayfalar.zip"
                       : selectedFeature.fallbackFilename;
                   const savedSplitName = await saveBlobToUser(splitBlob, splitName);
-                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName });
+                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName, toolId: "split" });
                   applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
                   setSubmitting(false);
                   return;
@@ -4061,7 +4134,7 @@ function App() {
               const filename = selectedFeature.fallbackFilename;
               const blob = pdfBytesToBlob(resultBytes);
               const savedName = await saveBlobToUser(blob, filename);
-              setMergeShareReady({ blob, filename: savedName });
+              setMergeShareReady({ blob, filename: savedName, toolId: cid });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
               return;
@@ -5872,6 +5945,42 @@ function App() {
                 </button>
               </div>
             </div>
+            {chainSuggestions.length > 0 ? (
+              <div className="merge-share-bar__chain">
+                <span className="merge-share-bar__chain-label">
+                  {language === "tr" ? "Sıradaki adım:" : "Next step:"}
+                </span>
+                <div className="merge-share-bar__chain-chips">
+                  {chainSuggestions.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      className="merge-share-chip"
+                      onClick={() =>
+                        chainToTool(
+                          f.id,
+                          mergeShareReady.blob,
+                          mergeShareReady.filename,
+                        )
+                      }
+                      title={
+                        language === "tr"
+                          ? `${f.title} aracına aktar`
+                          : `Send to ${f.title}`
+                      }
+                    >
+                      <span
+                        className="merge-share-chip__icon"
+                        aria-hidden="true"
+                      >
+                        {f.icon}
+                      </span>
+                      {f.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
