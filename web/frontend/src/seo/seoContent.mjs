@@ -55,6 +55,7 @@ export const TOOL_SLUGS = [
   "pdf-ozetle",
   "pdf-sohbet",
   "pdf-duzenle",
+  "pdf-imzala",
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
   "pdf-ceviri",
@@ -697,6 +698,33 @@ export const TOOL_SEO = {
         { q: "How do I delete and change existing text in a PDF?", a: "Upload the PDF and the editor opens full-screen. With 'Replace Text', draw a box over the text you want to change — it's captured, then type the new text (leave empty to delete). Click 'Done' → 'Prepare PDF' → download." },
         { q: "Is the text truly deleted or just covered?", a: "Truly deleted. Using PyMuPDF redaction, the text in the selected area is removed from the PDF (not covered), and new text is written in its place." },
         { q: "Is my file safe?", a: "Yes. For real text editing the file is processed on our secure server and deleted right after — never stored. (Our other tools run on your device.)" },
+      ],
+    ),
+  },
+
+  "pdf-imzala": {
+    tr: T(
+      "PDF İmzala — Online İmza Ekle (Üyeliksiz, Cihazda)",
+      "PDF'e elektronik imza ekleyin: imzanızı çizin, yazın ya da görsel yükleyin; istediğiniz yere yerleştirin. İmzanız cihazınızdan çıkmaz — %100 gizli, üyeliksiz, ücretsiz.",
+      "PDF'e İmza Ekle — Cihazında, Gizli",
+      "Sözleşme, form ve belgeleri saniyeler içinde imzalayın. İmzanızı fareyle/parmağınızla çizin, adınızı el yazısı fontuyla yazın veya hazır imza görselinizi yükleyin; ardından PDF sayfasında istediğiniz yere sürükleyip boyutlandırın. Tüm işlem tarayıcınızda (cihazınızda) gerçekleşir — dosyanız ve imzanız sunucuya GİTMEZ. İmzalı PDF'i indirin.",
+      ["pdf imzala", "pdf imza ekle", "online pdf imzalama", "elektronik imza pdf", "pdf'e imza", "belge imzalama", "ücretsiz pdf imza", "e-imza pdf"],
+      [
+        { q: "PDF'e nasıl imza eklerim?", a: "PDF'i yükleyin, «İmza Oluştur» ile imzanızı çizin/yazın/yükleyin, sonra sayfada istediğiniz yere tıklayıp yerleştirin. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin." },
+        { q: "İmzam ve dosyam sunucuya gidiyor mu?", a: "Hayır. İmzalama tamamen tarayıcınızda (cihazınızda) yapılır; PDF ve imza asla yüklenmez. %100 gizli ve üyeliksizdir." },
+        { q: "Birden fazla sayfaya imza atabilir miyim?", a: "Evet. Farklı sayfaları seçip her birine imza/tarih yerleştirebilir, hepsini tek seferde uygulayabilirsiniz." },
+      ],
+    ),
+    en: T(
+      "Sign PDF — Add Your Signature Online (No Sign-up, On-device)",
+      "Add an electronic signature to a PDF: draw, type or upload your signature and place it anywhere. Your signature never leaves your device — 100% private, no sign-up, free.",
+      "Add a Signature to PDF — On Your Device, Private",
+      "Sign contracts, forms and documents in seconds. Draw your signature with the mouse/finger, type your name in a handwriting font, or upload a signature image; then drag and resize it anywhere on the PDF page. Everything happens in your browser (on your device) — your file and signature are NEVER uploaded. Download the signed PDF.",
+      ["sign pdf", "add signature to pdf", "online pdf signing", "electronic signature pdf", "esign pdf", "sign document online", "free pdf signature"],
+      [
+        { q: "How do I add a signature to a PDF?", a: "Upload the PDF, click 'Create signature' to draw/type/upload it, then click on the page to place it. Drag to position, resize from the corner, and click 'Apply & download'." },
+        { q: "Do my signature and file get uploaded?", a: "No. Signing happens entirely in your browser (on your device); the PDF and signature are never uploaded. It's 100% private and needs no sign-up." },
+        { q: "Can I sign multiple pages?", a: "Yes. Select different pages and place a signature/date on each, then apply them all at once." },
       ],
     ),
   },

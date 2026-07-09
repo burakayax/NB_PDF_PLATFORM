@@ -18,6 +18,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "pdf-veri-cikar",
   "ai-toplu-islem",
   "pdf-duzenle",
+  "pdf-imzala",
   "hassas-veri-gizle",
   "taranmis-pdf-ocr",
 ]);
@@ -69,6 +70,12 @@ const toolCategories = (lang: Language) => [
         id: "pdf-duzenle",
         icon: "✏️",
         name: lang === "tr" ? "PDF Düzenle" : "Edit PDF",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
+        id: "pdf-imzala",
+        icon: "🖋️",
+        name: lang === "tr" ? "PDF İmzala" : "Sign PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
