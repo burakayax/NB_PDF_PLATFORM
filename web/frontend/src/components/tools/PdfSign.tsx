@@ -78,6 +78,9 @@ function todayStr(): string {
   return new Date().toLocaleDateString();
 }
 
+/** Metin/tarih alanı renk seçenekleri (lacivert, siyah, kırmızı, mavi, yeşil, beyaz). */
+const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"];
+
 export function PdfSign({ language }: { language: Language; accessToken?: string | null }) {
   const tr = language === "tr";
   const [file, setFile] = useState<File | null>(null);
@@ -99,6 +102,7 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [textColor, setTextColor] = useState("#0b2447"); // metin/tarih rengi
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -345,15 +349,15 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     }
   }
 
-  // Metin/tarih alanı ekle — sayfanın ortasına, düzenlenebilir.
+  // Metin/tarih alanı ekle — sayfanın ortasına, seçili renkte, düzenlenebilir.
   function addTextField(defaultText: string) {
-    const r = renderTextToPng(defaultText);
+    const r = renderTextToPng(defaultText, textColor);
     const wNorm = 0.3;
     const hNorm = (wNorm * (dims.w || 1)) / (r.aspect || 1) / (dims.h || 1);
     const xNorm = Math.max(0, Math.min(1 - wNorm, 0.5 - wNorm / 2));
     const yNorm = Math.max(0, Math.min(1 - hNorm, 0.5 - hNorm / 2));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setPlacements((ps) => [...ps, { ...r, id, page: current, xNorm, yNorm, wNorm, text: defaultText, color: "#0b2447" }]);
+    setPlacements((ps) => [...ps, { ...r, id, page: current, xNorm, yNorm, wNorm, text: defaultText, color: textColor }]);
     setSelected(id);
   }
 
@@ -363,6 +367,17 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
         if (p.id !== id || p.text === undefined) return p;
         const r = renderTextToPng(newText, p.color);
         return { ...p, text: newText, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
+      }),
+    );
+  }
+
+  // Metin/tarih rengini değiştir — PNG'yi yeni renkle yeniden üretir.
+  function updateTextColor(id: string, color: string) {
+    setPlacements((ps) =>
+      ps.map((p) => {
+        if (p.id !== id || p.text === undefined) return p;
+        const r = renderTextToPng(p.text, color);
+        return { ...p, color, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
       }),
     );
   }
@@ -458,6 +473,25 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 <Calendar className="h-4 w-4" />
                 {tr ? "Tarih" : "Date"}
               </button>
+              {/* Metin rengi skalası — yeni metni ve seçili metni etkiler */}
+              <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1" title={tr ? "Metin rengi" : "Text color"}>
+                {TEXT_COLORS.map((c) => {
+                  const active = (selectedPlacement?.text !== undefined ? selectedPlacement.color : textColor) === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setTextColor(c);
+                        if (selectedPlacement?.text !== undefined) updateTextColor(selectedPlacement.id, c);
+                      }}
+                      title={c}
+                      className={`h-5 w-5 rounded-full border transition ${active ? "border-cyan-300 ring-2 ring-cyan-400/50 scale-110" : "border-white/25 hover:border-white/60"}`}
+                      style={{ backgroundColor: c }}
+                    />
+                  );
+                })}
+              </span>
               <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-medium text-slate-300 lg:inline-flex">
                 {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
                 <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-100">Ctrl+C</kbd>
