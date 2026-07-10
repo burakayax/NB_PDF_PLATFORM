@@ -33,6 +33,70 @@ const publicDir = join(frontendRoot, "public");
 /** Statik prerender birincil dili. Hedef pazar Türkiye → "tr". */
 const PRIMARY_LANG = "tr";
 
+// ─── Tematik iç linkleme haritaları ───────────────────────────────────────────
+// Google topical authority + kullanıcı akışı için: blog↔ilgili araç ve
+// araç↔ilgili araç bağları. Flat "Tüm Araçlar" listesine EK katmandır.
+
+/** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + iç link). */
+const BLOG_RELATED_TOOLS = {
+  "faturadan-excele-veri-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
+  "banka-ekstresi-excele-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
+  "faturalari-toplu-muhasebeye-hazirlama": ["pdf-veri-cikar", "ai-toplu-islem", "pdf-to-excel"],
+  "iki-pdf-birlestirme-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
+  "pdf-bolme-sayfalara-ayirma": ["split-pdf", "merge-pdf", "organize-pdf"],
+  "pdf-sayfa-silme": ["delete-pages", "organize-pdf", "split-pdf"],
+  "pdf-dondurme-kaydetme": ["rotate-pdf", "organize-pdf"],
+  "pdf-sayfa-sirasi-degistirme": ["organize-pdf", "delete-pages", "rotate-pdf"],
+  "pdf-boyutu-kucultme-sikistirma": ["compress", "flatten-pdf"],
+  "pdf-word-donusturme": ["pdf-to-word", "word-to-pdf"],
+  "resimleri-pdf-yapma": ["image-to-pdf", "pdf-to-image"],
+  "pdf-sifre-kaldirma-koyma": ["unlock-pdf", "encrypt"],
+  "pdf-baska-dile-cevirme": ["pdf-ceviri", "pdf-ozetle", "pdf-sohbet"],
+  "yabanci-dildeki-sozlesmeyi-anlama": ["pdf-ceviri", "pdf-sohbet", "pdf-ozetle"],
+  "uzun-belgeleri-ai-ile-ozetleme": ["pdf-ozetle", "pdf-sohbet"],
+  "akademik-makale-ozetleme-literatur": ["pdf-ozetle", "pdf-sohbet", "pdf-ceviri"],
+  "ihale-sartnamesi-nasil-okunur": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
+  "kira-kontrati-dikkat-edilecek-maddeler": ["pdf-ozetle", "pdf-sohbet"],
+  "taranmis-pdf-metne-cevirme-ocr": ["taranmis-pdf-ocr", "pdf-to-text"],
+};
+
+/** Araç slug → tematik ilgili araçlar (curated iç link). */
+const TOOL_RELATED_TOOLS = {
+  "split-pdf": ["merge-pdf", "organize-pdf", "delete-pages", "rotate-pdf"],
+  "merge-pdf": ["split-pdf", "organize-pdf", "compress", "page-numbers"],
+  "delete-pages": ["organize-pdf", "split-pdf", "rotate-pdf", "merge-pdf"],
+  "rotate-pdf": ["organize-pdf", "delete-pages", "split-pdf", "merge-pdf"],
+  "organize-pdf": ["delete-pages", "rotate-pdf", "split-pdf", "page-numbers"],
+  "compress": ["merge-pdf", "split-pdf", "flatten-pdf", "pdf-to-image"],
+  "pdf-to-word": ["word-to-pdf", "pdf-to-excel", "pdf-to-text", "pdf-ozetle"],
+  "word-to-pdf": ["pdf-to-word", "merge-pdf", "compress", "watermark"],
+  "excel-to-pdf": ["pdf-to-excel", "merge-pdf", "compress"],
+  "pdf-to-excel": ["excel-to-pdf", "pdf-veri-cikar", "pdf-to-word", "pdf-to-text"],
+  "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
+  "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
+  "pdf-to-image": ["image-to-pdf", "pdf-to-ppt", "compress"],
+  "image-to-pdf": ["pdf-to-image", "merge-pdf", "compress", "pdf-to-word"],
+  "html-to-pdf": ["pdf-to-word", "merge-pdf", "compress"],
+  "unlock-pdf": ["encrypt", "compress", "watermark", "pdf-to-word"],
+  "watermark": ["page-numbers", "compress", "encrypt", "pdf-imzala"],
+  "page-numbers": ["watermark", "merge-pdf", "organize-pdf", "compress"],
+  "repair-pdf": ["compress", "merge-pdf", "pdf-to-word"],
+  "encrypt": ["unlock-pdf", "watermark", "compress", "flatten-pdf"],
+  "pdf-to-text": ["pdf-to-word", "taranmis-pdf-ocr", "pdf-ozetle", "pdf-veri-cikar"],
+  "flatten-pdf": ["compress", "watermark", "page-numbers", "encrypt"],
+  "pdf-ozetle": ["pdf-sohbet", "pdf-ceviri", "pdf-veri-cikar", "taranmis-pdf-ocr"],
+  "pdf-sohbet": ["pdf-ozetle", "pdf-ceviri", "pdf-veri-cikar"],
+  "pdf-duzenle": ["pdf-imzala", "pdf-yorumla", "watermark", "page-numbers"],
+  "pdf-imzala": ["pdf-yorumla", "pdf-duzenle", "watermark", "encrypt"],
+  "pdf-yorumla": ["pdf-imzala", "pdf-duzenle", "watermark"],
+  "taranmis-pdf-ocr": ["pdf-to-text", "pdf-ozetle", "pdf-to-word", "pdf-ceviri"],
+  "pdf-veri-cikar": ["pdf-to-excel", "pdf-ozetle", "pdf-sohbet", "ai-toplu-islem"],
+  "pdf-ceviri": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
+  "ai-toplu-islem": ["pdf-ozetle", "pdf-veri-cikar", "pdf-ceviri"],
+  "pdf-karsilastir": ["pdf-ozetle", "pdf-sohbet", "pdf-duzenle"],
+  "hassas-veri-gizle": ["pdf-duzenle", "encrypt", "watermark"],
+};
+
 function readEnvBaseUrl() {
   let base =
     String(
@@ -392,6 +456,23 @@ function renderBlogBlocksHtml(blocks) {
     .join("");
 }
 
+// Araç kısa etiketi — SEO title'ın "—" öncesi kısmı (ör. "PDF Birleştir").
+function toolShortLabel(slug) {
+  const t = TOOL_SEO[slug]?.[PRIMARY_LANG]?.title || "";
+  return (t.split(/[—–|]/)[0] || "").trim() || slug.replace(/-/g, " ");
+}
+function toolLi(slug) {
+  return `<li><a href="/tools/${slug}">${escapeHtml(toolShortLabel(slug))}</a></li>`;
+}
+function blogTitleFor(slug) {
+  const p = BLOG_POSTS.find((x) => x.slug === slug);
+  return p ? p[PRIMARY_LANG].title : slug.replace(/-/g, " ");
+}
+// Bu aracı ilgili gösteren blog yazıları (ters harita).
+function guidesForTool(toolSlug) {
+  return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(toolSlug));
+}
+
 function renderVisibleBody(baseUrl, meta) {
   const parts = [];
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
@@ -400,6 +481,32 @@ function renderVisibleBody(baseUrl, meta) {
   // Blog yazısı — tam makale gövdesi (crawler görünür metin)
   if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
     parts.push(`<article class="seo-article">${renderBlogBlocksHtml(meta.blocks)}</article>`);
+    // Yazıdaki işi yapan araçlara CTA + iç link
+    const rel = (meta.post && BLOG_RELATED_TOOLS[meta.post.slug]) || [];
+    if (rel.length) {
+      parts.push(
+        `<nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul>${rel.map(toolLi).join("")}</ul></nav>`,
+      );
+    }
+  }
+
+  // Araç sayfası — tematik ilgili araçlar + ilgili rehberler (flat listeden önce)
+  if (meta.kind === "tool" && meta.slug) {
+    const rel = TOOL_RELATED_TOOLS[meta.slug] || [];
+    if (rel.length) {
+      parts.push(
+        `<nav aria-label="İlgili araçlar" class="seo-related-tools"><h2>İlgili Araçlar</h2><ul>${rel.map(toolLi).join("")}</ul></nav>`,
+      );
+    }
+    const guides = guidesForTool(meta.slug);
+    if (guides.length) {
+      const gl = guides
+        .map((s) => `<li><a href="/blog/${s}">${escapeHtml(blogTitleFor(s))}</a></li>`)
+        .join("");
+      parts.push(
+        `<nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul>${gl}</ul></nav>`,
+      );
+    }
   }
 
   // Blog index — yazı kartlarına iç bağlantı
