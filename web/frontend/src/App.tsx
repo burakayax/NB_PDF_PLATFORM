@@ -1684,7 +1684,18 @@ function App() {
     }
     chainPendingRef.current = null;
     const raf = requestAnimationFrame(() => {
-      void handleNewFiles([pend.file]);
+      // Dosyayı ekle, ardından "taşındı" bilgisini göster ki kullanıcı sıfırdan
+      // yeni bir işleme yönlendirildiğini sanmasın — dosya zaten burada.
+      void handleNewFiles([pend.file]).then(() => {
+        const trLang = language === "tr";
+        showToast(
+          "success",
+          trLang ? "Dosya taşındı" : "File carried over",
+          trLang
+            ? `“${pend.file.name}” bu araca aktarıldı — tekrar yüklemene gerek yok.`
+            : `“${pend.file.name}” was brought here — no need to upload it again.`,
+        );
+      });
     });
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNewFiles güncel closure'dan alınır; yalnız araç değişince tetiklenmeli
@@ -5961,7 +5972,9 @@ function App() {
             {chainSuggestions.length > 0 ? (
               <div className="merge-toast__chain">
                 <span className="merge-toast__chain-label">
-                  {language === "tr" ? "Sıradaki adım" : "Next step"}
+                  {language === "tr"
+                    ? "Aynı dosyayla devam et — tekrar yükleme yok"
+                    : "Continue with this file — no re-upload"}
                 </span>
                 <div className="merge-toast__chain-chips">
                   {chainSuggestions.map((f) => {
