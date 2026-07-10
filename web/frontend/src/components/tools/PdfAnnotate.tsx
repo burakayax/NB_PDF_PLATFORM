@@ -8,9 +8,11 @@ import {
   Download,
   Highlighter,
   Loader2,
+  Minus,
   MousePointer2,
   Paintbrush,
   Pencil,
+  Spline,
   Square,
   Trash2,
   Type as TypeIcon,
@@ -145,6 +147,7 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const [color, setColor] = useState("#fde047");
   const [thickness, setThickness] = useState(4);
   const [selected, setSelected] = useState<string | null>(null);
+  const [straight, setStraight] = useState(true); // fosforlu/kalem: düz çizgi modu
   const [draft, setDraft] = useState<Anno | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +157,7 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const overlayRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const drawing = useRef(false);
+  const straightModeRef = useRef(false); // çizim boyunca düz-çizgi kilidi
 
   const openFile = useCallback(
     async (f: File) => {
@@ -283,6 +287,8 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
     }
     e.preventDefault();
     drawing.current = true;
+    // Kalem/fosforlu düz-çizgi modunda ise başlangıç noktasını kilitle (snap).
+    straightModeRef.current = straight && (tool === "pen" || tool === "marker");
     const [x, y] = relPoint(e);
     if (tool === "pen") {
       setDraft({ id: newId(), page: current, kind: "pen", points: [[x, y]], color, thickness });
@@ -302,7 +308,15 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
       const [x, y] = relPoint(e);
       setDraft((d) => {
         if (!d) return d;
-        if (d.kind === "pen") return { ...d, points: [...d.points, [x, y]] };
+        if (d.kind === "pen") {
+          if (straightModeRef.current) {
+            // Düz çizgi: başlangıç sabit, yatay/dikey eksene snap (metin satırı düz kalsın).
+            const s = d.points[0];
+            const [ex, ey] = Math.abs(x - s[0]) >= Math.abs(y - s[1]) ? [x, s[1]] : [s[0], y];
+            return { ...d, points: [s, [ex, ey]] };
+          }
+          return { ...d, points: [...d.points, [x, y]] };
+        }
         if (d.kind === "arrow") return { ...d, x2: x, y2: y };
         if (d.kind === "highlight" || d.kind === "rect") {
           return { ...d, w: x - d.x, h: y - d.y };
@@ -532,6 +546,17 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
                   />
                 ))}
               </div>
+              {(tool === "marker" || tool === "pen") && (
+                <button
+                  type="button"
+                  onClick={() => setStraight((v) => !v)}
+                  title={straight ? (tr ? "Şu an: düz çizgi — serbest çizime geç" : "Now: straight — switch to freehand") : tr ? "Şu an: serbest — düz çizgiye geç" : "Now: freehand — switch to straight"}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${straight ? "bg-cyan-500/20 text-cyan-100 ring-1 ring-cyan-400/40" : "text-slate-300 hover:bg-white/[0.06]"}`}
+                >
+                  {straight ? <Minus className="h-4 w-4" /> : <Spline className="h-4 w-4" />}
+                  {straight ? (tr ? "Düz" : "Straight") : tr ? "Serbest" : "Free"}
+                </button>
+              )}
               {tool !== "highlight" && tool !== "text" && tool !== "select" && (
                 <div className="ml-1 flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1 py-0.5">
                   {thicknessSet.map((t) => (

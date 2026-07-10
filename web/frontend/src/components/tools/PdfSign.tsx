@@ -8,6 +8,8 @@ import {
   Download,
   Loader2,
   PenLine,
+  RotateCcw,
+  RotateCw,
   Trash2,
   Type as TypeIcon,
   Upload,
@@ -32,6 +34,8 @@ type Placement = SigSource & {
   /** Metin/tarih alanı ise dolu; imza görselinde undefined. Düzenlenebilir. */
   text?: string;
   color?: string;
+  opacity?: number; // 0..1 (varsayılan 1)
+  rotation?: number; // ekran saat yönü derece (varsayılan 0)
 };
 type Drag =
   | { id: string; mode: "move"; sx: number; sy: number; ox: number; oy: number }
@@ -182,19 +186,20 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     };
   }, [doc, current, editorOpen, zoom]);
 
-  // Overlay'a tıklama → aktif imzayı yerleştir.
-  function onOverlayClick(e: React.MouseEvent) {
-    if (!activeSig || drag) return;
-    const r = overlayRef.current!.getBoundingClientRect();
+  // İmza oluşturulur oluşturulmaz sayfanın ORTASINA yerleştirilir (tıklama beklenmez);
+  // kullanıcı sürükleyerek konumlandırır. "Tekrar ekle" ile aynı imzadan bir kopya daha.
+  function placeSignature(sig: SigSource) {
     const wNorm = 0.28;
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    const hNorm = (wNorm * (dims.w || 1)) / (activeSig.aspect || 1) / (dims.h || 1);
-    const xNorm = Math.max(0, Math.min(1 - wNorm, px - wNorm / 2));
-    const yNorm = Math.max(0, Math.min(1 - hNorm, py - hNorm / 2));
+    const hNorm = (wNorm * (dims.w || 1)) / (sig.aspect || 1) / (dims.h || 1);
+    const xNorm = Math.max(0, Math.min(1 - wNorm, 0.5 - wNorm / 2));
+    const yNorm = Math.max(0, Math.min(1 - hNorm, 0.5 - hNorm / 2));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-    setPlacements((ps) => [...ps, { ...activeSig, id, page: current, xNorm, yNorm, wNorm }]);
+    setPlacements((ps) => [...ps, { ...sig, id, page: current, xNorm, yNorm, wNorm }]);
     setSelected(id);
+  }
+
+  function updatePlacement(id: string, patch: Partial<Placement>) {
+    setPlacements((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
 
   // Sürükleme / boyutlandırma.
@@ -260,6 +265,8 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
         xNorm: p.xNorm,
         yNorm: p.yNorm,
         wNorm: p.wNorm,
+        opacity: p.opacity,
+        rotationDeg: p.rotation,
       }));
       const outBytes = await applySignatures(srcBytes.slice(), items);
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-imzali.pdf`;
@@ -368,10 +375,15 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 {activeSig ? (tr ? "İmzayı Değiştir" : "Change signature") : tr ? "İmza Oluştur" : "Create signature"}
               </button>
               {activeSig && (
-                <span className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1">
+                <button
+                  type="button"
+                  onClick={() => placeSignature(activeSig)}
+                  title={tr ? "Aynı imzadan bir kopya daha ekle" : "Add another copy of this signature"}
+                  className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 transition hover:border-cyan-400/40 hover:bg-white/[0.08]"
+                >
                   <img src={activeSig.dataUrl} alt="" className="h-6 w-auto max-w-[80px] object-contain" />
-                  <span className="text-[11px] text-slate-400">{tr ? "sayfaya tıkla → yerleştir" : "click page to place"}</span>
-                </span>
+                  <span className="text-[11px] font-semibold text-slate-300">{tr ? "+ Tekrar ekle" : "+ Add again"}</span>
+                </button>
               )}
 
               <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
@@ -399,6 +411,31 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
                   className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
                 />
+              )}
+              {selectedPlacement && (
+                <span className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5">
+                  <span className="text-[11px] font-semibold text-slate-400">{tr ? "Saydam" : "Opacity"}</span>
+                  <input
+                    type="range"
+                    min={0.2}
+                    max={1}
+                    step={0.05}
+                    value={selectedPlacement.opacity ?? 1}
+                    onChange={(e) => updatePlacement(selectedPlacement.id, { opacity: Number(e.target.value) })}
+                    className="w-16 accent-cyan-400"
+                    title={tr ? "Saydamlık" : "Opacity"}
+                  />
+                  <span className="mx-0.5 h-4 w-px bg-white/10" />
+                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: (selectedPlacement.rotation ?? 0) - 15 })} title={tr ? "Sola döndür" : "Rotate left"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:bg-white/10 hover:text-white">
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: 0 })} title={tr ? "Açıyı sıfırla" : "Reset angle"} className="min-w-[2.5rem] rounded-md px-1 text-center text-[11px] font-semibold tabular-nums text-slate-200 hover:bg-white/10">
+                    {Math.round(((selectedPlacement.rotation ?? 0) % 360 + 360) % 360)}°
+                  </button>
+                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: (selectedPlacement.rotation ?? 0) + 15 })} title={tr ? "Sağa döndür" : "Rotate right"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:bg-white/10 hover:text-white">
+                    <RotateCw className="h-4 w-4" />
+                  </button>
+                </span>
               )}
 
               <div className="ml-auto flex items-center gap-3">
@@ -463,9 +500,8 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                   )}
                   <div
                     ref={overlayRef}
-                    onClick={onOverlayClick}
                     className="absolute inset-0"
-                    style={{ cursor: activeSig ? "copy" : "default" }}
+                    style={{ cursor: "default" }}
                   >
                     {pagePlacements.map((p) => {
                       const left = p.xNorm * dims.w;
@@ -486,7 +522,15 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                             setDrag({ id: p.id, mode: "move", sx: e.clientX, sy: e.clientY, ox: p.xNorm, oy: p.yNorm });
                           }}
                           className={`absolute select-none ${isSel ? "ring-2 ring-cyan-400" : "ring-1 ring-cyan-400/30"}`}
-                          style={{ left, top, width, height, cursor: "move" }}
+                          style={{
+                            left,
+                            top,
+                            width,
+                            height,
+                            cursor: "move",
+                            opacity: p.opacity ?? 1,
+                            transform: p.rotation ? `rotate(${p.rotation}deg)` : undefined,
+                          }}
                         >
                           <img src={p.dataUrl} alt="signature" className="pointer-events-none h-full w-full object-contain" draggable={false} />
                           {isSel && (
@@ -527,7 +571,9 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                   tr={tr}
                   onClose={() => setSigModalOpen(false)}
                   onDone={(dataUrl, aspect) => {
-                    setActiveSig({ dataUrl, bytes: dataUrlToBytes(dataUrl), aspect });
+                    const sig = { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect };
+                    setActiveSig(sig);
+                    placeSignature(sig); // tıklama bekleme — direkt ortaya yerleştir
                     setSigModalOpen(false);
                   }}
                 />,
