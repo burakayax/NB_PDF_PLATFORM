@@ -129,6 +129,8 @@ const AI_TOOLS: { mode: AiToolMode; tr: string; en: string }[] = [
 const EDITOR_FAV_ID = "edit-pdf";
 /** PDF İmzala (cihazda imza) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
 const SIGN_FAV_ID = "sign-pdf";
+/** PDF Yorumla (cihazda işaretleme) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
+const ANNOTATE_FAV_ID = "annotate-pdf";
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -157,6 +159,8 @@ type DashboardSidebarProps = {
   onOpenEditor?: () => void;
   /** PDF İmzala aracını aç (cihazda imza). */
   onOpenSign?: () => void;
+  /** PDF Yorumla aracını aç (cihazda işaretleme). */
+  onOpenAnnotate?: () => void;
 };
 
 /**
@@ -182,6 +186,7 @@ export function DashboardSidebar({
   onOpenAi,
   onOpenEditor,
   onOpenSign,
+  onOpenAnnotate,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -196,18 +201,19 @@ export function DashboardSidebar({
   // PDF Düzenle de favori olabilir (FeatureKey olmadığı için ayrı bayrak).
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
+  const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
   const sidebarGroups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    // Favoriler bölümü: en az bir araç VEYA editör/imza favorilenmişse görünür.
-    return fav.length > 0 || editorFavorited || signFavorited
+    // Favoriler bölümü: en az bir araç VEYA editör/imza/yorum favorilenmişse görünür.
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited]);
   // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
   // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
@@ -321,6 +327,31 @@ export function DashboardSidebar({
     );
   };
 
+  // PDF Yorumla satırı — favori yıldızlı, hem Favoriler hem İşaretle grubunda kullanılır.
+  const renderAnnotateRow = (keyPrefix = "") => {
+    if (!onOpenAnnotate) return null;
+    const label = tr ? "PDF Yorumla" : "Annotate PDF";
+    return (
+      <button
+        key={`${keyPrefix}annotate`}
+        type="button"
+        onClick={onOpenAnnotate}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+      >
+        <span className="text-base text-orange-300" aria-hidden>🖍️</span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <FavoriteStar
+            alwaysVisible
+            active={isFavorite(ANNOTATE_FAV_ID)}
+            label={label}
+            onToggle={() => toggleFavorite(ANNOTATE_FAV_ID)}
+          />
+        </span>
+      </button>
+    );
+  };
+
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
@@ -412,9 +443,11 @@ export function DashboardSidebar({
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
-                  {/* PDF İmzala — İşaretle grubunda her zaman ilk; Favoriler'de favoriyse */}
+                  {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
+                  {group.id === "annotate" ? renderAnnotateRow("annotate-") : null}
                   {group.id === "favorites" && signFavorited ? renderSignRow("fav-") : null}
+                  {group.id === "favorites" && annotateFavorited ? renderAnnotateRow("fav-") : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
@@ -494,6 +527,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenAi,
   onOpenEditor,
   onOpenSign,
+  onOpenAnnotate,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const tr = language === "tr";
@@ -515,18 +549,19 @@ export function DashboardSidebarMobileLauncher({
   const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
+  const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
   const groups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 || editorFavorited || signFavorited
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // favorites listesi değişince yeniden grupla
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -840,6 +875,31 @@ export function DashboardSidebarMobileLauncher({
                                   active={isFavorite(SIGN_FAV_ID)}
                                   label={tr ? "PDF İmzala" : "Sign PDF"}
                                   onToggle={() => toggleFavorite(SIGN_FAV_ID)}
+                                />
+                              </span>
+                            </button>
+                          ) : null}
+                          {/* PDF Yorumla kartı — İşaretle grubunda her zaman, Favoriler'de favoriyse */}
+                          {onOpenAnnotate && !query.trim() &&
+                          (group.id === "annotate" || (group.id === "favorites" && annotateFavorited)) ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenAnnotate();
+                                setOpen(false);
+                              }}
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-orange-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
+                            >
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>🖍️</span>
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
+                                {tr ? "PDF Yorumla" : "Annotate PDF"}
+                              </span>
+                              <span className="absolute left-1 top-1">
+                                <FavoriteStar
+                                  alwaysVisible
+                                  active={isFavorite(ANNOTATE_FAV_ID)}
+                                  label={tr ? "PDF Yorumla" : "Annotate PDF"}
+                                  onToggle={() => toggleFavorite(ANNOTATE_FAV_ID)}
                                 />
                               </span>
                             </button>
