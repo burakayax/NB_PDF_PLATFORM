@@ -527,23 +527,27 @@ function mergeToolPhaseLabel(
  * Öneriler yalnızca PDF-girdili workspace araçlarıdır; her biri "kaydetme yeri sor"
  * dahil normal boru hattından geçer.
  */
+// Her araç için "ilgili sonraki araç" havuzu. Sıra öncelik belirtir; önce
+// yapısal (çoğu bağlamda görünür) araçlar, sonra server-side olanlar gelir ki
+// bazı araçlar gizli/kilitli olsa bile eleme sonrası 2-3 öneri kalabilsin.
+// Ters/anlamsız dönüşüm zincirleri (pdf→excel→pdf gibi) kasıtla dışarıda.
 const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
-  merge: ["compress", "page-numbers", "watermark", "split"],
-  split: ["compress", "watermark", "page-numbers"],
-  compress: ["merge", "page-numbers", "watermark", "encrypt"],
-  "rotate-pdf": ["compress", "page-numbers", "watermark"],
-  "delete-pages": ["compress", "page-numbers", "merge"],
-  "organize-pdf": ["page-numbers", "compress", "watermark"],
-  watermark: ["compress", "page-numbers", "encrypt"],
-  "page-numbers": ["compress", "watermark", "encrypt"],
-  "repair-pdf": ["compress", "page-numbers", "pdf-to-word"],
-  "unlock-pdf": ["compress", "watermark", "page-numbers", "pdf-to-word"],
-  "flatten-pdf": ["compress", "page-numbers", "encrypt"],
-  "image-to-pdf": ["compress", "merge", "page-numbers", "watermark"],
-  "word-to-pdf": ["compress", "merge", "watermark", "encrypt"],
-  "excel-to-pdf": ["compress", "merge", "watermark"],
-  "ppt-to-pdf": ["compress", "merge", "watermark"],
-  "html-to-pdf": ["compress", "page-numbers", "watermark"],
+  merge: ["organize-pdf", "split", "rotate-pdf", "compress", "page-numbers", "watermark"],
+  split: ["merge", "organize-pdf", "rotate-pdf", "compress", "watermark", "page-numbers"],
+  compress: ["merge", "organize-pdf", "page-numbers", "watermark", "split", "encrypt"],
+  "rotate-pdf": ["organize-pdf", "delete-pages", "merge", "compress", "page-numbers", "watermark"],
+  "delete-pages": ["organize-pdf", "rotate-pdf", "merge", "compress", "page-numbers", "split"],
+  "organize-pdf": ["delete-pages", "rotate-pdf", "merge", "page-numbers", "compress", "watermark"],
+  watermark: ["compress", "page-numbers", "merge", "organize-pdf", "encrypt"],
+  "page-numbers": ["compress", "watermark", "merge", "organize-pdf", "encrypt"],
+  "repair-pdf": ["compress", "organize-pdf", "merge", "page-numbers", "watermark"],
+  "unlock-pdf": ["compress", "watermark", "page-numbers", "merge", "organize-pdf", "encrypt"],
+  "flatten-pdf": ["compress", "page-numbers", "watermark", "merge", "encrypt"],
+  "image-to-pdf": ["merge", "organize-pdf", "rotate-pdf", "compress", "page-numbers", "watermark"],
+  "word-to-pdf": ["compress", "merge", "watermark", "page-numbers", "encrypt"],
+  "excel-to-pdf": ["compress", "merge", "watermark", "page-numbers"],
+  "ppt-to-pdf": ["compress", "merge", "watermark", "page-numbers"],
+  "html-to-pdf": ["compress", "page-numbers", "watermark", "merge"],
   // encrypt → çıktı şifreli (zincir parola ister) → öneri yok.
   // pdf-to-word/excel/ppt/image/text → çıktı PDF değil → zincirleme yok.
 };
@@ -1651,6 +1655,11 @@ function App() {
   // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
   const chainToTool = useCallback(
     (targetId: FeatureId, blob: Blob, filename: string) => {
+      // Kilitli araç önerisi → dosyayı geçirme, yükseltme akışını aç (toast durur).
+      if (lockedFeatures.has(targetId)) {
+        setUpgradeModalOpen(true);
+        return;
+      }
       const f = new File([blob], filename, { type: "application/pdf" });
       chainPendingRef.current = { file: f, toolId: targetId };
       setMergeShareReady(null);
@@ -1660,7 +1669,7 @@ function App() {
       setActiveSidebar(targetId);
       setSelectedFeatureId(targetId);
     },
-    [resetForm],
+    [resetForm, lockedFeatures],
   );
 
   // Bekleyen zincir dosyası, hedef araca geçildikten SONRA (temiz state ile) yüklenir.
@@ -3466,7 +3475,10 @@ function App() {
   const toolNeedsUpload = selectedFeature.requiresUpload !== false;
 
   // İşlem bitince gösterilecek "sıradaki adım" önerileri: yalnız PDF çıktısı olan
-  // araçlar için, ilgili (ters/anlamsız olmayan) araçlardan görünür + kilitsiz olanlar.
+  // araçlar için, ilgili (ters/anlamsız olmayan) ve o an GÖRÜNÜR araçlardan 3 tanesi.
+  // Kilitli araçlar da gösterilir (keşif/upgrade fırsatı); tıklanınca chainToTool
+  // yükseltme akışına yönlendirir. Gizli (disabled) araçlar workspaceFeatures'ta
+  // olmadığı için doğal olarak elenir.
   const chainSuggestions = useMemo<Feature[]>(() => {
     const r = mergeShareReady;
     if (!r?.toolId) return [];
@@ -3475,13 +3487,13 @@ function App() {
     const byId = new Map(workspaceFeatures.map((f) => [f.id, f]));
     const out: Feature[] = [];
     for (const id of raw) {
-      if (id === r.toolId || lockedFeatures.has(id)) continue;
+      if (id === r.toolId) continue;
       const f = byId.get(id);
       if (f) out.push(f);
       if (out.length >= 3) break;
     }
     return out;
-  }, [mergeShareReady, workspaceFeatures, lockedFeatures]);
+  }, [mergeShareReady, workspaceFeatures]);
   const submitDisabled =
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
@@ -5944,33 +5956,45 @@ function App() {
                   {language === "tr" ? "Sıradaki adım" : "Next step"}
                 </span>
                 <div className="merge-toast__chain-chips">
-                  {chainSuggestions.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      className="merge-share-chip"
-                      onClick={() =>
-                        chainToTool(
-                          f.id,
-                          mergeShareReady.blob,
-                          mergeShareReady.filename,
-                        )
-                      }
-                      title={
-                        language === "tr"
-                          ? `${f.title} aracına aktar`
-                          : `Send to ${f.title}`
-                      }
-                    >
-                      <span
-                        className="merge-share-chip__icon"
-                        aria-hidden="true"
+                  {chainSuggestions.map((f) => {
+                    const locked = lockedFeatures.has(f.id);
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`merge-share-chip${locked ? " merge-share-chip--locked" : ""}`}
+                        onClick={() =>
+                          chainToTool(
+                            f.id,
+                            mergeShareReady.blob,
+                            mergeShareReady.filename,
+                          )
+                        }
+                        title={
+                          locked
+                            ? language === "tr"
+                              ? `${f.title} — Pro ile aç`
+                              : `${f.title} — unlock with Pro`
+                            : language === "tr"
+                              ? `${f.title} aracına aktar`
+                              : `Send to ${f.title}`
+                        }
                       >
-                        {f.icon}
-                      </span>
-                      {f.title}
-                    </button>
-                  ))}
+                        <span
+                          className="merge-share-chip__icon"
+                          aria-hidden="true"
+                        >
+                          {f.icon}
+                        </span>
+                        {f.title}
+                        {locked ? (
+                          <span className="merge-share-chip__lock" aria-hidden="true">
+                            🔒
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}

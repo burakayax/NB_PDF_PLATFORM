@@ -1593,14 +1593,16 @@ textarea {
  * as a softened, card-like variant of the fixed bottom progress bar.
  * ------------------------------------------------------------------------- */
 
-/* Sağ-alt köşede yüzen kompakt "başarı" toast kartı — dikey, derli toplu. */
+/* Ekran altında ORTADA yüzen kompakt "başarı" toast kartı — footer akışından
+ * bağımsız (position: fixed), her zaman görünür alanın altında ortalanır. */
 .merge-toast {
   position: fixed;
-  right: max(18px, env(safe-area-inset-right));
-  bottom: max(18px, env(safe-area-inset-bottom));
-  left: auto;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  right: auto;
+  transform: translateX(-50%);
   z-index: 100;
-  width: min(340px, calc(100vw - 32px));
+  width: min(440px, calc(100vw - 32px));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1608,7 +1610,7 @@ textarea {
   border-radius: 18px;
   border: 1px solid rgba(52, 211, 153, 0.32);
   background:
-    radial-gradient(130% 120% at 100% 0%, rgba(16, 185, 129, 0.16) 0%, transparent 52%),
+    radial-gradient(130% 130% at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 55%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 26%),
     rgba(11, 18, 32, 0.98);
   backdrop-filter: blur(24px) saturate(1.25);
@@ -1621,14 +1623,21 @@ textarea {
   animation: merge-toast-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* Masaüstünde sol sidebar (240px) genişliğini hesaba katıp içerik alanında ortala. */
+@media (min-width: 1024px) {
+  .merge-toast {
+    left: calc(50% + 7.5rem);
+  }
+}
+
 @keyframes merge-toast-in {
   from {
     opacity: 0;
-    transform: translate(16px, 12px) scale(0.97);
+    transform: translateX(-50%) translateY(14px) scale(0.97);
   }
   to {
     opacity: 1;
-    transform: translate(0, 0) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 
@@ -1848,6 +1857,24 @@ textarea {
 .merge-share-chip__icon {
   font-size: 14px;
   line-height: 1;
+}
+
+/* Kilitli araç önerisi — daha soluk + kilit rozeti; tıklanınca upgrade akışı. */
+.merge-share-chip--locked {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
+  color: rgba(253, 230, 138, 0.92);
+}
+
+.merge-share-chip--locked:hover {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.16);
+}
+
+.merge-share-chip__lock {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.85;
 }
 
 /* ---------------------------------------------------------------------------
