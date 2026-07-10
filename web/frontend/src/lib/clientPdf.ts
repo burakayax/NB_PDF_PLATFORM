@@ -8,7 +8,7 @@
  * NOT: pdf-lib şifre korumalı (encrypted) PDF'leri ÇÖZEMEZ. Şifreli dosyalar
  * için sunucu yoluna düşülür (çağıran taraf `PdfEncryptedError`'ı yakalar).
  */
-import { PDFDocument, degrees } from "pdf-lib";
+import { PDFDocument, degrees, rgb, LineCapStyle } from "pdf-lib";
 import { zipSync } from "fflate";
 
 export class PdfEncryptedError extends Error {
@@ -103,6 +103,135 @@ export async function applySignatures(
     const x = it.xNorm * pw;
     const y = ph - it.yNorm * ph - h; // üst-tabanlı → pdf-lib alt-sol origin
     page.drawImage(img, { x, y, width: w, height: h });
+  }
+  return doc.save();
+}
+
+/**
+ * Yorumlama (annotation) öğeleri — hepsi sayfaya ORANLI koordinatlarla (0..1),
+ * `yNorm` ÜST-tabanlıdır (sol-üst köşe). Renk 0..1 [r,g,b]. Cihazda pdf-lib ile
+ * vektörel olarak gömülür (metin hariç; metin Türkçe-güvenli PNG olarak gelir).
+ */
+export type AnnotationItem =
+  | {
+      type: "highlight" | "rect";
+      page: number;
+      xNorm: number;
+      yNorm: number;
+      wNorm: number;
+      hNorm: number;
+      color: [number, number, number];
+      /** rect için kenarlık kalınlığı (pt); highlight'ta yok sayılır. */
+      borderWidth?: number;
+    }
+  | {
+      type: "pen";
+      page: number;
+      /** Ardışık nokta dizisi [xNorm, yNorm]; aralar çizgiyle birleştirilir. */
+      pointsNorm: Array<[number, number]>;
+      color: [number, number, number];
+      thickness: number; // pt
+      /** Fosforlu/keçeli kalem için 0..1 saydamlık (yazı görünür kalsın). */
+      opacity?: number;
+    }
+  | {
+      type: "line";
+      page: number;
+      x1Norm: number;
+      y1Norm: number;
+      x2Norm: number;
+      y2Norm: number;
+      color: [number, number, number];
+      thickness: number; // pt
+      arrow?: boolean; // uç noktada ok başı çiz
+    }
+  | {
+      type: "image"; // metin kutusu / not — PNG olarak gömülür
+      page: number;
+      xNorm: number;
+      yNorm: number;
+      wNorm: number;
+      aspect: number;
+      pngBytes: Uint8Array;
+    };
+
+/**
+ * Yorumlama öğelerini PDF'e GÖMER — cihazda, düzleştirilmiş çıktı. Vurgu, kutu,
+ * serbest çizim, ok/çizgi ve metin/not tek geçişte işlenir.
+ */
+export async function applyAnnotations(
+  pdfBytes: ArrayBuffer | Uint8Array,
+  items: AnnotationItem[],
+): Promise<Uint8Array> {
+  const doc = await loadPdf(pdfBytes);
+  const pages = doc.getPages();
+  const imgCache = new Map<Uint8Array, Awaited<ReturnType<typeof doc.embedPng>>>();
+  for (const it of items) {
+    const page = pages[it.page];
+    if (!page) continue;
+    const { width: pw, height: ph } = page.getSize();
+    const col = "color" in it ? rgb(it.color[0], it.color[1], it.color[2]) : rgb(0, 0, 0);
+    if (it.type === "highlight" || it.type === "rect") {
+      const w = it.wNorm * pw;
+      const h = it.hNorm * ph;
+      const x = it.xNorm * pw;
+      const y = ph - it.yNorm * ph - h; // üst-taban → pdf-lib alt-sol
+      if (it.type === "highlight") {
+        page.drawRectangle({ x, y, width: w, height: h, color: col, opacity: 0.35 });
+      } else {
+        page.drawRectangle({
+          x,
+          y,
+          width: w,
+          height: h,
+          borderColor: col,
+          borderWidth: it.borderWidth ?? 2,
+          opacity: 0,
+          borderOpacity: 1,
+        });
+      }
+    } else if (it.type === "pen") {
+      const pts = it.pointsNorm;
+      for (let i = 1; i < pts.length; i++) {
+        page.drawLine({
+          start: { x: pts[i - 1][0] * pw, y: ph - pts[i - 1][1] * ph },
+          end: { x: pts[i][0] * pw, y: ph - pts[i][1] * ph },
+          thickness: it.thickness,
+          color: col,
+          lineCap: LineCapStyle.Round,
+          opacity: it.opacity ?? 1,
+        });
+      }
+    } else if (it.type === "line") {
+      const start = { x: it.x1Norm * pw, y: ph - it.y1Norm * ph };
+      const end = { x: it.x2Norm * pw, y: ph - it.y2Norm * ph };
+      page.drawLine({ start, end, thickness: it.thickness, color: col, lineCap: LineCapStyle.Round });
+      if (it.arrow) {
+        const ang = Math.atan2(end.y - start.y, end.x - start.x);
+        const head = Math.max(8, it.thickness * 4);
+        const spread = Math.PI / 7;
+        for (const s of [ang + Math.PI - spread, ang + Math.PI + spread]) {
+          page.drawLine({
+            start: end,
+            end: { x: end.x + head * Math.cos(s), y: end.y + head * Math.sin(s) },
+            thickness: it.thickness,
+            color: col,
+            lineCap: LineCapStyle.Round,
+          });
+        }
+      }
+    } else if (it.type === "image") {
+      let img = imgCache.get(it.pngBytes);
+      if (!img) {
+        img = await doc.embedPng(it.pngBytes);
+        imgCache.set(it.pngBytes, img);
+      }
+      const w = it.wNorm * pw;
+      const h = it.aspect > 0 ? w / it.aspect : w;
+      const x = it.xNorm * pw;
+      const y = ph - it.yNorm * ph - h;
+      page.drawImage(img, { x, y, width: w, height: h });
+    }
   }
   return doc.save();
 }

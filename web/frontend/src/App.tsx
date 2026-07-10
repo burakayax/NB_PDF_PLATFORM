@@ -275,6 +275,9 @@ const PdfEditor = lazy(() =>
 const PdfSign = lazy(() =>
   import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
 );
+const PdfAnnotate = lazy(() =>
+  import("./components/tools/PdfAnnotate").then((m) => ({ default: m.PdfAnnotate })),
+);
 const BlogIndexPage = lazy(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -298,6 +301,7 @@ type ContentPanel =
   | "ai"
   | "editor"
   | "sign"
+  | "annotate"
   | "api";
 
 type ToastState = {
@@ -801,6 +805,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/pdf-sohbet" ||
     rawPath === "/tools/pdf-duzenle" ||
     rawPath === "/tools/pdf-imzala" ||
+    rawPath === "/tools/pdf-yorumla" ||
     rawPath === "/tools/taranmis-pdf-ocr" ||
     rawPath === "/tools/pdf-veri-cikar" ||
     rawPath === "/tools/pdf-ceviri" ||
@@ -3069,6 +3074,7 @@ function App() {
         p === "/tools/pdf-sohbet" ||
         p === "/tools/pdf-duzenle" ||
         p === "/tools/pdf-imzala" ||
+        p === "/tools/pdf-yorumla" ||
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
         p === "/tools/pdf-ceviri" ||
@@ -5020,6 +5026,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-yorumla") {
+      return (
+        <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfAnnotate language={language} accessToken={accessToken} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "ai-toplu-islem") {
       return (
         <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister}>
@@ -6231,6 +6246,7 @@ function App() {
           }}
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
+          onOpenAnnotate={() => setContentPanel("annotate")}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
@@ -6250,6 +6266,7 @@ function App() {
           }}
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
+          onOpenAnnotate={() => setContentPanel("annotate")}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
@@ -6317,6 +6334,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSign language={language} accessToken={accessToken} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "annotate" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfAnnotate language={language} accessToken={accessToken} />
                 </Suspense>
               </section>
             ) : null}

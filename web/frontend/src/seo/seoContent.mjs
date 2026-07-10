@@ -56,6 +56,7 @@ export const TOOL_SLUGS = [
   "pdf-sohbet",
   "pdf-duzenle",
   "pdf-imzala",
+  "pdf-yorumla",
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
   "pdf-ceviri",
@@ -725,6 +726,33 @@ export const TOOL_SEO = {
         { q: "How do I add a signature to a PDF?", a: "Upload the PDF, click 'Create signature' to draw/type/upload it, then click on the page to place it. Drag to position, resize from the corner, and click 'Apply & download'." },
         { q: "Do my signature and file get uploaded?", a: "No. Signing happens entirely in your browser (on your device); the PDF and signature are never uploaded. It's 100% private and needs no sign-up." },
         { q: "Can I sign multiple pages?", a: "Yes. Select different pages and place a signature/date on each, then apply them all at once." },
+      ],
+    ),
+  },
+
+  "pdf-yorumla": {
+    tr: T(
+      "PDF Yorumla — Vurgu, Not, Çizim Ekle (Üyeliksiz, Cihazda)",
+      "PDF'e fosforlu kalemle vurgu, keçeli kalem çizimi, kutu, ok ve metin notu ekleyin. Yazı silinmeden üzerini işaretleyin. Her şey cihazınızda işlenir — %100 gizli, üyeliksiz, ücretsiz.",
+      "PDF'e Vurgu, Not ve Çizim Ekle — Cihazında, Gizli",
+      "Bir belgeyi incelerken önemli yerleri fosforlu kalemle işaretleyin, keçeli kalemle serbestçe çizin, kutu içine alın, ok çekin ve metin notu ekleyin. Fosforlu ve keçeli kalem yarı saydamdır; altındaki yazı okunmaya devam eder. Farklı renk ve kalınlık seçin, birden fazla sayfada çalışın. Tüm işlem tarayıcınızda (cihazınızda) gerçekleşir — dosyanız sunucuya GİTMEZ. İşaretli PDF'i indirin.",
+      ["pdf yorumla", "pdf vurgu", "pdf işaretleme", "pdf fosforlu kalem", "pdf üzerine yazma", "pdf not ekleme", "pdf çizim", "pdf highlight türkçe"],
+      [
+        { q: "PDF'te yazının üzerini nasıl işaretlerim?", a: "PDF'i yükleyin, «Fosforlu» aracını seçin, bir renk seçip yazının üzerinde sürükleyin. Kalem yarı saydamdır, altındaki metin okunur kalır. «Uygula ve İndir» ile işaretli PDF'i indirin." },
+        { q: "Yazının üzerini çizince metin silinir mi?", a: "Hayır. İşaretlemeler PDF'in üzerine eklenir; mevcut yazı asla silinmez veya değişmez. Fosforlu/keçeli kalem yarı saydam olduğundan alttaki yazı görünür kalır." },
+        { q: "Dosyam sunucuya gidiyor mu?", a: "Hayır. Tüm işaretleme tarayıcınızda (cihazınızda) yapılır; PDF asla yüklenmez. %100 gizli ve üyeliksizdir." },
+      ],
+    ),
+    en: T(
+      "Annotate PDF — Highlight, Note, Draw (No Sign-up, On-device)",
+      "Add highlighter marks, freehand marker drawings, boxes, arrows and text notes to a PDF. Mark over text without erasing it. Everything runs on your device — 100% private, no sign-up, free.",
+      "Add Highlights, Notes and Drawings to PDF — On Your Device, Private",
+      "While reviewing a document, highlight the important parts with a marker, draw freely with a felt pen, box things in, draw arrows and add text notes. The highlighter and marker are semi-transparent, so the text underneath stays readable. Pick different colors and thicknesses, and work across multiple pages. Everything happens in your browser (on your device) — your file is NEVER uploaded. Download the annotated PDF.",
+      ["annotate pdf", "highlight pdf", "pdf marker", "draw on pdf", "pdf comments", "pdf notes", "mark up pdf", "pdf highlighter"],
+      [
+        { q: "How do I highlight text in a PDF?", a: "Upload the PDF, pick the 'Marker' tool, choose a color and drag over the text. The marker is semi-transparent, so the underlying text stays readable. Click 'Apply & download' to get the annotated PDF." },
+        { q: "Does drawing over text erase it?", a: "No. Annotations are drawn on top of the PDF; existing text is never removed or changed. The highlighter/marker is semi-transparent, so the text below stays visible." },
+        { q: "Does my file get uploaded?", a: "No. All annotating happens in your browser (on your device); the PDF is never uploaded. It's 100% private and needs no sign-up." },
       ],
     ),
   },
