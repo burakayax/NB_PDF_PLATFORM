@@ -204,34 +204,39 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     setPlacements((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
 
-  // Seçili imzayı TÜM sayfalara aynı konum/boyut/açı/saydamlıkla uygular.
-  function applyToAllPages(p: Placement) {
+  // MEVCUT sayfadaki TÜM öğeleri (imza + metin + tarih) diğer tüm sayfalara
+  // aynı konum/boyut/açı/saydamlıkla kopyalar. Mükerrer eklemeyi önler.
+  function applyCurrentPageToAll() {
+    const pageItems = placements.filter((p) => p.page === current);
+    if (pageItems.length === 0) return;
     setPlacements((ps) => {
       const additions: Placement[] = [];
       for (let i = 0; i < pageCount; i++) {
-        if (i === p.page) continue;
-        // Aynı imza + aynı konum o sayfada zaten varsa tekrar ekleme.
-        const dup = ps.some(
-          (x) =>
-            x.page === i &&
-            x.bytes === p.bytes &&
-            Math.abs(x.xNorm - p.xNorm) < 0.01 &&
-            Math.abs(x.yNorm - p.yNorm) < 0.01,
-        );
-        if (dup) continue;
-        additions.push({
-          ...p,
-          id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
-          page: i,
-        });
+        if (i === current) continue;
+        for (const p of pageItems) {
+          const dup = ps.some(
+            (x) =>
+              x.page === i &&
+              x.bytes === p.bytes &&
+              x.text === p.text &&
+              Math.abs(x.xNorm - p.xNorm) < 0.01 &&
+              Math.abs(x.yNorm - p.yNorm) < 0.01,
+          );
+          if (dup) continue;
+          additions.push({
+            ...p,
+            id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+            page: i,
+          });
+        }
       }
       return [...ps, ...additions];
     });
   }
 
-  // Bu imzanın (aynı görselin) tüm sayfalardaki kopyalarını kaldırır.
-  function removeFromAllPages(p: Placement) {
-    setPlacements((ps) => ps.filter((x) => x.bytes !== p.bytes));
+  // Tüm sayfalardaki TÜM öğeleri temizler (baştan başla).
+  function clearAllPlacements() {
+    setPlacements([]);
     setSelected(null);
   }
 
@@ -483,25 +488,27 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                   <span className="w-9 text-right text-[11px] font-semibold tabular-nums text-slate-200">{Math.round((selectedPlacement.opacity ?? 1) * 100)}%</span>
                 </span>
               )}
-              {selectedPlacement && pageCount > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => applyToAllPages(selectedPlacement)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
-                  >
-                    <Layers className="h-4 w-4" />
-                    {tr ? "Tüm sayfalara uygula" : "Apply to all pages"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeFromAllPages(selectedPlacement)}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {tr ? "Tümünden kaldır" : "Remove from all"}
-                  </button>
-                </>
+              {pagePlacements.length > 0 && pageCount > 1 && (
+                <button
+                  type="button"
+                  onClick={applyCurrentPageToAll}
+                  title={tr ? "Bu sayfadaki tüm öğeleri (imza, metin, tarih) aynı yere tüm sayfalara koy" : "Copy every item on this page to all pages at the same position"}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                >
+                  <Layers className="h-4 w-4" />
+                  {tr ? "Tüm sayfalara uygula" : "Apply to all pages"}
+                </button>
+              )}
+              {placements.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllPlacements}
+                  title={tr ? "Tüm sayfalardaki tüm öğeleri temizle" : "Clear every item on all pages"}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {tr ? "Tümünü temizle" : "Clear all"}
+                </button>
               )}
 
               <div className="ml-auto flex items-center gap-3">
