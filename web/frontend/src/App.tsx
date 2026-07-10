@@ -1673,12 +1673,20 @@ function App() {
   );
 
   // Bekleyen zincir dosyası, hedef araca geçildikten SONRA (temiz state ile) yüklenir.
+  // ÖNEMLİ: araç değişince çalışan reset effect'i (aşağıda, `resetForm(true)`)
+  // aynı commit'te uploads'ı boşaltıyor ve bu effect'ten SONRA koştuğu için
+  // dosyayı hemen silerdi. Bu yüzden yüklemeyi bir sonraki frame'e erteliyoruz;
+  // böylece tüm senkron reset effect'leri bittikten sonra dosya kalıcı eklenir.
   useEffect(() => {
     const pend = chainPendingRef.current;
-    if (pend && pend.toolId === selectedFeatureId) {
-      chainPendingRef.current = null;
-      void handleNewFiles([pend.file]);
+    if (!pend || pend.toolId !== selectedFeatureId) {
+      return;
     }
+    chainPendingRef.current = null;
+    const raf = requestAnimationFrame(() => {
+      void handleNewFiles([pend.file]);
+    });
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handleNewFiles güncel closure'dan alınır; yalnız araç değişince tetiklenmeli
   }, [selectedFeatureId]);
 
