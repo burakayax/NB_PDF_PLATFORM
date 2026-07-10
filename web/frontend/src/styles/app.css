@@ -1817,11 +1817,11 @@ textarea {
 }
 
 .merge-toast__chain-label {
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(148, 163, 184, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+  color: rgba(203, 213, 225, 0.9);
 }
 
 .merge-toast__chain-chips {
