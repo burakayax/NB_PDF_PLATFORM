@@ -5832,79 +5832,90 @@ function App() {
         />
 
         {mergeShareReady && !mergeShare ? (
-          <div
-            className="merge-progress-fixed merge-share-bar"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="merge-progress-fixed__inner merge-share-bar__inner">
-              <div className="merge-share-bar__info">
-                <span className="merge-share-bar__icon" aria-hidden="true">
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
+          <div className="merge-toast" role="status" aria-live="polite">
+            <button
+              type="button"
+              className="merge-toast__close"
+              onClick={() => setMergeShareReady(null)}
+              aria-label={language === "tr" ? "Kapat" : "Close"}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="merge-toast__head">
+              <span className="merge-toast__icon" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </span>
+              <div className="merge-toast__texts">
+                <span className="merge-toast__title">
+                  {language === "tr" ? "Dosyan kaydedildi" : "File saved"}
                 </span>
-                <div className="merge-share-bar__texts">
-                  <span className="merge-share-bar__title">
-                    {language === "tr"
-                      ? "Dosyan kaydedildi ✓"
-                      : "File saved ✓"}
-                  </span>
-                  <span
-                    className="merge-share-bar__name"
-                    title={mergeShareReady.filename}
-                  >
-                    {mergeShareReady.filename}
-                  </span>
-                </div>
+                <span
+                  className="merge-toast__name"
+                  title={mergeShareReady.filename}
+                >
+                  {mergeShareReady.filename}
+                </span>
               </div>
-              <div className="merge-share-bar__actions">
-                {isShareApiAvailable() ? (
-                  <button
-                    type="button"
-                    className="merge-share-btn merge-share-btn--share"
-                    onClick={() => {
-                      setMergeShare({
-                        defaultName: mergeShareReady.filename,
-                        blob: mergeShareReady.blob,
-                      });
-                    }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="18" cy="5" r="3" />
-                      <circle cx="6" cy="12" r="3" />
-                      <circle cx="18" cy="19" r="3" />
-                      <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
-                    </svg>
-                    {language === "tr" ? "Paylaş" : "Share"}
-                  </button>
-                ) : null}
+            </div>
+            <div className="merge-toast__actions">
+              <button
+                type="button"
+                className="merge-share-btn merge-share-btn--open"
+                onClick={() => {
+                  const url = URL.createObjectURL(mergeShareReady.blob);
+                  window.open(url, "_blank", "noopener,noreferrer");
+                  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                </svg>
+                {language === "tr" ? "Aç" : "Open"}
+              </button>
+              {isShareApiAvailable() ? (
                 <button
                   type="button"
-                  className="merge-share-btn merge-share-btn--open"
+                  className="merge-share-btn merge-share-btn--share"
                   onClick={() => {
-                    const url = URL.createObjectURL(mergeShareReady.blob);
-                    window.open(url, "_blank", "noopener,noreferrer");
-                    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+                    setMergeShare({
+                      defaultName: mergeShareReady.filename,
+                      blob: mergeShareReady.blob,
+                    });
                   }}
                 >
                   <svg
@@ -5918,40 +5929,21 @@ function App() {
                     strokeLinejoin="round"
                     aria-hidden="true"
                   >
-                    <path d="M15 3h6v6" />
-                    <path d="M10 14 21 3" />
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
                   </svg>
-                  {language === "tr" ? "Aç" : "Open"}
+                  {language === "tr" ? "Paylaş" : "Share"}
                 </button>
-                <button
-                  type="button"
-                  className="merge-share-btn merge-share-btn--close"
-                  onClick={() => setMergeShareReady(null)}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
-                  {language === "tr" ? "Kapat" : "Close"}
-                </button>
-              </div>
+              ) : null}
             </div>
             {chainSuggestions.length > 0 ? (
-              <div className="merge-share-bar__chain">
-                <span className="merge-share-bar__chain-label">
-                  {language === "tr" ? "Sıradaki adım:" : "Next step:"}
+              <div className="merge-toast__chain">
+                <span className="merge-toast__chain-label">
+                  {language === "tr" ? "Sıradaki adım" : "Next step"}
                 </span>
-                <div className="merge-share-bar__chain-chips">
+                <div className="merge-toast__chain-chips">
                   {chainSuggestions.map((f) => (
                     <button
                       key={f.id}

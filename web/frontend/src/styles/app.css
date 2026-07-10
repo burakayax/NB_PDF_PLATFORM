@@ -1593,91 +1593,91 @@ textarea {
  * as a softened, card-like variant of the fixed bottom progress bar.
  * ------------------------------------------------------------------------- */
 
-.merge-share-bar {
-  padding: 14px 16px;
-  padding-bottom: max(18px, env(safe-area-inset-bottom));
-  border-top: none;
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-  pointer-events: none;
-}
-
-@keyframes merge-share-bar-in {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.merge-share-bar__inner {
-  pointer-events: auto;
-  position: relative;
-  overflow: hidden;
+/* Sağ-alt köşede yüzen kompakt "başarı" toast kartı — dikey, derli toplu. */
+.merge-toast {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: auto;
+  z-index: 100;
+  width: min(340px, calc(100vw - 32px));
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px 18px;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 15px 18px 15px 22px;
-  border-radius: 20px;
-  border: 1px solid rgba(52, 211, 153, 0.34);
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px 16px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(52, 211, 153, 0.32);
   background:
-    radial-gradient(120% 140% at 0% 0%, rgba(16, 185, 129, 0.14) 0%, transparent 46%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 30%),
-    rgba(11, 18, 32, 0.97);
+    radial-gradient(130% 120% at 100% 0%, rgba(16, 185, 129, 0.16) 0%, transparent 52%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 26%),
+    rgba(11, 18, 32, 0.98);
   backdrop-filter: blur(24px) saturate(1.25);
   -webkit-backdrop-filter: blur(24px) saturate(1.25);
   box-shadow:
-    0 24px 60px -20px rgba(0, 0, 0, 0.78),
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 0 34px -14px rgba(16, 185, 129, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: merge-share-bar-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+    0 24px 60px -18px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(0, 0, 0, 0.32),
+    0 0 30px -14px rgba(16, 185, 129, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  animation: merge-toast-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Sol kenarda ince yeşil "başarı" vurgu şeridi — kartı diğer içerikten ayırır. */
-.merge-share-bar__inner::before {
-  content: "";
-  position: absolute;
-  top: 12px;
-  bottom: 12px;
-  left: 0;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: linear-gradient(180deg, #34d399 0%, #059669 100%);
-  box-shadow: 0 0 12px -1px rgba(16, 185, 129, 0.7);
+@keyframes merge-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(16px, 12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .merge-share-bar__inner {
+  .merge-toast {
     animation: none;
   }
 }
 
-.merge-share-bar__info {
-  display: flex;
+.merge-toast__close {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1 1 220px;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.85);
+  cursor: pointer;
+  transition:
+    background var(--nb-transition-premium),
+    color var(--nb-transition-premium);
 }
 
-.merge-share-bar__icon {
+.merge-toast__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.merge-toast__head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  padding-right: 26px; /* kapat butonuna yer aç */
+}
+
+.merge-toast__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
   color: #6ee7b7;
   border: 1px solid rgba(52, 211, 153, 0.4);
   background: linear-gradient(
@@ -1688,22 +1688,22 @@ textarea {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 
-.merge-share-bar__texts {
+.merge-toast__texts {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  gap: 2px;
+  gap: 1px;
 }
 
-.merge-share-bar__title {
-  font-size: 14.5px;
+.merge-toast__title {
+  font-size: 13.5px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--nb-heading, #f8fafc);
 }
 
-.merge-share-bar__name {
-  font-size: 12px;
+.merge-toast__name {
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--nb-muted);
   white-space: nowrap;
@@ -1711,12 +1711,15 @@ textarea {
   text-overflow: ellipsis;
 }
 
-.merge-share-bar__actions {
+.merge-toast__actions {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.merge-toast__actions .merge-share-btn {
+  flex: 1 1 0;
+  justify-content: center;
 }
 
 .merge-share-btn {
@@ -1794,55 +1797,40 @@ textarea {
     0 12px 26px -12px rgba(16, 185, 129, 0.65);
 }
 
-/* Kapat — neutral / muted */
-.merge-share-btn--close {
-  border-color: rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.06);
-  color: rgba(226, 232, 240, 0.92);
+
+/* Zincirleme önerileri: toast içinde ayraçla ayrılmış "sıradaki adım" bölümü. */
+.merge-toast__chain {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.merge-share-btn--close:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.26);
-  filter: none;
+.merge-toast__chain-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(148, 163, 184, 0.85);
 }
 
-/* Zincirleme önerileri: sonuç barının altında "sıradaki adım" çip satırı. */
-.merge-share-bar__chain {
-  pointer-events: auto;
-  max-width: 640px;
-  margin: 9px auto 0;
+.merge-toast__chain-chips {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  padding: 0 8px;
-  animation: merge-share-bar-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.merge-share-bar__chain-label {
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: rgba(148, 163, 184, 0.92);
-}
-
-.merge-share-bar__chain-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .merge-share-chip {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 13px;
+  gap: 6px;
+  padding: 6px 11px;
   border-radius: 999px;
   border: 1px solid rgba(52, 211, 153, 0.3);
   background: rgba(16, 185, 129, 0.1);
   color: rgba(209, 250, 229, 0.96);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -1858,30 +1846,8 @@ textarea {
 }
 
 .merge-share-chip__icon {
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .merge-share-bar__chain {
-    animation: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .merge-share-bar__inner {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .merge-share-bar__actions {
-    justify-content: stretch;
-  }
-
-  .merge-share-btn {
-    flex: 1 1 0;
-    justify-content: center;
-  }
 }
 
 /* ---------------------------------------------------------------------------
