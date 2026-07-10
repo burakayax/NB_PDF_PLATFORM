@@ -137,6 +137,7 @@ export const legalDocuments: Record<
             "Usage and product data: feature usage, operational logs needed for security and reliability, and—if you opt in—basic analytics events from the web client (such as page or screen identifiers and session context).",
             "Support and communications: content you send via contact or support channels, including your email address and message text.",
             "Technical data: IP address, browser type, device or OS hints, and error reports you allow us to collect (which may include a short stack trace or diagnostic text).",
+            "AI feature content: when you use AI-powered tools (for example summarize, chat, translate, extract data, compare, redact), text extracted from your document on your device is sent to our AI provider to generate the result. That text may contain personal data if such data is present in your file. Structural tools (merge, split, rotate, sign, annotate, etc.) run in your browser and your file is not sent for those.",
             "We do not use this policy to describe the full contents of documents you process; processing of file content is governed by how the product works technically and by these disclosures only to the extent personal data appears inside files you choose to upload.",
           ],
         },
@@ -144,6 +145,7 @@ export const legalDocuments: Record<
           title: "3. Why we use personal data",
           paragraphs: [
             "To provide and secure the service: register and authenticate users, enforce plan limits, prevent fraud and abuse, and maintain infrastructure.",
+            "To provide AI-powered features: generate summaries, translations, data extraction, comparisons and similar outputs by sending your document text to our AI provider; the text is used only to produce your result and is not used to train the provider's models.",
             "To communicate with you: transactional messages (e.g. verification, security notices), responses to support requests, and—where permitted—product updates.",
             "To improve the product: troubleshooting, aggregated statistics, and optional analytics when you have accepted cookies for that purpose.",
             "To meet legal obligations: responding to lawful requests and retaining records where the law requires.",
@@ -160,6 +162,7 @@ export const legalDocuments: Record<
           title: "5. Sharing and processors",
           paragraphs: [
             "We use trusted service providers (for example hosting, email delivery, or analytics) who process data on our instructions and under appropriate safeguards.",
+            "AI processor: our AI-powered features rely on Anthropic (Anthropic PBC, United States). Text extracted from your document is sent to Anthropic solely to generate your result; per Anthropic's API terms it is not used to train models. Only the document text is sent, not the file itself.",
             "We do not sell your personal data. We may disclose information if required by law, to protect rights and safety, or in connection with a merger or asset transfer subject to continued protection of your information.",
           ],
         },
@@ -199,7 +202,7 @@ export const legalDocuments: Record<
         {
           title: "8. International transfers",
           paragraphs: [
-            "If we process data in countries other than your own, we will ensure appropriate safeguards where required (such as standard contractual clauses or equivalent mechanisms), consistent with applicable data protection laws.",
+            "Some processors — notably our AI provider Anthropic (United States) and our analytics/error-monitoring providers — may process data outside your country. Where required we ensure appropriate safeguards (such as standard contractual clauses or equivalent mechanisms), consistent with applicable data protection laws.",
           ],
         },
         {
@@ -478,6 +481,7 @@ export const legalDocuments: Record<
             "Kullanım ve ürün verileri: güvenlik ve güvenilirlik için gerekli operasyon günlükleri; açık rızanızla web istemcisinden temel analitik olayları (örneğin sayfa veya ekran tanımlayıcıları ve oturum bağlamı).",
             "Destek ve iletişim: iletişim veya destek kanalları aracılığıyla gönderdiğiniz içerik, e-posta adresiniz ve mesaj metni.",
             "Teknik veriler: IP adresi, tarayıcı türü, cihaz veya işletim sistemi ipuçları ve izin verdiğiniz hata raporları (kısa yığın izi veya tanı metni içerebilir).",
+            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (örneğin özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme) kullandığınızda, belgenizden cihazınızda çıkarılan metin sonucu üretmek üzere yapay zekâ sağlayıcımıza gönderilir. Bu metin, dosyanızda mevcutsa kişisel veri içerebilir. Yapısal araçlar (birleştirme, bölme, döndürme, imzalama, işaretleme vb.) tarayıcınızda çalışır ve dosyanız bunlar için gönderilmez.",
             "İşlediğiniz dosyaların tam içeriğini bu politika ayrıntılı olarak listelemez; dosya içeriği ürünün teknik işleyişi kapsamında işlenir ve yalnızca kişisel veri içermesi hâlinde bu açıklamalarla ilişkilidir.",
           ],
         },
@@ -485,6 +489,7 @@ export const legalDocuments: Record<
           title: "3. Kişisel verileri kullanma amaçları",
           paragraphs: [
             "Hizmeti sunmak ve güvence altına almak: kullanıcı kaydı ve kimlik doğrulama, plan limitlerini uygulama, dolandırıcılık ve kötüye kullanımı önleme, altyapıyı işletme.",
+            "Yapay zekâ destekli özellikleri sunmak: belge metninizi yapay zekâ sağlayıcımıza göndererek özet, çeviri, veri çıkarma, karşılaştırma ve benzeri çıktılar üretmek; bu metin yalnızca sonucunuzu üretmek için kullanılır, sağlayıcının modellerini eğitmek için kullanılmaz.",
             "Sizinle iletişim: işlemsel mesajlar (doğrulama, güvenlik bildirimleri), destek taleplerine yanıt ve izin verildiğinde ürün güncellemeleri.",
             "Ürünü geliştirmek: sorun giderme, toplu istatistikler ve çerez bildirimini kabul ettiğinizde isteğe bağlı analitik.",
             "Yasal yükümlülükler: yasal taleplere yanıt ve kanunun gerektirdiği sürelerle kayıt saklama.",
@@ -501,6 +506,7 @@ export const legalDocuments: Record<
           title: "5. Paylaşım ve işleyenler",
           paragraphs: [
             "Barındırma, e-posta gönderimi veya analitik gibi güvenilir hizmet sağlayıcıları, talimatlarımız ve uygun güvenceler çerçevesinde veri işleyebilir.",
+            "Yapay zekâ işleyeni: Yapay zekâ destekli özelliklerimiz Anthropic (Anthropic PBC, ABD) altyapısını kullanır. Yapay zekâ araçlarına gönderdiğiniz belge metni yalnızca sonucunuzu üretmek amacıyla Anthropic'e iletilir; Anthropic'in API şartları gereği modellerin eğitiminde kullanılmaz. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
             "Kişisel verilerinizi satmayız. Yasal zorunluluk, hakların ve güvenliğin korunması veya birleşme veya varlık devri (verilerinizin korunmasının sürmesi koşuluyla) hallerinde bilgi açıklanabilir.",
           ],
         },
@@ -540,7 +546,7 @@ export const legalDocuments: Record<
         {
           title: "8. Uluslararası aktarım",
           paragraphs: [
-            "Verilerinizi ikamet ettiğiniz ülke dışında işlersek, geçerli veri koruma kanunlarına uygun olarak standart sözleşme maddeleri veya eşdeğer mekanizmalarla uygun güvenceleri sağlarız.",
+            "Bazı işleyenler — özellikle yapay zekâ sağlayıcımız Anthropic (ABD) ile analitik/hata izleme sağlayıcılarımız — verileri ülkeniz dışında işleyebilir. Gerektiğinde, geçerli veri koruma kanunlarına uygun olarak standart sözleşme maddeleri veya eşdeğer mekanizmalarla uygun güvenceleri sağlarız.",
           ],
         },
         {
@@ -588,7 +594,8 @@ export const legalDocuments: Record<
             "Kimlik ve iletişim bilgileri: Ad, soyad, e-posta adresi; hesap oluşturma ve kimlik doğrulama süreçlerinde işlenir.",
             "Ödeme ve fatura bilgileri: Ad, soyad, adres, posta kodu, şehir, ülke, cep telefonu; ödeme altyapısı sağlayıcısına (İyzico) iletilerek güvenli tahsilat ve fatura düzenlenmesi amacıyla işlenir. Kart numarası, CVV gibi ödeme aracı bilgileri sistemimizde saklanmaz; doğrudan İyzico’nun PCI DSS uyumlu altyapısında işlenir.",
             "Teknik ve kullanım verileri: IP adresi, tarayıcı/cihaz bilgisi, oturum bilgileri; güvenlik, sahteciliğin önlenmesi ve sistem performansı amaçlarıyla işlenir.",
-            "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir; içerik analizi yapılmaz.",
+            "Yüklenen belgeler: PDF ve diğer dosyalar işlem için geçici olarak sunucularımızda tutulur; işlem tamamlandıktan kısa süre sonra otomatik olarak silinir. Yapısal araçlarda (birleştirme, dönüştürme vb.) belge içeriğine anlamsal analiz uygulanmaz.",
+            "Yapay zekâ araç içeriği: Yapay zekâ destekli araçları (özetleme, sohbet, çeviri, veri çıkarma, karşılaştırma, gizleme) kullandığınızda, belgenizden çıkarılan metin sonucu üretmek amacıyla yapay zekâ sağlayıcımıza (Anthropic, ABD) aktarılır; bu metin dosyanızda mevcutsa kişisel veri içerebilir. Yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez.",
           ],
         },
         {
@@ -597,6 +604,7 @@ export const legalDocuments: Record<
             "Sözleşmenin kurulması ve ifası (KVKK md. 5/2-c): Hesap oluşturma, ödeme işlemi, abonelik yönetimi ve hizmetlerin sunulması.",
             "Meşru menfaat (KVKK md. 5/2-f): Hizmetin güvenliğinin sağlanması, dolandırıcılık ve kötüye kullanımın önlenmesi, sistem performansı.",
             "Hukuki yükümlülüğün yerine getirilmesi (KVKK md. 5/2-ç): Vergi mevzuatı ve diğer kanuni yükümlülükler kapsamında fatura ve kayıt tutma.",
+            "Yapay zekâ destekli araçların sunulması (KVKK md. 5/2-c — sözleşmenin ifası): Bir yapay zekâ aracını kullanmayı seçtiğinizde, talebinizi yerine getirmek üzere belge metninizin yapay zekâ sağlayıcısına aktarılarak sonuç üretilmesi.",
             "Açık rıza (KVKK md. 5/1): Analitik ve pazarlama amaçlı çerezler gibi zorunlu olmayan veri işleme faaliyetleri için ayrıca açık rızanız alınır.",
           ],
         },
@@ -605,6 +613,7 @@ export const legalDocuments: Record<
           paragraphs: [
             "Kişisel verileriniz; hizmetlerimizin sunulabilmesi için ihtiyaç duyulan ölçüde aşağıdaki alıcı gruplarına aktarılabilir:",
             "Ödeme kuruluşu (İyzico): Ödeme işlemlerinin gerçekleştirilmesi amacıyla gerekli kimlik ve adres bilgileri aktarılır.",
+            "Yapay zekâ sağlayıcısı (Anthropic PBC, ABD) — yurt dışına aktarım: Yapay zekâ destekli araçları kullandığınızda belge metniniz, sonucun üretilmesi amacıyla Anthropic'e aktarılır. Bu, KVKK md. 9 kapsamında yurt dışına aktarım niteliğindedir; yalnızca belge metni gönderilir, dosyanın kendisi gönderilmez ve veriler sağlayıcının model eğitiminde kullanılmaz.",
             "Bulut altyapısı ve barındırma hizmet sağlayıcıları: Hizmetin çalıştırıldığı sunucu altyapısını sunan şirketler; veri işleme sözleşmeleri çerçevesinde sınırlı erişim.",
             "Analitik hizmet sağlayıcıları (onay halinde): Ürün iyileştirme amacıyla anonimleştirilmiş kullanım verileri.",
             "Yasal zorunluluk: Mahkeme kararı veya yetkili kamu kurumu talebi halinde ilgili makamlarla paylaşılabilir.",

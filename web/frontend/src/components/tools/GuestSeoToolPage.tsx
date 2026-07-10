@@ -20,9 +20,15 @@ type Props = {
  * Genel misafir araç sayfası (SEO + tam sayfa) — herhangi bir aracı (AiPdfTool,
  * PdfEditor…) SEO içeriğiyle (H1 + açıklama + SSS) sarar. Prerender ile aynı içerik.
  */
+// Yalnızca bu araçlar tamamen cihazda (tarayıcıda) çalışır; dosya sunucuya
+// gitmez. Diğerleri (PDF Düzenle sunucuda, AI araçları Anthropic'e metin
+// gönderir) için "cihazdan çıkmaz" iddiası yanıltıcı olur — o yüzden ayrım.
+const ON_DEVICE_SEO_TOOLS = new Set<string>(["pdf-imzala", "pdf-yorumla"]);
+
 export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
+  const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
   const relatedTools = getRelatedToolLinks(slug, language) as Array<{ slug: string; label: string }>;
   const guideSlugs = getGuideSlugsForTool(slug) as string[];
   const guides = guideSlugs
@@ -58,7 +64,9 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[12px] font-semibold text-cyan-300">
             <Sparkles className="h-3.5 w-3.5" />
-            {tr ? "Ücretsiz · Gizli · Kurulum yok" : "Free · Private · No install"}
+            {onDevice
+              ? tr ? "Ücretsiz · Gizli · Kurulum yok" : "Free · Private · No install"
+              : tr ? "Ücretsiz · Güvenli · Kurulum yok" : "Free · Secure · No install"}
           </span>
           <h1 className="mt-4 bg-gradient-to-b from-white to-slate-300 bg-clip-text text-3xl font-extrabold leading-tight tracking-tight text-transparent sm:text-4xl md:text-5xl">
             {seo?.h1 ?? slug}
@@ -73,11 +81,18 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
         <div className="mt-9">{children}</div>
 
         <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { icon: <ShieldCheck className="h-4 w-4" />, t: tr ? "Dosyan cihazından çıkmaz" : "Files never leave your device" },
-            { icon: <Zap className="h-4 w-4" />, t: tr ? "Anında işlem" : "Instant processing" },
-            { icon: <Lock className="h-4 w-4" />, t: tr ? "Sınırsız & ücretsiz" : "Unlimited & free" },
-          ].map((b, i) => (
+          {(onDevice
+            ? [
+                { icon: <ShieldCheck className="h-4 w-4" />, t: tr ? "Dosyan cihazından çıkmaz" : "Files never leave your device" },
+                { icon: <Zap className="h-4 w-4" />, t: tr ? "Anında işlem" : "Instant processing" },
+                { icon: <Lock className="h-4 w-4" />, t: tr ? "Sınırsız & ücretsiz" : "Unlimited & free" },
+              ]
+            : [
+                { icon: <ShieldCheck className="h-4 w-4" />, t: tr ? "İşlem sonrası dosyan silinir" : "Files deleted after processing" },
+                { icon: <Zap className="h-4 w-4" />, t: tr ? "Hızlı, güvenli işleme" : "Fast, secure processing" },
+                { icon: <Lock className="h-4 w-4" />, t: tr ? "Şifreli aktarım" : "Encrypted transfer" },
+              ]
+          ).map((b, i) => (
             <div key={i} className="flex items-center gap-2.5 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 text-[12px] text-slate-300">
               <span className="text-cyan-300">{b.icon}</span>
               {b.t}
