@@ -76,6 +76,9 @@ export type SignatureItem = {
   xNorm: number; // sol-üst x / sayfa genişliği
   yNorm: number; // sol-üst y / sayfa yüksekliği (üstten)
   wNorm: number; // genişlik / sayfa genişliği
+  opacity?: number; // 0..1 saydamlık (varsayılan 1)
+  /** Ekran saat yönünde derece (varsayılan 0); merkez etrafında döndürülür. */
+  rotationDeg?: number;
 };
 
 /**
@@ -100,9 +103,29 @@ export async function applySignatures(
     const { width: pw, height: ph } = page.getSize();
     const w = it.wNorm * pw;
     const h = it.aspect > 0 ? w / it.aspect : w;
-    const x = it.xNorm * pw;
-    const y = ph - it.yNorm * ph - h; // üst-tabanlı → pdf-lib alt-sol origin
-    page.drawImage(img, { x, y, width: w, height: h });
+    const op = it.opacity ?? 1;
+    const rot = it.rotationDeg ?? 0;
+    if (!rot) {
+      const x = it.xNorm * pw;
+      const y = ph - it.yNorm * ph - h; // üst-tabanlı → pdf-lib alt-sol origin
+      page.drawImage(img, { x, y, width: w, height: h, opacity: op });
+    } else {
+      // Merkez etrafında döndür: pdf-lib köşe-pivotludur, pivot'u telafi ederiz.
+      // Ekran saat yönü → pdf-lib (y-yukarı) saat tersi olduğundan açı ters işaretli.
+      const phi = (-rot * Math.PI) / 180;
+      const cx = it.xNorm * pw + w / 2;
+      const cy = ph - it.yNorm * ph - h / 2;
+      const rx = (w / 2) * Math.cos(phi) - (h / 2) * Math.sin(phi);
+      const ry = (w / 2) * Math.sin(phi) + (h / 2) * Math.cos(phi);
+      page.drawImage(img, {
+        x: cx - rx,
+        y: cy - ry,
+        width: w,
+        height: h,
+        opacity: op,
+        rotate: degrees(-rot),
+      });
+    }
   }
   return doc.save();
 }
