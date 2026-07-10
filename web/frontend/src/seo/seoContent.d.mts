@@ -41,3 +41,12 @@ export const LEGAL_SEO: Record<
 export const SOFTWARE_FEATURE_LIST: Record<SeoLang, string[]>;
 
 export function getToolSeo(slug: string, language: SeoLang): ToolSeoCopy | null;
+
+export const RELATED_TOOLS: Record<string, string[]>;
+export const BLOG_RELATED_TOOLS: Record<string, string[]>;
+export function toolShortLabel(slug: string, language?: SeoLang): string;
+export function getRelatedToolLinks(
+  slug: string,
+  language?: SeoLang,
+): Array<{ slug: string; label: string }>;
+export function getGuideSlugsForTool(slug: string): string[];

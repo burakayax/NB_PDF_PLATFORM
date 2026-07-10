@@ -23,6 +23,8 @@ import {
   API_SEO,
   LEGAL_SEO,
   SOFTWARE_FEATURE_LIST,
+  RELATED_TOOLS as TOOL_RELATED_TOOLS,
+  BLOG_RELATED_TOOLS,
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 
@@ -33,69 +35,7 @@ const publicDir = join(frontendRoot, "public");
 /** Statik prerender birincil dili. Hedef pazar Türkiye → "tr". */
 const PRIMARY_LANG = "tr";
 
-// ─── Tematik iç linkleme haritaları ───────────────────────────────────────────
-// Google topical authority + kullanıcı akışı için: blog↔ilgili araç ve
-// araç↔ilgili araç bağları. Flat "Tüm Araçlar" listesine EK katmandır.
-
-/** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + iç link). */
-const BLOG_RELATED_TOOLS = {
-  "faturadan-excele-veri-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
-  "banka-ekstresi-excele-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
-  "faturalari-toplu-muhasebeye-hazirlama": ["pdf-veri-cikar", "ai-toplu-islem", "pdf-to-excel"],
-  "iki-pdf-birlestirme-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
-  "pdf-bolme-sayfalara-ayirma": ["split-pdf", "merge-pdf", "organize-pdf"],
-  "pdf-sayfa-silme": ["delete-pages", "organize-pdf", "split-pdf"],
-  "pdf-dondurme-kaydetme": ["rotate-pdf", "organize-pdf"],
-  "pdf-sayfa-sirasi-degistirme": ["organize-pdf", "delete-pages", "rotate-pdf"],
-  "pdf-boyutu-kucultme-sikistirma": ["compress", "flatten-pdf"],
-  "pdf-word-donusturme": ["pdf-to-word", "word-to-pdf"],
-  "resimleri-pdf-yapma": ["image-to-pdf", "pdf-to-image"],
-  "pdf-sifre-kaldirma-koyma": ["unlock-pdf", "encrypt"],
-  "pdf-baska-dile-cevirme": ["pdf-ceviri", "pdf-ozetle", "pdf-sohbet"],
-  "yabanci-dildeki-sozlesmeyi-anlama": ["pdf-ceviri", "pdf-sohbet", "pdf-ozetle"],
-  "uzun-belgeleri-ai-ile-ozetleme": ["pdf-ozetle", "pdf-sohbet"],
-  "akademik-makale-ozetleme-literatur": ["pdf-ozetle", "pdf-sohbet", "pdf-ceviri"],
-  "ihale-sartnamesi-nasil-okunur": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
-  "kira-kontrati-dikkat-edilecek-maddeler": ["pdf-ozetle", "pdf-sohbet"],
-  "taranmis-pdf-metne-cevirme-ocr": ["taranmis-pdf-ocr", "pdf-to-text"],
-};
-
-/** Araç slug → tematik ilgili araçlar (curated iç link). */
-const TOOL_RELATED_TOOLS = {
-  "split-pdf": ["merge-pdf", "organize-pdf", "delete-pages", "rotate-pdf"],
-  "merge-pdf": ["split-pdf", "organize-pdf", "compress", "page-numbers"],
-  "delete-pages": ["organize-pdf", "split-pdf", "rotate-pdf", "merge-pdf"],
-  "rotate-pdf": ["organize-pdf", "delete-pages", "split-pdf", "merge-pdf"],
-  "organize-pdf": ["delete-pages", "rotate-pdf", "split-pdf", "page-numbers"],
-  "compress": ["merge-pdf", "split-pdf", "flatten-pdf", "pdf-to-image"],
-  "pdf-to-word": ["word-to-pdf", "pdf-to-excel", "pdf-to-text", "pdf-ozetle"],
-  "word-to-pdf": ["pdf-to-word", "merge-pdf", "compress", "watermark"],
-  "excel-to-pdf": ["pdf-to-excel", "merge-pdf", "compress"],
-  "pdf-to-excel": ["excel-to-pdf", "pdf-veri-cikar", "pdf-to-word", "pdf-to-text"],
-  "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
-  "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
-  "pdf-to-image": ["image-to-pdf", "pdf-to-ppt", "compress"],
-  "image-to-pdf": ["pdf-to-image", "merge-pdf", "compress", "pdf-to-word"],
-  "html-to-pdf": ["pdf-to-word", "merge-pdf", "compress"],
-  "unlock-pdf": ["encrypt", "compress", "watermark", "pdf-to-word"],
-  "watermark": ["page-numbers", "compress", "encrypt", "pdf-imzala"],
-  "page-numbers": ["watermark", "merge-pdf", "organize-pdf", "compress"],
-  "repair-pdf": ["compress", "merge-pdf", "pdf-to-word"],
-  "encrypt": ["unlock-pdf", "watermark", "compress", "flatten-pdf"],
-  "pdf-to-text": ["pdf-to-word", "taranmis-pdf-ocr", "pdf-ozetle", "pdf-veri-cikar"],
-  "flatten-pdf": ["compress", "watermark", "page-numbers", "encrypt"],
-  "pdf-ozetle": ["pdf-sohbet", "pdf-ceviri", "pdf-veri-cikar", "taranmis-pdf-ocr"],
-  "pdf-sohbet": ["pdf-ozetle", "pdf-ceviri", "pdf-veri-cikar"],
-  "pdf-duzenle": ["pdf-imzala", "pdf-yorumla", "watermark", "page-numbers"],
-  "pdf-imzala": ["pdf-yorumla", "pdf-duzenle", "watermark", "encrypt"],
-  "pdf-yorumla": ["pdf-imzala", "pdf-duzenle", "watermark"],
-  "taranmis-pdf-ocr": ["pdf-to-text", "pdf-ozetle", "pdf-to-word", "pdf-ceviri"],
-  "pdf-veri-cikar": ["pdf-to-excel", "pdf-ozetle", "pdf-sohbet", "ai-toplu-islem"],
-  "pdf-ceviri": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
-  "ai-toplu-islem": ["pdf-ozetle", "pdf-veri-cikar", "pdf-ceviri"],
-  "pdf-karsilastir": ["pdf-ozetle", "pdf-sohbet", "pdf-duzenle"],
-  "hassas-veri-gizle": ["pdf-duzenle", "encrypt", "watermark"],
-};
+// Tematik iç linkleme haritaları seoContent.mjs'ten gelir (SEO + React ortak kaynak).
 
 function readEnvBaseUrl() {
   let base =
@@ -412,6 +352,27 @@ function renderStructuredData(baseUrl, routePath, meta) {
       publisher: { "@id": orgId },
       image: `${baseUrl}${DEFAULT_OG_IMAGE}`,
     });
+
+    // HowTo — yazıdaki adım adım "steps" bloğunu yapılandırılmış rehbere çevirir.
+    // Rich result Google'da sınırlansa da AI Overviews / AEO için değerlidir.
+    const stepsBlock = Array.isArray(meta.blocks)
+      ? meta.blocks.find((b) => b.t === "steps" && Array.isArray(b.items) && b.items.length)
+      : null;
+    if (stepsBlock) {
+      nodes.push({
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        name: meta.h1,
+        description: meta.description,
+        inLanguage: lang,
+        step: stepsBlock.items.map((s, i) => ({
+          "@type": "HowToStep",
+          position: i + 1,
+          name: s.title,
+          text: s.x,
+        })),
+      });
+    }
   }
 
   // FAQPage — rich result Mayıs 2026'da kaldırıldı ancak AI Overviews / AEO için

@@ -1310,6 +1310,239 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "pdf-e-imza-atma-nasil-yapilir",
+      date: "2026-07-10",
+      updated: "2026-07-10",
+      readMinutes: 5,
+      tags: { tr: ["İmza", "E-İmza", "Üyeliksiz"], en: ["Signature", "E-sign", "No sign-up"] },
+      accent: "cyan",
+      tool: "/tools/pdf-imzala",
+    },
+    {
+      title: "PDF'e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)",
+      description:
+        "PDF'e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz.",
+      excerpt:
+        "Sözleşme, form ve dilekçeleri yazdırıp ıslak imzalayıp tekrar taramaya son. Bu rehberde PDF'e elektronik imzayı — imzayı çizerek, yazarak veya yükleyerek — cihazınızdan çıkmadan nasıl atacağınızı adım adım gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir sözleşmeyi imzalamak için onu yazdırıp ıslak imza atıp tekrar taramak; hem zaman kaybı hem de kalite kaybıdır. PDF'e doğrudan elektronik imza atmak çok daha hızlı ve temizdir. İşte cihazınızdan çıkmadan, üyelik gerektirmeden bunu yapmanın yolu." },
+
+        { t: "h2", x: "Elektronik imza nedir, e-imza (nitelikli) ile farkı ne?" },
+        { t: "p", x: "Gündelik kullanımda \"PDF'e imza atmak\", belgeye imza görselinizi yerleştirmek demektir; sözleşme, teklif, kira formu, dilekçe gibi belgelerin büyük çoğunluğu için yeterlidir. Resmî kurumların istediği nitelikli elektronik imza (NES) ise ayrı bir e-imza cihazı/sertifikası gerektirir. Bu araç birinci türü — hızlı, görünür imza yerleştirmeyi — sağlar." },
+
+        { t: "h2", x: "İmzanızı üç şekilde oluşturun" },
+        { t: "p", x: "PDF İmzala aracı imzanızı üç yolla almanıza izin verir: fareyle/parmağınızla çizin, adınızı el yazısı fontuyla yazın veya hazır bir imza görselini (şeffaf PNG en iyisi) yükleyin." },
+        { t: "ul", items: ["Çiz: dokunmatik ekranda parmağınızla en doğal sonuç.", "Yaz: adınız el yazısı fontuna dönüşür.", "Yükle: kaşe/imza görselinizi ekleyin."] },
+
+        { t: "h2", x: "Adım adım: PDF'e imza atma" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "İmzalanacak sözleşme veya formu sürükleyip bırakın ya da seçin. Dosya tarayıcınızda açılır." },
+          { title: "İmzanızı oluşturun", x: "«İmza Ekle» ile imzanızı çizin, yazın veya yükleyin. İmza oluşur oluşmaz sayfanın ortasına yerleşir." },
+          { title: "Yerleştirin ve ayarlayın", x: "İmzayı sürükleyerek istediğiniz yere taşıyın, köşeden boyutlandırın, üstteki tutamakla döndürün; gerekirse saydamlığını ayarlayın. Tarih veya metin de ekleyebilirsiniz." },
+          { title: "Uygulayın ve indirin", x: "Çok sayfalıysa «Tüm sayfalara uygula» ile aynı yere kopyalayın, sonra «Uygula ve İndir» deyin. İmzalı PDF hazır." },
+        ] },
+
+        { t: "tip", x: "İmzanız ve dosyanız sunucuya GİTMEZ — imzalama tamamen tarayıcınızda (cihazınızda) yapılır. Bu yüzden gizli belgeleri de gönül rahatlığıyla imzalayabilirsiniz." },
+
+        { t: "cta", title: "PDF İmzala", x: "Sözleşmenizi saniyeler içinde imzalayın — üyeliksiz, cihazınızda.", btn: "Aracı aç", tool: "/tools/pdf-imzala" },
+
+        { t: "h2", x: "Aynı imzayı birden çok sayfaya koyma" },
+        { t: "p", x: "Çok sayfalı sözleşmelerde her sayfanın altına imza gerekebilir. İmzanızı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde, aynı imza tüm sayfalarda aynı hizaya kopyalanır. Bir öğeyi kopyalayıp başka yere yapıştırmak için Ctrl+C / Ctrl+V kısayollarını da kullanabilirsiniz." },
+
+        { t: "h2", x: "İmza + tarih + metin birlikte" },
+        { t: "p", x: "İmzanın yanına tarih ve serbest metin (ör. \"Okudum, onaylıyorum\") de ekleyebilirsiniz. Metin rengini istediğiniz gibi seçebilir, konumunu sürükleyerek ayarlayabilirsiniz — hepsi tek geçişte PDF'e gömülür." },
+      ],
+      faq: [
+        { q: "PDF'e nasıl imza atarım?", a: "PDF'i yükleyin, «İmza Ekle» ile imzanızı çizin/yazın/yükleyin; imza sayfaya yerleşir. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin. Tümü tarayıcınızda çalışır." },
+        { q: "İmzam sunucuya yükleniyor mu?", a: "Hayır. İmzalama tamamen cihazınızda yapılır; PDF ve imza asla karşıya yüklenmez. %100 gizli ve üyeliksizdir." },
+        { q: "Birden çok sayfaya aynı imzayı atabilir miyim?", a: "Evet. İmzayı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde aynı imza tüm sayfalarda aynı hizaya eklenir." },
+      ],
+    },
+    {
+      title: "How to Sign a PDF Electronically: Free, No Sign-up (2026)",
+      description:
+        "How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free.",
+      excerpt:
+        "Stop printing, wet-signing and re-scanning contracts. This guide shows how to sign a PDF electronically — by drawing, typing or uploading your signature — without your file ever leaving your device.",
+      blocks: [
+        { t: "lead", x: "Printing a contract, signing it by hand and scanning it back is slow and lossy. Signing the PDF directly is far faster and cleaner. Here's how to do it without your file leaving your device and without an account." },
+        { t: "h2", x: "Electronic signature vs. qualified e-signature" },
+        { t: "p", x: "In everyday use, \"signing a PDF\" means placing your signature image on the document — enough for most contracts, quotes, rental forms and letters. A qualified electronic signature (QES) required by some authorities needs a separate certificate/device. This tool provides the first kind: quick, visible signature placement." },
+        { t: "h2", x: "Create your signature three ways" },
+        { t: "p", x: "The Sign PDF tool lets you capture your signature by drawing with the mouse/finger, typing your name in a handwriting font, or uploading a signature image (transparent PNG works best)." },
+        { t: "ul", items: ["Draw: most natural with a finger on touch screens.", "Type: your name becomes a handwriting font.", "Upload: add your stamp/signature image."] },
+        { t: "h2", x: "Step by step: sign a PDF" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drag and drop or choose the contract or form to sign. The file opens in your browser." },
+          { title: "Create your signature", x: "Click «Add signature» to draw, type or upload it. It's placed in the center of the page as soon as it's created." },
+          { title: "Place and adjust", x: "Drag it where you want, resize from the corner, rotate with the top handle, and adjust opacity if needed. You can also add a date or text." },
+          { title: "Apply and download", x: "For multi-page files use «Apply to all pages» to copy it to the same spot, then click «Apply & download». Your signed PDF is ready." },
+        ] },
+        { t: "tip", x: "Your signature and file are NOT uploaded — signing happens entirely in your browser (on your device), so you can sign confidential documents safely." },
+        { t: "cta", title: "Sign PDF", x: "Sign your contract in seconds — no sign-up, on your device.", btn: "Open the tool", tool: "/tools/pdf-imzala" },
+        { t: "h2", x: "Put the same signature on every page" },
+        { t: "p", x: "Multi-page contracts often need a signature on each page. Place your signature once and click «Apply to all pages» to copy it to the same position across all pages. You can also use Ctrl+C / Ctrl+V to copy an item elsewhere." },
+        { t: "h2", x: "Signature + date + text together" },
+        { t: "p", x: "You can add a date and free text (e.g. \"Read and approved\") next to the signature, pick any text color, and position everything by dragging — all burned into the PDF in one pass." },
+      ],
+      faq: [
+        { q: "How do I sign a PDF?", a: "Upload the PDF, click «Add signature» to draw/type/upload it; it's placed on the page. Drag to position, resize from the corner, then «Apply & download». Everything runs in your browser." },
+        { q: "Is my signature uploaded to a server?", a: "No. Signing happens entirely on your device; the PDF and signature are never uploaded. It's 100% private and needs no sign-up." },
+        { q: "Can I put the same signature on multiple pages?", a: "Yes. Place it on one page and click «Apply to all pages» to add it at the same position across all pages." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-filigran-ekleme",
+      date: "2026-07-10",
+      updated: "2026-07-10",
+      readMinutes: 4,
+      tags: { tr: ["Filigran", "Watermark", "Belge"], en: ["Watermark", "Branding", "Document"] },
+      accent: "sky",
+      tool: "/tools/watermark",
+    },
+    {
+      title: "PDF'e Filigran Ekleme: Metin, Renk ve Saydamlık Ayarıyla",
+      description:
+        "PDF'e filigran nasıl eklenir? \"TASLAK\", \"GİZLİ\" veya şirket adınızı; renk, yazı tipi ve saydamlık ayarıyla belgenin üzerine yerleştirin. Hızlı ve pratik.",
+      excerpt:
+        "Bir belgeyi \"TASLAK\" veya \"GİZLİ\" olarak işaretlemek, ya da paylaştığınız PDF'lere şirket adınızı basmak istiyorsanız filigran en pratik yoldur. Renk, yazı tipi ve saydamlığı ayarlayarak dakikalar içinde nasıl ekleyeceğinizi anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Filigran; bir PDF'in üzerine yarı saydam bir yazı basarak belgenin durumunu (taslak, gizli, kopya) veya sahibini belirtmenin en hızlı yoludur. Sözleşme paylaşırken, teklif gönderirken ya da belge sızıntısını caydırmak isterken işe yarar." },
+
+        { t: "h2", x: "Filigran ne işe yarar?" },
+        { t: "ul", items: ["Belge durumunu belirtir: TASLAK, GİZLİ, ONAYLANMADI.", "Sahiplik/marka basar: şirket adınız veya web siteniz.", "İzinsiz paylaşımı caydırır: yarı saydam metin ekran görüntüsünde de kalır."] },
+
+        { t: "h2", x: "Adım adım: PDF'e filigran ekleme" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "Filigran eklemek istediğiniz belgeyi seçin." },
+          { title: "Filigran metnini yazın", x: "\"TASLAK\", \"GİZLİ\" ya da şirket adınız gibi bir metin girin." },
+          { title: "Renk, yazı tipi ve saydamlığı ayarlayın", x: "Rengi (#RRGGBB), yazı tipini ve saydamlığı belgeyi okunur bırakacak şekilde seçin." },
+          { title: "Önizleyip indirin", x: "Sonucu önizleyin, uygun görünüyorsa filigranlı PDF'i indirin." },
+        ] },
+
+        { t: "tip", x: "Saydamlığı çok düşük (koyu) tutarsanız filigran metni okumayı zorlaştırır; çok yüksek (soluk) tutarsanız fark edilmez. %10–20 arası çoğu belge için idealdir." },
+
+        { t: "cta", title: "Filigran Ekle", x: "Belgenize TASLAK, GİZLİ veya markanızı dakikalar içinde basın.", btn: "Aracı aç", tool: "/tools/watermark" },
+
+        { t: "h2", x: "Filigrandan sonra: koruma ve numaralandırma" },
+        { t: "p", x: "Filigran, belgeyi görsel olarak işaretler ama düzenlenmesini engellemez. Belgeyi gerçekten korumak istiyorsanız parola ile şifreleyebilir; resmî belgelerde sayfa numarası da ekleyebilirsiniz. Bu araçlar birbirini tamamlar." },
+        { t: "ul", items: ["Parola korumak için: PDF Şifrele.", "Sayfa numarası için: Sayfa Numarası Ekle.", "İmza gerekiyorsa: PDF İmzala."] },
+      ],
+      faq: [
+        { q: "PDF'e filigran nasıl eklenir?", a: "PDF'i Filigran aracına yükleyin, filigran metnini (ör. TASLAK) yazın, renk/yazı tipi/saydamlığı seçin, önizleyip indirin." },
+        { q: "Filigranın rengini ve saydamlığını değiştirebilir miyim?", a: "Evet. Filigran metninin rengini (#RRGGBB), yazı tipini ve saydamlığını belgeyi okunur bırakacak şekilde ayarlayabilirsiniz." },
+        { q: "Filigran belgeyi korur mu?", a: "Filigran belgeyi görsel olarak işaretler ama düzenlemeyi engellemez. Gerçek koruma için PDF'i parolayla şifreleyin." },
+      ],
+    },
+    {
+      title: "How to Add a Watermark to a PDF: Text, Color and Opacity",
+      description:
+        "How to add a watermark to a PDF: place \"DRAFT\", \"CONFIDENTIAL\" or your company name over the document with color, font and opacity control. Fast and simple.",
+      excerpt:
+        "Whether you want to mark a document as \"DRAFT\" or \"CONFIDENTIAL\", or stamp your company name on shared PDFs, a watermark is the quickest way. Here's how to add one in minutes with color, font and opacity control.",
+      blocks: [
+        { t: "lead", x: "A watermark stamps a semi-transparent line of text over a PDF to signal its status (draft, confidential, copy) or its owner. It's handy when sharing contracts, sending quotes or discouraging leaks." },
+        { t: "h2", x: "What is a watermark good for?" },
+        { t: "ul", items: ["State the status: DRAFT, CONFIDENTIAL, NOT APPROVED.", "Stamp ownership/brand: your company name or website.", "Discourage sharing: the semi-transparent text stays visible in screenshots too."] },
+        { t: "h2", x: "Step by step: add a watermark" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Choose the document you want to watermark." },
+          { title: "Type the watermark text", x: "Enter text such as \"DRAFT\", \"CONFIDENTIAL\" or your company name." },
+          { title: "Set color, font and opacity", x: "Pick the color (#RRGGBB), font and an opacity that keeps the document readable." },
+          { title: "Preview and download", x: "Preview the result and, if it looks right, download the watermarked PDF." },
+        ] },
+        { t: "tip", x: "Too dark (low opacity) makes text hard to read; too faint (high opacity) and it's barely visible. 10–20% works for most documents." },
+        { t: "cta", title: "Add Watermark", x: "Stamp DRAFT, CONFIDENTIAL or your brand in minutes.", btn: "Open the tool", tool: "/tools/watermark" },
+        { t: "h2", x: "After the watermark: protect and number" },
+        { t: "p", x: "A watermark marks a document visually but doesn't prevent editing. To really protect it, encrypt with a password; for official documents you can also add page numbers. These tools complement each other." },
+        { t: "ul", items: ["To password-protect: Encrypt PDF.", "For page numbers: Add Page Numbers.", "If you need a signature: Sign PDF."] },
+      ],
+      faq: [
+        { q: "How do I add a watermark to a PDF?", a: "Upload the PDF to the Watermark tool, type the watermark text (e.g. DRAFT), choose color/font/opacity, preview and download." },
+        { q: "Can I change the watermark color and opacity?", a: "Yes. You can set the watermark text's color (#RRGGBB), font and opacity so the document stays readable." },
+        { q: "Does a watermark protect the document?", a: "A watermark marks the document visually but doesn't prevent editing. For real protection, encrypt the PDF with a password." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-uzerine-yazma-isaretleme",
+      date: "2026-07-10",
+      updated: "2026-07-10",
+      readMinutes: 5,
+      tags: { tr: ["İşaretleme", "Vurgu", "Not"], en: ["Markup", "Highlight", "Notes"] },
+      accent: "amber",
+      tool: "/tools/pdf-yorumla",
+    },
+    {
+      title: "PDF Üzerine Yazma ve İşaretleme: Vurgu, Not ve Çizim",
+      description:
+        "PDF üzerine nasıl yazılır ve işaretlenir? Fosforlu kalemle vurgu, serbest çizim, kutu, ok ve metin notu ekleyin. Yazı silinmez, her şey cihazınızda işlenir — üyeliksiz.",
+      excerpt:
+        "Bir belgeyi incelerken önemli yerleri işaretlemek, kenara not düşmek veya bir yeri kutuya almak istersiniz. PDF İşaretle aracıyla fosforlu vurgu, çizim, kutu, ok ve metin notunu — yazıyı silmeden, cihazınızdan çıkmadan — nasıl ekleyeceğinizi gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir sözleşmeyi, ödevi ya da raporu incelerken kalem elinizde olsun istersiniz: önemli cümleyi fosforlu boyayın, kenara not düşün, bir maddeyi kutuya alın, bir yeri okla gösterin. PDF İşaretle bunu tarayıcıda, dosyanız cihazınızdan çıkmadan yapmanızı sağlar." },
+
+        { t: "h2", x: "Hangi işaretleme araçları var?" },
+        { t: "ul", items: ["Fosforlu: metnin üzerini yarı saydam boyar; alttaki yazı okunur kalır.", "Kalem: serbest çizim; düz çizgi modu da var.", "Kutu ve Ok: bir bölgeyi çerçeveleyin veya işaret edin.", "Metin: kenara veya belge üzerine not yazın."] },
+
+        { t: "h2", x: "Adım adım: PDF'i işaretleme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "İşaretlemek istediğiniz belgeyi sürükleyip bırakın ya da seçin." },
+          { title: "Bir araç ve renk seçin", x: "Fosforlu, kalem, kutu, ok veya metin; ardından bir renk ve kalınlık seçin." },
+          { title: "Sayfada çizin", x: "Sürükleyerek işaretleyin. Fosforlu/kalemde «Düz» modu satırların üstünü düzgün çekmenizi sağlar." },
+          { title: "Düzenleyin ve indirin", x: "«Seç» aracıyla bir işareti taşıyın, boyutlandırın, rengini değiştirin; Ctrl+Z ile geri alın. «Uygula ve İndir» deyin." },
+        ] },
+
+        { t: "tip", x: "İşaretlemeler belgenin ÜZERİNE eklenir; mevcut yazı asla silinmez veya değişmez. Fosforlu ve kalem yarı saydam olduğundan altındaki metin okunmaya devam eder." },
+
+        { t: "cta", title: "PDF İşaretle", x: "Belgenizi fosforlu, çizim ve notlarla işaretleyin — cihazınızda, üyeliksiz.", btn: "Aracı aç", tool: "/tools/pdf-yorumla" },
+
+        { t: "h2", x: "İnceleme ve iş birliği için pratik" },
+        { t: "p", x: "İşaretli PDF'i indirip e-postayla paylaşabilirsiniz; karşı taraf herhangi bir PDF görüntüleyicide notlarınızı görür. Bir imza da gerekiyorsa PDF İmzala, metin düzeltmesi gerekiyorsa PDF Düzenle araçlarıyla aynı belgede devam edebilirsiniz." },
+      ],
+      faq: [
+        { q: "PDF üzerine nasıl yazılır/işaretlenir?", a: "PDF'i İşaretle aracına yükleyin, fosforlu/kalem/kutu/ok/metin araçlarından birini seçip sayfada sürükleyin. «Uygula ve İndir» ile işaretli PDF'i alın. Tümü tarayıcınızda çalışır." },
+        { q: "Yazının üzerini boyayınca metin silinir mi?", a: "Hayır. İşaretlemeler üste eklenir; mevcut yazı silinmez. Fosforlu ve kalem yarı saydam olduğundan alttaki yazı görünür kalır." },
+        { q: "Yaptığım işareti geri alabilir/düzenleyebilir miyim?", a: "Evet. Ctrl+Z ile geri alabilir; «Seç» aracıyla bir işareti sonradan taşıyabilir, boyutlandırabilir veya rengini değiştirebilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Write and Mark Up a PDF: Highlight, Note and Draw",
+      description:
+        "How to write on and mark up a PDF: add highlighter marks, freehand drawing, boxes, arrows and text notes. The text stays intact and everything runs on your device — no sign-up.",
+      excerpt:
+        "Reviewing a document, you want to highlight what matters, jot a note in the margin or box a clause. Markup PDF lets you add highlights, drawings, boxes, arrows and text notes — without erasing the text and without your file leaving your device.",
+      blocks: [
+        { t: "lead", x: "Reviewing a contract, an assignment or a report, you want a pen in hand: highlight the key sentence, jot a note, box a clause, point with an arrow. Markup PDF lets you do this in the browser, with your file never leaving your device." },
+        { t: "h2", x: "Which markup tools are there?" },
+        { t: "ul", items: ["Highlighter: paints over text semi-transparently; the text below stays readable.", "Pen: freehand drawing, with a straight-line mode too.", "Box and Arrow: frame a region or point to it.", "Text: write a note in the margin or on the document."] },
+        { t: "h2", x: "Step by step: mark up a PDF" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Drag and drop or choose the document you want to mark up." },
+          { title: "Pick a tool and color", x: "Highlighter, pen, box, arrow or text; then choose a color and thickness." },
+          { title: "Draw on the page", x: "Drag to mark. Marker/pen offer a «Straight» mode to draw cleanly over lines of text." },
+          { title: "Edit and download", x: "Use «Select» to move, resize or recolor a mark; undo with Ctrl+Z. Then «Apply & download»." },
+        ] },
+        { t: "tip", x: "Marks are added ON TOP of the document; existing text is never removed or changed. Highlighter and pen are semi-transparent, so the text below stays readable." },
+        { t: "cta", title: "Markup PDF", x: "Mark up your document with highlights, drawings and notes — on your device, no sign-up.", btn: "Open the tool", tool: "/tools/pdf-yorumla" },
+        { t: "h2", x: "Handy for review and collaboration" },
+        { t: "p", x: "Download the marked-up PDF and share it by email; the other side sees your notes in any PDF viewer. If you also need a signature use Sign PDF, and for text corrections use Edit PDF on the same document." },
+      ],
+      faq: [
+        { q: "How do I write on / mark up a PDF?", a: "Upload the PDF to the Markup tool, pick highlighter/pen/box/arrow/text and drag on the page. Click «Apply & download» to get the marked-up PDF. Everything runs in your browser." },
+        { q: "Does highlighting over text erase it?", a: "No. Marks are added on top; existing text is not removed. Highlighter and pen are semi-transparent, so the text below stays visible." },
+        { q: "Can I undo or edit a mark I made?", a: "Yes. Undo with Ctrl+Z; use the «Select» tool to move, resize or recolor a mark afterwards." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
