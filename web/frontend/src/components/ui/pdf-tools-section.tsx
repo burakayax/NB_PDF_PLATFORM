@@ -82,7 +82,7 @@ const toolCategories = (lang: Language) => [
       {
         id: "pdf-yorumla",
         icon: "🖍️",
-        name: lang === "tr" ? "PDF Yorumla" : "Annotate PDF",
+        name: lang === "tr" ? "PDF İşaretle" : "Markup PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {

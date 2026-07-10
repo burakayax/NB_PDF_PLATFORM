@@ -330,7 +330,7 @@ export function DashboardSidebar({
   // PDF Yorumla satırı — favori yıldızlı, hem Favoriler hem İşaretle grubunda kullanılır.
   const renderAnnotateRow = (keyPrefix = "") => {
     if (!onOpenAnnotate) return null;
-    const label = tr ? "PDF Yorumla" : "Annotate PDF";
+    const label = tr ? "PDF İşaretle" : "Markup PDF";
     return (
       <button
         key={`${keyPrefix}annotate`}
@@ -892,13 +892,13 @@ export function DashboardSidebarMobileLauncher({
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>🖍️</span>
                               <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
-                                {tr ? "PDF Yorumla" : "Annotate PDF"}
+                                {tr ? "PDF İşaretle" : "Markup PDF"}
                               </span>
                               <span className="absolute left-1 top-1">
                                 <FavoriteStar
                                   alwaysVisible
                                   active={isFavorite(ANNOTATE_FAV_ID)}
-                                  label={tr ? "PDF Yorumla" : "Annotate PDF"}
+                                  label={tr ? "PDF İşaretle" : "Markup PDF"}
                                   onToggle={() => toggleFavorite(ANNOTATE_FAV_ID)}
                                 />
                               </span>
