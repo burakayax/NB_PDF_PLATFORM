@@ -6,9 +6,9 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
   Calendar,
   Download,
+  Layers,
   Loader2,
   PenLine,
-  RotateCcw,
   RotateCw,
   Trash2,
   Type as TypeIcon,
@@ -40,6 +40,7 @@ type Placement = SigSource & {
 type Drag =
   | { id: string; mode: "move"; sx: number; sy: number; ox: number; oy: number }
   | { id: string; mode: "resize"; sx: number; ow: number }
+  | { id: string; mode: "rotate"; cx: number; cy: number }
   | null;
 
 function dataUrlToBytes(dataUrl: string): Uint8Array {
@@ -102,6 +103,7 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const clipboardRef = useRef<Placement | null>(null); // Ctrl+C ile kopyalanan imza
 
   const openFile = useCallback(async (f: File) => {
     setError(null);
@@ -202,6 +204,37 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     setPlacements((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
 
+  // Seçili imzayı TÜM sayfalara aynı konum/boyut/açı/saydamlıkla uygular.
+  function applyToAllPages(p: Placement) {
+    setPlacements((ps) => {
+      const additions: Placement[] = [];
+      for (let i = 0; i < pageCount; i++) {
+        if (i === p.page) continue;
+        // Aynı imza + aynı konum o sayfada zaten varsa tekrar ekleme.
+        const dup = ps.some(
+          (x) =>
+            x.page === i &&
+            x.bytes === p.bytes &&
+            Math.abs(x.xNorm - p.xNorm) < 0.01 &&
+            Math.abs(x.yNorm - p.yNorm) < 0.01,
+        );
+        if (dup) continue;
+        additions.push({
+          ...p,
+          id: `${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          page: i,
+        });
+      }
+      return [...ps, ...additions];
+    });
+  }
+
+  // Bu imzanın (aynı görselin) tüm sayfalardaki kopyalarını kaldırır.
+  function removeFromAllPages(p: Placement) {
+    setPlacements((ps) => ps.filter((x) => x.bytes !== p.bytes));
+    setSelected(null);
+  }
+
   // Sürükleme / boyutlandırma.
   useEffect(() => {
     if (!drag) return;
@@ -221,6 +254,13 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
               yNorm: Math.max(0, Math.min(1 - hNorm, drag.oy + dy)),
             };
           }
+          if (drag.mode === "rotate") {
+            // Kol imzanın üstünde başlar; merkeze göre imleç açısı → rotation.
+            const ang = (Math.atan2(e.clientY - drag.cy, e.clientX - drag.cx) * 180) / Math.PI + 90;
+            let deg = Math.round(ang);
+            if (e.shiftKey) deg = Math.round(deg / 15) * 15; // Shift → 15° adım
+            return { ...p, rotation: deg };
+          }
           const dw = (e.clientX - drag.sx) / r.width;
           return { ...p, wNorm: Math.max(0.06, Math.min(0.95, drag.ow + dw)) };
         }),
@@ -235,20 +275,41 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
     };
   }, [drag, dims]);
 
-  // Delete tuşu ile seçili yerleşimi sil.
+  // Klavye kısayolları: Delete=sil, Ctrl/⌘+C=kopyala, Ctrl/⌘+V=yapıştır.
   useEffect(() => {
     if (!editorOpen) return;
     const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      const inField = !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA");
+      if (inField) return;
       if ((e.key === "Delete" || e.key === "Backspace") && selected) {
-        const el = document.activeElement;
-        if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
         setPlacements((ps) => ps.filter((p) => p.id !== selected));
         setSelected(null);
+        return;
+      }
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && (e.key === "c" || e.key === "C") && selected) {
+        const p = placements.find((x) => x.id === selected);
+        if (p) clipboardRef.current = p;
+        e.preventDefault();
+        return;
+      }
+      if (mod && (e.key === "v" || e.key === "V") && clipboardRef.current) {
+        const src = clipboardRef.current;
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+        const wNorm = src.wNorm;
+        const hNorm = (wNorm * (dims.w || 1)) / (src.aspect || 1) / (dims.h || 1);
+        // Aktif sayfaya, hafif kaydırılmış konuma yapıştır.
+        const xNorm = Math.max(0, Math.min(1 - wNorm, src.xNorm + 0.03));
+        const yNorm = Math.max(0, Math.min(1 - hNorm, src.yNorm + 0.03));
+        setPlacements((ps) => [...ps, { ...src, id, page: current, xNorm, yNorm }]);
+        setSelected(id);
+        e.preventDefault();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editorOpen, selected]);
+  }, [editorOpen, selected, placements, current, dims]);
 
   async function apply() {
     if (!srcBytes || placements.length === 0) {
@@ -372,25 +433,14 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"
               >
                 <PenLine className="h-4 w-4" />
-                {activeSig ? (tr ? "İmzayı Değiştir" : "Change signature") : tr ? "İmza Oluştur" : "Create signature"}
+                {tr ? "İmza Ekle" : "Add signature"}
               </button>
-              {activeSig && (
-                <button
-                  type="button"
-                  onClick={() => placeSignature(activeSig)}
-                  title={tr ? "Aynı imzadan bir kopya daha ekle" : "Add another copy of this signature"}
-                  className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 transition hover:border-cyan-400/40 hover:bg-white/[0.08]"
-                >
-                  <img src={activeSig.dataUrl} alt="" className="h-6 w-auto max-w-[80px] object-contain" />
-                  <span className="text-[11px] font-semibold text-slate-300">{tr ? "+ Tekrar ekle" : "+ Add again"}</span>
-                </button>
-              )}
 
               <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
               <button
                 type="button"
                 onClick={() => addTextField(tr ? "Metin" : "Text")}
-                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
               >
                 <TypeIcon className="h-4 w-4" />
                 {tr ? "Metin" : "Text"}
@@ -398,11 +448,16 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
               <button
                 type="button"
                 onClick={() => addTextField(todayStr())}
-                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
               >
                 <Calendar className="h-4 w-4" />
                 {tr ? "Tarih" : "Date"}
               </button>
+              <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-medium text-slate-300 lg:inline-flex">
+                {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-100">Ctrl+C</kbd>
+                <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-[10px] text-slate-100">Ctrl+V</kbd>
+              </span>
               {selectedPlacement?.text !== undefined && (
                 <input
                   autoFocus
@@ -413,8 +468,8 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 />
               )}
               {selectedPlacement && (
-                <span className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5">
-                  <span className="text-[11px] font-semibold text-slate-400">{tr ? "Saydam" : "Opacity"}</span>
+                <span className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.06] px-2.5 py-1.5">
+                  <span className="text-[12px] font-semibold text-slate-100">{tr ? "Saydamlık" : "Opacity"}</span>
                   <input
                     type="range"
                     min={0.2}
@@ -422,20 +477,31 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                     step={0.05}
                     value={selectedPlacement.opacity ?? 1}
                     onChange={(e) => updatePlacement(selectedPlacement.id, { opacity: Number(e.target.value) })}
-                    className="w-16 accent-cyan-400"
+                    className="w-20 accent-cyan-400"
                     title={tr ? "Saydamlık" : "Opacity"}
                   />
-                  <span className="mx-0.5 h-4 w-px bg-white/10" />
-                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: (selectedPlacement.rotation ?? 0) - 15 })} title={tr ? "Sola döndür" : "Rotate left"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:bg-white/10 hover:text-white">
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
-                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: 0 })} title={tr ? "Açıyı sıfırla" : "Reset angle"} className="min-w-[2.5rem] rounded-md px-1 text-center text-[11px] font-semibold tabular-nums text-slate-200 hover:bg-white/10">
-                    {Math.round(((selectedPlacement.rotation ?? 0) % 360 + 360) % 360)}°
-                  </button>
-                  <button type="button" onClick={() => updatePlacement(selectedPlacement.id, { rotation: (selectedPlacement.rotation ?? 0) + 15 })} title={tr ? "Sağa döndür" : "Rotate right"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 hover:bg-white/10 hover:text-white">
-                    <RotateCw className="h-4 w-4" />
-                  </button>
+                  <span className="w-9 text-right text-[11px] font-semibold tabular-nums text-slate-200">{Math.round((selectedPlacement.opacity ?? 1) * 100)}%</span>
                 </span>
+              )}
+              {selectedPlacement && pageCount > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => applyToAllPages(selectedPlacement)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-2 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                  >
+                    <Layers className="h-4 w-4" />
+                    {tr ? "Tüm sayfalara uygula" : "Apply to all pages"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeFromAllPages(selectedPlacement)}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08]"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {tr ? "Tümünden kaldır" : "Remove from all"}
+                  </button>
+                </>
               )}
 
               <div className="ml-auto flex items-center gap-3">
@@ -555,6 +621,24 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                                 className="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-white bg-cyan-400"
                                 title={tr ? "Boyutlandır" : "Resize"}
                               />
+                              {/* Döndürme tutamağı — imzanın üstünde, çekince merkez etrafında döner */}
+                              <span
+                                onPointerDown={(e) => {
+                                  e.stopPropagation();
+                                  const r = overlayRef.current!.getBoundingClientRect();
+                                  setDrag({
+                                    id: p.id,
+                                    mode: "rotate",
+                                    cx: r.left + left + width / 2,
+                                    cy: r.top + top + height / 2,
+                                  });
+                                }}
+                                className="absolute -top-8 left-1/2 flex h-5 w-5 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-white bg-cyan-400 text-white active:cursor-grabbing"
+                                title={tr ? "Döndür (Shift: 15° adım)" : "Rotate (Shift: 15° steps)"}
+                              >
+                                <RotateCw className="h-3 w-3" />
+                              </span>
+                              <span className="absolute -top-3 left-1/2 h-3 w-px -translate-x-1/2 bg-cyan-400/60" />
                             </>
                           )}
                         </div>
