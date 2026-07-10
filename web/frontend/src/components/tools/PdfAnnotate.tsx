@@ -12,10 +12,12 @@ import {
   MousePointer2,
   Paintbrush,
   Pencil,
+  Redo2,
   Spline,
   Square,
   Trash2,
   Type as TypeIcon,
+  Undo2,
   UploadCloud,
   X,
   ZoomIn,
@@ -83,12 +85,34 @@ type Anno =
 
 const COLORS = ["#ef4444", "#f59e0b", "#22c55e", "#3b82f6", "#a855f7", "#111827"];
 const HIGHLIGHT_COLORS = ["#fde047", "#86efac", "#93c5fd", "#f9a8d4", "#fdba74"];
-const THICKNESS = [2, 4, 7];
-const MARKER_THICKNESS = [10, 16, 24];
+const THICKNESS = [2, 4, 8, 14, 22]; // ince → çok kalın
+const MARKER_THICKNESS = [12, 20, 32, 48, 64]; // fosforlu: geniş kademe
 const MARKER_OPACITY = 0.4;
 
 function newId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+/** Nesneyi (dx,dy) oranı kadar taşır — türüne göre tüm koordinatlar kayar. */
+function moveAnnoBy(a: Anno, dx: number, dy: number): Anno {
+  if (a.kind === "highlight" || a.kind === "rect" || a.kind === "text")
+    return { ...a, x: clamp01(a.x + dx), y: clamp01(a.y + dy) };
+  if (a.kind === "arrow")
+    return { ...a, x1: clamp01(a.x1 + dx), y1: clamp01(a.y1 + dy), x2: clamp01(a.x2 + dx), y2: clamp01(a.y2 + dy) };
+  if (a.kind === "pen")
+    return { ...a, points: a.points.map(([x, y]) => [clamp01(x + dx), clamp01(y + dy)] as [number, number]) };
+  return a;
+}
+
+/** Boyutlandırma kolu: kutu/vurgu sağ-alt köşesi, metin genişliği, ok uç noktası. */
+function resizeAnnoTo(a: Anno, px: number, py: number): Anno {
+  if (a.kind === "highlight" || a.kind === "rect")
+    return { ...a, w: Math.max(0.02, px - a.x), h: Math.max(0.02, py - a.y) };
+  if (a.kind === "text") return { ...a, w: Math.max(0.05, px - a.x) };
+  if (a.kind === "arrow") return { ...a, x2: clamp01(px), y2: clamp01(py) };
+  return a; // pen serbest çizim yeniden boyutlanmaz
 }
 
 function hexToRgb01(hex: string): [number, number, number] {
@@ -149,6 +173,10 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const [selected, setSelected] = useState<string | null>(null);
   const [straight, setStraight] = useState(true); // fosforlu/kalem: düz çizgi modu
   const [draft, setDraft] = useState<Anno | null>(null);
+  const [editing, setEditing] = useState(false); // seçili nesne sürükleniyor/boyutlanıyor
+  const [past, setPast] = useState<Anno[][]>([]); // geri al yığını
+  const [future, setFuture] = useState<Anno[][]>([]); // ileri al yığını
+  const [showHelp, setShowHelp] = useState(true); // kullanım ipucu şeridi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -158,6 +186,13 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const fileInputRef = useRef<HTMLInputElement>(null);
   const drawing = useRef(false);
   const straightModeRef = useRef(false); // çizim boyunca düz-çizgi kilidi
+  const draftRef = useRef<Anno | null>(null); // çizim taslağının güncel değeri (up için)
+  const clipboardRef = useRef<Anno | null>(null); // Ctrl+C ile kopyalanan nesne
+  const editRef = useRef<
+    | { id: string; mode: "move"; sx: number; sy: number; snap: Anno }
+    | { id: string; mode: "resize"; snap: Anno }
+    | null
+  >(null); // select modu: taşıma/boyutlandırma sürükleme durumu
 
   const openFile = useCallback(
     async (f: File) => {
@@ -182,6 +217,32 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
     },
     [tr],
   );
+
+  // Geri/ileri al: her KALICI değişiklikten önce pushHistory() çağrılır.
+  const pushHistory = useCallback(() => {
+    setPast((p) => [...p.slice(-49), annos]);
+    setFuture([]);
+  }, [annos]);
+
+  const undo = useCallback(() => {
+    setPast((p) => {
+      if (!p.length) return p;
+      setFuture((f) => [annos, ...f]);
+      setAnnos(p[p.length - 1]);
+      setSelected(null);
+      return p.slice(0, -1);
+    });
+  }, [annos]);
+
+  const redo = useCallback(() => {
+    setFuture((f) => {
+      if (!f.length) return f;
+      setPast((p) => [...p, annos]);
+      setAnnos(f[0]);
+      setSelected(null);
+      return f.slice(1);
+    });
+  }, [annos]);
 
   // Thumbnail üretimi.
   useEffect(() => {
@@ -249,20 +310,109 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
     };
   }, [doc, current, editorOpen, zoom]);
 
-  // Delete tuşu ile seçili yorumu sil.
+  // Klavye kısayolları: Delete=sil, Ctrl+Z=geri, Ctrl+Y/Ctrl+Shift+Z=ileri,
+  // Ctrl+C=kopyala, Ctrl+V=yapıştır.
   useEffect(() => {
     if (!editorOpen) return;
     const onKey = (e: KeyboardEvent) => {
+      const el = document.activeElement;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+      const mod = e.ctrlKey || e.metaKey;
       if ((e.key === "Delete" || e.key === "Backspace") && selected) {
-        const el = document.activeElement;
-        if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) return;
+        pushHistory();
         setAnnos((a) => a.filter((x) => x.id !== selected));
         setSelected(null);
+        return;
+      }
+      if (mod && (e.key === "z" || e.key === "Z") && !e.shiftKey) {
+        undo();
+        e.preventDefault();
+        return;
+      }
+      if (mod && ((e.key === "y" || e.key === "Y") || ((e.key === "z" || e.key === "Z") && e.shiftKey))) {
+        redo();
+        e.preventDefault();
+        return;
+      }
+      if (mod && (e.key === "c" || e.key === "C") && selected) {
+        const p = annos.find((x) => x.id === selected);
+        if (p) clipboardRef.current = p;
+        e.preventDefault();
+        return;
+      }
+      if (mod && (e.key === "v" || e.key === "V") && clipboardRef.current) {
+        const src = clipboardRef.current;
+        const id = newId();
+        pushHistory();
+        const copy = { ...moveAnnoBy(src, 0.03, 0.03), id, page: current } as Anno;
+        setAnnos((a) => [...a, copy]);
+        setSelected(id);
+        e.preventDefault();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [editorOpen, selected]);
+  }, [editorOpen, selected, annos, current, undo, redo, pushHistory]);
+
+  function startEditDrag(e: React.PointerEvent, p: Anno, mode: "move" | "resize") {
+    e.stopPropagation();
+    setSelected(p.id);
+    pushHistory();
+    editRef.current =
+      mode === "move"
+        ? { id: p.id, mode, sx: e.clientX, sy: e.clientY, snap: p }
+        : { id: p.id, mode, snap: p };
+    setEditing(true);
+  }
+
+  // Seçili nesneyi taşıma/boyutlandırma sürüklemesi.
+  useEffect(() => {
+    if (!editing) return;
+    const move = (e: PointerEvent) => {
+      const ed = editRef.current;
+      const r = overlayRef.current?.getBoundingClientRect();
+      if (!ed || !r) return;
+      const px = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      const py = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+      setAnnos((list) =>
+        list.map((a) => {
+          if (a.id !== ed.id) return a;
+          if (ed.mode === "move") {
+            const dx = (e.clientX - ed.sx) / r.width;
+            const dy = (e.clientY - ed.sy) / r.height;
+            return moveAnnoBy(ed.snap, dx, dy);
+          }
+          return resizeAnnoTo(ed.snap, px, py);
+        }),
+      );
+    };
+    const up = () => {
+      editRef.current = null;
+      setEditing(false);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up, { once: true });
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [editing]);
+
+  // Seçili nesnenin rengini/kalınlığını değiştirir (toolbar'dan, history'li).
+  function patchSelected(patch: Partial<Extract<Anno, { kind: "pen" }>> | { color?: string; thickness?: number }) {
+    if (!selected) return;
+    pushHistory();
+    setAnnos((list) =>
+      list.map((a) => {
+        if (a.id !== selected) return a;
+        if (a.kind === "text" && "color" in patch && patch.color) {
+          const r = renderTextToPng(a.text, patch.color);
+          return { ...a, color: patch.color, dataUrl: r.dataUrl, bytes: r.bytes, aspect: r.aspect };
+        }
+        return { ...a, ...patch } as Anno;
+      }),
+    );
+  }
 
   function relPoint(e: { clientX: number; clientY: number }): [number, number] {
     const r = overlayRef.current!.getBoundingClientRect();
@@ -273,16 +423,23 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   }
 
   function onOverlayPointerDown(e: React.PointerEvent) {
-    if (tool === "select") return;
+    if (tool === "select") {
+      // Boşluğa tıklama seçimi kaldırır (nesneler kendi pointerdown'ında durdurur).
+      setSelected(null);
+      return;
+    }
     if (tool === "text") {
       const [x, y] = relPoint(e);
       const t = tr ? "Metin" : "Text";
       const r = renderTextToPng(t, color);
       const w = 0.22;
+      const id = newId();
+      pushHistory();
       setAnnos((a) => [
         ...a,
-        { id: newId(), page: current, kind: "text", x, y, w, aspect: r.aspect, text: t, color, dataUrl: r.dataUrl, bytes: r.bytes },
+        { id, page: current, kind: "text", x, y, w, aspect: r.aspect, text: t, color, dataUrl: r.dataUrl, bytes: r.bytes },
       ]);
+      setSelected(id);
       return;
     }
     e.preventDefault();
@@ -290,15 +447,18 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
     // Kalem/fosforlu düz-çizgi modunda ise başlangıç noktasını kilitle (snap).
     straightModeRef.current = straight && (tool === "pen" || tool === "marker");
     const [x, y] = relPoint(e);
+    let d: Anno;
     if (tool === "pen") {
-      setDraft({ id: newId(), page: current, kind: "pen", points: [[x, y]], color, thickness });
+      d = { id: newId(), page: current, kind: "pen", points: [[x, y]], color, thickness };
     } else if (tool === "marker") {
-      setDraft({ id: newId(), page: current, kind: "pen", points: [[x, y]], color, thickness, opacity: MARKER_OPACITY });
+      d = { id: newId(), page: current, kind: "pen", points: [[x, y]], color, thickness, opacity: MARKER_OPACITY };
     } else if (tool === "arrow") {
-      setDraft({ id: newId(), page: current, kind: "arrow", x1: x, y1: y, x2: x, y2: y, color, thickness });
+      d = { id: newId(), page: current, kind: "arrow", x1: x, y1: y, x2: x, y2: y, color, thickness };
     } else {
-      setDraft({ id: newId(), page: current, kind: tool, x, y, w: 0, h: 0, color, thickness });
+      d = { id: newId(), page: current, kind: tool, x, y, w: 0, h: 0, color, thickness };
     }
+    draftRef.current = d;
+    setDraft(d);
   }
 
   useEffect(() => {
@@ -308,43 +468,48 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
       const [x, y] = relPoint(e);
       setDraft((d) => {
         if (!d) return d;
+        let nd: Anno = d;
         if (d.kind === "pen") {
           if (straightModeRef.current) {
-            // Düz çizgi: başlangıç sabit, yatay/dikey eksene snap (metin satırı düz kalsın).
             const s = d.points[0];
             const [ex, ey] = Math.abs(x - s[0]) >= Math.abs(y - s[1]) ? [x, s[1]] : [s[0], y];
-            return { ...d, points: [s, [ex, ey]] };
+            nd = { ...d, points: [s, [ex, ey]] };
+          } else {
+            nd = { ...d, points: [...d.points, [x, y]] };
           }
-          return { ...d, points: [...d.points, [x, y]] };
+        } else if (d.kind === "arrow") {
+          nd = { ...d, x2: x, y2: y };
+        } else if (d.kind === "highlight" || d.kind === "rect") {
+          nd = { ...d, w: x - d.x, h: y - d.y };
         }
-        if (d.kind === "arrow") return { ...d, x2: x, y2: y };
-        if (d.kind === "highlight" || d.kind === "rect") {
-          return { ...d, w: x - d.x, h: y - d.y };
-        }
-        return d;
+        draftRef.current = nd;
+        return nd;
       });
     };
     const up = () => {
       drawing.current = false;
-      setDraft((d) => {
-        if (!d) return null;
-        // Normalize: negatif w/h → sol-üst köşeye çevir; çok küçükleri at.
-        if (d.kind === "highlight" || d.kind === "rect") {
-          const x = Math.min(d.x, d.x + d.w);
-          const y = Math.min(d.y, d.y + d.h);
-          const w = Math.abs(d.w);
-          const h = Math.abs(d.h);
-          if (w < 0.01 || h < 0.01) return null;
-          setAnnos((a) => [...a, { ...d, x, y, w, h }]);
-        } else if (d.kind === "arrow") {
-          if (Math.hypot(d.x2 - d.x1, d.y2 - d.y1) < 0.01) return null;
-          setAnnos((a) => [...a, d]);
-        } else if (d.kind === "pen") {
-          if (d.points.length < 2) return null;
-          setAnnos((a) => [...a, d]);
-        }
-        return null;
-      });
+      const d = draftRef.current;
+      draftRef.current = null;
+      setDraft(null);
+      if (!d) return;
+      // Normalize + çok küçükleri at; geçerliyse geçmişe kaydedip ekle.
+      if (d.kind === "highlight" || d.kind === "rect") {
+        const x = Math.min(d.x, d.x + d.w);
+        const y = Math.min(d.y, d.y + d.h);
+        const w = Math.abs(d.w);
+        const h = Math.abs(d.h);
+        if (w < 0.01 || h < 0.01) return;
+        pushHistory();
+        setAnnos((a) => [...a, { ...d, x, y, w, h }]);
+      } else if (d.kind === "arrow") {
+        if (Math.hypot(d.x2 - d.x1, d.y2 - d.y1) < 0.01) return;
+        pushHistory();
+        setAnnos((a) => [...a, d]);
+      } else if (d.kind === "pen") {
+        if (d.points.length < 2) return;
+        pushHistory();
+        setAnnos((a) => [...a, d]);
+      }
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up, { once: true });
@@ -352,7 +517,7 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
     };
-  }, [draft]);
+  }, [draft, pushHistory]);
 
   function updateText(id: string, newText: string) {
     setAnnos((a) =>
@@ -422,7 +587,7 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
         throw new Error("unreachable");
       });
       const outBytes = await applyAnnotations(srcBytes.slice(), items);
-      const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-yorumlu.pdf`;
+      const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-isaretli.pdf`;
       await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
       setEditorOpen(false);
     } catch (e) {
@@ -447,6 +612,9 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const thicknessSet = tool === "marker" ? MARKER_THICKNESS : THICKNESS;
   const pagePreview = draft && draft.page === current ? draft : null;
   const pageAnnos = annos.filter((a) => a.page === current);
+  const selectedAnno = annos.find((a) => a.id === selected) ?? null;
+  const selThickness =
+    selectedAnno && "thickness" in selectedAnno ? selectedAnno.thickness : thickness;
 
   const toolBtn = (t: Tool, icon: React.ReactNode, label: string) => (
     <button
@@ -469,11 +637,11 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
           <Highlighter className="h-7 w-7" />
         </div>
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF Yorumla" : "Annotate PDF"}</h1>
+          <h1 className="text-2xl font-black tracking-tight text-white">{tr ? "PDF İşaretle" : "Markup PDF"}</h1>
           <p className="mt-1 text-sm text-slate-400">
             {tr
-              ? "PDF'e vurgu, not, çizim, kutu ve ok ekle. Her şey cihazında işlenir — %100 gizli, üyeliksiz."
-              : "Add highlights, notes, drawings, boxes and arrows to a PDF. Everything runs on your device — 100% private, no sign-up."}
+              ? "PDF'e fosforlu vurgu, serbest çizim, kutu, ok ve metin not ekle. Her şey cihazında işlenir — %100 gizli, üyeliksiz."
+              : "Highlight, draw, box, arrow and add text notes on a PDF. Everything runs on your device — 100% private, no sign-up."}
           </p>
         </div>
       </div>
@@ -510,7 +678,7 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 text-amber-200 ring-1 ring-white/10 transition group-hover:scale-105">
             <UploadCloud className="h-9 w-9" />
           </div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "Yorumlanacak PDF'i sürükle veya seç" : "Drag or choose a PDF to annotate"}</p>
+          <p className="mt-5 text-lg font-bold text-white">{tr ? "İşaretlenecek PDF'i sürükle veya seç" : "Drag or choose a PDF to mark up"}</p>
           <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}</p>
         </div>
       )}
@@ -533,18 +701,36 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
               {toolBtn("text", <TypeIcon className="h-4 w-4" />, tr ? "Metin" : "Text")}
 
               <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
-              {/* Renk paleti */}
+              {/* Renk paleti + özel renk seçici — seçili nesne varsa onu da değiştirir */}
               <div className="flex items-center gap-1">
                 {palette.map((c) => (
                   <button
                     key={c}
                     type="button"
-                    onClick={() => setColor(c)}
+                    onClick={() => {
+                      setColor(c);
+                      patchSelected({ color: c });
+                    }}
                     title={c}
-                    className={`h-6 w-6 rounded-full border-2 transition ${color === c ? "border-white scale-110" : "border-white/20 hover:border-white/50"}`}
+                    className={`h-6 w-6 rounded-full border-2 transition ${(selectedAnno?.color ?? color) === c ? "border-white scale-110" : "border-white/20 hover:border-white/50"}`}
                     style={{ backgroundColor: c }}
                   />
                 ))}
+                <label
+                  className="relative flex h-6 w-6 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-white/20 hover:border-white/50"
+                  title={tr ? "Özel renk seç" : "Pick a custom color"}
+                  style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }}
+                >
+                  <input
+                    type="color"
+                    value={selectedAnno?.color ?? color}
+                    onChange={(e) => {
+                      setColor(e.target.value);
+                      patchSelected({ color: e.target.value });
+                    }}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  />
+                </label>
               </div>
               {(tool === "marker" || tool === "pen") && (
                 <button
@@ -557,15 +743,23 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
                   {straight ? (tr ? "Düz" : "Straight") : tr ? "Serbest" : "Free"}
                 </button>
               )}
-              {tool !== "highlight" && tool !== "text" && tool !== "select" && (
+              {tool !== "highlight" && tool !== "text" && (tool !== "select" || (selectedAnno && "thickness" in selectedAnno)) && (
                 <div className="ml-1 flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1 py-0.5">
-                  {thicknessSet.map((t) => (
+                  {(tool === "select"
+                    ? selectedAnno && selectedAnno.kind === "pen" && selectedAnno.opacity
+                      ? MARKER_THICKNESS
+                      : THICKNESS
+                    : thicknessSet
+                  ).map((t) => (
                     <button
                       key={t}
                       type="button"
-                      onClick={() => setThickness(t)}
+                      onClick={() => {
+                        setThickness(t);
+                        patchSelected({ thickness: t });
+                      }}
                       title={`${t}px`}
-                      className={`flex h-6 w-6 items-center justify-center rounded-lg transition ${thickness === t ? "bg-cyan-500/25" : "hover:bg-white/10"}`}
+                      className={`flex h-6 w-6 items-center justify-center rounded-lg transition ${selThickness === t ? "bg-cyan-500/25" : "hover:bg-white/10"}`}
                     >
                       <span className="rounded-full bg-current" style={{ width: Math.min(t + 1, 15), height: Math.min(t + 1, 15), color: "#e2e8f0" }} />
                     </button>
@@ -584,6 +778,14 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
               )}
 
               <div className="ml-auto flex items-center gap-3">
+                <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1 py-0.5">
+                  <button type="button" onClick={undo} disabled={past.length === 0} title={tr ? "Geri al (Ctrl+Z)" : "Undo (Ctrl+Z)"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-30">
+                    <Undo2 className="h-4 w-4" />
+                  </button>
+                  <button type="button" onClick={redo} disabled={future.length === 0} title={tr ? "İleri al (Ctrl+Y)" : "Redo (Ctrl+Y)"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white disabled:opacity-30">
+                    <Redo2 className="h-4 w-4" />
+                  </button>
+                </div>
                 <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
                   <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 hover:text-white">
                     <ZoomOut className="h-4 w-4" />
@@ -610,6 +812,20 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
             </div>
 
             {error && <div className="border-b border-red-500/20 bg-red-500/[0.08] px-4 py-2 text-[13px] text-red-300">{error}</div>}
+
+            {showHelp && (
+              <div className="flex items-start gap-3 border-b border-white/[0.06] bg-cyan-500/[0.06] px-4 py-2 text-[12px] leading-relaxed text-slate-300">
+                <span className="shrink-0 pt-0.5 font-bold text-cyan-200">{tr ? "Nasıl kullanılır?" : "How to use?"}</span>
+                <span className="min-w-0 flex-1">
+                  {tr
+                    ? "Bir araç seç → sayfada sürükleyerek çiz. Fosforlu/Kalem'de «Düz/Serbest» ve kalınlık seçebilirsin. «Seç» aracıyla bir nesneye tıkla: sürükleyip taşı, köşeden boyutlandır, renk/kalınlığını değiştir. Kısayollar: Ctrl+Z geri, Ctrl+Y ileri, Ctrl+C/V kopyala-yapıştır, Del sil."
+                    : "Pick a tool → drag on the page to draw. Marker/Pen offer «Straight/Free» and thickness. With «Select», click an item: drag to move, resize from the corner, change color/thickness. Shortcuts: Ctrl+Z undo, Ctrl+Y redo, Ctrl+C/V copy-paste, Del delete."}
+                </span>
+                <button type="button" onClick={() => setShowHelp(false)} className="shrink-0 rounded-md px-2 py-1 font-semibold text-cyan-200 hover:bg-white/10">
+                  {tr ? "Anladım" : "Got it"}
+                </button>
+              </div>
+            )}
 
             <div className="flex min-h-0 flex-1">
               {/* Sol: thumbnail'ler */}
@@ -682,9 +898,33 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
                       })}
                     </svg>
 
-                    {/* Seçim çerçeveleri + metin kutuları (etkileşimli) */}
+                    {/* Seçim çerçeveleri + metin kutuları — select modda taşı/boyutlandır/sil */}
                     {pageAnnos.map((a) => {
                       const isSel = selected === a.id;
+                      const selMode = tool === "select";
+                      const delBtn = (
+                        <button
+                          type="button"
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            pushHistory();
+                            setAnnos((list) => list.filter((x) => x.id !== a.id));
+                            setSelected(null);
+                          }}
+                          className="absolute -right-2.5 -top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow"
+                          title={tr ? "Sil" : "Delete"}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      );
+                      const resizeHandle = (
+                        <span
+                          onPointerDown={(e) => startEditDrag(e, a, "resize")}
+                          className="absolute -bottom-1.5 -right-1.5 h-3.5 w-3.5 cursor-nwse-resize rounded-full border-2 border-white bg-amber-400"
+                          title={tr ? "Boyutlandır" : "Resize"}
+                        />
+                      );
                       if (a.kind === "text") {
                         const left = a.x * dims.w;
                         const top = a.y * dims.h;
@@ -693,33 +933,22 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
                         return (
                           <div
                             key={a.id}
-                            onPointerDown={(e) => {
-                              e.stopPropagation();
-                              setSelected(a.id);
-                            }}
-                            className={`absolute select-none ${isSel ? "ring-2 ring-amber-400" : "ring-1 ring-amber-400/30"}`}
-                            style={{ left, top, width, height, cursor: "pointer" }}
+                            onPointerDown={selMode ? (e) => startEditDrag(e, a, "move") : undefined}
+                            className={`absolute select-none ${isSel ? "ring-2 ring-amber-400" : selMode ? "ring-1 ring-amber-400/30" : ""}`}
+                            style={{ left, top, width, height, cursor: selMode ? "move" : "default", pointerEvents: selMode ? "auto" : "none" }}
                           >
                             <img src={a.dataUrl} alt="" className="pointer-events-none h-full w-full object-contain" draggable={false} />
-                            {isSel && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setAnnos((list) => list.filter((x) => x.id !== a.id));
-                                  setSelected(null);
-                                }}
-                                className="absolute -right-2.5 -top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow"
-                                title={tr ? "Sil" : "Delete"}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
+                            {isSel && selMode && (
+                              <>
+                                {delBtn}
+                                {resizeHandle}
+                              </>
                             )}
                           </div>
                         );
                       }
-                      // Vektörel yorumlar için tıklama-hedefi (seç + sil) — select modda.
-                      if (tool !== "select") return null;
+                      // Vektörel yorumlar için tıklama-hedefi — yalnız select modda.
+                      if (!selMode) return null;
                       let bx = 0, by = 0, bw = 0, bh = 0;
                       if (a.kind === "highlight" || a.kind === "rect") {
                         bx = Math.min(a.x, a.x + a.w) * dims.w;
@@ -742,36 +971,25 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
                       return (
                         <div
                           key={a.id}
-                          onPointerDown={(e) => {
-                            e.stopPropagation();
-                            setSelected(a.id);
-                          }}
+                          onPointerDown={(e) => startEditDrag(e, a, "move")}
                           className={`absolute ${isSel ? "ring-2 ring-amber-400" : "hover:ring-1 hover:ring-amber-400/40"}`}
-                          style={{ left: bx - 4, top: by - 4, width: bw + 8, height: bh + 8, cursor: "pointer" }}
+                          style={{ left: bx - 4, top: by - 4, width: bw + 8, height: bh + 8, cursor: "move" }}
                         >
                           {isSel && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setAnnos((list) => list.filter((x) => x.id !== a.id));
-                                setSelected(null);
-                              }}
-                              className="absolute -right-2.5 -top-2.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow"
-                              title={tr ? "Sil" : "Delete"}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                            <>
+                              {delBtn}
+                              {a.kind !== "pen" && resizeHandle}
+                            </>
                           )}
                         </div>
                       );
                     })}
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-md text-center text-[12px] text-slate-500">
+                <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">
                   {tool === "select"
-                    ? tr ? "Bir işareti seçmek için üzerine tıkla, silmek için çöp kutusuna bas." : "Click a mark to select it; use the trash icon to delete."
-                    : tr ? "Sayfada sürükleyerek çiz. Silmek için 'Seç' aracına geç." : "Drag on the page to draw. Switch to 'Select' to delete."}
+                    ? tr ? "Bir nesneye tıklayıp sürükleyerek taşı, köşedeki tutamaktan boyutlandır; renk ve kalınlığı üstteki çubuktan değiştir." : "Click and drag an item to move it, resize from the corner handle; change color and thickness in the top bar."
+                    : tr ? "Sayfada sürükleyerek çiz. Düzenlemek/taşımak için «Seç» aracına geç." : "Drag on the page to draw. Switch to «Select» to edit or move."}
                 </p>
               </div>
             </div>

@@ -732,7 +732,7 @@ export const TOOL_SEO = {
 
   "pdf-yorumla": {
     tr: T(
-      "PDF Yorumla — Vurgu, Not, Çizim Ekle (Üyeliksiz, Cihazda)",
+      "PDF İşaretle — Vurgu, Not, Çizim Ekle (Üyeliksiz, Cihazda)",
       "PDF'e fosforlu kalemle vurgu, keçeli kalem çizimi, kutu, ok ve metin notu ekleyin. Yazı silinmeden üzerini işaretleyin. Her şey cihazınızda işlenir — %100 gizli, üyeliksiz, ücretsiz.",
       "PDF'e Vurgu, Not ve Çizim Ekle — Cihazında, Gizli",
       "Bir belgeyi incelerken önemli yerleri fosforlu kalemle işaretleyin, keçeli kalemle serbestçe çizin, kutu içine alın, ok çekin ve metin notu ekleyin. Fosforlu ve keçeli kalem yarı saydamdır; altındaki yazı okunmaya devam eder. Farklı renk ve kalınlık seçin, birden fazla sayfada çalışın. Tüm işlem tarayıcınızda (cihazınızda) gerçekleşir — dosyanız sunucuya GİTMEZ. İşaretli PDF'i indirin.",
@@ -744,7 +744,7 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Annotate PDF — Highlight, Note, Draw (No Sign-up, On-device)",
+      "Markup PDF — Highlight, Note, Draw (No Sign-up, On-device)",
       "Add highlighter marks, freehand marker drawings, boxes, arrows and text notes to a PDF. Mark over text without erasing it. Everything runs on your device — 100% private, no sign-up, free.",
       "Add Highlights, Notes and Drawings to PDF — On Your Device, Private",
       "While reviewing a document, highlight the important parts with a marker, draw freely with a felt pen, box things in, draw arrows and add text notes. The highlighter and marker are semi-transparent, so the text underneath stays readable. Pick different colors and thicknesses, and work across multiple pages. Everything happens in your browser (on your device) — your file is NEVER uploaded. Download the annotated PDF.",

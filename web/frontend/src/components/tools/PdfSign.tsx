@@ -473,10 +473,11 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                 <Calendar className="h-4 w-4" />
                 {tr ? "Tarih" : "Date"}
               </button>
-              {/* Metin rengi skalası — yeni metni ve seçili metni etkiler */}
+              {/* Metin rengi skalası + özel renk seçici — yeni metni ve seçili metni etkiler */}
               <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1.5 py-1" title={tr ? "Metin rengi" : "Text color"}>
                 {TEXT_COLORS.map((c) => {
-                  const active = (selectedPlacement?.text !== undefined ? selectedPlacement.color : textColor) === c;
+                  const activeColor = selectedPlacement?.text !== undefined ? selectedPlacement.color : textColor;
+                  const active = activeColor === c;
                   return (
                     <button
                       key={c}
@@ -491,6 +492,21 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                     />
                   );
                 })}
+                <label
+                  className="relative flex h-5 w-5 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-white/25 hover:border-white/60"
+                  title={tr ? "Özel renk seç" : "Pick a custom color"}
+                  style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }}
+                >
+                  <input
+                    type="color"
+                    value={(selectedPlacement?.text !== undefined ? selectedPlacement.color : textColor) ?? "#0b2447"}
+                    onChange={(e) => {
+                      setTextColor(e.target.value);
+                      if (selectedPlacement?.text !== undefined) updateTextColor(selectedPlacement.id, e.target.value);
+                    }}
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  />
+                </label>
               </span>
               <span className="ml-0.5 hidden items-center gap-1 rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-medium text-slate-300 lg:inline-flex">
                 {tr ? "Kopyala/Yapıştır:" : "Copy/paste:"}
