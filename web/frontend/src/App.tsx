@@ -552,6 +552,27 @@ const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
   // pdf-to-word/excel/ppt/image/text → çıktı PDF değil → zincirleme yok.
 };
 
+// Zincirleme başlığında kullanılan "işlem sonucu" dosya adı — kullanıcı bunun
+// yüklediği orijinal değil, az önce OLUŞTURDUĞU dosya olduğunu anlasın diye.
+const CHAIN_RESULT_NOUN: Partial<Record<FeatureId, { tr: string; en: string }>> = {
+  merge: { tr: "Birleştirdiğiniz PDF", en: "merged PDF" },
+  split: { tr: "Ayırdığınız PDF", en: "split PDF" },
+  compress: { tr: "Sıkıştırdığınız PDF", en: "compressed PDF" },
+  "rotate-pdf": { tr: "Döndürdüğünüz PDF", en: "rotated PDF" },
+  "delete-pages": { tr: "Düzenlediğiniz PDF", en: "edited PDF" },
+  "organize-pdf": { tr: "Sıraladığınız PDF", en: "reordered PDF" },
+  watermark: { tr: "Filigran eklediğiniz PDF", en: "watermarked PDF" },
+  "page-numbers": { tr: "Numaralandırdığınız PDF", en: "numbered PDF" },
+  "repair-pdf": { tr: "Onardığınız PDF", en: "repaired PDF" },
+  "unlock-pdf": { tr: "Şifresini çözdüğünüz PDF", en: "unlocked PDF" },
+  "flatten-pdf": { tr: "Düzleştirdiğiniz PDF", en: "flattened PDF" },
+  "image-to-pdf": { tr: "Oluşturduğunuz PDF", en: "new PDF" },
+  "word-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
+  "excel-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
+  "ppt-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
+  "html-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
+};
+
 function createUploadItems(fileList: File[]) {
   // Tarayıcı File listesini arayüz state modeline çevirir; her öğeye kararlı id ve şifre alanı ekler.
   // Birleştirme sırası ve liste render'ı bu yapı üzerinden yürüdüğünden tutarlı şema gereklidir.
@@ -5972,9 +5993,17 @@ function App() {
             {chainSuggestions.length > 0 ? (
               <div className="merge-toast__chain">
                 <span className="merge-toast__chain-label">
-                  {language === "tr"
-                    ? "Aynı dosyayla devam et — tekrar yükleme yok"
-                    : "Continue with this file — no re-upload"}
+                  {(() => {
+                    const noun = mergeShareReady.toolId
+                      ? CHAIN_RESULT_NOUN[mergeShareReady.toolId]
+                      : undefined;
+                    if (language === "tr") {
+                      const n = noun?.tr ?? "Oluşturduğunuz PDF";
+                      return `${n} ile yeniden yükleme yapmadan şunları da yapabilirsiniz:`;
+                    }
+                    const n = noun?.en ?? "new PDF";
+                    return `Do more with your ${n} — no re-upload needed:`;
+                  })()}
                 </span>
                 <div className="merge-toast__chain-chips">
                   {chainSuggestions.map((f) => {
