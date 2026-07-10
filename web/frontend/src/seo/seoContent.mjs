@@ -1075,3 +1075,85 @@ export function getToolSeo(slug, language) {
   if (!entry) return null;
   return entry[language] ?? entry.tr;
 }
+
+// ─── Tematik iç linkleme (SEO prerender + React SPA ortak kaynağı) ─────────────
+
+/** Araç slug → tematik ilgili araçlar (curated iç link). */
+export const RELATED_TOOLS = {
+  "split-pdf": ["merge-pdf", "organize-pdf", "delete-pages", "rotate-pdf"],
+  "merge-pdf": ["split-pdf", "organize-pdf", "compress", "page-numbers"],
+  "delete-pages": ["organize-pdf", "split-pdf", "rotate-pdf", "merge-pdf"],
+  "rotate-pdf": ["organize-pdf", "delete-pages", "split-pdf", "merge-pdf"],
+  "organize-pdf": ["delete-pages", "rotate-pdf", "split-pdf", "page-numbers"],
+  "compress": ["merge-pdf", "split-pdf", "flatten-pdf", "pdf-to-image"],
+  "pdf-to-word": ["word-to-pdf", "pdf-to-excel", "pdf-to-text", "pdf-ozetle"],
+  "word-to-pdf": ["pdf-to-word", "merge-pdf", "compress", "watermark"],
+  "excel-to-pdf": ["pdf-to-excel", "merge-pdf", "compress"],
+  "pdf-to-excel": ["excel-to-pdf", "pdf-veri-cikar", "pdf-to-word", "pdf-to-text"],
+  "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
+  "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
+  "pdf-to-image": ["image-to-pdf", "pdf-to-ppt", "compress"],
+  "image-to-pdf": ["pdf-to-image", "merge-pdf", "compress", "pdf-to-word"],
+  "html-to-pdf": ["pdf-to-word", "merge-pdf", "compress"],
+  "unlock-pdf": ["encrypt", "compress", "watermark", "pdf-to-word"],
+  "watermark": ["page-numbers", "compress", "encrypt", "pdf-imzala"],
+  "page-numbers": ["watermark", "merge-pdf", "organize-pdf", "compress"],
+  "repair-pdf": ["compress", "merge-pdf", "pdf-to-word"],
+  "encrypt": ["unlock-pdf", "watermark", "compress", "flatten-pdf"],
+  "pdf-to-text": ["pdf-to-word", "taranmis-pdf-ocr", "pdf-ozetle", "pdf-veri-cikar"],
+  "flatten-pdf": ["compress", "watermark", "page-numbers", "encrypt"],
+  "pdf-ozetle": ["pdf-sohbet", "pdf-ceviri", "pdf-veri-cikar", "taranmis-pdf-ocr"],
+  "pdf-sohbet": ["pdf-ozetle", "pdf-ceviri", "pdf-veri-cikar"],
+  "pdf-duzenle": ["pdf-imzala", "pdf-yorumla", "watermark", "page-numbers"],
+  "pdf-imzala": ["pdf-yorumla", "pdf-duzenle", "watermark", "encrypt"],
+  "pdf-yorumla": ["pdf-imzala", "pdf-duzenle", "watermark"],
+  "taranmis-pdf-ocr": ["pdf-to-text", "pdf-ozetle", "pdf-to-word", "pdf-ceviri"],
+  "pdf-veri-cikar": ["pdf-to-excel", "pdf-ozetle", "pdf-sohbet", "ai-toplu-islem"],
+  "pdf-ceviri": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
+  "ai-toplu-islem": ["pdf-ozetle", "pdf-veri-cikar", "pdf-ceviri"],
+  "pdf-karsilastir": ["pdf-ozetle", "pdf-sohbet", "pdf-duzenle"],
+  "hassas-veri-gizle": ["pdf-duzenle", "encrypt", "watermark"],
+};
+
+/** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
+export const BLOG_RELATED_TOOLS = {
+  "faturadan-excele-veri-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
+  "banka-ekstresi-excele-aktarma": ["pdf-veri-cikar", "pdf-to-excel"],
+  "faturalari-toplu-muhasebeye-hazirlama": ["pdf-veri-cikar", "ai-toplu-islem", "pdf-to-excel"],
+  "iki-pdf-birlestirme-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
+  "pdf-bolme-sayfalara-ayirma": ["split-pdf", "merge-pdf", "organize-pdf"],
+  "pdf-sayfa-silme": ["delete-pages", "organize-pdf", "split-pdf"],
+  "pdf-dondurme-kaydetme": ["rotate-pdf", "organize-pdf"],
+  "pdf-sayfa-sirasi-degistirme": ["organize-pdf", "delete-pages", "rotate-pdf"],
+  "pdf-boyutu-kucultme-sikistirma": ["compress", "flatten-pdf"],
+  "pdf-word-donusturme": ["pdf-to-word", "word-to-pdf"],
+  "resimleri-pdf-yapma": ["image-to-pdf", "pdf-to-image"],
+  "pdf-sifre-kaldirma-koyma": ["unlock-pdf", "encrypt"],
+  "pdf-baska-dile-cevirme": ["pdf-ceviri", "pdf-ozetle", "pdf-sohbet"],
+  "yabanci-dildeki-sozlesmeyi-anlama": ["pdf-ceviri", "pdf-sohbet", "pdf-ozetle"],
+  "uzun-belgeleri-ai-ile-ozetleme": ["pdf-ozetle", "pdf-sohbet"],
+  "akademik-makale-ozetleme-literatur": ["pdf-ozetle", "pdf-sohbet", "pdf-ceviri"],
+  "ihale-sartnamesi-nasil-okunur": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
+  "kira-kontrati-dikkat-edilecek-maddeler": ["pdf-ozetle", "pdf-sohbet"],
+  "taranmis-pdf-metne-cevirme-ocr": ["taranmis-pdf-ocr", "pdf-to-text"],
+  "pdf-e-imza-atma-nasil-yapilir": ["pdf-imzala", "pdf-duzenle", "pdf-yorumla"],
+  "pdf-filigran-ekleme": ["watermark", "encrypt", "page-numbers"],
+  "pdf-uzerine-yazma-isaretleme": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
+};
+
+/** Araç kısa etiketi — SEO title'ın "—" öncesi (ör. "PDF Birleştir"). */
+export function toolShortLabel(slug, language = "tr") {
+  const c = TOOL_SEO[slug]?.[language] ?? TOOL_SEO[slug]?.tr;
+  const t = (c && c.title) || "";
+  return (t.split(/[—–|]/)[0] || "").trim() || slug.replace(/-/g, " ");
+}
+
+/** İlgili araç linkleri: [{ slug, label }]. */
+export function getRelatedToolLinks(slug, language = "tr") {
+  return (RELATED_TOOLS[slug] || []).map((s) => ({ slug: s, label: toolShortLabel(s, language) }));
+}
+
+/** Bu aracı "ilgili" gösteren blog yazısı slug'ları (ters harita). */
+export function getGuideSlugsForTool(slug) {
+  return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(slug));
+}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026) — PDF Platform</title>
+    <meta name="description" content="PDF&#39;e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
+         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026) — PDF Platform" />
+    <meta property="og:description" content="PDF&#39;e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026) — PDF Platform" />
+    <meta name="twitter:description" content="PDF&#39;e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF'e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)","description":"PDF'e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz.","datePublished":"2026-07-10","dateModified":"2026-07-10","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"PDF'e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)","description":"PDF'e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i açın","text":"İmzalanacak sözleşme veya formu sürükleyip bırakın ya da seçin. Dosya tarayıcınızda açılır."},{"@type":"HowToStep","position":2,"name":"İmzanızı oluşturun","text":"«İmza Ekle» ile imzanızı çizin, yazın veya yükleyin. İmza oluşur oluşmaz sayfanın ortasına yerleşir."},{"@type":"HowToStep","position":3,"name":"Yerleştirin ve ayarlayın","text":"İmzayı sürükleyerek istediğiniz yere taşıyın, köşeden boyutlandırın, üstteki tutamakla döndürün; gerekirse saydamlığını ayarlayın. Tarih veya metin de ekleyebilirsiniz."},{"@type":"HowToStep","position":4,"name":"Uygulayın ve indirin","text":"Çok sayfalıysa «Tüm sayfalara uygula» ile aynı yere kopyalayın, sonra «Uygula ve İndir» deyin. İmzalı PDF hazır."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'e nasıl imza atarım?","acceptedAnswer":{"@type":"Answer","text":"PDF'i yükleyin, «İmza Ekle» ile imzanızı çizin/yazın/yükleyin; imza sayfaya yerleşir. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin. Tümü tarayıcınızda çalışır."}},{"@type":"Question","name":"İmzam sunucuya yükleniyor mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. İmzalama tamamen cihazınızda yapılır; PDF ve imza asla karşıya yüklenmez. %100 gizli ve üyeliksizdir."}},{"@type":"Question","name":"Birden çok sayfaya aynı imzayı atabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. İmzayı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde aynı imza tüm sayfalarda aynı hizaya eklenir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF&#39;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)</h1><p class="seo-intro">Sözleşme, form ve dilekçeleri yazdırıp ıslak imzalayıp tekrar taramaya son. Bu rehberde PDF&#39;e elektronik imzayı — imzayı çizerek, yazarak veya yükleyerek — cihazınızdan çıkmadan nasıl atacağınızı adım adım gösteriyoruz.</p><article class="seo-article"><p class="seo-lead">Bir sözleşmeyi imzalamak için onu yazdırıp ıslak imza atıp tekrar taramak; hem zaman kaybı hem de kalite kaybıdır. PDF&#39;e doğrudan elektronik imza atmak çok daha hızlı ve temizdir. İşte cihazınızdan çıkmadan, üyelik gerektirmeden bunu yapmanın yolu.</p><h2>Elektronik imza nedir, e-imza (nitelikli) ile farkı ne?</h2><p>Gündelik kullanımda &quot;PDF&#39;e imza atmak&quot;, belgeye imza görselinizi yerleştirmek demektir; sözleşme, teklif, kira formu, dilekçe gibi belgelerin büyük çoğunluğu için yeterlidir. Resmî kurumların istediği nitelikli elektronik imza (NES) ise ayrı bir e-imza cihazı/sertifikası gerektirir. Bu araç birinci türü — hızlı, görünür imza yerleştirmeyi — sağlar.</p><h2>İmzanızı üç şekilde oluşturun</h2><p>PDF İmzala aracı imzanızı üç yolla almanıza izin verir: fareyle/parmağınızla çizin, adınızı el yazısı fontuyla yazın veya hazır bir imza görselini (şeffaf PNG en iyisi) yükleyin.</p><ul><li>Çiz: dokunmatik ekranda parmağınızla en doğal sonuç.</li><li>Yaz: adınız el yazısı fontuna dönüşür.</li><li>Yükle: kaşe/imza görselinizi ekleyin.</li></ul><h2>Adım adım: PDF&#39;e imza atma</h2><ol><li><strong>PDF&#39;i açın:</strong> İmzalanacak sözleşme veya formu sürükleyip bırakın ya da seçin. Dosya tarayıcınızda açılır.</li><li><strong>İmzanızı oluşturun:</strong> «İmza Ekle» ile imzanızı çizin, yazın veya yükleyin. İmza oluşur oluşmaz sayfanın ortasına yerleşir.</li><li><strong>Yerleştirin ve ayarlayın:</strong> İmzayı sürükleyerek istediğiniz yere taşıyın, köşeden boyutlandırın, üstteki tutamakla döndürün; gerekirse saydamlığını ayarlayın. Tarih veya metin de ekleyebilirsiniz.</li><li><strong>Uygulayın ve indirin:</strong> Çok sayfalıysa «Tüm sayfalara uygula» ile aynı yere kopyalayın, sonra «Uygula ve İndir» deyin. İmzalı PDF hazır.</li></ol><p>İmzanız ve dosyanız sunucuya GİTMEZ — imzalama tamamen tarayıcınızda (cihazınızda) yapılır. Bu yüzden gizli belgeleri de gönül rahatlığıyla imzalayabilirsiniz.</p><p><a href="/tools/pdf-imzala"><strong>PDF İmzala</strong> — Sözleşmenizi saniyeler içinde imzalayın — üyeliksiz, cihazınızda.</a></p><h2>Aynı imzayı birden çok sayfaya koyma</h2><p>Çok sayfalı sözleşmelerde her sayfanın altına imza gerekebilir. İmzanızı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde, aynı imza tüm sayfalarda aynı hizaya kopyalanır. Bir öğeyi kopyalayıp başka yere yapıştırmak için Ctrl+C / Ctrl+V kısayollarını da kullanabilirsiniz.</p><h2>İmza + tarih + metin birlikte</h2><p>İmzanın yanına tarih ve serbest metin (ör. &quot;Okudum, onaylıyorum&quot;) de ekleyebilirsiniz. Metin rengini istediğiniz gibi seçebilir, konumunu sürükleyerek ayarlayabilirsiniz — hepsi tek geçişte PDF&#39;e gömülür.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/pdf-imzala">PDF İmzala</a></li><li><a href="/tools/pdf-duzenle">PDF Düzenle</a></li><li><a href="/tools/pdf-yorumla">PDF İşaretle</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;e nasıl imza atarım?</h3><p>PDF&#39;i yükleyin, «İmza Ekle» ile imzanızı çizin/yazın/yükleyin; imza sayfaya yerleşir. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin. Tümü tarayıcınızda çalışır.</p></div><div class="seo-faq-item"><h3>İmzam sunucuya yükleniyor mu?</h3><p>Hayır. İmzalama tamamen cihazınızda yapılır; PDF ve imza asla karşıya yüklenmez. %100 gizli ve üyeliksizdir.</p></div><div class="seo-faq-item"><h3>Birden çok sayfaya aynı imzayı atabilir miyim?</h3><p>Evet. İmzayı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde aynı imza tüm sayfalarda aynı hizaya eklenir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

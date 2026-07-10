@@ -489,4 +489,28 @@
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir"/>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-filigran-ekleme</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-filigran-ekleme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-filigran-ekleme"/>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme"/>
+    <lastmod>2026-07-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

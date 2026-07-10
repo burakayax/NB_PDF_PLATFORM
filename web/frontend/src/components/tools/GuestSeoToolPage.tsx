@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { getToolSeo } from "../../seo/seoContent.mjs";
+import {
+  getToolSeo,
+  getRelatedToolLinks,
+  getGuideSlugsForTool,
+} from "../../seo/seoContent.mjs";
+import { getBlogPost } from "../../blog/blogContent.mjs";
 
 type Props = {
   slug: string;
@@ -18,6 +23,15 @@ type Props = {
 export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
+  const relatedTools = getRelatedToolLinks(slug, language) as Array<{ slug: string; label: string }>;
+  const guideSlugs = getGuideSlugsForTool(slug) as string[];
+  const guides = guideSlugs
+    .map((g) => {
+      const p = getBlogPost(g);
+      const c = p ? p[language] ?? p.tr : null;
+      return c ? { slug: g, title: c.title as string } : null;
+    })
+    .filter((x): x is { slug: string; title: string } => x !== null);
 
   return (
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
@@ -88,6 +102,46 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
                 </details>
               ))}
             </div>
+          </section>
+        )}
+
+        {relatedTools.length > 0 && (
+          <section className="mt-14">
+            <h2 className="mb-4 text-center text-lg font-bold text-slate-200">
+              {tr ? "İlgili Araçlar" : "Related Tools"}
+            </h2>
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+              {relatedTools.map((r) => (
+                <a
+                  key={r.slug}
+                  href={`/tools/${r.slug}`}
+                  className="rounded-xl border border-white/[0.08] bg-white/[0.025] px-4 py-3 text-center text-[13px] font-semibold text-slate-200 transition hover:border-cyan-400/30 hover:bg-white/[0.05] hover:text-white"
+                >
+                  {r.label}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {guides.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-4 text-center text-lg font-bold text-slate-200">
+              {tr ? "İlgili Rehberler" : "Related Guides"}
+            </h2>
+            <ul className="mx-auto max-w-2xl space-y-2">
+              {guides.map((g) => (
+                <li key={g.slug}>
+                  <a
+                    href={`/blog/${g.slug}`}
+                    className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[13px] font-medium text-slate-300 transition hover:border-amber-400/25 hover:bg-white/[0.05] hover:text-white"
+                  >
+                    <span className="text-amber-300">📄</span>
+                    {g.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </section>
         )}
       </main>
