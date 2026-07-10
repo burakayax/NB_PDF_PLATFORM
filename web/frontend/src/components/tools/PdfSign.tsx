@@ -623,7 +623,7 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
                   )}
                   <div
                     ref={overlayRef}
-                    className="absolute inset-0"
+                    className="absolute inset-0 touch-none"
                     style={{ cursor: "default" }}
                   >
                     {pagePlacements.map((p) => {
