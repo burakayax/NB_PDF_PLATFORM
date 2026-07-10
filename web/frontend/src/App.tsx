@@ -573,6 +573,24 @@ const CHAIN_RESULT_NOUN: Partial<Record<FeatureId, { tr: string; en: string }>> 
   "html-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
 };
 
+// Öneri havuzu (yukarıdaki liste) eleme sonrası 3'ün altında kalırsa buradan
+// tamamlanır. Yalnızca PDF GİRDİ alıp PDF ÇIKTI veren araçlar (popülerlik sırası)
+// — böylece "3 öneri" hedefi her bağlamda garanti altına alınır.
+const CHAIN_FALLBACK: FeatureId[] = [
+  "compress",
+  "merge",
+  "organize-pdf",
+  "rotate-pdf",
+  "page-numbers",
+  "watermark",
+  "split",
+  "delete-pages",
+  "encrypt",
+  "unlock-pdf",
+  "flatten-pdf",
+  "repair-pdf",
+];
+
 function createUploadItems(fileList: File[]) {
   // Tarayıcı File listesini arayüz state modeline çevirir; her öğeye kararlı id ve şifre alanı ekler.
   // Birleştirme sırası ve liste render'ı bu yapı üzerinden yürüdüğünden tutarlı şema gereklidir.
@@ -3523,15 +3541,20 @@ function App() {
     const r = mergeShareReady;
     if (!r?.toolId) return [];
     if (!/\.pdf$/i.test(r.filename)) return []; // .zip/.docx vb. çıktılar zincirlenmez
-    const raw = CHAIN_SUGGESTIONS[r.toolId] ?? [];
     const byId = new Map(workspaceFeatures.map((f) => [f.id, f]));
     const out: Feature[] = [];
-    for (const id of raw) {
-      if (id === r.toolId) continue;
+    const seen = new Set<FeatureId>([r.toolId]);
+    const tryPush = (id: FeatureId) => {
+      if (out.length >= 3 || seen.has(id)) return;
       const f = byId.get(id);
-      if (f) out.push(f);
-      if (out.length >= 3) break;
-    }
+      if (f) {
+        out.push(f);
+        seen.add(id);
+      }
+    };
+    // Önce araca-özgü ilgili öneriler, sonra 3'e tamamlamak için genel yedek havuz.
+    for (const id of CHAIN_SUGGESTIONS[r.toolId] ?? []) tryPush(id);
+    if (out.length < 3) for (const id of CHAIN_FALLBACK) tryPush(id);
     return out;
   }, [mergeShareReady, workspaceFeatures]);
   const submitDisabled =
