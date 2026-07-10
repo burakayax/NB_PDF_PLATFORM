@@ -197,6 +197,15 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
   const openFile = useCallback(
     async (f: File) => {
       setError(null);
+      // Cihazda işlenen araçta çok büyük dosya tarayıcıyı kilitleyebilir → nazik uyarı.
+      if (f.size > 150 * 1024 * 1024) {
+        setError(
+          tr
+            ? "Dosya çok büyük (150 MB üzeri). Cihazda işlemek için daha küçük bir PDF deneyin."
+            : "File too large (over 150 MB). Try a smaller PDF for on-device processing.",
+        );
+        return;
+      }
       try {
         const bytes = new Uint8Array(await f.arrayBuffer());
         setSrcBytes(bytes);

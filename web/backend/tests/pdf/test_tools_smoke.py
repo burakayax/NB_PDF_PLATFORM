@@ -297,3 +297,42 @@ def test_ppt_to_pdf(assets):
     o = _out(assets, "ptp.pdf")
     _run(lambda: ptx.pptx_to_pdf(src_pptx, o))
     assert _valid_pdf(o)
+
+
+# ── Uçtan uca / varyasyon (roundtrip) ───────────────────────────────────────
+
+@needs_engine
+def test_encrypt_unlock_roundtrip(assets):
+    """Şifreleme + şifre çözme birlikte çalışmalı; çözülen dosya parolasız açılmalı."""
+    enc = _out(assets, "rt_enc.pdf")
+    _run(lambda: engine.encrypt_pdf(assets["pdf"], enc, user_password="s3cret"))
+    assert _valid_pdf(enc, password="s3cret")
+    dec = _out(assets, "rt_dec.pdf")
+    _run(lambda: ptx.unlock_pdf_pikepdf(enc, dec, "s3cret"))
+    # Çözülen dosya parola OLMADAN açılabilmeli (password=None).
+    assert _valid_pdf(dec, password=None)
+
+
+def test_watermark_font_and_color(assets):
+    """Filigran farklı yazı tipi (tiro/cour) ve renk ile de geçerli PDF üretmeli."""
+    for font, color, name in (("tiro", "#00AA00", "wm_tiro.pdf"), ("cour", "#1133FF", "wm_cour.pdf")):
+        o = _out(assets, name)
+        _run(lambda o=o, font=font, color=color: ptx.add_watermark_text(
+            assets["pdf"], o, "GIZLI", font_name=font, font_color=color))
+        assert _valid_pdf(o)
+
+
+def test_page_numbers_positions(assets):
+    """Sayfa numarası header ve footer konumunda geçerli PDF üretmeli."""
+    for pos, name in (("footer", "pn_footer.pdf"), ("header", "pn_header.pdf")):
+        o = _out(assets, name)
+        _run(lambda o=o, pos=pos: ptx.add_page_numbers(assets["pdf"], o, start_at=1, position=pos))
+        assert _valid_pdf(o)
+
+
+def test_rotate_all_angles(assets):
+    """Tüm sayfalar 90/180/270 döndürülünce geçerli PDF üretmeli."""
+    for deg, name in ((90, "rot90.pdf"), (180, "rot180.pdf"), (270, "rot270.pdf")):
+        o = _out(assets, name)
+        _run(lambda o=o, deg=deg: ptx.rotate_pdf(assets["pdf"], o, deg, None))
+        assert _valid_pdf(o)
