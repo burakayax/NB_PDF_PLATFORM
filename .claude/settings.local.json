@@ -7,7 +7,8 @@
       "Edit(*)",
       "PowerShell(*)",
       "WebFetch(*)",
-      "WebSearch(*)"
+      "WebSearch(*)",
+      "Artifact"
     ]
   }
 }
