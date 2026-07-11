@@ -384,7 +384,7 @@ function MonthlyOnlyCard({
         <button
           type="button"
           onClick={onShowPerks}
-          className="mt-2 w-full text-center text-[12px] font-semibold text-blue-300/90 underline-offset-2 transition hover:text-blue-200 hover:underline"
+          className="relative z-10 mt-2 w-full cursor-pointer touch-manipulation rounded-lg py-2 text-center text-[13px] font-semibold text-blue-300/90 underline underline-offset-2 transition hover:bg-white/[0.04] hover:text-blue-200"
         >
           {tr ? "Tüm ayrıcalıkları gör →" : "See all perks →"}
         </button>
@@ -616,7 +616,7 @@ function CycleAwareCard({
         <button
           type="button"
           onClick={onShowPerks}
-          className={`mt-2 w-full text-center text-[12px] font-semibold underline-offset-2 transition hover:underline ${
+          className={`relative z-10 mt-2 w-full cursor-pointer touch-manipulation rounded-lg py-2 text-center text-[13px] font-semibold underline underline-offset-2 transition hover:bg-white/[0.04] ${
             isPro ? "text-amber-300/90 hover:text-amber-200" : "text-violet-300/90 hover:text-violet-200"
           }`}
         >
