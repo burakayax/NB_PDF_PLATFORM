@@ -8,8 +8,10 @@ import {
   Download,
   FileText,
   Loader2,
+  ImagePlus,
   Move,
   Pencil,
+  RotateCw,
   Share2,
   ShieldAlert,
   Sparkles,
@@ -36,6 +38,13 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
 type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey };
 type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey };
+// Kullanıcının eklediği resim — bbox (PDF pt, döndürülmemiş), aspect (w/h), açı (derece).
+type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
+type ImgDrag =
+  | { id: string; mode: "move"; sx: number; sy: number; ox: number; oy: number }
+  | { id: string; mode: "resize"; sx: number; ow: number; oh: number; x0: number; y0: number }
+  | { id: string; mode: "rotate"; cx: number; cy: number }
+  | null;
 
 const FONT_CSS: Record<FontKey, string> = {
   sans: "Roboto, system-ui, sans-serif",
@@ -102,6 +111,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const [dims, setDims] = useState({ w: 0, h: 0 });
   const [edits, setEdits] = useState<Map<string, Edit>>(new Map());
   const [added, setAdded] = useState<Added[]>([]);
+  const [addedImages, setAddedImages] = useState<AddedImg[]>([]);
+  const [imgDrag, setImgDrag] = useState<ImgDrag>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [addMode, setAddMode] = useState(false);
   const [color, setColor] = useState("#111111");
@@ -137,10 +148,12 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const pageEls = analysis?.pages[current]?.elements ?? [];
   const pageAdded = added.filter((a) => a.page === current);
-  const editCount = edits.size + added.length;
+  const pageImages = addedImages.filter((a) => a.page === current);
+  const editCount = edits.size + added.length + addedImages.length;
   // Taranmış PDF: hiç metin katmanı yok (yalnız görsel) → var olan yazı düzenlenemez.
   const scanned = !!analysis && !analysis.pages.some((p) => p.elements.some((e) => e.type === "text"));
 
@@ -278,6 +291,60 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [drag, scale]);
 
+  // Eklenen resim: taşıma / boyutlandırma (oran korumalı) / merkez etrafı döndürme.
+  useEffect(() => {
+    if (!imgDrag) return;
+    const onMove = (e: PointerEvent) => {
+      setAddedImages((arr) => arr.map((im) => {
+        if (im.id !== imgDrag.id) return im;
+        const [x0, y0, x1, y1] = im.bbox;
+        if (imgDrag.mode === "move") {
+          const dx = (e.clientX - imgDrag.sx) / scale, dy = (e.clientY - imgDrag.sy) / scale;
+          const w = x1 - x0, h = y1 - y0;
+          const nx = Math.max(0, imgDrag.ox + dx), ny = Math.max(0, imgDrag.oy + dy);
+          return { ...im, bbox: [nx, ny, nx + w, ny + h] };
+        }
+        if (imgDrag.mode === "resize") {
+          const dw = (e.clientX - imgDrag.sx) / scale;
+          const nw = Math.max(16, imgDrag.ow + dw);
+          const nh = nw / (im.aspect || 1);
+          return { ...im, bbox: [imgDrag.x0, imgDrag.y0, imgDrag.x0 + nw, imgDrag.y0 + nh] };
+        }
+        const ang = (Math.atan2(e.clientY - imgDrag.cy, e.clientX - imgDrag.cx) * 180) / Math.PI + 90;
+        let deg = Math.round(ang);
+        if (e.shiftKey) deg = Math.round(deg / 15) * 15;
+        return { ...im, rotate: ((deg % 360) + 360) % 360 };
+      }));
+    };
+    const onUp = () => setImgDrag(null);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp, { once: true });
+    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
+  }, [imgDrag, scale]);
+
+  function addImageFile(f: File | undefined) {
+    if (!f || !f.type.startsWith("image/")) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      const dataUrl = String(rd.result);
+      const im = new Image();
+      im.onload = () => {
+        const aspect = im.width / im.height || 1;
+        const pageW = analysis?.pages[current]?.width ?? (scale ? dims.w / scale : 400);
+        const pageH = analysis?.pages[current]?.height ?? (scale ? dims.h / scale : 560);
+        const w = Math.min(pageW * 0.35, pageW - 20);
+        const h = w / aspect;
+        const x0 = Math.max(0, (pageW - w) / 2), y0 = Math.max(0, (pageH - h) / 2);
+        const id = uid();
+        setAddedImages((arr) => [...arr, { id, page: current, bbox: [x0, y0, x0 + w, y0 + h], dataUrl, aspect, rotate: 0 }]);
+        setSelected(id);
+        setAddMode(false);
+      };
+      im.src = dataUrl;
+    };
+    rd.readAsDataURL(f);
+  }
+
   function ensureBg(el: PdfElement) {
     if (bgMap.has(el.id)) return;
     const c = sampleBgColor(el.bbox[0], el.bbox[1], el.bbox[2], el.bbox[3]);
@@ -362,6 +429,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
         ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
     }
     for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font });
+    for (const im of addedImages) ops.push({ page: im.page, bbox: im.bbox, text: "", size: 0, image: im.dataUrl, rotate: im.rotate });
     if (ops.length === 0) { setError(tr ? "Henüz bir düzenleme yapmadınız." : "No edits yet."); return; }
     try {
       setBusy(true);
@@ -385,7 +453,7 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
     }
     downloadResult();
   }
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setResult(null); setError(null); setEditorOpen(false); setThumbs([]); setZoom(1); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setEditorOpen(false); setThumbs([]); setZoom(1); }
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -455,6 +523,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
           {/* Üst araç çubuğu */}
           <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-2.5">
             <button type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); }} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${addMode ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/40" : "text-slate-300 hover:bg-white/[0.06]"}`}><Type className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Metin Ekle" : "Add Text"}</span></button>
+            <button type="button" onClick={() => imageInputRef.current?.click()} className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"><ImagePlus className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Resim Ekle" : "Add Image"}</span></button>
+            <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
             {selInfo?.kind === "text" && (
               <>
                 <span className="mx-1 h-5 w-px bg-white/10" />
@@ -605,9 +675,34 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                       </div>
                     );
                   })}
+                  {/* Eklenen resimler — taşı (sürükle) · köşeden boyutlandır · üstten döndür */}
+                  {pageImages.map((im) => {
+                    const [x0, y0, x1, y1] = im.bbox;
+                    const left = x0 * scale, top = y0 * scale;
+                    const w = (x1 - x0) * scale, h = (y1 - y0) * scale;
+                    const sel = selected === im.id;
+                    return (
+                      <div
+                        key={im.id}
+                        onPointerDown={(e) => { e.stopPropagation(); setSelected(im.id); setAddMode(false); e.currentTarget.setPointerCapture?.(e.pointerId); setImgDrag({ id: im.id, mode: "move", sx: e.clientX, sy: e.clientY, ox: x0, oy: y0 }); }}
+                        className={`absolute select-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/40 hover:ring-cyan-400/70"}`}
+                        style={{ left, top, width: w, height: h, transform: im.rotate ? `rotate(${im.rotate}deg)` : undefined, cursor: "move", touchAction: "none" }}
+                      >
+                        <img src={im.dataUrl} alt="" draggable={false} className="pointer-events-none h-full w-full select-none" style={{ objectFit: "fill" }} />
+                        {sel && (
+                          <>
+                            <button type="button" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); setAddedImages((a) => a.filter((x) => x.id !== im.id)); setSelected(null); }} className="absolute -right-2.5 -top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow" title={tr ? "Sil" : "Delete"}><Trash2 className="h-3.5 w-3.5" /></button>
+                            <span onPointerDown={(e) => { e.stopPropagation(); e.currentTarget.setPointerCapture?.(e.pointerId); setImgDrag({ id: im.id, mode: "resize", sx: e.clientX, ow: x1 - x0, oh: y1 - y0, x0, y0 }); }} style={{ touchAction: "none" }} className="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-white bg-cyan-400" title={tr ? "Boyutlandır" : "Resize"} />
+                            <span onPointerDown={(e) => { e.stopPropagation(); const r = overlayRef.current!.getBoundingClientRect(); setImgDrag({ id: im.id, mode: "rotate", cx: r.left + left + w / 2, cy: r.top + top + h / 2 }); }} style={{ touchAction: "none" }} className="absolute -top-8 left-1/2 flex h-5 w-5 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-white bg-cyan-400 text-white" title={tr ? "Döndür (Shift: 15°)" : "Rotate (Shift: 15°)"}><RotateCw className="h-3 w-3" /></span>
+                            <span className="absolute -top-3 left-1/2 h-3 w-px -translate-x-1/2 bg-cyan-400/60" />
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele/amblem'e tıkla → «Sil» butonu. «Metin Ekle» ile yeni yazı. Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete» button. «Add Text» for new text. «Done» → «Prepare PDF»."}</p>
+              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele tıkla → «Sil». «Metin Ekle» / «Resim Ekle» ile yeni öğe (resmi köşeden boyutlandır, üstten döndür). Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete». «Add Text» / «Add Image» for new items (resize an image from the corner, rotate from the top). «Done» → «Prepare PDF»."}</p>
               <p className="mx-auto mt-1.5 max-w-lg text-center text-[11px] text-amber-300/70">{tr ? "Not: Bir yazıyı düzenlerken beliren kapatma kutusu üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Note: while editing a line, the cover box may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
             </div>
           </div>

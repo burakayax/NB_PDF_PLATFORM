@@ -126,6 +126,10 @@ export type PdfTextEdit = {
   bg?: string;
   /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
   by?: number;
+  /** Resim EKLEME op'u: base64 data URL. Doluysa bu op bir görsel yerleştirmedir
+   * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
+  image?: string;
+  rotate?: number;
 };
 
 export type PdfElement = {
