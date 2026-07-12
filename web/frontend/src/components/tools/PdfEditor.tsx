@@ -13,6 +13,7 @@ import {
   Share2,
   ShieldAlert,
   Sparkles,
+  Trash2,
   Type,
   UploadCloud,
   X,
@@ -522,7 +523,20 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                       // Silinmiş görsel → arka plan rengiyle kapat. Silgiyi bbox'tan ~3px taşır:
                       // amblem/logo kenarındaki ince hat çizgileri de örtülsün (indirmede zaten yok).
                       if (del) return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300" style={{ left: style.left - 3, top: style.top - 3, width: style.width + 6, height: style.height + 6, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
-                      return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, Delete ile sil" : "Image — select, Delete to remove"} />;
+                      return (
+                        <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className={`absolute cursor-pointer rounded-sm ${sel ? "ring-2 ring-cyan-500 bg-cyan-500/10" : "hover:ring-2 hover:ring-cyan-400/70 hover:bg-cyan-400/5"}`} style={style} title={tr ? "Görsel — seç, sonra sil" : "Image — select, then delete"}>
+                          {sel && (
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setEdit(el.id, { deleted: true }); setSelected(null); }}
+                              className="absolute -right-2.5 -top-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow"
+                              title={tr ? "Sil" : "Delete"}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
                     }
                     // Metin öğesi. Silgi kutusu = ORİJİNAL bbox (metin kısalıp temizlense de
                     // alttaki orijinal asla görünmesin). Boyut, içerikten BAĞIMSIZ.
@@ -562,13 +576,25 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                     return (
                       <div key={a.id} className="absolute" style={{ left: x0 * scale, top: y0 * scale }}>
                         {sel && (
-                          <span
-                            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setDrag({ id: a.id, sx: e.clientX, sy: e.clientY, ox: x0, oy: y0 }); }}
-                            className="absolute -top-7 left-0 z-10 inline-flex cursor-move items-center gap-1 rounded-md bg-cyan-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-lg select-none"
-                            title={tr ? "Sürükleyerek taşı" : "Drag to move"}
-                          >
-                            <Move className="h-3 w-3" />{tr ? "Taşı" : "Move"}
-                          </span>
+                          <>
+                            <span
+                              onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); e.currentTarget.setPointerCapture?.(e.pointerId); setDrag({ id: a.id, sx: e.clientX, sy: e.clientY, ox: x0, oy: y0 }); }}
+                              style={{ touchAction: "none" }}
+                              className="absolute -top-7 left-0 z-10 inline-flex cursor-move touch-none items-center gap-1 rounded-md bg-cyan-600 px-2 py-1 text-[11px] font-bold text-white shadow-lg select-none"
+                              title={tr ? "Sürükleyerek taşı" : "Drag to move"}
+                            >
+                              <Move className="h-3.5 w-3.5" />{tr ? "Taşı" : "Move"}
+                            </span>
+                            <button
+                              type="button"
+                              onPointerDown={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); setAdded((arr) => arr.filter((x) => x.id !== a.id)); setSelected(null); }}
+                              className="absolute -top-7 left-[4.2rem] z-10 inline-flex h-[26px] w-[26px] items-center justify-center rounded-md bg-red-500 text-white shadow-lg"
+                              title={tr ? "Sil" : "Delete"}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </>
                         )}
                         <AutoText id={a.id} initial={a.text}
                           onInput={(t) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: t } : x)))}
@@ -581,7 +607,8 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
                   })}
                 </div>
               </div>
-              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele/amblem'e tıkla → «Sil». «Metin Ekle» ile yeni yazı. Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete». «Add Text» for new text. «Done» → «Prepare PDF»."}</p>
+              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele/amblem'e tıkla → «Sil» butonu. «Metin Ekle» ile yeni yazı. Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete» button. «Add Text» for new text. «Done» → «Prepare PDF»."}</p>
+              <p className="mx-auto mt-1.5 max-w-lg text-center text-[11px] text-amber-300/70">{tr ? "Not: Bir yazıyı düzenlerken beliren kapatma kutusu üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Note: while editing a line, the cover box may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
             </div>
           </div>
         </div>,
