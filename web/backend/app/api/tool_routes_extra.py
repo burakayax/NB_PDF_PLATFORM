@@ -388,18 +388,28 @@ async def tool_edit_text(
                             by_page.setdefault(pi, []).append(op)
                     except Exception:
                         continue
+                import base64 as _b64
+                import io as _io
+                import math as _math
+
                 for pi, page_ops in by_page.items():
                     page = doc[pi]
-                    # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır.
+                    # Görsel EKLEME op'ları (op.image) altındaki içeriği silmemeli;
+                    # metin/silme op'larından ayrılır.
+                    text_ops = [o for o in page_ops if not o.get("image")]
+                    image_ops = [o for o in page_ops if o.get("image")]
+
+                    # 1) Seçili bölgelerin mevcut içeriğini GERÇEKTEN kaldır (yalnız metin op'ları).
                     #    Redaction fill = frontend'in canvas'tan örneklediği ARKA PLAN rengi
                     #    (varsayılan beyaz yerine) → kırmızı/siyah/renkli zeminde beyaz kutu kalmaz.
-                    for op in page_ops:
+                    for op in text_ops:
                         x0, y0, x1, y1 = (float(v) for v in op["bbox"])
                         fill = _hex_to_rgb01(op.get("bg")) if op.get("bg") else (1.0, 1.0, 1.0)
                         page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1), fill=fill)
-                    page.apply_redactions()
+                    if text_ops:
+                        page.apply_redactions()
                     # 2) Yeni metinleri aynı bölgeye yaz (varsa).
-                    for op in page_ops:
+                    for op in text_ops:
                         t = (op.get("text") or "").strip()
                         if not t:
                             continue
@@ -416,6 +426,33 @@ async def tool_edit_text(
                             t, fontsize=fs, color=col,
                             fontname=fkey, fontfile=_EDIT_FONTS[fkey],
                         )
+                    # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
+                    for op in image_ops:
+                        try:
+                            data = str(op.get("image") or "")
+                            raw = _b64.b64decode(data.split(",")[-1])
+                            x0, y0, x1, y1 = (float(v) for v in op["bbox"])
+                            deg = float(op.get("rotate") or 0) % 360
+                            if abs(deg) < 0.5:
+                                page.insert_image(_fitz.Rect(x0, y0, x1, y1), stream=raw, keep_proportion=False)
+                                continue
+                            # Serbest açı: PIL ile döndür (CSS saat yönü = PIL -deg), döndürülmüş
+                            # görselin merkez-korumalı bounding box'ına oturt.
+                            from PIL import Image as _Image
+                            img = _Image.open(_io.BytesIO(raw)).convert("RGBA")
+                            rot = img.rotate(-deg, expand=True, resample=_Image.BICUBIC)
+                            buf = _io.BytesIO(); rot.save(buf, "PNG")
+                            r = _math.radians(deg)
+                            w0, h0 = (x1 - x0), (y1 - y0)
+                            bw = abs(w0 * _math.cos(r)) + abs(h0 * _math.sin(r))
+                            bh = abs(w0 * _math.sin(r)) + abs(h0 * _math.cos(r))
+                            cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+                            page.insert_image(
+                                _fitz.Rect(cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2),
+                                stream=buf.getvalue(), keep_proportion=False,
+                            )
+                        except Exception:
+                            continue
                 doc.save(str(out_p), garbage=3, deflate=True)
                 return out_p.read_bytes()
             finally:
