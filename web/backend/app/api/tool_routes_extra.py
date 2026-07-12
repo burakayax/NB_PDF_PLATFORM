@@ -449,8 +449,9 @@ async def tool_redact_pdf(
     password: str = Form(""),
 ):
     """Hassas veri gizleme: verilen metin parçalarını (TC/IBAN/telefon/e-posta/isim…)
-    PyMuPDF ile TÜM sayfalarda bulup GERÇEKTEN kaldırır (redaction — siyah kutu + veri
-    PDF'ten silinir, örtme değil). `terms`: JSON string listesi. Misafire açık (token yok);
+    PyMuPDF ile TÜM sayfalarda bulup GERÇEKTEN kaldırır. Siyah kutu yerine, kaldırılan
+    bölgenin orijinal görüntüsü BULANIKLAŞTIRILARAK geri konur — renk korunur, metin
+    PDF'ten silinir (geri getirilemez), örtme değil. `terms`: JSON string listesi. Misafire açık (token yok);
     boyut/oran/sandbox korur. NOT: dosya sunucuya yüklenir (frontend'de gizlilik uyarısı)."""
     import json as _json
 
@@ -472,6 +473,8 @@ async def tool_redact_pdf(
 
         def _run() -> bytes:
             import fitz as _fitz
+            import io as _io
+            from PIL import Image as _Image, ImageFilter as _ImageFilter
 
             doc = _fitz.open(sp)
             try:
@@ -479,17 +482,44 @@ async def tool_redact_pdf(
                     if not pwd or not doc.authenticate(pwd):
                         raise HTTPException(status_code=400, detail="Şifreli PDF için doğru parola gerekli.")
                 for page in doc:
-                    found = False
+                    # 1. Gizlenecek tüm bölgeleri bul.
+                    rects = []
                     for term in term_list:
                         try:
-                            rects = page.search_for(term, quads=False)
+                            for r in page.search_for(term, quads=False):
+                                rects.append(r)
                         except Exception:
-                            rects = []
-                        for r in rects:
-                            page.add_redact_annot(r, fill=(0, 0, 0))
-                            found = True
-                    if found:
-                        page.apply_redactions()
+                            pass
+                    if not rects:
+                        continue
+
+                    # 2. GÜVENLİ BLUR: metni siyahla ÖRTMEK yerine gerçekten kaldırıp
+                    #    yerine orijinalin BULANIK rasterini koyarız. Böylece altta metin
+                    #    kalmaz (geri getirilemez) ama renk korunur, siyah kutu olmaz.
+                    #    Önce orijinal içerikten yüksek çözünürlüklü bulanık görüntü üret.
+                    blur_imgs = []
+                    for r in rects:
+                        try:
+                            pix = page.get_pixmap(clip=r, matrix=_fitz.Matrix(3, 3), alpha=False)
+                            img = _Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+                            radius = max(6, int(min(pix.width, pix.height) / 4))
+                            blurred = img.filter(_ImageFilter.GaussianBlur(radius))
+                            buf = _io.BytesIO()
+                            blurred.save(buf, format="PNG")
+                            blur_imgs.append((r, buf.getvalue()))
+                        except Exception:
+                            # Görüntü üretilemezse en azından içeriği kaldır (beyaz).
+                            blur_imgs.append((r, None))
+
+                    # 3. İçeriği (metin dahil) GERÇEKTEN kaldır.
+                    for r in rects:
+                        page.add_redact_annot(r, fill=(1, 1, 1))
+                    page.apply_redactions()
+
+                    # 4. Bulanık rasteri geri koy (redaction'dan SONRA).
+                    for r, png in blur_imgs:
+                        if png:
+                            page.insert_image(r, stream=png)
                 doc.save(str(out_p), garbage=3, deflate=True)
                 return out_p.read_bytes()
             finally:
