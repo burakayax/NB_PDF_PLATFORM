@@ -6260,6 +6260,8 @@ function App() {
             userRole={user?.role}
             enabledToolIds={enabledToolIds}
             resolveToolLabel={resolveToolLabel}
+            contentPanel={contentPanel}
+            aiMode={aiModal}
             onOpenAi={(mode) => {
             setAiModal(mode);
             setContentPanel("ai");

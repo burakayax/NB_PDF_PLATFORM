@@ -161,6 +161,11 @@ type DashboardSidebarProps = {
   onOpenSign?: () => void;
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
+  /** Aktif içerik paneli — mobil launcher başlığı FeatureKey olmayan araçları da
+   * (Düzenle/İmzala/İşaretle/AI) doğru göstersin diye. */
+  contentPanel?: string;
+  /** Aktif AI aracı modu (contentPanel === "ai" iken). */
+  aiMode?: AiToolMode | null;
 };
 
 /**
@@ -528,6 +533,8 @@ export function DashboardSidebarMobileLauncher({
   onOpenEditor,
   onOpenSign,
   onOpenAnnotate,
+  contentPanel,
+  aiMode,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const tr = language === "tr";
@@ -539,12 +546,25 @@ export function DashboardSidebarMobileLauncher({
   const labelForTool =
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
 
+  // FeatureKey OLMAYAN aktif panelleri de başlıkta göster (activeSidebar bunlarda
+  // güncellenmiyor). Öncelik: aktif özel/AI panel → normal araç → "Menü".
+  const panelLabel =
+    contentPanel === "editor"
+      ? tr ? "PDF Düzenle" : "Edit PDF"
+      : contentPanel === "sign"
+        ? tr ? "PDF İmzala" : "Sign PDF"
+        : contentPanel === "annotate"
+          ? tr ? "PDF İşaretle" : "Markup PDF"
+          : contentPanel === "ai" && aiMode
+            ? (() => {
+                const t = AI_TOOLS.find((x) => x.mode === aiMode);
+                return t ? (tr ? t.tr : t.en) : tr ? "Yapay Zekâ" : "AI";
+              })()
+            : null;
   const activeIsTool = toolOrder.includes(active as FeatureKey);
-  const activeLabel = activeIsTool
-    ? labelForTool(active as FeatureKey)
-    : tr
-      ? "Menü"
-      : "Menu";
+  const activeLabel =
+    panelLabel ??
+    (activeIsTool ? labelForTool(active as FeatureKey) : tr ? "Menü" : "Menu");
 
   const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
