@@ -6,7 +6,7 @@ import { BackToTopButton } from "./components/common/BackToTopButton";
 import { PwaPrompts } from "./components/common/PwaPrompts";
 import { GlobalErrorBoundary } from "./components/common/GlobalErrorBoundary";
 import { SettingsProvider } from "./contexts/SettingsContext";
-import { installProductionGuards } from "./lib/productionGuards";
+import { installProductionGuards, installChunkReloadGuard } from "./lib/productionGuards";
 import { getCountryCode } from "./lib/geoCountry";
 import "./styles/app.css";
 
@@ -41,6 +41,7 @@ async function setDocumentLanguage() {
 void setDocumentLanguage();
 
 installProductionGuards();
+installChunkReloadGuard();
 
 if (import.meta.env.VITE_BLOCK_SEARCH_INDEXING === "true") {
   const tag = document.querySelector('meta[name="robots"]');

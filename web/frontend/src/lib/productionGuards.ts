@@ -33,3 +33,22 @@ export function installProductionGuards(): void {
     { capture: true },
   );
 }
+
+/**
+ * Yeni sürüm dağıtıldığında, arka planda açık kalmış eski sekme yeni bir lazy chunk
+ * istediğinde eski hash'li dosya sunucuda artık bulunmaz (404) ve uygulama "buga girip"
+ * boş/eski ekran gösterir. Vite bunu `vite:preloadError` ile bildirir; burada oturum
+ * başına TEK bir reload ile taze index.html + güncel chunk'lara geçeriz. sessionStorage
+ * guard'ı sonsuz yeniden yükleme döngüsünü önler (ör. gerçekten ağ koptuysa).
+ */
+export function installChunkReloadGuard(): void {
+  const KEY = "nbpdf-chunk-reloaded";
+  window.addEventListener("vite:preloadError", (event) => {
+    if (sessionStorage.getItem(KEY)) {
+      return; // bu oturumda zaten bir kez denedik → döngüye girme
+    }
+    event.preventDefault();
+    sessionStorage.setItem(KEY, "1");
+    window.location.reload();
+  });
+}
