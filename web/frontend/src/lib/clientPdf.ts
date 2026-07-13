@@ -9,6 +9,7 @@
  * için sunucu yoluna düşülür (çağıran taraf `PdfEncryptedError`'ı yakalar).
  */
 import { PDFDocument, degrees, rgb, LineCapStyle } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { zipSync } from "fflate";
 
 export class PdfEncryptedError extends Error {
@@ -61,6 +62,54 @@ export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
       width: embedded.width,
       height: embedded.height,
     });
+  }
+  return out.save();
+}
+
+/** Aranabilir PDF için tek kelime — konum KAYNAK GÖRÜNTÜ pikselinde (sol-üst origin). */
+export type SearchableWord = { text: string; x0: number; y0: number; x1: number; y1: number };
+export type SearchablePage = {
+  bytes: ArrayBuffer | Uint8Array;
+  mime: string;
+  words: SearchableWord[];
+};
+
+/**
+ * Görselleri, üzerine GÖRÜNMEZ metin katmanı (OCR) gömülü ARANABİLİR PDF'e çevirir.
+ * Görsel göze aynı görünür; arkasındaki metin seçilebilir/aranabilir olur (Ctrl+F,
+ * kopyala, ekran okuyucu). Türkçe için Unicode font (`fontBytes`, ör. Roboto)
+ * fontkit ile gömülür. Her şey cihazda; dosya sunucuya gitmez.
+ */
+export async function imagesToSearchablePdf(
+  pages: SearchablePage[],
+  fontBytes: ArrayBuffer | Uint8Array,
+): Promise<Uint8Array> {
+  if (pages.length === 0) throw new Error("No pages.");
+  const out = await PDFDocument.create();
+  out.registerFontkit(fontkit);
+  const font = await out.embedFont(fontBytes, { subset: true });
+  for (const pg of pages) {
+    const isPng = pg.mime.includes("png");
+    const img = isPng ? await out.embedPng(pg.bytes) : await out.embedJpg(pg.bytes);
+    const page = out.addPage([img.width, img.height]);
+    page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+    for (const w of pg.words) {
+      const h = Math.max(1, w.y1 - w.y0);
+      const size = h * 0.8;
+      try {
+        // opacity 0 → görünmez ama seçilebilir/aranabilir. pdf-lib origin sol-alt.
+        page.drawText(w.text, {
+          x: w.x0,
+          y: img.height - w.y1 + h * 0.15,
+          size,
+          font,
+          color: rgb(0, 0, 0),
+          opacity: 0,
+        });
+      } catch {
+        /* fontta olmayan karakter → o kelimeyi atla, PDF bozulmasın */
+      }
+    }
   }
   return out.save();
 }

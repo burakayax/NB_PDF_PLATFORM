@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama — PDF Platform</title>
+    <meta name="description" content="Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif" />
+    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
+         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama — PDF Platform" />
+    <meta property="og:description" content="Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama — PDF Platform" />
+    <meta name="twitter:description" content="Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"CamScanner'a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama","description":"Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi.","datePublished":"2026-07-13","dateModified":"2026-07-13","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Ücretsiz bir CamScanner alternatifi var mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. PDF Platform'un belge tarayıcısı tarayıcıda çalışır; tarama, perspektif düzeltme, filtreler, PDF oluşturma ve paylaşma ücretsizdir ve çıktıya zorunlu filigran koymaz."}},{"@type":"Question","name":"Belgelerim buluta yüklenir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Tüm tarama ve PDF oluşturma işlemi cihazınızda çalışır; belgeniz sunucuya gönderilmez."}},{"@type":"Question","name":"Çıktıda filigran olur mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Oluşturduğunuz PDF'e zorunlu filigran eklenmez."}},{"@type":"Question","name":"Hangi özellikler Pro?","acceptedAnswer":{"@type":"Answer","text":"Otomatik gölge temizleme filtresi, tek taramada sınırsız sayfa ve aranabilir PDF (OCR) Pro özellikleridir. Temel tarama ve PDF oluşturma ücretsizdir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>CamScanner&#39;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama</h1><p class="seo-intro">Belge tarama uygulamaları pratik ama çoğu reklam gösterir, çıktıya filigran koyar ya da dosyanızı buluta yükler. Tarayıcıda çalışan, cihazınızda işleyen ve temel özellikleri ücretsiz olan bir alternatifi tanıtıyoruz.</p><article class="seo-article"><p class="seo-lead">CamScanner gibi tarama uygulamaları işi görür; ama birçoğu üyelik ister, ücretsiz sürümde çıktıya filigran koyar, reklam gösterir ve belgelerinizi işlemek için kendi bulutlarına yükler. Hassas belgeler söz konusuysa bu son madde tek başına yeterince rahatsız edici.</p><h2>Tarayıcıda + cihazda ne değişiyor?</h2><p>PDF Platform&#39;un belge tarayıcısı telefon tarayıcınızda açılır — kurulum yok. Daha önemlisi, tüm işlem cihazınızda çalışır: kamera görüntüsü, otomatik kenar bulma, perspektif düzeltme ve PDF oluşturma. Belgeniz herhangi bir sunucuya yüklenmez, çıktıya zorunlu filigran konmaz.</p><h2>Dürüst karşılaştırma</h2><ul><li>Kurulum: Uygulama yok — telefon tarayıcısında açılır.</li><li>Gizlilik: Tarama cihazınızda; belge buluta yüklenmez.</li><li>Filigran: Çıktıya zorunlu filigran yok.</li><li>Ücretsiz: Tarama, PDF, kaydetme ve paylaşma ücretsiz; tek taramada 3 sayfa.</li><li>Pro: Otomatik gölge temizleme, sınırsız sayfa ve aranabilir PDF (OCR).</li></ul><h2>Temelde ücretsiz olan ne?</h2><p>Belgeyi tarama, otomatik kenar bulma, perspektif düzeltme, Renkli/Gri/Siyah-Beyaz filtreler, PDF oluşturma, kaydetme ve paylaşma — tümü ücretsizdir ve üyelik istemez. Tek taramada 3 sayfaya kadar tarayabilirsiniz.</p><h2>Pro neyi ekler?</h2><p>Daha profesyonel taramalar için Pro üç şey ekler: gölgeleri temizleyip zemini beyazlatan «Otomatik» filtre, tek taramada sınırsız sayfa ve metni Ctrl+F ile aranabilir/kopyalanabilir yapan aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır.</p><p><a href="/tools/image-to-pdf"><strong>Görsel → PDF</strong> — Belgelerinizi ya da fotoğraflarınızı tek PDF&#39;e çevirin — cihazınızda, üyeliksiz.</a></p><h2>Kimler için ideal?</h2><p>Ara sıra bir belge tarayan ama telefonuna bir uygulama daha kurmak istemeyen; kimlik, sözleşme, fatura gibi belgeleri buluta yüklemeden dijitalleştirmek isteyen herkes için. Bir bağlantıdan açılır, işini görür ve belgeniz sizde kalır.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/image-to-pdf">JPG&#39;den PDF&#39;e Dönüştürme</a></li><li><a href="/tools/taranmis-pdf-ocr">Taranmış PDF&#39;i Metne Çevir (OCR)</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Ücretsiz bir CamScanner alternatifi var mı?</h3><p>Evet. PDF Platform&#39;un belge tarayıcısı tarayıcıda çalışır; tarama, perspektif düzeltme, filtreler, PDF oluşturma ve paylaşma ücretsizdir ve çıktıya zorunlu filigran koymaz.</p></div><div class="seo-faq-item"><h3>Belgelerim buluta yüklenir mi?</h3><p>Hayır. Tüm tarama ve PDF oluşturma işlemi cihazınızda çalışır; belgeniz sunucuya gönderilmez.</p></div><div class="seo-faq-item"><h3>Çıktıda filigran olur mu?</h3><p>Hayır. Oluşturduğunuz PDF&#39;e zorunlu filigran eklenmez.</p></div><div class="seo-faq-item"><h3>Hangi özellikler Pro?</h3><p>Otomatik gölge temizleme filtresi, tek taramada sınırsız sayfa ve aranabilir PDF (OCR) Pro özellikleridir. Temel tarama ve PDF oluşturma ücretsizdir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

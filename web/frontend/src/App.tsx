@@ -105,6 +105,8 @@ import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
+import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
+import { SearchablePdfTool } from "./components/tools/SearchablePdfTool";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   mergePdfs,
@@ -812,6 +814,8 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/ai-toplu-islem" ||
     rawPath === "/tools/pdf-karsilastir" ||
     rawPath === "/tools/hassas-veri-gizle" ||
+    rawPath === "/tools/belge-tara" ||
+    rawPath === "/tools/aranabilir-pdf" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
@@ -1176,6 +1180,19 @@ function App() {
   const excelConfirmRef = useRef(false);
   const [excelDialogOpen, setExcelDialogOpen] = useState(false);
   const [pageVisualModalOpen, setPageVisualModalOpen] = useState(false);
+  // İşlemi başlatan ana buton — görsel seçici «Tamam» ile kapanınca odağı buraya
+  // kaydır (misafir araçlarındaki davranışın aynısı).
+  const primaryActionRef = useRef<HTMLButtonElement | null>(null);
+  const closePageVisualAndFocus = useCallback(() => {
+    setPageVisualModalOpen(false);
+    setTimeout(() => {
+      const btn = primaryActionRef.current;
+      if (btn && !btn.disabled) {
+        btn.scrollIntoView({ behavior: "smooth", block: "center" });
+        btn.focus({ preventScroll: true });
+      }
+    }, 140);
+  }, []);
   const [pageVisualMode, setPageVisualMode] =
     useState<PdfPageVisualMode>("split");
   const [rotatePageRotations, setRotatePageRotations] = useState<
@@ -3081,6 +3098,8 @@ function App() {
         p === "/tools/ai-toplu-islem" ||
         p === "/tools/pdf-karsilastir" ||
         p === "/tools/hassas-veri-gizle" ||
+        p === "/tools/belge-tara" ||
+        p === "/tools/aranabilir-pdf" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5008,6 +5027,22 @@ function App() {
     const seoSlug = pathname.split("/tools/")[1] ?? "";
     const goLogin = () => setView("login");
     const goRegister = () => setView("register");
+    if (seoSlug === "belge-tara") {
+      return (
+        <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <DocumentScannerLaunch language={language} isPro={aiAllowed} onUpgrade={goRegister} />
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "aranabilir-pdf") {
+      return (
+        <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "pdf-duzenle") {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
@@ -5850,7 +5885,7 @@ function App() {
           <Suspense fallback={<ModalSkeleton />}>
             <SplitPagePickerModal
               open={pageVisualModalOpen}
-              onClose={() => setPageVisualModalOpen(false)}
+              onClose={closePageVisualAndFocus}
               onReset={resetVisualPagePicker}
               file={uploads[0].file}
               password={password}
@@ -7698,6 +7733,7 @@ function App() {
                         ) : null}
 
                         <button
+                          ref={primaryActionRef}
                           className="primary-action"
                           type="submit"
                           disabled={submitDisabled}

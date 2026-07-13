@@ -1543,6 +1543,285 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "telefonla-belge-tarama-pdf",
+      date: "2026-07-13",
+      updated: "2026-07-13",
+      readMinutes: 6,
+      tags: { tr: ["Belge Tarama", "Mobil", "PDF"], en: ["Scanning", "Mobile", "PDF"] },
+      accent: "cyan",
+      tool: "/tools/image-to-pdf",
+    },
+    {
+      title: "Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)",
+      description:
+        "Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz.",
+      excerpt:
+        "Bir sözleşmeyi, faturayı ya da not kağıdını hızlıca dijitalleştirmek için ayrı bir uygulama kurmanıza gerek yok. Telefonunuzun tarayıcısından belgeyi çekin; kenarları otomatik bulunsun, perspektifi düzelsin ve tek dokunuşla PDF olsun — hepsi cihazınızda.",
+      blocks: [
+        { t: "lead", x: "Elinizde kağıt bir belge var ve onu hızlıca PDF yapmanız gerekiyor. Çoğu kişi bunun için mağazadan bir tarayıcı uygulaması indirir; reklamlar, üyelik ekranları ve dosyalarını buluta yükleyen izinlerle uğraşır. Oysa telefonunuzun tarayıcısında, hiçbir şey kurmadan, belgeyi çekip düzgün bir PDF'e çevirebilirsiniz — üstelik dosyanız cihazınızdan hiç çıkmadan." },
+
+        { t: "h2", x: "Neden tarayıcıda ve cihazda?" },
+        { t: "p", x: "Uygulama kurmak yer kaplar, güncelleme ister ve çoğu tarama uygulaması belgenizi işlemek için sunucularına gönderir. PDF Platform'un belge tarayıcısı ise doğrudan telefon tarayıcınızda açılır ve tüm işlemi — kenar bulma, perspektif düzeltme, PDF oluşturma — cihazınızda yapar. Bu, iki büyük fark demektir: kurulum yok ve belgeniz internete yüklenmez." },
+
+        { t: "h2", x: "Nasıl çalışır? Adım adım" },
+        { t: "steps", items: [
+          { title: "Ana sayfada «Belge Tara»ya dokunun", x: "Telefonunuzda pdfplatform.app'i açın; araç seçicinin üstündeki «📸 Kamerayla Belge Tara» düğmesine dokunun. Kamera izni verin." },
+          { title: "Kamerayı belgeye doğrultun", x: "Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Telefonu sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar — deklanşöre basmanıza gerek yok." },
+          { title: "Filtreyi seçin, köşeleri onaylayın", x: "Renkli, Gri veya Siyah-Beyaz arasından seçin. Otomatik bulunan köşeler hazırdır; istersen parmakla ince ayar yapabilirsin." },
+          { title: "PDF'i oluşturun", x: "Tek sayfa ya da birden çok sayfa ekleyin, ardından «PDF Oluştur» deyin. Sonuçta Kaydet, Paylaş veya PDF araçlarında açma seçenekleri çıkar." },
+        ] },
+
+        { t: "tip", x: "Kenar tespiti tamamen otomatiktir: belgeyi çerçeveye alıp sabit tutmanız yeterli. Işık iyiyse ve belge zeminden ayrıştıysa kenarlar anında bulunur; bulunamazsa köşeleri elle sürükleyerek düzeltebilirsiniz." },
+
+        { t: "h2", x: "Çok sayfalı belgeleri tek PDF'te toplayın" },
+        { t: "p", x: "Bir sözleşmenin tüm sayfalarını ya da bir defter dolusu notu arka arkaya tarayıp tek bir PDF'te birleştirebilirsiniz. Her sayfa tarandıkça küçük bir önizleme olarak eklenir; sırasını görür, istemediğinizi silersiniz. Ücretsiz planda tek taramada 3 sayfaya kadar tarayabilir; sınırsız sayfa için Pro'ya geçebilirsiniz." },
+
+        { t: "cta", title: "Görsel → PDF", x: "Zaten çektiğiniz fotoğraflar varsa onları da saniyeler içinde tek PDF'e çevirin — cihazınızda, üyeliksiz.", btn: "Aracı aç", tool: "/tools/image-to-pdf" },
+
+        { t: "h2", x: "Gizlilik: belgeniz cihazınızdan çıkmaz" },
+        { t: "p", x: "Kimlik, sözleşme, fatura gibi belgeleri tararken en büyük endişe, dosyanın bir sunucuya gitmesidir. Burada böyle bir şey olmaz: kamera görüntüsü, kenar tespiti ve PDF oluşturma tamamen tarayıcınızda çalışır. Oluşan PDF yalnızca sizin kaydettiğiniz veya paylaştığınız yere gider." },
+      ],
+      faq: [
+        { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. pdfplatform.app'i telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli. Kurulum, üyelik ya da uygulama mağazası gerekmez." },
+        { q: "Belgenin kenarlarını kendim mi seçmem gerekiyor?", a: "Hayır, kenarlar otomatik bulunur. Kamerayı belgeye doğrultup sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar; gerekirse köşeleri elle düzeltebilirsiniz." },
+        { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Tarama, kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
+        { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa Pro özelliğidir." },
+      ],
+    },
+    {
+      title: "Scan Documents with Your Phone: No App, Free, On Your Device (2026)",
+      description:
+        "Scan documents to PDF with your phone camera — no app to install, right in the browser. Edges are detected automatically, perspective is fixed and your file never leaves your device.",
+      excerpt:
+        "You don't need a separate app to digitize a contract, invoice or note. Capture the document from your phone's browser; edges are detected, perspective is corrected and it becomes a PDF in one tap — all on your device.",
+      blocks: [
+        { t: "lead", x: "You have a paper document and need it as a PDF fast. Most people install a scanner app for this and deal with ads, sign-up screens and permissions that upload their files to the cloud. But you can capture and convert a document to a clean PDF right in your phone's browser, with nothing to install — and your file never leaves your device." },
+        { t: "h2", x: "Why in the browser and on-device?" },
+        { t: "p", x: "Installing an app takes space, needs updates, and most scanner apps send your document to their servers for processing. PDF Platform's document scanner opens right in your phone browser and does everything — edge detection, perspective correction, PDF creation — on your device. That means two big wins: no install and your document is never uploaded." },
+        { t: "h2", x: "How it works, step by step" },
+        { t: "steps", items: [
+          { title: "Tap «Scan document» on the homepage", x: "Open pdfplatform.app on your phone and tap the «📸 Scan a document with camera» button above the tool picker. Allow camera access." },
+          { title: "Point the camera at the document", x: "The document's edges are marked live with a green outline. Hold steady and the system captures it by itself — no shutter press needed." },
+          { title: "Pick a filter, confirm the corners", x: "Choose Color, Gray or Black & White. The auto-detected corners are ready; fine-tune them with your finger if you like." },
+          { title: "Create the PDF", x: "Add one page or several, then tap «Create PDF». You'll get options to Save, Share or open it in the PDF tools." },
+        ] },
+        { t: "tip", x: "Edge detection is fully automatic: just frame the document and hold still. With good light and clear contrast the edges snap instantly; if not, drag the corners to adjust." },
+        { t: "h2", x: "Combine multi-page documents into one PDF" },
+        { t: "p", x: "Scan every page of a contract or a notebook back-to-back and merge them into a single PDF. Each page appears as a small preview as you go; you can see the order and remove any you don't want. The free plan scans up to 3 pages per scan; upgrade to Pro for unlimited pages." },
+        { t: "cta", title: "Image → PDF", x: "Already have photos? Turn them into a single PDF in seconds — on your device, no sign-up.", btn: "Open the tool", tool: "/tools/image-to-pdf" },
+        { t: "h2", x: "Privacy: your document stays on your device" },
+        { t: "p", x: "The biggest worry when scanning IDs, contracts or invoices is the file going to a server. That doesn't happen here: the camera frame, edge detection and PDF creation all run in your browser. The resulting PDF only goes where you save or share it." },
+      ],
+      faq: [
+        { q: "Do I need an app to scan documents with my phone?", a: "No. Just open pdfplatform.app in your phone browser and tap «Scan document». No install, sign-up or app store needed." },
+        { q: "Do I have to select the document edges myself?", a: "No, edges are detected automatically. Point the camera at the document and hold steady; the system captures it by itself. You can adjust the corners by hand if needed." },
+        { q: "Is my scanned document uploaded to a server?", a: "No. Scanning, edge detection and PDF creation all run on your device; your document is never sent to the internet." },
+        { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages is a Pro feature." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "aranabilir-pdf-olusturma-ocr",
+      date: "2026-07-13",
+      updated: "2026-07-13",
+      readMinutes: 6,
+      tags: { tr: ["OCR", "Aranabilir PDF", "Tarama"], en: ["OCR", "Searchable PDF", "Scanning"] },
+      accent: "violet",
+      tool: "/tools/taranmis-pdf-ocr",
+    },
+    {
+      title: "Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F'te Bulunan Belgeler",
+      description:
+        "Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF'i aranabilir yapın — Türkçe destekli, tamamen cihazınızda.",
+      excerpt:
+        "Telefonla taradığınız belge göze yazı gibi görünse de aslında bir fotoğraftır; Ctrl+F ile arayamaz, metni kopyalayamazsınız. Aranabilir PDF, görüntünün üzerine görünmez bir metin katmanı ekleyerek bunu çözer. Nasıl yapıldığını anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir belgeyi tarayıp PDF yaptığınızda, o PDF içindeki yazı bilgisayar için metin değil, sadece piksellerden oluşan bir resimdir. Bu yüzden belgede kelime aratamaz, bir cümleyi seçip kopyalayamazsınız. «Aranabilir PDF» tam olarak bu sorunu çözer." },
+
+        { t: "h2", x: "Aranabilir PDF nedir?" },
+        { t: "p", x: "Aranabilir PDF, taranan görüntünün tam üzerine hizalanmış, gözle görünmeyen bir metin katmanı gömülmüş PDF'tir. Belge göze aynı görünür — fotoğrafı görürsünüz — ama arkada gerçek, seçilebilir metin durur. Böylece Ctrl+F ile kelime arayabilir, metni seçip kopyalayabilir; arşiv ve doküman sistemleri de belgenin içeriğine göre arama yapabilir." },
+
+        { t: "h2", x: "OCR bu işi nasıl yapar?" },
+        { t: "p", x: "OCR (Optik Karakter Tanıma), görüntüdeki yazıyı «okur» ve her kelimenin metnini ve konumunu çıkarır. Ardından bu kelimeler, görüntünün üzerine tam kendi konumlarına, görünmez biçimde yerleştirilir. Sonuç: görünüşü bozulmamış ama içi aranabilir bir belge." },
+
+        { t: "h2", x: "PDF Platform'da aranabilir PDF yapmak" },
+        { t: "steps", items: [
+          { title: "Belgeyi tarayın veya yükleyin", x: "Telefonla belge tarayıcısını kullanın ya da elinizdeki taranmış PDF'i açın." },
+          { title: "«Aranabilir PDF yap» deyin", x: "Belge tarayıcıda PDF'i oluşturduktan sonra «🔍 Aranabilir PDF yap» seçeneğini kullanın; metin cihazınızda tanınır (Türkçe + İngilizce)." },
+          { title: "Kaydedin ve arayın", x: "Oluşan PDF'i kaydedin. Artık herhangi bir PDF görüntüleyicide Ctrl+F ile kelime arayabilir, metni kopyalayabilirsiniz." },
+        ] },
+
+        { t: "tip", x: "OCR tamamen cihazınızda çalışır — Türkçe karakterler dahil (ş, ğ, ı, İ). Belgeniz metne çevrilmek için hiçbir sunucuya gönderilmez. Aranabilir PDF üretimi bir Pro özelliğidir." },
+
+        { t: "cta", title: "Taranmış PDF → Metin (OCR)", x: "Yalnızca metni mi istiyorsunuz? Taranmış PDF'i cihazınızda düz metne çevirin.", btn: "OCR aracını aç", tool: "/tools/taranmis-pdf-ocr" },
+
+        { t: "h2", x: "Nerede işe yarar?" },
+        { t: "ul", items: ["Arşivleme: yüzlerce taranmış belge arasında kelimeyle arama yapabilmek.", "Hukuk ve muhasebe: sözleşme veya faturada bir tutarı/maddeyi anında bulmak.", "Öğrenciler: ders notu fotoğraflarında konu araması.", "Erişilebilirlik: ekran okuyucuların belgeyi okuyabilmesi."] },
+      ],
+      faq: [
+        { q: "Aranabilir PDF ile normal taranmış PDF farkı nedir?", a: "Normal taranmış PDF bir resimdir; içinde arama yapılamaz. Aranabilir PDF'te görüntünün üzerine görünmez bir metin katmanı gömülüdür, böylece Ctrl+F ile arama ve kopyalama çalışır." },
+        { q: "Türkçe karakterlerde çalışır mı?", a: "Evet. OCR Türkçe + İngilizce destekler ve ş, ğ, ı, İ gibi karakterler doğru şekilde aranabilir metne dönüştürülür." },
+        { q: "Belgem sunucuya gönderilir mi?", a: "Hayır. OCR ve metin katmanı gömme işlemi tamamen cihazınızda yapılır; belgeniz internete yüklenmez." },
+        { q: "Belgenin görünüşü değişir mi?", a: "Hayır. Metin katmanı görünmezdir; belge göze tıpatıp aynı görünür, sadece artık aranabilir ve kopyalanabilir olur." },
+      ],
+    },
+    {
+      title: "How to Create a Searchable PDF: OCR So You Can Find Text with Ctrl+F",
+      description:
+        "A scanned document is really an image — you can't search it. Add an invisible text layer with OCR to make the PDF searchable — Turkish supported, entirely on your device.",
+      excerpt:
+        "A document you scan with your phone looks like text but is actually a photo; you can't search it with Ctrl+F or copy the text. A searchable PDF fixes this by adding an invisible text layer over the image. Here's how.",
+      blocks: [
+        { t: "lead", x: "When you scan a document to PDF, the text inside is not text to a computer — it's an image made of pixels. That's why you can't search for a word or select and copy a sentence. A «searchable PDF» solves exactly this." },
+        { t: "h2", x: "What is a searchable PDF?" },
+        { t: "p", x: "A searchable PDF has an invisible text layer embedded right over the scanned image, aligned to each word. The document looks the same — you see the photo — but real, selectable text sits behind it. So you can search with Ctrl+F, select and copy text; archive and document systems can also search by content." },
+        { t: "h2", x: "How does OCR do it?" },
+        { t: "p", x: "OCR (Optical Character Recognition) «reads» the text in the image and extracts each word's text and position. Those words are then placed invisibly over the image at their exact positions. The result: a document that looks untouched but is searchable inside." },
+        { t: "h2", x: "Making a searchable PDF on PDF Platform" },
+        { t: "steps", items: [
+          { title: "Scan or upload the document", x: "Use the phone document scanner, or open a scanned PDF you already have." },
+          { title: "Choose «Make searchable»", x: "After creating the PDF in the scanner, use «🔍 Make searchable»; text is recognized on your device (Turkish + English)." },
+          { title: "Save and search", x: "Save the resulting PDF. Now you can search with Ctrl+F and copy text in any PDF viewer." },
+        ] },
+        { t: "tip", x: "OCR runs entirely on your device — including Turkish characters (ş, ğ, ı, İ). Your document is never sent to a server for recognition. Searchable PDF output is a Pro feature." },
+        { t: "cta", title: "Scanned PDF → Text (OCR)", x: "Just want the text? Convert a scanned PDF to plain text on your device.", btn: "Open the OCR tool", tool: "/tools/taranmis-pdf-ocr" },
+        { t: "h2", x: "Where is it useful?" },
+        { t: "ul", items: ["Archiving: search by keyword across hundreds of scanned documents.", "Legal and accounting: instantly find an amount or clause in a contract or invoice.", "Students: search topics in photos of lecture notes.", "Accessibility: screen readers can read the document."] },
+      ],
+      faq: [
+        { q: "What's the difference between a searchable PDF and a normal scanned PDF?", a: "A normal scanned PDF is an image; you can't search inside it. A searchable PDF has an invisible text layer over the image, so Ctrl+F search and copy work." },
+        { q: "Does it work with Turkish characters?", a: "Yes. OCR supports Turkish + English, and characters like ş, ğ, ı, İ are converted correctly into searchable text." },
+        { q: "Is my document sent to a server?", a: "No. OCR and text-layer embedding happen entirely on your device; your document is not uploaded." },
+        { q: "Does the document's appearance change?", a: "No. The text layer is invisible; the document looks identical, it just becomes searchable and copyable." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "belge-fotografini-kaliteli-pdf-yapma",
+      date: "2026-07-13",
+      updated: "2026-07-13",
+      readMinutes: 5,
+      tags: { tr: ["Belge Tarama", "Kalite", "PDF"], en: ["Scanning", "Quality", "PDF"] },
+      accent: "emerald",
+      tool: "/tools/image-to-pdf",
+    },
+    {
+      title: "Belge Fotoğrafını Düzgün PDF'e Çevirme: Eğiklik, Gölge ve Kenar Sorunları",
+      description:
+        "Telefonla çekilen belge fotoğrafları çoğu zaman eğri ve gölgelidir. Otomatik perspektif düzeltme ve gölge temizleme ile fotoğrafı tarayıcı çıktısı gibi düzgün bir PDF'e çevirin.",
+      excerpt:
+        "Bir belgeyi telefonla çektiğinizde sonuç genelde eğri, köşeleri kırpık ve tek yanı gölgeli olur. İyi bir belge tarayıcı bunları otomatik düzeltir. Perspektif düzeltme ve gölge temizlemenin nasıl çalıştığını gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Kağıt bir belgeyi telefonla çekmek kolaydır; ama sonuç çoğu zaman «tarama» gibi görünmez: belge eğridir, masa da kadraja girmiştir, bir köşe gölgede kalmıştır. İyi bir tarayıcı işte tam burada devreye girer — fotoğrafı düz, temiz bir belgeye çevirir." },
+
+        { t: "h2", x: "Perspektif düzeltme: eğri belgeyi «dümdüz» yapmak" },
+        { t: "p", x: "Belgeyi tam tepeden çekmediğiniz için kenarlar birbirine paralel çıkmaz; belge yamuk görünür. Belge tarayıcı, dört köşeyi otomatik bularak görüntüyü yeniden hesaplar ve belgeyi karşıdan bakılmış gibi düz bir dikdörtgene dönüştürür. Böylece arka plandaki masa da kırpılır, yalnız belge kalır." },
+
+        { t: "h2", x: "Gölge temizleme ve kontrast (Otomatik filtre)" },
+        { t: "p", x: "Elle çekimde ışık her zaman eşit gelmez; bir kenar koyu, bir kenar parlak olur. «Otomatik» filtre, her renk kanalında arka plan aydınlatmasını tahmin edip dengeleyerek gölgeleri temizler ve zemini dümdüz beyaza yaklaştırır — metin keskinleşir, renkler korunur. Bu, tarama uygulamalarındaki «magic color» etkisine benzer." },
+
+        { t: "h2", x: "Hangi filtreyi ne zaman kullanmalı?" },
+        { t: "ul", items: ["Renkli: logolu, renkli faturalar ve fotoğraflı belgeler için.", "Gri: metin ağırlıklı belgeler; daha küçük dosya.", "Siyah-Beyaz: en keskin metin, en küçük dosya — düz metin belgeler için ideal.", "Otomatik (Pro): gölge temizleme + kontrast; en profesyonel, tarayıcı benzeri çıktı."] },
+
+        { t: "h2", x: "Adım adım kaliteli tarama" },
+        { t: "steps", items: [
+          { title: "İyi ışık ve düz zemin", x: "Belgeyi düz bir zemine koyun, gölge düşürmeyecek şekilde üstten çekin. Zeminle belge arasında renk farkı olsun ki kenarlar kolay bulunsun." },
+          { title: "Otomatik yakalamayı bekleyin", x: "Kamerayı sabit tutun; kenarlar yeşil çerçeveyle işaretlenip belge kendiliğinden yakalanır." },
+          { title: "Filtreyi seçin ve oluşturun", x: "Belgeye uygun filtreyi seçip PDF'i oluşturun; gerekirse köşeleri düzeltin." },
+        ] },
+
+        { t: "cta", title: "Görsel → PDF", x: "Elinizdeki belge fotoğraflarını tek PDF'e çevirin — cihazınızda, üyeliksiz.", btn: "Aracı aç", tool: "/tools/image-to-pdf" },
+
+        { t: "p", x: "Tarama sonrası dosya büyükse Sıkıştır aracıyla boyutu küçültebilir; sayfaları yeniden sıralamak, döndürmek veya silmek isterseniz taradığınız PDF'i doğrudan ilgili araçta açabilirsiniz." },
+      ],
+      faq: [
+        { q: "Eğri çektiğim belgeyi düz yapabilir miyim?", a: "Evet. Belge tarayıcı dört köşeyi otomatik bulup perspektifi düzeltir; belge karşıdan bakılmış gibi düz bir dikdörtgene dönüşür ve arka plan kırpılır." },
+        { q: "Belgedeki gölgeleri nasıl temizlerim?", a: "«Otomatik» filtre, arka plan aydınlatmasını dengeleyerek gölgeleri temizler ve zemini beyaza yaklaştırır. Bu filtre bir Pro özelliğidir; Renkli/Gri/Siyah-Beyaz filtreler ücretsizdir." },
+        { q: "Hangi filtre en küçük dosyayı verir?", a: "Siyah-Beyaz filtre en keskin metni ve en küçük dosyayı üretir; düz metin belgeler için idealdir. Renkli belgeler için Renkli veya Otomatik'i tercih edin." },
+      ],
+    },
+    {
+      title: "Turn a Document Photo into a Clean PDF: Skew, Shadows and Edges",
+      description:
+        "Phone photos of documents are usually skewed and shadowed. With automatic perspective correction and shadow removal, turn the photo into a clean, scanner-like PDF.",
+      excerpt:
+        "When you photograph a document, the result is usually skewed, with clipped corners and a shadow on one side. A good document scanner fixes these automatically. Here's how perspective correction and shadow removal work.",
+      blocks: [
+        { t: "lead", x: "Photographing a paper document is easy; but the result rarely looks like a «scan»: the document is skewed, the desk is in frame, one corner is in shadow. A good scanner steps in exactly here — turning the photo into a flat, clean document." },
+        { t: "h2", x: "Perspective correction: making a skewed document flat" },
+        { t: "p", x: "Because you don't shoot perfectly top-down, the edges aren't parallel and the document looks slanted. The scanner finds the four corners automatically and recomputes the image, turning the document into a flat rectangle as if viewed head-on. The desk behind it is cropped away, leaving only the document." },
+        { t: "h2", x: "Shadow removal and contrast (Auto filter)" },
+        { t: "p", x: "Handheld shots rarely have even light; one edge is dark, another bright. The «Auto» filter estimates and balances background lighting on each color channel to remove shadows and flatten the background toward white — text sharpens, colors stay. It's similar to the «magic color» effect in scanner apps." },
+        { t: "h2", x: "Which filter, when?" },
+        { t: "ul", items: ["Color: for invoices with logos and documents with photos.", "Gray: text-heavy documents; smaller file.", "Black & White: sharpest text, smallest file — ideal for plain text.", "Auto (Pro): shadow removal + contrast; the most professional, scanner-like output."] },
+        { t: "h2", x: "Step by step: a quality scan" },
+        { t: "steps", items: [
+          { title: "Good light and a flat surface", x: "Place the document on a flat surface and shoot from above without casting a shadow. Keep contrast between the surface and the document so edges are easy to find." },
+          { title: "Wait for auto-capture", x: "Hold the camera steady; edges are marked with a green outline and the document is captured by itself." },
+          { title: "Pick a filter and create", x: "Choose the right filter for the document and create the PDF; adjust corners if needed." },
+        ] },
+        { t: "cta", title: "Image → PDF", x: "Turn your document photos into a single PDF — on your device, no sign-up.", btn: "Open the tool", tool: "/tools/image-to-pdf" },
+        { t: "p", x: "If the file is large after scanning, use Compress to reduce its size; to reorder, rotate or delete pages, open your scanned PDF directly in the matching tool." },
+      ],
+      faq: [
+        { q: "Can I straighten a document I shot at an angle?", a: "Yes. The scanner finds the four corners automatically and corrects perspective; the document becomes a flat rectangle as if viewed head-on, with the background cropped." },
+        { q: "How do I remove shadows from a document?", a: "The «Auto» filter balances background lighting to remove shadows and flatten the background toward white. This filter is a Pro feature; Color/Gray/Black & White filters are free." },
+        { q: "Which filter gives the smallest file?", a: "Black & White gives the sharpest text and smallest file; it's ideal for plain text documents. For color documents, prefer Color or Auto." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "camscanner-ucretsiz-gizli-alternatif",
+      date: "2026-07-13",
+      updated: "2026-07-13",
+      readMinutes: 5,
+      tags: { tr: ["Belge Tarama", "Alternatif", "Gizlilik"], en: ["Scanning", "Alternative", "Privacy"] },
+      accent: "blue",
+      tool: "/tools/image-to-pdf",
+    },
+    {
+      title: "CamScanner'a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama",
+      description:
+        "Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi.",
+      excerpt:
+        "Belge tarama uygulamaları pratik ama çoğu reklam gösterir, çıktıya filigran koyar ya da dosyanızı buluta yükler. Tarayıcıda çalışan, cihazınızda işleyen ve temel özellikleri ücretsiz olan bir alternatifi tanıtıyoruz.",
+      blocks: [
+        { t: "lead", x: "CamScanner gibi tarama uygulamaları işi görür; ama birçoğu üyelik ister, ücretsiz sürümde çıktıya filigran koyar, reklam gösterir ve belgelerinizi işlemek için kendi bulutlarına yükler. Hassas belgeler söz konusuysa bu son madde tek başına yeterince rahatsız edici." },
+
+        { t: "h2", x: "Tarayıcıda + cihazda ne değişiyor?" },
+        { t: "p", x: "PDF Platform'un belge tarayıcısı telefon tarayıcınızda açılır — kurulum yok. Daha önemlisi, tüm işlem cihazınızda çalışır: kamera görüntüsü, otomatik kenar bulma, perspektif düzeltme ve PDF oluşturma. Belgeniz herhangi bir sunucuya yüklenmez, çıktıya zorunlu filigran konmaz." },
+
+        { t: "h2", x: "Dürüst karşılaştırma" },
+        { t: "ul", items: ["Kurulum: Uygulama yok — telefon tarayıcısında açılır.", "Gizlilik: Tarama cihazınızda; belge buluta yüklenmez.", "Filigran: Çıktıya zorunlu filigran yok.", "Ücretsiz: Tarama, PDF, kaydetme ve paylaşma ücretsiz; tek taramada 3 sayfa.", "Pro: Otomatik gölge temizleme, sınırsız sayfa ve aranabilir PDF (OCR)."] },
+
+        { t: "h2", x: "Temelde ücretsiz olan ne?" },
+        { t: "p", x: "Belgeyi tarama, otomatik kenar bulma, perspektif düzeltme, Renkli/Gri/Siyah-Beyaz filtreler, PDF oluşturma, kaydetme ve paylaşma — tümü ücretsizdir ve üyelik istemez. Tek taramada 3 sayfaya kadar tarayabilirsiniz." },
+
+        { t: "h2", x: "Pro neyi ekler?" },
+        { t: "p", x: "Daha profesyonel taramalar için Pro üç şey ekler: gölgeleri temizleyip zemini beyazlatan «Otomatik» filtre, tek taramada sınırsız sayfa ve metni Ctrl+F ile aranabilir/kopyalanabilir yapan aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır." },
+
+        { t: "cta", title: "Görsel → PDF", x: "Belgelerinizi ya da fotoğraflarınızı tek PDF'e çevirin — cihazınızda, üyeliksiz.", btn: "Hemen deneyin", tool: "/tools/image-to-pdf" },
+
+        { t: "h2", x: "Kimler için ideal?" },
+        { t: "p", x: "Ara sıra bir belge tarayan ama telefonuna bir uygulama daha kurmak istemeyen; kimlik, sözleşme, fatura gibi belgeleri buluta yüklemeden dijitalleştirmek isteyen herkes için. Bir bağlantıdan açılır, işini görür ve belgeniz sizde kalır." },
+      ],
+      faq: [
+        { q: "Ücretsiz bir CamScanner alternatifi var mı?", a: "Evet. PDF Platform'un belge tarayıcısı tarayıcıda çalışır; tarama, perspektif düzeltme, filtreler, PDF oluşturma ve paylaşma ücretsizdir ve çıktıya zorunlu filigran koymaz." },
+        { q: "Belgelerim buluta yüklenir mi?", a: "Hayır. Tüm tarama ve PDF oluşturma işlemi cihazınızda çalışır; belgeniz sunucuya gönderilmez." },
+        { q: "Çıktıda filigran olur mu?", a: "Hayır. Oluşturduğunuz PDF'e zorunlu filigran eklenmez." },
+        { q: "Hangi özellikler Pro?", a: "Otomatik gölge temizleme filtresi, tek taramada sınırsız sayfa ve aranabilir PDF (OCR) Pro özellikleridir. Temel tarama ve PDF oluşturma ücretsizdir." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */

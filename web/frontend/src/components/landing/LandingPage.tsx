@@ -21,6 +21,8 @@ import { AiBatchTool } from "../tools/AiBatchTool";
 import { AiCompareTool } from "../tools/AiCompareTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
+import { DocumentScanner } from "../tools/DocumentScanner";
+import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
@@ -449,6 +451,18 @@ function Hero({
   // geçip geri dönünce dosyaları yerinde kalır (remount'ta kaybolmaz).
   const [toolFiles, setToolFiles] = useState<Record<string, GuestPickedFile[]>>({});
 
+  // Belge Tarayıcı (mobil): kamerayla belge → cihazda PDF. "PDF Araçlarında aç"
+  // seçilirse taranan PDF'i sayfa aracına (Düzenle) aktarırız.
+  const { isMobileOrTablet } = useResponsive();
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannedFile, setScannedFile] = useState<File | null>(null);
+  const handleScannedToTools = useCallback((file: File) => {
+    setScannedFile(file);
+    setAiTool(null);
+    setEditorOn(false);
+    setFreeTool("organize-pdf");
+  }, []);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
       <div className="relative z-10 max-w-5xl mx-auto">
@@ -515,6 +529,16 @@ function Hero({
           {...stagger(3)}
           className="mt-10 mx-auto w-full max-w-4xl"
         >
+          {/* Mobil: kamerayla belge tara (cihazda PDF) */}
+          {isMobileOrTablet && (
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/[0.14] to-blue-500/[0.14] px-5 py-3.5 text-sm font-bold text-cyan-100 shadow-[0_10px_30px_-14px_rgba(6,182,212,0.7)] transition hover:from-cyan-500/25 hover:to-blue-500/25"
+            >
+              {tr ? "📸 Kamerayla Belge Tara" : "📸 Scan a document with camera"}
+            </button>
+          )}
           <div className="mb-4 flex flex-wrap justify-center gap-2">
             {FREE_TOOLS.map((t) => {
               const A = toolAccent(t.id);
@@ -624,7 +648,7 @@ function Hero({
                 comingSoon={aiComingSoon}
               />
             ) : isPageToolId(freeTool) ? (
-              <GuestPageToolCore key={freeTool} tool={freeTool} language={language} />
+              <GuestPageToolCore key={freeTool} tool={freeTool} language={language} initialFile={scannedFile} />
             ) : (
               <GuestToolCore
                 key={freeTool}
@@ -646,6 +670,20 @@ function Hero({
             {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>
+
+        {/* Belge Tarayıcı (mobil) — tam ekran, cihazda işlenir */}
+        <AnimatePresence>
+          {scannerOpen && (
+            <DocumentScanner
+              open={scannerOpen}
+              language={language}
+              onClose={() => setScannerOpen(false)}
+              onUseInTools={handleScannedToTools}
+              isPro={aiAllowed}
+              onUpgrade={onUpgrade}
+            />
+          )}
+        </AnimatePresence>
 
         {/* Trust bar */}
         <motion.div
@@ -1812,86 +1850,92 @@ function Footer({
 
   return (
     <footer className="border-t border-white/[0.06] bg-black/30 backdrop-blur-sm">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-10">
-        {/* Brand */}
-        <div className="col-span-2 md:col-span-1">
-          <button
-            onClick={onUseWebApp}
-            aria-label={copy.navbar.productLabel}
-            className="flex items-center mb-4 group"
-          >
-            <img
-              src="/navbar-logo.png"
-              alt="PDF Platform"
-              className="h-14 w-auto object-contain transition-opacity group-hover:opacity-90"
-            />
-          </button>
-          <p className="text-xs text-gray-600 leading-relaxed max-w-[200px]">
-            {copy.footer.description}
-          </p>
-          {socialLinks.length > 0 ? (
-            <nav
-              aria-label={tr ? "Sosyal medya" : "Social media"}
-              className="mt-5 flex flex-wrap gap-2"
+      <div className="mx-auto max-w-6xl px-6 py-12 sm:px-8 sm:py-14">
+        <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-12">
+          {/* Brand */}
+          <div className="max-w-sm">
+            <button
+              onClick={onUseWebApp}
+              aria-label={copy.navbar.productLabel}
+              className="group flex items-center"
             >
-              {socialLinks.map((url) => {
-                const label = socialLabelFromUrl(url);
-                return (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="me noopener noreferrer"
-                    aria-label={label}
-                    title={label}
-                    className="rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:border-white/25 hover:text-gray-200"
-                  >
-                    {label}
-                  </a>
-                );
-              })}
-            </nav>
-          ) : null}
-        </div>
-
-        {/* Link columns */}
-        {cols.map((col) => (
-          <div key={col.heading}>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-4">
-              {col.heading}
+              <img
+                src="/navbar-logo.png"
+                alt="PDF Platform"
+                className="h-11 w-auto object-contain transition-opacity group-hover:opacity-90 sm:h-12"
+              />
+            </button>
+            <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-gray-500">
+              {copy.footer.description}
             </p>
-            <ul className="space-y-3">
-              {col.links.map((link) => (
-                <li key={link.label}>
-                  {"action" in link ? (
-                    <button
-                      onClick={link.action}
-                      className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+            {socialLinks.length > 0 ? (
+              <nav
+                aria-label={tr ? "Sosyal medya" : "Social media"}
+                className="mt-5 flex flex-wrap gap-2"
+              >
+                {socialLinks.map((url) => {
+                  const label = socialLabelFromUrl(url);
+                  return (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="me noopener noreferrer"
+                      aria-label={label}
+                      title={label}
+                      className="rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1 text-xs font-medium text-gray-400 transition-colors hover:border-white/25 hover:text-gray-200"
                     >
-                      {link.label}
-                    </button>
-                  ) : (
-                    <CrawlableLink
-                      href={link.href ?? "#"}
-                      className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
-                    >
-                      {link.label}
-                    </CrawlableLink>
-                  )}
-                </li>
-              ))}
-            </ul>
+                      {label}
+                    </a>
+                  );
+                })}
+              </nav>
+            ) : null}
           </div>
-        ))}
+
+          {/* Link columns */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-9 sm:grid-cols-3 md:flex md:gap-x-16">
+            {cols.map((col) => (
+              <div key={col.heading} className="min-w-[7rem]">
+                <p className="mb-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">
+                  {col.heading}
+                </p>
+                <ul className="space-y-2.5">
+                  {col.links.map((link) => (
+                    <li key={link.label}>
+                      {"action" in link ? (
+                        <button
+                          onClick={link.action}
+                          className="text-left text-[13.5px] text-gray-400 transition-colors hover:text-white"
+                        >
+                          {link.label}
+                        </button>
+                      ) : (
+                        <CrawlableLink
+                          href={link.href ?? "#"}
+                          className="text-[13.5px] text-gray-400 transition-colors hover:text-white"
+                        >
+                          {link.label}
+                        </CrawlableLink>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/[0.04] px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <p className="text-xs text-gray-600">
-          © {new Date().getFullYear()} NB Global Studio.{" "}
-          {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
-        </p>
-        <p className="text-xs text-gray-700">Made with ❤️ for productivity</p>
+      <div className="border-t border-white/[0.06]">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-2 px-6 py-6 text-center sm:flex-row sm:justify-between sm:gap-3 sm:px-8 sm:text-left">
+          <p className="text-xs text-gray-500">
+            © {new Date().getFullYear()} NB Global Studio.{" "}
+            {tr ? "Tüm hakları saklıdır." : "All rights reserved."}
+          </p>
+          <p className="text-xs text-gray-600">Made with ❤️ for productivity</p>
+        </div>
       </div>
     </footer>
   );
