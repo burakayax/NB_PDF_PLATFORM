@@ -107,6 +107,7 @@ import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { SearchablePdfTool } from "./components/tools/SearchablePdfTool";
+import { DocumentScanner } from "./components/tools/DocumentScanner";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   mergePdfs,
@@ -1153,6 +1154,8 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  // Belge Tarayıcı (giriş yapmış kullanıcı — workspace'te de erişilebilir).
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -6470,6 +6473,20 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
+                {/* Mobil: kamerayla belge tara — giriş yapmış kullanıcı da erişsin */}
+                <button
+                  type="button"
+                  onClick={() => setScannerOpen(true)}
+                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/[0.14] to-blue-500/[0.14] px-5 py-3 text-sm font-bold text-cyan-100 transition hover:from-cyan-500/25 hover:to-blue-500/25 lg:hidden"
+                >
+                  {language === "tr" ? "📸 Kamerayla Belge Tara" : "📸 Scan a document with camera"}
+                </button>
+                <DocumentScanner
+                  open={scannerOpen}
+                  language={language}
+                  onClose={() => setScannerOpen(false)}
+                  isPro={aiAllowed}
+                />
                 <section className="workspace-card relative overflow-x-hidden">
                   <div className="workspace-card__header">
                     <div>

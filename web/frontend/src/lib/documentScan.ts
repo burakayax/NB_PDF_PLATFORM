@@ -295,6 +295,37 @@ export async function warpDocument(
   }
 }
 
+/**
+ * OpenCV yoksa YEDEK kırpma: dörtgenin sınırlayıcı kutusunu 2D canvas ile kırpar.
+ * Perspektif düzeltme YOK, ama en azından belge kırpılır (arka plan atılır) →
+ * kullanıcı "orijinal işlendi" sorunu yaşamaz. `enhance` gri/s-b için basit uygulanır.
+ */
+export function cropQuadFallback(
+  canvas: HTMLCanvasElement,
+  quad: Quad,
+  enhance: EnhanceMode = "color",
+): HTMLCanvasElement {
+  const xs = quad.map((p) => p.x);
+  const ys = quad.map((p) => p.y);
+  const minX = Math.max(0, Math.floor(Math.min(...xs)));
+  const minY = Math.max(0, Math.floor(Math.min(...ys)));
+  const maxX = Math.min(canvas.width, Math.ceil(Math.max(...xs)));
+  const maxY = Math.min(canvas.height, Math.ceil(Math.max(...ys)));
+  const w = Math.max(1, maxX - minX);
+  const h = Math.max(1, maxY - minY);
+  const out = document.createElement("canvas");
+  out.width = w;
+  out.height = h;
+  const ctx = out.getContext("2d");
+  if (ctx) {
+    if (enhance === "gray") ctx.filter = "grayscale(1)";
+    else if (enhance === "bw") ctx.filter = "grayscale(1) contrast(1.7) brightness(1.05)";
+    else if (enhance === "auto") ctx.filter = "grayscale(0.15) contrast(1.25) brightness(1.12)";
+    ctx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+  }
+  return out;
+}
+
 /** Canvas'ı JPEG Blob'a çevirir (imagesToPdf için). */
 export function canvasToJpegBlob(
   canvas: HTMLCanvasElement,

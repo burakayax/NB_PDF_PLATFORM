@@ -456,11 +456,12 @@ function Hero({
   const { isMobileOrTablet } = useResponsive();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannedFile, setScannedFile] = useState<File | null>(null);
-  const handleScannedToTools = useCallback((file: File) => {
+  const handleScannedToTools = useCallback((file: File, toolId: string) => {
     setScannedFile(file);
     setAiTool(null);
     setEditorOn(false);
-    setFreeTool("organize-pdf");
+    // Seçilen araç sayfa aracıysa (böl/döndür/sil/düzenle) taranan PDF oraya aktarılır.
+    setFreeTool((isFreeToolId(toolId) ? toolId : "organize-pdf") as FreeToolId);
   }, []);
 
   return (

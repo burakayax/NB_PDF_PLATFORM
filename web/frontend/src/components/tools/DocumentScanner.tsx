@@ -27,6 +27,7 @@ import { imagesToPdf, imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/cl
 import { ocrImagesToWords } from "../../lib/ocr";
 import {
   canvasToJpegBlob,
+  cropQuadFallback,
   detectDocumentQuad,
   fullFrameQuad,
   warpDocument,
@@ -42,8 +43,8 @@ type Props = {
   open: boolean;
   language: Language;
   onClose: () => void;
-  /** "PDF Araçları" seçilince taranan PDF File'ı üst bileşene verir (araçlara aktarım). */
-  onUseInTools?: (file: File) => void;
+  /** "PDF Araçları" seçilince taranan PDF File'ı + seçilen araç id'sini üst bileşene verir. */
+  onUseInTools?: (file: File, toolId: string) => void;
   /** Ücretli plan (STARTER/PLUS/PRO/BUSINESS veya admin) → Pro tarama özellikleri açık. */
   isPro?: boolean;
   /** Pro'ya yükseltme akışını başlatır (upsell butonu). */
@@ -80,6 +81,10 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
   const [quad, setQuad] = useState<Quad | null>(null);
   const [enhance, setEnhance] = useState<EnhanceMode>("color");
+  // Manuel köşe ayarında sürüklenen köşe indeksi → büyüteç (loupe) önizlemesi.
+  const [activeCorner, setActiveCorner] = useState<number | null>(null);
+  // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
+  const [toolPicker, setToolPicker] = useState(false);
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -177,6 +182,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setUpsell(null);
     setOcrPct(null);
     setSearchable(false);
+    setToolPicker(false);
+    setActiveCorner(null);
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -359,6 +366,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const startDrag = (e: React.PointerEvent, i: number) => {
     e.preventDefault();
     dragIdx.current = i;
+    setActiveCorner(i);
     (e.target as Element).setPointerCapture?.(e.pointerId);
   };
   const onMove = (e: React.PointerEvent) => {
@@ -373,6 +381,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   };
   const endDrag = () => {
     dragIdx.current = null;
+    setActiveCorner(null);
   };
 
   // Bu sayfayı işle (perspektif + iyileştirme) → sayfa listesine ekle.
@@ -391,7 +400,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       try {
         out = await warpDocument(c, quad, enhance);
       } catch {
-        out = c; // OpenCV yüklenemediyse ham kareyi kullan (düzeltmesiz)
+        // OpenCV yüklenemediyse en azından dörtgeni KIRP (perspektifsiz) —
+        // orijinali işlemektense kırpılmış belge işlensin.
+        out = cropQuadFallback(c, quad, enhance);
       }
       const blob = await canvasToJpegBlob(out);
       const url = URL.createObjectURL(blob);
@@ -527,9 +538,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     }
   }
 
-  function useInTools() {
+  function pickToolAndUse(toolId: string) {
     if (!result || !onUseInTools) return;
-    onUseInTools(new File([result.blob], result.filename, { type: "application/pdf" }));
+    onUseInTools(new File([result.blob], result.filename, { type: "application/pdf" }), toolId);
     onClose();
   }
 
@@ -541,6 +552,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   const strokeW = captured ? Math.max(2, captured.width / 320) : 3;
   const cornerR = captured ? Math.max(10, captured.width / 42) : 14;
+  // Canlı filtre önizlemesi (Renkli/Gri/S-B/Oto) — CSS ile yaklaşık; gerçek çıktı
+  // işlemede OpenCV ile üretilir. Kullanıcı butona basınca görüntü anında değişir.
+  const previewFilter =
+    enhance === "gray"
+      ? "grayscale(1)"
+      : enhance === "bw"
+        ? "grayscale(1) contrast(1.7) brightness(1.05)"
+        : enhance === "auto"
+          ? "grayscale(0.15) contrast(1.25) brightness(1.12)"
+          : "none";
 
   return createPortal(
     <motion.div
@@ -711,7 +732,46 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {phase === "review" && capturedUrl && (
             <motion.div key="review" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col p-4">
               <div className="relative mx-auto w-full max-w-md select-none">
-                <img src={capturedUrl} alt="" className="block w-full rounded-xl" draggable={false} />
+                <img
+                  src={capturedUrl}
+                  alt=""
+                  className="block w-full rounded-xl"
+                  style={{ filter: previewFilter === "none" ? undefined : previewFilter }}
+                  draggable={false}
+                />
+                {/* Büyüteç (loupe) — sürüklenen köşenin altını kalmadan tam konumu göster */}
+                {activeCorner != null && captured && quad && capturedUrl && (() => {
+                  const ap = quad[activeCorner]!;
+                  const ZOOM = 2.75;
+                  const SZ = 132;
+                  const onLeft = ap.x < captured.width / 2;
+                  return (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        [onLeft ? "right" : "left"]: 10,
+                        width: SZ,
+                        height: SZ,
+                        borderRadius: 9999,
+                        overflow: "hidden",
+                        border: "3px solid #38bdf8",
+                        boxShadow: "0 12px 32px rgba(0,0,0,0.6)",
+                        backgroundColor: "#000",
+                        backgroundImage: `url(${capturedUrl})`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: `${captured.width * ZOOM}px ${captured.height * ZOOM}px`,
+                        backgroundPosition: `${SZ / 2 - ap.x * ZOOM}px ${SZ / 2 - ap.y * ZOOM}px`,
+                        filter: previewFilter === "none" ? undefined : previewFilter,
+                        pointerEvents: "none",
+                        zIndex: 20,
+                      }}
+                    >
+                      <div style={{ position: "absolute", left: "50%", top: "50%", width: 2, height: 26, transform: "translate(-50%,-50%)", background: "#38bdf8", boxShadow: "0 0 0 1px rgba(255,255,255,0.7)" }} />
+                      <div style={{ position: "absolute", left: "50%", top: "50%", width: 26, height: 2, transform: "translate(-50%,-50%)", background: "#38bdf8", boxShadow: "0 0 0 1px rgba(255,255,255,0.7)" }} />
+                    </div>
+                  );
+                })()}
                 {captured && quad && (
                   <svg
                     ref={svgRef}
@@ -973,7 +1033,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   {onUseInTools && (
                     <button
                       type="button"
-                      onClick={useInTools}
+                      onClick={() => setToolPicker(true)}
                       className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.1]"
                     >
                       <Wrench className="h-4 w-4 text-cyan-300" />
@@ -1113,6 +1173,59 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 className="mt-2 w-full py-1 text-[13px] font-medium text-slate-400 transition hover:text-slate-200"
               >
                 {tr ? "Şimdilik ücretsiz devam et" : "Continue free for now"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── ARAÇ SEÇİCİ ── "PDF Araçlarında aç" → hangi araç? (ücretsiz sayfa araçları) */}
+      <AnimatePresence>
+        {toolPicker && result && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 flex items-end justify-center bg-black/65 p-4 sm:items-center"
+            onClick={() => setToolPicker(false)}
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-3xl border border-white/[0.1] bg-[#0f1424] p-6 shadow-2xl"
+            >
+              <p className="text-center text-lg font-bold text-white">
+                {tr ? "Hangi araçta açalım?" : "Open in which tool?"}
+              </p>
+              <p className="mt-1 text-center text-[13px] text-slate-400">
+                {tr ? "Taradığın belge seçtiğin araca aktarılır." : "Your scanned document opens in the chosen tool."}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-2.5">
+                {([
+                  { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Düzenle / Sırala", en: "Organize" },
+                  { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
+                  { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
+                  { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
+                ] as { id: string; icon: React.ReactNode; tr: string; en: string }[]).map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => pickToolAndUse(t.id)}
+                    className="flex flex-col items-center gap-2 rounded-2xl border border-white/[0.1] bg-white/[0.03] px-4 py-4 text-center transition hover:border-cyan-400/40 hover:bg-white/[0.06]"
+                  >
+                    <span className="text-cyan-300">{t.icon}</span>
+                    <span className="text-[13px] font-semibold text-slate-100">{tr ? t.tr : t.en}</span>
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setToolPicker(false)}
+                className="mt-3 w-full py-1.5 text-[13px] font-medium text-slate-400 transition hover:text-slate-200"
+              >
+                {tr ? "Vazgeç" : "Cancel"}
               </button>
             </motion.div>
           </motion.div>
