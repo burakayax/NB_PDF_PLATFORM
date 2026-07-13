@@ -294,6 +294,45 @@ Preserve the meaning, tone, structure and layout: keep headings, paragraphs, lis
   return callClaude(system, [{ role: "user", content: doc }], 8000);
 }
 
+function extractJsonArray(s: string): string {
+  const a = s.indexOf("[");
+  const b = s.lastIndexOf("]");
+  return a >= 0 && b > a ? s.slice(a, b + 1) : s;
+}
+
+/** Konum-koruyan çeviri: PDF'ten çıkarılan metin PARÇALARINI (okuma sırasında)
+ * hedef dile çevirir. Her parça ayrı çevrilir; sıra ve SAYI korunur → çağıran
+ * taraf çeviriyi orijinal PDF'in aynı konumuna yerleştirebilir. */
+export async function translateSegments(texts: string[], targetCode: string): Promise<string[]> {
+  if (texts.length === 0) return [];
+  const target = TRANSLATE_LANGS[targetCode] ?? "English";
+  const system = `You are a professional translator. You receive a JSON array of short text fragments extracted from a PDF, in reading order. Translate EACH fragment into ${target}.
+Rules:
+- Return ONLY a JSON array of strings, with the SAME length and SAME order as the input.
+- Translate each fragment as-is, even a single word or a label, and even if it contains a hyphen (e.g. "E-Dönüştür" — translate the whole thing).
+- Keep numbers, dates, codes, currency symbols and proper nouns intact.
+- If a fragment is purely a number, symbol or code with no translatable word, return it unchanged.
+- Never merge, split, reorder, add or drop fragments. No commentary. Output ONLY the JSON array.`;
+  const CHUNK = 60;
+  const out: string[] = [];
+  for (let i = 0; i < texts.length; i += CHUNK) {
+    const slice = texts.slice(i, i + CHUNK);
+    let ok = false;
+    try {
+      const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(slice) }], 4000);
+      const parsed = JSON.parse(extractJsonArray(raw));
+      if (Array.isArray(parsed) && parsed.length === slice.length) {
+        out.push(...parsed.map((v) => (typeof v === "string" ? v : String(v ?? ""))));
+        ok = true;
+      }
+    } catch {
+      /* parse/çağrı hatası → orijinali koru */
+    }
+    if (!ok) out.push(...slice);
+  }
+  return out;
+}
+
 /** Belge bağlamında kullanıcı sorusunu yanıtlar (geçmişle birlikte). */
 export async function chatWithDocument(
   text: string,

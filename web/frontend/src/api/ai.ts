@@ -133,6 +133,19 @@ export async function aiTranslate(
   return { translation: d.translation ?? "", quota: d.quota };
 }
 
+/** Konum-koruyan çeviri: PDF metin parçalarını (öğe metinleri) sırayla çevirir;
+ * dönen dizi girdiyle AYNI uzunlukta olur → çağıran taraf her çeviriyi orijinal
+ * konuma yerleştirir. */
+export async function aiTranslateSegments(
+  segments: string[],
+  target: string,
+  token: string | null,
+): Promise<{ translations: string[]; quota?: AiQuota }> {
+  const d = await postAi<{ translations?: string[]; quota?: AiQuota }>("translate-segments", { segments, target }, token);
+  const translations = Array.isArray(d.translations) ? d.translations.map((s) => String(s ?? "")) : segments;
+  return { translations, quota: d.quota };
+}
+
 /** Hassas veri tespiti öğesi. */
 export type SensitiveItem = { type: string; value: string };
 
