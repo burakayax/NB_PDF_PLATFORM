@@ -4,6 +4,10 @@
 type UpdateCallback = (apply: () => void) => void;
 
 let refreshing = false;
+// Sayfayı yalnızca kullanıcı güncellemeyi onayladığında yeniliyoruz. İlk kuruluşta
+// activate→clients.claim de controllerchange tetikler; o durumda reload İSTEMİYORUZ
+// (aksi halde uygulama ilk açılışta ve arka plandan her dönüşte gereksiz sıfırlanır).
+let userApprovedUpdate = false;
 
 /**
  * @param onUpdateAvailable Yeni bir SW kuruldu ve beklemede; `apply()` çağrısı onu etkinleştirip sayfayı yeniler.
@@ -20,9 +24,10 @@ export function registerServiceWorker(onUpdateAvailable?: UpdateCallback): void 
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
-        // Yeni SW etkin olunca (skipWaiting sonrası) sayfayı bir kez yenile.
+        // Yeni SW etkin olunca (kullanıcı onayı → SKIP_WAITING sonrası) sayfayı bir kez
+        // yenile. Onay yoksa (ör. ilk kuruluş claim'i) yenileme YAPMA.
         navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (refreshing) {
+          if (!userApprovedUpdate || refreshing) {
             return;
           }
           refreshing = true;
@@ -37,6 +42,7 @@ export function registerServiceWorker(onUpdateAvailable?: UpdateCallback): void 
           // (ilk kuruluşta controller null'dur → güncelleme bildirimi gösterme).
           if (navigator.serviceWorker.controller && onUpdateAvailable) {
             onUpdateAvailable(() => {
+              userApprovedUpdate = true;
               worker.postMessage({ type: "SKIP_WAITING" });
             });
           }
