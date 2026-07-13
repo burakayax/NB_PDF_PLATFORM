@@ -24,12 +24,13 @@ import {
 import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
-import { summaryToPdf, translationToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
+import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
+import { analyzePdf, editPdfText, type PdfTextEdit } from "../../api";
 import {
   aiSummarize,
   aiChat,
   aiExtract,
-  aiTranslate,
+  aiTranslateSegments,
   fetchAiQuota,
   TRANSLATE_TARGETS,
   type AiError,
@@ -136,6 +137,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   const tr = language === "tr";
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [docText, setDocText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +152,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   // Özet
   const [summary, setSummary] = useState("");
   const [extracted, setExtracted] = useState<ExtractedData | null>(null);
-  const [translation, setTranslation] = useState("");
+  const [translatedBlob, setTranslatedBlob] = useState<Blob | null>(null);
   const [targetLang, setTargetLang] = useState(language === "tr" ? "en" : "tr");
   // Sohbet
   const [messages, setMessages] = useState<ChatTurn[]>([]);
@@ -203,13 +205,14 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     setGate(null);
     setSummary("");
     setExtracted(null);
-    setTranslation("");
+    setTranslatedBlob(null);
     setMessages([]);
     if (!f) return;
     if (f.type !== "application/pdf") {
       setError(tr ? "Lütfen bir PDF seçin." : "Please choose a PDF.");
       return;
     }
+    setPdfFile(f);
     try {
       setBusy(true);
       const { text, likelyScanned } = await extractPdfText(f);
@@ -282,14 +285,44 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     }
   }
 
+  // Konum-koruyan çeviri: PDF'i analiz et → her metin öğesini yerinde çevir →
+  // orijinal düzeni bozmadan (aynı bbox) yeni metni yaz. Sonuç = birebir PDF,
+  // yalnız yazılar hedef dilde. Düz-metin döküm yerine gerçek çeviri.
   async function runTranslate() {
     setError(null);
     setGate(null);
+    if (!pdfFile) return;
     try {
       setBusy(true);
-      const { translation: t, quota: q } = await aiTranslate(docText, targetLang, accessToken);
-      setTranslation(t);
+      setTranslatedBlob(null);
+      const analysis = await analyzePdf(pdfFile, accessToken ?? null);
+      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string }[] = [];
+      analysis.pages.forEach((pg, pi) => {
+        pg.elements.forEach((el) => {
+          const t = (el.text ?? "").trim();
+          if (el.type === "text" && t) {
+            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color });
+          }
+        });
+      });
+      if (items.length === 0) {
+        setError(tr ? "Bu PDF'te çevrilecek metin katmanı yok (taranmış olabilir)." : "No translatable text layer in this PDF (it may be scanned).");
+        return;
+      }
+      const { translations, quota: q } = await aiTranslateSegments(items.map((i) => i.text), targetLang, accessToken ?? null);
       if (q) setQuota(q);
+      const ops: PdfTextEdit[] = items.map((it, i) => ({
+        page: it.page,
+        bbox: it.bbox,
+        text: translations[i] ?? it.text,
+        size: it.size,
+        color: it.color,
+        font: "sans",
+        by: it.by,
+        bg: "#ffffff",
+      }));
+      const blob = await editPdfText(pdfFile, ops, accessToken ?? null);
+      setTranslatedBlob(blob);
     } catch (e) {
       handleAiError(e);
     } finally {
@@ -297,38 +330,33 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     }
   }
 
-  function copyTranslation() {
-    void navigator.clipboard?.writeText(translation).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    });
-  }
-
   async function downloadTranslation() {
-    if (exporting) return;
+    if (!translatedBlob || exporting) return;
     try {
       setExporting(true);
       const langName = TRANSLATE_TARGETS.find((l) => l.code === targetLang);
-      const ttl = fileName
-        ? `${fileName.replace(/\.pdf$/i, "")} — ${tr ? "Çeviri" : "Translation"}`
-        : tr ? "PDF Çeviri" : "PDF Translation";
-      const langLabel = langName ? (tr ? langName.tr : langName.en) : targetLang;
-      const blob = pdfBytesToBlob(
-        await translationToPdf(translation, {
-          title: ttl,
-          languageLabel: `${tr ? "Çeviri" : "Translation"} • ${langLabel}`,
-        }),
-      );
       await saveBlobWithPicker(
-        blob,
+        translatedBlob,
         `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`,
         { description: "PDF", accept: { "application/pdf": [".pdf"] } },
       );
     } catch {
-      setError(tr ? "PDF oluşturulamadı." : "Couldn't create the PDF.");
+      /* kullanıcı iptal etti */
     } finally {
       setExporting(false);
     }
+  }
+
+  async function shareTranslation() {
+    if (!translatedBlob) return;
+    const langName = TRANSLATE_TARGETS.find((l) => l.code === targetLang);
+    const name = `${(fileName || "ceviri").replace(/\.pdf$/i, "")}-${langName?.en?.toLowerCase() ?? targetLang}.pdf`;
+    const f = new File([translatedBlob], name, { type: "application/pdf" });
+    const nav = navigator as Navigator & { canShare?: (d?: unknown) => boolean };
+    if (typeof nav.share === "function" && nav.canShare?.({ files: [f] })) {
+      try { await nav.share({ files: [f], title: name }); return; } catch { /* iptal */ }
+    }
+    void downloadTranslation();
   }
 
   function copyExtracted() {
@@ -451,10 +479,11 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
 
   function reset() {
     setFileName(null);
+    setPdfFile(null);
     setDocText("");
     setSummary("");
     setExtracted(null);
-    setTranslation("");
+    setTranslatedBlob(null);
     setMessages([]);
     setError(null);
     setGate(null);
@@ -781,40 +810,15 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </button>
             )
           ) : mode === "translate" ? (
-            translation ? (
-              <div className="overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
-                  <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300">
-                    <Languages className="h-4 w-4" />
-                    {tr ? "Çeviri" : "Translation"}
-                    <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2 py-0.5 text-[11px] font-bold text-fuchsia-200">
-                      {(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {})[tr ? "tr" : "en"]}
-                    </span>
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <select value={targetLang} onChange={(e) => setTargetLang(e.target.value)}
-                      className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-[12px] text-white">
-                      {TRANSLATE_TARGETS.map((l) => <option key={l.code} value={l.code} className="text-black">{tr ? l.tr : l.en}</option>)}
-                    </select>
-                    <button type="button" onClick={copyTranslation} title={tr ? "Kopyala" : "Copy"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
-                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
-                      <span className="hidden sm:inline">{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}</span>
-                    </button>
-                    <button type="button" onClick={() => void downloadTranslation()} disabled={exporting} title={tr ? "PDF indir" : "Download PDF"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">
-                      {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                      <span className="hidden sm:inline">PDF</span>
-                    </button>
-                    <button type="button" onClick={() => void runTranslate()} disabled={busy} title={tr ? "Yeniden çevir" : "Retranslate"}
-                      className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-40">
-                      <RefreshCw className={`h-3.5 w-3.5 ${busy ? "animate-spin" : ""}`} />
-                      <span className="hidden sm:inline">{tr ? "Yeniden" : "Redo"}</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="max-h-[62vh] overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
-                  <SimpleMarkdown text={translation} />
+            translatedBlob ? (
+              <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"><Check className="h-8 w-8" /></div>
+                <p className="mt-4 text-xl font-bold text-white">{tr ? "Çeviri hazır 🎉" : "Translation ready 🎉"}</p>
+                <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">{tr ? "Orijinal düzen birebir korundu — yalnızca yazılar çevrildi." : "The original layout is preserved exactly — only the text was translated."}</p>
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <button type="button" onClick={() => void downloadTranslation()} disabled={exporting} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50">{exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "İndir" : "Download"}</button>
+                  <button type="button" onClick={() => void shareTranslation()} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"><Share2 className="h-4 w-4" />{tr ? "Paylaş" : "Share"}</button>
+                  <button type="button" onClick={() => setTranslatedBlob(null)} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]">{tr ? "Farklı dile çevir" : "Different language"}</button>
                 </div>
               </div>
             ) : busy ? (

@@ -5,6 +5,7 @@ import {
   chatWithDocument,
   extractData,
   translateDocument,
+  translateSegments,
   compareDocuments,
   detectSensitive,
   type ChatTurn,
@@ -119,6 +120,24 @@ export async function translateController(req: Request, res: Response): Promise<
   await consumeAiQuota(u.id, u.plan, u.role, "translate");
   const quota = await getAiQuota(u.id, u.plan, u.role);
   res.json({ translation, quota });
+}
+
+/** POST /api/ai/translate-segments — { segments: string[], target } → { translations, quota }.
+ * Konum-koruyan çeviri: her PDF metin parçası ayrı çevrilir; sıra/sayı korunur. */
+export async function translateSegmentsController(req: Request, res: Response): Promise<void> {
+  const segments = Array.isArray(req.body?.segments)
+    ? (req.body.segments as unknown[]).map((s) => (typeof s === "string" ? s : String(s ?? "")))
+    : [];
+  const target = typeof req.body?.target === "string" ? req.body.target : "en";
+  if (segments.length === 0) {
+    throw new HttpError(400, "Çevrilecek metin bulunamadı. PDF'te metin katmanı olmayabilir.");
+  }
+  if (await blockedByQuota(req, res)) return;
+  const translations = await translateSegments(segments, target);
+  const u = req.authUser!;
+  await consumeAiQuota(u.id, u.plan, u.role, "translate");
+  const quota = await getAiQuota(u.id, u.plan, u.role);
+  res.json({ translations, quota });
 }
 
 /** POST /api/ai/compare — { textA, textB, lang? } → { result, quota } */
