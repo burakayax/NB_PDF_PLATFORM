@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler — PDF Platform</title>
+    <meta name="description" content="Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF&#39;i aranabilir yapın — Türkçe destekli, tamamen cihazınızda." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr" />
+    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
+         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler — PDF Platform" />
+    <meta property="og:description" content="Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF&#39;i aranabilir yapın — Türkçe destekli, tamamen cihazınızda." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler — PDF Platform" />
+    <meta name="twitter:description" content="Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF&#39;i aranabilir yapın — Türkçe destekli, tamamen cihazınızda." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F'te Bulunan Belgeler","description":"Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF'i aranabilir yapın — Türkçe destekli, tamamen cihazınızda.","datePublished":"2026-07-13","dateModified":"2026-07-13","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F'te Bulunan Belgeler","description":"Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF'i aranabilir yapın — Türkçe destekli, tamamen cihazınızda.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"Belgeyi tarayın veya yükleyin","text":"Telefonla belge tarayıcısını kullanın ya da elinizdeki taranmış PDF'i açın."},{"@type":"HowToStep","position":2,"name":"«Aranabilir PDF yap» deyin","text":"Belge tarayıcıda PDF'i oluşturduktan sonra «🔍 Aranabilir PDF yap» seçeneğini kullanın; metin cihazınızda tanınır (Türkçe + İngilizce)."},{"@type":"HowToStep","position":3,"name":"Kaydedin ve arayın","text":"Oluşan PDF'i kaydedin. Artık herhangi bir PDF görüntüleyicide Ctrl+F ile kelime arayabilir, metni kopyalayabilirsiniz."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Aranabilir PDF ile normal taranmış PDF farkı nedir?","acceptedAnswer":{"@type":"Answer","text":"Normal taranmış PDF bir resimdir; içinde arama yapılamaz. Aranabilir PDF'te görüntünün üzerine görünmez bir metin katmanı gömülüdür, böylece Ctrl+F ile arama ve kopyalama çalışır."}},{"@type":"Question","name":"Türkçe karakterlerde çalışır mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. OCR Türkçe + İngilizce destekler ve ş, ğ, ı, İ gibi karakterler doğru şekilde aranabilir metne dönüştürülür."}},{"@type":"Question","name":"Belgem sunucuya gönderilir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. OCR ve metin katmanı gömme işlemi tamamen cihazınızda yapılır; belgeniz internete yüklenmez."}},{"@type":"Question","name":"Belgenin görünüşü değişir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Metin katmanı görünmezdir; belge göze tıpatıp aynı görünür, sadece artık aranabilir ve kopyalanabilir olur."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&#39;te Bulunan Belgeler</h1><p class="seo-intro">Telefonla taradığınız belge göze yazı gibi görünse de aslında bir fotoğraftır; Ctrl+F ile arayamaz, metni kopyalayamazsınız. Aranabilir PDF, görüntünün üzerine görünmez bir metin katmanı ekleyerek bunu çözer. Nasıl yapıldığını anlatıyoruz.</p><article class="seo-article"><p class="seo-lead">Bir belgeyi tarayıp PDF yaptığınızda, o PDF içindeki yazı bilgisayar için metin değil, sadece piksellerden oluşan bir resimdir. Bu yüzden belgede kelime aratamaz, bir cümleyi seçip kopyalayamazsınız. «Aranabilir PDF» tam olarak bu sorunu çözer.</p><h2>Aranabilir PDF nedir?</h2><p>Aranabilir PDF, taranan görüntünün tam üzerine hizalanmış, gözle görünmeyen bir metin katmanı gömülmüş PDF&#39;tir. Belge göze aynı görünür — fotoğrafı görürsünüz — ama arkada gerçek, seçilebilir metin durur. Böylece Ctrl+F ile kelime arayabilir, metni seçip kopyalayabilir; arşiv ve doküman sistemleri de belgenin içeriğine göre arama yapabilir.</p><h2>OCR bu işi nasıl yapar?</h2><p>OCR (Optik Karakter Tanıma), görüntüdeki yazıyı «okur» ve her kelimenin metnini ve konumunu çıkarır. Ardından bu kelimeler, görüntünün üzerine tam kendi konumlarına, görünmez biçimde yerleştirilir. Sonuç: görünüşü bozulmamış ama içi aranabilir bir belge.</p><h2>PDF Platform&#39;da aranabilir PDF yapmak</h2><ol><li><strong>Belgeyi tarayın veya yükleyin:</strong> Telefonla belge tarayıcısını kullanın ya da elinizdeki taranmış PDF&#39;i açın.</li><li><strong>«Aranabilir PDF yap» deyin:</strong> Belge tarayıcıda PDF&#39;i oluşturduktan sonra «🔍 Aranabilir PDF yap» seçeneğini kullanın; metin cihazınızda tanınır (Türkçe + İngilizce).</li><li><strong>Kaydedin ve arayın:</strong> Oluşan PDF&#39;i kaydedin. Artık herhangi bir PDF görüntüleyicide Ctrl+F ile kelime arayabilir, metni kopyalayabilirsiniz.</li></ol><p>OCR tamamen cihazınızda çalışır — Türkçe karakterler dahil (ş, ğ, ı, İ). Belgeniz metne çevrilmek için hiçbir sunucuya gönderilmez. Aranabilir PDF üretimi bir Pro özelliğidir.</p><p><a href="/tools/taranmis-pdf-ocr"><strong>Taranmış PDF → Metin (OCR)</strong> — Yalnızca metni mi istiyorsunuz? Taranmış PDF&#39;i cihazınızda düz metne çevirin.</a></p><h2>Nerede işe yarar?</h2><ul><li>Arşivleme: yüzlerce taranmış belge arasında kelimeyle arama yapabilmek.</li><li>Hukuk ve muhasebe: sözleşme veya faturada bir tutarı/maddeyi anında bulmak.</li><li>Öğrenciler: ders notu fotoğraflarında konu araması.</li><li>Erişilebilirlik: ekran okuyucuların belgeyi okuyabilmesi.</li></ul></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/taranmis-pdf-ocr">Taranmış PDF&#39;i Metne Çevir (OCR)</a></li><li><a href="/tools/pdf-to-text">PDF Metin Çıkarma</a></li><li><a href="/tools/image-to-pdf">JPG&#39;den PDF&#39;e Dönüştürme</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Aranabilir PDF ile normal taranmış PDF farkı nedir?</h3><p>Normal taranmış PDF bir resimdir; içinde arama yapılamaz. Aranabilir PDF&#39;te görüntünün üzerine görünmez bir metin katmanı gömülüdür, böylece Ctrl+F ile arama ve kopyalama çalışır.</p></div><div class="seo-faq-item"><h3>Türkçe karakterlerde çalışır mı?</h3><p>Evet. OCR Türkçe + İngilizce destekler ve ş, ğ, ı, İ gibi karakterler doğru şekilde aranabilir metne dönüştürülür.</p></div><div class="seo-faq-item"><h3>Belgem sunucuya gönderilir mi?</h3><p>Hayır. OCR ve metin katmanı gömme işlemi tamamen cihazınızda yapılır; belgeniz internete yüklenmez.</p></div><div class="seo-faq-item"><h3>Belgenin görünüşü değişir mi?</h3><p>Hayır. Metin katmanı görünmezdir; belge göze tıpatıp aynı görünür, sadece artık aranabilir ve kopyalanabilir olur.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import { type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertTriangle,
@@ -7,6 +7,7 @@ import {
   Check,
   Download,
   FileText,
+  GripVertical,
   Image as ImageIcon,
   Loader2,
   Lock,
@@ -168,6 +169,35 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       [n[i]!, n[j]!] = [n[j]!, n[i]!];
       return n;
     });
+
+  // ── Dokunmatik + fare ile sürükle-bırak sıralama (mobilde HTML5 drag çalışmaz) ──
+  // Grip tutamacından pointer ile başlar; parmak hangi satırın üstündeyse dizide
+  // oraya taşır. framer-motion `layout` sayesinde canlı animasyonla akar.
+  const [dragId, setDragId] = useState<string | null>(null);
+  const reorderTo = (overId: string) =>
+    setFiles((prev) => {
+      const from = prev.findIndex((f) => f.id === dragId);
+      const to = prev.findIndex((f) => f.id === overId);
+      if (from < 0 || to < 0 || from === to) return prev;
+      const n = [...prev];
+      const [m] = n.splice(from, 1);
+      n.splice(to, 0, m!);
+      return n;
+    });
+  const onGripPointerDown = (e: ReactPointerEvent, id: string) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    setDragId(id);
+  };
+  const onGripPointerMove = (e: ReactPointerEvent) => {
+    if (!dragId) return;
+    e.preventDefault();
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const row = el?.closest<HTMLElement>("[data-file-row]");
+    const overId = row?.dataset.fileRow;
+    if (overId && overId !== dragId) reorderTo(overId);
+  };
+  const endDrag = () => setDragId(null);
   const remove = (id: string) => setFiles((prev) => prev.filter((f) => f.id !== id));
   const clearAll = () => { setFiles([]); setError(null); };
   const reset = () => {
@@ -479,10 +509,25 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             <motion.li
               key={f.id}
               layout
+              data-file-row={f.id}
               initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 ${bad ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.03]"}`}
+              animate={{ opacity: dragId === f.id ? 0.85 : 1, y: 0 }}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${dragId === f.id ? "border-cyan-400/50 bg-cyan-500/[0.08] shadow-[0_10px_30px_-12px_rgba(34,211,238,0.6)]" : bad ? "border-amber-400/30 bg-amber-500/[0.06]" : "border-white/[0.08] bg-white/[0.03]"}`}
             >
+              {!isImages && files.length > 1 && (
+                <button
+                  type="button"
+                  onPointerDown={(e) => onGripPointerDown(e, f.id)}
+                  onPointerMove={onGripPointerMove}
+                  onPointerUp={endDrag}
+                  onPointerCancel={endDrag}
+                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-500 transition hover:text-white active:cursor-grabbing"
+                  aria-label={tr ? "Sürükleyip sırala" : "Drag to reorder"}
+                  title={tr ? "Sürükleyip sırala" : "Drag to reorder"}
+                >
+                  <GripVertical className="h-4 w-4" />
+                </button>
+              )}
               <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${f.status === "locked" ? "bg-amber-500/10 text-amber-300" : bad ? "bg-red-500/10 text-red-300" : "bg-white/[0.06] text-cyan-300"}`}>
                 {f.status === "checking" ? <Loader2 className="h-4 w-4 animate-spin" /> : f.status === "locked" ? <Lock className="h-4 w-4" /> : bad ? <AlertTriangle className="h-4 w-4" /> : isImages ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
               </span>

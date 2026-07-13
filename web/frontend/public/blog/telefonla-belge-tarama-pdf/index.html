@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026) — PDF Platform</title>
+    <meta name="description" content="Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf" />
+    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
+         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026) — PDF Platform" />
+    <meta property="og:description" content="Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026) — PDF Platform" />
+    <meta name="twitter:description" content="Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)","description":"Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz.","datePublished":"2026-07-13","dateModified":"2026-07-13","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)","description":"Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"Ana sayfada «Belge Tara»ya dokunun","text":"Telefonunuzda pdfplatform.app'i açın; araç seçicinin üstündeki «📸 Kamerayla Belge Tara» düğmesine dokunun. Kamera izni verin."},{"@type":"HowToStep","position":2,"name":"Kamerayı belgeye doğrultun","text":"Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Telefonu sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar — deklanşöre basmanıza gerek yok."},{"@type":"HowToStep","position":3,"name":"Filtreyi seçin, köşeleri onaylayın","text":"Renkli, Gri veya Siyah-Beyaz arasından seçin. Otomatik bulunan köşeler hazırdır; istersen parmakla ince ayar yapabilirsin."},{"@type":"HowToStep","position":4,"name":"PDF'i oluşturun","text":"Tek sayfa ya da birden çok sayfa ekleyin, ardından «PDF Oluştur» deyin. Sonuçta Kaydet, Paylaş veya PDF araçlarında açma seçenekleri çıkar."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Telefonla belge taramak için uygulama gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. pdfplatform.app'i telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli. Kurulum, üyelik ya da uygulama mağazası gerekmez."}},{"@type":"Question","name":"Belgenin kenarlarını kendim mi seçmem gerekiyor?","acceptedAnswer":{"@type":"Answer","text":"Hayır, kenarlar otomatik bulunur. Kamerayı belgeye doğrultup sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar; gerekirse köşeleri elle düzeltebilirsiniz."}},{"@type":"Question","name":"Taradığım belge sunucuya yüklenir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Tarama, kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez."}},{"@type":"Question","name":"Birden çok sayfayı tek PDF yapabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa Pro özelliğidir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)</h1><p class="seo-intro">Bir sözleşmeyi, faturayı ya da not kağıdını hızlıca dijitalleştirmek için ayrı bir uygulama kurmanıza gerek yok. Telefonunuzun tarayıcısından belgeyi çekin; kenarları otomatik bulunsun, perspektifi düzelsin ve tek dokunuşla PDF olsun — hepsi cihazınızda.</p><article class="seo-article"><p class="seo-lead">Elinizde kağıt bir belge var ve onu hızlıca PDF yapmanız gerekiyor. Çoğu kişi bunun için mağazadan bir tarayıcı uygulaması indirir; reklamlar, üyelik ekranları ve dosyalarını buluta yükleyen izinlerle uğraşır. Oysa telefonunuzun tarayıcısında, hiçbir şey kurmadan, belgeyi çekip düzgün bir PDF&#39;e çevirebilirsiniz — üstelik dosyanız cihazınızdan hiç çıkmadan.</p><h2>Neden tarayıcıda ve cihazda?</h2><p>Uygulama kurmak yer kaplar, güncelleme ister ve çoğu tarama uygulaması belgenizi işlemek için sunucularına gönderir. PDF Platform&#39;un belge tarayıcısı ise doğrudan telefon tarayıcınızda açılır ve tüm işlemi — kenar bulma, perspektif düzeltme, PDF oluşturma — cihazınızda yapar. Bu, iki büyük fark demektir: kurulum yok ve belgeniz internete yüklenmez.</p><h2>Nasıl çalışır? Adım adım</h2><ol><li><strong>Ana sayfada «Belge Tara»ya dokunun:</strong> Telefonunuzda pdfplatform.app&#39;i açın; araç seçicinin üstündeki «📸 Kamerayla Belge Tara» düğmesine dokunun. Kamera izni verin.</li><li><strong>Kamerayı belgeye doğrultun:</strong> Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Telefonu sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar — deklanşöre basmanıza gerek yok.</li><li><strong>Filtreyi seçin, köşeleri onaylayın:</strong> Renkli, Gri veya Siyah-Beyaz arasından seçin. Otomatik bulunan köşeler hazırdır; istersen parmakla ince ayar yapabilirsin.</li><li><strong>PDF&#39;i oluşturun:</strong> Tek sayfa ya da birden çok sayfa ekleyin, ardından «PDF Oluştur» deyin. Sonuçta Kaydet, Paylaş veya PDF araçlarında açma seçenekleri çıkar.</li></ol><p>Kenar tespiti tamamen otomatiktir: belgeyi çerçeveye alıp sabit tutmanız yeterli. Işık iyiyse ve belge zeminden ayrıştıysa kenarlar anında bulunur; bulunamazsa köşeleri elle sürükleyerek düzeltebilirsiniz.</p><h2>Çok sayfalı belgeleri tek PDF&#39;te toplayın</h2><p>Bir sözleşmenin tüm sayfalarını ya da bir defter dolusu notu arka arkaya tarayıp tek bir PDF&#39;te birleştirebilirsiniz. Her sayfa tarandıkça küçük bir önizleme olarak eklenir; sırasını görür, istemediğinizi silersiniz. Ücretsiz planda tek taramada 3 sayfaya kadar tarayabilir; sınırsız sayfa için Pro&#39;ya geçebilirsiniz.</p><p><a href="/tools/image-to-pdf"><strong>Görsel → PDF</strong> — Zaten çektiğiniz fotoğraflar varsa onları da saniyeler içinde tek PDF&#39;e çevirin — cihazınızda, üyeliksiz.</a></p><h2>Gizlilik: belgeniz cihazınızdan çıkmaz</h2><p>Kimlik, sözleşme, fatura gibi belgeleri tararken en büyük endişe, dosyanın bir sunucuya gitmesidir. Burada böyle bir şey olmaz: kamera görüntüsü, kenar tespiti ve PDF oluşturma tamamen tarayıcınızda çalışır. Oluşan PDF yalnızca sizin kaydettiğiniz veya paylaştığınız yere gider.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/image-to-pdf">JPG&#39;den PDF&#39;e Dönüştürme</a></li><li><a href="/tools/pdf-to-image">PDF&#39;den JPG&#39;ye Dönüştürme</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Telefonla belge taramak için uygulama gerekir mi?</h3><p>Hayır. pdfplatform.app&#39;i telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli. Kurulum, üyelik ya da uygulama mağazası gerekmez.</p></div><div class="seo-faq-item"><h3>Belgenin kenarlarını kendim mi seçmem gerekiyor?</h3><p>Hayır, kenarlar otomatik bulunur. Kamerayı belgeye doğrultup sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar; gerekirse köşeleri elle düzeltebilirsiniz.</p></div><div class="seo-faq-item"><h3>Taradığım belge sunucuya yüklenir mi?</h3><p>Hayır. Tarama, kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez.</p></div><div class="seo-faq-item"><h3>Birden çok sayfayı tek PDF yapabilir miyim?</h3><p>Evet. Sayfaları arka arkaya tarayıp tek PDF&#39;te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa Pro özelliğidir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

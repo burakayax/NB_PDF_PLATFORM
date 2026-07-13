@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Check,
@@ -59,9 +59,12 @@ function canShare(): boolean {
 export function GuestPageToolCore({
   tool,
   language,
+  initialFile,
 }: {
   tool: PageToolId;
   language: Language;
+  /** Dışarıdan (ör. Belge Tarayıcı) gelen başlangıç PDF'i — otomatik yüklenir. */
+  initialFile?: File | null;
 }) {
   const tr = language === "tr";
   const mode: PdfPageVisualMode =
@@ -83,7 +86,11 @@ export function GuestPageToolCore({
   const [splitMode, setSplitMode] = useState<"single" | "separate">("single");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Bilgilendirici (hata değil) bildirim — ör. "PDF zaten tek sayfa".
+  const [notice, setNotice] = useState<string | null>(null);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
+  // «PDF'i Hazırla» butonu — «Tamam» sonrası odak buraya kaysın.
+  const prepareBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const outName =
     mode === "rotate"
@@ -99,6 +106,7 @@ export function GuestPageToolCore({
 
   async function pickFile(f: File | undefined) {
     setError(null);
+    setNotice(null);
     if (!f) return;
     if (f.type !== "application/pdf") {
       setError(tr ? "Lütfen bir PDF dosyası seçin." : "Please choose a PDF file.");
@@ -114,6 +122,15 @@ export function GuestPageToolCore({
     }
     try {
       const n = await getPdfPageCount(await f.arrayBuffer());
+      // Sayfa Ayır tek sayfalık PDF'te anlamsız — dosyayı yükleme, nazikçe bilgilendir.
+      if (mode === "split" && n <= 1) {
+        setNotice(
+          tr
+            ? "Yüklediğiniz PDF zaten tek sayfadan oluşuyor — ayrılacak bir şey yok. Birden fazla sayfalı bir PDF seçin."
+            : "This PDF already has just a single page — there's nothing to split. Please choose a PDF with more than one page.",
+        );
+        return;
+      }
       setFile(f);
       setPageCount(n);
       setPagesText("");
@@ -140,10 +157,31 @@ export function GuestPageToolCore({
     setModalOpen(false);
     setResult(null);
     setError(null);
+    setNotice(null);
     setPagesText("");
     setPageRotations({});
     setPageOrder([]);
   }
+
+  // Görsel seçici kapanınca (Tamam/kapat): bir seçim yapıldıysa odağı «PDF'i Hazırla»
+  // butonuna kaydır — kullanıcı bir sonraki adımı hemen görsün ve tıklasın.
+  function closeModalAndFocus() {
+    setModalOpen(false);
+    setTimeout(() => {
+      const btn = prepareBtnRef.current;
+      if (btn && !btn.disabled) {
+        btn.scrollIntoView({ behavior: "smooth", block: "center" });
+        btn.focus({ preventScroll: true });
+      }
+    }, 140);
+  }
+
+  // Dışarıdan başlangıç PDF'i (Belge Tarayıcı → "PDF Araçlarında aç") geldiğinde
+  // otomatik yükle — kullanıcı taradığı belgeyle doğrudan araca düşsün.
+  useEffect(() => {
+    if (initialFile) void pickFile(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   function downloadBlob(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
@@ -393,6 +431,20 @@ export function GuestPageToolCore({
         </p>
       )}
 
+      {notice && (
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.07] px-4 py-3.5">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30">
+            <FileText className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[13.5px] font-semibold text-cyan-100">
+              {tr ? "Bu PDF tek sayfalık" : "This PDF has a single page"}
+            </p>
+            <p className="mt-0.5 text-[12.5px] leading-relaxed text-cyan-200/70">{notice}</p>
+          </div>
+        </div>
+      )}
+
       {/* AYIR modu seçici (yalnız split): tek PDF mi, ayrı dosyalar (ZIP) mı */}
       {mode === "split" && (
         <div className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1.5">
@@ -440,10 +492,11 @@ export function GuestPageToolCore({
           {selectorLabel}
         </button>
         <button
+          ref={prepareBtnRef}
           type="button"
           onClick={() => void prepare()}
           disabled={busy || !hasSelection}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 focus-visible:ring-2 focus-visible:ring-cyan-300/70 disabled:pointer-events-none disabled:opacity-40"
         >
           {busy ? (
             <>
@@ -463,7 +516,7 @@ export function GuestPageToolCore({
           <Suspense fallback={null}>
             <SplitPagePickerModal
               open={modalOpen}
-            onClose={() => setModalOpen(false)}
+            onClose={closeModalAndFocus}
           onReset={() => {
             setPagesText("");
             setPageRotations({});

@@ -44,6 +44,8 @@ export const TOOL_SLUGS = [
   "ppt-to-pdf",
   "pdf-to-image",
   "image-to-pdf",
+  "belge-tara",
+  "aranabilir-pdf",
   "html-to-pdf",
   "unlock-pdf",
   "watermark",
@@ -422,6 +424,60 @@ export const TOOL_SEO = {
       [
         { q: "How do I combine images into one PDF?", a: "Upload your JPG/PNG/WebP files, arrange the order, and download a single PDF." },
         { q: "Can I change the image order?", a: "Yes. Drag the uploaded images into any order you like." },
+      ],
+    ),
+  },
+
+  "belge-tara": {
+    tr: T(
+      "Belge Tarama — Telefonla PDF'e Tara",
+      "Telefonunuzun kamerasıyla belge tarayıp PDF yapın. Kenarlar otomatik bulunur, perspektif düzeltilir — uygulamasız, ücretsiz ve cihazınızda.",
+      "Telefonla Belge Tarama — Ücretsiz PDF Tarayıcı",
+      "Belgenizi telefon kameranızla tarayıp saniyeler içinde PDF yapın. Kenarlar otomatik bulunur ve perspektif düzeltilir; her şey cihazınızda işlenir — belgeniz sunucuya gitmez, uygulama kurmanız gerekmez. Çok sayfalı tarama, gölge temizleme ve aranabilir PDF (OCR) desteğiyle.",
+      ["belge tarama", "pdf tara", "telefonla belge tarama", "belge tarayıcı", "pdf tarayıcı", "belge tarama ücretsiz", "kamera ile pdf", "camscanner alternatif"],
+      [
+        { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. Sayfayı telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli; kamerayı belgeye doğrultun, kenarlar otomatik bulunur ve PDF oluşur. Kurulum veya üyelik gerekmez." },
+        { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
+        { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) Pro özellikleridir." },
+      ],
+    ),
+    en: T(
+      "Document Scanner — Scan to PDF with Phone",
+      "Scan documents to PDF with your phone camera. Edges are detected automatically, perspective is corrected — no app, free and on your device.",
+      "Scan Documents to PDF — Free Online Scanner",
+      "Scan your document with your phone camera and turn it into a PDF in seconds. Edges are detected automatically and perspective is corrected; everything runs on your device — your document is never uploaded and there's no app to install. With multi-page scanning, shadow removal and searchable PDF (OCR).",
+      ["document scanner", "scan to pdf", "scan document with phone", "pdf scanner", "free document scanner", "camera to pdf", "camscanner alternative"],
+      [
+        { q: "Do I need an app to scan documents with my phone?", a: "No. Just open the page in your phone browser and tap «Scan document»; point the camera at the document, edges are detected automatically and a PDF is created. No install or sign-up needed." },
+        { q: "Is my scanned document uploaded to a server?", a: "No. The camera frame, automatic edge detection and PDF creation all run on your device; your document is never sent to the internet." },
+        { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are Pro features." },
+      ],
+    ),
+  },
+
+  "aranabilir-pdf": {
+    tr: T(
+      "Aranabilir PDF — OCR ile PDF'i Aranabilir Yap",
+      "Taranmış PDF veya görselleri OCR ile aranabilir PDF'e çevirin. Metni Ctrl+F ile arayın ve kopyalayın — Türkçe destekli, cihazınızda.",
+      "Aranabilir PDF Oluşturma — OCR ile Metin Katmanı",
+      "Taranmış bir PDF ya da belge fotoğrafı aslında bir resimdir; içinde arama yapılamaz. Bu araç, OCR ile metni tanıyıp görüntünün üzerine görünmez bir metin katmanı ekler — belge göze aynı görünür ama artık Ctrl+F ile aranabilir ve kopyalanabilir. Türkçe + İngilizce desteklenir ve işlem cihazınızda yapılır.",
+      ["aranabilir pdf", "ocr pdf", "pdf ocr", "taranan pdf aranabilir", "pdf metin tanıma", "searchable pdf", "pdf aranabilir yapma", "taranmış pdf arama"],
+      [
+        { q: "Aranabilir PDF nasıl oluşturulur?", a: "Taranmış PDF'inizi veya belge görsellerinizi yükleyin; araç metni OCR ile tanıyıp görüntünün üzerine görünmez bir metin katmanı ekler. Oluşan PDF'te Ctrl+F ile arama yapabilir ve metni kopyalayabilirsiniz." },
+        { q: "Türkçe karakterlerde çalışır mı?", a: "Evet. OCR Türkçe + İngilizce destekler; ş, ğ, ı, İ gibi karakterler doğru şekilde aranabilir metne dönüştürülür." },
+        { q: "Belgem sunucuya gönderilir mi?", a: "Hayır. OCR ve metin katmanı gömme tamamen cihazınızda çalışır; belgeniz internete yüklenmez." },
+      ],
+    ),
+    en: T(
+      "Searchable PDF — Make a PDF Searchable with OCR",
+      "Turn scanned PDFs or images into searchable PDFs with OCR. Search text with Ctrl+F and copy it — Turkish supported, on your device.",
+      "Create a Searchable PDF with OCR",
+      "A scanned PDF or a document photo is really an image; you can't search inside it. This tool recognizes the text with OCR and adds an invisible text layer over the image — the document looks the same but is now searchable with Ctrl+F and copyable. Turkish + English are supported and processing happens on your device.",
+      ["searchable pdf", "ocr pdf", "make pdf searchable", "pdf ocr online", "scanned pdf to searchable", "pdf text recognition", "convert scan to searchable pdf"],
+      [
+        { q: "How do I create a searchable PDF?", a: "Upload your scanned PDF or document images; the tool recognizes the text with OCR and adds an invisible text layer over the image. In the resulting PDF you can search with Ctrl+F and copy text." },
+        { q: "Does it work with Turkish characters?", a: "Yes. OCR supports Turkish + English; characters like ş, ğ, ı, İ are converted correctly into searchable text." },
+        { q: "Is my document sent to a server?", a: "No. OCR and text-layer embedding run entirely on your device; your document is never uploaded." },
       ],
     ),
   },
@@ -1093,7 +1149,9 @@ export const RELATED_TOOLS = {
   "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
   "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
   "pdf-to-image": ["image-to-pdf", "pdf-to-ppt", "compress"],
-  "image-to-pdf": ["pdf-to-image", "merge-pdf", "compress", "pdf-to-word"],
+  "image-to-pdf": ["pdf-to-image", "belge-tara", "compress", "pdf-to-word"],
+  "belge-tara": ["image-to-pdf", "aranabilir-pdf", "pdf-to-image", "compress"],
+  "aranabilir-pdf": ["taranmis-pdf-ocr", "belge-tara", "pdf-to-text", "image-to-pdf"],
   "html-to-pdf": ["pdf-to-word", "merge-pdf", "compress"],
   "unlock-pdf": ["encrypt", "compress", "watermark", "pdf-to-word"],
   "watermark": ["page-numbers", "compress", "encrypt", "pdf-imzala"],
@@ -1139,6 +1197,10 @@ export const BLOG_RELATED_TOOLS = {
   "pdf-e-imza-atma-nasil-yapilir": ["pdf-imzala", "pdf-duzenle", "pdf-yorumla"],
   "pdf-filigran-ekleme": ["watermark", "encrypt", "page-numbers"],
   "pdf-uzerine-yazma-isaretleme": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
+  "telefonla-belge-tarama-pdf": ["image-to-pdf", "pdf-to-image", "compress"],
+  "aranabilir-pdf-olusturma-ocr": ["taranmis-pdf-ocr", "pdf-to-text", "image-to-pdf"],
+  "belge-fotografini-kaliteli-pdf-yapma": ["image-to-pdf", "compress", "pdf-to-image"],
+  "camscanner-ucretsiz-gizli-alternatif": ["image-to-pdf", "taranmis-pdf-ocr", "compress"],
 };
 
 /** Araç kısa etiketi — SEO title'ın "—" öncesi (ör. "PDF Birleştir"). */
