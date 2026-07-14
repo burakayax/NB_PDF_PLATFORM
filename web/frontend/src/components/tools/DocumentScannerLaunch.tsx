@@ -13,10 +13,12 @@ export function DocumentScannerLaunch({
   language,
   isPro,
   onUpgrade,
+  onUseInTools,
 }: {
   language: Language;
   isPro?: boolean;
   onUpgrade?: () => void;
+  onUseInTools?: (file: File, toolId: string) => void;
 }) {
   const tr = language === "tr";
   // PWA kısayolundan (?scan=1) gelindiyse tarayıcıyı doğrudan aç.
@@ -82,6 +84,7 @@ export function DocumentScannerLaunch({
             onClose={() => setOpen(false)}
             isPro={isPro}
             onUpgrade={onUpgrade}
+            onUseInTools={onUseInTools}
           />
         )}
       </AnimatePresence>
