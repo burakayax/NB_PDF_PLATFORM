@@ -98,7 +98,7 @@ function AutoText({ id, initial, className, style, onInput, onClick, onFocus, au
   );
 }
 
-export function PdfEditor({ language, accessToken }: { language: Language; accessToken?: string | null }) {
+export function PdfEditor({ language, accessToken, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
   const [file, setFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -182,6 +182,12 @@ export function PdfEditor({ language, accessToken }: { language: Language; acces
       setError(e instanceof Error ? e.message : tr ? "PDF açılamadı." : "Couldn't open the PDF.");
     } finally { setLoadingMsg(null); }
   }
+
+  // Dışarıdan (ör. PDF Merkezi → PDF Düzenle) gelen başlangıç PDF'i otomatik yükle.
+  useEffect(() => {
+    if (initialFile) void pickFile(initialFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   // Thumbnail'ler (küçük render).
   useEffect(() => {
