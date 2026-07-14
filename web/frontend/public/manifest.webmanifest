@@ -51,5 +51,11 @@
     { "name": "PDF'den Resme", "short_name": "PDF→JPG", "url": "/tools/pdf-to-image?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "Filigran Ekle", "short_name": "Filigran", "url": "/tools/watermark?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "Sayfa Sil", "short_name": "Sayfa Sil", "url": "/tools/delete-pages?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] }
+  ],
+  "file_handlers": [
+    { "action": "/?open=hub", "accept": { "application/pdf": [".pdf"] }, "name": "PDF Araçları", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "action": "/?open=pdf-imzala", "accept": { "application/pdf": [".pdf"] }, "name": "PDF İmzala", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "action": "/?open=pdf-to-word", "accept": { "application/pdf": [".pdf"] }, "name": "PDF'den Word'e", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
+    { "action": "/?open=pdf-to-image", "accept": { "application/pdf": [".pdf"] }, "name": "PDF'den Görüntüye", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] }
   ]
 }
