@@ -551,10 +551,12 @@ type Props = {
   language: Language;
   onLogin: () => void;
   onRegister: () => void;
+  /** Dışarıdan (PDF Merkezi / "PDF ile aç") gelen başlangıç PDF'i — otomatik yüklenir. */
+  initialFile?: File | null;
 };
 
 /** Tam sayfa misafir aracı (SEO için /tools/<slug>). Çekirdek + sayfa çerçevesi. */
-export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Props) {
+export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initialFile }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
 
@@ -597,7 +599,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister }: Pro
         </div>
 
         <div className="mt-8">
-          <GuestPageToolCore tool={tool} language={language} />
+          <GuestPageToolCore tool={tool} language={language} initialFile={initialFile} />
         </div>
 
         <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
