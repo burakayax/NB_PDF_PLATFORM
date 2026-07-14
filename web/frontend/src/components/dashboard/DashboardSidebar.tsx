@@ -335,6 +335,22 @@ export function DashboardSidebar({
     );
   };
 
+  // Belge Tara satırı — kamerayla tarama (cihazda). "Düzenle" grubunda gösterilir.
+  const renderScanRow = (keyPrefix = "") => {
+    if (!onOpenScan) return null;
+    return (
+      <button
+        key={`${keyPrefix}scan`}
+        type="button"
+        onClick={onOpenScan}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] px-3 py-2.5 text-left text-sm font-medium text-cyan-100 hover:scale-[1.02] hover:border-cyan-400/45 hover:bg-cyan-500/[0.12]"
+      >
+        <span className="text-base" aria-hidden>📸</span>
+        <span className="truncate">{tr ? "Belge Tara" : "Scan document"}</span>
+      </button>
+    );
+  };
+
   // PDF Yorumla satırı — favori yıldızlı, hem Favoriler hem İşaretle grubunda kullanılır.
   const renderAnnotateRow = (keyPrefix = "") => {
     if (!onOpenAnnotate) return null;
@@ -366,17 +382,6 @@ export function DashboardSidebar({
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
-        {/* ── Belge Tara — kamerayla tarama (cihazda), her zaman en üstte ── */}
-        {onOpenScan ? (
-          <button
-            type="button"
-            onClick={onOpenScan}
-            className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.07] px-3 py-2.5 text-left text-sm font-semibold text-cyan-100 hover:scale-[1.02] hover:border-cyan-400/50 hover:bg-cyan-500/[0.14]"
-          >
-            <span className="text-base" aria-hidden>📸</span>
-            <span className="truncate">{tr ? "Belge Tara" : "Scan document"}</span>
-          </button>
-        ) : null}
         {/* ── Ayrı AI kategorisi (Özetle + Sohbet) — kendi modal'ını açar ── */}
         {onOpenAi ? (
           <section>
@@ -459,6 +464,8 @@ export function DashboardSidebar({
               </button>
               {open ? (
                 <div className="flex flex-col gap-1">
+                  {/* Belge Tara — kamerayla tarama, Düzenle grubunun başında */}
+                  {group.id === "organize" ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}

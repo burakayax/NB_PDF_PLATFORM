@@ -15,6 +15,7 @@ import {
   Search,
   Share2,
   Sliders,
+  Smartphone,
   Sparkles,
   Trash2,
   Wand2,
@@ -50,6 +51,8 @@ type Props = {
   isPro?: boolean;
   /** Pro'ya yükseltme akışını başlatır (upsell butonu). */
   onUpgrade?: () => void;
+  /** Masaüstü/web (arka kamera yok) → "telefonda açın" bilgi ekranı gösterilir. */
+  isDesktop?: boolean;
 };
 
 /** Dosya adını güvenli hale getirir (geçersiz karakterleri temizler, boşsa varsayılan). */
@@ -73,7 +76,7 @@ const STABLE_FRAMES = 6;
  * tespiti + perspektif düzeltmesiyle PDF üretir. Görüntü SUNUCUYA GİTMEZ.
  * Sonuçta kullanıcıya "Kaydet / Paylaş / PDF Araçları" seçenekleri sunulur.
  */
-export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade }: Props) {
+export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade, isDesktop }: Props) {
   const tr = language === "tr";
   const [phase, setPhase] = useState<Phase>("camera");
   // Pro upsell paneli: hangi tetikleyiciyle açıldı (filtre / sayfa limiti / OCR).
@@ -124,8 +127,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   }, []);
 
   // Kamerayı yalnız "camera" fazında ve modal açıkken çalıştır (mobil kaynağı boşa tutma).
+  // Masaüstünde (arka kamera yok) kamerayı hiç açma → "telefonda açın" ekranı gösterilir.
   useEffect(() => {
-    if (!open || phase !== "camera") return;
+    if (!open || phase !== "camera" || isDesktop) return;
     let cancelled = false;
     (async () => {
       try {
@@ -155,7 +159,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       cancelled = true;
       stopStream();
     };
-  }, [open, phase, stopStream]);
+  }, [open, phase, stopStream, isDesktop]);
 
   // Sayfa kaydırmasını kilitle + kapanınca her şeyi sıfırla.
   useEffect(() => {
@@ -278,7 +282,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   // ── CANLI kenar tespiti döngüsü (yalnız kamera fazında) ──
   useEffect(() => {
-    if (!open || phase !== "camera" || cameraError) return;
+    if (!open || phase !== "camera" || cameraError || isDesktop) return;
     // Kameraya her girişte temiz başla.
     capturingRef.current = false;
     stableRef.current = 0;
@@ -628,7 +632,37 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── KAMERA ── */}
           {phase === "camera" && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col">
-              {cameraError ? (
+              {isDesktop ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30">
+                    <Smartphone className="h-8 w-8" />
+                  </span>
+                  <div>
+                    <p className="text-lg font-bold">
+                      {tr ? "Bu araç telefonda kullanılır" : "Use this tool on your phone"}
+                    </p>
+                    <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
+                      {tr
+                        ? "Belge Tara, telefonunuzun arka kamerasıyla belgeyi çekip cihazınızda PDF'e çevirir. Bilgisayarda kamera tarama çalışmaz — telefonunuzdan pdfplatform.app adresine girip Belge Tara'yı açın."
+                        : "Scan Document uses your phone's rear camera to capture a document and turn it into a PDF on-device. Camera scanning isn't available on desktop — open pdfplatform.app on your phone and start Scan Document."}
+                    </p>
+                  </div>
+                  <div className="mt-1 flex flex-col items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.1]"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      {tr ? "Bilgisayardan görsel yükle" : "Upload an image instead"}
+                    </button>
+                    <p className="inline-flex items-center gap-1.5 text-[12px] text-slate-500">
+                      <Smartphone className="h-3.5 w-3.5" />
+                      {tr ? "En iyi sonuç: telefonun arka kamerası" : "Best result: phone rear camera"}
+                    </p>
+                  </div>
+                </div>
+              ) : cameraError ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
                   <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.06] text-cyan-300">
                     <Camera className="h-7 w-7" />

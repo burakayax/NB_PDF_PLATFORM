@@ -41,6 +41,8 @@ type AuthPageProps = {
   registrationSuccessBanner?: string | null;
   onDismissRegistrationSuccess?: () => void;
   onBack: () => void;
+  /** "Geri" butonu metni (verilmezse landing'e dönüş metni kullanılır). */
+  backLabel?: string;
   onModeChange: (mode: AuthMode) => void;
   onSubmit: (payload: AuthSubmitPayload) => Promise<void>;
   onForgotPassword?: () => void;
@@ -84,6 +86,7 @@ export function AuthPage({
   registrationSuccessBanner,
   onDismissRegistrationSuccess,
   onBack,
+  backLabel,
   onModeChange,
   onSubmit,
   onForgotPassword,
@@ -247,7 +250,7 @@ export function AuthPage({
           <span className="mr-1 transition group-hover:-translate-x-0.5">
             ↩️
           </span>
-          {copy.shared.backToLanding}
+          {backLabel ?? copy.shared.backToLanding}
         </button>
 
         <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
