@@ -51,7 +51,10 @@ type Props = {
   onUpgrade?: () => void;
 };
 
-const OUT_NAME = "taranan-belge.pdf";
+/** Dosya adını güvenli hale getirir (geçersiz karakterleri temizler, boşsa varsayılan). */
+function sanitizeFileName(name: string): string {
+  return (name.trim() || "taranan-belge").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 100);
+}
 /** Ücretsiz planda tek taramada izin verilen sayfa sayısı (Pro: sınırsız). */
 const FREE_PAGE_LIMIT = 3;
 
@@ -85,6 +88,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [activeCorner, setActiveCorner] = useState<number | null>(null);
   // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
   const [toolPicker, setToolPicker] = useState(false);
+  // Kullanıcının belirlediği PDF adı (sayfalar ekranında girilir, her yerde kullanılır).
+  const [fileName, setFileName] = useState("taranan-belge");
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -184,6 +189,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setSearchable(false);
     setToolPicker(false);
     setActiveCorner(null);
+    setFileName("taranan-belge");
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -453,7 +459,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
         pages.map(async (p) => ({ bytes: await p.blob.arrayBuffer(), mime: "image/jpeg" })),
       );
       const bytes = await imagesToPdf(imgs);
-      setResult({ blob: pdfBytesToBlob(bytes), filename: OUT_NAME });
+      setResult({ blob: pdfBytesToBlob(bytes), filename: `${sanitizeFileName(fileName)}.pdf` });
       setPhase("result");
     } catch {
       setError(tr ? "PDF oluşturulamadı." : "Could not build the PDF.");
@@ -484,7 +490,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       }));
       const bytes = await imagesToSearchablePdf(searchablePages, fontBytes);
       saveHandleRef.current = null; // içerik değişti → "aynı yere yaz" sıfırla
-      setResult({ blob: pdfBytesToBlob(bytes), filename: "taranan-belge-aranabilir.pdf" });
+      setResult({ blob: pdfBytesToBlob(bytes), filename: `${sanitizeFileName(fileName)}-aranabilir.pdf` });
       setSearchable(true);
     } catch {
       setError(tr ? "Aranabilir PDF oluşturulamadı." : "Could not create searchable PDF.");
@@ -949,7 +955,24 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
               )}
 
+              {/* PDF adı — burada girilir, kaydet/paylaş/araçlar hep bu adı kullanır */}
               <div className="mx-auto mt-5 w-full max-w-md">
+                <label className="mb-1.5 block text-[12px] font-medium text-slate-400">
+                  {tr ? "PDF adı" : "PDF name"}
+                </label>
+                <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 focus-within:border-cyan-400/40">
+                  <input
+                    type="text"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
+                    placeholder="taranan-belge"
+                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-500 outline-none"
+                  />
+                  <span className="shrink-0 text-sm text-slate-500">.pdf</span>
+                </div>
+              </div>
+
+              <div className="mx-auto mt-3 w-full max-w-md">
                 <button
                   type="button"
                   onClick={() => void buildPdf()}
