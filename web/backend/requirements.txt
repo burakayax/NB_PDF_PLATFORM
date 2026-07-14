@@ -19,7 +19,7 @@ ocrmypdf
 # NOT: docling / easyocr / onnxruntime (torch + CUDA, ~5 GB) buradan ÇIKARILDI.
 # Ücretsiz/küçük planlara sığmaz. Yapay zeka tabanlı OCR gerektiğinde (büyük
 # planda) requirements-ocr.txt dosyasını da kurun: pip install -r requirements-ocr.txt
-pypdf>=6
+pypdf>=6.14.2
 python-docx
 Pillow
 lxml
