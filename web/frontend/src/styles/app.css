@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* Tailwind v4 Preflight, buton/rol="button" öğelerini varsayılan imleçle bırakır
+   (v3'teki cursor:pointer davranışı kaldırıldı). Tıklanabilir öğelerde parmak
+   imleci beklendiği için v3 davranışını geri getiriyoruz (ör. landing "Araçlar"
+   menüsü ve tüm butonlar). */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+label[for],
+summary {
+  cursor: pointer;
+}
+
 /* Design tokens: Deep Space — anthracite slate base, electric cyan primary, indigo secondary */
 :root {
   color-scheme: dark;

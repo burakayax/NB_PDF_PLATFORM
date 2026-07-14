@@ -3776,6 +3776,16 @@ function App() {
     navigateToTool(toolId as FeatureId);
   }
 
+  // Belge Tarayıcı'da "PDF Araçlarında aç" (PDF Merkezi) → seçilen araca PDF'i aktar.
+  async function handleScannerPick(file: File, toolId: string) {
+    try {
+      await saveScannedPdf(file);
+    } catch {
+      /* yoksay */
+    }
+    navigateToTool(toolId as FeatureId);
+  }
+
   // PWA file_handlers: telefonda "PDF ile aç → PDF Platform" → launchQueue ile PDF gelir.
   useEffect(() => {
     const w = window as unknown as {
@@ -5088,8 +5098,11 @@ function App() {
 
   // Blog — tam sayfa SEO içerik (index + yazı).
   if (pathname === "/blog" || pathname.startsWith("/blog/")) {
-    const goLogin = () => setView("login");
-    const goRegister = () => setView("register");
+    // NOT: Blog erken-return'ü pathname'e göre çalışır; sadece setView demek
+    // görünümü değiştirmez (pathname hâlâ /blog olduğu için yine blog render olur).
+    // Bu yüzden URL'i de /login|/register'a taşıyan pushState'li sürümleri kullan.
+    const goLogin = apiPageGoLogin;
+    const goRegister = apiPageGoRegister;
     const blogSlug = pathname === "/blog" ? "" : pathname.split("/blog/")[1] ?? "";
     return (
       <Suspense fallback={<PageSkeleton />}>
@@ -5111,7 +5124,7 @@ function App() {
     if (seoSlug === "belge-tara") {
       return (
         <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <DocumentScannerLaunch language={language} isPro={aiAllowed} onUpgrade={goRegister} />
+          <DocumentScannerLaunch language={language} isPro={aiAllowed} onUpgrade={goRegister} onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)} />
         </GuestSeoToolPage>
       );
     }
@@ -6395,6 +6408,7 @@ function App() {
             language={language}
             onClose={() => setScannerOpen(false)}
             isPro={aiAllowed}
+            onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
