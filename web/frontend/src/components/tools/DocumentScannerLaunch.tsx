@@ -19,7 +19,10 @@ export function DocumentScannerLaunch({
   onUpgrade?: () => void;
 }) {
   const tr = language === "tr";
-  const [open, setOpen] = useState(false);
+  // PWA kısayolundan (?scan=1) gelindiyse tarayıcıyı doğrudan aç.
+  const [open, setOpen] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("scan") === "1",
+  );
 
   return (
     <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 sm:p-8">

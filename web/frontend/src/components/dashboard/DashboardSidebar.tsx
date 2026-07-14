@@ -161,6 +161,8 @@ type DashboardSidebarProps = {
   onOpenSign?: () => void;
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
+  /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
+  onOpenScan?: () => void;
   /** Aktif içerik paneli — mobil launcher başlığı FeatureKey olmayan araçları da
    * (Düzenle/İmzala/İşaretle/AI) doğru göstersin diye. */
   contentPanel?: string;
@@ -192,6 +194,7 @@ export function DashboardSidebar({
   onOpenEditor,
   onOpenSign,
   onOpenAnnotate,
+  onOpenScan,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -363,6 +366,17 @@ export function DashboardSidebar({
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
       >
+        {/* ── Belge Tara — kamerayla tarama (cihazda), her zaman en üstte ── */}
+        {onOpenScan ? (
+          <button
+            type="button"
+            onClick={onOpenScan}
+            className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.07] px-3 py-2.5 text-left text-sm font-semibold text-cyan-100 hover:scale-[1.02] hover:border-cyan-400/50 hover:bg-cyan-500/[0.14]"
+          >
+            <span className="text-base" aria-hidden>📸</span>
+            <span className="truncate">{tr ? "Belge Tara" : "Scan document"}</span>
+          </button>
+        ) : null}
         {/* ── Ayrı AI kategorisi (Özetle + Sohbet) — kendi modal'ını açar ── */}
         {onOpenAi ? (
           <section>
@@ -533,6 +547,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenEditor,
   onOpenSign,
   onOpenAnnotate,
+  onOpenScan,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -849,6 +864,22 @@ export function DashboardSidebarMobileLauncher({
 
                         {/* Araç kartları — telefona otomatik uyum (auto-fill) */}
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
+                          {/* Belge Tara kartı — kamerayla tarama (Düzenle grubunda) */}
+                          {onOpenScan && !query.trim() && group.id === "organize" ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onOpenScan();
+                                setOpen(false);
+                              }}
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] p-2 text-center hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.97]"
+                            >
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>📸</span>
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-cyan-100">
+                                {tr ? "Belge Tara" : "Scan document"}
+                              </span>
+                            </button>
+                          ) : null}
                           {/* PDF Düzenle kartı — Düzenle grubunda her zaman, Favoriler'de favoriyse */}
                           {onOpenEditor && !query.trim() &&
                           (group.id === "organize" || (group.id === "favorites" && editorFavorited)) ? (

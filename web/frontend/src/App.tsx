@@ -6285,6 +6285,7 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
+          onOpenScan={() => setScannerOpen(true)}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
@@ -6307,6 +6308,14 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
+          onOpenScan={() => setScannerOpen(true)}
+          />
+          {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). */}
+          <DocumentScanner
+            open={scannerOpen}
+            language={language}
+            onClose={() => setScannerOpen(false)}
+            isPro={aiAllowed}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
@@ -6473,20 +6482,6 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
-                {/* Mobil: kamerayla belge tara — giriş yapmış kullanıcı da erişsin */}
-                <button
-                  type="button"
-                  onClick={() => setScannerOpen(true)}
-                  className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/[0.14] to-blue-500/[0.14] px-5 py-3 text-sm font-bold text-cyan-100 transition hover:from-cyan-500/25 hover:to-blue-500/25 lg:hidden"
-                >
-                  {language === "tr" ? "📸 Kamerayla Belge Tara" : "📸 Scan a document with camera"}
-                </button>
-                <DocumentScanner
-                  open={scannerOpen}
-                  language={language}
-                  onClose={() => setScannerOpen(false)}
-                  isPro={aiAllowed}
-                />
                 <section className="workspace-card relative overflow-x-hidden">
                   <div className="workspace-card__header">
                     <div>
