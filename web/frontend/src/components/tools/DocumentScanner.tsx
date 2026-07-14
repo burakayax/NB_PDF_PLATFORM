@@ -25,6 +25,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { imagesToPdf, imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdf";
 import { ocrImagesToWords } from "../../lib/ocr";
+import { PdfHub } from "./PdfHub";
 import {
   canvasToJpegBlob,
   cropQuadFallback,
@@ -1208,56 +1209,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
         )}
       </AnimatePresence>
 
-      {/* ── ARAÇ SEÇİCİ ── "PDF Araçlarında aç" → hangi araç? (ücretsiz sayfa araçları) */}
+      {/* ── PDF MERKEZİ ── "PDF Araçlarında aç" → önizleme + araçlar */}
       <AnimatePresence>
         {toolPicker && result && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-20 flex items-end justify-center bg-black/65 p-4 sm:items-center"
-            onClick={() => setToolPicker(false)}
-          >
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 40, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-3xl border border-white/[0.1] bg-[#0f1424] p-6 shadow-2xl"
-            >
-              <p className="text-center text-lg font-bold text-white">
-                {tr ? "Hangi araçta açalım?" : "Open in which tool?"}
-              </p>
-              <p className="mt-1 text-center text-[13px] text-slate-400">
-                {tr ? "Taradığın belge seçtiğin araca aktarılır." : "Your scanned document opens in the chosen tool."}
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2.5">
-                {([
-                  { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Düzenle / Sırala", en: "Organize" },
-                  { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
-                  { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
-                  { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
-                ] as { id: string; icon: React.ReactNode; tr: string; en: string }[]).map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => pickToolAndUse(t.id)}
-                    className="flex flex-col items-center gap-2 rounded-2xl border border-white/[0.1] bg-white/[0.03] px-4 py-4 text-center transition hover:border-cyan-400/40 hover:bg-white/[0.06]"
-                  >
-                    <span className="text-cyan-300">{t.icon}</span>
-                    <span className="text-[13px] font-semibold text-slate-100">{tr ? t.tr : t.en}</span>
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={() => setToolPicker(false)}
-                className="mt-3 w-full py-1.5 text-[13px] font-medium text-slate-400 transition hover:text-slate-200"
-              >
-                {tr ? "Vazgeç" : "Cancel"}
-              </button>
-            </motion.div>
-          </motion.div>
+          <PdfHub
+            file={new File([result.blob], result.filename, { type: "application/pdf" })}
+            language={language}
+            isPro={isPro}
+            onClose={() => setToolPicker(false)}
+            onPickTool={(toolId) => pickToolAndUse(toolId)}
+          />
         )}
       </AnimatePresence>
     </motion.div>,
