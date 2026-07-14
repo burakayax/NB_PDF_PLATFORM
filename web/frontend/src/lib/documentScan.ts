@@ -32,23 +32,39 @@ export function loadOpenCv(): Promise<CV> {
 }
 
 function waitForRuntime(cv: CV): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     if (cv?.Mat) return resolve();
+    let done = false;
+    const finish = () => {
+      if (!done) {
+        done = true;
+        resolve();
+      }
+    };
     const prev = cv.onRuntimeInitialized;
     cv.onRuntimeInitialized = () => {
       try {
         prev?.();
       } finally {
-        resolve();
+        finish();
       }
     };
     // Bazı emscripten sürümleri callback'i atlayabilir → poll ile güvence altına al.
     const t = setInterval(() => {
       if (cv?.Mat) {
         clearInterval(t);
-        resolve();
+        finish();
       }
     }, 40);
+    // WASM hiç hazır olmazsa (ör. CSP eval engeli, ağ) sonsuza dek bekleme.
+    setTimeout(() => {
+      clearInterval(t);
+      if (cv?.Mat) finish();
+      else if (!done) {
+        done = true;
+        reject(new Error("OpenCV runtime did not initialize (timeout)"));
+      }
+    }, 25000);
   });
 }
 
@@ -164,8 +180,10 @@ export async function detectDocumentQuad(
     }
     cv.cvtColor(work, gray, cv.COLOR_RGBA2GRAY);
     cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
-    cv.Canny(gray, edges, 50, 150);
+    cv.Canny(gray, edges, 40, 120);
+    // Kenar boşluklarını kapat — belge kenarı gölge/düşük kontrastta kesintili çıkar.
     cv.dilate(edges, edges, kernel);
+    cv.morphologyEx(edges, edges, cv.MORPH_CLOSE, kernel);
     cv.findContours(
       edges,
       contours,
@@ -175,30 +193,36 @@ export async function detectDocumentQuad(
     );
 
     const imgArea = work.rows * work.cols;
-    let best: Pt[] | null = null;
-    let bestArea = 0;
+    // Yeterince büyük konturları topla (eşik gevşek) ve alana göre azalan sırala.
+    const cand: Array<{ c: CV; area: number }> = [];
     for (let i = 0; i < contours.size(); i++) {
       const c: CV = contours.get(i);
       const area = cv.contourArea(c);
-      if (area > bestArea && area > imgArea * 0.15) {
-        const peri = cv.arcLength(c, true);
+      if (area > imgArea * 0.1) cand.push({ c, area });
+      else c.delete();
+    }
+    cand.sort((a, b) => b.area - a.area);
+
+    // En büyük 6 konturu, birden çok yaklaşım toleransıyla (epsilon) 4-köşe için dene.
+    let best: Pt[] | null = null;
+    for (const { c } of cand.slice(0, 6)) {
+      if (best) break;
+      const peri = cv.arcLength(c, true);
+      for (const eps of [0.02, 0.04, 0.06, 0.08]) {
         const approx: CV = new cv.Mat();
-        cv.approxPolyDP(c, approx, 0.02 * peri, true);
+        cv.approxPolyDP(c, approx, eps * peri, true);
         if (approx.rows === 4 && cv.isContourConvex(approx)) {
           const pts: Pt[] = [];
           for (let r = 0; r < 4; r++) {
-            pts.push({
-              x: approx.intPtr(r, 0)[0],
-              y: approx.intPtr(r, 0)[1],
-            });
+            pts.push({ x: approx.intPtr(r, 0)[0], y: approx.intPtr(r, 0)[1] });
           }
           best = pts;
-          bestArea = area;
         }
         approx.delete();
+        if (best) break;
       }
-      c.delete();
     }
+    cand.forEach(({ c }) => c.delete());
 
     if (!best) return null;
     const inv = scale < 1 ? 1 / scale : 1;

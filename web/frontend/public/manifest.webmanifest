@@ -42,6 +42,7 @@
     }
   ],
   "shortcuts": [
+    { "name": "Belge Tara", "short_name": "Tara", "url": "/tools/belge-tara?scan=1&source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "PDF Birleştir", "short_name": "Birleştir", "url": "/tools/merge-pdf?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "PDF Böl", "short_name": "Böl", "url": "/tools/split-pdf?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "PDF Sıkıştır", "short_name": "Sıkıştır", "url": "/tools/compress?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },

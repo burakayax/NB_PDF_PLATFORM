@@ -30,6 +30,7 @@ import {
   cropQuadFallback,
   detectDocumentQuad,
   fullFrameQuad,
+  loadOpenCv,
   warpDocument,
   type EnhanceMode,
   type Pt,
@@ -203,16 +204,33 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       setPhase("review");
       setDetecting(true);
       stopStream();
+      // Önce tarama motorunu (OpenCV) yükle — teşhis için "motor yüklenemedi" ile
+      // "kenar bulunamadı" durumlarını AYIR (birincisi tarayıcı güvenlik/CSP sorunu).
       try {
-        const q = await detectDocumentQuad(cnv);
-        setQuad(q ?? fullFrameQuad(cnv.width, cnv.height));
+        await loadOpenCv();
       } catch {
         setQuad(fullFrameQuad(cnv.width, cnv.height));
         setError(
           tr
-            ? "Otomatik kenar bulunamadı — köşeleri elle ayarlayabilirsin."
-            : "Auto edge detection unavailable — adjust corners manually.",
+            ? "Tarama motoru yüklenemedi (tarayıcı güvenlik ayarı). Sayfayı yenileyip tekrar deneyin; köşeleri elle de ayarlayabilirsin."
+            : "Scan engine failed to load (browser security). Refresh and retry; you can also adjust corners manually.",
         );
+        setDetecting(false);
+        return;
+      }
+      try {
+        const q = await detectDocumentQuad(cnv);
+        setQuad(q ?? fullFrameQuad(cnv.width, cnv.height));
+        if (!q) {
+          setError(
+            tr
+              ? "Otomatik kenar bulunamadı — köşeleri elle ayarlayabilirsin."
+              : "Couldn't auto-detect edges — adjust the corners manually.",
+          );
+        }
+      } catch {
+        setQuad(fullFrameQuad(cnv.width, cnv.height));
+        setError(tr ? "Kenar tespiti sırasında hata oluştu." : "Edge detection error.");
       } finally {
         setDetecting(false);
       }
@@ -742,8 +760,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 {/* Büyüteç (loupe) — sürüklenen köşenin altını kalmadan tam konumu göster */}
                 {activeCorner != null && captured && quad && capturedUrl && (() => {
                   const ap = quad[activeCorner]!;
-                  const ZOOM = 2.75;
-                  const SZ = 132;
+                  const ZOOM = 2;
+                  const SZ = 150;
                   const onLeft = ap.x < captured.width / 2;
                   return (
                     <div
@@ -788,17 +806,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       strokeWidth={strokeW}
                     />
                     {quad.map((p, i) => (
-                      <circle
-                        key={i}
-                        cx={p.x}
-                        cy={p.y}
-                        r={cornerR}
-                        fill="#38bdf8"
-                        stroke="#fff"
-                        strokeWidth={strokeW}
-                        onPointerDown={(e) => startDrag(e, i)}
-                        style={{ cursor: "grab" }}
-                      />
+                      <g key={i} onPointerDown={(e) => startDrag(e, i)} style={{ cursor: "grab" }}>
+                        {/* Geniş dokunma hedefi — parmağı tam köşeye getirmek gerekmesin */}
+                        <circle cx={p.x} cy={p.y} r={cornerR * 2.6} fill="rgba(56,189,248,0.16)" stroke="rgba(56,189,248,0.45)" strokeWidth={strokeW} />
+                        {/* Görünür tutamak */}
+                        <circle cx={p.x} cy={p.y} r={cornerR} fill="#38bdf8" stroke="#fff" strokeWidth={strokeW} />
+                      </g>
                     ))}
                   </svg>
                 )}
