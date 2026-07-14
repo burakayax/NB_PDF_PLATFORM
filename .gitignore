@@ -92,3 +92,6 @@ _screenshots/
 
 # Tesseract OCR asset'leri (build-zamanı üretilir: scripts/setup-tesseract.mjs)
 web/frontend/public/tesseract/
+
+# Scanic ML belge-köşe modeli + ORT wasm (build-zamanı üretilir: scripts/setup-scanic-ml.mjs)
+web/frontend/public/scanic-ml/

@@ -7,8 +7,8 @@
     "node": "20.x"
   },
   "scripts": {
-    "prebuild": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs",
-    "predev": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs",
+    "prebuild": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs && node scripts/setup-scanic-ml.mjs",
+    "predev": "node scripts/generate-seo-files.mjs && node scripts/setup-tesseract.mjs && node scripts/setup-scanic-ml.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -27,7 +27,6 @@
     "@pdf-lib/fontkit": "^1.1.1",
     "@sentry/react": "^10.55.0",
     "@tanstack/react-virtual": "^3.13.2",
-    "@techstark/opencv-js": "^5.0.0-release.1",
     "clsx": "^2.1.1",
     "fflate": "^0.8.3",
     "framer-motion": "^12.38.0",
@@ -41,6 +40,8 @@
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.1",
+    "scanic": "^1.5.0",
+    "scanic-ml": "^0.2.0",
     "tailwind-merge": "^3.6.0",
     "tesseract.js": "^5.1.1"
   },
