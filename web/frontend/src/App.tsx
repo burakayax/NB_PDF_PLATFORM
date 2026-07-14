@@ -109,7 +109,7 @@ import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch"
 import { SearchablePdfTool } from "./components/tools/SearchablePdfTool";
 import { DocumentScanner } from "./components/tools/DocumentScanner";
 import { PdfHub } from "./components/tools/PdfHub";
-import { saveScannedPdf } from "./lib/pendingScan";
+import { saveScannedPdf, takeScannedPdf } from "./lib/pendingScan";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   mergePdfs,
@@ -1160,6 +1160,8 @@ function App() {
   const [scannerOpen, setScannerOpen] = useState(false);
   // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF burada açılır.
   const [pdfHubFile, setPdfHubFile] = useState<File | null>(null);
+  // Bir araca aktarılmayı bekleyen taranan/açılan PDF (IndexedDB'den bir kez yüklenir).
+  const [pendingToolFile, setPendingToolFile] = useState<File | null>(null);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -3804,6 +3806,23 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Bir araç sayfası açıldığında bekleyen (taranan/açılan) PDF varsa bir kez yükle.
+  useEffect(() => {
+    if (view !== "web" || !selectedFeatureId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const f = await takeScannedPdf();
+        if (!cancelled) setPendingToolFile(f); // f null ise temizle (tek kullanımlık)
+      } catch {
+        /* yoksay */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [view, selectedFeatureId]);
+
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
     if (id !== "subscription" && lockedFeatures.has(id)) {
@@ -5109,7 +5128,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfEditor language={language} accessToken={accessToken} />
+            <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5418,6 +5437,7 @@ function App() {
           slug={toolSlug}
           tool={selectedFeatureId as PageToolId}
           language={language}
+          initialFile={pendingToolFile}
           onLogin={() => {
             savePendingTool(selectedFeatureId);
             setView("login");
@@ -6433,7 +6453,7 @@ function App() {
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfEditor language={language} accessToken={accessToken} />
+                  <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}

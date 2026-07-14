@@ -47,3 +47,7 @@ sendgrid>=6.10.0
 pytest>=8.0.0
 pytest-asyncio>=0.23.0
 pytest-cov>=5.0.0
+
+# Güvenlik: ortamdaki setuptools 79.0.1 -> PYSEC-2026-3447 (sdist Unicode bypass).
+# Fix >=83.0.0; pip install sırasında yükseltilir (pip-audit temiz geçer).
+setuptools>=83.0.0
