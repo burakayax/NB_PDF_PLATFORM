@@ -10,12 +10,19 @@
 
 // OpenCV.js (emscripten) tipleri eksik olduğundan runtime'ı `any` olarak ele
 // alıyoruz; API çağrıları elle doğrulanmıştır.
+import { warpPerspective, type WarpEnhance, type WarpQuad } from "./perspectiveWarp";
+
 type CV = any;
 
 let cvPromise: Promise<CV> | null = null;
+// Bir kez yüklenemezse (ör. tarayıcı güvenlik ayarı / CSP eval engeli) TEKRAR
+// DENEME — 15 MB chunk'ı her karede yeniden indirmeye çalışmayı önler.
+let cvUnavailable = false;
 
-/** OpenCV.js'i (bir kez) dinamik yükler ve WASM runtime'ı hazır olana dek bekler. */
+/** OpenCV.js'i (bir kez) dinamik yükler ve WASM runtime'ı hazır olana dek bekler.
+ *  Otomatik kenar tespiti için OPSİYONELDİR; perspektif düzeltme OpenCV'siz çalışır. */
 export function loadOpenCv(): Promise<CV> {
+  if (cvUnavailable) return Promise.reject(new Error("OpenCV unavailable"));
   if (!cvPromise) {
     cvPromise = import("@techstark/opencv-js")
       .then(async (mod) => {
@@ -24,7 +31,8 @@ export function loadOpenCv(): Promise<CV> {
         return cv;
       })
       .catch((e) => {
-        cvPromise = null; // sonraki denemeye izin ver
+        cvUnavailable = true; // kalıcı olarak devre dışı → tekrar deneme yok
+        cvPromise = null;
         throw e;
       });
   }
@@ -64,7 +72,7 @@ function waitForRuntime(cv: CV): Promise<void> {
         done = true;
         reject(new Error("OpenCV runtime did not initialize (timeout)"));
       }
-    }, 25000);
+    }, 8000);
   });
 }
 
@@ -73,54 +81,6 @@ export type Pt = { x: number; y: number };
 export type Quad = [Pt, Pt, Pt, Pt];
 
 export type EnhanceMode = "color" | "gray" | "bw" | "auto";
-
-/**
- * "Sihirli" otomatik iyileştirme (Pro) — GÖLGE TEMİZLEME + kontrast normalizasyonu.
- * Her renk kanalı için arka plan (aydınlatma/gölge) tahmin edilip bölünür → belge
- * dümdüz beyaz zeminli, gölgesiz ve keskin görünür (renkler korunur). `dst` yerinde
- * güncellenir (RGBA).
- */
-function autoEnhance(cv: CV, dst: CV): void {
-  const rgb: CV = new cv.Mat();
-  cv.cvtColor(dst, rgb, cv.COLOR_RGBA2RGB);
-  const channels: CV = new cv.MatVector();
-  cv.split(rgb, channels);
-  const out: CV = new cv.MatVector();
-  const kernel: CV = cv.Mat.ones(7, 7, cv.CV_8U);
-  const tmp: CV[] = [];
-  try {
-    for (let i = 0; i < 3; i++) {
-      const ch: CV = channels.get(i);
-      const dil: CV = new cv.Mat();
-      const bg: CV = new cv.Mat();
-      const diff: CV = new cv.Mat();
-      const norm: CV = new cv.Mat();
-      cv.dilate(ch, dil, kernel);
-      cv.medianBlur(dil, bg, 17); // aydınlatma/gölge tahmini
-      cv.absdiff(ch, bg, diff);
-      cv.bitwise_not(diff, diff); // 255 - fark → beyaz zemin
-      cv.normalize(diff, norm, 0, 255, cv.NORM_MINMAX);
-      out.push_back(norm);
-      tmp.push(dil, bg, diff, norm, ch);
-    }
-    const merged: CV = new cv.Mat();
-    cv.merge(out, merged);
-    cv.cvtColor(merged, dst, cv.COLOR_RGB2RGBA);
-    merged.delete();
-  } finally {
-    rgb.delete();
-    channels.delete();
-    out.delete();
-    kernel.delete();
-    tmp.forEach((m) => {
-      try {
-        m.delete();
-      } catch {
-        /* zaten silinmiş olabilir */
-      }
-    });
-  }
-}
 
 function dist(a: Pt, b: Pt): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
@@ -240,83 +200,15 @@ export async function detectDocumentQuad(
 
 /**
  * Verilen dörtgeni "dümdüz" bir belgeye çevirir (perspektif düzeltme) ve isteğe
- * göre gri/siyah-beyaz iyileştirir. Sonuç yeni bir <canvas> olarak döner.
+ * göre gri/siyah-beyaz/otomatik iyileştirir. OpenCV GEREKTİRMEZ — CSP-uyumlu
+ * CPU warp (perspectiveWarp). Sonuç yeni bir <canvas>.
  */
-export async function warpDocument(
+export function warpDocument(
   canvas: HTMLCanvasElement,
   quad: Quad,
   enhance: EnhanceMode = "color",
-): Promise<HTMLCanvasElement> {
-  const cv = await loadOpenCv();
-  const src: CV = cv.imread(canvas);
-  const dst: CV = new cv.Mat();
-  let srcTri: CV | null = null;
-  let dstTri: CV | null = null;
-  let M: CV | null = null;
-  try {
-    const [tl, tr, br, bl] = quad;
-    const widthTop = dist(tr, tl);
-    const widthBottom = dist(br, bl);
-    const heightLeft = dist(bl, tl);
-    const heightRight = dist(br, tr);
-    const dstW = Math.max(1, Math.round(Math.max(widthTop, widthBottom)));
-    const dstH = Math.max(1, Math.round(Math.max(heightLeft, heightRight)));
-
-    srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      tl.x, tl.y,
-      tr.x, tr.y,
-      br.x, br.y,
-      bl.x, bl.y,
-    ]);
-    dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-      0, 0,
-      dstW, 0,
-      dstW, dstH,
-      0, dstH,
-    ]);
-    M = cv.getPerspectiveTransform(srcTri, dstTri);
-    cv.warpPerspective(
-      src,
-      dst,
-      M,
-      new cv.Size(dstW, dstH),
-      cv.INTER_LINEAR,
-      cv.BORDER_CONSTANT,
-      new cv.Scalar(255, 255, 255, 255),
-    );
-
-    if (enhance === "auto") {
-      autoEnhance(cv, dst);
-    } else if (enhance !== "color") {
-      const g: CV = new cv.Mat();
-      cv.cvtColor(dst, g, cv.COLOR_RGBA2GRAY);
-      if (enhance === "bw") {
-        cv.adaptiveThreshold(
-          g,
-          g,
-          255,
-          cv.ADAPTIVE_THRESH_GAUSSIAN_C,
-          cv.THRESH_BINARY,
-          15,
-          10,
-        );
-      }
-      cv.cvtColor(g, dst, cv.COLOR_GRAY2RGBA);
-      g.delete();
-    }
-
-    const out = document.createElement("canvas");
-    out.width = dstW;
-    out.height = dstH;
-    cv.imshow(out, dst);
-    return out;
-  } finally {
-    src.delete();
-    dst.delete();
-    srcTri?.delete();
-    dstTri?.delete();
-    M?.delete();
-  }
+): HTMLCanvasElement {
+  return warpPerspective(canvas, quad as unknown as WarpQuad, enhance as WarpEnhance);
 }
 
 /**
