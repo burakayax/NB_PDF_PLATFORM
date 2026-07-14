@@ -467,7 +467,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     } finally {
       setBusy(false);
     }
-  }, [pages, tr]);
+  }, [pages, tr, fileName]);
 
   // ARANABİLİR PDF (Pro): sayfaları cihazda OCR'lar (Türkçe+İngilizce) ve görünmez
   // metin katmanı gömer → Ctrl+F ile aranabilir, kopyalanabilir PDF. Dosya cihazdan çıkmaz.
@@ -498,7 +498,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     } finally {
       setOcrPct(null);
     }
-  }, [pages, ocrPct, tr]);
+  }, [pages, ocrPct, tr, fileName]);
 
   // ── Sonuç aksiyonları ──
   function downloadBlob(blob: Blob, name: string) {

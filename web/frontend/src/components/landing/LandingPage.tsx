@@ -38,7 +38,7 @@ const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
-  { id: "organize-pdf", tr: "Düzenle", en: "Organize" },
+  { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
 ];
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
@@ -459,7 +459,12 @@ function Hero({
   const [scannedFile, setScannedFile] = useState<File | null>(null);
   const handleScannedToTools = useCallback(
     async (file: File, toolId: string) => {
-      if (isFreeToolId(toolId)) {
+      if (toolId === "pdf-duzenle") {
+        // PDF Düzenle editörü (cihazda görünür, misafire açık) → taranan PDF yüklenir.
+        setScannedFile(file);
+        setAiTool(null);
+        setEditorOn(true);
+      } else if (isFreeToolId(toolId)) {
         // Cihazda çalışan araç → taranan PDF doğrudan aktarılır (initialFile).
         setScannedFile(file);
         setAiTool(null);
@@ -628,7 +633,7 @@ function Hero({
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
           <div className="text-left">
             {editorOn ? (
-              <PdfEditor language={language} accessToken={accessToken} />
+              <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
             ) : aiTool === "batch" ? (
               <AiBatchTool
                 language={language}
