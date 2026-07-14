@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   ModalSkeleton,
   PageSkeleton,
@@ -73,6 +74,7 @@ import {
   type SidebarToolId,
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
+import { useResponsive } from "./components/dashboard/hooks/useResponsive";
 import { QuotaWidget } from "./components/dashboard/QuotaWidget";
 import { AiUsageBreakdown } from "./components/dashboard/AiUsageBreakdown";
 import { DashboardLifecycleNudge } from "./components/dashboard/DashboardLifecycleNudge";
@@ -1156,6 +1158,11 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  // Masaüstü/telefon ayrımı — Belge Tara webde "telefonda açın" ekranı gösterir.
+  const { isMobileOrTablet } = useResponsive();
+  // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
+  // Böylece tarama kaybolmaz; "Geri" ile taramaya dönülür, giriş sonrası abonelik açılır.
+  const [scannerAuthMode, setScannerAuthMode] = useState<"login" | "register" | null>(null);
   // Belge Tarayıcı (giriş yapmış kullanıcı — workspace'te de erişilebilir).
   const [scannerOpen, setScannerOpen] = useState(false);
   // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF burada açılır.
@@ -1570,6 +1577,29 @@ function App() {
         setActiveSidebar("split");
         setContentPanel("tool");
         setView("landing");
+        return;
+      }
+
+      // Belge Tarayıcı "Pro'ya Geç" (Google ile) → dönüşte abonelik sayfasını aç.
+      let pendingUpgrade = false;
+      try {
+        pendingUpgrade = sessionStorage.getItem("nb_pending_upgrade") === "1";
+        if (pendingUpgrade) sessionStorage.removeItem("nb_pending_upgrade");
+      } catch {
+        /* yoksay */
+      }
+      if (pendingUpgrade) {
+        url.pathname = "/workspace";
+        window.history.replaceState(
+          {},
+          "",
+          `${url.pathname}${qs ? `?${qs}` : ""}${url.hash}`,
+        );
+        setSelectedFeatureId("split");
+        setActiveSidebar("subscription");
+        setContentPanel("subscription");
+        setView("web");
+        setUpgradeModalOpen(true);
         return;
       }
 
@@ -3956,6 +3986,101 @@ function App() {
     }
   }
 
+  // Misafir tarayıcıda "Pro'ya Geç" → tam sayfa yerine ÜSTTE açılan giriş/kayıt.
+  // Tarama modalı mount kalır (kaybolmaz); "Geri" ile taramaya dönülür. Giriş
+  // başarılıysa overlay kapanır ve doğrudan abonelik paneli + yükseltme modalı açılır.
+  const openScannerUpgradeAuth = useCallback(() => {
+    setAuthError("");
+    setRegistrationSuccessBanner(null);
+    // Google OAuth tam sayfa yönlendirir → dönüşte abonelik sayfasına gitmek için işaret.
+    try {
+      sessionStorage.setItem("nb_pending_upgrade", "1");
+    } catch {
+      /* sessionStorage yoksa yoksay */
+    }
+    setScannerAuthMode("register");
+  }, []);
+
+  async function handleScannerAuthSubmit(payload: {
+    email: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    city?: string;
+    marketingConsent?: boolean;
+  }) {
+    try {
+      setAuthSubmitting(true);
+      setAuthError("");
+
+      if (scannerAuthMode === "register") {
+        const firstName = payload.firstName?.trim() ?? "";
+        const lastName = payload.lastName?.trim() ?? "";
+        if (!firstName || !lastName) {
+          const msg =
+            language === "tr"
+              ? "Ad ve soyad gereklidir."
+              : "First and last name are required.";
+          setAuthError(msg);
+          throw new Error(msg);
+        }
+        const registerResult = await register({
+          firstName,
+          lastName,
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+          preferredLanguage: language,
+          phone: payload.phone?.trim() || undefined,
+          city: payload.city?.trim() || undefined,
+          marketingConsent: payload.marketingConsent === true,
+        });
+        setRegistrationSuccessBanner(
+          language === "tr"
+            ? "Güvenliğiniz için bir doğrulama e-postası gönderdik. Hesabınızı kullanmaya başlamak için lütfen e-posta adresinizi onaylayın."
+            : registerResult.message,
+        );
+        // Overlay içinde giriş sekmesine geç (kullanıcı taramadan ayrılmadan devam eder).
+        setScannerAuthMode("login");
+        return;
+      }
+
+      const loggedInUser = await login(payload.email, payload.password, false);
+      if (
+        loggedInUser.preferredLanguage &&
+        loggedInUser.preferredLanguage !== language
+      ) {
+        setLanguage(loggedInUser.preferredLanguage);
+      }
+
+      // Giriş başarılı → overlay + tarayıcıyı kapat, doğrudan abonelik sayfasına götür.
+      try {
+        sessionStorage.removeItem("nb_pending_upgrade");
+      } catch {
+        /* yoksay */
+      }
+      setScannerAuthMode(null);
+      setRegistrationSuccessBanner(null);
+      setScannerOpen(false);
+      setSelectedFeatureId("split");
+      setActiveSidebar("subscription");
+      setContentPanel("subscription");
+      setView("web");
+      window.history.replaceState({}, "", "/workspace");
+      setUpgradeModalOpen(true);
+    } catch (error) {
+      const fallback =
+        language === "tr"
+          ? "Kimlik doğrulama işlemi başarısız oldu."
+          : "Authentication failed.";
+      const raw = error instanceof Error ? error.message : fallback;
+      setAuthError(translateAuthApiMessage(raw, language));
+      throw error;
+    } finally {
+      setAuthSubmitting(false);
+    }
+  }
+
   function handleGoToAdmin() {
     setView("admin");
     window.history.pushState({}, "", "/admin");
@@ -5052,6 +5177,46 @@ function App() {
     flags?.featureFlags?.paymentsDisabled !== false && !aiAllowed;
   const aiIsAdmin = user?.role === "ADMIN" || userBalance?.isAdmin === true;
 
+  // Tarayıcı-üstü giriş/kayıt overlay'i (misafir "Pro'ya Geç"). Portal + z-[120]
+  // ile tarama modalının (z-100) ÜSTÜNDE açılır; tarama mount kaldığından foto
+  // kaybolmaz. "Geri" taramaya döner, giriş başarılı olunca abonelik sayfası açılır.
+  const scannerAuthOverlay = scannerAuthMode
+    ? createPortal(
+        <div className="fixed inset-0 z-[120] overflow-y-auto">
+          <Suspense fallback={<PageSkeleton />}>
+            <AuthPage
+              mode={scannerAuthMode}
+              language={language}
+              submitting={authSubmitting || isRestoring}
+              serverError={authError}
+              registrationSuccessBanner={registrationSuccessBanner}
+              onDismissRegistrationSuccess={() => setRegistrationSuccessBanner(null)}
+              onBack={() => {
+                setAuthError("");
+                setRegistrationSuccessBanner(null);
+                setScannerAuthMode(null);
+              }}
+              backLabel={language === "tr" ? "Taramaya dön" : "Back to scan"}
+              onModeChange={(nextMode) => {
+                setAuthError("");
+                setScannerAuthMode(nextMode);
+              }}
+              onSubmit={handleScannerAuthSubmit}
+              onForgotPassword={() => {
+                setAuthError("");
+                setScannerAuthMode(null);
+                setView("forgot_password");
+              }}
+              onOpenTerms={() => openLegalPage("terms")}
+              onOpenPrivacy={() => openLegalPage("privacy")}
+              onOpenKvkk={() => openLegalPage("kvkk")}
+            />
+          </Suspense>
+        </div>,
+        document.body,
+      )
+    : null;
+
   // Geliştirici API dokümantasyonu (detaylı kullanım kılavuzu).
   if (pathname === "/pdf-api/docs") {
     return (
@@ -5123,9 +5288,18 @@ function App() {
     const goRegister = () => setView("register");
     if (seoSlug === "belge-tara") {
       return (
-        <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister}>
-          <DocumentScannerLaunch language={language} isPro={aiAllowed} onUpgrade={goRegister} onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)} />
-        </GuestSeoToolPage>
+        <>
+          <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister}>
+            <DocumentScannerLaunch
+              language={language}
+              isPro={aiAllowed}
+              isDesktop={!isMobileOrTablet}
+              onUpgrade={isAuthenticated ? goRegister : openScannerUpgradeAuth}
+              onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
+            />
+          </GuestSeoToolPage>
+          {scannerAuthOverlay}
+        </>
       );
     }
     if (seoSlug === "aranabilir-pdf") {
@@ -5541,8 +5715,10 @@ function App() {
                 setView("register");
               }
             }}
+            onScannerUpgrade={openScannerUpgradeAuth}
             />
           </Suspense>
+          {scannerAuthOverlay}
           {/* Toast landing'de de gösterilir: logout sonrası kullanıcı buraya döndüğünde
               "Oturum kapatıldı" bildirimi anında görünür (önceden yalnız giriş ekranında çıkıyordu). */}
           {toast ? (
@@ -6408,6 +6584,8 @@ function App() {
             language={language}
             onClose={() => setScannerOpen(false)}
             isPro={aiAllowed}
+            isDesktop={!isMobileOrTablet}
+            onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
             onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
           />
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">

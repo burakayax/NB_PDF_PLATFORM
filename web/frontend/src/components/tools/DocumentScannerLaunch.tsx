@@ -14,11 +14,13 @@ export function DocumentScannerLaunch({
   isPro,
   onUpgrade,
   onUseInTools,
+  isDesktop,
 }: {
   language: Language;
   isPro?: boolean;
   onUpgrade?: () => void;
   onUseInTools?: (file: File, toolId: string) => void;
+  isDesktop?: boolean;
 }) {
   const tr = language === "tr";
   // PWA kısayolundan (?scan=1) gelindiyse tarayıcıyı doğrudan aç.
@@ -83,6 +85,7 @@ export function DocumentScannerLaunch({
             language={language}
             onClose={() => setOpen(false)}
             isPro={isPro}
+            isDesktop={isDesktop}
             onUpgrade={onUpgrade}
             onUseInTools={onUseInTools}
           />
