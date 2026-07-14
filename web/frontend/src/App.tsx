@@ -3853,7 +3853,18 @@ function App() {
     (async () => {
       try {
         const f = await takeScannedPdf();
-        if (!cancelled) setPendingToolFile(f); // f null ise temizle (tek kullanımlık)
+        if (cancelled) return;
+        if (!f) {
+          setPendingToolFile(null);
+          return;
+        }
+        if (isAuthenticated && contentPanel === "tool") {
+          // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
+          await handleNewFiles([f]);
+        } else {
+          // Misafir guest araç / editör paneli → initialFile ile yükle.
+          setPendingToolFile(f);
+        }
       } catch {
         /* yoksay */
       }
@@ -3861,7 +3872,8 @@ function App() {
     return () => {
       cancelled = true;
     };
-  }, [view, selectedFeatureId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, selectedFeatureId, isAuthenticated, contentPanel]);
 
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
