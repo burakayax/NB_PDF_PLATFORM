@@ -9,6 +9,7 @@ import {
   Layers,
   Loader2,
   Lock,
+  Pencil,
   RotateCcw,
   Share2,
   Sliders,
@@ -21,9 +22,10 @@ import { renderPdfToCanvases } from "../../lib/ocr";
 
 type ToolItem = { id: string; icon: React.ReactNode; tr: string; en: string };
 
-// Cihazda (tarayıcıda) çalışan — anında, üyeliksiz.
+// Düzenleme araçları (üyeliksiz kullanılabilir).
 const DEVICE_TOOLS: ToolItem[] = [
-  { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Düzenle / Sırala", en: "Organize" },
+  { id: "pdf-duzenle", icon: <Pencil className="h-5 w-5" />, tr: "PDF Düzenle", en: "Edit PDF" },
+  { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Sayfa Sırala", en: "Reorder pages" },
   { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
   { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
@@ -213,7 +215,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
         {/* Araç paneli */}
         <div className="shrink-0 border-t border-white/[0.08] bg-[#0b1020] p-4 lg:w-80 lg:overflow-y-auto lg:border-l lg:border-t-0">
           <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
-            {tr ? "Cihazda — anında" : "On device — instant"}
+            {tr ? "Düzenle" : "Edit"}
           </p>
           <div className="grid grid-cols-3 gap-2 lg:grid-cols-2">
             {DEVICE_TOOLS.map((t) => toolBtn(t, false))}
