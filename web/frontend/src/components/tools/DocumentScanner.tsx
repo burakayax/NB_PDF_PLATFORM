@@ -30,7 +30,6 @@ import {
   cropQuadFallback,
   detectDocumentQuad,
   fullFrameQuad,
-  loadOpenCv,
   warpDocument,
   type EnhanceMode,
   type Pt,
@@ -202,35 +201,28 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       setQuad(null);
       setError(null);
       setPhase("review");
-      setDetecting(true);
       stopStream();
-      // Önce tarama motorunu (OpenCV) yükle — teşhis için "motor yüklenemedi" ile
-      // "kenar bulunamadı" durumlarını AYIR (birincisi tarayıcı güvenlik/CSP sorunu).
-      try {
-        await loadOpenCv();
-      } catch {
-        setQuad(fullFrameQuad(cnv.width, cnv.height));
-        setError(
-          tr
-            ? "Tarama motoru yüklenemedi (tarayıcı güvenlik ayarı). Sayfayı yenileyip tekrar deneyin; köşeleri elle de ayarlayabilirsin."
-            : "Scan engine failed to load (browser security). Refresh and retry; you can also adjust corners manually.",
-        );
-        setDetecting(false);
-        return;
-      }
+      // Perspektif düzeltme OpenCV GEREKTİRMEZ → kenarları HEMEN tam-kare ver;
+      // kullanıcı beklemeden köşeleri ayarlayabilir.
+      setQuad(fullFrameQuad(cnv.width, cnv.height));
+      setDetecting(true);
+      // Otomatik kenar tespiti OPSİYONEL (OpenCV). Yüklenemezse (ör. tarayıcı
+      // güvenlik ayarı) SESSİZCE manuel moda düşer — hata/yeniden-yükleme YOK.
       try {
         const q = await detectDocumentQuad(cnv);
-        setQuad(q ?? fullFrameQuad(cnv.width, cnv.height));
-        if (!q) {
+        if (q) setQuad(q);
+        else
           setError(
             tr
               ? "Otomatik kenar bulunamadı — köşeleri elle ayarlayabilirsin."
               : "Couldn't auto-detect edges — adjust the corners manually.",
           );
-        }
       } catch {
-        setQuad(fullFrameQuad(cnv.width, cnv.height));
-        setError(tr ? "Kenar tespiti sırasında hata oluştu." : "Edge detection error.");
+        setError(
+          tr
+            ? "Otomatik kenar kullanılamıyor — köşeleri elle ayarlayabilirsin."
+            : "Auto edge detection unavailable — adjust the corners manually.",
+        );
       } finally {
         setDetecting(false);
       }
