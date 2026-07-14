@@ -41,7 +41,7 @@ sentry-sdk[fastapi]>=2.0.0
 
 # Billing / invoicing
 tenacity>=8.2.0
-sendgrid>=6.10.0
+sendgrid>=6.12.5
 
 # Test
 pytest>=8.0.0
