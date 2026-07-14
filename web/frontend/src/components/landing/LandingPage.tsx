@@ -22,6 +22,7 @@ import { AiCompareTool } from "../tools/AiCompareTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { DocumentScanner } from "../tools/DocumentScanner";
+import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
 
@@ -456,13 +457,27 @@ function Hero({
   const { isMobileOrTablet } = useResponsive();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannedFile, setScannedFile] = useState<File | null>(null);
-  const handleScannedToTools = useCallback((file: File, toolId: string) => {
-    setScannedFile(file);
-    setAiTool(null);
-    setEditorOn(false);
-    // Seçilen araç sayfa aracıysa (böl/döndür/sil/düzenle) taranan PDF oraya aktarılır.
-    setFreeTool((isFreeToolId(toolId) ? toolId : "organize-pdf") as FreeToolId);
-  }, []);
+  const handleScannedToTools = useCallback(
+    async (file: File, toolId: string) => {
+      if (isFreeToolId(toolId)) {
+        // Cihazda çalışan araç → taranan PDF doğrudan aktarılır (initialFile).
+        setScannedFile(file);
+        setAiTool(null);
+        setEditorOn(false);
+        setFreeTool(toolId as FreeToolId);
+      } else {
+        // Dönüştürme (sunucu + üyelik) → PDF'i IndexedDB'de KORU, üyelik akışına al.
+        // (Faz 2: giriş sonrası ilgili araç sayfası bu PDF'i geri yükler.)
+        try {
+          await saveScannedPdf(file);
+        } catch {
+          /* IndexedDB yoksa yoksay */
+        }
+        onRegister();
+      }
+    },
+    [onRegister],
+  );
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 pb-16 px-5 sm:px-8 text-center overflow-hidden">
