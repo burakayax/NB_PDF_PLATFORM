@@ -108,6 +108,8 @@ import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { SearchablePdfTool } from "./components/tools/SearchablePdfTool";
 import { DocumentScanner } from "./components/tools/DocumentScanner";
+import { PdfHub } from "./components/tools/PdfHub";
+import { saveScannedPdf } from "./lib/pendingScan";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   mergePdfs,
@@ -1156,6 +1158,8 @@ function App() {
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Belge Tarayıcı (giriş yapmış kullanıcı — workspace'te de erişilebilir).
   const [scannerOpen, setScannerOpen] = useState(false);
+  // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF burada açılır.
+  const [pdfHubFile, setPdfHubFile] = useState<File | null>(null);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -3758,6 +3762,48 @@ function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
 
+  // PDF Merkezi'nde bir araç seçilince: PDF'i koru (IndexedDB) + o araca git.
+  async function handlePickFromHub(toolId: string) {
+    if (!pdfHubFile) return;
+    try {
+      await saveScannedPdf(pdfHubFile);
+    } catch {
+      /* IndexedDB yoksa yoksay */
+    }
+    setPdfHubFile(null);
+    navigateToTool(toolId as FeatureId);
+  }
+
+  // PWA file_handlers: telefonda "PDF ile aç → PDF Platform" → launchQueue ile PDF gelir.
+  useEffect(() => {
+    const w = window as unknown as {
+      launchQueue?: {
+        setConsumer: (cb: (p: { files?: Array<{ getFile: () => Promise<File> }> }) => void) => void;
+      };
+    };
+    if (!w.launchQueue?.setConsumer) return;
+    w.launchQueue.setConsumer(async (params) => {
+      if (!params.files?.length) return;
+      try {
+        const file = await params.files[0]!.getFile();
+        const tool = new URLSearchParams(window.location.search).get("open") || "hub";
+        if (tool === "hub") {
+          setPdfHubFile(file);
+        } else {
+          try {
+            await saveScannedPdf(file);
+          } catch {
+            /* yoksay */
+          }
+          navigateToTool(tool as FeatureId);
+        }
+      } catch {
+        /* yoksay */
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
     if (id !== "subscription" && lockedFeatures.has(id)) {
@@ -5005,6 +5051,19 @@ function App() {
           onOpenPricing={() => { window.location.href = "/#pricing"; }}
         />
       </Suspense>
+    );
+  }
+
+  // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF; state varken her şeyden önce.
+  if (pdfHubFile) {
+    return (
+      <PdfHub
+        file={pdfHubFile}
+        language={language}
+        isPro={aiAllowed}
+        onClose={() => setPdfHubFile(null)}
+        onPickTool={(toolId) => void handlePickFromHub(toolId)}
+      />
     );
   }
 
