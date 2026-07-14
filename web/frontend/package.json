@@ -34,7 +34,7 @@
     "lucide-react": "^0.460.0",
     "motion": "^12.38.0",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^4.10.38",
+    "pdfjs-dist": "^6.1.200",
     "react": "latest",
     "react-dom": "latest",
     "react-phone-number-input": "^3.4.16",
