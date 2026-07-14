@@ -62,16 +62,25 @@ function quadArea(q: Quad): number {
   return Math.abs(a) / 2;
 }
 
+async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise<Quad | null> {
+  try {
+    const r = await s.scan(canvas, { mode: "detect", maxProcessingDimension: 900 });
+    if (r.success && r.corners) return cornersToQuad(r.corners);
+  } catch {
+    /* yoksay */
+  }
+  return null;
+}
+
 export async function detectDocumentQuad(
   canvas: HTMLCanvasElement,
   useMl = false,
 ): Promise<Quad | null> {
   const s = await getScanner();
   const imgArea = canvas.width * canvas.height;
-  const cands: Quad[] = [];
 
-  // ML (nöral) dedektör: zorlu fotoğraflarda daha isabetli. Model + ORT wasm KENDİ
-  // sunucumuzdan (self-host) iner → gizlilik + CSP korunur. Canlıda kullanılmaz (yavaş).
+  // ÖNCELİK: ML (nöral) dedektör — en isabetli. Model+ORT wasm self-host (gizli/CSP).
+  // Canlıda kullanılmaz (yavaş); yalnız çekimde.
   if (useMl) {
     try {
       const r = await s.scan(canvas, {
@@ -79,25 +88,21 @@ export async function detectDocumentQuad(
         detector: "ml",
         ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/" },
       });
-      if (r.success && r.corners) cands.push(cornersToQuad(r.corners));
+      if (r.success && r.corners) {
+        const q = cornersToQuad(r.corners);
+        // ML sonucu makul (kadrajı doldurmuyor) → DOĞRUDAN kullan.
+        if (quadArea(q) < imgArea * 0.92) return q;
+        // ML neredeyse tüm kadrajı seçmiş (masa/çerçeve şüphesi) → classical daha
+        // küçük/makul bir belge bulursa onu tercih et; yoksa yine ML.
+        const qc = await classicalQuad(s, canvas);
+        if (qc && quadArea(qc) < quadArea(q)) return qc;
+        return q;
+      }
     } catch {
-      /* ML yok → classical yeter */
+      /* ML yok → classical'a düş */
     }
   }
-  try {
-    const r = await s.scan(canvas, { mode: "detect", maxProcessingDimension: 900 });
-    if (r.success && r.corners) cands.push(cornersToQuad(r.corners));
-  } catch {
-    /* yoksay */
-  }
-  if (cands.length === 0) return null;
-
-  // Masa/çerçeve genelde kadrajın ~%95+'ini kaplar; belge daha küçüktür. Kadrajı
-  // neredeyse dolduran (masa şüphesi) adayları ele, kalanların en büyüğünü (belge) seç.
-  const scored = cands.map((q) => ({ q, a: quadArea(q) }));
-  const good = scored.filter((x) => x.a < imgArea * 0.95 && x.a > imgArea * 0.12);
-  if (good.length) return good.sort((x, y) => y.a - x.a)[0]!.q;
-  return scored.sort((x, y) => x.a - y.a)[0]!.q; // hepsi büyükse en küçüğü (masadan kaç)
+  return classicalQuad(s, canvas);
 }
 
 /**
