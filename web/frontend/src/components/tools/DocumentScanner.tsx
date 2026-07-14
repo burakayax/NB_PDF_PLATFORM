@@ -209,7 +209,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       // Otomatik kenar tespiti OPSİYONEL (OpenCV). Yüklenemezse (ör. tarayıcı
       // güvenlik ayarı) SESSİZCE manuel moda düşer — hata/yeniden-yükleme YOK.
       try {
-        const q = await detectDocumentQuad(cnv);
+        // Çekimde ML (nöral) dedektör — daha isabetli otomatik kenar (self-host, gizli).
+        const q = await detectDocumentQuad(cnv, true);
         if (q) setQuad(q);
         else
           setError(
