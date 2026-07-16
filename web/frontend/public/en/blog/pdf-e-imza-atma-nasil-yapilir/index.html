@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>How to Sign a PDF Electronically: Free, No Sign-up (2026) — PDF Platform</title>
+    <meta name="description" content="How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="How to Sign a PDF Electronically: Free, No Sign-up (2026) — PDF Platform" />
+    <meta property="og:description" content="How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="How to Sign a PDF Electronically: Free, No Sign-up (2026) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/pdf-e-imza-atma-nasil-yapilir" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="How to Sign a PDF Electronically: Free, No Sign-up (2026) — PDF Platform" />
+    <meta name="twitter:description" content="How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="How to Sign a PDF Electronically: Free, No Sign-up (2026) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Sign a PDF Electronically: Free, No Sign-up (2026)","description":"How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free.","datePublished":"2026-07-10","dateModified":"2026-07-10","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/pdf-e-imza-atma-nasil-yapilir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"How to Sign a PDF Electronically: Free, No Sign-up (2026)","description":"How to sign a PDF: draw, type or upload your signature and sign contracts and forms in seconds. Your signature never leaves your device — no sign-up, free.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Open the PDF","text":"Drag and drop or choose the contract or form to sign. The file opens in your browser."},{"@type":"HowToStep","position":2,"name":"Create your signature","text":"Click «Add signature» to draw, type or upload it. It's placed in the center of the page as soon as it's created."},{"@type":"HowToStep","position":3,"name":"Place and adjust","text":"Drag it where you want, resize from the corner, rotate with the top handle, and adjust opacity if needed. You can also add a date or text."},{"@type":"HowToStep","position":4,"name":"Apply and download","text":"For multi-page files use «Apply to all pages» to copy it to the same spot, then click «Apply & download». Your signed PDF is ready."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I sign a PDF?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF, click «Add signature» to draw/type/upload it; it's placed on the page. Drag to position, resize from the corner, then «Apply & download». Everything runs in your browser."}},{"@type":"Question","name":"Is my signature uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Signing happens entirely on your device; the PDF and signature are never uploaded. It's 100% private and needs no sign-up."}},{"@type":"Question","name":"Can I put the same signature on multiple pages?","acceptedAnswer":{"@type":"Answer","text":"Yes. Place it on one page and click «Apply to all pages» to add it at the same position across all pages."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>How to Sign a PDF Electronically: Free, No Sign-up (2026)</h1><p class="seo-intro">Stop printing, wet-signing and re-scanning contracts. This guide shows how to sign a PDF electronically — by drawing, typing or uploading your signature — without your file ever leaving your device.</p><article class="seo-article"><p class="seo-lead">Printing a contract, signing it by hand and scanning it back is slow and lossy. Signing the PDF directly is far faster and cleaner. Here&#39;s how to do it without your file leaving your device and without an account.</p><h2>Electronic signature vs. qualified e-signature</h2><p>In everyday use, &quot;signing a PDF&quot; means placing your signature image on the document — enough for most contracts, quotes, rental forms and letters. A qualified electronic signature (QES) required by some authorities needs a separate certificate/device. This tool provides the first kind: quick, visible signature placement.</p><h2>Create your signature three ways</h2><p>The Sign PDF tool lets you capture your signature by drawing with the mouse/finger, typing your name in a handwriting font, or uploading a signature image (transparent PNG works best).</p><ul><li>Draw: most natural with a finger on touch screens.</li><li>Type: your name becomes a handwriting font.</li><li>Upload: add your stamp/signature image.</li></ul><h2>Step by step: sign a PDF</h2><ol><li><strong>Open the PDF:</strong> Drag and drop or choose the contract or form to sign. The file opens in your browser.</li><li><strong>Create your signature:</strong> Click «Add signature» to draw, type or upload it. It&#39;s placed in the center of the page as soon as it&#39;s created.</li><li><strong>Place and adjust:</strong> Drag it where you want, resize from the corner, rotate with the top handle, and adjust opacity if needed. You can also add a date or text.</li><li><strong>Apply and download:</strong> For multi-page files use «Apply to all pages» to copy it to the same spot, then click «Apply &amp; download». Your signed PDF is ready.</li></ol><p>Your signature and file are NOT uploaded — signing happens entirely in your browser (on your device), so you can sign confidential documents safely.</p><p><a href="/tools/pdf-imzala"><strong>Sign PDF</strong> — Sign your contract in seconds — no sign-up, on your device.</a></p><h2>Put the same signature on every page</h2><p>Multi-page contracts often need a signature on each page. Place your signature once and click «Apply to all pages» to copy it to the same position across all pages. You can also use Ctrl+C / Ctrl+V to copy an item elsewhere.</p><h2>Signature + date + text together</h2><p>You can add a date and free text (e.g. &quot;Read and approved&quot;) next to the signature, pick any text color, and position everything by dragging — all burned into the PDF in one pass.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-imzala">Sign PDF</a></li><li><a href="/en/tools/pdf-duzenle">Edit PDF</a></li><li><a href="/en/tools/pdf-yorumla">Markup PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I sign a PDF?</h3><p>Upload the PDF, click «Add signature» to draw/type/upload it; it&#39;s placed on the page. Drag to position, resize from the corner, then «Apply &amp; download». Everything runs in your browser.</p></div><div class="seo-faq-item"><h3>Is my signature uploaded to a server?</h3><p>No. Signing happens entirely on your device; the PDF and signature are never uploaded. It&#39;s 100% private and needs no sign-up.</p></div><div class="seo-faq-item"><h3>Can I put the same signature on multiple pages?</h3><p>Yes. Place it on one page and click «Apply to all pages» to add it at the same position across all pages.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

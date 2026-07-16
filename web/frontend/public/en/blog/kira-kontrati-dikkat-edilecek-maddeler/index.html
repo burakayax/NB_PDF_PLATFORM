@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>What to Check Before Signing a Lease Agreement — PDF Platform</title>
+    <meta name="description" content="Clauses to review before signing a lease: rent increase, deposit, eviction, dues, term. Understand the contract quickly with AI." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="What to Check Before Signing a Lease Agreement — PDF Platform" />
+    <meta property="og:description" content="Clauses to review before signing a lease: rent increase, deposit, eviction, dues, term. Understand the contract quickly with AI." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="What to Check Before Signing a Lease Agreement — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/kira-kontrati-dikkat-edilecek-maddeler" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="What to Check Before Signing a Lease Agreement — PDF Platform" />
+    <meta name="twitter:description" content="Clauses to review before signing a lease: rent increase, deposit, eviction, dues, term. Understand the contract quickly with AI." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="What to Check Before Signing a Lease Agreement — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"What to Check Before Signing a Lease Agreement","description":"Clauses to review before signing a lease: rent increase, deposit, eviction, dues, term. Understand the contract quickly with AI.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/kira-kontrati-dikkat-edilecek-maddeler","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What are the most important clauses in a lease?","acceptedAnswer":{"@type":"Answer","text":"Rent increase rate, deposit return conditions, term, eviction/termination clauses, and responsibility for dues/repairs."}},{"@type":"Question","name":"Can I ask AI about a clause in the contract?","acceptedAnswer":{"@type":"Answer","text":"Yes. Upload the lease to AI Chat and ask directly; answers rely only on the document's content."}},{"@type":"Question","name":"Does AI give legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. It helps you understand the document but isn't a substitute for legal advice; consult a lawyer on binding matters."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>What to Check Before Signing a Lease Agreement</h1><p class="seo-intro">Before quickly signing a lease, a few clauses make a big difference later. What to look for, and how AI helps.</p><article class="seo-article"><p class="seo-lead">Leases often look standard, but clauses like deposit return, rent increase rate and eviction terms can cause serious disputes later. Check these before signing.</p><h2>Lease checklist</h2><ul><li>Rent amount, payment day and method.</li><li>Rent increase rate and which index it&#39;s tied to.</li><li>Deposit amount and return conditions.</li><li>Term and renewal/termination clauses.</li><li>Who&#39;s responsible for dues, bills and repairs?</li><li>Eviction conditions and notice periods.</li><li>Inventory list and record of existing damage.</li></ul><h2>Ask the AI about the contract</h2><p>Finding a specific clause in a long contract takes time. With PDF Platform&#39;s AI Chat tool you can upload the lease and ask directly: &quot;What&#39;s the rent increase tied to?&quot;, &quot;When is the deposit returned?&quot;. The AI answers based only on the contract.</p><p><a href="/tools/pdf-sohbet"><strong>Ask Your Contract</strong> — Upload the lease and ask the clause you care about directly.</a></p><p>AI helps you understand the contract; for legal validity and disputes, consult a lawyer. This tool is not a substitute for legal advice.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-ozetle">Summarize PDF</a></li><li><a href="/en/tools/pdf-sohbet">Chat with PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>What are the most important clauses in a lease?</h3><p>Rent increase rate, deposit return conditions, term, eviction/termination clauses, and responsibility for dues/repairs.</p></div><div class="seo-faq-item"><h3>Can I ask AI about a clause in the contract?</h3><p>Yes. Upload the lease to AI Chat and ask directly; answers rely only on the document&#39;s content.</p></div><div class="seo-faq-item"><h3>Does AI give legal advice?</h3><p>No. It helps you understand the document but isn&#39;t a substitute for legal advice; consult a lawyer on binding matters.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

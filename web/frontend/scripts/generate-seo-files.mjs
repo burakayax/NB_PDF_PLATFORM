@@ -1,12 +1,18 @@
 /**
- * Production SEO assets (TR birincil, EN ikincil):
+ * Production SEO assets (TR birincil, EN ikincil — /en/ alt dizini):
  * - robots.txt
- * - sitemap.xml (lastmod dahil)
+ * - sitemap.xml (lastmod + çift yönlü hreflang dahil)
  * - prerendered static HTML snapshots (gerçek görünür gövde + zengin JSON-LD)
+ *   TR (öneksiz) + EN (/en/ önekli) sürümler.
  *
  * Tüm metin/şema içeriği TEK kaynaktan gelir: src/seo/seoContent.mjs
  * Böylece Google'ın gördüğü statik HTML, tarayıcıda enjekte edilen runtime
  * meta verileriyle hiçbir zaman ayrışmaz.
+ *
+ * Çok dilli model: her mantıksal sayfa iki URL'de yayınlanır —
+ *   TR: https://site/tools/merge-pdf     (canonical=kendisi)
+ *   EN: https://site/en/tools/merge-pdf  (canonical=kendisi)
+ * İkisi de karşılıklı hreflang (tr <-> en) + x-default=TR taşır.
  */
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -34,8 +40,116 @@ const publicDir = join(frontendRoot, "public");
 
 /** Statik prerender birincil dili. Hedef pazar Türkiye → "tr". */
 const PRIMARY_LANG = "tr";
+/** Desteklenen diller (öneksiz TR + /en/ önekli EN). */
+const LANGS = ["tr", "en"];
 
-// Tematik iç linkleme haritaları seoContent.mjs'ten gelir (SEO + React ortak kaynak).
+// ─── Dile göre URL öneki / yol yardımcıları ──────────────────────────────────
+/** EN sayfaları /en/ altında; TR öneksiz. */
+function langPrefix(lang) {
+  return lang === "en" ? "/en" : "";
+}
+/** routePath ("/", "/tools/x", ...) → o dildeki tam URL (canonical). */
+function urlForRoute(baseUrl, routePath, lang) {
+  const suffix = routePath === "/" ? "" : routePath;
+  return `${baseUrl}${langPrefix(lang)}${suffix}` || baseUrl;
+}
+/** routePath → o dildeki public/ çıktı dosya yolu. */
+function outFileForRoute(routePath, lang) {
+  const rel = routePath === "/" ? "" : routePath.replace(/^\//, "");
+  return join(publicDir, langPrefix(lang).replace(/^\//, ""), rel, "index.html");
+}
+/** Görünür gövde/iç link öneki (EN sayfalarda linkler /en/ altında kalsın). */
+function linkBase(lang) {
+  return langPrefix(lang);
+}
+
+// ─── Dile bağlı sabit arayüz metinleri (görünür gövde + şema) ─────────────────
+const UI = {
+  tr: {
+    relatedTools: "İlgili Araçlar",
+    relatedGuides: "İlgili Rehberler",
+    toolsForTask: "Bu İşi Yapan PDF Araçları",
+    allTools: "Tüm PDF Araçları",
+    allPosts: "Tüm Yazılar",
+    faqHeading: "Sık Sorulan Sorular",
+    ariaRelatedTools: "İlgili araçlar",
+    ariaToolsForTask: "İlgili PDF araçları",
+    ariaRelatedGuides: "İlgili rehberler",
+    ariaBlogPosts: "Blog yazıları",
+    ariaAllTools: "PDF araçları",
+    ariaFaq: "Sık sorulan sorular",
+    pricingCta: (base) =>
+      `<p><a href="${base}/register">Ücretsiz başlayın</a> veya <a href="${base || "/"}">tüm PDF araçlarını</a> inceleyin.</p>`,
+    blogIndex: {
+      title: `Blog — Rehberler & İpuçları | ${BRAND}`,
+      description:
+        "PDF işlerini hızlandıran pratik rehberler: birleştirme, veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştırın.",
+      h1: "PDF Platform Blog",
+      intro:
+        "PDF birleştirme, faturadan veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştıran pratik rehberler.",
+    },
+    genericToolDesc: (label) =>
+      `${label} işlemini güvenli, profesyonel bir PDF platformunda gerçekleştirin.`,
+    genericToolIntro: (label) =>
+      `${label} aracını kullanın; dosyanızı yükleyin, işleyin ve sonucu indirin.`,
+    orgDescription:
+      "Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.",
+    softwareOfferDesc:
+      "Ücretsiz plan mevcut. Ücretsiz paket ve aylık abonelik seçenekleri sunulmaktadır.",
+    pricingOfferName: "PDF Platform — Abonelik Planları",
+    pricingOfferDesc:
+      "Ücretsiz plan dahil aylık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi.",
+    returnPolicyName: "7 Gün Para İade Garantisi",
+    returnPolicyDesc:
+      "Satın alma tarihinden itibaren 7 gün içinde tam iade. Gerekçe belirtmenize gerek yoktur.",
+    inLanguageTag: "tr-TR",
+    ogLocale: "tr_TR",
+    ogLocaleAlt: "en_US",
+    priceCurrency: "TRY",
+  },
+  en: {
+    relatedTools: "Related Tools",
+    relatedGuides: "Related Guides",
+    toolsForTask: "PDF Tools for This Task",
+    allTools: "All PDF Tools",
+    allPosts: "All Posts",
+    faqHeading: "Frequently Asked Questions",
+    ariaRelatedTools: "Related tools",
+    ariaToolsForTask: "Related PDF tools",
+    ariaRelatedGuides: "Related guides",
+    ariaBlogPosts: "Blog posts",
+    ariaAllTools: "PDF tools",
+    ariaFaq: "Frequently asked questions",
+    pricingCta: (base) =>
+      `<p><a href="${base}/register">Start for free</a> or explore <a href="${base || "/"}">all PDF tools</a>.</p>`,
+    blogIndex: {
+      title: `Blog — Guides & Tips | ${BRAND}`,
+      description:
+        "Practical guides that speed up your PDF work: merging, data extraction, translation, and AI tools to streamline your workflow.",
+      h1: "PDF Platform Blog",
+      intro:
+        "Practical guides on PDF merging, invoice data extraction, translation, and AI tools to streamline your workflow.",
+    },
+    genericToolDesc: (label) =>
+      `Perform ${label} on a secure, professional PDF platform.`,
+    genericToolIntro: (label) =>
+      `Use the ${label} tool: upload your file, process it, and download the result.`,
+    orgDescription:
+      "Professional PDF merge, convert, compress, and edit platform — built for business document workflows.",
+    softwareOfferDesc:
+      "Free plan available. Free packs and monthly subscription plans offered.",
+    pricingOfferName: "PDF Platform — Subscription Plans",
+    pricingOfferDesc:
+      "Monthly subscription plans including a free tier. 7-day no-questions-asked money-back guarantee.",
+    returnPolicyName: "7-Day Money-Back Guarantee",
+    returnPolicyDesc:
+      "Full refund within 7 days of purchase. No questions asked.",
+    inLanguageTag: "en-US",
+    ogLocale: "en_US",
+    ogLocaleAlt: "tr_TR",
+    priceCurrency: "USD",
+  },
+};
 
 function readEnvBaseUrl() {
   let base =
@@ -104,19 +218,26 @@ function escapeHtml(s) {
     .replace(/'/g, "&#39;");
 }
 
-function ensurePublicFilePathForRoute(routePath) {
-  if (routePath === "/") {
-    return join(publicDir, "index.html");
-  }
-  return join(publicDir, routePath.replace(/^\//, ""), "index.html");
-}
-
 const todayIso = new Date().toISOString().slice(0, 10);
 
-// ─── Route → SEO meta (TR birincil) ──────────────────────────────────────────
-function pageMetaForRoute(routePath) {
-  const lang = PRIMARY_LANG;
+/** Bir routePath'in belirtilen dilde içeriği var mı? (EN'de eksik blog atlanır) */
+function routeHasLang(routePath, lang) {
+  if (lang === PRIMARY_LANG) return true;
+  if (routePath.startsWith("/blog/")) {
+    const slug = routePath.slice("/blog/".length);
+    const p = BLOG_POSTS.find((x) => x.slug === slug);
+    return Boolean(p && p[lang] && p[lang].title);
+  }
+  if (routePath.startsWith("/tools/")) {
+    const slug = routePath.slice("/tools/".length);
+    // Eşlenmemiş araç jenerik içerikle her dilde üretilebilir.
+    return Boolean(!TOOL_SEO[slug] || TOOL_SEO[slug]?.[lang]);
+  }
+  return true;
+}
 
+// ─── Route → SEO meta ────────────────────────────────────────────────────────
+function pageMetaForRoute(routePath, lang) {
   if (routePath === "/") {
     const c = LANDING_SEO[lang];
     return {
@@ -148,9 +269,9 @@ function pageMetaForRoute(routePath) {
     const label = slug.replace(/-/g, " ");
     return {
       title: `${label} | ${BRAND}`,
-      description: `${label} işlemini güvenli, profesyonel bir PDF platformunda gerçekleştirin.`,
+      description: UI[lang].genericToolDesc(label),
       h1: label,
-      intro: `${label} aracını kullanın; dosyanızı yükleyin, işleyin ve sonucu indirin.`,
+      intro: UI[lang].genericToolIntro(label),
       keywords: [],
       faq: [],
       kind: "tool",
@@ -172,11 +293,12 @@ function pageMetaForRoute(routePath) {
   }
 
   if (routePath === "/blog") {
+    const c = UI[lang].blogIndex;
     return {
-      title: `Blog — Rehberler & İpuçları | ${BRAND}`,
-      description: "PDF işlerini hızlandıran pratik rehberler: birleştirme, veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştırın.",
-      h1: "PDF Platform Blog",
-      intro: "PDF birleştirme, faturadan veri çıkarma, çeviri ve yapay zekâ araçlarıyla iş akışınızı kolaylaştıran pratik rehberler.",
+      title: c.title,
+      description: c.description,
+      h1: c.h1,
+      intro: c.intro,
       keywords: [],
       faq: [],
       kind: "blogindex",
@@ -188,14 +310,14 @@ function pageMetaForRoute(routePath) {
   if (routePath.startsWith("/blog/")) {
     const slug = routePath.slice("/blog/".length);
     const p = BLOG_POSTS.find((x) => x.slug === slug);
-    if (p) {
+    if (p && p[lang]) {
       const c = p[lang];
       return {
         title: `${c.title} — ${BRAND}`,
         description: c.description,
         h1: c.title,
         intro: c.excerpt,
-        keywords: p.tags[lang] || [],
+        keywords: (p.tags && p.tags[lang]) || [],
         faq: c.faq || [],
         kind: "blogpost",
         post: p,
@@ -216,9 +338,9 @@ function pageMetaForRoute(routePath) {
 
   return {
     title: BRAND,
-    description: "Profesyonel PDF platformu.",
+    description: lang === "tr" ? "Profesyonel PDF platformu." : "Professional PDF platform.",
     h1: BRAND,
-    intro: "Profesyonel PDF araçları.",
+    intro: lang === "tr" ? "Profesyonel PDF araçları." : "Professional PDF tools.",
     keywords: [],
     faq: [],
     kind: "other",
@@ -228,9 +350,9 @@ function pageMetaForRoute(routePath) {
 }
 
 // ─── JSON-LD ──────────────────────────────────────────────────────────────────
-function renderStructuredData(baseUrl, routePath, meta) {
-  const lang = PRIMARY_LANG;
-  const canonicalUrl = `${baseUrl}${routePath === "/" ? "" : routePath}` || baseUrl;
+function renderStructuredData(baseUrl, routePath, meta, lang) {
+  const t = UI[lang];
+  const canonicalUrl = urlForRoute(baseUrl, routePath, lang);
   const orgId = `${baseUrl}/#organization`;
   const nodes = [];
 
@@ -240,7 +362,7 @@ function renderStructuredData(baseUrl, routePath, meta) {
     "@id": `${baseUrl}/#website`,
     name: BRAND,
     url: baseUrl,
-    inLanguage: "tr-TR",
+    inLanguage: t.inLanguageTag,
     description: LANDING_SEO[lang].description,
     publisher: { "@id": orgId },
   });
@@ -257,8 +379,7 @@ function renderStructuredData(baseUrl, routePath, meta) {
       width: 192,
       height: 192,
     },
-    description:
-      "Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.",
+    description: t.orgDescription,
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
@@ -285,10 +406,9 @@ function renderStructuredData(baseUrl, routePath, meta) {
       offers: {
         "@type": "Offer",
         price: "0",
-        priceCurrency: "TRY",
+        priceCurrency: t.priceCurrency,
         availability: "https://schema.org/InStock",
-        description:
-          "Ücretsiz plan mevcut. Ücretsiz paket ve aylık abonelik seçenekleri sunulmaktadır.",
+        description: t.softwareOfferDesc,
       },
       brand: { "@type": "Brand", name: BRAND },
       publisher: { "@id": orgId },
@@ -301,7 +421,7 @@ function renderStructuredData(baseUrl, routePath, meta) {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
       itemListElement: [
-        { "@type": "ListItem", position: 1, name: BRAND, item: baseUrl },
+        { "@type": "ListItem", position: 1, name: BRAND, item: urlForRoute(baseUrl, "/", lang) },
         {
           "@type": "ListItem",
           position: 2,
@@ -316,18 +436,16 @@ function renderStructuredData(baseUrl, routePath, meta) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "Offer",
-      name: "PDF Platform — Abonelik Planları",
-      description:
-        "Ücretsiz plan dahil aylık abonelik seçenekleri. 7 gün koşulsuz para iade garantisi.",
+      name: t.pricingOfferName,
+      description: t.pricingOfferDesc,
       url: canonicalUrl,
-      priceCurrency: "TRY",
+      priceCurrency: t.priceCurrency,
       availability: "https://schema.org/InStock",
       seller: { "@id": orgId },
       hasMerchantReturnPolicy: {
         "@type": "MerchantReturnPolicy",
-        name: "7 Gün Para İade Garantisi",
-        description:
-          "Satın alma tarihinden itibaren 7 gün içinde tam iade. Gerekçe belirtmenize gerek yoktur.",
+        name: t.returnPolicyName,
+        description: t.returnPolicyDesc,
         returnPolicyCategory:
           "https://schema.org/MerchantReturnFiniteReturnWindow",
         merchantReturnDays: 7,
@@ -353,8 +471,6 @@ function renderStructuredData(baseUrl, routePath, meta) {
       image: `${baseUrl}${DEFAULT_OG_IMAGE}`,
     });
 
-    // HowTo — yazıdaki adım adım "steps" bloğunu yapılandırılmış rehbere çevirir.
-    // Rich result Google'da sınırlansa da AI Overviews / AEO için değerlidir.
     const stepsBlock = Array.isArray(meta.blocks)
       ? meta.blocks.find((b) => b.t === "steps" && Array.isArray(b.items) && b.items.length)
       : null;
@@ -375,8 +491,6 @@ function renderStructuredData(baseUrl, routePath, meta) {
     }
   }
 
-  // FAQPage — rich result Mayıs 2026'da kaldırıldı ancak AI Overviews / AEO için
-  // hâlâ değerli; schema geçerli olduğundan korunur.
   if (meta.includeFaq && Array.isArray(meta.faq) && meta.faq.length > 0) {
     nodes.push({
       "@context": "https://schema.org",
@@ -398,9 +512,6 @@ function renderStructuredData(baseUrl, routePath, meta) {
 }
 
 // ─── Görünür gövde (crawler + AI motorları + ilk boya içeriği) ────────────────
-// İçerik #root içine yazılır; React createRoot mount olunca temizleyip yeniden
-// render eder (çift içerik olmaz). Crawler JS çalıştırmasa bile içeriği görür.
-/** Blog bloklarını crawler-dostu semantik HTML'e çevirir. */
 function renderBlogBlocksHtml(blocks) {
   return blocks
     .map((b) => {
@@ -418,23 +529,26 @@ function renderBlogBlocksHtml(blocks) {
 }
 
 // Araç kısa etiketi — SEO title'ın "—" öncesi kısmı (ör. "PDF Birleştir").
-function toolShortLabel(slug) {
-  const t = TOOL_SEO[slug]?.[PRIMARY_LANG]?.title || "";
+function toolShortLabel(slug, lang) {
+  const t = TOOL_SEO[slug]?.[lang]?.title || "";
   return (t.split(/[—–|]/)[0] || "").trim() || slug.replace(/-/g, " ");
 }
-function toolLi(slug) {
-  return `<li><a href="/tools/${slug}">${escapeHtml(toolShortLabel(slug))}</a></li>`;
+function toolLi(slug, lang) {
+  return `<li><a href="${linkBase(lang)}/tools/${slug}">${escapeHtml(toolShortLabel(slug, lang))}</a></li>`;
 }
-function blogTitleFor(slug) {
+function blogTitleFor(slug, lang) {
   const p = BLOG_POSTS.find((x) => x.slug === slug);
-  return p ? p[PRIMARY_LANG].title : slug.replace(/-/g, " ");
+  if (!p) return slug.replace(/-/g, " ");
+  return (p[lang] || p[PRIMARY_LANG]).title;
 }
 // Bu aracı ilgili gösteren blog yazıları (ters harita).
 function guidesForTool(toolSlug) {
   return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(toolSlug));
 }
 
-function renderVisibleBody(baseUrl, meta) {
+function renderVisibleBody(baseUrl, meta, lang) {
+  const t = UI[lang];
+  const base = linkBase(lang);
   const parts = [];
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
   parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
@@ -442,30 +556,29 @@ function renderVisibleBody(baseUrl, meta) {
   // Blog yazısı — tam makale gövdesi (crawler görünür metin)
   if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
     parts.push(`<article class="seo-article">${renderBlogBlocksHtml(meta.blocks)}</article>`);
-    // Yazıdaki işi yapan araçlara CTA + iç link
     const rel = (meta.post && BLOG_RELATED_TOOLS[meta.post.slug]) || [];
     if (rel.length) {
       parts.push(
-        `<nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul>${rel.map(toolLi).join("")}</ul></nav>`,
+        `<nav aria-label="${t.ariaToolsForTask}" class="seo-related-tools"><h2>${t.toolsForTask}</h2><ul>${rel.map((s) => toolLi(s, lang)).join("")}</ul></nav>`,
       );
     }
   }
 
-  // Araç sayfası — tematik ilgili araçlar + ilgili rehberler (flat listeden önce)
+  // Araç sayfası — tematik ilgili araçlar + ilgili rehberler
   if (meta.kind === "tool" && meta.slug) {
     const rel = TOOL_RELATED_TOOLS[meta.slug] || [];
     if (rel.length) {
       parts.push(
-        `<nav aria-label="İlgili araçlar" class="seo-related-tools"><h2>İlgili Araçlar</h2><ul>${rel.map(toolLi).join("")}</ul></nav>`,
+        `<nav aria-label="${t.ariaRelatedTools}" class="seo-related-tools"><h2>${t.relatedTools}</h2><ul>${rel.map((s) => toolLi(s, lang)).join("")}</ul></nav>`,
       );
     }
-    const guides = guidesForTool(meta.slug);
+    const guides = guidesForTool(meta.slug).filter((s) => routeHasLang(`/blog/${s}`, lang));
     if (guides.length) {
       const gl = guides
-        .map((s) => `<li><a href="/blog/${s}">${escapeHtml(blogTitleFor(s))}</a></li>`)
+        .map((s) => `<li><a href="${base}/blog/${s}">${escapeHtml(blogTitleFor(s, lang))}</a></li>`)
         .join("");
       parts.push(
-        `<nav aria-label="İlgili rehberler" class="seo-related-guides"><h2>İlgili Rehberler</h2><ul>${gl}</ul></nav>`,
+        `<nav aria-label="${t.ariaRelatedGuides}" class="seo-related-guides"><h2>${t.relatedGuides}</h2><ul>${gl}</ul></nav>`,
       );
     }
   }
@@ -473,30 +586,29 @@ function renderVisibleBody(baseUrl, meta) {
   // Blog index — yazı kartlarına iç bağlantı
   if (meta.kind === "blogindex") {
     const links = getBlogPostsSorted()
+      .filter((p) => routeHasLang(`/blog/${p.slug}`, lang))
       .map((p) => {
-        const c = p[PRIMARY_LANG];
-        return `<li><a href="/blog/${p.slug}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
+        const c = p[lang] || p[PRIMARY_LANG];
+        return `<li><a href="${base}/blog/${p.slug}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
       })
       .join("");
-    parts.push(`<nav aria-label="Blog yazıları" class="seo-posts"><h2>Tüm Yazılar</h2><ul>${links}</ul></nav>`);
+    parts.push(`<nav aria-label="${t.ariaBlogPosts}" class="seo-posts"><h2>${t.allPosts}</h2><ul>${links}</ul></nav>`);
   }
 
-  // Araç ve landing sayfalarında tüm araçlara iç bağlantı (crawl + sitelink sinyali)
+  // Araç ve landing sayfalarında tüm araçlara iç bağlantı
   if (meta.kind === "tool" || meta.kind === "landing") {
     const links = TOOL_SLUGS.map((slug) => {
-      const c = TOOL_SEO[slug]?.[PRIMARY_LANG];
+      const c = TOOL_SEO[slug]?.[lang];
       const label = c ? c.h1 : slug.replace(/-/g, " ");
-      return `<li><a href="/tools/${slug}">${escapeHtml(label)}</a></li>`;
+      return `<li><a href="${base}/tools/${slug}">${escapeHtml(label)}</a></li>`;
     }).join("");
     parts.push(
-      `<nav aria-label="PDF araçları" class="seo-tools"><h2>Tüm PDF Araçları</h2><ul>${links}</ul></nav>`,
+      `<nav aria-label="${t.ariaAllTools}" class="seo-tools"><h2>${t.allTools}</h2><ul>${links}</ul></nav>`,
     );
   }
 
   if (meta.kind === "pricing") {
-    parts.push(
-      `<p><a href="/register">Ücretsiz başlayın</a> veya <a href="/">tüm PDF araçlarını</a> inceleyin.</p>`,
-    );
+    parts.push(t.pricingCta(base));
   }
 
   // SSS bölümü (görünür) — FAQPage schema ile birebir aynı metin
@@ -508,17 +620,57 @@ function renderVisibleBody(baseUrl, meta) {
       )
       .join("");
     parts.push(
-      `<section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2>${items}</section>`,
+      `<section aria-label="${t.ariaFaq}" class="seo-faq"><h2>${t.faqHeading}</h2>${items}</section>`,
     );
   }
 
   return `<div id="root"><main class="seo-prerender">${parts.join("")}</main></div>`;
 }
 
+// ─── hreflang blokları (HTML <link> + sitemap <xhtml:link>) ───────────────────
+/** Bir mantıksal route için tüm dil alternatiflerinin URL haritası. */
+function altUrlsForRoute(baseUrl, routePath) {
+  const map = {};
+  for (const lang of LANGS) {
+    if (routeHasLang(routePath, lang)) {
+      map[lang] = urlForRoute(baseUrl, routePath, lang);
+    }
+  }
+  return map;
+}
+function renderHreflangLinks(baseUrl, routePath) {
+  const alts = altUrlsForRoute(baseUrl, routePath);
+  const lines = [];
+  for (const lang of LANGS) {
+    if (alts[lang]) {
+      lines.push(`<link rel="alternate" hreflang="${lang}" href="${alts[lang]}" />`);
+    }
+  }
+  // x-default → birincil (TR) sürüm
+  if (alts[PRIMARY_LANG]) {
+    lines.push(`<link rel="alternate" hreflang="x-default" href="${alts[PRIMARY_LANG]}" />`);
+  }
+  return lines.join("\n    ");
+}
+function renderSitemapHreflang(baseUrl, routePath) {
+  const alts = altUrlsForRoute(baseUrl, routePath);
+  const lines = [];
+  for (const lang of LANGS) {
+    if (alts[lang]) {
+      lines.push(`    <xhtml:link rel="alternate" hreflang="${lang}" href="${escapeXml(alts[lang])}"/>`);
+    }
+  }
+  if (alts[PRIMARY_LANG]) {
+    lines.push(`    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(alts[PRIMARY_LANG])}"/>`);
+  }
+  return lines.join("\n");
+}
+
 // ─── Tam HTML ─────────────────────────────────────────────────────────────────
-function renderPrerenderHtml(baseUrl, routePath) {
-  const meta = pageMetaForRoute(routePath);
-  const canonicalUrl = `${baseUrl}${routePath === "/" ? "" : routePath}` || baseUrl;
+function renderPrerenderHtml(baseUrl, routePath, lang) {
+  const t = UI[lang];
+  const meta = pageMetaForRoute(routePath, lang);
+  const canonicalUrl = urlForRoute(baseUrl, routePath, lang);
   const robots = meta.index
     ? meta.follow
       ? "index, follow, max-image-preview:large"
@@ -529,7 +681,7 @@ function renderPrerenderHtml(baseUrl, routePath) {
   const ogImage = `${baseUrl}${DEFAULT_OG_IMAGE}`;
 
   return `<!doctype html>
-<html lang="${PRIMARY_LANG}">
+<html lang="${lang}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -560,10 +712,8 @@ function renderPrerenderHtml(baseUrl, routePath) {
     <meta name="robots" content="${robots}" />
     <meta name="googlebot" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
-    <!-- Tek URL, TR-birincil (prerender içeriği Türkçe). Ayrı /en/ URL'i olmadığından
-         yanıltıcı hreflang="en" (aynı URL'e) kaldırıldı; tr + x-default self-referans. -->
-    <link rel="alternate" hreflang="tr" href="${canonicalUrl}" />
-    <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    ${renderHreflangLinks(baseUrl, routePath)}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${BRAND}" />
     <meta property="og:title" content="${title}" />
@@ -573,8 +723,8 @@ function renderPrerenderHtml(baseUrl, routePath) {
     <meta property="og:image:height" content="${DEFAULT_OG_IMAGE_HEIGHT}" />
     <meta property="og:image:alt" content="${title}" />
     <meta property="og:url" content="${canonicalUrl}" />
-    <meta property="og:locale" content="tr_TR" />
-    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:locale" content="${t.ogLocale}" />
+    <meta property="og:locale:alternate" content="${t.ogLocaleAlt}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@nbglobalstudio" />
     <meta name="twitter:creator" content="@nbglobalstudio" />
@@ -595,10 +745,10 @@ function renderPrerenderHtml(baseUrl, routePath) {
          ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
       .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
     </style>
-    ${renderStructuredData(baseUrl, routePath, meta)}
+    ${renderStructuredData(baseUrl, routePath, meta, lang)}
   </head>
   <body>
-    ${renderVisibleBody(baseUrl, meta)}
+    ${renderVisibleBody(baseUrl, meta, lang)}
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>`;
@@ -615,17 +765,30 @@ if (blockIndexing) {
 Disallow: /
 `;
 } else {
-  // Google önerisi: bir sayfayı indeksten çıkarmak için robots.txt ile ENGELLEME —
-  // engelliyse Google `noindex` etiketini/başlığını göremez ("engelli ama indeksli" uyarısı).
-  // Özel HTML rotaları (workspace/admin/nbadmin/admin-login/login-success) render.yaml'de
-  // `X-Robots-Tag: noindex` başlığıyla ele alınır; burada taramaya izin veriyoruz.
-  // /api/ HTML değil (SEO içeriği yok) → geleneksel olarak engelli bırakılır.
   robots = `User-agent: *
 Disallow: /api/
 
 Sitemap: ${base}/sitemap.xml
 `;
 }
+
+// Mantıksal route listesi (dil-öneksiz). Her biri sitemap'te TR + EN olarak çıkar.
+const LOGICAL_ROUTES = [
+  { path: "/", changefreq: "weekly", priority: "1.0" },
+  { path: "/pricing", changefreq: "weekly", priority: "0.8" },
+  { path: "/terms", changefreq: "monthly", priority: "0.4" },
+  { path: "/privacy", changefreq: "monthly", priority: "0.4" },
+  { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
+  ...TOOL_SLUGS.map((slug) => ({ path: `/tools/${slug}`, changefreq: "weekly", priority: "0.9" })),
+  { path: "/pdf-api", changefreq: "monthly", priority: "0.7" },
+  { path: "/blog", changefreq: "weekly", priority: "0.7" },
+  ...BLOG_POSTS.map((p) => ({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" })),
+];
+// Yalnızca sitemap'e giren, prerender edilmeyen ek rotalar (login/register).
+const SITEMAP_EXTRA_ROUTES = [
+  { path: "/login", changefreq: "monthly", priority: "0.5" },
+  { path: "/register", changefreq: "monthly", priority: "0.5" },
+];
 
 let sitemap;
 if (blockIndexing) {
@@ -634,53 +797,28 @@ if (blockIndexing) {
 </urlset>
 `;
 } else {
-  const STATIC_ROUTES = [
-    { path: "/", changefreq: "weekly", priority: "1.0" },
-    { path: "/pricing", changefreq: "weekly", priority: "0.8" },
-    { path: "/terms", changefreq: "monthly", priority: "0.4" },
-    { path: "/privacy", changefreq: "monthly", priority: "0.4" },
-    { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
-    { path: "/login", changefreq: "monthly", priority: "0.5" },
-    { path: "/register", changefreq: "monthly", priority: "0.5" },
-  ];
-
-  const urls = [
-    ...STATIC_ROUTES.map((route) => ({
-      loc: `${base}${route.path}`,
-      changefreq: route.changefreq,
-      priority: route.priority,
-    })),
-    ...TOOL_SLUGS.map((slug) => ({
-      loc: `${base}/tools/${slug}`,
-      changefreq: "weekly",
-      priority: "0.9",
-    })),
-    { loc: `${base}/pdf-api`, changefreq: "monthly", priority: "0.7" },
-    { loc: `${base}/blog`, changefreq: "weekly", priority: "0.7" },
-    ...BLOG_POSTS.map((p) => ({
-      loc: `${base}/blog/${p.slug}`,
-      changefreq: "monthly",
-      priority: "0.7",
-    })),
-  ];
-
-  function renderHreflang(loc) {
-    // Tek URL, TR-birincil — ayrı /en/ URL'i yok. Yanıltıcı hreflang="en"
-    // (aynı URL'e) kaldırıldı; tr + x-default self-referans (HTML meta ile aynı).
-    return [
-      `    <xhtml:link rel="alternate" hreflang="tr" href="${escapeXml(loc)}"/>`,
-      `    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(loc)}"/>`,
-    ].join("\n");
+  // Her mantıksal route için mevcut her dilde bir <url> (çift yönlü hreflang ile).
+  const urlEntries = [];
+  for (const route of [...LOGICAL_ROUTES, ...SITEMAP_EXTRA_ROUTES]) {
+    for (const lang of LANGS) {
+      if (!routeHasLang(route.path, lang)) continue;
+      urlEntries.push({
+        loc: urlForRoute(base, route.path, lang),
+        routePath: route.path,
+        changefreq: route.changefreq,
+        priority: route.priority,
+      });
+    }
   }
 
   sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${urls
+${urlEntries
   .map(
     (u) => `  <url>
     <loc>${escapeXml(u.loc)}</loc>
-${renderHreflang(u.loc)}
+${renderSitemapHreflang(base, u.routePath)}
     <lastmod>${todayIso}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
@@ -694,7 +832,7 @@ ${renderHreflang(u.loc)}
 writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
 
-// ─── Prerendered HTML snapshots ───────────────────────────────────────────────
+// ─── Prerendered HTML snapshots (TR + EN) ─────────────────────────────────────
 const prerenderRoutes = [
   "/",
   "/pricing",
@@ -707,14 +845,19 @@ const prerenderRoutes = [
   ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];
 
-for (const routePath of prerenderRoutes) {
-  const outPath = ensurePublicFilePathForRoute(routePath);
-  mkdirSync(dirname(outPath), { recursive: true });
-  writeFileSync(outPath, renderPrerenderHtml(base, routePath), "utf8");
+let pageCount = 0;
+for (const lang of LANGS) {
+  for (const routePath of prerenderRoutes) {
+    if (!routeHasLang(routePath, lang)) continue;
+    const outPath = outFileForRoute(routePath, lang);
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, renderPrerenderHtml(base, routePath, lang), "utf8");
+    pageCount++;
+  }
 }
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",
   blockIndexing ? "(block indexing)" : base,
-  `| ${prerenderRoutes.length} pages, lang=${PRIMARY_LANG}`,
+  `| ${pageCount} pages, langs=${LANGS.join("+")}`,
 );
