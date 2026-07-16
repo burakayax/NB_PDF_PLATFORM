@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Flatten PDF — lock in form fields | PDF Platform</title>
+    <meta name="description" content="Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — free online." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/tools/flatten-pdf" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/tools/flatten-pdf" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/tools/flatten-pdf" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/tools/flatten-pdf" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Flatten PDF — lock in form fields | PDF Platform" />
+    <meta property="og:description" content="Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — free online." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Flatten PDF — lock in form fields | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/tools/flatten-pdf" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Flatten PDF — lock in form fields | PDF Platform" />
+    <meta name="twitter:description" content="Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — free online." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Flatten PDF — lock in form fields | PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Flatten PDF","url":"https://www.pdfplatform.app/en/tools/flatten-pdf","description":"Permanently embed PDF form fields and annotations into the page. Create a non-editable, fixed PDF — free online.","applicationCategory":"BusinessApplication","operatingSystem":"Web Browser","browserRequirements":"Requires JavaScript. Works in Chrome, Firefox, Edge, Safari.","inLanguage":[{"@type":"Language","name":"Turkish"},{"@type":"Language","name":"English"}],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","availability":"https://schema.org/InStock","description":"Free plan available. Free packs and monthly subscription plans offered."},"brand":{"@type":"Brand","name":"PDF Platform"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"featureList":["Merge PDF","Split PDF","Compress PDF","PDF conversion (Word, Excel, PowerPoint)","PDF to image and image to PDF","PDF encryption and password protection","Add watermark and page numbers to PDF","Rotate, delete and organize PDF pages"]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Flatten PDF","item":"https://www.pdfplatform.app/en/tools/flatten-pdf"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why should I flatten a PDF?","acceptedAnswer":{"@type":"Answer","text":"Flattening embeds form fields and annotations into the page, preventing accidental edits and fixing the appearance on every device."}},{"@type":"Question","name":"Can a flattened form be edited again?","acceptedAnswer":{"@type":"Answer","text":"No. Flattening is permanent; fields can no longer be edited individually. Keep a backup first."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Flatten PDF</h1><p class="seo-intro">Permanently embed filled form fields, signatures and annotations into the page. Produce a fixed PDF whose content can&#39;t be changed and looks identical everywhere.</p><nav aria-label="Related tools" class="seo-related-tools"><h2>Related Tools</h2><ul><li><a href="/en/tools/compress">Compress PDF</a></li><li><a href="/en/tools/watermark">Add Watermark to PDF</a></li><li><a href="/en/tools/page-numbers">Add Page Numbers to PDF</a></li><li><a href="/en/tools/encrypt">Encrypt PDF</a></li></ul></nav><nav aria-label="Related guides" class="seo-related-guides"><h2>Related Guides</h2><ul><li><a href="/en/blog/pdf-boyutu-kucultme-sikistirma">Reduce PDF File Size (Compress): Fit It Into an Email</a></li></ul></nav><nav aria-label="PDF tools" class="seo-tools"><h2>All PDF Tools</h2><ul><li><a href="/en/tools/split-pdf">Split &amp; Extract PDF Pages</a></li><li><a href="/en/tools/merge-pdf">Merge PDF</a></li><li><a href="/en/tools/delete-pages">Delete Pages from PDF</a></li><li><a href="/en/tools/rotate-pdf">Rotate PDF Pages</a></li><li><a href="/en/tools/organize-pdf">Organize PDF Pages</a></li><li><a href="/en/tools/compress">Compress PDF</a></li><li><a href="/en/tools/pdf-to-word">PDF to Word</a></li><li><a href="/en/tools/word-to-pdf">Word to PDF</a></li><li><a href="/en/tools/excel-to-pdf">Excel to PDF</a></li><li><a href="/en/tools/pdf-to-excel">PDF to Excel</a></li><li><a href="/en/tools/pdf-to-ppt">PDF to PowerPoint</a></li><li><a href="/en/tools/ppt-to-pdf">PowerPoint to PDF</a></li><li><a href="/en/tools/pdf-to-image">PDF to Image (JPG/PNG)</a></li><li><a href="/en/tools/image-to-pdf">Image to PDF (JPG/PNG)</a></li><li><a href="/en/tools/belge-tara">Scan Documents to PDF — Free Online Scanner</a></li><li><a href="/en/tools/aranabilir-pdf">Create a Searchable PDF with OCR</a></li><li><a href="/en/tools/html-to-pdf">HTML / URL to PDF</a></li><li><a href="/en/tools/unlock-pdf">Unlock PDF</a></li><li><a href="/en/tools/watermark">Add Watermark to PDF</a></li><li><a href="/en/tools/page-numbers">Add Page Numbers to PDF</a></li><li><a href="/en/tools/repair-pdf">Repair PDF</a></li><li><a href="/en/tools/encrypt">Encrypt &amp; Password Protect PDF</a></li><li><a href="/en/tools/pdf-to-text">Extract Text from PDF</a></li><li><a href="/en/tools/flatten-pdf">Flatten PDF</a></li><li><a href="/en/tools/pdf-ozetle">Summarize PDF with AI</a></li><li><a href="/en/tools/pdf-sohbet">Chat with your PDF</a></li><li><a href="/en/tools/pdf-duzenle">Edit PDF — Really Change the Text</a></li><li><a href="/en/tools/pdf-imzala">Add a Signature to PDF — On Your Device, Private</a></li><li><a href="/en/tools/pdf-yorumla">Add Highlights, Notes and Drawings to PDF — On Your Device, Private</a></li><li><a href="/en/tools/taranmis-pdf-ocr">Scanned PDF → Text (OCR)</a></li><li><a href="/en/tools/pdf-veri-cikar">Extract Data from PDF (AI)</a></li><li><a href="/en/tools/pdf-ceviri">Translate PDF with AI</a></li><li><a href="/en/tools/ai-toplu-islem">Batch Process PDFs (AI)</a></li><li><a href="/en/tools/pdf-karsilastir">Compare Two PDFs with AI</a></li><li><a href="/en/tools/hassas-veri-gizle">Redact Sensitive Data in a PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Why should I flatten a PDF?</h3><p>Flattening embeds form fields and annotations into the page, preventing accidental edits and fixing the appearance on every device.</p></div><div class="seo-faq-item"><h3>Can a flattened form be edited again?</h3><p>No. Flattening is permanent; fields can no longer be edited individually. Keep a backup first.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

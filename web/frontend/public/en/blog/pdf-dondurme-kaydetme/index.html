@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Fix a Sideways PDF: Rotate Pages and Save Permanently (2026) — PDF Platform</title>
+    <meta name="description" content="Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/pdf-dondurme-kaydetme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-dondurme-kaydetme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-dondurme-kaydetme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-dondurme-kaydetme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Fix a Sideways PDF: Rotate Pages and Save Permanently (2026) — PDF Platform" />
+    <meta property="og:description" content="Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Fix a Sideways PDF: Rotate Pages and Save Permanently (2026) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/pdf-dondurme-kaydetme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Fix a Sideways PDF: Rotate Pages and Save Permanently (2026) — PDF Platform" />
+    <meta name="twitter:description" content="Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Fix a Sideways PDF: Rotate Pages and Save Permanently (2026) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)","description":"Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds.","datePublished":"2026-07-06","dateModified":"2026-07-06","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/pdf-dondurme-kaydetme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)","description":"Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Open the PDF","text":"Drop your file into the \"Rotate PDF\" tool. Each page appears as a thumbnail."},{"@type":"HowToStep","position":2,"name":"Set the orientation","text":"Use the rotate-left/right buttons on each card to turn pages in 90° steps. Fix only the sideways pages, or all of them."},{"@type":"HowToStep","position":3,"name":"Download permanently","text":"Confirm and download — the new PDF is saved in the correct orientation and looks right every time."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is PDF rotation permanent?","acceptedAnswer":{"@type":"Answer","text":"Yes. The tool actually rotates the page and saves it that way; the downloaded PDF shows the right orientation every time you open it."}},{"@type":"Question","name":"Can I rotate just one page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Rotate each page individually left/right, or turn them all at once."}},{"@type":"Question","name":"Is my file uploaded?","acceptedAnswer":{"@type":"Answer","text":"Used as a guest, rotation happens in your browser; your file isn't sent over the internet."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)</h1><p class="seo-intro">Did your scan come out sideways? Does rotating in the viewer reset every time? Here&#39;s how to rotate a PDF permanently and save it the right way up — entirely in your browser.</p><article class="seo-article"><p class="seo-lead">When you scan or photograph a document, pages often come out sideways or upside-down. Hitting &quot;rotate&quot; in a PDF viewer usually isn&#39;t permanent — reopen the file and it&#39;s sideways again. The real fix is to rotate the pages and save them that way.</p><h2>Why rotating in the viewer isn&#39;t enough</h2><p>In most viewers, rotate only changes the current view; the page orientation inside the file stays the same. So when you share or print it, it looks sideways again. You need to actually rotate the page and save it.</p><h2>Step by step: rotate and save a PDF</h2><ol><li><strong>Open the PDF:</strong> Drop your file into the &quot;Rotate PDF&quot; tool. Each page appears as a thumbnail.</li><li><strong>Set the orientation:</strong> Use the rotate-left/right buttons on each card to turn pages in 90° steps. Fix only the sideways pages, or all of them.</li><li><strong>Download permanently:</strong> Confirm and download — the new PDF is saved in the correct orientation and looks right every time.</li></ol><p><a href="/tools/rotate-pdf"><strong>Rotate PDF</strong> — Turn sideways scans the right way up and save permanently — on your device, no signup.</a></p><h2>Tips</h2><ul><li>If only one page is sideways, rotate just that page — no need to turn the whole file.</li><li>Fix upside-down (180°) pages by rotating twice.</li><li>After rotating, clean up any unwanted pages with the &quot;Delete Pages&quot; tool.</li></ul><p>As a guest, rotation runs entirely in your browser; your file is not uploaded and it works even if your connection drops.</p><h2>Privacy note</h2><p>The Rotate PDF tool runs on your device; your document is not sent anywhere. Merge, split, delete and organize tools handle their structural work in your browser the same way.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/rotate-pdf">Rotate PDF</a></li><li><a href="/en/tools/organize-pdf">Organize PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Is PDF rotation permanent?</h3><p>Yes. The tool actually rotates the page and saves it that way; the downloaded PDF shows the right orientation every time you open it.</p></div><div class="seo-faq-item"><h3>Can I rotate just one page?</h3><p>Yes. Rotate each page individually left/right, or turn them all at once.</p></div><div class="seo-faq-item"><h3>Is my file uploaded?</h3><p>Used as a guest, rotation happens in your browser; your file isn&#39;t sent over the internet.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

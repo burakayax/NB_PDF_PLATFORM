@@ -1821,6 +1821,39 @@ export const BLOG_POSTS = [
         { q: "Hangi özellikler Pro?", a: "Otomatik gölge temizleme filtresi, tek taramada sınırsız sayfa ve aranabilir PDF (OCR) Pro özellikleridir. Temel tarama ve PDF oluşturma ücretsizdir." },
       ],
     },
+    {
+      title: "A Free, Private CamScanner Alternative: Scan Documents in Your Browser",
+      description:
+        "Scan documents without installing an app, without watermarks, and without uploading your files to the cloud. A free document-scanning alternative that runs in your browser and processes on your device.",
+      excerpt:
+        "Document scanning apps are handy, but most show ads, stamp a watermark on the output, or upload your file to the cloud. Here's an alternative that runs in your browser, processes on your device, and keeps the core features free.",
+      blocks: [
+        { t: "lead", x: "Scanning apps like CamScanner get the job done — but many require an account, watermark the output on the free tier, show ads, and upload your documents to their own cloud to process them. When sensitive documents are involved, that last point alone is unsettling enough." },
+
+        { t: "h2", x: "What changes with browser + on-device?" },
+        { t: "p", x: "PDF Platform's document scanner opens in your phone's browser — no install. More importantly, the whole process runs on your device: the camera image, automatic edge detection, perspective correction and PDF creation. Your document is never uploaded to any server, and no forced watermark is added to the output." },
+
+        { t: "h2", x: "An honest comparison" },
+        { t: "ul", items: ["Install: No app — opens in your phone's browser.", "Privacy: Scanning happens on your device; the document isn't uploaded to the cloud.", "Watermark: No forced watermark on the output.", "Free: Scanning, PDF, saving and sharing are free; up to 3 pages per scan.", "Pro: Automatic shadow removal, unlimited pages and searchable PDF (OCR)."] },
+
+        { t: "h2", x: "What's free at the core?" },
+        { t: "p", x: "Scanning a document, automatic edge detection, perspective correction, Color/Gray/Black-and-White filters, PDF creation, saving and sharing — all free and no account required. You can scan up to 3 pages per scan." },
+
+        { t: "h2", x: "What does Pro add?" },
+        { t: "p", x: "For more professional scans, Pro adds three things: an «Auto» filter that removes shadows and whitens the background, unlimited pages per scan, and searchable PDF (OCR) that makes text findable with Ctrl+F and copyable. All of it still runs on your device." },
+
+        { t: "cta", title: "Image → PDF", x: "Turn your documents or photos into a single PDF — on your device, no account.", btn: "Try it now", tool: "/tools/image-to-pdf" },
+
+        { t: "h2", x: "Who is it ideal for?" },
+        { t: "p", x: "For anyone who scans a document now and then but doesn't want to install yet another app; who wants to digitize IDs, contracts and invoices without uploading them to the cloud. It opens from a link, does the job, and your document stays with you." },
+      ],
+      faq: [
+        { q: "Is there a free CamScanner alternative?", a: "Yes. PDF Platform's document scanner runs in the browser; scanning, perspective correction, filters, PDF creation and sharing are free, and it adds no forced watermark to the output." },
+        { q: "Are my documents uploaded to the cloud?", a: "No. All scanning and PDF creation runs on your device; your document is never sent to a server." },
+        { q: "Will there be a watermark on the output?", a: "No. No forced watermark is added to the PDF you create." },
+        { q: "Which features are Pro?", a: "The automatic shadow-removal filter, unlimited pages per scan, and searchable PDF (OCR) are Pro features. Basic scanning and PDF creation are free." },
+      ],
+    },
   ),
 ];
 

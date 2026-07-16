@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Convert a Scanned PDF into Editable Text (OCR) — PDF Platform</title>
+    <meta name="description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Convert a Scanned PDF into Editable Text (OCR) — PDF Platform" />
+    <meta property="og:description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Convert a Scanned PDF into Editable Text (OCR) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Convert a Scanned PDF into Editable Text (OCR) — PDF Platform" />
+    <meta name="twitter:description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Convert a Scanned PDF into Editable Text (OCR) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Convert a Scanned PDF into Editable Text (OCR)","description":"Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/taranmis-pdf-metne-cevirme-ocr","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Convert a Scanned PDF into Editable Text (OCR)","description":"Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Upload the scanned PDF","text":"Add your photo/scan-based PDF to the OCR tool."},{"@type":"HowToStep","position":2,"name":"Convert to text","text":"OCR turns the text in the page images into real text on your device (Turkish + English)."},{"@type":"HowToStep","position":3,"name":"Use the text","text":"Now search, copy, or feed it into summarize or translate tools."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I convert scanned PDF text to text?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF to the OCR tool; OCR turns the text in the page images into real text in your browser. Then you can search, copy or summarize it."}},{"@type":"Question","name":"Which languages does OCR support?","acceptedAnswer":{"@type":"Answer","text":"Turkish and English. Processing happens on your device; your document is not uploaded."}},{"@type":"Question","name":"Why can't I select text in a scanned PDF?","acceptedAnswer":{"@type":"Answer","text":"Because the text is actually an image. OCR turns it into real, selectable text."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Convert a Scanned PDF into Editable Text (OCR)</h1><p class="seo-intro">Can&#39;t select or search text in a scanned PDF? That&#39;s because the text is actually an image. OCR turns it into real text — here&#39;s how.</p><article class="seo-article"><p class="seo-lead">When you scan a document into a PDF, the text on the page is actually a photo. That&#39;s why you can&#39;t select, search or copy it. OCR (Optical Character Recognition) turns that image into real text.</p><h2>What exactly does OCR do?</h2><p>OCR recognizes the letters and words in the page image and converts them into editable, searchable text. So you can summarize, search within, or copy a scanned contract, deed or invoice.</p><h2>OCR step by step</h2><ol><li><strong>Upload the scanned PDF:</strong> Add your photo/scan-based PDF to the OCR tool.</li><li><strong>Convert to text:</strong> OCR turns the text in the page images into real text on your device (Turkish + English).</li><li><strong>Use the text:</strong> Now search, copy, or feed it into summarize or translate tools.</li></ol><p><a href="/tools/taranmis-pdf-ocr"><strong>Scanned PDF → Text (OCR)</strong> — Turn text in a scanned document into real text.</a></p><p>Processing happens entirely on your device — your document is not uploaded. Best results come from clear, high-resolution scans.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/taranmis-pdf-ocr">Scanned PDF to Text (OCR)</a></li><li><a href="/en/tools/pdf-to-text">PDF to Text</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I convert scanned PDF text to text?</h3><p>Upload the PDF to the OCR tool; OCR turns the text in the page images into real text in your browser. Then you can search, copy or summarize it.</p></div><div class="seo-faq-item"><h3>Which languages does OCR support?</h3><p>Turkish and English. Processing happens on your device; your document is not uploaded.</p></div><div class="seo-faq-item"><h3>Why can&#39;t I select text in a scanned PDF?</h3><p>Because the text is actually an image. OCR turns it into real, selectable text.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
