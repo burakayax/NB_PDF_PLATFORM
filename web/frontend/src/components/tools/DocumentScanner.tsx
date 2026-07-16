@@ -504,6 +504,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     }
   }, [pages, ocrPct, tr, fileName]);
 
+  // PRO/BUSINESS: PDF hazır olur olmaz otomatik ARANABİLİR PDF (OCR) üret —
+  // ücretli kullanıcı her şeye erişir, tarama otomatik aranabilir gelir.
+  // Free kullanıcı sonuç ekranındaki butonla kendi tetikler.
+  useEffect(() => {
+    if (phase === "result" && isPro && result && !searchable && ocrPct === null) {
+      void makeSearchable();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, isPro, result?.filename]);
+
   // ── Sonuç aksiyonları ──
   function downloadBlob(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
