@@ -77,6 +77,14 @@ export function SeoRouteManager({
       ]
     : undefined;
 
+  // OG görseli: EN sayfalarda İngilizce tagline'lı varyant (statik prerender ile
+  // birebir). Yalnızca varsayılan markalı görselde değiştir; özel ogImage'lara dokunma.
+  const defaultOgImage = seo.ogImage ?? "/app-preview-main.png";
+  const ogImage =
+    language === "en" && defaultOgImage === "/og-image.png"
+      ? "/og-image-en.png"
+      : defaultOgImage;
+
   return (
     <SEO
       title={seo.title}
@@ -93,7 +101,7 @@ export function SeoRouteManager({
       og={{
         title: seo.title,
         description: seo.description,
-        image: seo.ogImage ?? "/app-preview-main.png",
+        image: ogImage,
         imageWidth: "1280",
         imageHeight: "720",
         url: activePath,
@@ -104,7 +112,7 @@ export function SeoRouteManager({
         card: "summary_large_image",
         title: seo.title,
         description: seo.description,
-        image: seo.ogImage ?? "/app-preview-main.png",
+        image: ogImage,
       }}
       includeProductSchema={view === "landing" || view === "web"}
       includePricingOfferSchema={view === "pricing"}
