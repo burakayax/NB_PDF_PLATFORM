@@ -335,7 +335,10 @@ export function applyWorkspaceToolMeta(
     return;
   }
 
-  const canonicalUrl = `${origin}${pathname}`;
+  // TR öneksiz, EN /en/ alt dizininde (prerender + SeoRouteManager ile birebir).
+  const urlTr = `${origin}${pathname}`;
+  const urlEn = `${origin}/en${pathname}`;
+  const canonicalUrl = language === "en" ? urlEn : urlTr;
   const headline = headlineFromWorkspaceTitle(title);
 
   upsertLinkTag({
@@ -343,9 +346,6 @@ export function applyWorkspaceToolMeta(
     rel: "canonical",
     href: canonicalUrl,
   });
-
-  const urlTr = `${canonicalUrl}?lang=tr`;
-  const urlEn = `${canonicalUrl}?lang=en`;
 
   upsertLinkTag({
     id: HEAD_IDS.hreflangTr,
@@ -362,7 +362,7 @@ export function applyWorkspaceToolMeta(
   upsertLinkTag({
     id: HEAD_IDS.hreflangDefault,
     rel: "alternate",
-    href: canonicalUrl,
+    href: urlTr,
     hreflang: "x-default",
   });
 
