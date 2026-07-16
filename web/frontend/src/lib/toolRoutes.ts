@@ -31,7 +31,9 @@ export function featureFromWorkspaceToolSlug(slug: string): FeatureKey | null {
 
 /** `/tools/:slug` → tool id, or null if path is not a workspace tools route. */
 export function parseWorkspaceToolPath(pathname: string): FeatureKey | null {
-  const raw = pathname.replace(/\/$/, "") || "/";
+  // /en (İngilizce alt dizin) önekini yok say: /en/tools/x da /tools/x gibi çözülsün.
+  const raw =
+    (pathname.replace(/\/$/, "").replace(/^\/en(?=\/|$)/, "") || "/");
   if (raw === "/workspace") {
     return "split";
   }
