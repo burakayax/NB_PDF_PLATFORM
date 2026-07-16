@@ -163,7 +163,11 @@ import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
-import { usePreferredLanguage } from "./hooks/usePreferredLanguage";
+import {
+  usePreferredLanguage,
+  stripLangPrefix,
+  withLangPrefix,
+} from "./hooks/usePreferredLanguage";
 import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import {
   allowedExtensionsFromAccept,
@@ -801,7 +805,10 @@ function getInitialViewFromLocation(): AppView {
   if (typeof window === "undefined") {
     return "landing";
   }
-  const rawPath = window.location.pathname.replace(/\/$/, "") || "/";
+  // /en (İngilizce alt dizin) önekini soy: /en/tools/... → /tools/... olarak
+  // eşleştir. Dilin kendisi usePreferredLanguage tarafından /en'den algılanır.
+  const rawPath =
+    stripLangPrefix(window.location.pathname.replace(/\/$/, "")) || "/";
   if (parseWorkspaceToolPath(rawPath)) {
     return "web";
   }
@@ -4131,9 +4138,29 @@ function App() {
     }
   }
 
+  /**
+   * Misafir SEO ziyaretçisi dil değiştirince URL'i de eşle: EN → /en/..., TR →
+   * öneksiz. Böylece canonical/hreflang aktif dile uyar ve URL paylaşılabilir olur.
+   * (Giriş yapmış kullanıcılar uygulama içindedir; /en yalnızca pazarlama/SEO
+   * sayfaları içindir, o yüzden onların URL'i değiştirilmez.)
+   */
+  function syncLanguageUrl(nextLanguage: "tr" | "en") {
+    if (typeof window === "undefined") return;
+    const current = window.location.pathname.replace(/\/$/, "") || "/";
+    const target = withLangPrefix(current, nextLanguage);
+    if (target !== current) {
+      window.history.replaceState(
+        {},
+        "",
+        `${target}${window.location.search}${window.location.hash}`,
+      );
+    }
+  }
+
   async function handleLanguageChange(nextLanguage: "tr" | "en") {
     if (!isAuthenticated) {
       setLanguage(nextLanguage);
+      syncLanguageUrl(nextLanguage);
       return;
     }
 
@@ -5156,7 +5183,7 @@ function App() {
 
   const pathname =
     typeof window !== "undefined"
-      ? window.location.pathname.replace(/\/$/, "") || "/"
+      ? stripLangPrefix(window.location.pathname.replace(/\/$/, "")) || "/"
       : "/";
 
   // API sayfalarından gezinme: /pdf-api erken-return'ü setView'i bastırdığı için
