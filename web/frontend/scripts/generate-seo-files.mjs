@@ -62,6 +62,10 @@ function outFileForRoute(routePath, lang) {
 function linkBase(lang) {
   return langPrefix(lang);
 }
+/** Dile göre OG paylaşım görseli (EN sayfalar İngilizce tagline'lı görsel kullanır). */
+function ogImageForLang(lang) {
+  return lang === "en" ? "/og-image-en.png" : DEFAULT_OG_IMAGE;
+}
 
 // ─── Dile bağlı sabit arayüz metinleri (görünür gövde + şema) ─────────────────
 const UI = {
@@ -468,7 +472,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       mainEntityOfPage: canonicalUrl,
       author: { "@type": "Organization", name: BRAND, "@id": orgId },
       publisher: { "@id": orgId },
-      image: `${baseUrl}${DEFAULT_OG_IMAGE}`,
+      image: `${baseUrl}${ogImageForLang(lang)}`,
     });
 
     const stepsBlock = Array.isArray(meta.blocks)
@@ -678,7 +682,7 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     : "noindex, nofollow";
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
-  const ogImage = `${baseUrl}${DEFAULT_OG_IMAGE}`;
+  const ogImage = `${baseUrl}${ogImageForLang(lang)}`;
 
   return `<!doctype html>
 <html lang="${lang}">
