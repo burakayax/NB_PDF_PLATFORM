@@ -2589,7 +2589,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const path = window.location.pathname.replace(/\/$/, "") || "/";
+    const rawPath = window.location.pathname.replace(/\/$/, "") || "/";
+    // Rota eşleştirmesi /en önekinden bağımsız; ama URL karşılaştırması ham yola göre.
+    const path = stripLangPrefix(rawPath);
     if (path === "/login-error") {
       return;
     }
@@ -2627,13 +2629,14 @@ function App() {
     if (view === "admin") {
       next = "/admin";
     } else if (view === "web") {
-      next = workspacePathForFeature(selectedFeatureId);
+      // Araç yolu aktif dile göre /en önekli (EN) veya öneksiz (TR) olur.
+      next = withLangPrefix(workspacePathForFeature(selectedFeatureId), language);
     } else if (view === "admin_login") {
       next = "/nbadmin";
     } else {
       next = getTrackedPath(view);
     }
-    const current = path;
+    const current = rawPath;
     const normalizedNext = next.replace(/\/$/, "") || "/";
     if (current !== normalizedNext) {
       const sp = new URLSearchParams(window.location.search);
@@ -2642,7 +2645,6 @@ function App() {
         "payment",
         "oauth_error",
         "email_verified",
-        "lang",
         "token",
       ] as const) {
         const v = sp.get(key);
@@ -2657,7 +2659,7 @@ function App() {
         `${next}${qs ? `?${qs}` : ""}${window.location.hash}`,
       );
     }
-  }, [view, isAuthenticated, isRestoring, user?.role, selectedFeatureId]);
+  }, [view, isAuthenticated, isRestoring, user?.role, selectedFeatureId, language]);
 
   useEffect(() => {
     if (view !== "admin" || isRestoring || !isAuthenticated) {
@@ -3130,7 +3132,7 @@ function App() {
       // kullanabilir; login'e ATMA (üstteki özel handler tam sayfa render eder).
       const p =
         typeof window !== "undefined"
-          ? window.location.pathname.replace(/\/+$/, "")
+          ? stripLangPrefix(window.location.pathname.replace(/\/+$/, ""))
           : "";
       if (
         p === "/tools/pdf-ozetle" ||
@@ -3254,14 +3256,15 @@ function App() {
     user,
   ]);
 
+  // Dil artık /en yol önekinden gelir; eski ?lang query'sinden kalıntı varsa temizle.
   useEffect(() => {
     if (view !== "web") {
       return;
     }
     try {
       const u = new URL(window.location.href);
-      if (u.searchParams.get("lang") !== language) {
-        u.searchParams.set("lang", language);
+      if (u.searchParams.has("lang")) {
+        u.searchParams.delete("lang");
         window.history.replaceState(
           {},
           "",
@@ -3271,7 +3274,7 @@ function App() {
     } catch {
       /* ignore */
     }
-  }, [view, language, selectedFeatureId]);
+  }, [view, selectedFeatureId]);
 
   useEffect(() => {
     if (view !== "admin_login" || isRestoring || !isAuthenticated || !user) {
