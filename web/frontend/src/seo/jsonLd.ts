@@ -23,6 +23,11 @@ function origin(url: string): string {
 }
 
 // ─── WebSite ─────────────────────────────────────────────────────────────────
+// NOT: Sitelinks Searchbox (potentialAction/SearchAction) BİLEREK eklenmiyor.
+// Sitede çalışan bir arama sayfası (/search) yok; olmayan bir uç noktaya işaret
+// eden SearchAction, Google'ın "yapılandırılmış veri sayfanın gerçeğiyle tutarlı
+// olmalı" kuralını ihlal eder ve Search Console'da hata üretir. Site içi arama
+// eklenirse buraya gerçek /search?q= uç noktasıyla geri konabilir.
 function buildWebSite(input: SchemaInput): JsonLdNode {
   return {
     "@context": "https://schema.org",
@@ -32,14 +37,6 @@ function buildWebSite(input: SchemaInput): JsonLdNode {
     url: origin(input.canonicalUrl),
     inLanguage: input.language === "tr" ? "tr-TR" : "en-US",
     description: input.pageDescription,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${origin(input.canonicalUrl)}/search?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
   };
 }
 

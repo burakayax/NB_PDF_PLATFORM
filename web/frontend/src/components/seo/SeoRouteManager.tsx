@@ -60,15 +60,20 @@ export function SeoRouteManager({
         ]
       : undefined;
 
-  // ── hreflang ──────────────────────────────────────────────────────────────
-  // Tek URL, TR-birincil (prerender içeriği Türkçe); ayrı /en/ URL'i yok. Aynı
-  // URL'e işaret eden yanıltıcı hreflang="en" kaldırıldı — prerender/sitemap ile
-  // tutarlı: tr + x-default self-referans.
-  const canonicalAbsolute = `${siteOrigin}${seo.canonicalPath === "/" ? "" : seo.canonicalPath}` || "/";
+  // ── Çok dilli canonical + hreflang ──────────────────────────────────────────
+  // TR öneksiz, EN /en/ alt dizininde yayınlanır (prerender + sitemap ile birebir).
+  // Aktif dil "en" ise canonical /en önekli olur; her iki sürüm karşılıklı
+  // hreflang taşır, x-default = TR.
+  const barePath = seo.canonicalPath;
+  const enPath = barePath === "/" ? "/en" : `/en${barePath}`;
+  const activePath = language === "en" ? enPath : barePath;
+  const trAbsolute = `${siteOrigin}${barePath === "/" ? "" : barePath}` || `${siteOrigin}/`;
+  const enAbsolute = `${siteOrigin}${enPath}`;
   const hreflang = siteOrigin
     ? [
-        { lang: "tr", href: canonicalAbsolute || `${siteOrigin}/` },
-        { lang: "x-default", href: canonicalAbsolute || `${siteOrigin}/` },
+        { lang: "tr", href: trAbsolute || `${siteOrigin}/` },
+        { lang: "en", href: enAbsolute },
+        { lang: "x-default", href: trAbsolute || `${siteOrigin}/` },
       ]
     : undefined;
 
@@ -76,7 +81,7 @@ export function SeoRouteManager({
     <SEO
       title={seo.title}
       description={seo.description}
-      canonical={seo.canonicalPath}
+      canonical={activePath}
       language={language}
       robots={
         seo.index
@@ -91,7 +96,7 @@ export function SeoRouteManager({
         image: seo.ogImage ?? "/app-preview-main.png",
         imageWidth: "1280",
         imageHeight: "720",
-        url: seo.canonicalPath,
+        url: activePath,
         locale: seo.ogLocale,
         localeAlternate: seo.ogLocaleAlternate,
       }}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>The Fast Way to Understand a Contract in a Foreign Language — PDF Platform</title>
+    <meta name="description" content="A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/yabanci-dildeki-sozlesmeyi-anlama" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/yabanci-dildeki-sozlesmeyi-anlama" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/yabanci-dildeki-sozlesmeyi-anlama" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/yabanci-dildeki-sozlesmeyi-anlama" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="The Fast Way to Understand a Contract in a Foreign Language — PDF Platform" />
+    <meta property="og:description" content="A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The Fast Way to Understand a Contract in a Foreign Language — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/yabanci-dildeki-sozlesmeyi-anlama" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="The Fast Way to Understand a Contract in a Foreign Language — PDF Platform" />
+    <meta name="twitter:description" content="A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="The Fast Way to Understand a Contract in a Foreign Language — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"The Fast Way to Understand a Contract in a Foreign Language","description":"A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/yabanci-dildeki-sozlesmeyi-anlama","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"The Fast Way to Understand a Contract in a Foreign Language","description":"A practical method to quickly understand a contract, report or email in English or another language: AI translation + summary, with structure preserved.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Translate the document","text":"Upload the PDF to AI Translate, pick a target language; it translates preserving structure and you can download a PDF."},{"@type":"HowToStep","position":2,"name":"Summarize if long","text":"Use AI Summarize to extract the key points, parties and critical clauses of the translated document."},{"@type":"HowToStep","position":3,"name":"Ask about tricky parts","text":"Use AI Chat to ask directly about a specific clause you want to understand."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I quickly understand a foreign-language contract?","acceptedAnswer":{"@type":"Answer","text":"First translate it with AI Translate, then if long extract key points with AI Summarize; ask AI Chat about any clause you're stuck on."}},{"@type":"Question","name":"Is the layout preserved in translation?","acceptedAnswer":{"@type":"Answer","text":"Yes. Headings, lists and tables are kept, and you can download the result as a PDF."}},{"@type":"Question","name":"Is it enough for official use?","acceptedAnswer":{"@type":"Answer","text":"It's ideal for fast understanding; official validity (notary/court) requires a sworn translator."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>The Fast Way to Understand a Contract in a Foreign Language</h1><p class="seo-intro">Got a contract in a foreign language and need to grasp it fast? Here&#39;s how translation and summary work together.</p><article class="seo-article"><p class="seo-lead">In business you often face contracts, proposals or technical docs in a foreign language. Instead of translating every line with a dictionary, you can translate the document without breaking its structure and extract its key points.</p><h2>Translate first, then summarize</h2><p>The most efficient approach is two steps: (1) translate the document into your language, (2) if it&#39;s long, summarize the key points. On PDF Platform you can do both — translation preserves structure (headings, lists, tables); the summary surfaces parties, dates and obligations.</p><ol><li><strong>Translate the document:</strong> Upload the PDF to AI Translate, pick a target language; it translates preserving structure and you can download a PDF.</li><li><strong>Summarize if long:</strong> Use AI Summarize to extract the key points, parties and critical clauses of the translated document.</li><li><strong>Ask about tricky parts:</strong> Use AI Chat to ask directly about a specific clause you want to understand.</li></ol><p><a href="/tools/pdf-ceviri"><strong>AI Translate</strong> — Translate a foreign-language document while preserving structure.</a></p><p>AI translation is for fast comprehension; documents needing official/legal validity require a sworn translator.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-ceviri">Translate PDF</a></li><li><a href="/en/tools/pdf-sohbet">Chat with PDF</a></li><li><a href="/en/tools/pdf-ozetle">Summarize PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I quickly understand a foreign-language contract?</h3><p>First translate it with AI Translate, then if long extract key points with AI Summarize; ask AI Chat about any clause you&#39;re stuck on.</p></div><div class="seo-faq-item"><h3>Is the layout preserved in translation?</h3><p>Yes. Headings, lists and tables are kept, and you can download the result as a PDF.</p></div><div class="seo-faq-item"><h3>Is it enough for official use?</h3><p>It&#39;s ideal for fast understanding; official validity (notary/court) requires a sworn translator.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

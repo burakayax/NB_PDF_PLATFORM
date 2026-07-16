@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Blog — Guides &amp; Tips | PDF Platform</title>
+    <meta name="description" content="Practical guides that speed up your PDF work: merging, data extraction, translation, and AI tools to streamline your workflow." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Blog — Guides &amp; Tips | PDF Platform" />
+    <meta property="og:description" content="Practical guides that speed up your PDF work: merging, data extraction, translation, and AI tools to streamline your workflow." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Blog — Guides &amp; Tips | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Blog — Guides &amp; Tips | PDF Platform" />
+    <meta name="twitter:description" content="Practical guides that speed up your PDF work: merging, data extraction, translation, and AI tools to streamline your workflow." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Blog — Guides &amp; Tips | PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF Platform Blog</h1><p class="seo-intro">Practical guides on PDF merging, invoice data extraction, translation, and AI tools to streamline your workflow.</p><nav aria-label="Blog posts" class="seo-posts"><h2>All Posts</h2><ul><li><a href="/en/blog/camscanner-ucretsiz-gizli-alternatif"><strong>A Free, Private CamScanner Alternative: Scan Documents in Your Browser</strong></a><span> — Document scanning apps are handy, but most show ads, stamp a watermark on the output, or upload your file to the cloud. Here&#39;s an alternative that runs in your browser, processes on your device, and keeps the core features free.</span></li><li><a href="/en/blog/belge-fotografini-kaliteli-pdf-yapma"><strong>Turn a Document Photo into a Clean PDF: Skew, Shadows and Edges</strong></a><span> — When you photograph a document, the result is usually skewed, with clipped corners and a shadow on one side. A good document scanner fixes these automatically. Here&#39;s how perspective correction and shadow removal work.</span></li><li><a href="/en/blog/aranabilir-pdf-olusturma-ocr"><strong>How to Create a Searchable PDF: OCR So You Can Find Text with Ctrl+F</strong></a><span> — A document you scan with your phone looks like text but is actually a photo; you can&#39;t search it with Ctrl+F or copy the text. A searchable PDF fixes this by adding an invisible text layer over the image. Here&#39;s how.</span></li><li><a href="/en/blog/telefonla-belge-tarama-pdf"><strong>Scan Documents with Your Phone: No App, Free, On Your Device (2026)</strong></a><span> — You don&#39;t need a separate app to digitize a contract, invoice or note. Capture the document from your phone&#39;s browser; edges are detected, perspective is corrected and it becomes a PDF in one tap — all on your device.</span></li><li><a href="/en/blog/pdf-uzerine-yazma-isaretleme"><strong>How to Write and Mark Up a PDF: Highlight, Note and Draw</strong></a><span> — Reviewing a document, you want to highlight what matters, jot a note in the margin or box a clause. Markup PDF lets you add highlights, drawings, boxes, arrows and text notes — without erasing the text and without your file leaving your device.</span></li><li><a href="/en/blog/pdf-filigran-ekleme"><strong>How to Add a Watermark to a PDF: Text, Color and Opacity</strong></a><span> — Whether you want to mark a document as &quot;DRAFT&quot; or &quot;CONFIDENTIAL&quot;, or stamp your company name on shared PDFs, a watermark is the quickest way. Here&#39;s how to add one in minutes with color, font and opacity control.</span></li><li><a href="/en/blog/pdf-e-imza-atma-nasil-yapilir"><strong>How to Sign a PDF Electronically: Free, No Sign-up (2026)</strong></a><span> — Stop printing, wet-signing and re-scanning contracts. This guide shows how to sign a PDF electronically — by drawing, typing or uploading your signature — without your file ever leaving your device.</span></li><li><a href="/en/blog/pdf-bolme-sayfalara-ayirma"><strong>Split a PDF: Separate a PDF into Pages or Parts (2026)</strong></a><span> — Need only a few pages from a thick PDF? Want to break a document into parts? Here&#39;s the easiest way to split a PDF — entirely in your browser, step by step.</span></li><li><a href="/en/blog/pdf-sayfa-sirasi-degistirme"><strong>Reorder PDF Pages: Rearrange a Document Easily (2026)</strong></a><span> — Pages scanned in the wrong order? Want to move a page to the front or back? Here&#39;s the easiest way to rearrange PDF pages — entirely in your browser.</span></li><li><a href="/en/blog/pdf-dondurme-kaydetme"><strong>Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)</strong></a><span> — Did your scan come out sideways? Does rotating in the viewer reset every time? Here&#39;s how to rotate a PDF permanently and save it the right way up — entirely in your browser.</span></li><li><a href="/en/blog/pdf-sayfa-silme"><strong>How to Delete Pages from a PDF: Free, No Signup, On Your Device (2026)</strong></a><span> — Got blank, duplicate or unwanted pages in a PDF? You don&#39;t need expensive software or an account to remove them. Here&#39;s how, entirely in your browser.</span></li><li><a href="/en/blog/faturalari-toplu-muhasebeye-hazirlama"><strong>Prepare Dozens of Invoices for Accounting (Batch)</strong></a><span> — Month-end is here, you have dozens of PDF invoices, and you need to enter them all into accounting. Here&#39;s how batch processing cuts it to minutes.</span></li><li><a href="/en/blog/akademik-makale-ozetleme-literatur"><strong>Quickly Summarize Academic Papers (for Literature Review)</strong></a><span> — In a literature review, most time is lost screening out irrelevant papers. Use AI to tell in seconds whether a paper is useful.</span></li><li><a href="/en/blog/yabanci-dildeki-sozlesmeyi-anlama"><strong>The Fast Way to Understand a Contract in a Foreign Language</strong></a><span> — Got a contract in a foreign language and need to grasp it fast? Here&#39;s how translation and summary work together.</span></li><li><a href="/en/blog/banka-ekstresi-excele-aktarma"><strong>Export a Bank Statement (PDF) to Excel</strong></a><span> — Typing hundreds of transactions from a PDF bank statement into Excel is painful. Here&#39;s how AI turns it into a tidy table.</span></li><li><a href="/en/blog/kira-kontrati-dikkat-edilecek-maddeler"><strong>What to Check Before Signing a Lease Agreement</strong></a><span> — Before quickly signing a lease, a few clauses make a big difference later. What to look for, and how AI helps.</span></li><li><a href="/en/blog/ihale-sartnamesi-nasil-okunur"><strong>How to Read a Tender Document (RFP): What to Watch For</strong></a><span> — Missing a few key clauses in a long tender document is costly. Here&#39;s how AI makes an RFP readable in seconds.</span></li><li><a href="/en/blog/taranmis-pdf-metne-cevirme-ocr"><strong>Convert a Scanned PDF into Editable Text (OCR)</strong></a><span> — Can&#39;t select or search text in a scanned PDF? That&#39;s because the text is actually an image. OCR turns it into real text — here&#39;s how.</span></li><li><a href="/en/blog/uzun-belgeleri-ai-ile-ozetleme"><strong>Summarize Long Contracts and Reports with AI</strong></a><span> — No time to read a 50-page contract? AI detects the document type and extracts what you most need. Here&#39;s how.</span></li><li><a href="/en/blog/resimleri-pdf-yapma"><strong>Convert JPG/PNG Images into One PDF (Free)</strong></a><span> — Combining multiple photos or scans into one tidy PDF is easy. Free, no signup and entirely in your browser — step by step.</span></li><li><a href="/en/blog/pdf-sifre-kaldirma-koyma"><strong>Remove a PDF Password and Add a Password to a PDF</strong></a><span> — Tired of a PDF asking for a password every time, or want to protect a sensitive document? Both take just a few steps. Here&#39;s the right way.</span></li><li><a href="/en/blog/pdf-boyutu-kucultme-sikistirma"><strong>Reduce PDF File Size (Compress): Fit It Into an Email</strong></a><span> — Email saying &quot;file too large&quot;? PDFs usually bloat because of the images inside. This post shows how to reduce the size and what to watch for.</span></li><li><a href="/en/blog/pdf-word-donusturme"><strong>Convert PDF to Word: Turn It into an Editable Document</strong></a><span> — If you want to edit a PDF without retyping it, the answer is converting it to Word. This post covers the most practical method and tips to minimize formatting loss.</span></li><li><a href="/en/blog/pdf-baska-dile-cevirme"><strong>The Fastest Way to Translate a PDF (Without Breaking Layout)</strong></a><span> — The biggest headache when translating a PDF is the layout falling apart. Here&#39;s how to translate with AI while preserving meaning and structure.</span></li><li><a href="/en/blog/iki-pdf-birlestirme-ucretsiz"><strong>Merge Two or More PDFs for Free (No Install)</strong></a><span> — The easiest way to combine multiple PDFs into one document. Free, no signup, and your files never leave your device — step by step.</span></li><li><a href="/en/blog/faturadan-excele-veri-aktarma"><strong>Extract Data from Invoices to Excel: 2026 Guide (3 Methods)</strong></a><span> — Typing invoice data into Excel by hand is slow and error-prone. This guide compares three methods and shows how to turn dozens of invoices into one table in seconds.</span></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

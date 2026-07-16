@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Convert PDF to Word: Turn It into an Editable Document — PDF Platform</title>
+    <meta name="description" content="Convert a PDF into an editable Word (.docx) document. The most practical way to edit the text while keeping formatting — and what to watch for." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/pdf-word-donusturme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-word-donusturme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-word-donusturme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-word-donusturme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Convert PDF to Word: Turn It into an Editable Document — PDF Platform" />
+    <meta property="og:description" content="Convert a PDF into an editable Word (.docx) document. The most practical way to edit the text while keeping formatting — and what to watch for." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Convert PDF to Word: Turn It into an Editable Document — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/pdf-word-donusturme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Convert PDF to Word: Turn It into an Editable Document — PDF Platform" />
+    <meta name="twitter:description" content="Convert a PDF into an editable Word (.docx) document. The most practical way to edit the text while keeping formatting — and what to watch for." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Convert PDF to Word: Turn It into an Editable Document — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Convert PDF to Word: Turn It into an Editable Document","description":"Convert a PDF into an editable Word (.docx) document. The most practical way to edit the text while keeping formatting — and what to watch for.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/pdf-word-donusturme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Convert PDF to Word: Turn It into an Editable Document","description":"Convert a PDF into an editable Word (.docx) document. The most practical way to edit the text while keeping formatting — and what to watch for.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Upload the PDF","text":"Open PDF Platform's PDF → Word tool and select your document."},{"@type":"HowToStep","position":2,"name":"Convert","text":"The tool analyzes the text and layout and produces an editable .docx."},{"@type":"HowToStep","position":3,"name":"Download the Word file","text":"Download and edit in Microsoft Word, Google Docs or similar."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I convert PDF to Word?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF to the PDF → Word tool; it produces an editable .docx that you download and edit in Word."}},{"@type":"Question","name":"Is formatting preserved?","acceptedAnswer":{"@type":"Answer","text":"For text-heavy documents the layout is largely preserved. Very complex table/column layouts may need small fixes."}},{"@type":"Question","name":"Can I convert a scanned PDF to Word?","acceptedAnswer":{"@type":"Answer","text":"Yes, but the text must first be recognized with OCR to be editable."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Convert PDF to Word: Turn It into an Editable Document</h1><p class="seo-intro">If you want to edit a PDF without retyping it, the answer is converting it to Word. This post covers the most practical method and tips to minimize formatting loss.</p><article class="seo-article"><p class="seo-lead">PDF is a format designed for sharing, not editing. When you need to change the text inside, the most practical way is to convert the document into an editable Word file.</p><h2>Why is editing directly hard?</h2><p>In a PDF, text and columns are placed at fixed positions; change one word and the layout easily breaks. Converting to Word makes paragraphs, headings and tables flow again so you can edit like a normal document.</p><h2>PDF → Word step by step</h2><ol><li><strong>Upload the PDF:</strong> Open PDF Platform&#39;s PDF → Word tool and select your document.</li><li><strong>Convert:</strong> The tool analyzes the text and layout and produces an editable .docx.</li><li><strong>Download the Word file:</strong> Download and edit in Microsoft Word, Google Docs or similar.</li></ol><p><a href="/tools/pdf-to-word"><strong>Convert PDF to Word</strong> — Turn your PDF into an editable Word document.</a></p><p>If your document is scanned (image), OCR is needed first to recognize the text — otherwise the Word file contains an image instead of editable text.</p><h2>Minimizing formatting loss</h2><p>For complex layouts (multi-column, table-heavy) minor shifts can happen. The cleanest results come from text-heavy documents. A quick review of tables and headings after conversion is usually enough.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-to-word">PDF to Word converter</a></li><li><a href="/en/tools/word-to-pdf">Word to PDF converter online</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I convert PDF to Word?</h3><p>Upload the PDF to the PDF → Word tool; it produces an editable .docx that you download and edit in Word.</p></div><div class="seo-faq-item"><h3>Is formatting preserved?</h3><p>For text-heavy documents the layout is largely preserved. Very complex table/column layouts may need small fixes.</p></div><div class="seo-faq-item"><h3>Can I convert a scanned PDF to Word?</h3><p>Yes, but the text must first be recognized with OCR to be editable.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
