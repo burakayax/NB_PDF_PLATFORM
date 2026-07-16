@@ -686,6 +686,8 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
     <script>
       // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
       // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
