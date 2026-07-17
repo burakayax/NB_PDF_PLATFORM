@@ -51,17 +51,5 @@
     { "name": "PDF'den Resme", "short_name": "PDF→JPG", "url": "/tools/pdf-to-image?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "Filigran Ekle", "short_name": "Filigran", "url": "/tools/watermark?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] },
     { "name": "Sayfa Sil", "short_name": "Sayfa Sil", "url": "/tools/delete-pages?source=pwa", "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }] }
-  ],
-  "file_handlers": [
-    {
-      "action": "/?open=hub",
-      "accept": { "application/pdf": [".pdf"] },
-      "name": "PDF Platform",
-      "icons": [
-        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-        { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png" },
-        { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-      ]
-    }
   ]
 }
