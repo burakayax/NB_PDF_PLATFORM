@@ -99,7 +99,18 @@ export function appendLogLine(line: string): void {
         await rotateLogs(abs);
         currentLogDate = today;
       }
-      await fs.appendFile(abs, `${line}\n`, "utf8");
+      try {
+        await fs.appendFile(abs, `${line}\n`, "utf8");
+      } catch (err: unknown) {
+        // Dizin henüz yoksa (ör. prepareLogFile başlangıç çökmesi nedeniyle çalışmadıysa)
+        // bir kez oluştur ve yeniden dene — üretim logları sessizce kaybolmasın.
+        if ((err as NodeJS.ErrnoException)?.code === "ENOENT") {
+          await fs.mkdir(path.dirname(abs), { recursive: true });
+          await fs.appendFile(abs, `${line}\n`, "utf8");
+        } else {
+          throw err;
+        }
+      }
     })
     .catch((err: unknown) => {
       console.error("[file-log] append failed", err);

@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { verifyAccessToken } from "../lib/jwt.js";
 import { logSuspiciousActivity } from "../lib/app-logger.js";
 import { appendLogLine } from "../lib/file-log.js";
@@ -183,7 +183,7 @@ export const globalApiLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `${getClientIp(req)}:${rateLimitTierForRequest(req)}`,
+  keyGenerator: (req) => `${ipKeyGenerator(getClientIp(req))}:${rateLimitTierForRequest(req)}`,
   message: { message: "Bu IP'den çok fazla istek gönderildi. Lütfen kısa süre sonra tekrar deneyin." },
   handler: async (request, response, _next, options) => {
     const cfg = await getApiSecurityResolved();
@@ -209,7 +209,7 @@ export const paymentCallbackLimiter = rateLimit({
   limit: 60,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => getClientIp(req),
+  keyGenerator: (req) => ipKeyGenerator(getClientIp(req)),
   message: { message: "Çok fazla ödeme callback isteği. Lütfen kısa süre sonra tekrar deneyin." },
 });
 
