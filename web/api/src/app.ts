@@ -172,6 +172,14 @@ app.use(
   }),
 );
 
+// Liveness — apiRouter'dan (ve onun DB'ye dokunan globalApiLimiter/site-config
+// middleware'inden) ÖNCE mount edilir. Böylece DB koptuğunda bile /api/health 200
+// kalır → izleme (UptimeRobot) süreç ayaktayken "down" görmez. Salt süreç canlılığı;
+// DB durumu ayrı /api/health/db (readiness) ucundan raporlanır.
+app.get("/api/health", (_request, response) => {
+  response.json({ status: "ok", service: "nb-pdf-TOOLS-auth-api" });
+});
+
 app.use("/api", apiRouter);
 
 // B2B programatik API — API anahtarıyla doğrulanır (JWT'den bağımsız). Kendi per-anahtar

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
-import { initSentry } from "./lib/sentry.js";
+import { initSentry, Sentry } from "./lib/sentry.js";
 initSentry();
 import { app } from "./app.js";
 import { env } from "./config/env.js";
@@ -10,10 +10,45 @@ import { ensureAppSettingsRow } from "./lib/ensure-app-settings.js";
 import { ensureToolRegistry } from "./lib/ensure-tool-registry.js";
 import { prepareLogFile, logger } from "./lib/file-log.js";
 
-await prepareLogFile();
-await ensureDefaultAdminUser();
-await ensureAppSettingsRow();
-await ensureToolRegistry();
+// Log dizini hazırlığı — DB'ye bağlı değil; hata olsa bile başlangıcı bozmasın.
+try {
+  await prepareLogFile();
+} catch (err) {
+  logger.error("server", "prepareLogFile başarısız (devam ediliyor)", err as Error);
+}
+
+// DB'ye bağlı başlangıç işleri (varsayılan admin + ayarlar + araç kaydı) DB koptuğunda
+// ARTIK süreci ÇÖKERTMEZ. Server dinlemeye başladıktan SONRA, geri-çekilmeli (backoff)
+// tekrar denemeyle arka planda çalışır; DB o an kapalıysa server ayakta kalır (/health
+// cevap verir) ve DB dönünce bu işler kendiliğinden tamamlanır. (Önceden bu üç çağrı
+// top-level await idi → DB kopunca süreç çöküp Render sonsuz restart döngüsüne giriyordu.)
+async function bootstrapDatabaseWithRetry(): Promise<void> {
+  let attempt = 0;
+  for (;;) {
+    try {
+      await ensureDefaultAdminUser();
+      await ensureAppSettingsRow();
+      await ensureToolRegistry();
+      logger.info(
+        "server",
+        attempt > 0
+          ? `DB başlangıç işleri tamamlandı (${attempt} yeniden denemeden sonra)`
+          : "DB başlangıç işleri tamamlandı",
+      );
+      return;
+    } catch (err) {
+      attempt += 1;
+      const delayMs = Math.min(30_000, 2_000 * attempt); // artan bekleme, en çok 30 sn
+      logger.error(
+        "server",
+        `DB başlangıç işleri başarısız (deneme ${attempt}); ${Math.round(delayMs / 1000)} sn sonra tekrar denenecek`,
+        err as Error,
+      );
+      Sentry.captureException(err, { tags: { phase: "db-bootstrap" }, extra: { attempt } });
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
 
 if (env.NODE_ENV === "production") {
   const iyzicoUri = (
@@ -75,6 +110,10 @@ activeServer.keepAliveTimeout = 16 * 60 * 1000;
 
 attachListenError(activeServer);
 activeServer.listen(env.PORT, listenMessage);
+
+// Server artık dinliyor (/health cevap veriyor). DB'ye bağlı başlangıç işlerini arka
+// planda, çökmeden yürüt — DB o an kapalıysa server ayakta kalır, DB dönünce toparlanır.
+void bootstrapDatabaseWithRetry();
 
 // ── Graceful shutdown ──────────────────────────────────────────────────────
 // Render.com ve Kubernetes, pod'u kapatmadan önce SIGTERM gönderir.
