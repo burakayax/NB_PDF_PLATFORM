@@ -46,14 +46,9 @@ apiRouter.use((req, res, next) => {
   next();
 });
 
-// Liveness — DB'ye DOKUNMAZ. Render'ın deploy health check'i (healthCheckPath)
-// bunu kullanır; DB anlık yavaşlasa bile deploy'lar/uygulama canlılığı etkilenmez.
-apiRouter.get("/health", (_request, response) => {
-  response.json({
-    status: "ok",
-    service: "nb-pdf-TOOLS-auth-api",
-  });
-});
+// NOT: Liveness `/api/health` artık app.ts'te apiRouter'dan ÖNCE mount ediliyor
+// (DB'ye dokunan globalApiLimiter/site-config middleware'ini bypass eder) → DB
+// koptuğunda bile 200 kalır. Aşağıdaki readiness ucu DB durumunu ayrıca raporlar.
 
 // Readiness — DB'ye hafif `SELECT 1` atar. DB koparsa 503 döner ki dış izleme
 // (UptimeRobot) DB kesintisini de yakalasın. Express GET rotası HEAD'e de yanıt
