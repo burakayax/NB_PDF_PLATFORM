@@ -73,6 +73,16 @@ apiRouter.get("/health/db", async (_request, response) => {
   }
 });
 
+// ⚠️ GEÇİCİ — Sentry doğrulama ucu. Sadece dogru anahtarla kasitli hata firlatir
+// (Sentry.setupExpressErrorHandler bunu yakalayip Sentry'ye gonderir). Bot gurultusunu
+// onlemek icin anahtar sart. DOGRULAMADAN SONRA BU BLOK SILINECEK.
+apiRouter.get("/health/sentry-test", (request, response) => {
+  if (request.query.key === "nb-sentry-check-2607") {
+    throw new Error(`Sentry dogrulama testi (gecici uc) — ${new Date().toISOString()}`);
+  }
+  response.json({ status: "ok", note: "sentry-test gecici uc; anahtar gerekli" });
+});
+
 apiRouter.use("/public", publicRouter);
 apiRouter.use("/access", accessRouter);
 apiRouter.use("/admin", adminRouter);

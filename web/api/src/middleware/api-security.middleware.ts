@@ -217,6 +217,7 @@ export const paymentCallbackLimiter = rateLimit({
 export function isPublicApiPath(method: string, path: string): boolean {
   const p = path.replace(/\/+$/, "") || "/";
   if (p === "/health" || p === "/health/db") return true;
+  if (p === "/health/sentry-test") return true; // GEÇİCİ — Sentry doğrulama; sonra silinecek
   if (p === "/subscription/plans" && method === "GET") return true;
   if (p.startsWith("/public/") && method === "GET") return true;
   if (p === "/analytics/page-view" && method === "POST") return true;
