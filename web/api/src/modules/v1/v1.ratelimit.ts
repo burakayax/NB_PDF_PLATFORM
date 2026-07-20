@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import type { Request, Response } from "express";
 import { problem } from "./v1.errors.js";
 import type { ApiUser } from "./v1.middleware.js";
@@ -12,7 +12,9 @@ export const v1RateLimiter = rateLimit({
   legacyHeaders: true,
   keyGenerator: (_req: Request, res: Response): string => {
     const u = (res.locals as { apiUser?: ApiUser }).apiUser;
-    return u?.id ?? _req.ip ?? "anon";
+    // IPv6 adreslerinin limiti aşmasını önlemek için ipKeyGenerator ile normalize et
+    // (express-rate-limit v8 aksi halde ERR_ERL_KEY_GEN_IPV6 ile başlangıçta çöker).
+    return u?.id ?? ipKeyGenerator(_req.ip ?? "anon");
   },
   handler: (_req: Request, res: Response): void => {
     problem(res, 429, "rate_limited", "İstek sınırı aşıldı (60/dk). Retry-After başlığına göre bekleyin.");
