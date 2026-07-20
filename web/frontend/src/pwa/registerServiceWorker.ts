@@ -4,13 +4,14 @@
 type UpdateCallback = (apply: () => void) => void;
 
 let refreshing = false;
-// Sayfayı yalnızca kullanıcı güncellemeyi onayladığında yeniliyoruz. İlk kuruluşta
-// activate→clients.claim de controllerchange tetikler; o durumda reload İSTEMİYORUZ
-// (aksi halde uygulama ilk açılışta ve arka plandan her dönüşte gereksiz sıfırlanır).
-let userApprovedUpdate = false;
+// Kayıt anında zaten bir SW kontrol ediyor muydu? Varsa, controllerchange bir GÜNCELLEME
+// demektir (yeni deploy) → sayfayı otomatik tazele. Controller yoksa bu İLK kuruluştur
+// (activate→clients.claim); o durumda reload İSTEMİYORUZ (gereksiz sıfırlama olmasın).
+let hadControllerAtStart = false;
 
 /**
- * @param onUpdateAvailable Yeni bir SW kuruldu ve beklemede; `apply()` çağrısı onu etkinleştirip sayfayı yeniler.
+ * @param onUpdateAvailable Geriye dönük uyumluluk için tutulur; otomatik güncellemede
+ *   artık kullanıcı onayı beklenmez, yeni sürüm kendiliğinden devreye girip sayfayı tazeler.
  */
 export function registerServiceWorker(onUpdateAvailable?: UpdateCallback): void {
   if (!import.meta.env.PROD) {
@@ -20,14 +21,17 @@ export function registerServiceWorker(onUpdateAvailable?: UpdateCallback): void 
     return;
   }
 
+  hadControllerAtStart = !!navigator.serviceWorker.controller;
+
   const register = () => {
     navigator.serviceWorker
       .register("/sw.js", { scope: "/" })
       .then((registration) => {
-        // Yeni SW etkin olunca (kullanıcı onayı → SKIP_WAITING sonrası) sayfayı bir kez
-        // yenile. Onay yoksa (ör. ilk kuruluş claim'i) yenileme YAPMA.
+        // OTOMATIK GÜNCELLEME: yeni SW kontrolü ele aldığında (sw.js skipWaiting() çağırıp
+        // activate olunca) sayfayı tek seferde tazele — ama yalnızca önceden bir controller
+        // varsa (gerçek güncelleme). İlk kuruluşun claim'inde tazeleme YAPMA.
         navigator.serviceWorker.addEventListener("controllerchange", () => {
-          if (!userApprovedUpdate || refreshing) {
+          if (!hadControllerAtStart || refreshing) {
             return;
           }
           refreshing = true;
@@ -38,11 +42,10 @@ export function registerServiceWorker(onUpdateAvailable?: UpdateCallback): void 
           if (!worker) {
             return;
           }
-          // Yalnızca halihazırda kontrol eden bir SW varsa "güncelleme" anlamlıdır
-          // (ilk kuruluşta controller null'dur → güncelleme bildirimi gösterme).
+          // Yeni SW zaten skipWaiting ile otomatik devreye giriyor; banner opsiyoneldir.
+          // Yine de tüketici bir geri-çağırım verdiyse "hemen uygula" seçeneğini sunalım.
           if (navigator.serviceWorker.controller && onUpdateAvailable) {
             onUpdateAvailable(() => {
-              userApprovedUpdate = true;
               worker.postMessage({ type: "SKIP_WAITING" });
             });
           }
