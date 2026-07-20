@@ -143,7 +143,71 @@ services:
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
     # SPA fallback: tüm yollar index.html'e döner (React Router için)
+    # ── Prerender SEO sayfalari: slash'siz URL'leri dizin index.html'ine yonlendir ──
+    # SORUN: sitemap/canonical slash'siz URL kullanir (/pricing, /tools/x). Render bir
+    # yolda GERCEK dosya varsa kurallari atlar; /pricing/ (slash'li) dogru gelir ama
+    # /pricing (slash'siz) dosya sayilmaz -> asagidaki catch-all ana sayfayi donerdi
+    # -> Google tum prerender sayfalarini ana sayfanin kopyasi sanip indekslemiyordu.
+    # COZUM: slash'siz varyantlari acikca prerender dosyasina rewrite et. Named
+    # placeholder (:slug) TEK segment eslesir (Render dokuman ornegi: /:year/:month).
+    # SPA-only rotalar (/login /register /workspace /admin ...) bu prefix'lerde
+    # OLMADIGI icin etkilenmez; en sondaki /* catch-all'a duser.
     routes:
+      # Arac + blog detay sayfalari (TR + EN) — :slug tek segment
+      - type: rewrite
+        source: "/tools/:slug"
+        destination: "/tools/:slug/index.html"
+      - type: rewrite
+        source: "/en/tools/:slug"
+        destination: "/en/tools/:slug/index.html"
+      - type: rewrite
+        source: "/blog/:slug"
+        destination: "/blog/:slug/index.html"
+      - type: rewrite
+        source: "/en/blog/:slug"
+        destination: "/en/blog/:slug/index.html"
+      # Duz prerender sayfalari (TR)
+      - type: rewrite
+        source: "/pricing"
+        destination: "/pricing/index.html"
+      - type: rewrite
+        source: "/terms"
+        destination: "/terms/index.html"
+      - type: rewrite
+        source: "/privacy"
+        destination: "/privacy/index.html"
+      - type: rewrite
+        source: "/kvkk"
+        destination: "/kvkk/index.html"
+      - type: rewrite
+        source: "/pdf-api"
+        destination: "/pdf-api/index.html"
+      - type: rewrite
+        source: "/blog"
+        destination: "/blog/index.html"
+      # Duz prerender sayfalari (EN)
+      - type: rewrite
+        source: "/en"
+        destination: "/en/index.html"
+      - type: rewrite
+        source: "/en/pricing"
+        destination: "/en/pricing/index.html"
+      - type: rewrite
+        source: "/en/terms"
+        destination: "/en/terms/index.html"
+      - type: rewrite
+        source: "/en/privacy"
+        destination: "/en/privacy/index.html"
+      - type: rewrite
+        source: "/en/kvkk"
+        destination: "/en/kvkk/index.html"
+      - type: rewrite
+        source: "/en/pdf-api"
+        destination: "/en/pdf-api/index.html"
+      - type: rewrite
+        source: "/en/blog"
+        destination: "/en/blog/index.html"
+      # SPA fallback — HER ZAMAN EN SONDA
       - type: rewrite
         source: "/*"
         destination: "/index.html"
