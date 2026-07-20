@@ -7,7 +7,7 @@
  *   - POST/PUT vb. ve çapraz-köken istekleri: dokunulmaz, tarayıcıya bırakılır
  * Sürüm değişince activate'te eski önbellekler silinir.
  */
-const SW_VERSION = "v1.0.8";
+const SW_VERSION = "v1.0.9";
 const STATIC_CACHE = `nbpdf-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `nbpdf-runtime-${SW_VERSION}`;
 const APP_SHELL_URL = "/";
@@ -24,12 +24,13 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  // NOT: burada artık skipWaiting() ÇAĞIRMIYORUZ. Otomatik skipWaiting, yeni SW'nin
-  // mevcut sayfayı anında ele geçirip (clients.claim) controllerchange→reload
-  // tetiklemesine yol açıyordu; kullanıcı uygulamayı arka plana alıp (ör. indirdiği
-  // PDF'i okuyup) döndüğünde uygulama sıfırlanıyor, reload yarışında bazen eski sürüm
-  // görünüyordu. Artık yeni SW "waiting"de bekler; kullanıcı güncelleme banner'ından
-  // onaylayınca (registerServiceWorker → SKIP_WAITING mesajı) tek seferde temiz geçilir.
+  // OTOMATIK GÜNCELLEME: yeni SW kurulur kurulmaz beklemeyi atlar. Böylece yeni bir
+  // deploy çıktığında kullanıcının banner'a tıklamasına gerek kalmaz — bir sonraki
+  // ziyarette (ya da açık sekmede) yeni sürüm kendiliğinden devreye girer, activate'te
+  // eski cache'ler silinir, controllerchange → tek seferlik reload ile temiz geçilir.
+  // (Eski sürümde banner onayı bekleniyordu; onaylamayan kullanıcılar bozuk/eski
+  // cache'te kalıp yeni asset hash'lerine ulaşamıyordu → PDF worker 404 → takılma.)
+  self.skipWaiting();
   event.waitUntil(
     caches.open(STATIC_CACHE).then(async (cache) => {
       // Tek tek ekle: biri 404 olsa bile install'ı bozma.
