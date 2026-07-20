@@ -152,7 +152,11 @@ export function ToolDropzone({
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
             </span>
             <span className="text-[13px] font-semibold text-white">
-              {busy ? (tr ? "İşleniyor…" : "Processing…") : tr ? "+ Dosya ekle" : "+ Add file"}
+              {busy
+                ? (tr ? "İşleniyor…" : "Processing…")
+                : multiple
+                  ? (tr ? "+ Dosya ekle" : "+ Add file")
+                  : (tr ? "Dosya değiştir" : "Replace file")}
             </span>
           </div>
         ) : (
