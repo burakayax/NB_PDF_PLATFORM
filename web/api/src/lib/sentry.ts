@@ -8,6 +8,8 @@ export function initSentry() {
     dsn,
     environment: process.env.NODE_ENV ?? "development",
     tracesSampleRate: 0.2,
+    // Render deploy'un git commit'i — hatalar "hangi sürümle geldi" diye etiketlenir.
+    release: process.env.RENDER_GIT_COMMIT || undefined,
   });
 }
 
