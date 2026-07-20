@@ -216,7 +216,7 @@ export const paymentCallbackLimiter = rateLimit({
 /** Kimlik gerektirmeyen uçlar (auth akışı, sağlık, plan listesi, iletişim). */
 export function isPublicApiPath(method: string, path: string): boolean {
   const p = path.replace(/\/+$/, "") || "/";
-  if (p === "/health") return true;
+  if (p === "/health" || p === "/health/db") return true;
   if (p === "/subscription/plans" && method === "GET") return true;
   if (p.startsWith("/public/") && method === "GET") return true;
   if (p === "/analytics/page-view" && method === "POST") return true;

@@ -78,7 +78,7 @@ export async function getApiSecurityResolved(): Promise<ApiSecurityResolved> {
 
 export function apiRateLimitForRequest(request: Request, cfg: ApiSecurityResolved): number {
   const path = logicalApiPath(request);
-  if (path === "/health") {
+  if (path === "/health" || path === "/health/db") {
     return cfg.healthPerMinute;
   }
   if (path.startsWith("/license")) {
@@ -113,7 +113,7 @@ export function apiRateLimitForRequest(request: Request, cfg: ApiSecurityResolve
 
 export function rateLimitTierForRequest(request: Request): string {
   const path = logicalApiPath(request);
-  if (path === "/health") {
+  if (path === "/health" || path === "/health/db") {
     return "health";
   }
   if (path.startsWith("/license")) {
