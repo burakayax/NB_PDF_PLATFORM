@@ -20,6 +20,7 @@ import { fakePaymentRouter } from "./modules/fake-payment/index.js";
 import { requirePaymentsEnabled } from "./modules/payment/payments-gate.middleware.js";
 import { paymentCallbackController, paymentCallbackUrlencoded } from "./modules/payment/payment.controller.js";
 import { apiRouter } from "./routes/index.js";
+import { Sentry } from "./lib/sentry.js";
 import { v1Router } from "./modules/v1/v1.routes.js";
 import { registerTeamJobs } from "./jobs/teamJobs.js";
 import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
@@ -208,6 +209,12 @@ function skipDuplicateHttpErrorLog(request: express.Request, statusCode: number)
     p.endsWith("/auth/register");
   return authFormRoutes;
 }
+
+// Sentry Express hata yakalayıcısı — TÜM route'lardan SONRA, özel hata middleware'inden ÖNCE
+// olmalı (Sentry v10 gereği). Bu olmadan route'larda atılan beklenmeyen 5xx hatalar Sentry'ye
+// ULAŞMAZ. DSN girili değilken Sentry.init çalışmaz → bu çağrı no-op'tur, güvenlidir.
+// Varsayılan olarak yalnızca 5xx / status'suz hataları gönderir (4xx HttpError gürültüsü gitmez).
+Sentry.setupExpressErrorHandler(app);
 
 // Merkezi hata işleyici: HttpError, Zod doğrulama ve beklenmeyen hataları JSON yanıtına çevirir ve dosyaya loglar.
 // Tüm API için tutarlı hata sözleşmesi ve üretim izlenebilirliği sağlamak zorundadır.
