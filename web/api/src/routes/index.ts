@@ -23,7 +23,6 @@ import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
 import { emailRouter } from "../modules/email/email.routes.js";
 import { prisma } from "../lib/prisma.js";
-import { Sentry } from "../lib/sentry.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -72,22 +71,6 @@ apiRouter.get("/health/db", async (_request, response) => {
   } catch {
     response.status(503).json({ status: "error", service: "nb-pdf-TOOLS-auth-api", db: "down" });
   }
-});
-
-// ⚠️ GEÇİCİ — Sentry doğrulama ucu. Sadece dogru anahtarla kasitli hata firlatir
-// (Sentry.setupExpressErrorHandler bunu yakalayip Sentry'ye gonderir). Bot gurultusunu
-// onlemek icin anahtar sart. DOGRULAMADAN SONRA BU BLOK SILINECEK.
-apiRouter.get("/health/sentry-test", async (request, response) => {
-  const dsnSet = Boolean(process.env.SENTRY_DSN);
-  if (request.query.key === "nb-sentry-check-2607") {
-    const err = new Error(`Sentry dogrulama testi (explicit capture) — ${new Date().toISOString()}`);
-    const eventId = Sentry.captureException(err);
-    // Kısa ömürlü istekte olayın ağ üzerinden gitmesini bekle (aksi halde process yanit sonrasi bosaltmayabilir).
-    await Sentry.flush(3000).catch(() => undefined);
-    response.json({ captured: true, dsnSet, eventId });
-    return;
-  }
-  response.json({ status: "ok", note: "sentry-test gecici uc; anahtar gerekli", dsnSet });
 });
 
 apiRouter.use("/public", publicRouter);
