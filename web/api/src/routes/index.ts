@@ -22,6 +22,7 @@ import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout
 import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
 import { emailRouter } from "../modules/email/email.routes.js";
+import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
   globalApiLimiter,
@@ -45,11 +46,31 @@ apiRouter.use((req, res, next) => {
   next();
 });
 
+// Liveness — DB'ye DOKUNMAZ. Render'ın deploy health check'i (healthCheckPath)
+// bunu kullanır; DB anlık yavaşlasa bile deploy'lar/uygulama canlılığı etkilenmez.
 apiRouter.get("/health", (_request, response) => {
   response.json({
     status: "ok",
     service: "nb-pdf-TOOLS-auth-api",
   });
+});
+
+// Readiness — DB'ye hafif `SELECT 1` atar. DB koparsa 503 döner ki dış izleme
+// (UptimeRobot) DB kesintisini de yakalasın. Express GET rotası HEAD'e de yanıt
+// verir → ücretsiz HEAD monitörü çalışır. Timeout ile hızlı 503 (asla asılı kalmaz).
+apiRouter.get("/health/db", async (_request, response) => {
+  const DB_PING_TIMEOUT_MS = 5000;
+  try {
+    await Promise.race([
+      prisma.$queryRaw`SELECT 1`,
+      new Promise((_resolve, reject) =>
+        setTimeout(() => reject(new Error("db_ping_timeout")), DB_PING_TIMEOUT_MS),
+      ),
+    ]);
+    response.json({ status: "ok", service: "nb-pdf-TOOLS-auth-api", db: "up" });
+  } catch {
+    response.status(503).json({ status: "error", service: "nb-pdf-TOOLS-auth-api", db: "down" });
+  }
 });
 
 apiRouter.use("/public", publicRouter);
