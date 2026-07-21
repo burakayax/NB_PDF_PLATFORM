@@ -22,7 +22,22 @@ const fmtDate = (iso: string, tr: boolean) => {
   } catch { return iso; }
 };
 
-function Header({ tr, onLogin, onRegister }: { tr: boolean; onLogin: () => void; onRegister: () => void }) {
+function Header({
+  language,
+  isAuthenticated,
+  onOpenApp,
+  onLogin,
+  onRegister,
+  onSwitchLanguage,
+}: {
+  language: Language;
+  isAuthenticated: boolean;
+  onOpenApp: () => void;
+  onLogin: () => void;
+  onRegister: () => void;
+  onSwitchLanguage: (lang: "tr" | "en") => void;
+}) {
+  const tr = language === "tr";
   return (
     <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
@@ -30,10 +45,21 @@ function Header({ tr, onLogin, onRegister }: { tr: boolean; onLogin: () => void;
           <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
           <span className="text-sm font-bold tracking-tight text-white">PDF Platform</span>
         </a>
-        <div className="flex items-center gap-2">
-          <a href="/blog" className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">Blog</a>
-          <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
-          <button type="button" onClick={onRegister} className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <a href="/blog" className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white sm:inline-block">Blog</a>
+          {/* Dil değiştirici — doğrudan girişte (Google'dan gelen) kullanıcı dili değiştirebilsin */}
+          <div className="flex items-center rounded-lg border border-white/10 p-0.5 text-xs font-bold">
+            <button type="button" onClick={() => onSwitchLanguage("tr")} aria-pressed={tr} className={`rounded-md px-2 py-1 transition ${tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>TR</button>
+            <button type="button" onClick={() => onSwitchLanguage("en")} aria-pressed={!tr} className={`rounded-md px-2 py-1 transition ${!tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>EN</button>
+          </div>
+          {isAuthenticated ? (
+            <button type="button" onClick={onOpenApp} className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Uygulamaya git" : "Open app"}</button>
+          ) : (
+            <>
+              <button type="button" onClick={onLogin} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">{tr ? "Giriş yap" : "Log in"}</button>
+              <button type="button" onClick={onRegister} className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">{tr ? "Üye Ol" : "Sign up"}</button>
+            </>
+          )}
         </div>
       </div>
     </header>
@@ -90,13 +116,13 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
 }
 
 // ─── Blog index ───────────────────────────────────────────────────────────────
-export function BlogIndexPage({ language, onLogin, onRegister }: { language: Language; onLogin: () => void; onRegister: () => void }) {
+export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, onOpenApp, onSwitchLanguage }: { language: Language; onLogin: () => void; onRegister: () => void; isAuthenticated: boolean; onOpenApp: () => void; onSwitchLanguage: (lang: "tr" | "en") => void }) {
   const tr = language === "tr";
   const posts = getBlogPostsSorted() as BlogPost[];
   useEffect(() => { document.title = tr ? "Blog — PDF Platform" : "Blog — PDF Platform"; }, [tr]);
   return (
     <Shell>
-      <Header tr={tr} onLogin={onLogin} onRegister={onRegister} />
+      <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
       <main className="mx-auto max-w-5xl px-5 pb-24 pt-12 sm:pt-16">
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-400/20 bg-fuchsia-400/10 px-3 py-1 text-[12px] font-semibold text-fuchsia-300"><Newspaper className="h-3.5 w-3.5" />{tr ? "Rehberler & İpuçları" : "Guides & Tips"}</span>
@@ -137,7 +163,7 @@ export function BlogIndexPage({ language, onLogin, onRegister }: { language: Lan
 }
 
 // ─── Blog post ────────────────────────────────────────────────────────────────
-export function BlogPostPage({ slug, language, onLogin, onRegister }: { slug: string; language: Language; onLogin: () => void; onRegister: () => void }) {
+export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthenticated, onOpenApp, onSwitchLanguage }: { slug: string; language: Language; onLogin: () => void; onRegister: () => void; isAuthenticated: boolean; onOpenApp: () => void; onSwitchLanguage: (lang: "tr" | "en") => void }) {
   const tr = language === "tr";
   const post = getBlogPost(slug) as BlogPost | null;
   const c = post ? (post[tr ? "tr" : "en"] as BlogPostCopy) : null;
@@ -147,7 +173,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister }: { slug: st
   if (!post || !c) {
     return (
       <Shell>
-        <Header tr={tr} onLogin={onLogin} onRegister={onRegister} />
+        <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
         <main className="mx-auto max-w-3xl px-5 py-24 text-center">
           <p className="text-lg font-bold text-white">{tr ? "Yazı bulunamadı" : "Post not found"}</p>
           <a href="/blog" className="mt-4 inline-block text-fuchsia-300 hover:text-fuchsia-200">← Blog</a>
@@ -175,7 +201,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister }: { slug: st
 
   return (
     <Shell>
-      <Header tr={tr} onLogin={onLogin} onRegister={onRegister} />
+      <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8">
         <a href="/blog" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
