@@ -113,3 +113,16 @@ export function splitPagesToZip(
 export function getPdfPageCount(bytes: ArrayBuffer | Uint8Array): Promise<number> {
   return call("getPdfPageCount", [bytes]);
 }
+// İmzala / Yorumla — pdf-lib ile görsel/çizim gömme + save; büyük PDF'te worker donmayı önler.
+export function applySignatures(
+  pdfBytes: Parameters<typeof direct.applySignatures>[0],
+  items: Parameters<typeof direct.applySignatures>[1],
+): Promise<Uint8Array> {
+  return call("applySignatures", [pdfBytes, items]);
+}
+export function applyAnnotations(
+  pdfBytes: Parameters<typeof direct.applyAnnotations>[0],
+  items: Parameters<typeof direct.applyAnnotations>[1],
+): Promise<Uint8Array> {
+  return call("applyAnnotations", [pdfBytes, items]);
+}
