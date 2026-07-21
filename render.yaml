@@ -6,7 +6,7 @@ services:
   - type: web
     name: nb-pdf-api
     branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
-    autoDeployTrigger: checksPass  # CI (GitHub Actions) YEŞİL olmadan deploy etme (deploy güvenliği)
+    autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     # Docker runtime: native Python runtime'da apt-get çalışmaz (salt-okunur FS).
     # Sistem araçları (tesseract/poppler/wkhtmltopdf/ghostscript) Dockerfile'da kurulur.
     runtime: docker
@@ -68,7 +68,7 @@ services:
   - type: web
     name: nb-auth-api
     branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
-    autoDeployTrigger: checksPass  # CI (GitHub Actions) YEŞİL olmadan deploy etme (deploy güvenliği)
+    autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     runtime: node
     region: frankfurt
     plan: starter             # Starter: UYUMAZ → cold-start yok. Site açılışı (public/runtime)
@@ -140,7 +140,7 @@ services:
   - type: web
     name: nb-pdf-frontend
     branch: main              # SADECE main'e push'ta deploy et (calismaAlani'yi yok say)
-    autoDeployTrigger: checksPass  # CI (GitHub Actions) YEŞİL olmadan deploy etme (deploy güvenliği)
+    autoDeployTrigger: off  # Render OTOMATIK deploy etmez; CI (ci.yml "deploy" job'i) tum testler yesilse deploy hook ile tetikler
     runtime: static
     rootDir: web/frontend
     buildCommand: npm ci && npm run build
