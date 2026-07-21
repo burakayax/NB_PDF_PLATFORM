@@ -19,7 +19,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { applySignatures, pdfBytesToBlob, type SignatureItem } from "../../lib/clientPdf";
+import { applySignatures, pdfBytesToBlob, type SignatureItem } from "../../lib/clientPdfWorker";
 import { saveBlobToUser } from "../../api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
