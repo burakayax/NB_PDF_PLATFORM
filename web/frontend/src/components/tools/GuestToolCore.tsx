@@ -22,7 +22,7 @@ import {
   pdfBytesToBlob,
   getPdfPageCount,
   PdfEncryptedError,
-} from "../../lib/clientPdf";
+} from "../../lib/clientPdfWorker";
 
 export type GuestToolId = "merge" | "image-to-pdf";
 

@@ -123,7 +123,7 @@ import {
   pdfBytesToBlob,
   zipBytesToBlob,
   PdfEncryptedError,
-} from "./lib/clientPdf";
+} from "./lib/clientPdfWorker";
 import {
   isClientCapableTool,
   isGuestPageTool,
