@@ -5310,13 +5310,20 @@ function App() {
     // Bu yüzden URL'i de /login|/register'a taşıyan pushState'li sürümleri kullan.
     const goLogin = apiPageGoLogin;
     const goRegister = apiPageGoRegister;
+    // Blog dil değiştirici: URL'i HER ZAMAN /en'e senkronla (handleLanguageChange'in
+    // auth dalı workspace'i bozmamak için URL senkronlamaz; blog public sayfa olduğundan
+    // burada açıkça senkronlarız → giriş yapmış kullanıcıda da /blog/x ↔ /en/blog/x çalışır).
+    const switchBlogLanguage = (lang: "tr" | "en") => {
+      syncLanguageUrl(lang);
+      void handleLanguageChange(lang);
+    };
     const blogSlug = pathname === "/blog" ? "" : pathname.split("/blog/")[1] ?? "";
     return (
       <Suspense fallback={<PageSkeleton />}>
         {blogSlug ? (
-          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={handleLanguageChange} />
+          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={switchBlogLanguage} />
         ) : (
-          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={handleLanguageChange} />
+          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={switchBlogLanguage} />
         )}
       </Suspense>
     );
