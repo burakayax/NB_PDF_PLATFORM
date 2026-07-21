@@ -74,6 +74,20 @@ describe("signRefreshToken / verifyRefreshToken", () => {
     const accessToken = signAccessToken(TEST_PAYLOAD);
     expect(() => verifyRefreshToken(accessToken)).toThrow();
   });
+
+  it("aynı payload + aynı an için BENZERSİZ token üretir (tokenHash çakışması regresyonu)", async () => {
+    // Regresyon: JWT iat/exp saniye hassasiyetinde → jti olmadan aynı saniyede
+    // aynı token üretilip refreshToken.tokenHash unique kısıtı çakışıyordu (500).
+    const { signRefreshToken, verifyRefreshToken } = await loadJwt();
+    const a = signRefreshToken(TEST_PAYLOAD);
+    const b = signRefreshToken(TEST_PAYLOAD);
+    expect(a).not.toBe(b);
+    // Her ikisi de geçerli ve farklı jti taşımalı.
+    const pa = verifyRefreshToken(a) as { jti?: string };
+    const pb = verifyRefreshToken(b) as { jti?: string };
+    expect(pa.jti).toBeTruthy();
+    expect(pa.jti).not.toBe(pb.jti);
+  });
 });
 
 describe("signPasswordResetJwt / verifyPasswordResetJwt", () => {
