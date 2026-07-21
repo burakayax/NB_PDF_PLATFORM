@@ -24,7 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { imagesToPdf, imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdf";
+import { imagesToPdf, imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
 import { ocrImagesToWords } from "../../lib/ocr";
 import { PdfHub } from "./PdfHub";
 import {

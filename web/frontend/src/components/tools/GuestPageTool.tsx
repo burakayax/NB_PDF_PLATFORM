@@ -28,7 +28,7 @@ import {
   pdfBytesToBlob,
   zipBytesToBlob,
   PdfEncryptedError,
-} from "../../lib/clientPdf";
+} from "../../lib/clientPdfWorker";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
 // Dashboard'ın görsel seçici modalının BİREBİR aynısı.
