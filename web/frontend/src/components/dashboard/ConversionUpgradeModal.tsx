@@ -13,14 +13,14 @@ export type ConversionUpgradeModalProps = {
 function copy(language: Language) {
   const tr = language === "tr";
   return {
-    eyebrow: tr ? "Plan bilgisi" : "Plan info",
-    title: tr ? "İşlem limitinize yaklaştınız" : "You're approaching your limit",
+    eyebrow: tr ? "Sınırsıza geç" : "Go unlimited",
+    title: tr ? "Sınırsız PDF işlemenin kilidini açın" : "Unlock unlimited PDF processing",
     subtitle: tr
-      ? "Günlük veya aylık işlem limitinize yaklaşıyorsunuz. Daha fazla işlem için planınızı yükseltin."
-      : "You're approaching your daily or monthly operation limit. Upgrade to keep going.",
+      ? "Limit sizi yavaşlatmasın. Üst planla daha fazla işlem, daha büyük dosyalar ve tüm yapay zekâ araçları anında açılır."
+      : "Don't let limits slow you down. A higher plan instantly unlocks more operations, larger files, and every AI tool.",
     speedStrip: tr
-      ? "Üst planlarda daha fazla işlem, daha büyük dosyalar ve öncelikli kuyruk."
-      : "Higher plans include more operations, larger files, and priority queue.",
+      ? "Üst planlarda daha fazla işlem, daha büyük dosyalar ve öncelikli işlem kuyruğu."
+      : "Higher plans include more operations, larger files, and a priority queue.",
     features: tr
       ? [
           "Daha fazla aylık işlem",
@@ -34,11 +34,14 @@ function copy(language: Language) {
           "✨ AI tools (summarize, extract…)",
           "Priority processing queue",
         ],
+    guarantee: tr
+      ? "🛡️ 7 gün koşulsuz para-iade garantisi — risksiz deneyin."
+      : "🛡️ 7-day money-back guarantee — no questions asked.",
     usageLine: (ops: number) =>
       tr
-        ? `Bugün ${ops} işlem yaptınız. Planınızı yükselterek limitinizi artırın.`
-        : `You've run ${ops} operations today. Upgrade your plan to increase your limit.`,
-    ctaPrimary: tr ? "Planları gör" : "View plans",
+        ? `Bugün ${ops} işlem yaptınız — hız kesmeden devam edin.`
+        : `You've run ${ops} operations today — keep going without limits.`,
+    ctaPrimary: tr ? "Şimdi yükselt" : "Upgrade now",
     ctaSecondary: tr ? "Belki sonra" : "Maybe later",
     close: tr ? "Kapat" : "Close",
   };
@@ -125,6 +128,10 @@ export function ConversionUpgradeModal({
         </ul>
 
         <p className="conv-upgrade-modal__usage">{C.usageLine(operationsToday)}</p>
+
+        <p className="conv-upgrade-modal__guarantee" role="note">
+          {C.guarantee}
+        </p>
 
         <div className="conv-upgrade-modal__actions">
           <button type="button" className="conv-upgrade-modal__cta-primary" onClick={onUpgrade}>
