@@ -2447,6 +2447,226 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "pdf-karsilastirma-farklari-bulma",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 5,
+      tags: { tr: ["Yapay Zekâ", "Karşılaştırma", "Sözleşme"], en: ["AI", "Compare", "Contract"] },
+      accent: "fuchsia",
+      tool: "/tools/pdf-karsilastir",
+    },
+    {
+      title: "İki PDF'i Karşılaştırma: Sözleşme Sürümleri Arasındaki Farkı Bulma",
+      description:
+        "İki PDF'i (ör. sözleşmenin eski ve yeni sürümü) yapay zekâ ile karşılaştırın; eklenen, çıkarılan ve değişen maddeleri — özellikle tutar, tarih ve yükümlülükleri — saniyeler içinde görün.",
+      excerpt:
+        "Bir sözleşmenin iki sürümünü satır satır karşılaştırmak yorucu ve risklidir; küçük bir değişiklik gözden kaçabilir. Yapay zekâ ile iki PDF arasındaki bağlayıcı farkları saniyeler içinde nasıl bulacağınızı anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "\"Bu, geçen hafta gönderdikleri sürümün aynısı mı, yoksa bir madde mi değişti?\" — sözleşmelerde en riskli sorulardan biri. İki PDF'i elle karşılaştırmak hem yorucu hem de tehlikeli: değişen tek bir tarih ya da tutar gözden kaçabilir. Yapay zekâ bu işi saniyelere indirir." },
+        { t: "h2", x: "Elle karşılaştırmanın riski" },
+        { t: "p", x: "İki uzun belgeyi yan yana okumak dikkat ister; sayfalarca metinde eklenen bir cümleyi, silinen bir istisnayı ya da değişen bir rakamı kaçırmak kolaydır. Üstelik biçim farkları (yeniden numaralanmış maddeler, kayan paragraflar) gerçek içerik değişikliğini gizleyebilir." },
+        { t: "h2", x: "Yapay zekâ ile karşılaştırma — adım adım" },
+        { t: "steps", items: [
+          { title: "İki sürümü yükleyin", x: "A (eski) ve B (yeni) belgelerini PDF Karşılaştırma aracına ekleyin." },
+          { title: "Karşılaştırın", x: "Yapay zekâ metni anlar ve eklenen, çıkarılan, değiştirilen maddeleri ayıklar." },
+          { title: "Farkları inceleyin", x: "Özellikle bağlayıcı değişiklikleri görün: tutar, tarih, süre, taraf, yükümlülük ve ceza maddeleri." },
+        ] },
+        { t: "cta", title: "PDF Karşılaştır", x: "Bir sözleşmenin iki sürümünü karşılaştırın — bağlayıcı farkları saniyeler içinde görün.", btn: "Aracı aç", tool: "/tools/pdf-karsilastir" },
+        { t: "h2", x: "Ne zaman çok işe yarar?" },
+        { t: "ul", items: [
+          "Sözleşme revizyonlarını onaylamadan önce kontrol etmek.",
+          "İhale/şartname güncellemelerinde neyin değiştiğini görmek.",
+          "Karşı tarafın gönderdiği 'küçük düzeltme'lerin gerçekte ne içerdiğini anlamak.",
+        ] },
+        { t: "tip", x: "Bir sözleşmeyi imzalamadan önce yalnızca farkı değil, tamamını da anlamak isterseniz; PDF Özetle ve PDF ile Sohbet araçlarıyla belgeye soru sorabilirsiniz." },
+        { t: "cta", title: "PDF ile Sohbet", x: "Belgeye \"ceza maddesi nedir?\" gibi sorular sorup net cevaplar alın.", btn: "Sohbet aracı", tool: "/tools/pdf-sohbet" },
+      ],
+      faq: [
+        { q: "İki PDF nasıl karşılaştırılır?", a: "İki belgeyi (A: eski, B: yeni) PDF Karşılaştırma aracına yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarır." },
+        { q: "Hangi farkları yakalar?", a: "Özellikle bağlayıcı değişiklikleri: tutar, tarih, süre, taraf, yükümlülük ve ceza maddelerini öne çıkarır." },
+        { q: "Biçim değişikliğiyle içerik değişikliğini ayırır mı?", a: "Evet. Yapay zekâ metnin anlamına bakar; yeniden numaralama veya kayan paragraf gibi biçim farklarını gerçek içerik değişikliğinden ayırmaya çalışır." },
+      ],
+    },
+    {
+      title: "How to Compare Two PDFs: Find the Differences Between Contract Versions",
+      description:
+        "Compare two PDFs (e.g., old and new versions of a contract) with AI; see added, removed and changed clauses — especially amounts, dates and obligations — in seconds.",
+      excerpt:
+        "Comparing two versions of a contract line by line is tedious and risky; a small change can slip through. Here's how to find the binding differences between two PDFs in seconds with AI.",
+      blocks: [
+        { t: "lead", x: "\"Is this the same version they sent last week, or did a clause change?\" — one of the riskiest questions in contracts. Comparing two PDFs by hand is tedious and dangerous: a single changed date or amount can slip by. AI brings this down to seconds." },
+        { t: "h2", x: "The risk of manual comparison" },
+        { t: "p", x: "Reading two long documents side by side demands focus; across pages of text it's easy to miss an added sentence, a removed exception or a changed figure. And formatting differences (renumbered clauses, shifted paragraphs) can hide the real content changes." },
+        { t: "h2", x: "Comparing with AI — step by step" },
+        { t: "steps", items: [
+          { title: "Upload both versions", x: "Add documents A (old) and B (new) to the Compare PDF tool." },
+          { title: "Compare", x: "The AI understands the text and extracts added, removed and changed clauses." },
+          { title: "Review the differences", x: "See binding changes in particular: amounts, dates, terms, parties, obligations and penalty clauses." },
+        ] },
+        { t: "cta", title: "Compare PDF", x: "Compare two versions of a contract — see the binding differences in seconds.", btn: "Open the tool", tool: "/tools/pdf-karsilastir" },
+        { t: "h2", x: "When is it most useful?" },
+        { t: "ul", items: [
+          "Checking contract revisions before you approve them.",
+          "Seeing what changed in tender/spec updates.",
+          "Understanding what the other side's 'minor edits' actually contain.",
+        ] },
+        { t: "tip", x: "If you want to understand not just the difference but the whole document before signing, the Summarize and Chat with PDF tools let you ask questions about it." },
+        { t: "cta", title: "Chat with PDF", x: "Ask the document questions like \"what is the penalty clause?\" and get clear answers.", btn: "Chat tool", tool: "/tools/pdf-sohbet" },
+      ],
+      faq: [
+        { q: "How do I compare two PDFs?", a: "Upload both documents (A: old, B: new) to the Compare PDF tool; the AI extracts added, removed and changed clauses." },
+        { q: "Which differences does it catch?", a: "It highlights binding changes in particular: amounts, dates, terms, parties, obligations and penalty clauses." },
+        { q: "Does it separate formatting changes from content changes?", a: "Yes. The AI looks at the meaning of the text and tries to separate formatting differences like renumbering or shifted paragraphs from real content changes." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-hassas-veri-gizleme-kvkk",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 5,
+      tags: { tr: ["KVKK", "Gizlilik", "Redaction"], en: ["Privacy", "Redaction", "GDPR"] },
+      accent: "blue",
+      tool: "/tools/hassas-veri-gizle",
+    },
+    {
+      title: "PDF'te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım",
+      description:
+        "PDF'teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım.",
+      excerpt:
+        "Bir belgeyi paylaşmadan önce içindeki TC kimlik, IBAN veya adres gibi kişisel verileri gizlemek çoğu zaman yasal bir zorunluluktur. Ama siyah kutu koymak yetmez — veri altta durmaya devam eder. Gerçek redaction'ı anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir sözleşmeyi, faturayı ya da resmî belgeyi paylaşmadan önce içindeki kişisel verileri (TC kimlik, IBAN, telefon, adres) gizlemeniz gerekir — bu çoğu zaman KVKK açısından bir zorunluluktur. Ama dikkat: metnin üzerine siyah kutu koymak GERÇEK bir gizleme değildir." },
+        { t: "h2", x: "Neden \"siyah kutu\" güvenli değil?" },
+        { t: "p", x: "Çoğu araçta hassas veriyi \"gizlemek\" için üzerine siyah bir dikdörtgen çizersiniz. Ancak orijinal yazı belgenin içinde durmaya devam eder: PDF'i bir metin düzenleyicide açan, kutuyu kaldıran ya da metni kopyalayan biri veriyi geri okuyabilir. Bu, sızıntı ve KVKK ihlali riski demektir." },
+        { t: "tip", x: "Gerçek redaction, veriyi belgenin İÇERİĞİNDEN kaldırır. Hassas Veri Gizleme aracımız PyMuPDF redaction ile veriyi tamamen siler — üzerini örtmez. Kaldırılan yerde arama, kopyalama veya kurtarma mümkün olmaz." },
+        { t: "h2", x: "Nasıl çalışır — adım adım" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "Hassas Veri Gizleme aracına belgenizi ekleyin." },
+          { title: "Hassas alanlar bulunsun", x: "TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir." },
+          { title: "Kalıcı olarak kaldırın", x: "Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF'i indirin." },
+        ] },
+        { t: "cta", title: "Hassas Veri Gizle", x: "Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın.", btn: "Aracı aç", tool: "/tools/hassas-veri-gizle" },
+        { t: "h2", x: "Ne zaman gerekir?" },
+        { t: "ul", items: [
+          "Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.",
+          "Resmî başvuru, ihale veya mahkeme dosyalarında.",
+          "Örnek/şablon olarak yayınlanacak belgelerde.",
+        ] },
+        { t: "p", x: "Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir." },
+      ],
+      faq: [
+        { q: "PDF'teki hassas veri nasıl gizlenir?", a: "PDF'i yükleyin; araç TC/IBAN/telefon/e-postayı cihazınızda, isim/adres gibi verileri yapay zekâ ile bulur ve onayınızla kalıcı olarak kaldırır." },
+        { q: "Veriler gerçekten siliniyor mu, üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile veri PDF'in içeriğinden kaldırılır; üzerine kutu çizilmez, geri okunamaz." },
+        { q: "Bu KVKK açısından yeterli mi?", a: "Gerçek redaction, kişisel veriyi belgeden kaldırdığı için 'siyah kutu'ya göre çok daha güvenlidir. Yine de paylaşım öncesi sonucu kontrol etmeniz önerilir." },
+      ],
+    },
+    {
+      title: "Redact Sensitive Data in a PDF: Share Safely (GDPR/KVKK)",
+      description:
+        "Permanently remove personal data like national ID, IBAN, phone, email, name and address from a PDF — real redaction, not covering up. Step by step for compliant sharing.",
+      excerpt:
+        "Before sharing a document, hiding personal data like an ID number, IBAN or address is often a legal requirement. But a black box isn't enough — the data still sits underneath. Here's real redaction.",
+      blocks: [
+        { t: "lead", x: "Before sharing a contract, invoice or official document, you need to hide the personal data inside it (ID numbers, IBAN, phone, address) — often a legal requirement under GDPR/KVKK. But beware: drawing a black box over text is NOT real hiding." },
+        { t: "h2", x: "Why a \"black box\" isn't safe" },
+        { t: "p", x: "In most tools you \"hide\" sensitive data by drawing a black rectangle over it. But the original text stays inside the document: anyone who opens the PDF in a text editor, removes the box, or copies the text can read the data back. That's a leak and a compliance risk." },
+        { t: "tip", x: "Real redaction removes the data from the document's CONTENT. Our redaction tool uses PyMuPDF to delete the data entirely — it doesn't cover it. In the redacted spot, searching, copying or recovery is impossible." },
+        { t: "h2", x: "How it works — step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Add your document to the redaction tool." },
+          { title: "Sensitive fields get found", x: "Patterns like ID, IBAN, phone and email are detected on your device; context-based data like names and addresses is detected with AI." },
+          { title: "Remove permanently", x: "The fields you confirm are truly deleted from the document's content. Download the cleaned PDF." },
+        ] },
+        { t: "cta", title: "Redact Sensitive Data", x: "Permanently remove personal data and share the document safely.", btn: "Open the tool", tool: "/tools/hassas-veri-gizle" },
+        { t: "h2", x: "When do you need it?" },
+        { t: "ul", items: [
+          "Before sharing a contract or invoice with a third party.",
+          "In official applications, tenders or court files.",
+          "For documents published as samples/templates.",
+        ] },
+        { t: "p", x: "The part of the personal data detected on your device (ID, IBAN, phone, email) is not sent anywhere as it's removed; only context-based detection (name/address) sends text to the AI." },
+      ],
+      faq: [
+        { q: "How do I redact sensitive data in a PDF?", a: "Upload the PDF; the tool finds ID/IBAN/phone/email on your device and name/address with AI, then permanently removes them with your confirmation." },
+        { q: "Is the data truly deleted, or just covered?", a: "Truly deleted. With PyMuPDF redaction the data is removed from the PDF's content; no box is drawn over it and it can't be read back." },
+        { q: "Is this enough for GDPR/KVKK?", a: "Real redaction removes the personal data from the document, making it far safer than a 'black box'. Still, it's recommended to review the result before sharing." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "dosya-yuklemeden-pdf-isleme-gizlilik",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Gizlilik", "Cihazda İşleme", "PDF Araçları"], en: ["Privacy", "On-device", "PDF Tools"] },
+      accent: "fuchsia",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli?",
+      description:
+        "Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform'un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?",
+      excerpt:
+        "Bir PDF'i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.",
+      blocks: [
+        { t: "lead", x: "Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok." },
+        { t: "h2", x: "\"Cihazda işleme\" ne demek?" },
+        { t: "p", x: "Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme." },
+        { t: "h2", x: "Tarayıcınızda çalışan araçlar" },
+        { t: "ul", items: [
+          "Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.",
+          "Görselden PDF, PDF'e imza atma ve yorumlama — cihazınızda.",
+          "Belge Tarayıcı — kamera görüntüsü de dahil, tamamen cihazınızda.",
+        ] },
+        { t: "cta", title: "Cihazda Birleştir", x: "PDF'lerinizi sunucuya yüklemeden, tarayıcınızda birleştirin.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Peki her araç cihazda mı çalışır?" },
+        { t: "p", x: "Dürüst olalım: hayır. Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır (bunlar tarayıcıda pratik değildir). Yapay zekâ araçlarında ise dosyanız yüklenmez — metin cihazınızda çıkarılıp yalnızca metin işlenir. Yani hangi aracın nerede çalıştığı bellidir." },
+        { t: "tip", x: "Gizliliğin en önemli olduğu belgelerde (kimlik, sözleşme, sağlık) cihazda çalışan yapısal araçları ve belge tarayıcıyı tercih edin; paylaşım öncesi gerekiyorsa hassas verileri gerçek redaction ile kaldırın." },
+        { t: "cta", title: "Hassas Veri Gizle", x: "Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın.", btn: "Redaction aracı", tool: "/tools/hassas-veri-gizle" },
+      ],
+      faq: [
+        { q: "PDF'i sunucuya yüklemeden işleyebilir miyim?", a: "Evet. Birleştirme, bölme, döndürme, sayfa silme/sıralama, görselden PDF, imza, yorumlama ve belge tarama gibi yapısal işlemler tamamen tarayıcınızda çalışır; dosya internete gönderilmez." },
+        { q: "Hangi araçlar sunucuda çalışır?", a: "Word/Excel/PowerPoint dönüşümü, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır. Yapay zekâ araçlarında dosya yüklenmez; yalnızca cihazda çıkarılan metin işlenir." },
+        { q: "Cihazda işleme neden daha hızlı?", a: "Dosya yüklenip indirilmediği için bekleme olmaz; işlem tarayıcınızda anında yapılır ve çevrimdışıyken bile çalışabilir." },
+      ],
+    },
+    {
+      title: "Process PDFs Without Uploading: Why On-Device Is Safer",
+      description:
+        "Most online PDF tools upload your file to a server. PDF Platform's structural tools run entirely in your browser — your file never leaves your device. Why it matters, and which tools.",
+      excerpt:
+        "Do you have to upload a PDF to an unknown server just to merge it? No. Most structural PDF operations can run entirely in your browser — without your file ever being sent to the internet.",
+      blocks: [
+        { t: "lead", x: "Most online PDF tools work like this: they upload your file to their servers, process it there, and hand back the result. But for documents like contracts, IDs and invoices, that means a copy of your file ends up on a server you don't control. For most structural PDF operations, that's unnecessary." },
+        { t: "h2", x: "What does \"on-device\" mean?" },
+        { t: "p", x: "On-device (client-side) processing means the whole job happens inside your browser — the file is never sent to the internet. That means three things: privacy (the file stays with you), speed (no upload/download wait, instant result) and the ability to work offline." },
+        { t: "h2", x: "Tools that run in your browser" },
+        { t: "ul", items: [
+          "Merge, Split, Rotate, Delete Pages, Reorder Pages — all on your device.",
+          "Images to PDF, signing and annotating a PDF — on your device.",
+          "Document Scanner — including the camera image, entirely on your device.",
+        ] },
+        { t: "cta", title: "Merge On-Device", x: "Merge your PDFs in your browser, without uploading to a server.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "So does every tool run on-device?" },
+        { t: "p", x: "Let's be honest: no. Heavy jobs like Word/Excel conversion, OCR and compression run on the server (they aren't practical in the browser). With AI tools, your file isn't uploaded — the text is extracted on your device and only the text is processed. So it's always clear which tool runs where." },
+        { t: "tip", x: "For the most sensitive documents (IDs, contracts, health records), prefer the on-device structural tools and the document scanner; and if needed before sharing, remove sensitive data with real redaction." },
+        { t: "cta", title: "Redact Sensitive Data", x: "Permanently remove personal data before sharing.", btn: "Redaction tool", tool: "/tools/hassas-veri-gizle" },
+      ],
+      faq: [
+        { q: "Can I process a PDF without uploading it to a server?", a: "Yes. Structural operations like merging, splitting, rotating, deleting/reordering pages, images to PDF, signing, annotating and document scanning run entirely in your browser; the file is not sent to the internet." },
+        { q: "Which tools run on the server?", a: "Heavy jobs like Word/Excel/PowerPoint conversion, OCR and compression run on the server. With AI tools the file isn't uploaded; only the text extracted on your device is processed." },
+        { q: "Why is on-device processing faster?", a: "Because the file isn't uploaded and downloaded, there's no wait; the operation happens instantly in your browser and can even work offline." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
