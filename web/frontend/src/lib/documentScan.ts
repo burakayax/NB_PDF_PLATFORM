@@ -131,32 +131,33 @@ export async function warpDocument(
 }
 
 /** Warp edilmiş canvas'a gri / siyah-beyaz / otomatik (kontrast) iyileştirmeyi
- *  cihazda uygular (Scanic yalnız geometri yapar). `color` ise dokunmaz. */
+ *  cihazda uygular (Scanic yalnız geometri yapar). `color` ise dokunmaz.
+ *
+ *  PERF: Eskiden ANA THREAD'de piksel-piksel JS döngüsüydü (12MP görüntüde ~48M
+ *  işlem → belirgin donma, özellikle telefonda). Artık GPU-hızlandırmalı canvas
+ *  `filter` kullanır (cropQuadFallback ile AYNI değerler → tutarlı görünüm) —
+ *  ana thread'i bloklamaz. Filtre mevcut içeriğe geçici canvas üzerinden uygulanır
+ *  (ctx.filter yalnız YENİ çizimlere etki eder). */
 function enhanceCanvasInPlace(canvas: HTMLCanvasElement, enhance: EnhanceMode): void {
   if (enhance === "color") return;
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
-  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const a = img.data;
-  for (let i = 0; i < a.length; i += 4) {
-    const r = a[i]!;
-    const g = a[i + 1]!;
-    const b = a[i + 2]!;
-    if (enhance === "gray" || enhance === "bw") {
-      let lum = 0.299 * r + 0.587 * g + 0.114 * b;
-      if (enhance === "bw") lum = lum < 128 ? 0 : 255;
-      a[i] = a[i + 1] = a[i + 2] = lum;
-    } else if (enhance === "auto") {
-      a[i] = clamp255((r - 46) * 1.45 + 20);
-      a[i + 1] = clamp255((g - 46) * 1.45 + 20);
-      a[i + 2] = clamp255((b - 46) * 1.45 + 20);
-    }
-  }
-  ctx.putImageData(img, 0, 0);
-}
-
-function clamp255(v: number): number {
-  return v < 0 ? 0 : v > 255 ? 255 : v;
+  const filter =
+    enhance === "gray"
+      ? "grayscale(1)"
+      : enhance === "bw"
+        ? "grayscale(1) contrast(1.7) brightness(1.05)"
+        : "grayscale(0.15) contrast(1.25) brightness(1.12)"; // auto
+  const tmp = document.createElement("canvas");
+  tmp.width = canvas.width;
+  tmp.height = canvas.height;
+  const tctx = tmp.getContext("2d");
+  if (!tctx) return;
+  tctx.filter = filter;
+  tctx.drawImage(canvas, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.filter = "none";
+  ctx.drawImage(tmp, 0, 0);
 }
 
 /**
