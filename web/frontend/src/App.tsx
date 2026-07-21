@@ -5314,9 +5314,9 @@ function App() {
     return (
       <Suspense fallback={<PageSkeleton />}>
         {blogSlug ? (
-          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} />
+          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={handleLanguageChange} />
         ) : (
-          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} />
+          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={handleLanguageChange} />
         )}
       </Suspense>
     );
