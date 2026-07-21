@@ -2667,6 +2667,160 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "telefonda-pdf-islemleri-uygulamasiz",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Mobil", "Cihazda İşleme", "PDF Araçları"], en: ["Mobile", "On-device", "PDF Tools"] },
+      accent: "blue",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Telefonda PDF İşlemleri: Uygulama Yüklemeden Birleştir, Düzenle, Tara",
+      description:
+        "Telefonda PDF birleştirme, sayfa silme, döndürme ve belge tarama — uygulama yüklemeden, doğrudan tarayıcıda. Yapısal işlemler cihazınızda çalışır, dosyanız gizli kalır.",
+      excerpt:
+        "PDF işlemek için telefonuna bir sürü uygulama yüklemene gerek yok. Birleştirme, sayfa silme, döndürme ve belge tarama gibi işler doğrudan telefon tarayıcında, dosyan cihazından çıkmadan yapılabilir.",
+      blocks: [
+        { t: "lead", x: "Telefonda hızlıca iki PDF'i birleştirmek ya da bir belge taramak gerektiğinde, uygulama mağazasına gidip yer kaplayan, reklamlı bir uygulama indirmek zorunda değilsin. Bu işlerin çoğu doğrudan telefon tarayıcında, cihazında çalışır." },
+        { t: "h2", x: "Telefonda tarayıcıda çalışan işlemler" },
+        { t: "ul", items: [
+          "PDF birleştirme ve sayfalara ayırma",
+          "Sayfa silme, döndürme, yeniden sıralama",
+          "Görsellerden (fotoğraf) PDF oluşturma",
+          "Kamerayla belge tarama (kenar bulma + perspektif düzeltme)",
+        ] },
+        { t: "h2", x: "Neden uygulama yüklemeden daha iyi?" },
+        { t: "p", x: "Uygulama kurmak yer kaplar, güncelleme ister ve çoğu ücretsiz uygulama işlevleri kilitler ya da çıktıya zorunlu filigran ekler. Tarayıcıda ise link açılır, iş biter. Üstelik bu yapısal işlemler cihazında çalıştığı için dosyan internete gönderilmez — hız ve gizlilik bir arada." },
+        { t: "cta", title: "Telefonda Birleştir", x: "İki PDF'i telefonunda, uygulama yüklemeden birleştir.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Belgeyi telefonla tarama" },
+        { t: "p", x: "Belge Tarayıcı, telefon kameranı kullanarak belgenin köşelerini otomatik bulur, perspektifi düzeltir ve temiz bir PDF üretir — tamamen cihazında. Kimlik, sözleşme veya fatura gibi belgeleri buluta göndermeden dijitalleştirebilirsin." },
+        { t: "cta", title: "Belge Tara", x: "Telefon kameranla belgeyi tarayıp PDF yap — cihazında, gizli.", btn: "Tarayıcıyı aç", tool: "/tools/belge-tara" },
+        { t: "h2", x: "Peki ağır işler?" },
+        { t: "p", x: "Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler telefonda pratik olmadığı için sunucuda yapılır; telefonda da çalışırlar, sadece dosya yüklenir. Yapısal işlemler ise (birleştir, tara vb.) tamamen cihazında kalır." },
+      ],
+      faq: [
+        { q: "Telefonda PDF birleştirmek için uygulama gerekir mi?", a: "Hayır. PDF birleştirme, sayfa silme/döndürme ve belge tarama gibi işlemler doğrudan telefon tarayıcında, cihazında çalışır; uygulama yüklemene gerek yoktur." },
+        { q: "Dosyam telefonda güvende mi?", a: "Yapısal işlemler (birleştir, böl, döndür, tara) tamamen cihazında yapılır; dosya internete gönderilmez. Yalnızca dönüştürme/OCR gibi ağır işler sunucuda çalışır." },
+        { q: "Çıktıya filigran ekleniyor mu?", a: "Hayır. Ürettiğin PDF'e zorunlu filigran eklenmez." },
+      ],
+    },
+    {
+      title: "PDF on Your Phone: Merge, Edit and Scan Without an App",
+      description:
+        "Merge, delete pages, rotate and scan documents on your phone — without installing an app, right in the browser. Structural tools run on your device; your file stays private.",
+      excerpt:
+        "You don't need to install a bunch of apps to work with PDFs on your phone. Merging, deleting pages, rotating and scanning documents can happen right in your phone's browser, without your file leaving the device.",
+      blocks: [
+        { t: "lead", x: "When you need to quickly merge two PDFs or scan a document on your phone, you don't have to head to the app store for a bulky, ad-filled app. Most of these tasks run right in your phone's browser, on your device." },
+        { t: "h2", x: "Tasks that run in your phone's browser" },
+        { t: "ul", items: [
+          "Merging and splitting PDFs",
+          "Deleting, rotating and reordering pages",
+          "Creating a PDF from images (photos)",
+          "Scanning documents with the camera (edge detection + perspective correction)",
+        ] },
+        { t: "h2", x: "Why is no-install better?" },
+        { t: "p", x: "Installing an app takes space, needs updates, and many free apps lock features or add a forced watermark to the output. In the browser, a link opens and the job is done. And because these structural tasks run on your device, your file isn't sent to the internet — speed and privacy together." },
+        { t: "cta", title: "Merge on Phone", x: "Merge two PDFs on your phone, no app needed.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Scanning a document with your phone" },
+        { t: "p", x: "The Document Scanner uses your phone camera to automatically find the document's corners, correct the perspective and produce a clean PDF — entirely on your device. You can digitize IDs, contracts or invoices without sending them to the cloud." },
+        { t: "cta", title: "Scan Document", x: "Scan a document with your phone camera into a PDF — on your device, private.", btn: "Open the scanner", tool: "/tools/belge-tara" },
+        { t: "h2", x: "What about heavy jobs?" },
+        { t: "p", x: "Heavy jobs like Word/Excel conversion, OCR and compression aren't practical on a phone, so they run on the server; they work on mobile too, the file is just uploaded. Structural tasks (merge, scan, etc.) stay entirely on your device." },
+      ],
+      faq: [
+        { q: "Do I need an app to merge PDFs on my phone?", a: "No. Merging, deleting/rotating pages and scanning documents run right in your phone's browser, on your device; you don't need to install an app." },
+        { q: "Is my file safe on my phone?", a: "Structural tasks (merge, split, rotate, scan) happen entirely on your device; the file isn't sent to the internet. Only heavy jobs like conversion/OCR run on the server." },
+        { q: "Is a watermark added to the output?", a: "No. No forced watermark is added to the PDF you create." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "en-iyi-ucretsiz-pdf-araclari",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 5,
+      tags: { tr: ["Rehber", "PDF Araçları", "Ücretsiz"], en: ["Guide", "PDF Tools", "Free"] },
+      accent: "fuchsia",
+      tool: "/",
+    },
+    {
+      title: "En İyi Ücretsiz Online PDF Araçları (2026 Rehberi)",
+      description:
+        "Birleştirme, dönüştürme, sıkıştırma, düzenleme ve yapay zekâ — ihtiyacınıza göre en iyi ücretsiz online PDF araçları. Hangi işi hangi araçla yapacağınızı kategorilere göre anlattık.",
+      excerpt:
+        "\"En iyi ücretsiz PDF aracı\" diye tek bir cevap yok — işe göre değişir. Bu rehberde PDF işlerini kategorilere ayırıp her biri için doğru aracı ve nelere dikkat etmeniz gerektiğini anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "İnternette yüzlerce PDF aracı var ama hangisi ne zaman gerekir? Bu rehber, PDF işlerini beş kategoriye ayırıp her biri için doğru aracı gösteriyor — ve bir aracı seçerken nelere (gizlilik, filigran, dosya boyutu) dikkat etmeniz gerektiğini." },
+        { t: "h2", x: "1) Düzenleme ve organizasyon" },
+        { t: "p", x: "Sayfaları birleştirmek, ayırmak, silmek, döndürmek veya yeniden sıralamak en sık ihtiyaçtır. Bu işlemler hafiftir ve iyi araçlarda cihazınızda (tarayıcıda) çalışır — dosyanız sunucuya gitmez, anında sonuç alırsınız." },
+        { t: "cta", title: "PDF Birleştir", x: "Birden çok PDF'i tek belgede toplayın — cihazınızda.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "2) Dönüştürme" },
+        { t: "p", x: "PDF'i Word/Excel/PowerPoint'e ya da tersine çevirmek; PDF'i JPG'ye almak. Bunlar ağır işlemlerdir ve genelde sunucuda yapılır. Bir dönüştürücü seçerken en önemli ölçüt: biçimin (düzen, tablo, yazı tipi) ne kadar korunduğu." },
+        { t: "cta", title: "PDF → Word", x: "PDF'i düzenlenebilir Word belgesine çevirin.", btn: "Aracı aç", tool: "/tools/pdf-to-word" },
+        { t: "h2", x: "3) Optimizasyon ve güvenlik" },
+        { t: "p", x: "Dosya boyutunu küçültmek (sıkıştırma), şifre koymak/kaldırmak, filigran veya sayfa numarası eklemek. E-postayla göndermek için sıkıştırma, paylaşmadan önce şifreleme sık kullanılır." },
+        { t: "cta", title: "PDF Sıkıştır", x: "PDF boyutunu e-postaya uygun hâle getirin.", btn: "Aracı aç", tool: "/tools/compress" },
+        { t: "h2", x: "4) Yapay zekâ ile PDF" },
+        { t: "p", x: "Uzun belgeleri özetlemek, belgeye soru sormak, faturalardan veri çıkarmak veya iki sözleşmeyi karşılaştırmak. Yapay zekâ araçlarında genelde dosyanın kendisi yüklenmez; metin çıkarılıp yalnızca metin işlenir." },
+        { t: "cta", title: "PDF Özetle", x: "Uzun bir belgeyi saniyeler içinde özetleyin.", btn: "Aracı aç", tool: "/tools/pdf-ozetle" },
+        { t: "h2", x: "5) Bir aracı seçerken nelere dikkat etmeli?" },
+        { t: "ul", items: [
+          "Gizlilik: Dosya sunucuya mı yükleniyor, yoksa cihazınızda mı işleniyor? Hassas belgelerde cihazda işleme tercih edin.",
+          "Filigran: Ücretsiz çıktıya zorunlu filigran ekleniyor mu?",
+          "Üyelik: Basit bir iş için hesap açmaya zorluyor mu?",
+          "Dosya boyutu/limit: Kaç MB'a kadar, günde kaç işlem?",
+        ] },
+        { t: "tip", x: "PDF Platform'da yapısal araçlar (birleştir, böl, döndür, tara) cihazınızda çalışır, çıktıya zorunlu filigran eklenmez ve çoğu işlem üyeliksiz yapılabilir." },
+      ],
+      faq: [
+        { q: "En iyi ücretsiz PDF aracı hangisi?", a: "İşe göre değişir: düzenleme/organizasyon için cihazda çalışan yapısal araçlar; dönüştürme için biçimi koruyan dönüştürücüler; uzun belgeler için yapay zekâ araçları en uygunudur." },
+        { q: "Online PDF araçları güvenli mi?", a: "Çoğu online araç dosyanızı sunucuya yükler. Hassas belgelerde, işlemi cihazınızda (tarayıcıda) yapan araçları tercih edin — dosya internete gönderilmez." },
+        { q: "Ücretsiz araçlar filigran ekler mi?", a: "Bazıları ekler. Seçmeden önce çıktıya zorunlu filigran eklenip eklenmediğini kontrol edin; PDF Platform zorunlu filigran eklemez." },
+      ],
+    },
+    {
+      title: "The Best Free Online PDF Tools (2026 Guide)",
+      description:
+        "Merge, convert, compress, edit and AI — the best free online PDF tools for your need. We break down which tool to use for which job, by category.",
+      excerpt:
+        "There's no single answer to \"the best free PDF tool\" — it depends on the job. This guide splits PDF tasks into categories and shows the right tool for each, plus what to watch for.",
+      blocks: [
+        { t: "lead", x: "There are hundreds of PDF tools online, but which one when? This guide splits PDF work into five categories and shows the right tool for each — and what to watch for (privacy, watermark, file size) when choosing." },
+        { t: "h2", x: "1) Editing and organizing" },
+        { t: "p", x: "Merging, splitting, deleting, rotating or reordering pages is the most common need. These tasks are light and, in good tools, run on your device (in the browser) — your file doesn't go to a server and you get an instant result." },
+        { t: "cta", title: "Merge PDF", x: "Combine multiple PDFs into one — on your device.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "2) Converting" },
+        { t: "p", x: "Turning PDF into Word/Excel/PowerPoint or back; getting a PDF as JPG. These are heavy tasks usually done on the server. The key criterion when choosing a converter: how well formatting (layout, tables, fonts) is preserved." },
+        { t: "cta", title: "PDF to Word", x: "Convert a PDF into an editable Word document.", btn: "Open the tool", tool: "/tools/pdf-to-word" },
+        { t: "h2", x: "3) Optimizing and securing" },
+        { t: "p", x: "Reducing file size (compression), adding/removing a password, adding a watermark or page numbers. Compression to email a file and encryption before sharing are common." },
+        { t: "cta", title: "Compress PDF", x: "Make your PDF small enough to email.", btn: "Open the tool", tool: "/tools/compress" },
+        { t: "h2", x: "4) PDF with AI" },
+        { t: "p", x: "Summarizing long documents, asking a document questions, extracting data from invoices, or comparing two contracts. In AI tools the file itself usually isn't uploaded; text is extracted and only the text is processed." },
+        { t: "cta", title: "Summarize PDF", x: "Summarize a long document in seconds.", btn: "Open the tool", tool: "/tools/pdf-ozetle" },
+        { t: "h2", x: "5) What to watch for when choosing a tool" },
+        { t: "ul", items: [
+          "Privacy: Is the file uploaded to a server, or processed on your device? For sensitive documents, prefer on-device processing.",
+          "Watermark: Does the free output get a forced watermark?",
+          "Signup: Does it force an account for a simple task?",
+          "File size/limits: Up to how many MB, how many operations a day?",
+        ] },
+        { t: "tip", x: "On PDF Platform, structural tools (merge, split, rotate, scan) run on your device, no forced watermark is added, and most tasks can be done without an account." },
+      ],
+      faq: [
+        { q: "Which is the best free PDF tool?", a: "It depends on the job: on-device structural tools for editing/organizing; format-preserving converters for conversion; AI tools for long documents." },
+        { q: "Are online PDF tools safe?", a: "Most upload your file to a server. For sensitive documents, prefer tools that process on your device (in the browser) — the file isn't sent to the internet." },
+        { q: "Do free tools add a watermark?", a: "Some do. Check whether a forced watermark is added before choosing; PDF Platform doesn't add a forced watermark." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
