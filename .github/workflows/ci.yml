@@ -374,3 +374,48 @@ jobs:
           name: playwright-report
           path: web/frontend/playwright-report/
           retention-days: 7
+
+  # ─── Deploy — YALNIZCA main push'ta ve YUKARIDAKI TUM job'lar yesilse çalışır ─────
+  # Render'da autoDeployTrigger: off; deploy'u kesin olarak BU job tetikler (Deploy
+  # Hook'lari POST ederek). Boylece deploy = "CI tamamen yesil" garantisi. Bir job
+  # kirmiziysa `needs` yuzunden bu job atlanir → deploy OLMAZ (guvenli kapi).
+  deploy:
+    name: Deploy to Render (main, CI green)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs:
+      - python-security
+      - python-tests
+      - node-security-api
+      - api-unit-tests
+      - node-security-frontend
+      - frontend-build
+      - api-typecheck
+      - frontend-component-tests
+      - frontend-typecheck
+      - frontend-e2e
+    steps:
+      - name: Trigger Render deploy hooks
+        env:
+          HOOK_AUTH: ${{ secrets.RENDER_DEPLOY_HOOK_AUTH }}
+          HOOK_PDF: ${{ secrets.RENDER_DEPLOY_HOOK_PDF }}
+          HOOK_FRONTEND: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
+        run: |
+          trigger() {
+            name="$1"; url="$2"
+            if [ -z "$url" ]; then
+              echo "::warning::$name deploy hook secret bos — atlaniyor (secret ekli mi?)"
+              return 0
+            fi
+            code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "$url")
+            echo "$name deploy hook -> HTTP $code"
+            if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+              echo "::error::$name deploy hook HTTP $code (basarisiz)"
+              return 1
+            fi
+          }
+          rc=0
+          trigger "auth-api"  "$HOOK_AUTH"     || rc=1
+          trigger "pdf-api"   "$HOOK_PDF"      || rc=1
+          trigger "frontend"  "$HOOK_FRONTEND" || rc=1
+          exit $rc
