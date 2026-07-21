@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Spark
 import type { Language } from "../../i18n/landing";
 import { getBlogPost, getBlogPostsSorted } from "../../blog/blogContent.mjs";
 import type { BlogBlock, BlogPost, BlogPostCopy } from "../../blog/blogContent.mjs";
+import { SiteFooter } from "../common/SiteFooter";
 
 type Accent = { grad: string; soft: string; text: string; ring: string; chip: string };
 const ACCENTS: Record<string, Accent> = {
@@ -130,6 +131,7 @@ export function BlogIndexPage({ language, onLogin, onRegister }: { language: Lan
           })}
         </div>
       </main>
+      <SiteFooter language={language} />
     </Shell>
   );
 }
@@ -243,6 +245,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister }: { slug: st
           </section>
         )}
       </main>
+      <SiteFooter language={language} />
     </Shell>
   );
 }
