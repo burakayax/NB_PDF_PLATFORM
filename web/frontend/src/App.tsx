@@ -108,8 +108,6 @@ import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool"
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
-import { SearchablePdfTool } from "./components/tools/SearchablePdfTool";
-import { DocumentScanner } from "./components/tools/DocumentScanner";
 import { PdfHub } from "./components/tools/PdfHub";
 import { saveScannedPdf, takeScannedPdf } from "./lib/pendingScan";
 import { getToolSeo } from "./seo/seoContent.mjs";
@@ -288,6 +286,13 @@ const PdfSign = lazy(() =>
 );
 const PdfAnnotate = lazy(() =>
   import("./components/tools/PdfAnnotate").then((m) => ({ default: m.PdfAnnotate })),
+);
+// Ağır cihaz-içi araçlar (pdf-lib/tesseract/opencv) — lazy: pdf-lib ana paketten çıkar.
+const SearchablePdfTool = lazy(() =>
+  import("./components/tools/SearchablePdfTool").then((m) => ({ default: m.SearchablePdfTool })),
+);
+const DocumentScanner = lazy(() =>
+  import("./components/tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
 );
 const BlogIndexPage = lazy(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
@@ -6627,16 +6632,19 @@ function App() {
           onOpenAnnotate={() => setContentPanel("annotate")}
           onOpenScan={() => setScannerOpen(true)}
           />
-          {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). */}
-          <DocumentScanner
-            open={scannerOpen}
-            language={language}
-            onClose={() => setScannerOpen(false)}
-            isPro={aiAllowed}
-            isDesktop={!isMobileOrTablet}
-            onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
-            onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
-          />
+          {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). Lazy:
+              chunk yalnız tarayıcı açılınca yüklenir; kapalıyken null render eder. */}
+          <Suspense fallback={null}>
+            <DocumentScanner
+              open={scannerOpen}
+              language={language}
+              onClose={() => setScannerOpen(false)}
+              isPro={aiAllowed}
+              isDesktop={!isMobileOrTablet}
+              onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
+              onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
+            />
+          </Suspense>
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
             {isAuthenticated &&
             contentPanel !== "tool" &&

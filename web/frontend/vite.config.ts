@@ -297,6 +297,18 @@ export default defineConfig(({ command, mode, isPreview }) => {
             if (id.includes("node_modules/@hello-pangea")) {
               return "dnd";
             }
+            // Cihaz-içi PDF motoru bağımlılıkları — ana pakette DEĞİL, ayrı chunk:
+            // yalnız bir araç açılınca yüklenir (lazy tool chunk'ları paylaşır).
+            if (
+              id.includes("node_modules/pdf-lib") ||
+              id.includes("node_modules/@pdf-lib/fontkit") ||
+              id.includes("node_modules/fflate")
+            ) {
+              return "pdf-lib";
+            }
+            if (id.includes("node_modules/tesseract.js")) {
+              return "tesseract";
+            }
           },
         },
       },
