@@ -1175,6 +1175,9 @@ export const RELATED_TOOLS = {
 
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
+  "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],
+  "pdf-hassas-veri-gizleme-kvkk": ["hassas-veri-gizle", "pdf-duzenle"],
+  "dosya-yuklemeden-pdf-isleme-gizlilik": ["merge-pdf", "belge-tara", "hassas-veri-gizle"],
   "excel-pdf-cevirme": ["excel-to-pdf", "pdf-to-excel"],
   "powerpoint-pdf-cevirme": ["ppt-to-pdf", "pdf-to-ppt"],
   "pdf-sayfa-numarasi-ekleme": ["page-numbers", "watermark"],
