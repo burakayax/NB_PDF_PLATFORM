@@ -24,7 +24,10 @@ import {
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { imagesToPdf, imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
+import { imagesToPdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
+// Ağır OCR yolu (pdf-lib + tesseract) doğrudan çekirdek motordan; bu bileşen lazy
+// yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
+import { imagesToSearchablePdf } from "../../lib/clientPdf";
 import { ocrImagesToWords } from "../../lib/ocr";
 import { PdfHub } from "./PdfHub";
 import {
