@@ -29,6 +29,7 @@ import {
   zipBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdfWorker";
+import { ValueMomentNudge } from "./ValueMomentNudge";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
 // Dashboard'ın görsel seçici modalının BİREBİR aynısı.
@@ -365,6 +366,7 @@ export function GuestPageToolCore({
             {tr ? "Kapat" : "Close"}
           </button>
         </div>
+        <ValueMomentNudge language={language} />
       </div>
     );
   }
