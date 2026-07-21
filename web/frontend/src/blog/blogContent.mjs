@@ -1855,6 +1855,298 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "word-pdf-cevirme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Dönüştürme", "Word", "PDF"], en: ["Convert", "Word", "PDF"] },
+      accent: "blue",
+      tool: "/tools/word-to-pdf",
+    },
+    {
+      title: "Word'ü PDF'e Çevirme: Biçimi Bozmadan (2026 Rehberi)",
+      description:
+        "Word (.doc/.docx) belgelerini düzen ve yazı tipleri korunacak şekilde PDF'e dönüştürün. Neden PDF'e çevirmelisiniz, nasıl yapılır ve nelere dikkat etmelisiniz — adım adım.",
+      excerpt:
+        "Word belgenizi paylaşmadan önce PDF'e çevirmek, düzenin herkeste aynı görünmesini garanti eder. Biçimi bozmadan Word'den PDF'e dönüştürmenin en pratik yolunu ve püf noktalarını anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir Word belgesini başkasına gönderdiğinizde, karşı taraftaki farklı Office sürümü veya eksik yazı tipi yüzünden düzen kayabilir. PDF bu sorunu çözer: belge herkeste birebir aynı görünür. İşte Word'ü biçimi bozmadan PDF'e çevirmenin yolu." },
+        { t: "h2", x: "Neden Word'ü PDF'e çevirmelisiniz?" },
+        { t: "ul", items: [
+          "Düzen kilitlenir: yazı tipleri, tablolar ve boşluklar herkeste aynı görünür.",
+          "Her cihazda açılır: telefon, tablet, bilgisayar — özel program gerekmez.",
+          "Yanlışlıkla değiştirilmez: teklif, sözleşme ve CV'ler için güvenli.",
+          "Resmî gönderimler genelde PDF ister.",
+        ] },
+        { t: "h2", x: "Adım adım dönüştürme" },
+        { t: "steps", items: [
+          { title: "Belgeyi yükleyin", x: "Word'den PDF'e aracına .doc, .docx, .odt veya .rtf dosyanızı sürükleyip bırakın." },
+          { title: "Dönüştürün", x: "Belge sunucuda işlenir; düzen, yazı tipleri ve tablolar korunarak PDF'e çevrilir." },
+          { title: "Önizleyip indirin", x: "Sonucu kontrol edin ve PDF'i indirin. Sayfa yapısı orijinal belgenizle aynı kalır." },
+        ] },
+        { t: "cta", title: "Word'den PDF'e", x: "Word belgenizi düzeni bozulmadan PDF'e çevirin.", btn: "Aracı aç", tool: "/tools/word-to-pdf" },
+        { t: "h2", x: "Biçim korunması için ipuçları" },
+        { t: "tip", x: "Belgenizde standart yazı tipleri (Arial, Times New Roman, Calibri) kullanırsanız çıktı orijinaline en yakın olur. Çok özel/kurulu olmayan yazı tipleri bazı sistemlerde farklı görünebilir." },
+        { t: "p", x: "Ters yönde ihtiyacınız varsa — yani PDF'i tekrar düzenlenebilir Word'e çevirmek — bunun için ayrı bir aracımız var." },
+        { t: "cta", title: "PDF'den Word'e", x: "Elinizde düzenlenebilir hâli yoksa, PDF'i tekrar Word'e çevirin.", btn: "PDF → Word", tool: "/tools/pdf-to-word" },
+      ],
+      faq: [
+        { q: "Word'ü PDF'e çevirince biçim bozulur mu?", a: "Hayır. Dönüştürmede düzen, yazı tipleri, tablolar ve sayfa yapısı korunur. En iyi sonuç için belgede yaygın yazı tipleri kullanın." },
+        { q: "Hangi dosya türlerini yükleyebilirim?", a: ".doc, .docx, .odt ve .rtf gibi yaygın belge biçimlerini yükleyip PDF'e çevirebilirsiniz." },
+        { q: "PDF'i tekrar Word'e çevirebilir miyim?", a: "Evet. PDF'den Word'e aracıyla PDF'i düzenlenebilir .docx belgesine geri çevirebilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert Word to PDF Without Breaking Formatting (2026)",
+      description:
+        "Convert Word (.doc/.docx) documents to PDF while keeping layout and fonts intact. Why convert to PDF, how to do it, and what to watch for — step by step.",
+      excerpt:
+        "Converting your Word file to PDF before sharing guarantees the layout looks the same for everyone. Here's the most practical way to go from Word to PDF without breaking formatting.",
+      blocks: [
+        { t: "lead", x: "When you send a Word document, a different Office version or a missing font on the other end can shift your layout. PDF fixes this: the document looks identical for everyone. Here's how to convert Word to PDF without breaking formatting." },
+        { t: "h2", x: "Why convert Word to PDF?" },
+        { t: "ul", items: [
+          "Locks the layout: fonts, tables and spacing look the same everywhere.",
+          "Opens on any device: phone, tablet, computer — no special software.",
+          "Can't be edited by accident: safe for proposals, contracts and CVs.",
+          "Official submissions usually require PDF.",
+        ] },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Upload the document", x: "Drag your .doc, .docx, .odt or .rtf file into the Word to PDF tool." },
+          { title: "Convert", x: "The document is processed on the server and converted to PDF with layout, fonts and tables preserved." },
+          { title: "Preview and download", x: "Check the result and download the PDF. The page structure matches your original document." },
+        ] },
+        { t: "cta", title: "Word to PDF", x: "Convert your Word document to PDF with layout intact.", btn: "Open the tool", tool: "/tools/word-to-pdf" },
+        { t: "h2", x: "Tips for preserving formatting" },
+        { t: "tip", x: "If your document uses standard fonts (Arial, Times New Roman, Calibri), the output will be closest to the original. Very custom, non-installed fonts may render differently on some systems." },
+        { t: "p", x: "Need the other direction — turning a PDF back into an editable Word file? We have a separate tool for that." },
+        { t: "cta", title: "PDF to Word", x: "No editable version on hand? Convert the PDF back to Word.", btn: "PDF → Word", tool: "/tools/pdf-to-word" },
+      ],
+      faq: [
+        { q: "Will converting Word to PDF break the formatting?", a: "No. Layout, fonts, tables and page structure are preserved during conversion. For the best result, use common fonts in your document." },
+        { q: "Which file types can I upload?", a: "You can upload common document formats like .doc, .docx, .odt and .rtf and convert them to PDF." },
+        { q: "Can I convert the PDF back to Word?", a: "Yes. Use the PDF to Word tool to turn the PDF back into an editable .docx document." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-jpg-resme-cevirme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Dönüştürme", "Görsel", "JPG"], en: ["Convert", "Image", "JPG"] },
+      accent: "fuchsia",
+      tool: "/tools/pdf-to-image",
+    },
+    {
+      title: "PDF'i JPG'ye / Resme Çevirme: Her Sayfa Ayrı Görsel",
+      description:
+        "PDF sayfalarını yüksek çözünürlüklü JPG veya PNG görsellerine dönüştürün. Her sayfa ayrı bir görsel olur — sosyal medya, sunum ve web için pratik. Adım adım anlatım.",
+      excerpt:
+        "Bir PDF sayfasını görsel olarak paylaşmak, web'e koymak veya sunuma eklemek gerektiğinde en temiz yol onu JPG/PNG'ye çevirmektir. Nasıl yapılacağını ve JPG mi PNG mi seçeceğinizi anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "PDF'i her yere gömemezsiniz — ama bir görseli gömebilirsiniz. Bir sayfayı sosyal medyada paylaşmak, bir web sayfasına koymak ya da sunuma eklemek için PDF'i JPG veya PNG'ye çevirmek en pratik yoldur." },
+        { t: "h2", x: "Ne zaman işe yarar?" },
+        { t: "ul", items: [
+          "Sosyal medyada tek bir sayfayı görsel olarak paylaşmak.",
+          "Web sitesine veya blog yazısına önizleme koymak.",
+          "Sunuma (PowerPoint/Slides) bir sayfayı resim olarak eklemek.",
+          "PDF açamayan birine sayfayı hızlıca göstermek.",
+        ] },
+        { t: "h2", x: "Adım adım dönüştürme" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "PDF'den JPG'ye aracına belgenizi ekleyin." },
+          { title: "Sayfalar görsele dönüşsün", x: "Her sayfa yüksek çözünürlüklü ayrı bir JPG/PNG olarak işlenir." },
+          { title: "İndirin", x: "Görselleri tek tek ya da hepsini bir ZIP olarak indirin." },
+        ] },
+        { t: "cta", title: "PDF'den JPG'ye", x: "PDF sayfalarını yüksek kaliteli görsellere çevirin.", btn: "Aracı aç", tool: "/tools/pdf-to-image" },
+        { t: "h2", x: "JPG mi PNG mi?" },
+        { t: "p", x: "JPG dosya boyutu küçüktür ve fotoğraf/yoğun içerikli sayfalar için idealdir. PNG ise keskin kenarları ve metni daha net korur, şeffaflık destekler — logo, diyagram veya çok metinli sayfalarda tercih edin." },
+        { t: "h2", x: "Tersi: Görselleri PDF yapmak" },
+        { t: "p", x: "Elinizde birden çok fotoğraf/görsel varsa ve bunları tek bir PDF'te toplamak istiyorsanız, bunun için ayrı bir aracımız var — üstelik tamamen cihazınızda çalışır." },
+        { t: "cta", title: "Görselden PDF'e", x: "Fotoğraflarınızı tek bir PDF'te toplayın — cihazınızda.", btn: "Görsel → PDF", tool: "/tools/image-to-pdf" },
+      ],
+      faq: [
+        { q: "PDF'i JPG'ye nasıl çeviririm?", a: "PDF'i araca yükleyin; her sayfa ayrı bir JPG/PNG görseline dönüştürülür. Görselleri tek tek veya ZIP olarak indirebilirsiniz." },
+        { q: "Görsel kalitesi düşer mi?", a: "Sayfalar yüksek çözünürlükte işlenir; baskı ve ekran için net sonuç alırsınız. Daha keskin metin için PNG'yi tercih edin." },
+        { q: "Tek bir sayfayı çevirebilir miyim?", a: "Her sayfa ayrı bir görsel olduğu için istediğiniz sayfanın görselini seçip indirebilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert PDF to JPG / Images: One Image per Page",
+      description:
+        "Convert PDF pages into high-resolution JPG or PNG images. Each page becomes a separate image — handy for social media, slides and the web. Step-by-step guide.",
+      excerpt:
+        "When you need to share a PDF page as an image, put it on the web, or drop it into a slide, the cleanest way is to convert it to JPG/PNG. Here's how — and whether to pick JPG or PNG.",
+      blocks: [
+        { t: "lead", x: "You can't embed a PDF everywhere — but you can embed an image. To share a page on social media, place it on a web page, or add it to a slide, converting the PDF to JPG or PNG is the most practical route." },
+        { t: "h2", x: "When is it useful?" },
+        { t: "ul", items: [
+          "Sharing a single page as an image on social media.",
+          "Adding a preview to a website or blog post.",
+          "Dropping a page into a presentation as a picture.",
+          "Quickly showing a page to someone who can't open a PDF.",
+        ] },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Add your document to the PDF to JPG tool." },
+          { title: "Pages become images", x: "Each page is processed as a separate high-resolution JPG/PNG." },
+          { title: "Download", x: "Download the images one by one or all together as a ZIP." },
+        ] },
+        { t: "cta", title: "PDF to JPG", x: "Turn PDF pages into high-quality images.", btn: "Open the tool", tool: "/tools/pdf-to-image" },
+        { t: "h2", x: "JPG or PNG?" },
+        { t: "p", x: "JPG is smaller and ideal for photo-heavy pages. PNG keeps sharp edges and text crisper and supports transparency — prefer it for logos, diagrams or text-heavy pages." },
+        { t: "h2", x: "The reverse: images to PDF" },
+        { t: "p", x: "If you have several photos/images and want to combine them into one PDF, we have a separate tool for that — and it runs entirely on your device." },
+        { t: "cta", title: "Images to PDF", x: "Combine your photos into a single PDF — on your device.", btn: "Images → PDF", tool: "/tools/image-to-pdf" },
+      ],
+      faq: [
+        { q: "How do I convert a PDF to JPG?", a: "Upload the PDF to the tool; each page is converted into a separate JPG/PNG image. Download them individually or as a ZIP." },
+        { q: "Will image quality drop?", a: "Pages are processed at high resolution for crisp results on screen and in print. For sharper text, prefer PNG." },
+        { q: "Can I convert just one page?", a: "Since each page becomes a separate image, you can pick and download the image for the page you want." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-metin-duzenleme-silme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 5,
+      tags: { tr: ["Düzenleme", "PDF", "Metin"], en: ["Editing", "PDF", "Text"] },
+      accent: "blue",
+      tool: "/tools/pdf-duzenle",
+    },
+    {
+      title: "PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme",
+      description:
+        "Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım.",
+      excerpt:
+        "Bir PDF'te yanlış bir tarih, fiyat veya isim mi var? Çoğu 'düzenleyici' yazının üzerini beyaz kutuyla kapatır — metin altta durmaya devam eder. Gerçek düzenleme bundan farklıdır; işte nasıl yapıldığı.",
+      blocks: [
+        { t: "lead", x: "PDF'te küçük bir hatayı düzeltmek — yanlış bir tarih, güncel olmayan bir fiyat, bir yazım hatası — göründüğünden zor olabilir. Çünkü çoğu online 'PDF düzenleyici' aslında metni silmez; sadece üzerine beyaz bir kutu koyar. Bu yazıda gerçek düzenlemeyi anlatıyoruz." },
+        { t: "h2", x: "\"Üzerini kapatma\" ile \"gerçek silme\" farkı" },
+        { t: "p", x: "Metnin üzerine kutu koyan araçlarda orijinal yazı belgenin içinde kalır: kopyala-yapıştır yapıldığında ya da metin arandığında eski içerik hâlâ görünebilir. Bu hem dağınık hem de gizlilik açısından risklidir. Gerçek düzenleme, yazıyı belgenin içinden kaldırıp yerine yenisini koyar." },
+        { t: "tip", x: "PDF Düzenle aracımız PyMuPDF ile mevcut metni GERÇEKTEN kaldırır ve yerine yazdığınızı koyar — üzerini örtmez. Türkçe karakterler tam desteklenir." },
+        { t: "h2", x: "Adım adım düzenleme" },
+        { t: "steps", items: [
+          { title: "PDF'i açın", x: "PDF Düzenle aracına belgenizi yükleyin." },
+          { title: "Metne tıklayın", x: "Değiştirmek istediğiniz yazıya tıklayın; mevcut metin seçilir." },
+          { title: "Silin veya yeniden yazın", x: "Yazıyı kaldırın ya da yerine yenisini yazın. Metin ekleyebilir, düzeltebilirsiniz." },
+          { title: "İndirin", x: "Düzenlenmiş PDF'i indirin — değişiklik belgeye işlenmiş olur." },
+        ] },
+        { t: "cta", title: "PDF Düzenle", x: "PDF'teki yazıyı gerçekten silip değiştirin — üzerini örtmeden.", btn: "Aracı aç", tool: "/tools/pdf-duzenle" },
+        { t: "h2", x: "Ne zaman iyi çalışır, ne zaman çalışmaz?" },
+        { t: "p", x: "Bu araç, içinde gerçek metin katmanı olan PDF'lerde çalışır (örneğin Word'den üretilmiş bir PDF). Taranmış / fotoğraf PDF'lerde yazı aslında bir görüntüdür; bu durumda önce OCR ile metne çevirmeniz gerekir." },
+        { t: "cta", title: "Taranmış PDF'i metne çevir", x: "Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün.", btn: "OCR aracı", tool: "/tools/taranmis-pdf-ocr" },
+      ],
+      faq: [
+        { q: "PDF'teki mevcut yazıyı gerçekten silebilir miyim?", a: "Evet. PDF Düzenle aracı yazının üzerini kapatmak yerine metni belgeden gerçekten kaldırır ve yerine yenisini yazmanıza izin verir." },
+        { q: "Türkçe karakterler destekleniyor mu?", a: "Evet. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) tam olarak desteklenir." },
+        { q: "Taranmış (fotoğraf) PDF'te çalışır mı?", a: "Taranmış PDF'lerde yazı bir görüntüdür; önce OCR ile metne çevirmeniz gerekir, ardından düzenleme yapılabilir." },
+      ],
+    },
+    {
+      title: "How to Edit a PDF: Actually Delete and Replace Existing Text",
+      description:
+        "Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step.",
+      excerpt:
+        "Wrong date, price or name in a PDF? Most 'editors' cover the text with a white box — the text still sits underneath. Real editing is different; here's how it works.",
+      blocks: [
+        { t: "lead", x: "Fixing a small mistake in a PDF — a wrong date, an outdated price, a typo — can be harder than it looks. Because most online 'PDF editors' don't actually delete the text; they just place a white box over it. This post covers real editing." },
+        { t: "h2", x: "\"Cover up\" vs \"truly delete\"" },
+        { t: "p", x: "With tools that put a box over the text, the original text stays inside the document: it can still show up when copied or searched. That's messy and a privacy risk. Real editing removes the text from the document and puts new text in its place." },
+        { t: "tip", x: "Our Edit PDF tool uses PyMuPDF to TRULY remove existing text and place your new text — it doesn't cover it up. Turkish characters are fully supported." },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Open the PDF", x: "Upload your document to the Edit PDF tool." },
+          { title: "Click the text", x: "Click the text you want to change; the existing text is selected." },
+          { title: "Delete or rewrite", x: "Remove the text or type a replacement. You can add and correct text." },
+          { title: "Download", x: "Download the edited PDF — the change is baked into the document." },
+        ] },
+        { t: "cta", title: "Edit PDF", x: "Truly delete and replace PDF text — no covering up.", btn: "Open the tool", tool: "/tools/pdf-duzenle" },
+        { t: "h2", x: "When it works — and when it doesn't" },
+        { t: "p", x: "This tool works on PDFs that contain a real text layer (for example, a PDF exported from Word). In scanned/photo PDFs the text is actually an image; there you first need to turn it into text with OCR." },
+        { t: "cta", title: "OCR a scanned PDF", x: "If your document is scanned, first turn the text into real text with OCR.", btn: "OCR tool", tool: "/tools/taranmis-pdf-ocr" },
+      ],
+      faq: [
+        { q: "Can I really delete existing text in a PDF?", a: "Yes. Instead of covering the text, the Edit PDF tool truly removes it from the document and lets you write new text in its place." },
+        { q: "Are Turkish characters supported?", a: "Yes. Turkish characters (ç, ğ, ı, ö, ş, ü) are fully supported." },
+        { q: "Does it work on scanned (photo) PDFs?", a: "In scanned PDFs the text is an image; you first need to turn it into text with OCR, then editing can be applied." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-excel-tablo-cevirme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Dönüştürme", "Excel", "Tablo"], en: ["Convert", "Excel", "Table"] },
+      accent: "fuchsia",
+      tool: "/tools/pdf-to-excel",
+    },
+    {
+      title: "PDF'i Excel'e Çevirme: Tabloları .xlsx'e Aktarma (2026)",
+      description:
+        "PDF'teki tabloları düzenlenebilir Excel (.xlsx) dosyasına aktarın. Ne zaman düz dönüştürme, ne zaman yapay zekâ ile veri çıkarma daha iyi — adım adım anlatıyoruz.",
+      excerpt:
+        "PDF'teki bir tabloyu Excel'de düzenlemek istiyorsanız, kopyala-yapıştır çoğu zaman hizalamayı bozar. Tabloları temiz şekilde .xlsx'e aktarmanın yolunu ve ne zaman AI'nın daha iyi olduğunu anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "PDF'teki bir raporu, fiyat listesini ya da tabloyu Excel'de analiz etmek için önce veriyi hücrelere düzgün taşımanız gerekir. Kopyala-yapıştır genelde her şeyi tek sütuna yığar. İşte tabloları temizce Excel'e aktarmanın yolu." },
+        { t: "h2", x: "Adım adım dönüştürme" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "PDF'den Excel'e aracına tablo içeren belgenizi ekleyin." },
+          { title: "Tablolar çıkarılsın", x: "Sayfalardaki tablo yapısı algılanıp satır/sütunlar korunarak .xlsx'e dökülür." },
+          { title: "Excel dosyasını indirin", x: "Sonucu indirin ve Excel'de doğrudan düzenleyin, filtreleyin, hesaplayın." },
+        ] },
+        { t: "cta", title: "PDF'den Excel'e", x: "PDF tablolarını düzenlenebilir Excel dosyasına aktarın.", btn: "Aracı aç", tool: "/tools/pdf-to-excel" },
+        { t: "h2", x: "Düz dönüştürme mi, yapay zekâ mı?" },
+        { t: "p", x: "PDF'te net, ızgara şeklinde tablolar varsa düz dönüştürme hızlı ve yeterlidir. Ancak fatura, irsaliye gibi her biri farklı düzende olan belgelerden alan çıkarmak istiyorsanız — fatura no, tarih, tutar, kalemler gibi — yapay zekâ ile veri çıkarma çok daha isabetlidir." },
+        { t: "tip", x: "Onlarca faturayı tek bir CSV tablosunda toplamak istiyorsanız, AI Veri Çıkar ve AI Toplu İşlem araçları bu iş için tasarlandı — her satır bir belge olacak şekilde birleştirir." },
+        { t: "cta", title: "AI Veri Çıkar", x: "Faturalar gibi karmaşık belgelerden alanları yapay zekâ ile çıkarın.", btn: "AI ile çıkar", tool: "/tools/pdf-veri-cikar" },
+      ],
+      faq: [
+        { q: "PDF'i Excel'e nasıl çeviririm?", a: "PDF'i araca yükleyin; tablolar algılanıp satır/sütunları korunarak düzenlenebilir bir .xlsx dosyasına aktarılır." },
+        { q: "Tablo düzgün çıkmazsa ne yapmalıyım?", a: "Belge fatura gibi değişken düzenliyse, düz dönüştürme yerine AI Veri Çıkar aracını deneyin; alanları ve kalemleri yapılandırılmış olarak çıkarır." },
+        { q: "Birden çok belgeyi tek tabloya alabilir miyim?", a: "Evet. AI Toplu İşlem aracıyla birden çok belgeyi işleyip verilerini tek bir CSV tablosunda birleştirebilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert PDF to Excel: Export Tables to .xlsx (2026)",
+      description:
+        "Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step.",
+      excerpt:
+        "If you want to work with a PDF table in Excel, copy-paste usually breaks the alignment. Here's how to export tables cleanly to .xlsx — and when AI is the better choice.",
+      blocks: [
+        { t: "lead", x: "To analyze a report, price list or table from a PDF in Excel, you first need the data to land in proper cells. Copy-paste usually dumps everything into one column. Here's how to export tables cleanly to Excel." },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Add your document with tables to the PDF to Excel tool." },
+          { title: "Tables get extracted", x: "The table structure on the pages is detected and written to .xlsx with rows/columns preserved." },
+          { title: "Download the Excel file", x: "Download the result and edit, filter and calculate directly in Excel." },
+        ] },
+        { t: "cta", title: "PDF to Excel", x: "Export PDF tables into an editable Excel file.", btn: "Open the tool", tool: "/tools/pdf-to-excel" },
+        { t: "h2", x: "Plain conversion or AI?" },
+        { t: "p", x: "If the PDF has clean, grid-like tables, plain conversion is fast and enough. But if you need to pull fields from documents that each have a different layout — like invoices (invoice no, date, totals, line items) — AI data extraction is far more accurate." },
+        { t: "tip", x: "To gather dozens of invoices into a single CSV table, the Extract Data and Batch tools are built for exactly this — merging one row per document." },
+        { t: "cta", title: "Extract Data", x: "Pull fields from complex documents like invoices with AI.", btn: "Extract with AI", tool: "/tools/pdf-veri-cikar" },
+      ],
+      faq: [
+        { q: "How do I convert a PDF to Excel?", a: "Upload the PDF to the tool; tables are detected and exported to an editable .xlsx file with rows/columns preserved." },
+        { q: "What if the table doesn't come out clean?", a: "If the document has a variable layout like invoices, try the Extract Data tool instead of plain conversion; it extracts fields and line items as structured data." },
+        { q: "Can I combine several documents into one table?", a: "Yes. With the AI Batch tool you can process several documents and merge their data into a single CSV table." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
