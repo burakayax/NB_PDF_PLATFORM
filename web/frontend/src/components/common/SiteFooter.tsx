@@ -1,20 +1,13 @@
 import type { Language } from "../../i18n/landing";
 import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
+import { SocialIcon, socialLabelFromUrl, socialPlatformFromUrl } from "./socialIcons";
 
 /**
  * Paylaşılan, href-tabanlı site footer'ı — callback gerektirmez, her sayfada (özellikle
  * blog) kullanılabilir. Araç sayfalarına iç-link taşır (blog → money-page link equity = SEO).
- * Sosyal bağlantılar site ayarlarından gelir.
+ * Sosyal bağlantılar site ayarlarından gelir; ikonlar landing footer'ıyla AYNI (socialIcons paylaşımlı).
  */
-function socialLabel(url: string): string {
-  try {
-    const host = new URL(url).hostname.replace(/^www\./, "").split(".")[0] || "";
-    return host ? host.charAt(0).toUpperCase() + host.slice(1) : "Link";
-  } catch {
-    return "Link";
-  }
-}
 
 export function SiteFooter({ language }: { language: Language }) {
   const tr = language === "tr";
@@ -73,17 +66,23 @@ export function SiteFooter({ language }: { language: Language }) {
                 aria-label={tr ? "Sosyal medya" : "Social media"}
                 className="mt-5 flex flex-wrap items-center gap-2"
               >
-                {socialLinks.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="me noopener noreferrer"
-                    className="rounded-full border border-white/[0.12] bg-white/[0.03] px-3 py-1 text-[12px] font-semibold text-gray-400 transition-colors hover:border-white/25 hover:bg-white/[0.07] hover:text-white"
-                  >
-                    {socialLabel(url)}
-                  </a>
-                ))}
+                {socialLinks.map((url) => {
+                  const label = socialLabelFromUrl(url);
+                  const platform = socialPlatformFromUrl(url);
+                  return (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="me noopener noreferrer"
+                      aria-label={label}
+                      title={label}
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.03] text-gray-400 transition-colors hover:border-white/25 hover:bg-white/[0.07] hover:text-white"
+                    >
+                      <SocialIcon platform={platform} className="h-[18px] w-[18px]" />
+                    </a>
+                  );
+                })}
               </nav>
             ) : null}
           </div>
