@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { OrgRole, Plan, UserRole } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
@@ -41,8 +42,14 @@ export function signDesktopAccessToken(payload: AuthUserPayload) {
 }
 
 export function signRefreshToken(payload: AuthUserPayload) {
+  // jwtid (jti): rastgele benzersiz kimlik. JWT'ler iat/exp'i SANİYE hassasiyetinde
+  // tuttuğundan, aynı saniyede (çift tık / çoklu sekme / retry) aynı kullanıcı için
+  // signRefreshToken BİREBİR AYNI token üretiyordu → aynı hashToken → refreshToken
+  // tablosundaki `tokenHash` unique kısıtı çakışıp /api/auth/refresh 500 veriyordu.
+  // jti her token'ı benzersiz kılar; doğrulama/rotasyon jti'ye bakmadığından şeffaftır.
   return jwt.sign(createPayload(payload, "refresh"), env.JWT_REFRESH_SECRET, {
     expiresIn: `${env.REFRESH_TOKEN_TTL_DAYS}d`,
+    jwtid: randomUUID(),
   });
 }
 
