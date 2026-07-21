@@ -2147,6 +2147,306 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+
+  post(
+    {
+      slug: "excel-pdf-cevirme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Dönüştürme", "Excel", "PDF"], en: ["Convert", "Excel", "PDF"] },
+      accent: "blue",
+      tool: "/tools/excel-to-pdf",
+    },
+    {
+      title: "Excel'i PDF'e Çevirme: Tabloları ve Düzeni Koruyarak (2026)",
+      description:
+        "Excel (.xls/.xlsx) tablolarınızı hücreler ve düzen korunacak şekilde paylaşıma ve baskıya hazır PDF'e dönüştürün. Neden PDF'e çevirmeli, nasıl yapılır — adım adım.",
+      excerpt:
+        "Excel dosyasını olduğu gibi göndermek çoğu zaman kayan hücreler ve bozuk sayfa düzeniyle sonuçlanır. Tabloları koruyarak Excel'i PDF'e çevirmenin ve baskıya hazır hâle getirmenin yolunu anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir Excel tablosunu göndermek, çoğu zaman karşı tarafta kayan sütunlar, bölünen sayfalar ve bozuk yazdırma alanıyla sonuçlanır. PDF bu sorunu çözer: tablo herkeste birebir aynı, baskıya hazır görünür. İşte Excel'i düzeni bozmadan PDF'e çevirmenin yolu." },
+        { t: "h2", x: "Neden Excel'i PDF'e çevirmelisiniz?" },
+        { t: "ul", items: [
+          "Düzen kilitlenir: hücreler, sütun genişlikleri ve sayfa sonları herkeste aynı görünür.",
+          "Baskıya hazır: yazdırma alanı ve sığdırma sorunları ortadan kalkar.",
+          "Yanlışlıkla değiştirilmez: rapor, teklif ve fatura tabloları için güvenli.",
+          "Excel kurulu olmayan cihazlarda da açılır.",
+        ] },
+        { t: "h2", x: "Adım adım dönüştürme" },
+        { t: "steps", items: [
+          { title: "Excel'i yükleyin", x: "Excel'den PDF'e aracına .xls, .xlsx, .ods veya .csv dosyanızı ekleyin." },
+          { title: "Dönüştürün", x: "Belge sunucuda işlenir; tablolar, hücreler ve biçimlendirme korunarak PDF'e çevrilir." },
+          { title: "Önizleyip indirin", x: "Sonucu kontrol edip PDF'i indirin — tablonuz paylaşıma ve baskıya hazırdır." },
+        ] },
+        { t: "cta", title: "Excel'den PDF'e", x: "Excel tablonuzu düzeni bozulmadan PDF'e çevirin.", btn: "Aracı aç", tool: "/tools/excel-to-pdf" },
+        { t: "h2", x: "Geniş tablolar için ipucu" },
+        { t: "tip", x: "Çok sütunlu geniş tablolarda, çevirmeden önce Excel'de sayfa düzenini 'Yatay (Landscape)' yapmak ve yazdırma alanını ayarlamak, çıktının sığmasını ve okunaklı olmasını sağlar." },
+        { t: "h2", x: "Tersi: PDF'teki tabloyu Excel'e almak" },
+        { t: "p", x: "Elinizde bir PDF var ve içindeki tabloyu Excel'de düzenlemek istiyorsanız, bunun için ayrı bir aracımız var — tabloları .xlsx'e çıkarır." },
+        { t: "cta", title: "PDF'den Excel'e", x: "PDF'teki tabloları düzenlenebilir Excel'e aktarın.", btn: "PDF → Excel", tool: "/tools/pdf-to-excel" },
+      ],
+      faq: [
+        { q: "Excel'i PDF'e çevirince tablo bozulur mu?", a: "Hayır. Hücreler, sütun düzeni ve biçimlendirme korunur. Geniş tablolarda yatay sayfa düzeni ve yazdırma alanını ayarlamak en iyi sonucu verir." },
+        { q: "Hangi dosya türlerini yükleyebilirim?", a: ".xls, .xlsx, .ods ve .csv gibi yaygın tablo biçimlerini yükleyip PDF'e çevirebilirsiniz." },
+        { q: "PDF'teki tabloyu tekrar Excel'e alabilir miyim?", a: "Evet. PDF'den Excel'e aracıyla PDF'teki tabloları düzenlenebilir bir .xlsx dosyasına aktarabilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert Excel to PDF Keeping Tables and Layout (2026)",
+      description:
+        "Convert Excel (.xls/.xlsx) tables into a share-ready, print-ready PDF with cells and layout preserved. Why convert to PDF and how — step by step.",
+      excerpt:
+        "Sending an Excel file as-is often results in shifted cells and broken page layout. Here's how to convert Excel to PDF while keeping tables intact and print-ready.",
+      blocks: [
+        { t: "lead", x: "Sending an Excel table often ends with shifted columns, split pages and a broken print area on the other end. PDF fixes this: the table looks identical and print-ready for everyone. Here's how to convert Excel to PDF without breaking the layout." },
+        { t: "h2", x: "Why convert Excel to PDF?" },
+        { t: "ul", items: [
+          "Locks the layout: cells, column widths and page breaks look the same everywhere.",
+          "Print-ready: print-area and fit-to-page issues disappear.",
+          "Can't be changed by accident: safe for report, quote and invoice tables.",
+          "Opens on devices without Excel installed.",
+        ] },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Upload the Excel file", x: "Add your .xls, .xlsx, .ods or .csv file to the Excel to PDF tool." },
+          { title: "Convert", x: "The file is processed on the server and converted to PDF with tables, cells and formatting preserved." },
+          { title: "Preview and download", x: "Check the result and download the PDF — your table is share- and print-ready." },
+        ] },
+        { t: "cta", title: "Excel to PDF", x: "Convert your Excel table to PDF with layout intact.", btn: "Open the tool", tool: "/tools/excel-to-pdf" },
+        { t: "h2", x: "Tip for wide tables" },
+        { t: "tip", x: "For wide, many-column tables, setting the page orientation to Landscape and adjusting the print area in Excel before converting helps everything fit and stay readable." },
+        { t: "h2", x: "The reverse: getting a table out of a PDF" },
+        { t: "p", x: "If you have a PDF and want to edit the table inside it in Excel, we have a separate tool that extracts tables to .xlsx." },
+        { t: "cta", title: "PDF to Excel", x: "Export tables from a PDF into editable Excel.", btn: "PDF → Excel", tool: "/tools/pdf-to-excel" },
+      ],
+      faq: [
+        { q: "Will converting Excel to PDF break the table?", a: "No. Cells, column layout and formatting are preserved. For wide tables, using landscape orientation and setting the print area gives the best result." },
+        { q: "Which file types can I upload?", a: "You can upload common spreadsheet formats like .xls, .xlsx, .ods and .csv and convert them to PDF." },
+        { q: "Can I get the table back into Excel?", a: "Yes. Use the PDF to Excel tool to export tables from the PDF into an editable .xlsx file." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "powerpoint-pdf-cevirme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Dönüştürme", "PowerPoint", "Sunum"], en: ["Convert", "PowerPoint", "Slides"] },
+      accent: "fuchsia",
+      tool: "/tools/ppt-to-pdf",
+    },
+    {
+      title: "PowerPoint'i PDF'e Çevirme (ve PDF'i PowerPoint'e)",
+      description:
+        "PPT/PPTX sunumlarını tasarımı korunacak şekilde tek PDF'e çevirin; ya da PDF'i tekrar düzenlenebilir PowerPoint slaytlarına dönüştürün. İki yön, adım adım.",
+      excerpt:
+        "Sunumu PDF olarak paylaşmak, slaytların herkeste aynı görünmesini ve yanlışlıkla değişmemesini sağlar. PowerPoint'i PDF'e — ve gerektiğinde tersini — nasıl yapacağınızı anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir sunumu PowerPoint dosyası olarak göndermek riskli olabilir: karşı tarafta yazı tipleri kayabilir, animasyonlar bozulabilir ya da slaytlar yanlışlıkla değiştirilebilir. PDF, sunumu herkeste birebir aynı ve değiştirilemez hâle getirir." },
+        { t: "h2", x: "PowerPoint'i PDF'e çevirme" },
+        { t: "steps", items: [
+          { title: "Sunumu yükleyin", x: "PowerPoint'ten PDF'e aracına .ppt veya .pptx dosyanızı ekleyin." },
+          { title: "Dönüştürün", x: "Tüm slaytlar tasarımı korunarak tek bir PDF'te toplanır." },
+          { title: "İndirin", x: "PDF'i indirin — her cihazda aynı görünen, paylaşıma hazır sunum." },
+        ] },
+        { t: "cta", title: "PowerPoint'ten PDF'e", x: "Sunumunuzu tasarımı bozulmadan tek PDF'e çevirin.", btn: "Aracı aç", tool: "/tools/ppt-to-pdf" },
+        { t: "h2", x: "PDF'i tekrar PowerPoint'e çevirme" },
+        { t: "p", x: "Elinizde yalnızca PDF hâli olan bir sunumu düzenlemek isterseniz, PDF'i tekrar PowerPoint slaytlarına dönüştürebilirsiniz — her sayfa bir slayt olur ve içeriği yeniden kullanabilirsiniz." },
+        { t: "cta", title: "PDF'den PowerPoint'e", x: "PDF sunumunu düzenlenebilir .pptx slaytlarına çevirin.", btn: "PDF → PowerPoint", tool: "/tools/pdf-to-ppt" },
+        { t: "h2", x: "Hangisini ne zaman kullanmalı?" },
+        { t: "ul", items: [
+          "Paylaşmak / sunmak / arşivlemek için: PowerPoint → PDF.",
+          "Eski bir sunumu düzenlemek / içeriği yeniden kullanmak için: PDF → PowerPoint.",
+        ] },
+      ],
+      faq: [
+        { q: "PowerPoint'i PDF'e nasıl çeviririm?", a: "PPT/PPTX dosyanızı araca yükleyin; tüm slaytlar tasarımı korunarak tek bir PDF'te toplanır ve indirebilirsiniz." },
+        { q: "Sunum tasarımı bozulur mu?", a: "Hayır. Slayt düzeni, yazı tipleri ve görseller korunur; sunum her cihazda aynı görünür." },
+        { q: "PDF'i tekrar PowerPoint'e çevirebilir miyim?", a: "Evet. PDF'den PowerPoint'e aracıyla her sayfayı bir slayt olacak şekilde düzenlenebilir .pptx dosyasına çevirebilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)",
+      description:
+        "Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step.",
+      excerpt:
+        "Sharing a deck as a PDF keeps slides looking the same for everyone and safe from accidental edits. Here's how to convert PowerPoint to PDF — and back when you need to.",
+      blocks: [
+        { t: "lead", x: "Sending a deck as a PowerPoint file can be risky: fonts may shift, animations may break, or slides may be changed by accident. PDF makes the deck look identical for everyone and un-editable." },
+        { t: "h2", x: "PowerPoint to PDF" },
+        { t: "steps", items: [
+          { title: "Upload the deck", x: "Add your .ppt or .pptx file to the PowerPoint to PDF tool." },
+          { title: "Convert", x: "All slides are combined into a single PDF with the design preserved." },
+          { title: "Download", x: "Download the PDF — a share-ready deck that looks the same on every device." },
+        ] },
+        { t: "cta", title: "PowerPoint to PDF", x: "Convert your deck into a single PDF with the design intact.", btn: "Open the tool", tool: "/tools/ppt-to-pdf" },
+        { t: "h2", x: "PDF back to PowerPoint" },
+        { t: "p", x: "If you only have the PDF version of a deck and want to edit it, you can convert the PDF back into PowerPoint slides — each page becomes a slide and you can reuse the content." },
+        { t: "cta", title: "PDF to PowerPoint", x: "Turn a PDF deck into editable .pptx slides.", btn: "PDF → PowerPoint", tool: "/tools/pdf-to-ppt" },
+        { t: "h2", x: "Which one, when?" },
+        { t: "ul", items: [
+          "To share / present / archive: PowerPoint → PDF.",
+          "To edit an old deck / reuse content: PDF → PowerPoint.",
+        ] },
+      ],
+      faq: [
+        { q: "How do I convert PowerPoint to PDF?", a: "Upload your PPT/PPTX to the tool; all slides are combined into a single PDF with the design preserved, ready to download." },
+        { q: "Will the design break?", a: "No. Slide layout, fonts and images are preserved; the deck looks the same on every device." },
+        { q: "Can I convert the PDF back to PowerPoint?", a: "Yes. Use the PDF to PowerPoint tool to turn each page into a slide in an editable .pptx file." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "pdf-sayfa-numarasi-ekleme",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 3,
+      tags: { tr: ["Düzenleme", "PDF", "Sayfa Numarası"], en: ["Editing", "PDF", "Page Numbers"] },
+      accent: "blue",
+      tool: "/tools/page-numbers",
+    },
+    {
+      title: "PDF'e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek",
+      description:
+        "PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım.",
+      excerpt:
+        "Uzun bir raporu, tezi ya da sözleşmeyi düzenli hâle getirmenin en kolay yolu sayfa numarası eklemektir. Konumu ve biçimi seçerek PDF'e nasıl sayfa numarası ekleyeceğinizi gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Çok sayfalı bir belgeyi paylaşırken sayfa numaraları büyük fark yaratır: okuyucu yönünü kaybetmez, baskıda sayfalar karışmaz, atıf yapmak kolaylaşır. PDF'inize dakikalar içinde numara eklemenin yolu burada." },
+        { t: "h2", x: "Ne zaman gerekir?" },
+        { t: "ul", items: [
+          "Rapor, tez ve akademik belgelerde referans kolaylığı.",
+          "Sözleşme ve resmî evrakta sayfa bütünlüğü.",
+          "Baskıya gidecek uzun belgelerde sıralamayı korumak.",
+        ] },
+        { t: "h2", x: "Adım adım" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "Sayfa Numarası aracına belgenizi ekleyin." },
+          { title: "Konum ve biçimi seçin", x: "Numaranın üstte mi altta mı olacağını ve biçimini belirleyin." },
+          { title: "İndirin", x: "Numaralandırılmış PDF'i indirin — her sayfa profesyonelce numaralanmış olur." },
+        ] },
+        { t: "cta", title: "Sayfa Numarası Ekle", x: "PDF'inize konum ve biçim seçerek sayfa numarası ekleyin.", btn: "Aracı aç", tool: "/tools/page-numbers" },
+        { t: "h2", x: "İpucu" },
+        { t: "tip", x: "Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur." },
+      ],
+      faq: [
+        { q: "PDF'e sayfa numarası nasıl eklerim?", a: "PDF'inizi yükleyin, numaranın konumunu (üst/alt) ve biçimini seçip indirin. Her sayfa otomatik numaralanır." },
+        { q: "Numaranın yerini seçebilir miyim?", a: "Evet. Numarayı başlık (üst) veya dipnot (alt) konumuna yerleştirebilir, biçimini seçebilirsiniz." },
+        { q: "Mevcut içerik bozulur mu?", a: "Hayır. Sayfa numarası belgenin üzerine eklenir; mevcut metin ve düzen korunur." },
+      ],
+    },
+    {
+      title: "How to Add Page Numbers to a PDF: Choose Position and Format",
+      description:
+        "Add professional page numbers to your PDF — choose header/footer position and format. Handy for reports, theses and contracts, step by step.",
+      excerpt:
+        "The easiest way to make a long report, thesis or contract feel organized is to add page numbers. Here's how to add them to a PDF, choosing position and format.",
+      blocks: [
+        { t: "lead", x: "When sharing a multi-page document, page numbers make a big difference: readers don't lose their place, printed pages don't get mixed up, and referencing becomes easy. Here's how to add numbers to your PDF in minutes." },
+        { t: "h2", x: "When do you need it?" },
+        { t: "ul", items: [
+          "Easy referencing in reports, theses and academic documents.",
+          "Page integrity in contracts and official paperwork.",
+          "Keeping order in long documents headed for print.",
+        ] },
+        { t: "h2", x: "Step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Add your document to the Page Numbers tool." },
+          { title: "Choose position and format", x: "Set whether the number goes at the top or bottom, and pick its format." },
+          { title: "Download", x: "Download the numbered PDF — every page is professionally numbered." },
+        ] },
+        { t: "cta", title: "Add Page Numbers", x: "Add page numbers to your PDF with your choice of position and format.", btn: "Open the tool", tool: "/tools/page-numbers" },
+        { t: "h2", x: "Tip" },
+        { t: "tip", x: "If your document has a cover page, consider starting numbering from the content page — leaving the cover without a number looks more professional." },
+      ],
+      faq: [
+        { q: "How do I add page numbers to a PDF?", a: "Upload your PDF, choose the position (top/bottom) and format, then download. Every page is numbered automatically." },
+        { q: "Can I choose where the number goes?", a: "Yes. You can place the number in the header (top) or footer (bottom) and pick its format." },
+        { q: "Will it break the existing content?", a: "No. The page number is added on top of the document; existing text and layout are preserved." },
+      ],
+    },
+  ),
+
+  post(
+    {
+      slug: "bozuk-pdf-onarma",
+      date: "2026-07-21",
+      updated: "2026-07-21",
+      readMinutes: 4,
+      tags: { tr: ["Sorun Giderme", "PDF", "Onarma"], en: ["Troubleshooting", "PDF", "Repair"] },
+      accent: "fuchsia",
+      tool: "/tools/repair-pdf",
+    },
+    {
+      title: "Açılmayan / Bozuk PDF'i Onarma: İçeriği Kurtarma Yolları",
+      description:
+        "PDF açılmıyor, hata veriyor ya da bozuk mu görünüyor? Bozuk PDF'i onarıp içeriği kurtarmayı deneyin. Neden bozulur, nasıl onarılır — adım adım.",
+      excerpt:
+        "\"PDF açılamıyor\" ya da \"dosya bozuk\" hatası, önemli bir belgede can sıkıcıdır. PDF'in neden bozulduğunu ve yapıyı yeniden paketleyerek kurtarılabilen içeriği nasıl geri alacağınızı anlatıyoruz.",
+      blocks: [
+        { t: "lead", x: "Önemli bir PDF'i açmaya çalışırken \"dosya hasarlı\" veya \"açılamıyor\" hatasıyla karşılaşmak sinir bozucudur. İyi haber: çoğu bozuk PDF'te içerik hâlâ oradadır, sadece dosyanın yapısı zarar görmüştür — ve bu genelde onarılabilir." },
+        { t: "h2", x: "PDF neden bozulur?" },
+        { t: "ul", items: [
+          "Yarım kalan indirme veya aktarım (bağlantı koptu).",
+          "USB/disk hatası ya da dosyanın eksik kaydedilmesi.",
+          "Uyumsuz bir programla düzenleme veya hatalı dışa aktarma.",
+          "E-posta/eklenti sıkıştırmasının dosyayı bozması.",
+        ] },
+        { t: "h2", x: "Onarmayı deneyin — adım adım" },
+        { t: "steps", items: [
+          { title: "Bozuk PDF'i yükleyin", x: "PDF Onarma aracına açılmayan dosyanızı ekleyin." },
+          { title: "Onarım çalışsın", x: "Araç dosyanın yapısını yeniden paketleyip kurtarılabilen içeriği toplar." },
+          { title: "Sonucu indirin", x: "Onarılmış PDF'i indirip açmayı deneyin. İçerik büyük ölçüde geri gelebilir." },
+        ] },
+        { t: "cta", title: "PDF Onar", x: "Açılmayan PDF'inizi onarıp içeriği kurtarmayı deneyin.", btn: "Aracı aç", tool: "/tools/repair-pdf" },
+        { t: "h2", x: "Ne beklemeli?" },
+        { t: "p", x: "Onarım her zaman %100 garanti değildir — hasarın derecesine bağlıdır. Yapısı bozulmuş ama içeriği duran dosyalarda başarı yüksektir; tamamen silinmiş/şifreli veriyi geri getiremez. Yine de denemek çoğu zaman belgeyi kurtarır." },
+        { t: "tip", x: "Onarımdan sonra dosya çok büyük geldiyse, sıkıştırma aracıyla boyutu düşürebilir; taranmış ve metni gitmişse OCR ile yeniden metin katmanı ekleyebilirsiniz." },
+      ],
+      faq: [
+        { q: "Bozuk bir PDF'i nasıl onarırım?", a: "Hasarlı PDF'inizi PDF Onarma aracına yükleyin; araç yapıyı yeniden paketleyerek kurtarılabilen içeriği yeni bir dosyada toplar." },
+        { q: "Her bozuk dosya kurtarılır mı?", a: "Hayır, başarı hasarın derecesine bağlıdır. Yapısı bozulmuş ama içeriği duran dosyalarda başarı yüksektir; tamamen silinmiş veri geri getirilemez." },
+        { q: "PDF neden açılmıyor?", a: "En yaygın nedenler yarım indirme, disk/aktarım hatası, uyumsuz bir programla hatalı dışa aktarma ve dosyanın eksik kaydedilmesidir." },
+      ],
+    },
+    {
+      title: "How to Repair a Corrupt / Won't-Open PDF: Ways to Recover Content",
+      description:
+        "PDF won't open, throws an error or looks corrupt? Try repairing the broken PDF and recovering its content. Why PDFs break and how to fix them — step by step.",
+      excerpt:
+        "A \"can't open\" or \"file is corrupt\" error on an important document is frustrating. Here's why a PDF breaks and how to recover the salvageable content by re-packaging its structure.",
+      blocks: [
+        { t: "lead", x: "Hitting a \"file is damaged\" or \"can't open\" error on an important PDF is maddening. The good news: in most broken PDFs the content is still there — only the file's structure is damaged — and that's often repairable." },
+        { t: "h2", x: "Why do PDFs break?" },
+        { t: "ul", items: [
+          "An interrupted download or transfer (the connection dropped).",
+          "A USB/disk error or the file not being fully saved.",
+          "Editing with an incompatible program or a faulty export.",
+          "Email/attachment compression corrupting the file.",
+        ] },
+        { t: "h2", x: "Try repairing — step by step" },
+        { t: "steps", items: [
+          { title: "Upload the broken PDF", x: "Add your won't-open file to the Repair PDF tool." },
+          { title: "Let the repair run", x: "The tool re-packages the file's structure and gathers the salvageable content." },
+          { title: "Download the result", x: "Download the repaired PDF and try opening it. Much of the content may come back." },
+        ] },
+        { t: "cta", title: "Repair PDF", x: "Try to repair your won't-open PDF and recover the content.", btn: "Open the tool", tool: "/tools/repair-pdf" },
+        { t: "h2", x: "What to expect" },
+        { t: "p", x: "Repair is not always a 100% guarantee — it depends on the degree of damage. Success is high for files whose structure is broken but whose content remains; it can't bring back fully deleted or encrypted data. Still, trying often recovers the document." },
+        { t: "tip", x: "If the file is very large after repair, you can shrink it with the compress tool; if it's scanned and the text is gone, you can add a text layer again with OCR." },
+      ],
+      faq: [
+        { q: "How do I repair a corrupt PDF?", a: "Upload your damaged PDF to the Repair PDF tool; it re-packages the structure and gathers the salvageable content into a new file." },
+        { q: "Is every broken file recoverable?", a: "No, success depends on the degree of damage. It's high for files whose structure is broken but content remains; fully deleted data can't be recovered." },
+        { q: "Why won't my PDF open?", a: "The most common causes are an interrupted download, a disk/transfer error, a faulty export from an incompatible program, and the file not being fully saved." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
