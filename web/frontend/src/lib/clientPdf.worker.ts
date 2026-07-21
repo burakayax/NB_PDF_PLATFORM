@@ -12,6 +12,8 @@ import {
   reorderPages,
   splitPagesToZip,
   getPdfPageCount,
+  applySignatures,
+  applyAnnotations,
 } from "./clientPdf";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,6 +26,8 @@ const ops: Record<string, Op> = {
   reorderPages,
   splitPagesToZip,
   getPdfPageCount,
+  applySignatures,
+  applyAnnotations,
 };
 
 // Worker global'i — webworker lib'i (DOM ile çakışabilir) yerine minimal tipleme.

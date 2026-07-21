@@ -28,7 +28,7 @@ import {
   applyAnnotations,
   pdfBytesToBlob,
   type AnnotationItem,
-} from "../../lib/clientPdf";
+} from "../../lib/clientPdfWorker";
 import { saveBlobToUser } from "../../api";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
