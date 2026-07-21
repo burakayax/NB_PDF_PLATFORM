@@ -1175,6 +1175,10 @@ export const RELATED_TOOLS = {
 
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
+  "excel-pdf-cevirme": ["excel-to-pdf", "pdf-to-excel"],
+  "powerpoint-pdf-cevirme": ["ppt-to-pdf", "pdf-to-ppt"],
+  "pdf-sayfa-numarasi-ekleme": ["page-numbers", "watermark"],
+  "bozuk-pdf-onarma": ["repair-pdf", "compress", "pdf-to-text"],
   "word-pdf-cevirme": ["word-to-pdf", "pdf-to-word"],
   "pdf-jpg-resme-cevirme": ["pdf-to-image", "image-to-pdf"],
   "pdf-metin-duzenleme-silme": ["pdf-duzenle", "taranmis-pdf-ocr"],
