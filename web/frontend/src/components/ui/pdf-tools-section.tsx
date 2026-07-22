@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Crop } from "lucide-react";
 import { AnimatedCardOptions, type CardOption } from "./animated-card-options";
 import type { Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
@@ -148,7 +149,7 @@ const toolCategories = (lang: Language) => [
       },
       {
         id: "crop-pdf",
-        icon: "🔲",
+        icon: <Crop className="h-6 w-6 text-cyan-300" strokeWidth={2} />,
         name: lang === "tr" ? "PDF Kırp" : "Crop PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
