@@ -836,6 +836,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/hassas-veri-gizle" ||
     rawPath === "/tools/belge-tara" ||
     rawPath === "/tools/aranabilir-pdf" ||
+    rawPath === "/tools/crop-pdf" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
