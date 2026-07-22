@@ -52,6 +52,11 @@ const L = {
     scope: "Uygula:",
     allPages: "Tüm sayfalar",
     thisPage: "Bu sayfa",
+    eachPage: "Sayfa sayfa",
+    hintAll: "Seçtiğin kırpma tüm sayfalara aynı yerden uygulanır.",
+    hintThis: "Yalnızca şu an gördüğün sayfa kırpılır; diğerleri değişmeden kalır.",
+    hintEach: "Her sayfaya AYRI kırpma. Sayfalar arasında gezin, her birinin kutusunu ayarla — yalnızca ayarladığın sayfalar kırpılır.",
+    configured: (n: number) => `${n} sayfa ayarlandı`,
     reset: "Sıfırla",
     apply: "Kırp ve İndir",
     processing: "Kırpılıyor…",
@@ -78,6 +83,11 @@ const L = {
     scope: "Apply to:",
     allPages: "All pages",
     thisPage: "This page",
+    eachPage: "Each page",
+    hintAll: "Your crop is applied to every page at the same position.",
+    hintThis: "Only the page you're viewing is cropped; the others stay unchanged.",
+    hintEach: "A SEPARATE crop per page. Move between pages and set each one's box — only the pages you set get cropped.",
+    configured: (n: number) => `${n} page(s) set`,
     reset: "Reset",
     apply: "Crop & Download",
     processing: "Cropping…",
@@ -101,7 +111,9 @@ export function PdfCropTool({ language }: Props) {
   const [pageCount, setPageCount] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [crop, setCrop] = useState<Rect>({ x: 0.06, y: 0.06, w: 0.88, h: 0.88 });
-  const [applyAll, setApplyAll] = useState(true);
+  const [scope, setScope] = useState<"all" | "this" | "each">("all");
+  // "each" modunda her sayfanın kendi kırpma dikdörtgeni.
+  const [pageCrops, setPageCrops] = useState<Record<number, Rect>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -202,6 +214,19 @@ export function PdfCropTool({ language }: Props) {
     (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
     dragRef.current = null;
     setDragging(false);
+    // "each" modunda: bu sayfanın kutusunu kaydet → bu sayfa kırpılacak sayfalar arasına girer.
+    if (scope === "each") setPageCrops((m) => ({ ...m, [pageIndex]: crop }));
+  };
+
+  // Sayfa değiştir — "each" modunda mevcut sayfanın kutusunu sakla, hedefin kutusunu yükle.
+  const goToPage = (next: number) => {
+    const clamped = Math.max(0, Math.min(pageCount - 1, next));
+    if (clamped === pageIndex) return;
+    if (scope === "each") {
+      setPageCrops((m) => ({ ...m, [pageIndex]: crop }));
+      setCrop(pageCrops[clamped] ?? crop);
+    }
+    setPageIndex(clamped);
   };
 
   const apply = async () => {
@@ -209,9 +234,17 @@ export function PdfCropTool({ language }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const rect: CropRect = { xNorm: crop.x, yNorm: crop.y, wNorm: crop.w, hNorm: crop.h };
-      const pages = applyAll ? undefined : [pageIndex];
-      const out = await cropPdf(bytes, rect, pages);
+      const toCropRect = (r: Rect): CropRect => ({ xNorm: r.x, yNorm: r.y, wNorm: r.w, hNorm: r.h });
+      let out: Uint8Array;
+      if (scope === "each") {
+        // Mevcut sayfayı da dahil et; her sayfaya kendi dikdörtgeni, gerisi tam kalır.
+        const map = { ...pageCrops, [pageIndex]: crop };
+        const record: Record<number, CropRect> = {};
+        for (const [k, r] of Object.entries(map)) record[Number(k)] = toCropRect(r);
+        out = await cropPdf(bytes, record);
+      } else {
+        out = await cropPdf(bytes, toCropRect(crop), scope === "this" ? [pageIndex] : undefined);
+      }
       setResult({
         blob: pdfBytesToBlob(out),
         filename: fileName.replace(/\.pdf$/i, "") + "-kirpilmis.pdf",
@@ -408,7 +441,7 @@ export function PdfCropTool({ language }: Props) {
           <button
             type="button"
             disabled={pageIndex === 0}
-            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+            onClick={() => goToPage(pageIndex - 1)}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-white transition hover:bg-white/[0.12] disabled:opacity-30"
           >
             <ChevronLeft className="h-4 w-4" />
@@ -419,7 +452,7 @@ export function PdfCropTool({ language }: Props) {
           <button
             type="button"
             disabled={pageIndex >= pageCount - 1}
-            onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
+            onClick={() => goToPage(pageIndex + 1)}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-white transition hover:bg-white/[0.12] disabled:opacity-30"
           >
             <ChevronRight className="h-4 w-4" />
@@ -496,20 +529,22 @@ export function PdfCropTool({ language }: Props) {
       <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
         <span className="text-[13px] font-medium text-slate-400">{t.scope}</span>
         <div className="flex items-center gap-1 rounded-xl bg-slate-950/40 p-1 ring-1 ring-white/[0.06]">
-          <button
-            type="button"
-            onClick={() => setApplyAll(true)}
-            className={`rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${applyAll ? "bg-cyan-500/25 text-cyan-100 ring-1 ring-cyan-400/30" : "text-slate-400 hover:text-white"}`}
-          >
-            {t.allPages}
-          </button>
-          <button
-            type="button"
-            onClick={() => setApplyAll(false)}
-            className={`rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${!applyAll ? "bg-cyan-500/25 text-cyan-100 ring-1 ring-cyan-400/30" : "text-slate-400 hover:text-white"}`}
-          >
-            {t.thisPage}
-          </button>
+          {(
+            [
+              ["all", t.allPages],
+              ["this", t.thisPage],
+              ["each", t.eachPage],
+            ] as const
+          ).map(([val, label]) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => setScope(val)}
+              className={`rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${scope === val ? "bg-cyan-500/25 text-cyan-100 ring-1 ring-cyan-400/30" : "text-slate-400 hover:text-white"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
         <button
           type="button"
@@ -527,6 +562,15 @@ export function PdfCropTool({ language }: Props) {
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crop className="h-4 w-4" />}
           {busy ? t.processing : t.apply}
         </button>
+      </div>
+      {/* Mod açıklaması + "Sayfa sayfa" sayacı */}
+      <div className="flex flex-wrap items-center justify-center gap-2 text-center text-[12px] text-slate-400">
+        <span>{scope === "all" ? t.hintAll : scope === "this" ? t.hintThis : t.hintEach}</span>
+        {scope === "each" && Object.keys(pageCrops).length > 0 && (
+          <span className="rounded-md bg-cyan-500/15 px-2 py-0.5 font-semibold text-cyan-200 ring-1 ring-cyan-400/25">
+            {t.configured(Object.keys(pageCrops).length)}
+          </span>
+        )}
       </div>
       {error && <p className="text-center text-[13px] text-rose-300">{error}</p>}
     </div>
