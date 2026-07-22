@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım — PDF Platform</title>
+    <meta name="description" content="PDF&#39;teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-hassas-veri-gizleme-kvkk" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım — PDF Platform" />
+    <meta property="og:description" content="PDF&#39;teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım — PDF Platform" />
+    <meta name="twitter:description" content="PDF&#39;teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF'te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım","description":"PDF'teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"PDF'te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım","description":"PDF'teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i yükleyin","text":"Hassas Veri Gizleme aracına belgenizi ekleyin."},{"@type":"HowToStep","position":2,"name":"Hassas alanlar bulunsun","text":"TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir."},{"@type":"HowToStep","position":3,"name":"Kalıcı olarak kaldırın","text":"Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF'i indirin."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'teki hassas veri nasıl gizlenir?","acceptedAnswer":{"@type":"Answer","text":"PDF'i yükleyin; araç TC/IBAN/telefon/e-postayı cihazınızda, isim/adres gibi verileri yapay zekâ ile bulur ve onayınızla kalıcı olarak kaldırır."}},{"@type":"Question","name":"Veriler gerçekten siliniyor mu, üstü mü örtülüyor?","acceptedAnswer":{"@type":"Answer","text":"Gerçekten siliniyor. PyMuPDF redaction ile veri PDF'in içeriğinden kaldırılır; üzerine kutu çizilmez, geri okunamaz."}},{"@type":"Question","name":"Bu KVKK açısından yeterli mi?","acceptedAnswer":{"@type":"Answer","text":"Gerçek redaction, kişisel veriyi belgeden kaldırdığı için 'siyah kutu'ya göre çok daha güvenlidir. Yine de paylaşım öncesi sonucu kontrol etmeniz önerilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF&#39;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım</h1><p class="seo-intro">Bir belgeyi paylaşmadan önce içindeki TC kimlik, IBAN veya adres gibi kişisel verileri gizlemek çoğu zaman yasal bir zorunluluktur. Ama siyah kutu koymak yetmez — veri altta durmaya devam eder. Gerçek redaction&#39;ı anlatıyoruz.</p><article class="seo-article"><p class="seo-lead">Bir sözleşmeyi, faturayı ya da resmî belgeyi paylaşmadan önce içindeki kişisel verileri (TC kimlik, IBAN, telefon, adres) gizlemeniz gerekir — bu çoğu zaman KVKK açısından bir zorunluluktur. Ama dikkat: metnin üzerine siyah kutu koymak GERÇEK bir gizleme değildir.</p><h2>Neden &quot;siyah kutu&quot; güvenli değil?</h2><p>Çoğu araçta hassas veriyi &quot;gizlemek&quot; için üzerine siyah bir dikdörtgen çizersiniz. Ancak orijinal yazı belgenin içinde durmaya devam eder: PDF&#39;i bir metin düzenleyicide açan, kutuyu kaldıran ya da metni kopyalayan biri veriyi geri okuyabilir. Bu, sızıntı ve KVKK ihlali riski demektir.</p><p>Gerçek redaction, veriyi belgenin İÇERİĞİNDEN kaldırır. Hassas Veri Gizleme aracımız PyMuPDF redaction ile veriyi tamamen siler — üzerini örtmez. Kaldırılan yerde arama, kopyalama veya kurtarma mümkün olmaz.</p><h2>Nasıl çalışır — adım adım</h2><ol><li><strong>PDF&#39;i yükleyin:</strong> Hassas Veri Gizleme aracına belgenizi ekleyin.</li><li><strong>Hassas alanlar bulunsun:</strong> TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir.</li><li><strong>Kalıcı olarak kaldırın:</strong> Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF&#39;i indirin.</li></ol><p><a href="/tools/hassas-veri-gizle"><strong>Hassas Veri Gizle</strong> — Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın.</a></p><h2>Ne zaman gerekir?</h2><ul><li>Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.</li><li>Resmî başvuru, ihale veya mahkeme dosyalarında.</li><li>Örnek/şablon olarak yayınlanacak belgelerde.</li></ul><p>Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/hassas-veri-gizle">PDF&#39;te Hassas Veri Gizleme (Redaction)</a></li><li><a href="/tools/pdf-duzenle">PDF Düzenle</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;teki hassas veri nasıl gizlenir?</h3><p>PDF&#39;i yükleyin; araç TC/IBAN/telefon/e-postayı cihazınızda, isim/adres gibi verileri yapay zekâ ile bulur ve onayınızla kalıcı olarak kaldırır.</p></div><div class="seo-faq-item"><h3>Veriler gerçekten siliniyor mu, üstü mü örtülüyor?</h3><p>Gerçekten siliniyor. PyMuPDF redaction ile veri PDF&#39;in içeriğinden kaldırılır; üzerine kutu çizilmez, geri okunamaz.</p></div><div class="seo-faq-item"><h3>Bu KVKK açısından yeterli mi?</h3><p>Gerçek redaction, kişisel veriyi belgeden kaldırdığı için &#39;siyah kutu&#39;ya göre çok daha güvenlidir. Yine de paylaşım öncesi sonucu kontrol etmeniz önerilir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
