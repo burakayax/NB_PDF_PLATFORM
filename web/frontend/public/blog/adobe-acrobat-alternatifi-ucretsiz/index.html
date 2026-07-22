@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri — PDF Platform</title>
+    <meta name="description" content="Adobe Acrobat&#39;a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/adobe-acrobat-alternatifi-ucretsiz" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri — PDF Platform" />
+    <meta property="og:description" content="Adobe Acrobat&#39;a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri — PDF Platform" />
+    <meta name="twitter:description" content="Adobe Acrobat&#39;a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri","description":"Adobe Acrobat'a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda.","datePublished":"2026-07-22","dateModified":"2026-07-22","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Adobe Acrobat'a ücretsiz bir alternatif var mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. Gündelik işler (birleştir, böl, dönüştür, imzala, metin ekle) için PDF Platform'u kurulum ve çoğunda ücret olmadan tarayıcıda kullanabilirsiniz."}},{"@type":"Question","name":"Program kurmam gerekir mi?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Her şey tarayıcıda çalışır; indirme, kurulum veya eklenti gerekmez."}},{"@type":"Question","name":"PDF imzalamak için Acrobat şart mı?","acceptedAnswer":{"@type":"Answer","text":"Hayır. İmzanızı tarayıcıda çizip/yükleyip PDF'e ekleyebilirsiniz; işlem cihazınızda yapılır, dosya sunucuya gitmez."}},{"@type":"Question","name":"Acrobat gerçekten ne zaman gerekir?","acceptedAnswer":{"@type":"Answer","text":"İleri düzey form tasarımı, prepress veya kurumsal iş akışları için Acrobat Pro güçlüdür; ama çoğu gündelik iş için ücretsiz tarayıcı araçları yeterlidir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri</h1><p class="seo-intro">Çoğu PDF işi için pahalı Acrobat aboneliğine gerek yok. Birleştirmeden imzaya, kurulum olmadan tarayıcıda yapabileceğiniz işler ve dürüst sınırlar.</p><article class="seo-article"><p class="seo-lead">Adobe Acrobat güçlü bir program, ama tam sürümü ücretli ve kurulum ister. İyi haber: gündelik PDF işlerinin büyük kısmı için ne abonelik ne de kurulum gerekir — hepsini tarayıcınızda ücretsiz yapabilirsiniz.</p><h2>Acrobat olmadan hangi işleri yapabilirsiniz?</h2><ul><li>Birleştir, böl, döndür, sayfa sil, sayfa sırala — hepsi ücretsiz ve cihazınızda.</li><li>Görselden PDF, belge tarama, sayfa numarası ve filigran ekleme.</li><li>Metin ekleme, işaretleme ve imza atma.</li><li>Word/Excel/PowerPoint dönüştürme, sıkıştırma ve OCR (sunucuda, içerik saklanmaz).</li></ul><h2>Kurulum ve abonelik derdi yok</h2><p>PDF Platform tamamen tarayıcıda çalışır — indirme, kurulum veya eklenti gerektirmez. Birleştirme, bölme ve imza gibi yapısal işlemler cihazınızda yapılır; dosyanız sunucuya bile gitmez. Üyelik yalnızca daha büyük dosyalar, geçmiş kaydı ve gelişmiş dönüştürme için gerekir.</p><p><a href="/tools/merge-pdf"><strong>PDF Araçlarını Aç</strong> — Birleştirin, dönüştürün, imzalayın — kurulum olmadan, ücretsiz.</a></p><h2>Peki Acrobat ne zaman gerekir?</h2><p>Dürüst olalım: karmaşık form tasarımı, ileri düzey ön kontrol (prepress) veya kurumsal doküman iş akışları için Acrobat Pro hâlâ güçlü bir seçenektir. Ama çoğu kullanıcının ihtiyacı birleştirmek, dönüştürmek, imzalamak ve metin eklemek — bunlar için ücretli bir programa gerek yok.</p><p>Yalnızca bir PDF&#39;i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/merge-pdf">PDF Birleştirme</a></li><li><a href="/tools/pdf-to-word">PDF&#39;den Word&#39;e Dönüştürme</a></li><li><a href="/tools/pdf-imzala">PDF İmzala</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Adobe Acrobat&#39;a ücretsiz bir alternatif var mı?</h3><p>Evet. Gündelik işler (birleştir, böl, dönüştür, imzala, metin ekle) için PDF Platform&#39;u kurulum ve çoğunda ücret olmadan tarayıcıda kullanabilirsiniz.</p></div><div class="seo-faq-item"><h3>Program kurmam gerekir mi?</h3><p>Hayır. Her şey tarayıcıda çalışır; indirme, kurulum veya eklenti gerekmez.</p></div><div class="seo-faq-item"><h3>PDF imzalamak için Acrobat şart mı?</h3><p>Hayır. İmzanızı tarayıcıda çizip/yükleyip PDF&#39;e ekleyebilirsiniz; işlem cihazınızda yapılır, dosya sunucuya gitmez.</p></div><div class="seo-faq-item"><h3>Acrobat gerçekten ne zaman gerekir?</h3><p>İleri düzey form tasarımı, prepress veya kurumsal iş akışları için Acrobat Pro güçlüdür; ama çoğu gündelik iş için ücretsiz tarayıcı araçları yeterlidir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

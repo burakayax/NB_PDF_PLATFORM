@@ -1375,6 +1375,8 @@ export const RELATED_TOOLS = {
 export const BLOG_RELATED_TOOLS = {
   "ilovepdf-alternatifi-cihazda-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
   "smallpdf-alternatifi-sinirsiz-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
+  "adobe-acrobat-alternatifi-ucretsiz": ["merge-pdf", "pdf-to-word", "pdf-imzala"],
+  "ucretsiz-pdf-duzenleyici-rehberi": ["pdf-duzenle", "pdf-yorumla", "pdf-imzala"],
   "cv-ozgecmis-word-pdf-cevirme": ["word-to-pdf", "compress", "merge-pdf"],
   "pdf-form-doldurma-online-ucretsiz": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
   "telefonda-pdf-islemleri-uygulamasiz": ["merge-pdf", "belge-tara", "split-pdf"],
