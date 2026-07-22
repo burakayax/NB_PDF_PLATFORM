@@ -22,6 +22,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "pdf-yorumla",
   "hassas-veri-gizle",
   "taranmis-pdf-ocr",
+  "crop-pdf",
 ]);
 
 const toolCategories = (lang: Language) => [
@@ -143,6 +144,12 @@ const toolCategories = (lang: Language) => [
         id: "organize-pdf",
         icon: "⇅",
         name: lang === "tr" ? "Sayfaları Düzenle" : "Organize Pages",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
+        id: "crop-pdf",
+        icon: "🔲",
+        name: lang === "tr" ? "PDF Kırp" : "Crop PDF",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
