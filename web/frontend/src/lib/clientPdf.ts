@@ -316,3 +316,38 @@ export async function splitPagesToZip(
   }
   return zipSync(files);
 }
+
+/** Kırpma dikdörtgeni — sayfaya ORANLI (0..1), ÜST-tabanlı sol-üst köşe (diğer
+ * araçlarla tutarlı). */
+export type CropRect = { xNorm: number; yNorm: number; wNorm: number; hNorm: number };
+
+/** KIRP — hedef sayfaların görünür alanını (CropBox) verilen dikdörtgene ayarlar.
+ * İçerik SİLİNMEZ; yalnızca görünür kutu daralır (standart, geri alınabilir PDF
+ * kırpması). `pages` boşsa tüm sayfalara uygulanır. */
+export async function cropPdf(
+  bytes: ArrayBuffer | Uint8Array,
+  crop: CropRect,
+  pages?: number[],
+): Promise<Uint8Array> {
+  const doc = await loadPdf(bytes);
+  const all = doc.getPages();
+  const targets = pages && pages.length ? pages : all.map((_, i) => i);
+  const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+  const xN = clamp01(crop.xNorm);
+  const yN = clamp01(crop.yNorm);
+  const wN = clamp01(crop.wNorm);
+  const hN = clamp01(crop.hNorm);
+  if (wN <= 0.001 || hN <= 0.001) throw new Error("Crop area is empty.");
+  for (const i of targets) {
+    const page = all[i];
+    if (!page) continue;
+    const mb = page.getMediaBox();
+    const w = wN * mb.width;
+    const h = hN * mb.height;
+    const x = mb.x + xN * mb.width;
+    // yNorm üst-tabanlı → pdf-lib alt-sol origin
+    const y = mb.y + mb.height - yN * mb.height - h;
+    page.setCropBox(x, y, w, h);
+  }
+  return doc.save();
+}

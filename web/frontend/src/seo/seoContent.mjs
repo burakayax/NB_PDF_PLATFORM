@@ -35,6 +35,7 @@ export const TOOL_SLUGS = [
   "delete-pages",
   "rotate-pdf",
   "organize-pdf",
+  "crop-pdf",
   "compress",
   "pdf-to-word",
   "word-to-pdf",
@@ -78,6 +79,36 @@ const T = (title, description, h1, intro, keywords, faq) => ({
 
 // ─── Araç SEO içeriği (slug bazlı, TR + EN) ──────────────────────────────────
 export const TOOL_SEO = {
+  "crop-pdf": {
+    tr: T(
+      "PDF Kırpma — kenar boşluklarını kes, online ve ücretsiz",
+      "PDF sayfalarını tarayıcınızda kırpın. Kenar boşluklarını kesin veya sayfayı istediğiniz alana daraltın — dosyanız cihazınızdan çıkmadan, üyeliksiz ve ücretsiz.",
+      "PDF Kırpma",
+      "PDF sayfalarının kenar boşluklarını kesin ya da görünür alanı istediğiniz dikdörtgene daraltın. Kırpma tamamen tarayıcınızda (cihazınızda) çalışır — dosyanız sunucuya gitmez. Kutuyu sürükleyip boyutlandırın, tüm sayfalara veya tek sayfaya uygulayın; üyelik ve kurulum gerekmez.",
+      ["pdf kırpma", "pdf kırp", "pdf crop", "pdf kenar boşluğu kesme", "pdf sayfa kırpma", "online pdf kırpma"],
+      [
+        { q: "PDF nasıl kırpılır?", a: "PDF'inizi yükleyin, kırpma kutusunu sürükleyip köşelerden boyutlandırarak istediğiniz alanı seçin ve 'Kırp ve İndir' deyin. İşlem cihazınızda yapılır." },
+        { q: "Kırpma tüm sayfalara mı uygulanır?", a: "İkisi de mümkün. 'Tüm sayfalar' ya da 'Yalnız bu sayfa' seçeneğiyle kırpmayı istediğiniz kapsama uygulayabilirsiniz." },
+        { q: "Dosyam sunucuya yüklenir mi?", a: "Hayır. PDF kırpma tamamen tarayıcınızda (cihazınızda) çalışır; dosyanız internete hiç gönderilmez, %100 gizlidir." },
+        { q: "Kırpılan içerik kalıcı olarak silinir mi?", a: "Kırpma, sayfanın görünür alanını (CropBox) daraltır; bu standart, geri alınabilir bir PDF kırpmasıdır. Kalan alan net biçimde görüntülenir ve yazdırılır." },
+        { q: "PDF kırpmak ücretsiz mi?", a: "Evet. Kırpma üyeliksiz ve ücretsizdir; kurulum gerekmez, doğrudan tarayıcıda çalışır." },
+      ],
+    ),
+    en: T(
+      "Crop PDF — trim margins, online and free",
+      "Crop PDF pages in your browser. Trim the margins or narrow the page to any area — your file never leaves your device, no signup, free.",
+      "Crop PDF",
+      "Trim the margins of your PDF pages or narrow the visible area to any rectangle. Cropping runs entirely in your browser (on your device) — your file is never sent to a server. Drag and resize the box, apply to all pages or a single page; no signup or installation needed.",
+      ["crop pdf", "pdf crop", "trim pdf margins", "crop pdf online", "crop pdf pages", "cut pdf margins"],
+      [
+        { q: "How do I crop a PDF?", a: "Upload your PDF, drag and resize the crop box from the corners to select the area you want, and click 'Crop & Download'. It happens on your device." },
+        { q: "Is the crop applied to all pages?", a: "Either way. Use 'All pages' or 'This page only' to apply the crop to the scope you want." },
+        { q: "Is my file uploaded to a server?", a: "No. Cropping runs entirely in your browser (on your device); your file is never sent to the internet and stays 100% private." },
+        { q: "Is the cropped content permanently deleted?", a: "Cropping narrows the page's visible area (CropBox); it's a standard, reversible PDF crop. The remaining area displays and prints cleanly." },
+        { q: "Is cropping a PDF free?", a: "Yes. Cropping is free and needs no signup or installation; it runs directly in the browser." },
+      ],
+    ),
+  },
   "merge-pdf": {
     tr: T(
       "PDF Birleştirme — online ve ücretsiz",
@@ -1337,8 +1368,9 @@ export const RELATED_TOOLS = {
   "split-pdf": ["merge-pdf", "organize-pdf", "delete-pages", "rotate-pdf"],
   "merge-pdf": ["split-pdf", "organize-pdf", "compress", "page-numbers"],
   "delete-pages": ["organize-pdf", "split-pdf", "rotate-pdf", "merge-pdf"],
-  "rotate-pdf": ["organize-pdf", "delete-pages", "split-pdf", "merge-pdf"],
-  "organize-pdf": ["delete-pages", "rotate-pdf", "split-pdf", "page-numbers"],
+  "rotate-pdf": ["crop-pdf", "organize-pdf", "delete-pages", "split-pdf"],
+  "organize-pdf": ["delete-pages", "rotate-pdf", "crop-pdf", "split-pdf"],
+  "crop-pdf": ["rotate-pdf", "organize-pdf", "delete-pages", "split-pdf"],
   "compress": ["merge-pdf", "split-pdf", "flatten-pdf", "pdf-to-image"],
   "pdf-to-word": ["word-to-pdf", "pdf-to-excel", "pdf-to-text", "pdf-ozetle"],
   "word-to-pdf": ["pdf-to-word", "merge-pdf", "compress", "watermark"],
