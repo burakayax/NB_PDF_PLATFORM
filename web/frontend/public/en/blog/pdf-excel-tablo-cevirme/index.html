@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>How to Convert PDF to Excel: Export Tables to .xlsx (2026) — PDF Platform</title>
+    <meta name="description" content="Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/pdf-excel-tablo-cevirme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-excel-tablo-cevirme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="How to Convert PDF to Excel: Export Tables to .xlsx (2026) — PDF Platform" />
+    <meta property="og:description" content="Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="How to Convert PDF to Excel: Export Tables to .xlsx (2026) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/pdf-excel-tablo-cevirme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="How to Convert PDF to Excel: Export Tables to .xlsx (2026) — PDF Platform" />
+    <meta name="twitter:description" content="Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="How to Convert PDF to Excel: Export Tables to .xlsx (2026) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Convert PDF to Excel: Export Tables to .xlsx (2026)","description":"Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/pdf-excel-tablo-cevirme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image-en.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"How to Convert PDF to Excel: Export Tables to .xlsx (2026)","description":"Export tables from a PDF into an editable Excel (.xlsx) file. When plain conversion is enough and when AI data extraction is better — step by step.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Upload the PDF","text":"Add your document with tables to the PDF to Excel tool."},{"@type":"HowToStep","position":2,"name":"Tables get extracted","text":"The table structure on the pages is detected and written to .xlsx with rows/columns preserved."},{"@type":"HowToStep","position":3,"name":"Download the Excel file","text":"Download the result and edit, filter and calculate directly in Excel."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I convert a PDF to Excel?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF to the tool; tables are detected and exported to an editable .xlsx file with rows/columns preserved."}},{"@type":"Question","name":"What if the table doesn't come out clean?","acceptedAnswer":{"@type":"Answer","text":"If the document has a variable layout like invoices, try the Extract Data tool instead of plain conversion; it extracts fields and line items as structured data."}},{"@type":"Question","name":"Can I combine several documents into one table?","acceptedAnswer":{"@type":"Answer","text":"Yes. With the AI Batch tool you can process several documents and merge their data into a single CSV table."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>How to Convert PDF to Excel: Export Tables to .xlsx (2026)</h1><p class="seo-intro">If you want to work with a PDF table in Excel, copy-paste usually breaks the alignment. Here&#39;s how to export tables cleanly to .xlsx — and when AI is the better choice.</p><article class="seo-article"><p class="seo-lead">To analyze a report, price list or table from a PDF in Excel, you first need the data to land in proper cells. Copy-paste usually dumps everything into one column. Here&#39;s how to export tables cleanly to Excel.</p><h2>Step by step</h2><ol><li><strong>Upload the PDF:</strong> Add your document with tables to the PDF to Excel tool.</li><li><strong>Tables get extracted:</strong> The table structure on the pages is detected and written to .xlsx with rows/columns preserved.</li><li><strong>Download the Excel file:</strong> Download the result and edit, filter and calculate directly in Excel.</li></ol><p><a href="/tools/pdf-to-excel"><strong>PDF to Excel</strong> — Export PDF tables into an editable Excel file.</a></p><h2>Plain conversion or AI?</h2><p>If the PDF has clean, grid-like tables, plain conversion is fast and enough. But if you need to pull fields from documents that each have a different layout — like invoices (invoice no, date, totals, line items) — AI data extraction is far more accurate.</p><p>To gather dozens of invoices into a single CSV table, the Extract Data and Batch tools are built for exactly this — merging one row per document.</p><p><a href="/tools/pdf-veri-cikar"><strong>Extract Data</strong> — Pull fields from complex documents like invoices with AI.</a></p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-to-excel">PDF to Excel converter online</a></li><li><a href="/en/tools/pdf-veri-cikar">PDF Data Extraction</a></li><li><a href="/en/tools/ai-toplu-islem">AI Batch</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I convert a PDF to Excel?</h3><p>Upload the PDF to the tool; tables are detected and exported to an editable .xlsx file with rows/columns preserved.</p></div><div class="seo-faq-item"><h3>What if the table doesn&#39;t come out clean?</h3><p>If the document has a variable layout like invoices, try the Extract Data tool instead of plain conversion; it extracts fields and line items as structured data.</p></div><div class="seo-faq-item"><h3>Can I combine several documents into one table?</h3><p>Yes. With the AI Batch tool you can process several documents and merge their data into a single CSV table.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

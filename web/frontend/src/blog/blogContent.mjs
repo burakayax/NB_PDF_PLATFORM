@@ -2821,6 +2821,172 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "ilovepdf-alternatifi-cihazda-ucretsiz",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 5,
+      tags: { tr: ["Karşılaştırma", "Gizlilik"], en: ["Comparison", "Privacy"] },
+      accent: "cyan",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları",
+      description:
+        "iLovePDF'ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın.",
+      excerpt:
+        "iLovePDF alternatifi ararken en kritik soru: dosyam nereye gidiyor? Cihazda çalışan, üyeliksiz ve zorunlu filigransız araçlarla dürüst bir karşılaştırma.",
+      blocks: [
+        { t: "lead", x: "iLovePDF popüler bir araç, ama çoğu işlemde dosyanız önce sunucularına yüklenir. Hassas bir sözleşme, kimlik ya da mali tabloyu işlerken bu bir soru işareti bırakır. İşte dosyanızı cihazınızdan çıkarmadan aynı işleri yapmanın yolu." },
+        { t: "h2", x: "iLovePDF'de dosyanız nereye gidiyor?" },
+        { t: "p", x: "iLovePDF gibi çoğu online araçta birleştirme, bölme veya dönüştürme için dosyanız sunucuya yüklenir, orada işlenir ve sonra silinir. Genelde güvenlidir; ama dosya yine de bir süre internete çıkar. Gizli belgelerde en güvenli yaklaşım, dosyanın cihazdan hiç ayrılmamasıdır." },
+        { t: "h2", x: "Bir alternatifte neye bakmalısınız?" },
+        { t: "ul", items: [
+          "Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcınızda mı işleniyor?",
+          "Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu?",
+          "Üyelik zorunluluğu: Basit bir işlem için hesap isteniyor mu?",
+          "Günlük/işlem sınırı: Ücretsizde kaç işlem yapabiliyorsunuz?",
+        ] },
+        { t: "h2", x: "PDF Platform'un farkı: yapısal araçlar cihazda çalışır" },
+        { t: "p", x: "PDF Platform'da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal işlemler tamamen tarayıcınızda (cihazınızda) çalışır — dosyanız internete hiç gönderilmez. Üyelik gerekmez, ücretsiz çıktıya zorunlu filigran eklenmez ve internet kesilse bile çalışır." },
+        { t: "cta", title: "PDF Birleştir", x: "Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — cihazınızda, ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Hangi araçlar cihazda, hangileri sunucuda?" },
+        { t: "p", x: "Dürüst olmak gerekirse her işlem tarayıcıda yapılamaz. Ayrımı net söyleyelim:" },
+        { t: "ul", items: [
+          "Cihazda (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, görsel → PDF, belge tara, imza ve işaretleme.",
+          "Sunucuda (içerik saklanmaz, şifreli bağlantı): Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları (özet, sohbet, çeviri).",
+        ] },
+        { t: "tip", x: "Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz." },
+      ],
+      faq: [
+        { q: "iLovePDF'ye tamamen ücretsiz bir alternatif var mı?", a: "Evet. PDF Platform'da birleştir, böl, döndür, sil gibi yapısal araçlar üyeliksiz, ücretsiz ve zorunlu filigransızdır; işlem tarayıcınızda çalışır." },
+        { q: "Dosyam gerçekten sunucuya yüklenmiyor mu?", a: "Yapısal araçlarda (birleştir, böl, döndür, sil, sırala, görsel → PDF) dosyanız tamamen cihazınızda işlenir, internete hiç gönderilmez. Dönüştürme ve OCR gibi işlemler sunucuda yapılır ancak içerik saklanmaz." },
+        { q: "Ücretsiz çıktıya filigran ekleniyor mu?", a: "Hayır. PDF Platform ücretsiz çıktılara zorunlu filigran eklemez." },
+        { q: "Üye olmadan kullanabilir miyim?", a: "Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız." },
+      ],
+    },
+    {
+      title: "iLovePDF Alternative: Free PDF Tools That Keep Your File On Your Device",
+      description:
+        "Looking for a free, private alternative to iLovePDF? Use merge, split, rotate and delete right in your browser — your file is never uploaded to a server.",
+      excerpt:
+        "The key question when looking for an iLovePDF alternative: where does my file go? An honest comparison with tools that run on-device, need no signup and add no forced watermark.",
+      blocks: [
+        { t: "lead", x: "iLovePDF is popular, but for most operations your file is uploaded to its servers first. When you're handling a sensitive contract, ID or financial statement, that leaves a question mark. Here's how to do the same tasks without your file ever leaving your device." },
+        { t: "h2", x: "Where does your file go in iLovePDF?" },
+        { t: "p", x: "In most online tools like iLovePDF, merging, splitting or converting uploads your file to a server, processes it there, and then deletes it. It's usually safe, but the file still goes to the internet for a while. For confidential documents, the safest approach is for the file to never leave your device." },
+        { t: "h2", x: "What to look for in an alternative" },
+        { t: "ul", items: [
+          "Privacy: Is the file uploaded to a server, or processed in your browser?",
+          "Forced watermark: Is a stamp added to the free output?",
+          "Signup requirement: Does a simple task require an account?",
+          "Daily/usage limits: How many operations can you do for free?",
+        ] },
+        { t: "h2", x: "The PDF Platform difference: structural tools run on-device" },
+        { t: "p", x: "On PDF Platform, structural operations like merge, split, rotate, delete pages, reorder pages and image-to-PDF run entirely in your browser (on your device) — your file is never sent to the internet. No signup is required, no forced watermark is added to the free output, and it even works when your connection drops." },
+        { t: "cta", title: "Merge PDF", x: "Add your files, reorder and download one PDF — on your device, free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Which tools run on-device, which on the server?" },
+        { t: "p", x: "To be honest, not every operation can run in the browser. Here's the clear split:" },
+        { t: "ul", items: [
+          "On-device (file never leaves): merge, split, rotate, delete pages, reorder pages, image → PDF, document scan, sign and annotate.",
+          "On the server (content not stored, encrypted connection): Word/Excel/PowerPoint conversion, OCR, compression and AI tools (summarize, chat, translate).",
+        ] },
+        { t: "tip", x: "If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing." },
+      ],
+      faq: [
+        { q: "Is there a completely free alternative to iLovePDF?", a: "Yes. On PDF Platform, structural tools like merge, split, rotate and delete are free, need no signup and add no forced watermark; processing runs in your browser." },
+        { q: "Is my file really not uploaded to a server?", a: "For structural tools (merge, split, rotate, delete, reorder, image → PDF) your file is processed entirely on your device and never sent to the internet. Operations like conversion and OCR run on the server, but content is not stored." },
+        { q: "Is a watermark added to the free output?", a: "No. PDF Platform does not add a forced watermark to free output." },
+        { q: "Can I use it without an account?", a: "Yes. The basic tools need no account or installation; you work directly in the browser." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "cv-ozgecmis-word-pdf-cevirme",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 4,
+      tags: { tr: ["Nasıl Yapılır", "Dönüştürme"], en: ["How-to", "Conversion"] },
+      accent: "blue",
+      tool: "/tools/word-to-pdf",
+    },
+    {
+      title: "CV'yi (Özgeçmiş) Word'den PDF'e Çevirme — İş Başvurusu İçin Doğru Yöntem",
+      description:
+        "Word'de hazırladığınız özgeçmişi biçimi bozulmadan PDF'e çevirin. İşverenlerin beklediği profesyonel format, doğru dosya adı ve adım adım dönüştürme.",
+      excerpt:
+        "İş başvurusunda CV'nizi neden PDF göndermelisiniz ve Word'den biçimi bozulmadan nasıl çevirirsiniz — adım adım.",
+      blocks: [
+        { t: "lead", x: "Bir CV, işverenin sizinle ilgili gördüğü ilk belgedir. Word'de hazırladığınız özgeçmiş farklı bilgisayarlarda kayabilir, yazı tipleri değişebilir. Çözüm basit: göndermeden önce PDF'e çevirmek." },
+        { t: "h2", x: "CV neden PDF olarak gönderilmeli?" },
+        { t: "ul", items: [
+          "Her cihazda aynı görünür: Yazı tipleri, satır aralıkları ve düzen, açan kişiden bağımsız olarak korunur.",
+          "Profesyonel standart: Çoğu işveren ve kariyer portalı PDF'i tercih eder, hatta zorunlu tutar.",
+          "Yanlışlıkla değişmez: Word dosyası açılırken kayabilir; PDF sabittir.",
+        ] },
+        { t: "h2", x: "Word CV'yi PDF'e çevirme — adım adım" },
+        { t: "steps", items: [
+          { title: "Word dosyanızı yükleyin", x: "Word'den PDF'e aracına .doc veya .docx özgeçmişinizi sürükleyip bırakın." },
+          { title: "Dönüştürün", x: "\"Dönüştür\" deyin; yazı tipleri, tablolar ve düzen korunarak PDF anında hazırlanır." },
+          { title: "İndirin ve adlandırın", x: "PDF'i indirin ve \"Ad_Soyad_CV.pdf\" gibi düzgün bir adla kaydedin." },
+        ] },
+        { t: "cta", title: "Word'ü PDF'e Çevir", x: "Özgeçmişinizi yükleyin, biçimi bozulmadan PDF olarak indirin — ücretsiz.", btn: "Aracı aç", tool: "/tools/word-to-pdf" },
+        { t: "h2", x: "Göndermeden önce son kontroller" },
+        { t: "ul", items: [
+          "Dosya adı profesyonel mi? \"belge1.pdf\" yerine \"Ad_Soyad_CV.pdf\".",
+          "PDF'te yazı tipleri ve hizalama Word'deki gibi mi görünüyor?",
+          "Fotoğraf ve bağlantılar (LinkedIn, e-posta) doğru yerinde mi?",
+          "Dosya çok büyükse \"PDF Küçült\" ile e-posta boyutuna indirin.",
+        ] },
+        { t: "tip", x: "Birden çok belgeyi (CV + ön yazı + sertifikalar) tek dosyada göndermeniz istenirse, PDF'e çevirdikten sonra \"PDF Birleştir\" ile tek belgede toplayabilirsiniz." },
+      ],
+      faq: [
+        { q: "Word CV'yi PDF'e çevirince biçim bozulur mu?", a: "Hayır. Word'den PDF'e aracı yazı tiplerini, tabloları ve düzeni koruyarak dönüştürür; CV'niz her cihazda aynı görünür." },
+        { q: "CV'yi PDF yapmak ücretsiz mi?", a: "Evet. Word belgenizi yükleyip PDF'i anında oluşturabilir ve indirebilirsiniz." },
+        { q: "Dosya adını ne yapmalıyım?", a: "\"Ad_Soyad_CV.pdf\" gibi net bir ad kullanın; işverenler bunu profesyonel bulur ve dosyanızı kolayca bulur." },
+        { q: "CV ve ön yazıyı tek PDF yapabilir miyim?", a: "Evet. Her ikisini PDF'e çevirdikten sonra \"PDF Birleştir\" aracıyla tek belgede toplayabilirsiniz." },
+      ],
+    },
+    {
+      title: "How to Convert a CV (Résumé) From Word to PDF the Right Way",
+      description:
+        "Convert your Word résumé to PDF without breaking the formatting. The professional format employers expect, the right file name, and step-by-step conversion.",
+      excerpt:
+        "Why you should send your CV as a PDF for job applications, and how to convert it from Word without breaking the formatting — step by step.",
+      blocks: [
+        { t: "lead", x: "A CV is the first document an employer sees about you. A résumé built in Word can shift on different computers and its fonts can change. The fix is simple: convert it to PDF before sending." },
+        { t: "h2", x: "Why should a CV be sent as a PDF?" },
+        { t: "ul", items: [
+          "Looks the same on every device: Fonts, line spacing and layout are preserved regardless of who opens it.",
+          "Professional standard: Most employers and career portals prefer, or even require, PDF.",
+          "Won't change by accident: A Word file can shift when opened; a PDF is fixed.",
+        ] },
+        { t: "h2", x: "Convert a Word CV to PDF — step by step" },
+        { t: "steps", items: [
+          { title: "Upload your Word file", x: "Drag and drop your .doc or .docx résumé into the Word-to-PDF tool." },
+          { title: "Convert", x: "Click \"Convert\"; the PDF is prepared instantly with fonts, tables and layout preserved." },
+          { title: "Download and name it", x: "Download the PDF and save it with a clean name like \"First_Last_CV.pdf\"." },
+        ] },
+        { t: "cta", title: "Convert Word to PDF", x: "Upload your résumé and download it as a PDF without breaking the formatting — free.", btn: "Open the tool", tool: "/tools/word-to-pdf" },
+        { t: "h2", x: "Final checks before you send" },
+        { t: "ul", items: [
+          "Is the file name professional? Use \"First_Last_CV.pdf\" instead of \"document1.pdf\".",
+          "Do the fonts and alignment in the PDF match the Word version?",
+          "Are the photo and links (LinkedIn, email) in the right place?",
+          "If the file is too big, shrink it to email size with \"Compress PDF\".",
+        ] },
+        { t: "tip", x: "If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with \"Merge PDF\"." },
+      ],
+      faq: [
+        { q: "Does converting a Word CV to PDF break the formatting?", a: "No. The Word-to-PDF tool preserves fonts, tables and layout, so your CV looks the same on every device." },
+        { q: "Is converting a CV to PDF free?", a: "Yes. Upload your Word document and create and download the PDF instantly." },
+        { q: "What should I name the file?", a: "Use a clear name like \"First_Last_CV.pdf\"; employers find it professional and can locate your file easily." },
+        { q: "Can I combine my CV and cover letter into one PDF?", a: "Yes. After converting both to PDF, combine them into one document with the \"Merge PDF\" tool." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
