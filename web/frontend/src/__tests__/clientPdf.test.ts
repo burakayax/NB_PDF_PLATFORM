@@ -11,6 +11,7 @@ import {
   reorderPages,
   getPdfPageCount,
   splitPagesToZip,
+  cropPdf,
   pdfBytesToBlob,
   zipBytesToBlob,
   PdfEncryptedError,
@@ -34,6 +35,28 @@ async function pageCount(bytes: Uint8Array): Promise<number> {
 }
 
 // ─── Birleştirme ──────────────────────────────────────────────────────────────
+describe("cropPdf", () => {
+  it("CropBox'ı oranlı dikdörtgene ayarlar (üst-tabanlı → alt-sol origin)", async () => {
+    const out = await cropPdf(await makePdf(1), { xNorm: 0.1, yNorm: 0.1, wNorm: 0.8, hNorm: 0.8 });
+    const doc = await PDFDocument.load(out);
+    const cb = doc.getPage(0).getCropBox();
+    // Sayfa 300×400: w=240, h=320, x=30, y=400-40-320=40
+    expect(Math.round(cb.width)).toBe(240);
+    expect(Math.round(cb.height)).toBe(320);
+    expect(Math.round(cb.x)).toBe(30);
+    expect(Math.round(cb.y)).toBe(40);
+  });
+  it("yalnızca hedef sayfaları kırpar", async () => {
+    const out = await cropPdf(await makePdf(2), { xNorm: 0, yNorm: 0, wNorm: 0.5, hNorm: 1 }, [0]);
+    const doc = await PDFDocument.load(out);
+    expect(Math.round(doc.getPage(0).getCropBox().width)).toBe(150); // kırpıldı
+    expect(Math.round(doc.getPage(1).getCropBox().width)).toBe(300); // dokunulmadı
+  });
+  it("boş alan hata verir", async () => {
+    await expect(cropPdf(await makePdf(1), { xNorm: 0, yNorm: 0, wNorm: 0, hNorm: 0.5 })).rejects.toThrow();
+  });
+});
+
 describe("mergePdfs", () => {
   it("sayfa sayılarını toplar", async () => {
     const out = await mergePdfs([await makePdf(2), await makePdf(3)]);

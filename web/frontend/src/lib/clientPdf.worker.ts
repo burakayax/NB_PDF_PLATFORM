@@ -12,6 +12,7 @@ import {
   reorderPages,
   splitPagesToZip,
   getPdfPageCount,
+  cropPdf,
   applySignatures,
   applyAnnotations,
 } from "./clientPdf";
@@ -26,6 +27,7 @@ const ops: Record<string, Op> = {
   reorderPages,
   splitPagesToZip,
   getPdfPageCount,
+  cropPdf,
   applySignatures,
   applyAnnotations,
 };
