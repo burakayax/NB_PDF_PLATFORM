@@ -3267,6 +3267,85 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "pdf-kirpma-kenar-boslugu-kesme",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 4,
+      tags: { tr: ["Nasıl Yapılır", "Kırpma"], en: ["How-to", "Crop"] },
+      accent: "cyan",
+      tool: "/tools/crop-pdf",
+    },
+    {
+      title: "PDF Kırpma: Kenar Boşluklarını Kesme ve Sayfayı Daraltma (Ücretsiz)",
+      description:
+        "PDF sayfalarını tarayıcınızda kırpın: kenar boşluklarını kesin, tabloya/grafiğe odaklanın ya da üst/alt bilgiyi çıkarın — dosyanız cihazınızdan çıkmadan, ücretsiz.",
+      excerpt:
+        "Taranmış belgelerin geniş boşlukları, tek bir tabloya odaklanma ya da üst/alt bilgiyi çıkarma... PDF'i cihazınızda nasıl kırparsınız — adım adım.",
+      blocks: [
+        { t: "lead", x: "Taranmış bir belgenin kocaman beyaz kenarları mı var, yoksa bir sayfadaki tek bir tabloya mı odaklanmak istiyorsunuz? PDF kırpma, sayfanın görünür alanını istediğiniz dikdörtgene daraltır — hem de dosyanız cihazınızdan hiç çıkmadan." },
+        { t: "h2", x: "PDF kırpma ne işe yarar?" },
+        { t: "ul", items: [
+          "Taranmış belgelerdeki geniş kenar boşluklarını kesmek.",
+          "Bir sayfadaki tek bir tabloya, grafiğe veya bölüme odaklanmak.",
+          "Tekrar eden üst bilgi/alt bilgi (header/footer) alanını görünümden çıkarmak.",
+          "Sunum veya baskı için sayfayı düzgün bir çerçeveye getirmek.",
+        ] },
+        { t: "h2", x: "PDF nasıl kırpılır — adım adım" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "Kırpma aracına PDF'inizi sürükleyip bırakın; ilk sayfa önizlemede açılır." },
+          { title: "Kırpma kutusunu ayarlayın", x: "Kutuyu sürükleyerek taşıyın, köşelerden veya kenarlardan boyutlandırarak tutmak istediğiniz alanı seçin." },
+          { title: "Kapsamı seçip indirin", x: "'Tüm sayfalar' ya da 'Yalnız bu sayfa' deyin ve 'Kırp ve İndir' ile sonucu alın." },
+        ] },
+        { t: "cta", title: "PDF Kırp", x: "Kutuyu sürükleyip boyutlandırın, kırpın ve indirin — cihazınızda, ücretsiz.", btn: "Aracı aç", tool: "/tools/crop-pdf" },
+        { t: "h2", x: "Kırpma içeriği siler mi?" },
+        { t: "p", x: "Hayır. Kırpma, sayfanın görünür alanını (CropBox) daraltan standart bir PDF işlemidir; kalan alan net biçimde görüntülenir ve yazdırılır. İşlem tamamen tarayıcınızda çalışır, dosyanız sunucuya gitmez." },
+        { t: "tip", x: "Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın." },
+      ],
+      faq: [
+        { q: "PDF nasıl kırpılır?", a: "PDF'inizi yükleyin, kırpma kutusunu sürükleyip köşelerden boyutlandırarak istediğiniz alanı seçin ve 'Kırp ve İndir' deyin. İşlem cihazınızda yapılır." },
+        { q: "Kenar boşluklarını kesebilir miyim?", a: "Evet. Kutuyu içeri doğru daraltarak taranmış belgelerdeki geniş beyaz kenarları kesebilirsiniz." },
+        { q: "Kırpma tüm sayfalara mı uygulanır?", a: "İkisi de mümkün. 'Tüm sayfalar' ya da 'Yalnız bu sayfa' ile istediğiniz kapsama uygulayabilirsiniz." },
+        { q: "Dosyam sunucuya yüklenir mi?", a: "Hayır. Kırpma tamamen tarayıcınızda (cihazınızda) çalışır; dosyanız internete hiç gönderilmez, %100 gizlidir." },
+        { q: "PDF kırpmak ücretsiz mi?", a: "Evet. Kırpma üyeliksiz ve ücretsizdir; kurulum gerekmez, doğrudan tarayıcıda çalışır." },
+      ],
+    },
+    {
+      title: "How to Crop a PDF: Trim Margins and Focus the Page (Free)",
+      description:
+        "Crop PDF pages in your browser: trim margins, focus on a table or chart, or remove headers/footers — your file never leaves your device, free.",
+      excerpt:
+        "Wide margins on scanned documents, focusing on a single table, or removing headers/footers... how to crop a PDF on your device — step by step.",
+      blocks: [
+        { t: "lead", x: "Got a scanned document with huge white borders, or want to focus on a single table on a page? Cropping a PDF narrows the visible area to any rectangle you choose — and your file never leaves your device." },
+        { t: "h2", x: "What is cropping a PDF good for?" },
+        { t: "ul", items: [
+          "Trimming the wide margins on scanned documents.",
+          "Focusing on a single table, chart or section on a page.",
+          "Removing repeating header/footer areas from view.",
+          "Framing the page neatly for presentation or printing.",
+        ] },
+        { t: "h2", x: "How to crop a PDF — step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Drag and drop your PDF into the crop tool; the first page opens in the preview." },
+          { title: "Set the crop box", x: "Drag the box to move it, and resize from the corners or edges to select the area you want to keep." },
+          { title: "Choose scope and download", x: "Pick 'All pages' or 'This page only' and click 'Crop & Download' to get the result." },
+        ] },
+        { t: "cta", title: "Crop PDF", x: "Drag and resize the box, crop and download — on your device, free.", btn: "Open the tool", tool: "/tools/crop-pdf" },
+        { t: "h2", x: "Does cropping delete content?" },
+        { t: "p", x: "No. Cropping is a standard PDF operation that narrows the page's visible area (CropBox); the remaining area displays and prints cleanly. It runs entirely in your browser, and your file is not sent to a server." },
+        { t: "tip", x: "To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool." },
+      ],
+      faq: [
+        { q: "How do I crop a PDF?", a: "Upload your PDF, drag and resize the crop box from the corners to select the area you want, and click 'Crop & Download'. It happens on your device." },
+        { q: "Can I trim the margins?", a: "Yes. Narrow the box inward to cut the wide white borders on scanned documents." },
+        { q: "Is the crop applied to all pages?", a: "Either way. Use 'All pages' or 'This page only' to apply it to the scope you want." },
+        { q: "Is my file uploaded to a server?", a: "No. Cropping runs entirely in your browser (on your device); your file is never sent to the internet and stays 100% private." },
+        { q: "Is cropping a PDF free?", a: "Yes. Cropping is free and needs no signup or installation; it runs directly in the browser." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
