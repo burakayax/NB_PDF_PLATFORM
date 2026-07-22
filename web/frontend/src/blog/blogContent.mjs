@@ -2987,6 +2987,154 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "smallpdf-alternatifi-sinirsiz-ucretsiz",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 5,
+      tags: { tr: ["Karşılaştırma", "Ücretsiz"], en: ["Comparison", "Free"] },
+      accent: "violet",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "SmallPDF Alternatifi: Günlük Sınır ve Filigran Olmadan Ücretsiz PDF Araçları",
+      description:
+        "SmallPDF'nin günlük işlem sınırı ve üyelik baskısı olmadan PDF araçları arıyorsanız: birleştir, böl, döndür, sıkıştır — sınırsız, üyeliksiz ve cihazınızda.",
+      excerpt:
+        "SmallPDF alternatifi ararken en çok takılınan yer: günlük işlem sınırı ve üyelik duvarı. Sınırsız, üyeliksiz ve zorunlu filigransız araçlarla karşılaştırma.",
+      blocks: [
+        { t: "lead", x: "SmallPDF iyi bir araç, ama ücretsiz kullanımda günlük işlem sınırına ve sık sık üyelik/Pro duvarına takılırsınız. Peki aynı işleri sınır olmadan, üye olmadan yapmak mümkün mü? Evet." },
+        { t: "h2", x: "SmallPDF ücretsiz sürümünün sınırları" },
+        { t: "ul", items: [
+          "Günlük işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemeniz ya da Pro'ya geçmeniz istenir.",
+          "Üyelik/Pro baskısı: Bazı araçlar veya toplu işlemler hesap ister.",
+          "Yükleme: Çoğu işlemde dosyanız sunucuya gider.",
+        ] },
+        { t: "h2", x: "PDF Platform'da sınır yok, üyelik yok" },
+        { t: "p", x: "PDF Platform'da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal araçlar üyeliksiz, günlük sınır olmadan ve zorunlu filigran eklenmeden çalışır. Üstelik bu işlemler tamamen tarayıcınızda (cihazınızda) yapılır — dosyanız sunucuya hiç gitmez." },
+        { t: "cta", title: "PDF Birleştir", x: "Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — sınırsız ve ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Hangi işler ücretsiz, hangileri hesap ister?" },
+        { t: "p", x: "Dürüst ayrım: yapısal araçlar tamamen ücretsiz ve üyeliksizdir. Word/Excel dönüştürme, OCR ve yapay zekâ araçları (özet, sohbet, çeviri) sunucuda çalışır; bunlar için daha büyük dosyalar ve geçmiş kaydı hesap gerektirir ancak içerik saklanmaz." },
+        { t: "ul", items: [
+          "Sınırsız & üyeliksiz: birleştir, böl, döndür, sil, sırala, görsel → PDF, belge tara, imza, işaretleme.",
+          "Hesap/plan: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve AI araçları (daha büyük dosya + geçmiş için).",
+        ] },
+        { t: "tip", x: "Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz." },
+      ],
+      faq: [
+        { q: "SmallPDF'ye ücretsiz ve sınırsız bir alternatif var mı?", a: "Evet. PDF Platform'da yapısal araçlar (birleştir, böl, döndür, sil, sırala, görsel → PDF) üyeliksiz, günlük sınır olmadan ve zorunlu filigransız çalışır." },
+        { q: "Günlük işlem sınırı var mı?", a: "Cihazda çalışan yapısal araçlarda günlük işlem sınırı yoktur; istediğiniz kadar kullanabilirsiniz." },
+        { q: "Üye olmadan kullanabilir miyim?", a: "Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız." },
+        { q: "Dosyalarım sunucuya yükleniyor mu?", a: "Yapısal araçlarda dosyanız tamamen cihazınızda işlenir, sunucuya gitmez. Dönüştürme/OCR gibi işlemler sunucuda yapılır ama içerik saklanmaz." },
+      ],
+    },
+    {
+      title: "SmallPDF Alternative: Free PDF Tools With No Daily Limit or Watermark",
+      description:
+        "Want PDF tools without SmallPDF's daily task limit and signup pressure? Merge, split, rotate and compress — unlimited, no signup, and on your device.",
+      excerpt:
+        "The usual snag when looking for a SmallPDF alternative: the daily task limit and the signup wall. A comparison with unlimited, signup-free, watermark-free tools.",
+      blocks: [
+        { t: "lead", x: "SmallPDF is a solid tool, but on the free tier you hit a daily task limit and frequent signup/Pro walls. Is it possible to do the same tasks with no limit and no account? Yes." },
+        { t: "h2", x: "The limits of SmallPDF's free tier" },
+        { t: "ul", items: [
+          "Daily task limit: After a set number of free tasks you're asked to wait or upgrade to Pro.",
+          "Signup/Pro pressure: Some tools or batch operations require an account.",
+          "Upload: For most operations your file goes to a server.",
+        ] },
+        { t: "h2", x: "On PDF Platform there's no limit and no signup" },
+        { t: "p", x: "On PDF Platform, structural tools like merge, split, rotate, delete pages, reorder pages and image-to-PDF work with no signup, no daily limit and no forced watermark. And these operations run entirely in your browser (on your device) — your file never goes to a server." },
+        { t: "cta", title: "Merge PDF", x: "Add your files, reorder and download one PDF — unlimited and free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Which tasks are free, which need an account?" },
+        { t: "p", x: "The honest split: structural tools are fully free and signup-free. Word/Excel conversion, OCR and AI tools (summarize, chat, translate) run on the server; those need an account for larger files and history, but content is not stored." },
+        { t: "ul", items: [
+          "Unlimited & signup-free: merge, split, rotate, delete, reorder, image → PDF, document scan, sign, annotate.",
+          "Account/plan: Word/Excel/PowerPoint conversion, OCR, compression and AI tools (for larger files + history).",
+        ] },
+        { t: "tip", x: "If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device." },
+      ],
+      faq: [
+        { q: "Is there a free, unlimited alternative to SmallPDF?", a: "Yes. On PDF Platform, structural tools (merge, split, rotate, delete, reorder, image → PDF) work with no signup, no daily limit and no forced watermark." },
+        { q: "Is there a daily task limit?", a: "The on-device structural tools have no daily task limit; use them as much as you like." },
+        { q: "Can I use it without an account?", a: "Yes. The basic tools need no account or installation; you work directly in the browser." },
+        { q: "Are my files uploaded to a server?", a: "For structural tools your file is processed entirely on your device and not sent to a server. Conversion/OCR run on the server, but content is not stored." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "pdf-form-doldurma-online-ucretsiz",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 4,
+      tags: { tr: ["Nasıl Yapılır", "Form"], en: ["How-to", "Forms"] },
+      accent: "emerald",
+      tool: "/tools/pdf-yorumla",
+    },
+    {
+      title: "PDF Form Doldurma: Yazdırmadan, Online ve Ücretsiz (Düz Formlar Dahil)",
+      description:
+        "PDF formlarını yazdırmadan bilgisayarda doldurun. Doldurulabilir alanı olmayan (düz/taranmış) formlara bile metin ekleyip imzalayın — ücretsiz ve kolay.",
+      excerpt:
+        "Elinize gelen PDF formu yazdırıp elle doldurmaya gerek yok. Doldurulabilir alanı olsun olmasın, PDF'e nasıl metin ekleyip imzalarsınız — adım adım.",
+      blocks: [
+        { t: "lead", x: "Başvuru, sözleşme ya da dilekçe... Çoğu PDF form aslında \"düz\"dür; yani içinde tıklayıp yazabileceğiniz hazır alan yoktur. Yazdırıp elle doldurmak yerine, metni doğrudan formun üzerine ekleyebilirsiniz." },
+        { t: "h2", x: "İki tür PDF form vardır" },
+        { t: "ul", items: [
+          "Doldurulabilir (interaktif) form: İçinde hazır alanlar vardır; herhangi bir PDF okuyucuda alanlara tıklayıp yazabilirsiniz.",
+          "Düz form: Çoğu resmi/taranmış belge böyledir; hazır alan yoktur. Bunlarda metni formun uygun yerine \"üzerine\" eklemeniz gerekir.",
+        ] },
+        { t: "h2", x: "Düz bir PDF formunu doldurma — adım adım" },
+        { t: "steps", items: [
+          { title: "Formu yükleyin", x: "PDF formunuzu işaretleme/metin aracına yükleyin." },
+          { title: "Metin ekleyin", x: "Metin/not aracıyla ilgili boşluğa tıklayıp cevabınızı yazın; her alana ayrı kutu ekleyebilirsiniz." },
+          { title: "İmzalayın ve indirin", x: "Gerekiyorsa imzanızı ekleyip \"Uygula ve İndir\" ile doldurulmuş PDF'i indirin." },
+        ] },
+        { t: "cta", title: "PDF'e Metin/İşaret Ekle", x: "Formunuzu yükleyin, boşluklara metin ekleyin ve doldurulmuş PDF'i indirin — ücretsiz.", btn: "Aracı aç", tool: "/tools/pdf-yorumla" },
+        { t: "h2", x: "İmza gerekiyorsa" },
+        { t: "p", x: "Form imza istiyorsa, metni ekledikten sonra imzanızı çizip/yazıp yerleştirebilirsiniz. İmzalama tamamen cihazınızda yapılır; belgeniz sunucuya gitmez." },
+        { t: "tip", x: "Onay kutuları için küçük bir \"X\" veya \"✓\" metni ekleyebilirsiniz. Formu birden çok sayfaysa her sayfaya ayrı ayrı metin/işaret ekleyebilirsiniz." },
+      ],
+      faq: [
+        { q: "Doldurulabilir alanı olmayan PDF'i doldurabilir miyim?", a: "Evet. Düz (interaktif alanı olmayan) formlarda metni doğrudan formun üzerine ekleyebilirsiniz; yazdırmaya gerek kalmaz." },
+        { q: "PDF form doldurmak ücretsiz mi?", a: "Evet. Formunuzu yükleyip metin ekleyebilir ve doldurulmuş PDF'i indirebilirsiniz." },
+        { q: "Doldurduğum formu imzalayabilir miyim?", a: "Evet. Metni ekledikten sonra imzanızı çizip yerleştirebilirsiniz; imzalama cihazınızda yapılır, dosya sunucuya gitmez." },
+        { q: "Formu telefonda doldurabilir miyim?", a: "Evet. Araç tarayıcı tabanlıdır; Android, iPhone ve iPad dahil her cihazda çalışır." },
+      ],
+    },
+    {
+      title: "How to Fill Out a PDF Form Online for Free (Flat Forms Too)",
+      description:
+        "Fill PDF forms on your computer without printing. Even for forms with no fillable fields (flat/scanned), add text and sign — free and easy.",
+      excerpt:
+        "No need to print and hand-fill a PDF form you received. Whether it has fillable fields or not, here's how to add text and sign a PDF — step by step.",
+      blocks: [
+        { t: "lead", x: "Applications, contracts, petitions... Most PDF forms are actually \"flat\" — they have no ready fields you can click and type into. Instead of printing and filling by hand, you can add text directly on top of the form." },
+        { t: "h2", x: "There are two kinds of PDF forms" },
+        { t: "ul", items: [
+          "Fillable (interactive) form: It has ready fields; you can click and type into them in any PDF reader.",
+          "Flat form: Most official/scanned documents are like this; there are no ready fields. Here you add text \"on top\" at the right spot.",
+        ] },
+        { t: "h2", x: "Filling a flat PDF form — step by step" },
+        { t: "steps", items: [
+          { title: "Upload the form", x: "Upload your PDF form to the annotate/text tool." },
+          { title: "Add text", x: "With the text/note tool, click the relevant blank and type your answer; add a separate box for each field." },
+          { title: "Sign and download", x: "If needed, add your signature and download the filled PDF with \"Apply & download\"." },
+        ] },
+        { t: "cta", title: "Add Text/Markup to PDF", x: "Upload your form, add text to the blanks, and download the filled PDF — free.", btn: "Open the tool", tool: "/tools/pdf-yorumla" },
+        { t: "h2", x: "If a signature is required" },
+        { t: "p", x: "If the form asks for a signature, after adding your text you can draw/type your signature and place it. Signing happens entirely on your device; your document is not sent to a server." },
+        { t: "tip", x: "For checkboxes, add a small \"X\" or \"✓\" text. If the form has multiple pages, add text/marks to each page separately." },
+      ],
+      faq: [
+        { q: "Can I fill a PDF that has no fillable fields?", a: "Yes. On flat forms (no interactive fields) you add text directly on top of the form; no printing needed." },
+        { q: "Is filling a PDF form free?", a: "Yes. Upload your form, add text, and download the filled PDF." },
+        { q: "Can I sign the form I filled?", a: "Yes. After adding text, you can draw and place your signature; signing happens on your device and the file isn't uploaded." },
+        { q: "Can I fill the form on my phone?", a: "Yes. The tool is browser-based and works on any device — Android, iPhone, and iPad." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
