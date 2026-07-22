@@ -32,6 +32,20 @@ function canShareApi(): boolean {
   );
 }
 
+// Gerçek kaydırılan kapsayıcıyı bul (dashboard'da içerik `window` değil bir div'de
+// kayar). Bulamazsa null → window kullanılır. Oto-kaydırmanın her yerde çalışması için.
+function getScrollParent(el: HTMLElement | null): HTMLElement | null {
+  let node = el?.parentElement ?? null;
+  while (node) {
+    const s = getComputedStyle(node);
+    if (/(auto|scroll|overlay)/.test(s.overflowY) && node.scrollHeight > node.clientHeight + 1) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type Props = { language: Language };
@@ -129,6 +143,7 @@ export function PdfCropTool({ language }: Props) {
   const dragRef = useRef<{ handle: Handle; start: Rect; startPx: number; startPy: number } | null>(null);
   const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const autoScrollRef = useRef<number | null>(null);
+  const scrollElRef = useRef<HTMLElement | null>(null); // gerçek kaydırma kapsayıcısı (null=window)
 
   const loadFile = useCallback(
     async (file: File) => {
@@ -160,8 +175,10 @@ export function PdfCropTool({ language }: Props) {
       const canvas = canvasRef.current;
       if (!stage || !canvas) return;
       const maxW = Math.min(stage.clientWidth || 680, 820);
+      // Ekran YÜKSEKLİĞİNE de sığdır → uzun sayfa taşmaz, ortadaki kutu tümüyle görünür.
+      const maxH = Math.max(380, window.innerHeight - 240);
       const base = page.getViewport({ scale: 1 });
-      const scale = maxW / base.width;
+      const scale = Math.min(maxW / base.width, maxH / base.height);
       const vp = page.getViewport({ scale });
       canvas.width = Math.ceil(vp.width);
       canvas.height = Math.ceil(vp.height);
@@ -191,6 +208,7 @@ export function PdfCropTool({ language }: Props) {
     const startPy = rect ? (e.clientY - rect.top) / rect.height : 0;
     dragRef.current = { handle, start: { ...crop }, startPx, startPy };
     lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    scrollElRef.current = getScrollParent(stageRef.current); // hangi kapsayıcı kayacak?
     setDragging(true);
   };
 
@@ -238,8 +256,19 @@ export function PdfCropTool({ language }: Props) {
   };
   const maybeAutoScroll = (clientY: number) => {
     const EDGE = 90; // kenardan bu kadar px içerideyken kaydırmaya başla
-    const vh = window.innerHeight;
-    const dir = clientY > vh - EDGE ? 1 : clientY < EDGE ? -1 : 0;
+    const el = scrollElRef.current;
+    // Kaydırma kapsayıcısının görünür üst/alt sınırı (window ise tüm viewport).
+    let top: number;
+    let bottom: number;
+    if (el) {
+      const r = el.getBoundingClientRect();
+      top = r.top;
+      bottom = r.bottom;
+    } else {
+      top = 0;
+      bottom = window.innerHeight;
+    }
+    const dir = clientY > bottom - EDGE ? 1 : clientY < top + EDGE ? -1 : 0;
     if (dir === 0) {
       stopAutoScroll();
       return;
@@ -250,7 +279,8 @@ export function PdfCropTool({ language }: Props) {
         stopAutoScroll();
         return;
       }
-      window.scrollBy(0, dir * 7); // ~7px/kare → kontrollü, hızlı değil
+      if (el) el.scrollTop += dir * 7;
+      else window.scrollBy(0, dir * 7); // ~7px/kare → kontrollü, hızlı değil
       applyCropFromPointer(lastPointerRef.current.x, lastPointerRef.current.y);
       autoScrollRef.current = requestAnimationFrame(step);
     };
