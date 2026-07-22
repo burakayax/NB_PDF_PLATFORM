@@ -22,19 +22,21 @@ import { AiCompareTool } from "../tools/AiCompareTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { DocumentScanner } from "../tools/DocumentScanner";
+import { PdfCropTool } from "../tools/PdfCropTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
-export type FreeToolId = "merge" | "image-to-pdf" | PageToolId;
+export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | PageToolId;
 const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf", "split"]);
 const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
 export const isFreeToolId = (id: string): id is FreeToolId =>
-  id === "merge" || id === "image-to-pdf" || PAGE_TOOL_IDS.has(id);
+  id === "merge" || id === "image-to-pdf" || id === "crop-pdf" || PAGE_TOOL_IDS.has(id);
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
+  { id: "crop-pdf", tr: "Kırp", en: "Crop" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
@@ -672,6 +674,8 @@ function Hero({
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+            ) : freeTool === "crop-pdf" ? (
+              <PdfCropTool language={language} />
             ) : isPageToolId(freeTool) ? (
               <GuestPageToolCore key={freeTool} tool={freeTool} language={language} initialFile={scannedFile} />
             ) : (

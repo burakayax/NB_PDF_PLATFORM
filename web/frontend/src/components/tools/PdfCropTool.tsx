@@ -3,21 +3,34 @@ import * as pdfjsLib from "pdfjs-dist";
 // eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Crop,
+  Download,
+  ExternalLink,
   FileText,
   Loader2,
   Lock,
   RotateCcw,
+  Share2,
   ShieldCheck,
   UploadCloud,
+  X,
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { cropPdf, pdfBytesToBlob, PdfEncryptedError } from "../../lib/clientPdfWorker";
 import type { CropRect } from "../../lib/clientPdf";
-import { saveBlobToUser } from "../../api";
+import { ValueMomentNudge } from "./ValueMomentNudge";
+
+// Web Share API destegi (mobil "Paylas") — GuestPageTool ile ayni.
+function canShareApi(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function"
+  );
+}
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
@@ -46,6 +59,12 @@ const L = {
     failed: "İşlem başarısız oldu. Lütfen tekrar deneyin.",
     dragHint: "Kutuyu sürükleyin · köşelerden boyutlandırın",
     newFile: "Başka PDF",
+    ready: "PDF hazır 🎉",
+    readySub: "Dosyan cihazından hiç çıkmadı.",
+    download: "İndir",
+    share: "Paylaş",
+    open: "Aç",
+    close: "Kapat",
   },
   en: {
     drop: "Drag a PDF here",
@@ -66,6 +85,12 @@ const L = {
     failed: "Something went wrong. Please try again.",
     dragHint: "Drag the box · resize from the corners",
     newFile: "Another PDF",
+    ready: "Your PDF is ready 🎉",
+    readySub: "Your file never left your device.",
+    download: "Download",
+    share: "Share",
+    open: "Open",
+    close: "Close",
   },
 };
 
@@ -81,6 +106,7 @@ export function PdfCropTool({ language }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [hover, setHover] = useState(false);
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -186,7 +212,10 @@ export function PdfCropTool({ language }: Props) {
       const rect: CropRect = { xNorm: crop.x, yNorm: crop.y, wNorm: crop.w, hNorm: crop.h };
       const pages = applyAll ? undefined : [pageIndex];
       const out = await cropPdf(bytes, rect, pages);
-      await saveBlobToUser(pdfBytesToBlob(out), fileName.replace(/\.pdf$/i, "") + "-kirpilmis.pdf");
+      setResult({
+        blob: pdfBytesToBlob(out),
+        filename: fileName.replace(/\.pdf$/i, "") + "-kirpilmis.pdf",
+      });
     } catch (err) {
       setError(err instanceof PdfEncryptedError ? t.encrypted : t.failed);
     } finally {
@@ -195,6 +224,62 @@ export function PdfCropTool({ language }: Props) {
   };
 
   const reset = () => setCrop({ x: 0.06, y: 0.06, w: 0.88, h: 0.88 });
+
+  // Sonuç işlemleri — mevcut araçlarla (GuestPageTool) birebir aynı davranış.
+  function downloadBlob(blob: Blob, name: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  }
+  async function saveResult() {
+    if (!result) return;
+    const win = window as unknown as {
+      showSaveFilePicker?: (o: {
+        suggestedName?: string;
+        types?: Array<{ description: string; accept: Record<string, string[]> }>;
+      }) => Promise<FileSystemFileHandle>;
+    };
+    if (typeof win.showSaveFilePicker === "function") {
+      try {
+        const handle = await win.showSaveFilePicker({
+          suggestedName: result.filename,
+          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
+        });
+        const w = await handle.createWritable();
+        await w.write(result.blob);
+        await w.close();
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+      }
+    }
+    downloadBlob(result.blob, result.filename);
+  }
+  function openResult() {
+    if (!result) return;
+    const url = URL.createObjectURL(result.blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  async function shareResult() {
+    if (!result) return;
+    const f = new File([result.blob], result.filename, { type: "application/pdf" });
+    const nav = navigator as Navigator & {
+      canShare?: (d: { files: File[] }) => boolean;
+      share?: (d: { files: File[]; title?: string }) => Promise<void>;
+    };
+    try {
+      if (nav.canShare?.({ files: [f] }) && nav.share)
+        await nav.share({ files: [f], title: result.filename });
+    } catch {
+      /* iptal */
+    }
+  }
 
   // ─── Yükleme durumu ────────────────────────────────────────────────────────
   if (!bytes) {
@@ -256,6 +341,52 @@ export function PdfCropTool({ language }: Props) {
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // ─── Sonuç durumu (İndir / Paylaş / Aç / Kapat) — diğer araçlarla aynı ──────
+  if (result) {
+    return (
+      <div className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
+          <Check className="h-8 w-8" />
+        </div>
+        <p className="mt-4 text-xl font-bold text-white">{t.ready}</p>
+        <p className="mt-1 text-sm text-slate-400">{t.readySub}</p>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => void saveResult()}
+            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+          >
+            <Download className="h-4 w-4" /> {t.download}
+          </button>
+          {canShareApi() && (
+            <button
+              type="button"
+              onClick={() => void shareResult()}
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+            >
+              <Share2 className="h-4 w-4" /> {t.share}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={openResult}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+          >
+            <ExternalLink className="h-4 w-4" /> {t.open}
+          </button>
+          <button
+            type="button"
+            onClick={() => setResult(null)}
+            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+          >
+            <X className="h-4 w-4" /> {t.close}
+          </button>
+        </div>
+        <ValueMomentNudge language={language} />
       </div>
     );
   }
