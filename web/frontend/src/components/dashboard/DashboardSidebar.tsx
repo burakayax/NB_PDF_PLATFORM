@@ -161,6 +161,7 @@ type DashboardSidebarProps = {
   onOpenSign?: () => void;
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
+  onOpenCrop?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Aktif içerik paneli — mobil launcher başlığı FeatureKey olmayan araçları da
@@ -195,6 +196,7 @@ export function DashboardSidebar({
   onOpenSign,
   onOpenAnnotate,
   onOpenScan,
+  onOpenCrop,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -376,6 +378,23 @@ export function DashboardSidebar({
     );
   };
 
+  // PDF Kırp satırı — cihazda görsel kırpma; yapısal grup (Düzenle/Organize) içinde.
+  const renderCropRow = (keyPrefix = "") => {
+    if (!onOpenCrop) return null;
+    const label = tr ? "PDF Kırp" : "Crop PDF";
+    return (
+      <button
+        key={`${keyPrefix}crop`}
+        type="button"
+        onClick={onOpenCrop}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+      >
+        <span className="text-base text-cyan-300" aria-hidden>🔲</span>
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
   return (
     <aside className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
@@ -468,6 +487,7 @@ export function DashboardSidebar({
                   {group.id === "organize" ? renderScanRow("organize-") : null}
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
+                  {group.id === "organize" ? renderCropRow("organize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
