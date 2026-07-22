@@ -88,6 +88,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF dosyalarını üye olmadan, online ve ücretsiz nasıl birleştiririm?", a: "Dosyalarınızı sürükleyip bırakın, sırayı ayarlayın ve birleştir deyin. PDF'iniz sunucuya gönderilmeden cihazınızda birleştirilir ve saniyeler içinde otomatik indirilir — üyelik yok, kurulum yok." },
         { q: "Dosyalarım güvende mi?", a: "Evet — birleştirme tamamen tarayıcınızda (cihazınızda) yapılır. Dosyalarınız sunucuya hiç yüklenmez, bilgisayarınızdan çıkmaz; %100 gizlidir." },
+        { q: "Kaç PDF dosyasını aynı anda birleştirebilirim?", a: "İstediğiniz kadar; onlarca PDF'i tek belgede toplayabilirsiniz. Toplam boyut 80 MB'a kadar ücretsiz ve sınırsızdır." },
+        { q: "Birleştirmeden önce sayfaların sırasını değiştirebilir miyim?", a: "Evet. Dosyaları sürükleyip bırakarak istediğiniz sıraya dizin; PDF'ler tam o sırayla birleştirilir." },
+        { q: "Telefonda veya tablette PDF birleştirebilir miyim?", a: "Evet. Araç tarayıcı tabanlıdır; kurulum gerektirmeden Android, iPhone ve iPad dahil her cihazda çalışır." },
       ],
     ),
     en: T(
@@ -99,6 +102,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I merge PDF files without signing up, online and free?", a: "Drag and drop your files, set the order, and click merge. Your PDF is combined on your device — never sent to a server — and downloads automatically in seconds. No sign-up, no installation." },
         { q: "Are my files safe?", a: "Yes — merging happens entirely in your browser (on your device). Your files are never uploaded to a server and never leave your computer; it's 100% private." },
+        { q: "How many PDF files can I merge at once?", a: "As many as you like — combine dozens of PDFs into one document. Total size is free and unlimited up to 80 MB." },
+        { q: "Can I change the page order before merging?", a: "Yes. Drag and drop the files into any order, and the PDFs are merged in exactly that sequence." },
+        { q: "Can I merge PDFs on a phone or tablet?", a: "Yes. The tool runs in your browser, so it works on any device — including Android, iPhone, and iPad — with no installation." },
       ],
     ),
   },
@@ -113,6 +119,9 @@ export const TOOL_SEO = {
       [
         { q: "Bir PDF'i nasıl ayrı sayfalara bölerim?", a: "PDF'inizi yükleyin, ayırmak istediğiniz sayfaları veya aralıkları seçin ve indirin. Her sayfayı ayrı dosya ya da seçili aralığı tek dosya olarak alabilirsiniz." },
         { q: "Belirli sayfa aralığını çıkarabilir miyim?", a: "Evet. Örneğin 5-10 arası sayfaları seçip yalnızca o aralığı yeni bir PDF olarak indirebilirsiniz." },
+        { q: "PDF'i her sayfa ayrı dosya olacak şekilde bölebilir miyim?", a: "Evet. 'Her sayfa ayrı dosya' seçeneğiyle tüm sayfalar tek tek PDF'e ayrılır ve bir ZIP olarak indirilir." },
+        { q: "Bölme işlemi dosyalarımı sunucuya yükler mi?", a: "Hayır. Bölme tamamen tarayıcınızda yapılır; PDF'iniz cihazınızdan çıkmaz, %100 gizlidir." },
+        { q: "Bölünen PDF'lerin kalitesi düşer mi?", a: "Hayır. Sayfalar birebir kopyalanır; metin, görsel ve biçim orijinaliyle aynı kalır." },
       ],
     ),
     en: T(
@@ -124,6 +133,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I split a PDF into separate pages?", a: "Upload your PDF, select the pages or ranges to split, and download. Get each page as a separate file or a selected range as one file." },
         { q: "Can I extract a specific page range?", a: "Yes. Select, for example, pages 5–10 and download only that range as a new PDF." },
+        { q: "Can I split a PDF so every page becomes a separate file?", a: "Yes. Use the 'each page as a separate file' option to split all pages into individual PDFs, downloaded together as a ZIP." },
+        { q: "Does splitting upload my files to a server?", a: "No. Splitting happens entirely in your browser — your PDF never leaves your device and stays 100% private." },
+        { q: "Will the split PDFs lose quality?", a: "No. Pages are copied exactly, so text, images, and formatting stay identical to the original." },
       ],
     ),
   },
@@ -138,6 +150,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'ten sayfa nasıl silinir?", a: "PDF'inizi yükleyin, silmek istediğiniz sayfaları işaretleyin ve uygula deyin. Yeni PDF, seçtiğiniz sayfalar çıkarılmış olarak indirilir." },
         { q: "Birden fazla sayfayı aynı anda silebilir miyim?", a: "Evet. İstediğiniz kadar sayfayı işaretleyip tek işlemde silebilirsiniz." },
+        { q: "Sildiğim sayfaları geri alabilir miyim?", a: "Orijinal dosyanız değişmez; yalnızca yeni (sayfaları çıkarılmış) PDF indirilir. Yanlış seçerseniz baştan yükleyip yeniden seçebilirsiniz." },
+        { q: "Silme işlemi dosyamı sunucuya gönderir mi?", a: "Hayır. Sayfa silme tamamen tarayıcınızda yapılır; PDF'iniz cihazınızdan çıkmaz, %100 gizlidir." },
+        { q: "Şifreli (korumalı) PDF'ten sayfa silebilir miyim?", a: "Şifre korumalı PDF'lerde önce kilidi kaldırmanız gerekir; ardından istediğiniz sayfaları silebilirsiniz." },
       ],
     ),
     en: T(
@@ -149,6 +164,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I delete a page from a PDF?", a: "Upload your PDF, mark the pages to remove, and apply. The new PDF downloads with the selected pages removed." },
         { q: "Can I delete multiple pages at once?", a: "Yes. Mark as many pages as you want and delete them in a single operation." },
+        { q: "Can I undo deleted pages?", a: "Your original file is never changed — only a new PDF (with pages removed) is downloaded. If you pick the wrong ones, just re-upload and select again." },
+        { q: "Does deleting pages send my file to a server?", a: "No. Page deletion happens entirely in your browser — your PDF never leaves your device and stays 100% private." },
+        { q: "Can I delete pages from an encrypted PDF?", a: "For password-protected PDFs, unlock the file first, then you can delete pages." },
       ],
     ),
   },
@@ -163,6 +181,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF sayfalarını nasıl döndürürüm?", a: "PDF'inizi yükleyin, döndürmek istediğiniz sayfaları sola/sağa çevirin ve indirin. Tüm sayfaları tek seferde de döndürebilirsiniz." },
         { q: "Döndürme kalıcı olur mu?", a: "Evet. İndirilen PDF'te sayfa yönü kalıcı olarak güncellenir." },
+        { q: "Yalnızca belirli sayfaları döndürebilir miyim?", a: "Evet. Her sayfayı tek tek sola/sağa çevirebilir ya da tüm sayfaları tek seferde döndürebilirsiniz." },
+        { q: "Ters veya yan taranmış sayfaları düzeltebilir miyim?", a: "Evet. Ters ya da yan taranmış sayfaları 90°, 180° veya 270° döndürerek doğru yöne getirebilirsiniz." },
+        { q: "Telefonda PDF döndürebilir miyim?", a: "Evet. Araç tarayıcıda çalışır; Android, iPhone ve iPad dahil her cihazda kurulum olmadan kullanılır." },
       ],
     ),
     en: T(
@@ -174,6 +195,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I rotate PDF pages?", a: "Upload your PDF, turn the chosen pages left or right, and download. You can also rotate all pages at once." },
         { q: "Is the rotation permanent?", a: "Yes. The page orientation is permanently updated in the downloaded PDF." },
+        { q: "Can I rotate only specific pages?", a: "Yes. Turn each page left or right individually, or rotate all pages at once." },
+        { q: "Can I fix sideways or upside-down scanned pages?", a: "Yes. Rotate sideways or upside-down scans by 90°, 180°, or 270° to set the correct orientation." },
+        { q: "Can I rotate a PDF on my phone?", a: "Yes. The tool works in your browser on any device — Android, iPhone, and iPad — with no installation." },
       ],
     ),
   },
@@ -188,6 +212,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF sayfalarının sırasını nasıl değiştiririm?", a: "PDF'inizi yükleyin, sayfaları sürükleyerek veya konum numarası girerek yeniden sıralayın ve yeni PDF'i indirin." },
         { q: "Sayfaları çıkararak yeniden düzenleyebilir miyim?", a: "Evet. İstemediğiniz sayfaları kaldırıp kalanları yeni bir düzende dışa aktarabilirsiniz." },
+        { q: "Sayfaları sürükleyerek mi yoksa numara girerek mi sıralarım?", a: "İkisi de. Sayfaları sürükle-bırak ile taşıyabilir ya da her sayfaya yeni konum numarası girerek hızlıca sıralayabilirsiniz." },
+        { q: "Yeniden düzenleme dosyamı sunucuya yükler mi?", a: "Hayır. Tüm işlem tarayıcınızda yapılır; PDF'iniz cihazınızdan çıkmaz, %100 gizlidir." },
+        { q: "Telefonda sayfa sıralaması yapabilir miyim?", a: "Evet. Araç tarayıcı tabanlıdır ve Android, iPhone, iPad dahil her cihazda kurulum olmadan çalışır." },
       ],
     ),
     en: T(
@@ -199,6 +226,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I change the order of PDF pages?", a: "Upload your PDF, reorder pages by dragging or typing a position number, and download the new PDF." },
         { q: "Can I remove pages while reorganizing?", a: "Yes. Drop unwanted pages and export the rest in a new order." },
+        { q: "Do I reorder by dragging or by typing numbers?", a: "Both. Move pages with drag-and-drop, or type a new position number for each page to reorder quickly." },
+        { q: "Does reorganizing upload my file to a server?", a: "No. Everything happens in your browser — your PDF never leaves your device and stays 100% private." },
+        { q: "Can I reorder pages on my phone?", a: "Yes. The tool is browser-based and works on any device — Android, iPhone, and iPad — with no installation." },
       ],
     ),
   },
@@ -213,6 +243,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF dosyasını boyutunu küçültmek için nasıl sıkıştırırım?", a: "PDF'inizi yükleyin, sıkıştırma düzeyini seçin ve optimize edilmiş dosyayı indirin. Metin ve görseller okunaklı kalır." },
         { q: "Sıkıştırma kaliteyi bozar mı?", a: "Dengeli düzeyde belirgin bir kalite kaybı olmaz; daha yüksek sıkıştırmada boyut daha çok düşer." },
+        { q: "PDF'i e-postaya sığdıracak kadar küçültebilir miyim?", a: "Evet. Sıkıştırma düzeyini yükselterek büyük PDF'leri e-posta ve portal yükleme sınırlarının altına indirebilirsiniz." },
+        { q: "Sıkıştırılmış PDF'in metni seçilebilir kalır mı?", a: "Evet. Metin katmanı korunur; sıkıştırılan PDF'te de metni seçebilir, arayabilir ve kopyalayabilirsiniz." },
+        { q: "Taranmış (görsel) PDF'leri sıkıştırabilir miyim?", a: "Evet. Görsel ağırlıklı, taranmış PDF'lerde sıkıştırma genellikle en yüksek boyut kazancını sağlar." },
       ],
     ),
     en: T(
@@ -224,6 +257,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I compress a PDF to reduce its file size?", a: "Upload your PDF, choose a compression level, and download the optimized file. Text and images stay sharp." },
         { q: "Does compression hurt quality?", a: "At a balanced level there is no noticeable loss; higher compression reduces size further." },
+        { q: "Can I shrink a PDF small enough to email?", a: "Yes. Increase the compression level to bring large PDFs under email and portal upload limits." },
+        { q: "Does the compressed PDF keep selectable text?", a: "Yes. The text layer is preserved, so you can still select, search, and copy text in the compressed PDF." },
+        { q: "Can I compress scanned (image) PDFs?", a: "Yes. Image-heavy scanned PDFs usually see the biggest size reduction from compression." },
       ],
     ),
   },
@@ -238,6 +274,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'i biçimi bozulmadan Word'e nasıl dönüştürürüm?", a: "PDF'inizi yükleyin; dönüştürücü yazı tiplerini, tabloları ve düzeni koruyarak düzenlenebilir bir .docx üretir." },
         { q: "Taranmış PDF'i Word'e çevirebilir miyim?", a: "Metin katmanı olan PDF'ler en iyi sonucu verir; taranmış belgelerde düzen yaklaşık olarak korunur." },
+        { q: "PDF'i Word'e dönüştürmek ücretsiz mi?", a: "Evet, önizleme ve temel dönüştürme ücretsizdir. Dosyanızı yükleyin, düzenlenebilir .docx'i saniyeler içinde alın." },
+        { q: "Dönüştürülen Word dosyasını düzenleyebilir miyim?", a: "Evet. Çıktı gerçek bir .docx'tir; Microsoft Word, Google Dokümanlar veya LibreOffice'te metni, tabloları ve görselleri düzenleyebilirsiniz." },
+        { q: "Tablolar ve görseller korunur mu?", a: "Evet. Tablolar, görseller ve sütun düzeni mümkün olduğunca orijinal PDF'e sadık şekilde aktarılır." },
       ],
     ),
     en: T(
@@ -249,6 +288,9 @@ export const TOOL_SEO = {
       [
         { q: "Can I convert PDF to Word without losing formatting?", a: "Yes. Upload your PDF and the converter produces an editable .docx that preserves fonts, tables and layout." },
         { q: "Can I convert a scanned PDF to Word?", a: "PDFs with a text layer give the best results; for scans the layout is approximately preserved." },
+        { q: "Is converting PDF to Word free?", a: "Yes, preview and basic conversion are free. Upload your file and get an editable .docx in seconds." },
+        { q: "Can I edit the converted Word file?", a: "Yes. The output is a real .docx — edit text, tables, and images in Microsoft Word, Google Docs, or LibreOffice." },
+        { q: "Are tables and images preserved?", a: "Yes. Tables, images, and column layout are transferred as faithfully as possible to the original PDF." },
       ],
     ),
   },
@@ -263,6 +305,9 @@ export const TOOL_SEO = {
       [
         { q: "Word belgesini PDF'e nasıl dönüştürürüm?", a: "DOC/DOCX dosyanızı yükleyin ve dönüştür deyin. Düzen ve yazı tipleri korunarak PDF anında hazırlanır." },
         { q: "PDF her cihazda aynı görünür mü?", a: "Evet. PDF sabit düzenlidir; yazı tipleri gömülür ve belge tüm cihazlarda aynı görünür." },
+        { q: "DOCX ve DOC dosyalarının ikisini de dönüştürebilir miyim?", a: "Evet. Hem eski .doc hem yeni .docx Word belgeleri desteklenir; ikisi de tek tıkla PDF olur." },
+        { q: "Word'den PDF'e dönüştürmek ücretsiz mi?", a: "Evet. Belgenizi yükleyin, PDF'i anında oluşturup indirin — üyelik veya kurulum gerekmez." },
+        { q: "Yazı tipleri ve biçimlendirme korunur mu?", a: "Evet. Yazı tipleri gömülür; başlıklar, tablolar, madde işaretleri ve düzen orijinal Word belgesiyle aynı kalır." },
       ],
     ),
     en: T(
@@ -274,6 +319,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a Word document to PDF?", a: "Upload your DOC/DOCX and click convert. The PDF is created instantly with layout and fonts preserved." },
         { q: "Will the PDF look the same on every device?", a: "Yes. PDF is fixed-layout; fonts are embedded and the document looks identical everywhere." },
+        { q: "Can I convert both DOCX and DOC files?", a: "Yes. Both legacy .doc and modern .docx Word documents are supported and convert to PDF in one click." },
+        { q: "Is Word to PDF conversion free?", a: "Yes. Upload your document, create the PDF instantly, and download it — no account or installation needed." },
+        { q: "Are fonts and formatting preserved?", a: "Yes. Fonts are embedded, and headings, tables, bullet lists, and layout stay identical to the original Word document." },
       ],
     ),
   },
@@ -288,6 +336,9 @@ export const TOOL_SEO = {
       [
         { q: "Excel dosyasını PDF'e nasıl çeviririm?", a: "XLS/XLSX dosyanızı yükleyin; tablolar ve biçimlendirme korunarak paylaşıma hazır bir PDF oluşturulur." },
         { q: "Geniş tablolar düzgün sığar mı?", a: "Sayfa düzeni korunur; geniş tablolar baskı ayarlarına göre sayfalara bölünerek aktarılır." },
+        { q: "Birden fazla çalışma sayfası (sekme) dönüştürülür mü?", a: "Evet. Çalışma kitabındaki tüm sayfalar sırasıyla tek bir PDF'e aktarılır." },
+        { q: "Grafikler ve hücre biçimlendirmesi korunur mu?", a: "Evet. Grafikler, renkler, kenarlıklar ve sayı biçimleri orijinal Excel görünümüyle korunur." },
+        { q: "XLS ve XLSX'in ikisi de desteklenir mi?", a: "Evet. Hem eski .xls hem yeni .xlsx dosyaları desteklenir." },
       ],
     ),
     en: T(
@@ -299,6 +350,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert an Excel file to PDF?", a: "Upload your XLS/XLSX and a shareable PDF is created with tables and formatting preserved." },
         { q: "Do wide tables fit correctly?", a: "The layout is preserved; wide tables are split across pages based on print settings." },
+        { q: "Are multiple worksheets (tabs) converted?", a: "Yes. All sheets in the workbook are exported into a single PDF in order." },
+        { q: "Are charts and cell formatting preserved?", a: "Yes. Charts, colors, borders, and number formats are kept as they appear in Excel." },
+        { q: "Are both XLS and XLSX supported?", a: "Yes. Both legacy .xls and modern .xlsx files are supported." },
       ],
     ),
   },
@@ -313,6 +367,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'teki tabloyu Excel'e nasıl aktarırım?", a: "PDF'inizi yükleyin; tablo verileri tespit edilerek düzenlenebilir bir .xlsx dosyasına dönüştürülür." },
         { q: "Çıkan verileri Excel'de düzenleyebilir miyim?", a: "Evet. Çıktı hücre bazlıdır; formül ekleyebilir, sıralayabilir ve analiz edebilirsiniz." },
+        { q: "Birden fazla tablosu olan PDF'i dönüştürebilir miyim?", a: "Evet. Sayfalardaki tablolar tespit edilip hücrelere ayrılır; her tablo Excel'de düzenlenebilir olur." },
+        { q: "Taranmış (görsel) tabloyu Excel'e çevirebilir miyim?", a: "Metin katmanı olan PDF'ler en iyi sonucu verir; taranmış tablolar için önce OCR gerekir." },
+        { q: "PDF'ten Excel'e dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, düzenlenebilir .xlsx dosyasını saniyeler içinde indirin." },
       ],
     ),
     en: T(
@@ -324,6 +381,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I extract a table from PDF to Excel?", a: "Upload your PDF and the table data is detected and converted into an editable .xlsx file." },
         { q: "Can I edit the extracted data in Excel?", a: "Yes. The output is cell-based, so you can add formulas, sort and analyze it." },
+        { q: "Can I convert a PDF with multiple tables?", a: "Yes. Tables across pages are detected and split into cells, so each table is editable in Excel." },
+        { q: "Can I convert a scanned (image) table to Excel?", a: "PDFs with a text layer work best; scanned tables need OCR first." },
+        { q: "Is PDF to Excel conversion free?", a: "Yes. Upload your PDF and download the editable .xlsx in seconds." },
       ],
     ),
   },
@@ -338,6 +398,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'i PowerPoint'e nasıl dönüştürürüm?", a: "PDF'inizi yükleyin; her sayfa bir slayda dönüştürülerek düzenlenebilir bir .pptx dosyası oluşturulur." },
         { q: "Slaytları sonradan düzenleyebilir miyim?", a: "Evet. Çıktı PowerPoint'te açılır ve metin/öğeler düzenlenebilir." },
+        { q: "Her PDF sayfası bir slayt mı olur?", a: "Evet. Her sayfa bir slayda dönüştürülür; sunum sırası PDF ile aynı kalır." },
+        { q: "Çıktıyı Google Slaytlar'da açabilir miyim?", a: "Evet. Dosya standart .pptx'tir; PowerPoint, Google Slaytlar ve Keynote ile uyumludur." },
+        { q: "PDF'ten PowerPoint'e dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, düzenlenebilir .pptx sunumu saniyeler içinde indirin." },
       ],
     ),
     en: T(
@@ -349,6 +412,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a PDF to PowerPoint?", a: "Upload your PDF; each page becomes a slide in an editable .pptx file." },
         { q: "Can I edit the slides afterwards?", a: "Yes. The output opens in PowerPoint with editable text and elements." },
+        { q: "Does each PDF page become a slide?", a: "Yes. Each page is converted into one slide, keeping the same order as the PDF." },
+        { q: "Can I open the output in Google Slides?", a: "Yes. The file is a standard .pptx, compatible with PowerPoint, Google Slides, and Keynote." },
+        { q: "Is PDF to PowerPoint conversion free?", a: "Yes. Upload your PDF and download an editable .pptx presentation in seconds." },
       ],
     ),
   },
@@ -363,6 +429,9 @@ export const TOOL_SEO = {
       [
         { q: "PowerPoint sunumunu PDF'e nasıl çeviririm?", a: "PPT/PPTX dosyanızı yükleyin; tüm slaytlar tasarımı korunarak tek bir PDF'te toplanır." },
         { q: "Animasyonlar PDF'te görünür mü?", a: "PDF sabit düzenlidir; her slaydın son görünümü korunur, animasyonlar statik olarak yansır." },
+        { q: "Sunumu tek PDF olarak alabilir miyim?", a: "Evet. Her slayt PDF'te bir sayfa olur; tüm sunum tek bir paylaşılabilir PDF'te toplanır." },
+        { q: "Yazı tipleri ve tasarım korunur mu?", a: "Evet. Yazı tipleri gömülür; renkler, düzen ve grafikler orijinal sunumla aynı görünür." },
+        { q: "PPT ve PPTX'in ikisi de desteklenir mi?", a: "Evet. Hem eski .ppt hem yeni .pptx sunum dosyaları desteklenir." },
       ],
     ),
     en: T(
@@ -374,6 +443,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a PowerPoint to PDF?", a: "Upload your PPT/PPTX and all slides are combined into one PDF with the design preserved." },
         { q: "Do animations appear in the PDF?", a: "PDF is fixed-layout; each slide's final appearance is preserved, animations are flattened." },
+        { q: "Does each slide become one PDF page?", a: "Yes. Each slide becomes a page, and the whole deck is combined into one shareable PDF." },
+        { q: "Are fonts and design preserved?", a: "Yes. Fonts are embedded, and colors, layout, and graphics look identical to the original deck." },
+        { q: "Are both PPT and PPTX supported?", a: "Yes. Both legacy .ppt and modern .pptx presentation files are supported." },
       ],
     ),
   },
@@ -388,6 +460,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF sayfalarını JPG'ye nasıl dönüştürürüm?", a: "PDF'inizi yükleyin; her sayfa yüksek çözünürlüklü bir JPG/PNG görseli olarak dışa aktarılır ve toplu indirilir." },
         { q: "Görsel çözünürlüğünü seçebilir miyim?", a: "Evet. Daha yüksek çözünürlük baskı ve yakınlaştırma için daha net görseller üretir." },
+        { q: "Yalnızca belirli sayfaları görsele dönüştürebilir miyim?", a: "Evet. İstediğiniz sayfaları seçip yalnızca onları JPG/PNG olarak dışa aktarabilirsiniz." },
+        { q: "Görseller JPG mi PNG mi olur?", a: "İkisini de alabilirsiniz; şeffaflık gereken sayfalar için PNG, küçük dosya için JPG idealdir." },
+        { q: "PDF'ten görsele dönüştürmek ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, sayfaları yüksek çözünürlüklü görsel olarak indirin — üyelik gerekmez." },
       ],
     ),
     en: T(
@@ -399,6 +474,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert PDF pages to JPG?", a: "Upload your PDF; each page is exported as a high-resolution JPG/PNG image and downloaded together." },
         { q: "Can I choose the image resolution?", a: "Yes. Higher resolution produces sharper images for printing and zooming." },
+        { q: "Can I convert only specific pages to images?", a: "Yes. Select the pages you want and export only those as JPG or PNG." },
+        { q: "Are the images JPG or PNG?", a: "You can get either — PNG for pages needing transparency, JPG for smaller file size." },
+        { q: "Is PDF to image conversion free?", a: "Yes. Upload your PDF and download the pages as high-resolution images — no account required." },
       ],
     ),
   },
@@ -413,6 +491,9 @@ export const TOOL_SEO = {
       [
         { q: "Görselleri üye olmadan tek PDF'te nasıl birleştiririm?", a: "JPG/PNG/WebP dosyalarınızı sürükleyip bırakın, sırayı düzenleyin ve PDF olarak indirin. Görselleriniz cihazınızda işlenir, sunucuya gitmez — üyelik yok, ücretsiz." },
         { q: "Görsel sırasını değiştirebilir miyim?", a: "Evet. Yüklediğiniz görselleri sürükleyerek istediğiniz sıraya dizebilirsiniz." },
+        { q: "Hangi görsel formatlarını PDF'e çevirebilirim?", a: "JPG, PNG ve WebP desteklenir. Farklı formatları aynı anda yükleyip tek bir PDF'te birleştirebilirsiniz." },
+        { q: "Telefonla çektiğim fotoğrafları PDF yapabilir miyim?", a: "Evet. Telefonunuzdaki fotoğrafları yükleyin; cihazınızda tek PDF'e dönüştürülür, sunucuya gitmez." },
+        { q: "Görseller sunucuya yüklenir mi?", a: "Hayır. Dönüştürme tamamen tarayıcınızda yapılır; görselleriniz cihazınızdan çıkmaz, %100 gizlidir." },
       ],
     ),
     en: T(
@@ -424,6 +505,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I combine images into one PDF?", a: "Upload your JPG/PNG/WebP files, arrange the order, and download a single PDF." },
         { q: "Can I change the image order?", a: "Yes. Drag the uploaded images into any order you like." },
+        { q: "Which image formats can I convert to PDF?", a: "JPG, PNG, and WebP are supported. Upload different formats at once and combine them into a single PDF." },
+        { q: "Can I turn photos from my phone into a PDF?", a: "Yes. Upload photos from your phone and they're combined into one PDF on your device — never sent to a server." },
+        { q: "Are my images uploaded to a server?", a: "No. Conversion happens entirely in your browser — your images never leave your device and stay 100% private." },
       ],
     ),
   },
@@ -439,6 +523,8 @@ export const TOOL_SEO = {
         { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. Sayfayı telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli; kamerayı belgeye doğrultun, kenarlar otomatik bulunur ve PDF oluşur. Kurulum veya üyelik gerekmez." },
         { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
         { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) Pro özellikleridir." },
+        { q: "Taranan belgenin kalitesi nasıl artırılıyor?", a: "Araç perspektifi düzeltir (eğik çekimi düzleştirir), kenarları kırpar ve kontrastı iyileştirir; sonuç tarayıcıdan çıkmış gibi net olur." },
+        { q: "Bilgisayardan da tarama yapabilir miyim?", a: "Evet. Telefon kamerasının yanı sıra bilgisayarınızdaki fotoğrafları da yükleyip belge PDF'ine dönüştürebilirsiniz." },
       ],
     ),
     en: T(
@@ -451,6 +537,8 @@ export const TOOL_SEO = {
         { q: "Do I need an app to scan documents with my phone?", a: "No. Just open the page in your phone browser and tap «Scan document»; point the camera at the document, edges are detected automatically and a PDF is created. No install or sign-up needed." },
         { q: "Is my scanned document uploaded to a server?", a: "No. The camera frame, automatic edge detection and PDF creation all run on your device; your document is never sent to the internet." },
         { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are Pro features." },
+        { q: "How is the scan quality improved?", a: "The tool corrects perspective (flattens angled shots), crops the edges, and boosts contrast, so the result looks as crisp as a real scanner." },
+        { q: "Can I scan from a computer too?", a: "Yes. Besides the phone camera, you can upload photos from your computer and turn them into a document PDF." },
       ],
     ),
   },
@@ -466,6 +554,8 @@ export const TOOL_SEO = {
         { q: "Aranabilir PDF nasıl oluşturulur?", a: "Taranmış PDF'inizi veya belge görsellerinizi yükleyin; araç metni OCR ile tanıyıp görüntünün üzerine görünmez bir metin katmanı ekler. Oluşan PDF'te Ctrl+F ile arama yapabilir ve metni kopyalayabilirsiniz." },
         { q: "Türkçe karakterlerde çalışır mı?", a: "Evet. OCR Türkçe + İngilizce destekler; ş, ğ, ı, İ gibi karakterler doğru şekilde aranabilir metne dönüştürülür." },
         { q: "Belgem sunucuya gönderilir mi?", a: "Hayır. OCR ve metin katmanı gömme tamamen cihazınızda çalışır; belgeniz internete yüklenmez." },
+        { q: "Hangi dosyaları aranabilir PDF'e çevirebilirim?", a: "Taranmış PDF'leri ve JPG/PNG belge görsellerini yükleyebilirsiniz; hepsi tek bir aranabilir PDF'te birleşir." },
+        { q: "Görüntü kalitesi bozulur mu?", a: "Hayır. Orijinal görüntü aynen korunur; metin katmanı görünmez biçimde üstüne eklenir, sayfa göze aynı görünür." },
       ],
     ),
     en: T(
@@ -478,6 +568,8 @@ export const TOOL_SEO = {
         { q: "How do I create a searchable PDF?", a: "Upload your scanned PDF or document images; the tool recognizes the text with OCR and adds an invisible text layer over the image. In the resulting PDF you can search with Ctrl+F and copy text." },
         { q: "Does it work with Turkish characters?", a: "Yes. OCR supports Turkish + English; characters like ş, ğ, ı, İ are converted correctly into searchable text." },
         { q: "Is my document sent to a server?", a: "No. OCR and text-layer embedding run entirely on your device; your document is never uploaded." },
+        { q: "Which files can I turn into a searchable PDF?", a: "You can upload scanned PDFs and JPG/PNG document images; they're combined into a single searchable PDF." },
+        { q: "Will the image quality degrade?", a: "No. The original image is preserved exactly; the invisible text layer is added on top, so the page looks identical." },
       ],
     ),
   },
@@ -492,6 +584,9 @@ export const TOOL_SEO = {
       [
         { q: "Bir web sayfasını PDF'e nasıl çeviririm?", a: "Sayfa adresini (URL) veya HTML içeriğini girin; sayfa render edilerek sabit düzenli bir PDF olarak indirilir." },
         { q: "Sayfa düzeni korunur mu?", a: "Evet. İçerik render edilip PDF'e yazıldığı için görünüm büyük ölçüde korunur." },
+        { q: "URL yerine kendi HTML kodumu yapıştırabilir miyim?", a: "Evet. Bir web adresi girebilir ya da doğrudan HTML içeriğinizi yapıştırıp PDF'e dönüştürebilirsiniz." },
+        { q: "Görseller ve CSS stilleri PDF'e aktarılır mı?", a: "Evet. Sayfa gerçek bir tarayıcı gibi render edilir; görseller, yazı tipleri ve CSS düzeni PDF'e yansır." },
+        { q: "HTML'den PDF'e dönüştürmek ücretsiz mi?", a: "Evet. Adresi veya kodu girin, sabit düzenli PDF'i saniyeler içinde indirin — kurulum gerekmez." },
       ],
     ),
     en: T(
@@ -503,6 +598,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a web page to PDF?", a: "Enter the page URL or HTML; the page is rendered and downloaded as a fixed-layout PDF." },
         { q: "Is the page layout preserved?", a: "Yes. Content is rendered and written to PDF, so the appearance is largely preserved." },
+        { q: "Can I paste my own HTML instead of a URL?", a: "Yes. Enter a web address, or paste your HTML content directly and convert it to PDF." },
+        { q: "Are images and CSS styles included in the PDF?", a: "Yes. The page is rendered like a real browser, so images, fonts, and CSS layout carry into the PDF." },
+        { q: "Is HTML to PDF conversion free?", a: "Yes. Enter the URL or code and download a fixed-layout PDF in seconds — no installation needed." },
       ],
     ),
   },
@@ -517,6 +615,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF parolasını nasıl kaldırırım?", a: "Şifreli PDF'inizi yükleyin, açma parolasını girin ve korumasız kopyayı indirin." },
         { q: "Parolayı bilmeden açabilir miyim?", a: "Hayır. Yalnızca açma parolasını bildiğiniz, yetkili olduğunuz belgelerde işlem yapılabilir." },
+        { q: "Kilidi kaldırılan PDF'i tekrar düzenleyebilir miyim?", a: "Evet. Parola kaldırıldıktan sonra PDF'i serbestçe birleştirebilir, bölebilir, düzenleyebilir veya yazdırabilirsiniz." },
+        { q: "Yazdırma ve kopyalama kısıtlamalarını da kaldırır mı?", a: "Açma parolasını girdiğinizde, izin kısıtlamaları da kaldırılmış korumasız bir kopya elde edersiniz." },
+        { q: "Parola kaldırma güvenli mi?", a: "Evet — yalnızca yetkili olduğunuz belgelerde kullanın. Dosyanız işlem sonrası sunucuda saklanmaz." },
       ],
     ),
     en: T(
@@ -528,6 +629,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I remove a PDF password?", a: "Upload your protected PDF, enter the open password, and download an unprotected copy." },
         { q: "Can I open it without the password?", a: "No. The tool only works on documents you are authorized for and know the open password to." },
+        { q: "Can I edit the unlocked PDF afterward?", a: "Yes. Once the password is removed, you can freely merge, split, edit, or print the PDF." },
+        { q: "Does it also remove print and copy restrictions?", a: "When you enter the open password, you get an unprotected copy with permission restrictions removed too." },
+        { q: "Is removing the password safe?", a: "Yes — only use it on documents you're authorized for. Your file isn't stored on the server after processing." },
       ],
     ),
   },
@@ -542,6 +646,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'e nasıl filigran eklerim?", a: "PDF'inizi yükleyin, metin veya görsel filigranı seçin, renk ve konumu ayarlayıp indirin." },
         { q: "Filigran rengini değiştirebilir miyim?", a: "Evet. Metin rengi (#RRGGBB), yazı tipi ve şeffaflık ayarlanabilir." },
+        { q: "Görsel veya logo filigranı ekleyebilir miyim?", a: "Evet. Metin filigranının yanı sıra kendi logonuzu veya bir görseli filigran olarak ekleyip konumlandırabilirsiniz." },
+        { q: "Filigran tüm sayfalara uygulanır mı?", a: "Evet. Filigran belgenin tüm sayfalarına uygulanır; konum ve şeffaflık her sayfada aynı kalır." },
+        { q: "Filigranı çapraz (diyagonal) yapabilir miyim?", a: "Evet. 'GİZLİ' veya 'TASLAK' gibi metinleri çapraz açıyla, yarı saydam biçimde sayfaya yerleştirebilirsiniz." },
       ],
     ),
     en: T(
@@ -553,6 +660,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I add a watermark to a PDF?", a: "Upload your PDF, choose a text or image watermark, set the color and position, and download." },
         { q: "Can I change the watermark color?", a: "Yes. Text color (#RRGGBB), font and opacity are adjustable." },
+        { q: "Can I add an image or logo watermark?", a: "Yes. Besides text, you can add your own logo or an image as a watermark and position it." },
+        { q: "Is the watermark applied to all pages?", a: "Yes. The watermark is applied to every page, with the same position and opacity throughout." },
+        { q: "Can I make the watermark diagonal?", a: "Yes. Place text like 'CONFIDENTIAL' or 'DRAFT' at a diagonal angle, semi-transparent, across the page." },
       ],
     ),
   },
@@ -567,6 +677,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'e sayfa numarası nasıl eklerim?", a: "PDF'inizi yükleyin, numara konumunu (üst/alt) ve biçimini seçip indirin." },
         { q: "Belirli bir sayfadan başlatabilir miyim?", a: "Evet. Başlangıç numarasını ve hangi sayfadan başlayacağını ayarlayabilirsiniz." },
+        { q: "Sayfa numarası biçimini seçebilir miyim?", a: "Evet. Sadece rakam (1, 2, 3), 'Sayfa X' veya 'X / Y' (toplam sayfalı) gibi biçimler arasından seçebilirsiniz." },
+        { q: "Numaraların konumunu ve hizasını ayarlayabilir miyim?", a: "Evet. Numarayı üst veya alt kenarda; sol, orta ya da sağ hizada konumlandırabilirsiniz." },
+        { q: "İlk sayfayı (kapak) numarasız bırakabilir miyim?", a: "Evet. Numaralandırmayı ikinci sayfadan başlatarak kapağı numarasız tutabilirsiniz." },
       ],
     ),
     en: T(
@@ -578,6 +691,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I add page numbers to a PDF?", a: "Upload your PDF, choose the number position (top/bottom) and format, and download." },
         { q: "Can I start from a specific page?", a: "Yes. Set the starting number and which page numbering begins on." },
+        { q: "Can I choose the page number format?", a: "Yes. Pick formats like plain numbers (1, 2, 3), 'Page X', or 'X / Y' with the total page count." },
+        { q: "Can I set the position and alignment?", a: "Yes. Place numbers at the top or bottom, aligned left, center, or right." },
+        { q: "Can I leave the first page (cover) unnumbered?", a: "Yes. Start numbering from the second page to keep the cover unnumbered." },
       ],
     ),
   },
@@ -592,6 +708,9 @@ export const TOOL_SEO = {
       [
         { q: "Bozuk bir PDF'i nasıl onarırım?", a: "Hasarlı PDF'inizi yükleyin; araç yapıyı yeniden paketleyerek kurtarılabilen içeriği yeni bir PDF olarak üretir." },
         { q: "Her bozuk PDF kurtarılabilir mi?", a: "Hasarın derecesine bağlıdır; çoğu durumda erişilebilir içerik başarıyla kurtarılır." },
+        { q: "PDF neden bozulur?", a: "Eksik indirme, disk hatası, yarım kaydetme veya uyumsuz düzenleme araçları PDF yapısını bozabilir; onarım aracı yapıyı yeniden kurar." },
+        { q: "'Dosya açılamıyor' hatası veren PDF'i onarabilir miyim?", a: "Evet. Açılmayan veya 'hasarlı' uyarısı veren PDF'leri yükleyin; kurtarılabilen içerik yeni bir dosyaya alınır." },
+        { q: "Onarım metin ve görselleri korur mu?", a: "Evet. Erişilebilir metin, görsel ve sayfalar mümkün olduğunca korunarak yeni PDF'e aktarılır." },
       ],
     ),
     en: T(
@@ -603,6 +722,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I repair a corrupted PDF?", a: "Upload the damaged PDF; the tool re-packages the structure and produces a new PDF from the recoverable content." },
         { q: "Can every corrupted PDF be recovered?", a: "It depends on the damage; in most cases the accessible content is recovered successfully." },
+        { q: "Why do PDFs get corrupted?", a: "Incomplete downloads, disk errors, interrupted saves, or incompatible editors can damage a PDF's structure; the repair tool rebuilds it." },
+        { q: "Can I fix a PDF that won't open?", a: "Yes. Upload PDFs that won't open or show a 'damaged' warning, and the recoverable content is saved into a new file." },
+        { q: "Does repair keep text and images?", a: "Yes. Accessible text, images, and pages are preserved as much as possible in the new PDF." },
       ],
     ),
   },
@@ -617,6 +739,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'e nasıl parola eklerim?", a: "PDF'inizi yükleyin, bir açılış parolası belirleyin ve şifreli dosyayı indirin. Belge yalnızca parolayla açılır." },
         { q: "Şifreleme ne kadar güvenli?", a: "Belge endüstri standardı şifreleme ile korunur; parolayı yalnızca yetkili kişilerle paylaşın." },
+        { q: "Şifreli PDF'i her programda açabilir miyim?", a: "Evet. Standart PDF şifrelemesi kullanılır; Adobe Acrobat, tarayıcılar ve tüm yaygın okuyucular parolayı sorarak açar." },
+        { q: "Parolayı sonradan kaldırabilir miyim?", a: "Evet. Parolayı bildiğiniz sürece 'PDF kilidini kaldır' aracıyla korumayı kaldırabilirsiniz." },
+        { q: "Yazdırma ve kopyalamayı da engelleyebilir miyim?", a: "Açılış parolasına ek olarak belge izinlerini kısıtlayarak yetkisiz yazdırma ve kopyalamayı engelleyebilirsiniz." },
       ],
     ),
     en: T(
@@ -628,6 +753,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I add a password to a PDF?", a: "Upload your PDF, set an open password, and download the encrypted file. The document only opens with the password." },
         { q: "How secure is the encryption?", a: "The document is protected with industry-standard encryption; share the password only with authorized people." },
+        { q: "Can I open the encrypted PDF in any app?", a: "Yes. Standard PDF encryption is used, so Adobe Acrobat, browsers, and all common readers open it by asking for the password." },
+        { q: "Can I remove the password later?", a: "Yes. As long as you know the password, you can remove protection with the 'unlock PDF' tool." },
+        { q: "Can I also block printing and copying?", a: "Beyond the open password, you can restrict document permissions to prevent unauthorized printing and copying." },
       ],
     ),
   },
@@ -642,6 +770,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'ten metni nasıl çıkarırım?", a: "PDF'inizi yükleyin; metin katmanı düz metin (.txt) olarak dışa aktarılır ve indirilir." },
         { q: "Taranmış PDF'ten metin çıkar mı?", a: "Metin katmanı olan PDF'ler en iyi sonucu verir; taranmış görüntülerde metin sınırlı olabilir." },
+        { q: "Çıkarılan metni kopyalayıp düzenleyebilir miyim?", a: "Evet. Çıktı düz metin (.txt) dosyasıdır; her metin düzenleyicide açıp kopyalayabilir ve düzenleyebilirsiniz." },
+        { q: "Biçimlendirme ve düzen korunur mu?", a: "Metin içeriği çıkarılır; renk, yazı tipi ve sayfa düzeni gibi biçimlendirme .txt'de yer almaz." },
+        { q: "PDF'ten metin çıkarmak ücretsiz mi?", a: "Evet. PDF'inizi yükleyin, metni .txt olarak saniyeler içinde indirin — üyelik gerekmez." },
       ],
     ),
     en: T(
@@ -653,6 +784,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I extract text from a PDF?", a: "Upload your PDF; the text layer is exported as a plain text (.txt) file and downloaded." },
         { q: "Does it extract text from scanned PDFs?", a: "PDFs with a text layer give the best results; scanned images may have limited text." },
+        { q: "Can I copy and edit the extracted text?", a: "Yes. The output is a plain text (.txt) file you can open, copy, and edit in any text editor." },
+        { q: "Is formatting and layout preserved?", a: "The text content is extracted; formatting such as color, fonts, and page layout is not included in .txt." },
+        { q: "Is extracting text from PDF free?", a: "Yes. Upload your PDF and download the text as .txt in seconds — no account required." },
       ],
     ),
   },
@@ -667,6 +801,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF'i neden düzleştirmeliyim?", a: "Düzleştirme, form alanlarını ve açıklamaları sayfaya gömerek içeriğin yanlışlıkla değiştirilmesini önler ve görünümü her cihazda sabitler." },
         { q: "Düzleştirilen form yeniden düzenlenebilir mi?", a: "Hayır. Düzleştirme kalıcıdır; alanlar artık ayrı ayrı düzenlenemez. Önce bir yedek almanız önerilir." },
+        { q: "Form alanları ve imzalar düzleştirmede korunur mu?", a: "Evet. Doldurulmuş form değerleri, imzalar ve açıklamalar sayfaya görsel olarak gömülür; görünüm birebir korunur." },
+        { q: "Düzleştirilmiş PDF her cihazda aynı görünür mü?", a: "Evet. İçerik sabitlendiği için PDF, farklı okuyucu ve cihazlarda aynı görünür." },
+        { q: "Düzleştirme dosya boyutunu artırır mı?", a: "Genellikle hayır; çoğu durumda etkileşimli katmanlar kaldırıldığı için boyut aynı kalır veya biraz azalır." },
       ],
     ),
     en: T(
@@ -678,6 +815,9 @@ export const TOOL_SEO = {
       [
         { q: "Why should I flatten a PDF?", a: "Flattening embeds form fields and annotations into the page, preventing accidental edits and fixing the appearance on every device." },
         { q: "Can a flattened form be edited again?", a: "No. Flattening is permanent; fields can no longer be edited individually. Keep a backup first." },
+        { q: "Are form fields and signatures kept when flattening?", a: "Yes. Filled form values, signatures, and annotations are embedded visually into the page, preserving the exact appearance." },
+        { q: "Does a flattened PDF look the same on every device?", a: "Yes. With content fixed in place, the PDF looks identical across readers and devices." },
+        { q: "Does flattening increase file size?", a: "Usually not; in most cases size stays the same or drops slightly because interactive layers are removed." },
       ],
     ),
   },
@@ -692,6 +832,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF nasıl yapay zekâ ile özetlenir?", a: "PDF'i yükleyin; araç belgeyi okur, türünü (ihale, sözleşme, akademik…) tanır ve taraflar, tarihler, tutarlar ve çıkarımlarla yapılandırılmış bir özet üretir." },
         { q: "Taranmış PDF'i özetleyebilir miyim?", a: "Evet. Taranmış/fotoğraf PDF'lerde OCR otomatik devreye girip yazıyı metne çevirir, ardından özet çıkarılır." },
+        { q: "Özet güvenilir mi, uydurma yapar mı?", a: "Özet yalnızca belgenizdeki bilgiye dayanır; taraflar, tarihler ve tutarlar belgeden alınır. Belgede olmayan bilgi eklenmez." },
+        { q: "Hangi belge türlerini özetleyebilirim?", a: "Sözleşme, ihale, akademik makale, rapor, mali tablo ve daha fazlası — araç türü tanıyıp ona uygun bir özet çıkarır." },
+        { q: "Uzun, çok sayfalı PDF'leri özetleyebilir miyim?", a: "Evet. Çok sayfalı belgeler baştan sona okunur ve en önemli noktalar özetlenir." },
       ],
     ),
     en: T(
@@ -703,6 +846,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I summarize a PDF with AI?", a: "Upload the PDF; the tool reads it, detects its type (tender, contract, academic…) and produces a structured summary with parties, dates, amounts and takeaways." },
         { q: "Can I summarize a scanned PDF?", a: "Yes. For scanned/image PDFs, OCR kicks in automatically to turn the image into text, then the summary is generated." },
+        { q: "Is the summary reliable — does it make things up?", a: "The summary is grounded only in your document; parties, dates, and amounts come from the file. It doesn't add information that isn't there." },
+        { q: "Which document types can I summarize?", a: "Contracts, tenders, academic papers, reports, financial statements, and more — the tool detects the type and tailors the summary." },
+        { q: "Can I summarize long, multi-page PDFs?", a: "Yes. Multi-page documents are read end to end and the most important points are summarized." },
       ],
     ),
   },
@@ -717,6 +863,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF ile sohbet nasıl çalışır?", a: "PDF'i yükleyin ve doğal dille soru sorun. Yapay zekâ yalnızca belgedeki bilgiye dayanarak yanıtlar; belgede yoksa 'belgede yok' der." },
         { q: "Yanıtlar güvenilir mi?", a: "Yanıtlar yalnızca yüklediğiniz belgeden gelir, uydurma yapılmaz. Böylece kaynağı belgeniz olan doğru cevaplar alırsınız." },
+        { q: "Belge hangi dilde olursa çalışır mı?", a: "Evet. Türkçe, İngilizce ve birçok dildeki belgelerle çalışır; sorunuzu istediğiniz dilde sorabilirsiniz." },
+        { q: "Belgemin ve sorularımın gizliliği korunur mu?", a: "Belgeniz yalnızca sorularınızı yanıtlamak için işlenir; sohbet oturumu sizindir." },
+        { q: "Ne tür sorular sorabilirim?", a: "'Sözleşme süresi ne?', 'Cezai şart var mı?', 'Toplam tutar kaç?' gibi belgeye dair her soruyu doğal dille sorabilirsiniz." },
       ],
     ),
     en: T(
@@ -728,6 +877,9 @@ export const TOOL_SEO = {
       [
         { q: "How does chatting with a PDF work?", a: "Upload the PDF and ask questions in plain language. The AI answers based only on the document; if the answer isn't there, it says so." },
         { q: "Are the answers reliable?", a: "Answers come only from your uploaded document, with no fabrication — so you get accurate answers grounded in your file." },
+        { q: "Does it work whatever language the document is in?", a: "Yes. It works with documents in Turkish, English, and many languages, and you can ask in the language you prefer." },
+        { q: "Are my document and chat kept private?", a: "Your document is processed only to answer your questions; the chat session is yours." },
+        { q: "What kind of questions can I ask?", a: "Ask anything about the file in plain language — 'What's the contract term?', 'Is there a penalty clause?', 'What's the total amount?'" },
       ],
     ),
   },
@@ -743,6 +895,8 @@ export const TOOL_SEO = {
         { q: "PDF'teki mevcut yazıyı nasıl silip değiştiririm?", a: "PDF'i yükleyin, editör tam ekran açılır. 'Metni Değiştir' ile değiştirmek istediğiniz yazının üstüne kutu çizin — o metin gelir, yenisini yazın (boş bırakırsanız silinir). «Tamam» → «PDF'i Hazırla» → indirin." },
         { q: "Metin gerçekten siliniyor mu, yoksa üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile seçili bölgedeki metin PDF'ten kaldırılır (örtme değil), yerine yeni metin yazılır." },
         { q: "Dosyam güvende mi?", a: "Evet. Gerçek metin düzenleme için dosya güvenli sunucumuzda işlenir ve işlem biter bitmez silinir, saklanmaz. (Diğer araçlarımız cihazınızda çalışır.)" },
+        { q: "Yeni metin, görsel veya sayfa ekleyebilir miyim?", a: "Evet. Mevcut yazıyı değiştirmenin yanı sıra yeni metin kutuları ve görsel ekleyebilir, düzenlemenizi PDF olarak indirebilirsiniz." },
+        { q: "Taranmış PDF'i düzenleyebilir miyim?", a: "Metin katmanı olan PDF'lerde en iyi sonucu alırsınız; taranmış belgelerde önce OCR ile metin oluşturmanız gerekir." },
       ],
     ),
     en: T(
@@ -755,6 +909,8 @@ export const TOOL_SEO = {
         { q: "How do I delete and change existing text in a PDF?", a: "Upload the PDF and the editor opens full-screen. With 'Replace Text', draw a box over the text you want to change — it's captured, then type the new text (leave empty to delete). Click 'Done' → 'Prepare PDF' → download." },
         { q: "Is the text truly deleted or just covered?", a: "Truly deleted. Using PyMuPDF redaction, the text in the selected area is removed from the PDF (not covered), and new text is written in its place." },
         { q: "Is my file safe?", a: "Yes. For real text editing the file is processed on our secure server and deleted right after — never stored. (Our other tools run on your device.)" },
+        { q: "Can I add new text, images, or pages?", a: "Yes. Besides changing existing text, you can add new text boxes and images, then download your edit as a PDF." },
+        { q: "Can I edit a scanned PDF?", a: "You get the best results on PDFs with a text layer; for scanned documents, run OCR first to create the text." },
       ],
     ),
   },
@@ -770,6 +926,8 @@ export const TOOL_SEO = {
         { q: "PDF'e nasıl imza eklerim?", a: "PDF'i yükleyin, «İmza Oluştur» ile imzanızı çizin/yazın/yükleyin, sonra sayfada istediğiniz yere tıklayıp yerleştirin. Sürükleyerek konumlandırın, köşeden boyutlandırın, «Uygula ve İndir» deyin." },
         { q: "İmzam ve dosyam sunucuya gidiyor mu?", a: "Hayır. İmzalama tamamen tarayıcınızda (cihazınızda) yapılır; PDF ve imza asla yüklenmez. %100 gizli ve üyeliksizdir." },
         { q: "Birden fazla sayfaya imza atabilir miyim?", a: "Evet. Farklı sayfaları seçip her birine imza/tarih yerleştirebilir, hepsini tek seferde uygulayabilirsiniz." },
+        { q: "İmzamı nasıl oluşturabilirim?", a: "İmzanızı parmağınız veya farenizle çizebilir, adınızı yazıp imza yazı tipi seçebilir ya da imzanızın fotoğrafını (PNG/JPG) yükleyebilirsiniz." },
+        { q: "İmza yasal olarak geçerli mi?", a: "Görsel (ıslak imza görünümlü) elektronik imza eklersiniz; birçok belge için uygundur. Nitelikli e-imza gerektiren resmi işlemlerde onu tercih edin." },
       ],
     ),
     en: T(
@@ -782,6 +940,8 @@ export const TOOL_SEO = {
         { q: "How do I add a signature to a PDF?", a: "Upload the PDF, click 'Create signature' to draw/type/upload it, then click on the page to place it. Drag to position, resize from the corner, and click 'Apply & download'." },
         { q: "Do my signature and file get uploaded?", a: "No. Signing happens entirely in your browser (on your device); the PDF and signature are never uploaded. It's 100% private and needs no sign-up." },
         { q: "Can I sign multiple pages?", a: "Yes. Select different pages and place a signature/date on each, then apply them all at once." },
+        { q: "How do I create my signature?", a: "Draw it with your finger or mouse, type your name and pick a signature font, or upload a photo of your signature (PNG/JPG)." },
+        { q: "Is the signature legally valid?", a: "You add a visual (wet-ink-style) electronic signature, suitable for many documents. For official processes requiring a qualified e-signature, use that instead." },
       ],
     ),
   },
@@ -797,6 +957,8 @@ export const TOOL_SEO = {
         { q: "PDF'te yazının üzerini nasıl işaretlerim?", a: "PDF'i yükleyin, «Fosforlu» aracını seçin, bir renk seçip yazının üzerinde sürükleyin. Kalem yarı saydamdır, altındaki metin okunur kalır. «Uygula ve İndir» ile işaretli PDF'i indirin." },
         { q: "Yazının üzerini çizince metin silinir mi?", a: "Hayır. İşaretlemeler PDF'in üzerine eklenir; mevcut yazı asla silinmez veya değişmez. Fosforlu/keçeli kalem yarı saydam olduğundan alttaki yazı görünür kalır." },
         { q: "Dosyam sunucuya gidiyor mu?", a: "Hayır. Tüm işaretleme tarayıcınızda (cihazınızda) yapılır; PDF asla yüklenmez. %100 gizli ve üyeliksizdir." },
+        { q: "Fosforlu dışında hangi araçlar var?", a: "Fosforlu kalemin yanında serbest çizim kalemi, dikdörtgen kutu, ok/çizgi ve metin/not ekleme araçları vardır." },
+        { q: "Yaptığım işaretlemeleri geri alabilir miyim?", a: "Evet. Uygulamadan önce işaretlemeleri geri alabilir veya silebilirsiniz; nihai PDF'i indirene kadar orijinal dosya değişmez." },
       ],
     ),
     en: T(
@@ -809,6 +971,8 @@ export const TOOL_SEO = {
         { q: "How do I highlight text in a PDF?", a: "Upload the PDF, pick the 'Marker' tool, choose a color and drag over the text. The marker is semi-transparent, so the underlying text stays readable. Click 'Apply & download' to get the annotated PDF." },
         { q: "Does drawing over text erase it?", a: "No. Annotations are drawn on top of the PDF; existing text is never removed or changed. The highlighter/marker is semi-transparent, so the text below stays visible." },
         { q: "Does my file get uploaded?", a: "No. All annotating happens in your browser (on your device); the PDF is never uploaded. It's 100% private and needs no sign-up." },
+        { q: "Which tools are there besides the highlighter?", a: "Alongside the highlighter, there's a freehand pen, a rectangle box, arrow/line, and a text/note tool." },
+        { q: "Can I undo my annotations?", a: "Yes. You can undo or delete annotations before applying; the original file stays unchanged until you download the final PDF." },
       ],
     ),
   },
@@ -823,6 +987,9 @@ export const TOOL_SEO = {
       [
         { q: "Taranmış PDF'teki yazıyı nasıl metne çeviririm?", a: "PDF'i yükleyin; OCR sayfa görüntülerindeki yazıyı tarayıcınızda gerçek metne dönüştürür. Sonra özetleyebilir, arayabilir veya düzenleyebilirsiniz." },
         { q: "OCR hangi dilleri destekliyor?", a: "Türkçe ve İngilizce desteklenir. İşlem cihazınızda yapılır; belgeniz sunucuya yüklenmez." },
+        { q: "OCR sonrası metni arayıp kopyalayabilir miyim?", a: "Evet. Tanınan metni Ctrl+F ile arayabilir, kopyalayabilir veya düzenleyebilirsiniz; belge aranabilir hale gelir." },
+        { q: "El yazısını tanır mı?", a: "OCR basılı/dizgi metinde en iyi sonucu verir; el yazısı ve çok bozuk taramalarda doğruluk düşebilir." },
+        { q: "OCR ücretsiz mi ve dosyam güvende mi?", a: "İşlem tarayıcınızda çalışır; belgeniz sunucuya gitmez, %100 gizlidir." },
       ],
     ),
     en: T(
@@ -834,6 +1001,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I convert a scanned PDF to text?", a: "Upload the PDF; OCR turns the text in the page images into real text in your browser. You can then summarize, search or edit it." },
         { q: "Which languages does OCR support?", a: "Turkish and English are supported. Processing happens on your device; your document is not uploaded to a server." },
+        { q: "Can I search and copy the text after OCR?", a: "Yes. Search the recognized text with Ctrl+F, copy it, or edit it — the document becomes searchable." },
+        { q: "Does it recognize handwriting?", a: "OCR works best on printed/typeset text; accuracy can drop with handwriting and very degraded scans." },
+        { q: "Is OCR free and is my file safe?", a: "Processing runs in your browser; your document never goes to a server and stays 100% private." },
       ],
     ),
   },
@@ -848,6 +1018,9 @@ export const TOOL_SEO = {
       [
         { q: "Faturadan veri nasıl çıkarılır?", a: "PDF'i yükleyin; yapay zekâ belge türünü tanır ve fatura no, tarih, taraflar, toplam, KDV gibi alanları ve satır kalemlerini yapılandırılmış olarak çıkarır. CSV/JSON indirebilirsiniz." },
         { q: "Birden çok faturayı tek tabloya alabilir miyim?", a: "Evet. «AI Toplu İşlem» aracıyla onlarca faturayı işleyip hepsini tek bir CSV tablosunda birleştirebilirsiniz." },
+        { q: "Hangi formatta veri indirebilirim?", a: "Çıkarılan verileri CSV (Excel'de açılır) veya JSON olarak indirebilirsiniz; muhasebe ve otomasyon sistemlerine kolayca aktarılır." },
+        { q: "Fatura dışında başka belgelerden veri çıkarır mı?", a: "Evet. İrsaliye, makbuz, sözleşme ve form gibi belgelerdeki anahtar alanlar da yapılandırılmış olarak çıkarılabilir." },
+        { q: "Taranmış faturalardan veri çıkarabilir miyim?", a: "Evet. Taranmış/fotoğraf faturalarda OCR devreye girer, ardından alanlar tespit edilir." },
       ],
     ),
     en: T(
@@ -859,6 +1032,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I extract data from an invoice?", a: "Upload the PDF; the AI detects the document type and extracts fields like invoice no, date, parties, total, VAT and line items as structured data. You can download CSV/JSON." },
         { q: "Can I extract many invoices into one table?", a: "Yes. With the «AI Batch» tool you can process dozens of invoices and merge them all into a single CSV table." },
+        { q: "In which format can I download the data?", a: "Download the extracted data as CSV (opens in Excel) or JSON, ready to import into accounting and automation systems." },
+        { q: "Does it extract data from documents other than invoices?", a: "Yes. Key fields from delivery notes, receipts, contracts, and forms can also be extracted as structured data." },
+        { q: "Can I extract data from scanned invoices?", a: "Yes. For scanned/photo invoices, OCR runs first, then the fields are detected." },
       ],
     ),
   },
@@ -873,6 +1049,9 @@ export const TOOL_SEO = {
       [
         { q: "PDF nasıl başka dile çevrilir?", a: "PDF'i yükleyin, hedef dili seçin ve «Çevir» deyin. Yapay zekâ belgeyi anlam ve yapısını koruyarak çevirir; sonucu PDF olarak indirebilirsiniz." },
         { q: "Çeviride belgenin düzeni korunur mu?", a: "Evet. Başlıklar, listeler ve tablolar korunarak çevrilir; sayı, tarih ve özel isimler olduğu gibi kalır." },
+        { q: "Hangi dillere çeviri yapabilirim?", a: "İngilizce, Almanca, Fransızca, İspanyolca, Arapça ve daha birçok dil desteklenir; hedef dili seçmeniz yeterli." },
+        { q: "Çevrilen PDF'i düzenleyebilir miyim?", a: "Sonucu PDF olarak indirebilir; metni ayrıca kopyalayıp başka belgelere aktarabilirsiniz." },
+        { q: "Taranmış PDF'i çevirebilir miyim?", a: "Evet. Taranmış belgelerde önce OCR ile metin tanınır, ardından çeviri yapılır." },
       ],
     ),
     en: T(
@@ -884,6 +1063,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I translate a PDF into another language?", a: "Upload the PDF, pick a target language and click 'Translate'. The AI translates while preserving meaning and structure; you can download the result as a PDF." },
         { q: "Is the layout preserved in translation?", a: "Yes. Headings, lists and tables are kept, and numbers, dates and proper nouns stay intact." },
+        { q: "Which languages can I translate to?", a: "English, German, French, Spanish, Arabic, and many more are supported — just pick the target language." },
+        { q: "Can I edit the translated PDF?", a: "You can download the result as a PDF, and also copy the text to use in other documents." },
+        { q: "Can I translate a scanned PDF?", a: "Yes. For scanned documents, text is recognized with OCR first, then translated." },
       ],
     ),
   },
@@ -899,6 +1081,8 @@ export const TOOL_SEO = {
         { q: "PDF'teki hassas veri nasıl gizlenir?", a: "PDF'i yükleyin; araç TC/IBAN/telefon/e-postayı cihazınızda, isim/adresi yapay zekâ ile bulur. Onayladıklarınız sunucuda gerçek redaction ile PDF'ten kalıcı kaldırılır." },
         { q: "Veriler gerçekten siliniyor mu, üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile veri PDF'in içeriğinden kaldırılır; üstüne siyah kutu konulup altında metin kalması gibi bir durum olmaz." },
         { q: "KVKK için uygun mu?", a: "Kişisel verileri kalıcı olarak kaldırmanıza yardımcı olur. Yine de kritik belgelerde sonucu gözden geçirmeniz ve kurumsal veri politikanıza uymanız önerilir." },
+        { q: "Hangi tür veriler otomatik bulunur?", a: "TC kimlik no, IBAN, telefon ve e-posta cihazınızda; kişi adı ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir." },
+        { q: "Neyin gizleneceğini ben seçebilir miyim?", a: "Evet. Araç bulduğu alanları önerir; siz onaylar, ekler veya çıkarırsınız — yalnızca onayladıklarınız kaldırılır." },
       ],
     ),
     en: T(
@@ -911,6 +1095,8 @@ export const TOOL_SEO = {
         { q: "How do I redact sensitive data in a PDF?", a: "Upload the PDF; the tool finds ID/IBAN/phone/email on your device and names/addresses with AI. What you confirm is permanently removed via true server-side redaction." },
         { q: "Is the data truly removed or just covered?", a: "Truly removed. With PyMuPDF redaction the data is stripped from the PDF's content; there's no black box with readable text underneath." },
         { q: "Is it suitable for GDPR/KVKK?", a: "It helps you permanently remove personal data. Still, review the result on critical documents and follow your organization's data policy." },
+        { q: "What kinds of data are found automatically?", a: "ID numbers, IBAN, phone, and email on your device; context-based data like personal names and addresses are detected with AI." },
+        { q: "Can I choose what gets redacted?", a: "Yes. The tool suggests the fields it finds; you confirm, add, or remove — only what you approve is redacted." },
       ],
     ),
   },
@@ -925,6 +1111,9 @@ export const TOOL_SEO = {
       [
         { q: "İki PDF nasıl karşılaştırılır?", a: "İki belgeyi (A: eski, B: yeni) yükleyin; yapay zekâ eklenen, çıkarılan ve değişen maddeleri çıkarır ve renk kodlu olarak listeler." },
         { q: "Hangi farkları yakalar?", a: "Özellikle bağlayıcı değişiklikleri: tutar, tarih, süre, taraf, yükümlülük ve ceza maddelerini. Biçimsel/önemsiz farkları yok sayar." },
+        { q: "Karşılaştırma için hangi belgeleri yükleyebilirim?", a: "Sözleşmelerin iki sürümü, revize teklifler veya güncellenen raporlar gibi aynı belgenin eski ve yeni hâllerini yükleyebilirsiniz." },
+        { q: "Farklar nasıl gösterilir?", a: "Eklenen, çıkarılan ve değişen maddeler renk kodlu listelenir; her değişikliğin özeti ve önemi belirtilir." },
+        { q: "Taranmış belgeleri karşılaştırabilir miyim?", a: "Evet. Taranmış PDF'lerde OCR ile metin çıkarılıp karşılaştırma yapılır." },
       ],
     ),
     en: T(
@@ -936,6 +1125,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I compare two PDFs?", a: "Upload two documents (A: old, B: new); the AI extracts added, removed and changed clauses and lists them color-coded." },
         { q: "Which differences does it catch?", a: "Especially binding changes: amounts, dates, terms, parties, obligations and penalties. It ignores trivial/formatting differences." },
+        { q: "Which documents can I upload to compare?", a: "Upload old and new versions of the same document — two versions of a contract, revised proposals, or updated reports." },
+        { q: "How are the differences shown?", a: "Added, removed, and changed clauses are listed color-coded, each with a summary and its significance." },
+        { q: "Can I compare scanned documents?", a: "Yes. For scanned PDFs, text is extracted with OCR and then compared." },
       ],
     ),
   },
@@ -950,6 +1142,9 @@ export const TOOL_SEO = {
       [
         { q: "Birden çok PDF'i tek seferde nasıl işlerim?", a: "PDF'leri toplu yükleyin, işlemi (özet / veri çıkar / çeviri) seçin ve başlatın. Her dosya sırayla işlenir; sonuçları tek CSV veya PDF olarak indirebilirsiniz." },
         { q: "Faturaları tek tabloda birleştirebilir miyim?", a: "Evet. Veri çıkarma modunda tüm faturaların alanları birleştirilip, her satırı bir dosya olan tek bir CSV tablosu oluşturulur." },
+        { q: "Aynı anda kaç PDF işleyebilirim?", a: "Onlarca dosyayı toplu yükleyip sırayla işleyebilirsiniz; büyük arşivleri tek seferde özetleyip veriye dönüştürmek için idealdir." },
+        { q: "Hangi toplu işlemleri yapabilirim?", a: "Toplu özetleme, toplu veri çıkarma ve toplu çeviri desteklenir; işlemi bir kez seçip tüm dosyalara uygularsınız." },
+        { q: "Sonuçları nasıl indiririm?", a: "Veri çıkarmada birleşik CSV; özet ve çeviride her dosya için ayrı çıktı veya birleşik PDF olarak indirebilirsiniz." },
       ],
     ),
     en: T(
@@ -961,6 +1156,9 @@ export const TOOL_SEO = {
       [
         { q: "How do I process multiple PDFs at once?", a: "Upload the PDFs in bulk, choose the operation (summarize / extract / translate) and start. Each file is processed in turn; you can export the results as one CSV or PDF." },
         { q: "Can I merge invoices into one table?", a: "Yes. In extract mode, the fields of all invoices are merged into a single CSV table with one row per file." },
+        { q: "How many PDFs can I process at once?", a: "Upload and process dozens of files in turn — ideal for summarizing and turning large archives into data in one go." },
+        { q: "Which batch operations are available?", a: "Batch summarize, batch extract, and batch translate are supported; pick the operation once and apply it to every file." },
+        { q: "How do I download the results?", a: "A combined CSV for extraction; for summaries and translation, per-file outputs or one combined PDF." },
       ],
     ),
   },
