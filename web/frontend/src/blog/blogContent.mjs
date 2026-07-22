@@ -3135,6 +3135,138 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "adobe-acrobat-alternatifi-ucretsiz",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 5,
+      tags: { tr: ["Karşılaştırma", "Ücretsiz"], en: ["Comparison", "Free"] },
+      accent: "fuchsia",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri",
+      description:
+        "Adobe Acrobat'a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda.",
+      excerpt:
+        "Çoğu PDF işi için pahalı Acrobat aboneliğine gerek yok. Birleştirmeden imzaya, kurulum olmadan tarayıcıda yapabileceğiniz işler ve dürüst sınırlar.",
+      blocks: [
+        { t: "lead", x: "Adobe Acrobat güçlü bir program, ama tam sürümü ücretli ve kurulum ister. İyi haber: gündelik PDF işlerinin büyük kısmı için ne abonelik ne de kurulum gerekir — hepsini tarayıcınızda ücretsiz yapabilirsiniz." },
+        { t: "h2", x: "Acrobat olmadan hangi işleri yapabilirsiniz?" },
+        { t: "ul", items: [
+          "Birleştir, böl, döndür, sayfa sil, sayfa sırala — hepsi ücretsiz ve cihazınızda.",
+          "Görselden PDF, belge tarama, sayfa numarası ve filigran ekleme.",
+          "Metin ekleme, işaretleme ve imza atma.",
+          "Word/Excel/PowerPoint dönüştürme, sıkıştırma ve OCR (sunucuda, içerik saklanmaz).",
+        ] },
+        { t: "h2", x: "Kurulum ve abonelik derdi yok" },
+        { t: "p", x: "PDF Platform tamamen tarayıcıda çalışır — indirme, kurulum veya eklenti gerektirmez. Birleştirme, bölme ve imza gibi yapısal işlemler cihazınızda yapılır; dosyanız sunucuya bile gitmez. Üyelik yalnızca daha büyük dosyalar, geçmiş kaydı ve gelişmiş dönüştürme için gerekir." },
+        { t: "cta", title: "PDF Araçlarını Aç", x: "Birleştirin, dönüştürün, imzalayın — kurulum olmadan, ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "Peki Acrobat ne zaman gerekir?" },
+        { t: "p", x: "Dürüst olalım: karmaşık form tasarımı, ileri düzey ön kontrol (prepress) veya kurumsal doküman iş akışları için Acrobat Pro hâlâ güçlü bir seçenektir. Ama çoğu kullanıcının ihtiyacı birleştirmek, dönüştürmek, imzalamak ve metin eklemek — bunlar için ücretli bir programa gerek yok." },
+        { t: "tip", x: "Yalnızca bir PDF'i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz." },
+      ],
+      faq: [
+        { q: "Adobe Acrobat'a ücretsiz bir alternatif var mı?", a: "Evet. Gündelik işler (birleştir, böl, dönüştür, imzala, metin ekle) için PDF Platform'u kurulum ve çoğunda ücret olmadan tarayıcıda kullanabilirsiniz." },
+        { q: "Program kurmam gerekir mi?", a: "Hayır. Her şey tarayıcıda çalışır; indirme, kurulum veya eklenti gerekmez." },
+        { q: "PDF imzalamak için Acrobat şart mı?", a: "Hayır. İmzanızı tarayıcıda çizip/yükleyip PDF'e ekleyebilirsiniz; işlem cihazınızda yapılır, dosya sunucuya gitmez." },
+        { q: "Acrobat gerçekten ne zaman gerekir?", a: "İleri düzey form tasarımı, prepress veya kurumsal iş akışları için Acrobat Pro güçlüdür; ama çoğu gündelik iş için ücretsiz tarayıcı araçları yeterlidir." },
+      ],
+    },
+    {
+      title: "Free Adobe Acrobat Alternative: PDF Tasks With No Install",
+      description:
+        "Looking for a free Adobe Acrobat alternative? Merge, split, convert, sign and add text — no installation, no charge for most tasks, right in your browser.",
+      excerpt:
+        "You don't need a pricey Acrobat subscription for most PDF tasks. What you can do in the browser without installing anything — and the honest limits.",
+      blocks: [
+        { t: "lead", x: "Adobe Acrobat is powerful, but the full version is paid and needs installation. The good news: for most everyday PDF tasks you need neither a subscription nor an install — you can do it all free in your browser." },
+        { t: "h2", x: "What can you do without Acrobat?" },
+        { t: "ul", items: [
+          "Merge, split, rotate, delete pages, reorder pages — all free and on your device.",
+          "Image-to-PDF, document scanning, page numbers and watermarks.",
+          "Adding text, annotating and signing.",
+          "Word/Excel/PowerPoint conversion, compression and OCR (on the server, content not stored).",
+        ] },
+        { t: "h2", x: "No install, no subscription hassle" },
+        { t: "p", x: "PDF Platform runs entirely in the browser — no download, install or plugin. Structural tasks like merge, split and sign happen on your device; your file doesn't even go to a server. An account is only needed for larger files, history and advanced conversion." },
+        { t: "cta", title: "Open PDF Tools", x: "Merge, convert, sign — with no install, free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+        { t: "h2", x: "So when do you actually need Acrobat?" },
+        { t: "p", x: "Let's be honest: for complex form design, advanced prepress, or enterprise document workflows, Acrobat Pro is still a strong option. But most users just need to merge, convert, sign and add text — and for that you don't need a paid program." },
+        { t: "tip", x: "Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device." },
+      ],
+      faq: [
+        { q: "Is there a free alternative to Adobe Acrobat?", a: "Yes. For everyday tasks (merge, split, convert, sign, add text) you can use PDF Platform in the browser with no install and, for most, no charge." },
+        { q: "Do I need to install a program?", a: "No. Everything runs in the browser; no download, install or plugin is required." },
+        { q: "Do I need Acrobat to sign a PDF?", a: "No. Draw or upload your signature in the browser and add it to the PDF; it happens on your device and the file isn't uploaded." },
+        { q: "When do you really need Acrobat?", a: "For advanced form design, prepress, or enterprise workflows, Acrobat Pro is powerful; but for most everyday tasks, free browser tools are enough." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "ucretsiz-pdf-duzenleyici-rehberi",
+      date: "2026-07-22",
+      updated: "2026-07-22",
+      readMinutes: 5,
+      tags: { tr: ["Nasıl Yapılır", "Düzenleme"], en: ["How-to", "Editing"] },
+      accent: "sky",
+      tool: "/tools/pdf-duzenle",
+    },
+    {
+      title: "Ücretsiz PDF Düzenleyici: Metin Ekleme, Silme, İmza ve Form Doldurma",
+      description:
+        "PDF'i ücretsiz düzenleyin: mevcut yazıyı değiştirin/silin, yeni metin ekleyin, imzalayın, işaretleyin ve form doldurun — kurulum yok, tarayıcıda.",
+      excerpt:
+        "PDF düzenlemenin tek bir yolu yok: yazıyı değiştirmek, metin eklemek, imzalamak, işaretlemek... İhtiyacınıza göre hangi aracı kullanacağınızı gösteren rehber.",
+      blocks: [
+        { t: "lead", x: "\"PDF düzenleme\" herkes için aynı şey değildir: kimi mevcut yazıyı değiştirmek, kimi üzerine not eklemek, kimi imzalamak ister. Doğru aracı seçince iş saniyeler sürer. İşte ihtiyaca göre yol haritası." },
+        { t: "h2", x: "1) Mevcut yazıyı değiştirmek veya silmek" },
+        { t: "p", x: "PDF'teki bir yazıyı gerçekten silip yenisini yazmak istiyorsanız \"PDF Düzenle\" aracını kullanın. Değiştirmek istediğiniz metnin üzerine kutu çizin, yenisini yazın (boş bırakırsanız silinir) ve indirin." },
+        { t: "cta", title: "PDF Düzenle", x: "Mevcut yazıyı gerçekten silip değiştirin — kutu çizin, yeni metni yazın, indirin.", btn: "Aracı aç", tool: "/tools/pdf-duzenle" },
+        { t: "h2", x: "2) Üzerine metin, not veya işaret eklemek" },
+        { t: "p", x: "Mevcut yazıya dokunmadan üzerine metin, vurgu, kutu veya çizim eklemek istiyorsanız \"PDF İşaretle\" aracı idealdir. Formlardaki boşlukları doldurmak için de bunu kullanabilirsiniz." },
+        { t: "h2", x: "3) İmza atmak" },
+        { t: "p", x: "Belgeyi imzalamak için \"PDF İmzala\" aracıyla imzanızı çizin, yazın veya yükleyin; sayfada istediğiniz yere yerleştirin. İmzalama tamamen cihazınızda yapılır." },
+        { t: "h2", x: "4) Form doldurmak" },
+        { t: "p", x: "Doldurulabilir alanı olmayan (düz) formlarda metni doğrudan üzerine ekleyerek doldurabilirsiniz — ayrıntılı adımlar için form doldurma rehberimize bakın." },
+        { t: "tip", x: "Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz." },
+      ],
+      faq: [
+        { q: "PDF'i ücretsiz düzenleyebilir miyim?", a: "Evet. Metin ekleme, işaretleme ve imza gibi işlemler ücretsizdir; mevcut yazıyı gerçek anlamda silip değiştirmek için de PDF Düzenle aracını kullanabilirsiniz." },
+        { q: "PDF'teki yazıyı gerçekten silebilir miyim?", a: "Evet. PDF Düzenle aracı, seçtiğiniz bölgedeki metni gerçekten kaldırır (üstünü örtmez) ve yerine yenisini yazabilirsiniz." },
+        { q: "Kurulum gerekiyor mu?", a: "Hayır. Tüm düzenleme araçları tarayıcıda çalışır; indirme veya kurulum gerekmez." },
+        { q: "Hangi araç ne işe yarar?", a: "Mevcut yazıyı silmek/değiştirmek için PDF Düzenle; üzerine not/metin için PDF İşaretle; imza için PDF İmzala; düz form doldurmak için işaretleme aracı." },
+      ],
+    },
+    {
+      title: "Free PDF Editor: Add and Delete Text, Sign and Fill Forms",
+      description:
+        "Edit PDFs for free: change or delete existing text, add new text, sign, annotate and fill forms — no installation, right in your browser.",
+      excerpt:
+        "There's no single way to edit a PDF: changing text, adding text, signing, annotating... A guide to which tool to use for what you actually need.",
+      blocks: [
+        { t: "lead", x: "\"Editing a PDF\" means different things to different people: some want to change existing text, some to add notes on top, some to sign. Pick the right tool and it takes seconds. Here's a roadmap by need." },
+        { t: "h2", x: "1) Change or delete existing text" },
+        { t: "p", x: "If you want to actually remove text in a PDF and type new text, use the \"Edit PDF\" tool. Draw a box over the text to change, type the new text (leave empty to delete) and download." },
+        { t: "cta", title: "Edit PDF", x: "Truly delete and replace existing text — draw a box, type the new text, download.", btn: "Open the tool", tool: "/tools/pdf-duzenle" },
+        { t: "h2", x: "2) Add text, notes or marks on top" },
+        { t: "p", x: "To add text, highlights, boxes or drawings on top without touching existing text, the \"Annotate PDF\" tool is ideal. You can also use it to fill in blanks on forms." },
+        { t: "h2", x: "3) Sign" },
+        { t: "p", x: "To sign a document, use the \"Sign PDF\" tool to draw, type or upload your signature and place it anywhere on the page. Signing happens entirely on your device." },
+        { t: "h2", x: "4) Fill forms" },
+        { t: "p", x: "For forms with no fillable fields (flat), you can fill them by adding text directly on top — see our form-filling guide for detailed steps." },
+        { t: "tip", x: "For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing." },
+      ],
+      faq: [
+        { q: "Can I edit a PDF for free?", a: "Yes. Tasks like adding text, annotating and signing are free; to truly delete and replace existing text you can use the Edit PDF tool." },
+        { q: "Can I really delete text in a PDF?", a: "Yes. The Edit PDF tool actually removes the text in the selected area (it doesn't just cover it) and lets you type new text in its place." },
+        { q: "Do I need to install anything?", a: "No. All editing tools run in the browser; no download or installation is required." },
+        { q: "Which tool does what?", a: "Edit PDF to delete/change existing text; Annotate PDF for notes/text on top; Sign PDF for signatures; the annotate tool for filling flat forms." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
