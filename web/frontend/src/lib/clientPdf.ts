@@ -321,33 +321,45 @@ export async function splitPagesToZip(
  * araçlarla tutarlı). */
 export type CropRect = { xNorm: number; yNorm: number; wNorm: number; hNorm: number };
 
-/** KIRP — hedef sayfaların görünür alanını (CropBox) verilen dikdörtgene ayarlar.
- * İçerik SİLİNMEZ; yalnızca görünür kutu daralır (standart, geri alınabilir PDF
- * kırpması). `pages` boşsa tüm sayfalara uygulanır. */
-export async function cropPdf(
-  bytes: ArrayBuffer | Uint8Array,
-  crop: CropRect,
-  pages?: number[],
-): Promise<Uint8Array> {
-  const doc = await loadPdf(bytes);
-  const all = doc.getPages();
-  const targets = pages && pages.length ? pages : all.map((_, i) => i);
+/** Tek bir sayfanın CropBox'ını oranlı dikdörtgene göre ayarlar (üst-tabanlı → alt-sol). */
+function setPageCrop(page: ReturnType<PDFDocument["getPage"]>, crop: CropRect): void {
   const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
   const xN = clamp01(crop.xNorm);
   const yN = clamp01(crop.yNorm);
   const wN = clamp01(crop.wNorm);
   const hN = clamp01(crop.hNorm);
   if (wN <= 0.001 || hN <= 0.001) throw new Error("Crop area is empty.");
-  for (const i of targets) {
-    const page = all[i];
-    if (!page) continue;
-    const mb = page.getMediaBox();
-    const w = wN * mb.width;
-    const h = hN * mb.height;
-    const x = mb.x + xN * mb.width;
-    // yNorm üst-tabanlı → pdf-lib alt-sol origin
-    const y = mb.y + mb.height - yN * mb.height - h;
-    page.setCropBox(x, y, w, h);
+  const mb = page.getMediaBox();
+  const w = wN * mb.width;
+  const h = hN * mb.height;
+  const x = mb.x + xN * mb.width;
+  const y = mb.y + mb.height - yN * mb.height - h; // yNorm üst-tabanlı → pdf-lib alt-sol origin
+  page.setCropBox(x, y, w, h);
+}
+
+/** KIRP — sayfaların görünür alanını (CropBox) daraltır. İçerik SİLİNMEZ (standart,
+ * geri alınabilir PDF kırpması).
+ * - `crop` tek bir CropRect ise: `pages`'teki sayfalara (boşsa TÜMÜNE) aynı kırpma.
+ * - `crop` bir harita ise ({sayfaIndex: CropRect}): HER sayfaya KENDİ dikdörtgeni;
+ *   haritada olmayan sayfalar dokunulmadan (tam) kalır. */
+export async function cropPdf(
+  bytes: ArrayBuffer | Uint8Array,
+  crop: CropRect | Record<number, CropRect>,
+  pages?: number[],
+): Promise<Uint8Array> {
+  const doc = await loadPdf(bytes);
+  const all = doc.getPages();
+  if ("xNorm" in crop) {
+    const targets = pages && pages.length ? pages : all.map((_, i) => i);
+    for (const i of targets) {
+      const page = all[i];
+      if (page) setPageCrop(page, crop);
+    }
+  } else {
+    for (const [k, rect] of Object.entries(crop)) {
+      const page = all[Number(k)];
+      if (page) setPageCrop(page, rect);
+    }
   }
   return doc.save();
 }
