@@ -7,7 +7,7 @@
  *   - POST/PUT vb. ve çapraz-köken istekleri: dokunulmaz, tarayıcıya bırakılır
  * Sürüm değişince activate'te eski önbellekler silinir.
  */
-const SW_VERSION = "v1.0.16";
+const SW_VERSION = "v1.0.17";
 const STATIC_CACHE = `nbpdf-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `nbpdf-runtime-${SW_VERSION}`;
 const APP_SHELL_URL = "/";
@@ -24,13 +24,13 @@ const PRECACHE_URLS = [
 ];
 
 self.addEventListener("install", (event) => {
-  // OTOMATIK GÜNCELLEME: yeni SW kurulur kurulmaz beklemeyi atlar. Böylece yeni bir
-  // deploy çıktığında kullanıcının banner'a tıklamasına gerek kalmaz — bir sonraki
-  // ziyarette (ya da açık sekmede) yeni sürüm kendiliğinden devreye girer, activate'te
-  // eski cache'ler silinir, controllerchange → tek seferlik reload ile temiz geçilir.
-  // (Eski sürümde banner onayı bekleniyordu; onaylamayan kullanıcılar bozuk/eski
-  // cache'te kalıp yeni asset hash'lerine ulaşamıyordu → PDF worker 404 → takılma.)
-  self.skipWaiting();
+  // PROMPT PATTERN: yeni SW BEKLER (burada skipWaiting YOK). Kullanıcı form/ödeme/PDF
+  // işlemi ortasındayken ZORLA reload edip işini kaybetmeyelim (web.dev + Workbox,
+  // veri-girişli uygulamalar için bunu önerir). Kullanıcı sağ üstteki "Güncelle"ye
+  // basınca sayfa SKIP_WAITING mesajı yollar → aşağıdaki message listener skipWaiting
+  // çağırır → yeni sürüm devreye girer, controllerchange → reload. Bu arada eski açık
+  // sekme yeni bir lazy chunk isteyip 404 alırsa installChunkReloadGuard
+  // (vite:preloadError) tek seferlik reload ile kurtarır → takılma olmaz.
   event.waitUntil(
     caches.open(STATIC_CACHE).then(async (cache) => {
       // Tek tek ekle: biri 404 olsa bile install'ı bozma.
