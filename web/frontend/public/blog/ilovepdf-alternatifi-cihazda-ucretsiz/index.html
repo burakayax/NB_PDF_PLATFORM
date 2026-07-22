@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları — PDF Platform</title>
+    <meta name="description" content="iLovePDF&#39;ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları — PDF Platform" />
+    <meta property="og:description" content="iLovePDF&#39;ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları — PDF Platform" />
+    <meta name="twitter:description" content="iLovePDF&#39;ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları","description":"iLovePDF'ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın.","datePublished":"2026-07-22","dateModified":"2026-07-22","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"iLovePDF'ye tamamen ücretsiz bir alternatif var mı?","acceptedAnswer":{"@type":"Answer","text":"Evet. PDF Platform'da birleştir, böl, döndür, sil gibi yapısal araçlar üyeliksiz, ücretsiz ve zorunlu filigransızdır; işlem tarayıcınızda çalışır."}},{"@type":"Question","name":"Dosyam gerçekten sunucuya yüklenmiyor mu?","acceptedAnswer":{"@type":"Answer","text":"Yapısal araçlarda (birleştir, böl, döndür, sil, sırala, görsel → PDF) dosyanız tamamen cihazınızda işlenir, internete hiç gönderilmez. Dönüştürme ve OCR gibi işlemler sunucuda yapılır ancak içerik saklanmaz."}},{"@type":"Question","name":"Ücretsiz çıktıya filigran ekleniyor mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. PDF Platform ücretsiz çıktılara zorunlu filigran eklemez."}},{"@type":"Question","name":"Üye olmadan kullanabilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları</h1><p class="seo-intro">iLovePDF alternatifi ararken en kritik soru: dosyam nereye gidiyor? Cihazda çalışan, üyeliksiz ve zorunlu filigransız araçlarla dürüst bir karşılaştırma.</p><article class="seo-article"><p class="seo-lead">iLovePDF popüler bir araç, ama çoğu işlemde dosyanız önce sunucularına yüklenir. Hassas bir sözleşme, kimlik ya da mali tabloyu işlerken bu bir soru işareti bırakır. İşte dosyanızı cihazınızdan çıkarmadan aynı işleri yapmanın yolu.</p><h2>iLovePDF&#39;de dosyanız nereye gidiyor?</h2><p>iLovePDF gibi çoğu online araçta birleştirme, bölme veya dönüştürme için dosyanız sunucuya yüklenir, orada işlenir ve sonra silinir. Genelde güvenlidir; ama dosya yine de bir süre internete çıkar. Gizli belgelerde en güvenli yaklaşım, dosyanın cihazdan hiç ayrılmamasıdır.</p><h2>Bir alternatifte neye bakmalısınız?</h2><ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcınızda mı işleniyor?</li><li>Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu?</li><li>Üyelik zorunluluğu: Basit bir işlem için hesap isteniyor mu?</li><li>Günlük/işlem sınırı: Ücretsizde kaç işlem yapabiliyorsunuz?</li></ul><h2>PDF Platform&#39;un farkı: yapısal araçlar cihazda çalışır</h2><p>PDF Platform&#39;da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal işlemler tamamen tarayıcınızda (cihazınızda) çalışır — dosyanız internete hiç gönderilmez. Üyelik gerekmez, ücretsiz çıktıya zorunlu filigran eklenmez ve internet kesilse bile çalışır.</p><p><a href="/tools/merge-pdf"><strong>PDF Birleştir</strong> — Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — cihazınızda, ücretsiz.</a></p><h2>Hangi araçlar cihazda, hangileri sunucuda?</h2><p>Dürüst olmak gerekirse her işlem tarayıcıda yapılamaz. Ayrımı net söyleyelim:</p><ul><li>Cihazda (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, görsel → PDF, belge tara, imza ve işaretleme.</li><li>Sunucuda (içerik saklanmaz, şifreli bağlantı): Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları (özet, sohbet, çeviri).</li></ul><p>Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/merge-pdf">PDF Birleştirme</a></li><li><a href="/tools/split-pdf">PDF Ayırma</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>iLovePDF&#39;ye tamamen ücretsiz bir alternatif var mı?</h3><p>Evet. PDF Platform&#39;da birleştir, böl, döndür, sil gibi yapısal araçlar üyeliksiz, ücretsiz ve zorunlu filigransızdır; işlem tarayıcınızda çalışır.</p></div><div class="seo-faq-item"><h3>Dosyam gerçekten sunucuya yüklenmiyor mu?</h3><p>Yapısal araçlarda (birleştir, böl, döndür, sil, sırala, görsel → PDF) dosyanız tamamen cihazınızda işlenir, internete hiç gönderilmez. Dönüştürme ve OCR gibi işlemler sunucuda yapılır ancak içerik saklanmaz.</p></div><div class="seo-faq-item"><h3>Ücretsiz çıktıya filigran ekleniyor mu?</h3><p>Hayır. PDF Platform ücretsiz çıktılara zorunlu filigran eklemez.</p></div><div class="seo-faq-item"><h3>Üye olmadan kullanabilir miyim?</h3><p>Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

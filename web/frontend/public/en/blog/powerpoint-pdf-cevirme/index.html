@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>How to Convert PowerPoint to PDF (and PDF Back to PowerPoint) — PDF Platform</title>
+    <meta name="description" content="Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/powerpoint-pdf-cevirme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/powerpoint-pdf-cevirme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="How to Convert PowerPoint to PDF (and PDF Back to PowerPoint) — PDF Platform" />
+    <meta property="og:description" content="Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="How to Convert PowerPoint to PDF (and PDF Back to PowerPoint) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/powerpoint-pdf-cevirme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="How to Convert PowerPoint to PDF (and PDF Back to PowerPoint) — PDF Platform" />
+    <meta name="twitter:description" content="Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="How to Convert PowerPoint to PDF (and PDF Back to PowerPoint) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)","description":"Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/powerpoint-pdf-cevirme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image-en.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)","description":"Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Upload the deck","text":"Add your .ppt or .pptx file to the PowerPoint to PDF tool."},{"@type":"HowToStep","position":2,"name":"Convert","text":"All slides are combined into a single PDF with the design preserved."},{"@type":"HowToStep","position":3,"name":"Download","text":"Download the PDF — a share-ready deck that looks the same on every device."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I convert PowerPoint to PDF?","acceptedAnswer":{"@type":"Answer","text":"Upload your PPT/PPTX to the tool; all slides are combined into a single PDF with the design preserved, ready to download."}},{"@type":"Question","name":"Will the design break?","acceptedAnswer":{"@type":"Answer","text":"No. Slide layout, fonts and images are preserved; the deck looks the same on every device."}},{"@type":"Question","name":"Can I convert the PDF back to PowerPoint?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the PDF to PowerPoint tool to turn each page into a slide in an editable .pptx file."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)</h1><p class="seo-intro">Sharing a deck as a PDF keeps slides looking the same for everyone and safe from accidental edits. Here&#39;s how to convert PowerPoint to PDF — and back when you need to.</p><article class="seo-article"><p class="seo-lead">Sending a deck as a PowerPoint file can be risky: fonts may shift, animations may break, or slides may be changed by accident. PDF makes the deck look identical for everyone and un-editable.</p><h2>PowerPoint to PDF</h2><ol><li><strong>Upload the deck:</strong> Add your .ppt or .pptx file to the PowerPoint to PDF tool.</li><li><strong>Convert:</strong> All slides are combined into a single PDF with the design preserved.</li><li><strong>Download:</strong> Download the PDF — a share-ready deck that looks the same on every device.</li></ol><p><a href="/tools/ppt-to-pdf"><strong>PowerPoint to PDF</strong> — Convert your deck into a single PDF with the design intact.</a></p><h2>PDF back to PowerPoint</h2><p>If you only have the PDF version of a deck and want to edit it, you can convert the PDF back into PowerPoint slides — each page becomes a slide and you can reuse the content.</p><p><a href="/tools/pdf-to-ppt"><strong>PDF to PowerPoint</strong> — Turn a PDF deck into editable .pptx slides.</a></p><h2>Which one, when?</h2><ul><li>To share / present / archive: PowerPoint → PDF.</li><li>To edit an old deck / reuse content: PDF → PowerPoint.</li></ul></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/ppt-to-pdf">PowerPoint to PDF converter</a></li><li><a href="/en/tools/pdf-to-ppt">PDF to PowerPoint converter</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I convert PowerPoint to PDF?</h3><p>Upload your PPT/PPTX to the tool; all slides are combined into a single PDF with the design preserved, ready to download.</p></div><div class="seo-faq-item"><h3>Will the design break?</h3><p>No. Slide layout, fonts and images are preserved; the deck looks the same on every device.</p></div><div class="seo-faq-item"><h3>Can I convert the PDF back to PowerPoint?</h3><p>Yes. Use the PDF to PowerPoint tool to turn each page into a slide in an editable .pptx file.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

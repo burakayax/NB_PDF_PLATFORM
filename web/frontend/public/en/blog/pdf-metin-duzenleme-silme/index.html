@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>How to Edit a PDF: Actually Delete and Replace Existing Text — PDF Platform</title>
+    <meta name="description" content="Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/pdf-metin-duzenleme-silme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-metin-duzenleme-silme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="How to Edit a PDF: Actually Delete and Replace Existing Text — PDF Platform" />
+    <meta property="og:description" content="Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="How to Edit a PDF: Actually Delete and Replace Existing Text — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/pdf-metin-duzenleme-silme" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="How to Edit a PDF: Actually Delete and Replace Existing Text — PDF Platform" />
+    <meta name="twitter:description" content="Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="How to Edit a PDF: Actually Delete and Replace Existing Text — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How to Edit a PDF: Actually Delete and Replace Existing Text","description":"Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/pdf-metin-duzenleme-silme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image-en.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"How to Edit a PDF: Actually Delete and Replace Existing Text","description":"Most tools only COVER PDF text. The Edit PDF tool truly deletes the existing text and writes new text in its place. How it works, step by step.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Open the PDF","text":"Upload your document to the Edit PDF tool."},{"@type":"HowToStep","position":2,"name":"Click the text","text":"Click the text you want to change; the existing text is selected."},{"@type":"HowToStep","position":3,"name":"Delete or rewrite","text":"Remove the text or type a replacement. You can add and correct text."},{"@type":"HowToStep","position":4,"name":"Download","text":"Download the edited PDF — the change is baked into the document."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I really delete existing text in a PDF?","acceptedAnswer":{"@type":"Answer","text":"Yes. Instead of covering the text, the Edit PDF tool truly removes it from the document and lets you write new text in its place."}},{"@type":"Question","name":"Are Turkish characters supported?","acceptedAnswer":{"@type":"Answer","text":"Yes. Turkish characters (ç, ğ, ı, ö, ş, ü) are fully supported."}},{"@type":"Question","name":"Does it work on scanned (photo) PDFs?","acceptedAnswer":{"@type":"Answer","text":"In scanned PDFs the text is an image; you first need to turn it into text with OCR, then editing can be applied."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>How to Edit a PDF: Actually Delete and Replace Existing Text</h1><p class="seo-intro">Wrong date, price or name in a PDF? Most &#39;editors&#39; cover the text with a white box — the text still sits underneath. Real editing is different; here&#39;s how it works.</p><article class="seo-article"><p class="seo-lead">Fixing a small mistake in a PDF — a wrong date, an outdated price, a typo — can be harder than it looks. Because most online &#39;PDF editors&#39; don&#39;t actually delete the text; they just place a white box over it. This post covers real editing.</p><h2>&quot;Cover up&quot; vs &quot;truly delete&quot;</h2><p>With tools that put a box over the text, the original text stays inside the document: it can still show up when copied or searched. That&#39;s messy and a privacy risk. Real editing removes the text from the document and puts new text in its place.</p><p>Our Edit PDF tool uses PyMuPDF to TRULY remove existing text and place your new text — it doesn&#39;t cover it up. Turkish characters are fully supported.</p><h2>Step by step</h2><ol><li><strong>Open the PDF:</strong> Upload your document to the Edit PDF tool.</li><li><strong>Click the text:</strong> Click the text you want to change; the existing text is selected.</li><li><strong>Delete or rewrite:</strong> Remove the text or type a replacement. You can add and correct text.</li><li><strong>Download:</strong> Download the edited PDF — the change is baked into the document.</li></ol><p><a href="/tools/pdf-duzenle"><strong>Edit PDF</strong> — Truly delete and replace PDF text — no covering up.</a></p><h2>When it works — and when it doesn&#39;t</h2><p>This tool works on PDFs that contain a real text layer (for example, a PDF exported from Word). In scanned/photo PDFs the text is actually an image; there you first need to turn it into text with OCR.</p><p><a href="/tools/taranmis-pdf-ocr"><strong>OCR a scanned PDF</strong> — If your document is scanned, first turn the text into real text with OCR.</a></p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/pdf-duzenle">Edit PDF</a></li><li><a href="/en/tools/taranmis-pdf-ocr">Scanned PDF to Text (OCR)</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Can I really delete existing text in a PDF?</h3><p>Yes. Instead of covering the text, the Edit PDF tool truly removes it from the document and lets you write new text in its place.</p></div><div class="seo-faq-item"><h3>Are Turkish characters supported?</h3><p>Yes. Turkish characters (ç, ğ, ı, ö, ş, ü) are fully supported.</p></div><div class="seo-faq-item"><h3>Does it work on scanned (photo) PDFs?</h3><p>In scanned PDFs the text is an image; you first need to turn it into text with OCR, then editing can be applied.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

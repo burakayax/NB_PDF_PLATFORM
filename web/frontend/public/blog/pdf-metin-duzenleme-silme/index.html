@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme — PDF Platform</title>
+    <meta name="description" content="Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-metin-duzenleme-silme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme — PDF Platform" />
+    <meta property="og:description" content="Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme — PDF Platform" />
+    <meta name="twitter:description" content="Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme","description":"Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme","description":"Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i açın","text":"PDF Düzenle aracına belgenizi yükleyin."},{"@type":"HowToStep","position":2,"name":"Metne tıklayın","text":"Değiştirmek istediğiniz yazıya tıklayın; mevcut metin seçilir."},{"@type":"HowToStep","position":3,"name":"Silin veya yeniden yazın","text":"Yazıyı kaldırın ya da yerine yenisini yazın. Metin ekleyebilir, düzeltebilirsiniz."},{"@type":"HowToStep","position":4,"name":"İndirin","text":"Düzenlenmiş PDF'i indirin — değişiklik belgeye işlenmiş olur."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'teki mevcut yazıyı gerçekten silebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. PDF Düzenle aracı yazının üzerini kapatmak yerine metni belgeden gerçekten kaldırır ve yerine yenisini yazmanıza izin verir."}},{"@type":"Question","name":"Türkçe karakterler destekleniyor mu?","acceptedAnswer":{"@type":"Answer","text":"Evet. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) tam olarak desteklenir."}},{"@type":"Question","name":"Taranmış (fotoğraf) PDF'te çalışır mı?","acceptedAnswer":{"@type":"Answer","text":"Taranmış PDF'lerde yazı bir görüntüdür; önce OCR ile metne çevirmeniz gerekir, ardından düzenleme yapılabilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme</h1><p class="seo-intro">Bir PDF&#39;te yanlış bir tarih, fiyat veya isim mi var? Çoğu &#39;düzenleyici&#39; yazının üzerini beyaz kutuyla kapatır — metin altta durmaya devam eder. Gerçek düzenleme bundan farklıdır; işte nasıl yapıldığı.</p><article class="seo-article"><p class="seo-lead">PDF&#39;te küçük bir hatayı düzeltmek — yanlış bir tarih, güncel olmayan bir fiyat, bir yazım hatası — göründüğünden zor olabilir. Çünkü çoğu online &#39;PDF düzenleyici&#39; aslında metni silmez; sadece üzerine beyaz bir kutu koyar. Bu yazıda gerçek düzenlemeyi anlatıyoruz.</p><h2>&quot;Üzerini kapatma&quot; ile &quot;gerçek silme&quot; farkı</h2><p>Metnin üzerine kutu koyan araçlarda orijinal yazı belgenin içinde kalır: kopyala-yapıştır yapıldığında ya da metin arandığında eski içerik hâlâ görünebilir. Bu hem dağınık hem de gizlilik açısından risklidir. Gerçek düzenleme, yazıyı belgenin içinden kaldırıp yerine yenisini koyar.</p><p>PDF Düzenle aracımız PyMuPDF ile mevcut metni GERÇEKTEN kaldırır ve yerine yazdığınızı koyar — üzerini örtmez. Türkçe karakterler tam desteklenir.</p><h2>Adım adım düzenleme</h2><ol><li><strong>PDF&#39;i açın:</strong> PDF Düzenle aracına belgenizi yükleyin.</li><li><strong>Metne tıklayın:</strong> Değiştirmek istediğiniz yazıya tıklayın; mevcut metin seçilir.</li><li><strong>Silin veya yeniden yazın:</strong> Yazıyı kaldırın ya da yerine yenisini yazın. Metin ekleyebilir, düzeltebilirsiniz.</li><li><strong>İndirin:</strong> Düzenlenmiş PDF&#39;i indirin — değişiklik belgeye işlenmiş olur.</li></ol><p><a href="/tools/pdf-duzenle"><strong>PDF Düzenle</strong> — PDF&#39;teki yazıyı gerçekten silip değiştirin — üzerini örtmeden.</a></p><h2>Ne zaman iyi çalışır, ne zaman çalışmaz?</h2><p>Bu araç, içinde gerçek metin katmanı olan PDF&#39;lerde çalışır (örneğin Word&#39;den üretilmiş bir PDF). Taranmış / fotoğraf PDF&#39;lerde yazı aslında bir görüntüdür; bu durumda önce OCR ile metne çevirmeniz gerekir.</p><p><a href="/tools/taranmis-pdf-ocr"><strong>Taranmış PDF&#39;i metne çevir</strong> — Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün.</a></p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/pdf-duzenle">PDF Düzenle</a></li><li><a href="/tools/taranmis-pdf-ocr">Taranmış PDF&#39;i Metne Çevir (OCR)</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;teki mevcut yazıyı gerçekten silebilir miyim?</h3><p>Evet. PDF Düzenle aracı yazının üzerini kapatmak yerine metni belgeden gerçekten kaldırır ve yerine yenisini yazmanıza izin verir.</p></div><div class="seo-faq-item"><h3>Türkçe karakterler destekleniyor mu?</h3><p>Evet. Türkçe karakterler (ç, ğ, ı, ö, ş, ü) tam olarak desteklenir.</p></div><div class="seo-faq-item"><h3>Taranmış (fotoğraf) PDF&#39;te çalışır mı?</h3><p>Taranmış PDF&#39;lerde yazı bir görüntüdür; önce OCR ile metne çevirmeniz gerekir, ardından düzenleme yapılabilir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
