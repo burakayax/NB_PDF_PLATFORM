@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli? — PDF Platform</title>
+    <meta name="description" content="Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform&#39;un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli? — PDF Platform" />
+    <meta property="og:description" content="Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform&#39;un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?" />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli? — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli? — PDF Platform" />
+    <meta name="twitter:description" content="Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform&#39;un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?" />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli? — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli?","description":"Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform'un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'i sunucuya yüklemeden işleyebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. Birleştirme, bölme, döndürme, sayfa silme/sıralama, görselden PDF, imza, yorumlama ve belge tarama gibi yapısal işlemler tamamen tarayıcınızda çalışır; dosya internete gönderilmez."}},{"@type":"Question","name":"Hangi araçlar sunucuda çalışır?","acceptedAnswer":{"@type":"Answer","text":"Word/Excel/PowerPoint dönüşümü, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır. Yapay zekâ araçlarında dosya yüklenmez; yalnızca cihazda çıkarılan metin işlenir."}},{"@type":"Question","name":"Cihazda işleme neden daha hızlı?","acceptedAnswer":{"@type":"Answer","text":"Dosya yüklenip indirilmediği için bekleme olmaz; işlem tarayıcınızda anında yapılır ve çevrimdışıyken bile çalışabilir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli?</h1><p class="seo-intro">Bir PDF&#39;i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.</p><article class="seo-article"><p class="seo-lead">Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok.</p><h2>&quot;Cihazda işleme&quot; ne demek?</h2><p>Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme.</p><h2>Tarayıcınızda çalışan araçlar</h2><ul><li>Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.</li><li>Görselden PDF, PDF&#39;e imza atma ve yorumlama — cihazınızda.</li><li>Belge Tarayıcı — kamera görüntüsü de dahil, tamamen cihazınızda.</li></ul><p><a href="/tools/merge-pdf"><strong>Cihazda Birleştir</strong> — PDF&#39;lerinizi sunucuya yüklemeden, tarayıcınızda birleştirin.</a></p><h2>Peki her araç cihazda mı çalışır?</h2><p>Dürüst olalım: hayır. Word/Excel&#39;e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır (bunlar tarayıcıda pratik değildir). Yapay zekâ araçlarında ise dosyanız yüklenmez — metin cihazınızda çıkarılıp yalnızca metin işlenir. Yani hangi aracın nerede çalıştığı bellidir.</p><p>Gizliliğin en önemli olduğu belgelerde (kimlik, sözleşme, sağlık) cihazda çalışan yapısal araçları ve belge tarayıcıyı tercih edin; paylaşım öncesi gerekiyorsa hassas verileri gerçek redaction ile kaldırın.</p><p><a href="/tools/hassas-veri-gizle"><strong>Hassas Veri Gizle</strong> — Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın.</a></p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/merge-pdf">PDF Birleştirme</a></li><li><a href="/tools/belge-tara">Belge Tarama</a></li><li><a href="/tools/hassas-veri-gizle">PDF&#39;te Hassas Veri Gizleme (Redaction)</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;i sunucuya yüklemeden işleyebilir miyim?</h3><p>Evet. Birleştirme, bölme, döndürme, sayfa silme/sıralama, görselden PDF, imza, yorumlama ve belge tarama gibi yapısal işlemler tamamen tarayıcınızda çalışır; dosya internete gönderilmez.</p></div><div class="seo-faq-item"><h3>Hangi araçlar sunucuda çalışır?</h3><p>Word/Excel/PowerPoint dönüşümü, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır. Yapay zekâ araçlarında dosya yüklenmez; yalnızca cihazda çıkarılan metin işlenir.</p></div><div class="seo-faq-item"><h3>Cihazda işleme neden daha hızlı?</h3><p>Dosya yüklenip indirilmediği için bekleme olmaz; işlem tarayıcınızda anında yapılır ve çevrimdışıyken bile çalışabilir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

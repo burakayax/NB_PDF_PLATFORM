@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek — PDF Platform</title>
+    <meta name="description" content="PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-sayfa-numarasi-ekleme" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek — PDF Platform" />
+    <meta property="og:description" content="PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek — PDF Platform" />
+    <meta name="twitter:description" content="PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF'e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek","description":"PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım.","datePublished":"2026-07-21","dateModified":"2026-07-21","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"PDF'e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek","description":"PDF belgenize profesyonel sayfa numaraları ekleyin — üst/alt konum ve biçim seçin. Rapor, tez ve sözleşmeler için pratik, adım adım anlatım.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"PDF'i yükleyin","text":"Sayfa Numarası aracına belgenizi ekleyin."},{"@type":"HowToStep","position":2,"name":"Konum ve biçimi seçin","text":"Numaranın üstte mi altta mı olacağını ve biçimini belirleyin."},{"@type":"HowToStep","position":3,"name":"İndirin","text":"Numaralandırılmış PDF'i indirin — her sayfa profesyonelce numaralanmış olur."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF'e sayfa numarası nasıl eklerim?","acceptedAnswer":{"@type":"Answer","text":"PDF'inizi yükleyin, numaranın konumunu (üst/alt) ve biçimini seçip indirin. Her sayfa otomatik numaralanır."}},{"@type":"Question","name":"Numaranın yerini seçebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. Numarayı başlık (üst) veya dipnot (alt) konumuna yerleştirebilir, biçimini seçebilirsiniz."}},{"@type":"Question","name":"Mevcut içerik bozulur mu?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Sayfa numarası belgenin üzerine eklenir; mevcut metin ve düzen korunur."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF&#39;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek</h1><p class="seo-intro">Uzun bir raporu, tezi ya da sözleşmeyi düzenli hâle getirmenin en kolay yolu sayfa numarası eklemektir. Konumu ve biçimi seçerek PDF&#39;e nasıl sayfa numarası ekleyeceğinizi gösteriyoruz.</p><article class="seo-article"><p class="seo-lead">Çok sayfalı bir belgeyi paylaşırken sayfa numaraları büyük fark yaratır: okuyucu yönünü kaybetmez, baskıda sayfalar karışmaz, atıf yapmak kolaylaşır. PDF&#39;inize dakikalar içinde numara eklemenin yolu burada.</p><h2>Ne zaman gerekir?</h2><ul><li>Rapor, tez ve akademik belgelerde referans kolaylığı.</li><li>Sözleşme ve resmî evrakta sayfa bütünlüğü.</li><li>Baskıya gidecek uzun belgelerde sıralamayı korumak.</li></ul><h2>Adım adım</h2><ol><li><strong>PDF&#39;i yükleyin:</strong> Sayfa Numarası aracına belgenizi ekleyin.</li><li><strong>Konum ve biçimi seçin:</strong> Numaranın üstte mi altta mı olacağını ve biçimini belirleyin.</li><li><strong>İndirin:</strong> Numaralandırılmış PDF&#39;i indirin — her sayfa profesyonelce numaralanmış olur.</li></ol><p><a href="/tools/page-numbers"><strong>Sayfa Numarası Ekle</strong> — PDF&#39;inize konum ve biçim seçerek sayfa numarası ekleyin.</a></p><h2>İpucu</h2><p>Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/page-numbers">PDF Sayfa Numarası Ekleme</a></li><li><a href="/tools/watermark">PDF Filigran Ekleme</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF&#39;e sayfa numarası nasıl eklerim?</h3><p>PDF&#39;inizi yükleyin, numaranın konumunu (üst/alt) ve biçimini seçip indirin. Her sayfa otomatik numaralanır.</p></div><div class="seo-faq-item"><h3>Numaranın yerini seçebilir miyim?</h3><p>Evet. Numarayı başlık (üst) veya dipnot (alt) konumuna yerleştirebilir, biçimini seçebilirsiniz.</p></div><div class="seo-faq-item"><h3>Mevcut içerik bozulur mu?</h3><p>Hayır. Sayfa numarası belgenin üzerine eklenir; mevcut metin ve düzen korunur.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
