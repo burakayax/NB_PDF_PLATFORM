@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Crop } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -389,7 +390,7 @@ export function DashboardSidebar({
         onClick={onOpenCrop}
         className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
       >
-        <span className="text-base text-cyan-300" aria-hidden>🔲</span>
+        <Crop className="h-5 w-5 text-cyan-300" aria-hidden />
         <span className="truncate">{label}</span>
       </button>
     );
