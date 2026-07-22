@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -6,7 +7,6 @@ import {
   getRelatedToolLinks,
   getGuideSlugsForTool,
 } from "../../seo/seoContent.mjs";
-import { getBlogPost } from "../../blog/blogContent.mjs";
 
 type Props = {
   slug: string;
@@ -30,14 +30,34 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
   const seo = getToolSeo(slug, language);
   const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
   const relatedTools = getRelatedToolLinks(slug, language) as Array<{ slug: string; label: string }>;
-  const guideSlugs = getGuideSlugsForTool(slug) as string[];
-  const guides = guideSlugs
-    .map((g) => {
-      const p = getBlogPost(g);
-      const c = p ? p[language] ?? p.tr : null;
-      return c ? { slug: g, title: c.title as string } : null;
-    })
-    .filter((x): x is { slug: string; title: string } => x !== null);
+
+  // "İlgili Rehberler" başlıkları — ağır blogContent.mjs'i (tüm yazı gövdeleri) ANA
+  // PAKETE sokmamak için dinamik import ile lazy çekilir. Bu bölüm sayfa altında ve
+  // kritik değil; prerender SEO'su generate-seo-files.mjs tarafından ayrıca üretilir.
+  const [guides, setGuides] = useState<Array<{ slug: string; title: string }>>([]);
+  useEffect(() => {
+    const guideSlugs = getGuideSlugsForTool(slug) as string[];
+    if (guideSlugs.length === 0) {
+      setGuides([]);
+      return;
+    }
+    let alive = true;
+    void import("../../blog/blogContent.mjs").then((m) => {
+      if (!alive) return;
+      setGuides(
+        guideSlugs
+          .map((g) => {
+            const p = m.getBlogPost(g);
+            const c = p ? (p[language] ?? p.tr) : null;
+            return c ? { slug: g, title: c.title as string } : null;
+          })
+          .filter((x): x is { slug: string; title: string } => x !== null),
+      );
+    });
+    return () => {
+      alive = false;
+    };
+  }, [slug, language]);
 
   return (
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
