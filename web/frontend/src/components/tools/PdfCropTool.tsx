@@ -39,6 +39,9 @@ type Props = { language: Language };
 type Handle = "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 type Rect = { x: number; y: number; w: number; h: number }; // normalized 0..1, top-left origin
 
+// Varsayılan kutu: küçük ve ORTADA (kenar boşlukları simetrik). Kullanıcı buradan büyütür.
+const DEFAULT_CROP: Rect = { x: 0.2, y: 0.2, w: 0.6, h: 0.6 };
+
 const L = {
   tr: {
     drop: "PDF'i buraya sürükleyin",
@@ -63,7 +66,7 @@ const L = {
     encrypted: "Bu PDF şifre korumalı; önce kilidini kaldırın.",
     failed: "İşlem başarısız oldu. Lütfen tekrar deneyin.",
     dragHint: "Kutuyu sürükleyin · köşelerden boyutlandırın",
-    newFile: "Başka PDF",
+    newFile: "Yeni PDF",
     ready: "PDF hazır 🎉",
     readySub: "Dosyan cihazından hiç çıkmadı.",
     download: "İndir",
@@ -94,7 +97,7 @@ const L = {
     encrypted: "This PDF is password-protected; unlock it first.",
     failed: "Something went wrong. Please try again.",
     dragHint: "Drag the box · resize from the corners",
-    newFile: "Another PDF",
+    newFile: "New PDF",
     ready: "Your PDF is ready 🎉",
     readySub: "Your file never left your device.",
     download: "Download",
@@ -110,7 +113,7 @@ export function PdfCropTool({ language }: Props) {
   const [fileName, setFileName] = useState("belge.pdf");
   const [pageCount, setPageCount] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
-  const [crop, setCrop] = useState<Rect>({ x: 0.06, y: 0.06, w: 0.88, h: 0.88 });
+  const [crop, setCrop] = useState<Rect>(DEFAULT_CROP);
   const [scope, setScope] = useState<"all" | "this" | "each">("all");
   // "each" modunda her sayfanın kendi kırpma dikdörtgeni.
   const [pageCrops, setPageCrops] = useState<Record<number, Rect>>({});
@@ -123,7 +126,9 @@ export function PdfCropTool({ language }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
-  const dragRef = useRef<{ handle: Handle; sx: number; sy: number; start: Rect } | null>(null);
+  const dragRef = useRef<{ handle: Handle; start: Rect; startPx: number; startPy: number } | null>(null);
+  const lastPointerRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const autoScrollRef = useRef<number | null>(null);
 
   const loadFile = useCallback(
     async (file: File) => {
@@ -136,7 +141,7 @@ export function PdfCropTool({ language }: Props) {
         setFileName(file.name.replace(/\.pdf$/i, "") + ".pdf");
         setPageCount(doc.numPages);
         setPageIndex(0);
-        setCrop({ x: 0.06, y: 0.06, w: 0.88, h: 0.88 });
+        setCrop(DEFAULT_CROP);
       } catch {
         setError(t.failed);
       }
@@ -169,63 +174,113 @@ export function PdfCropTool({ language }: Props) {
     };
   }, [bytes, pageIndex]);
 
+  // Bileşen kaldırılırken oto-kaydırma döngüsünü durdur.
+  useEffect(
+    () => () => {
+      if (autoScrollRef.current != null) cancelAnimationFrame(autoScrollRef.current);
+    },
+    [],
+  );
+
   const onPointerDown = (handle: Handle) => (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    dragRef.current = { handle, sx: e.clientX, sy: e.clientY, start: { ...crop } };
+    const rect = canvasRef.current?.getBoundingClientRect();
+    const startPx = rect ? (e.clientX - rect.left) / rect.width : 0;
+    const startPy = rect ? (e.clientY - rect.top) / rect.height : 0;
+    dragRef.current = { handle, start: { ...crop }, startPx, startPy };
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
     setDragging(true);
   };
 
-  const onPointerMove = (e: React.PointerEvent) => {
+  // Kırpmayı pointer'ın kanvasa göre MUTLAK konumundan hesapla — scroll'a dayanıklı:
+  // getBoundingClientRect anlık scroll'u yansıtır, sayfa kayarken de doğru çalışır.
+  const applyCropFromPointer = (clientX: number, clientY: number) => {
     const d = dragRef.current;
     const canvas = canvasRef.current;
     if (!d || !canvas) return;
-    const dxN = (e.clientX - d.sx) / canvas.clientWidth;
-    const dyN = (e.clientY - d.sy) / canvas.clientHeight;
-    let { x, y, w, h } = d.start;
+    const rect = canvas.getBoundingClientRect();
     const clamp = (v: number) => Math.max(0, Math.min(1, v));
+    const px = clamp((clientX - rect.left) / rect.width);
+    const py = clamp((clientY - rect.top) / rect.height);
     const MIN = 0.05;
+    let { x, y, w, h } = d.start;
     if (d.handle === "move") {
-      x = clamp(x + dxN);
-      y = clamp(y + dyN);
+      x = clamp(d.start.x + (px - d.startPx));
+      y = clamp(d.start.y + (py - d.startPy));
       x = Math.min(x, 1 - w);
       y = Math.min(y, 1 - h);
     } else {
       if (d.handle.includes("w")) {
-        const nx = clamp(x + dxN);
-        const right = x + w;
-        x = Math.min(nx, right - MIN);
+        const right = d.start.x + d.start.w;
+        x = Math.min(px, right - MIN);
         w = right - x;
       }
-      if (d.handle.includes("e")) w = Math.max(MIN, Math.min(1 - x, w + dxN));
+      if (d.handle.includes("e")) w = Math.max(MIN, Math.min(1 - x, px - x));
       if (d.handle.includes("n")) {
-        const ny = clamp(y + dyN);
-        const bottom = y + h;
-        y = Math.min(ny, bottom - MIN);
+        const bottom = d.start.y + d.start.h;
+        y = Math.min(py, bottom - MIN);
         h = bottom - y;
       }
-      if (d.handle.includes("s")) h = Math.max(MIN, Math.min(1 - y, h + dyN));
+      if (d.handle.includes("s")) h = Math.max(MIN, Math.min(1 - y, py - y));
     }
     setCrop({ x, y, w, h });
+  };
+
+  // Sürüklerken viewport kenarına gelince sayfayı KONTROLLÜ (yavaş) otomatik kaydır —
+  // ekrana sığmayan uzun sayfalarda altta kalan yerleri de seçebilmek için.
+  const stopAutoScroll = () => {
+    if (autoScrollRef.current != null) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+  };
+  const maybeAutoScroll = (clientY: number) => {
+    const EDGE = 90; // kenardan bu kadar px içerideyken kaydırmaya başla
+    const vh = window.innerHeight;
+    const dir = clientY > vh - EDGE ? 1 : clientY < EDGE ? -1 : 0;
+    if (dir === 0) {
+      stopAutoScroll();
+      return;
+    }
+    if (autoScrollRef.current != null) return; // zaten kayıyor
+    const step = () => {
+      if (!dragRef.current) {
+        stopAutoScroll();
+        return;
+      }
+      window.scrollBy(0, dir * 7); // ~7px/kare → kontrollü, hızlı değil
+      applyCropFromPointer(lastPointerRef.current.x, lastPointerRef.current.y);
+      autoScrollRef.current = requestAnimationFrame(step);
+    };
+    autoScrollRef.current = requestAnimationFrame(step);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    lastPointerRef.current = { x: e.clientX, y: e.clientY };
+    applyCropFromPointer(e.clientX, e.clientY);
+    maybeAutoScroll(e.clientY);
   };
 
   const onPointerUp = (e: React.PointerEvent) => {
     (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
     dragRef.current = null;
     setDragging(false);
-    // "each" modunda: bu sayfanın kutusunu kaydet → bu sayfa kırpılacak sayfalar arasına girer.
+    stopAutoScroll();
+    // "each" modunda: bu sayfanın kutusunu kaydet → kırpılacak sayfalar arasına girer.
     if (scope === "each") setPageCrops((m) => ({ ...m, [pageIndex]: crop }));
   };
 
-  // Sayfa değiştir — "each" modunda mevcut sayfanın kutusunu sakla, hedefin kutusunu yükle.
+  // Sayfa değiştir — kutu SIFIRLANIR (ortada gelir); önceki sayfayla aynı yerde kalıp
+  // kafa karıştırmasın. "each"te o sayfanın kayıtlı kutusu varsa onu yükler.
   const goToPage = (next: number) => {
     const clamped = Math.max(0, Math.min(pageCount - 1, next));
     if (clamped === pageIndex) return;
-    if (scope === "each") {
-      setPageCrops((m) => ({ ...m, [pageIndex]: crop }));
-      setCrop(pageCrops[clamped] ?? crop);
-    }
+    if (scope === "each") setCrop(pageCrops[clamped] ?? DEFAULT_CROP);
+    else if (scope === "this") setCrop(DEFAULT_CROP);
+    // "all": aynı kırpma tüm sayfalara — kutu korunur (yoksa apply'da tutarsız olur).
     setPageIndex(clamped);
   };
 
@@ -237,10 +292,11 @@ export function PdfCropTool({ language }: Props) {
       const toCropRect = (r: Rect): CropRect => ({ xNorm: r.x, yNorm: r.y, wNorm: r.w, hNorm: r.h });
       let out: Uint8Array;
       if (scope === "each") {
-        // Mevcut sayfayı da dahil et; her sayfaya kendi dikdörtgeni, gerisi tam kalır.
-        const map = { ...pageCrops, [pageIndex]: crop };
+        // Yalnızca AYARLANAN sayfalar (pageCrops) kırpılır — gerisi TAM kalır. Hiç
+        // ayarlanmadıysa en azından mevcut sayfayı uygula.
+        const src = Object.keys(pageCrops).length ? pageCrops : { [pageIndex]: crop };
         const record: Record<number, CropRect> = {};
-        for (const [k, r] of Object.entries(map)) record[Number(k)] = toCropRect(r);
+        for (const [k, r] of Object.entries(src)) record[Number(k)] = toCropRect(r);
         out = await cropPdf(bytes, record);
       } else {
         out = await cropPdf(bytes, toCropRect(crop), scope === "this" ? [pageIndex] : undefined);
@@ -256,7 +312,7 @@ export function PdfCropTool({ language }: Props) {
     }
   };
 
-  const reset = () => setCrop({ x: 0.06, y: 0.06, w: 0.88, h: 0.88 });
+  const reset = () => setCrop(DEFAULT_CROP);
 
   // Sonuç işlemleri — mevcut araçlarla (GuestPageTool) birebir aynı davranış.
   function downloadBlob(blob: Blob, name: string) {
