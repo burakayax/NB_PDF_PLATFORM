@@ -1374,7 +1374,9 @@ export const RELATED_TOOLS = {
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
   "ilovepdf-alternatifi-cihazda-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
+  "smallpdf-alternatifi-sinirsiz-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
   "cv-ozgecmis-word-pdf-cevirme": ["word-to-pdf", "compress", "merge-pdf"],
+  "pdf-form-doldurma-online-ucretsiz": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
   "telefonda-pdf-islemleri-uygulamasiz": ["merge-pdf", "belge-tara", "split-pdf"],
   "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle", "html-to-pdf"],
   "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],
