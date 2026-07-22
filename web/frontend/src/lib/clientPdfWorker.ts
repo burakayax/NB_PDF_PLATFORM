@@ -5,14 +5,22 @@
  * GÜVENLİK AĞI: Worker oluşturulamaz/çökerse (eski tarayıcı, CSP, OOM) işlem ANA
  * THREAD'e zarifçe geri düşer → en kötü ihtimalle bugünkü davranış; sonuç ASLA bozulmaz.
  *
- * Diğer tüm export'lar clientPdf'ten aynen re-export edilir (pdfBytesToBlob,
- * PdfEncryptedError, applySignatures/applyAnnotations/imagesToSearchablePdf ve tipler)
- * — çağıranlar tek satırlık import kaynağı değişikliğiyle geçebilsin.
+ * ÖNEMLİ (paket boyutu): pdf-lib'i ANA CHUNK'a sokmamak için ağır `./clientPdf`
+ * modülü YALNIZCA fallback anında dinamik `import()` ile yüklenir. Hafif semboller
+ * (pdfBytesToBlob, zipBytesToBlob, PdfEncryptedError, tipler) pdf-lib'siz
+ * `./clientPdfCore`'dan re-export edilir → landing/blog ziyaretçisi pdf-lib indirmez.
  */
-export * from "./clientPdf";
+export { PdfEncryptedError, pdfBytesToBlob, zipBytesToBlob } from "./clientPdfCore";
+export type {
+  SearchableWord,
+  SearchablePage,
+  SignatureItem,
+  AnnotationItem,
+} from "./clientPdfCore";
 
-import * as direct from "./clientPdf";
-import { PdfEncryptedError } from "./clientPdf";
+import { PdfEncryptedError } from "./clientPdfCore";
+// Tip-yalnızca: derleme sonrası SİLİNİR, çalışma zamanında pdf-lib çekmez.
+import type * as Direct from "./clientPdf";
 
 type Pending = {
   resolve: (v: unknown) => void;
@@ -26,9 +34,16 @@ let workerBroken = false;
 let seq = 0;
 const pending = new Map<number, Pending>();
 
+// Ağır motoru YALNIZCA fallback gerektiğinde (worker yok/çöktü) lazy yükle; bir kez
+// yüklenince belleğe alınır. Böylece pdf-lib ana pakete girmez, ilk yükleme küçülür.
+let directModP: Promise<typeof Direct> | null = null;
+const loadDirect = (): Promise<typeof Direct> => (directModP ??= import("./clientPdf"));
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const runDirect = (op: string, args: unknown[]): Promise<any> =>
-  (direct as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[op](...args);
+const runDirect = async (op: string, args: unknown[]): Promise<any> => {
+  const mod = await loadDirect();
+  return (mod as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[op](...args);
+};
 
 function getWorker(): Worker | null {
   if (workerBroken) return null;
@@ -85,7 +100,7 @@ function call<T>(op: string, args: unknown[]): Promise<T> {
 export function mergePdfs(files: Array<ArrayBuffer | Uint8Array>): Promise<Uint8Array> {
   return call("mergePdfs", [files]);
 }
-export function imagesToPdf(images: Parameters<typeof direct.imagesToPdf>[0]): Promise<Uint8Array> {
+export function imagesToPdf(images: Parameters<typeof Direct.imagesToPdf>[0]): Promise<Uint8Array> {
   return call("imagesToPdf", [images]);
 }
 export function rotatePdf(
@@ -115,14 +130,14 @@ export function getPdfPageCount(bytes: ArrayBuffer | Uint8Array): Promise<number
 }
 // İmzala / Yorumla — pdf-lib ile görsel/çizim gömme + save; büyük PDF'te worker donmayı önler.
 export function applySignatures(
-  pdfBytes: Parameters<typeof direct.applySignatures>[0],
-  items: Parameters<typeof direct.applySignatures>[1],
+  pdfBytes: Parameters<typeof Direct.applySignatures>[0],
+  items: Parameters<typeof Direct.applySignatures>[1],
 ): Promise<Uint8Array> {
   return call("applySignatures", [pdfBytes, items]);
 }
 export function applyAnnotations(
-  pdfBytes: Parameters<typeof direct.applyAnnotations>[0],
-  items: Parameters<typeof direct.applyAnnotations>[1],
+  pdfBytes: Parameters<typeof Direct.applyAnnotations>[0],
+  items: Parameters<typeof Direct.applyAnnotations>[1],
 ): Promise<Uint8Array> {
   return call("applyAnnotations", [pdfBytes, items]);
 }
