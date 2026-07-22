@@ -93,8 +93,8 @@ const COPY = {
     benefitFast: "Anında açılış",
     benefitFullscreen: "Tam ekran",
     updateTitle: "Yeni sürüm hazır",
-    updateBody: "Güncellemeyi uygulamak için yenile.",
-    refresh: "Yenile",
+    updateBody: "Bu güncellemede:",
+    refresh: "Güncelle",
   },
   en: {
     installTitle: "Install the app",
@@ -113,8 +113,8 @@ const COPY = {
     benefitFast: "Instant launch",
     benefitFullscreen: "Full screen",
     updateTitle: "New version available",
-    updateBody: "Refresh to apply the update.",
-    refresh: "Refresh",
+    updateBody: "In this update:",
+    refresh: "Update",
   },
 } as const;
 
@@ -238,34 +238,66 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
 function UpdateToast({ lang }: { lang: "tr" | "en" }) {
   const { updateReady, applyUpdate } = usePwaUpdate();
   const [hidden, setHidden] = useState(false);
+  const [notes, setNotes] = useState<string[]>([]);
   const t = COPY[lang];
+
+  // Yeni sürüm hazır olunca "neler değişti"yi version.json'dan çek (taze, cache'siz).
+  useEffect(() => {
+    if (!updateReady) return;
+    let alive = true;
+    fetch(`/version.json?cb=${Date.now()}`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { notes?: Record<string, string[]> } | null) => {
+        const list = data?.notes?.[lang];
+        if (alive && Array.isArray(list)) setNotes(list);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [updateReady, lang]);
+
   if (!updateReady || hidden) {
     return null;
   }
   return (
     <div
       role="status"
-      className="fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top))] z-[70] mx-auto flex max-w-sm items-center gap-3 rounded-2xl border border-nb-primary/30 bg-gradient-to-br from-nb-panel/95 to-nb-bg/95 p-3 pl-4 shadow-[0_18px_44px_-10px_rgba(34,211,238,0.35)] backdrop-blur-xl sm:inset-x-auto sm:right-6"
+      className="fixed inset-x-3 top-[max(1rem,env(safe-area-inset-top))] z-[70] mx-auto max-w-sm rounded-2xl border border-nb-primary/30 bg-gradient-to-br from-nb-panel/95 to-nb-bg/95 p-4 shadow-[0_18px_44px_-10px_rgba(34,211,238,0.35)] backdrop-blur-xl sm:inset-x-auto sm:right-6"
     >
-      <RefreshCw className="h-5 w-5 shrink-0 text-nb-primary" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-white">{t.updateTitle}</p>
-        <p className="text-[12px] leading-snug text-nb-muted">{t.updateBody}</p>
+      <div className="flex items-start gap-3">
+        <RefreshCw className="mt-0.5 h-5 w-5 shrink-0 text-nb-primary" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-white">{t.updateTitle}</p>
+          {notes.length > 0 && (
+            <>
+              <p className="mt-0.5 text-[12px] text-nb-muted">{t.updateBody}</p>
+              <ul className="mt-1.5 space-y-1">
+                {notes.map((n, i) => (
+                  <li key={i} className="flex gap-1.5 text-[12px] leading-snug text-slate-300">
+                    <span className="mt-[6px] h-1 w-1 shrink-0 rounded-full bg-nb-primary" aria-hidden />
+                    <span>{n}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => setHidden(true)}
+          aria-label={t.close}
+          className="nb-transition -mr-1 -mt-1 shrink-0 rounded-lg p-1 text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
+        >
+          <X className="h-4 w-4" aria-hidden />
+        </button>
       </div>
       <button
         type="button"
         onClick={applyUpdate}
-        className="nb-transition shrink-0 rounded-xl bg-nb-primary px-3 py-1.5 text-[13px] font-bold text-[#0b1220] hover:bg-nb-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
+        className="nb-transition mt-3 w-full rounded-xl bg-nb-primary px-4 py-2.5 text-sm font-bold text-[#0b1220] hover:bg-nb-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-primary/50"
       >
         {t.refresh}
-      </button>
-      <button
-        type="button"
-        onClick={() => setHidden(true)}
-        aria-label={t.close}
-        className="nb-transition shrink-0 rounded-lg p-1 text-nb-muted hover:bg-white/[0.06] hover:text-nb-text"
-      >
-        <X className="h-4 w-4" aria-hidden />
       </button>
     </div>
   );
