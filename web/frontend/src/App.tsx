@@ -321,6 +321,7 @@ type ContentPanel =
   | "editor"
   | "sign"
   | "annotate"
+  | "crop"
   | "api";
 
 type ToastState = {
@@ -6620,6 +6621,7 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
+          onOpenCrop={() => setContentPanel("crop")}
           onOpenScan={() => setScannerOpen(true)}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
@@ -6643,6 +6645,7 @@ function App() {
           onOpenEditor={() => setContentPanel("editor")}
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
+          onOpenCrop={() => setContentPanel("crop")}
           onOpenScan={() => setScannerOpen(true)}
           />
           {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). Lazy:
@@ -6732,6 +6735,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "crop" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfCropTool language={language} />
                 </Suspense>
               </section>
             ) : null}
