@@ -55,6 +55,16 @@ describe("cropPdf", () => {
   it("boş alan hata verir", async () => {
     await expect(cropPdf(await makePdf(1), { xNorm: 0, yNorm: 0, wNorm: 0, hNorm: 0.5 })).rejects.toThrow();
   });
+  it("harita ile her sayfaya AYRI dikdörtgen uygular", async () => {
+    const out = await cropPdf(await makePdf(3), {
+      0: { xNorm: 0, yNorm: 0, wNorm: 0.5, hNorm: 1 },
+      2: { xNorm: 0, yNorm: 0, wNorm: 0.25, hNorm: 1 },
+    });
+    const doc = await PDFDocument.load(out);
+    expect(Math.round(doc.getPage(0).getCropBox().width)).toBe(150); // %50
+    expect(Math.round(doc.getPage(1).getCropBox().width)).toBe(300); // haritada yok → tam
+    expect(Math.round(doc.getPage(2).getCropBox().width)).toBe(75); // %25
+  });
 });
 
 describe("mergePdfs", () => {
