@@ -294,6 +294,9 @@ const SearchablePdfTool = lazy(() =>
 const DocumentScanner = lazy(() =>
   import("./components/tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
 );
+const PdfCropTool = lazy(() =>
+  import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
+);
 const BlogIndexPage = lazy(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -5361,6 +5364,15 @@ function App() {
         <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
             <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "crop-pdf") {
+      return (
+        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfCropTool language={language} />
           </Suspense>
         </GuestSeoToolPage>
       );

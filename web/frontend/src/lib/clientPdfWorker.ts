@@ -128,6 +128,14 @@ export function splitPagesToZip(
 export function getPdfPageCount(bytes: ArrayBuffer | Uint8Array): Promise<number> {
   return call("getPdfPageCount", [bytes]);
 }
+// KIRP — sayfaların görünür alanını (CropBox) daraltır; büyük PDF'te worker donmayı önler.
+export function cropPdf(
+  bytes: ArrayBuffer | Uint8Array,
+  crop: Parameters<typeof Direct.cropPdf>[1],
+  pages?: number[],
+): Promise<Uint8Array> {
+  return call("cropPdf", [bytes, crop, pages]);
+}
 // İmzala / Yorumla — pdf-lib ile görsel/çizim gömme + save; büyük PDF'te worker donmayı önler.
 export function applySignatures(
   pdfBytes: Parameters<typeof Direct.applySignatures>[0],
