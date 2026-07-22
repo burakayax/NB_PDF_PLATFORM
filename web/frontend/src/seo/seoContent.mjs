@@ -1376,7 +1376,7 @@ export const BLOG_RELATED_TOOLS = {
   "ilovepdf-alternatifi-cihazda-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
   "cv-ozgecmis-word-pdf-cevirme": ["word-to-pdf", "compress", "merge-pdf"],
   "telefonda-pdf-islemleri-uygulamasiz": ["merge-pdf", "belge-tara", "split-pdf"],
-  "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle"],
+  "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle", "html-to-pdf"],
   "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],
   "pdf-hassas-veri-gizleme-kvkk": ["hassas-veri-gizle", "pdf-duzenle"],
   "dosya-yuklemeden-pdf-isleme-gizlilik": ["merge-pdf", "belge-tara", "hassas-veri-gizle"],
@@ -1411,7 +1411,7 @@ export const BLOG_RELATED_TOOLS = {
   "pdf-filigran-ekleme": ["watermark", "encrypt", "page-numbers"],
   "pdf-uzerine-yazma-isaretleme": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
   "telefonla-belge-tarama-pdf": ["image-to-pdf", "pdf-to-image", "compress"],
-  "aranabilir-pdf-olusturma-ocr": ["taranmis-pdf-ocr", "pdf-to-text", "image-to-pdf"],
+  "aranabilir-pdf-olusturma-ocr": ["aranabilir-pdf", "taranmis-pdf-ocr", "pdf-to-text", "image-to-pdf"],
   "belge-fotografini-kaliteli-pdf-yapma": ["image-to-pdf", "compress", "pdf-to-image"],
   "camscanner-ucretsiz-gizli-alternatif": ["image-to-pdf", "taranmis-pdf-ocr", "compress"],
 };
