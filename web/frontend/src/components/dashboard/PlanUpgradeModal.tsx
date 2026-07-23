@@ -48,6 +48,8 @@ interface PlanUpgradeModalProps {
   /** Modalı açan araç (payment_required ile duvara toslanan). Bilinirse fiyat tablosunun
    *  üstünde o araca özgü bağlam banner'ı gösterilir. */
   reasonToolId?: string | null;
+  /** E-posta CTA'sından gelen kupon (?coupon=…) — ödeme özetinde otomatik uygulanır. */
+  initialCoupon?: string | null;
 }
 
 export function PlanUpgradeModal({
@@ -59,6 +61,7 @@ export function PlanUpgradeModal({
   showToast,
   onBeforeExternalCheckout,
   reasonToolId,
+  initialCoupon,
 }: PlanUpgradeModalProps) {
   const tr = language === "tr";
   const reasonLabel = reasonToolId ? GATED_TOOL_LABELS[reasonToolId] : undefined;
@@ -188,6 +191,7 @@ export function PlanUpgradeModal({
           extraSeats={selectedExtraSeats}
           accessToken={accessToken}
           language={language}
+          initialCoupon={initialCoupon}
           onClose={() => {
             // Ödeme özeti adımında vazgeçti (ödemeyi tamamlamadan kapattı).
             trackGAEvent("checkout_abandoned", { step: "payment_summary", plan: selectedPlanId });

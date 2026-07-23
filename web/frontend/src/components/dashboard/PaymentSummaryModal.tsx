@@ -116,6 +116,9 @@ type Props = {
   onClose: () => void;
   onPurchaseSuccess: () => void;
   onBeforeExternalCheckout?: () => void;
+  /** E-posta CTA'sından gelen kupon kodu (?coupon=…) — modal açılınca otomatik doğrulanıp
+   *  uygulanır; kullanıcı elle yazmak zorunda kalmaz. */
+  initialCoupon?: string | null;
 };
 
 export function PaymentSummaryModal({
@@ -129,6 +132,7 @@ export function PaymentSummaryModal({
   onClose,
   onPurchaseSuccess,
   onBeforeExternalCheckout,
+  initialCoupon,
 }: Props) {
   const [promoInput, setPromoInput] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -139,6 +143,8 @@ export function PaymentSummaryModal({
   const [legalOverlay, setLegalOverlay] = useState<null | "terms" | "kvkk">(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // E-posta kuponunu (initialCoupon) modal başına yalnız bir kez otomatik uygula.
+  const autoAppliedCouponRef = useRef(false);
   // Exit-intent: kullanıcı kapatmaya çalıştığında bir kez indirim teklifi gösterilir.
   const [exitOfferShown, setExitOfferShown] = useState(false);
   const [showExitOffer, setShowExitOffer] = useState(false);
@@ -273,8 +279,8 @@ export function PaymentSummaryModal({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open, attemptClose]);
 
-  const handleApplyPromo = useCallback(async () => {
-    const code = promoInput.trim();
+  const handleApplyPromo = useCallback(async (codeArg?: string) => {
+    const code = (codeArg ?? promoInput).trim();
     if (!code) return;
     setApplyingPromo(true);
     setPromoError(null);
@@ -294,6 +300,19 @@ export function PaymentSummaryModal({
       setApplyingPromo(false);
     }
   }, [accessToken, promoInput, tr]);
+
+  // E-posta CTA'sından gelen kupon: modal açılınca alanı doldur + otomatik doğrula/uygula.
+  useEffect(() => {
+    if (!open) {
+      autoAppliedCouponRef.current = false;
+      return;
+    }
+    const code = (initialCoupon ?? "").trim();
+    if (!code || autoAppliedCouponRef.current) return;
+    autoAppliedCouponRef.current = true;
+    setPromoInput(code);
+    void handleApplyPromo(code);
+  }, [open, initialCoupon, handleApplyPromo]);
 
   const handlePay = useCallback(async () => {
     if (!legalAccepted) {
