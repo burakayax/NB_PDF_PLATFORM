@@ -45,7 +45,13 @@ export function renderCampaign(
   const body = tr ? c.bodyTr : c.bodyEn;
   const ctaLabel = tr ? c.ctaLabelTr : c.ctaLabelEn;
   const origin = env.FRONTEND_ORIGIN.replace(/\/$/, "");
-  const ctaUrl = c.ctaUrl || `${origin}/workspace`;
+  // CTA hedefi: boşsa /workspace; göreli yol (/ ile başlar) siteye eklenir; tam URL
+  // (http…) aynen kullanılır. Böylece kampanyada env-bağımsız göreli yol saklanabilir
+  // (ör. "/workspace?upgrade=1" → yükseltme paneli).
+  const rawCta = (c.ctaUrl || "").trim() || "/workspace";
+  const ctaUrl = /^https?:\/\//i.test(rawCta)
+    ? rawCta
+    : `${origin}${rawCta.startsWith("/") ? "" : "/"}${rawCta}`;
 
   const coupon = c.couponCode ? couponBlock(c.couponCode, tr ? "İndirim kodunuz" : "Your discount code") : "";
   const cta = ctaLabel ? ctaButton(ctaUrl, ctaLabel) : "";
@@ -116,7 +122,7 @@ export async function seedDefaultCampaigns(): Promise<void> {
         bodyTr: "Pro'ya geçen kullanıcılar şu yapay zekâ araçlarını açıyor:\n\n**PDF Özetle** — uzun sözleşme ve raporları saniyeler içinde özetleyin.\n**Veri Çıkar** — fatura ve tablolardan Excel'e hazır veri.\n**Çeviri & Karşılaştırma** — belgeleri çevirin, iki sürümün farkını bulun.\n**Toplu işlem, daha büyük dosyalar ve API erişimi.**",
         bodyEn: "Users who upgrade to Pro unlock these AI tools:\n\n**Summarize PDF** — long contracts and reports in seconds.\n**Extract Data** — invoices and tables straight into Excel.\n**Translate & Compare** — translate docs, diff two versions.\n**Batch processing, larger files and API access.**",
         ctaLabelTr: "Planları gör", ctaLabelEn: "View plans",
-        ctaUrl: "",
+        ctaUrl: "/workspace?upgrade=1",
       },
       {
         name: "Geri kazanım + indirim (13. gün)",
@@ -130,7 +136,7 @@ export async function seedDefaultCampaigns(): Promise<void> {
         bodyTr: "Yükseltmeyi düşünüyorsanız, bu size özel indirim tam zamanı. PDF özetleme, faturadan veri çıkarma, çeviri ve toplu işlem — yapay zekâ araçlarının tamamı sizi bekliyor.",
         bodyEn: "If you've been thinking about upgrading, this discount is perfect timing. PDF summarization, data extraction, translation and batch processing — the full AI toolkit is waiting.",
         ctaLabelTr: "İndirimi kullan", ctaLabelEn: "Use the discount",
-        ctaUrl: "",
+        ctaUrl: "/workspace?upgrade=1",
         couponCode: null,
       },
       {
@@ -173,12 +179,22 @@ export async function seedDefaultCampaigns(): Promise<void> {
         bodyTr: "Daha da ileri gitmek istersen: yapay zekâ araçlarımız uzun belgeleri özetliyor, faturalardan Excel'e veri çıkarıyor ve belgeleri çeviriyor. Bir dahaki büyük işinde denemeye değer.\n\nBir sorunun mu var? Bu e-postayı yanıtla, yardımcı olalım.",
         bodyEn: "Want to go further? Our AI tools summarize long documents, extract data from invoices into Excel, and translate documents. Worth a try on your next big task.\n\nHave a question? Just reply to this email and we'll help.",
         ctaLabelTr: "AI araçlarını gör", ctaLabelEn: "See AI tools",
-        ctaUrl: "",
+        ctaUrl: "/workspace?upgrade=1",
       },
     ];
 
     for (const data of defaults) {
-      const exists = await prisma.emailCampaign.findFirst({ where: { name: data.name }, select: { id: true } });
-      if (!exists) await prisma.emailCampaign.create({ data });
+      const exists = await prisma.emailCampaign.findFirst({ where: { name: data.name }, select: { id: true, ctaUrl: true } });
+      if (!exists) {
+        await prisma.emailCampaign.create({ data });
+        continue;
+      }
+      // Var olan kampanyanın butonu BOŞsa ve varsayılan bir hedef tanımlıyorsa yalnız onu
+      // güncelle (admin'in panelden elle girdiği CTA'yı ASLA ezme). Böylece canlıdaki eski
+      // kampanyalar da yeni /workspace?upgrade=1 hedefini otomatik alır.
+      const defCta = (typeof data.ctaUrl === "string" ? data.ctaUrl : "").trim();
+      if (defCta && !(exists.ctaUrl ?? "").trim()) {
+        await prisma.emailCampaign.update({ where: { id: exists.id }, data: { ctaUrl: defCta } });
+      }
     }
 }
