@@ -1,6 +1,5 @@
 import { type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { trackGAEvent } from "../../lib/analytics";
 import {
   AlertTriangle,
   ArrowDown,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolDropzone } from "./ToolDropzone";
+import { ValueMomentNudge } from "./ValueMomentNudge";
 import {
   mergePdfs,
   imagesToPdf,
@@ -422,28 +422,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             {tr ? "Yeni işlem" : "New task"}
           </button>
         </div>
-        {onRegister && (
-          <div className="mt-7 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-left">
-            <p className="text-sm font-semibold text-white">
-              {tr ? "Daha fazlası ister misin?" : "Want more?"}
-            </p>
-            <p className="mt-0.5 text-[13px] text-slate-400">
-              {tr
-                ? "Ücretsiz üye ol: Word/Excel/PowerPoint'e dönüştür, sıkıştır, şifrele — tüm araçlara eriş ve daha büyük dosyalar işle."
-                : "Sign up free: convert to Word/Excel/PowerPoint, compress, encrypt — unlock all tools and larger files."}
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                trackGAEvent("sign_up_cta_click", { source: "guest_tool" });
-                onRegister();
-              }}
-              className="mt-3 text-[13px] font-semibold text-cyan-300 transition hover:text-cyan-200"
-            >
-              {tr ? "Ücretsiz üye ol →" : "Sign up free →"}
-            </button>
-          </div>
-        )}
+        <ValueMomentNudge language={language} source="guest_tool_success" />
       </motion.div>
     );
   }
