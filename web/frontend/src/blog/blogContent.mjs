@@ -3457,6 +3457,162 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "pdf-kucultme-eposta-whatsapp",
+      date: "2026-07-23",
+      updated: "2026-07-23",
+      readMinutes: 4,
+      tags: { tr: ["Nasıl Yapılır", "Sıkıştırma"], en: ["How-to", "Compress"] },
+      accent: "amber",
+      tool: "/tools/compress",
+    },
+    {
+      title: "PDF'i E-postayla veya WhatsApp'ta Gönderilecek Kadar Küçültme",
+      description:
+        "PDF çok büyük, e-posta veya WhatsApp kabul etmiyor mu? Dosyayı gönderim sınırlarının altına indirmek için PDF sıkıştırma — metin ve görseller net kalır.",
+      excerpt:
+        "\"Dosya çok büyük\" hatası mı alıyorsun? PDF'i e-posta ve WhatsApp sınırlarının altına indirmenin en kolay yolu — adım adım.",
+      blocks: [
+        { t: "lead", x: "Bir PDF'i e-postayla göndermek istiyorsun ama \"dosya çok büyük\" diyor; ya da WhatsApp belgeyi kabul etmiyor. Çözüm dosyayı bölmek değil, sıkıştırmak: boyutu düşürüp içeriği korumak." },
+        { t: "h2", x: "Neden büyük? Ve tipik sınırlar" },
+        { t: "ul", items: [
+          "Taranmış belgeler ve bol görselli PDF'ler en çok yer kaplar.",
+          "Gmail eki: ~25 MB · Outlook: ~20 MB · WhatsApp belge: ~100 MB ama pratikte çok büyük dosyalar takılır.",
+          "Portal/başvuru sistemleri sık sık 2–10 MB sınırı koyar.",
+        ] },
+        { t: "h2", x: "PDF'i küçültme — adım adım" },
+        { t: "steps", items: [
+          { title: "PDF'i yükle", x: "Sıkıştırma aracına dosyanı sürükleyip bırak." },
+          { title: "Sıkıştırma düzeyini seç", x: "Dengeli düzeyde belirgin kalite kaybı olmaz; daha yüksek düzey boyutu daha çok düşürür." },
+          { title: "İndir ve gönder", x: "Optimize edilmiş dosyayı indir; artık e-posta/WhatsApp sınırının altında." },
+        ] },
+        { t: "cta", title: "PDF Küçült", x: "Dosyanı yükle, sıkıştır ve gönderime hazır hâlde indir — ücretsiz.", btn: "Aracı aç", tool: "/tools/compress" },
+        { t: "h2", x: "Küçültünce kalite bozulur mu?" },
+        { t: "p", x: "Dengeli düzeyde hayır — metin seçilebilir ve net kalır, görseller okunaklı olur. Metin katmanı korunduğu için sıkıştırılmış PDF'te de arama yapabilir, kopyalayabilirsin. En büyük kazanç genellikle taranmış (görsel ağırlıklı) PDF'lerde olur." },
+        { t: "tip", x: "Hâlâ büyükse: gereksiz sayfaları \"PDF Böl/Sil\" ile çıkar ya da yalnız gereken sayfaları gönder. Birden çok belgeyi tek dosyada göndereceksen önce sıkıştır, sonra \"PDF Birleştir\" ile topla." },
+      ],
+      faq: [
+        { q: "PDF'i e-postaya sığdıracak kadar nasıl küçültürüm?", a: "PDF'i sıkıştırma aracına yükle, bir sıkıştırma düzeyi seç ve indir. Dosya Gmail/Outlook sınırlarının (≈20–25 MB) altına iner; daha da küçük gerekiyorsa yüksek düzeyi seç." },
+        { q: "WhatsApp'ta PDF neden gönderilmiyor?", a: "Genelde dosya çok büyük olduğu için. PDF'i sıkıştırıp boyutunu düşürünce WhatsApp belge olarak sorunsuz gönderir." },
+        { q: "Sıkıştırınca metin seçilebilir kalır mı?", a: "Evet. Metin katmanı korunur; sıkıştırılmış PDF'te de metni seçebilir, arayabilir ve kopyalayabilirsin." },
+        { q: "PDF küçültmek ücretsiz mi?", a: "Evet. PDF'ini yükle, sıkıştır ve optimize edilmiş dosyayı indir — üyelik gerekmez." },
+        { q: "Taranmış PDF'i küçültebilir miyim?", a: "Evet. Görsel ağırlıklı, taranmış PDF'lerde sıkıştırma genellikle en yüksek boyut kazancını sağlar." },
+      ],
+    },
+    {
+      title: "How to Shrink a PDF to Email or Send on WhatsApp",
+      description:
+        "PDF too big for email or WhatsApp? Compress it below the sending limits while keeping text and images sharp — step by step.",
+      excerpt:
+        "Getting a \"file too large\" error? The easiest way to get a PDF under email and WhatsApp limits — step by step.",
+      blocks: [
+        { t: "lead", x: "You want to email a PDF but it says \"file too large\", or WhatsApp won't accept the document. The fix isn't splitting it — it's compressing: reduce the size while keeping the content." },
+        { t: "h2", x: "Why so big? And typical limits" },
+        { t: "ul", items: [
+          "Scanned documents and image-heavy PDFs take the most space.",
+          "Gmail attachment: ~25 MB · Outlook: ~20 MB · WhatsApp document: ~100 MB, but very large files stall in practice.",
+          "Portals and application systems often cap at 2–10 MB.",
+        ] },
+        { t: "h2", x: "Shrink a PDF — step by step" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Drag and drop your file into the compress tool." },
+          { title: "Pick a compression level", x: "At a balanced level there's no noticeable quality loss; a higher level reduces size further." },
+          { title: "Download and send", x: "Download the optimized file — now under the email/WhatsApp limit." },
+        ] },
+        { t: "cta", title: "Compress PDF", x: "Upload your file, compress it, and download it ready to send — free.", btn: "Open the tool", tool: "/tools/compress" },
+        { t: "h2", x: "Does compressing hurt quality?" },
+        { t: "p", x: "At a balanced level, no — text stays selectable and crisp, and images stay readable. The text layer is preserved, so you can still search and copy in the compressed PDF. The biggest savings usually come from scanned, image-heavy PDFs." },
+        { t: "tip", x: "Still too big? Remove unneeded pages with \"Split/Delete\", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with \"Merge PDF\"." },
+      ],
+      faq: [
+        { q: "How do I shrink a PDF to fit an email?", a: "Upload it to the compress tool, pick a level, and download. The file drops under Gmail/Outlook limits (≈20–25 MB); for even smaller, choose a higher level." },
+        { q: "Why won't WhatsApp send my PDF?", a: "Usually because the file is too large. Compress the PDF to reduce its size and WhatsApp will send it as a document with no problem." },
+        { q: "Does the text stay selectable after compressing?", a: "Yes. The text layer is preserved, so you can still select, search and copy text in the compressed PDF." },
+        { q: "Is compressing a PDF free?", a: "Yes. Upload your PDF, compress it, and download the optimized file — no account needed." },
+        { q: "Can I compress a scanned PDF?", a: "Yes. Image-heavy scanned PDFs usually see the biggest size reduction from compression." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "telefonda-pdf-duzenleme-uygulamasiz",
+      date: "2026-07-23",
+      updated: "2026-07-23",
+      readMinutes: 4,
+      tags: { tr: ["Nasıl Yapılır", "Mobil"], en: ["How-to", "Mobile"] },
+      accent: "sky",
+      tool: "/tools/pdf-yorumla",
+    },
+    {
+      title: "Telefonda PDF Düzenleme (Uygulamasız): Metin, İmza ve İşaretleme",
+      description:
+        "Telefonda uygulama kurmadan PDF düzenle: metin/not ekle, imzala, işaretle. Tarayıcıda çalışır — Android ve iPhone'da, dosyan cihazından çıkmadan.",
+      excerpt:
+        "Telefona uygulama kurmadan PDF'e metin ekle, imzala, işaretle — hepsi tarayıcıda. Android ve iPhone'da nasıl yapılır.",
+      blocks: [
+        { t: "lead", x: "Yolda bir belgeyi imzalaman ya da bir forma not eklemen gerekti ama telefonuna PDF uygulaması kurmak istemiyorsun. Gerek de yok — bunların çoğunu telefon tarayıcında, kurulum olmadan yapabilirsin." },
+        { t: "h2", x: "Telefonda uygulamasız neler yapabilirsin?" },
+        { t: "ul", items: [
+          "Üzerine metin/not ekleme ve boşlukları doldurma → İşaretle aracı",
+          "İmza atma (parmakla çiz, yaz veya fotoğrafını yükle) → İmzala aracı",
+          "Fosforlu, kutu, çizim ile işaretleme → İşaretle aracı",
+          "Mevcut yazıyı gerçekten silip değiştirme → Düzenle aracı",
+        ] },
+        { t: "h2", x: "Adım adım (Android ve iPhone)" },
+        { t: "steps", items: [
+          { title: "Tarayıcıda aracı aç", x: "Telefonunun tarayıcısında (Chrome/Safari) araç sayfasını aç — kurulum yok." },
+          { title: "PDF'ini yükle", x: "Dosyanı seç; işaretle/imzala aracı doğrudan telefonda çalışır." },
+          { title: "Düzenle ve indir", x: "Parmakla imzala/işaretle, sonra \"Uygula ve İndir\" ile kaydet." },
+        ] },
+        { t: "cta", title: "Telefonda PDF İşaretle", x: "Metin ekle, imzala, işaretle — telefonunda, uygulamasız ve ücretsiz.", btn: "Aracı aç", tool: "/tools/pdf-yorumla" },
+        { t: "h2", x: "Dosyam güvende mi?" },
+        { t: "p", x: "İşaretleme ve imzalama tamamen telefonunun tarayıcısında (cihazında) yapılır; PDF sunucuya yüklenmez, %100 gizlidir. Yalnızca gerçek metin silme/değiştirme sunucuda yapılır ve dosya işlem sonrası saklanmaz." },
+        { t: "tip", x: "İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin." },
+      ],
+      faq: [
+        { q: "Telefonda uygulama kurmadan PDF düzenleyebilir miyim?", a: "Evet. Telefon tarayıcında (Chrome/Safari) araç sayfasını aç; metin ekleme, işaretleme ve imzalama kurulum olmadan çalışır." },
+        { q: "iPhone'da PDF'e imza atabilir miyim?", a: "Evet. Safari'de imzalama aracını aç, imzanı parmağınla çiz veya fotoğrafını yükle, sayfaya yerleştir ve indir." },
+        { q: "Telefonda PDF'e metin ekleyebilir miyim?", a: "Evet. İşaretleme aracıyla boşluklara dokunup metin ekleyebilir, formları doldurabilirsin — hepsi telefonda." },
+        { q: "Dosyam telefonda güvende mi?", a: "İşaretleme ve imzalama cihazında yapılır, dosya sunucuya gitmez. Gerçek metin düzenleme sunucuda yapılır ama dosya saklanmaz." },
+        { q: "Ücretsiz mi?", a: "Evet. Metin ekleme, işaretleme ve imzalama üyeliksiz ve ücretsizdir." },
+      ],
+    },
+    {
+      title: "How to Edit a PDF on Your Phone (No App): Text, Signature, Markup",
+      description:
+        "Edit a PDF on your phone without installing an app: add text, sign, and annotate. Works in the browser on Android and iPhone, without uploading your file.",
+      excerpt:
+        "Add text, sign and annotate a PDF on your phone with no app — all in the browser. How to do it on Android and iPhone.",
+      blocks: [
+        { t: "lead", x: "You need to sign a document or add a note to a form on the go, but you don't want to install a PDF app on your phone. You don't have to — you can do most of this in your phone's browser, with no installation." },
+        { t: "h2", x: "What can you do on your phone with no app?" },
+        { t: "ul", items: [
+          "Add text/notes and fill in blanks → Annotate tool",
+          "Sign (draw with your finger, type, or upload a photo) → Sign tool",
+          "Highlight, boxes, drawing → Annotate tool",
+          "Actually delete and change existing text → Edit tool",
+        ] },
+        { t: "h2", x: "Step by step (Android and iPhone)" },
+        { t: "steps", items: [
+          { title: "Open the tool in your browser", x: "Open the tool page in your phone browser (Chrome/Safari) — no install." },
+          { title: "Upload your PDF", x: "Pick your file; the annotate/sign tool runs right on the phone." },
+          { title: "Edit and download", x: "Sign/mark with your finger, then save with \"Apply & download\"." },
+        ] },
+        { t: "cta", title: "Annotate PDF on Your Phone", x: "Add text, sign, annotate — on your phone, no app, free.", btn: "Open the tool", tool: "/tools/pdf-yorumla" },
+        { t: "h2", x: "Is my file safe?" },
+        { t: "p", x: "Annotating and signing happen entirely in your phone's browser (on your device); the PDF isn't uploaded and stays 100% private. Only true text deletion/editing runs on a server, and the file isn't stored after processing." },
+        { t: "tip", x: "For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone." },
+      ],
+      faq: [
+        { q: "Can I edit a PDF on my phone without installing an app?", a: "Yes. Open the tool page in your phone browser (Chrome/Safari); adding text, annotating and signing work with no installation." },
+        { q: "Can I sign a PDF on iPhone?", a: "Yes. Open the sign tool in Safari, draw your signature with your finger or upload a photo, place it on the page, and download." },
+        { q: "Can I add text to a PDF on my phone?", a: "Yes. With the annotate tool you can tap blanks and add text, and fill forms — all on the phone." },
+        { q: "Is my file safe on the phone?", a: "Annotating and signing happen on your device and the file isn't sent to a server. True text editing runs on a server but the file isn't stored." },
+        { q: "Is it free?", a: "Yes. Adding text, annotating and signing are free and need no sign-up." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
