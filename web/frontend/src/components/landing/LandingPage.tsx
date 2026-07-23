@@ -721,6 +721,7 @@ function Hero({
         >
           {[
             tr ? "🔒 Dosyan cihazından çıkmaz" : "🔒 Files stay on your device",
+            tr ? "🚫 Filigran yok" : "🚫 No watermark",
             tr ? "⚡ Anında işlem" : "⚡ Instant",
             tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
             tr ? "🆓 Üyelik gerekmez" : "🆓 No sign-up",
