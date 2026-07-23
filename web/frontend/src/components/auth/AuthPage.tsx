@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Check } from "lucide-react";
 import { getGoogleOAuthStartUrl } from "../../api/auth";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
@@ -282,6 +283,31 @@ export function AuthPage({
                 {copy.screen.description}
               </p>
             </>
+          )}
+
+          {/* Kayıt modunda son-metre kazanım+güven şeridi — değer-anı CTA'sından inen
+              misafirin tereddüdünü düşürmek için. Dürüst, somut; uydurma sayı YOK. */}
+          {!adminPortal && mode === "register" && (
+            <ul className="mx-auto mt-6 flex max-w-[360px] flex-col gap-2">
+              {[
+                language === "tr"
+                  ? "Word · Excel · PPT'ye çevir, sıkıştır, OCR, AI özetle"
+                  : "Convert to Word · Excel · PPT, compress, OCR, AI",
+                language === "tr"
+                  ? "Kart gerekmez · 30 saniyede hazır · dilediğin an iptal"
+                  : "No card · ready in 30 seconds · cancel anytime",
+                language === "tr"
+                  ? "İşlemler cihazında yapılır — dosyaların gizli kalır"
+                  : "Runs on your device — your files stay private",
+              ].map((text) => (
+                <li key={text} className="flex items-center gap-2.5 text-[13px] text-nb-muted">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
+                    <Check className="h-3 w-3" strokeWidth={3} />
+                  </span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
           )}
 
           <a
