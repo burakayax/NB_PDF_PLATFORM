@@ -3346,6 +3346,117 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "ucretsiz-pdf-araci-nasil-secilir",
+      date: "2026-07-23",
+      updated: "2026-07-23",
+      readMinutes: 7,
+      tags: { tr: ["Rehber", "Gizlilik"], en: ["Guide", "Privacy"] },
+      accent: "emerald",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)",
+      description:
+        "Her \"ücretsiz PDF aracı\" aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma.",
+      excerpt:
+        "Dosyanı sunucuya yükleyen mi, cihazında işleyen mi? Ücretsiz bir PDF aracını seçmeden önce bakman gereken 6 şey — dürüst bir rehber.",
+      blocks: [
+        { t: "lead", x: "\"Ücretsiz online PDF aracı\" araması yüzlerce sonuç verir ama hepsi aynı değildir. Bazısı dosyanı sunucusuna yükler, bazısı çıktıya filigran koyar, bazısı basit bir işlem için üyelik ister. Bu rehber, doğru aracı seçmen için nelere bakman gerektiğini adım adım anlatır." },
+
+        { t: "h2", x: "Çoğu online PDF aracının görünmeyen tarafı: dosya yükleme" },
+        { t: "p", x: "Çoğu online PDF aracında birleştirme, bölme ya da dönüştürme için dosyan önce onların sunucusuna yüklenir, orada işlenir, sonra silinir. Genelde güvenlidir; ama bir sözleşme, kimlik ya da mali tablo için dosyanın bir süreliğine de olsa internete çıkması bir soru işareti bırakır. Alternatif yaklaşım: işlemin dosyanın hiç cihazından çıkmadan, doğrudan tarayıcıda yapılması." },
+
+        { t: "h2", x: "İyi bir ücretsiz PDF aracında aranacak 6 şey" },
+        { t: "ul", items: [
+          "Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcında mı (cihazında) işleniyor? Hassas belgeler için cihazda işleme en güvenlisidir.",
+          "Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu? Profesyonel bir belge için bu can sıkıcıdır.",
+          "Üyelik zorunluluğu: Basit bir birleştirme için hesap açmak gerekiyor mu?",
+          "Günlük/işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemen ya da ödeme yapman isteniyor mu?",
+          "Kurulum: Tarayıcıda mı çalışıyor, yoksa program/eklenti mi istiyor?",
+          "Kapsam: Sadece birleştirme mi, yoksa böl/kırp/döndür/dönüştür/imza gibi ihtiyaç duyacağın araçlar da var mı?",
+        ] },
+
+        { t: "h2", x: "Neden \"cihazda işleme\" fark yaratır?" },
+        { t: "p", x: "Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez." },
+
+        { t: "cta", title: "PDF Araçlarını Dene", x: "Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Hangi işlem cihazda yapılabilir, hangisi sunucu ister?" },
+        { t: "p", x: "Dürüst olmak gerekir: her işlem tarayıcıda yapılamaz. Doğru araç, bu ayrımı sana açıkça söyleyendir. Genel kural:" },
+        { t: "ul", items: [
+          "Cihazda yapılabilir (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, kırp, görsel→PDF, imza ve işaretleme.",
+          "Sunucu gerektirir: Word/Excel/PowerPoint dönüştürme, OCR (taranmış belgeyi metne çevirme), yüksek oranlı sıkıştırma ve yapay zekâ (özet, sohbet, çeviri). Burada da iyi bir araç içeriği saklamaz ve şifreli bağlantı kullanır.",
+        ] },
+
+        { t: "h2", x: "Kısa özet: nasıl seçmeli?" },
+        { t: "steps", items: [
+          { title: "Hassas belge mi?", x: "Evetse, işlemi cihazında (tarayıcıda) yapan bir araç seç — dosya internete gitmesin." },
+          { title: "Sadece basit bir iş mi (birleştir/böl/kırp)?", x: "Üyelik ve kurulum isteyeni ele; bunlar üyeliksiz ve anında yapılabilir." },
+          { title: "Dönüştürme/OCR gerekiyor mu?", x: "Bunlar sunucu ister; içeriğin saklanmadığını ve şifreli aktarım kullanıldığını doğrula." },
+        ] },
+        { t: "tip", x: "Pratik test: Aracı aç, bir dosya seç ve işlemin ne kadar sürede bittiğine bak. Yükleme çubuğu görmeden anında sonuç geliyorsa, işlem büyük olasılıkla cihazında yapılıyordur — yani dosyan internete gitmemiştir." },
+      ],
+      faq: [
+        { q: "Ücretsiz PDF araçları güvenli mi?", a: "Çoğu dosyanı sunucusuna yükler; genelde güvenlidir ama hassas belgeler için işlemi cihazında (tarayıcıda) yapan araçları tercih et — o zaman dosya internete hiç gönderilmez." },
+        { q: "Dosyamı yüklemeden PDF birleştirebilir miyim?", a: "Evet. Tarayıcıda çalışan araçlarda (ör. PDF Platform'un birleştirme aracı) dosya cihazında işlenir, sunucuya gitmez. Sürükle, sırala, indir — hepsi yerel." },
+        { q: "Ücretsiz araçlar filigran koyar mı?", a: "Bazıları koyar. Seçmeden önce ücretsiz çıktıya zorunlu filigran eklenip eklenmediğini kontrol et; PDF Platform zorunlu filigran eklemez." },
+        { q: "Hangi PDF işlemleri sunucu gerektirir?", a: "Word/Excel dönüştürme, OCR, yüksek sıkıştırma ve yapay zekâ araçları sunucuda çalışır. Birleştir, böl, kırp, döndür gibi yapısal işlemler cihazında yapılabilir." },
+        { q: "En iyi ücretsiz PDF aracı hangisi?", a: "İşine bağlı: hassas belgede cihazda çalışan yapısal araçlar; dönüştürmede biçimi koruyan dönüştürücüler; uzun belgede yapay zekâ araçları. Öncelik gizlilikse, cihazda-işleme yaklaşımı belirleyici olur." },
+      ],
+    },
+    {
+      title: "How to Choose a Free PDF Tool in 2026 (Privacy & Security Guide)",
+      description:
+        "Not every \"free PDF tool\" is the same. Uploading, sign-up, watermarks, daily limits and privacy — a full checklist and comparison to choose wisely.",
+      excerpt:
+        "Does it upload your file to a server, or process it on your device? The 6 things to check before picking a free PDF tool — an honest guide.",
+      blocks: [
+        { t: "lead", x: "Searching for a \"free online PDF tool\" returns hundreds of results, but they're not the same. Some upload your file to their servers, some add a watermark, some ask you to sign up for a simple task. This guide walks through exactly what to check so you pick the right one." },
+
+        { t: "h2", x: "The hidden side of most online PDF tools: uploading" },
+        { t: "p", x: "In most online PDF tools, merging, splitting or converting uploads your file to their server, processes it there, and then deletes it. It's usually safe, but for a contract, ID or financial statement, having the file go to the internet — even briefly — leaves a question mark. The alternative: the operation runs directly in your browser, so the file never leaves your device." },
+
+        { t: "h2", x: "6 things to look for in a free PDF tool" },
+        { t: "ul", items: [
+          "Privacy: Is the file uploaded to a server, or processed in your browser (on your device)? On-device is safest for sensitive documents.",
+          "Forced watermark: Is a stamp added to the free output? Annoying for a professional document.",
+          "Sign-up requirement: Does a simple merge require an account?",
+          "Daily/usage limit: Are you asked to wait or pay after a set number of free tasks?",
+          "Installation: Does it run in the browser, or need a program/plugin?",
+          "Coverage: Just merging, or also split/crop/rotate/convert/sign — the tools you'll actually need?",
+        ] },
+
+        { t: "h2", x: "Why \"on-device\" processing matters" },
+        { t: "p", x: "If a tool runs the operation in your browser, you gain three things: privacy (the file doesn't go online), speed (no upload/download wait, instant results), and offline use (once loaded, it works even if your connection drops). On PDF Platform, structural tools like merge, split, crop, rotate, delete pages, reorder and image→PDF run entirely on your device — your file never goes to a server." },
+
+        { t: "cta", title: "Try the PDF Tools", x: "Merge, split, crop, rotate — without your file leaving your device, no sign-up, free.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Which operations run on-device, which need a server?" },
+        { t: "p", x: "To be honest, not everything can run in the browser. The right tool is the one that tells you the split clearly. The general rule:" },
+        { t: "ul", items: [
+          "Can run on-device (file never leaves): merge, split, rotate, delete pages, reorder, crop, image→PDF, sign and annotate.",
+          "Needs a server: Word/Excel/PowerPoint conversion, OCR (turning scans into text), high-ratio compression and AI (summarize, chat, translate). Even here, a good tool doesn't store content and uses an encrypted connection.",
+        ] },
+
+        { t: "h2", x: "Quick summary: how to choose" },
+        { t: "steps", items: [
+          { title: "Is it a sensitive document?", x: "If yes, pick a tool that runs the operation on your device (in the browser) so the file doesn't go online." },
+          { title: "Just a simple task (merge/split/crop)?", x: "Skip the ones that require sign-up or installation; these can be done with no account, instantly." },
+          { title: "Need conversion/OCR?", x: "Those need a server; confirm content isn't stored and an encrypted connection is used." },
+        ] },
+        { t: "tip", x: "A quick test: open the tool, pick a file, and watch how fast it finishes. If you get instant results with no upload bar, the operation is likely running on your device — meaning your file didn't go to the internet." },
+      ],
+      faq: [
+        { q: "Are free PDF tools safe?", a: "Most upload your file to a server; that's usually safe, but for sensitive documents prefer tools that process on your device (in the browser) — then the file is never sent to the internet." },
+        { q: "Can I merge PDFs without uploading my file?", a: "Yes. With browser-based tools (like PDF Platform's merge tool), the file is processed on your device and not sent to a server. Drag, reorder, download — all local." },
+        { q: "Do free tools add a watermark?", a: "Some do. Before choosing, check whether a forced watermark is added to the free output; PDF Platform doesn't add one." },
+        { q: "Which PDF operations need a server?", a: "Word/Excel conversion, OCR, high compression and AI tools run on a server. Structural tasks like merge, split, crop and rotate can run on your device." },
+        { q: "What's the best free PDF tool?", a: "It depends on the task: on-device structural tools for sensitive files; format-preserving converters for conversion; AI tools for long documents. If privacy is the priority, the on-device approach is the deciding factor." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */
