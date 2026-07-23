@@ -16,9 +16,9 @@ import type { Locale } from "../lib/email-i18n.js";
  * kalan yüksek-niyetli terk. Bu kişilere ~2 saat sonra tek "kaldığın yerden devam et"
  * e-postası gider.
  *
- * Uyum: kullanıcı satın almayı KENDİ başlattığı için transactional kabul edilir;
- * yine de açıkça çıkmış (marketingUnsubscribedAt) kullanıcıya gönderilmez ve
- * e-postada unsubscribe yolu vardır. Dedup: 7 gün içinde bir kez (audit log).
+ * Uyum (HUKUKİ, sıfır risk): diğer pazarlama e-postalarıyla AYNI sıkı opt-in —
+ * yalnız açıkça pazarlama izni VEREN (marketingConsent) ve çıkmayan kullanıcılara.
+ * E-postada unsubscribe linki + List-Unsubscribe başlığı. Dedup: 7 günde bir (audit log).
  */
 
 function safeRun(name: string, fn: () => Promise<void>) {
@@ -59,7 +59,10 @@ async function runCheckoutRecovery(): Promise<void> {
         plan: "FREE", // tamamlamış/yükseltmiş olsaydı FREE olmazdı
         role: "USER",
         isVerified: true,
-        marketingUnsubscribedAt: null, // açık opt-out'a saygı
+        // HUKUKİ (KVKK/6563/GDPR): diğer pazarlama e-postalarıyla AYNI sıkı opt-in —
+        // yalnız açıkça izin VEREN ve çıkmayan kullanıcılara. Sıfır hukuki risk.
+        marketingConsent: true,
+        marketingUnsubscribedAt: null,
         teamMembership: { is: null },
       },
     },
