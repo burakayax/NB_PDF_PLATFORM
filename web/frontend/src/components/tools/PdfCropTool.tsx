@@ -505,7 +505,7 @@ export function PdfCropTool({ language }: Props) {
             <X className="h-4 w-4" /> {t.close}
           </button>
         </div>
-        <ValueMomentNudge language={language} />
+        <ValueMomentNudge language={language} source="crop_success" />
       </div>
     );
   }

@@ -1406,6 +1406,8 @@ export const RELATED_TOOLS = {
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
 export const BLOG_RELATED_TOOLS = {
   "ucretsiz-pdf-araci-nasil-secilir": ["merge-pdf", "split-pdf", "compress", "pdf-to-word"],
+  "pdf-kucultme-eposta-whatsapp": ["compress", "split-pdf", "merge-pdf"],
+  "telefonda-pdf-duzenleme-uygulamasiz": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
   "ilovepdf-alternatifi-cihazda-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
   "smallpdf-alternatifi-sinirsiz-ucretsiz": ["merge-pdf", "split-pdf", "compress"],
   "adobe-acrobat-alternatifi-ucretsiz": ["merge-pdf", "pdf-to-word", "pdf-imzala"],
