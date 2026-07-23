@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik) — PDF Platform</title>
+    <meta name="description" content="Her &quot;ücretsiz PDF aracı&quot; aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/ucretsiz-pdf-araci-nasil-secilir" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik) — PDF Platform" />
+    <meta property="og:description" content="Her &quot;ücretsiz PDF aracı&quot; aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik) — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik) — PDF Platform" />
+    <meta name="twitter:description" content="Her &quot;ücretsiz PDF aracı&quot; aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image.png" />
+    <meta name="twitter:image:alt" content="Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik) — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)","description":"Her \"ücretsiz PDF aracı\" aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma.","datePublished":"2026-07-23","dateModified":"2026-07-23","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/og-image.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)","description":"Her \"ücretsiz PDF aracı\" aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma.","inLanguage":"tr","step":[{"@type":"HowToStep","position":1,"name":"Hassas belge mi?","text":"Evetse, işlemi cihazında (tarayıcıda) yapan bir araç seç — dosya internete gitmesin."},{"@type":"HowToStep","position":2,"name":"Sadece basit bir iş mi (birleştir/böl/kırp)?","text":"Üyelik ve kurulum isteyeni ele; bunlar üyeliksiz ve anında yapılabilir."},{"@type":"HowToStep","position":3,"name":"Dönüştürme/OCR gerekiyor mu?","text":"Bunlar sunucu ister; içeriğin saklanmadığını ve şifreli aktarım kullanıldığını doğrula."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Ücretsiz PDF araçları güvenli mi?","acceptedAnswer":{"@type":"Answer","text":"Çoğu dosyanı sunucusuna yükler; genelde güvenlidir ama hassas belgeler için işlemi cihazında (tarayıcıda) yapan araçları tercih et — o zaman dosya internete hiç gönderilmez."}},{"@type":"Question","name":"Dosyamı yüklemeden PDF birleştirebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. Tarayıcıda çalışan araçlarda (ör. PDF Platform'un birleştirme aracı) dosya cihazında işlenir, sunucuya gitmez. Sürükle, sırala, indir — hepsi yerel."}},{"@type":"Question","name":"Ücretsiz araçlar filigran koyar mı?","acceptedAnswer":{"@type":"Answer","text":"Bazıları koyar. Seçmeden önce ücretsiz çıktıya zorunlu filigran eklenip eklenmediğini kontrol et; PDF Platform zorunlu filigran eklemez."}},{"@type":"Question","name":"Hangi PDF işlemleri sunucu gerektirir?","acceptedAnswer":{"@type":"Answer","text":"Word/Excel dönüştürme, OCR, yüksek sıkıştırma ve yapay zekâ araçları sunucuda çalışır. Birleştir, böl, kırp, döndür gibi yapısal işlemler cihazında yapılabilir."}},{"@type":"Question","name":"En iyi ücretsiz PDF aracı hangisi?","acceptedAnswer":{"@type":"Answer","text":"İşine bağlı: hassas belgede cihazda çalışan yapısal araçlar; dönüştürmede biçimi koruyan dönüştürücüler; uzun belgede yapay zekâ araçları. Öncelik gizlilikse, cihazda-işleme yaklaşımı belirleyici olur."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)</h1><p class="seo-intro">Dosyanı sunucuya yükleyen mi, cihazında işleyen mi? Ücretsiz bir PDF aracını seçmeden önce bakman gereken 6 şey — dürüst bir rehber.</p><article class="seo-article"><p class="seo-lead">&quot;Ücretsiz online PDF aracı&quot; araması yüzlerce sonuç verir ama hepsi aynı değildir. Bazısı dosyanı sunucusuna yükler, bazısı çıktıya filigran koyar, bazısı basit bir işlem için üyelik ister. Bu rehber, doğru aracı seçmen için nelere bakman gerektiğini adım adım anlatır.</p><h2>Çoğu online PDF aracının görünmeyen tarafı: dosya yükleme</h2><p>Çoğu online PDF aracında birleştirme, bölme ya da dönüştürme için dosyan önce onların sunucusuna yüklenir, orada işlenir, sonra silinir. Genelde güvenlidir; ama bir sözleşme, kimlik ya da mali tablo için dosyanın bir süreliğine de olsa internete çıkması bir soru işareti bırakır. Alternatif yaklaşım: işlemin dosyanın hiç cihazından çıkmadan, doğrudan tarayıcıda yapılması.</p><h2>İyi bir ücretsiz PDF aracında aranacak 6 şey</h2><ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcında mı (cihazında) işleniyor? Hassas belgeler için cihazda işleme en güvenlisidir.</li><li>Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu? Profesyonel bir belge için bu can sıkıcıdır.</li><li>Üyelik zorunluluğu: Basit bir birleştirme için hesap açmak gerekiyor mu?</li><li>Günlük/işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemen ya da ödeme yapman isteniyor mu?</li><li>Kurulum: Tarayıcıda mı çalışıyor, yoksa program/eklenti mi istiyor?</li><li>Kapsam: Sadece birleştirme mi, yoksa böl/kırp/döndür/dönüştür/imza gibi ihtiyaç duyacağın araçlar da var mı?</li></ul><h2>Neden &quot;cihazda işleme&quot; fark yaratır?</h2><p>Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform&#39;da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez.</p><p><a href="/tools/merge-pdf"><strong>PDF Araçlarını Dene</strong> — Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz.</a></p><h2>Hangi işlem cihazda yapılabilir, hangisi sunucu ister?</h2><p>Dürüst olmak gerekir: her işlem tarayıcıda yapılamaz. Doğru araç, bu ayrımı sana açıkça söyleyendir. Genel kural:</p><ul><li>Cihazda yapılabilir (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, kırp, görsel→PDF, imza ve işaretleme.</li><li>Sunucu gerektirir: Word/Excel/PowerPoint dönüştürme, OCR (taranmış belgeyi metne çevirme), yüksek oranlı sıkıştırma ve yapay zekâ (özet, sohbet, çeviri). Burada da iyi bir araç içeriği saklamaz ve şifreli bağlantı kullanır.</li></ul><h2>Kısa özet: nasıl seçmeli?</h2><ol><li><strong>Hassas belge mi?:</strong> Evetse, işlemi cihazında (tarayıcıda) yapan bir araç seç — dosya internete gitmesin.</li><li><strong>Sadece basit bir iş mi (birleştir/böl/kırp)?:</strong> Üyelik ve kurulum isteyeni ele; bunlar üyeliksiz ve anında yapılabilir.</li><li><strong>Dönüştürme/OCR gerekiyor mu?:</strong> Bunlar sunucu ister; içeriğin saklanmadığını ve şifreli aktarım kullanıldığını doğrula.</li></ol><p>Pratik test: Aracı aç, bir dosya seç ve işlemin ne kadar sürede bittiğine bak. Yükleme çubuğu görmeden anında sonuç geliyorsa, işlem büyük olasılıkla cihazında yapılıyordur — yani dosyan internete gitmemiştir.</p></article><nav aria-label="İlgili PDF araçları" class="seo-related-tools"><h2>Bu İşi Yapan PDF Araçları</h2><ul><li><a href="/tools/merge-pdf">PDF Birleştirme</a></li><li><a href="/tools/split-pdf">PDF Ayırma</a></li><li><a href="/tools/compress">PDF Sıkıştırma</a></li><li><a href="/tools/pdf-to-word">PDF&#39;den Word&#39;e Dönüştürme</a></li></ul></nav><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Ücretsiz PDF araçları güvenli mi?</h3><p>Çoğu dosyanı sunucusuna yükler; genelde güvenlidir ama hassas belgeler için işlemi cihazında (tarayıcıda) yapan araçları tercih et — o zaman dosya internete hiç gönderilmez.</p></div><div class="seo-faq-item"><h3>Dosyamı yüklemeden PDF birleştirebilir miyim?</h3><p>Evet. Tarayıcıda çalışan araçlarda (ör. PDF Platform&#39;un birleştirme aracı) dosya cihazında işlenir, sunucuya gitmez. Sürükle, sırala, indir — hepsi yerel.</p></div><div class="seo-faq-item"><h3>Ücretsiz araçlar filigran koyar mı?</h3><p>Bazıları koyar. Seçmeden önce ücretsiz çıktıya zorunlu filigran eklenip eklenmediğini kontrol et; PDF Platform zorunlu filigran eklemez.</p></div><div class="seo-faq-item"><h3>Hangi PDF işlemleri sunucu gerektirir?</h3><p>Word/Excel dönüştürme, OCR, yüksek sıkıştırma ve yapay zekâ araçları sunucuda çalışır. Birleştir, böl, kırp, döndür gibi yapısal işlemler cihazında yapılabilir.</p></div><div class="seo-faq-item"><h3>En iyi ücretsiz PDF aracı hangisi?</h3><p>İşine bağlı: hassas belgede cihazda çalışan yapısal araçlar; dönüştürmede biçimi koruyan dönüştürücüler; uzun belgede yapay zekâ araçları. Öncelik gizlilikse, cihazda-işleme yaklaşımı belirleyici olur.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
