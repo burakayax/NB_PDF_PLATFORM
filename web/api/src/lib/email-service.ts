@@ -120,6 +120,62 @@ export async function sendLifecycleEmail(
   });
 }
 
+/**
+ * Checkout recovery — ödeme adımında yarıda kalmış (terk edilmiş) yükseltmeyi geri
+ * kazanma e-postası. Transactional nitelikte: kullanıcı satın almayı KENDİ başlattı
+ * ("kaldığın yerden devam et"). Yine de açık unsubscribe yolu + List-Unsubscribe
+ * başlığı eklenir; açıkça çıkmış kullanıcıya job katmanında hiç gönderilmez.
+ * Dedup: audit action'ı checkoutId içerir → aynı terk için tekrar gönderilmez.
+ */
+export async function sendCheckoutRecoveryEmail(
+  toEmail: string,
+  vars: { name: string; userId: string; checkoutId: string; planLabel: string; ctaUrl: string; locale?: Locale },
+): Promise<void> {
+  const locale: Locale = vars.locale ?? "tr";
+  const t = emailT[locale];
+  const tr = locale === "tr";
+  const name = escapeHtml(vars.name);
+  const plan = escapeHtml(vars.planLabel);
+
+  const eyebrow = tr ? "Yükseltmen bekliyor" : "Your upgrade is waiting";
+  const title = tr ? "Bir adım kalmıştı" : "You were one step away";
+  const intro = tr
+    ? `${plan} planına geçişini tamamlamadın — kaldığın yerden devam edebilirsin.`
+    : `You didn't finish upgrading to ${plan} — you can pick up right where you left off.`;
+  const p1 = tr
+    ? `${plan} planına geçişin neredeyse tamamdı; ödeme adımında yarıda kaldı. Hiçbir şey kaybolmadı — planını seçip birkaç saniyede tamamlayabilirsin.`
+    : `Your switch to ${plan} was almost done; it stopped at the payment step. Nothing is lost — pick your plan and finish in a few seconds.`;
+  const p2 = tr
+    ? "Yükselttiğinde daha büyük dosyalar, daha fazla işlem ve yapay zekâ araçları anında açılır."
+    : "Once you upgrade, larger files, more operations and AI tools unlock instantly.";
+  const cta = tr ? "Yükseltmeyi tamamla" : "Complete your upgrade";
+
+  const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
+  const bodyHtml = `
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p1}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p2}</p>
+    ${ctaButton(vars.ctaUrl, cta)}
+  `;
+  const html = renderCorporateEmail({
+    eyebrow,
+    title,
+    intro,
+    bodyHtml,
+    footerText: t.newsletter_footer,
+    productName: product(),
+    unsubscribeUrl,
+  });
+  const subject = tr ? `${vars.planLabel} yükseltmen yarım kaldı` : `Your ${vars.planLabel} upgrade is unfinished`;
+  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
+  await logAutomationEmailAudit(`email.checkout_recovery.${vars.checkoutId}`, vars.userId, `Checkout recovery → ${toEmail}`, {
+    template: "checkout_recovery",
+    checkoutId: vars.checkoutId,
+    planLabel: vars.planLabel,
+    locale,
+  });
+}
+
 export async function sendMassCampaignEmail(
   toEmail: string,
   subject: string,
