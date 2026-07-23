@@ -1175,6 +1175,9 @@ function App() {
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
+  // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
+  const [upgradeReasonTool, setUpgradeReasonTool] = useState<string | null>(null);
   // Masaüstü/telefon ayrımı — Belge Tara webde "telefonda açın" ekranı gösterir.
   const { isMobileOrTablet } = useResponsive();
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
@@ -2233,6 +2236,7 @@ function App() {
           },
         );
         if (outcome.status === "payment_required") {
+          setUpgradeReasonTool(toolId);
           setUpgradeModalOpen(true);
           return;
         }
@@ -6203,7 +6207,7 @@ function App() {
           <Suspense fallback={<ModalSkeleton />}>
             <PlanUpgradeModal
               open={upgradeModalOpen}
-              onClose={() => setUpgradeModalOpen(false)}
+              onClose={() => { setUpgradeModalOpen(false); setUpgradeReasonTool(null); }}
               language={language}
               accessToken={accessToken ?? undefined}
               user={user}
@@ -6212,6 +6216,7 @@ function App() {
               onOpenTerms={() => openLegalPage("terms")}
               onOpenKvkk={() => openLegalPage("kvkk")}
               onBeforeExternalCheckout={persistNbResumeSnapshot}
+              reasonToolId={upgradeReasonTool}
             />
           </Suspense>
         )}
