@@ -84,7 +84,7 @@ export const PLANS: PlanDefinition[] = [
     monthlyOpsLimit: 30,
     fileSizeMB: 80,
     batchLimit: 0,
-    watermark: true,
+    watermark: false,
     seats: 1,
   },
   {
@@ -123,7 +123,7 @@ export const PLANS: PlanDefinition[] = [
     monthlyOpsLimit: 250,
     fileSizeMB: 100,
     batchLimit: 2,
-    watermark: true,
+    watermark: false,
     seats: 1,
   },
   {

@@ -95,10 +95,10 @@ function getPerks(planId: PlanId, language: Language): PerkCategory[] {
             : "Merge, split, convert, compress, encrypt, watermark and more.",
         },
         {
-          label: tr ? "Filigran yok" : "No watermark",
+          label: tr ? "Temiz, filigransız çıktı" : "Clean, watermark-free output",
           detail: tr
-            ? "Çıktı dosyalarında PDF Platform filigranı bulunmaz — temiz, profesyonel."
-            : "No PDF Platform watermark on your output — clean and professional.",
+            ? "Tüm çıktılarında PDF Platform filigranı yok — her planda temiz ve profesyonel."
+            : "No PDF Platform watermark on any output — clean and professional on every plan.",
         },
       ],
     },
