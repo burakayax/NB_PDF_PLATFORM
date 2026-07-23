@@ -49,9 +49,14 @@ export function renderCampaign(
   // (http…) aynen kullanılır. Böylece kampanyada env-bağımsız göreli yol saklanabilir
   // (ör. "/workspace?upgrade=1" → yükseltme paneli).
   const rawCta = (c.ctaUrl || "").trim() || "/workspace";
-  const ctaUrl = /^https?:\/\//i.test(rawCta)
+  let ctaUrl = /^https?:\/\//i.test(rawCta)
     ? rawCta
     : `${origin}${rawCta.startsWith("/") ? "" : "/"}${rawCta}`;
+  // Kupon varsa butonun linkine taşı → ödeme özetinde OTOMATİK uygulanır (elle yazma yok).
+  // Görünen kupon bloğu manuel yedek olarak kalır.
+  if (c.couponCode) {
+    ctaUrl += `${ctaUrl.includes("?") ? "&" : "?"}coupon=${encodeURIComponent(c.couponCode)}`;
+  }
 
   const coupon = c.couponCode ? couponBlock(c.couponCode, tr ? "İndirim kodunuz" : "Your discount code") : "";
   const cta = ctaLabel ? ctaButton(ctaUrl, ctaLabel) : "";

@@ -1178,6 +1178,15 @@ function App() {
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
   const [upgradeReasonTool, setUpgradeReasonTool] = useState<string | null>(null);
+  // E-posta indirim kuponu (?coupon=…) — ödeme özetinde otomatik uygulanır. sessionStorage
+  // ile login'den sağ çıkar (girişsiz kullanıcı önce giriş yapar).
+  const [pendingCoupon, setPendingCoupon] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem("nb_pending_coupon");
+    } catch {
+      return null;
+    }
+  });
   // E-posta CTA deep-link'i: ?upgrade=1 → fiyatlandırma/upgrade panelini aç. Checkout
   // recovery + upgrade e-postalarının butonları buraya iner. Girişli değilse
   // nb_pending_upgrade set edilir → giriş sonrası mevcut akış paneli açar (login'den sağ çıkar).
@@ -1185,21 +1194,36 @@ function App() {
   useEffect(() => {
     if (upgradeDeepLinkHandledRef.current || isRestoring) return;
     let wantsUpgrade = false;
+    let coupon: string | null = null;
     try {
-      wantsUpgrade = new URLSearchParams(window.location.search).get("upgrade") === "1";
+      const params = new URLSearchParams(window.location.search);
+      wantsUpgrade = params.get("upgrade") === "1";
+      const c = params.get("coupon");
+      coupon = c && c.trim() ? c.trim() : null;
     } catch {
       /* yoksay */
     }
-    if (!wantsUpgrade) return;
+    if (!wantsUpgrade && !coupon) return;
     upgradeDeepLinkHandledRef.current = true;
-    // URL'den ?upgrade parametresini temizle (yenilemede tekrar tetiklenmesin).
+    // Kuponu sakla (login'den sağ çıkması için) + otomatik uygulama için state'e al.
+    if (coupon) {
+      setPendingCoupon(coupon);
+      try {
+        sessionStorage.setItem("nb_pending_coupon", coupon);
+      } catch {
+        /* private mode */
+      }
+    }
+    // URL'den ?upgrade ve ?coupon parametrelerini temizle (yenilemede tekrar tetiklenmesin).
     try {
       const u = new URL(window.location.href);
       u.searchParams.delete("upgrade");
+      u.searchParams.delete("coupon");
       window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
     } catch {
       /* yoksay */
     }
+    if (!wantsUpgrade) return;
     if (isAuthenticated) {
       setView("web");
       setActiveSidebar("subscription");
@@ -6254,6 +6278,7 @@ function App() {
               onOpenKvkk={() => openLegalPage("kvkk")}
               onBeforeExternalCheckout={persistNbResumeSnapshot}
               reasonToolId={upgradeReasonTool}
+              initialCoupon={pendingCoupon}
             />
           </Suspense>
         )}
