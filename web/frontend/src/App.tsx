@@ -1178,6 +1178,43 @@ function App() {
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
   const [upgradeReasonTool, setUpgradeReasonTool] = useState<string | null>(null);
+  // E-posta CTA deep-link'i: ?upgrade=1 → fiyatlandırma/upgrade panelini aç. Checkout
+  // recovery + upgrade e-postalarının butonları buraya iner. Girişli değilse
+  // nb_pending_upgrade set edilir → giriş sonrası mevcut akış paneli açar (login'den sağ çıkar).
+  const upgradeDeepLinkHandledRef = useRef(false);
+  useEffect(() => {
+    if (upgradeDeepLinkHandledRef.current || isRestoring) return;
+    let wantsUpgrade = false;
+    try {
+      wantsUpgrade = new URLSearchParams(window.location.search).get("upgrade") === "1";
+    } catch {
+      /* yoksay */
+    }
+    if (!wantsUpgrade) return;
+    upgradeDeepLinkHandledRef.current = true;
+    // URL'den ?upgrade parametresini temizle (yenilemede tekrar tetiklenmesin).
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.delete("upgrade");
+      window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
+    } catch {
+      /* yoksay */
+    }
+    if (isAuthenticated) {
+      setView("web");
+      setActiveSidebar("subscription");
+      setContentPanel("subscription");
+      setUpgradeModalOpen(true);
+    } else {
+      // Giriş yoksa: bayrağı bırak — giriş sonrası post-login akışı (nb_pending_upgrade)
+      // abonelik panelini açar. Kullanıcı normal giriş/kayıt UI'ından devam eder.
+      try {
+        sessionStorage.setItem("nb_pending_upgrade", "1");
+      } catch {
+        /* private mode */
+      }
+    }
+  }, [isRestoring, isAuthenticated]);
   // Masaüstü/telefon ayrımı — Belge Tara webde "telefonda açın" ekranı gösterir.
   const { isMobileOrTablet } = useResponsive();
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
