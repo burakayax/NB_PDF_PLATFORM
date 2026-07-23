@@ -366,7 +366,7 @@ export function GuestPageToolCore({
             {tr ? "Kapat" : "Close"}
           </button>
         </div>
-        <ValueMomentNudge language={language} />
+        <ValueMomentNudge language={language} source="page_tool_success" />
       </div>
     );
   }
