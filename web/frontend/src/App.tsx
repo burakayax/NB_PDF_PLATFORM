@@ -74,6 +74,7 @@ import {
   type SidebarToolId,
 } from "./components/dashboard/DashboardSidebar";
 import { DashboardTopNav } from "./components/dashboard/DashboardTopNav";
+import { ProductTour, type TourStep } from "./components/onboarding/ProductTour";
 import { useResponsive } from "./components/dashboard/hooks/useResponsive";
 import { QuotaWidget } from "./components/dashboard/QuotaWidget";
 import { AiUsageBreakdown } from "./components/dashboard/AiUsageBreakdown";
@@ -1239,6 +1240,94 @@ function App() {
       }
     }
   }, [isRestoring, isAuthenticated]);
+
+  // ── İlk giren kullanıcıya ürün turu (spotlight onboarding) ──────────────────
+  // İlk kez çalışma alanına giren kayıtlı kullanıcıya arayüzü adım adım tanıtır.
+  // localStorage ile bir kez; `?tour=1` ile her zaman yeniden başlatılabilir (replay).
+  const [tourOpen, setTourOpen] = useState(false);
+  const tourStartedRef = useRef(false);
+  const tourSteps: TourStep[] = useMemo(() => {
+    const t = language === "tr";
+    return [
+      {
+        selector: '[data-tour="tools"]',
+        placement: "auto",
+        title: t ? "Araçların burada" : "Your tools live here",
+        body: t
+          ? "İhtiyacın olan aracı buradan seç — birleştir, dönüştür, sıkıştır, imzala ve daha fazlası."
+          : "Pick the tool you need here — merge, convert, compress, sign and more.",
+      },
+      {
+        selector: "#nb-workspace-tool-form",
+        placement: "auto",
+        title: t ? "Dosyanı ekle" : "Add your file",
+        body: t
+          ? "Dosyanı buraya sürükle ya da tıklayıp yükle; gerekli ayarları da burada yaparsın."
+          : "Drag your file here or click to upload; set any options right here.",
+      },
+      {
+        selector: '[data-tour="process"]',
+        placement: "top",
+        title: t ? "İşle ve indir" : "Process & download",
+        body: t
+          ? "Hazır olunca bu butona bas — sonucun birkaç saniyede hazırlanıp indirilir."
+          : "When ready, hit this button — your result is prepared and downloaded in seconds.",
+      },
+      {
+        selector: '[data-tour="plan"]',
+        placement: "bottom",
+        title: t ? "Daha fazlası için yükselt" : "Upgrade for more",
+        body: t
+          ? "Yapay zekâ araçları, daha büyük dosyalar ve limitsiz işlem için planını buradan yükseltebilirsin."
+          : "Unlock AI tools, larger files and unlimited operations by upgrading here.",
+      },
+    ];
+  }, [language]);
+  const handleTourClose = useCallback((_completed: boolean, shown: boolean) => {
+    setTourOpen(false);
+    if (shown) {
+      try {
+        localStorage.setItem("nb_tour_v1_seen", "1");
+      } catch {
+        /* private mode */
+      }
+    } else {
+      // Hedefler henüz hazır değildi (ör. layout oturmadı) → "görüldü" işaretleme;
+      // koşullar tekrar sağlanınca yeniden denensin.
+      tourStartedRef.current = false;
+    }
+  }, []);
+  useEffect(() => {
+    if (tourStartedRef.current || isRestoring) return;
+    let forced = false;
+    try {
+      forced = new URLSearchParams(window.location.search).get("tour") === "1";
+    } catch {
+      /* yoksay */
+    }
+    if (forced) {
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.delete("tour");
+        window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
+      } catch {
+        /* yoksay */
+      }
+    }
+    if (!isAuthenticated || view !== "web" || user?.role === "ADMIN") return;
+    let seen = false;
+    try {
+      seen = localStorage.getItem("nb_tour_v1_seen") === "1";
+    } catch {
+      /* yoksay */
+    }
+    if (seen && !forced) return;
+    tourStartedRef.current = true;
+    // Layout (sidebar/form) otursun diye kısa gecikme sonra başlat.
+    const timer = window.setTimeout(() => setTourOpen(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [isAuthenticated, isRestoring, view, user?.role]);
+
   // Masaüstü/telefon ayrımı — Belge Tara webde "telefonda açın" ekranı gösterir.
   const { isMobileOrTablet } = useResponsive();
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
@@ -6610,6 +6699,13 @@ function App() {
           />
         ) : null}
 
+        <ProductTour
+          steps={tourSteps}
+          open={tourOpen}
+          language={language}
+          onClose={handleTourClose}
+        />
+
         <DashboardTopNav
           user={user}
           language={language}
@@ -8165,6 +8261,7 @@ function App() {
 
                         <button
                           ref={primaryActionRef}
+                          data-tour="process"
                           className="primary-action"
                           type="submit"
                           disabled={submitDisabled}
