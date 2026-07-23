@@ -66,8 +66,8 @@ const PLAN_ORG_LIMITS: Record<string, {
   watermarkEnabled: boolean;
   queuePriority: "LOW" | "MEDIUM" | "HIGH" | "HIGHEST";
 }> = {
-  FREE:     { dailyOperationLimit: 3,    monthlyOperationLimit: 30,     fileSizeLimitMB: 80,     batchLimit: 0,   watermarkEnabled: true,  queuePriority: "LOW" },
-  STARTER:  { dailyOperationLimit: 25,   monthlyOperationLimit: 250,    fileSizeLimitMB: 100,    batchLimit: 2,   watermarkEnabled: true,  queuePriority: "LOW" },
+  FREE:     { dailyOperationLimit: 3,    monthlyOperationLimit: 30,     fileSizeLimitMB: 80,     batchLimit: 0,   watermarkEnabled: false,  queuePriority: "LOW" },
+  STARTER:  { dailyOperationLimit: 25,   monthlyOperationLimit: 250,    fileSizeLimitMB: 100,    batchLimit: 2,   watermarkEnabled: false,  queuePriority: "LOW" },
   PLUS:     { dailyOperationLimit: null, monthlyOperationLimit: 600,    fileSizeLimitMB: 250,    batchLimit: 5,   watermarkEnabled: false, queuePriority: "MEDIUM" },
   PRO:      { dailyOperationLimit: null, monthlyOperationLimit: 1000,   fileSizeLimitMB: 500,    batchLimit: 25,  watermarkEnabled: false, queuePriority: "HIGH" },
   BUSINESS: { dailyOperationLimit: null, monthlyOperationLimit: 999999, fileSizeLimitMB: 999999, batchLimit: 999, watermarkEnabled: false, queuePriority: "HIGHEST" },

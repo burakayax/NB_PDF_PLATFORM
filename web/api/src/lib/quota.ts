@@ -235,7 +235,9 @@ export async function checkQuota(
     dailyLimit: effDailyLimit,
     monthlyUsed: currentOrg.currentMonthOperations,
     monthlyLimit: currentOrg.monthlyOperationLimit,
-    watermarkEnabled: currentOrg.watermarkEnabled,
+    // Politika: hiçbir planda görünür filigran/footer damgası YOK ("filigransız" markası).
+    // DB'de eski org'larda watermarkEnabled=true kalmış olsa bile karar daima false döner.
+    watermarkEnabled: false,
     fileSizeLimitMB: currentOrg.fileSizeLimitMB,
   };
 }
@@ -357,7 +359,7 @@ export async function checkAndIncrementQuota(
       dailyLimit: effDailyLimit,
       monthlyUsed: org.currentMonthOperations + 1,
       monthlyLimit: org.monthlyOperationLimit,
-      watermarkEnabled: org.watermarkEnabled,
+      watermarkEnabled: false, // Politika: filigran tamamen kaldırıldı (tüm planlar)
       fileSizeLimitMB: org.fileSizeLimitMB,
     };
   });
@@ -484,7 +486,7 @@ export async function getQuotaSummary(userId: string) {
       used: org.currentMonthOperations,
       limit: org.monthlyOperationLimit < 999999 ? org.monthlyOperationLimit : null,
     },
-    watermarkEnabled: org.watermarkEnabled,
+    watermarkEnabled: false, // Politika: filigran tamamen kaldırıldı (tüm planlar)
     batchLimit: org.batchLimit,
     fileSizeLimitMB: org.fileSizeLimitMB,
     isAdmin: false,
