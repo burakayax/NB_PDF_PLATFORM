@@ -1,5 +1,6 @@
 import { type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { trackGAEvent } from "../../lib/analytics";
 import {
   AlertTriangle,
   ArrowDown,
@@ -433,7 +434,10 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             </p>
             <button
               type="button"
-              onClick={onRegister}
+              onClick={() => {
+                trackGAEvent("sign_up_cta_click", { source: "guest_tool" });
+                onRegister();
+              }}
               className="mt-3 text-[13px] font-semibold text-cyan-300 transition hover:text-cyan-200"
             >
               {tr ? "Ücretsiz üye ol →" : "Sign up free →"}

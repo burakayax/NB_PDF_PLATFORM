@@ -8,6 +8,7 @@ import {
   SESSION_POST_OAUTH_ADMIN_VALUE,
   SESSION_POST_OAUTH_REDIRECT_KEY,
 } from "../../lib/oauthRedirect";
+import { trackGAEvent } from "../../lib/analytics";
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -220,6 +221,8 @@ export function AuthPage({
           city: registerCity.trim() || undefined,
           marketingConsent,
         });
+        // Kazanım dönüşümü — onSubmit hata fırlatmadıysa kayıt başarılı.
+        trackGAEvent("sign_up_completed", { method: "email" });
         setFirstName("");
         setLastName("");
         setRegisterCity("");

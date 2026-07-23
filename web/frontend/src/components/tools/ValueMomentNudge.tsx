@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { trackGAEvent } from "../../lib/analytics";
 
 /**
  * "Değer-anı" nudge'ı — kullanıcı ücretsiz bir işlemi BAŞARIYLA bitirdiğinde (değer taze,
@@ -48,6 +49,7 @@ export function ValueMomentNudge({ language }: { language: Language }) {
       </p>
       <a
         href="/register"
+        onClick={() => trackGAEvent("sign_up_cta_click", { source: "value_nudge" })}
         className="shrink-0 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2 text-[13px] font-bold text-white transition hover:from-indigo-500 hover:to-fuchsia-500"
       >
         {tr ? "Ücretsiz başla" : "Start free"}
