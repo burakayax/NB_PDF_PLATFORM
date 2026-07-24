@@ -25,7 +25,9 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { renderPdfToCanvases } from "../../lib/ocr";
+import { getPdfPageCount, renderPdfToCanvases } from "../../lib/ocr";
+
+const PREVIEW_PAGES = 12; // önizlemede render edilen sayfa sınırı (perf)
 
 type ToolItem = { id: string; icon: React.ReactNode; tr: string; en: string };
 
@@ -72,6 +74,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
   const tr = language === "tr";
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Yakınlaştırma: 100 = sayfaya sığdır (kapsayıcı genişliği). Ctrl+tekerlek + butonlar.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -96,7 +99,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
     setLoading(true);
     (async () => {
       try {
-        const canvases = await renderPdfToCanvases(file, 2, 12);
+        const canvases = await renderPdfToCanvases(file, 2, PREVIEW_PAGES);
         if (cancelled) return;
         setThumbs(canvases.map((c) => c.toDataURL("image/jpeg", 0.85)));
       } catch {
@@ -104,6 +107,18 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
       } finally {
         if (!cancelled) setLoading(false);
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
+
+  // Toplam sayfa sayısı (önizleme sınırı aşılıyorsa kullanıcıya dürüst not için).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const n = await getPdfPageCount(file);
+      if (!cancelled) setTotalPages(n);
     })();
     return () => {
       cancelled = true;
@@ -253,7 +268,14 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-500/15 text-cyan-300">
             <FileText className="h-4 w-4" />
           </span>
-          <p className="truncate text-sm font-bold">{file.name || (tr ? "Belge" : "Document")}</p>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold leading-tight">{file.name || (tr ? "Belge" : "Document")}</p>
+            {totalPages > 0 && (
+              <p className="text-[11px] leading-tight text-slate-400">
+                {totalPages} {tr ? "sayfa" : totalPages === 1 ? "page" : "pages"}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <button type="button" onClick={() => void saveResult()} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-white/[0.08]">
@@ -283,6 +305,13 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
               </div>
             ) : thumbs.length > 0 ? (
               <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-3 pb-16">
+                {totalPages > thumbs.length && (
+                  <div className="w-full max-w-md rounded-lg border border-amber-400/20 bg-amber-500/[0.06] px-3 py-2 text-center text-[12px] leading-relaxed text-amber-200/90">
+                    {tr
+                      ? `Önizlemede ilk ${thumbs.length} sayfa gösteriliyor. Seçtiğin araç belgenin tamamına (${totalPages} sayfa) uygulanır.`
+                      : `Previewing the first ${thumbs.length} of ${totalPages} pages. The tool you pick applies to the full document.`}
+                  </div>
+                )}
                 {thumbs.map((src, i) => (
                   <img
                     key={i}
