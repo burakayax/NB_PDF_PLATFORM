@@ -242,6 +242,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Embed form fields and annotations permanently into PDF pages.",
     },
   },
+  "extract-images": {
+    tr: {
+      title: "PDF'ten görsel çıkar | PDF Platform",
+      description:
+        "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarıp ZIP olarak indirin.",
+    },
+    en: {
+      title: "Extract Images from PDF | PDF Platform",
+      description:
+        "Pull embedded photos and logos out of a PDF at original quality and download them as a ZIP.",
+    },
+  },
 };
 
 /** `<title>` içinden marka sonekini ayırarak H1 / JSON-LD name için kısa başlık üretir. */

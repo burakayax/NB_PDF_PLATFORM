@@ -19,6 +19,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "extract-images",
   "unlock-pdf",
   "watermark",
   "page-numbers",
@@ -69,6 +70,7 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
       "ppt-to-pdf",
       "pdf-to-image",
       "image-to-pdf",
+      "extract-images",
       "html-to-pdf",
       "pdf-to-text",
     ],
@@ -142,6 +144,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
   "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
+  "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
 export function sidebarToolLabel(id: FeatureKey, lang: Language): string {
@@ -610,6 +613,13 @@ export function featureCopy(
         ? "Etkileşimli form alanlarını ve açıklamaları sayfaya gömer, düzenlenemez hale getirir."
         : "Embed interactive form fields and annotations into the page permanently.",
       button: tr ? "DÜZLEŞTİR" : "FLATTEN",
+    },
+    "extract-images": {
+      title: tr ? "PDF'TEN GÖRSEL ÇIKAR" : "EXTRACT IMAGES",
+      description: tr
+        ? "PDF içindeki gömülü fotoğraf ve logoları özgün formatında çıkarır, ZIP olarak indirir."
+        : "Pull embedded photos and logos out of the PDF in their original format as a ZIP.",
+      button: tr ? "GÖRSELLERİ ÇIKAR" : "EXTRACT IMAGES",
     },
   };
   return map[id];

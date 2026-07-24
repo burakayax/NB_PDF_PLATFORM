@@ -427,6 +427,52 @@ def pdf_to_images_zip(
     return zip_path
 
 
+def extract_images_zip(
+    pdf_path: str,
+    workdir: str,
+    password: Optional[str] = None,
+) -> str:
+    """PDF'e GÖMÜLÜ ham görselleri (sayfa rasterize DEĞİL) ayıklayıp ZIP yolunu döndürür.
+
+    - pdf_to_images_zip sayfaları resme çevirir; bu ise dokümanın içindeki asıl
+      görsel akışlarını (fotoğraf/logo vb.) özgün formatıyla (jpg/png…) çıkarır.
+    - Aynı görsel birden çok sayfada kullanılıyorsa xref ile TEKİLLEŞTİRİLİR.
+    - Hiç görsel yoksa açıklayıcı hata verir (boş ZIP dönmez).
+    """
+    doc = _fitz_open(pdf_path, password=password)
+    try:
+        zip_path = os.path.join(workdir, "gorseller.zip")
+        seen_xrefs: set[int] = set()
+        count = 0
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+            for page_number in range(doc.page_count):
+                page = doc.load_page(page_number)
+                for img in page.get_images(full=True):
+                    xref = img[0]
+                    if xref in seen_xrefs:
+                        continue
+                    seen_xrefs.add(xref)
+                    try:
+                        info = doc.extract_image(xref)
+                    except Exception:
+                        continue
+                    data = info.get("image")
+                    if not data:
+                        continue
+                    ext = (info.get("ext") or "png").lower()
+                    count += 1
+                    zf.writestr(f"image_{count:04d}.{ext}", data)
+        if count == 0:
+            try:
+                os.remove(zip_path)
+            except OSError:
+                pass
+            raise Exception("Bu PDF'de ayıklanabilir gömülü görsel bulunamadı.")
+        return zip_path
+    finally:
+        doc.close()
+
+
 def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
     try:
         import img2pdf
