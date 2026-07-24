@@ -1,28 +1,35 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeftRight,
+  Check,
   Download,
   FileText,
+  Hash,
   Image as ImageIcon,
   Layers,
   Loader2,
   Lock,
+  Maximize2,
+  MousePointerClick,
   Pencil,
+  Presentation,
   RotateCcw,
   Share2,
   Sliders,
   Sparkles,
   Trash2,
   X,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { renderPdfToCanvases } from "../../lib/ocr";
 
 type ToolItem = { id: string; icon: React.ReactNode; tr: string; en: string };
 
-// Düzenleme araçları (üyeliksiz kullanılabilir).
+// Düzenleme araçları (cihazda / üyeliksiz kullanılabilir).
 const DEVICE_TOOLS: ToolItem[] = [
   { id: "pdf-duzenle", icon: <Pencil className="h-5 w-5" />, tr: "PDF Düzenle", en: "Edit PDF" },
   { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Sayfa Sırala", en: "Reorder pages" },
@@ -31,33 +38,49 @@ const DEVICE_TOOLS: ToolItem[] = [
   { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
 ];
 
-// Dönüştürme — sunucu + üyelik (Pro vurgusu). Faz 2'de tam aktarım.
+// Dönüştür & çıkar — sunucu + üyelik (Pro vurgusu).
 const CONVERT_TOOLS: ToolItem[] = [
   { id: "pdf-to-word", icon: <FileText className="h-5 w-5" />, tr: "Word'e Çevir", en: "To Word" },
   { id: "pdf-to-excel", icon: <Layers className="h-5 w-5" />, tr: "Excel'e Çevir", en: "To Excel" },
   { id: "pdf-to-image", icon: <ImageIcon className="h-5 w-5" />, tr: "Resme Çevir", en: "To Image" },
+  { id: "pdf-to-ppt", icon: <Presentation className="h-5 w-5" />, tr: "PPT'ye Çevir", en: "To PPT" },
+  { id: "extract-images", icon: <ImageIcon className="h-5 w-5" />, tr: "Görsel Çıkar", en: "Extract images" },
   { id: "compress", icon: <ArrowLeftRight className="h-5 w-5" />, tr: "Sıkıştır", en: "Compress" },
+  { id: "page-numbers", icon: <Hash className="h-5 w-5" />, tr: "Sayfa No", en: "Page numbers" },
 ];
+
+const ZOOM_MIN = 40;
+const ZOOM_MAX = 400;
+const ZOOM_STEP = 20;
+const clampZoom = (z: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z)));
 
 type Props = {
   file: File;
   language: Language;
   isPro?: boolean;
   onClose: () => void;
-  /** Bir araç seçildi — üst bileşen PDF'i o araca aktarır (cihazda: initialFile;
-   *  dönüştürme: pending + yönlendirme). */
+  /** Bir araç onaylandı — üst bileşen PDF'i o araca aktarır (IndexedDB + yönlendirme). */
   onPickTool: (toolId: string, isConvert: boolean) => void;
 };
 
 /**
- * PDF MERKEZİ — taranan/açılan bir PDF'i önce GÖSTERİR, yanında (masaüstü) / altında
- * (mobil) araçları sunar. Kullanıcı bir araca dokununca PDF o araçta açılır; ya da
- * sadece bakıp kapatır. Uyarlanır düzen.
+ * PDF MERKEZİ — taranan/açılan bir PDF'i önce GÖSTERİR (sayfaya sığacak şekilde, yakınlaştırma
+ * destekli), yanında (masaüstü) / altında (mobil) araçları sunar. Bir araca dokununca, PDF'in o
+ * araca aktarılacağı ONAYLANIR ve araç açılır. Uyarlanır düzen.
  */
 export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
   const tr = language === "tr";
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Yakınlaştırma: 100 = sayfaya sığdır (kapsayıcı genişliği). Ctrl+tekerlek + butonlar.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [fitWidth, setFitWidth] = useState(0);
+  const [zoom, setZoom] = useState(100);
+  const pageWidth = fitWidth > 0 ? Math.round((fitWidth * zoom) / 100) : 0;
+
+  // Onaylı aktarım: bir araç seçilince önce onay göster, sonra eşitle.
+  const [pending, setPending] = useState<{ tool: ToolItem; convert: boolean } | null>(null);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -67,14 +90,15 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
     };
   }, []);
 
+  // Önizlemeyi yüksek çözünürlükte üret (yakınlaştırınca net kalsın).
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     (async () => {
       try {
-        const canvases = await renderPdfToCanvases(file, 1.1, 12);
+        const canvases = await renderPdfToCanvases(file, 2, 12);
         if (cancelled) return;
-        setThumbs(canvases.map((c) => c.toDataURL("image/jpeg", 0.7)));
+        setThumbs(canvases.map((c) => c.toDataURL("image/jpeg", 0.85)));
       } catch {
         /* önizleme üretilemezse araçlar yine çalışır */
       } finally {
@@ -85,6 +109,60 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
       cancelled = true;
     };
   }, [file]);
+
+  // Kapsayıcı genişliğini ölç → "sığdır" temel genişliği (ultra-geniş ekranda üst sınır).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const measure = () => {
+      const w = el.clientWidth - 32; // yatay padding payı
+      setFitWidth(Math.max(220, Math.min(w, 1000)));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Ctrl + fare tekerleği ile yakınlaştır (pasif olmayan dinleyici → preventDefault çalışsın).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return; // düz tekerlek normal kaydırma yapsın
+      e.preventDefault();
+      setZoom((z) => clampZoom(z + (e.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Klavye: + / - yakınlaştır, 0 sığdır, Esc kapat/onayı iptal et.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (pending) setPending(null);
+        else onClose();
+        return;
+      }
+      if (e.ctrlKey && (e.key === "=" || e.key === "+")) {
+        e.preventDefault();
+        setZoom((z) => clampZoom(z + ZOOM_STEP));
+      } else if (e.ctrlKey && e.key === "-") {
+        e.preventDefault();
+        setZoom((z) => clampZoom(z - ZOOM_STEP));
+      } else if (e.ctrlKey && e.key === "0") {
+        e.preventDefault();
+        setZoom(100);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pending, onClose]);
+
+  const zoomIn = useCallback(() => setZoom((z) => clampZoom(z + ZOOM_STEP)), []);
+  const zoomOut = useCallback(() => setZoom((z) => clampZoom(z - ZOOM_STEP)), []);
+  const zoomFit = useCallback(() => setZoom(100), []);
 
   function downloadBlob() {
     const url = URL.createObjectURL(file);
@@ -142,7 +220,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
     <button
       key={t.id}
       type="button"
-      onClick={() => onPickTool(t.id, convert)}
+      onClick={() => setPending({ tool: t, convert })}
       className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${
         convert
           ? "border-violet-400/25 bg-violet-500/[0.06] hover:border-violet-400/45 hover:bg-violet-500/[0.12]"
@@ -158,6 +236,9 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
       <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
     </button>
   );
+
+  const zoomBtnCls =
+    "flex h-8 w-8 items-center justify-center rounded-lg text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40";
 
   return createPortal(
     <motion.div
@@ -193,21 +274,53 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
 
       {/* Gövde — mobil: dikey (önizleme üstte); masaüstü: yan panel */}
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        {/* PDF önizleme */}
-        <div className="min-h-0 flex-1 overflow-y-auto bg-black/30 p-4">
-          {loading ? (
-            <div className="flex h-40 items-center justify-center text-slate-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
-          ) : thumbs.length > 0 ? (
-            <div className="mx-auto flex max-w-md flex-col items-center gap-3">
-              {thumbs.map((src, i) => (
-                <img key={i} src={src} alt={`sayfa ${i + 1}`} className="w-full rounded-lg border border-white/10 shadow-lg" />
-              ))}
-            </div>
-          ) : (
-            <div className="flex h-40 items-center justify-center text-sm text-slate-400">
-              {tr ? "Önizleme yüklenemedi" : "Preview unavailable"}
+        {/* PDF önizleme + yakınlaştırma çubuğu */}
+        <div className="relative min-h-0 flex-1">
+          <div ref={scrollRef} className="h-full overflow-auto bg-black/30 p-4">
+            {loading ? (
+              <div className="flex h-40 items-center justify-center text-slate-400">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : thumbs.length > 0 ? (
+              <div className="mx-auto flex w-fit min-w-full flex-col items-center gap-3 pb-16">
+                {thumbs.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`sayfa ${i + 1}`}
+                    style={pageWidth ? { width: pageWidth } : undefined}
+                    className="max-w-none rounded-lg border border-white/10 shadow-lg"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-40 items-center justify-center text-sm text-slate-400">
+                {tr ? "Önizleme yüklenemedi" : "Preview unavailable"}
+              </div>
+            )}
+          </div>
+
+          {/* Yakınlaştırma çubuğu — önizlemenin altında ortalı, sabit */}
+          {!loading && thumbs.length > 0 && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center px-4">
+              <div className="pointer-events-auto flex items-center gap-1 rounded-xl border border-white/10 bg-[#0b1020]/95 px-1.5 py-1 shadow-[0_10px_30px_-8px_rgba(0,0,0,0.7)] backdrop-blur">
+                <button type="button" onClick={zoomOut} disabled={zoom <= ZOOM_MIN} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className={zoomBtnCls}>
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <span className="min-w-[3rem] text-center text-[12px] font-bold tabular-nums text-slate-100">%{zoom}</span>
+                <button type="button" onClick={zoomIn} disabled={zoom >= ZOOM_MAX} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className={zoomBtnCls}>
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+                <span className="mx-1 h-5 w-px bg-white/10" />
+                <button type="button" onClick={zoomFit} aria-label={tr ? "Sayfaya sığdır" : "Fit to page"} className={`${zoomBtnCls} w-auto gap-1 px-2 text-[12px] font-semibold`}>
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  {tr ? "Sığdır" : "Fit"}
+                </button>
+                <span className="ml-1 hidden items-center gap-1 pl-1 pr-1.5 text-[11px] text-slate-400 md:flex">
+                  <MousePointerClick className="h-3 w-3" />
+                  {tr ? "Ctrl + tekerlek" : "Ctrl + wheel"}
+                </span>
+              </div>
             </div>
           )}
         </div>
@@ -223,7 +336,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
 
           <p className="mb-2 mt-5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-300">
             <Sparkles className="h-3 w-3" />
-            {tr ? "Dönüştür" : "Convert"}
+            {tr ? "Dönüştür & Çıkar" : "Convert & extract"}
           </p>
           <div className="grid grid-cols-3 gap-2 lg:grid-cols-2">
             {CONVERT_TOOLS.map((t) => toolBtn(t, true))}
@@ -237,6 +350,52 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
           )}
         </div>
       </div>
+
+      {/* Onaylı aktarım — "açık PDF bu araca aktarılacak" */}
+      {pending && (
+        <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={() => setPending(null)}>
+          <div
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#0b1020] p-5 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pending.convert ? "bg-violet-500/15 text-violet-300" : "bg-cyan-500/15 text-cyan-300"}`}>
+                {pending.tool.icon}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white">{tr ? (pending.tool as ToolItem).tr : (pending.tool as ToolItem).en}</p>
+                <p className="truncate text-[12px] text-slate-400">{file.name || (tr ? "Belge.pdf" : "Document.pdf")}</p>
+              </div>
+            </div>
+            <p className="mt-3 text-[13px] leading-relaxed text-slate-300">
+              {tr
+                ? "Açık olan PDF bu araca aktarılıp orada açılacak. Devam edilsin mi?"
+                : "The open PDF will be transferred to this tool and opened there. Continue?"}
+            </p>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPending(null)}
+                className="rounded-lg border border-white/12 px-3 py-2 text-[13px] font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+              >
+                {tr ? "Vazgeç" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const p = pending;
+                  setPending(null);
+                  onPickTool(p.tool.id, p.convert);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-[13px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(34,211,238,0.7)] transition hover:from-cyan-400 hover:to-blue-500"
+              >
+                <Check className="h-4 w-4" />
+                {tr ? "Aktar ve Aç" : "Transfer & open"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>,
     document.body,
   );
