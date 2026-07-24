@@ -1,15 +1,17 @@
 {
-  "version": "1.0.17",
-  "date": "2026-07-22",
+  "version": "1.0.18",
+  "date": "2026-07-24",
   "notes": {
     "tr": [
-      "Yeni PDF Kırp aracı: sayfa-sayfa farklı kırpma, ekrana sığdırma ve oto-kaydırma",
-      "Güncellemeler artık siz onaylayınca uygulanır — işlem ortasındayken işiniz kaybolmaz",
+      "Yeni Görsel Sıkıştır aracı: JPG/PNG/WebP görselleri cihazında sıkıştır — üyeliksiz, dosya yüklenmez",
+      "Yeni PDF'ten Görsel Çıkar aracı: gömülü fotoğraf ve logoları özgün kalitede çıkar",
+      "PDF Merkezi artık sayfaya sığdırma ve yakınlaştırma (Ctrl + tekerlek) destekliyor",
       "Çeşitli iyileştirmeler ve hata düzeltmeleri"
     ],
     "en": [
-      "New Crop PDF tool: per-page cropping, fit-to-screen and auto-scroll",
-      "Updates now apply when you confirm — you won't lose work mid-task",
+      "New Compress Image tool: shrink JPG/PNG/WebP on your device — no sign-up, nothing uploaded",
+      "New Extract Images from PDF: pull embedded photos and logos out at original quality",
+      "PDF Hub now supports fit-to-page and zoom (Ctrl + wheel)",
       "Various improvements and bug fixes"
     ]
   }

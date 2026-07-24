@@ -12,10 +12,15 @@ import type { ComponentType, LazyExoticComponent } from "react";
  *
  * Bu sarmalayıcı:
  *  - Modül şeklini doğrular (default yoksa net hata → belirsiz React crash'i yerine).
- *  - Chunk/yükleme hatasında GÜNCEL bundle'ı almak için bir kez sert yenileme yapar
- *    (sessionStorage guard ile sonsuz döngü engellenir; başarılı yüklemede sıfırlanır).
+ *  - Chunk/yükleme hatasında GÜNCEL bundle'ı almak için sert yenileme yapar.
+ *
+ * DÖNGÜ GÜVENLİĞİ: Yenileme zaman damgasıyla kısıtlanır — cooldown içinde ikinci
+ * bir otomatik yenileme YAPILMAZ (aksi halde bir chunk sürekli hata verirken
+ * diğerleri başarılı olursa sonsuz reload oluşurdu). Cooldown geçtikten sonra
+ * (gerçekten yeni bir deploy geçişinde) tekrar bir kez yenilemeye izin verilir.
  */
-const RELOAD_GUARD_KEY = "nb_lazy_reload_once";
+const RELOAD_TS_KEY = "nb_lazy_reload_ts";
+const RELOAD_COOLDOWN_MS = 15000;
 
 export function lazyWithRetry<
   // React.lazy'nin kendi imzası gibi: bileşen prop'ları çeşitli olduğundan `any`.
@@ -30,24 +35,18 @@ export function lazyWithRetry<
       if (!mod || typeof (mod as { default?: unknown }).default === "undefined") {
         throw new Error("Lazy modül geçerli bir default export ile dönmedi.");
       }
-      // Başarılı → gelecekteki bir deploy geçişinde tekrar yenilemeye izin ver.
-      try {
-        sessionStorage.removeItem(RELOAD_GUARD_KEY);
-      } catch {
-        /* sessionStorage yoksa yoksay */
-      }
       return mod;
     } catch (err) {
       try {
-        if (
-          typeof window !== "undefined" &&
-          typeof sessionStorage !== "undefined" &&
-          !sessionStorage.getItem(RELOAD_GUARD_KEY)
-        ) {
-          sessionStorage.setItem(RELOAD_GUARD_KEY, String(Date.now()));
-          window.location.reload();
-          // Yenileme gerçekleşene dek Suspense fallback'te kal (crash gösterme).
-          return await new Promise<never>(() => {});
+        if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+          const last = Number(sessionStorage.getItem(RELOAD_TS_KEY) || "0");
+          // Yalnızca son yenilemeden bu yana cooldown geçtiyse yenile → döngü yok.
+          if (!Number.isFinite(last) || Date.now() - last > RELOAD_COOLDOWN_MS) {
+            sessionStorage.setItem(RELOAD_TS_KEY, String(Date.now()));
+            window.location.reload();
+            // Yenileme gerçekleşene dek Suspense fallback'te kal (crash gösterme).
+            return await new Promise<never>(() => {});
+          }
         }
       } catch {
         /* sessionStorage/reload kullanılamıyor → aşağıda hatayı yükselt */
