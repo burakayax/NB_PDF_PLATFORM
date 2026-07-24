@@ -4,6 +4,7 @@ import {
   Crop,
   Scissors,
   Images,
+  ImageDown,
   RotateCw,
   Trash2,
   LayoutGrid,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 
 /** Ana sayfada yerinde çalışan ücretsiz araçların id'leri. */
-export type ToolId = "merge" | "split" | "image-to-pdf" | "rotate-pdf" | "delete-pages" | "organize-pdf" | "crop-pdf";
+export type ToolId = "merge" | "split" | "image-to-pdf" | "rotate-pdf" | "delete-pages" | "organize-pdf" | "crop-pdf" | "gorsel-sikistir";
 
 type Benefit = { icon: LucideIcon; tr: string; trDesc: string; en: string; enDesc: string };
 type Accent = {
@@ -71,6 +72,17 @@ const TOOL_ACCENTS: Record<ToolId, Accent> = {
       { icon: Crop, tr: "Kenar boşluklarını kes", trDesc: "Kutuyu sürükleyerek istediğin alana daralt.", en: "Trim the margins", enDesc: "Drag the box to narrow to the area you want." },
       { icon: Zap, tr: "Anında", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Instant", enDesc: "No upload — done on your device in seconds." },
       { icon: Lock, tr: "Gizli", trDesc: "Belgen cihazından hiç çıkmaz.", en: "Private", enDesc: "Your document never leaves your device." },
+    ],
+  },
+  "gorsel-sikistir": {
+    icon: ImageDown,
+    grad: "from-cyan-500/25 to-blue-600/25",
+    text: "text-cyan-300",
+    hover: "hover:border-cyan-400/50 hover:bg-cyan-400/[0.04]",
+    benefits: [
+      { icon: ImageDown, tr: "Dosya boyutunu küçült", trDesc: "Kalite ve boyutu ayarla, JPEG/WebP olarak al.", en: "Shrink file size", enDesc: "Adjust quality and dimensions, export JPEG/WebP." },
+      { icon: Zap, tr: "Anında & ücretsiz", trDesc: "Yükleme yok — cihazında saniyeler içinde.", en: "Instant & free", enDesc: "No upload — done on your device in seconds." },
+      { icon: Lock, tr: "Gizli", trDesc: "Görselin cihazından hiç çıkmaz.", en: "Private", enDesc: "Your image never leaves your device." },
     ],
   },
   "rotate-pdf": {
