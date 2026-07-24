@@ -10,6 +10,19 @@ const MAX_TEXT_CHARS = 180_000;
 
 export type OcrProgress = { page: number; totalPages: number; ratio: number };
 
+/** PDF'in toplam sayfa sayısını hızlıca döndürür (render etmeden). Hata/şifre → 0. */
+export async function getPdfPageCount(file: File): Promise<number> {
+  try {
+    const data = new Uint8Array(await file.arrayBuffer());
+    const doc = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+    const n = doc.numPages;
+    await doc.destroy();
+    return n;
+  } catch {
+    return 0;
+  }
+}
+
 /**
  * Bir PDF'in sayfalarını canvas'lara render eder (aranabilir PDF üretimi için).
  * `scale` OCR doğruluğu için ~2 önerilir. `maxPages` maliyet/süre sınırı.
