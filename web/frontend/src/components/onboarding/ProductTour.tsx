@@ -81,6 +81,8 @@ export function ProductTour({
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const rafRef = useRef<number | null>(null);
   const shownRef = useRef(false); // en az bir adım gösterildi mi
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [cardH, setCardH] = useState(0); // baloncuğun ölçülen yüksekliği (px)
   const reduce = prefersReducedMotion();
 
   // Kullanıcı kaynaklı kapanış (atla/bitir/X/Esc) — "bir daha gösterme" tercihiyle birlikte.
@@ -198,6 +200,14 @@ export function ProductTour({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, goNext, goBack, dismiss]);
 
+  // Baloncuğun gerçek yüksekliğini ölç → konumu viewport'a tam kelepçelemek için.
+  // Bağımlılıksız: her render sonrası çalışır ama guard'la sonsuz döngü engellenir.
+  useLayoutEffect(() => {
+    if (!cardRef.current) return;
+    const h = cardRef.current.offsetHeight;
+    if (h && Math.abs(h - cardH) > 1) setCardH(h);
+  });
+
   if (!open || !step || !rect || !ready) {
     // Overlay'i erken göstermeyelim (hedef ölçülene dek boş kalır → zıplama olmaz).
     return open ? <div className="fixed inset-0 z-[200] bg-slate-950/60" aria-hidden /> : null;
@@ -211,14 +221,28 @@ export function ProductTour({
     height: rect.height + SPOT_PAD * 2,
   };
 
-  // Baloncuk konumu: altta yer varsa alta, yoksa üste. Yatayda viewport'a sıkıştır.
+  // Baloncuk konumu — HER ZAMAN viewport içine tam sığdır (üstten de alttan da taşmaz).
   const vh = window.innerHeight;
   const vw = window.innerWidth;
+  // Çok kısa pencerede kart yüksekliği viewport'u aşarsa iç kaydırmaya bırak.
+  const maxCardH = vh - VIEW_MARGIN * 2;
+  const effCardH = Math.min(cardH || 0, maxCardH);
   const spaceBelow = vh - (spot.top + spot.height);
+  const spaceAbove = spot.top;
+  const needed = effCardH + CARD_GAP + VIEW_MARGIN;
+  // Yönü seç: alt tercih; sığmıyorsa üst; ikisi de sığmıyorsa daha geniş olan taraf.
   const placeBelow =
-    step.placement === "bottom" ? true : step.placement === "top" ? false : spaceBelow > 220;
-  const cardTop = placeBelow ? spot.top + spot.height + CARD_GAP : undefined;
-  const cardBottom = placeBelow ? undefined : vh - spot.top + CARD_GAP;
+    step.placement === "bottom"
+      ? true
+      : step.placement === "top"
+        ? false
+        : spaceBelow >= needed || spaceBelow >= spaceAbove;
+  // Önce ideal top'u hesapla, sonra [VIEW_MARGIN, vh - effCardH - VIEW_MARGIN] aralığına kelepçele.
+  const idealTop = placeBelow
+    ? spot.top + spot.height + CARD_GAP
+    : spot.top - CARD_GAP - effCardH;
+  const maxTop = Math.max(VIEW_MARGIN, vh - effCardH - VIEW_MARGIN);
+  const cardTop = Math.min(Math.max(VIEW_MARGIN, idealTop), maxTop);
   let cardLeft = spot.left + spot.width / 2 - CARD_W / 2;
   cardLeft = Math.min(Math.max(VIEW_MARGIN, cardLeft), vw - CARD_W - VIEW_MARGIN);
 
@@ -258,13 +282,16 @@ export function ProductTour({
 
       {/* Açıklama baloncuğu */}
       <div
+        ref={cardRef}
         style={{
           position: "fixed",
           top: cardTop,
-          bottom: cardBottom,
           left: cardLeft,
           width: CARD_W,
           maxWidth: `calc(100vw - ${VIEW_MARGIN * 2}px)`,
+          maxHeight: `calc(100vh - ${VIEW_MARGIN * 2}px)`,
+          overflowY: "auto",
+          transition: trans,
         }}
         className="rounded-2xl border border-cyan-400/25 bg-gradient-to-b from-slate-900/98 to-slate-950/98 p-5 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.8)] backdrop-blur-sm"
         onMouseDown={(e) => e.stopPropagation()}
