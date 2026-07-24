@@ -507,7 +507,8 @@ export function DashboardSidebar({
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "organize" ? renderCropRow("organize-") : null}
-                  {group.id === "organize" ? renderCompressImageRow("organize-") : null}
+                  {/* Görsel Sıkıştır — İyileştir grubu (PDF Sıkıştır'ın görsel karşılığı) */}
+                  {group.id === "optimize" ? renderCompressImageRow("optimize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}

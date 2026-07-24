@@ -24,6 +24,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "hassas-veri-gizle",
   "taranmis-pdf-ocr",
   "crop-pdf",
+  "gorsel-sikistir",
 ]);
 
 const toolCategories = (lang: Language) => [
