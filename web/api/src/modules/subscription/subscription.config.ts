@@ -26,6 +26,7 @@ export const featureCatalog = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "extract-images",
 ] as const;
 
 export type FeatureKey = (typeof featureCatalog)[number];
@@ -59,6 +60,7 @@ const STARTER_TOOLS: FeatureKey[] = [
   "image-to-pdf",
   "page-numbers",
   "watermark",
+  "extract-images",
 ];
 
 export const planDefinitions: Record<Plan, PlanDefinition> = {

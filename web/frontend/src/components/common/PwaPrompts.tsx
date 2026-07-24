@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Download,
+  FileText,
   Maximize2,
   RefreshCw,
   Share,
@@ -92,6 +93,7 @@ const COPY = {
     benefitOffline: "Çevrimdışı erişim",
     benefitFast: "Anında açılış",
     benefitFullscreen: "Tam ekran",
+    benefitOpenPdf: "PDF'i tek tıkla aç",
     updateTitle: "Yeni sürüm hazır",
     updateBody: "Bu güncellemede:",
     refresh: "Güncelle",
@@ -112,6 +114,7 @@ const COPY = {
     benefitOffline: "Works offline",
     benefitFast: "Instant launch",
     benefitFullscreen: "Full screen",
+    benefitOpenPdf: "Open PDFs in one tap",
     updateTitle: "New version available",
     updateBody: "In this update:",
     refresh: "Update",
@@ -129,6 +132,7 @@ function InstallBanner({ lang }: { lang: "tr" | "en" }) {
   const benefits = [
     { icon: WifiOff, label: t.benefitOffline },
     { icon: Zap, label: t.benefitFast },
+    { icon: FileText, label: t.benefitOpenPdf },
     { icon: Maximize2, label: t.benefitFullscreen },
   ];
   return (

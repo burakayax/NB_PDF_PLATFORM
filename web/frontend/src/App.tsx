@@ -1247,8 +1247,10 @@ function App() {
   // localStorage ile bir kez; `?tour=1` ile her zaman yeniden başlatılabilir (replay).
   const [tourOpen, setTourOpen] = useState(false);
   const tourStartedRef = useRef(false);
+  const { isMobileOrTablet } = useResponsive();
   const tourSteps: TourStep[] = useMemo(() => {
     const t = language === "tr";
+    const m = isMobileOrTablet; // mobil/tablet → menü-tabanlı, telefona özel metin
     return [
       {
         // Desktop sidebar (lg) gizliyse mobil araç-menüsü çubuğuna düşer.
@@ -1256,16 +1258,24 @@ function App() {
         placement: "auto",
         title: t ? "Araçların burada" : "Your tools live here",
         body: t
-          ? "İhtiyacın olan aracı buradan seç — birleştir, dönüştür, sıkıştır, imzala ve daha fazlası."
-          : "Pick the tool you need here — merge, convert, compress, sign and more.",
+          ? m
+            ? "Üstteki menüye dokun ve ihtiyacın olan aracı seç — birleştir, dönüştür, sıkıştır ve daha fazlası."
+            : "İhtiyacın olan aracı buradan seç — birleştir, dönüştür, sıkıştır, imzala ve daha fazlası."
+          : m
+            ? "Tap the menu at the top and pick the tool you need — merge, convert, compress and more."
+            : "Pick the tool you need here — merge, convert, compress, sign and more.",
       },
       {
         selector: "#nb-workspace-tool-form",
         placement: "auto",
         title: t ? "Dosyanı ekle" : "Add your file",
         body: t
-          ? "Dosyanı buraya sürükle ya da tıklayıp yükle; gerekli ayarları da burada yaparsın."
-          : "Drag your file here or click to upload; set any options right here.",
+          ? m
+            ? "Dosyanı buraya yükle; gerekli ayarlar hemen altında görünür."
+            : "Dosyanı buraya sürükle ya da tıklayıp yükle; gerekli ayarları da burada yaparsın."
+          : m
+            ? "Upload your file here; the options appear right below."
+            : "Drag your file here or click to upload; set any options right here.",
       },
       {
         selector: '[data-tour="process"]',
@@ -1284,7 +1294,7 @@ function App() {
           : "Unlock AI tools, larger files and unlimited operations by upgrading here.",
       },
     ];
-  }, [language]);
+  }, [language, isMobileOrTablet]);
   const handleTourClose = useCallback(
     ({ shown, dontShowAgain }: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => {
       setTourOpen(false);
@@ -1320,7 +1330,9 @@ function App() {
         /* yoksay */
       }
     }
-    if (!isAuthenticated || view !== "web" || user?.role === "ADMIN") return;
+    if (!isAuthenticated || view !== "web") return;
+    // Admin'e OTOMATİK tur gösterilmez; ama ?tour=1 ile önizleme/replay admin'de de çalışır.
+    if (!forced && user?.role === "ADMIN") return;
     // Kullanıcı "bir daha gösterme" demediyse tur HER GİRİŞTE gösterilir (opt-out mantığı).
     let optedOut = false;
     try {
@@ -1335,8 +1347,7 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [isAuthenticated, isRestoring, view, user?.role]);
 
-  // Masaüstü/telefon ayrımı — Belge Tara webde "telefonda açın" ekranı gösterir.
-  const { isMobileOrTablet } = useResponsive();
+  // Masaüstü/telefon ayrımı (isMobileOrTablet yukarıda, tur adımlarından önce tanımlı).
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
   // Böylece tarama kaybolmaz; "Geri" ile taramaya dönülür, giriş sonrası abonelik açılır.
   const [scannerAuthMode, setScannerAuthMode] = useState<"login" | "register" | null>(null);
