@@ -700,7 +700,7 @@ export function DashboardSidebarMobileLauncher({
   };
 
   return (
-    <div className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden">
+    <div data-tour="tools-mobile" className="sticky top-14 z-30 border-b border-white/[0.06] bg-nb-bg/95 backdrop-blur-md lg:hidden">
       {/* Tetikleyici: hamburger + aktif araç adı */}
       <button
         type="button"
