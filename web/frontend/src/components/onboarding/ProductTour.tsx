@@ -18,8 +18,9 @@ import type { Language } from "../../i18n/landing";
  */
 
 export type TourStep = {
-  /** Hedef elemanın CSS seçicisi. Bulunamazsa adım atlanır. */
-  selector: string;
+  /** Hedef elemanın CSS seçicisi. Dizi verilirse GÖRÜNÜR olan ilk seçici kullanılır
+   *  (ör. desktop + mobil çıpası). Hiçbiri görünür değilse adım atlanır. */
+  selector: string | string[];
   title: string;
   body: string;
   /** Baloncuğun tercih edilen yönü (yer yoksa otomatik ters çevrilir). */
@@ -49,6 +50,16 @@ function measure(selector: string): Rect | null {
   }
 }
 
+/** Verilen seçici(ler) içinden GÖRÜNÜR olan ilkini çöz — desktop/mobil çıpa seçimi. */
+function resolveVisible(sel: string | string[]): { selector: string; rect: Rect } | null {
+  const list = Array.isArray(sel) ? sel : [sel];
+  for (const s of list) {
+    const r = measure(s);
+    if (r) return { selector: s, rect: r };
+  }
+  return null;
+}
+
 export function ProductTour({
   steps,
   open,
@@ -75,7 +86,7 @@ export function ProductTour({
     (from: number, dir: 1 | -1): number => {
       let i = from;
       while (i >= 0 && i < steps.length) {
-        if (measure(steps[i]!.selector)) return i;
+        if (resolveVisible(steps[i]!.selector)) return i;
         i += dir;
       }
       return -1;
@@ -102,25 +113,22 @@ export function ProductTour({
     if (!open || !step) return;
     let cancelled = false;
     setReady(false);
-    const el = (() => {
-      try {
-        return document.querySelector(step.selector);
-      } catch {
-        return null;
-      }
-    })();
-    if (!el) {
-      // Hedef kayboldu → sonraki hedefli adıma geç (yoksa bitir).
+    const resolved = resolveVisible(step.selector);
+    if (!resolved) {
+      // Görünür hedef yok → sonraki hedefli adıma geç (yoksa bitir).
       const next = findStepWithTarget(index + 1, 1);
       if (next < 0) onClose(false, shownRef.current);
       else setIndex(next);
       return;
     }
-    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center", inline: "nearest" });
+    const activeSelector = resolved.selector;
+    document
+      .querySelector(activeSelector)
+      ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center", inline: "nearest" });
     // Kaydırma otursun diye kısa gecikme, sonra ölç.
     const t = window.setTimeout(() => {
       if (cancelled) return;
-      const r = measure(step.selector);
+      const r = measure(activeSelector);
       if (r) {
         setRect(r);
         setReady(true);
@@ -140,8 +148,8 @@ export function ProductTour({
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
         rafRef.current = null;
-        const r = measure(step.selector);
-        if (r) setRect(r);
+        const resolved = resolveVisible(step.selector);
+        if (resolved) setRect(resolved.rect);
       });
     };
     window.addEventListener("resize", onMove);
@@ -206,7 +214,7 @@ export function ProductTour({
 
   // Görünür (hedefli) adım sırası — ilerleme göstergesi için.
   const visibleSteps: number[] = [];
-  for (let i = 0; i < steps.length; i++) if (measure(steps[i]!.selector)) visibleSteps.push(i);
+  for (let i = 0; i < steps.length; i++) if (resolveVisible(steps[i]!.selector)) visibleSteps.push(i);
   const posInVisible = visibleSteps.indexOf(index);
   const totalVisible = visibleSteps.length;
 

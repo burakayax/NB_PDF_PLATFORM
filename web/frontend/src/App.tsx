@@ -1250,7 +1250,8 @@ function App() {
     const t = language === "tr";
     return [
       {
-        selector: '[data-tour="tools"]',
+        // Desktop sidebar (lg) gizliyse mobil araç-menüsü çubuğuna düşer.
+        selector: ['[data-tour="tools"]', '[data-tour="tools-mobile"]'],
         placement: "auto",
         title: t ? "Araçların burada" : "Your tools live here",
         body: t
