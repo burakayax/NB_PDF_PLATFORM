@@ -221,30 +221,54 @@ export function ProductTour({
     height: rect.height + SPOT_PAD * 2,
   };
 
-  // Baloncuk konumu — HER ZAMAN viewport içine tam sığdır (üstten de alttan da taşmaz).
+  // Baloncuk konumu — hedefin ÜSTÜNE binmeden, en çok boşluk olan tarafa yerleştir.
+  // (Tam boy sidebar gibi hedeflerde alt/üst yer yoktur → SAĞ/SOL'a geçilir.)
   const vh = window.innerHeight;
   const vw = window.innerWidth;
   // Çok kısa pencerede kart yüksekliği viewport'u aşarsa iç kaydırmaya bırak.
   const maxCardH = vh - VIEW_MARGIN * 2;
   const effCardH = Math.min(cardH || 0, maxCardH);
-  const spaceBelow = vh - (spot.top + spot.height);
+  const spotRight = spot.left + spot.width;
+  const spotBottom = spot.top + spot.height;
   const spaceAbove = spot.top;
-  const needed = effCardH + CARD_GAP + VIEW_MARGIN;
-  // Yönü seç: alt tercih; sığmıyorsa üst; ikisi de sığmıyorsa daha geniş olan taraf.
-  const placeBelow =
-    step.placement === "bottom"
-      ? true
-      : step.placement === "top"
-        ? false
-        : spaceBelow >= needed || spaceBelow >= spaceAbove;
-  // Önce ideal top'u hesapla, sonra [VIEW_MARGIN, vh - effCardH - VIEW_MARGIN] aralığına kelepçele.
-  const idealTop = placeBelow
-    ? spot.top + spot.height + CARD_GAP
-    : spot.top - CARD_GAP - effCardH;
-  const maxTop = Math.max(VIEW_MARGIN, vh - effCardH - VIEW_MARGIN);
-  const cardTop = Math.min(Math.max(VIEW_MARGIN, idealTop), maxTop);
-  let cardLeft = spot.left + spot.width / 2 - CARD_W / 2;
-  cardLeft = Math.min(Math.max(VIEW_MARGIN, cardLeft), vw - CARD_W - VIEW_MARGIN);
+  const spaceBelow = vh - spotBottom;
+  const spaceLeft = spot.left;
+  const spaceRight = vw - spotRight;
+  const needV = effCardH + CARD_GAP + VIEW_MARGIN; // dikey (alt/üst) yerleşim için gerekli boşluk
+  const needH = CARD_W + CARD_GAP + VIEW_MARGIN; // yatay (sağ/sol) yerleşim için gerekli boşluk
+
+  // Tercih: alt → üst → sağ → sol; tam sığan ilkini seç. Hiçbiri sığmazsa en geniş taraf.
+  let placement: "top" | "bottom" | "left" | "right";
+  if (step.placement === "bottom" && spaceBelow >= needV) placement = "bottom";
+  else if (step.placement === "top" && spaceAbove >= needV) placement = "top";
+  else if (spaceBelow >= needV) placement = "bottom";
+  else if (spaceAbove >= needV) placement = "top";
+  else if (spaceRight >= needH) placement = "right";
+  else if (spaceLeft >= needH) placement = "left";
+  else {
+    const maxSpace = Math.max(spaceBelow, spaceAbove, spaceRight, spaceLeft);
+    placement =
+      maxSpace === spaceRight
+        ? "right"
+        : maxSpace === spaceLeft
+          ? "left"
+          : maxSpace === spaceBelow
+            ? "bottom"
+            : "top";
+  }
+
+  let cardTop: number;
+  let cardLeft: number;
+  if (placement === "bottom" || placement === "top") {
+    cardTop = placement === "bottom" ? spotBottom + CARD_GAP : spot.top - CARD_GAP - effCardH;
+    cardLeft = spot.left + spot.width / 2 - CARD_W / 2;
+  } else {
+    cardLeft = placement === "right" ? spotRight + CARD_GAP : spot.left - CARD_GAP - CARD_W;
+    cardTop = spot.top + spot.height / 2 - effCardH / 2;
+  }
+  // Her iki eksende viewport içine kelepçele (kart daima tam görünür kalır).
+  cardTop = Math.min(Math.max(VIEW_MARGIN, cardTop), Math.max(VIEW_MARGIN, vh - effCardH - VIEW_MARGIN));
+  cardLeft = Math.min(Math.max(VIEW_MARGIN, cardLeft), Math.max(VIEW_MARGIN, vw - CARD_W - VIEW_MARGIN));
 
   // Görünür (hedefli) adım sırası — ilerleme göstergesi için.
   const visibleSteps: number[] = [];
