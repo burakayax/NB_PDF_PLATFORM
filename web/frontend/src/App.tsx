@@ -298,6 +298,9 @@ const DocumentScanner = lazyWithRetry(() =>
 const PdfCropTool = lazyWithRetry(() =>
   import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
 );
+const ImageCompressTool = lazyWithRetry(() =>
+  import("./components/tools/ImageCompressTool").then((m) => ({ default: m.ImageCompressTool })),
+);
 const BlogIndexPage = lazyWithRetry(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -323,6 +326,7 @@ type ContentPanel =
   | "sign"
   | "annotate"
   | "crop"
+  | "compress-image"
   | "api";
 
 type ToastState = {
@@ -840,6 +844,7 @@ function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/belge-tara" ||
     rawPath === "/tools/aranabilir-pdf" ||
     rawPath === "/tools/crop-pdf" ||
+    rawPath === "/tools/gorsel-sikistir" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
@@ -5565,6 +5570,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "gorsel-sikistir") {
+      return (
+        <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <ImageCompressTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "pdf-duzenle") {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
@@ -6817,6 +6831,7 @@ function App() {
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
           onOpenCrop={() => setContentPanel("crop")}
+          onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
@@ -6841,6 +6856,7 @@ function App() {
           onOpenSign={() => setContentPanel("sign")}
           onOpenAnnotate={() => setContentPanel("annotate")}
           onOpenCrop={() => setContentPanel("crop")}
+          onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
           />
           {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). Lazy:
@@ -6938,6 +6954,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfCropTool language={language} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "compress-image" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <ImageCompressTool language={language} />
                 </Suspense>
               </section>
             ) : null}
