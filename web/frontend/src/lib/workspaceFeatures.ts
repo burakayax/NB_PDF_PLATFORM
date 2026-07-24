@@ -189,6 +189,14 @@ const REGISTRY: Omit<WorkspaceFeatureUi, "title" | "description" | "buttonText">
     multiple: true,
     fallbackFilename: "düzleştirilmiş.pdf",
   },
+  {
+    id: "extract-images",
+    icon: "🖼️",
+    endpoint: "extract-images",
+    accept: ".pdf,application/pdf",
+    multiple: false,
+    fallbackFilename: "gorseller.zip",
+  },
 ];
 
 /** POST sonucu result_id dönen (önizleme + indirmede tüketim) araçlar */
@@ -214,6 +222,7 @@ export const RESULT_STORE_TOOL_IDS: FeatureKey[] = [
   "ppt-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "extract-images",
 ];
 
 export function isResultStoreTool(id: FeatureKey): boolean {

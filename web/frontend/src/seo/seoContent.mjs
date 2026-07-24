@@ -55,6 +55,7 @@ export const TOOL_SLUGS = [
   "encrypt",
   "pdf-to-text",
   "flatten-pdf",
+  "extract-images",
   "pdf-ozetle",
   "pdf-sohbet",
   "pdf-duzenle",
@@ -853,6 +854,37 @@ export const TOOL_SEO = {
     ),
   },
 
+  "extract-images": {
+    tr: T(
+      "PDF'ten Görsel Çıkarma — gömülü resimleri indir",
+      "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın, tek tıkla ZIP olarak indirin — online ve ücretsiz.",
+      "PDF'ten Görsel Çıkarma",
+      "PDF dosyasının içine gömülü tüm fotoğrafları, logoları ve resimleri özgün formatında (JPG/PNG) tek tek çıkarır ve bir ZIP arşivinde toplar. Sayfaları ekran görüntüsü gibi resme çevirmez; dokümandaki asıl görsel dosyalarını kayıpsız ayıklar.",
+      ["pdf resim çıkarma", "pdf görsel çıkarma", "pdf içinden fotoğraf çıkarma", "pdf resimleri kaydetme", "pdf logo çıkarma"],
+      [
+        { q: "Bu araç sayfaları mı resme çeviriyor?", a: "Hayır. Sayfa görüntüsü almaz; PDF'in içine gömülü asıl görsel akışlarını (fotoğraf, logo) özgün formatıyla ayıklar. Sayfayı resme çevirmek isterseniz 'PDF → Görsel' aracını kullanın." },
+        { q: "Görseller hangi formatta gelir?", a: "Her görsel PDF'te saklandığı özgün formatıyla (genellikle JPG veya PNG) çıkarılır ve kayıpsız olarak bir ZIP dosyasında toplanır." },
+        { q: "Aynı logo birden çok sayfada varsa ne olur?", a: "Aynı görsel tekilleştirilir; tekrar eden bir logo veya resim ZIP'te yalnızca bir kez yer alır." },
+        { q: "Şifreli PDF'ten görsel çıkarabilir miyim?", a: "Evet. Parolayı girdiğinizde şifreli PDF'in kilidi işlem için açılır ve görseller çıkarılır." },
+        { q: "PDF'te hiç gömülü görsel yoksa?", a: "Doküman yalnızca metin/vektörden oluşuyorsa ayıklanacak gömülü görsel bulunmaz ve araç sizi bilgilendirir." },
+      ],
+    ),
+    en: T(
+      "Extract Images from PDF — download embedded pictures",
+      "Pull embedded photos and logos out of a PDF at original quality and download them as a ZIP — free online.",
+      "Extract Images from PDF",
+      "Extracts every embedded photo, logo and picture from a PDF in its original format (JPG/PNG) and bundles them into a single ZIP archive. It does not rasterize pages like a screenshot — it pulls the actual image files out of the document without quality loss.",
+      ["extract images from pdf", "pdf image extractor", "save pictures from pdf", "get images out of pdf", "pdf photo extract"],
+      [
+        { q: "Does this rasterize the pages?", a: "No. It does not screenshot pages; it extracts the actual embedded image streams (photos, logos) in their original format. To turn pages into images, use the 'PDF to Image' tool." },
+        { q: "What format are the images in?", a: "Each image is extracted in the original format it was stored in the PDF (usually JPG or PNG), losslessly, and collected in a ZIP file." },
+        { q: "What if the same logo appears on many pages?", a: "Identical images are de-duplicated; a repeating logo or picture appears only once in the ZIP." },
+        { q: "Can I extract images from an encrypted PDF?", a: "Yes. Enter the password and the encrypted PDF is unlocked for the operation so images can be extracted." },
+        { q: "What if the PDF has no embedded images?", a: "If the document is text/vector only, there are no embedded images to extract and the tool lets you know." },
+      ],
+    ),
+  },
+
   "pdf-ozetle": {
     tr: T(
       "PDF Özetle — Yapay Zekâ ile PDF Özeti",
@@ -1378,7 +1410,7 @@ export const RELATED_TOOLS = {
   "pdf-to-excel": ["excel-to-pdf", "pdf-veri-cikar", "pdf-to-word", "pdf-to-text"],
   "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
   "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
-  "pdf-to-image": ["image-to-pdf", "pdf-to-ppt", "compress"],
+  "pdf-to-image": ["extract-images", "image-to-pdf", "pdf-to-ppt", "compress"],
   "image-to-pdf": ["pdf-to-image", "belge-tara", "compress", "pdf-to-word"],
   "belge-tara": ["image-to-pdf", "aranabilir-pdf", "pdf-to-image", "compress"],
   "aranabilir-pdf": ["taranmis-pdf-ocr", "belge-tara", "pdf-to-text", "image-to-pdf"],
@@ -1390,6 +1422,7 @@ export const RELATED_TOOLS = {
   "encrypt": ["unlock-pdf", "watermark", "compress", "flatten-pdf"],
   "pdf-to-text": ["pdf-to-word", "taranmis-pdf-ocr", "pdf-ozetle", "pdf-veri-cikar"],
   "flatten-pdf": ["compress", "watermark", "page-numbers", "encrypt"],
+  "extract-images": ["pdf-to-image", "image-to-pdf", "compress", "pdf-to-word"],
   "pdf-ozetle": ["pdf-sohbet", "pdf-ceviri", "pdf-veri-cikar", "taranmis-pdf-ocr"],
   "pdf-sohbet": ["pdf-ozetle", "pdf-ceviri", "pdf-veri-cikar"],
   "pdf-duzenle": ["pdf-imzala", "pdf-yorumla", "watermark", "page-numbers"],

@@ -1167,6 +1167,53 @@ async def tool_pdf_to_image(
             cleanup_path(workdir)
 
 
+@router.post("/extract-images")
+@limiter.limit("10/minute")
+async def tool_extract_images(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    decision = await entitlement_check(token, "extract-images")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+
+        def _zip():
+            zpath = ptx.extract_images_zip(sp, str(workdir), password=pwd)
+            return save_result_from_file(
+                Path(zpath),
+                "gorseller.zip",
+                "application/zip",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="extract-images",
+            )
+
+        h = await run_sandboxed(_zip)
+        return {
+            "result_id": h.result_id,
+            "filename": h.filename,
+            "mime": h.mime,
+            "size_bytes": h.size_bytes,
+            "has_thumbnail": False,
+            "saasGating": _g_check(decision),
+        }
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="extract-images")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
 @router.post("/image-to-pdf")
 @limiter.limit("15/minute")
 async def tool_image_to_pdf(

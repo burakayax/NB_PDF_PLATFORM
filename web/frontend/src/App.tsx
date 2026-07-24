@@ -383,6 +383,7 @@ const pdfInspectionFeatures: FeatureId[] = [
   "pdf-to-image",
   "pdf-to-text",
   "flatten-pdf",
+  "extract-images",
 ];
 
 function EmptyStateIllustration() {
@@ -2435,6 +2436,7 @@ function App() {
             "html-to-pdf": "HTML → PDF",
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
+            "extract-images": "PDF'ten Görsel Çıkar",
           };
           fetch("/api/team/activity", {
             method: "POST",
@@ -3588,6 +3590,7 @@ function App() {
     "pdf-to-image",
     "pdf-to-text",
     "flatten-pdf",
+    "extract-images",
   ];
   const anyUploadEncrypted =
     uploads.length > 0 && uploads.some((u) => u.encrypted);
@@ -4923,6 +4926,11 @@ function App() {
               formData.append("password", password.trim());
             }
             break;
+          case "extract-images":
+            if (password.trim()) {
+              formData.append("password", password.trim());
+            }
+            break;
           default:
             break;
         }
@@ -5062,6 +5070,7 @@ function App() {
           "html-to-pdf": "HTML → PDF",
           "pdf-to-text": "PDF → Metin",
           "flatten-pdf": "PDF Düzleştir",
+          "extract-images": "PDF'ten Görsel Çıkar",
         };
         const fid2 = selectedFeature.id;
         fetch("/api/team/activity", {

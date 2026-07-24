@@ -9,6 +9,7 @@ import {
   Layers2,
   Globe,
   Image,
+  ImageDown,
   Images,
   Layers,
   ListOrdered,
@@ -46,6 +47,7 @@ const byId: Record<FeatureKey, LucideIcon> = {
   encrypt: Lock,
   "pdf-to-text": FileText,
   "flatten-pdf": Layers2,
+  "extract-images": ImageDown,
 };
 
 /** Araç başına renk — sidebar ikonları PDF Düzenle gibi renkli görünür. */
@@ -72,6 +74,7 @@ const colorById: Record<FeatureKey, string> = {
   encrypt: "text-red-400",
   "pdf-to-text": "text-blue-400",
   "flatten-pdf": "text-purple-400",
+  "extract-images": "text-fuchsia-400",
 };
 
 type SidebarToolGlyphProps = {

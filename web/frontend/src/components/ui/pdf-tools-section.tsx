@@ -130,6 +130,11 @@ const toolCategories = (lang: Language) => [
         name: lang === "tr" ? "PDF Düzleştir" : "Flatten PDF",
       },
       {
+        id: "extract-images",
+        icon: "🖼️",
+        name: lang === "tr" ? "PDF'ten Görsel Çıkar" : "Extract Images",
+      },
+      {
         id: "rotate-pdf",
         icon: "🔄",
         name: lang === "tr" ? "PDF Döndür" : "Rotate PDF",
