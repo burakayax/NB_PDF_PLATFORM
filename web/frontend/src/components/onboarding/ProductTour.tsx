@@ -68,18 +68,28 @@ export function ProductTour({
 }: {
   steps: TourStep[];
   open: boolean;
-  /** `shown`: tur en az bir adımı GERÇEKTEN gösterdi mi. false ise (hedef bulunamadı)
-   *  çağıran "görüldü" işaretlememeli ki sonra tekrar denenebilsin. */
-  onClose: (completed: boolean, shown: boolean) => void;
+  /** Kapanış bilgisi:
+   *  - `shown`: tur en az bir adımı GERÇEKTEN gösterdi mi (hedef yoksa false → tekrar denenir).
+   *  - `dontShowAgain`: kullanıcı "Bir daha gösterme"yi işaretledi mi (kalıcı gizle). */
+  onClose: (result: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => void;
   language: Language;
 }) {
   const tr = language === "tr";
   const [index, setIndex] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
   const [ready, setReady] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(false);
   const rafRef = useRef<number | null>(null);
   const shownRef = useRef(false); // en az bir adım gösterildi mi
   const reduce = prefersReducedMotion();
+
+  // Kullanıcı kaynaklı kapanış (atla/bitir/X/Esc) — "bir daha gösterme" tercihiyle birlikte.
+  const dismiss = useCallback(
+    (completed: boolean) => {
+      onClose({ completed, shown: shownRef.current, dontShowAgain });
+    },
+    [onClose, dontShowAgain],
+  );
 
   // İleri/geri gezinirken hedefi olan bir sonraki adımı bul (hedefsiz adımları atla).
   const findStepWithTarget = useCallback(
@@ -100,7 +110,7 @@ export function ProductTour({
     setReady(false);
     const first = findStepWithTarget(0, 1);
     if (first < 0) {
-      onClose(false, false); // gösterilecek hedef yok → "görüldü" işaretleme, tekrar denenebilsin
+      onClose({ completed: false, shown: false, dontShowAgain: false }); // hedef yok → tekrar denenebilsin
       return;
     }
     setIndex(first);
@@ -117,7 +127,7 @@ export function ProductTour({
     if (!resolved) {
       // Görünür hedef yok → sonraki hedefli adıma geç (yoksa bitir).
       const next = findStepWithTarget(index + 1, 1);
-      if (next < 0) onClose(false, shownRef.current);
+      if (next < 0) onClose({ completed: false, shown: shownRef.current, dontShowAgain });
       else setIndex(next);
       return;
     }
@@ -139,7 +149,7 @@ export function ProductTour({
       cancelled = true;
       window.clearTimeout(t);
     };
-  }, [open, step, index, findStepWithTarget, onClose, reduce]);
+  }, [open, step, index, findStepWithTarget, onClose, reduce, dontShowAgain]);
 
   // Resize/scroll'da yeniden ölç (rAF ile throttle).
   useEffect(() => {
@@ -167,9 +177,9 @@ export function ProductTour({
 
   const goNext = useCallback(() => {
     const next = findStepWithTarget(index + 1, 1);
-    if (next < 0) onClose(true, shownRef.current);
+    if (next < 0) dismiss(true);
     else setIndex(next);
-  }, [findStepWithTarget, index, onClose]);
+  }, [findStepWithTarget, index, dismiss]);
 
   const goBack = useCallback(() => {
     const prev = findStepWithTarget(index - 1, -1);
@@ -180,13 +190,13 @@ export function ProductTour({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose(false, shownRef.current);
+      if (e.key === "Escape") dismiss(false);
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goBack();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, goNext, goBack, onClose]);
+  }, [open, goNext, goBack, dismiss]);
 
   if (!open || !step || !rect || !ready) {
     // Overlay'i erken göstermeyelim (hedef ölçülene dek boş kalır → zıplama olmaz).
@@ -261,7 +271,7 @@ export function ProductTour({
       >
         <button
           type="button"
-          onClick={() => onClose(false, shownRef.current)}
+          onClick={() => dismiss(false)}
           aria-label={tr ? "Turu kapat" : "Close tour"}
           className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
         >
@@ -289,11 +299,22 @@ export function ProductTour({
           ))}
         </div>
 
+        {/* "Bir daha gösterme" — işaretlenmezse tur her girişte tekrar gösterilir. */}
+        <label className="mt-3.5 flex w-fit cursor-pointer items-center gap-2 text-[12.5px] text-slate-400 transition hover:text-slate-300">
+          <input
+            type="checkbox"
+            checked={dontShowAgain}
+            onChange={(e) => setDontShowAgain(e.target.checked)}
+            className="h-3.5 w-3.5 rounded border-white/25 bg-white/5 accent-cyan-500"
+          />
+          {tr ? "Bunu bir daha gösterme" : "Don't show this again"}
+        </label>
+
         <div className="mt-4 flex items-center justify-between gap-2">
           <button
             type="button"
-            onClick={() => onClose(false, shownRef.current)}
-            className="text-[12.5px] font-medium text-slate-400 transition hover:text-slate-200"
+            onClick={() => dismiss(false)}
+            className="rounded-lg border border-white/12 px-3 py-2 text-[12.5px] font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
           >
             {tr ? "Turu atla" : "Skip tour"}
           </button>
