@@ -794,6 +794,24 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdften-gorsel-resim-cikarma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma"/>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.pdfplatform.app/en/blog/pdften-gorsel-resim-cikarma</loc>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdften-gorsel-resim-cikarma"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma"/>
+    <lastmod>2026-07-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma</loc>
     <xhtml:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/faturadan-excele-veri-aktarma"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/faturadan-excele-veri-aktarma"/>
