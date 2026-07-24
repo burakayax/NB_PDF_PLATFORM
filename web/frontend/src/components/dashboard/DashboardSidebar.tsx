@@ -132,6 +132,10 @@ const EDITOR_FAV_ID = "edit-pdf";
 const SIGN_FAV_ID = "sign-pdf";
 /** PDF Yorumla (cihazda işaretleme) favorilerde bu sabit id ile tutulur — FeatureKey değil. */
 const ANNOTATE_FAV_ID = "annotate-pdf";
+/** Belge Tara favorilerde bu sabit id ile tutulur — FeatureKey değil. */
+const SCAN_FAV_ID = "scan-doc";
+/** AI araçları favorilerde `ai:<mode>` id'siyle tutulur — FeatureKey değil. */
+const aiFavId = (mode: AiToolMode) => `ai:${mode}`;
 
 export type SidebarToolId = FeatureKey | "subscription";
 
@@ -215,18 +219,20 @@ export function DashboardSidebar({
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
   const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
+  const scanFavorited = !!onOpenScan && isFavorite(SCAN_FAV_ID);
+  const favAiTools = onOpenAi ? AI_TOOLS.filter((t) => isFavorite(aiFavId(t.mode))) : [];
   const sidebarGroups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    // Favoriler bölümü: en az bir araç VEYA editör/imza/yorum favorilenmişse görünür.
-    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited
+    // Favoriler bölümü: en az bir araç VEYA özel araç (editör/imza/yorum/tara/AI) favorilenmişse görünür.
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length]);
   // Accordion: varsayılan olarak TÜM kategoriler kapalı; yalnızca kullanıcının
   // favorisi varsa "Favoriler" açık gelir. Diğerleri başlığa tıklayınca açılır.
   const [openCats, setOpenCats] = useState<Set<string>>(
@@ -340,18 +346,45 @@ export function DashboardSidebar({
     );
   };
 
-  // Belge Tara satırı — kamerayla tarama (cihazda). "Düzenle" grubunda gösterilir.
+  // Belge Tara satırı — kamerayla tarama (cihazda). Diğer araçlarla AYNI nötr stil + favori yıldızı.
   const renderScanRow = (keyPrefix = "") => {
     if (!onOpenScan) return null;
+    const label = tr ? "Belge Tara" : "Scan document";
     return (
       <button
         key={`${keyPrefix}scan`}
         type="button"
         onClick={onOpenScan}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] px-3 py-2.5 text-left text-sm font-medium text-cyan-100 hover:scale-[1.02] hover:border-cyan-400/45 hover:bg-cyan-500/[0.12]"
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
       >
         <span className="text-base" aria-hidden>📸</span>
-        <span className="truncate">{tr ? "Belge Tara" : "Scan document"}</span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <FavoriteStar alwaysVisible active={isFavorite(SCAN_FAV_ID)} label={label} onToggle={() => toggleFavorite(SCAN_FAV_ID)} />
+        </span>
+      </button>
+    );
+  };
+
+  // AI aracı satırı — favori yıldızlı; AI kategorisinde ve Favoriler'de kullanılır.
+  const renderAiRow = (t: { mode: AiToolMode; tr: string; en: string }, keyPrefix = "") => {
+    if (!onOpenAi) return null;
+    const label = tr ? t.tr : t.en;
+    return (
+      <button
+        key={`${keyPrefix}ai-${t.mode}`}
+        type="button"
+        onClick={() => onOpenAi(t.mode)}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-fuchsia-400/40 hover:bg-fuchsia-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(232,121,249,0.6)]"
+      >
+        <span className="text-base text-fuchsia-300" aria-hidden>✨</span>
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{label}</span>
+          <span className="flex shrink-0 items-center gap-1.5">
+            <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">Pro</span>
+            <FavoriteStar alwaysVisible active={isFavorite(aiFavId(t.mode))} label={label} onToggle={() => toggleFavorite(aiFavId(t.mode))} />
+          </span>
+        </span>
       </button>
     );
   };
@@ -446,22 +479,7 @@ export function DashboardSidebar({
             </button>
             {openCats.has("ai") ? (
               <div className="flex flex-col gap-1">
-                {AI_TOOLS.map((t) => (
-                  <button
-                    key={t.mode}
-                    type="button"
-                    onClick={() => onOpenAi(t.mode)}
-                    className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/[0.05] px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:border-fuchsia-400/40 hover:bg-fuchsia-500/[0.12] hover:text-nb-text hover:shadow-[0_0_22px_-8px_rgba(232,121,249,0.6)]"
-                  >
-                    <span className="text-base text-fuchsia-300" aria-hidden>✨</span>
-                    <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-                      <span className="truncate">{tr ? t.tr : t.en}</span>
-                      <span className="shrink-0 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fuchsia-300">
-                        Pro
-                      </span>
-                    </span>
-                  </button>
-                ))}
+                {AI_TOOLS.map((t) => renderAiRow(t, "ai-"))}
               </div>
             ) : null}
           </section>
@@ -515,6 +533,8 @@ export function DashboardSidebar({
                   {group.id === "annotate" ? renderAnnotateRow("annotate-") : null}
                   {group.id === "favorites" && signFavorited ? renderSignRow("fav-") : null}
                   {group.id === "favorites" && annotateFavorited ? renderAnnotateRow("fav-") : null}
+                  {group.id === "favorites" && scanFavorited ? renderScanRow("fav-") : null}
+                  {group.id === "favorites" ? favAiTools.map((t) => renderAiRow(t, "fav-")) : null}
                   {group.tools.map((id) => renderTool(id, `${group.id}-`))}
                 </div>
               ) : null}
