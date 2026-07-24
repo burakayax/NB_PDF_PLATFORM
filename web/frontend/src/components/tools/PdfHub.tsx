@@ -60,9 +60,13 @@ type Props = {
   file: File;
   language: Language;
   isPro?: boolean;
+  /** Kullanıcının erişemediği (plana dahil olmayan) araç id'leri — kilit/upsell için. */
+  lockedFeatures?: Set<string>;
   onClose: () => void;
   /** Bir araç onaylandı — üst bileşen PDF'i o araca aktarır (IndexedDB + yönlendirme). */
   onPickTool: (toolId: string, isConvert: boolean) => void;
+  /** Kilitli araca tıklandığında "Planları Gör" — hub'ı kapatıp yükseltme panelini açar. */
+  onUpgrade?: () => void;
 };
 
 /**
@@ -70,8 +74,9 @@ type Props = {
  * destekli), yanında (masaüstü) / altında (mobil) araçları sunar. Bir araca dokununca, PDF'in o
  * araca aktarılacağı ONAYLANIR ve araç açılır. Uyarlanır düzen.
  */
-export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
+export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickTool, onUpgrade }: Props) {
   const tr = language === "tr";
+  const isLocked = (id: string) => lockedFeatures?.has(id) ?? false;
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
@@ -83,7 +88,8 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
   const pageWidth = fitWidth > 0 ? Math.round((fitWidth * zoom) / 100) : 0;
 
   // Onaylı aktarım: bir araç seçilince önce onay göster, sonra eşitle.
-  const [pending, setPending] = useState<{ tool: ToolItem; convert: boolean } | null>(null);
+  // locked=true ise araç plana dahil değil → aktarım yerine upsell gösterilir.
+  const [pending, setPending] = useState<{ tool: ToolItem; convert: boolean; locked: boolean } | null>(null);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -231,26 +237,29 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
     }
   }
 
-  const toolBtn = (t: ToolItem, convert: boolean) => (
-    <button
-      key={t.id}
-      type="button"
-      onClick={() => setPending({ tool: t, convert })}
-      className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${
-        convert
-          ? "border-violet-400/25 bg-violet-500/[0.06] hover:border-violet-400/45 hover:bg-violet-500/[0.12]"
-          : "border-white/[0.1] bg-white/[0.03] hover:border-cyan-400/40 hover:bg-white/[0.06]"
-      }`}
-    >
-      {convert && !isPro && (
-        <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
-          <Lock className="h-2.5 w-2.5" />Pro
-        </span>
-      )}
-      <span className={convert ? "text-violet-300" : "text-cyan-300"}>{t.icon}</span>
-      <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
-    </button>
-  );
+  const toolBtn = (t: ToolItem, convert: boolean) => {
+    const locked = isLocked(t.id);
+    return (
+      <button
+        key={t.id}
+        type="button"
+        onClick={() => setPending({ tool: t, convert, locked })}
+        className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${
+          convert
+            ? "border-violet-400/25 bg-violet-500/[0.06] hover:border-violet-400/45 hover:bg-violet-500/[0.12]"
+            : "border-white/[0.1] bg-white/[0.03] hover:border-cyan-400/40 hover:bg-white/[0.06]"
+        }`}
+      >
+        {locked && (
+          <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
+            <Lock className="h-2.5 w-2.5" />Pro
+          </span>
+        )}
+        <span className={`${convert ? "text-violet-300" : "text-cyan-300"} ${locked ? "opacity-70" : ""}`}>{t.icon}</span>
+        <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
+      </button>
+    );
+  };
 
   const zoomBtnCls =
     "flex h-8 w-8 items-center justify-center rounded-lg text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40";
@@ -380,7 +389,7 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
         </div>
       </div>
 
-      {/* Onaylı aktarım — "açık PDF bu araca aktarılacak" */}
+      {/* Onaylı aktarım / upsell — kilitli araçta plan yükseltme, açık araçta aktarım onayı */}
       {pending && (
         <div className="absolute inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={() => setPending(null)}>
           <div
@@ -388,40 +397,80 @@ export function PdfHub({ file, language, isPro, onClose, onPickTool }: Props) {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3">
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pending.convert ? "bg-violet-500/15 text-violet-300" : "bg-cyan-500/15 text-cyan-300"}`}>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pending.locked || pending.convert ? "bg-violet-500/15 text-violet-300" : "bg-cyan-500/15 text-cyan-300"}`}>
                 {pending.tool.icon}
               </span>
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white">{tr ? (pending.tool as ToolItem).tr : (pending.tool as ToolItem).en}</p>
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 text-sm font-bold text-white">
+                  <span className="truncate">{tr ? pending.tool.tr : pending.tool.en}</span>
+                  {pending.locked && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
+                      <Lock className="h-2.5 w-2.5" />Pro
+                    </span>
+                  )}
+                </p>
                 <p className="truncate text-[12px] text-slate-400">{file.name || (tr ? "Belge.pdf" : "Document.pdf")}</p>
               </div>
             </div>
-            <p className="mt-3 text-[13px] leading-relaxed text-slate-300">
-              {tr
-                ? "Açık olan PDF bu araca aktarılıp orada açılacak. Devam edilsin mi?"
-                : "The open PDF will be transferred to this tool and opened there. Continue?"}
-            </p>
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setPending(null)}
-                className="rounded-lg border border-white/12 px-3 py-2 text-[13px] font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
-              >
-                {tr ? "Vazgeç" : "Cancel"}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const p = pending;
-                  setPending(null);
-                  onPickTool(p.tool.id, p.convert);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-[13px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(34,211,238,0.7)] transition hover:from-cyan-400 hover:to-blue-500"
-              >
-                <Check className="h-4 w-4" />
-                {tr ? "Aktar ve Aç" : "Transfer & open"}
-              </button>
-            </div>
+
+            {pending.locked ? (
+              <>
+                <p className="mt-3 text-[13px] leading-relaxed text-slate-300">
+                  {tr
+                    ? "Bu araç ücretli planlara dahildir. Uygun bir pakete geçtiğinizde, görüntülediğiniz PDF'i doğrudan bu araçta işleyebilirsiniz."
+                    : "This tool is included in our paid plans. Upgrade to a suitable plan to process the PDF you're viewing directly in this tool."}
+                </p>
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPending(null)}
+                    className="rounded-lg border border-white/12 px-3 py-2 text-[13px] font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                  >
+                    {tr ? "Kapat" : "Close"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPending(null);
+                      onUpgrade?.();
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-fuchsia-600 px-4 py-2 text-[13px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(217,70,239,0.7)] transition hover:from-violet-400 hover:to-fuchsia-500"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {tr ? "Planları Gör" : "See plans"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-[13px] leading-relaxed text-slate-300">
+                  {tr
+                    ? "Görüntülediğiniz PDF, seçtiğiniz araca otomatik olarak aktarılıp orada açılacak."
+                    : "The PDF you're viewing will be transferred to the selected tool and opened there."}
+                </p>
+                <div className="mt-4 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPending(null)}
+                    className="rounded-lg border border-white/12 px-3 py-2 text-[13px] font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+                  >
+                    {tr ? "Vazgeç" : "Cancel"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const p = pending;
+                      setPending(null);
+                      onPickTool(p.tool.id, p.convert);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-[13px] font-bold text-white shadow-[0_10px_28px_-10px_rgba(34,211,238,0.7)] transition hover:from-cyan-400 hover:to-blue-500"
+                  >
+                    <Check className="h-4 w-4" />
+                    {tr ? "Aktar ve Aç" : "Transfer & open"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
