@@ -18,7 +18,7 @@
     "dev:with-pdf-api": "concurrently -k -n pdf,ui -c blue,magenta \"node ../../scripts/run-pdf-api.mjs\" \"vite --host\"",
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
     "dev:fullstack": "npm run dev --prefix ../..",
-    "build": "tsc && vite build && node scripts/inject-prerender-assets.mjs",
+    "build": "tsc && vite build && node scripts/inject-prerender-assets.mjs && node scripts/stamp-sw-version.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

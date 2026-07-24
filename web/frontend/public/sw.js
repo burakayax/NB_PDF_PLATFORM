@@ -7,7 +7,9 @@
  *   - POST/PUT vb. ve çapraz-köken istekleri: dokunulmaz, tarayıcıya bırakılır
  * Sürüm değişince activate'te eski önbellekler silinir.
  */
-const SW_VERSION = "v1.0.21";
+// SW_VERSION build sırasında otomatik damgalanır (scripts/stamp-sw-version.mjs).
+// Dev'de placeholder olarak kalır (sabit cache anahtarı). Elle bump GEREKMEZ.
+const SW_VERSION = "__SW_BUILD_ID__";
 const STATIC_CACHE = `nbpdf-static-${SW_VERSION}`;
 const RUNTIME_CACHE = `nbpdf-runtime-${SW_VERSION}`;
 const APP_SHELL_URL = "/";
