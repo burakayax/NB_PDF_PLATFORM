@@ -13,6 +13,118 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const BLOG_POSTS = [
   post(
     {
+      slug: "pdften-gorsel-resim-cikarma",
+      date: "2026-07-24",
+      updated: "2026-07-24",
+      readMinutes: 5,
+      tags: { tr: ["PDF Araçları", "Görsel", "Resim Çıkarma"], en: ["PDF Tools", "Images", "Extraction"] },
+      accent: "fuchsia",
+      tool: "/tools/extract-images",
+    },
+    {
+      title: "PDF'ten Resim (Görsel) Çıkarma: Gömülü Fotoğrafları Kayıpsız İndirin",
+      description:
+        "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın. \"PDF'i resme çevirme\" ile \"PDF'ten görsel çıkarma\" arasındaki farkı açıklıyor, en kolay yolu adım adım gösteriyoruz.",
+      excerpt:
+        "PDF'in içindeki resimleri kaydetmek istiyor ama ekran görüntüsüyle kalite mi kaybediyorsunuz? PDF'i resme çevirmekle gömülü görselleri çıkarmak farklı şeylerdir — bu yazıda ikisini ayırıp en kolay yolu gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir PDF'in içinde işinize yarayan bir fotoğraf, logo veya grafik var ve onu ayrı bir dosya olarak kaydetmek istiyorsunuz. Ekran görüntüsü almak kalite kaybettirir. İşin doğru yolu, dokümana gömülü asıl görseli özgün haliyle çıkarmaktır — bu yazıda nasıl yapıldığını gösteriyoruz." },
+
+        { t: "h2", x: "Önemli fark: \"PDF'i resme çevirme\" ≠ \"PDF'ten görsel çıkarma\"" },
+        { t: "p", x: "Bu iki iş sık karıştırılır ama farklıdır. Doğru aracı seçmek sonuç kalitesini belirler:" },
+        { t: "ul", items: [
+          "PDF'i resme çevirme: Her sayfanın tamamının bir ekran görüntüsünü (JPG/PNG) alır. Sayfadaki metin, çizgi ve resim hep birlikte tek bir düz görüntüye dönüşür.",
+          "PDF'ten görsel çıkarma: Sayfayı resme çevirmez; dokümanın içine gömülü asıl görsel dosyalarını (fotoğraf, logo) özgün formatında ve çözünürlüğünde ayıklar.",
+        ] },
+        { t: "tip", x: "Tüm sayfayı bir resim olarak istiyorsanız \"PDF → Görsel\" aracını; yalnızca içindeki fotoğraf/logoları özgün kalitede istiyorsanız \"PDF'ten Görsel Çıkar\" aracını kullanın." },
+
+        { t: "h2", x: "Yöntem 1 — Ekran görüntüsü (önerilmez)" },
+        { t: "p", x: "PDF'i açıp görselin üstünden ekran görüntüsü almak en bilinen ama en kötü yoldur: elde ettiğiniz resim ekranınızın çözünürlüğüyle sınırlıdır, kenarları kırpmak zordur ve özgün kalite kaybolur." },
+
+        { t: "h2", x: "Yöntem 2 — Sayfayı resme çevirme" },
+        { t: "p", x: "Görsel sayfanın tamamını kaplıyorsa, sayfayı yüksek çözünürlüklü bir görüntüye çevirmek işinizi görebilir. Ama sayfada metin ve başka öğeler de varsa hepsi görsele karışır; sadece fotoğrafı izole edemezsiniz." },
+        { t: "cta", title: "PDF → Görsel", x: "Sayfaların tamamını yüksek çözünürlüklü JPG/PNG olarak indirin.", btn: "Aracı aç", tool: "/tools/pdf-to-image" },
+
+        { t: "h2", x: "Yöntem 3 — Gömülü görselleri çıkarma (en temizi)" },
+        { t: "p", x: "En doğru sonuç, dokümana gömülü asıl görsel akışlarını çıkarmaktır. PDF Platform'un PDF'ten Görsel Çıkar aracı tam olarak bunu yapar:" },
+        { t: "steps", items: [
+          { title: "PDF'i yükleyin", x: "İçinde fotoğraf/logo bulunan belgenizi seçin. Şifreli bir PDF ise parolasını girin." },
+          { title: "\"Görselleri Çıkar\" deyin", x: "Araç sayfaları tek tek tarayıp gömülü tüm görselleri özgün formatında (JPG/PNG) ayıklar; aynı görsel birden çok sayfada varsa tekilleştirir." },
+          { title: "ZIP olarak indirin", x: "Çıkarılan tüm görseller tek bir ZIP arşivinde toplanır; tek tıkla indirin." },
+        ] },
+        { t: "cta", title: "PDF'ten Görsel Çıkar", x: "Bir PDF yükleyin — içindeki tüm fotoğraf ve logolar kayıpsız çıksın.", btn: "Aracı aç", tool: "/tools/extract-images" },
+
+        { t: "h2", x: "Ne işe yarar?" },
+        { t: "ul", items: [
+          "Bir sunum veya rapordaki fotoğrafları yeniden kullanma.",
+          "Eski bir PDF'ten şirket logosunu özgün kalitede geri alma.",
+          "Katalog/broşürdeki ürün görsellerini toplu indirme.",
+        ] },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "Görsel çıkarma sunucuda yapılır ancak dosyanız kalıcı olarak saklanmaz; işlem biter bitmez geçici veriler temizlenir. Birleştirme, döndürme, sayfa silme gibi araçlarımızın çoğu ise tamamen tarayıcınızda çalışır." },
+      ],
+      faq: [
+        { q: "PDF'ten resimler nasıl çıkarılır?", a: "PDF'i \"PDF'ten Görsel Çıkar\" aracına yükleyip \"Görselleri Çıkar\" deyin; gömülü tüm fotoğraf ve logolar özgün formatında bir ZIP dosyasında toplanır ve indirilir." },
+        { q: "Sayfayı resme çevirmek ile görsel çıkarmak aynı şey mi?", a: "Hayır. Sayfayı resme çevirmek tüm sayfanın ekran görüntüsünü alır; görsel çıkarmak ise yalnızca dokümana gömülü asıl fotoğraf/logo dosyalarını özgün kalitede ayıklar." },
+        { q: "Çıkan görseller hangi formatta olur?", a: "Her görsel PDF'te saklandığı özgün formatıyla (genellikle JPG veya PNG) kayıpsız olarak çıkarılır." },
+        { q: "Şifreli PDF'ten görsel çıkarabilir miyim?", a: "Evet. Parolayı girdiğinizde şifreli PDF işlem için açılır ve gömülü görseller çıkarılır." },
+      ],
+    },
+    {
+      title: "Extract Images from a PDF: Save Embedded Photos Without Quality Loss",
+      description:
+        "Pull embedded photos and logos out of a PDF at original quality. We explain the difference between \"PDF to image\" and \"extract images from PDF\" and show the easiest way, step by step.",
+      excerpt:
+        "Want to save the pictures inside a PDF but keep losing quality with screenshots? Converting pages to images and extracting embedded images are different things — this guide separates them and shows the easiest way.",
+      blocks: [
+        { t: "lead", x: "There's a useful photo, logo or graphic inside a PDF and you want it as a separate file. Taking a screenshot loses quality. The right way is to extract the actual embedded image in its original form — this post shows how." },
+
+        { t: "h2", x: "Key difference: \"PDF to image\" ≠ \"extract images from PDF\"" },
+        { t: "p", x: "These two jobs are often confused but they're different, and choosing the right tool decides the quality:" },
+        { t: "ul", items: [
+          "PDF to image: Takes a screenshot (JPG/PNG) of the entire page. Text, lines and pictures all flatten into one image.",
+          "Extract images from PDF: Doesn't rasterize the page; it pulls out the actual embedded image files (photos, logos) in their original format and resolution.",
+        ] },
+        { t: "tip", x: "Want the whole page as an image? Use \"PDF to Image\". Want only the photos/logos inside at original quality? Use \"Extract Images\"." },
+
+        { t: "h2", x: "Method 1 — Screenshot (not recommended)" },
+        { t: "p", x: "Opening the PDF and screenshotting the picture is the best-known but worst way: the result is limited to your screen resolution, cropping edges is hard, and original quality is lost." },
+
+        { t: "h2", x: "Method 2 — Convert the page to an image" },
+        { t: "p", x: "If the image fills the whole page, converting the page to a high-resolution image can work. But if the page also has text and other elements, they all blend into the image — you can't isolate just the photo." },
+        { t: "cta", title: "PDF to Image", x: "Download whole pages as high-resolution JPG/PNG.", btn: "Open the tool", tool: "/tools/pdf-to-image" },
+
+        { t: "h2", x: "Method 3 — Extract embedded images (the cleanest)" },
+        { t: "p", x: "The most accurate result is to extract the actual embedded image streams. PDF Platform's Extract Images tool does exactly that:" },
+        { t: "steps", items: [
+          { title: "Upload the PDF", x: "Pick a document that contains photos/logos. If the PDF is encrypted, enter its password." },
+          { title: "Click \"Extract Images\"", x: "The tool scans each page and pulls out every embedded image in its original format (JPG/PNG), de-duplicating images used on multiple pages." },
+          { title: "Download as ZIP", x: "All extracted images are bundled into a single ZIP archive; download in one click." },
+        ] },
+        { t: "cta", title: "Extract Images from PDF", x: "Upload a PDF — get every photo and logo inside, without quality loss.", btn: "Open the tool", tool: "/tools/extract-images" },
+
+        { t: "h2", x: "What is it good for?" },
+        { t: "ul", items: [
+          "Reusing photos from a presentation or report.",
+          "Recovering a company logo from an old PDF at original quality.",
+          "Bulk-downloading product images from a catalog/brochure.",
+        ] },
+
+        { t: "h2", x: "Privacy note" },
+        { t: "p", x: "Image extraction runs on a server, but your file is not stored permanently; temporary data is cleared as soon as the job finishes. Most of our tools (merge, rotate, delete pages, etc.) run entirely in your browser." },
+      ],
+      faq: [
+        { q: "How do I extract images from a PDF?", a: "Upload the PDF to the Extract Images tool and click \"Extract Images\"; all embedded photos and logos are bundled into a ZIP in their original format and downloaded." },
+        { q: "Is converting a page to an image the same as extracting images?", a: "No. Converting a page takes a screenshot of the whole page; extracting images pulls out only the actual embedded photo/logo files at original quality." },
+        { q: "What format are the extracted images in?", a: "Each image is extracted losslessly in the original format it was stored in the PDF (usually JPG or PNG)." },
+        { q: "Can I extract images from an encrypted PDF?", a: "Yes. Enter the password and the encrypted PDF is unlocked for the operation so embedded images can be extracted." },
+      ],
+    },
+  ),
+
+  post(
+    {
       slug: "faturadan-excele-veri-aktarma",
       date: "2026-07-03",
       updated: "2026-07-03",

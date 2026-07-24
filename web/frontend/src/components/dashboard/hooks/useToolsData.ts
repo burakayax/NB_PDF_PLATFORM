@@ -19,6 +19,7 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "ppt-to-pdf",
   "html-to-pdf",
   "flatten-pdf",
+  "extract-images",
 ]);
 
 export function useToolsData(language: Language): ToolItem[] {
