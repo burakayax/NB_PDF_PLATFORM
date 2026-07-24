@@ -23,21 +23,27 @@ import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
 import { DocumentScanner } from "../tools/DocumentScanner";
 import { PdfCropTool } from "../tools/PdfCropTool";
+import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
-export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | PageToolId;
+export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | "gorsel-sikistir" | PageToolId;
 const PAGE_TOOL_IDS = new Set<string>(["rotate-pdf", "delete-pages", "organize-pdf", "split"]);
 const isPageToolId = (id: string): id is PageToolId => PAGE_TOOL_IDS.has(id);
 export const isFreeToolId = (id: string): id is FreeToolId =>
-  id === "merge" || id === "image-to-pdf" || id === "crop-pdf" || PAGE_TOOL_IDS.has(id);
+  id === "merge" ||
+  id === "image-to-pdf" ||
+  id === "crop-pdf" ||
+  id === "gorsel-sikistir" ||
+  PAGE_TOOL_IDS.has(id);
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
   { id: "crop-pdf", tr: "Kırp", en: "Crop" },
   { id: "image-to-pdf", tr: "Görsel → PDF", en: "Image → PDF" },
+  { id: "gorsel-sikistir", tr: "Görsel Sıkıştır", en: "Compress Image" },
   { id: "rotate-pdf", tr: "Döndür", en: "Rotate" },
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
   { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
@@ -674,6 +680,8 @@ function Hero({
                 onUpgrade={onUpgrade}
                 comingSoon={aiComingSoon}
               />
+            ) : freeTool === "gorsel-sikistir" ? (
+              <ImageCompressTool language={language} />
             ) : freeTool === "crop-pdf" ? (
               <PdfCropTool language={language} />
             ) : isPageToolId(freeTool) ? (
