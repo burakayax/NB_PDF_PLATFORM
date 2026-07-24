@@ -5487,8 +5487,14 @@ function App() {
         file={pdfHubFile}
         language={language}
         isPro={aiAllowed}
+        lockedFeatures={lockedFeatures}
         onClose={() => setPdfHubFile(null)}
         onPickTool={(toolId) => void handlePickFromHub(toolId)}
+        onUpgrade={() => {
+          setPdfHubFile(null);
+          openWorkspace();
+          setUpgradeModalOpen(true);
+        }}
       />
     );
   }
