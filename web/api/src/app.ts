@@ -27,6 +27,7 @@ import { registerDataRetentionJobs } from "./jobs/dataRetentionJobs.js";
 import { registerSubscriptionJobs } from "./jobs/subscriptionJobs.js";
 import { registerLifecycleEmailJobs } from "./jobs/lifecycleEmailJobs.js";
 import { registerCheckoutRecoveryJobs } from "./jobs/checkoutRecoveryJobs.js";
+import { registerLimitReachedEmailJobs } from "./jobs/limitReachedEmailJobs.js";
 import { registerPlanOverrideJobs } from "./jobs/planOverrideJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
@@ -192,6 +193,7 @@ registerDataRetentionJobs();
 registerSubscriptionJobs();
 registerLifecycleEmailJobs();
 registerCheckoutRecoveryJobs();
+registerLimitReachedEmailJobs();
 registerPlanOverrideJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.

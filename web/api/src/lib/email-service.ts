@@ -176,6 +176,54 @@ export async function sendCheckoutRecoveryEmail(
   });
 }
 
+/**
+ * "Aylık limitine ulaştın" — FREE kullanıcı aylık ücretsiz işlem hakkını bitirdiğinde
+ * (güçlü satın-alma sinyali) gönderilen davranış-tetikli yükseltme e-postası. Uygulamada
+ * değilken onu geri getirir. Sıkı opt-in (job katmanında marketingConsent) + unsubscribe.
+ */
+export async function sendLimitReachedEmail(
+  toEmail: string,
+  vars: { name: string; userId: string; periodKey: string; ctaUrl: string; locale?: Locale },
+): Promise<void> {
+  const locale: Locale = vars.locale ?? "tr";
+  const t = emailT[locale];
+  const tr = locale === "tr";
+  const name = escapeHtml(vars.name);
+
+  const eyebrow = tr ? "Limitine ulaştın" : "You hit your limit";
+  const title = tr ? "Bu ay için hakkın doldu 🚀" : "You're out for this month 🚀";
+  const intro = tr
+    ? "Ücretsiz aylık işlem hakkını kullandın — belli ki işine yarıyor."
+    : "You've used your free monthly operations — clearly it's working for you.";
+  const p1 = tr
+    ? "Beklemek zorunda değilsin: yükselttiğinde günlük/aylık limit kalkar, daha büyük dosyalar ve yapay zekâ araçları da anında açılır."
+    : "No need to wait: upgrading removes the daily/monthly cap and instantly unlocks larger files and AI tools.";
+  const cta = tr ? "Limitsize geç" : "Go unlimited";
+
+  const unsubscribeUrl = unsubscribeUrlFor(vars.userId);
+  const bodyHtml = `
+    <p style="margin:0 0 14px;font-size:16px;line-height:1.75;color:#0f172a;">${t.greeting(name)}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.75;color:#334155;">${p1}</p>
+    ${ctaButton(vars.ctaUrl, cta)}
+  `;
+  const html = renderCorporateEmail({
+    eyebrow,
+    title,
+    intro,
+    bodyHtml,
+    footerText: t.newsletter_footer,
+    productName: product(),
+    unsubscribeUrl,
+  });
+  const subject = tr ? "Aylık ücretsiz hakkın doldu — limitsize geç" : "Your free monthly quota is used up — go unlimited";
+  await sendMail({ to: toEmail, subject, html, text: stripForText(`${vars.name} — ${vars.ctaUrl}`), listUnsubscribeUrl: unsubscribeUrl });
+  await logAutomationEmailAudit(`email.limit_reached.${vars.periodKey}`, vars.userId, `Limit reached → ${toEmail}`, {
+    template: "limit_reached",
+    periodKey: vars.periodKey,
+    locale,
+  });
+}
+
 export async function sendMassCampaignEmail(
   toEmail: string,
   subject: string,
