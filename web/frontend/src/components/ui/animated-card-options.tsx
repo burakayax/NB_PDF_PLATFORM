@@ -43,15 +43,21 @@ export function AnimatedCardOptions({ options, columns = 4, onSelect }: Animated
   };
 
   const handleCardClick = (option: CardOption) => {
-    if (selectedCard) return;
+    // Seçimi HER ZAMAN ilet — client-side navigasyonda grid mount kalabildiğinden
+    // kalıcı kilit ("bir kez tıklandıktan sonra başka araç açılmıyor") olmamalı.
+    onSelect?.(option);
     setSelectedCard(option.id);
     const otherCards = options.filter((opt) => opt.id !== option.id);
     otherCards.forEach((card) => {
       setTimeout(() => {
         setFadingCards((prev) => new Set([...prev, card.id]));
-      }, Math.random() * 300);
+      }, Math.random() * 200);
     });
-    onSelect?.(option);
+    // Animasyonu kısa süre sonra sıfırla → grid asla kalıcı kilitlenmez.
+    window.setTimeout(() => {
+      setSelectedCard(null);
+      setFadingCards(new Set());
+    }, 700);
   };
 
   const shouldShowCard = (cardId: string) => {
