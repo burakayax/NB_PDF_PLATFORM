@@ -6,6 +6,7 @@ import {
   ArrowUp,
   Check,
   Download,
+  ExternalLink,
   FileText,
   GripVertical,
   Image as ImageIcon,
@@ -341,6 +342,14 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     downloadBlob(result.blob, result.filename);
   }
 
+  // Sonucu yeni sekmede aç (PDF tarayıcıda görüntülenir).
+  function openResult() {
+    if (!result) return;
+    const url = URL.createObjectURL(result.blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
   // Web Share API — tarayıcı özelliği, LOGIN GEREKTİRMEZ (çoğunlukla mobil).
   const canShare =
     typeof navigator !== "undefined" &&
@@ -396,6 +405,14 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             : "Your file never left your device — fully private."}
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <button
+            type="button"
+            onClick={openResult}
+            className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.12] px-6 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {tr ? "Aç" : "Open"}
+          </button>
           <button
             type="button"
             onClick={() => void redownload()}

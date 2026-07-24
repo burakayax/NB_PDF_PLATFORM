@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Download, Loader2, Share2, Trash2, Image as ImageIcon } from "lucide-react";
+import { Check, Download, ExternalLink, Loader2, Share2, Trash2, Image as ImageIcon } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolDropzone } from "./ToolDropzone";
 import { ValueMomentNudge } from "./ValueMomentNudge";
@@ -13,7 +13,7 @@ import { zipStore } from "../../lib/zipStore";
  * Tek görsel → sıkıştırılmış görsel; çok görsel → tek ZIP.
  */
 
-type Format = "image/jpeg" | "image/webp";
+type Format = "image/jpeg" | "image/webp" | "image/png";
 type Picked = { id: string; file: File; previewUrl: string };
 type Result = { blob: Blob; filename: string; saved: "picker" | "download"; count: number };
 
@@ -26,7 +26,13 @@ function humanSize(b: number): string {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
-const extFor = (f: Format) => (f === "image/webp" ? "webp" : "jpg");
+const extFor = (f: Format) => (f === "image/webp" ? "webp" : f === "image/png" ? "png" : "jpg");
+/** Save picker'da gösterilecek zengin uzantı listesi (biçime göre). */
+function acceptFor(f: Format): Record<string, string[]> {
+  if (f === "image/png") return { "image/png": [".png"] };
+  if (f === "image/webp") return { "image/webp": [".webp"] };
+  return { "image/jpeg": [".jpg", ".jpeg"] };
+}
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -142,8 +148,6 @@ export function ImageCompressTool({ language }: { language: Language }) {
     const q = Math.min(0.95, Math.max(0.2, quality / 100));
     const multi = files.length > 1;
     const outName = multi ? "sikistirilmis-gorseller.zip" : `${(files[0]!.file.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extFor(format)}`;
-    const outMime = multi ? "application/zip" : format;
-    const outExt = multi ? "zip" : extFor(format);
 
     // Kaydetme yerini SOR (ağır işlemden önce, kullanıcı aktivasyonu geçerliyken).
     let saveHandle: FileSystemFileHandle | null = null;
@@ -157,7 +161,12 @@ export function ImageCompressTool({ language }: { language: Language }) {
       try {
         saveHandle = await win.showSaveFilePicker({
           suggestedName: outName,
-          types: [{ description: multi ? "ZIP" : "Görsel", accept: { [outMime]: [`.${outExt}`] } }],
+          types: [
+            {
+              description: multi ? (tr ? "ZIP arşivi" : "ZIP archive") : (tr ? "Görsel" : "Image"),
+              accept: multi ? { "application/zip": [".zip"] } : acceptFor(format),
+            },
+          ],
         });
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return;
@@ -215,6 +224,13 @@ export function ImageCompressTool({ language }: { language: Language }) {
     downloadBlob(result.blob, result.filename);
   }
 
+  function openResult() {
+    if (!result) return;
+    const url = URL.createObjectURL(result.blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
   const canShare =
     typeof navigator !== "undefined" &&
     typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function";
@@ -266,6 +282,16 @@ export function ImageCompressTool({ language }: { language: Language }) {
           {tr ? "Görselin cihazından hiç çıkmadı — tamamen gizli." : "Your image never left your device — fully private."}
         </p>
         <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          {result.count === 1 && (
+            <button
+              type="button"
+              onClick={openResult}
+              className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.12] px-6 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
+            >
+              <ExternalLink className="h-4 w-4" />
+              {tr ? "Aç" : "Open"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void redownload()}
@@ -326,8 +352,9 @@ export function ImageCompressTool({ language }: { language: Language }) {
             <label className="flex flex-col gap-1.5">
               <span className="text-[12px] font-semibold text-slate-300">{tr ? "Biçim" : "Format"}</span>
               <select value={format} onChange={(e) => setFormat(e.target.value as Format)} className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100">
-                <option value="image/jpeg">JPEG</option>
-                <option value="image/webp">WebP</option>
+                <option value="image/jpeg">JPEG (.jpg)</option>
+                <option value="image/webp">WebP (.webp)</option>
+                <option value="image/png">PNG (.png)</option>
               </select>
             </label>
           </div>
