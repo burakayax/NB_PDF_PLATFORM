@@ -1284,20 +1284,24 @@ function App() {
       },
     ];
   }, [language]);
-  const handleTourClose = useCallback((_completed: boolean, shown: boolean) => {
-    setTourOpen(false);
-    if (shown) {
-      try {
-        localStorage.setItem("nb_tour_v1_seen", "1");
-      } catch {
-        /* private mode */
+  const handleTourClose = useCallback(
+    ({ shown, dontShowAgain }: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => {
+      setTourOpen(false);
+      if (dontShowAgain) {
+        // Kullanıcı "bir daha gösterme" dedi → kalıcı gizle.
+        try {
+          localStorage.setItem("nb_tour_optout_v1", "1");
+        } catch {
+          /* private mode */
+        }
+      } else if (!shown) {
+        // Hedefler hazır değildi → koşullar tekrar sağlanınca yeniden denensin.
+        tourStartedRef.current = false;
       }
-    } else {
-      // Hedefler henüz hazır değildi (ör. layout oturmadı) → "görüldü" işaretleme;
-      // koşullar tekrar sağlanınca yeniden denensin.
-      tourStartedRef.current = false;
-    }
-  }, []);
+      // shown && !dontShowAgain: işaretleme YOK → bir sonraki GİRİŞTE (yeni oturum) tekrar gösterilir.
+    },
+    [],
+  );
   useEffect(() => {
     if (tourStartedRef.current || isRestoring) return;
     let forced = false;
@@ -1316,13 +1320,14 @@ function App() {
       }
     }
     if (!isAuthenticated || view !== "web" || user?.role === "ADMIN") return;
-    let seen = false;
+    // Kullanıcı "bir daha gösterme" demediyse tur HER GİRİŞTE gösterilir (opt-out mantığı).
+    let optedOut = false;
     try {
-      seen = localStorage.getItem("nb_tour_v1_seen") === "1";
+      optedOut = localStorage.getItem("nb_tour_optout_v1") === "1";
     } catch {
       /* yoksay */
     }
-    if (seen && !forced) return;
+    if (optedOut && !forced) return;
     tourStartedRef.current = true;
     // Layout (sidebar/form) otursun diye kısa gecikme sonra başlat.
     const timer = window.setTimeout(() => setTourOpen(true), 900);
