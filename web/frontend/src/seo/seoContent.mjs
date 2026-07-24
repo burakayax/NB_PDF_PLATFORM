@@ -1411,7 +1411,7 @@ export const RELATED_TOOLS = {
   "pdf-to-ppt": ["ppt-to-pdf", "pdf-to-image", "pdf-to-word"],
   "ppt-to-pdf": ["pdf-to-ppt", "merge-pdf", "compress"],
   "pdf-to-image": ["extract-images", "image-to-pdf", "pdf-to-ppt", "compress"],
-  "image-to-pdf": ["pdf-to-image", "belge-tara", "compress", "pdf-to-word"],
+  "image-to-pdf": ["pdf-to-image", "extract-images", "belge-tara", "compress"],
   "belge-tara": ["image-to-pdf", "aranabilir-pdf", "pdf-to-image", "compress"],
   "aranabilir-pdf": ["taranmis-pdf-ocr", "belge-tara", "pdf-to-text", "image-to-pdf"],
   "html-to-pdf": ["pdf-to-word", "merge-pdf", "compress"],
