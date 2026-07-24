@@ -159,6 +159,12 @@ const toolCategories = (lang: Language) => [
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
+        id: "gorsel-sikistir",
+        icon: "🗜️",
+        name: lang === "tr" ? "Görsel Sıkıştır" : "Compress Image",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
         id: "page-numbers",
         icon: "#️⃣",
         name: lang === "tr" ? "Sayfa Numarası Ekle" : "Add Page Numbers",

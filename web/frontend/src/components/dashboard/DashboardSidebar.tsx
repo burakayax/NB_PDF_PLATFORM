@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Crop } from "lucide-react";
+import { Crop, ImageDown } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -163,6 +163,7 @@ type DashboardSidebarProps = {
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
   onOpenCrop?: () => void;
+  onOpenCompressImage?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Aktif içerik paneli — mobil launcher başlığı FeatureKey olmayan araçları da
@@ -198,6 +199,7 @@ export function DashboardSidebar({
   onOpenAnnotate,
   onOpenScan,
   onOpenCrop,
+  onOpenCompressImage,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -396,6 +398,22 @@ export function DashboardSidebar({
     );
   };
 
+  const renderCompressImageRow = (keyPrefix = "") => {
+    if (!onOpenCompressImage) return null;
+    const label = tr ? "Görsel Sıkıştır" : "Compress Image";
+    return (
+      <button
+        key={`${keyPrefix}compress-image`}
+        type="button"
+        onClick={onOpenCompressImage}
+        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+      >
+        <ImageDown className="h-5 w-5 text-cyan-300" aria-hidden />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
   return (
     <aside data-tour="tools" className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
       <nav
@@ -489,6 +507,7 @@ export function DashboardSidebar({
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "organize" ? renderCropRow("organize-") : null}
+                  {group.id === "organize" ? renderCompressImageRow("organize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
