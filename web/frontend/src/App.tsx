@@ -2,7 +2,6 @@
 // Oturum, abonelik ve dosya yükleme durumunun modüller arasında paylaşılması için tek React ağacında toplanır.
 // Bu bileşen parçalanırsa üst düzey hook ve görünüm geçişleri yeniden kablolanmak zorunda kalır.
 import {
-  lazy,
   Suspense,
   useCallback,
   useEffect,
@@ -11,6 +10,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { lazyWithRetry } from "./lib/lazyWithRetry";
 import {
   ModalSkeleton,
   PageSkeleton,
@@ -54,13 +54,13 @@ import {
 import { RuntimeBootstrapSplash } from "./components/common/RuntimeBootstrapSplash";
 import { PdfApiOfflineBanner } from "./components/common/PdfApiOfflineBanner";
 import type { PdfPageVisualMode } from "./components/split/PdfPageVisualGrid";
-const SplitPagePickerModal = lazy(() =>
+const SplitPagePickerModal = lazyWithRetry(() =>
   import("./components/split/SplitPagePickerModal").then((module) => ({
     default: module.SplitPagePickerModal,
   })),
 );
 // framer-motion'u (ağır) başlangıç paketinden çıkarır; yalnızca modal açılınca yüklenir.
-const GatedResultPreviewModal = lazy(() =>
+const GatedResultPreviewModal = lazyWithRetry(() =>
   import("./components/GatedResultPreviewModal").then((module) => ({
     default: module.GatedResultPreviewModal,
   })),
@@ -211,54 +211,54 @@ type LegalView =
 type AppView = NonLegalView | LegalView;
 type ToastType = "success" | "error" | "loading" | "info";
 
-const AdminPanel = lazy(() =>
+const AdminPanel = lazyWithRetry(() =>
   import("./admin/AdminPanel").then((module) => ({
     default: module.AdminPanel,
   })),
 );
-const AuthPage = lazy(() =>
+const AuthPage = lazyWithRetry(() =>
   import("./components/auth/AuthPage").then((module) => ({
     default: module.AuthPage,
   })),
 );
-const ForgotPasswordPage = lazy(() =>
+const ForgotPasswordPage = lazyWithRetry(() =>
   import("./components/auth/ForgotPasswordPage").then((module) => ({
     default: module.ForgotPasswordPage,
   })),
 );
-const LoginSuccessPage = lazy(() =>
+const LoginSuccessPage = lazyWithRetry(() =>
   import("./components/auth/LoginSuccessPage").then((module) => ({
     default: module.LoginSuccessPage,
   })),
 );
-const LandingPage = lazy(() =>
+const LandingPage = lazyWithRetry(() =>
   import("./components/landing/LandingPage").then((module) => ({
     default: module.LandingPage,
   })),
 );
-const AboutPage = lazy(() =>
+const AboutPage = lazyWithRetry(() =>
   import("./components/landing/AboutPage").then((module) => ({
     default: module.AboutPage,
   })),
 );
-const LegalPage = lazy(() =>
+const LegalPage = lazyWithRetry(() =>
   import("./components/legal/LegalPage").then((module) => ({
     default: module.LegalPage,
   })),
 );
-const PlanUpgradeModal = lazy(() =>
+const PlanUpgradeModal = lazyWithRetry(() =>
   import("./components/dashboard/PlanUpgradeModal").then((module) => ({
     default: module.PlanUpgradeModal,
   })),
 );
 
-const TeamDashboardLazy = lazy(() =>
+const TeamDashboardLazy = lazyWithRetry(() =>
   import("./components/team/TeamDashboard").then((m) => ({
     default: m.TeamDashboard,
   })),
 );
 
-const TeamInviteAcceptPageLazy = lazy(() =>
+const TeamInviteAcceptPageLazy = lazyWithRetry(() =>
   import("./components/team/TeamInviteAcceptPage").then((m) => ({
     default: m.TeamInviteAcceptPage,
   })),
@@ -267,47 +267,47 @@ const TeamInviteAcceptPageLazy = lazy(() =>
 // Rota-izole ağır bileşenler — ana bundle'dan çıkarıldı (landing/blog ziyaretçisine
 // inmez; yalnız ilgili rota/panelde talep üzerine yüklenir). pdf-lib/fontkit/pdf
 // metin çıkarma gibi ağır bağımlılıklar bu chunk'lara taşınır.
-const AiPdfTool = lazy(() =>
+const AiPdfTool = lazyWithRetry(() =>
   import("./components/tools/AiPdfTool").then((m) => ({ default: m.AiPdfTool })),
 );
-const AiBatchTool = lazy(() =>
+const AiBatchTool = lazyWithRetry(() =>
   import("./components/tools/AiBatchTool").then((m) => ({ default: m.AiBatchTool })),
 );
-const AiCompareTool = lazy(() =>
+const AiCompareTool = lazyWithRetry(() =>
   import("./components/tools/AiCompareTool").then((m) => ({ default: m.AiCompareTool })),
 );
-const AiRedactTool = lazy(() =>
+const AiRedactTool = lazyWithRetry(() =>
   import("./components/tools/AiRedactTool").then((m) => ({ default: m.AiRedactTool })),
 );
-const PdfEditor = lazy(() =>
+const PdfEditor = lazyWithRetry(() =>
   import("./components/tools/PdfEditor").then((m) => ({ default: m.PdfEditor })),
 );
-const PdfSign = lazy(() =>
+const PdfSign = lazyWithRetry(() =>
   import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
 );
-const PdfAnnotate = lazy(() =>
+const PdfAnnotate = lazyWithRetry(() =>
   import("./components/tools/PdfAnnotate").then((m) => ({ default: m.PdfAnnotate })),
 );
 // Ağır cihaz-içi araçlar (pdf-lib/tesseract/opencv) — lazy: pdf-lib ana paketten çıkar.
-const SearchablePdfTool = lazy(() =>
+const SearchablePdfTool = lazyWithRetry(() =>
   import("./components/tools/SearchablePdfTool").then((m) => ({ default: m.SearchablePdfTool })),
 );
-const DocumentScanner = lazy(() =>
+const DocumentScanner = lazyWithRetry(() =>
   import("./components/tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
 );
-const PdfCropTool = lazy(() =>
+const PdfCropTool = lazyWithRetry(() =>
   import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
 );
-const BlogIndexPage = lazy(() =>
+const BlogIndexPage = lazyWithRetry(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
-const BlogPostPage = lazy(() =>
+const BlogPostPage = lazyWithRetry(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogPostPage })),
 );
-const DeveloperApiPage = lazy(() =>
+const DeveloperApiPage = lazyWithRetry(() =>
   import("./components/DeveloperApiPage").then((m) => ({ default: m.DeveloperApiPage })),
 );
-const ApiDocsPage = lazy(() =>
+const ApiDocsPage = lazyWithRetry(() =>
   import("./components/ApiDocsPage").then((m) => ({ default: m.ApiDocsPage })),
 );
 
