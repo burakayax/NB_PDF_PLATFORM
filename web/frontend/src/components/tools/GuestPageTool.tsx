@@ -1,5 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
 import {
   Check,
   Download,
@@ -33,7 +34,7 @@ import { ValueMomentNudge } from "./ValueMomentNudge";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
 // Dashboard'ın görsel seçici modalının BİREBİR aynısı.
-const SplitPagePickerModal = lazy(() =>
+const SplitPagePickerModal = lazyWithRetry(() =>
   import("../split/SplitPagePickerModal").then((m) => ({
     default: m.SplitPagePickerModal,
   })),
