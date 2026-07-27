@@ -25,7 +25,7 @@ import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
-import { analyzePdf, editPdfText, type PdfTextEdit } from "../../api";
+import { analyzePdf, editPdfText, type PdfTextEdit, type PdfFontKey } from "../../api";
 import {
   aiSummarize,
   aiChat,
@@ -296,12 +296,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setBusy(true);
       setTranslatedBlob(null);
       const analysis = await analyzePdf(pdfFile, accessToken ?? null);
-      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string }[] = [];
+      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string; font?: PdfFontKey }[] = [];
       analysis.pages.forEach((pg, pi) => {
         pg.elements.forEach((el) => {
           const t = (el.text ?? "").trim();
           if (el.type === "text" && t) {
-            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color });
+            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color, font: el.font });
           }
         });
       });
@@ -317,7 +317,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         text: translations[i] ?? it.text,
         size: it.size,
         color: it.color,
-        font: "sans",
+        font: it.font ?? "sans",
         by: it.by,
         bg: "#ffffff",
       }));
