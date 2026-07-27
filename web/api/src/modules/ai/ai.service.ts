@@ -325,6 +325,8 @@ Rules:
 - Return ONLY a JSON object with the EXACT SAME keys as the input — every key present, none added or removed.
 - Each value = the ${target} translation of that line's text. Translate labels and single words too (e.g. "E-Dönüştür").
 - Keep numbers, dates, codes, currency symbols and proper nouns intact.
+- Keep ADDRESSES and their components VERBATIM — do NOT translate Turkish address words or abbreviations (Mah., Mahallesi, Sk., Sokak, Cad., Cadde, Bulvar, Blv., No, Blok, Kat, Daire, Apt.). Copy the whole address unchanged.
+- Be CONSISTENT: translate the same term/heading the same way every time (e.g. always "Contracting Authority", not sometimes "Contracting Entity").
 - If a line has no translatable word (pure number/symbol/code), copy it unchanged.
 - No commentary. Output ONLY the JSON object.`;
 
