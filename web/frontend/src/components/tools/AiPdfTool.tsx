@@ -296,12 +296,12 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setBusy(true);
       setTranslatedBlob(null);
       const analysis = await analyzePdf(pdfFile, accessToken ?? null);
-      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string; font?: PdfFontKey }[] = [];
+      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string; font?: PdfFontKey; bold?: boolean; italic?: boolean }[] = [];
       analysis.pages.forEach((pg, pi) => {
         pg.elements.forEach((el) => {
           const t = (el.text ?? "").trim();
           if (el.type === "text" && t) {
-            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color, font: el.font });
+            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color, font: el.font, bold: el.bold, italic: el.italic });
           }
         });
       });
@@ -318,6 +318,8 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         size: it.size,
         color: it.color,
         font: it.font ?? "sans",
+        bold: it.bold,
+        italic: it.italic,
         by: it.by,
         bg: "#ffffff",
       }));
