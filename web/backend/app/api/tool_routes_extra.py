@@ -392,6 +392,28 @@ async def tool_edit_text(
                 import io as _io
                 import math as _math
 
+                # Otomatik sığdır: çevrilmiş/düzenlenmiş metin orijinal kutudan genişse
+                # fontu SIĞACAK şekilde küçült (tek satır kalır → alttaki içerikle çakışmaz).
+                _font_cache: dict[str, _fitz.Font] = {}
+
+                def _fit_size(text: str, fkey: str, box_w: float, fs: float) -> float:
+                    if box_w <= 1:
+                        return fs
+                    fobj = _font_cache.get(fkey)
+                    if fobj is None:
+                        try:
+                            fobj = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
+                        except Exception:
+                            return fs
+                        _font_cache[fkey] = fobj
+                    try:
+                        tw = fobj.text_length(text, fontsize=fs)
+                    except Exception:
+                        return fs
+                    if tw > box_w and tw > 0:
+                        return max(fs * (box_w / tw), 5.0)  # okunur taban 5pt
+                    return fs
+
                 for pi, page_ops in by_page.items():
                     page = doc[pi]
                     # Görsel EKLEME op'ları (op.image) altındaki içeriği silmemeli;
@@ -421,6 +443,7 @@ async def tool_edit_text(
                         baseline = float(by) if by is not None else (y0 + fs)
                         col = _hex_to_rgb01(op.get("color"))
                         fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
+                        fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
                         page.insert_text(
                             _fitz.Point(x0, baseline),
                             t, fontsize=fs, color=col,
