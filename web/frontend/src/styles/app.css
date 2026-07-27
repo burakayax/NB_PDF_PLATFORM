@@ -4612,3 +4612,32 @@ textarea {
   0% { left: -40%; }
   100% { left: 100%; }
 }
+
+/* PDF metin katmanı — resmin üstüne konumlu, ŞEFFAF ama SEÇİLEBİLİR metin.
+   pdf.js TextLayer span'ları buraya işler; kullanıcı metni seçip kopyalayabilir/arayabilir. */
+.pdfTextLayer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-align: initial;
+  text-size-adjust: none;
+  forced-color-adjust: none;
+  transform-origin: 0 0;
+  z-index: 2;
+  caret-color: CanvasText;
+}
+.pdfTextLayer :is(span, br) {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.pdfTextLayer span.markedContent {
+  top: 0;
+  height: 0;
+}
+.pdfTextLayer ::selection {
+  background: rgba(59, 130, 246, 0.4);
+}
