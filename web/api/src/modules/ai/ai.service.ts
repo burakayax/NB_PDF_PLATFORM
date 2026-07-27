@@ -313,22 +313,43 @@ Rules:
 - Keep numbers, dates, codes, currency symbols and proper nouns intact.
 - If a fragment is purely a number, symbol or code with no translatable word, return it unchanged.
 - Never merge, split, reorder, add or drop fragments. No commentary. Output ONLY the JSON array.`;
-  const CHUNK = 60;
+  const CHUNK = 40;
+
+  // Bir dilimi çevir. API/yapılandırma hatası (eksik anahtar, geçersiz model, 401/402/429…)
+  // → callClaude FIRLATIR ve burada YUTULMAZ → üst kata çıkar → controller gerçek hata döndürür
+  // (kota harcanmaz), böylece "sessizce orijinali döndürme" (kullanıcıya "çeviri olmadı" gibi görünen)
+  // durumu ortadan kalkar. Yalnızca parse/uzunluk uyuşmazlığında null döner → çağıran alt-böler.
+  async function translateSlice(slice: string[]): Promise<string[] | null> {
+    // max_tokens yüksek: yoğun belgede çeviri (hedef dil çoğu kez kaynaktan uzun) çıktısı
+    // 4000'i aşarsa yanıt YARIDA kesilir → JSON bozulur → tüm chunk orijinale düşerdi
+    // ("hiçbir dile çevirmiyor" hatasının ana nedeni). Küçük CHUNK + bu tavan truncation'ı önler.
+    const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(slice) }], 8000);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(extractJsonArray(raw));
+    } catch {
+      return null; // model geçerli JSON döndürmedi (ör. truncation) → alt-böl
+    }
+    if (Array.isArray(parsed) && parsed.length === slice.length) {
+      return parsed.map((v) => (typeof v === "string" ? v : String(v ?? "")));
+    }
+    return null; // uzunluk uyuşmazlığı (model parça birleştirdi/böldü) → alt-böl
+  }
+
   const out: string[] = [];
   for (let i = 0; i < texts.length; i += CHUNK) {
     const slice = texts.slice(i, i + CHUNK);
-    let ok = false;
-    try {
-      const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(slice) }], 4000);
-      const parsed = JSON.parse(extractJsonArray(raw));
-      if (Array.isArray(parsed) && parsed.length === slice.length) {
-        out.push(...parsed.map((v) => (typeof v === "string" ? v : String(v ?? ""))));
-        ok = true;
-      }
-    } catch {
-      /* parse/çağrı hatası → orijinali koru */
+    let res = await translateSlice(slice);
+    if (!res && slice.length > 1) {
+      // Parse/uzunluk uyuşmazlığı: dilimi ikiye böl, ayrı ayrı dene (model daha küçük
+      // partide sıra/sayıyı daha güvenilir korur). Alt-dilim de başarısızsa o parçada
+      // orijinali koru — API çalışıyorsa çeviriyi tümüyle kaybetmeyiz.
+      const mid = Math.ceil(slice.length / 2);
+      const a = (await translateSlice(slice.slice(0, mid))) ?? slice.slice(0, mid);
+      const b = (await translateSlice(slice.slice(mid))) ?? slice.slice(mid);
+      res = [...a, ...b];
     }
-    if (!ok) out.push(...slice);
+    out.push(...(res ?? slice));
   }
   return out;
 }
