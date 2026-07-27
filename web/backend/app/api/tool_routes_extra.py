@@ -467,11 +467,22 @@ async def tool_edit_text(
                         col = _hex_to_rgb01(op.get("color"))
                         fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
                         fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
-                        page.insert_text(
-                            _fitz.Point(x0, baseline),
-                            t, fontsize=fs, color=col,
+                        ins_kwargs: dict[str, Any] = dict(
+                            fontsize=fs, color=col,
                             fontname=fkey, fontfile=_EDIT_FONTS[fkey],
                         )
+                        # Kalın: fill+stroke (render_mode=2) + kalem kalınlığı → sentetik bold
+                        if op.get("bold"):
+                            ins_kwargs["render_mode"] = 2
+                            ins_kwargs["fill"] = col
+                            ins_kwargs["border_width"] = max(0.3, fs * 0.035)
+                        # İtalik: taban çizgisi etrafında yatay kesme (shear) → sentetik italik
+                        if op.get("italic"):
+                            ins_kwargs["morph"] = (
+                                _fitz.Point(x0, baseline),
+                                _fitz.Matrix(1, 0, 0.2, 1, 0, 0),
+                            )
+                        page.insert_text(_fitz.Point(x0, baseline), t, **ins_kwargs)
                     # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
                     for op in image_ops:
                         try:
@@ -668,12 +679,20 @@ async def tool_pdf_analyze(
                                 # Gerçek taban çizgisi (origin.y) — hem önizleme hem export
                                 # bu değerle orijinal metnin tam yerine oturur.
                                 oy = float(span.get("origin", (x0, y1))[1])
+                                # Kalın/italik: PyMuPDF span flags (bit4=16 bold, bit1=2 italic)
+                                # + font adı yedeği (ör. "Arial-BoldItalicMT").
+                                _flags = int(span.get("flags", 0))
+                                _fname = str(span.get("font", ""))
+                                _fl = _fname.lower()
+                                _bold = bool(_flags & 16) or "bold" in _fl or "black" in _fl or "heavy" in _fl
+                                _italic = bool(_flags & 2) or "italic" in _fl or "oblique" in _fl
                                 els.append({
                                     "id": f"t{pi}_{ei}", "type": "text",
                                     "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
                                     "text": txt, "size": round(float(span.get("size", 11)), 1),
                                     "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
-                                    "font": _map_font_to_key(span.get("font", "")),
+                                    "font": _map_font_to_key(_fname),
+                                    "bold": _bold, "italic": _italic,
                                 })
                                 ei += 1
                     for img in page.get_image_info():

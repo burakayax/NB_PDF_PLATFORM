@@ -122,6 +122,10 @@ export type PdfTextEdit = {
   size: number;
   color?: string;
   font?: PdfFontKey;
+  /** Kalın (sentetik: fill+stroke). */
+  bold?: boolean;
+  /** İtalik (sentetik: yatay shear). */
+  italic?: boolean;
   /** Silinen bölgenin arka plan rengi (#RRGGBB) — redaction fill; boşsa beyaz. */
   bg?: string;
   /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
@@ -143,6 +147,10 @@ export type PdfElement = {
   by?: number;
   /** Orijinal fonta en yakın gömülü font anahtarı (serif/sans/mono…). */
   font?: PdfFontKey;
+  /** Orijinal metin kalın mı. */
+  bold?: boolean;
+  /** Orijinal metin italik mi. */
+  italic?: boolean;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
