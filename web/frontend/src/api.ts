@@ -118,8 +118,10 @@ export type PdfFontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "me
 export type PdfTextEdit = {
   page: number;
   bbox: [number, number, number, number];
-  text: string;
-  size: number;
+  /** Yazılacak metin (html op'unda gerekmez — HTML stil taşır). */
+  text?: string;
+  /** Font boyutu (pt). html op'unda CSS içinde tanımlıdır. */
+  size?: number;
   color?: string;
   font?: PdfFontKey;
   /** Kalın (sentetik: fill+stroke). */
@@ -137,6 +139,9 @@ export type PdfTextEdit = {
   /** Sarmalı (çok satırlı) yazım: metni bbox'a kelime-kaydırmayla sar (insert_textbox).
    * Konum-koruyan çeviride PARAGRAF bloğunu orijinal alanına yeniden akıtmak için. */
   wrap?: boolean;
+  /** ZENGİN yazım: bbox'a stil taşıyan HTML (kalın/renk/hizalama) yerleştir (insert_htmlbox).
+   * Konum-koruyan çeviride orijinalin kalın/renk/justify düzenini korumak için. */
+  html?: string;
 };
 
 export type PdfElement = {
