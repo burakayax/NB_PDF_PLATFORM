@@ -471,11 +471,6 @@ async def tool_edit_text(
                             fontsize=fs, color=col,
                             fontname=fkey, fontfile=_EDIT_FONTS[fkey],
                         )
-                        # Kalın: fill+stroke (render_mode=2) + kalem kalınlığı → sentetik bold
-                        if op.get("bold"):
-                            ins_kwargs["render_mode"] = 2
-                            ins_kwargs["fill"] = col
-                            ins_kwargs["border_width"] = max(0.3, fs * 0.035)
                         # İtalik: taban çizgisi etrafında yatay kesme (shear) → sentetik italik
                         if op.get("italic"):
                             ins_kwargs["morph"] = (
@@ -483,6 +478,14 @@ async def tool_edit_text(
                                 _fitz.Matrix(1, 0, 0.2, 1, 0, 0),
                             )
                         page.insert_text(_fitz.Point(x0, baseline), t, **ins_kwargs)
+                        # Kalın: metni çok küçük yatay offset'le İKİNCİ kez yaz (çift-basım
+                        # faux-bold). render_mode/stroke yöntemi küçük punto'da glyph'leri
+                        # birleştirip okunamaz SİYAH LEKE yapıyordu; çift-basım okunur kalır.
+                        if op.get("bold"):
+                            page.insert_text(
+                                _fitz.Point(x0 + max(0.25, fs * 0.03), baseline),
+                                t, **ins_kwargs,
+                            )
                     # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
                     for op in image_ops:
                         try:
