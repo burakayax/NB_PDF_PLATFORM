@@ -373,6 +373,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       // → düz sarma bunları yan yana bindiriyordu. Çevrilmiş metinde YAPISAL İŞARETÇİ (a) b) …,
       // LOT-N:, Madde/Article N-) ile başlayan run'ların önüne <br> koyarak orijinal satır/liste
       // yapısını geri getir (başlığa çift <br> = boş satır).
+      // Run BAŞINDA işaretçi → run'lar arası satır kırma (başlığa çift = boş satır).
       const brFor = (s: string): string => {
         const m = s.trimStart();
         if (/^(article|madde|section|bölüm|bolum)\s*[0-9ivx]+\s*[-.:]/i.test(m)) return "<br><br>";
@@ -380,11 +381,15 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         if (/^[a-zçğıöşü]\)\s/i.test(m)) return "<br>";
         return "";
       };
+      // Run ORTASINDA işaretçi (ör. "…Procurement d) Place…", "…LOT-1:… LOT-2:…") → orada da
+      // kır. İşaretçiden önceki boşluğu <br> ile değiştir; metni escape edip parçaları birleştir.
+      const markerMid = /(?<=\S)[ \t]+(?=(?:LOT[-\s]?\d|[a-zçğıöşü]\)[ \t]|(?:article|madde|section|bölüm|bolum)\s*[0-9ivx]+[ \t]*[-.:]))/gi;
+      const runInner = (t: string): string => t.split(markerMid).map(esc).join("<br>");
       const htmlByBlock = blocks.map(() => "");
       flat.forEach((f, i) => {
         const r = blocks[f.b].runs[f.r];
         const trText = translations[i] ?? r.text;
-        let x = esc(trText);
+        let x = runInner(trText);
         if (r.color) x = `<span style="color:${r.color}">${x}</span>`;
         if (r.bold) x = `<b>${x}</b>`;
         const cur = htmlByBlock[f.b];
