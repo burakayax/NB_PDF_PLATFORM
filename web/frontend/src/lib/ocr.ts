@@ -54,6 +54,36 @@ export async function renderPdfToCanvases(
   return canvases;
 }
 
+/**
+ * Önizleme: her sayfayı canvas'a render edip JPEG data URL üretir; AYRICA pdf.js belgesini
+ * AÇIK bırakır (döner) ki çağıran taraf her sayfa için metin katmanı (getTextContent + viewport)
+ * kurabilsin. Belge iş bitince `doc.destroy()` ile kapatılmalı (bellek). `baseW/baseH` = ölçek-1
+ * viewport boyutu → metin katmanı bu koordinatta kurulup görüntü genişliğine ölçeklenir.
+ */
+export type PdfPreviewPage = { dataUrl: string; baseW: number; baseH: number };
+export async function renderPdfPreview(
+  file: File,
+  scale = 2,
+  maxPages = MAX_OCR_PAGES,
+): Promise<{ doc: Awaited<ReturnType<typeof pdfjsLib.getDocument>["promise"]>; pages: PdfPreviewPage[] }> {
+  const data = new Uint8Array(await file.arrayBuffer());
+  const doc = await pdfjsLib.getDocument({ data, isEvalSupported: false }).promise;
+  const n = Math.min(doc.numPages, maxPages);
+  const pages: PdfPreviewPage[] = [];
+  for (let i = 1; i <= n; i++) {
+    const page = await doc.getPage(i);
+    const vp1 = page.getViewport({ scale: 1 });
+    const vp = page.getViewport({ scale });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(vp.width);
+    canvas.height = Math.ceil(vp.height);
+    const ctx = canvas.getContext("2d");
+    if (ctx) await page.render({ canvasContext: ctx, viewport: vp }).promise;
+    pages.push({ dataUrl: canvas.toDataURL("image/jpeg", 0.85), baseW: vp1.width, baseH: vp1.height });
+  }
+  return { doc, pages };
+}
+
 /** Bir görsel dosyayı (JPG/PNG/WebP) canvas'a yükler. */
 export function imageFileToCanvas(file: File): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {

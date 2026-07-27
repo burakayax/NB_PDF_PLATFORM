@@ -24,8 +24,10 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
+import { TextLayer } from "pdfjs-dist";
+import type { PDFDocumentProxy } from "pdfjs-dist";
 import type { Language } from "../../i18n/landing";
-import { getPdfPageCount, renderPdfToCanvases } from "../../lib/ocr";
+import { getPdfPageCount, renderPdfPreview, type PdfPreviewPage } from "../../lib/ocr";
 
 const PREVIEW_PAGES = 12; // önizlemede render edilen sayfa sınırı (perf)
 
@@ -77,7 +79,8 @@ type Props = {
 export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickTool, onUpgrade }: Props) {
   const tr = language === "tr";
   const isLocked = (id: string) => lockedFeatures?.has(id) ?? false;
-  const [thumbs, setThumbs] = useState<string[]>([]);
+  const [thumbs, setThumbs] = useState<PdfPreviewPage[]>([]);
+  const docRef = useRef<PDFDocumentProxy | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
 
@@ -103,11 +106,19 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    // Önceki belgeyi kapat (yeni dosya geldiğinde).
+    docRef.current?.destroy().catch(() => {});
+    docRef.current = null;
+    setThumbs([]);
     (async () => {
       try {
-        const canvases = await renderPdfToCanvases(file, 2, PREVIEW_PAGES);
-        if (cancelled) return;
-        setThumbs(canvases.map((c) => c.toDataURL("image/jpeg", 0.85)));
+        const { doc, pages } = await renderPdfPreview(file, 2, PREVIEW_PAGES);
+        if (cancelled) {
+          doc.destroy().catch(() => {});
+          return;
+        }
+        docRef.current = doc; // metin katmanı için AÇIK tutulur
+        setThumbs(pages);
       } catch {
         /* önizleme üretilemezse araçlar yine çalışır */
       } finally {
@@ -116,6 +127,8 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
     })();
     return () => {
       cancelled = true;
+      docRef.current?.destroy().catch(() => {});
+      docRef.current = null;
     };
   }, [file]);
 
@@ -321,15 +334,22 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
                       : `Previewing the first ${thumbs.length} of ${totalPages} pages. The tool you pick applies to the full document.`}
                   </div>
                 )}
-                {thumbs.map((src, i) => (
-                  <img
-                    key={i}
-                    src={src}
-                    alt={`sayfa ${i + 1}`}
-                    style={pageWidth ? { width: pageWidth } : undefined}
-                    className="max-w-none rounded-lg border border-white/10 shadow-lg"
-                  />
-                ))}
+                {thumbs.map((pg, i) => {
+                  const w = pageWidth || pg.baseW;
+                  const h = (w * pg.baseH) / pg.baseW;
+                  return (
+                    <div
+                      key={i}
+                      className="relative max-w-none overflow-hidden rounded-lg border border-white/10 shadow-lg"
+                      style={{ width: w, height: h }}
+                    >
+                      <img src={pg.dataUrl} alt={`sayfa ${i + 1}`} className="block h-full w-full select-none" draggable={false} />
+                      {docRef.current && (
+                        <PdfTextOverlay doc={docRef.current} pageIndex={i} baseW={pg.baseW} displayW={w} />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="flex h-40 items-center justify-center text-sm text-slate-400">
@@ -477,4 +497,52 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
     </motion.div>,
     document.body,
   );
+}
+
+/**
+ * PDF metin katmanı overlay'i — resmin ÜSTÜNE, pdf.js `TextLayer` ile her kelimeyi
+ * tam konumunda ŞEFFAF ama SEÇİLEBİLİR metin olarak işler. Böylece kullanıcı önizlemedeki
+ * metni fareyle seçip kopyalayabilir (Ctrl+F araması da çalışır). Görünüm değişmez; metin
+ * görünmezdir, yalnız seçim/kopya için vardır. Taranmış (görüntü) PDF'te metin katmanı boştur.
+ * `displayW` (zoom) değişince metin katmanı yeni ölçekte yeniden kurulur → hizalama korunur.
+ */
+function PdfTextOverlay({
+  doc,
+  pageIndex,
+  baseW,
+  displayW,
+}: {
+  doc: PDFDocumentProxy;
+  pageIndex: number;
+  baseW: number;
+  displayW: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const el = ref.current;
+    if (!el || baseW <= 0 || displayW <= 0) return;
+    (async () => {
+      try {
+        const page = await doc.getPage(pageIndex + 1);
+        if (cancelled) return;
+        const scale = displayW / baseW;
+        const viewport = page.getViewport({ scale });
+        const content = await page.getTextContent();
+        if (cancelled) return;
+        el.replaceChildren();
+        el.style.width = `${viewport.width}px`;
+        el.style.height = `${viewport.height}px`;
+        el.style.setProperty("--scale-factor", String(scale));
+        const textLayer = new TextLayer({ textContentSource: content, container: el, viewport });
+        await textLayer.render();
+      } catch {
+        /* metin katmanı üretilemezse (taranmış/şifreli) görünüm resim olarak kalır */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [doc, pageIndex, baseW, displayW]);
+  return <div ref={ref} className="pdfTextLayer" />;
 }
