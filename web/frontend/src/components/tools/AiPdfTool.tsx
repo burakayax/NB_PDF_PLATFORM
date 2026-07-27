@@ -297,12 +297,36 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setBusy(true);
       setTranslatedBlob(null);
       const analysis = await analyzePdf(pdfFile, accessToken ?? null);
-      const items: { page: number; bbox: [number, number, number, number]; text: string; size: number; by?: number; color?: string; font?: PdfFontKey; bold?: boolean; italic?: boolean }[] = [];
+      // ÖNEMLİ: analyze metni SPAN bazında çıkarır; tek cümle birden çok span'a/satıra bölünür.
+      // Parça/satır bazında çevirmek Claude'u parçaları BİRLEŞTİRMEYE/yeniden dağıtmaya zorlar
+      // (sayı tutmaz → orijinale düşer, hizalama kayar). GERÇEK belgede ölçüldü: span/satır
+      // yaklaşımları %50 orijinal kalıp KAYIYORDU; BLOK (paragraf) bazında %100 doğru hizalı.
+      // Çözüm: bir BLOĞUN (backend "line"=sayfa:blok:satır → blok = ilk iki alan) tüm span'larını
+      // tek tutarlı paragrafta birleştir; satırlar arası boşluk ekle; çeviriyi bloğun birleşik
+      // bbox'una WRAP (kelime-kaydırma) ile yeniden akıt → düzen korunur, sadece dil değişir.
+      type BlockItem = { page: number; bbox: [number, number, number, number]; text: string; size: number; color?: string; font?: PdfFontKey; bold?: boolean; italic?: boolean; _lastLine?: string };
+      const items: BlockItem[] = [];
+      const byBlock = new Map<string, number>();
       analysis.pages.forEach((pg, pi) => {
-        pg.elements.forEach((el) => {
-          const t = (el.text ?? "").trim();
-          if (el.type === "text" && t) {
-            items.push({ page: pi, bbox: el.bbox, text: el.text as string, size: el.size ?? 12, by: el.by, color: el.color, font: el.font, bold: el.bold, italic: el.italic });
+        pg.elements.forEach((el, ei) => {
+          if (el.type !== "text") return;
+          const t = el.text ?? "";
+          if (!t.trim()) return;
+          // Blok anahtarı: "sayfa:blok:satır" → "sayfa:blok". backend "line" vermezse her span solo.
+          const blockKey = el.line ? el.line.split(":").slice(0, 2).join(":") : `solo:${pi}:${ei}`;
+          const idx = byBlock.get(blockKey);
+          if (idx === undefined) {
+            byBlock.set(blockKey, items.length);
+            items.push({ page: pi, bbox: [...el.bbox] as [number, number, number, number], text: t, size: el.size ?? 12, color: el.color, font: el.font, bold: el.bold, italic: el.italic, _lastLine: el.line });
+          } else {
+            const it = items[idx];
+            // Yeni SATIRA geçildiyse (aynı blokta) boşluk ekle → satır sonu/başı kelimeler birleşmesin.
+            if (el.line && it._lastLine && el.line !== it._lastLine && !it.text.endsWith(" ") && !t.startsWith(" ")) {
+              it.text += " ";
+            }
+            it.text += t;
+            it._lastLine = el.line;
+            it.bbox = [Math.min(it.bbox[0], el.bbox[0]), Math.min(it.bbox[1], el.bbox[1]), Math.max(it.bbox[2], el.bbox[2]), Math.max(it.bbox[3], el.bbox[3])];
           }
         });
       });
@@ -321,7 +345,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
         font: it.font ?? "sans",
         bold: it.bold,
         italic: it.italic,
-        by: it.by,
+        wrap: true, // paragrafı bloğun dikdörtgenine kelime-kaydırmayla yeniden akıt
         bg: "#ffffff",
       }));
       const blob = await editPdfText(pdfFile, ops, accessToken ?? null);

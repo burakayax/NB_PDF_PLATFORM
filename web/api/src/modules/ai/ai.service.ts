@@ -300,57 +300,81 @@ function extractJsonArray(s: string): string {
   return a >= 0 && b > a ? s.slice(a, b + 1) : s;
 }
 
-/** Konum-koruyan çeviri: PDF'ten çıkarılan metin PARÇALARINI (okuma sırasında)
- * hedef dile çevirir. Her parça ayrı çevrilir; sıra ve SAYI korunur → çağıran
- * taraf çeviriyi orijinal PDF'in aynı konumuna yerleştirebilir. */
+function extractJsonObject(s: string): string {
+  const a = s.indexOf("{");
+  const b = s.lastIndexOf("}");
+  return a >= 0 && b > a ? s.slice(a, b + 1) : s;
+}
+
+/** Konum-koruyan çeviri: PDF'ten çıkarılan metin SATIRLARINI (okuma sırasında) hedef dile çevirir.
+ *
+ * NEDEN İNDEKSLİ NESNE (dizi değil): analyze metni span bazında çıkarır; çağıran taraf aynı
+ * satırdaki span'ları birleştirse bile, düz DİZİ protokolünde model parça-cümleleri anlamlı hale
+ * getirmek için BİRLEŞTİRİYOR/BÖLÜYOR → dönen sayı tutmuyor → tüm chunk orijinale düşüyordu
+ * ("bazı yerleri çevirdi bazı yerleri bıraktı"). İNDEKSLİ NESNE ({ "0": "...", ... }) her satırı
+ * kendi anahtarına sabitler: sayı/sıra kaybolmaz, eksik anahtar TAM olarak tespit edilip yeniden
+ * denenir. (Gerçek ihale belgesinde ölçüldü: dizi %50 orijinal kalıyordu → nesne %100 çeviri.)
+ *
+ * API/yapılandırma hatası (eksik anahtar, geçersiz model, 401/402/429) callClaude'dan FIRLAR ve
+ * burada YUTULMAZ → controller gerçek hata döndürür (kota harcanmaz), sessiz no-op olmaz. */
 export async function translateSegments(texts: string[], targetCode: string): Promise<string[]> {
   if (texts.length === 0) return [];
   const target = TRANSLATE_LANGS[targetCode] ?? "English";
-  const system = `You are a professional translator. You receive a JSON array of short text fragments extracted from a PDF, in reading order. Translate EACH fragment into ${target}.
+  const system = `You are a professional translator. The user sends a JSON object mapping index keys to lines of text extracted from a PDF, in reading order. Translate EACH line into ${target}.
 Rules:
-- Return ONLY a JSON array of strings, with the SAME length and SAME order as the input.
-- Translate each fragment as-is, even a single word or a label, and even if it contains a hyphen (e.g. "E-Dönüştür" — translate the whole thing).
+- Return ONLY a JSON object with the EXACT SAME keys as the input — every key present, none added or removed.
+- Each value = the ${target} translation of that line's text. Translate labels and single words too (e.g. "E-Dönüştür").
 - Keep numbers, dates, codes, currency symbols and proper nouns intact.
-- If a fragment is purely a number, symbol or code with no translatable word, return it unchanged.
-- Never merge, split, reorder, add or drop fragments. No commentary. Output ONLY the JSON array.`;
-  const CHUNK = 40;
+- If a line has no translatable word (pure number/symbol/code), copy it unchanged.
+- No commentary. Output ONLY the JSON object.`;
 
-  // Bir dilimi çevir. API/yapılandırma hatası (eksik anahtar, geçersiz model, 401/402/429…)
-  // → callClaude FIRLATIR ve burada YUTULMAZ → üst kata çıkar → controller gerçek hata döndürür
-  // (kota harcanmaz), böylece "sessizce orijinali döndürme" (kullanıcıya "çeviri olmadı" gibi görünen)
-  // durumu ortadan kalkar. Yalnızca parse/uzunluk uyuşmazlığında null döner → çağıran alt-böler.
-  async function translateSlice(slice: string[]): Promise<string[] | null> {
-    // max_tokens yüksek: yoğun belgede çeviri (hedef dil çoğu kez kaynaktan uzun) çıktısı
-    // 4000'i aşarsa yanıt YARIDA kesilir → JSON bozulur → tüm chunk orijinale düşerdi
-    // ("hiçbir dile çevirmiyor" hatasının ana nedeni). Küçük CHUNK + bu tavan truncation'ı önler.
-    const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(slice) }], 8000);
+  const out = new Array<string>(texts.length);
+  const done = new Array<boolean>(texts.length).fill(false);
+
+  // Verilen indeks kümesini indeksli-nesne protokolüyle çevirir; dönen anahtarları out'a yazar.
+  // Parse hatası → sessizce döner (eksikler dışarıda toplanıp yeniden denenir). API hatası → FIRLAR.
+  async function translateKeys(indices: number[]): Promise<void> {
+    if (indices.length === 0) return;
+    const obj: Record<string, string> = {};
+    for (const i of indices) obj[String(i)] = texts[i];
+    const raw = await callClaude(system, [{ role: "user", content: JSON.stringify(obj) }], 8000);
     let parsed: unknown;
     try {
-      parsed = JSON.parse(extractJsonArray(raw));
+      parsed = JSON.parse(extractJsonObject(raw));
     } catch {
-      return null; // model geçerli JSON döndürmedi (ör. truncation) → alt-böl
+      return;
     }
-    if (Array.isArray(parsed) && parsed.length === slice.length) {
-      return parsed.map((v) => (typeof v === "string" ? v : String(v ?? "")));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return;
+    const rec = parsed as Record<string, unknown>;
+    for (const i of indices) {
+      const v = rec[String(i)];
+      if (typeof v === "string" && v.length > 0) {
+        out[i] = v;
+        done[i] = true;
+      }
     }
-    return null; // uzunluk uyuşmazlığı (model parça birleştirdi/böldü) → alt-böl
   }
 
-  const out: string[] = [];
+  const CHUNK = 40;
   for (let i = 0; i < texts.length; i += CHUNK) {
-    const slice = texts.slice(i, i + CHUNK);
-    let res = await translateSlice(slice);
-    if (!res && slice.length > 1) {
-      // Parse/uzunluk uyuşmazlığı: dilimi ikiye böl, ayrı ayrı dene (model daha küçük
-      // partide sıra/sayıyı daha güvenilir korur). Alt-dilim de başarısızsa o parçada
-      // orijinali koru — API çalışıyorsa çeviriyi tümüyle kaybetmeyiz.
-      const mid = Math.ceil(slice.length / 2);
-      const a = (await translateSlice(slice.slice(0, mid))) ?? slice.slice(0, mid);
-      const b = (await translateSlice(slice.slice(mid))) ?? slice.slice(mid);
-      res = [...a, ...b];
-    }
-    out.push(...(res ?? slice));
+    const indices: number[] = [];
+    for (let j = i; j < Math.min(i + CHUNK, texts.length); j++) indices.push(j);
+    await translateKeys(indices);
   }
+
+  // Eksik kalan indeksler (model anahtar düşürdü / parse hatası): önce küçük partiler, sonra
+  // TEK TEK (tek anahtarda birleştirme imkânsız → kesin çözülür) yeniden dene.
+  let missing = texts.map((_, i) => i).filter((i) => !done[i]);
+  for (let pass = 0; pass < 2 && missing.length > 0; pass++) {
+    const size = pass === 0 ? 10 : 1;
+    for (let k = 0; k < missing.length; k += size) {
+      await translateKeys(missing.slice(k, k + size));
+    }
+    missing = texts.map((_, i) => i).filter((i) => !done[i]);
+  }
+
+  // Hâlâ çözülmeyen (ör. gerçekten çevrilemez içerik) → orijinali koru.
+  for (let i = 0; i < texts.length; i++) if (!done[i]) out[i] = texts[i];
   return out;
 }
 
