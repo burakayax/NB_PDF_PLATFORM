@@ -2797,7 +2797,8 @@ function App() {
       path === "/pdf-api" ||
       path.startsWith("/pdf-api/") ||
       path === "/blog" ||
-      path.startsWith("/blog/")
+      path.startsWith("/blog/") ||
+      path === "/pricing"
     ) {
       return;
     }
