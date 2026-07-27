@@ -297,55 +297,91 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setBusy(true);
       setTranslatedBlob(null);
       const analysis = await analyzePdf(pdfFile, accessToken ?? null);
-      // ÖNEMLİ: analyze metni SPAN bazında çıkarır; tek cümle birden çok span'a/satıra bölünür.
-      // Parça/satır bazında çevirmek Claude'u parçaları BİRLEŞTİRMEYE/yeniden dağıtmaya zorlar
-      // (sayı tutmaz → orijinale düşer, hizalama kayar). GERÇEK belgede ölçüldü: span/satır
-      // yaklaşımları %50 orijinal kalıp KAYIYORDU; BLOK (paragraf) bazında %100 doğru hizalı.
-      // Çözüm: bir BLOĞUN (backend "line"=sayfa:blok:satır → blok = ilk iki alan) tüm span'larını
-      // tek tutarlı paragrafta birleştir; satırlar arası boşluk ekle; çeviriyi bloğun birleşik
-      // bbox'una WRAP (kelime-kaydırma) ile yeniden akıt → düzen korunur, sadece dil değişir.
-      type BlockItem = { page: number; bbox: [number, number, number, number]; text: string; size: number; color?: string; font?: PdfFontKey; bold?: boolean; italic?: boolean; _lastLine?: string };
-      const items: BlockItem[] = [];
+      // KONUM + STİL KORUYAN ÇEVİRİ. analyze metni SPAN bazında çıkarır; parça/satır bazında
+      // çevirmek Claude'u parçaları birleştirmeye/yeniden dağıtmaya zorlar (sayı tutmaz →
+      // orijinale düşer, hizalama kayar). Çözüm: span'ları BLOK (paragraf) bazında topla, blok
+      // içinde ardışık AYNI stildeki (kalın+renk) span'ları "run"a birleştir → run metinlerini
+      // indeksli protokolle çevir (kayma/eksik yok), her bloğu KALIN/RENK/HİZALAMA taşıyan HTML
+      // olarak orijinal bbox'a yeniden akıt (backend insert_htmlbox) → orijinal düzen korunur.
+      type Run = { text: string; bold: boolean; color?: string; lead: boolean };
+      type Block = { page: number; bbox: [number, number, number, number]; size: number; font?: PdfFontKey; align: "left" | "center" | "justify"; lineIds: Set<string>; runs: Run[] };
+      const normColor = (c?: string): string | undefined => {
+        if (!c) return undefined;
+        const v = c.toLowerCase();
+        return v === "#000000" || v === "#000" ? undefined : v; // siyah = varsayılan, stil yok
+      };
+      const blocks: Block[] = [];
       const byBlock = new Map<string, number>();
+      const st = new Map<number, { lastX1: number; lastLine?: string }>(); // boşluk kararı için
       analysis.pages.forEach((pg, pi) => {
         pg.elements.forEach((el, ei) => {
           if (el.type !== "text") return;
-          const t = el.text ?? "";
-          if (!t.trim()) return;
-          // Blok anahtarı: "sayfa:blok:satır" → "sayfa:blok". backend "line" vermezse her span solo.
+          const raw = el.text ?? "";
+          if (!raw.trim()) return;
           const blockKey = el.line ? el.line.split(":").slice(0, 2).join(":") : `solo:${pi}:${ei}`;
+          const bold = !!el.bold;
+          const color = normColor(el.color);
           const idx = byBlock.get(blockKey);
           if (idx === undefined) {
-            byBlock.set(blockKey, items.length);
-            items.push({ page: pi, bbox: [...el.bbox] as [number, number, number, number], text: t, size: el.size ?? 12, color: el.color, font: el.font, bold: el.bold, italic: el.italic, _lastLine: el.line });
-          } else {
-            const it = items[idx];
-            // Yeni SATIRA geçildiyse (aynı blokta) boşluk ekle → satır sonu/başı kelimeler birleşmesin.
-            if (el.line && it._lastLine && el.line !== it._lastLine && !it.text.endsWith(" ") && !t.startsWith(" ")) {
-              it.text += " ";
-            }
-            it.text += t;
-            it._lastLine = el.line;
-            it.bbox = [Math.min(it.bbox[0], el.bbox[0]), Math.min(it.bbox[1], el.bbox[1]), Math.max(it.bbox[2], el.bbox[2]), Math.max(it.bbox[3], el.bbox[3])];
+            byBlock.set(blockKey, blocks.length);
+            st.set(blocks.length, { lastX1: el.bbox[2], lastLine: el.line });
+            blocks.push({ page: pi, bbox: [...el.bbox] as [number, number, number, number], size: el.size ?? 12, font: el.font, align: "left", lineIds: new Set(el.line ? [el.line] : []), runs: [{ text: raw, bold, color, lead: false }] });
+            return;
           }
+          const b = blocks[idx];
+          const s = st.get(idx)!;
+          // Boşluk gerekli mi? Yeni satıra geçiş VEYA yatay boşluk (x-gap) → kelimeler birleşmesin.
+          const newLine = !!(el.line && s.lastLine && el.line !== s.lastLine);
+          const xgap = el.bbox[0] - s.lastX1 > (el.size ?? 12) * 0.22;
+          const sep = newLine || xgap;
+          const last = b.runs[b.runs.length - 1];
+          if (last.bold === bold && (last.color ?? "") === (color ?? "")) {
+            last.text += sep && !last.text.endsWith(" ") && !raw.startsWith(" ") ? " " + raw : raw;
+          } else {
+            // Stil değişti → yeni run. Boşluk çeviriye GİRMESİN (Claude trim'ler) → lead bayrağı.
+            b.runs.push({ text: raw, bold, color, lead: sep });
+          }
+          b.bbox = [Math.min(b.bbox[0], el.bbox[0]), Math.min(b.bbox[1], el.bbox[1]), Math.max(b.bbox[2], el.bbox[2]), Math.max(b.bbox[3], el.bbox[3])];
+          if (el.line) b.lineIds.add(el.line);
+          s.lastX1 = el.bbox[2];
+          s.lastLine = el.line;
         });
       });
-      if (items.length === 0) {
+      if (blocks.length === 0) {
         setError(tr ? "Bu PDF'te çevrilecek metin katmanı yok (taranmış olabilir)." : "No translatable text layer in this PDF (it may be scanned).");
         return;
       }
-      const { translations, quota: q } = await aiTranslateSegments(items.map((i) => i.text), targetLang, accessToken ?? null);
+      // Hizalama: ortalı başlık (dar+sayfa-merkezli tek satır) / justify (çok satır) / left.
+      blocks.forEach((b) => {
+        const pw = analysis.pages[b.page]?.width || 595;
+        const cx = (b.bbox[0] + b.bbox[2]) / 2;
+        const w = b.bbox[2] - b.bbox[0];
+        const multi = b.lineIds.size > 1;
+        if (!multi && Math.abs(cx - pw / 2) < pw * 0.12 && w < pw * 0.7) b.align = "center";
+        else b.align = multi ? "justify" : "left";
+      });
+      // Tüm run'ları düz listeye al → indeksli protokolle çevir.
+      const flat: Array<{ b: number; r: number }> = [];
+      const texts: string[] = [];
+      blocks.forEach((b, bi) => b.runs.forEach((r, ri) => { flat.push({ b: bi, r: ri }); texts.push(r.text); }));
+      const { translations, quota: q } = await aiTranslateSegments(texts, targetLang, accessToken ?? null);
       if (q) setQuota(q);
-      const ops: PdfTextEdit[] = items.map((it, i) => ({
-        page: it.page,
-        bbox: it.bbox,
-        text: translations[i] ?? it.text,
-        size: it.size,
-        color: it.color,
-        font: it.font ?? "sans",
-        bold: it.bold,
-        italic: it.italic,
-        wrap: true, // paragrafı bloğun dikdörtgenine kelime-kaydırmayla yeniden akıt
+      // Her bloğu stil taşıyan HTML'e çevir.
+      const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const cssFont = (f?: PdfFontKey) => (f === "serif" || f === "merriweather" ? "serif" : f === "mono" ? "monospace" : "sans-serif");
+      const htmlByBlock = blocks.map(() => "");
+      flat.forEach((f, i) => {
+        const r = blocks[f.b].runs[f.r];
+        let x = esc(translations[i] ?? r.text);
+        if (r.color) x = `<span style="color:${r.color}">${x}</span>`;
+        if (r.bold) x = `<b>${x}</b>`;
+        const cur = htmlByBlock[f.b];
+        htmlByBlock[f.b] = cur + (r.lead && cur.length > 0 && !cur.endsWith(" ") ? " " : "") + x;
+      });
+      const ops: PdfTextEdit[] = blocks.map((b, bi) => ({
+        page: b.page,
+        bbox: b.bbox,
+        html: `<div style="font-family:${cssFont(b.font)};font-size:${b.size.toFixed(1)}px;text-align:${b.align};line-height:1.15;margin:0">${htmlByBlock[bi]}</div>`,
         bg: "#ffffff",
       }));
       const blob = await editPdfText(pdfFile, ops, accessToken ?? null);

@@ -497,6 +497,30 @@ async def tool_edit_text(
                         page.apply_redactions()
                     # 2) Yeni metinleri aynı bölgeye yaz (varsa).
                     for op in text_ops:
+                        # HTML modu (ZENGİN konum-koruyan ÇEVİRİ): op bir PARAGRAF bloğudur ve
+                        # `html` alanı stil taşır (kalın <b>, renk <span style=color>, hizalama).
+                        # insert_htmlbox → orijinalin KALIN/RENK/İKİ-YANA-YASLI düzenini korur;
+                        # scale_low=0 → metin kutuya sığmıyorsa otomatik küçültür. (Düz insert_text
+                        # bunu yapamıyordu → çeviri kalın/renk/justify kaybediyordu.)
+                        html = op.get("html")
+                        if html:
+                            x0, y0, x1, y1 = (float(v) for v in op["bbox"])
+                            rect = _fitz.Rect(x0, y0, x1, y1)
+                            try:
+                                page.insert_htmlbox(rect, str(html), scale_low=0)
+                            except Exception:
+                                # htmlbox yoksa/başarısızsa (eski PyMuPDF) blok BOŞ kalmasın:
+                                # HTML etiketlerini sıyır, düz metni sarmalı yaz (stil kaybı olur ama okunur).
+                                import re as _re
+                                plain = _re.sub(r"<[^>]+>", "", str(html))
+                                plain = (plain.replace("&amp;", "&").replace("&lt;", "<")
+                                         .replace("&gt;", ">").replace("&#160;", " ")).strip()
+                                if plain:
+                                    fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "serif"
+                                    bfs = _fit_block_size(plain, fkey, x1 - x0, y1 - y0, float(op.get("size") or 11))
+                                    page.insert_textbox(rect, plain, fontsize=bfs, fontname=fkey,
+                                                        fontfile=_EDIT_FONTS[fkey], align=0)
+                            continue
                         t = (op.get("text") or "").strip()
                         if not t:
                             continue
