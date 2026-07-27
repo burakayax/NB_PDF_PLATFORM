@@ -437,6 +437,48 @@ async def tool_edit_text(
                         return max(fs * (box_w / tw), 5.0)  # okunur taban 5pt
                     return fs
 
+                def _fit_block_size(text: str, fkey: str, box_w: float, box_h: float, fs: float) -> float:
+                    """Sarmalı (çok satırlı) blok için: metin, kelime kaydırmayla box_w'ye sarıldığında
+                    gereken satır sayısı × satır yüksekliği box_h'yi aşıyorsa fontu küçült. Çeviri
+                    (hedef dil çoğu kez daha uzun) paragraf kutusuna sığsın diye."""
+                    if box_w <= 1 or box_h <= 1:
+                        return fs
+                    fobj = _font_cache.get(fkey)
+                    if fobj is None:
+                        try:
+                            fobj = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
+                        except Exception:
+                            return fs
+                        _font_cache[fkey] = fobj
+                    words = text.split()
+                    if not words:
+                        return fs
+
+                    def _lines_at(size: float) -> int:
+                        try:
+                            space = fobj.text_length(" ", fontsize=size)
+                        except Exception:
+                            return 1
+                        lines = 1
+                        cur = 0.0
+                        for w in words:
+                            wl = fobj.text_length(w, fontsize=size)
+                            if cur <= 0:
+                                cur = wl
+                            elif cur + space + wl > box_w:
+                                lines += 1
+                                cur = wl
+                            else:
+                                cur += space + wl
+                        return lines
+
+                    size = fs
+                    for _ in range(60):
+                        if _lines_at(size) * size * 1.28 <= box_h or size <= 5.0:
+                            break
+                        size = max(5.0, size - 0.5)
+                    return size
+
                 for pi, page_ops in by_page.items():
                     page = doc[pi]
                     # Görsel EKLEME op'ları (op.image) altındaki içeriği silmemeli;
@@ -466,6 +508,23 @@ async def tool_edit_text(
                         baseline = float(by) if by is not None else (y0 + fs)
                         col = _hex_to_rgb01(op.get("color"))
                         fkey = op.get("font") if op.get("font") in _EDIT_FONTS else "sans"
+                        # WRAP modu (konum-koruyan ÇEVİRİ): op bir PARAGRAF bloğudur → metni
+                        # blok dikdörtgenine kelime-kaydırmayla sar (insert_textbox). Tek satır
+                        # baseline yerine kutuya sarma, çok satırlı paragrafı orijinal alanında tutar.
+                        if op.get("wrap"):
+                            rect = _fitz.Rect(x0, y0, x1, y1)
+                            bfs = _fit_block_size(t, fkey, x1 - x0, y1 - y0, fs)
+                            tb_kwargs: dict[str, Any] = dict(
+                                fontsize=bfs, color=col, fontname=fkey,
+                                fontfile=_EDIT_FONTS[fkey], align=0,
+                            )
+                            page.insert_textbox(rect, t, **tb_kwargs)
+                            if op.get("bold"):  # çift-basım faux-bold (kutu minik dx kaydırılır)
+                                page.insert_textbox(
+                                    _fitz.Rect(x0 + max(0.25, bfs * 0.03), y0, x1 + max(0.25, bfs * 0.03), y1),
+                                    t, **tb_kwargs,
+                                )
+                            continue
                         fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
                         ins_kwargs: dict[str, Any] = dict(
                             fontsize=fs, color=col,
@@ -671,8 +730,8 @@ async def tool_pdf_analyze(
                     page = doc[pi]
                     els: list[dict[str, Any]] = []
                     ei = 0
-                    for bl in page.get_text("dict").get("blocks", []):
-                        for ln in bl.get("lines", []):
+                    for bi, bl in enumerate(page.get_text("dict").get("blocks", [])):
+                        for li, ln in enumerate(bl.get("lines", [])):
                             for span in ln.get("spans", []):
                                 txt = span.get("text", "")
                                 if not txt.strip():
@@ -696,6 +755,10 @@ async def tool_pdf_analyze(
                                     "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
                                     "font": _map_font_to_key(_fname),
                                     "bold": _bold, "italic": _italic,
+                                    # Satır grubu (sayfa:blok:satır) — konum-koruyan çeviri span'ları
+                                    # AYNI SATIRDA birleştirip tutarlı segment üretsin diye. PyMuPDF'in
+                                    # kendi satır segmentasyonu blok/hücreye saygılıdır.
+                                    "line": f"{pi}:{bi}:{li}",
                                 })
                                 ei += 1
                     for img in page.get_image_info():

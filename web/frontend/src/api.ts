@@ -134,6 +134,9 @@ export type PdfTextEdit = {
    * (altındaki içerik silinmez); bbox konum/boyut, rotate serbest açı (derece). */
   image?: string;
   rotate?: number;
+  /** Sarmalı (çok satırlı) yazım: metni bbox'a kelime-kaydırmayla sar (insert_textbox).
+   * Konum-koruyan çeviride PARAGRAF bloğunu orijinal alanına yeniden akıtmak için. */
+  wrap?: boolean;
 };
 
 export type PdfElement = {
@@ -151,6 +154,8 @@ export type PdfElement = {
   bold?: boolean;
   /** Orijinal metin italik mi. */
   italic?: boolean;
+  /** Satır grubu id'si (sayfa:blok:satır) — aynı satırdaki span'ları gruplamak için. */
+  line?: string;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
