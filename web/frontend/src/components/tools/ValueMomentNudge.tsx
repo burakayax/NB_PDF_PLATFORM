@@ -71,12 +71,12 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         </span>
         <div className="min-w-0 pr-6">
           <p className="text-[15px] font-bold leading-tight text-white">
-            {tr ? "Bunu bedava yaptın 🎉" : "You did that free 🎉"}
+            {tr ? "Bu işlemi ücretsiz yaptın 🎉" : "You did this for free 🎉"}
           </p>
           <p className="text-[12.5px] leading-snug text-slate-400">
             {tr
-              ? "Ücretsiz hesap, tarayıcının tek başına yapamadıklarını açar:"
-              : "A free account unlocks what the browser can't do alone:"}
+              ? "PDF Platform bunları da yapar — ücretsiz hesapla başla:"
+              : "PDF Platform can do more too — start with a free account:"}
           </p>
         </div>
       </div>
