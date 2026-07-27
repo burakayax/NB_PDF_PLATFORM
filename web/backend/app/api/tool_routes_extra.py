@@ -328,6 +328,29 @@ _EDIT_FONTS = {
 }
 
 
+def _map_font_to_key(font_name: str) -> str:
+    """PDF span font adını mevcut gömülü fontlardan en yakınına eşler (serif/sans/mono).
+
+    PDF'in gerçek fontu çoğu zaman lisanslı/gömülemez olduğundan bu EN-YAKIN
+    eşlemedir (serif belge serif kalır, monospace mono kalır). Kalın/italik
+    ayrımı korunmaz (yalnız Regular kesitler mevcut).
+    """
+    f = (font_name or "").lower()
+    if any(k in f for k in ("mono", "courier", "consol", "menlo", "typewriter")):
+        return "mono"
+    if "montserrat" in f:
+        return "montserrat"
+    if "lato" in f:
+        return "lato"
+    if "oswald" in f:
+        return "oswald"
+    if "merriweather" in f:
+        return "merriweather"
+    if any(k in f for k in ("times", "serif", "georgia", "garamond", "minion", "roman", "cambria", "palatino")):
+        return "serif"
+    return "sans"
+
+
 def _hex_to_rgb01(hex_str: str | None) -> tuple[float, float, float]:
     """'#RRGGBB' → (r,g,b) 0..1. Geçersizse siyah."""
     try:
@@ -650,6 +673,7 @@ async def tool_pdf_analyze(
                                     "bbox": [round(x0, 1), round(y0, 1), round(x1, 1), round(y1, 1)],
                                     "text": txt, "size": round(float(span.get("size", 11)), 1),
                                     "color": f"#{c & 0xFFFFFF:06x}", "by": round(oy, 1),
+                                    "font": _map_font_to_key(span.get("font", "")),
                                 })
                                 ei += 1
                     for img in page.get_image_info():

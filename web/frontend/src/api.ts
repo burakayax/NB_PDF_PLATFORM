@@ -141,6 +141,8 @@ export type PdfElement = {
   color?: string;
   /** Metin span'inin gerçek taban çizgisi (origin.y). */
   by?: number;
+  /** Orijinal fonta en yakın gömülü font anahtarı (serif/sans/mono…). */
+  font?: PdfFontKey;
 };
 export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
