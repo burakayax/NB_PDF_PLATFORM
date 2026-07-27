@@ -2103,6 +2103,24 @@ export function LandingPage({
     injectFonts();
   }, []);
 
+  // /pricing (ve /en/pricing) doğrudan açılınca fiyat bölümüne kaydır — aksi halde
+  // landing'in tepesi (anasayfa) görünüyordu. Layout otursun diye kısa retry.
+  useEffect(() => {
+    const p = window.location.pathname.replace(/\/+$/, "");
+    if (p !== "/pricing" && p !== "/en/pricing") return;
+    let tries = 0;
+    const tick = () => {
+      const el = document.getElementById("pricing");
+      if (el) {
+        el.scrollIntoView({ behavior: "auto", block: "start" });
+        return;
+      }
+      if (tries++ < 25) window.setTimeout(tick, 120);
+    };
+    const t = window.setTimeout(tick, 120);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
     <div className="min-h-screen text-white antialiased">
       <GradientBackground />
