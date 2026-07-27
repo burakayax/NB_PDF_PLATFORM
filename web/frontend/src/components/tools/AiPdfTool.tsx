@@ -4,6 +4,7 @@ import {
   Clock,
   Copy,
   Download,
+  ExternalLink,
   FileText,
   ListChecks,
   Languages,
@@ -347,6 +348,13 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
     } finally {
       setExporting(false);
     }
+  }
+
+  function openTranslation() {
+    if (!translatedBlob) return;
+    const url = URL.createObjectURL(translatedBlob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
   async function shareTranslation() {
@@ -818,6 +826,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 <p className="mt-4 text-xl font-bold text-white">{tr ? "Çeviri hazır 🎉" : "Translation ready 🎉"}</p>
                 <p className="mx-auto mt-1 max-w-md text-sm text-slate-400">{tr ? "Orijinal düzen birebir korundu — yalnızca yazılar çevrildi." : "The original layout is preserved exactly — only the text was translated."}</p>
                 <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                  <button type="button" onClick={openTranslation} className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.12] px-6 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"><ExternalLink className="h-4 w-4" />{tr ? "Aç" : "Open"}</button>
                   <button type="button" onClick={() => void downloadTranslation()} disabled={exporting} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-violet-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50">{exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "İndir" : "Download"}</button>
                   <button type="button" onClick={() => void shareTranslation()} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"><Share2 className="h-4 w-4" />{tr ? "Paylaş" : "Share"}</button>
                   <button type="button" onClick={() => setTranslatedBlob(null)} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]">{tr ? "Farklı dile çevir" : "Different language"}</button>
