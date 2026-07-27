@@ -653,18 +653,20 @@ export function DashboardSidebarMobileLauncher({
   const editorFavorited = !!onOpenEditor && isFavorite(EDITOR_FAV_ID);
   const signFavorited = !!onOpenSign && isFavorite(SIGN_FAV_ID);
   const annotateFavorited = !!onOpenAnnotate && isFavorite(ANNOTATE_FAV_ID);
+  const scanFavorited = !!onOpenScan && isFavorite(SCAN_FAV_ID);
+  const favAiTools = onOpenAi ? AI_TOOLS.filter((t) => isFavorite(aiFavId(t.mode))) : [];
   const groups = useMemo(() => {
     const base = groupToolsByCategory(toolOrder) as Array<{
       id: ToolCategoryId | "other" | "favorites";
       tools: FeatureKey[];
     }>;
     const fav = toolOrder.filter((id) => isFavorite(id));
-    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited
+    return fav.length > 0 || editorFavorited || signFavorited || annotateFavorited || scanFavorited || favAiTools.length > 0
       ? [{ id: "favorites" as const, tools: fav }, ...base]
       : base;
     // favorites listesi değişince yeniden grupla
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited]);
+  }, [toolOrder, favorites, editorFavorited, signFavorited, annotateFavorited, scanFavorited, favAiTools.length]);
 
   // Arama: araç adına göre filtrele; eşleşme olmayan kategoriler gizlenir.
   const filteredGroups = useMemo(() => {
@@ -894,6 +896,14 @@ export function DashboardSidebarMobileLauncher({
                             <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[8px] font-bold uppercase text-fuchsia-300">
                               Pro
                             </span>
+                            <span className="absolute left-1 top-1">
+                              <FavoriteStar
+                                alwaysVisible
+                                active={isFavorite(aiFavId(t.mode))}
+                                label={tr ? t.tr : t.en}
+                                onToggle={() => toggleFavorite(aiFavId(t.mode))}
+                              />
+                            </span>
                           </button>
                         ))}
                       </div>
@@ -932,19 +942,28 @@ export function DashboardSidebarMobileLauncher({
 
                         {/* Araç kartları — telefona otomatik uyum (auto-fill) */}
                         <div className="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] sm:gap-3">
-                          {/* Belge Tara kartı — kamerayla tarama (Düzenle grubunda) */}
-                          {onOpenScan && !query.trim() && group.id === "organize" ? (
+                          {/* Belge Tara kartı — diğer araçlarla aynı nötr stil + favori yıldızı */}
+                          {onOpenScan && !query.trim() &&
+                          (group.id === "organize" || (group.id === "favorites" && scanFavorited)) ? (
                             <button
                               type="button"
                               onClick={() => {
                                 onOpenScan();
                                 setOpen(false);
                               }}
-                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] p-2 text-center hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.97]"
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-white/[0.08] bg-nb-panel/55 p-2 text-center hover:border-cyan-400/25 hover:bg-white/[0.06] active:scale-[0.97]"
                             >
                               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] text-lg" aria-hidden>📸</span>
-                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-cyan-100">
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-nb-text/90">
                                 {tr ? "Belge Tara" : "Scan document"}
+                              </span>
+                              <span className="absolute left-1 top-1">
+                                <FavoriteStar
+                                  alwaysVisible
+                                  active={isFavorite(SCAN_FAV_ID)}
+                                  label={tr ? "Belge Tara" : "Scan document"}
+                                  onToggle={() => toggleFavorite(SCAN_FAV_ID)}
+                                />
                               </span>
                             </button>
                           ) : null}
@@ -1023,6 +1042,36 @@ export function DashboardSidebarMobileLauncher({
                               </span>
                             </button>
                           ) : null}
+                          {/* Favorilenen AI araçları — Favoriler grubunda göster */}
+                          {group.id === "favorites" && onOpenAi
+                            ? favAiTools.map((t) => (
+                                <button
+                                  key={`fav-ai-${t.mode}`}
+                                  type="button"
+                                  onClick={() => {
+                                    onOpenAi(t.mode);
+                                    setOpen(false);
+                                  }}
+                                  className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/[0.06] p-2 text-center hover:border-fuchsia-400/45 hover:bg-fuchsia-500/[0.12] active:scale-[0.97]"
+                                >
+                                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/10 text-lg" aria-hidden>✨</span>
+                                  <span className="line-clamp-2 text-[10px] font-bold leading-tight text-fuchsia-100">
+                                    {tr ? t.tr : t.en}
+                                  </span>
+                                  <span className="absolute right-1 top-1 rounded-md border border-fuchsia-400/35 bg-fuchsia-500/10 px-1 py-0.5 text-[8px] font-bold uppercase text-fuchsia-300">
+                                    Pro
+                                  </span>
+                                  <span className="absolute left-1 top-1">
+                                    <FavoriteStar
+                                      alwaysVisible
+                                      active={isFavorite(aiFavId(t.mode))}
+                                      label={tr ? t.tr : t.en}
+                                      onToggle={() => toggleFavorite(aiFavId(t.mode))}
+                                    />
+                                  </span>
+                                </button>
+                              ))
+                            : null}
                           {group.tools.map((id) => {
                             const isActive = active === id;
                             const locked = lockedFeatures.has(id);
