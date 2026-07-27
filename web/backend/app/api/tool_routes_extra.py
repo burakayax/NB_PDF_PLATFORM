@@ -462,7 +462,7 @@ async def tool_edit_text(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{out_p.name}"'},
+            headers={"Content-Disposition": operations.content_disposition(out_p.name)},
         )
     except CpuCapacityTimeout:
         cleanup_path(workdir)
@@ -566,7 +566,7 @@ async def tool_redact_pdf(
         return Response(
             content=pdf_bytes,
             media_type="application/pdf",
-            headers={"Content-Disposition": f'attachment; filename="{out_p.name}"'},
+            headers={"Content-Disposition": operations.content_disposition(out_p.name)},
         )
     except CpuCapacityTimeout:
         cleanup_path(workdir)
