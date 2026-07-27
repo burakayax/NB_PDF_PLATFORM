@@ -369,14 +369,28 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       // Her bloğu stil taşıyan HTML'e çevir.
       const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const cssFont = (f?: PdfFontKey) => (f === "serif" || f === "merriweather" ? "serif" : f === "mono" ? "monospace" : "sans-serif");
+      // PyMuPDF bir paragraf + sonraki başlığı / bir listenin tüm maddelerini TEK blok sayabilir
+      // → düz sarma bunları yan yana bindiriyordu. Çevrilmiş metinde YAPISAL İŞARETÇİ (a) b) …,
+      // LOT-N:, Madde/Article N-) ile başlayan run'ların önüne <br> koyarak orijinal satır/liste
+      // yapısını geri getir (başlığa çift <br> = boş satır).
+      const brFor = (s: string): string => {
+        const m = s.trimStart();
+        if (/^(article|madde|section|bölüm|bolum)\s*[0-9ivx]+\s*[-.:]/i.test(m)) return "<br><br>";
+        if (/^(lot)[-\s]?\d/i.test(m)) return "<br>";
+        if (/^[a-zçğıöşü]\)\s/i.test(m)) return "<br>";
+        return "";
+      };
       const htmlByBlock = blocks.map(() => "");
       flat.forEach((f, i) => {
         const r = blocks[f.b].runs[f.r];
-        let x = esc(translations[i] ?? r.text);
+        const trText = translations[i] ?? r.text;
+        let x = esc(trText);
         if (r.color) x = `<span style="color:${r.color}">${x}</span>`;
         if (r.bold) x = `<b>${x}</b>`;
         const cur = htmlByBlock[f.b];
-        htmlByBlock[f.b] = cur + (r.lead && cur.length > 0 && !cur.endsWith(" ") ? " " : "") + x;
+        const br = f.r > 0 ? brFor(trText) : ""; // blok ilk run'ında satır kırma yok
+        const sep = !br && r.lead && cur.length > 0 && !cur.endsWith(" ") ? " " : "";
+        htmlByBlock[f.b] = cur + br + sep + x;
       });
       const ops: PdfTextEdit[] = blocks.map((b, bi) => ({
         page: b.page,
