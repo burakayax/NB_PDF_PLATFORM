@@ -380,6 +380,42 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     return _validate_consume(data)
 
 
+def internal_service_secret() -> str:
+    return os.getenv("INTERNAL_SERVICE_SECRET", "").strip()
+
+
+async def consume_editor_download(id_key: str) -> dict[str, Any] | None:
+    """PDF Düzenle günlük indirme sayacı — Node/Postgres'te atomik check+consume.
+
+    ``INTERNAL_SERVICE_SECRET`` ayarlı DEĞİLSE ya da çağrı başarısızsa ``None`` döner →
+    çağıran yerel SQLite sayacına düşer (kesinti olmaz). Başarılıysa
+    ``{allowed, used, limit, resetAt, guest}`` döndürür."""
+    secret = internal_service_secret()
+    if not secret:
+        return None
+    base = saas_api_base()
+    try:
+        r = await _httpx_post_json_with_retry(
+            f"{base}/api/entitlement/internal/editor-download",
+            headers={"X-Internal-Secret": secret},
+            json_body={"idKey": id_key},
+            attempts=1,
+        )
+    except Exception as exc:  # ağ/sunucu hatası → fallback
+        logger.warning("consume_editor_download bridge failed: %s", exc)
+        return None
+    if r.status_code != 200:
+        logger.warning("consume_editor_download non-200: %s %s", r.status_code, r.text[:200])
+        return None
+    try:
+        data = r.json()
+    except Exception:
+        return None
+    if not isinstance(data, dict) or "allowed" not in data:
+        return None
+    return data
+
+
 async def get_user_file_size_limit_bytes(token: str) -> int | None:
     """GET ``/api/entitlement/balance`` — kullanıcının plan bazlı dosya boyutu limitini bayt cinsinden döndürür.
     999999 MB veya hata durumunda None (sınırsız/bilinmiyor) döner.

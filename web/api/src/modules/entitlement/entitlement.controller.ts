@@ -10,6 +10,7 @@ import {
   getQuotaSummary,
 } from "../../lib/quota.js";
 import { canExecute } from "./entitlement.engine.js";
+import { consumeEditorDownload } from "./editor-download.service.js";
 import { downloadLogCreateSchema, entitlementBodySchema } from "./entitlement.schema.js";
 
 function clientIpFromRequest(request: Request): string | null {
@@ -300,4 +301,32 @@ export async function downloadLogAckController(
     monthlyUsed: quota?.monthlyUsed,
     monthlyLimit: quota?.monthlyLimit,
   });
+}
+
+/**
+ * POST /api/entitlement/internal/editor-download
+ *
+ * PDF Düzenle indirme sayacı — SADECE dahili (FastAPI worker) çağrısı içindir.
+ * `X-Internal-Secret` başlığı ile korunur (kullanıcı JWT'si gerekmez; misafir de sayılır).
+ * Gövde: `{ idKey }` (Python'da güvenilir türetilir). Kararı 200 ile döndürür;
+ * limit dolsa bile 200 döner (`allowed:false`) → Python 429'a çevirir.
+ */
+export async function editorDownloadConsumeController(
+  request: Request,
+  response: Response,
+) {
+  const secret = process.env.INTERNAL_SERVICE_SECRET;
+  if (!secret) {
+    throw new HttpError(503, "Internal service secret not configured.");
+  }
+  const provided = request.headers["x-internal-secret"];
+  if (typeof provided !== "string" || provided !== secret) {
+    throw new HttpError(403, "Forbidden.");
+  }
+  const idKey = typeof request.body?.idKey === "string" ? request.body.idKey.trim() : "";
+  if (!idKey || !(idKey.startsWith("u:") || idKey.startsWith("g:")) || idKey.length > 80) {
+    throw new HttpError(400, "Invalid idKey.");
+  }
+  const decision = await consumeEditorDownload(idKey);
+  response.status(200).json(decision);
 }

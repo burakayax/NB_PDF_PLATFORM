@@ -63,6 +63,14 @@ services:
         sync: false
       - key: S3_ENDPOINT
         sync: false
+      # PDF Düzenle günlük indirme sayacı — Node/Postgres köprüsü için PAYLAŞILAN secret.
+      # AYNI değeri nb-auth-api'de de gir. Boşsa yerel SQLite'a düşer (instance başına, deploy'da sıfırlanır).
+      - key: INTERNAL_SERVICE_SECRET
+        sync: false
+      - key: EDITOR_GUEST_DAILY_LIMIT
+        value: "2"
+      - key: EDITOR_FREE_DAILY_LIMIT
+        value: "5"
 
   # ─── Auth API (Express / Node.js) ─────────────────────────────────────────
   - type: web
@@ -101,6 +109,13 @@ services:
         sync: false
       - key: JWT_REFRESH_SECRET
         sync: false
+      # PDF Düzenle indirme sayacı köprüsü — nb-pdf-api ile AYNI değer olmalı.
+      - key: INTERNAL_SERVICE_SECRET
+        sync: false
+      - key: EDITOR_GUEST_DAILY_LIMIT
+        value: "2"
+      - key: EDITOR_FREE_DAILY_LIMIT
+        value: "5"
       - key: BILLING_ENCRYPTION_KEY
         sync: false
       - key: IYZICO_API_KEY

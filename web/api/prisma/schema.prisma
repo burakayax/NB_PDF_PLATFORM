@@ -759,3 +759,19 @@ model EmailCampaign {
 
   @@map("email_campaigns")
 }
+
+/// PDF Düzenle aracı — günlük indirme sayacı (misafir 2/gün, FREE 5/gün).
+/// idKey: "u:<userId>" (oturum açmış FREE) veya "g:<ipHash>" (misafir). day: "YYYY-MM-DD" (Europe/Istanbul).
+/// İzole tablo (User ilişkisi yok — misafir kayıtları da tutulur). Instance'lar arası paylaşılır.
+model EditorDownloadUsage {
+  id        String   @id @default(cuid())
+  idKey     String   @map("id_key")
+  day       String
+  count     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([idKey, day])
+  @@index([idKey, day])
+  @@map("editor_download_usage")
+}
