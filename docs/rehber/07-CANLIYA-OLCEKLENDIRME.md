@@ -173,3 +173,25 @@ için Dockerfile'ın onları da kurmasını sağla:
 
 > İlgili rehberler: planın kendisi ve ortam değişkenleri için **01-YAYINA-ALMA.md**,
 > sorun çıkarsa **03-LOGLAR.md** ve **06-SIK-HATALAR.md**.
+
+---
+
+## ✏️ PDF Düzenle — günlük indirme limiti (ücretsiz-mod kısıtlaması)
+
+PDF Düzenle aracı sunucuda çalıştığı için, maliyet/istismarı sınırlamak ve kayda
+teşvik için **indirmede düşen günlük bir limit** eklendi (önizleme/hazırlama ücretsiz):
+
+- Misafir: **2 / gün** (IP hash bazlı)
+- Oturum açmış FREE: **5 / gün** (user_id bazlı)
+- PRO / PLUS / BUSINESS / ADMIN: **sınırsız**
+
+Nerede: `web/backend/app/core/editor_daily_limit.py` (SQLite sayaç) +
+`GET /api/edit-text/download/{result_id}` uç noktası (`tool_routes_extra.py`).
+Hazırlama artık bytes yerine `{result_id, dl}` döndürür; indirme bu uçtan yapılır.
+
+**Limitleri değiştirmek / gevşetmek** (büyürken veya kampanyada):
+- Ortam değişkenleri: `EDITOR_GUEST_DAILY_LIMIT`, `EDITOR_FREE_DAILY_LIMIT`.
+- Tamamen kaldırmak istersen bu iki değeri çok yükseğe çek (ör. 99999) ya da
+  download uç noktasındaki `consume(...)` çağrısını devre dışı bırak.
+- Sayaç Europe/Istanbul gün sınırında sıfırlanır; kalıcı disk gerekir
+  (`EDITOR_LIMIT_DB`, varsayılan `tmp/editor_daily_limit.db`).

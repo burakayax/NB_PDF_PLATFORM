@@ -1,31 +1,45 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import * as pdfjsLib from "pdfjs-dist";
 // eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  Bold,
   Check,
   Download,
+  ExternalLink,
   FileText,
+  HelpCircle,
+  Italic,
   Loader2,
   ImagePlus,
+  Minus,
   Move,
   Pencil,
+  Plus,
   RotateCw,
   Share2,
   ShieldAlert,
   Sparkles,
+  Strikethrough,
   Trash2,
   Type,
+  Underline,
   UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { ProductTour, type TourStep } from "../onboarding/ProductTour";
 import {
   analyzePdf,
-  editPdfText,
+  editPdfTextPrepare,
+  downloadEditedPdf,
+  EditDailyLimitError,
   saveBlobToUser,
   type PdfAnalysis,
   type PdfElement,
@@ -36,8 +50,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const uid = () => Math.random().toString(36).slice(2, 9);
 type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather" | "oswald";
-type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey };
-type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey };
+type AlignKey = "left" | "center" | "right";
+// Biçim bayrakları — kalın/italik/altı çizili/üstü çizili + hizalama.
+type Fmt = { bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean; align?: AlignKey };
+type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey } & Fmt;
+type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey } & Fmt;
 // Kullanıcının eklediği resim — bbox (PDF pt, döndürülmemiş), aspect (w/h), açı (derece).
 type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
 type ImgDrag =
@@ -65,6 +82,16 @@ const FONT_LABEL: Record<FontKey, string> = {
 const ASCENT_RATIO = 0.8;
 // Hazır renk paleti — hızlı seçim.
 const PRESET_COLORS = ["#111111", "#ffffff", "#e11d48", "#f59e0b", "#16a34a", "#2563eb", "#7c3aed", "#0891b2", "#6b7280", "#000000"];
+
+// Metin genişliğini PDF nokta (pt) cinsinden ölç — komşu-kaydırma (madde 3) hesabı için.
+// Ölçümde fontSize=pt→px kullanıldığından dönen genişlik pt ile sayısal olarak eşdeğer.
+const _measureCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
+function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean): number {
+  const ctx = _measureCanvas?.getContext("2d");
+  if (!ctx || !text) return 0;
+  ctx.font = `${italic ? "italic " : ""}${bold ? "700 " : "400 "}${sizePt}px ${FONT_CSS[fontKey]}`;
+  return ctx.measureText(text).width;
+}
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
  * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
@@ -118,6 +145,10 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [color, setColor] = useState("#111111");
   const [size, setSize] = useState(14);
   const [font, setFont] = useState<FontKey>("sans");
+  const [align, setAlign] = useState<AlignKey>("left");
+  // Çoklu seçim (Ctrl+A / toplu biçim). Boşsa tekil `selected` geçerli.
+  const [multiSel, setMultiSel] = useState<Set<string>>(new Set());
+  const [tourOpen, setTourOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState<string | null>(null);
@@ -125,7 +156,11 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
-  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
+  // Sonuç sunucuda saklanır; blob İLK indirmede (günlük limit düşerek) alınır ve
+  // önbelleğe konur → sonraki aç/paylaş tekrar limit düşmez.
+  const [result, setResult] = useState<{ resultId: string; dl: string; filename: string; blob?: Blob } | null>(null);
+  const [limitMsg, setLimitMsg] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(false);
   const [shared, setShared] = useState(false);
   // Öğe id → örneklenen arka plan rengi (#RRGGBB). Silgi/redaction bu renkle doldurulur
   // (beyaz varsayım yerine) → kırmızı/siyah/resimli zeminde beyaz kutu kalmaz.
@@ -143,6 +178,24 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&family=Noto+Serif:wght@400;600&family=Lato:wght@400;700&family=Montserrat:wght@400;600;700&family=Merriweather:wght@400;700&family=Oswald:wght@400;500;600&display=swap";
     document.head.appendChild(link);
+  }, []);
+
+  // Mini tur (madde 6): editör ilk açıldığında göster; ?tour=1 ile her zaman tekrar oynat.
+  useEffect(() => {
+    if (!editorOpen) return;
+    let replay = false;
+    try { replay = new URLSearchParams(window.location.search).get("tour") === "1"; } catch { /* ignore */ }
+    let seen = false;
+    try { seen = localStorage.getItem("pdfEditorTourSeen") === "1"; } catch { /* ignore */ }
+    if (!replay && seen) return;
+    // Editör DOM'u ve ilk sayfa render'ı otursun diye kısa gecikme.
+    const t = window.setTimeout(() => setTourOpen(true), 650);
+    return () => window.clearTimeout(t);
+  }, [editorOpen]);
+
+  const closeTour = useCallback((r: { completed: boolean; shown: boolean; dontShowAgain: boolean }) => {
+    setTourOpen(false);
+    if (r.shown) { try { localStorage.setItem("pdfEditorTourSeen", "1"); } catch { /* ignore */ } }
   }, []);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -248,8 +301,46 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   function elColor(el: PdfElement): string { return edits.get(el.id)?.color ?? el.color ?? "#111111"; }
   function elSize(el: PdfElement): number { return edits.get(el.id)?.size ?? el.size ?? 12; }
   function elFont(el: PdfElement): FontKey { return edits.get(el.id)?.font ?? "sans"; }
+  function elBold(el: PdfElement): boolean { return edits.get(el.id)?.bold ?? el.bold ?? false; }
+  function elItalic(el: PdfElement): boolean { return edits.get(el.id)?.italic ?? el.italic ?? false; }
+  function elUnderline(el: PdfElement): boolean { return edits.get(el.id)?.underline ?? false; }
+  function elStrike(el: PdfElement): boolean { return edits.get(el.id)?.strike ?? false; }
+  function elAlign(el: PdfElement): AlignKey { return edits.get(el.id)?.align ?? "left"; }
   const isDeleted = (id: string) => edits.get(id)?.deleted === true;
   const bgFor = (id: string) => bgMap.get(id) ?? "#ffffff";
+
+  // ── Seçim hedefleri + toplu uygulama (Ctrl+A / çoklu seçim) ──
+  const isAddedId = (id: string) => added.some((a) => a.id === id);
+  const selTargets = (): string[] => {
+    if (multiSel.size) return [...multiSel];
+    if (selected) return [selected];
+    return [];
+  };
+  // Bir biçim yamasını seçili TÜM öğelere uygula (eklenen metin ↔ mevcut metin ayrımıyla).
+  const applyPatch = useCallback((patch: Partial<Added> & Edit) => {
+    const ids = multiSel.size ? [...multiSel] : selected ? [selected] : [];
+    if (!ids.length) return;
+    for (const id of ids) {
+      if (added.some((a) => a.id === id)) setAdded((a) => a.map((x) => (x.id === id ? { ...x, ...patch } : x)));
+      else setEdit(id, patch);
+    }
+  }, [multiSel, selected, added, setEdit]);
+  // Toolbar vurgusu için birincil (ilk) seçili öğenin biçim durumu.
+  const primaryId = () => (multiSel.size ? [...multiSel][0] : selected);
+  function curFmt(key: keyof Fmt): boolean | AlignKey {
+    const id = primaryId();
+    if (!id) return key === "align" ? "left" : false;
+    const a = added.find((x) => x.id === id);
+    if (a) return key === "align" ? (a.align ?? "left") : !!a[key];
+    const el = analysis?.pages[current]?.elements.find((x) => x.id === id);
+    const ed = edits.get(id);
+    if (key === "align") return ed?.align ?? "left";
+    if (key === "bold") return ed?.bold ?? el?.bold ?? false;
+    if (key === "italic") return ed?.italic ?? el?.italic ?? false;
+    return !!ed?.[key];
+  }
+  const toggleFmt = (key: "bold" | "italic" | "underline" | "strike") => applyPatch({ [key]: !curFmt(key) } as Fmt);
+  const applyAlign = (a: AlignKey) => { setAlign(a); applyPatch({ align: a }); };
 
   /** Canvas'tan öğe bbox'ının çevresindeki baskın rengi örnekle → silgi/redaction fill.
    * Metin gövdesi yerine kenar/dış-halka noktalarından örnekler (glyph'e denk gelmesin),
@@ -357,35 +448,67 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     setBgMap((mp) => { const n = new Map(mp); n.set(el.id, c); return n; });
   }
 
-  function selectEl(el: PdfElement) {
-    setSelected(el.id);
+  function selectEl(el: PdfElement, additive = false) {
+    if (additive) {
+      // Ctrl/Shift ile tıkla → çoklu seçime ekle/çıkar.
+      setMultiSel((s) => { const n = new Set(s); if (n.has(el.id)) n.delete(el.id); else n.add(el.id); return n; });
+      setSelected(el.id);
+    } else {
+      setMultiSel(new Set());
+      setSelected(el.id);
+    }
     setAddMode(false);
     ensureBg(el);
-    if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); setFont(elFont(el)); }
+    if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); setFont(elFont(el)); setAlign(elAlign(el)); }
   }
   function applyFont(fk: FontKey) {
     setFont(fk);
-    if (!selected) return;
-    if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.map((x) => (x.id === selected ? { ...x, font: fk } : x)));
-    else setEdit(selected, { font: fk });
+    applyPatch({ font: fk });
   }
 
   // Klavye ile silme: bir GÖRSEL seçiliyken Delete/Backspace → hemen sil (beyazla kapat).
   useEffect(() => {
     if (!editorOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Delete" && e.key !== "Backspace") return;
       const tag = (document.activeElement?.tagName || "").toLowerCase();
       const editing = tag === "textarea" || tag === "input" || (document.activeElement as HTMLElement)?.isContentEditable;
-      if (editing || !selected) return;
+      // Ctrl/Cmd+A → sayfadaki TÜM düzenlenebilir metinleri seç (toplu biçim için).
+      // Bir metni düzenlerken (contentEditable) araya girme → normal metin seçimi çalışsın.
+      if ((e.ctrlKey || e.metaKey) && (e.key === "a" || e.key === "A")) {
+        if (editing) return;
+        e.preventDefault();
+        const ids = [
+          ...(analysis?.pages[current]?.elements ?? []).filter((x) => x.type === "text" && edits.get(x.id)?.deleted !== true).map((x) => x.id),
+          ...added.filter((a) => a.page === current).map((a) => a.id),
+        ];
+        setMultiSel(new Set(ids));
+        setSelected(ids[0] ?? null);
+        return;
+      }
+      if (e.key === "Escape") { setMultiSel(new Set()); return; }
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      if (editing) return;
+      // Çoklu seçim varken toplu sil.
+      if (multiSel.size) {
+        e.preventDefault();
+        for (const id of multiSel) {
+          const el = analysis?.pages[current]?.elements.find((x) => x.id === id);
+          if (el) setEdit(id, { deleted: true });
+          else setAdded((a) => a.filter((x) => x.id !== id));
+        }
+        setMultiSel(new Set()); setSelected(null);
+        return;
+      }
+      if (!selected) return;
       const el = analysis?.pages[current]?.elements.find((x) => x.id === selected);
       if (el?.type === "image") { e.preventDefault(); setEdit(el.id, { deleted: true }); setSelected(null); }
+      else if (el?.type === "text") { e.preventDefault(); setEdit(el.id, { deleted: true }); setSelected(null); }
       else if (pageAdded.find((a) => a.id === selected)) { e.preventDefault(); setAdded((a) => a.filter((x) => x.id !== selected)); setSelected(null); }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editorOpen, selected, current, analysis, pageAdded]);
+  }, [editorOpen, selected, current, analysis, pageAdded, added, edits, multiSel]);
 
   function onCanvasClick(e: React.MouseEvent) {
     if (!addMode) return;
@@ -407,59 +530,171 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
   function applyColor(c: string) {
     setColor(c);
-    if (!selected) return;
-    if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.map((x) => (x.id === selected ? { ...x, color: c } : x)));
-    else setEdit(selected, { color: c });
+    applyPatch({ color: c });
   }
   function applySize(s: number) {
-    setSize(s);
-    if (!selected) return;
-    if (pageAdded.find((a) => a.id === selected)) setAdded((a) => a.map((x) => (x.id === selected ? { ...x, size: s } : x)));
-    else setEdit(selected, { size: s });
+    const cl = Math.max(6, Math.min(72, Math.round(s)));
+    setSize(cl);
+    applyPatch({ size: cl });
   }
-  async function preparePdf() {
-    if (!file) return;
-    const ops: PdfTextEdit[] = [];
-    // Sayfa numarasını element id'sinden çöz (t{page}_{i} / i{page}_{i}).
-    const pageOf = (id: string) => { const m = /^[ti](\d+)_/.exec(id); return m ? parseInt(m[1], 10) : 0; };
-    for (const [id, ed] of edits) {
-      const p = pageOf(id);
-      const el = analysis?.pages[p]?.elements.find((x) => x.id === id);
-      if (!el) continue;
-      const bg = bgMap.get(id);
-      const by = el.by;
-      if (ed.deleted) ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
-      else if (ed.text !== undefined && ed.text !== el.text)
-        ops.push({ page: p, bbox: el.bbox, text: ed.text, size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
-      else if (ed.color || ed.size || ed.font)
-        ops.push({ page: p, bbox: el.bbox, text: el.text ?? "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg, by });
+
+  // ── Madde 3: Komşu metni sağa kaydır ──
+  // Bir metin kutusu düzenlenip genişleyince (yeni metin kutudan taşınca), AYNI SATIRDAKİ
+  // sağındaki metinleri, taşma miktarı kadar sağa öteler. Böylece font küçültülmez ve
+  // komşu yazının üstüne binmez. Dönen harita: element id → kaydırma (PDF pt).
+  const computeShifts = useCallback((pageIndex: number): Map<string, number> => {
+    const out = new Map<string, number>();
+    const els = (analysis?.pages[pageIndex]?.elements ?? []).filter((e) => e.type === "text");
+    if (!els.length) return out;
+    const byLine = new Map<string, PdfElement[]>();
+    for (const el of els) {
+      const key = el.line ?? `~${Math.round(el.by ?? el.bbox[1])}`;
+      const arr = byLine.get(key);
+      if (arr) arr.push(el); else byLine.set(key, [el]);
     }
-    for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font });
+    for (const group of byLine.values()) {
+      group.sort((a, b) => a.bbox[0] - b.bbox[0]);
+      let cum = 0;
+      for (const el of group) {
+        if (cum > 0.5) out.set(el.id, cum);
+        if (edits.get(el.id)?.deleted) continue;
+        const ed = edits.get(el.id);
+        // Yalnız GERÇEKTEN değişen (metin/boyut/font/kalın) öğeler taşma üretir.
+        const changed = ed && (ed.text !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined);
+        if (!changed) continue;
+        const txt = edits.get(el.id)?.text ?? el.text ?? "";
+        const boxW = el.bbox[2] - el.bbox[0];
+        const w = measureTextPt(txt, edits.get(el.id)?.size ?? el.size ?? 12, (edits.get(el.id)?.font ?? "sans") as FontKey, edits.get(el.id)?.bold ?? el.bold ?? false, edits.get(el.id)?.italic ?? el.italic ?? false);
+        const overflow = w - boxW;
+        if (overflow > 1) cum += overflow + 2; // 2pt güvenlik payı
+      }
+    }
+    return out;
+  }, [analysis, edits]);
+
+  const shifts = useMemo(() => computeShifts(current), [computeShifts, current]);
+
+  // Kaydırılan komşuların ORİJİNAL konumunu düzgün örtebilmek için arka plan rengini örnekle.
+  useEffect(() => {
+    if (!shifts.size) return;
+    for (const id of shifts.keys()) {
+      if (bgMap.has(id)) continue;
+      const el = analysis?.pages[current]?.elements.find((x) => x.id === id);
+      if (el) ensureBg(el);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shifts, current]);
+
+  async function preparePdf() {
+    if (!file || !analysis) return;
+    const ops: PdfTextEdit[] = [];
+    for (let p = 0; p < analysis.pages.length; p++) {
+      const sMap = computeShifts(p);
+      for (const el of analysis.pages[p].elements) {
+        const ed = edits.get(el.id);
+        const shift = sMap.get(el.id) ?? 0;
+        const [x0, y0, x1, y1] = el.bbox;
+        if (ed?.deleted) {
+          // Silme (metin veya görsel) → orijinali arka planla kapat.
+          ops.push({ page: p, bbox: el.bbox, text: "", size: ed.size ?? el.size ?? 12, color: ed.color ?? el.color, font: ed.font ?? "sans", bg: bgMap.get(el.id), by: el.by });
+          continue;
+        }
+        if (el.type !== "text") continue;
+        const changed = ed && ((ed.text !== undefined && ed.text !== el.text) || ed.color !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined || ed.italic !== undefined || ed.underline !== undefined || ed.strike !== undefined || ed.align !== undefined);
+        const shifted: [number, number, number, number] = shift > 0.5 ? [x0 + shift, y0, x1 + shift, y1] : el.bbox;
+        const clear: [number, number, number, number] | undefined = shift > 0.5 ? [x0, y0, x1, y1] : undefined;
+        if (changed) {
+          // Düzenlenmiş öğe. Önizlemedeki font ("sans" varsayılan) ile birebir olsun diye
+          // ed.font ?? "sans" kullanılır. Taşma varsa noshrink (küçültme yerine komşu kaydı).
+          const size = ed!.size ?? el.size ?? 12;
+          const fk = (ed!.font ?? "sans") as FontKey;
+          const bold = ed!.bold ?? el.bold ?? false;
+          const italic = ed!.italic ?? el.italic ?? false;
+          const txt = ed!.text ?? el.text ?? "";
+          const overflow = measureTextPt(txt, size, fk, bold, italic) - (x1 - x0);
+          ops.push({
+            page: p, bbox: shifted, clear, text: txt, size, color: ed!.color ?? el.color,
+            font: fk, by: el.by, bg: bgMap.get(el.id),
+            noshrink: overflow > 1 ? true : undefined,
+            bold: bold || undefined, italic: italic || undefined,
+            underline: ed!.underline || undefined, strike: ed!.strike || undefined, align: ed!.align,
+          });
+        } else if (shift > 0.5) {
+          // Değişmemiş ama SAĞA KAYDIRILAN komşu → orijinalini temizle, aynı içeriği yeni yere
+          // yaz (orijinal font/boyut/renk korunur, küçültme yok).
+          ops.push({
+            page: p, bbox: shifted, clear, text: el.text ?? "", size: el.size ?? 12,
+            color: el.color, font: (el.font ?? "sans") as FontKey, by: el.by, bg: bgMap.get(el.id),
+            noshrink: true, bold: el.bold || undefined, italic: el.italic || undefined,
+          });
+        }
+      }
+    }
+    for (const a of added) if (a.text.trim()) ops.push({ page: a.page, bbox: a.bbox, text: a.text, size: a.size, color: a.color, font: a.font, bold: a.bold || undefined, italic: a.italic || undefined, underline: a.underline || undefined, strike: a.strike || undefined, align: a.align });
     for (const im of addedImages) ops.push({ page: im.page, bbox: im.bbox, text: "", size: 0, image: im.dataUrl, rotate: im.rotate });
     if (ops.length === 0) { setError(tr ? "Henüz bir düzenleme yapmadınız." : "No edits yet."); return; }
     try {
       setBusy(true);
-      const blob = await editPdfText(file, ops, accessToken ?? null);
-      setResult({ blob, filename: `${file.name.replace(/\.pdf$/i, "")}-duzenlenmis.pdf` });
+      setLimitMsg(null);
+      const { resultId, dl } = await editPdfTextPrepare(file, ops, accessToken ?? null);
+      setResult({ resultId, dl, filename: `${file.name.replace(/\.pdf$/i, "")}-duzenlenmis.pdf` });
     } catch (e) { setError(e instanceof Error ? e.message : tr ? "Hazırlanamadı." : "Failed."); }
     finally { setBusy(false); }
   }
 
-  function downloadResult() {
-    if (!result) return;
-    // İndirme konumunu sorar (destekleyen tarayıcıda); değilse klasik indirmeye düşer.
-    void saveBlobToUser(result.blob, result.filename).catch(() => {});
+  function limitText(e: EditDailyLimitError): string {
+    const reset = e.resetAt ? new Date(e.resetAt).toLocaleString(tr ? "tr-TR" : "en-US", { hour: "2-digit", minute: "2-digit" }) : null;
+    if (tr) {
+      return e.guest
+        ? `Bugünkü ücretsiz indirme hakkınız doldu (${e.limit}/gün). Ücretsiz hesap açarak günde 5, Pro ile sınırsız indirebilirsiniz.${reset ? ` Yenilenme: ${reset}.` : ""}`
+        : `Bugünkü indirme limitiniz doldu (${e.limit}/gün). Pro'ya geçerek sınırsız indirin.${reset ? ` Yenilenme: ${reset}.` : ""}`;
+    }
+    return e.guest
+      ? `Daily free download limit reached (${e.limit}/day). Sign up free for 5/day, or Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`
+      : `Daily download limit reached (${e.limit}/day). Upgrade to Pro for unlimited.${reset ? ` Resets: ${reset}.` : ""}`;
+  }
+
+  // Sonucun blob'unu getir — İLK çağrıda sunucudan indirir (günlük limit düşer) ve önbelleğe
+  // alır; sonraki aç/paylaş tekrar limit düşürmeden bu blob'u kullanır.
+  async function ensureBlob(): Promise<Blob | null> {
+    if (!result) return null;
+    if (result.blob) return result.blob;
+    setFetching(true); setLimitMsg(null); setError(null);
+    try {
+      const blob = await downloadEditedPdf(result.resultId, result.dl, accessToken ?? null);
+      setResult((r) => (r ? { ...r, blob } : r));
+      return blob;
+    } catch (e) {
+      if (e instanceof EditDailyLimitError) setLimitMsg(limitText(e));
+      else setError(e instanceof Error ? e.message : tr ? "İndirilemedi." : "Download failed.");
+      return null;
+    } finally { setFetching(false); }
+  }
+
+  async function downloadResult() {
+    const fn = result?.filename ?? "duzenlenmis.pdf";
+    const blob = await ensureBlob();
+    if (blob) void saveBlobToUser(blob, fn).catch(() => {});
+  }
+  async function openResult() {
+    const blob = await ensureBlob();
+    if (!blob) return;
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
   async function shareResult() {
-    if (!result) return;
-    const f = new File([result.blob], result.filename, { type: "application/pdf" });
+    const fn = result?.filename ?? "duzenlenmis.pdf";
+    const blob = await ensureBlob();
+    if (!blob) return;
+    const f = new File([blob], fn, { type: "application/pdf" });
     const nav = navigator as Navigator & { canShare?: (d?: unknown) => boolean };
     if (typeof nav.share === "function" && nav.canShare?.({ files: [f] })) {
-      try { await nav.share({ files: [f], title: result.filename }); setShared(true); setTimeout(() => setShared(false), 1600); return; } catch { /* iptal */ }
+      try { await nav.share({ files: [f], title: fn }); setShared(true); setTimeout(() => setShared(false), 1600); return; } catch { /* iptal */ }
     }
-    downloadResult();
+    void saveBlobToUser(blob, fn).catch(() => {});
   }
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setEditorOpen(false); setThumbs([]); setZoom(1); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setLimitMsg(null); setFetching(false); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); }
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -493,11 +728,15 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30"><Check className="h-8 w-8" /></div>
           <p className="mt-4 text-xl font-bold text-white">{tr ? "PDF hazır 🎉" : "Ready 🎉"}</p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button type="button" onClick={downloadResult} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><Download className="h-4 w-4" />{tr ? "İndir" : "Download"}</button>
-            <button type="button" onClick={() => void shareResult()} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]">{shared ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}{tr ? "Paylaş" : "Share"}</button>
-            <button type="button" onClick={() => setEditorOpen(true)} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"><Pencil className="h-4 w-4" />{tr ? "Düzenlemeye Dön" : "Back to Editor"}</button>
+            <button type="button" onClick={() => void downloadResult()} disabled={fetching} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:opacity-50">{fetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}{tr ? "İndir" : "Download"}</button>
+            <button type="button" onClick={() => void openResult()} disabled={fetching} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08] disabled:opacity-50"><ExternalLink className="h-4 w-4" />{tr ? "Aç" : "Open"}</button>
+            <button type="button" onClick={() => void shareResult()} disabled={fetching} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08] disabled:opacity-50">{shared ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}{tr ? "Paylaş" : "Share"}</button>
+            <button type="button" onClick={() => { setResult(null); setLimitMsg(null); setEditorOpen(true); }} className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"><Pencil className="h-4 w-4" />{tr ? "Düzenlemeye Dön" : "Back to Editor"}</button>
             <button type="button" onClick={reset} className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]">{tr ? "Yeni PDF" : "New PDF"}</button>
           </div>
+          {limitMsg && (
+            <p className="mx-auto mt-5 max-w-md rounded-xl border border-amber-400/30 bg-amber-500/[0.08] px-4 py-3 text-[13px] text-amber-200">{limitMsg}</p>
+          )}
         </div>
       ) : !file ? (
         <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); void pickFile(e.dataTransfer.files[0]); }} onClick={() => inputRef.current?.click()}
@@ -528,8 +767,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         <div className="fixed inset-0 z-[100] flex flex-col bg-[#0b1020]/97 backdrop-blur-sm">
           {/* Üst araç çubuğu */}
           <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] bg-nb-bg-elevated/80 px-3 py-2.5">
-            <button type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); }} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${addMode ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/40" : "text-slate-300 hover:bg-white/[0.06]"}`}><Type className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Metin Ekle" : "Add Text"}</span></button>
-            <button type="button" onClick={() => imageInputRef.current?.click()} className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"><ImagePlus className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Resim Ekle" : "Add Image"}</span></button>
+            <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); }} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${addMode ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/40" : "text-slate-300 hover:bg-white/[0.06]"}`}><Type className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Metin Ekle" : "Add Text"}</span></button>
+            <button data-tour="editor-add-image" type="button" onClick={() => imageInputRef.current?.click()} className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"><ImagePlus className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Resim Ekle" : "Add Image"}</span></button>
             <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
             {selInfo?.kind === "text" && (
               <>
@@ -551,22 +790,56 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     {(["sans", "serif", "mono", "lato", "montserrat", "merriweather", "oswald"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black" style={{ fontFamily: FONT_CSS[f] }}>{FONT_LABEL[f]}</option>)}
                   </select>
                 </label>
+                {/* Boyut — görsel seçicideki gibi buton çiftli (madde 9) */}
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Boyut" : "Size"}
-                  <input type="number" min={6} max={72} value={size} onChange={(e) => applySize(Math.max(6, Math.min(72, +e.target.value || 12)))} className="w-14 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white" />
+                  <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1 py-0.5">
+                    <button type="button" onClick={() => applySize(size - 1)} title={tr ? "Küçült" : "Smaller"} aria-label={tr ? "Küçült" : "Smaller"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Minus className="h-3.5 w-3.5" /></button>
+                    <span className="min-w-[2ch] text-center text-[12px] font-semibold tabular-nums text-white">{size}</span>
+                    <button type="button" onClick={() => applySize(size + 1)} title={tr ? "Büyüt" : "Larger"} aria-label={tr ? "Büyüt" : "Larger"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Plus className="h-3.5 w-3.5" /></button>
+                  </span>
                 </label>
+                {/* Biçim — kalın/italik/altı çizili/üstü çizili (madde 8) */}
+                <span className="mx-1 h-5 w-px bg-white/10" />
+                <span className="flex items-center gap-1">
+                  {([
+                    ["bold", Bold, tr ? "Kalın" : "Bold"],
+                    ["italic", Italic, tr ? "İtalik" : "Italic"],
+                    ["underline", Underline, tr ? "Altı çizili" : "Underline"],
+                    ["strike", Strikethrough, tr ? "Üstü çizili" : "Strikethrough"],
+                  ] as [("bold" | "italic" | "underline" | "strike"), typeof Bold, string][]).map(([k, Icon, label]) => (
+                    <button key={k} type="button" onClick={() => toggleFmt(k)} title={label} aria-label={label} aria-pressed={curFmt(k) === true}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${curFmt(k) === true ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50" : "text-slate-300 hover:bg-white/[0.08]"}`}>
+                      <Icon className="h-4 w-4" />
+                    </button>
+                  ))}
+                </span>
+                {/* Hizalama (madde 8) */}
+                <span className="flex items-center gap-1">
+                  {([
+                    ["left", AlignLeft, tr ? "Sola yasla" : "Align left"],
+                    ["center", AlignCenter, tr ? "Ortala" : "Align center"],
+                    ["right", AlignRight, tr ? "Sağa yasla" : "Align right"],
+                  ] as [AlignKey, typeof AlignLeft, string][]).map(([k, Icon, label]) => (
+                    <button key={k} type="button" onClick={() => applyAlign(k)} title={label} aria-label={label} aria-pressed={curFmt("align") === k}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${curFmt("align") === k ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50" : "text-slate-300 hover:bg-white/[0.08]"}`}>
+                      <Icon className="h-4 w-4" />
+                    </button>
+                  ))}
+                </span>
               </>
             )}
             <div className="ml-auto flex items-center gap-3">
               {/* Yakınlaştırma — görsel seçicideki gibi */}
-              <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
+              <div data-tour="editor-zoom" className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
                 <button type="button" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.2) * 100) / 100))} title={tr ? "Uzaklaştır" : "Zoom out"} aria-label={tr ? "Uzaklaştır" : "Zoom out"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomOut className="h-4 w-4" /></button>
                 <input type="range" min={50} max={300} step={10} value={Math.round(zoom * 100)} onChange={(e) => setZoom(Number(e.target.value) / 100)} className="hidden w-24 accent-cyan-400 sm:block" aria-label={tr ? "Yakınlaştırma" : "Zoom"} />
                 <button type="button" onClick={() => setZoom((z) => Math.min(3, Math.round((z + 0.2) * 100) / 100))} title={tr ? "Yakınlaştır" : "Zoom in"} aria-label={tr ? "Yakınlaştır" : "Zoom in"} className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition hover:bg-white/10 hover:text-white"><ZoomIn className="h-4 w-4" /></button>
                 <button type="button" onClick={() => setZoom(1)} title={tr ? "Genişliğe sığdır" : "Fit to width"} className="min-w-[3rem] rounded-lg px-1.5 py-1 text-center text-[12px] font-semibold tabular-nums text-slate-200 transition hover:bg-white/10">{Math.round(zoom * 100)}%</button>
               </div>
               <span className="hidden text-[12px] font-semibold text-slate-300 md:inline">{tr ? "Öğeye tıkla → düzenle. Görsel/amblem seçip Delete → sil" : "Click to edit. Select image + Delete key → remove"} · <span className="text-cyan-300">{editCount} {tr ? "değişiklik" : "edits"}</span></span>
-              <button type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
+              <button type="button" onClick={() => setTourOpen(true)} title={tr ? "Turu tekrar göster" : "Replay tour"} aria-label={tr ? "Turu tekrar göster" : "Replay tour"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-cyan-300"><HelpCircle className="h-5 w-5" /></button>
+              <button data-tour="editor-done" type="button" onClick={() => setEditorOpen(false)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-5 py-2 text-[13px] font-bold text-white transition hover:brightness-110"><Check className="h-4 w-4" />{tr ? "Tamam" : "Done"}</button>
               <button type="button" onClick={() => setEditorOpen(false)} aria-label={tr ? "Kapat" : "Close"} className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
             </div>
           </div>
@@ -585,15 +858,27 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
             {/* Sağ: büyük düzenleme alanı */}
             <div className="min-w-0 flex-1 overflow-auto p-4 sm:p-6">
-              <div className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
+              <div data-tour="editor-canvas" className="relative mx-auto w-fit rounded-lg bg-white shadow-2xl">
                 <canvas ref={canvasRef} className="block rounded-lg" />
                 {rendering && <div className="absolute inset-0 flex items-center justify-center bg-black/10"><Loader2 className="h-6 w-6 animate-spin text-cyan-600" /></div>}
                 <div ref={overlayRef} onClick={onCanvasClick} className="absolute inset-0" style={{ cursor: addMode ? "text" : "default" }}>
-                  {/* Mevcut öğeler */}
+                  {/* KAPAK katmanı: aktif/kaydırılan metinlerin ORİJİNAL konumunu arka planla ört.
+                      İçerik katmanının ALTINDA kalır → sağa kaydırılan komşu metin, örtülen orijinalin
+                      ÜSTÜNE net biner (paint sırası sorunu çözülür). */}
+                  {pageEls.map((el) => {
+                    if (el.type !== "text" || isDeleted(el.id)) return null;
+                    const shift = shifts.get(el.id) ?? 0;
+                    const activeCover = selected === el.id || multiSel.has(el.id) || edits.has(el.id) || shift > 0.5;
+                    if (!activeCover) return null;
+                    const [x0, y0, x1, y1] = el.bbox;
+                    return <div key={`cover_${el.id}`} className="pointer-events-none absolute" style={{ left: x0 * scale - 1, top: y0 * scale - 1, width: Math.max((x1 - x0 + Math.max(0, shift)) * scale, 4) + 2, height: Math.max((y1 - y0) * scale, 6) + 2, backgroundColor: bgFor(el.id) }} />;
+                  })}
+                  {/* İçerik katmanı — mevcut öğeler */}
                   {pageEls.map((el) => {
                     const [x0, y0, x1, y1] = el.bbox;
                     const del = isDeleted(el.id);
-                    const sel = selected === el.id;
+                    const shift = shifts.get(el.id) ?? 0;
+                    const sel = selected === el.id || multiSel.has(el.id);
                     if (el.type === "image") {
                       const style = { left: x0 * scale, top: y0 * scale, width: Math.max((x1 - x0) * scale, 8), height: Math.max((y1 - y0) * scale, 8) } as const;
                       // Silinmiş görsel → arka plan rengiyle kapat. Silgiyi bbox'tan ~3px taşır:
@@ -621,34 +906,36 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                       // Silinmiş metin → orijinali arka plan rengiyle kapat, düzenleme yok (tıkla → geri al)
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); clearEdit(el.id); }} className="absolute cursor-pointer ring-1 ring-dashed ring-slate-300/70" style={{ ...eb, backgroundColor: bgFor(el.id) }} title={tr ? "Silindi — geri almak için tıkla" : "Deleted — click to undo"} />;
                     }
-                    // Değişmemiş VE seçili değil → sadece şeffaf tıklama hedefi; canvas'taki
-                    // NET orijinal metin görünür (üstüne HTML yazı basmıyoruz → çift görüntü yok).
-                    const active = sel || edits.has(el.id);
+                    // Değişmemiş, seçili değil ve KAYDIRILMAMIŞ → sadece şeffaf tıklama hedefi;
+                    // canvas'taki NET orijinal metin görünür (çift görüntü yok).
+                    const active = sel || edits.has(el.id) || shift > 0.5;
                     if (!active) {
                       return <div key={el.id} onClick={(e) => { e.stopPropagation(); selectEl(el); }} className="absolute cursor-text rounded-[2px] transition hover:bg-cyan-400/10 hover:ring-1 hover:ring-cyan-400/50" style={eb} title={tr ? "Düzenlemek için tıkla" : "Click to edit"} />;
                     }
-                    // Aktif (seçili ya da düzenlenmiş) → orijinali TAM kapla + düzenlenebilir katman üstte.
-                    // Metni GERÇEK taban çizgisine (by) hizala → "bir tık aşağı" kayması biter,
-                    // önizleme indirilen PDF ile birebir.
+                    // Aktif/kaydırılmış → metni SAĞA kaydırılmış konumda çiz (orijinali KAPAK
+                    // katmanı örter). Gerçek taban çizgisine (by) hizala + biçim (kalın/italik/
+                    // altı-üstü çizili) + hizalama → önizleme indirilen PDF ile birebir (madde 3/7/8).
                     const fsPx = elSize(el) * scale;
                     const baselinePt = el.by ?? (y0 + (el.size ?? 12));
                     const textTop = (baselinePt - y0) * scale - ASCENT_RATIO * fsPx;
+                    const shiftPx = shift * scale;
+                    const deco = [elUnderline(el) ? "underline" : "", elStrike(el) ? "line-through" : ""].filter(Boolean).join(" ") || "none";
+                    const al = elAlign(el);
                     return (
-                      <div key={el.id} className="absolute" style={{ left: eb.left, top: eb.top }}>
-                        <div className="absolute" style={{ left: -1, top: -1, width: eb.width + 2, height: eb.height + 2, backgroundColor: bgFor(el.id) }} />
-                        <AutoText id={el.id} initial={elText(el)} autoFocus={sel && !edits.has(el.id)}
+                      <div key={el.id} className="absolute" style={{ left: eb.left + shiftPx, top: eb.top }}>
+                        <AutoText id={el.id} initial={elText(el)} autoFocus={sel && !edits.has(el.id) && !multiSel.size}
                           onInput={(t) => setEdit(el.id, { text: t })}
-                          onClick={(e) => { e.stopPropagation(); selectEl(el); }}
-                          onFocus={() => selectEl(el)}
+                          onClick={(e) => { e.stopPropagation(); selectEl(el, e.ctrlKey || e.metaKey || e.shiftKey); }}
+                          onFocus={() => { if (!multiSel.size) selectEl(el); }}
                           className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ position: "absolute", left: 0, top: textTop, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
+                          style={{ position: "absolute", left: 0, top: textTop, width: al === "left" ? undefined : eb.width, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
                       </div>
                     );
                   })}
                   {/* Eklenen metinler — serbest sürüklenebilir (taşıma tutamacı) */}
                   {pageAdded.map((a) => {
                     const [x0, y0] = a.bbox;
-                    const sel = selected === a.id;
+                    const sel = selected === a.id || multiSel.has(a.id);
                     return (
                       <div key={a.id} className="absolute" style={{ left: x0 * scale, top: y0 * scale }}>
                         {sel && (
@@ -674,10 +961,10 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                         )}
                         <AutoText id={a.id} initial={a.text}
                           onInput={(t) => setAdded((arr) => arr.map((x) => (x.id === a.id ? { ...x, text: t } : x)))}
-                          onClick={(e) => { e.stopPropagation(); setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAddMode(false); }}
-                          onFocus={() => { setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); }}
+                          onClick={(e) => { e.stopPropagation(); if (!(e.ctrlKey || e.metaKey || e.shiftKey)) setMultiSel(new Set()); setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAlign(a.align ?? "left"); setAddMode(false); }}
+                          onFocus={() => { if (!multiSel.size) { setSelected(a.id); setColor(a.color); setSize(a.size); setFont(a.font); setAlign(a.align ?? "left"); } }}
                           className={`bg-white/90 leading-none outline-none ${sel ? "ring-2 ring-cyan-500" : "ring-1 ring-cyan-400/50"}`}
-                          style={{ position: "absolute", left: 0, top: 0, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: FONT_CSS[a.font], padding: 0 }} />
+                          style={{ position: "absolute", left: 0, top: 0, color: a.color, fontSize: `${a.size * scale}px`, fontFamily: FONT_CSS[a.font], padding: 0, fontWeight: a.bold ? 700 : 400, fontStyle: a.italic ? "italic" : "normal", textDecoration: [a.underline ? "underline" : "", a.strike ? "line-through" : ""].filter(Boolean).join(" ") || "none", textAlign: a.align ?? "left" }} />
                       </div>
                     );
                   })}
@@ -712,6 +999,18 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
               <p className="mx-auto mt-1.5 max-w-lg text-center text-[11px] text-amber-300/70">{tr ? "Not: Bir yazıyı düzenlerken beliren kapatma kutusu üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Note: while editing a line, the cover box may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
             </div>
           </div>
+          <ProductTour
+            open={tourOpen}
+            onClose={closeTour}
+            language={language}
+            steps={([
+              { selector: "[data-tour='editor-add-text']", title: tr ? "Metin ekle" : "Add text", body: tr ? "Sayfanın istediğiniz yerine yeni yazı ekleyin — tıklayıp yazın, sürükleyerek taşıyın." : "Add new text anywhere on the page — click to type, drag to move." },
+              { selector: "[data-tour='editor-add-image']", title: tr ? "Görsel / imza ekle" : "Add image / signature", body: tr ? "İmza, logo veya herhangi bir görsel ekleyin; köşeden boyutlandırın, üstten döndürün." : "Add a signature, logo or any image; resize from the corner, rotate from the top." },
+              { selector: "[data-tour='editor-canvas']", title: tr ? "Yazıları düzenle" : "Edit any text", body: tr ? "Herhangi bir yazıya tıklayın → değiştirin. Renk, boyut, kalın/italik/altı çizili ve hizalama üstteki çubukta. Ctrl+A ile tümünü seçip toplu değiştirin (ör. hepsini kırmızı yapın). Uzun yazınca komşu metin otomatik sağa kayar." : "Click any text → edit it. Color, size, bold/italic/underline and alignment are in the top bar. Press Ctrl+A to select all and change them at once (e.g. make everything red). Typing longer text pushes the neighbour right automatically." },
+              { selector: "[data-tour='editor-zoom']", title: tr ? "Yakınlaştır" : "Zoom", body: tr ? "Detaylı düzenleme için yakınlaştırın/uzaklaştırın; % ile genişliğe sığdırın." : "Zoom in/out for precise editing; the % button fits to width." },
+              { selector: "[data-tour='editor-done']", title: tr ? "Bitir ve indir" : "Finish & download", body: tr ? "«Tamam» → «PDF'i Hazırla» → «İndir/Aç/Paylaş». Önizleme ücretsizdir; günlük indirme hakkı yalnızca indirmede düşer." : "«Done» → «Prepare PDF» → «Download/Open/Share». Preview is free; your daily quota is only used when you download." },
+            ] as TourStep[])}
+          />
         </div>,
         document.body,
       )}

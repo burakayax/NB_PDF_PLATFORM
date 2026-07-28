@@ -128,6 +128,16 @@ export type PdfTextEdit = {
   bold?: boolean;
   /** İtalik (sentetik: yatay shear). */
   italic?: boolean;
+  /** Altı çizili. */
+  underline?: boolean;
+  /** Üstü çizili. */
+  strike?: boolean;
+  /** Hizalama (orijinal kutu içinde): sol/orta/sağ. */
+  align?: "left" | "center" | "right";
+  /** Fontu kutuya sığdırmak için KÜÇÜLTME (komşu sağa kaydırıldığında taşmaya izin ver). */
+  noshrink?: boolean;
+  /** Silinecek (redaction) bölge — kaydırmada ORİJİNAL konumu temizlemek için. Yoksa bbox. */
+  clear?: [number, number, number, number];
   /** Silinen bölgenin arka plan rengi (#RRGGBB) — redaction fill; boşsa beyaz. */
   bg?: string;
   /** Gerçek taban çizgisi (origin.y, PDF pt) — export'u orijinaliyle hizalar. */
@@ -192,8 +202,56 @@ export async function analyzePdf(
   return response.json();
 }
 
-/** Sunucu tarafı GERÇEK metin düzenleme — seçili bölgedeki mevcut metni PyMuPDF ile
- * gerçekten siler ve yerine yeni metni yazar. Bu araçta dosya SUNUCUYA yüklenir. */
+/** Günlük limit dolunca fırlatılan özel hata — çağıran dostça mesaj + sıfırlama saati gösterir. */
+export class EditDailyLimitError extends Error {
+  used: number;
+  limit: number;
+  resetAt: string | null;
+  guest: boolean;
+  constructor(used: number, limit: number, resetAt: string | null, guest: boolean) {
+    super("daily_limit");
+    this.name = "EditDailyLimitError";
+    this.used = used;
+    this.limit = limit;
+    this.resetAt = resetAt;
+    this.guest = guest;
+  }
+}
+
+/** PDF Düzenle — HAZIRLAMA adımı. Dosya SUNUCUYA yüklenir; sonuç sunucuda saklanır ve
+ * `{ resultId, dl }` döner (bytes DÖNMEZ). Bu adım ücretsiz/limitsizdir; günlük limit
+ * indirmede (aşağıdaki `downloadEditedPdf`) düşer. */
+export async function editPdfTextPrepare(
+  file: File,
+  edits: PdfTextEdit[],
+  accessToken?: string | null,
+): Promise<{ resultId: string; dl: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("edits", JSON.stringify(edits));
+  formData.append("store", "1"); // sunucuda sakla → result_id/dl dön
+  appendSaasAccessToken(formData, accessToken);
+  const response = await pdfFetch(`${API_BASE}/api/edit-text`, {
+    method: "POST",
+    body: formData,
+    headers: saasAuthHeaders(accessToken),
+  });
+  if (!response.ok) {
+    let msg = "Düzenleme başarısız oldu.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch {
+      /* JSON değilse varsayılan mesaj */
+    }
+    throw new Error(msg);
+  }
+  const j = await response.json();
+  return { resultId: String(j.result_id), dl: String(j.dl) };
+}
+
+/** Sunucu tarafı GERÇEK metin düzenleme (bytes döner) — AI çeviri gibi doğrudan blob
+ * isteyen akışlar için (günlük editör limitine tabi DEĞİL). */
 export async function editPdfText(
   file: File,
   edits: PdfTextEdit[],
@@ -213,9 +271,39 @@ export async function editPdfText(
     try {
       const j = await response.json();
       if (j?.detail) msg = String(j.detail);
-    } catch {
-      /* JSON değilse varsayılan mesaj */
-    }
+    } catch { /* varsayılan */ }
+    throw new Error(msg);
+  }
+  return response.blob();
+}
+
+/** PDF Düzenle — İNDİRME adımı. Günlük limit BURADA düşer (misafir 2/gün, FREE 5/gün;
+ * PRO/BUSINESS sınırsız). Limit dolarsa `EditDailyLimitError` fırlatır. */
+export async function downloadEditedPdf(
+  resultId: string,
+  dl: string,
+  accessToken?: string | null,
+): Promise<Blob> {
+  const url = `${API_BASE}/api/edit-text/download/${encodeURIComponent(resultId)}?dl=${encodeURIComponent(dl)}`;
+  const response = await pdfFetch(url, {
+    method: "GET",
+    headers: saasAuthHeaders(accessToken),
+  });
+  if (response.status === 429) {
+    let used = 0, limit = 0, resetAt: string | null = null, guest = true;
+    try {
+      const j = await response.json();
+      used = Number(j.used ?? 0); limit = Number(j.limit ?? 0);
+      resetAt = j.resetAt ? String(j.resetAt) : null; guest = !!j.guest;
+    } catch { /* ignore */ }
+    throw new EditDailyLimitError(used, limit, resetAt, guest);
+  }
+  if (!response.ok) {
+    let msg = "İndirme başarısız oldu.";
+    try {
+      const j = await response.json();
+      if (j?.detail) msg = String(j.detail);
+    } catch { /* varsayılan */ }
     throw new Error(msg);
   }
   return response.blob();

@@ -199,6 +199,36 @@ async def saas_session_ok(token: str) -> None:
     )
 
 
+async def saas_user_identity(token: str) -> dict[str, Any]:
+    """PDF editör günlük limiti için kimlik+plan çözer (yan etkisiz).
+
+    ``GET /api/auth/me`` sarmalar. Dönüş: ``{"user_id", "plan", "role"}``. Geçersiz/eksik
+    token'da ``HTTPException(401)`` fırlatır → çağıran misafir muamelesi yapabilir."""
+    base = saas_api_base()
+    url = f"{base}/api/auth/me"
+    try:
+        async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
+            r = await client.get(url, headers={"Authorization": f"Bearer {token}"})
+    except (httpx.TimeoutException, httpx.ConnectError) as exc:
+        raise HTTPException(status_code=502, detail="Kimlik API'ye ulaşılamadı.") from exc
+    if r.status_code == 401:
+        raise HTTPException(status_code=401, detail=_detail_from_response(r))
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail="Kullanıcı bilgisi alınamadı.")
+    try:
+        data = r.json()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail="Kullanıcı yanıtı okunamadı.") from exc
+    user = data.get("user") if isinstance(data, dict) else None
+    if not isinstance(user, dict) or not user.get("id"):
+        raise HTTPException(status_code=502, detail="Kullanıcı kimliği bulunamadı.")
+    return {
+        "user_id": str(user.get("id")),
+        "plan": str(user.get("plan") or "FREE").upper(),
+        "role": str(user.get("role") or "USER").upper(),
+    }
+
+
 async def saas_current_user_id(token: str) -> str:
     """Resolve the caller's user id without side effects.
 
