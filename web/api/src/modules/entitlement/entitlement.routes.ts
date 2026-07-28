@@ -4,6 +4,7 @@ import { asyncHandler } from "../../lib/async-handler.js";
 import {
   downloadLogAckController,
   downloadLogCreateController,
+  editorDownloadConsumeController,
   entitlementBalanceController,
   entitlementCheckController,
   entitlementConsumeController,
@@ -23,3 +24,6 @@ entitlementRouter.post("/check", asyncHandler(entitlementCheckController));
 entitlementRouter.post("/consume", asyncHandler(entitlementConsumeController));
 entitlementRouter.post("/download-log", asyncHandler(downloadLogCreateController));
 entitlementRouter.post("/download-log/:id/ack", asyncHandler(downloadLogAckController));
+// Dahili (FastAPI worker) — X-Internal-Secret ile korunur; JWT bypass'ı için
+// `isPublicApiPath`'e eklendi (kendi secret'ıyla yetkilenir).
+entitlementRouter.post("/internal/editor-download", asyncHandler(editorDownloadConsumeController));

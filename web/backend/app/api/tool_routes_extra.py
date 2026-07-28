@@ -42,6 +42,7 @@ from app.core.result_store import (
 from app.core.thread_pool import CpuCapacityTimeout, run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
 from app.core.saas_gate import (
+    consume_editor_download,
     entitlement_check,
     saas_current_user_id,
     saas_user_identity,
@@ -720,16 +721,21 @@ async def edit_text_download(
             token = ""
 
     if not unlimited:
-        allowed, used, lim = _edl.consume(key, limit)
-        if not allowed:
+        # Öncelik: Node/Postgres (instance'lar arası paylaşılan, kalıcı sayaç).
+        # INTERNAL_SERVICE_SECRET yoksa/çağrı başarısızsa → yerel SQLite'a düş (kesinti yok).
+        decision = await consume_editor_download(key)
+        if decision is None:
+            allowed, used, lim = _edl.consume(key, limit)
+            decision = {"allowed": allowed, "used": used, "limit": lim, "resetAt": _edl.reset_at_iso(), "guest": not token}
+        if not decision.get("allowed"):
             return JSONResponse(
                 status_code=429,
                 content={
                     "error": "daily_limit",
-                    "used": used,
-                    "limit": lim,
-                    "resetAt": _edl.reset_at_iso(),
-                    "guest": not token,
+                    "used": decision.get("used"),
+                    "limit": decision.get("limit"),
+                    "resetAt": decision.get("resetAt"),
+                    "guest": decision.get("guest", not token),
                 },
             )
 

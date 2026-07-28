@@ -185,13 +185,22 @@ teşvik için **indirmede düşen günlük bir limit** eklendi (önizleme/hazır
 - Oturum açmış FREE: **5 / gün** (user_id bazlı)
 - PRO / PLUS / BUSINESS / ADMIN: **sınırsız**
 
-Nerede: `web/backend/app/core/editor_daily_limit.py` (SQLite sayaç) +
-`GET /api/edit-text/download/{result_id}` uç noktası (`tool_routes_extra.py`).
-Hazırlama artık bytes yerine `{result_id, dl}` döndürür; indirme bu uçtan yapılır.
+**Sayaç nerede (SAĞLAM sürüm — Postgres):**
+- Birincil: **Node/Postgres** — `EditorDownloadUsage` Prisma modeli +
+  `POST /api/entitlement/internal/editor-download` (instance'lar arası PAYLAŞILAN,
+  kalıcı, atomik `UPDATE ... WHERE count < limit`). Python indirme uçu bu köprüyü çağırır.
+- Fallback: `INTERNAL_SERVICE_SECRET` ayarlı DEĞİLSE ya da köprü erişilemezse
+  Python yerel SQLite'a (`editor_daily_limit.py`) düşer → kesinti olmaz (ama sayaç
+  instance başına ve deploy'da sıfırlanır).
+- Uç: `GET /api/edit-text/download/{result_id}` (`tool_routes_extra.py`); hazırlama
+  bytes yerine `{result_id, dl}` döndürür.
 
-**Limitleri değiştirmek / gevşetmek** (büyürken veya kampanyada):
-- Ortam değişkenleri: `EDITOR_GUEST_DAILY_LIMIT`, `EDITOR_FREE_DAILY_LIMIT`.
-- Tamamen kaldırmak istersen bu iki değeri çok yükseğe çek (ör. 99999) ya da
-  download uç noktasındaki `consume(...)` çağrısını devre dışı bırak.
-- Sayaç Europe/Istanbul gün sınırında sıfırlanır; kalıcı disk gerekir
-  (`EDITOR_LIMIT_DB`, varsayılan `tmp/editor_daily_limit.db`).
+**KURULUM (Postgres'in devreye girmesi için ŞART):**
+- `INTERNAL_SERVICE_SECRET` → **nb-pdf-api VE nb-auth-api'de AYNI** uzun rastgele değer
+  (Render dashboard, `sync:false`). Boş kalırsa SQLite fallback çalışır.
+
+**Limitleri değiştirmek / gevşetmek:**
+- `EDITOR_GUEST_DAILY_LIMIT` (varsayılan 2), `EDITOR_FREE_DAILY_LIMIT` (varsayılan 5) —
+  hem Node hem Python bu env'leri okur; ikisinde de aynı olsun. Kaldırmak için çok
+  yükseğe çek (ör. 99999). Sayaç Europe/Istanbul gün sınırında sıfırlanır.
+- SQLite fallback kalıcı olsun istersen `EDITOR_LIMIT_DB`'yi kalıcı disk yoluna al.
