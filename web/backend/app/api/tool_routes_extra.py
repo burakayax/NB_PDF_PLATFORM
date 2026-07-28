@@ -11,12 +11,13 @@ import urllib.parse
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import Response
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, Header, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, Response
 from app.limiter import limiter
 
 from app.api.pdf_auth import extract_pdf_access_token
 from app.core import operations
+from app.core import editor_daily_limit as _edl
 from app.core.operations import (
     cleanup_and_raise,
     cleanup_path,
@@ -32,12 +33,18 @@ from app.core.preview_thumbnail import (
     generate_blurred_pdf_thumbnail_from_path,
     generate_blurred_pdf_thumbnail_from_doc,
 )
-from app.core.result_store import save_result_from_file
+from app.core.result_store import (
+    save_result_from_file,
+    get_result,
+    read_meta_only,
+    delete_result,
+)
 from app.core.thread_pool import CpuCapacityTimeout, run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
 from app.core.saas_gate import (
     entitlement_check,
     saas_current_user_id,
+    saas_user_identity,
 )
 from app.core.pdf_security import (
     validate_pdf_before_processing,
@@ -369,6 +376,7 @@ async def tool_edit_text(
     file: UploadFile = File(...),
     edits: str = Form("[]"),
     password: str = Form(""),
+    store: str = Form(""),
 ):
     # Not: bu araç misafire de açık (token gerekmez). Kötüye kullanımı boyut (50MB),
     # oran (15/dk) ve sandbox sınırları önler; entitlement/kredi tüketmez.
@@ -392,8 +400,13 @@ async def tool_edit_text(
         pwd = password.strip() or None
         sp = str(saved)
         out_p = workdir / format_derived_filename(file.filename or saved.name, "Duzenlenmis", "pdf")
+        # Madde 1: hazırlanan PDF SUNUCUDA saklanır; indirme jetonu (dl) meta'nın user_id'si
+        # olur → yalnız hazırlayan indirebilir (misafir dahil, Node token'ı gerekmeden).
+        import secrets as _secrets
+        dl_token = _secrets.token_urlsafe(18)
+        _store_result = str(store).strip().lower() in ("1", "true", "yes")
 
-        def _run() -> bytes:
+        def _run() -> Any:
             import fitz as _fitz
 
             doc = _fitz.open(sp)
@@ -490,7 +503,9 @@ async def tool_edit_text(
                     #    Redaction fill = frontend'in canvas'tan örneklediği ARKA PLAN rengi
                     #    (varsayılan beyaz yerine) → kırmızı/siyah/renkli zeminde beyaz kutu kalmaz.
                     for op in text_ops:
-                        x0, y0, x1, y1 = (float(v) for v in op["bbox"])
+                        # `clear` (kaydırmada ORİJİNAL konum) varsa onu, yoksa bbox'ı temizle.
+                        cb = op.get("clear") or op["bbox"]
+                        x0, y0, x1, y1 = (float(v) for v in cb)
                         fill = _hex_to_rgb01(op.get("bg")) if op.get("bg") else (1.0, 1.0, 1.0)
                         page.add_redact_annot(_fitz.Rect(x0, y0, x1, y1), fill=fill)
                     if text_ops:
@@ -549,7 +564,30 @@ async def tool_edit_text(
                                     t, **tb_kwargs,
                                 )
                             continue
-                        fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
+                        # Madde 3: noshrink → fontu KÜÇÜLTME (komşu metin frontend'de sağa
+                        # kaydırıldığı için taşacak yer açıldı). Aksi halde eskisi gibi sığdır.
+                        if not op.get("noshrink"):
+                            fs = _fit_size(t, fkey, x1 - x0, fs)  # kutuya sığdır (taşmayı önle)
+                        # Metin genişliği — hizalama + altı/üstü çizgi konumu için.
+                        _af = _font_cache.get(fkey)
+                        if _af is None:
+                            try:
+                                _af = _fitz.Font(fontfile=_EDIT_FONTS[fkey])
+                                _font_cache[fkey] = _af
+                            except Exception:
+                                _af = None
+                        try:
+                            tw = _af.text_length(t, fontsize=fs) if _af else (x1 - x0)
+                        except Exception:
+                            tw = x1 - x0
+                        # Hizalama (madde 8): sol/orta/sağ — orijinal kutu genişliği içinde.
+                        box_w = x1 - x0
+                        draw_x = x0
+                        _align = op.get("align")
+                        if _align == "center" and box_w > tw:
+                            draw_x = x0 + (box_w - tw) / 2
+                        elif _align == "right" and box_w > tw:
+                            draw_x = x1 - tw
                         ins_kwargs: dict[str, Any] = dict(
                             fontsize=fs, color=col,
                             fontname=fkey, fontfile=_EDIT_FONTS[fkey],
@@ -557,18 +595,26 @@ async def tool_edit_text(
                         # İtalik: taban çizgisi etrafında yatay kesme (shear) → sentetik italik
                         if op.get("italic"):
                             ins_kwargs["morph"] = (
-                                _fitz.Point(x0, baseline),
+                                _fitz.Point(draw_x, baseline),
                                 _fitz.Matrix(1, 0, 0.2, 1, 0, 0),
                             )
-                        page.insert_text(_fitz.Point(x0, baseline), t, **ins_kwargs)
+                        page.insert_text(_fitz.Point(draw_x, baseline), t, **ins_kwargs)
                         # Kalın: metni çok küçük yatay offset'le İKİNCİ kez yaz (çift-basım
                         # faux-bold). render_mode/stroke yöntemi küçük punto'da glyph'leri
                         # birleştirip okunamaz SİYAH LEKE yapıyordu; çift-basım okunur kalır.
                         if op.get("bold"):
                             page.insert_text(
-                                _fitz.Point(x0 + max(0.25, fs * 0.03), baseline),
+                                _fitz.Point(draw_x + max(0.25, fs * 0.03), baseline),
                                 t, **ins_kwargs,
                             )
+                        # Altı çizili / üstü çizili (madde 8): metin genişliği boyunca çizgi.
+                        _lw = max(0.5, fs * 0.05)
+                        if op.get("underline"):
+                            uy = baseline + fs * 0.12
+                            page.draw_line(_fitz.Point(draw_x, uy), _fitz.Point(draw_x + tw, uy), color=col, width=_lw)
+                        if op.get("strike"):
+                            sy = baseline - fs * 0.30
+                            page.draw_line(_fitz.Point(draw_x, sy), _fitz.Point(draw_x + tw, sy), color=col, width=_lw)
                     # 3) Kullanıcının eklediği resimleri yerleştir (serbest açıyla).
                     for op in image_ops:
                         try:
@@ -597,13 +643,25 @@ async def tool_edit_text(
                         except Exception:
                             continue
                 doc.save(str(out_p), garbage=3, deflate=True)
+                # store=1 (PDF Düzenle editörü): sonucu (fork edilmiş süreç içinde) SUNUCUDA
+                # sakla, handle döndür → bytes boşuna pickle edilmez. Aksi halde bytes döndür.
+                if _store_result:
+                    return save_result_from_file(
+                        out_p, out_p.name, "application/pdf",
+                        user_id=f"ed:{dl_token}", tool="pdf-edit",
+                    )
                 return out_p.read_bytes()
             finally:
                 doc.close()
 
-        pdf_bytes = await run_sandboxed(_run)
+        result_or_bytes = await run_sandboxed(_run)
+        # store=1 → bytes DÖNME; indirme, günlük limiti düşen ayrı uç noktadan yapılır.
+        # Aksi halde (AI çeviri vb.) eski davranış: PDF bytes'ını doğrudan döndür (geriye uyumlu).
+        if _store_result:
+            handle = result_or_bytes
+            return JSONResponse({"result_id": handle.result_id, "dl": dl_token})
         return Response(
-            content=pdf_bytes,
+            content=result_or_bytes,
             media_type="application/pdf",
             headers={"Content-Disposition": operations.content_disposition(out_p.name)},
         )
@@ -618,6 +676,87 @@ async def tool_edit_text(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+@router.get("/edit-text/download/{result_id}")
+@limiter.limit("30/minute")
+async def edit_text_download(
+    request: Request,
+    result_id: str,
+    background_tasks: BackgroundTasks,
+    dl: Annotated[str, Query()] = "",
+    authorization: Annotated[str | None, Header(alias="Authorization")] = None,
+):
+    """PDF Düzenle sonucunun indirilmesi — günlük limit BURADA düşer ("indirmede say").
+
+    Misafir: 2/gün (IP hash), oturum açmış FREE: 5/gün (user_id); PRO/PLUS/BUSINESS/ADMIN
+    sınırsız. `dl` = hazırlamada dönen indirme jetonu (yalnız hazırlayan indirebilir)."""
+    if not dl:
+        raise HTTPException(status_code=400, detail="Geçersiz indirme jetonu.")
+
+    # Sonuç var mı + jeton eşleşiyor mu? (limiti düşmeden ÖNCE doğrula → yarım kalan
+    # indirmede hak yanmaz.)
+    meta = read_meta_only(result_id)
+    if meta.get("user_id") != f"ed:{dl}":
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # Kimlik + plan çöz.
+    token = ""
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization[7:].strip()
+
+    unlimited = False
+    key = _edl.guest_key(_client_ip(request))
+    limit = _edl.GUEST_DAILY_LIMIT
+    if token:
+        try:
+            ident = await saas_user_identity(token)
+            if ident["role"] == "ADMIN" or ident["plan"] in ("PRO", "PLUS", "BUSINESS"):
+                unlimited = True
+            key = _edl.user_key(ident["user_id"])
+            limit = _edl.FREE_DAILY_LIMIT
+        except HTTPException:
+            # Token geçersiz/eksik → misafir muamelesi (key/limit misafir kalır).
+            token = ""
+
+    if not unlimited:
+        allowed, used, lim = _edl.consume(key, limit)
+        if not allowed:
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "daily_limit",
+                    "used": used,
+                    "limit": lim,
+                    "resetAt": _edl.reset_at_iso(),
+                    "guest": not token,
+                },
+            )
+
+    read = get_result(result_id, f"ed:{dl}")
+    background_tasks.add_task(delete_result, result_id)
+
+    if read.presigned_url:
+        from fastapi.responses import StreamingResponse
+        from app.core.result_store import _get_s3, _s3_bucket, _PAYLOAD_FILENAME
+
+        try:
+            s3 = _get_s3()
+            resp = s3.get_object(Bucket=_s3_bucket(), Key=f"{result_id}/{_PAYLOAD_FILENAME}")
+            return StreamingResponse(
+                resp["Body"].iter_chunks(8192),
+                media_type=read.mime,
+                headers={"Content-Disposition": operations.content_disposition(read.filename)},
+            )
+        except Exception as e:
+            logger.error("edit_text_download S3 fetch failed result_id=%s: %s", result_id, e)
+            raise HTTPException(status_code=500, detail="İndirme başarısız.")
+
+    return FileResponse(
+        path=str(read.payload_path),
+        filename=read.filename,
+        media_type=read.mime,
+    )
 
 
 @router.post("/redact-pdf")
