@@ -644,6 +644,54 @@ def _is_scanned_pdf(pdf_path: str, password: Optional[str] = None) -> bool:
         doc.close()
 
 
+_TESSDATA_CACHE: Optional[str] = None
+_TESSDATA_DONE = False
+
+
+def _tessdata_dir() -> Optional[str]:
+    """PyMuPDF get_textpage_ocr için Tesseract dil-verisi (tessdata) dizinini bul.
+    TESSDATA_PREFIX env → yaygın Linux/Docker yolları → glob. Sürümden bağımsız (bookworm=5)."""
+    global _TESSDATA_CACHE, _TESSDATA_DONE
+    if _TESSDATA_DONE:
+        return _TESSDATA_CACHE
+    import glob as _glob
+    _TESSDATA_DONE = True
+    env = os.environ.get("TESSDATA_PREFIX")
+    cands: List[str] = []
+    if env:
+        cands += [env, os.path.join(env, "tessdata")]
+    cands += [
+        "/usr/share/tesseract-ocr/5/tessdata",
+        "/usr/share/tesseract-ocr/4.00/tessdata",
+        "/usr/share/tessdata",
+        "/usr/local/share/tessdata",
+    ]
+    cands += sorted(_glob.glob("/usr/share/tesseract-ocr/*/tessdata"))
+    for c in cands:
+        try:
+            if c and os.path.isdir(c) and _glob.glob(os.path.join(c, "*.traineddata")):
+                _TESSDATA_CACHE = c
+                return c
+        except Exception:
+            continue
+    _TESSDATA_CACHE = None
+    return None
+
+
+def ocr_page_text(fitz_page, lang: str = "tur+eng", dpi: int = 200) -> str:
+    """Bir fitz sayfasını PyMuPDF yerleşik OCR'ı (Tesseract) ile OCR'layıp DÜZ METİN döndürür.
+    Taranmış/görüntü sayfalar için; tessdata otomatik bulunur. Hata olursa boş string."""
+    try:
+        kw: Dict[str, object] = dict(flags=0, language=lang, dpi=dpi, full=True)
+        td = _tessdata_dir()
+        if td:
+            kw["tessdata"] = td
+        tp = fitz_page.get_textpage_ocr(**kw)
+        return fitz_page.get_text("text", textpage=tp) or ""
+    except Exception:
+        return ""
+
+
 def _preprocess_ocr_image(img: "Image.Image") -> "Image.Image":
     """OCR doğruluğunu artırmak için görüntüyü ön işle: gri, kontrast, gürültü azaltma."""
     from PIL import ImageEnhance, ImageFilter
@@ -2378,20 +2426,37 @@ def pdf_text_to_excel(
         ws.title = "PDF Metni"
         ws.append(["Sayfa", "Satır No", "Metin"])
 
-        for i in range(num):
-            if progress_callback:
-                progress_callback(i + 1, max(1, num), f"Sayfa {i + 1}/{num}")
-            page = reader.pages[i]
-            try:
-                text = page.extract_text() or ""
-            except Exception:
-                text = ""
-            lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-            if not lines:
-                ws.append([i + 1, 1, "(Bu sayfada metin çıkarılamadı)"])
-            else:
-                for j, line in enumerate(lines, start=1):
-                    ws.append([i + 1, j, line])
+        _fdoc = None  # taranmış sayfalar için lazy açılan fitz belgesi (OCR)
+        try:
+            for i in range(num):
+                if progress_callback:
+                    progress_callback(i + 1, max(1, num), f"Sayfa {i + 1}/{num}")
+                page = reader.pages[i]
+                try:
+                    text = page.extract_text() or ""
+                except Exception:
+                    text = ""
+                lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+                if not lines:
+                    # Metin katmanı yok (taranmış sayfa) → Tesseract OCR ile metni tanı.
+                    try:
+                        import fitz as _fitz
+                        if _fdoc is None:
+                            _fdoc = _fitz.open(pdf_path)
+                            if _fdoc.needs_pass and password:
+                                _fdoc.authenticate(password)
+                        ocr_txt = ocr_page_text(_fdoc.load_page(i))
+                        lines = [ln.strip() for ln in ocr_txt.splitlines() if ln.strip()]
+                    except Exception:
+                        lines = []
+                if not lines:
+                    ws.append([i + 1, 1, "(Bu sayfada metin çıkarılamadı)"])
+                else:
+                    for j, line in enumerate(lines, start=1):
+                        ws.append([i + 1, j, line])
+        finally:
+            if _fdoc is not None:
+                _fdoc.close()
 
         wb.save(xlsx_path)
         return True
