@@ -176,13 +176,17 @@ export type PdfAnalysis = {
   pages: { width: number; height: number; elements: PdfElement[] }[];
 };
 
-/** PDF'in her sayfasındaki öğeleri (metin+görsel, bbox/renk/boyut) döndürür. */
+/** PDF'in her sayfasındaki öğeleri (metin+görsel, bbox/renk/boyut) döndürür.
+ * ocr=true: taranmış (metin katmanı olmayan) sayfalarda Tesseract OCR ile düzenlenebilir
+ * metin çıkarır (yavaş; kullanıcı isteğiyle çağrılır). */
 export async function analyzePdf(
   file: File,
   accessToken?: string | null,
+  ocr = false,
 ): Promise<PdfAnalysis> {
   const formData = new FormData();
   formData.append("file", file);
+  if (ocr) formData.append("ocr", "1");
   appendSaasAccessToken(formData, accessToken);
   const response = await pdfFetch(`${API_BASE}/api/pdf-analyze`, {
     method: "POST",

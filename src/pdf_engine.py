@@ -1199,6 +1199,32 @@ def pdf_to_word(
         if is_pdf_encrypted(pdf_path) and not password:
             raise Exception(f"PDF’ten Word’e dönüşüm için şifre gerekli: {os.path.basename(pdf_path)}")
 
+        # TARANMIŞ (görüntü) PDF ise: pdf2docx sayfayı DÜZENLENEMEZ FOTOĞRAF olarak gömerdi.
+        # Bunun yerine OCR ile GERÇEK düzenlenebilir metin çıkar (EasyOCR kuruluysa o, yoksa
+        # Tesseract — starter planda Tesseract). Dijital PDF'ler aşağıdaki normal zincire düşer.
+        try:
+            _scanned = _is_scanned_pdf(pdf_path, password)
+        except Exception:
+            _scanned = False
+        if _scanned:
+            if progress_callback:
+                progress_callback(0, 4, "Taranmış belge — OCR ile metin tanınıyor...")
+            if _pdf_to_word_easyocr(pdf_path, docx_path, password=password, progress_callback=progress_callback):
+                if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+                    if progress_callback:
+                        progress_callback(4, 4, "Tamamlandı.")
+                    return True
+            ocr_scale = 1.38 if reduced_quality else 2.0
+            _pdf_to_word_ocr_fitz(
+                pdf_path, docx_path, password,
+                progress_callback=progress_callback,
+                ocr_matrix_scale=ocr_scale,
+            )
+            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+                if progress_callback:
+                    progress_callback(4, 4, "Tamamlandı.")
+                return True
+
         if progress_callback:
             progress_callback(0, 4, "EasyOCR ile düzen analizi başlatılıyor...")
 
