@@ -168,6 +168,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [busy, setBusy] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState<string | null>(null);
   const [rendering, setRendering] = useState(false);
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrTried, setOcrTried] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
@@ -244,6 +246,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       setCurrent(0);
       setEdits(new Map());
       setAdded([]);
+      setOcrTried(false);
       setEditorOpen(true);
     } catch (e) {
       setFile(null);
@@ -691,6 +694,27 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shifts, current]);
 
+  // Taranmış PDF → sunucuda Tesseract OCR ile metni tanı, analizi düzenlenebilir metinle değiştir.
+  async function runOcr() {
+    if (!file || ocrBusy) return;
+    setOcrBusy(true);
+    setError(null);
+    setLoadingMsg(tr ? "Taranmış belge — OCR ile metin tanınıyor (birkaç saniye sürebilir)…" : "Scanned document — recognizing text with OCR (may take a few seconds)…");
+    try {
+      const a = await analyzePdf(file, accessToken ?? null, true);
+      setAnalysis(a);
+      setEdits(new Map());
+      setSelected(null);
+      setMultiSel(new Set());
+      setOcrTried(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tr ? "OCR başarısız." : "OCR failed.");
+    } finally {
+      setOcrBusy(false);
+      setLoadingMsg(null);
+    }
+  }
+
   async function preparePdf() {
     if (!file || !analysis) return;
     const ops: PdfTextEdit[] = [];
@@ -824,7 +848,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     }
     void saveBlobToUser(blob, fn).catch(() => {});
   }
-  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setLimitMsg(null); setFetching(false); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); }
+  function reset() { setFile(null); setDoc(null); setAnalysis(null); setEdits(new Map()); setAdded([]); setAddedImages([]); setResult(null); setError(null); setLimitMsg(null); setFetching(false); setEditorOpen(false); setThumbs([]); setZoom(1); setMultiSel(new Set()); setOcrTried(false); setOcrBusy(false); }
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -845,11 +869,24 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       </div>
 
       {scanned && (
-        <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-orange-400/30 bg-orange-500/[0.08] px-4 py-3 text-[13px] text-orange-200">
-          <FileText className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{tr
-            ? "Bu PDF taranmış görünüyor: sayfalar resim, düzenlenecek metin katmanı yok. Mevcut yazılar resmin parçası olduğu için metin olarak düzeltilemez. Yine de görselleri silebilir ve «Metin Ekle» ile üzerine yeni yazı ekleyebilirsiniz."
-            : "This PDF looks scanned: pages are images with no text layer. Existing words are part of the image and can't be edited as text. You can still delete images and add new text with «Add Text»."}</p>
+        <div className="mb-4 rounded-2xl border border-orange-400/30 bg-orange-500/[0.08] px-4 py-3 text-[13px] text-orange-200">
+          <div className="flex items-start gap-2.5">
+            <FileText className="mt-0.5 h-4 w-4 shrink-0" />
+            <p>{ocrTried
+              ? (tr
+                ? "OCR bu belgede düzenlenebilir metin bulamadı (görüntü kalitesi düşük olabilir). Görselleri silebilir ve «Metin Ekle» ile üzerine yeni yazı ekleyebilirsiniz."
+                : "OCR couldn't find editable text in this document (image quality may be low). You can delete images and add new text with «Add Text».")
+              : (tr
+                ? "Bu PDF taranmış görünüyor (sayfalar resim). Metni düzenlenebilir yapmak için OCR çalıştırın — yazıları tanıyıp metne çevirir."
+                : "This PDF looks scanned (pages are images). Run OCR to make the text editable — it recognizes the words and turns them into text.")}</p>
+          </div>
+          {!ocrTried && (
+            <button type="button" onClick={() => void runOcr()} disabled={ocrBusy}
+              className="mt-2.5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
+              {ocrBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {tr ? "Metni Tanı (OCR)" : "Recognize Text (OCR)"}
+            </button>
+          )}
         </div>
       )}
 

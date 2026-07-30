@@ -363,6 +363,41 @@ def _edit_font_archive():
     return _edit_font_archive_cache
 
 
+_tessdata_cache: str | None = None
+_tessdata_resolved = False
+
+
+def _tessdata_dir() -> str | None:
+    """PyMuPDF get_textpage_ocr için Tesseract dil-verisi (tessdata) dizinini bul.
+    TESSDATA_PREFIX env → yaygın Linux/Docker yolları → glob. Sürümden bağımsız."""
+    global _tessdata_cache, _tessdata_resolved
+    if _tessdata_resolved:
+        return _tessdata_cache
+    import glob as _glob
+
+    _tessdata_resolved = True
+    env = _os.environ.get("TESSDATA_PREFIX")
+    cands: list[str] = []
+    if env:
+        cands += [env, str(Path(env) / "tessdata")]
+    cands += [
+        "/usr/share/tesseract-ocr/5/tessdata",
+        "/usr/share/tesseract-ocr/4.00/tessdata",
+        "/usr/share/tessdata",
+        "/usr/local/share/tessdata",
+    ]
+    cands += sorted(_glob.glob("/usr/share/tesseract-ocr/*/tessdata"))
+    for c in cands:
+        try:
+            if c and Path(c).is_dir() and any(Path(c).glob("*.traineddata")):
+                _tessdata_cache = c
+                return c
+        except Exception:
+            continue
+    _tessdata_cache = None
+    return None
+
+
 def _map_font_to_key(font_name: str) -> str:
     """PDF span font adını mevcut gömülü fontlardan en yakınına eşler (serif/sans/mono).
 
@@ -906,10 +941,15 @@ async def tool_pdf_analyze(
     request: Request,
     file: UploadFile = File(...),
     password: str = Form(""),
+    ocr: str = Form(""),
 ):
     """Her sayfadaki öğeleri (metin span'leri + görseller) bbox/renk/boyutla döndürür
-    → frontend her öğeyi tıklanıp düzenlenebilir/silinebilir yapar. Misafire açık."""
+    → frontend her öğeyi tıklanıp düzenlenebilir/silinebilir yapar. Misafire açık.
+
+    ocr=1: metin katmanı OLMAYAN (taranmış) sayfalarda Tesseract OCR (get_textpage_ocr)
+    çalıştırıp koordinatlı DÜZENLENEBİLİR metin döndürür → taranmış PDF de editörde düzenlenebilir."""
     decision = {"fileSizeLimitMB": 50}
+    want_ocr = str(ocr).strip().lower() in ("1", "true", "yes")
     workdir = create_workdir()
     try:
         saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
@@ -930,7 +970,27 @@ async def tool_pdf_analyze(
                     page = doc[pi]
                     els: list[dict[str, Any]] = []
                     ei = 0
-                    for bi, bl in enumerate(page.get_text("dict").get("blocks", [])):
+                    text_dict = page.get_text("dict")
+                    # Taranmış sayfa (metin katmanı yok) + ocr=1 → Tesseract OCR ile metni tanı,
+                    # KOORDİNATLI span'ler döndür (aynı yapı) → editörde düzenlenebilir olsun.
+                    if want_ocr:
+                        _has_text = any(
+                            (_s.get("text") or "").strip()
+                            for _b in text_dict.get("blocks", [])
+                            for _l in _b.get("lines", [])
+                            for _s in _l.get("spans", [])
+                        )
+                        if not _has_text:
+                            try:
+                                _td = _tessdata_dir()
+                                _ocr_kw: dict[str, Any] = dict(flags=0, language="tur+eng", dpi=200, full=True)
+                                if _td:
+                                    _ocr_kw["tessdata"] = _td
+                                _tp = page.get_textpage_ocr(**_ocr_kw)
+                                text_dict = page.get_text("dict", textpage=_tp)
+                            except Exception:
+                                pass  # OCR başarısız → sayfa görüntü olarak kalır
+                    for bi, bl in enumerate(text_dict.get("blocks", [])):
                         for li, ln in enumerate(bl.get("lines", [])):
                             for span in ln.get("spans", []):
                                 txt = span.get("text", "")
