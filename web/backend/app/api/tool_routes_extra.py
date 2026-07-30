@@ -335,6 +335,33 @@ _EDIT_FONTS = {
     "oswald": str(_ASSETS / "Oswald-Regular.ttf"),
 }
 
+# Kelime bazlı zengin biçim (insert_htmlbox) için: font-family adlarını (frontend'in
+# gönderdiği FONT_LABEL adları) gerçek gömülü TTF'lere @font-face + archive ile bağla →
+# 7 font DOĞRU çıkar (aksi halde htmlbox genel aileye düşerdi). Adlar tarayıcı önizlemesiyle
+# birebir aynı (Roboto / Noto Serif / …) → önizleme = indirilen.
+_EDIT_FONT_FAMILY = {
+    "sans": "Roboto", "serif": "Noto Serif", "mono": "Roboto Mono",
+    "lato": "Lato", "montserrat": "Montserrat", "merriweather": "Merriweather", "oswald": "Oswald",
+}
+_EDIT_FONT_CSS = "".join(
+    f'@font-face {{font-family: "{_EDIT_FONT_FAMILY[_k]}"; src: url({Path(_v).name});}}'
+    for _k, _v in _EDIT_FONTS.items()
+)
+_edit_font_archive_cache: Any = None
+
+
+def _edit_font_archive():
+    """insert_htmlbox'a verilecek font arşivi (gömülü TTF'ler, basename ile). Süreç başına bir kez."""
+    global _edit_font_archive_cache
+    if _edit_font_archive_cache is None:
+        import fitz as _fitz
+
+        ar = _fitz.Archive()
+        for _v in _EDIT_FONTS.values():
+            ar.add(_v, Path(_v).name)
+        _edit_font_archive_cache = ar
+    return _edit_font_archive_cache
+
 
 def _map_font_to_key(font_name: str) -> str:
     """PDF span font adını mevcut gömülü fontlardan en yakınına eşler (serif/sans/mono).
@@ -523,7 +550,9 @@ async def tool_edit_text(
                             x0, y0, x1, y1 = (float(v) for v in op["bbox"])
                             rect = _fitz.Rect(x0, y0, x1, y1)
                             try:
-                                page.insert_htmlbox(rect, str(html), scale_low=0)
+                                # css + archive → font-family adları (Roboto/Noto Serif/…) gerçek
+                                # gömülü TTF'lere çözülür (7 font kelime bazında doğru).
+                                page.insert_htmlbox(rect, str(html), css=_EDIT_FONT_CSS, archive=_edit_font_archive(), scale_low=0)
                             except Exception:
                                 # htmlbox yoksa/başarısızsa (eski PyMuPDF) blok BOŞ kalmasın:
                                 # HTML etiketlerini sıyır, düz metni sarmalı yaz (stil kaybı olur ama okunur).

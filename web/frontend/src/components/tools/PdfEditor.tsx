@@ -378,8 +378,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     commitRich(f.el, f.id);
     return true;
   }
-  /** Seçili parçayı em ORANIYLA büyüt/küçült (px değil → önizleme+export ölçekten bağımsız doğru). */
-  function richFontStep(bigger: boolean): boolean {
+  /** Seçili parçayı bir <span> ile sarmalayıp verilen stili uygula (manuel → temiz, tırnaklı CSS). */
+  function richWrapStyle(applyStyle: (span: HTMLSpanElement) => void): boolean {
     const f = focusedSelection();
     if (!f) return false;
     const sel = window.getSelection();
@@ -387,7 +387,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     try {
       const range = sel.getRangeAt(0);
       const span = document.createElement("span");
-      span.style.fontSize = bigger ? "1.15em" : "0.87em";
+      applyStyle(span);
       span.appendChild(range.extractContents());
       range.insertNode(span);
       sel.removeAllRanges();
@@ -398,6 +398,12 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     commitRich(f.el, f.id);
     return true;
   }
+  /** Seçili parçayı em ORANIYLA büyüt/küçült (px değil → önizleme+export ölçekten bağımsız doğru). */
+  const richFontStep = (bigger: boolean): boolean =>
+    richWrapStyle((span) => { span.style.fontSize = bigger ? "1.15em" : "0.87em"; });
+  /** Seçili parçaya gerçek font ailesi (Roboto/Noto Serif/…) uygula → backend @font-face ile doğru. */
+  const richFontFamily = (fam: string): boolean =>
+    richWrapStyle((span) => { span.style.fontFamily = `'${fam}'`; });
   const toggleFmt = (key: "bold" | "italic" | "underline" | "strike") => {
     const cmd = key === "bold" ? "bold" : key === "italic" ? "italic" : key === "underline" ? "underline" : "strikeThrough";
     if (richExec(cmd)) return; // seçili kelime/parça → yalnız ona uygula
@@ -538,8 +544,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     if (f && sel && sel.rangeCount) savedRangeRef.current = { id: f.id, range: sel.getRangeAt(0).cloneRange() };
     else savedRangeRef.current = null;
   }
-  /** Saklanan seçimi geri yükle ve verilen komutu yalnız o parçaya uygula (başarılıysa true). */
-  function applyToSavedSelection(cmd: string, value: string): boolean {
+  /** Native picker/select açılmadan önce saklanan seçimi geri yükle (varsa true). */
+  function restoreSaved(): boolean {
     const saved = savedRangeRef.current;
     savedRangeRef.current = null;
     if (!saved) return false;
@@ -549,18 +555,19 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     el.focus();
     sel.removeAllRanges();
     sel.addRange(saved.range);
-    return richExec(cmd, value);
+    return true;
   }
   function applyFont(fk: FontKey) {
     setFont(fk);
-    // Seçili parça varsa yalnız ona (htmlbox genel aile: serif/sans/mono); yoksa tüm öğe.
-    const fam = fk === "serif" || fk === "merriweather" ? "serif" : fk === "mono" ? "monospace" : "sans-serif";
-    if (applyToSavedSelection("fontName", fam) || richExec("fontName", fam)) return;
+    restoreSaved(); // font menüsü seçimi kaybettiyse geri yükle
+    // Seçili parça varsa yalnız ona; gerçek font adı (backend @font-face ile 7 font doğru).
+    if (richFontFamily(FONT_LABEL[fk])) return;
     applyPatch({ font: fk });
   }
   function applyColorFromPicker(c: string) {
     setColor(c);
-    if (applyToSavedSelection("foreColor", c)) return; // yalnız seçili parça
+    restoreSaved(); // renk penceresi seçimi kaybettiyse geri yükle
+    if (richExec("foreColor", c)) return; // yalnız seçili parça
     applyPatch({ color: c }); // seçim yoksa tüm öğe
   }
 
@@ -720,9 +727,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           const size = ed!.size ?? el.size ?? 12;
           const fk = (ed!.font ?? "sans") as FontKey;
           const baseColor = ed!.color ?? el.color ?? "#111111";
-          // insert_htmlbox genel aile ister (Roboto/system-ui tanımaz).
-          const fam = fk === "serif" || fk === "merriweather" ? "serif" : fk === "mono" ? "monospace" : "sans-serif";
-          const wrapped = `<div style="font-family:${fam};font-size:${size}px;color:${baseColor};text-align:${ed!.align ?? "left"};line-height:1.0;margin:0;padding:0">${sanitizeRichHtml(richHtml)}</div>`;
+          // Gerçek font adı (Roboto/Noto Serif/…) → backend @font-face ile gömülü TTF'ye çözülür
+          // (7 font doğru). Tarayıcı önizlemesindeki adla birebir → önizleme = indirilen.
+          const wrapped = `<div style="font-family:'${FONT_LABEL[fk]}';font-size:${size}px;color:${baseColor};text-align:${ed!.align ?? "left"};line-height:1.0;margin:0;padding:0">${sanitizeRichHtml(richHtml)}</div>`;
           ops.push({ page: p, bbox: drawBbox, clear: clearBbox, html: wrapped, by: el.by, bg: bgMap.get(el.id) });
           continue;
         }
