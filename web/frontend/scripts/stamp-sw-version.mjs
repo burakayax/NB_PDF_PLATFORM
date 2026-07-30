@@ -50,14 +50,11 @@ if (!sw.includes(PLACEHOLDER)) {
 
 // --- version.json: sürüm + tarih + "neler değişti" notları OTOMATİK üretilir ---
 //
-// NEDEN: notlar elle güncelleniyordu ve unutuluyordu → "Yeni sürüm hazır" bildirimi
-// her deploy'da AYNI eski notları gösteriyordu (kullanıcı şikayeti: "gerçekten yapılan
-// işlem yazılmıyor"). Artık notlar, bir ÖNCEKİ deploy'dan bu yana yapılan git commit'lerinden
-// türetilir → her sürüm gerçek değişiklikleri yansıtır.
-//
-// NASIL: version.json.version zaten önceki build'in git hash'ini ("g<hash>") tutar.
-// Onu üzerine yazmadan ÖNCE okuyup `prevHash..HEAD` aralığındaki kullanıcıyı ilgilendiren
-// commit'leri (feat/fix/perf) alır, conventional-commit önekini temizler, TR notlara çevirir.
+// NEDEN: Kullanıcıya gösterilen "Yeni sürüm hazır" notları PROFESYONEL ve genel olmalı —
+// ham commit mesajları (geliştirici dili, küçük iç detaylar) kullanıcıya gösterilmez.
+// Bunun yerine, bir önceki deploy'dan bu yana yapılan commit TÜRLERİNDEN (feat/fix/perf)
+// cilalı, genel kullanıcı-dostu satırlar üretilir ("Performans iyileştirmeleri", "Hata
+// düzeltmeleri" gibi). Küçük çaplı değişiklikler ayrı ayrı YAZILMAZ.
 
 /** "g<hash>" biçimindeki build id'den git ref'i çıkarır (yoksa null). */
 function refFromBuildId(val) {
@@ -66,60 +63,68 @@ function refFromBuildId(val) {
   return m ? m[1] : null;
 }
 
-/** Bir önceki deploy'dan bu yana kullanıcıyı ilgilendiren commit'lerden TR not listesi üretir. */
-function releaseNotesTr(prevRef) {
-  const range = prevRef ? `${prevRef}..HEAD` : "-12";
+/** Bir önceki deploy'dan bu yana yapılan commit'lerin TÜRLERİNİ (feat/fix/perf/refactor) döndürür. */
+function commitTypesSince(prevRef) {
+  const range = prevRef ? `${prevRef}..HEAD` : "-15";
   let raw = "";
   try {
     raw = execSync(`git log ${range} --no-merges --pretty=format:%s`, {
       stdio: ["ignore", "pipe", "ignore"],
     }).toString();
   } catch {
-    // prevRef geçmişte yoksa (shallow clone / force-push) → son 12 commit'e düş.
     try {
-      raw = execSync(`git log -12 --no-merges --pretty=format:%s`, {
+      raw = execSync(`git log -15 --no-merges --pretty=format:%s`, {
         stdio: ["ignore", "pipe", "ignore"],
       }).toString();
     } catch {
-      return [];
+      return new Set();
     }
   }
-  const seen = new Set();
-  const notes = [];
+  const types = new Set();
   for (const line of raw.split("\n")) {
-    const s = line.trim();
-    if (!s || /^merge:/i.test(s)) continue;
-    // Yalnızca kullanıcıya görünür türler; altyapı/commit-hijyen türlerini ele.
-    const m = s.match(/^(feat|fix|perf)(\([^)]*\))?:\s*(.+)$/i);
-    if (!m) continue;
-    let text = m[3].replace(/\s+/g, " ").trim();
-    text = text.charAt(0).toLocaleUpperCase("tr-TR") + text.slice(1);
-    const key = text.toLocaleLowerCase("tr-TR");
-    if (seen.has(key)) continue;
-    seen.add(key);
-    notes.push(text);
-    if (notes.length >= 5) break;
+    const m = line.trim().match(/^(feat|fix|perf|refactor)(\([^)]*\))?:/i);
+    if (m) types.add(m[1].toLowerCase());
   }
-  return notes;
+  return types;
+}
+
+/**
+ * Commit türlerinden PROFESYONEL, genel sürüm notları üretir (TR + EN).
+ * Ham commit metni asla sızmaz; küçük detaylar tek tek yazılmaz.
+ */
+function professionalNotes(types) {
+  const tr = [];
+  const en = [];
+  if (types.has("feat")) {
+    tr.push("Yeni özellikler ve geliştirmeler eklendi.");
+    en.push("New features and enhancements.");
+  }
+  if (types.has("perf")) {
+    tr.push("Performans ve hız iyileştirmeleri yapıldı.");
+    en.push("Performance and speed improvements.");
+  }
+  if (types.has("fix") || types.has("refactor")) {
+    tr.push("Hatalar giderildi ve kararlılık artırıldı.");
+    en.push("Bug fixes and stability improvements.");
+  }
+  if (tr.length === 0) {
+    tr.push("Genel iyileştirmeler ve bakım güncellemeleri.");
+    en.push("General improvements and maintenance updates.");
+  }
+  return { tr, en };
 }
 
 if (existsSync(versionPath)) {
   try {
     const v = JSON.parse(readFileSync(versionPath, "utf8"));
     const prevRef = refFromBuildId(v.version); // üzerine yazmadan önceki hash
-    const tr = releaseNotesTr(prevRef);
+    const types = commitTypesSince(prevRef);
+    const notes = professionalNotes(types);
     v.version = id;
     v.date = new Date().toISOString().slice(0, 10);
-    if (tr.length > 0) {
-      v.notes = {
-        tr,
-        // EN kitlesi azınlık + TR commit'lerini İngilizce göstermek yanlış olur;
-        // spesifik-ama-yanlış yerine dürüst genel satır (asla "eski/donuk" değil).
-        en: ["We shipped improvements and bug fixes."],
-      };
-    }
+    v.notes = notes;
     writeFileSync(versionPath, JSON.stringify(v, null, 2) + "\n", "utf8");
-    console.log(`[stamp-sw] version.json → ${id} (${v.date}), ${tr.length} not`);
+    console.log(`[stamp-sw] version.json → ${id} (${v.date}), ${notes.tr.length} profesyonel not`);
   } catch (e) {
     console.warn(`[stamp-sw] version.json güncellenemedi: ${e?.message ?? e}`);
   }
