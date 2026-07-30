@@ -53,7 +53,9 @@ type FontKey = "sans" | "serif" | "mono" | "lato" | "montserrat" | "merriweather
 type AlignKey = "left" | "center" | "right";
 // Biçim bayrakları — kalın/italik/altı çizili/üstü çizili + hizalama.
 type Fmt = { bold?: boolean; italic?: boolean; underline?: boolean; strike?: boolean; align?: AlignKey };
-type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey } & Fmt;
+// html: kelime bazlı zengin biçim (contentEditable innerHTML). Doluysa export insert_htmlbox
+// ile yapılır (parça parça renk/kalın/italik/altı-üstü çizili/boyut korunur).
+type Edit = { text?: string; deleted?: boolean; size?: number; color?: string; font?: FontKey; html?: string } & Fmt;
 type Added = { id: string; page: number; bbox: [number, number, number, number]; text: string; size: number; color: string; font: FontKey } & Fmt;
 // Kullanıcının eklediği resim — bbox (PDF pt, döndürülmemiş), aspect (w/h), açı (derece).
 type AddedImg = { id: string; page: number; bbox: [number, number, number, number]; dataUrl: string; aspect: number; rotate: number };
@@ -86,6 +88,17 @@ const PRESET_COLORS = ["#111111", "#ffffff", "#e11d48", "#f59e0b", "#16a34a", "#
 // Metin genişliğini PDF nokta (pt) cinsinden ölç — komşu-kaydırma (madde 3) hesabı için.
 // Ölçümde fontSize=pt→px kullanıldığından dönen genişlik pt ile sayısal olarak eşdeğer.
 const _measureCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
+// Kelime bazlı zengin HTML'i export öncesi hafifçe temizle (insert_htmlbox'a giden).
+// Script/style/olay-işleyici ve gömme etiketlerini sıyır; contentEditable'ın ürettiği
+// span/b/i/u/font gibi güvenli biçim etiketlerini korur.
+function sanitizeRichHtml(html: string): string {
+  return html
+    .replace(/<\/?(script|style|iframe|object|embed|link|meta|img|svg)[^>]*>/gi, "")
+    .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
+    .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
+    .replace(/\son\w+\s*=\s*[^\s>]+/gi, "");
+}
+
 function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boolean, italic: boolean): number {
   const ctx = _measureCanvas?.getContext("2d");
   if (!ctx || !text) return 0;
@@ -95,15 +108,17 @@ function measureTextPt(text: string, sizePt: number, fontKey: FontKey, bold: boo
 
 /** Otomatik-genişleyen düzenlenebilir metin (contentEditable) — orijinal boyutu korur,
  * kutu içeriğe göre büyür (kırpmaz). Kontrolsüz: metin bir kez ayarlanır. */
-function AutoText({ id, initial, className, style, onInput, onClick, onFocus, autoFocus }: {
-  id: string; initial: string; className?: string; style?: React.CSSProperties;
-  onInput: (t: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void; autoFocus?: boolean;
+function AutoText({ id, initial, initialHtml, className, style, onInput, onClick, onFocus, autoFocus }: {
+  id: string; initial: string; initialHtml?: string; className?: string; style?: React.CSSProperties;
+  onInput: (text: string, html: string) => void; onClick: (e: React.MouseEvent) => void; onFocus: () => void; autoFocus?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.textContent = initial;
+    // Zengin biçim varsa (kelime bazlı) innerHTML; yoksa düz metin.
+    if (initialHtml && /<[a-z]/i.test(initialHtml)) el.innerHTML = initialHtml;
+    else el.textContent = initial;
     if (autoFocus) {
       el.focus();
       // İmleci metnin sonuna taşı
@@ -118,7 +133,7 @@ function AutoText({ id, initial, className, style, onInput, onClick, onFocus, au
   }, []);
   return (
     <div ref={ref} data-tid={id} data-op="1" contentEditable suppressContentEditableWarning role="textbox"
-      onInput={() => onInput(ref.current?.textContent ?? "")}
+      onInput={() => onInput(ref.current?.textContent ?? "", ref.current?.innerHTML ?? "")}
       onClick={onClick} onFocus={onFocus}
       className={className}
       style={{ whiteSpace: "pre", display: "inline-block", minWidth: "6px", ...style }} />
@@ -339,8 +354,60 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     if (key === "italic") return ed?.italic ?? el?.italic ?? false;
     return !!ed?.[key];
   }
-  const toggleFmt = (key: "bold" | "italic" | "underline" | "strike") => applyPatch({ [key]: !curFmt(key) } as Fmt);
-  const applyAlign = (a: AlignKey) => { setAlign(a); applyPatch({ align: a }); };
+  // ── Kelime bazlı zengin biçim (seçili metin parçasına uygula) ──
+  /** Odaklı düzenlenebilir metin içinde ÇÖKMEMİŞ (gerçek) seçim varsa döndürür. */
+  function focusedSelection(): { el: HTMLElement; id: string } | null {
+    const ae = document.activeElement as HTMLElement | null;
+    if (!ae || !ae.isContentEditable) return null;
+    const id = ae.getAttribute("data-tid");
+    if (!id) return null;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+    if (!ae.contains(sel.anchorNode) || !ae.contains(sel.focusNode)) return null;
+    return { el: ae, id };
+  }
+  function commitRich(el: HTMLElement, id: string) {
+    setEdit(id, { text: el.textContent ?? "", html: el.innerHTML });
+  }
+  /** Seçili parçaya execCommand ile biçim uygula; seçim yoksa false → çağıran tüm-öğeye düşer. */
+  function richExec(cmd: string, value?: string): boolean {
+    const f = focusedSelection();
+    if (!f) return false;
+    try { document.execCommand("styleWithCSS", false, "true"); } catch { /* eski tarayıcı */ }
+    try { document.execCommand(cmd, false, value); } catch { return false; }
+    commitRich(f.el, f.id);
+    return true;
+  }
+  /** Seçili parçayı em ORANIYLA büyüt/küçült (px değil → önizleme+export ölçekten bağımsız doğru). */
+  function richFontStep(bigger: boolean): boolean {
+    const f = focusedSelection();
+    if (!f) return false;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return false;
+    try {
+      const range = sel.getRangeAt(0);
+      const span = document.createElement("span");
+      span.style.fontSize = bigger ? "1.15em" : "0.87em";
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      sel.removeAllRanges();
+      const r = document.createRange();
+      r.selectNodeContents(span);
+      sel.addRange(r);
+    } catch { return false; }
+    commitRich(f.el, f.id);
+    return true;
+  }
+  const toggleFmt = (key: "bold" | "italic" | "underline" | "strike") => {
+    const cmd = key === "bold" ? "bold" : key === "italic" ? "italic" : key === "underline" ? "underline" : "strikeThrough";
+    if (richExec(cmd)) return; // seçili kelime/parça → yalnız ona uygula
+    applyPatch({ [key]: !curFmt(key) } as Fmt); // seçim yoksa → tüm öğe
+  };
+  const applyAlign = (a: AlignKey) => { setAlign(a); applyPatch({ align: a }); }; // hizalama satır bazlı
+  function sizeStep(bigger: boolean) {
+    if (richFontStep(bigger)) return; // seçili parça → em oranıyla
+    applySize(bigger ? size + 1 : size - 1); // tüm öğe
+  }
 
   /** Canvas'tan öğe bbox'ının çevresindeki baskın rengi örnekle → silgi/redaction fill.
    * Metin gövdesi yerine kenar/dış-halka noktalarından örnekler (glyph'e denk gelmesin),
@@ -530,7 +597,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
   function applyColor(c: string) {
     setColor(c);
-    applyPatch({ color: c });
+    if (richExec("foreColor", c)) return; // seçili kelime/parça → yalnız ona
+    applyPatch({ color: c }); // seçim yoksa → tüm öğe
   }
   function applySize(s: number) {
     const cl = Math.max(6, Math.min(72, Math.round(s)));
@@ -600,9 +668,23 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           continue;
         }
         if (el.type !== "text") continue;
-        const changed = ed && ((ed.text !== undefined && ed.text !== el.text) || ed.color !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined || ed.italic !== undefined || ed.underline !== undefined || ed.strike !== undefined || ed.align !== undefined);
+        const richHtml = ed?.html && /<[a-z]/i.test(ed.html) ? ed.html : undefined;
+        const changed = ed && ((ed.text !== undefined && ed.text !== el.text) || ed.color !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined || ed.italic !== undefined || ed.underline !== undefined || ed.strike !== undefined || ed.align !== undefined || !!richHtml);
         const shifted: [number, number, number, number] = shift > 0.5 ? [x0 + shift, y0, x1 + shift, y1] : el.bbox;
         const clear: [number, number, number, number] | undefined = shift > 0.5 ? [x0, y0, x1, y1] : undefined;
+        if (changed && richHtml) {
+          // Kelime bazlı zengin biçim → insert_htmlbox ile parça parça renk/kalın/italik/
+          // altı-üstü çizili/boyut korunur. Temel stil (renk/boyut/font/hizalama) wrapper'da;
+          // iç span'ler parça bazında ezer. Boyut em oranıyla saklandığı için ölçek uyumlu.
+          const size = ed!.size ?? el.size ?? 12;
+          const fk = (ed!.font ?? "sans") as FontKey;
+          const baseColor = ed!.color ?? el.color ?? "#111111";
+          // insert_htmlbox genel aile ister (Roboto/system-ui tanımaz).
+          const fam = fk === "serif" || fk === "merriweather" ? "serif" : fk === "mono" ? "monospace" : "sans-serif";
+          const wrapped = `<div style="font-family:${fam};font-size:${size}px;color:${baseColor};text-align:${ed!.align ?? "left"};line-height:1.0;margin:0;padding:0">${sanitizeRichHtml(richHtml)}</div>`;
+          ops.push({ page: p, bbox: shifted, clear, html: wrapped, by: el.by, bg: bgMap.get(el.id) });
+          continue;
+        }
         if (changed) {
           // Düzenlenmiş öğe. Önizlemedeki font ("sans" varsayılan) ile birebir olsun diye
           // ed.font ?? "sans" kullanılır. Taşma varsa noshrink (küçültme yerine komşu kaydı).
@@ -782,7 +864,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                   {tr ? "Renk" : "Color"}
                   <span className="flex items-center gap-1">
                     {PRESET_COLORS.map((c) => (
-                      <button key={c} type="button" onClick={() => applyColor(c)} title={c}
+                      <button key={c} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => applyColor(c)} title={c}
                         className={`h-5 w-5 rounded-md border transition hover:scale-110 ${color.toLowerCase() === c.toLowerCase() ? "border-white ring-2 ring-cyan-400" : "border-white/20"}`}
                         style={{ backgroundColor: c }} />
                     ))}
@@ -799,9 +881,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Boyut" : "Size"}
                   <span className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[0.04] px-1 py-0.5">
-                    <button type="button" onClick={() => applySize(size - 1)} title={tr ? "Küçült" : "Smaller"} aria-label={tr ? "Küçült" : "Smaller"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Minus className="h-3.5 w-3.5" /></button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => sizeStep(false)} title={tr ? "Küçült" : "Smaller"} aria-label={tr ? "Küçült" : "Smaller"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Minus className="h-3.5 w-3.5" /></button>
                     <span className="min-w-[2ch] text-center text-[12px] font-semibold tabular-nums text-white">{size}</span>
-                    <button type="button" onClick={() => applySize(size + 1)} title={tr ? "Büyüt" : "Larger"} aria-label={tr ? "Büyüt" : "Larger"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Plus className="h-3.5 w-3.5" /></button>
+                    <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => sizeStep(true)} title={tr ? "Büyüt" : "Larger"} aria-label={tr ? "Büyüt" : "Larger"} className="flex h-6 w-6 items-center justify-center rounded-md text-slate-300 transition hover:bg-white/10 hover:text-white"><Plus className="h-3.5 w-3.5" /></button>
                   </span>
                 </label>
                 {/* Biçim — kalın/italik/altı çizili/üstü çizili (madde 8) */}
@@ -813,7 +895,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     ["underline", Underline, tr ? "Altı çizili" : "Underline"],
                     ["strike", Strikethrough, tr ? "Üstü çizili" : "Strikethrough"],
                   ] as [("bold" | "italic" | "underline" | "strike"), typeof Bold, string][]).map(([k, Icon, label]) => (
-                    <button key={k} type="button" onClick={() => toggleFmt(k)} title={label} aria-label={label} aria-pressed={curFmt(k) === true}
+                    <button key={k} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => toggleFmt(k)} title={label} aria-label={label} aria-pressed={curFmt(k) === true}
                       className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${curFmt(k) === true ? "bg-cyan-500/25 text-cyan-200 ring-1 ring-cyan-400/50" : "text-slate-300 hover:bg-white/[0.08]"}`}>
                       <Icon className="h-4 w-4" />
                     </button>
@@ -922,11 +1004,14 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     // Backend ile BİREBİR: metin orijinal kutudan genişse fontu SIĞDIR (küçült)
                     // → önizleme, indirilen PDF ile aynı boyutta görünür ("bir tık büyük" biter,
                     // madde 2/7). Düzenlenip taşan (noshrink) veya kaydırılan öğede küçültme yok.
+                    const richHtml = edits.get(el.id)?.html;
+                    const isRich = !!richHtml && /<[a-z]/i.test(richHtml);
                     const rawPx = elSize(el) * scale;
                     const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el));
                     const _boxW = x1 - x0;
                     const _noShrink = (edits.has(el.id) && _txtW - _boxW > 1) || shift > 0.5;
-                    const _fit = (!_noShrink && _txtW > _boxW && _boxW > 1)
+                    // Zengin (kelime bazlı) öğede küçültme yok — export htmlbox otomatik ölçekler.
+                    const _fit = (!isRich && !_noShrink && _txtW > _boxW && _boxW > 1)
                       ? Math.max(_boxW / _txtW, 5 / Math.max(elSize(el), 1))
                       : 1;
                     const fsPx = rawPx * _fit;
@@ -937,8 +1022,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const al = elAlign(el);
                     return (
                       <div key={el.id} className="absolute" style={{ left: eb.left + shiftPx, top: eb.top }}>
-                        <AutoText id={el.id} initial={elText(el)} autoFocus={sel && !edits.has(el.id) && !multiSel.size}
-                          onInput={(t) => setEdit(el.id, { text: t })}
+                        <AutoText id={el.id} initial={elText(el)} initialHtml={richHtml} autoFocus={sel && !edits.has(el.id) && !multiSel.size}
+                          onInput={(t, h) => setEdit(el.id, { text: t, html: h })}
                           onClick={(e) => { e.stopPropagation(); selectEl(el, e.ctrlKey || e.metaKey || e.shiftKey); }}
                           onFocus={() => { if (!multiSel.size) selectEl(el); }}
                           className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
