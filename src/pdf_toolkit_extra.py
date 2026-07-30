@@ -15,8 +15,8 @@ from typing import Dict, List, Optional
 
 import fitz
 
-# pdf_engine'den parola açma
-from src.pdf_engine import _open_pdf_reader, is_pdf_encrypted, get_num_pages
+# pdf_engine'den parola açma + OCR (taranmış sayfalar için)
+from src.pdf_engine import _open_pdf_reader, is_pdf_encrypted, get_num_pages, ocr_page_text
 
 # Web SaaS: single quality tier (DPI not user-configurable).
 PDF_EXPORT_DPI_WEB = 300
@@ -330,11 +330,14 @@ def pdf_to_text(input_path: str, output_path: str, password: Optional[str] = Non
         lines: list[str] = []
         for page_num, page in enumerate(doc, 1):
             text = page.get_text("text").strip()
+            if not text:
+                # Metin katmanı yok (taranmış/görüntü sayfa) → Tesseract OCR ile metni tanı.
+                text = ocr_page_text(page).strip()
             if text:
                 lines.append(f"--- Sayfa {page_num} ---")
                 lines.append(text)
         if not lines:
-            raise Exception("PDF içinde çıkarılabilir metin bulunamadı. Taranmış görüntü PDF'leri metin içermez.")
+            raise Exception("PDF içinde metin bulunamadı (OCR de metin çıkaramadı — görüntü kalitesi düşük olabilir).")
         with open(output_path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
     finally:
