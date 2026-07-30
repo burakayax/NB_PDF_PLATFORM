@@ -25,7 +25,9 @@ services:
       - key: PDF_API_HOST
         value: "0.0.0.0"
       - key: PDF_CPU_WORKERS
-        value: "2"
+        value: "1"            # 512MB starter: ağır PDF işlemlerini SIRAYA al (aynı anda tek
+                              # işlem) → tepe bellek ~yarıya iner, OOM/restart önlenir. Büyük
+                              # plana (standard 2GB) geçince 2+ yapılabilir.
       - key: TRUSTED_HTTPS
         value: "true"
       - key: ENVIRONMENT
