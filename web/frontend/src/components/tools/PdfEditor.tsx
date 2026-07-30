@@ -770,9 +770,14 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
             <button data-tour="editor-add-text" type="button" onClick={() => { setAddMode((v) => !v); setSelected(null); }} className={`flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold transition ${addMode ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/40" : "text-slate-300 hover:bg-white/[0.06]"}`}><Type className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Metin Ekle" : "Add Text"}</span></button>
             <button data-tour="editor-add-image" type="button" onClick={() => imageInputRef.current?.click()} className="flex items-center gap-1.5 rounded-xl px-2.5 py-2 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.06]"><ImagePlus className="h-4 w-4" /><span className="hidden sm:inline">{tr ? "Resim Ekle" : "Add Image"}</span></button>
             <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/jpg,image/webp" className="hidden" onChange={(e) => { addImageFile(e.target.files?.[0]); e.target.value = ""; }} />
-            {selInfo?.kind === "text" && (
-              <>
-                <span className="mx-1 h-5 w-px bg-white/10" />
+            {/* Biçimlendirme araçları HER ZAMAN görünür; metin seçili değilken PASİF (soluk). */}
+            <span className="mx-1 h-5 w-px bg-white/10" />
+            <div
+              className="flex flex-wrap items-center gap-2 transition-opacity"
+              style={{ opacity: selInfo?.kind === "text" ? 1 : 0.4, pointerEvents: selInfo?.kind === "text" ? "auto" : "none" }}
+              aria-disabled={selInfo?.kind !== "text"}
+              title={selInfo?.kind === "text" ? undefined : (tr ? "Bir yazıya tıklayın" : "Click a text")}
+            >
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Renk" : "Color"}
                   <span className="flex items-center gap-1">
@@ -827,8 +832,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     </button>
                   ))}
                 </span>
-              </>
-            )}
+            </div>
             <div className="ml-auto flex items-center gap-3">
               {/* Yakınlaştırma — görsel seçicideki gibi */}
               <div data-tour="editor-zoom" className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-1">
@@ -915,7 +919,17 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     // Aktif/kaydırılmış → metni SAĞA kaydırılmış konumda çiz (orijinali KAPAK
                     // katmanı örter). Gerçek taban çizgisine (by) hizala + biçim (kalın/italik/
                     // altı-üstü çizili) + hizalama → önizleme indirilen PDF ile birebir (madde 3/7/8).
-                    const fsPx = elSize(el) * scale;
+                    // Backend ile BİREBİR: metin orijinal kutudan genişse fontu SIĞDIR (küçült)
+                    // → önizleme, indirilen PDF ile aynı boyutta görünür ("bir tık büyük" biter,
+                    // madde 2/7). Düzenlenip taşan (noshrink) veya kaydırılan öğede küçültme yok.
+                    const rawPx = elSize(el) * scale;
+                    const _txtW = measureTextPt(elText(el), elSize(el), elFont(el), elBold(el), elItalic(el));
+                    const _boxW = x1 - x0;
+                    const _noShrink = (edits.has(el.id) && _txtW - _boxW > 1) || shift > 0.5;
+                    const _fit = (!_noShrink && _txtW > _boxW && _boxW > 1)
+                      ? Math.max(_boxW / _txtW, 5 / Math.max(elSize(el), 1))
+                      : 1;
+                    const fsPx = rawPx * _fit;
                     const baselinePt = el.by ?? (y0 + (el.size ?? 12));
                     const textTop = (baselinePt - y0) * scale - ASCENT_RATIO * fsPx;
                     const shiftPx = shift * scale;
