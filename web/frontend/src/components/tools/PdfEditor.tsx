@@ -528,9 +528,40 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     ensureBg(el);
     if (el.type === "text") { setColor(elColor(el)); setSize(Math.round(elSize(el))); setFont(elFont(el)); setAlign(elAlign(el)); }
   }
+  // Native picker/select (renk kutusu, font açılır menüsü) AÇILINCA contentEditable seçimi
+  // kaybolur → AÇILMADAN ÖNCE (mousedown) seçimi sakla, seçim yapılınca geri yükleyip yalnız
+  // o parçaya uygula.
+  const savedRangeRef = useRef<{ id: string; range: Range } | null>(null);
+  function captureSelectionForPicker() {
+    const f = focusedSelection();
+    const sel = window.getSelection();
+    if (f && sel && sel.rangeCount) savedRangeRef.current = { id: f.id, range: sel.getRangeAt(0).cloneRange() };
+    else savedRangeRef.current = null;
+  }
+  /** Saklanan seçimi geri yükle ve verilen komutu yalnız o parçaya uygula (başarılıysa true). */
+  function applyToSavedSelection(cmd: string, value: string): boolean {
+    const saved = savedRangeRef.current;
+    savedRangeRef.current = null;
+    if (!saved) return false;
+    const el = document.querySelector<HTMLElement>(`[data-tid="${saved.id}"]`);
+    const sel = window.getSelection();
+    if (!el || !sel) return false;
+    el.focus();
+    sel.removeAllRanges();
+    sel.addRange(saved.range);
+    return richExec(cmd, value);
+  }
   function applyFont(fk: FontKey) {
     setFont(fk);
+    // Seçili parça varsa yalnız ona (htmlbox genel aile: serif/sans/mono); yoksa tüm öğe.
+    const fam = fk === "serif" || fk === "merriweather" ? "serif" : fk === "mono" ? "monospace" : "sans-serif";
+    if (applyToSavedSelection("fontName", fam) || richExec("fontName", fam)) return;
     applyPatch({ font: fk });
+  }
+  function applyColorFromPicker(c: string) {
+    setColor(c);
+    if (applyToSavedSelection("foreColor", c)) return; // yalnız seçili parça
+    applyPatch({ color: c }); // seçim yoksa tüm öğe
   }
 
   // Klavye ile silme: bir GÖRSEL seçiliyken Delete/Backspace → hemen sil (beyazla kapat).
@@ -670,8 +701,18 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
         if (el.type !== "text") continue;
         const richHtml = ed?.html && /<[a-z]/i.test(ed.html) ? ed.html : undefined;
         const changed = ed && ((ed.text !== undefined && ed.text !== el.text) || ed.color !== undefined || ed.size !== undefined || ed.font !== undefined || ed.bold !== undefined || ed.italic !== undefined || ed.underline !== undefined || ed.strike !== undefined || ed.align !== undefined || !!richHtml);
-        const shifted: [number, number, number, number] = shift > 0.5 ? [x0 + shift, y0, x1 + shift, y1] : el.bbox;
-        const clear: [number, number, number, number] | undefined = shift > 0.5 ? [x0, y0, x1, y1] : undefined;
+        let drawBbox: [number, number, number, number] = shift > 0.5 ? [x0 + shift, y0, x1 + shift, y1] : el.bbox;
+        let clearBbox: [number, number, number, number] | undefined = shift > 0.5 ? [x0, y0, x1, y1] : undefined;
+        // Hizalama merkez/sağ → çizim kutusunu SAYFA genişliğine yay (orijinal x0'ı simetrik
+        // marj al), orijinali `clear` ile temizle → ortala/sağa-yasla GERÇEKTEN çalışır
+        // (öğenin dar kutusunda hizalama görünmezdi).
+        const _alignV = ed?.align;
+        if (_alignV === "center" || _alignV === "right") {
+          const pageW = analysis.pages[p].width;
+          const m = Math.max(0, Math.min(x0, pageW - x1));
+          drawBbox = [m, y0, pageW - m, y1];
+          clearBbox = [x0, y0, x1, y1];
+        }
         if (changed && richHtml) {
           // Kelime bazlı zengin biçim → insert_htmlbox ile parça parça renk/kalın/italik/
           // altı-üstü çizili/boyut korunur. Temel stil (renk/boyut/font/hizalama) wrapper'da;
@@ -682,7 +723,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           // insert_htmlbox genel aile ister (Roboto/system-ui tanımaz).
           const fam = fk === "serif" || fk === "merriweather" ? "serif" : fk === "mono" ? "monospace" : "sans-serif";
           const wrapped = `<div style="font-family:${fam};font-size:${size}px;color:${baseColor};text-align:${ed!.align ?? "left"};line-height:1.0;margin:0;padding:0">${sanitizeRichHtml(richHtml)}</div>`;
-          ops.push({ page: p, bbox: shifted, clear, html: wrapped, by: el.by, bg: bgMap.get(el.id) });
+          ops.push({ page: p, bbox: drawBbox, clear: clearBbox, html: wrapped, by: el.by, bg: bgMap.get(el.id) });
           continue;
         }
         if (changed) {
@@ -693,9 +734,9 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           const bold = ed!.bold ?? el.bold ?? false;
           const italic = ed!.italic ?? el.italic ?? false;
           const txt = ed!.text ?? el.text ?? "";
-          const overflow = measureTextPt(txt, size, fk, bold, italic) - (x1 - x0);
+          const overflow = measureTextPt(txt, size, fk, bold, italic) - (drawBbox[2] - drawBbox[0]);
           ops.push({
-            page: p, bbox: shifted, clear, text: txt, size, color: ed!.color ?? el.color,
+            page: p, bbox: drawBbox, clear: clearBbox, text: txt, size, color: ed!.color ?? el.color,
             font: fk, by: el.by, bg: bgMap.get(el.id),
             noshrink: overflow > 1 ? true : undefined,
             bold: bold || undefined, italic: italic || undefined,
@@ -705,7 +746,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           // Değişmemiş ama SAĞA KAYDIRILAN komşu → orijinalini temizle, aynı içeriği yeni yere
           // yaz (orijinal font/boyut/renk korunur, küçültme yok).
           ops.push({
-            page: p, bbox: shifted, clear, text: el.text ?? "", size: el.size ?? 12,
+            page: p, bbox: drawBbox, clear: clearBbox, text: el.text ?? "", size: el.size ?? 12,
             color: el.color, font: (el.font ?? "sans") as FontKey, by: el.by, bg: bgMap.get(el.id),
             noshrink: true, bold: el.bold || undefined, italic: el.italic || undefined,
           });
@@ -869,11 +910,11 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                         style={{ backgroundColor: c }} />
                     ))}
                   </span>
-                  <input type="color" value={color} onChange={(e) => applyColor(e.target.value)} className="h-7 w-7 cursor-pointer rounded-lg border border-white/10 bg-transparent" title={tr ? "Özel renk" : "Custom color"} />
+                  <input type="color" value={color} onMouseDown={captureSelectionForPicker} onChange={(e) => applyColorFromPicker(e.target.value)} className="h-7 w-7 cursor-pointer rounded-lg border border-white/10 bg-transparent" title={tr ? "Özel renk" : "Custom color"} />
                 </label>
                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-slate-300">
                   {tr ? "Font" : "Font"}
-                  <select value={font} onChange={(e) => applyFont(e.target.value as FontKey)} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white">
+                  <select value={font} onMouseDown={captureSelectionForPicker} onChange={(e) => applyFont(e.target.value as FontKey)} className="rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1.5 text-white">
                     {(["sans", "serif", "mono", "lato", "montserrat", "merriweather", "oswald"] as FontKey[]).map((f) => <option key={f} value={f} className="text-black" style={{ fontFamily: FONT_CSS[f] }}>{FONT_LABEL[f]}</option>)}
                   </select>
                 </label>
@@ -1020,14 +1061,21 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                     const shiftPx = shift * scale;
                     const deco = [elUnderline(el) ? "underline" : "", elStrike(el) ? "line-through" : ""].filter(Boolean).join(" ") || "none";
                     const al = elAlign(el);
+                    // Hizalama merkez/sağ → önizlemede de SAYFA genişliğinde bölgeye yay (export ile
+                    // birebir); aksi halde öğenin kendi kutusu. bg şeffaf (geniş bölgeyi doldurmasın).
+                    const _pageW = analysis?.pages[current]?.width ?? 0;
+                    const _aligned = (al === "center" || al === "right") && _pageW > 0;
+                    const _m = _aligned ? Math.max(0, Math.min(x0, _pageW - x1)) : 0;
+                    const containerLeft = _aligned ? _m * scale : eb.left + shiftPx;
+                    const textW = _aligned ? (_pageW - 2 * _m) * scale : (al === "left" ? undefined : eb.width);
                     return (
-                      <div key={el.id} className="absolute" style={{ left: eb.left + shiftPx, top: eb.top }}>
+                      <div key={el.id} className="absolute" style={{ left: containerLeft, top: eb.top }}>
                         <AutoText id={el.id} initial={elText(el)} initialHtml={richHtml} autoFocus={sel && !edits.has(el.id) && !multiSel.size}
                           onInput={(t, h) => setEdit(el.id, { text: t, html: h })}
                           onClick={(e) => { e.stopPropagation(); selectEl(el, e.ctrlKey || e.metaKey || e.shiftKey); }}
                           onFocus={() => { if (!multiSel.size) selectEl(el); }}
                           className={`outline-none ${sel ? "ring-2 ring-cyan-500" : ""}`}
-                          style={{ position: "absolute", left: 0, top: textTop, width: al === "left" ? undefined : eb.width, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: bgFor(el.id) }} />
+                          style={{ position: "absolute", left: 0, top: textTop, width: textW, textAlign: al, color: elColor(el), fontSize: `${fsPx}px`, lineHeight: 1, fontWeight: elBold(el) ? 700 : 400, fontStyle: elItalic(el) ? "italic" : "normal", textDecoration: deco, fontFamily: FONT_CSS[elFont(el)], padding: 0, backgroundColor: _aligned ? "transparent" : bgFor(el.id) }} />
                       </div>
                     );
                   })}

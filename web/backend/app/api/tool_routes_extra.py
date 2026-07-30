@@ -537,8 +537,10 @@ async def tool_edit_text(
                                     page.insert_textbox(rect, plain, fontsize=bfs, fontname=fkey,
                                                         fontfile=_EDIT_FONTS[fkey], align=0)
                             continue
-                        t = (op.get("text") or "").strip()
-                        if not t:
+                        # Baştaki/sondaki BOŞLUKLARI KORU — kullanıcı elle hizalama/indent için
+                        # boşluk ekleyebilir (ör. satırı ortaya çekmek). Yalnız tamamen boş op'u atla.
+                        t = op.get("text") or ""
+                        if not t.strip():
                             continue
                         x0, y0, x1, y1 = (float(v) for v in op["bbox"])
                         fs = float(op.get("size") or 11)
