@@ -971,6 +971,9 @@ function App() {
   } = useCookieConsent();
   const { cms, site, TOOLSPublic, flags, runtimeHydrated } = useSettings();
   const [view, setView] = useState<AppView>(getInitialViewFromLocation);
+  // Oturum açık kullanıcıyı ilk açılışta landing yerine dashboard'a yönlendirme guard'ı
+  // (yalnız bir kez; oturum içi ana sayfaya dönüşü bozmaz).
+  const didBootRedirectRef = useRef(false);
   const [legalBackView, setLegalBackView] = useState<NonLegalView>("landing");
   const [selectedFeatureId, setSelectedFeatureId] = useState<FeatureId>(() =>
     typeof window !== "undefined"
@@ -1246,6 +1249,29 @@ function App() {
       }
     }
   }, [isRestoring, isAuthenticated]);
+
+  // Oturum AÇIK kullanıcı siteyi/PWA'yı açtığında ana sayfa (landing) yerine DOĞRUDAN
+  // çalışma alanına gitsin — amaç iş yapmak, landing'in anlamı yok. Yalnız İLK AÇILIŞTA
+  // bir kez çalışır (guard) → oturum içinde logoya tıklayıp ana sayfaya dönmeyi BOZMAZ.
+  // Misafirde landing korunur. `?home=1` ile bu davranış atlanır (ana sayfayı görmek isteyen).
+  useEffect(() => {
+    if (didBootRedirectRef.current) return;
+    if (isRestoring) return; // oturum geri yüklenene kadar bekle
+    didBootRedirectRef.current = true; // yalnız ilk çözümde bir kez tüket
+    if (!isAuthenticated || view !== "landing") return;
+    try {
+      if (new URLSearchParams(window.location.search).get("home") === "1") return;
+    } catch {
+      /* yoksay */
+    }
+    setView("web");
+    try {
+      window.history.replaceState({}, "", "/workspace");
+    } catch {
+      /* yoksay */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRestoring, isAuthenticated, view]);
 
   // ── İlk giren kullanıcıya ürün turu (spotlight onboarding) ──────────────────
   // İlk kez çalışma alanına giren kayıtlı kullanıcıya arayüzü adım adım tanıtır.
@@ -5922,6 +5948,16 @@ function App() {
   }
 
   if (view === "landing") {
+    // Oturum açık kullanıcı ilk açılışta dashboard'a yönlendirilecek (yukarıdaki effect) —
+    // landing'in bir an yanıp sönmesini önlemek için iskelet göster.
+    if (
+      !isRestoring &&
+      isAuthenticated &&
+      !didBootRedirectRef.current &&
+      (() => { try { return new URLSearchParams(window.location.search).get("home") !== "1"; } catch { return true; } })()
+    ) {
+      return <PageSkeleton />;
+    }
     return (
       <CheckoutCurrencyProvider>
         <>
