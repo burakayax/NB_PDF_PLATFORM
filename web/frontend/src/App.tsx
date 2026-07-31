@@ -5660,10 +5660,20 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    // Taranmış PDF → Metin (OCR): SEO içeriği "cihazda OCR ile aranabilir/düzenlenebilir
+    // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
+    if (seoSlug === "taranmis-pdf-ocr") {
+      return (
+        <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <Suspense fallback={<PageSkeleton />}>
+            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (
       seoSlug === "pdf-ozetle" ||
       seoSlug === "pdf-sohbet" ||
-      seoSlug === "taranmis-pdf-ocr" ||
       seoSlug === "pdf-veri-cikar" ||
       seoSlug === "pdf-ceviri"
     ) {
