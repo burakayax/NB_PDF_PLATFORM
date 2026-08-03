@@ -832,17 +832,17 @@ async def batch_process(
                 elif tool_type == "pdf-to-text":
                     out_name = format_derived_filename(orig_name, "Metin", "txt")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.pdf_to_text(sp, str(out_path), password=pwd)
+                    ptx.pdf_to_text(sp, str(out_path), password=pwd)
                     return out_path, out_name
                 elif tool_type == "repair-pdf":
                     out_name = format_derived_filename(orig_name, "Onarılmış", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.repair_pdf(sp, str(out_path), password=pwd)
+                    ptx.repair_pdf(sp, str(out_path), password=pwd)
                     return out_path, out_name
                 elif tool_type == "page-numbers":
                     out_name = format_derived_filename(orig_name, "Numaralı", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.add_page_numbers(sp, str(out_path), start=int(page_start), position=page_pos, fmt=page_fmt, password=pwd)
+                    ptx.add_page_numbers(sp, str(out_path), start_at=int(page_start), position=page_pos, fmt=page_fmt, password=pwd)
                     return out_path, out_name
                 elif tool_type == "watermark":
                     out_name = format_derived_filename(orig_name, "Filigran", "pdf")
@@ -855,19 +855,22 @@ async def batch_process(
                     ptx.images_to_pdf([sp], str(out_path))
                     return out_path, out_name
                 elif tool_type == "pdf-to-image":
-                    out_name = format_derived_filename(orig_name, "Görüntü", img_fmt)
-                    out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.pdf_to_image(sp, str(out_path), image_format=img_fmt, password=pwd)
-                    return out_path, out_name
+                    # PDF çok sayfalı → sayfa başına görsel; her girdi bir ZIP olur (toplu çıktıda
+                    # zip-içinde-zip). Tek-görsel motor fonksiyonu yok; pdf_to_images_zip kullanılır.
+                    out_name = format_derived_filename(orig_name, "Görüntü", "zip")
+                    sub = workdir / f"img_{idx:04d}"
+                    sub.mkdir(parents=True, exist_ok=True)
+                    zip_out = ptx.pdf_to_images_zip(sp, str(sub), image_format=img_fmt, password=pwd)
+                    return Path(zip_out), out_name
                 elif tool_type == "ppt-to-pdf":
                     out_name = format_derived_filename(orig_name, "PDF", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.ppt_to_pdf(sp, str(out_path))
+                    ptx.pptx_to_pdf(sp, str(out_path))
                     return out_path, out_name
                 elif tool_type == "pdf-to-ppt":
                     out_name = format_derived_filename(orig_name, "PowerPoint", "pptx")
                     out_path = workdir / f"{idx:04d}_{out_name}"
-                    engine.pdf_to_ppt(sp, str(out_path), password=pwd)
+                    ptx.pdf_to_pptx(sp, str(out_path), password=pwd)
                     return out_path, out_name
                 raise ValueError(f"Bilinmeyen araç: {tool_type}")
 
