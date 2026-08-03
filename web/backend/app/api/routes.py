@@ -861,7 +861,11 @@ async def batch_process(
                     sub = workdir / f"img_{idx:04d}"
                     sub.mkdir(parents=True, exist_ok=True)
                     zip_out = ptx.pdf_to_images_zip(sp, str(sub), image_format=img_fmt, password=pwd)
-                    return Path(zip_out), out_name
+                    # Benzersiz ada taşı — dış zip arcname=basename kullanıyor; sabit "sayfalar.zip"
+                    # birden çok girdide çakışırdı.
+                    dest = workdir / f"{idx:04d}_{out_name}"
+                    Path(zip_out).replace(dest)
+                    return dest, out_name
                 elif tool_type == "ppt-to-pdf":
                     out_name = format_derived_filename(orig_name, "PDF", "pdf")
                     out_path = workdir / f"{idx:04d}_{out_name}"
