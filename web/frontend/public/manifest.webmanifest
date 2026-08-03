@@ -13,6 +13,7 @@
   "lang": "tr",
   "dir": "ltr",
   "categories": ["productivity", "business", "utilities"],
+  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
   "icons": [
     { "src": "/icons/icon-16.png", "sizes": "16x16", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-32.png", "sizes": "32x32", "type": "image/png", "purpose": "any" },
