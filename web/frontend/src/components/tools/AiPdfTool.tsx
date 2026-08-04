@@ -96,6 +96,8 @@ type Props = {
   comingSoon?: boolean;
   /** Admin → top-up penceresinde test için kredi ekleyebilir. */
   isAdmin?: boolean;
+  /** Araçlar arası aktarım — dışarıdan (Taramalarım) gelen PDF'i otomatik yükle. */
+  initialFile?: File | null;
 };
 
 /** Şık ilerleme şeridi — `ratio` verilirse yüzdeli (OCR), null ise kayan/indeterminate (özet). */
@@ -134,7 +136,7 @@ function StatusStrip({ label, ratio }: { label: string; ratio: number | null }) 
  * AI aracı (Pro/Business): PDF metni CİHAZDA çıkarılır (pdf.js), yalnız metin
  * sunucuya gider → Claude. Özetle veya belgeyle Sohbet. 401→giriş, 403→yükselt.
  */
-export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, comingSoon, isAdmin }: Props) {
+export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, comingSoon, isAdmin, initialFile }: Props) {
   const tr = language === "tr";
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -200,6 +202,16 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       setError(err?.message || (tr ? "Bir hata oluştu." : "Something went wrong."));
     }
   }
+
+  // Araçlar arası aktarım: dışarıdan gelen PDF'i bir kez yükle (mod değişse de tekrar etmez).
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      void pickFile(initialFile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   async function pickFile(f: File | undefined) {
     setError(null);

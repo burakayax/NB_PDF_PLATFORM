@@ -51,7 +51,7 @@ export function DashboardScannedDocs({
   if (!accessToken) return null;
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-nb-panel/60 p-3 sm:p-4 lg:p-5">
+    <div>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-nb-heading sm:text-base">
           <Cloud className="h-5 w-5 text-cyan-300" />
@@ -239,14 +239,14 @@ function ScanCard({
   const actionBtn = "flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-2 text-[11px] font-semibold transition disabled:opacity-50";
 
   return (
-    <div className="group flex flex-col">
-      {/* Kapak — çerçevesiz, doğrudan zeminde; tıklayınca geniş önizleme */}
+    <div className="group flex flex-col overflow-hidden rounded-xl border border-white/[0.08] bg-white/[0.02]">
+      {/* Kapak — tıklayınca geniş önizleme */}
       <button
         type="button"
         onClick={doOpenPreview}
         disabled={busy}
         title={tr ? "Önizle" : "Preview"}
-        className="relative aspect-[3/4] w-full overflow-hidden rounded-xl bg-slate-800/40 shadow-md ring-1 ring-white/[0.06] transition group-hover:ring-white/[0.14] group-hover:shadow-lg"
+        className="relative aspect-[3/4] w-full overflow-hidden bg-slate-800/60"
       >
         {cover ? (
           <img src={cover} alt={scan.filename} className="h-full w-full object-cover object-top transition group-hover:scale-[1.03]" />
@@ -261,13 +261,13 @@ function ScanCard({
       </button>
 
       {/* Bilgi */}
-      <div className="min-w-0 px-0.5 pt-2">
+      <div className="min-w-0 px-2 pt-2">
         <p className="truncate text-[12px] font-semibold text-slate-100" title={scan.filename}>{scan.filename}</p>
         <p className="text-[10px] text-slate-500">{fmtSize(scan.sizeBytes)} · {fmtDate(scan.createdAt)}</p>
       </div>
 
       {/* Aksiyonlar — renkli */}
-      <div className="mt-2 flex items-stretch gap-1">
+      <div className="mt-2 flex items-stretch gap-1 p-2 pt-1">
         {canPick && isPdf && (
           <button type="button" onClick={doOpenTools} disabled={busy} title={tr ? "Araçta aç" : "Open in tool"} className={`${actionBtn} bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25`}>
             <Wrench className="h-3.5 w-3.5" />

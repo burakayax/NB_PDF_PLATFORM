@@ -4036,12 +4036,27 @@ function App() {
     "pdf-yorumla": "annotate",
     "crop-pdf": "crop",
   };
+  // AI araçları "ai" panelinde açılır (aiModal moduyla). Aktarılan PDF pendingToolFile
+  // üzerinden ilgili AI aracına yüklenir.
+  const AI_TOOL_MODE: Record<string, "summarize" | "chat" | "extract" | "translate" | "redact"> = {
+    "pdf-ozetle": "summarize",
+    "pdf-sohbet": "chat",
+    "pdf-veri-cikar": "extract",
+    "pdf-ceviri": "translate",
+    "hassas-veri-gizle": "redact",
+  };
 
   function navigateToTool(featureId: FeatureId) {
     const special = SPECIAL_TOOL_PANEL[featureId as string];
+    const aiMode = AI_TOOL_MODE[featureId as string];
     setSelectedFeatureId(featureId);
     setActiveSidebar(featureId as unknown as SidebarToolId);
-    setContentPanel(special ?? "tool");
+    if (aiMode) {
+      setAiModal(aiMode);
+      setContentPanel("ai");
+    } else {
+      setContentPanel(special ?? "tool");
+    }
     setAuthError("");
     if (isAuthenticated && user?.preferredLanguage) {
       setLanguage(user.preferredLanguage);
@@ -5691,7 +5706,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
-            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
+            <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5728,6 +5743,7 @@ function App() {
               onUpgrade={goRegister}
               comingSoon={aiComingSoon}
               isAdmin={aiIsAdmin}
+              initialFile={pendingToolFile}
             />
           </Suspense>
         </GuestSeoToolPage>
@@ -6997,6 +7013,7 @@ function App() {
                       onLogin={() => setView("login")}
                       onUpgrade={() => setUpgradeModalOpen(true)}
                       comingSoon={aiComingSoon}
+                      initialFile={pendingToolFile}
                     />
                   ) : (
                     <AiPdfTool
@@ -7007,6 +7024,7 @@ function App() {
                       onUpgrade={() => setUpgradeModalOpen(true)}
                       comingSoon={aiComingSoon}
                       isAdmin={aiIsAdmin}
+                      initialFile={pendingToolFile}
                     />
                   )}
                 </Suspense>
