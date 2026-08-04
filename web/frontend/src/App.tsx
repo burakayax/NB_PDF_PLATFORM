@@ -906,6 +906,22 @@ function getInitialViewFromLocation(): AppView {
 }
 
 /**
+ * TAM SAYFA render edilen özel SEO araç sayfaları (workspace FeatureKey DEĞİL; App.tsx'teki
+ * `seoSlug` dalları render eder). Bu yollarda oturum açık kullanıcıda URL /workspace'e
+ * YENİDEN YAZILMAMALI (aksi halde sayfa açılıp hemen ana menüye atılır) ve misafir login'e
+ * atılmamalı. getInitialViewFromLocation'daki "web" listesiyle aynı olmalı.
+ */
+const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
+  "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
+  "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
+  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
+  "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/crop-pdf", "/tools/gorsel-sikistir",
+]);
+function isFullPageSeoToolPath(p: string): boolean {
+  return FULLPAGE_SEO_TOOL_PATHS.has(p);
+}
+
+/**
  * Giriş yapılmamış kullanıcı bir araç deep-link'ine (ör. PWA kısayolu /tools/x) gelip
  * login'e yönlendirildiğinde, giriş sonrası tam o araca dönmek için saklanan hedef.
  * sessionStorage → yalnızca mevcut oturum; tarayıcı kapanınca temizlenir.
@@ -2818,13 +2834,15 @@ function App() {
     }
     // Public tam-sayfa rotaları (workspace aracı DEĞİL) — giriş yapılmış olsa da
     // URL'i /workspace'e YENİDEN YAZMA. Aksi halde oturum açık kullanıcı /pdf-api,
-    // /pdf-api/docs, /blog'a gittiğinde dashboard'a atılıyordu.
+    // /pdf-api/docs, /blog VEYA özel SEO araç sayfalarına (belge-tara, pdf-duzenle…)
+    // gittiğinde sayfa açılıp hemen dashboard'a atılıyordu.
     if (
       path === "/pdf-api" ||
       path.startsWith("/pdf-api/") ||
       path === "/blog" ||
       path.startsWith("/blog/") ||
-      path === "/pricing"
+      path === "/pricing" ||
+      isFullPageSeoToolPath(path)
     ) {
       return;
     }
