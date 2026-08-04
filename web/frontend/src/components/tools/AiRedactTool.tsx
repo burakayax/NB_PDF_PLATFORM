@@ -37,11 +37,11 @@ const AI_TYPE_LABEL: Record<string, { tr: string; en: string }> = {
   eposta: { tr: "E-posta", en: "Email" }, email: { tr: "E-posta", en: "Email" },
 };
 
-type Props = { language: Language; accessToken: string | null; onLogin: () => void; onUpgrade: () => void; comingSoon?: boolean };
+type Props = { language: Language; accessToken: string | null; onLogin: () => void; onUpgrade: () => void; comingSoon?: boolean; initialFile?: File | null };
 
 /** AI HASSAS VERİ GİZLEME — TC/IBAN/telefon/e-posta'yı cihazda regex ile, isim/adresi
  * yapay zekâ ile bul; onaylananları sunucuda GERÇEKTEN kaldır (PyMuPDF redaction). */
-export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, comingSoon }: Props) {
+export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, comingSoon, initialFile }: Props) {
   const tr = language === "tr";
   const [file, setFile] = useState<File | null>(null);
   const [docText, setDocText] = useState("");
@@ -78,6 +78,16 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
     }
     return out;
   }
+
+  // Araçlar arası aktarım: dışarıdan (Taramalarım) gelen PDF'i bir kez yükle.
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      void pickFile(initialFile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialFile]);
 
   async function pickFile(f: File | undefined) {
     if (!f) return;

@@ -1,21 +1,27 @@
 import type { ReactNode } from "react";
 import {
+  Braces,
   Combine,
   Crop,
   Droplets,
+  EyeOff,
+  FilePlus2,
   FileText,
   Hash,
   Highlighter,
   Image as ImageIcon,
   Images,
+  Languages,
   Layers,
   Lock,
+  MessageSquare,
   Minimize2,
   Pencil,
   PenTool,
   Presentation,
   RotateCcw,
   Sliders,
+  Sparkles,
   Table,
   Trash2,
   Type,
@@ -29,7 +35,7 @@ import {
  * (Birleştir / Word→PDF gibi çok-dosya veya PDF-dışı girdi isteyenler DIŞARIDA.)
  */
 export type ToolItem = { id: string; icon: ReactNode; tr: string; en: string };
-export type AccentKey = "cyan" | "amber" | "violet" | "emerald";
+export type AccentKey = "cyan" | "amber" | "violet" | "emerald" | "fuchsia";
 export type ToolCategory = { id: string; tr: string; en: string; accent: AccentKey; convert: boolean; tools: ToolItem[] };
 
 export const CAT_ACCENT: Record<AccentKey, { text: string; dot: string; btn: string; icon: string }> = {
@@ -57,6 +63,12 @@ export const CAT_ACCENT: Record<AccentKey, { text: string; dot: string; btn: str
     btn: "border-emerald-400/20 bg-emerald-500/[0.06] hover:border-emerald-400/45 hover:bg-emerald-500/[0.12]",
     icon: "text-emerald-300",
   },
+  fuchsia: {
+    text: "text-fuchsia-300",
+    dot: "bg-fuchsia-400 shadow-[0_0_8px_rgba(232,121,249,0.7)]",
+    btn: "border-fuchsia-400/25 bg-fuchsia-500/[0.06] hover:border-fuchsia-400/45 hover:bg-fuchsia-500/[0.12]",
+    icon: "text-fuchsia-300",
+  },
 };
 
 export const TOOL_CATEGORIES: ToolCategory[] = [
@@ -70,6 +82,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
       { id: "crop-pdf", icon: <Crop className="h-5 w-5" />, tr: "Kırp", en: "Crop" },
       { id: "flatten-pdf", icon: <Combine className="h-5 w-5" />, tr: "Düzleştir", en: "Flatten" },
+      { id: "merge", icon: <FilePlus2 className="h-5 w-5" />, tr: "Birleştir", en: "Merge" },
     ],
   },
   {
@@ -99,6 +112,16 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "repair-pdf", icon: <Wrench className="h-5 w-5" />, tr: "Onar", en: "Repair" },
       { id: "unlock-pdf", icon: <Unlock className="h-5 w-5" />, tr: "Kilit Aç", en: "Unlock" },
       { id: "encrypt", icon: <Lock className="h-5 w-5" />, tr: "Şifrele", en: "Encrypt" },
+    ],
+  },
+  {
+    id: "ai", tr: "Yapay Zekâ", en: "AI", accent: "fuchsia", convert: true,
+    tools: [
+      { id: "pdf-ozetle", icon: <Sparkles className="h-5 w-5" />, tr: "Özetle", en: "Summarize" },
+      { id: "pdf-sohbet", icon: <MessageSquare className="h-5 w-5" />, tr: "Sohbet", en: "Chat" },
+      { id: "pdf-veri-cikar", icon: <Braces className="h-5 w-5" />, tr: "Veri Çıkar", en: "Extract data" },
+      { id: "pdf-ceviri", icon: <Languages className="h-5 w-5" />, tr: "Çeviri", en: "Translate" },
+      { id: "hassas-veri-gizle", icon: <EyeOff className="h-5 w-5" />, tr: "Veri Gizle", en: "Redact" },
     ],
   },
 ];
