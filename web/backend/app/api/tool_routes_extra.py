@@ -832,58 +832,6 @@ async def edit_text_download(
     )
 
 
-@router.post("/scan-transfer")
-@limiter.limit("10/minute")
-async def scan_transfer_upload(
-    request: Request,
-    file: UploadFile = File(...),
-):
-    """Belge Tarayıcı — QR ile telefon→PC aktarımı (Pro). Dosya GEÇİCİ sunucuya saklanır,
-    `{id, k}` döner; PC `GET /api/scan-transfer/{id}?k=` ile indirir. TTL'de otomatik silinir.
-    NOT: bu işlemde dosya SUNUCUYA yüklenir (frontend'de Pro + gizlilik uyarısı gösterilir)."""
-    import secrets as _secrets
-
-    data = await file.read()
-    if not data:
-        raise HTTPException(status_code=400, detail="Boş dosya.")
-    if len(data) > 50 * 1024 * 1024:
-        raise HTTPException(status_code=413, detail="Dosya çok büyük (en fazla 50MB).")
-    dl = _secrets.token_urlsafe(16)
-    mime = file.content_type or "application/octet-stream"
-    handle = save_result(
-        data, file.filename or "tarama", mime,
-        user_id=f"tr:{dl}", tool="scan-transfer",
-    )
-    return JSONResponse({"id": handle.result_id, "k": dl})
-
-
-@router.get("/scan-transfer/{result_id}")
-@limiter.limit("30/minute")
-async def scan_transfer_download(
-    request: Request,
-    result_id: str,
-    k: Annotated[str, Query()] = "",
-):
-    """QR aktarım indirmesi — `k` jetonu meta ile eşleşmeli. Silmez (PC birden çok kez
-    indirebilir); TTL temizler."""
-    if not k:
-        raise HTTPException(status_code=400, detail="Geçersiz bağlantı.")
-    read = get_result(result_id, f"tr:{k}")
-    headers = {"Content-Disposition": operations.content_disposition(read.filename)}
-    if read.presigned_url:
-        from fastapi.responses import StreamingResponse
-        from app.core.result_store import _get_s3, _s3_bucket, _PAYLOAD_FILENAME
-
-        try:
-            s3 = _get_s3()
-            resp = s3.get_object(Bucket=_s3_bucket(), Key=f"{result_id}/{_PAYLOAD_FILENAME}")
-            return StreamingResponse(resp["Body"].iter_chunks(8192), media_type=read.mime, headers=headers)
-        except Exception as e:
-            logger.error("scan_transfer_download S3 fetch failed result_id=%s: %s", result_id, e)
-            raise HTTPException(status_code=500, detail="İndirme başarısız.")
-    return FileResponse(path=str(read.payload_path), filename=read.filename, media_type=read.mime, headers=headers)
-
-
 @router.post("/redact-pdf")
 @limiter.limit("15/minute")
 async def tool_redact_pdf(

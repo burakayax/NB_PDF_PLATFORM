@@ -81,7 +81,7 @@ function todayStr(): string {
 /** Metin/tarih alanı renk seçenekleri (lacivert, siyah, kırmızı, mavi, yeşil, beyaz). */
 const TEXT_COLORS = ["#0b2447", "#111827", "#dc2626", "#2563eb", "#16a34a", "#ffffff"];
 
-export function PdfSign({ language }: { language: Language; accessToken?: string | null }) {
+export function PdfSign({ language, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
   const [file, setFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -134,6 +134,15 @@ export function PdfSign({ language }: { language: Language; accessToken?: string
       setError(tr ? "PDF okunamadı. Şifreli dosyalar desteklenmez." : "Couldn't read the PDF. Encrypted files aren't supported.");
     }
   }, [tr]);
+
+  // Araçlar arası aktarım: dışarıdan (Taramalarım / PDF Merkezi) gelen PDF'i bir kez yükle.
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      void openFile(initialFile);
+    }
+  }, [initialFile, openFile]);
 
   // Thumbnails
   useEffect(() => {

@@ -2,24 +2,34 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeftRight,
   Check,
+  Combine,
+  Crop,
   Download,
+  Droplets,
   FileText,
   Hash,
+  Highlighter,
   Image as ImageIcon,
+  Images,
   Layers,
   Loader2,
   Lock,
   Maximize2,
+  Minimize2,
   MousePointerClick,
   Pencil,
+  PenTool,
   Presentation,
   RotateCcw,
   Share2,
   Sliders,
   Sparkles,
+  Table,
   Trash2,
+  Type,
+  Unlock,
+  Wrench,
   X,
   ZoomIn,
   ZoomOut,
@@ -32,25 +42,81 @@ import { getPdfPageCount, renderPdfPreview, type PdfPreviewPage } from "../../li
 const PREVIEW_PAGES = 12; // önizlemede render edilen sayfa sınırı (perf)
 
 type ToolItem = { id: string; icon: React.ReactNode; tr: string; en: string };
+type AccentKey = "cyan" | "amber" | "violet" | "emerald";
+type ToolCategory = { id: string; tr: string; en: string; accent: AccentKey; convert: boolean; tools: ToolItem[] };
 
-// Düzenleme araçları (cihazda / üyeliksiz kullanılabilir).
-const DEVICE_TOOLS: ToolItem[] = [
-  { id: "pdf-duzenle", icon: <Pencil className="h-5 w-5" />, tr: "PDF Düzenle", en: "Edit PDF" },
-  { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Sayfa Sırala", en: "Reorder pages" },
-  { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
-  { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
-  { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
-];
+// Kategori renk paleti — PWA launcher'a benzer renkli/kategorize görünüm.
+const CAT_ACCENT: Record<AccentKey, { text: string; dot: string; btn: string; icon: string }> = {
+  cyan: {
+    text: "text-cyan-300",
+    dot: "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.7)]",
+    btn: "border-cyan-400/20 bg-cyan-500/[0.06] hover:border-cyan-400/45 hover:bg-cyan-500/[0.12]",
+    icon: "text-cyan-300",
+  },
+  amber: {
+    text: "text-amber-300",
+    dot: "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.7)]",
+    btn: "border-amber-400/20 bg-amber-500/[0.06] hover:border-amber-400/45 hover:bg-amber-500/[0.12]",
+    icon: "text-amber-300",
+  },
+  violet: {
+    text: "text-violet-300",
+    dot: "bg-violet-400 shadow-[0_0_8px_rgba(167,139,250,0.7)]",
+    btn: "border-violet-400/20 bg-violet-500/[0.06] hover:border-violet-400/45 hover:bg-violet-500/[0.12]",
+    icon: "text-violet-300",
+  },
+  emerald: {
+    text: "text-emerald-300",
+    dot: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]",
+    btn: "border-emerald-400/20 bg-emerald-500/[0.06] hover:border-emerald-400/45 hover:bg-emerald-500/[0.12]",
+    icon: "text-emerald-300",
+  },
+};
 
-// Dönüştür & çıkar — sunucu + üyelik (Pro vurgusu).
-const CONVERT_TOOLS: ToolItem[] = [
-  { id: "pdf-to-word", icon: <FileText className="h-5 w-5" />, tr: "Word'e Çevir", en: "To Word" },
-  { id: "pdf-to-excel", icon: <Layers className="h-5 w-5" />, tr: "Excel'e Çevir", en: "To Excel" },
-  { id: "pdf-to-image", icon: <ImageIcon className="h-5 w-5" />, tr: "Resme Çevir", en: "To Image" },
-  { id: "pdf-to-ppt", icon: <Presentation className="h-5 w-5" />, tr: "PPT'ye Çevir", en: "To PPT" },
-  { id: "extract-images", icon: <ImageIcon className="h-5 w-5" />, tr: "Görsel Çıkar", en: "Extract images" },
-  { id: "compress", icon: <ArrowLeftRight className="h-5 w-5" />, tr: "Sıkıştır", en: "Compress" },
-  { id: "page-numbers", icon: <Hash className="h-5 w-5" />, tr: "Sayfa No", en: "Page numbers" },
+// TÜM PDF araçları — bir PDF'e uygulanabilen tek-dosya araçlar; kategorize.
+// (Birden çok dosya / PDF-dışı girdi isteyenler — birleştir, Word→PDF vb. — hariç.)
+const TOOL_CATEGORIES: ToolCategory[] = [
+  {
+    id: "edit", tr: "Düzenle", en: "Edit", accent: "cyan", convert: false,
+    tools: [
+      { id: "pdf-duzenle", icon: <Pencil className="h-5 w-5" />, tr: "PDF Düzenle", en: "Edit PDF" },
+      { id: "organize-pdf", icon: <Sliders className="h-5 w-5" />, tr: "Sayfa Sırala", en: "Reorder" },
+      { id: "split", icon: <Layers className="h-5 w-5" />, tr: "Sayfalara Böl", en: "Split" },
+      { id: "rotate-pdf", icon: <RotateCcw className="h-5 w-5" />, tr: "Döndür", en: "Rotate" },
+      { id: "delete-pages", icon: <Trash2 className="h-5 w-5" />, tr: "Sayfa Sil", en: "Delete pages" },
+      { id: "crop-pdf", icon: <Crop className="h-5 w-5" />, tr: "Kırp", en: "Crop" },
+      { id: "flatten-pdf", icon: <Combine className="h-5 w-5" />, tr: "Düzleştir", en: "Flatten" },
+    ],
+  },
+  {
+    id: "mark", tr: "İmzala & İşaretle", en: "Sign & mark", accent: "amber", convert: false,
+    tools: [
+      { id: "pdf-imzala", icon: <PenTool className="h-5 w-5" />, tr: "İmzala", en: "Sign" },
+      { id: "pdf-yorumla", icon: <Highlighter className="h-5 w-5" />, tr: "İşaretle", en: "Markup" },
+      { id: "watermark", icon: <Droplets className="h-5 w-5" />, tr: "Filigran", en: "Watermark" },
+      { id: "page-numbers", icon: <Hash className="h-5 w-5" />, tr: "Sayfa No", en: "Page no." },
+    ],
+  },
+  {
+    id: "convert", tr: "Dönüştür & Çıkar", en: "Convert & extract", accent: "violet", convert: true,
+    tools: [
+      { id: "pdf-to-word", icon: <FileText className="h-5 w-5" />, tr: "Word'e", en: "To Word" },
+      { id: "pdf-to-excel", icon: <Table className="h-5 w-5" />, tr: "Excel'e", en: "To Excel" },
+      { id: "pdf-to-ppt", icon: <Presentation className="h-5 w-5" />, tr: "PPT'ye", en: "To PPT" },
+      { id: "pdf-to-image", icon: <ImageIcon className="h-5 w-5" />, tr: "Resme", en: "To image" },
+      { id: "pdf-to-text", icon: <Type className="h-5 w-5" />, tr: "Metne", en: "To text" },
+      { id: "extract-images", icon: <Images className="h-5 w-5" />, tr: "Görsel Çıkar", en: "Extract images" },
+    ],
+  },
+  {
+    id: "improve", tr: "İyileştir & Güvenlik", en: "Optimize & secure", accent: "emerald", convert: true,
+    tools: [
+      { id: "compress", icon: <Minimize2 className="h-5 w-5" />, tr: "Sıkıştır", en: "Compress" },
+      { id: "repair-pdf", icon: <Wrench className="h-5 w-5" />, tr: "Onar", en: "Repair" },
+      { id: "unlock-pdf", icon: <Unlock className="h-5 w-5" />, tr: "Kilit Aç", en: "Unlock" },
+      { id: "encrypt", icon: <Lock className="h-5 w-5" />, tr: "Şifrele", en: "Encrypt" },
+    ],
+  },
 ];
 
 const ZOOM_MIN = 40;
@@ -250,25 +316,22 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
     }
   }
 
-  const toolBtn = (t: ToolItem, convert: boolean) => {
+  const toolBtn = (t: ToolItem, accent: AccentKey, convert: boolean) => {
     const locked = isLocked(t.id);
+    const a = CAT_ACCENT[accent];
     return (
       <button
         key={t.id}
         type="button"
         onClick={() => setPending({ tool: t, convert, locked })}
-        className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${
-          convert
-            ? "border-violet-400/25 bg-violet-500/[0.06] hover:border-violet-400/45 hover:bg-violet-500/[0.12]"
-            : "border-white/[0.1] bg-white/[0.03] hover:border-cyan-400/40 hover:bg-white/[0.06]"
-        }`}
+        className={`relative flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 text-center transition active:scale-[0.97] ${a.btn}`}
       >
         {locked && (
           <span className="absolute right-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-md bg-violet-500/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-violet-200">
             <Lock className="h-2.5 w-2.5" />Pro
           </span>
         )}
-        <span className={`${convert ? "text-violet-300" : "text-cyan-300"} ${locked ? "opacity-70" : ""}`}>{t.icon}</span>
+        <span className={`${a.icon} ${locked ? "opacity-70" : ""}`}>{t.icon}</span>
         <span className="text-[11px] font-semibold leading-tight text-slate-100">{tr ? t.tr : t.en}</span>
       </button>
     );
@@ -383,27 +446,27 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
           )}
         </div>
 
-        {/* Araç paneli */}
+        {/* Araç paneli — PWA launcher gibi renkli + kategorize; tüm PDF araçları */}
         <div className="shrink-0 border-t border-white/[0.08] bg-[#0b1020] p-4 lg:w-80 lg:overflow-y-auto lg:border-l lg:border-t-0">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-cyan-300">
-            {tr ? "Düzenle" : "Edit"}
+          <p className="mb-3 text-[12px] font-semibold text-slate-300">
+            {tr ? "Bir araç seç — belge oraya aktarılır" : "Pick a tool — your document transfers there"}
           </p>
-          <div className="grid grid-cols-3 gap-2 lg:grid-cols-2">
-            {DEVICE_TOOLS.map((t) => toolBtn(t, false))}
-          </div>
-
-          <p className="mb-2 mt-5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-violet-300">
-            <Sparkles className="h-3 w-3" />
-            {tr ? "Dönüştür & Çıkar" : "Convert & extract"}
-          </p>
-          <div className="grid grid-cols-3 gap-2 lg:grid-cols-2">
-            {CONVERT_TOOLS.map((t) => toolBtn(t, true))}
-          </div>
+          {TOOL_CATEGORIES.map((cat, ci) => (
+            <div key={cat.id} className={ci === 0 ? "" : "mt-5"}>
+              <p className={`mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${CAT_ACCENT[cat.accent].text}`}>
+                <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${CAT_ACCENT[cat.accent].dot}`} aria-hidden />
+                {tr ? cat.tr : cat.en}
+              </p>
+              <div className="grid grid-cols-3 gap-2 lg:grid-cols-2">
+                {cat.tools.map((t) => toolBtn(t, cat.accent, cat.convert))}
+              </div>
+            </div>
+          ))}
           {!isPro && (
-            <p className="mt-3 text-center text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-500">
               {tr
-                ? "Dönüştürme araçları üyelik gerektirir — belgen korunur, giriş sonrası orada açılır."
-                : "Conversion tools need an account — your file is kept and opens there after sign-in."}
+                ? "Dönüştürme & bazı araçlar üyelik gerektirir — belgen korunur, giriş sonrası orada açılır."
+                : "Conversion & some tools need an account — your file is kept and opens there after sign-in."}
             </p>
           )}
         </div>

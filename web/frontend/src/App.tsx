@@ -4027,10 +4027,21 @@ function App() {
   // görünümü. Giriş YAPMAMIŞSA login'e ATILMAZ; guest-block devreye girer
   // (client-capable araçta GuestPdfTool, diğerinde tanıtım). Giriş yapmışsa
   // workspace'te o araç açılır.
+  // Bazı araçlar workspace "tool" formu DEĞİL, kendi cihaz-içi panelinde açılır.
+  // Bu araçlara aktarılan PDF `pendingToolFile` üzerinden ilgili panele yüklenir
+  // (takeScannedPdf effect'i contentPanel !== "tool" iken setPendingToolFile yapar).
+  const SPECIAL_TOOL_PANEL: Record<string, ContentPanel> = {
+    "pdf-duzenle": "editor",
+    "pdf-imzala": "sign",
+    "pdf-yorumla": "annotate",
+    "crop-pdf": "crop",
+  };
+
   function navigateToTool(featureId: FeatureId) {
+    const special = SPECIAL_TOOL_PANEL[featureId as string];
     setSelectedFeatureId(featureId);
     setActiveSidebar(featureId as unknown as SidebarToolId);
-    setContentPanel("tool");
+    setContentPanel(special ?? "tool");
     setAuthError("");
     if (isAuthenticated && user?.preferredLanguage) {
       setLanguage(user.preferredLanguage);
@@ -5617,7 +5628,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfCropTool language={language} />
+            <PdfCropTool language={language} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5644,7 +5655,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfSign language={language} accessToken={accessToken} />
+            <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5653,7 +5664,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfAnnotate language={language} accessToken={accessToken} />
+            <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -7013,7 +7024,7 @@ function App() {
             {contentPanel === "sign" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfSign language={language} accessToken={accessToken} />
+                  <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
@@ -7021,7 +7032,7 @@ function App() {
             {contentPanel === "annotate" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfAnnotate language={language} accessToken={accessToken} />
+                  <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
@@ -7029,7 +7040,7 @@ function App() {
             {contentPanel === "crop" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfCropTool language={language} />
+                  <PdfCropTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
