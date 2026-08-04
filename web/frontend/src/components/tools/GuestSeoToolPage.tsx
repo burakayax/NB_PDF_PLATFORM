@@ -14,6 +14,10 @@ type Props = {
   onLogin: () => void;
   onRegister: () => void;
   children: ReactNode;
+  /** Oturum açıksa header giriş/üye-ol yerine "Panele git" gösterir (yanıltıcı olmasın). */
+  isAuthenticated?: boolean;
+  /** Oturum açık kullanıcıyı workspace'e (panele) götür. */
+  onOpenApp?: () => void;
 };
 
 /**
@@ -25,7 +29,7 @@ type Props = {
 // gönderir) için "cihazdan çıkmaz" iddiası yanıltıcı olur — o yüzden ayrım.
 const ON_DEVICE_SEO_TOOLS = new Set<string>(["pdf-imzala", "pdf-yorumla"]);
 
-export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children }: Props) {
+export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, isAuthenticated, onOpenApp }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
   const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
@@ -63,20 +67,33 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-          <button type="button" onClick={onLogin} className="flex items-center gap-2">
+          <button type="button" onClick={isAuthenticated ? onOpenApp : onLogin} className="flex items-center gap-2">
             <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
             <span className="text-sm font-bold tracking-tight">PDF Platform</span>
           </button>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={onLogin}
-              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
-              {tr ? "Giriş yap" : "Log in"}
-            </button>
-            <button type="button" onClick={onRegister}
-              className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">
-              {tr ? "Üye Ol" : "Sign up"}
-            </button>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-300 sm:inline-flex">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                {tr ? "Oturum açık" : "Signed in"}
+              </span>
+              <button type="button" onClick={onOpenApp}
+                className="rounded-lg bg-cyan-500/15 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 ring-1 ring-cyan-400/30 transition hover:bg-cyan-500/25">
+                {tr ? "Panele git" : "Go to app"}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={onLogin}
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white">
+                {tr ? "Giriş yap" : "Log in"}
+              </button>
+              <button type="button" onClick={onRegister}
+                className="rounded-lg bg-white/10 px-3.5 py-1.5 text-sm font-semibold text-white ring-1 ring-white/15 transition hover:bg-white/15">
+                {tr ? "Üye Ol" : "Sign up"}
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

@@ -5601,7 +5601,7 @@ function App() {
     if (seoSlug === "belge-tara") {
       return (
         <>
-          <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister}>
+          <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
             <DocumentScannerLaunch
               language={language}
               isPro={aiAllowed}
@@ -5617,7 +5617,7 @@ function App() {
     }
     if (seoSlug === "aranabilir-pdf") {
       return (
-        <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
           </Suspense>
@@ -5626,7 +5626,7 @@ function App() {
     }
     if (seoSlug === "crop-pdf") {
       return (
-        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfCropTool language={language} initialFile={pendingToolFile} />
           </Suspense>
@@ -5635,7 +5635,7 @@ function App() {
     }
     if (seoSlug === "gorsel-sikistir") {
       return (
-        <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <ImageCompressTool language={language} />
           </Suspense>
@@ -5644,7 +5644,7 @@ function App() {
     }
     if (seoSlug === "pdf-duzenle") {
       return (
-        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5653,7 +5653,7 @@ function App() {
     }
     if (seoSlug === "pdf-imzala") {
       return (
-        <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5662,7 +5662,7 @@ function App() {
     }
     if (seoSlug === "pdf-yorumla") {
       return (
-        <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5671,7 +5671,7 @@ function App() {
     }
     if (seoSlug === "ai-toplu-islem") {
       return (
-        <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
@@ -5680,7 +5680,7 @@ function App() {
     }
     if (seoSlug === "pdf-karsilastir") {
       return (
-        <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
@@ -5689,7 +5689,7 @@ function App() {
     }
     if (seoSlug === "hassas-veri-gizle") {
       return (
-        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
@@ -5700,7 +5700,7 @@ function App() {
     // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
     if (seoSlug === "taranmis-pdf-ocr") {
       return (
-        <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
           </Suspense>
@@ -5718,7 +5718,7 @@ function App() {
         seoSlug === "pdf-veri-cikar" ? "extract" :
         seoSlug === "pdf-ceviri" ? "translate" : "summarize";
       return (
-        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister}>
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
           <Suspense fallback={<PageSkeleton />}>
             <AiPdfTool
               mode={aiMode}
