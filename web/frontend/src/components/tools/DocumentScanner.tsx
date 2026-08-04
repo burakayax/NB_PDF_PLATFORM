@@ -6,6 +6,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   Copy,
   Download,
   Image as ImageIcon,
@@ -33,6 +34,7 @@ import qrcodeGen from "qrcode-generator";
 import { imagesToPdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
 import { zipStore } from "../../lib/zipStore";
 import { uploadScanTransfer, scanTransferUrl } from "../../api";
+import { uploadScanToLibrary } from "../../api/scans";
 // Ağır OCR yolu (pdf-lib + tesseract) doğrudan çekirdek motordan; bu bileşen lazy
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
 import { imagesToSearchablePdf } from "../../lib/clientPdf";
@@ -125,6 +127,8 @@ type Props = {
   onUpgrade?: () => void;
   /** Masaüstü/web (arka kamera yok) → "telefonda açın" bilgi ekranı gösterilir. */
   isDesktop?: boolean;
+  /** Oturum açıksa → "Hesabıma kaydet" (bulut taramalar) etkin. */
+  accessToken?: string | null;
 };
 
 /** Dosya adını güvenli hale getirir (geçersiz karakterleri temizler, boşsa varsayılan). */
@@ -148,7 +152,7 @@ const STABLE_FRAMES = 6;
  * tespiti + perspektif düzeltmesiyle PDF üretir. Görüntü SUNUCUYA GİTMEZ.
  * Sonuçta kullanıcıya "Kaydet / Paylaş / PDF Araçları" seçenekleri sunulur.
  */
-export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade, isDesktop }: Props) {
+export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade, isDesktop, accessToken }: Props) {
   const tr = language === "tr";
   const [phase, setPhase] = useState<Phase>("camera");
   // Pro upsell paneli: hangi tetikleyiciyle açıldı (filtre / sayfa limiti / OCR).
@@ -173,6 +177,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [rotatingAll, setRotatingAll] = useState(false);
   const [qr, setQr] = useState<{ img: string; url: string } | null>(null);
   const [qrBusy, setQrBusy] = useState(false);
+  const [savedAcct, setSavedAcct] = useState(false);
+  const [savingAcct, setSavingAcct] = useState(false);
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -281,6 +287,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setRotatingAll(false);
     setQr(null);
     setQrBusy(false);
+    setSavedAcct(false);
+    setSavingAcct(false);
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -722,6 +730,22 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       setTimeout(() => setCopied(false), 1800);
     } catch {
       /* izin yok / desteklenmiyor */
+    }
+  }
+
+  // Hesaba kaydet: taramayı buluta yükle → bilgisayardan Dashboard "Son Taratılanlar"da eriş.
+  async function saveToAccount() {
+    if (!result || !accessToken || savingAcct) return;
+    setSavingAcct(true);
+    setError(null);
+    try {
+      await uploadScanToLibrary(accessToken, result.blob, result.filename);
+      setSavedAcct(true);
+      setTimeout(() => setSavedAcct(false), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : tr ? "Hesaba kaydedilemedi." : "Could not save to account.");
+    } finally {
+      setSavingAcct(false);
     }
   }
 
@@ -1392,6 +1416,20 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       {tr ? "Aranabilir PDF (OCR) — Pro" : "Searchable PDF (OCR) — Pro"}
                     </button>
                   ))}
+                  {/* Hesaba kaydet — PC'de kamera yoksa bile: Dashboard "Son Taratılanlar"dan eriş */}
+                  {accessToken && (
+                    <button
+                      type="button"
+                      onClick={() => void saveToAccount()}
+                      disabled={savingAcct}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50"
+                    >
+                      {savingAcct ? <Loader2 className="h-4 w-4 animate-spin" /> : savedAcct ? <Check className="h-4 w-4" /> : <Cloud className="h-4 w-4" />}
+                      {savedAcct
+                        ? (tr ? "Hesabına kaydedildi — PC'den eriş" : "Saved to your account — open on PC")
+                        : (tr ? "Hesabıma kaydet (her yerden eriş)" : "Save to my account (access anywhere)")}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => void saveResult()}
