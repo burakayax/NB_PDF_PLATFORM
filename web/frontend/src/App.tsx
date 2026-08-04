@@ -7153,7 +7153,7 @@ function App() {
                 <DashboardScannedDocs
                   language={language}
                   accessToken={accessToken}
-                  onOpenInTools={(file) => setPdfHubFile(file)}
+                  onPickTool={(file, toolId) => void handleScannerPick(file, toolId)}
                 />
               </section>
             ) : null}
