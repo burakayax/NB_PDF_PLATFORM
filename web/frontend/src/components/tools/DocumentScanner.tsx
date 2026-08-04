@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { imagesToPdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
+import { zipStore } from "../../lib/zipStore";
 // Ağır OCR yolu (pdf-lib + tesseract) doğrudan çekirdek motordan; bu bileşen lazy
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
 import { imagesToSearchablePdf } from "../../lib/clientPdf";
@@ -42,6 +43,26 @@ import {
 } from "../../lib/documentScan";
 
 type Phase = "camera" | "review" | "pages" | "result";
+// Kaydetme formatı: PDF (belge standardı, çok sayfa), JPG (paylaşım/küçük boyut),
+// PNG (kayıpsız/keskin). Çok sayfalı JPG/PNG → sayfa başına görsel içeren ZIP.
+type ScanFormat = "pdf" | "jpg" | "png";
+const FORMAT_EXT: Record<ScanFormat, string> = { pdf: "pdf", jpg: "jpg", png: "png" };
+const FORMAT_MIME: Record<ScanFormat, string> = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png" };
+
+/** JPEG blob'unu PNG'ye çevir (kayıpsız çıktı için). */
+async function blobToPng(blob: Blob): Promise<Blob> {
+  const bmp = await createImageBitmap(blob);
+  const cnv = document.createElement("canvas");
+  cnv.width = bmp.width;
+  cnv.height = bmp.height;
+  const ctx = cnv.getContext("2d");
+  if (!ctx) { bmp.close?.(); throw new Error("no ctx"); }
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close?.();
+  return await new Promise<Blob>((resolve, reject) =>
+    cnv.toBlob((b) => (b ? resolve(b) : reject(new Error("png encode"))), "image/png"),
+  );
+}
 type ScannedPage = { url: string; blob: Blob };
 
 type Props = {
@@ -97,6 +118,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [toolPicker, setToolPicker] = useState(false);
   // Kullanıcının belirlediği PDF adı (sayfalar ekranında girilir, her yerde kullanılır).
   const [fileName, setFileName] = useState("taranan-belge");
+  const [format, setFormat] = useState<ScanFormat>("pdf");
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -198,6 +220,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setToolPicker(false);
     setActiveCorner(null);
     setFileName("taranan-belge");
+    setFormat("pdf");
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -458,23 +481,47 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setPhase("camera");
   };
 
-  const buildPdf = useCallback(async () => {
+  const buildResult = useCallback(async () => {
     if (pages.length === 0) return;
     setBusy(true);
     setError(null);
+    const base = sanitizeFileName(fileName);
     try {
-      const imgs = await Promise.all(
-        pages.map(async (p) => ({ bytes: await p.blob.arrayBuffer(), mime: "image/jpeg" })),
-      );
-      const bytes = await imagesToPdf(imgs);
-      setResult({ blob: pdfBytesToBlob(bytes), filename: `${sanitizeFileName(fileName)}.pdf` });
+      if (format === "pdf") {
+        const imgs = await Promise.all(
+          pages.map(async (p) => ({ bytes: await p.blob.arrayBuffer(), mime: "image/jpeg" })),
+        );
+        const bytes = await imagesToPdf(imgs);
+        setResult({ blob: pdfBytesToBlob(bytes), filename: `${base}.pdf` });
+      } else {
+        const ext = FORMAT_EXT[format];
+        // Sayfaları hedef formata çevir (JPG zaten JPEG; PNG'ye yeniden kodla).
+        const pageBlobs = await Promise.all(
+          pages.map((p) => (format === "png" ? blobToPng(p.blob) : Promise.resolve(p.blob))),
+        );
+        if (pageBlobs.length === 1) {
+          setResult({ blob: pageBlobs[0], filename: `${base}.${ext}` });
+        } else {
+          // Çok sayfa → tek görsel olamaz; sayfa başına görsel içeren ZIP.
+          const entries = await Promise.all(
+            pageBlobs.map(async (b, i) => ({
+              name: `${base}-${String(i + 1).padStart(2, "0")}.${ext}`,
+              data: new Uint8Array(await b.arrayBuffer()),
+            })),
+          );
+          const zipBytes = new Uint8Array(zipStore(entries));
+          setResult({ blob: new Blob([zipBytes], { type: "application/zip" }), filename: `${base}.zip` });
+        }
+      }
+      setSearchable(false);
+      saveHandleRef.current = null;
       setPhase("result");
     } catch {
-      setError(tr ? "PDF oluşturulamadı." : "Could not build the PDF.");
+      setError(tr ? "Dosya oluşturulamadı." : "Could not build the file.");
     } finally {
       setBusy(false);
     }
-  }, [pages, tr, fileName]);
+  }, [pages, tr, fileName, format]);
 
   // ARANABİLİR PDF (Pro): sayfaları cihazda OCR'lar (Türkçe+İngilizce) ve görünmez
   // metin katmanı gömer → Ctrl+F ile aranabilir, kopyalanabilir PDF. Dosya cihazdan çıkmaz.
@@ -511,7 +558,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   // ücretli kullanıcı her şeye erişir, tarama otomatik aranabilir gelir.
   // Free kullanıcı sonuç ekranındaki butonla kendi tetikler.
   useEffect(() => {
-    if (phase === "result" && isPro && result && !searchable && ocrPct === null) {
+    // Aranabilir metin katmanı yalnız PDF'e gömülür; JPG/PNG'de atla.
+    if (phase === "result" && isPro && result && !searchable && ocrPct === null && format === "pdf") {
       void makeSearchable();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -539,9 +587,11 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     };
     if (typeof win.showSaveFilePicker === "function") {
       try {
+        const _ext = result.filename.split(".").pop() || "pdf";
+        const _mime = result.blob.type || "application/octet-stream";
         const handle = await win.showSaveFilePicker({
           suggestedName: result.filename,
-          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
+          types: [{ description: _ext.toUpperCase(), accept: { [_mime]: [`.${_ext}`] } }],
         });
         const w = await handle.createWritable();
         await w.write(result.blob);
@@ -559,7 +609,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   async function shareResult() {
     if (!result) return;
-    const file = new File([result.blob], result.filename, { type: "application/pdf" });
+    const file = new File([result.blob], result.filename, { type: result.blob.type || "application/pdf" });
     const nav = navigator as Navigator & {
       canShare?: (d: { files: File[] }) => boolean;
       share?: (d: { files: File[]; title?: string }) => Promise<void>;
@@ -575,7 +625,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   function pickToolAndUse(toolId: string) {
     if (!result || !onUseInTools) return;
-    onUseInTools(new File([result.blob], result.filename, { type: "application/pdf" }), toolId);
+    onUseInTools(new File([result.blob], result.filename, { type: result.blob.type || "application/pdf" }), toolId);
     onClose();
   }
 
@@ -1003,10 +1053,39 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
               )}
 
-              {/* PDF adı — burada girilir, kaydet/paylaş/araçlar hep bu adı kullanır */}
+              {/* Kaydetme formatı — PDF / JPG / PNG. Çok sayfa + JPG/PNG → ZIP. */}
               <div className="mx-auto mt-5 w-full max-w-md">
                 <label className="mb-1.5 block text-[12px] font-medium text-slate-400">
-                  {tr ? "PDF adı" : "PDF name"}
+                  {tr ? "Format" : "Format"}
+                </label>
+                <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+                  {([
+                    ["pdf", "PDF", tr ? "Belge · çok sayfa" : "Document · multi-page"],
+                    ["jpg", "JPG", tr ? "Paylaşım · küçük" : "Share · small"],
+                    ["png", "PNG", tr ? "Kayıpsız · keskin" : "Lossless · sharp"],
+                  ] as [ScanFormat, string, string][]).map(([f, lbl, hint]) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFormat(f)}
+                      className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${format === f ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
+                    >
+                      <span className="text-[13px] font-bold">{lbl}</span>
+                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                    </button>
+                  ))}
+                </div>
+                {format !== "pdf" && pages.length > 1 && (
+                  <p className="mt-1.5 text-[11px] text-slate-500">
+                    {tr ? `${pages.length} sayfa → her sayfa ayrı görsel, tek ZIP olarak.` : `${pages.length} pages → one image per page, in a single ZIP.`}
+                  </p>
+                )}
+              </div>
+
+              {/* Dosya adı — kaydet/paylaş/araçlar hep bu adı kullanır */}
+              <div className="mx-auto mt-4 w-full max-w-md">
+                <label className="mb-1.5 block text-[12px] font-medium text-slate-400">
+                  {tr ? "Dosya adı" : "File name"}
                 </label>
                 <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.03] px-3 focus-within:border-cyan-400/40">
                   <input
@@ -1016,24 +1095,26 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     placeholder="taranan-belge"
                     className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-500 outline-none"
                   />
-                  <span className="shrink-0 text-sm text-slate-500">.pdf</span>
+                  <span className="shrink-0 text-sm text-slate-500">
+                    .{format === "pdf" ? "pdf" : pages.length > 1 ? "zip" : FORMAT_EXT[format]}
+                  </span>
                 </div>
               </div>
 
               <div className="mx-auto mt-3 w-full max-w-md">
                 <button
                   type="button"
-                  onClick={() => void buildPdf()}
+                  onClick={() => void buildResult()}
                   disabled={busy || pages.length === 0}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
                 >
                   {busy ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
-                      {tr ? "PDF oluşturuluyor…" : "Building PDF…"}
+                      {tr ? "Oluşturuluyor…" : "Building…"}
                     </>
                   ) : (
-                    <>{tr ? `PDF Oluştur (${pages.length})` : `Create PDF (${pages.length})`} →</>
+                    <>{tr ? `Oluştur (${pages.length})` : `Create (${pages.length})`} →</>
                   )}
                 </button>
               </div>
@@ -1052,16 +1133,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
                   {tr
-                    ? `${pages.length} sayfalık PDF · cihazından hiç çıkmadı.`
-                    : `${pages.length}-page PDF · never left your device.`}
+                    ? `${pages.length} sayfa · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · cihazından hiç çıkmadı.`
+                    : `${pages.length} page(s) · ${(result.filename.split(".").pop() || "pdf").toUpperCase()} · never left your device.`}
                 </p>
 
                 <p className="mt-6 text-[13px] font-semibold text-slate-300">
                   {tr ? "Ne yapmak istersin?" : "What would you like to do?"}
                 </p>
                 <div className="mt-3 grid gap-2.5">
-                  {/* Aranabilir PDF (OCR) — Pro */}
-                  {searchable ? (
+                  {/* Aranabilir PDF (OCR) — yalnız PDF formatında (JPG/PNG'de metin katmanı yok) */}
+                  {format === "pdf" && (searchable ? (
                     <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.08] px-6 py-3.5 text-sm font-bold text-emerald-200">
                       <Check className="h-4 w-4" />
                       {tr ? "🔍 Aranabilir PDF hazır — metni ara & kopyala" : "🔍 Searchable PDF ready — search & copy text"}
@@ -1098,14 +1179,14 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       <Lock className="h-4 w-4" />
                       {tr ? "Aranabilir PDF (OCR) — Pro" : "Searchable PDF (OCR) — Pro"}
                     </button>
-                  )}
+                  ))}
                   <button
                     type="button"
                     onClick={() => void saveResult()}
                     className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
                   >
                     <Download className="h-4 w-4" />
-                    {tr ? "PDF olarak kaydet" : "Save as PDF"}
+                    {tr ? `${(result.filename.split(".").pop() || "pdf").toUpperCase()} olarak kaydet` : `Save as ${(result.filename.split(".").pop() || "pdf").toUpperCase()}`}
                   </button>
                   {onUseInTools && (
                     <button
@@ -1114,7 +1195,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.1]"
                     >
                       <Wrench className="h-4 w-4 text-cyan-300" />
-                      {tr ? "PDF Araçlarında aç" : "Open in PDF tools"}
+                      {tr ? "Araçlarda aç" : "Open in tools"}
                     </button>
                   )}
                   {canShare && (
