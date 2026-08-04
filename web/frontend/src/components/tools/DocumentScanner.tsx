@@ -4,6 +4,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Camera,
   Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
   Download,
   Image as ImageIcon,
   Infinity as InfinityIcon,
@@ -12,6 +15,7 @@ import {
   Lock,
   Plus,
   RotateCcw,
+  RotateCw,
   Search,
   Share2,
   Sliders,
@@ -48,6 +52,30 @@ type Phase = "camera" | "review" | "pages" | "result";
 type ScanFormat = "pdf" | "jpg" | "png";
 const FORMAT_EXT: Record<ScanFormat, string> = { pdf: "pdf", jpg: "jpg", png: "png" };
 const FORMAT_MIME: Record<ScanFormat, string> = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png" };
+
+/** Tarih tabanlı akıllı varsayılan dosya adı (ör. Tarama-2026-08-04). */
+function defaultScanName(): string {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `Tarama-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** Bir görsel blob'unu 90° saat yönünde döndürüp JPEG döndür. */
+async function rotateBlob90(blob: Blob): Promise<Blob> {
+  const bmp = await createImageBitmap(blob);
+  const cnv = document.createElement("canvas");
+  cnv.width = bmp.height;
+  cnv.height = bmp.width;
+  const ctx = cnv.getContext("2d");
+  if (!ctx) { bmp.close?.(); throw new Error("no ctx"); }
+  ctx.translate(cnv.width / 2, cnv.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+  bmp.close?.();
+  return await new Promise<Blob>((resolve, reject) =>
+    cnv.toBlob((b) => (b ? resolve(b) : reject(new Error("rotate"))), "image/jpeg", 0.92),
+  );
+}
 
 /** JPEG blob'unu PNG'ye çevir (kayıpsız çıktı için). */
 async function blobToPng(blob: Blob): Promise<Blob> {
@@ -117,8 +145,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
   const [toolPicker, setToolPicker] = useState(false);
   // Kullanıcının belirlediği PDF adı (sayfalar ekranında girilir, her yerde kullanılır).
-  const [fileName, setFileName] = useState("taranan-belge");
+  const [fileName, setFileName] = useState(defaultScanName);
   const [format, setFormat] = useState<ScanFormat>("pdf");
+  const [copied, setCopied] = useState(false);
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -219,8 +248,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setSearchable(false);
     setToolPicker(false);
     setActiveCorner(null);
-    setFileName("taranan-belge");
+    setFileName(defaultScanName());
     setFormat("pdf");
+    setCopied(false);
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -473,6 +503,31 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       return p.filter((_, k) => k !== i);
     });
 
+  // Sayfayı 90° döndür (yan/ters taranmış sayfa için) — cihazda.
+  const rotatePage = async (i: number) => {
+    const pg = pages[i];
+    if (!pg) return;
+    try {
+      const blob = await rotateBlob90(pg.blob);
+      const url = URL.createObjectURL(blob);
+      const oldUrl = pg.url;
+      setPages((prev) => prev.map((x, k) => (k === i ? { url, blob } : x)));
+      URL.revokeObjectURL(oldUrl);
+    } catch {
+      setError(tr ? "Sayfa döndürülemedi." : "Could not rotate the page.");
+    }
+  };
+
+  // Sayfa sırasını değiştir (sola/sağa taşı).
+  const movePage = (i: number, dir: -1 | 1) =>
+    setPages((prev) => {
+      const j = i + dir;
+      if (j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+
   const retake = () => {
     setCaptured(null);
     setCapturedUrl(null);
@@ -605,6 +660,20 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     }
     downloadBlob(result.blob, result.filename);
     setResult({ ...result, saved: "download" });
+  }
+
+  // Tek görsel sonucu panoya kopyala (clipboard image/png ister → gerekirse PNG'ye çevir).
+  async function copyResultImage() {
+    if (!result || !result.blob.type.startsWith("image/")) return;
+    try {
+      if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) return;
+      const png = result.blob.type === "image/png" ? result.blob : await blobToPng(result.blob);
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": png })]);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* izin yok / desteklenmiyor */
+    }
   }
 
   async function shareResult() {
@@ -1022,6 +1091,35 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
+                    {/* Sayfa düzenleme: sola taşı · döndür · sağa taşı */}
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-gradient-to-t from-black/75 to-transparent px-1 py-1">
+                      <button
+                        type="button"
+                        onClick={() => movePage(i, -1)}
+                        disabled={i === 0}
+                        className="rounded-md p-1 text-white/90 transition hover:bg-white/20 disabled:opacity-30"
+                        aria-label={tr ? "Sola taşı" : "Move left"}
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void rotatePage(i)}
+                        className="rounded-md p-1 text-white/90 transition hover:bg-white/20"
+                        aria-label={tr ? "Döndür" : "Rotate"}
+                      >
+                        <RotateCw className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => movePage(i, 1)}
+                        disabled={i === pages.length - 1}
+                        className="rounded-md p-1 text-white/90 transition hover:bg-white/20 disabled:opacity-30"
+                        aria-label={tr ? "Sağa taşı" : "Move right"}
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
                 {!isPro && pages.length >= FREE_PAGE_LIMIT ? (
@@ -1206,6 +1304,17 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     >
                       <Share2 className="h-4 w-4" />
                       {tr ? "Paylaş" : "Share"}
+                    </button>
+                  )}
+                  {/* Tek görsel (JPG/PNG) sonucu panoya kopyala */}
+                  {result.blob.type.startsWith("image/") && typeof ClipboardItem !== "undefined" && (
+                    <button
+                      type="button"
+                      onClick={() => void copyResultImage()}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.08]"
+                    >
+                      {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                      {copied ? (tr ? "Kopyalandı" : "Copied") : (tr ? "Panoya kopyala" : "Copy to clipboard")}
                     </button>
                   )}
                 </div>
