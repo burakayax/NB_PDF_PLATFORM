@@ -10,7 +10,6 @@ import { useFavoriteTools } from "../../hooks/useFavoriteTools";
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardStatsCards } from "./DashboardStatsCards";
 import { DashboardRecentActivity } from "./DashboardRecentActivity";
-import { DashboardScannedDocs } from "./DashboardScannedDocs";
 import { DashboardToolsSection } from "./DashboardToolsSection";
 import { SidebarToolGlyph } from "./sidebarToolLucide";
 import { SIDEBAR_TOOL_ORDER, sidebarToolLabel, ws } from "../../i18n/workspace";
@@ -268,11 +267,6 @@ export function DashboardLayout({
               selectedTool === "subscription" ? null : (selectedTool as FeatureKey)
             }
             onSelectTool={handleToolSelect as (id: FeatureKey) => void}
-          />
-
-          <DashboardScannedDocs
-            language={language}
-            accessToken={accessToken}
           />
 
           <DashboardRecentActivity

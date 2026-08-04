@@ -170,6 +170,8 @@ type DashboardSidebarProps = {
   onOpenCompressImage?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
+  /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
+  onScansClick?: () => void;
   /** Aktif içerik paneli — mobil launcher başlığı FeatureKey olmayan araçları da
    * (Düzenle/İmzala/İşaretle/AI) doğru göstersin diye. */
   contentPanel?: string;
@@ -202,8 +204,10 @@ export function DashboardSidebar({
   onOpenSign,
   onOpenAnnotate,
   onOpenScan,
+  onScansClick,
   onOpenCrop,
   onOpenCompressImage,
+  contentPanel,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -556,6 +560,24 @@ export function DashboardSidebar({
         </div>
       ) : null}
 
+      {onScansClick ? (
+        <div className="border-t border-white/[0.06] px-3 py-3">
+          <button
+            type="button"
+            onClick={onScansClick}
+            aria-current={contentPanel === "scans" ? "page" : undefined}
+            className={`nb-transition flex w-full items-center gap-2.5 rounded-2xl border px-3 py-2.5 text-left text-sm font-semibold ${
+              contentPanel === "scans"
+                ? "border-cyan-400/45 bg-cyan-500/16 text-cyan-100 shadow-[0_0_20px_-6px_rgba(6,182,212,0.5)]"
+                : "border-cyan-500/25 bg-cyan-500/[0.06] text-cyan-200/90 hover:bg-cyan-500/14 hover:text-cyan-100 hover:shadow-[0_0_20px_-6px_rgba(6,182,212,0.4)]"
+            }`}
+          >
+            <span className="text-lg" aria-hidden>☁️</span>
+            <span>{language === "tr" ? "Taramalarım" : "My scans"}</span>
+          </button>
+        </div>
+      ) : null}
+
       {currentPlan === "BUSINESS" && (!isTeamMember || isManagerMember) && onTeamClick ? (
         <div className="border-t border-white/[0.06] px-3 py-3">
           <button
@@ -616,6 +638,7 @@ export function DashboardSidebarMobileLauncher({
   onOpenSign,
   onOpenAnnotate,
   onOpenScan,
+  onScansClick,
   contentPanel,
   aiMode,
 }: DashboardSidebarProps) {
@@ -964,6 +987,22 @@ export function DashboardSidebarMobileLauncher({
                                   label={tr ? "Belge Tara" : "Scan document"}
                                   onToggle={() => toggleFavorite(SCAN_FAV_ID)}
                                 />
+                              </span>
+                            </button>
+                          ) : null}
+                          {/* Taramalarım kartı — buluta kayıtlı taramalar; Belge Tara'nın yanında */}
+                          {onScansClick && !query.trim() && group.id === "organize" ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onScansClick();
+                                setOpen(false);
+                              }}
+                              className="nb-transition group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] p-2 text-center hover:border-cyan-400/45 hover:bg-cyan-500/[0.12] active:scale-[0.97]"
+                            >
+                              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10 text-lg" aria-hidden>☁️</span>
+                              <span className="line-clamp-2 text-[10px] font-bold leading-tight text-cyan-100">
+                                {tr ? "Taramalarım" : "My scans"}
                               </span>
                             </button>
                           ) : null}
