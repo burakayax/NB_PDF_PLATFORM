@@ -83,6 +83,7 @@ import { BatchFileUpload } from "./components/ui/batch-file-upload";
 import { ChangePasswordModal } from "./components/dashboard/ChangePasswordModal";
 import { CheckoutCurrencyProvider } from "./contexts/CheckoutCurrencyContext";
 import { UserProfilePanel } from "./components/dashboard/UserProfilePanel";
+import { DashboardScannedDocs } from "./components/dashboard/DashboardScannedDocs";
 import { PaymentSuccessModal } from "./components/dashboard/PaymentSuccessModal";
 import { userGreetingLine } from "./components/dashboard/userDisplayName";
 import { SeoRouteManager } from "./components/seo/SeoRouteManager";
@@ -327,6 +328,7 @@ type ContentPanel =
   | "annotate"
   | "crop"
   | "compress-image"
+  | "scans"
   | "api";
 
 type ToastState = {
@@ -4137,6 +4139,10 @@ function App() {
     window.history.replaceState({}, "", "/");
   }
 
+  function handleNavScans() {
+    setContentPanel("scans");
+  }
+
   function handleNavProfile() {
     setContentPanel("profile");
   }
@@ -6899,6 +6905,8 @@ function App() {
           onOpenCrop={() => setContentPanel("crop")}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
+          onScansClick={accessToken ? handleNavScans : undefined}
+          contentPanel={contentPanel}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
@@ -6924,6 +6932,7 @@ function App() {
           onOpenCrop={() => setContentPanel("crop")}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
+          onScansClick={accessToken ? handleNavScans : undefined}
           />
           {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). Lazy:
               chunk yalnız tarayıcı açılınca yüklenir; kapalıyken null render eder. */}
@@ -7116,6 +7125,26 @@ function App() {
                 }}
                 onLogout={handleAccountDeleted}
               />
+            ) : null}
+
+            {contentPanel === "scans" ? (
+              <section className="mx-auto w-full max-w-3xl">
+                <div className="mb-3 sm:mb-4">
+                  <h1 className="text-lg font-bold text-nb-heading sm:text-xl">
+                    {language === "tr" ? "Taramalarım" : "My scans"}
+                  </h1>
+                  <p className="mt-1 text-[13px] leading-relaxed text-slate-400">
+                    {language === "tr"
+                      ? "Telefonda belge tara → «Hesabıma kaydet» → burada indir, paylaş veya bir PDF aracında aç."
+                      : "Scan on your phone → «Save to my account» → download, share, or open in a PDF tool here."}
+                  </p>
+                </div>
+                <DashboardScannedDocs
+                  language={language}
+                  accessToken={accessToken}
+                  onOpenInTools={(file) => setPdfHubFile(file)}
+                />
+              </section>
             ) : null}
 
             {contentPanel === "tool" ? (
