@@ -775,3 +775,18 @@ model EditorDownloadUsage {
   @@index([idKey, day])
   @@map("editor_download_usage")
 }
+
+/// Belge Tarayıcı "Hesabıma kaydet" — kullanıcının son taramaları (her yerden eriş).
+/// Dosya bytea olarak Postgres'te (Render diski geçici; S3 bağımlılığı yok). FIFO: free 3, Pro 10.
+model ScannedDocument {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  filename  String
+  mime      String
+  sizeBytes Int      @map("size_bytes")
+  data      Bytes
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("scanned_documents")
+}

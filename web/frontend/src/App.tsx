@@ -5591,6 +5591,7 @@ function App() {
               isDesktop={!isMobileOrTablet}
               onUpgrade={isAuthenticated ? goRegister : openScannerUpgradeAuth}
               onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
+              accessToken={accessToken}
             />
           </GuestSeoToolPage>
           {scannerAuthOverlay}
@@ -6935,6 +6936,7 @@ function App() {
               isDesktop={!isMobileOrTablet}
               onUpgrade={isTeamMember ? undefined : () => setUpgradeModalOpen(true)}
               onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
+              accessToken={accessToken}
             />
           </Suspense>
           <div className="mx-auto w-full max-w-5xl px-2 py-2 sm:px-4 sm:py-3 md:px-8 md:py-4 lg:max-w-6xl xl:max-w-7xl">
