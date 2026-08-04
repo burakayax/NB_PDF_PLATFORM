@@ -53,6 +53,23 @@ type ScanFormat = "pdf" | "jpg" | "png";
 const FORMAT_EXT: Record<ScanFormat, string> = { pdf: "pdf", jpg: "jpg", png: "png" };
 const FORMAT_MIME: Record<ScanFormat, string> = { pdf: "application/pdf", jpg: "image/jpeg", png: "image/png" };
 
+// Boyut/kalite: JPEG yeniden kodlama kalitesi (PNG kayıpsız → uygulanmaz).
+type ScanQuality = "small" | "normal" | "high";
+const QUALITY_Q: Record<ScanQuality, number> = { small: 0.6, normal: 0.82, high: 0.95 };
+
+/** JPEG blob'unu verilen kalitede yeniden kodla (dosya boyutunu ayarlamak için). */
+async function reencodeJpeg(blob: Blob, quality: number): Promise<Blob> {
+  const bmp = await createImageBitmap(blob);
+  const cnv = document.createElement("canvas");
+  cnv.width = bmp.width;
+  cnv.height = bmp.height;
+  const ctx = cnv.getContext("2d");
+  if (!ctx) { bmp.close?.(); return blob; }
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close?.();
+  return await new Promise<Blob>((resolve) => cnv.toBlob((b) => resolve(b || blob), "image/jpeg", quality));
+}
+
 /** Tarih tabanlı akıllı varsayılan dosya adı (ör. Tarama-2026-08-04). */
 function defaultScanName(): string {
   const d = new Date();
@@ -147,7 +164,10 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   // Kullanıcının belirlediği PDF adı (sayfalar ekranında girilir, her yerde kullanılır).
   const [fileName, setFileName] = useState(defaultScanName);
   const [format, setFormat] = useState<ScanFormat>("pdf");
+  const [quality, setQuality] = useState<ScanQuality>("normal");
   const [copied, setCopied] = useState(false);
+  const [previewIdx, setPreviewIdx] = useState<number | null>(null);
+  const [rotatingAll, setRotatingAll] = useState(false);
   const [pages, setPages] = useState<ScannedPage[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -250,7 +270,10 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setActiveCorner(null);
     setFileName(defaultScanName());
     setFormat("pdf");
+    setQuality("normal");
     setCopied(false);
+    setPreviewIdx(null);
+    setRotatingAll(false);
     saveHandleRef.current = null;
   }, [stopStream]);
 
@@ -541,18 +564,21 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setBusy(true);
     setError(null);
     const base = sanitizeFileName(fileName);
+    const q = QUALITY_Q[quality];
     try {
       if (format === "pdf") {
+        // Kalite/boyut: sayfaları seçilen JPEG kalitesinde yeniden kodla → PDF boyutu ayarlanır.
+        const encoded = await Promise.all(pages.map((p) => reencodeJpeg(p.blob, q)));
         const imgs = await Promise.all(
-          pages.map(async (p) => ({ bytes: await p.blob.arrayBuffer(), mime: "image/jpeg" })),
+          encoded.map(async (b) => ({ bytes: await b.arrayBuffer(), mime: "image/jpeg" })),
         );
         const bytes = await imagesToPdf(imgs);
         setResult({ blob: pdfBytesToBlob(bytes), filename: `${base}.pdf` });
       } else {
         const ext = FORMAT_EXT[format];
-        // Sayfaları hedef formata çevir (JPG zaten JPEG; PNG'ye yeniden kodla).
+        // PNG kayıpsız (kalite yok); JPG seçilen kalitede yeniden kodlanır.
         const pageBlobs = await Promise.all(
-          pages.map((p) => (format === "png" ? blobToPng(p.blob) : Promise.resolve(p.blob))),
+          pages.map((p) => (format === "png" ? blobToPng(p.blob) : reencodeJpeg(p.blob, q))),
         );
         if (pageBlobs.length === 1) {
           setResult({ blob: pageBlobs[0], filename: `${base}.${ext}` });
@@ -576,7 +602,23 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     } finally {
       setBusy(false);
     }
-  }, [pages, tr, fileName, format]);
+  }, [pages, tr, fileName, format, quality]);
+
+  // Tüm sayfaları 90° döndür (toplu).
+  const rotateAllPages = async () => {
+    if (pages.length === 0 || rotatingAll) return;
+    setRotatingAll(true);
+    try {
+      const rotated = await Promise.all(pages.map((p) => rotateBlob90(p.blob)));
+      const oldUrls = pages.map((p) => p.url);
+      setPages(rotated.map((blob) => ({ blob, url: URL.createObjectURL(blob) })));
+      oldUrls.forEach((u) => URL.revokeObjectURL(u));
+    } catch {
+      setError(tr ? "Sayfalar döndürülemedi." : "Could not rotate the pages.");
+    } finally {
+      setRotatingAll(false);
+    }
+  };
 
   // ARANABİLİR PDF (Pro): sayfaları cihazda OCR'lar (Türkçe+İngilizce) ve görünmez
   // metin katmanı gömer → Ctrl+F ile aranabilir, kopyalanabilir PDF. Dosya cihazdan çıkmaz.
@@ -1067,19 +1109,39 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── SAYFALAR ── */}
           {phase === "pages" && (
             <motion.div key="pages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
-              <p className="mb-3 text-center text-sm text-slate-300">
-                {pages.length}{" "}
-                {tr ? "sayfa tarandı" : pages.length === 1 ? "page scanned" : "pages scanned"}
-                {!isPro && (
-                  <span className="ml-1.5 text-[12px] text-slate-500">
-                    ({pages.length}/{FREE_PAGE_LIMIT} {tr ? "ücretsiz" : "free"})
-                  </span>
+              <div className="mx-auto mb-3 flex max-w-md items-center justify-between gap-2">
+                <p className="text-sm text-slate-300">
+                  {pages.length}{" "}
+                  {tr ? "sayfa tarandı" : pages.length === 1 ? "page scanned" : "pages scanned"}
+                  {!isPro && (
+                    <span className="ml-1.5 text-[12px] text-slate-500">
+                      ({pages.length}/{FREE_PAGE_LIMIT} {tr ? "ücretsiz" : "free"})
+                    </span>
+                  )}
+                </p>
+                {pages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => void rotateAllPages()}
+                    disabled={rotatingAll}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-50"
+                  >
+                    {rotatingAll ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCw className="h-3.5 w-3.5" />}
+                    {tr ? "Tümünü döndür" : "Rotate all"}
+                  </button>
                 )}
-              </p>
+              </div>
               <div className="mx-auto grid max-w-md grid-cols-3 gap-3">
                 {pages.map((p, i) => (
                   <div key={p.url} className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-                    <img src={p.url} alt="" className="aspect-[3/4] w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setPreviewIdx(i)}
+                      className="block w-full"
+                      aria-label={tr ? "Büyük önizleme" : "Large preview"}
+                    >
+                      <img src={p.url} alt="" className="aspect-[3/4] w-full object-cover" />
+                    </button>
                     <span className="absolute left-1.5 top-1.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[11px] font-bold">
                       {i + 1}
                     </span>
@@ -1179,6 +1241,32 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   </p>
                 )}
               </div>
+
+              {/* Boyut / kalite — PDF ve JPG için (PNG kayıpsızdır, uygulanmaz). */}
+              {format !== "png" && (
+                <div className="mx-auto mt-4 w-full max-w-md">
+                  <label className="mb-1.5 block text-[12px] font-medium text-slate-400">
+                    {tr ? "Boyut / kalite" : "Size / quality"}
+                  </label>
+                  <div className="grid grid-cols-3 gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+                    {([
+                      ["small", tr ? "Küçük" : "Small", tr ? "en küçük dosya" : "smallest file"],
+                      ["normal", tr ? "Normal" : "Normal", tr ? "dengeli" : "balanced"],
+                      ["high", tr ? "Yüksek" : "High", tr ? "en iyi kalite" : "best quality"],
+                    ] as [ScanQuality, string, string][]).map(([qk, lbl, hint]) => (
+                      <button
+                        key={qk}
+                        type="button"
+                        onClick={() => setQuality(qk)}
+                        className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${quality === qk ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
+                      >
+                        <span className="text-[13px] font-bold">{lbl}</span>
+                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Dosya adı — kaydet/paylaş/araçlar hep bu adı kullanır */}
               <div className="mx-auto mt-4 w-full max-w-md">
@@ -1450,7 +1538,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       <AnimatePresence>
         {toolPicker && result && (
           <PdfHub
-            file={new File([result.blob], result.filename, { type: "application/pdf" })}
+            file={new File([result.blob], result.filename, { type: result.blob.type || "application/pdf" })}
             language={language}
             isPro={isPro}
             onClose={() => setToolPicker(false)}
@@ -1458,6 +1546,40 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           />
         )}
       </AnimatePresence>
+
+      {/* Büyük önizleme — sayfa küçük resmine dokununca tam ekran (döndür/sil hızlı erişim). */}
+      {previewIdx !== null && pages[previewIdx] && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setPreviewIdx(null)}
+        >
+          <img src={pages[previewIdx].url} alt="" className="max-h-full max-w-full rounded-lg object-contain" />
+          <button
+            type="button"
+            onClick={() => setPreviewIdx(null)}
+            aria-label={tr ? "Kapat" : "Close"}
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white transition hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <div className="absolute inset-x-0 bottom-6 flex items-center justify-center gap-3" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => void rotatePage(previewIdx)}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              <RotateCw className="h-4 w-4" /> {tr ? "Döndür" : "Rotate"}
+            </button>
+            <button
+              type="button"
+              onClick={() => { removePage(previewIdx); setPreviewIdx(null); }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-red-500/20 px-4 py-2 text-sm font-semibold text-red-200 transition hover:bg-red-500/30"
+            >
+              <Trash2 className="h-4 w-4" /> {tr ? "Sil" : "Delete"}
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>,
     document.body,
   );
