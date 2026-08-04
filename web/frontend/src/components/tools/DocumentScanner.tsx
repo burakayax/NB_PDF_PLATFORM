@@ -15,7 +15,6 @@ import {
   Loader2,
   Lock,
   Plus,
-  QrCode,
   RotateCcw,
   RotateCw,
   Search,
@@ -30,10 +29,8 @@ import {
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import qrcodeGen from "qrcode-generator";
 import { imagesToPdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
 import { zipStore } from "../../lib/zipStore";
-import { uploadScanTransfer, scanTransferUrl } from "../../api";
 import { uploadScanToLibrary } from "../../api/scans";
 // Ağır OCR yolu (pdf-lib + tesseract) doğrudan çekirdek motordan; bu bileşen lazy
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
@@ -175,8 +172,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [copied, setCopied] = useState(false);
   const [previewIdx, setPreviewIdx] = useState<number | null>(null);
   const [rotatingAll, setRotatingAll] = useState(false);
-  const [qr, setQr] = useState<{ img: string; url: string } | null>(null);
-  const [qrBusy, setQrBusy] = useState(false);
   const [savedAcct, setSavedAcct] = useState(false);
   const [savingAcct, setSavingAcct] = useState(false);
   const [pages, setPages] = useState<ScannedPage[]>([]);
@@ -285,8 +280,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setCopied(false);
     setPreviewIdx(null);
     setRotatingAll(false);
-    setQr(null);
-    setQrBusy(false);
     setSavedAcct(false);
     setSavingAcct(false);
     saveHandleRef.current = null;
@@ -677,6 +670,13 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, isPro, result?.filename]);
 
+  // Belge içeriği değişince (yeni sayfa / OCR sonrası / yeni tarama) "hesaba kaydedildi"
+  // durumunu sıfırla — böylece güncel hali yeniden kaydedilebilir; aynı belge ise buton
+  // "Kaydedildi" olarak KİLİTLİ kalır (mükerrer yükleme yok).
+  useEffect(() => {
+    setSavedAcct(false);
+  }, [result?.blob]);
+
   // ── Sonuç aksiyonları ──
   function downloadBlob(blob: Blob, name: string) {
     const url = URL.createObjectURL(blob);
@@ -734,14 +734,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   }
 
   // Hesaba kaydet: taramayı buluta yükle → bilgisayardan Dashboard "Son Taratılanlar"da eriş.
+  // Kaydedince buton KALICI "Kaydedildi" durumunda kalır; aynı belge tekrar tekrar
+  // yüklenmez. Belge değişirse (yeni sayfa / OCR / yeni tarama) savedAcct sıfırlanır
+  // (aşağıdaki effect) ve güncel hali yeniden kaydedilebilir.
   async function saveToAccount() {
-    if (!result || !accessToken || savingAcct) return;
+    if (!result || !accessToken || savingAcct || savedAcct) return;
     setSavingAcct(true);
     setError(null);
     try {
       await uploadScanToLibrary(accessToken, result.blob, result.filename);
       setSavedAcct(true);
-      setTimeout(() => setSavedAcct(false), 3000);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "Hesaba kaydedilemedi." : "Could not save to account.");
     } finally {
@@ -749,24 +751,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     }
   }
 
-  // QR ile telefon→PC aktarımı (Pro): dosyayı GEÇİCİ sunucuya yükle → QR link göster.
-  async function startQrTransfer() {
-    if (!result || qrBusy) return;
-    setQrBusy(true);
-    setError(null);
-    try {
-      const { id, k } = await uploadScanTransfer(result.blob, result.filename);
-      const url = scanTransferUrl(id, k);
-      const g = qrcodeGen(0, "M");
-      g.addData(url);
-      g.make();
-      setQr({ img: g.createDataURL(6, 8), url });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : tr ? "QR aktarım hazırlanamadı." : "Could not prepare QR transfer.");
-    } finally {
-      setQrBusy(false);
-    }
-  }
 
   async function shareResult() {
     if (!result) return;
@@ -1421,12 +1405,16 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     <button
                       type="button"
                       onClick={() => void saveToAccount()}
-                      disabled={savingAcct}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50"
+                      disabled={savingAcct || savedAcct}
+                      className={`inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-bold text-white transition ${
+                        savedAcct
+                          ? "cursor-default bg-emerald-600/90 ring-1 ring-emerald-300/40"
+                          : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50"
+                      }`}
                     >
                       {savingAcct ? <Loader2 className="h-4 w-4 animate-spin" /> : savedAcct ? <Check className="h-4 w-4" /> : <Cloud className="h-4 w-4" />}
                       {savedAcct
-                        ? (tr ? "Hesabına kaydedildi — PC'den eriş" : "Saved to your account — open on PC")
+                        ? (tr ? "Hesabına kaydedildi ✓" : "Saved to your account ✓")
                         : (tr ? "Hesabıma kaydet (her yerden eriş)" : "Save to my account (access anywhere)")}
                     </button>
                   )}
@@ -1458,27 +1446,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       {tr ? "Paylaş" : "Share"}
                     </button>
                   )}
-                  {/* QR ile telefon→PC aktar (Pro) */}
-                  {isPro ? (
-                    <button
-                      type="button"
-                      onClick={() => void startQrTransfer()}
-                      disabled={qrBusy}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/[0.08] disabled:opacity-50"
-                    >
-                      {qrBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4 text-cyan-300" />}
-                      {tr ? "QR ile bilgisayara aktar" : "Send to computer via QR"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => onUpgrade?.()}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-400/30 bg-violet-500/[0.08] px-6 py-3.5 text-sm font-bold text-violet-200 transition hover:bg-violet-500/[0.14]"
-                    >
-                      <Lock className="h-4 w-4" />
-                      {tr ? "QR ile bilgisayara aktar — Pro" : "Send to computer via QR — Pro"}
-                    </button>
-                  )}
                   {/* Tek görsel (JPG/PNG) sonucu panoya kopyala */}
                   {result.blob.type.startsWith("image/") && typeof ClipboardItem !== "undefined" && (
                     <button
@@ -1499,6 +1466,24 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       ? tr ? "Seçtiğin konuma kaydedildi" : "Saved to your chosen location"
                       : tr ? "İndirilenler'e kaydedildi" : "Saved to Downloads"}
                   </p>
+                )}
+
+                {savedAcct && (
+                  <div className="mt-4 flex items-start gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.1] px-4 py-3.5 text-left">
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
+                      <Cloud className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-bold text-emerald-100">
+                        {tr ? "Hesabına kaydedildi" : "Saved to your account"}
+                      </p>
+                      <p className="mt-0.5 text-[12px] leading-relaxed text-emerald-200/80">
+                        {tr
+                          ? "Erişmek için bilgisayardan veya diğer cihazlardan oturum aç → «Taramalarım»dan indir, paylaş ya da bir araçta aç."
+                          : "To access it, sign in on your computer or another device → open «My scans» to download, share or open in a tool."}
+                      </p>
+                    </div>
+                  </div>
                 )}
 
                 {!isPro && (
@@ -1631,32 +1616,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           />
         )}
       </AnimatePresence>
-
-      {/* QR aktarım modalı — dosya geçici sunucuya yüklendi, PC bu kodu okuyup indirir. */}
-      {qr && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4" onClick={() => setQr(null)}>
-          <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-nb-panel p-6 text-center" onClick={(e) => e.stopPropagation()}>
-            <p className="text-lg font-bold text-white">{tr ? "Bilgisayarda aç" : "Open on your computer"}</p>
-            <p className="mt-1 text-[13px] text-slate-400">
-              {tr ? "PC'nin kamerası veya bir QR okuyucuyla bu kodu tara — dosya otomatik iner." : "Scan this with your computer's camera or a QR reader — the file downloads automatically."}
-            </p>
-            <img src={qr.img} alt="QR" className="mx-auto mt-4 h-56 w-56 rounded-xl bg-white p-2" />
-            <p className="mt-3 break-all text-[11px] text-slate-500">{qr.url}</p>
-            <p className="mt-3 rounded-xl border border-amber-400/25 bg-amber-500/[0.08] px-3 py-2 text-[11px] text-amber-200">
-              {tr
-                ? "Bu aktarım için dosya geçici olarak sunucuya yüklendi ve kısa süre sonra otomatik silinir."
-                : "For this transfer the file was uploaded to a temporary server and is auto-deleted shortly."}
-            </p>
-            <button
-              type="button"
-              onClick={() => setQr(null)}
-              className="mt-4 w-full rounded-2xl bg-white/10 py-3 text-sm font-bold text-white transition hover:bg-white/20"
-            >
-              {tr ? "Kapat" : "Close"}
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Büyük önizleme — sayfa küçük resmine dokununca tam ekran (döndür/sil hızlı erişim). */}
       {previewIdx !== null && pages[previewIdx] && (

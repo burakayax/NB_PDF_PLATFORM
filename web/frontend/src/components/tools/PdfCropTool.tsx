@@ -48,7 +48,7 @@ function getScrollParent(el: HTMLElement | null): HTMLElement | null {
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
-type Props = { language: Language };
+type Props = { language: Language; initialFile?: File | null };
 
 type Handle = "move" | "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 type Rect = { x: number; y: number; w: number; h: number }; // normalized 0..1, top-left origin
@@ -121,7 +121,7 @@ const L = {
   },
 };
 
-export function PdfCropTool({ language }: Props) {
+export function PdfCropTool({ language, initialFile }: Props) {
   const t = L[language] ?? L.tr;
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
   const [fileName, setFileName] = useState("belge.pdf");
@@ -163,6 +163,15 @@ export function PdfCropTool({ language }: Props) {
     },
     [t.failed],
   );
+
+  // Araçlar arası aktarım: dışarıdan (Taramalarım / PDF Merkezi) gelen PDF'i bir kez yükle.
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      void loadFile(initialFile);
+    }
+  }, [initialFile, loadFile]);
 
   useEffect(() => {
     let cancelled = false;

@@ -153,7 +153,7 @@ function renderTextToPng(text: string, color: string) {
   return { dataUrl, bytes: dataUrlToBytes(dataUrl), aspect: w / h };
 }
 
-export function PdfAnnotate({ language }: { language: Language; accessToken?: string | null }) {
+export function PdfAnnotate({ language, initialFile }: { language: Language; accessToken?: string | null; initialFile?: File | null }) {
   const tr = language === "tr";
   const [file, setFile] = useState<File | null>(null);
   const [doc, setDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -226,6 +226,15 @@ export function PdfAnnotate({ language }: { language: Language; accessToken?: st
     },
     [tr],
   );
+
+  // Araçlar arası aktarım: dışarıdan (Taramalarım / PDF Merkezi) gelen PDF'i bir kez yükle.
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      void openFile(initialFile);
+    }
+  }, [initialFile, openFile]);
 
   // Geri/ileri al: her KALICI değişiklikten önce pushHistory() çağrılır.
   const pushHistory = useCallback(() => {

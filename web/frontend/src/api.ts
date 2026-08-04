@@ -254,27 +254,6 @@ export async function editPdfTextPrepare(
   return { resultId: String(j.result_id), dl: String(j.dl) };
 }
 
-/** Belge Tarayıcı — QR ile telefon→PC aktarımı (Pro). Dosyayı GEÇİCİ sunucuya yükler ve
- * `{ id, k }` döndürür; PC `scanTransferUrl` ile indirir. TTL sonunda otomatik silinir. */
-export async function uploadScanTransfer(blob: Blob, filename: string): Promise<{ id: string; k: string }> {
-  const fd = new FormData();
-  fd.append("file", new File([blob], filename, { type: blob.type || "application/octet-stream" }));
-  const r = await pdfFetch(`${API_BASE}/api/scan-transfer`, { method: "POST", body: fd });
-  if (!r.ok) {
-    let msg = "Aktarım hazırlanamadı.";
-    try { const j = await r.json(); if (j?.detail) msg = String(j.detail); } catch { /* */ }
-    throw new Error(msg);
-  }
-  const j = await r.json();
-  return { id: String(j.id), k: String(j.k) };
-}
-
-/** QR'a gömülecek / PC'nin açacağı MUTLAK indirme URL'i. */
-export function scanTransferUrl(id: string, k: string): string {
-  const base = API_BASE || (typeof window !== "undefined" ? window.location.origin : "");
-  return `${base}/api/scan-transfer/${encodeURIComponent(id)}?k=${encodeURIComponent(k)}`;
-}
-
 /** Sunucu tarafı GERÇEK metin düzenleme (bytes döner) — AI çeviri gibi doğrudan blob
  * isteyen akışlar için (günlük editör limitine tabi DEĞİL). */
 export async function editPdfText(
