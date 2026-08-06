@@ -126,6 +126,8 @@ type Props = {
   isDesktop?: boolean;
   /** Oturum açıksa → "Hesabıma kaydet" (bulut taramalar) etkin. */
   accessToken?: string | null;
+  /** Misafirde "Hesabıma kaydet" kilitli görünür; tıklanınca giriş akışını açar. */
+  onLogin?: () => void;
 };
 
 /** Dosya adını güvenli hale getirir (geçersiz karakterleri temizler, boşsa varsayılan). */
@@ -149,7 +151,7 @@ const STABLE_FRAMES = 6;
  * tespiti + perspektif düzeltmesiyle PDF üretir. Görüntü SUNUCUYA GİTMEZ.
  * Sonuçta kullanıcıya "Kaydet / Paylaş / PDF Araçları" seçenekleri sunulur.
  */
-export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade, isDesktop, accessToken }: Props) {
+export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, onUpgrade, isDesktop, accessToken, onLogin }: Props) {
   const tr = language === "tr";
   const [phase, setPhase] = useState<Phase>("camera");
   // Pro upsell paneli: hangi tetikleyiciyle açıldı (filtre / sayfa limiti / OCR).
@@ -1401,6 +1403,17 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     </button>
                   ))}
                   {/* Hesaba kaydet — PC'de kamera yoksa bile: Dashboard "Son Taratılanlar"dan eriş */}
+                  {!accessToken && onLogin && (
+                    /* Misafir: kilitli görünür — tıklayınca giriş ekranı açılır (tarama kaybolmaz). */
+                    <button
+                      type="button"
+                      onClick={onLogin}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/[0.08] px-6 py-3.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-500/[0.16]"
+                    >
+                      <Lock className="h-4 w-4" />
+                      {tr ? "Hesabıma kaydet — giriş yap" : "Save to my account — sign in"}
+                    </button>
+                  )}
                   {accessToken && (
                     <button
                       type="button"

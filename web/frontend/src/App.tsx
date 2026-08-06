@@ -1297,6 +1297,26 @@ function App() {
   const [tourOpen, setTourOpen] = useState(false);
   const tourStartedRef = useRef(false);
   const { isMobileOrTablet } = useResponsive();
+
+  // Dar masaüstü penceresi (768–1279px) — ör. Windows'ta uygulamayı ekranın yarısına
+  // yerleştirmek. Bu aralıkta 240px'lik sabit araç çubuğu içeriği (PDF önizleme)
+  // eziyordu; artık sidebar içeriğin ÜSTÜNDE açılıp kapanan bir panele dönüşür.
+  const [narrowShell, setNarrowShell] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1280,
+  );
+  const [toolsPanelOpen, setToolsPanelOpen] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px) and (max-width: 1279.98px)");
+    const onChange = (e: MediaQueryListEvent) => setNarrowShell(e.matches);
+    setNarrowShell(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  useEffect(() => {
+    // Pencere genişleyince/daralınca panel açık kalmasın (dar modda varsayılan kapalı).
+    if (!narrowShell) setToolsPanelOpen(false);
+  }, [narrowShell]);
+
   const tourSteps: TourStep[] = useMemo(() => {
     const t = language === "tr";
     const m = isMobileOrTablet; // mobil/tablet → menü-tabanlı, telefona özel metin
@@ -1478,7 +1498,7 @@ function App() {
     toolId?: FeatureId;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
-  const chainPendingRef = useRef<{ file: File; toolId: FeatureId } | null>(null);
+  const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
   const [uploadDragOver, setUploadDragOver] = useState(false);
   const [gatedHeroModalOpen, setGatedHeroModalOpen] = useState(false);
   const [gatedHeroResultId, setGatedHeroResultId] = useState<string | null>(
@@ -1989,16 +2009,16 @@ function App() {
     }
   }, []);
 
-  // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
-  const chainToTool = useCallback(
-    (targetId: FeatureId, blob: Blob, filename: string) => {
-      // Kilitli araç önerisi → dosyayı geçirme, yükseltme akışını aç (toast durur).
+  // Dosya(ları) tekrar yükleme OLMADAN başka bir araca taşır. Hem araç zincirleme
+  // (bir aracın çıktısı) hem de sidebar'dan araç değiştirme (açık dosyalar) bunu kullanır.
+  const carryFilesToTool = useCallback(
+    (targetId: FeatureId, files: File[]) => {
+      // Kilitli araç → dosyayı geçirme, yükseltme akışını aç (toast durur).
       if (lockedFeatures.has(targetId)) {
         setUpgradeModalOpen(true);
         return;
       }
-      const f = new File([blob], filename, { type: "application/pdf" });
-      chainPendingRef.current = { file: f, toolId: targetId };
+      chainPendingRef.current = { files, toolId: targetId };
       setMergeShareReady(null);
       setMergeShare(null);
       resetForm(true); // temiz başla (araç değişmez)
@@ -2007,6 +2027,14 @@ function App() {
       setSelectedFeatureId(targetId);
     },
     [resetForm, lockedFeatures],
+  );
+
+  // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
+  const chainToTool = useCallback(
+    (targetId: FeatureId, blob: Blob, filename: string) => {
+      carryFilesToTool(targetId, [new File([blob], filename, { type: "application/pdf" })]);
+    },
+    [carryFilesToTool],
   );
 
   // Bekleyen zincir dosyası, hedef araca geçildikten SONRA (temiz state ile) yüklenir.
@@ -2023,14 +2051,20 @@ function App() {
     const raf = requestAnimationFrame(() => {
       // Dosyayı ekle, ardından "taşındı" bilgisini göster ki kullanıcı sıfırdan
       // yeni bir işleme yönlendirildiğini sanmasın — dosya zaten burada.
-      void handleNewFiles([pend.file]).then(() => {
+      void handleNewFiles(pend.files).then(() => {
         const trLang = language === "tr";
+        const label =
+          pend.files.length === 1
+            ? `“${pend.files[0]!.name}”`
+            : trLang
+              ? `${pend.files.length} dosya`
+              : `${pend.files.length} files`;
         showToast(
           "success",
           trLang ? "Dosya taşındı" : "File carried over",
           trLang
-            ? `“${pend.file.name}” bu araca aktarıldı — tekrar yüklemene gerek yok.`
-            : `“${pend.file.name}” was brought here — no need to upload it again.`,
+            ? `${label} bu araca aktarıldı — tekrar yüklemene gerek yok.`
+            : `${label} brought here — no need to upload again.`,
         );
       });
     });
@@ -4078,8 +4112,29 @@ function App() {
     navigateToTool(toolId as FeatureId);
   }
 
-  // Belge Tarayıcı'da "PDF Araçlarında aç" (PDF Merkezi) → seçilen araca PDF'i aktar.
+  // Belge Tarayıcı / Taramalarım'da "Araçlarda aç" → seçilen araca PDF'i aktar.
+  // ÖNEMLİ: giriş yapmış kullanıcıda hedef NORMAL workspace form aracıysa dosyayı
+  // `chainToTool` ile aktarırız — araç değişince koşan reset effect'i (resetForm)
+  // IndexedDB üzerinden gelen dosyayı yarışta silebiliyordu; chainToTool rAF ile
+  // tüm reset'lerden SONRA yüklediği için dosya güvenle forma düşer.
+  // Özel paneller (editör/imza/yorum/kırp), AI araçları ve misafir akışı ise
+  // IndexedDB (pendingScan) + `pendingToolFile` yolunu kullanmaya devam eder.
   async function handleScannerPick(file: File, toolId: string) {
+    const isSpecialPanel = !!SPECIAL_TOOL_PANEL[toolId] || !!AI_TOOL_MODE[toolId];
+    const isWorkspaceFormTool = workspaceFeatures.some((f) => f.id === toolId);
+    // Kullanıcının planında olmayan (workspace listesinde bulunmayan) normal araç:
+    // yönlendirsek "en baştaki araca" geri düşer ve dosya kaybolur → yükseltmeyi aç.
+    if (isAuthenticated && !isSpecialPanel && !isWorkspaceFormTool) {
+      setUpgradeModalOpen(true);
+      return;
+    }
+    if (isAuthenticated && !isSpecialPanel && isWorkspaceFormTool) {
+      window.history.pushState({}, "", workspacePathForFeature(toolId as FeatureKey));
+      setView("web");
+      chainToTool(toolId as FeatureId, file, file.name);
+      window.scrollTo({ top: 0, behavior: "instant" });
+      return;
+    }
     try {
       await saveScannedPdf(file);
     } catch {
@@ -4155,6 +4210,22 @@ function App() {
     if (id === "subscription") {
       setContentPanel("subscription");
       return;
+    }
+    // Açık dosya(lar) varken başka bir araca geçiliyorsa dosyayı YENİDEN YÜKLETME:
+    // hedef araç bu türü kabul ediyorsa olduğu gibi taşı (araç değişince koşan
+    // reset effect'i dosyayı silmesin diye carryFilesToTool/rAF yolunu kullanır).
+    if (contentPanel === "tool" && id !== selectedFeatureId && !lockedFeatures.has(id)) {
+      const carry = uploads.filter((u) => !u.corrupt).map((u) => u.file);
+      const target = workspaceFeatures.find((f) => f.id === id);
+      if (carry.length > 0 && target) {
+        const allowed = allowedExtensionsFromAccept(target.accept);
+        const { rejected } = partitionByAllowedExtensions(carry, allowed);
+        // Tür uyuşmuyorsa (ör. PDF → Word'den PDF'e) taşımayı dene bile deme.
+        if (rejected.length === 0) {
+          carryFilesToTool(id as FeatureId, carry);
+          return;
+        }
+      }
     }
     setContentPanel("tool");
     setSelectedFeatureId(id);
@@ -4287,6 +4358,19 @@ function App() {
       /* sessionStorage yoksa yoksay */
     }
     setScannerAuthMode("register");
+  }, []);
+
+  // Misafir tarayıcıda "Hesabıma kaydet" → üstte giriş ekranı (tarama mount kalır,
+  // giriş sonrası aynı sonuç ekranında buton aktifleşir; "nb_pending_upgrade" YOK).
+  const openScannerLoginAuth = useCallback(() => {
+    setAuthError("");
+    setRegistrationSuccessBanner(null);
+    try {
+      sessionStorage.removeItem("nb_pending_upgrade");
+    } catch {
+      /* sessionStorage yoksa yoksay */
+    }
+    setScannerAuthMode("login");
   }, []);
 
   async function handleScannerAuthSubmit(payload: {
@@ -5624,6 +5708,7 @@ function App() {
               onUpgrade={isAuthenticated ? goRegister : openScannerUpgradeAuth}
               onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
               accessToken={accessToken}
+              onLogin={isAuthenticated ? undefined : openScannerLoginAuth}
             />
           </GuestSeoToolPage>
           {scannerAuthOverlay}
@@ -6083,6 +6168,7 @@ function App() {
               }
             }}
             onScannerUpgrade={openScannerUpgradeAuth}
+            onScannerLogin={openScannerLoginAuth}
             />
           </Suspense>
           {scannerAuthOverlay}
@@ -6934,11 +7020,17 @@ function App() {
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
+          overlay={narrowShell}
+          overlayOpen={toolsPanelOpen}
+          onOverlayOpenChange={setToolsPanelOpen}
         />
         <div className="app-shell__scroll" ref={dashboardScrollRef}>
         <div
-          className={`w-full flex-1 bg-nb-bg pt-14 lg:pl-60 ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
+          className={`w-full flex-1 bg-nb-bg pt-14 ${narrowShell ? "" : "lg:pl-60"} ${bottomToolProgressActive ? "pb-32 lg:pb-36" : "pb-2"}`}
         >
+          {/* Dar pencerede (768–1279px) araç gezgini overlay sidebar'a devredilir —
+              iki menü birden görünmesin. */}
+          {narrowShell ? null : (
           <DashboardSidebarMobileLauncher
             active={activeSidebar}
             onSelect={handleSidebarSelect}
@@ -6961,6 +7053,7 @@ function App() {
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
+          )}
           {/* Belge Tarayıcı — sidebar'dan açılır (her panelde erişilebilir). Lazy:
               chunk yalnız tarayıcı açılınca yüklenir; kapalıyken null render eder. */}
           <Suspense fallback={null}>
@@ -7172,6 +7265,7 @@ function App() {
                   language={language}
                   accessToken={accessToken}
                   onPickTool={(file, toolId) => void handleScannerPick(file, toolId)}
+                  lockedFeatures={lockedFeatures}
                 />
               </section>
             ) : null}

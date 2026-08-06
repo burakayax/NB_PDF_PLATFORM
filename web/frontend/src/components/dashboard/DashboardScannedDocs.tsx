@@ -16,9 +16,12 @@ export function DashboardScannedDocs({
   accessToken,
   language,
   onPickTool,
+  lockedFeatures,
 }: {
   accessToken: string | null | undefined;
   language: Language;
+  /** Plan dışı araçlar seçicide "Pro" rozetiyle işaretlenir. */
+  lockedFeatures?: Set<string>;
   /** Seçilen araca taramayı aktarır: PDF'i IndexedDB'ye koyup o araca yönlendirir. */
   onPickTool?: (file: File, toolId: string) => void;
 }) {
@@ -120,6 +123,7 @@ export function DashboardScannedDocs({
         <PdfToolPickerSheet
           language={language}
           fileName={picker.scan.filename}
+          lockedFeatures={lockedFeatures}
           onClose={() => setPicker(null)}
           onPick={(toolId) => {
             onPickTool?.(new File([picker.blob], picker.scan.filename, { type: picker.scan.mime }), toolId);
