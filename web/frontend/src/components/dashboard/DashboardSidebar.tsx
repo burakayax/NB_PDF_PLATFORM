@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { Crop, ImageDown } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
@@ -177,6 +178,13 @@ type DashboardSidebarProps = {
   contentPanel?: string;
   /** Aktif AI aracı modu (contentPanel === "ai" iken). */
   aiMode?: AiToolMode | null;
+  /** Dar pencere (ör. Windows yan yana yerleştirme): sidebar yer kaplamasın,
+   *  içeriğin ÜSTÜNDE açılır-kapanır bir panel olsun. */
+  overlay?: boolean;
+  /** Overlay modda panel açık mı. */
+  overlayOpen?: boolean;
+  /** Overlay panelin açık/kapalı durumunu değiştirir. */
+  onOverlayOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -208,6 +216,9 @@ export function DashboardSidebar({
   onOpenCrop,
   onOpenCompressImage,
   contentPanel,
+  overlay = false,
+  overlayOpen = false,
+  onOverlayOpenChange,
 }: DashboardSidebarProps) {
   const L = ws(language);
   const toolOrder = enabledToolIds?.length
@@ -451,8 +462,66 @@ export function DashboardSidebar({
     );
   };
 
+  // Overlay modda: araç seçilince panel kendiliğinden kapanır; kategori başlıkları
+  // (accordion) paneli kapatmaz — kullanıcı kategoriyi açıp aracı seçebilsin.
+  const handleAsideClick = (e: ReactMouseEvent<HTMLElement>) => {
+    if (!overlay || !overlayOpen) return;
+    const el = e.target as HTMLElement | null;
+    if (!el || el.closest("[data-nb-keep-sidebar]")) return;
+    if (el.closest("button,[role='button'],a")) onOverlayOpenChange?.(false);
+  };
+
+  // Overlay panel açıkken ESC ile kapansın.
+  useEffect(() => {
+    if (!overlay || !overlayOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOverlayOpenChange?.(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [overlay, overlayOpen, onOverlayOpenChange]);
+
+  const asideVisuals =
+    "w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150";
+
   return (
-    <aside data-tour="tools" className="fixed bottom-0 left-0 top-14 z-40 hidden w-60 flex-col border-r border-white/[0.08] bg-gradient-to-b from-nb-bg-elevated/92 via-[#0c1424]/95 to-nb-bg-elevated/92 shadow-[4px_0_32px_-6px_rgba(0,0,0,0.55)] backdrop-blur-xl backdrop-saturate-150 lg:flex">
+    <>
+      {/* Dar pencere: kapalıyken sol kenarda ince "Araçlar" sekmesi, açıkken karartma. */}
+      {overlay && !overlayOpen ? (
+        <button
+          type="button"
+          onClick={() => onOverlayOpenChange?.(true)}
+          data-tour="tools"
+          aria-label={tr ? "Araçlar menüsünü aç" : "Open tools menu"}
+          title={tr ? "Araçlar" : "Tools"}
+          className="fixed left-0 top-1/2 z-40 flex -translate-y-1/2 flex-col items-center gap-2 rounded-r-2xl border border-l-0 border-white/[0.1] bg-nb-bg-elevated/95 py-4 pl-1.5 pr-2 text-nb-muted shadow-[6px_0_24px_-10px_rgba(0,0,0,0.7)] backdrop-blur-md transition hover:text-nb-text"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          <span className="text-[10px] font-bold uppercase tracking-wider [writing-mode:vertical-rl]">
+            {tr ? "Araçlar" : "Tools"}
+          </span>
+        </button>
+      ) : null}
+      {overlay && overlayOpen ? (
+        <button
+          type="button"
+          aria-label={tr ? "Kapat" : "Close"}
+          tabIndex={-1}
+          onClick={() => onOverlayOpenChange?.(false)}
+          className="fixed inset-x-0 bottom-0 top-14 z-40 cursor-default bg-black/50 backdrop-blur-[2px]"
+        />
+      ) : null}
+    <aside
+      data-tour={overlay ? undefined : "tools"}
+      onClick={handleAsideClick}
+      className={
+        overlay
+          ? `fixed bottom-0 left-0 top-14 z-50 flex ${asideVisuals} transition-transform duration-200 ease-out ${overlayOpen ? "translate-x-0" : "-translate-x-full"}`
+          : `fixed bottom-0 left-0 top-14 z-40 hidden ${asideVisuals} lg:flex`
+      }
+    >
       <nav
         className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4"
         aria-label="TOOLS"
@@ -464,6 +533,7 @@ export function DashboardSidebar({
               type="button"
               onClick={() => toggleCat("ai")}
               aria-expanded={openCats.has("ai")}
+              data-nb-keep-sidebar
               className="mb-1.5 flex w-full items-center gap-2 px-2"
             >
               <span
@@ -505,6 +575,7 @@ export function DashboardSidebar({
                 type="button"
                 onClick={() => toggleCat(group.id)}
                 aria-expanded={open}
+                data-nb-keep-sidebar
                 className="mb-1.5 flex w-full items-center gap-2 px-2"
               >
                 <span
@@ -617,6 +688,7 @@ export function DashboardSidebar({
         </div>
       ) : null}
     </aside>
+    </>
   );
 }
 

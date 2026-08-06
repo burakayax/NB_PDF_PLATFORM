@@ -113,6 +113,8 @@ type LandingPageProps = {
   onUpgrade?: () => void;
   /** Belge Tarayıcı "Pro'ya Geç" → tarama kaybolmadan ÜSTTE giriş/kayıt açar. */
   onScannerUpgrade?: () => void;
+  /** Belge Tarayıcı "Hesabıma kaydet" (misafir) → ÜSTTE giriş ekranı açar. */
+  onScannerLogin?: () => void;
   /** Kullanıcı zaten AI'a yetkili mi (ADMIN / PRO / BUSINESS) → ödemeler kapalı olsa
    *  bile AI "Yakında" gösterme, gerçek araçları aç. */
   aiAllowed?: boolean;
@@ -424,6 +426,7 @@ function Hero({
   accessToken,
   onUpgrade,
   onScannerUpgrade,
+  onScannerLogin,
   aiAllowed,
 }: {
   language: Language;
@@ -433,6 +436,7 @@ function Hero({
   accessToken: string | null;
   onUpgrade: () => void;
   onScannerUpgrade?: () => void;
+  onScannerLogin?: () => void;
   aiAllowed?: boolean;
   windowsDownloadUrl: string;
 }) {
@@ -718,6 +722,8 @@ function Hero({
               onUseInTools={handleScannedToTools}
               isPro={aiAllowed}
               onUpgrade={onScannerUpgrade ?? onUpgrade}
+              accessToken={accessToken}
+              onLogin={accessToken ? undefined : (onScannerLogin ?? onLogin)}
             />
           )}
         </AnimatePresence>
@@ -2093,6 +2099,7 @@ export function LandingPage({
   accessToken,
   onUpgrade,
   onScannerUpgrade,
+  onScannerLogin,
   aiAllowed,
 }: LandingPageProps) {
   const { cms: cmsContent } = useSettings();
@@ -2144,6 +2151,7 @@ export function LandingPage({
           accessToken={accessToken ?? null}
           onUpgrade={onUpgrade ?? onRegister}
           onScannerUpgrade={onScannerUpgrade}
+          onScannerLogin={onScannerLogin}
           aiAllowed={aiAllowed}
           windowsDownloadUrl={windowsDownloadUrl}
         />

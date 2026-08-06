@@ -16,6 +16,7 @@ export function DocumentScannerLaunch({
   onUseInTools,
   isDesktop,
   accessToken,
+  onLogin,
 }: {
   language: Language;
   isPro?: boolean;
@@ -23,6 +24,8 @@ export function DocumentScannerLaunch({
   onUseInTools?: (file: File, toolId: string) => void;
   isDesktop?: boolean;
   accessToken?: string | null;
+  /** Misafirde "Hesabıma kaydet" → giriş akışı. */
+  onLogin?: () => void;
 }) {
   const tr = language === "tr";
   // PWA kısayolundan (?scan=1) gelindiyse tarayıcıyı doğrudan aç.
@@ -91,6 +94,7 @@ export function DocumentScannerLaunch({
             onUpgrade={onUpgrade}
             onUseInTools={onUseInTools}
             accessToken={accessToken}
+            onLogin={onLogin}
           />
         )}
       </AnimatePresence>
