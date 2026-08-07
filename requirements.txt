@@ -12,7 +12,7 @@ pytesseract
 pdf2image
 python-docx
 docx2pdf
-pywin32>=306; sys_platform == 'win32'
+pywin32>=312; sys_platform == 'win32'
 openpyxl
 reportlab
 pdfplumber
