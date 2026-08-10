@@ -41,12 +41,12 @@ function Header({
   return (
     <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-        <a href="/" className="flex items-center gap-2">
+        <a href={tr ? "/" : "/en"} className="flex items-center gap-2">
           <img src="/emblem.png" alt="" className="h-8 w-8 object-contain" />
           <span className="text-sm font-bold tracking-tight text-white">PDF Platform</span>
         </a>
         <div className="flex items-center gap-1.5 sm:gap-2">
-          <a href="/blog" className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white sm:inline-block">Blog</a>
+          <a href={tr ? "/blog" : "/en/blog"} className="hidden rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-300 transition hover:text-white sm:inline-block">Blog</a>
           {/* Dil değiştirici — doğrudan girişte (Google'dan gelen) kullanıcı dili değiştirebilsin */}
           <div className="flex items-center rounded-lg border border-white/10 p-0.5 text-xs font-bold">
             <button type="button" onClick={() => onSwitchLanguage("tr")} aria-pressed={tr} className={`rounded-md px-2 py-1 transition ${tr ? "bg-white/15 text-white" : "text-slate-400 hover:text-white"}`}>TR</button>
@@ -72,6 +72,10 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 
 // ─── Blok renderer ────────────────────────────────────────────────────────────
 function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; tr: boolean }) {
+  // EN yazılarda araç CTA'ları da /en/ önekli olmalı — aksi hâlde İngilizce sayfa
+  // Türkçe araç sayfasına link verir (kullanıcıyı yanlış dile atar, Google'a da
+  // "asıl sürüm TR" sinyali gönderir).
+  const localize = (href: string) => (tr || !href.startsWith("/") ? href : `/en${href}`);
   return (
     <div className="space-y-5">
       {blocks.map((b, i) => {
@@ -101,7 +105,7 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
           </div>
         );
         if (b.t === "cta") return (
-          <a key={i} href={b.tool} className={`group flex items-center justify-between gap-4 rounded-2xl border ${accent.ring} bg-gradient-to-r ${accent.soft} p-5 transition hover:brightness-110`}>
+          <a key={i} href={localize(b.tool)} className={`group flex items-center justify-between gap-4 rounded-2xl border ${accent.ring} bg-gradient-to-r ${accent.soft} p-5 transition hover:brightness-110`}>
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-[15px] font-black text-white"><Sparkles className={`h-4 w-4 ${accent.text}`} />{b.title}</p>
               <p className="mt-1 text-[13px] leading-relaxed text-slate-300">{b.x}</p>
@@ -136,7 +140,7 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
             const a = accentOf(p.accent);
             const tags = p.tags[tr ? "tr" : "en"];
             return (
-              <a key={p.slug} href={`/blog/${p.slug}`} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
+              <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
                 <div className={`relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br ${a.soft}`}>
                   <div className={`pointer-events-none absolute -top-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-b ${a.grad} opacity-30 blur-3xl`} />
                   <Newspaper className={`h-12 w-12 ${a.text} opacity-80`} />
@@ -176,7 +180,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
         <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
         <main className="mx-auto max-w-3xl px-5 py-24 text-center">
           <p className="text-lg font-bold text-white">{tr ? "Yazı bulunamadı" : "Post not found"}</p>
-          <a href="/blog" className="mt-4 inline-block text-fuchsia-300 hover:text-fuchsia-200">← Blog</a>
+          <a href={tr ? "/blog" : "/en/blog"} className="mt-4 inline-block text-fuchsia-300 hover:text-fuchsia-200">← Blog</a>
         </main>
       </Shell>
     );
@@ -196,7 +200,9 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
     inLanguage: tr ? "tr" : "en",
     author: { "@type": "Organization", name: "PDF Platform" },
     publisher: { "@type": "Organization", name: "PDF Platform", logo: { "@type": "ImageObject", url: "https://www.pdfplatform.app/logo.png" } },
-    mainEntityOfPage: `https://www.pdfplatform.app/blog/${post.slug}`,
+    // Canonical ile AYNI olmalı: EN sayfada TR URL vermek Google'a çelişkili
+    // canonical sinyali verir ("Google kullanıcıdan farklı standart sayfa seçti").
+    mainEntityOfPage: `https://www.pdfplatform.app${tr ? "" : "/en"}/blog/${post.slug}`,
   };
 
   return (
@@ -204,7 +210,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
       <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8">
-        <a href="/blog" className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
+        <a href={tr ? "/blog" : "/en/blog"} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
 
         {/* Başlık bloğu */}
         <div className="mt-6">
@@ -260,7 +266,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
                 const rc = p[tr ? "tr" : "en"] as BlogPostCopy;
                 const ra = accentOf(p.accent);
                 return (
-                  <a key={p.slug} href={`/blog/${p.slug}`} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
+                  <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
                     <p className={`text-[11px] font-bold uppercase tracking-wide ${ra.text}`}>{p.tags[tr ? "tr" : "en"][0]}</p>
                     <p className="mt-1.5 text-[15px] font-bold leading-snug text-white">{rc.title}</p>
                     <p className="mt-1.5 line-clamp-2 text-[12px] text-slate-400">{rc.excerpt}</p>
