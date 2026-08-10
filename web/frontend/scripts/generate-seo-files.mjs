@@ -800,6 +800,57 @@ const SITEMAP_EXTRA_ROUTES = [
   { path: "/register", changefreq: "monthly", priority: "0.5" },
 ];
 
+// Önceki sitemap'teki lastmod değerleri: içeriği DEĞİŞMEYEN sayfalar eski
+// tarihini korur. Her build'de tüm site "bugün güncellendi" demek Google'ın
+// lastmod sinyaline olan güvenini yitirmesine ve taramanın seyrelmesine yol açar.
+const previousLastmod = new Map();
+try {
+  const prev = readFileSync(join(publicDir, "sitemap.xml"), "utf8");
+  const re = /<loc>([^<]+)<\/loc>[\s\S]*?<lastmod>([^<]+)<\/lastmod>/g;
+  let m;
+  while ((m = re.exec(prev)) !== null) previousLastmod.set(m[1], m[2]);
+} catch {
+  /* ilk üretim — önceki sitemap yok */
+}
+/** Prerender sırasında içeriği gerçekten değişen route'lar (dil fark etmeksizin). */
+const changedRoutes = new Set();
+
+writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
+
+// ─── Prerendered HTML snapshots (TR + EN) ─────────────────────────────────────
+const prerenderRoutes = [
+  "/",
+  "/pricing",
+  "/terms",
+  "/privacy",
+  "/kvkk",
+  ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
+  "/pdf-api",
+  "/blog",
+  ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
+];
+
+let pageCount = 0;
+for (const lang of LANGS) {
+  for (const routePath of prerenderRoutes) {
+    if (!routeHasLang(routePath, lang)) continue;
+    const outPath = outFileForRoute(routePath, lang);
+    const html = renderPrerenderHtml(base, routePath, lang);
+    let previousHtml = null;
+    try {
+      previousHtml = readFileSync(outPath, "utf8");
+    } catch {
+      /* yeni sayfa */
+    }
+    if (previousHtml !== html) changedRoutes.add(routePath);
+    mkdirSync(dirname(outPath), { recursive: true });
+    writeFileSync(outPath, html, "utf8");
+    pageCount++;
+  }
+}
+
+// Sitemap EN SON üretilir: lastmod, prerender sırasında gerçekten değişen
+// sayfalara göre belirlenir (değişmeyenler eski tarihini korur).
 let sitemap;
 if (blockIndexing) {
   sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -821,6 +872,12 @@ if (blockIndexing) {
     }
   }
 
+  const lastmodFor = (u) => {
+    const previous = previousLastmod.get(u.loc);
+    if (!previous) return todayIso; // yeni URL
+    return changedRoutes.has(u.routePath) ? todayIso : previous;
+  };
+
   sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
@@ -829,7 +886,7 @@ ${urlEntries
     (u) => `  <url>
     <loc>${escapeXml(u.loc)}</loc>
 ${renderSitemapHreflang(base, u.routePath)}
-    <lastmod>${todayIso}</lastmod>
+    <lastmod>${lastmodFor(u)}</lastmod>
     <changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`,
@@ -839,32 +896,7 @@ ${renderSitemapHreflang(base, u.routePath)}
 `;
 }
 
-writeFileSync(join(publicDir, "robots.txt"), robots, "utf8");
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
-
-// ─── Prerendered HTML snapshots (TR + EN) ─────────────────────────────────────
-const prerenderRoutes = [
-  "/",
-  "/pricing",
-  "/terms",
-  "/privacy",
-  "/kvkk",
-  ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
-  "/pdf-api",
-  "/blog",
-  ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
-];
-
-let pageCount = 0;
-for (const lang of LANGS) {
-  for (const routePath of prerenderRoutes) {
-    if (!routeHasLang(routePath, lang)) continue;
-    const outPath = outFileForRoute(routePath, lang);
-    mkdirSync(dirname(outPath), { recursive: true });
-    writeFileSync(outPath, renderPrerenderHtml(base, routePath, lang), "utf8");
-    pageCount++;
-  }
-}
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",
