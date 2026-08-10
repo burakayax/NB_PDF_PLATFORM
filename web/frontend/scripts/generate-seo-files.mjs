@@ -516,7 +516,11 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
 }
 
 // ─── Görünür gövde (crawler + AI motorları + ilk boya içeriği) ────────────────
-function renderBlogBlocksHtml(blocks) {
+function renderBlogBlocksHtml(blocks, lang) {
+  // CTA hedefleri dil önekli olmalı: EN yazı TR araç sayfasına link verirse hem
+  // kullanıcı yanlış dile düşer hem de Google'a "asıl sürüm TR" sinyali gider.
+  const localize = (href) =>
+    lang === PRIMARY_LANG || !String(href).startsWith("/") ? href : `/${lang}${href}`;
   return blocks
     .map((b) => {
       if (b.t === "lead") return `<p class="seo-lead">${escapeHtml(b.x)}</p>`;
@@ -526,7 +530,7 @@ function renderBlogBlocksHtml(blocks) {
       if (b.t === "ul") return `<ul>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ul>`;
       if (b.t === "ol") return `<ol>${b.items.map((i) => `<li>${escapeHtml(i)}</li>`).join("")}</ol>`;
       if (b.t === "steps") return `<ol>${b.items.map((s) => `<li><strong>${escapeHtml(s.title)}:</strong> ${escapeHtml(s.x)}</li>`).join("")}</ol>`;
-      if (b.t === "cta") return `<p><a href="${escapeHtml(b.tool)}"><strong>${escapeHtml(b.title)}</strong> — ${escapeHtml(b.x)}</a></p>`;
+      if (b.t === "cta") return `<p><a href="${escapeHtml(localize(b.tool))}"><strong>${escapeHtml(b.title)}</strong> — ${escapeHtml(b.x)}</a></p>`;
       return "";
     })
     .join("");
@@ -559,7 +563,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
 
   // Blog yazısı — tam makale gövdesi (crawler görünür metin)
   if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
-    parts.push(`<article class="seo-article">${renderBlogBlocksHtml(meta.blocks)}</article>`);
+    parts.push(`<article class="seo-article">${renderBlogBlocksHtml(meta.blocks, lang)}</article>`);
     const rel = (meta.post && BLOG_RELATED_TOOLS[meta.post.slug]) || [];
     if (rel.length) {
       parts.push(
