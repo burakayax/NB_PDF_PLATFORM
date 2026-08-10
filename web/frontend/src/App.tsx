@@ -2903,7 +2903,11 @@ function App() {
     } else if (view === "admin_login") {
       next = "/nbadmin";
     } else {
-      next = getTrackedPath(view);
+      // ÖNEMLİ: dil öneki KORUNMALI. Aksi hâlde /en/register açan ziyaretçinin
+      // (ve Googlebot'un) URL'i replaceState ile /register'a çekiliyordu; Search
+      // Console bunu "Yönlendirmeli sayfa" sayıp EN sayfalarını dizine almıyordu.
+      // /en yolunda `language` zaten "en" (detectInitialLanguage yol önekini zorlar).
+      next = withLangPrefix(getTrackedPath(view), language);
     }
     const current = rawPath;
     const normalizedNext = next.replace(/\/$/, "") || "/";
