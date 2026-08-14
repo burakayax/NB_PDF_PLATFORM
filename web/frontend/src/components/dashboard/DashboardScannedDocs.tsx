@@ -59,7 +59,14 @@ export function DashboardScannedDocs({
         <h2 className="flex items-center gap-2 text-sm font-semibold text-nb-heading sm:text-base">
           <Cloud className="h-5 w-5 text-cyan-300" />
           {tr ? "Son Taratılanlar" : "Recent scans"}
-          {limit > 0 && <span className="text-[12px] font-normal text-slate-500">({scans.length}/{limit})</span>}
+          {/* limit === 0 → sunucu "sınırsız" diyor (ADMIN); kesir yerine sadece adet. */}
+          <span className="text-[12px] font-normal text-slate-500">
+            {loading
+              ? ""
+              : limit > 0
+              ? `(${scans.length}/${limit})`
+              : `(${scans.length} · ${tr ? "sınırsız" : "unlimited"})`}
+          </span>
         </h2>
         <button
           type="button"

@@ -328,6 +328,8 @@ type ContentPanel =
   | "annotate"
   | "crop"
   | "compress-image"
+  | "searchable"
+  | "scanner"
   | "scans"
   | "api";
 
@@ -924,6 +926,39 @@ function isFullPageSeoToolPath(p: string): boolean {
 }
 
 /**
+ * FeatureKey olmayan SEO araç slug'ları → workspace'teki karşılık gelen panel.
+ * Giriş YAPMIŞ kullanıcı bu araçlara gittiğinde (ör. Taramalarım → "Araçlarda aç")
+ * harici SEO sayfası değil, panelin İÇİ açılır (sidebar + üst bar korunur).
+ */
+const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
+  "pdf-duzenle": "editor",
+  "pdf-imzala": "sign",
+  "pdf-yorumla": "annotate",
+  "crop-pdf": "crop",
+  "gorsel-sikistir": "compress-image",
+  "aranabilir-pdf": "searchable",
+  "taranmis-pdf-ocr": "searchable",
+  "belge-tara": "scanner",
+};
+/** AI araç slug'ı → "ai" panelinin modu. */
+const AI_TOOL_MODES: Record<
+  string,
+  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare"
+> = {
+  "pdf-ozetle": "summarize",
+  "pdf-sohbet": "chat",
+  "pdf-veri-cikar": "extract",
+  "pdf-ceviri": "translate",
+  "hassas-veri-gizle": "redact",
+  "ai-toplu-islem": "batch",
+  "pdf-karsilastir": "compare",
+};
+/** Slug'ın workspace içinde açılabilir bir karşılığı var mı? */
+function hasInAppPanelForSeoSlug(slug: string): boolean {
+  return !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
+}
+
+/**
  * Giriş yapılmamış kullanıcı bir araç deep-link'ine (ör. PWA kısayolu /tools/x) gelip
  * login'e yönlendirildiğinde, giriş sonrası tam o araca dönmek için saklanan hedef.
  * sessionStorage → yalnızca mevcut oturum; tarayıcı kapanınca temizlenir.
@@ -1426,6 +1461,19 @@ function App() {
   const [pdfHubFile, setPdfHubFile] = useState<File | null>(null);
   // Bir araca aktarılmayı bekleyen taranan/açılan PDF (IndexedDB'den bir kez yüklenir).
   const [pendingToolFile, setPendingToolFile] = useState<File | null>(null);
+  /** takeScannedPdf yarışında (effect iki kez koşarsa) dosyayı kaybetmemek için taşıyıcı. */
+  const pendingScanCarryRef = useRef<File | null>(null);
+  /**
+   * Taramalarım/Belge Tarayıcı → araç aktarımı: dosya, kullanıcı onay penceresinde
+   * "Tamam"a basana kadar burada bekler (araç açılır ama dosya yüklenmez).
+   */
+  const [scanTransfer, setScanTransfer] = useState<
+    { file: File; toolId: string; mode: "form" | "panel" } | null
+  >(null);
+  const scanTransferRef = useRef(scanTransfer);
+  scanTransferRef.current = scanTransfer;
+  /** Onaylanan aktarım sayacı — takeScannedPdf effect'i teslim edilmiş dosyayı silmesin. */
+  const scanDeliveryCountRef = useRef(0);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -3447,6 +3495,34 @@ function App() {
   }, [isAuthenticated, isRestoring, view, language]);
 
   /**
+   * Giriş yapmış kullanıcı `/tools/pdf-duzenle` gibi (FeatureKey olmayan) bir araç
+   * URL'ine geldiğinde — doğrudan link, PWA kısayolu, geri/ileri — doğru panel açılsın.
+   * Bu olmadan workspace varsayılan "tool" panelinde kalır ve yanlış araç görünür.
+   */
+  const syncPanelFromSeoToolPath = useCallback(() => {
+    if (typeof window === "undefined") return false;
+    const p = stripLangPrefix(window.location.pathname.replace(/\/+$/, "")) || "/";
+    const slug = p.startsWith("/tools/") ? p.slice("/tools/".length) : "";
+    if (!slug || !hasInAppPanelForSeoSlug(slug)) return false;
+    const aiMode = AI_TOOL_MODES[slug];
+    setSelectedFeatureId(slug as FeatureId);
+    setActiveSidebar(slug as unknown as SidebarToolId);
+    if (aiMode) {
+      setAiModal(aiMode);
+      setContentPanel("ai");
+    } else {
+      setContentPanel(SPECIAL_TOOL_PANELS[slug]!);
+    }
+    setView("web");
+    return true;
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || isRestoring) return;
+    syncPanelFromSeoToolPath();
+  }, [isAuthenticated, isRestoring, syncPanelFromSeoToolPath]);
+
+  /**
    * Completes redirect-based fake checkout: user lands on
    * `/fake-payment/success?sessionId=...`, we confirm server-side, refresh
    * balance, then normalize the URL to `/tools/…`.
@@ -3577,6 +3653,10 @@ function App() {
       if (typeof window === "undefined") {
         return;
       }
+      // Panel araçları (editör/imza/yorum/kırp/AI) FeatureKey değil → önce onları dene.
+      if (isAuthenticated && syncPanelFromSeoToolPath()) {
+        return;
+      }
       const next = parseWorkspaceToolPath(window.location.pathname);
       if (next) {
         setSelectedFeatureId(next);
@@ -3587,7 +3667,7 @@ function App() {
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, []);
+  }, [isAuthenticated, syncPanelFromSeoToolPath]);
 
   useEffect(() => {
     if (!isAuthenticated || !user || !accessToken) {
@@ -4061,6 +4141,19 @@ function App() {
     setView(isAuthenticated ? "web" : "login");
   }
 
+  // "Panele git" (SEO/blog sayfalarının üst barı): bu sayfalar pathname'e göre
+  // erken-return ile render edilir → sadece setView demek görünümü DEĞİŞTİRMEZ
+  // (buton çalışmıyor görünür). URL'i de workspace'e taşımalıyız.
+  function goToWorkspaceApp() {
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", workspacePathForFeature("split"));
+    }
+    openWorkspace();
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }
+
   // MİSAFİR-ÖNCELİKLİ: Bir araca DOĞRUDAN git → /tools/<slug> URL'i + "web"
   // görünümü. Giriş YAPMAMIŞSA login'e ATILMAZ; guest-block devreye girer
   // (client-capable araçta GuestPdfTool, diğerinde tanıtım). Giriş yapmışsa
@@ -4068,21 +4161,10 @@ function App() {
   // Bazı araçlar workspace "tool" formu DEĞİL, kendi cihaz-içi panelinde açılır.
   // Bu araçlara aktarılan PDF `pendingToolFile` üzerinden ilgili panele yüklenir
   // (takeScannedPdf effect'i contentPanel !== "tool" iken setPendingToolFile yapar).
-  const SPECIAL_TOOL_PANEL: Record<string, ContentPanel> = {
-    "pdf-duzenle": "editor",
-    "pdf-imzala": "sign",
-    "pdf-yorumla": "annotate",
-    "crop-pdf": "crop",
-  };
+  const SPECIAL_TOOL_PANEL = SPECIAL_TOOL_PANELS;
   // AI araçları "ai" panelinde açılır (aiModal moduyla). Aktarılan PDF pendingToolFile
   // üzerinden ilgili AI aracına yüklenir.
-  const AI_TOOL_MODE: Record<string, "summarize" | "chat" | "extract" | "translate" | "redact"> = {
-    "pdf-ozetle": "summarize",
-    "pdf-sohbet": "chat",
-    "pdf-veri-cikar": "extract",
-    "pdf-ceviri": "translate",
-    "hassas-veri-gizle": "redact",
-  };
+  const AI_TOOL_MODE = AI_TOOL_MODES;
 
   function navigateToTool(featureId: FeatureId) {
     const special = SPECIAL_TOOL_PANEL[featureId as string];
@@ -4117,12 +4199,11 @@ function App() {
   }
 
   // Belge Tarayıcı / Taramalarım'da "Araçlarda aç" → seçilen araca PDF'i aktar.
-  // ÖNEMLİ: giriş yapmış kullanıcıda hedef NORMAL workspace form aracıysa dosyayı
-  // `chainToTool` ile aktarırız — araç değişince koşan reset effect'i (resetForm)
-  // IndexedDB üzerinden gelen dosyayı yarışta silebiliyordu; chainToTool rAF ile
-  // tüm reset'lerden SONRA yüklediği için dosya güvenle forma düşer.
-  // Özel paneller (editör/imza/yorum/kırp), AI araçları ve misafir akışı ise
-  // IndexedDB (pendingScan) + `pendingToolFile` yolunu kullanmaya devam eder.
+  // AKIŞ: önce hedef araca GİDİLİR (dosya YÜKLENMEDEN), sonra "aktarıldı" onay
+  // penceresi çıkar. Dosya ancak kullanıcı "Tamam"a bastığında araca yüklenir —
+  // böylece görsel sayfa seçici (ve diğer otomatik adımlar) onaydan önce açılmaz.
+  // Bu yüzden burada ne chainToTool (sağ alt "Dosya taşındı" bildirimi) ne de
+  // IndexedDB (pendingScan) kullanılır; dosya onaya kadar state'te bekletilir.
   async function handleScannerPick(file: File, toolId: string) {
     const isSpecialPanel = !!SPECIAL_TOOL_PANEL[toolId] || !!AI_TOOL_MODE[toolId];
     const isWorkspaceFormTool = workspaceFeatures.some((f) => f.id === toolId);
@@ -4135,16 +4216,34 @@ function App() {
     if (isAuthenticated && !isSpecialPanel && isWorkspaceFormTool) {
       window.history.pushState({}, "", workspacePathForFeature(toolId as FeatureKey));
       setView("web");
-      chainToTool(toolId as FeatureId, file, file.name);
+      // Araca temiz state ile geç (dosya onaydan sonra handleNewFiles ile eklenir).
+      setMergeShareReady(null);
+      setMergeShare(null);
+      resetForm(true);
+      setContentPanel("tool");
+      setActiveSidebar(toolId as SidebarToolId);
+      setSelectedFeatureId(toolId as FeatureId);
+      setScanTransfer({ file, toolId, mode: "form" });
       window.scrollTo({ top: 0, behavior: "instant" });
       return;
     }
-    try {
-      await saveScannedPdf(file);
-    } catch {
-      /* yoksay */
-    }
     navigateToTool(toolId as FeatureId);
+    setScanTransfer({ file, toolId, mode: "panel" });
+  }
+
+  /** Onay penceresindeki "Tamam" → dosya gerçekten araca yüklenir. */
+  function confirmScanTransfer() {
+    const pending = scanTransfer;
+    if (!pending) return;
+    setScanTransfer(null);
+    scanDeliveryCountRef.current += 1;
+    if (pending.mode === "form") {
+      void handleNewFiles([pending.file]);
+    } else {
+      // Editör / imza / yorum / kırp / AI panelleri ve misafir araç sayfaları
+      // dosyayı `initialFile` (pendingToolFile) üzerinden alır.
+      setPendingToolFile(pending.file);
+    }
   }
 
   // PWA file_handlers: telefonda "PDF ile aç → PDF Platform" → launchQueue ile PDF gelir.
@@ -4181,12 +4280,29 @@ function App() {
   useEffect(() => {
     if (view !== "web" || !selectedFeatureId) return;
     let cancelled = false;
+    const deliveryCountAtStart = scanDeliveryCountRef.current;
     (async () => {
       try {
-        const f = await takeScannedPdf();
-        if (cancelled) return;
+        // takeScannedPdf IndexedDB kaydını TÜKETİR. navigateToTool aynı anda hem
+        // selectedFeatureId hem contentPanel değiştirdiğinde bu effect iki kez
+        // koşabilir: ilk koşu dosyayı tüketip iptal edilir, ikinci koşu boş bulup
+        // pendingToolFile'ı null'lardı → dosya araca hiç düşmezdi. İptal olan koşu
+        // dosyayı ref'e geri koyar, sıradaki koşu oradan alır.
+        const f = pendingScanCarryRef.current ?? (await takeScannedPdf());
+        pendingScanCarryRef.current = null;
+        if (cancelled) {
+          pendingScanCarryRef.current = f;
+          return;
+        }
         if (!f) {
-          setPendingToolFile(null);
+          // Onay bekleyen bir aktarım varsa (kullanıcı "Tamam"a yeni basmış olabilir)
+          // yeni yüklenen dosyayı silme.
+          if (
+            !scanTransferRef.current &&
+            scanDeliveryCountRef.current === deliveryCountAtStart
+          ) {
+            setPendingToolFile(null);
+          }
           return;
         }
         if (isAuthenticated && contentPanel === "tool") {
@@ -5582,6 +5698,82 @@ function App() {
   // Tarayıcı-üstü giriş/kayıt overlay'i (misafir "Pro'ya Geç"). Portal + z-[120]
   // ile tarama modalının (z-100) ÜSTÜNDE açılır; tarama mount kaldığından foto
   // kaybolmaz. "Geri" taramaya döner, giriş başarılı olunca abonelik sayfası açılır.
+  /** Aktarım onay penceresinde gösterilecek araç adı. */
+  function scanTransferToolName(toolId: string): string {
+    const wf = workspaceFeatures.find((f) => f.id === toolId);
+    if (wf) return wf.title;
+    const seo = getToolSeo(toolId, language) as { h1?: string } | null;
+    return seo?.h1 ?? toolId;
+  }
+
+  /**
+   * Taramalarım/Belge Tarayıcı → araç aktarımı onayı. Sağ alttaki geçici bildirim
+   * yerine, kullanıcı dosya adını görüp "Tamam" diyene kadar hiçbir şey yüklenmez
+   * (görsel sayfa seçici de bu yüzden onaydan önce açılmaz).
+   */
+  const scanTransferModal = scanTransfer
+    ? createPortal(
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-[#0b1020] p-5 shadow-2xl"
+          >
+            <div className="flex items-start gap-3">
+              <span aria-hidden className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-lg text-emerald-300">
+                📄
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-base font-bold text-white">
+                  {language === "tr" ? "Dosya araca aktarıldı" : "File sent to the tool"}
+                </h2>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
+                  {language === "tr" ? (
+                    <>
+                      <span className="font-semibold text-white">“{scanTransfer.file.name}”</span>{" "}
+                      dosyası{" "}
+                      <span className="font-semibold text-white">
+                        {scanTransferToolName(scanTransfer.toolId)}
+                      </span>{" "}
+                      aracına aktarıldı. “Tamam”a bastığında dosya açılacak ve işlem
+                      yapabileceksin.
+                    </>
+                  ) : (
+                    <>
+                      <span className="font-semibold text-white">“{scanTransfer.file.name}”</span>{" "}
+                      was sent to{" "}
+                      <span className="font-semibold text-white">
+                        {scanTransferToolName(scanTransfer.toolId)}
+                      </span>
+                      . Press “OK” to open it and start working.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setScanTransfer(null)}
+                className="rounded-lg px-3.5 py-2 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06] hover:text-white"
+              >
+                {language === "tr" ? "Vazgeç" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                autoFocus
+                onClick={confirmScanTransfer}
+                className="rounded-lg bg-cyan-500/20 px-4 py-2 text-sm font-bold text-cyan-200 ring-1 ring-cyan-400/30 transition hover:bg-cyan-500/30"
+              >
+                {language === "tr" ? "Tamam" : "OK"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
   const scannerAuthOverlay = scannerAuthMode
     ? createPortal(
         <div className="fixed inset-0 z-[120] overflow-y-auto">
@@ -5687,9 +5879,9 @@ function App() {
     return (
       <Suspense fallback={<PageSkeleton />}>
         {blogSlug ? (
-          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={switchBlogLanguage} />
+          <BlogPostPage slug={blogSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} onSwitchLanguage={switchBlogLanguage} />
         ) : (
-          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace} onSwitchLanguage={switchBlogLanguage} />
+          <BlogIndexPage language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} onSwitchLanguage={switchBlogLanguage} />
         )}
       </Suspense>
     );
@@ -5697,14 +5889,20 @@ function App() {
 
   // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil; tam sayfa + SEO.
   // EN ÜSTTE: view/redirect mantığından ÖNCE yakalanır (misafir + giriş yapan).
-  if (pathname.startsWith("/tools/")) {
+  // ÖNEMLİ: Giriş YAPMIŞ kullanıcıda, workspace'te karşılığı olan araçlar (editör/imza/
+  // yorum/kırp/AI) burada YAKALANMAZ → aşağıdaki workspace render'ı çalışır ve araç
+  // panelin içinde, sidebar + "Merhaba <ad>" üst barıyla açılır (harici SEO sayfası değil).
+  if (
+    pathname.startsWith("/tools/") &&
+    !(isAuthenticated && hasInAppPanelForSeoSlug(pathname.split("/tools/")[1] ?? ""))
+  ) {
     const seoSlug = pathname.split("/tools/")[1] ?? "";
     const goLogin = () => setView("login");
     const goRegister = () => setView("register");
     if (seoSlug === "belge-tara") {
       return (
         <>
-          <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+          <GuestSeoToolPage slug="belge-tara" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
             <DocumentScannerLaunch
               language={language}
               isPro={aiAllowed}
@@ -5721,16 +5919,16 @@ function App() {
     }
     if (seoSlug === "aranabilir-pdf") {
       return (
-        <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
+            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
     }
     if (seoSlug === "crop-pdf") {
       return (
-        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="crop-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfCropTool language={language} initialFile={pendingToolFile} />
           </Suspense>
@@ -5739,7 +5937,7 @@ function App() {
     }
     if (seoSlug === "gorsel-sikistir") {
       return (
-        <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <ImageCompressTool language={language} />
           </Suspense>
@@ -5748,7 +5946,7 @@ function App() {
     }
     if (seoSlug === "pdf-duzenle") {
       return (
-        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5757,7 +5955,7 @@ function App() {
     }
     if (seoSlug === "pdf-imzala") {
       return (
-        <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="pdf-imzala" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5766,7 +5964,7 @@ function App() {
     }
     if (seoSlug === "pdf-yorumla") {
       return (
-        <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="pdf-yorumla" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
           </Suspense>
@@ -5775,7 +5973,7 @@ function App() {
     }
     if (seoSlug === "ai-toplu-islem") {
       return (
-        <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="ai-toplu-islem" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <AiBatchTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
@@ -5784,7 +5982,7 @@ function App() {
     }
     if (seoSlug === "pdf-karsilastir") {
       return (
-        <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="pdf-karsilastir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <AiCompareTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} />
           </Suspense>
@@ -5793,7 +5991,7 @@ function App() {
     }
     if (seoSlug === "hassas-veri-gizle") {
       return (
-        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="hassas-veri-gizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <AiRedactTool language={language} accessToken={accessToken} onLogin={goLogin} onUpgrade={goRegister} comingSoon={aiComingSoon} initialFile={pendingToolFile} />
           </Suspense>
@@ -5804,9 +6002,9 @@ function App() {
     // metin" vaat ediyor → AI özet yerine gerçek OCR aracı (SearchablePdfTool).
     if (seoSlug === "taranmis-pdf-ocr") {
       return (
-        <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} />
+            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5822,7 +6020,7 @@ function App() {
         seoSlug === "pdf-veri-cikar" ? "extract" :
         seoSlug === "pdf-ceviri" ? "translate" : "summarize";
       return (
-        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={openWorkspace}>
+        <GuestSeoToolPage slug={seoSlug} language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <AiPdfTool
               mode={aiMode}
@@ -7165,6 +7363,35 @@ function App() {
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
                 </Suspense>
+              </section>
+            ) : null}
+
+            {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
+            {contentPanel === "searchable" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <SearchablePdfTool
+                    language={language}
+                    isPro={aiAllowed}
+                    onUpgrade={() => setUpgradeModalOpen(true)}
+                    onLogin={() => setView("login")}
+                    initialFile={pendingToolFile}
+                  />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {/* Belge Tarayıcı — panel içi karşılığı (harici SEO sayfası yerine). */}
+            {contentPanel === "scanner" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <DocumentScannerLaunch
+                  language={language}
+                  isPro={aiAllowed}
+                  isDesktop={!isMobileOrTablet}
+                  onUpgrade={() => setUpgradeModalOpen(true)}
+                  onUseInTools={(file, toolId) => void handleScannerPick(file, toolId)}
+                  accessToken={accessToken}
+                />
               </section>
             ) : null}
 
@@ -8946,6 +9173,7 @@ function App() {
           onSavePreferences={saveCookiePreferences}
           onOpenPrivacy={() => openLegalPage("privacy")}
         />
+        {scanTransferModal}
       </div>
     </CheckoutCurrencyProvider>
   );
