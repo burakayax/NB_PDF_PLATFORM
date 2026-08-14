@@ -18,6 +18,10 @@ type Props = {
   isAuthenticated?: boolean;
   /** Oturum açık kullanıcıyı workspace'e (panele) götür. */
   onOpenApp?: () => void;
+  /** Üst barda "Merhaba <ad>" göstermek için kullanıcının adı. */
+  userName?: string | null;
+  /** Sayfa üstünde gösterilecek modal/overlay (ör. dosya aktarım onayı). */
+  overlay?: ReactNode;
 };
 
 /**
@@ -29,7 +33,7 @@ type Props = {
 // gönderir) için "cihazdan çıkmaz" iddiası yanıltıcı olur — o yüzden ayrım.
 const ON_DEVICE_SEO_TOOLS = new Set<string>(["pdf-imzala", "pdf-yorumla"]);
 
-export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, isAuthenticated, onOpenApp }: Props) {
+export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, isAuthenticated, onOpenApp, userName, overlay }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
   const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
@@ -75,7 +79,9 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
             <div className="flex items-center gap-2">
               <span className="hidden items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-300 sm:inline-flex">
                 <ShieldCheck className="h-3.5 w-3.5" />
-                {tr ? "Oturum açık" : "Signed in"}
+                {userName
+                  ? tr ? `Merhaba, ${userName}` : `Hi, ${userName}`
+                  : tr ? "Oturum açık" : "Signed in"}
               </span>
               <button type="button" onClick={onOpenApp}
                 className="rounded-lg bg-cyan-500/15 px-3.5 py-1.5 text-sm font-semibold text-cyan-200 ring-1 ring-cyan-400/30 transition hover:bg-cyan-500/25">
@@ -197,6 +203,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
           </section>
         )}
       </main>
+      {overlay}
     </div>
   );
 }

@@ -13,13 +13,17 @@ const FREE_LIMIT = Number(process.env.SCAN_LIBRARY_FREE_LIMIT ?? 3);
 const PRO_LIMIT = Number(process.env.SCAN_LIBRARY_PRO_LIMIT ?? 10);
 const MAX_BYTES = 12 * 1024 * 1024; // 12MB — tarama dosyaları küçük olur
 
+/** ADMIN sınırsızdır: 0 = "limit yok" (istemci sayaç göstermez, FIFO silme yapılmaz). */
+const UNLIMITED = 0;
+
 async function tierLimit(userId: string): Promise<number> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { plan: true, role: true },
   });
   if (!user) return FREE_LIMIT;
-  if (user.role === "ADMIN" || user.plan !== "FREE") return PRO_LIMIT;
+  if (user.role === "ADMIN") return UNLIMITED;
+  if (user.plan !== "FREE") return PRO_LIMIT;
   return FREE_LIMIT;
 }
 
@@ -57,17 +61,20 @@ export async function uploadScanController(request: Request, response: Response)
     select: { id: true, filename: true, mime: true, sizeBytes: true, createdAt: true },
   });
 
-  // FIFO: limitin ötesindeki (en eski) taramaları sil.
-  const overflow = await prisma.scannedDocument.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-    skip: limit,
-  });
-  if (overflow.length) {
-    await prisma.scannedDocument.deleteMany({
-      where: { id: { in: overflow.map((r) => r.id) } },
+  // FIFO: limitin ötesindeki (en eski) taramaları sil. limit === UNLIMITED (0) ise
+  // (ADMIN) hiçbir şey silinmez.
+  if (limit > 0) {
+    const overflow = await prisma.scannedDocument.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+      skip: limit,
     });
+    if (overflow.length) {
+      await prisma.scannedDocument.deleteMany({
+        where: { id: { in: overflow.map((r) => r.id) } },
+      });
+    }
   }
 
   response.status(201).json({ scan, limit });

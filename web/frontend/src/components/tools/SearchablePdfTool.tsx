@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Download, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolDropzone } from "./ToolDropzone";
@@ -22,11 +22,14 @@ export function SearchablePdfTool({
   isPro,
   onUpgrade,
   onLogin,
+  initialFile,
 }: {
   language: Language;
   isPro?: boolean;
   onUpgrade?: () => void;
   onLogin?: () => void;
+  /** Araçlar arası aktarım (Taramalarım / PDF Merkezi) ile gelen dosya. */
+  initialFile?: File | null;
 }) {
   const tr = language === "tr";
   const [files, setFiles] = useState<File[]>([]);
@@ -52,6 +55,16 @@ export function SearchablePdfTool({
     setFiles((prev) => [...prev, ...arr]);
     setResult(null);
   }
+
+  // Araçlar arası aktarım: dışarıdan gelen PDF/görseli bir kez listeye ekle.
+  const loadedInitialRef = useRef<File | null>(null);
+  useEffect(() => {
+    if (initialFile && loadedInitialRef.current !== initialFile) {
+      loadedInitialRef.current = initialFile;
+      addFiles([initialFile]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- addFiles güncel closure'dan alınır
+  }, [initialFile]);
 
   const removeFile = (i: number) => setFiles((prev) => prev.filter((_, k) => k !== i));
   const reset = () => {

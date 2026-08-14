@@ -20,6 +20,7 @@ import {
   PenTool,
   Presentation,
   RotateCcw,
+  ScanText,
   Sliders,
   Sparkles,
   Table,
@@ -103,6 +104,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       { id: "pdf-to-image", icon: <ImageIcon className="h-5 w-5" />, tr: "Resme", en: "To image" },
       { id: "pdf-to-text", icon: <Type className="h-5 w-5" />, tr: "Metne", en: "To text" },
       { id: "extract-images", icon: <Images className="h-5 w-5" />, tr: "Görsel Çıkar", en: "Extract images" },
+      { id: "aranabilir-pdf", icon: <ScanText className="h-5 w-5" />, tr: "Aranabilir PDF (OCR)", en: "Searchable PDF (OCR)" },
     ],
   },
   {
