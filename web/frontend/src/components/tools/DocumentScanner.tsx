@@ -32,6 +32,7 @@ import type { Language } from "../../i18n/landing";
 import { imagesToPdf, pdfBytesToBlob } from "../../lib/clientPdfWorker";
 import { zipStore } from "../../lib/zipStore";
 import { uploadScanToLibrary } from "../../api/scans";
+import { saveScanForAccount, takeScanForAccount } from "../../lib/pendingScan";
 // Ağır OCR yolu (pdf-lib + tesseract) doğrudan çekirdek motordan; bu bileşen lazy
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
 import { imagesToSearchablePdf } from "../../lib/clientPdf";
@@ -201,6 +202,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const stableRef = useRef(0);
   const prevLiveRef = useRef<Quad | null>(null);
   const capturingRef = useRef(false);
+  /** Misafir "Hesabıma kaydet"e bastı → giriş yapılır yapılmaz otomatik yükle. */
+  const pendingAcctSaveRef = useRef(false);
 
   const stopStream = useCallback(() => {
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -746,6 +749,14 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     try {
       await uploadScanToLibrary(accessToken, result.blob, result.filename);
       setSavedAcct(true);
+      // Bekleyen kopya artık gereksiz (giriş sonrası ikinci kez yüklenmesin).
+      pendingAcctSaveRef.current = false;
+      try {
+        sessionStorage.removeItem("nb_scan_return");
+      } catch {
+        /* yoksay */
+      }
+      void takeScanForAccount();
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "Hesaba kaydedilemedi." : "Could not save to account.");
     } finally {
@@ -753,6 +764,44 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     }
   }
 
+  // Giriş sonrası (aynı sayfada açılan giriş ekranı) sonuç ekranına dönülür →
+  // kullanıcı tekrar butona basmasın diye kaydetme otomatik tamamlanır ve
+  // "Hesabına kaydedildi" bilgilendirmesi görünür.
+  useEffect(() => {
+    if (!accessToken || !result || savedAcct || savingAcct) return;
+    if (!pendingAcctSaveRef.current) return;
+    void saveToAccount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken, result, savedAcct, savingAcct]);
+
+  /**
+   * Misafir: "Hesabıma kaydet — giriş yap". Belgeyi KAYBETMEMEK için önce
+   * IndexedDB'ye bırakır + niyeti işaretler, sonra giriş ekranını açar.
+   * - Aynı sayfada giriş (e-posta/şifre): bileşen mount kalır → aşağıdaki effect
+   *   accessToken gelir gelmez yüklemeyi kendisi yapar.
+   * - Google (tam sayfa yönlendirme): App, dönüşte tarama sayfasına geri getirir
+   *   ve bekleyen belgeyi yükleyip "Hesabınıza kaydedildi" bildirimi gösterir.
+   */
+  async function requestAccountSaveLogin() {
+    if (result) {
+      pendingAcctSaveRef.current = true;
+      try {
+        sessionStorage.setItem("nb_scan_return", "1");
+      } catch {
+        /* private mode */
+      }
+      try {
+        await saveScanForAccount(
+          new File([result.blob], result.filename, {
+            type: result.blob.type || "application/pdf",
+          }),
+        );
+      } catch {
+        /* IndexedDB yoksa: aynı sayfada giriş akışı yine de çalışır */
+      }
+    }
+    onLogin?.();
+  }
 
   async function shareResult() {
     if (!result) return;
@@ -1407,7 +1456,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     /* Misafir: kilitli görünür — tıklayınca giriş ekranı açılır (tarama kaybolmaz). */
                     <button
                       type="button"
-                      onClick={onLogin}
+                      onClick={() => void requestAccountSaveLogin()}
                       className="inline-flex items-center justify-center gap-2 rounded-2xl border border-emerald-400/30 bg-emerald-500/[0.08] px-6 py-3.5 text-sm font-bold text-emerald-200 transition hover:bg-emerald-500/[0.16]"
                     >
                       <Lock className="h-4 w-4" />
