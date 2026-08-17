@@ -111,7 +111,8 @@ import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
-import { saveScannedPdf, takeScannedPdf } from "./lib/pendingScan";
+import { saveScannedPdf, takeScannedPdf, takeScanForAccount } from "./lib/pendingScan";
+import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
   mergePdfs,
@@ -1455,6 +1456,12 @@ function App() {
   // Tarayıcı "Pro'ya Geç" (misafir) → tam sayfaya gitmeden ÜSTTE açılan giriş/kayıt.
   // Böylece tarama kaybolmaz; "Geri" ile taramaya dönülür, giriş sonrası abonelik açılır.
   const [scannerAuthMode, setScannerAuthMode] = useState<"login" | "register" | null>(null);
+  /**
+   * Tarayıcıdan açılan giriş ekranının AMACI: "upgrade" → giriş sonrası abonelik
+   * paneli açılır; "save" → kullanıcı taramasını hesabına kaydetmek istiyor, bu
+   * yüzden panele YÖNLENDİRİLMEZ; aynı sonuç ekranında kalır ve kayıt tamamlanır.
+   */
+  const scannerAuthIntentRef = useRef<"upgrade" | "save">("upgrade");
   // Belge Tarayıcı (giriş yapmış kullanıcı — workspace'te de erişilebilir).
   const [scannerOpen, setScannerOpen] = useState(false);
   // PDF Merkezi — PWA "PDF ile aç" (file_handlers) ile gelen PDF burada açılır.
@@ -1885,6 +1892,27 @@ function App() {
         return;
       }
 
+      // Belge Tarayıcı "Hesabıma kaydet" (Google ile) → dönüşte panele DEĞİL, tarama
+      // sayfasına dön (kullanıcı kaldığı yerden tarayıp sonuç ekranından kaydeder).
+      let pendingScanSave = false;
+      try {
+        pendingScanSave = sessionStorage.getItem("nb_scan_return") === "1";
+      } catch {
+        /* yoksay */
+      }
+      if (pendingScanSave) {
+        url.pathname = "/tools/belge-tara";
+        url.searchParams.set("scan", "1");
+        const scanQs = url.searchParams.toString();
+        window.history.replaceState(
+          {},
+          "",
+          `${url.pathname}${scanQs ? `?${scanQs}` : ""}${url.hash}`,
+        );
+        setView("landing");
+        return;
+      }
+
       // Belge Tarayıcı "Pro'ya Geç" (Google ile) → dönüşte abonelik sayfasını aç.
       let pendingUpgrade = false;
       try {
@@ -1925,6 +1953,55 @@ function App() {
     },
     [logout],
   );
+
+  /**
+   * Belge Tarayıcı → "Hesabıma kaydet" → giriş akışı tamamlandı. Google ile giriş
+   * TAM SAYFA yönlendirdiği için tarayıcı bileşeni (ve belge) bellekten silinir;
+   * belge IndexedDB'de beklediğinden burada otomatik yüklenir ve kullanıcıya
+   * "Hesabınıza kaydedildi" bildirimi gösterilir. (Aynı sayfada giriş yapıldıysa
+   * yükleme zaten tarayıcı içinde tamamlanır; bayrak temizlendiği için burası
+   * ikinci kez çalışmaz.)
+   */
+  const pendingScanSaveHandledRef = useRef(false);
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken || isRestoring) return;
+    if (pendingScanSaveHandledRef.current) return;
+    let wants = false;
+    try {
+      wants = sessionStorage.getItem("nb_scan_return") === "1";
+    } catch {
+      /* yoksay */
+    }
+    if (!wants) return;
+    pendingScanSaveHandledRef.current = true;
+    try {
+      sessionStorage.removeItem("nb_scan_return");
+    } catch {
+      /* yoksay */
+    }
+    void (async () => {
+      const file = await takeScanForAccount();
+      if (!file) return;
+      try {
+        await uploadScanToLibrary(accessToken, file, file.name);
+        showToastRef.current(
+          "success",
+          language === "tr" ? "Hesabınıza kaydedildi" : "Saved to your account",
+          language === "tr"
+            ? `«${file.name}» taraman hesabına kaydedildi — «Taramalarım»dan indirebilir, paylaşabilir veya bir araçta açabilirsin.`
+            : `Your scan «${file.name}» was saved to your account — open «My scans» to download, share or use it in a tool.`,
+        );
+      } catch {
+        showToastRef.current(
+          "error",
+          language === "tr" ? "Kaydedilemedi" : "Could not save",
+          language === "tr"
+            ? "Taraman hesabına kaydedilemedi. Tarama ekranından tekrar deneyebilirsin."
+            : "Your scan could not be saved. Please try again from the scan screen.",
+        );
+      }
+    })();
+  }, [isAuthenticated, accessToken, isRestoring, language]);
 
   useEffect(() => {
     if (view !== "web" || !isAuthenticated) {
@@ -4477,6 +4554,7 @@ function App() {
     } catch {
       /* sessionStorage yoksa yoksay */
     }
+    scannerAuthIntentRef.current = "upgrade";
     setScannerAuthMode("register");
   }, []);
 
@@ -4490,6 +4568,7 @@ function App() {
     } catch {
       /* sessionStorage yoksa yoksay */
     }
+    scannerAuthIntentRef.current = "save";
     setScannerAuthMode("login");
   }, []);
 
@@ -4550,6 +4629,24 @@ function App() {
         sessionStorage.removeItem("nb_pending_upgrade");
       } catch {
         /* yoksay */
+      }
+      // Amaç "hesabıma kaydet" ise: panele GÖTÜRME. Yalnız giriş ekranını kapat →
+      // tarayıcı arkada mount kaldığı için kullanıcı sonuç ekranına (PDF kaydet /
+      // araçlarda aç / paylaş) döner ve kaydetme orada otomatik tamamlanır.
+      if (scannerAuthIntentRef.current === "save") {
+        // Tarayıcı hâlâ ekranda (belge bellekte) → yüklemeyi O yapacak. Bekleyen
+        // IndexedDB kopyasını ve bayrağı şimdi temizle ki App'in "giriş sonrası
+        // otomatik yükle" effect'i devreye girip aynı belgeyi İKİNCİ kez yüklemesin.
+        pendingScanSaveHandledRef.current = true;
+        try {
+          sessionStorage.removeItem("nb_scan_return");
+        } catch {
+          /* yoksay */
+        }
+        void takeScanForAccount();
+        setScannerAuthMode(null);
+        setRegistrationSuccessBanner(null);
+        return;
       }
       setScannerAuthMode(null);
       setRegistrationSuccessBanner(null);
