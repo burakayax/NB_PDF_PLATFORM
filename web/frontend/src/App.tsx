@@ -4447,11 +4447,21 @@ function App() {
           }
           return;
         }
-        if (isAuthenticated && contentPanel === "tool") {
+        // Hedefi `contentPanel`in O ANKİ değerine göre seçmek YANLIŞ: tam sayfa
+        // yüklemede (PWA "PDF ile aç" akışı dahil) bu effect, panel henüz
+        // varsayılan "tool" iken koşuyor. `syncPanelFromSeoToolPath` paneli
+        // "ai"/"editor" yapmadan ÖNCE dosya `handleNewFiles` ile FORMA veriliyor,
+        // panel değişince de form sıfırlandığı için dosya kayboluyordu
+        // (tarayıcıda doğrulandı: IndexedDB kaydı tüketiliyor ama araç boş açılıyor).
+        // Hedefi ARACIN KENDİSİNDEN belirle — zamanlamadan bağımsız.
+        const opensInOwnPanel =
+          !!SPECIAL_TOOL_PANELS[selectedFeatureId as string] ||
+          !!AI_TOOL_MODES[selectedFeatureId as string];
+        if (isAuthenticated && !opensInOwnPanel && contentPanel === "tool") {
           // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
           await handleNewFiles([f]);
         } else {
-          // Misafir guest araç / editör paneli → initialFile ile yükle.
+          // Misafir guest araç / editör / AI paneli → initialFile ile yükle.
           setPendingToolFile(f);
         }
       } catch {
