@@ -42,6 +42,12 @@ sentry-sdk[fastapi]>=2.0.0
 # Billing / invoicing
 tenacity>=8.2.0
 sendgrid>=6.10.0
+# app/billing/{birfatura,parasut,tcmb,email_service}.py doğrudan requests kullanır ve
+# app/main.py bunları internal_billing router'ı üzerinden AÇILIŞTA import eder. Şimdiye
+# kadar başka bir paketin transitif bağımlılığı olarak geldiği için fark edilmemişti;
+# beyan edilmediğinden CI'da çözülmüyordu (ModuleNotFoundError: requests).
+# >=2.32.0: CVE-2024-35195 (Session doğrulama atlatma) düzeltmesi.
+requests>=2.32.0
 
 # Test
 pytest>=8.0.0
