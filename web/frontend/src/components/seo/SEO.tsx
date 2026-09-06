@@ -61,34 +61,106 @@ function upsertMeta(
   node.setAttribute("content", content);
 }
 
-function upsertCanonical(href: string) {
-  let node = document.getElementById(
-    HEAD_IDS.canonical,
-  ) as HTMLLinkElement | null;
-  if (!node) {
-    node = document.createElement("link");
-    node.id = HEAD_IDS.canonical;
-    node.setAttribute("rel", "canonical");
+/**
+ * Prerender HTML'i (public/**\/index.html) canonical/robots/hreflang/JSON-LD
+ * etiketlerini ID'SİZ basar. Bu yardımcılar eskiden yalnızca kendi ID'lerini
+ * aradığı için hidrasyondan sonra head'de İKİ canonical, İKİ robots ve ALTI
+ * hreflang kalıyordu. Google birden fazla rel=canonical gördüğünde hepsini
+ * yok sayar, tekrarlı hreflang de kümeyi geçersiz kılar → GSC "kullanıcı
+ * tarafından seçilen kanonik yok" / "kopya" raporları. Çözüm: ID'ye değil
+ * ETİKETİN KENDİSİNE göre eşleştir, ilkini sahiplen, fazlalıkları sil.
+ */
+function adoptOrCreate<T extends HTMLElement>(
+  id: string,
+  selector: string,
+  create: () => T,
+): T {
+  const existing = Array.from(
+    document.head.querySelectorAll<T>(selector),
+  );
+  // Birden fazla varsa ilkini tut, kalanları temizle (tekrar birikmesin).
+  for (let i = 1; i < existing.length; i += 1) {
+    existing[i].remove();
+  }
+  const node = existing[0] ?? create();
+  node.id = id;
+  if (!node.isConnected) {
     document.head.appendChild(node);
   }
+  return node;
+}
+
+function upsertCanonical(href: string) {
+  const node = adoptOrCreate<HTMLLinkElement>(
+    HEAD_IDS.canonical,
+    'link[rel="canonical"]',
+    () => {
+      const link = document.createElement("link");
+      link.setAttribute("rel", "canonical");
+      return link;
+    },
+  );
   node.setAttribute("href", href);
 }
 
 function upsertRobots(content: string) {
-  let node = document.getElementById(HEAD_IDS.robots) as HTMLMetaElement | null;
-  if (!node) {
-    node = document.createElement("meta");
-    node.id = HEAD_IDS.robots;
-    node.setAttribute("name", "robots");
-    document.head.appendChild(node);
-  }
+  const node = adoptOrCreate<HTMLMetaElement>(
+    HEAD_IDS.robots,
+    'meta[name="robots"]',
+    () => {
+      const meta = document.createElement("meta");
+      meta.setAttribute("name", "robots");
+      return meta;
+    },
+  );
   node.setAttribute("content", content);
 }
 
-function clearJsonLd() {
+/** Bir JSON-LD düğümünün kimliği: varsa @id, yoksa @type. */
+function jsonLdKey(node: unknown): string | null {
+  if (!node || typeof node !== "object") return null;
+  const record = node as Record<string, unknown>;
+  const id = record["@id"];
+  if (typeof id === "string") return `id:${id}`;
+  const type = record["@type"];
+  if (typeof type === "string") return `type:${type}`;
+  return null;
+}
+
+/**
+ * Kendi ürettiğimiz JSON-LD bloklarını sil ve prerender'ın ID'siz bloklarından
+ * SADECE birazdan yeniden basacaklarımızla çakışanları kaldır.
+ *
+ * Topluca silmiyoruz: prerender blog sayfaları client'ın üretmediği BlogPosting
+ * ve HowTo şemaları taşıyor; hepsini silmek zengin sonuçları kaybettirirdi.
+ */
+function pruneJsonLd(incoming: Array<Record<string, unknown>>) {
+  const incomingKeys = new Set(
+    incoming.map(jsonLdKey).filter((k): k is string => k !== null),
+  );
+
   document
-    .querySelectorAll(`script[id^="${HEAD_IDS.jsonLdPrefix}"]`)
-    .forEach((s) => s.remove());
+    .querySelectorAll('script[type="application/ld+json"]')
+    .forEach((script) => {
+      // Önceki render'da kendi bastıklarımız → her zaman gider.
+      if (script.id.startsWith(HEAD_IDS.jsonLdPrefix)) {
+        script.remove();
+        return;
+      }
+      // Prerender bloğu → yalnızca aynı @id/@type'ı yeniden basacaksak sil.
+      try {
+        const parsed: unknown = JSON.parse(script.textContent ?? "");
+        const nodes = Array.isArray(parsed) ? parsed : [parsed];
+        if (nodes.some((n) => {
+          const key = jsonLdKey(n);
+          return key !== null && incomingKeys.has(key);
+        })) {
+          script.remove();
+        }
+      } catch {
+        /* bozuk JSON-LD'ye dokunma */
+      }
+    });
 }
 
 function appendJsonLd(index: number, data: Record<string, unknown>) {
@@ -100,9 +172,10 @@ function appendJsonLd(index: number, data: Record<string, unknown>) {
 }
 
 function syncHreflang(items: Array<{ lang: string; href: string }>) {
-  // Remove stale hreflang links
+  // TÜM hreflang link'lerini kaldır (prerender'ın ID'siz olanları dahil) —
+  // yoksa aynı dil için iki farklı etiket kalır ve hreflang kümesi geçersiz olur.
   document
-    .querySelectorAll(`link[id^="${HEAD_IDS.hreflangPrefix}"]`)
+    .querySelectorAll("link[rel='alternate'][hreflang]")
     .forEach((el) => el.remove());
 
   items.forEach(({ lang, href }, i) => {
@@ -179,7 +252,6 @@ export function SEO({
     }
 
     // ── JSON-LD ──────────────────────────────────────────────────────────────
-    clearJsonLd();
     const nodes = buildBaseStructuredData({
       language,
       canonicalUrl,
@@ -191,6 +263,7 @@ export function SEO({
       breadcrumb,
       sameAs,
     });
+    pruneJsonLd(nodes);
     nodes.forEach((entry, index) => appendJsonLd(index, entry));
   }, [
     canonical,

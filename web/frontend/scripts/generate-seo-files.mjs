@@ -794,11 +794,13 @@ const LOGICAL_ROUTES = [
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   ...BLOG_POSTS.map((p) => ({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" })),
 ];
-// Yalnızca sitemap'e giren, prerender edilmeyen ek rotalar (login/register).
-const SITEMAP_EXTRA_ROUTES = [
-  { path: "/login", changefreq: "monthly", priority: "0.5" },
-  { path: "/register", changefreq: "monthly", priority: "0.5" },
-];
+// Yalnızca sitemap'e giren, prerender edilmeyen ek rotalar.
+// BOŞ: /login ve /register buradaydı ama prerender edilmedikleri için SPA
+// fallback'e düşüyor, React de oturum durumuna göre yönlendiriyordu. Google
+// bunları "Yönlendirmeli sayfa" diye raporluyor (/en/register dahil) ve
+// sitemap'te hata olarak birikiyordu. Kimlik doğrulama sayfalarının arama
+// sonucunda işi yok — sitemap'ten çıkarıldılar.
+const SITEMAP_EXTRA_ROUTES = [];
 
 // Önceki sitemap'teki lastmod değerleri: içeriği DEĞİŞMEYEN sayfalar eski
 // tarihini korur. Her build'de tüm site "bugün güncellendi" demek Google'ın
