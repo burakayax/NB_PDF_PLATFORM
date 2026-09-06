@@ -4438,7 +4438,29 @@ function App() {
 
   // Bir araç sayfası açıldığında bekleyen (taranan/açılan) PDF varsa bir kez yükle.
   useEffect(() => {
-    if (view !== "web" || !selectedFeatureId) return;
+    if (view !== "web" || !selectedFeatureId || isRestoring) return;
+    // ── Durum URL ile OTURMADAN dosyaya dokunma ────────────────────────────────
+    // Tam sayfa yüklemede (PWA "PDF ile aç" akışı dahil) `selectedFeatureId`,
+    // `contentPanel` ve `aiModal` sırayla oturuyor; bu effect ise aradaki her
+    // commit'te koşuyor. Erken koşan bir tur IndexedDB kaydını TÜKETİP dosyayı
+    // yanlış hedefe (ör. AI aracı yerine forma) verince dosya kayboluyordu.
+    // Çözüm: hedef URL'den okunur ve ilgili panel gerçekten açılana kadar BEKLENİR.
+    // Beklerken dosya IndexedDB'de durur — hiçbir koşulda kaybolmaz.
+    const urlSlug = currentToolSlugFromUrl();
+    if (urlSlug) {
+      const wantAi = AI_TOOL_MODES[urlSlug];
+      const wantPanel = SPECIAL_TOOL_PANELS[urlSlug];
+      if (wantAi) {
+        if (contentPanel !== "ai" || aiModal !== wantAi) return;
+      } else if (wantPanel) {
+        if (contentPanel !== wantPanel) return;
+      } else if (isAuthenticated) {
+        // Normal workspace form aracı: doğru araç seçili ve form paneli açık olmalı.
+        if (contentPanel !== "tool" || toolSlugForFeature(selectedFeatureId) !== urlSlug) {
+          return;
+        }
+      }
+    }
     let cancelled = false;
     const deliveryCountAtStart = scanDeliveryCountRef.current;
     (async () => {
@@ -4501,7 +4523,7 @@ function App() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, selectedFeatureId, isAuthenticated, contentPanel]);
+  }, [view, selectedFeatureId, isAuthenticated, contentPanel, aiModal, isRestoring]);
 
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
