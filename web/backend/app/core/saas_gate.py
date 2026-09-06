@@ -130,6 +130,27 @@ async def _httpx_post_json_with_retry(
     raise HTTPException(status_code=502, detail="SaaS isteği tekrar denemelerine rağmen başarısız.")
 
 
+def _user_headers(token: str) -> dict[str, str]:
+    """Kullanıcı token'ı ile Node'a giden çağrılar için standart başlıklar.
+
+    ``X-Internal-Secret`` EKLENİR: bu çağrılar tarayıcıdan değil PDF API
+    sürecinden çıkar, dolayısıyla Node'un gördüğü IP tüm kullanıcılar için
+    AYNIDIR (Render çıkış adresi). IP başına dakikalık limit bu yüzden tek bir
+    kullanıcıyı değil tüm trafiği ortak sayaca koyuyor ve eşik aşılınca
+    kötüye-kullanım bloğu giriş yapmış HERKESİ kilitliyordu
+    (Sentry: "Abonelik durumu alınamadı: Çok fazla istek").
+
+    Sır ayarlı değilse başlık eklenmez → Node tarafında bypass da olmaz
+    (fail-closed). Kullanıcı bazlı kota/entitlement kontrolleri bu başlıktan
+    ETKİLENMEZ; yalnızca yanlış boyutta uygulanan IP sayacı devre dışı kalır.
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    secret = internal_service_secret()
+    if secret:
+        headers["X-Internal-Secret"] = secret
+    return headers
+
+
 def _detail_from_response(r: httpx.Response) -> str:
     try:
         data = r.json()
@@ -168,7 +189,7 @@ async def saas_session_ok(token: str) -> None:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 url,
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
     except httpx.TimeoutException as exc:
         logger.warning("saas_session_ok timeout url=%s err=%s", url, exc)
@@ -208,7 +229,7 @@ async def saas_user_identity(token: str) -> dict[str, Any]:
     url = f"{base}/api/auth/me"
     try:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
-            r = await client.get(url, headers={"Authorization": f"Bearer {token}"})
+            r = await client.get(url, headers=_user_headers(token))
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
         raise HTTPException(status_code=502, detail="Kimlik API'ye ulaşılamadı.") from exc
     if r.status_code == 401:
@@ -242,7 +263,7 @@ async def saas_current_user_id(token: str) -> str:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 url,
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
     except httpx.TimeoutException as exc:
         logger.warning("saas_current_user_id timeout url=%s err=%s", url, exc)
@@ -335,7 +356,7 @@ async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> di
         json_body["fileCount"] = file_count
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/check",
-        headers={"Authorization": f"Bearer {token}"},
+        headers=_user_headers(token),
         json_body=json_body,
     )
     if r.status_code == 401:
@@ -362,7 +383,7 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     base = saas_api_base()
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/consume",
-        headers={"Authorization": f"Bearer {token}"},
+        headers=_user_headers(token),
         json_body={"toolId": tool_id},
         attempts=1,
     )
@@ -425,7 +446,7 @@ async def get_user_file_size_limit_bytes(token: str) -> int | None:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 f"{base}/api/entitlement/balance",
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
         if r.status_code != 200:
             return None

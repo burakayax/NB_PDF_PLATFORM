@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 
 import { HttpError } from "../../lib/http-error.js";
+import { requestHasInternalServiceSecret } from "../../middleware/api-security.middleware.js";
 import { prisma } from "../../lib/prisma.js";
 import {
   checkQuota,
@@ -315,12 +316,13 @@ export async function editorDownloadConsumeController(
   request: Request,
   response: Response,
 ) {
-  const secret = process.env.INTERNAL_SERVICE_SECRET;
-  if (!secret) {
+  if (!(process.env.INTERNAL_SERVICE_SECRET ?? "").trim()) {
     throw new HttpError(503, "Internal service secret not configured.");
   }
-  const provided = request.headers["x-internal-secret"];
-  if (typeof provided !== "string" || provided !== secret) {
+  // Sabit zamanlı karşılaştırma (ortak yardımcı). Eskiden `provided !== secret`
+  // ile doğrudan kıyaslanıyordu; bu sır artık IP rate-limit muafiyeti de
+  // verdiği için zamanlama sızıntısı saldırgan açısından daha değerli.
+  if (!requestHasInternalServiceSecret(request)) {
     throw new HttpError(403, "Forbidden.");
   }
   const idKey = typeof request.body?.idKey === "string" ? request.body.idKey.trim() : "";
