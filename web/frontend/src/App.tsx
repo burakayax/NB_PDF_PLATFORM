@@ -4285,23 +4285,33 @@ function App() {
    *
    * Bu paneller dosyayı `initialFile` (= `pendingToolFile`) prop'u ile alır.
    *
-   * `scanDeliveryCountRef` ARTIRILMALI: `contentPanel` değişince koşan teslim
-   * effect'i IndexedDB'de bekleyen dosya bulamazsa `pendingToolFile`'ı null'lar
-   * ve tam da verdiğimiz dosyayı siler. Sayaç değişince o effect silmeyi atlar.
+   * DOSYAYI DOĞRUDAN `setPendingToolFile` İLE VERME: `contentPanel` değişince
+   * koşan teslim effect'i IndexedDB'de bekleyen dosya bulamayınca
+   * `pendingToolFile`'ı null'lar ve tam da verdiğimiz dosyayı siler.
+   * `scanDeliveryCountRef` artırmak da İŞE YARAMAZ — effect sayacı KENDİ
+   * koşusunun başında okuyor, artış zaten olmuş oluyor, koşul hep eşit çıkıyor.
+   *
+   * Bunun yerine `handlePickFromHub`'ın kanıtlanmış yolu: dosyayı IndexedDB'ye
+   * yaz, teslimi effect'in KENDİSİ yapsın (`contentPanel !== "tool"` dalında
+   * `setPendingToolFile(f)`). Böylece silme/verme yarışı tamamen ortadan kalkar.
+   * Bu yüzden çağıranlar paneli değiştirmeden ÖNCE bunu `await` etmeli.
    *
    * Yalnızca form aracından (`contentPanel === "tool"`) geçişte taşır: başka bir
    * panelden gelirken `uploads` kullanıcının GÖRMEDİĞİ eski bir dosyayı tutuyor
    * olabilir, onu sürüklemek şaşırtıcı olurdu.
    */
-  function carryOpenPdfToPanel(): boolean {
+  async function carryOpenPdfToPanel(): Promise<boolean> {
     if (contentPanel !== "tool") return false;
     const pdf = uploads
       .filter((u) => !u.corrupt)
       .map((u) => u.file)
       .find((f) => fileExtension(f.name) === "pdf");
     if (!pdf) return false;
-    scanDeliveryCountRef.current += 1;
-    setPendingToolFile(pdf);
+    try {
+      await saveScannedPdf(pdf);
+    } catch {
+      return false; // IndexedDB yoksa sessizce vazgeç — araç boş açılır (eski davranış)
+    }
     const trLang = language === "tr";
     showToast(
       "success",
@@ -4311,6 +4321,23 @@ function App() {
         : `“${pdf.name}” brought here — no need to upload again.`,
     );
     return true;
+  }
+
+  /** Özel panele geç — açık PDF varsa beraberinde taşı. */
+  async function openPanelWithOpenPdf(panel: ContentPanel) {
+    await carryOpenPdfToPanel();
+    setContentPanel(panel);
+  }
+
+  /** AI aracına geç — açık PDF varsa beraberinde taşı (batch/compare çok dosyalı, taşınmaz). */
+  async function openAiWithOpenPdf(
+    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact",
+  ) {
+    if (mode !== "batch" && mode !== "compare") {
+      await carryOpenPdfToPanel();
+    }
+    setAiModal(mode);
+    setContentPanel("ai");
   }
 
   // Belge Tarayıcı / Taramalarım'da "Araçlarda aç" → seçilen araca PDF'i aktar.
@@ -7348,15 +7375,11 @@ function App() {
           isTeamMember={isTeamMember}
           isManagerMember={user?.teamMemberRole === "MANAGER"}
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
-          onOpenAi={(mode) => {
-            if (mode !== "batch" && mode !== "compare") carryOpenPdfToPanel();
-            setAiModal(mode);
-            setContentPanel("ai");
-          }}
-          onOpenEditor={() => { carryOpenPdfToPanel(); setContentPanel("editor"); }}
-          onOpenSign={() => { carryOpenPdfToPanel(); setContentPanel("sign"); }}
-          onOpenAnnotate={() => { carryOpenPdfToPanel(); setContentPanel("annotate"); }}
-          onOpenCrop={() => { carryOpenPdfToPanel(); setContentPanel("crop"); }}
+          onOpenAi={(mode) => { void openAiWithOpenPdf(mode); }}
+          onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
+          onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
+          onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
+          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
@@ -7382,15 +7405,11 @@ function App() {
             resolveToolLabel={resolveToolLabel}
             contentPanel={contentPanel}
             aiMode={aiModal}
-            onOpenAi={(mode) => {
-            if (mode !== "batch" && mode !== "compare") carryOpenPdfToPanel();
-            setAiModal(mode);
-            setContentPanel("ai");
-          }}
-          onOpenEditor={() => { carryOpenPdfToPanel(); setContentPanel("editor"); }}
-          onOpenSign={() => { carryOpenPdfToPanel(); setContentPanel("sign"); }}
-          onOpenAnnotate={() => { carryOpenPdfToPanel(); setContentPanel("annotate"); }}
-          onOpenCrop={() => { carryOpenPdfToPanel(); setContentPanel("crop"); }}
+            onOpenAi={(mode) => { void openAiWithOpenPdf(mode); }}
+          onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
+          onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
+          onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
+          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
