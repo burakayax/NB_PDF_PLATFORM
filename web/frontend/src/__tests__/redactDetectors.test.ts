@@ -3,7 +3,7 @@ import {
   detectSensitiveByRegex,
   isLuhnValid,
   isValidTcNo,
-} from "../components/tools/AiRedactTool";
+} from "../lib/redactDetectors";
 
 /**
  * Hassas Veri Gizle — cihazdaki tespit motoru.
