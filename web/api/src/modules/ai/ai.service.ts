@@ -210,15 +210,63 @@ export async function detectSensitive(text: string, lang: Lang): Promise<Sensiti
   const doc = text.slice(0, MAX_DOC_CHARS);
   const system =
     lang === "tr"
-      ? `Bir belgedeki KİŞİSEL/HASSAS verileri tespit eden bir uzmansın. Verilen metinden kişi adları, adresler, kimlik/pasaport numaraları, hesap/IBAN, telefon, e-posta, doğum tarihi, plaka gibi hassas bilgileri bul.
+      ? `Bir belgedeki KİŞİSEL/HASSAS verileri tespit eden bir uzmansın. KAPSAMLI davran: aşağıdaki türlerin HEPSİNİ ara.
+
+Türler ve karşılıkları:
+- isim: kişi ad/soyadları (imza altındaki adlar dahil)
+- adres: açık adres, mahalle/sokak/no, il-ilçe, posta kodu
+- kimlik: TC/kimlik/pasaport/ehliyet numaraları
+- hesap: IBAN, banka hesap no, kart numarası
+- telefon / eposta
+- tarih: doğum tarihi, işe giriş, sözleşme tarihi gibi kişiye bağlanabilen tarihler
+- fatura: fatura/irsaliye/makbuz/belge numarası, sipariş numarası
+- vergi: vergi kimlik no (VKN), vergi dairesi
+- musteri: müşteri/abone/üyelik/sicil numarası
+- sirket: şirket/kurum/işyeri adı (kişiyi tanımlıyorsa)
+- tutar: maaş, ücret, bakiye, borç gibi kişiye ait finansal tutarlar
+- saglik: tanı, ilaç, rapor, kan grubu gibi sağlık bilgisi
+- plaka: araç plakası
+- kullanici: kullanıcı adı, üyelik kodu
+- imza: imza/kaşe sahibinin adı
+- diger: yukarıya girmeyen ama kişiyi tanımlayan bilgi
+
 YALNIZCA şu JSON şemasında, başka HİÇBİR metin olmadan (markdown/backtick YOK) yanıt ver:
-{"items":[{"type":"isim|adres|kimlik|hesap|telefon|eposta|tarih|diger","value":"..."}]}
-ÇOK ÖNEMLİ: value, metinde GEÇTİĞİ GİBİ birebir olmalı (kırpma/biçim değiştirme yok) — aksi halde gizlenemez. Hassas olmayan genel kelimeleri EKLEME. Yoksa items: [].`
-      : `You detect PERSONAL/SENSITIVE data in a document. From the given text, find sensitive information like person names, addresses, ID/passport numbers, account/IBAN, phone, email, date of birth, license plates.
+{"items":[{"type":"isim|adres|kimlik|hesap|telefon|eposta|tarih|fatura|vergi|musteri|sirket|tutar|saglik|plaka|kullanici|imza|diger","value":"..."}]}
+
+ÇOK ÖNEMLİ: value, metinde GEÇTİĞİ GİBİ birebir olmalı (kırpma/biçim değiştirme yok) — aksi halde gizlenemez.
+Alan ETİKETİNİ değil DEĞERİNİ ver: "Fatura No: A-123" için value "A-123" olmalı, "Fatura No" değil.
+Şüphelendiğinde EKLE — kullanıcı listeden tek tek seçip onaylıyor, fazla öneri zarar vermez; kaçırılan veri zarar verir.
+Belgeyi okunamaz yapacak genel başlık/terimleri (ör. "Toplam", "Adres" gibi salt etiketler) EKLEME. Yoksa items: [].`
+      : `You detect PERSONAL/SENSITIVE data in a document. Be COMPREHENSIVE: look for ALL of the types below.
+
+Types:
+- name: person names (including names under signatures)
+- address: street address, district/city, postal code
+- id: national ID / passport / driver's licence numbers
+- account: IBAN, bank account number, card number
+- phone / email
+- date: dates tied to a person (birth date, hire date, contract date)
+- invoice: invoice/receipt/delivery-note/document number, order number
+- tax: tax identification number, tax office
+- customer: customer/subscriber/membership/registration number
+- company: company or employer name (when it identifies the person)
+- amount: salary, wage, balance, debt and similar personal financial figures
+- health: diagnosis, medication, report, blood type
+- plate: vehicle licence plate
+- username: usernames, membership codes
+- signature: name of the signatory
+- other: anything else that identifies the person
+
 Respond ONLY with this JSON schema, with NO other text (NO markdown/backticks):
-{"items":[{"type":"name|address|id|account|phone|email|date|other","value":"..."}]}
-VERY IMPORTANT: value must be EXACTLY as it appears in the text (no trimming/reformatting) — otherwise it can't be redacted. Do NOT include generic non-sensitive words. If none, items: [].`;
-  const raw = await callClaude(system, [{ role: "user", content: doc }], 1500);
+{"items":[{"type":"name|address|id|account|phone|email|date|invoice|tax|customer|company|amount|health|plate|username|signature|other","value":"..."}]}
+
+VERY IMPORTANT: value must be EXACTLY as it appears in the text (no trimming/reformatting) — otherwise it can't be redacted.
+Return the VALUE, not the field LABEL: for "Invoice No: A-123" the value must be "A-123", not "Invoice No".
+When in doubt, INCLUDE it — the user reviews and ticks each item, so extra suggestions are harmless while a missed one is not.
+Do NOT include generic headings/terms that would make the document unreadable (e.g. bare labels like "Total", "Address"). If none, items: [].`;
+  // 1500 → 3000: kategoriler genişledi, uzun belgelerde JSON yarıda kesilip
+  // parse hatası veriyordu (catch → items: [] yani "hiçbir şey bulunamadı").
+  const raw = await callClaude(system, [{ role: "user", content: doc }], 3000);
   let jsonText = raw.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
   const first = jsonText.indexOf("{");
   const last = jsonText.lastIndexOf("}");
