@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { verifyAccessToken } from "../lib/jwt.js";
@@ -17,6 +18,44 @@ import { requireAuth } from "./auth.middleware.js";
 export function getClientIp(request: Request): string {
   const raw = request.ip || request.socket?.remoteAddress || "";
   return String(raw).replace(/^::ffff:/, "") || "unknown";
+}
+
+/**
+ * PDF API'den (nb-pdf-api) gelen sunucular arası çağrı mı?
+ *
+ * NEDEN: `saas_gate.py` kullanıcının token'ını doğrulamak için Node'a HTTP atar.
+ * Bu istek tarayıcıdan değil PDF API sürecinden çıktığı için `getClientIp` TÜM
+ * kullanıcılar için AYNI adresi görür (Render çıkış IP'si). IP başına dakikalık
+ * limit böylece kullanıcı başına değil, tüm platform için ortak bir tavana
+ * dönüşüyordu; eşik aşılınca `abuseBlockMiddleware` o IP'yi 60 dakika bloklayıp
+ * giriş yapmış HERKESİN işlemini düşürüyordu.
+ *
+ * IP allowlist ÇÖZÜM DEĞİL: Render çıkış adresleri müşteriler arasında paylaşılan
+ * bir /24 aralığından dağıtılır ve hangi adresten çıkılacağı garanti edilmez
+ * (bkz. Render "Outbound IP Addresses" dokümanı).
+ *
+ * Sır TANIMLI DEĞİLSE her zaman false döner — yani yapılandırma eksikse muafiyet
+ * de yoktur (fail-closed). Karşılaştırma zamanlama saldırılarına karşı
+ * `timingSafeEqual` ile sabit zamanlıdır.
+ */
+export function requestHasInternalServiceSecret(request: Request): boolean {
+  const expected = (process.env.INTERNAL_SERVICE_SECRET ?? "").trim();
+  if (!expected) {
+    return false;
+  }
+  const raw = request.headers["x-internal-secret"];
+  const provided = (Array.isArray(raw) ? raw[0] : raw ?? "").trim();
+  if (!provided) {
+    return false;
+  }
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  // timingSafeEqual uzunluklar farklıysa fırlatır; önce uzunluğu eşitle ki
+  // "yanlış uzunluk" ile "yanlış içerik" ayırt edilemesin.
+  if (a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(a, b);
 }
 
 /** Bearer JWT ile gelen gerçek ADMIN istekleri dakikalık limitten muaf (panel / geliştirme). */
@@ -157,6 +196,13 @@ async function recordRateLimitViolation(ip: string, abuseThreshold: number, abus
 
 /** Tekrarlı rate limit ihlallerinden sonra IP geçici blok. */
 export async function abuseBlockMiddleware(request: Request, response: Response, next: NextFunction) {
+  // Sunucular arası çağrılar bloğa TAKILMAZ. Blok IP bazlı olduğu ve PDF API
+  // tek bir IP'den çıktığı için, aksi halde tek bir taşkın kullanıcı giriş
+  // yapmış tüm kullanıcıları 60 dakika dışarıda bırakabiliyordu.
+  if (requestHasInternalServiceSecret(request)) {
+    next();
+    return;
+  }
   const ip = getClientIp(request);
   const blockedUntil = await readBlockedUntil(ip);
   const now = Date.now();
@@ -176,7 +222,13 @@ export async function abuseBlockMiddleware(request: Request, response: Response,
 
 export const globalApiLimiter = rateLimit({
   windowMs: 60 * 1000,
-  skip: async (request) => requestHasAdminBearer(request),
+  // `skip` express-rate-limit'in allowlist için önerdiği mekanizmadır.
+  // Sunucular arası çağrılar IP sayacından muaf: aksi halde tek paylaşılan
+  // çıkış IP'si tüm kullanıcıları ortak tavana sokuyor (bkz.
+  // requestHasInternalServiceSecret). Kullanıcı bazlı koruma kaybolmaz —
+  // kota/entitlement kontrolleri token üzerinden ayrıca uygulanır.
+  skip: async (request) =>
+    requestHasInternalServiceSecret(request) || requestHasAdminBearer(request),
   limit: async (req) => {
     const cfg = await getApiSecurityResolved();
     return apiRateLimitForRequest(req, cfg);
