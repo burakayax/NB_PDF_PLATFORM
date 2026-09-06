@@ -111,7 +111,7 @@ import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
-import { saveScannedPdf, takeScannedPdf, takeScanForAccount } from "./lib/pendingScan";
+import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
@@ -1481,8 +1481,8 @@ function App() {
   const [pdfHubFile, setPdfHubFile] = useState<File | null>(null);
   // Bir araca aktarılmayı bekleyen taranan/açılan PDF (IndexedDB'den bir kez yüklenir).
   const [pendingToolFile, setPendingToolFile] = useState<File | null>(null);
-  /** takeScannedPdf yarışında (effect iki kez koşarsa) dosyayı kaybetmemek için taşıyıcı. */
-  const pendingScanCarryRef = useRef<File | null>(null);
+  /** Aynı dosyanın iki effect koşusunda birden teslim edilmesini önler. */
+  const deliveringRef = useRef(false);
   /**
    * Taramalarım/Belge Tarayıcı → araç aktarımı: dosya, kullanıcı onay penceresinde
    * "Tamam"a basana kadar burada bekler (araç açılır ama dosya yüklenmez).
@@ -4465,17 +4465,14 @@ function App() {
     const deliveryCountAtStart = scanDeliveryCountRef.current;
     (async () => {
       try {
-        // takeScannedPdf IndexedDB kaydını TÜKETİR. navigateToTool aynı anda hem
-        // selectedFeatureId hem contentPanel değiştirdiğinde bu effect iki kez
-        // koşabilir: ilk koşu dosyayı tüketip iptal edilir, ikinci koşu boş bulup
-        // pendingToolFile'ı null'lardı → dosya araca hiç düşmezdi. İptal olan koşu
-        // dosyayı ref'e geri koyar, sıradaki koşu oradan alır.
-        const f = pendingScanCarryRef.current ?? (await takeScannedPdf());
-        pendingScanCarryRef.current = null;
-        if (cancelled) {
-          pendingScanCarryRef.current = f;
-          return;
-        }
+        // ÖNCE OKU, TESLİM ET, SONRA SİL. Eskiden `takeScannedPdf` okurken
+        // siliyordu; bu effect iptal edilirse dosya ne IndexedDB'de ne araçta
+        // kalıyor, geçici bir ref'te mahsur kalıp sessizce kayboluyordu
+        // (tarayıcıda doğrulandı). Peek/clear ile kayıp penceresi yok: teslim
+        // olmadan kayıt silinmiyor, iptal olan koşudan sonra bir sonraki koşu
+        // dosyayı hâlâ IndexedDB'de buluyor.
+        const f = await peekScannedPdf();
+        if (cancelled) return;
         if (!f) {
           // Az önce teslim ettiğimiz dosya HÂLÂ kendi aracındaysa silme. Tam sayfa
           // yüklemede bu effect birkaç kez koşuyor (view → selectedFeatureId →
@@ -4507,13 +4504,22 @@ function App() {
         // URL ise ilk andan itibaren doğru: /tools/hassas-veri-gizle.
         const slug = currentToolSlugFromUrl();
         const opensInOwnPanel = !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
-        if (isAuthenticated && !opensInOwnPanel && contentPanel === "tool") {
-          // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
-          await handleNewFiles([f]);
-        } else {
-          // Misafir guest araç / editör / AI paneli → initialFile ile yükle.
-          deliveredForRef.current = { slug, file: f };
-          setPendingToolFile(f);
+        // Aynı dosyayı iki koşu birden teslim etmesin (peek silmediği için mümkün).
+        if (deliveringRef.current) return;
+        deliveringRef.current = true;
+        try {
+          if (isAuthenticated && !opensInOwnPanel && contentPanel === "tool") {
+            // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
+            await handleNewFiles([f]);
+          } else {
+            // Misafir guest araç / editör / AI paneli → initialFile ile yükle.
+            deliveredForRef.current = { slug, file: f };
+            setPendingToolFile(f);
+          }
+          // Teslim BAŞARILI → ancak şimdi sil.
+          await clearScannedPdf();
+        } finally {
+          deliveringRef.current = false;
         }
       } catch {
         /* yoksay */

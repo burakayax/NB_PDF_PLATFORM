@@ -35,6 +35,49 @@ export async function saveScannedPdf(file: File): Promise<void> {
   }
 }
 
+/**
+ * Bekleyen PDF'i SİLMEDEN oku. `takeScannedPdf` okurken sildiği için, teslim
+ * eden effect iptal edilirse (React araç/panel state'i otururken birkaç kez
+ * koşuyor) dosya ne IndexedDB'de ne de araçta kalıyordu → sessizce kayboluyordu.
+ * Doğru sıra: ÖNCE oku, araca TESLİM ET, SONRA `clearScannedPdf` ile sil.
+ */
+export async function peekScannedPdf(): Promise<File | null> {
+  try {
+    const db = await openDb();
+    try {
+      return await new Promise<File | null>((resolve) => {
+        const tx = db.transaction(STORE, "readonly");
+        const req = tx.objectStore(STORE).get(KEY);
+        req.onsuccess = () => resolve((req.result as File | undefined) ?? null);
+        req.onerror = () => resolve(null);
+      });
+    } finally {
+      db.close();
+    }
+  } catch {
+    return null;
+  }
+}
+
+/** Bekleyen PDF kaydını sil (teslim BAŞARILI olduktan sonra çağrılır). */
+export async function clearScannedPdf(): Promise<void> {
+  try {
+    const db = await openDb();
+    try {
+      await new Promise<void>((resolve) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).delete(KEY);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+      });
+    } finally {
+      db.close();
+    }
+  } catch {
+    /* yoksay */
+  }
+}
+
 /** Bekleyen PDF'i al VE sil (tek kullanımlık). Yoksa null. */
 export async function takeScannedPdf(): Promise<File | null> {
   const db = await openDb();
