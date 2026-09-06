@@ -173,6 +173,7 @@ import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import {
   allowedExtensionsFromAccept,
   allowedExtensionsLabel,
+  fileExtension,
   partitionByAllowedExtensions,
 } from "./lib/fileTypes";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
@@ -4275,6 +4276,43 @@ function App() {
     navigateToTool(toolId as FeatureId);
   }
 
+  /**
+   * Sidebar'daki ÖZEL paneller (Editör / İmza / İşaretle / Kırp) ve AI araçları
+   * `handleSidebarSelect` yolundan GEÇMEZ; kendi `onOpen*` callback'leriyle
+   * yalnızca `setContentPanel(...)` çağırıyorlardı. Bu yüzden o an açık olan PDF
+   * araca aktarılmıyor, araç boş açılıyordu ("araç açılıyor ama dosya gelmiyor").
+   * Normal araçlar aynı durumda `carryFilesToTool` ile dosyayı taşıyor.
+   *
+   * Bu paneller dosyayı `initialFile` (= `pendingToolFile`) prop'u ile alır.
+   *
+   * `scanDeliveryCountRef` ARTIRILMALI: `contentPanel` değişince koşan teslim
+   * effect'i IndexedDB'de bekleyen dosya bulamazsa `pendingToolFile`'ı null'lar
+   * ve tam da verdiğimiz dosyayı siler. Sayaç değişince o effect silmeyi atlar.
+   *
+   * Yalnızca form aracından (`contentPanel === "tool"`) geçişte taşır: başka bir
+   * panelden gelirken `uploads` kullanıcının GÖRMEDİĞİ eski bir dosyayı tutuyor
+   * olabilir, onu sürüklemek şaşırtıcı olurdu.
+   */
+  function carryOpenPdfToPanel(): boolean {
+    if (contentPanel !== "tool") return false;
+    const pdf = uploads
+      .filter((u) => !u.corrupt)
+      .map((u) => u.file)
+      .find((f) => fileExtension(f.name) === "pdf");
+    if (!pdf) return false;
+    scanDeliveryCountRef.current += 1;
+    setPendingToolFile(pdf);
+    const trLang = language === "tr";
+    showToast(
+      "success",
+      trLang ? "Dosya taşındı" : "File carried over",
+      trLang
+        ? `“${pdf.name}” bu araca aktarıldı — tekrar yüklemene gerek yok.`
+        : `“${pdf.name}” brought here — no need to upload again.`,
+    );
+    return true;
+  }
+
   // Belge Tarayıcı / Taramalarım'da "Araçlarda aç" → seçilen araca PDF'i aktar.
   // AKIŞ: önce hedef araca GİDİLİR (dosya YÜKLENMEDEN), sonra "aktarıldı" onay
   // penceresi çıkar. Dosya ancak kullanıcı "Tamam"a bastığında araca yüklenir —
@@ -4414,7 +4452,10 @@ function App() {
     if (contentPanel === "tool" && id !== selectedFeatureId && !lockedFeatures.has(id)) {
       const carry = uploads.filter((u) => !u.corrupt).map((u) => u.file);
       const target = workspaceFeatures.find((f) => f.id === id);
-      if (carry.length > 0 && target) {
+      // `requiresUpload: false` araçlar (html-to-pdf) dosya almaz; accept'leri de
+      // boş olduğu için filtre her şeyi "kabul" ediyor ve dosya taşınmış gibi
+      // bildirim çıkıyordu. Bu araçlara taşımayı hiç deneme.
+      if (carry.length > 0 && target && target.requiresUpload !== false) {
         const allowed = allowedExtensionsFromAccept(target.accept);
         const { rejected } = partitionByAllowedExtensions(carry, allowed);
         // Tür uyuşmuyorsa (ör. PDF → Word'den PDF'e) taşımayı dene bile deme.
@@ -7308,13 +7349,14 @@ function App() {
           isManagerMember={user?.teamMemberRole === "MANAGER"}
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
           onOpenAi={(mode) => {
+            if (mode !== "batch" && mode !== "compare") carryOpenPdfToPanel();
             setAiModal(mode);
             setContentPanel("ai");
           }}
-          onOpenEditor={() => setContentPanel("editor")}
-          onOpenSign={() => setContentPanel("sign")}
-          onOpenAnnotate={() => setContentPanel("annotate")}
-          onOpenCrop={() => setContentPanel("crop")}
+          onOpenEditor={() => { carryOpenPdfToPanel(); setContentPanel("editor"); }}
+          onOpenSign={() => { carryOpenPdfToPanel(); setContentPanel("sign"); }}
+          onOpenAnnotate={() => { carryOpenPdfToPanel(); setContentPanel("annotate"); }}
+          onOpenCrop={() => { carryOpenPdfToPanel(); setContentPanel("crop"); }}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
@@ -7341,13 +7383,14 @@ function App() {
             contentPanel={contentPanel}
             aiMode={aiModal}
             onOpenAi={(mode) => {
+            if (mode !== "batch" && mode !== "compare") carryOpenPdfToPanel();
             setAiModal(mode);
             setContentPanel("ai");
           }}
-          onOpenEditor={() => setContentPanel("editor")}
-          onOpenSign={() => setContentPanel("sign")}
-          onOpenAnnotate={() => setContentPanel("annotate")}
-          onOpenCrop={() => setContentPanel("crop")}
+          onOpenEditor={() => { carryOpenPdfToPanel(); setContentPanel("editor"); }}
+          onOpenSign={() => { carryOpenPdfToPanel(); setContentPanel("sign"); }}
+          onOpenAnnotate={() => { carryOpenPdfToPanel(); setContentPanel("annotate"); }}
+          onOpenCrop={() => { carryOpenPdfToPanel(); setContentPanel("crop"); }}
           onOpenCompressImage={() => setContentPanel("compress-image")}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
