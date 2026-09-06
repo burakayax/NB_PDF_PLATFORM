@@ -961,6 +961,18 @@ function hasInAppPanelForSeoSlug(slug: string): boolean {
 }
 
 /**
+ * URL'deki `/tools/<slug>` parçası (yoksa ""). Bekleyen dosyanın hangi araca
+ * teslim edileceğini belirlerken React state'i DEĞİL bunu kullanıyoruz:
+ * tam sayfa yüklemede `selectedFeatureId`/`contentPanel` henüz varsayılan
+ * değerinde olabiliyor, URL ise ilk andan itibaren doğru.
+ */
+function currentToolSlugFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  const p = stripLangPrefix(window.location.pathname.replace(/\/+$/, "")) || "/";
+  return p.startsWith("/tools/") ? p.slice("/tools/".length) : "";
+}
+
+/**
  * Giriş yapılmamış kullanıcı bir araç deep-link'ine (ör. PWA kısayolu /tools/x) gelip
  * login'e yönlendirildiğinde, giriş sonrası tam o araca dönmek için saklanan hedef.
  * sessionStorage → yalnızca mevcut oturum; tarayıcı kapanınca temizlenir.
@@ -1482,6 +1494,12 @@ function App() {
   scanTransferRef.current = scanTransfer;
   /** Onaylanan aktarım sayacı — takeScannedPdf effect'i teslim edilmiş dosyayı silmesin. */
   const scanDeliveryCountRef = useRef(0);
+  /**
+   * Bekleyen dosyanın HANGİ araca teslim edildiği. Teslim effect'i tam sayfa
+   * yüklemede birkaç kez koşuyor; ilk koşu dosyayı verdikten sonra sıradaki koşu
+   * IndexedDB'yi boş bulup aynı dosyayı siliyordu. Aynı araçtaysak silmeyi atlıyoruz.
+   */
+  const deliveredForRef = useRef<{ slug: string; file: File } | null>(null);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -4437,6 +4455,14 @@ function App() {
           return;
         }
         if (!f) {
+          // Az önce teslim ettiğimiz dosya HÂLÂ kendi aracındaysa silme. Tam sayfa
+          // yüklemede bu effect birkaç kez koşuyor (view → selectedFeatureId →
+          // contentPanel sırayla oturuyor); ilk koşu dosyayı teslim ediyor, sonraki
+          // koşu IndexedDB'yi boş bulup tam da o dosyayı siliyordu.
+          if (deliveredForRef.current?.slug === currentToolSlugFromUrl()) {
+            return;
+          }
+          deliveredForRef.current = null;
           // Onay bekleyen bir aktarım varsa (kullanıcı "Tamam"a yeni basmış olabilir)
           // yeni yüklenen dosyayı silme.
           if (
@@ -4453,15 +4479,18 @@ function App() {
         // "ai"/"editor" yapmadan ÖNCE dosya `handleNewFiles` ile FORMA veriliyor,
         // panel değişince de form sıfırlandığı için dosya kayboluyordu
         // (tarayıcıda doğrulandı: IndexedDB kaydı tüketiliyor ama araç boş açılıyor).
-        // Hedefi ARACIN KENDİSİNDEN belirle — zamanlamadan bağımsız.
-        const opensInOwnPanel =
-          !!SPECIAL_TOOL_PANELS[selectedFeatureId as string] ||
-          !!AI_TOOL_MODES[selectedFeatureId as string];
+        // Hedefi URL'DEN belirle. `selectedFeatureId` de `contentPanel` gibi tam
+        // sayfa yüklemede henüz oturmamış olabiliyor (ikisi de varsayılan "split"/
+        // "tool" iken bu effect koşuyor) — bu yüzden state'e bakmak yetmiyordu.
+        // URL ise ilk andan itibaren doğru: /tools/hassas-veri-gizle.
+        const slug = currentToolSlugFromUrl();
+        const opensInOwnPanel = !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
         if (isAuthenticated && !opensInOwnPanel && contentPanel === "tool") {
           // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
           await handleNewFiles([f]);
         } else {
           // Misafir guest araç / editör / AI paneli → initialFile ile yükle.
+          deliveredForRef.current = { slug, file: f };
           setPendingToolFile(f);
         }
       } catch {
