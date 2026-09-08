@@ -1920,7 +1920,8 @@ function App() {
         /* yoksay */
       }
       if (pendingScanSave) {
-        url.pathname = "/tools/belge-tara";
+        // Dil önekini + o dilin slug'ını koru: EN kullanıcı /en/tools/scan-document'e döner.
+        url.pathname = withLangPrefix("/tools/belge-tara", language);
         url.searchParams.set("scan", "1");
         const scanQs = url.searchParams.toString();
         window.history.replaceState(

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Language } from "../i18n/landing";
+import { canonicalBarePath, localizedPath } from "../seo/enSlugs.mjs";
 
 const STORAGE_KEY = "nbpdf-language";
 
@@ -8,22 +9,19 @@ export function isEnglishPath(pathname: string): boolean {
   return pathname === "/en" || pathname.startsWith("/en/");
 }
 
-/** Yoldan `/en` önekini soyar → route eşleştirme için dil-öneksiz yol. */
+/**
+ * Yoldan `/en` önekini soyar VE İngilizce slug'ı kanonik TR slug'ına indirger
+ * → route eşleştirme için tek biçimli yol.
+ * Örn. /en/blog/convert-pdf-to-word → /blog/pdf-word-donusturme
+ * (eski /en/blog/pdf-word-donusturme de aynı sonucu verir; kırık link olmaz.)
+ */
 export function stripLangPrefix(pathname: string): string {
-  if (isEnglishPath(pathname)) {
-    const rest = pathname.slice("/en".length);
-    return rest === "" ? "/" : rest;
-  }
-  return pathname;
+  return canonicalBarePath(pathname);
 }
 
-/** Bir yolu hedef dile göre önekle (tr = öneksiz, en = /en önekli). */
+/** Bir yolu hedef dile göre önekle + slug'ı o dile çevir (tr = öneksiz). */
 export function withLangPrefix(pathname: string, lang: Language): string {
-  const bare = stripLangPrefix(pathname) || "/";
-  if (lang === "en") {
-    return bare === "/" ? "/en" : `/en${bare}`;
-  }
-  return bare;
+  return localizedPath(stripLangPrefix(pathname) || "/", lang);
 }
 
 function detectInitialLanguage(): Language {
