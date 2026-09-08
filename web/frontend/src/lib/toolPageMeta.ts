@@ -2,6 +2,7 @@ import type { FeatureKey } from "../api/subscription";
 import type { Language } from "../i18n/landing";
 import { getPublicSiteOrigin } from "./siteOrigin";
 import { toolSlugForFeature } from "./toolRoutes";
+import { localizedPath } from "../seo/enSlugs.mjs";
 
 type SeoPair = { title: string; description: string };
 
@@ -349,7 +350,7 @@ export function applyWorkspaceToolMeta(
 
   // TR öneksiz, EN /en/ alt dizininde (prerender + SeoRouteManager ile birebir).
   const urlTr = `${origin}${pathname}`;
-  const urlEn = `${origin}/en${pathname}`;
+  const urlEn = `${origin}${localizedPath(pathname, "en")}`;
   const canonicalUrl = language === "en" ? urlEn : urlTr;
   const headline = headlineFromWorkspaceTitle(title);
 

@@ -14,7 +14,7 @@
  *   EN: https://site/en/tools/merge-pdf  (canonical=kendisi)
  * İkisi de karşılıklı hreflang (tr <-> en) + x-default=TR taşır.
  */
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -33,6 +33,7 @@ import {
   BLOG_RELATED_TOOLS,
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
+import { localizedPath } from "../src/seo/enSlugs.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -48,19 +49,24 @@ const LANGS = ["tr", "en"];
 function langPrefix(lang) {
   return lang === "en" ? "/en" : "";
 }
-/** routePath ("/", "/tools/x", ...) → o dildeki tam URL (canonical). */
+/** routePath ("/", "/tools/x", ...) → o dildeki tam URL (canonical).
+ *  EN'de yalnızca /en öneki değil, SLUG DA İngilizceye çevrilir (enSlugs.mjs). */
 function urlForRoute(baseUrl, routePath, lang) {
-  const suffix = routePath === "/" ? "" : routePath;
-  return `${baseUrl}${langPrefix(lang)}${suffix}` || baseUrl;
+  const path = localizedPath(routePath, lang);
+  return `${baseUrl}${path === "/" ? "" : path}` || baseUrl;
 }
-/** routePath → o dildeki public/ çıktı dosya yolu. */
+/** routePath → o dildeki public/ çıktı dosya yolu (EN slug'ıyla). */
 function outFileForRoute(routePath, lang) {
-  const rel = routePath === "/" ? "" : routePath.replace(/^\//, "");
-  return join(publicDir, langPrefix(lang).replace(/^\//, ""), rel, "index.html");
+  const rel = localizedPath(routePath, lang).replace(/^\//, "");
+  return join(publicDir, rel, "index.html");
 }
 /** Görünür gövde/iç link öneki (EN sayfalarda linkler /en/ altında kalsın). */
 function linkBase(lang) {
   return langPrefix(lang);
+}
+/** Gövde içi iç bağlantı: dil öneki + o dilin slug'ı. */
+function href(routePath, lang) {
+  return localizedPath(routePath, lang);
 }
 /** Dile göre OG paylaşım görseli (EN sayfalar İngilizce tagline'lı görsel kullanır). */
 function ogImageForLang(lang) {
@@ -519,8 +525,10 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
 function renderBlogBlocksHtml(blocks, lang) {
   // CTA hedefleri dil önekli olmalı: EN yazı TR araç sayfasına link verirse hem
   // kullanıcı yanlış dile düşer hem de Google'a "asıl sürüm TR" sinyali gider.
-  const localize = (href) =>
-    lang === PRIMARY_LANG || !String(href).startsWith("/") ? href : `/${lang}${href}`;
+  const localize = (target) =>
+    lang === PRIMARY_LANG || !String(target).startsWith("/")
+      ? target
+      : localizedPath(String(target), lang);
   return blocks
     .map((b) => {
       if (b.t === "lead") return `<p class="seo-lead">${escapeHtml(b.x)}</p>`;
@@ -542,7 +550,7 @@ function toolShortLabel(slug, lang) {
   return (t.split(/[—–|]/)[0] || "").trim() || slug.replace(/-/g, " ");
 }
 function toolLi(slug, lang) {
-  return `<li><a href="${linkBase(lang)}/tools/${slug}">${escapeHtml(toolShortLabel(slug, lang))}</a></li>`;
+  return `<li><a href="${href(`/tools/${slug}`, lang)}">${escapeHtml(toolShortLabel(slug, lang))}</a></li>`;
 }
 function blogTitleFor(slug, lang) {
   const p = BLOG_POSTS.find((x) => x.slug === slug);
@@ -583,7 +591,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
     const guides = guidesForTool(meta.slug).filter((s) => routeHasLang(`/blog/${s}`, lang));
     if (guides.length) {
       const gl = guides
-        .map((s) => `<li><a href="${base}/blog/${s}">${escapeHtml(blogTitleFor(s, lang))}</a></li>`)
+        .map((s) => `<li><a href="${href(`/blog/${s}`, lang)}">${escapeHtml(blogTitleFor(s, lang))}</a></li>`)
         .join("");
       parts.push(
         `<nav aria-label="${t.ariaRelatedGuides}" class="seo-related-guides"><h2>${t.relatedGuides}</h2><ul>${gl}</ul></nav>`,
@@ -597,7 +605,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
       .filter((p) => routeHasLang(`/blog/${p.slug}`, lang))
       .map((p) => {
         const c = p[lang] || p[PRIMARY_LANG];
-        return `<li><a href="${base}/blog/${p.slug}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
+        return `<li><a href="${href(`/blog/${p.slug}`, lang)}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
       })
       .join("");
     parts.push(`<nav aria-label="${t.ariaBlogPosts}" class="seo-posts"><h2>${t.allPosts}</h2><ul>${links}</ul></nav>`);
@@ -608,7 +616,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
     const links = TOOL_SLUGS.map((slug) => {
       const c = TOOL_SEO[slug]?.[lang];
       const label = c ? c.h1 : slug.replace(/-/g, " ");
-      return `<li><a href="${base}/tools/${slug}">${escapeHtml(label)}</a></li>`;
+      return `<li><a href="${href(`/tools/${slug}`, lang)}">${escapeHtml(label)}</a></li>`;
     }).join("");
     parts.push(
       `<nav aria-label="${t.ariaAllTools}" class="seo-tools"><h2>${t.allTools}</h2><ul>${links}</ul></nav>`,
@@ -833,10 +841,13 @@ const prerenderRoutes = [
 ];
 
 let pageCount = 0;
+/** Bu build'de üretilen prerender dosyaları — yetim temizliği için. */
+const writtenFiles = new Set();
 for (const lang of LANGS) {
   for (const routePath of prerenderRoutes) {
     if (!routeHasLang(routePath, lang)) continue;
     const outPath = outFileForRoute(routePath, lang);
+    writtenFiles.add(outPath);
     const html = renderPrerenderHtml(base, routePath, lang);
     let previousHtml = null;
     try {
@@ -849,6 +860,32 @@ for (const lang of LANGS) {
     writeFileSync(outPath, html, "utf8");
     pageCount++;
   }
+}
+
+// ─── Yetim prerender dosyalarını sil ─────────────────────────────────────────
+// Bir slug değiştiğinde (ör. /en/blog/pdf-word-donusturme → /en/blog/convert-pdf-to-word)
+// eski dizin public/ içinde kalırsa Render onu GERÇEK DOSYA olarak servis eder ve
+// render.yaml'daki 301 kuralı hiç çalışmaz → Google iki kopya görür. Bu yüzden bu
+// build'de üretilmeyen her prerender index.html'i kaldırıyoruz.
+function pruneOrphanPrerenders(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      pruneOrphanPrerenders(full);
+    } else if (e.name === "index.html" && !writtenFiles.has(full)) {
+      rmSync(full);
+      console.log("[seo] yetim prerender silindi:", full.replace(publicDir, ""));
+    }
+  }
+}
+for (const sub of ["en", "blog", "tools", "pricing", "terms", "privacy", "kvkk", "pdf-api"]) {
+  pruneOrphanPrerenders(join(publicDir, sub));
 }
 
 // Sitemap EN SON üretilir: lastmod, prerender sırasında gerçekten değişen

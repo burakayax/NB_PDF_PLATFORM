@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getBlogPost, getBlogPostsSorted } from "../../blog/blogContent.mjs";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import type { BlogBlock, BlogPost, BlogPostCopy } from "../../blog/blogContent.mjs";
 import { SiteFooter } from "../common/SiteFooter";
 
@@ -75,7 +76,8 @@ function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; t
   // EN yazılarda araç CTA'ları da /en/ önekli olmalı — aksi hâlde İngilizce sayfa
   // Türkçe araç sayfasına link verir (kullanıcıyı yanlış dile atar, Google'a da
   // "asıl sürüm TR" sinyali gönderir).
-  const localize = (href: string) => (tr || !href.startsWith("/") ? href : `/en${href}`);
+  const localize = (href: string) =>
+    tr || !href.startsWith("/") ? href : localizedPath(href, "en");
   return (
     <div className="space-y-5">
       {blocks.map((b, i) => {
@@ -140,7 +142,7 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
             const a = accentOf(p.accent);
             const tags = p.tags[tr ? "tr" : "en"];
             return (
-              <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
+              <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
                 <div className={`relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br ${a.soft}`}>
                   <div className={`pointer-events-none absolute -top-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-b ${a.grad} opacity-30 blur-3xl`} />
                   <Newspaper className={`h-12 w-12 ${a.text} opacity-80`} />
@@ -202,7 +204,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
     publisher: { "@type": "Organization", name: "PDF Platform", logo: { "@type": "ImageObject", url: "https://www.pdfplatform.app/logo.png" } },
     // Canonical ile AYNI olmalı: EN sayfada TR URL vermek Google'a çelişkili
     // canonical sinyali verir ("Google kullanıcıdan farklı standart sayfa seçti").
-    mainEntityOfPage: `https://www.pdfplatform.app${tr ? "" : "/en"}/blog/${post.slug}`,
+    mainEntityOfPage: `https://www.pdfplatform.app${localizedPath(`/blog/${post.slug}`, tr ? "tr" : "en")}`,
   };
 
   return (
@@ -249,7 +251,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
         )}
 
         {/* Ana araç CTA */}
-        <a href={post.tool} className={`mt-12 flex flex-col items-center gap-3 rounded-3xl border ${a.ring} bg-gradient-to-b ${a.soft} to-transparent p-8 text-center transition hover:brightness-110 sm:flex-row sm:justify-between sm:text-left`}>
+        <a href={localizedPath(post.tool, tr ? "tr" : "en")} className={`mt-12 flex flex-col items-center gap-3 rounded-3xl border ${a.ring} bg-gradient-to-b ${a.soft} to-transparent p-8 text-center transition hover:brightness-110 sm:flex-row sm:justify-between sm:text-left`}>
           <div>
             <p className="text-lg font-black text-white">{tr ? "Hemen deneyin" : "Try it now"}</p>
             <p className="mt-1 text-[14px] text-slate-300">{tr ? "Bu rehberdeki aracı açın ve saniyeler içinde sonucu alın." : "Open the tool from this guide and get results in seconds."}</p>
@@ -266,7 +268,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
                 const rc = p[tr ? "tr" : "en"] as BlogPostCopy;
                 const ra = accentOf(p.accent);
                 return (
-                  <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
+                  <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
                     <p className={`text-[11px] font-bold uppercase tracking-wide ${ra.text}`}>{p.tags[tr ? "tr" : "en"][0]}</p>
                     <p className="mt-1.5 text-[15px] font-bold leading-snug text-white">{rc.title}</p>
                     <p className="mt-1.5 line-clamp-2 text-[12px] text-slate-400">{rc.excerpt}</p>
