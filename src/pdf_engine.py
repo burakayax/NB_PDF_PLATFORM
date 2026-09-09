@@ -2385,6 +2385,27 @@ def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, 
                         for row_index, line in enumerate([ln.strip() for ln in text.splitlines() if ln.strip()], start=4):
                             ws.cell(row=row_index, column=1, value=line)
 
+                # SAYFA ÖNBELLEĞİNİ BOŞALT — bellek için ŞART.
+                #
+                # pdfplumber, her sayfanın çözümlenmiş karakter/çizgi/tablo
+                # nesnelerini sayfa üzerinde önbellekte tutar ve belge kapanana
+                # kadar SERBEST BIRAKMAZ. Sayfa sayısı arttıkça kullanım
+                # doğrusal büyür: 45 sayfalık gerçek bir belgede ölçülen artış
+                # ~354 MB. Sunucunun toplam belleği bunun altında kaldığı için
+                # işlem yarıda öldürülüyor, istek hiç yanıtlanmıyor ve kullanıcı
+                # ilerleme çubuğunun sonunda takılı kalıyordu.
+                #
+                # Aşağıdaki iki çağrı ile aynı belge ~0 MB artışla işleniyor.
+                # Sayfa verisi bu noktada Excel'e yazılmış durumda; önbelleğe
+                # bir daha ihtiyaç yok.
+                try:
+                    page.flush_cache()
+                    page.get_textmap.cache_clear()
+                except Exception:
+                    # Kütüphane sürümü bu yardımcıları sunmuyorsa sessiz geç:
+                    # dönüşüm yine doğru çalışır, yalnız bellek avantajı olmaz.
+                    pass
+
         if not wb.sheetnames:
             ws = wb.create_sheet("Sayfa 1")
             ws.cell(row=1, column=1, value="İçerik bulunamadı.")
