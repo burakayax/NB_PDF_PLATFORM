@@ -227,8 +227,15 @@ export const globalApiLimiter = rateLimit({
   // çıkış IP'si tüm kullanıcıları ortak tavana sokuyor (bkz.
   // requestHasInternalServiceSecret). Kullanıcı bazlı koruma kaybolmaz —
   // kota/entitlement kontrolleri token üzerinden ayrıca uygulanır.
-  skip: async (request) =>
-    requestHasInternalServiceSecret(request) || requestHasAdminBearer(request),
+  // DİKKAT: her iki kontrol de AWAIT edilmeli. `a() || b()` biçiminde yazılırsa
+  // `b()` bir Promise döndürdüğü için ifade `a()` false olduğunda bile HER ZAMAN
+  // truthy olur ve limit tüm istekler için sessizce devre dışı kalır.
+  skip: async (request) => {
+    if (requestHasInternalServiceSecret(request)) {
+      return true;
+    }
+    return await requestHasAdminBearer(request);
+  },
   limit: async (req) => {
     const cfg = await getApiSecurityResolved();
     return apiRateLimitForRequest(req, cfg);
