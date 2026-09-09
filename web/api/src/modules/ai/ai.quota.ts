@@ -89,32 +89,142 @@ export async function hasAiQuota(
   return (q.remaining ?? 0) > 0;
 }
 
-/** Başarılı AI işleminden SONRA tüket: aylık kota varsa onu, bittiyse bonus krediyi düş. */
-export async function consumeAiQuota(userId: string, plan?: string, role?: string, op?: string): Promise<void> {
+/**
+ * İşlemden ÖNCE hak REZERVE eder. Tek bir koşullu güncelleme ile çalışır: kota
+ * kontrolü ve düşüm aynı veritabanı işlemidir, dolayısıyla aynı anda gelen
+ * isteklerin hepsi birden aynı hakkı harcayamaz.
+ *
+ * Eskiden önce "hakkın var mı" diye bakılıp sonra pahalı yapay zekâ çağrısı
+ * yapılıyor, düşüm en sonda uygulanıyordu; 1 hakkı kalan bir kullanıcı aynı anda
+ * 20 istek göndererek 20 ücretli çağrı yaptırabiliyordu.
+ *
+ * @returns rezerve edildiyse `true`; hak kalmadıysa `false`.
+ */
+export async function reserveAiQuota(
+  userId: string,
+  plan?: string,
+  role?: string,
+  op?: string,
+): Promise<boolean> {
   const yearMonth = currentYearMonth();
   const limit = aiLimitForPlan(plan, role);
-  const row = await prisma.aiUsage.findUnique({ where: { userId_yearMonth: { userId, yearMonth } } });
-  const used = row?.count ?? 0;
 
-  // Araç bazında istek sayacı — her durumda (bonus dahil) güncellenir.
-  const counts = normalizeOpCounts(row?.operationCounts);
-  if (op) counts[op] = (counts[op] ?? 0) + 1;
+  // Sınırsız (admin): yalnızca sayaç ilerlet.
+  if (limit === null) {
+    await bumpUsageCounters(userId, yearMonth, op, { incrementCount: true });
+    return true;
+  }
+  if (limit <= 0) {
+    // Aylık hak yok; yalnızca satın alınmış ek kredi kullanılabilir.
+    return reserveFromBonus(userId, yearMonth, op);
+  }
 
-  if (limit !== null && used >= limit) {
-    // Aylık kota dolu → bonus krediden düş (0'ın altına inme). Aylık count artmaz;
-    // ama araç sayacını yine de yaz (row mevcut, çünkü used >= limit > 0).
-    await prisma.user.updateMany({ where: { id: userId, bonusAiCredits: { gt: 0 } }, data: { bonusAiCredits: { decrement: 1 } } });
-    if (op && row) {
-      await prisma.aiUsage.update({ where: { userId_yearMonth: { userId, yearMonth } }, data: { operationCounts: counts } });
+  // 1) Aylık kotadan koşullu düşüm — satır varsa ve limit dolmadıysa tek adımda artır.
+  const claimed = await prisma.aiUsage.updateMany({
+    where: { userId, yearMonth, count: { lt: limit } },
+    data: { count: { increment: 1 } },
+  });
+  if (claimed.count === 1) {
+    await bumpOperationCounter(userId, yearMonth, op);
+    return true;
+  }
+
+  // 2) Satır henüz yoksa oluştur. Aynı anda başka istek oluşturduysa (benzersizlik
+  //    çakışması) 1. adıma geri dön.
+  const existing = await prisma.aiUsage.findUnique({
+    where: { userId_yearMonth: { userId, yearMonth } },
+  });
+  if (!existing) {
+    try {
+      await prisma.aiUsage.create({
+        data: { userId, yearMonth, count: 1, operationCounts: op ? { [op]: 1 } : undefined },
+      });
+      return true;
+    } catch {
+      const retry = await prisma.aiUsage.updateMany({
+        where: { userId, yearMonth, count: { lt: limit } },
+        data: { count: { increment: 1 } },
+      });
+      if (retry.count === 1) {
+        await bumpOperationCounter(userId, yearMonth, op);
+        return true;
+      }
     }
+  }
+
+  // 3) Aylık kota dolu → satın alınmış ek krediden düş.
+  return reserveFromBonus(userId, yearMonth, op);
+}
+
+/** Ek (satın alınmış) krediden koşullu düşüm. */
+async function reserveFromBonus(userId: string, yearMonth: string, op?: string): Promise<boolean> {
+  const claimed = await prisma.user.updateMany({
+    where: { id: userId, bonusAiCredits: { gt: 0 } },
+    data: { bonusAiCredits: { decrement: 1 } },
+  });
+  if (claimed.count !== 1) {
+    return false;
+  }
+  await bumpOperationCounter(userId, yearMonth, op);
+  return true;
+}
+
+/**
+ * Rezerve edilmiş hakkı geri verir. Yapay zekâ çağrısı hata verdiğinde çağrılır —
+ * kullanıcı, kendisine hizmet verilmeyen bir istek için hak kaybetmez.
+ */
+export async function refundAiQuota(userId: string, plan?: string, role?: string): Promise<void> {
+  const yearMonth = currentYearMonth();
+  const limit = aiLimitForPlan(plan, role);
+  if (limit === null) {
+    await prisma.aiUsage.updateMany({
+      where: { userId, yearMonth, count: { gt: 0 } },
+      data: { count: { decrement: 1 } },
+    });
     return;
   }
-  // Aylık sayacı artır (admin dahil — analitik için) + araç sayacı.
-  await prisma.aiUsage.upsert({
-    where: { userId_yearMonth: { userId, yearMonth } },
-    create: { userId, yearMonth, count: 1, operationCounts: op ? { [op]: 1 } : undefined },
-    update: { count: { increment: 1 }, operationCounts: op ? counts : undefined },
+  const reverted = await prisma.aiUsage.updateMany({
+    where: { userId, yearMonth, count: { gt: 0 } },
+    data: { count: { decrement: 1 } },
   });
+  if (reverted.count === 1) {
+    return;
+  }
+  await prisma.user.updateMany({ where: { id: userId }, data: { bonusAiCredits: { increment: 1 } } });
+}
+
+/** Araç bazlı sayaç (analitik) — hak düşümünden bağımsız, en iyi çaba. */
+async function bumpOperationCounter(userId: string, yearMonth: string, op?: string): Promise<void> {
+  if (!op) return;
+  await bumpUsageCounters(userId, yearMonth, op, { incrementCount: false });
+}
+
+async function bumpUsageCounters(
+  userId: string,
+  yearMonth: string,
+  op: string | undefined,
+  options: { incrementCount: boolean },
+): Promise<void> {
+  try {
+    const row = await prisma.aiUsage.findUnique({ where: { userId_yearMonth: { userId, yearMonth } } });
+    const counts = normalizeOpCounts(row?.operationCounts);
+    if (op) counts[op] = (counts[op] ?? 0) + 1;
+    await prisma.aiUsage.upsert({
+      where: { userId_yearMonth: { userId, yearMonth } },
+      create: {
+        userId,
+        yearMonth,
+        count: options.incrementCount ? 1 : 0,
+        operationCounts: op ? { [op]: 1 } : undefined,
+      },
+      update: {
+        ...(options.incrementCount ? { count: { increment: 1 } } : {}),
+        ...(op ? { operationCounts: counts } : {}),
+      },
+    });
+  } catch {
+    /* sayaç analitiktir; hata hizmeti durdurmamalı */
+  }
 }
 
 /** Top-up: kullanıcıya ek AI kredisi ekle (ödeme başarılı olunca çağrılır). */

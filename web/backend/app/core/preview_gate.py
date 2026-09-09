@@ -14,6 +14,7 @@ from typing import Optional
 from app.core.preview_thumbnail import (
     generate_hero_watermarked_preview_png,
     generate_hero_watermarked_preview_png_from_path,
+    generate_watermarked_preview_pdf_from_path,
 )
 from app.core.thread_pool import run_cpu_bound
 
@@ -31,3 +32,9 @@ async def generate_hero_watermarked_preview_png_queued_from_path(pdf_path) -> Op
     """``generate_hero_watermarked_preview_png_queued`` gibi ama dosyayı RAM'e yüklemeden açar."""
     async with _hero_semaphore:
         return await run_cpu_bound(generate_hero_watermarked_preview_png_from_path, pdf_path)
+
+
+async def generate_watermarked_preview_pdf_queued_from_path(pdf_path) -> Optional[bytes]:
+    """Çok sayfalı filigranlı önizleme PDF'ini aynı semaphore altında üretir."""
+    async with _hero_semaphore:
+        return await run_cpu_bound(generate_watermarked_preview_pdf_from_path, pdf_path)

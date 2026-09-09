@@ -493,6 +493,8 @@ model Coupon {
   discountPercent   Int
   isActive          Boolean  @default(true)
   usageLimitPerUser Int      @default(1)
+  /// Kuponun TOPLAM kaç kez kullanılabileceği (tüm kullanıcılar). null = sınırsız.
+  usageLimitTotal   Int?     @map("usage_limit_total")
   expiresAt         DateTime? @map("expires_at")
   createdAt         DateTime @default(now()) @map("created_at")
   uses              CouponUse[]

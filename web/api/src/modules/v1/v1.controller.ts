@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { summarizeDocument, extractData, translateDocument } from "../ai/ai.service.js";
-import { getAiQuota, consumeAiQuota, hasAiQuota } from "../ai/ai.quota.js";
+import { getAiQuota, reserveAiQuota, refundAiQuota } from "../ai/ai.quota.js";
 import { extractPdfText } from "../../lib/pdf-text.js";
 import { problem } from "./v1.errors.js";
 import type { ApiUser } from "./v1.middleware.js";
@@ -38,18 +38,26 @@ function getLang(req: Request): "tr" | "en" {
   return l === "en" ? "en" : "tr";
 }
 
-/** İşlemden ÖNCE kredi var mı (yoksa 402). true = engellendi. */
-async function requireCredits(res: Response): Promise<boolean> {
+/**
+ * İşlemden ÖNCE 1 kredi REZERVE eder (kontrol ve düşüm tek adımda). Kredi yoksa
+ * 402 döner ve `true` verir. Aynı anda gelen istekler aynı krediyi harcayamaz.
+ */
+async function reserveCredit(res: Response, op: string): Promise<boolean> {
   const u = apiUser(res);
-  if (await hasAiQuota(u.id, u.plan, u.role)) return false;
+  if (await reserveAiQuota(u.id, u.plan, u.role, op)) return false;
   problem(res, 402, "insufficient_credits", "AI krediniz tükendi. Kredi paketi (top-up) ekleyin.");
   return true;
 }
 
-/** İşlemden SONRA: 1 kredi düş + kalan krediyi başlık ve gövdeye ekle. */
+/** İstek karşılanamadıysa rezerve edilen krediyi iade eder. */
+async function releaseCredit(res: Response): Promise<void> {
+  const u = apiUser(res);
+  await refundAiQuota(u.id, u.plan, u.role);
+}
+
+/** Yanıt: kalan krediyi başlık ve gövdeye ekle (düşüm rezervasyonda yapıldı). */
 async function withUsage(res: Response, payload: Record<string, unknown>): Promise<void> {
   const u = apiUser(res);
-  await consumeAiQuota(u.id, u.plan, u.role);
   const quota = await getAiQuota(u.id, u.plan, u.role);
   if (!quota.unlimited && quota.remaining != null) {
     res.setHeader("X-Credits-Remaining", String(quota.remaining));
@@ -68,6 +76,7 @@ export async function v1MeController(_req: Request, res: Response): Promise<void
 async function run(
   req: Request,
   res: Response,
+  opName: string,
   op: (text: string) => Promise<Record<string, unknown>>,
 ): Promise<void> {
   const resolved = await resolveText(req);
@@ -80,20 +89,30 @@ async function run(
     problem(res, 400, "invalid_request", "'text' alanı ya da 'file' (PDF) zorunludur.");
     return;
   }
-  if (await requireCredits(res)) return;
-  const payload = await op(resolved.text.slice(0, MAX_TEXT));
-  if (res.headersSent) return; // op zaten yanıt verdi (ör. çıkarım parse hatası)
+  if (await reserveCredit(res, opName)) return;
+  let payload: Record<string, unknown>;
+  try {
+    payload = await op(resolved.text.slice(0, MAX_TEXT));
+  } catch (error) {
+    await releaseCredit(res);
+    throw error;
+  }
+  if (res.headersSent) {
+    // op zaten hata yanıtı yazdı (ör. çıkarım parse hatası) → kredi iade edilir.
+    await releaseCredit(res);
+    return;
+  }
   await withUsage(res, payload);
 }
 
 /** POST /v1/summarize — { text | file, lang? } → { summary } */
 export async function v1SummarizeController(req: Request, res: Response): Promise<void> {
-  await run(req, res, async (text) => ({ summary: await summarizeDocument(text, getLang(req)) }));
+  await run(req, res, "summarize", async (text) => ({ summary: await summarizeDocument(text, getLang(req)) }));
 }
 
 /** POST /v1/extract — { text | file, lang? } → { data } */
 export async function v1ExtractController(req: Request, res: Response): Promise<void> {
-  await run(req, res, async (text) => {
+  await run(req, res, "extract", async (text) => {
     try {
       return { data: await extractData(text, getLang(req)) };
     } catch (e) {
@@ -109,5 +128,5 @@ export async function v1ExtractController(req: Request, res: Response): Promise<
 /** POST /v1/translate — { text | file, target } → { translation } */
 export async function v1TranslateController(req: Request, res: Response): Promise<void> {
   const target = typeof req.body?.target === "string" ? req.body.target : "en";
-  await run(req, res, async (text) => ({ translation: await translateDocument(text, target) }));
+  await run(req, res, "translate", async (text) => ({ translation: await translateDocument(text, target) }));
 }

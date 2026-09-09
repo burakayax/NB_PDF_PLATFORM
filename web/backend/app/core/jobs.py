@@ -45,6 +45,7 @@ def create_merge_job(
     workdir: Path,
     output_name: str,
     watermark_enabled: bool = False,
+    owner_id: str | None = None,
 ) -> str:
     """PDF birlestirmeyi arka planda calistirip ilerleme bilgisini hafizada tutar.
 
@@ -55,6 +56,10 @@ def create_merge_job(
     output_path = workdir / output_name
     job = {
         "id": job_id,
+        # İşi başlatan kullanıcı. Durum/iptal/önizleme/indirme uçları bu kimliği
+        # doğrular; aksi halde işin kimliğini ele geçiren başka bir oturum
+        # sahibinin çıktısını indirebilir ve KENDİ hakkını harcatabilirdi.
+        "owner_id": owner_id,
         "status": "queued",
         "message": "Sıraya alındı.",
         "where": "",
@@ -138,32 +143,43 @@ def create_merge_job(
     return job_id
 
 
-def get_job(job_id: str) -> dict:
+def _assert_owner(job: dict, owner_id: str | None) -> None:
+    """İş başkasına aitse 404 (varlığını sızdırmamak için 403 değil)."""
+    if owner_id is None:
+        return
+    job_owner = job.get("owner_id")
+    if job_owner is not None and job_owner != owner_id:
+        raise HTTPException(status_code=404, detail="İşlem bulunamadı.")
+
+
+def get_job(job_id: str, owner_id: str | None = None) -> dict:
     with _lock:
         job = _jobs.get(job_id)
         if not job:
             raise HTTPException(status_code=404, detail="İşlem bulunamadı.")
+        _assert_owner(job, owner_id)
         return job
 
 
-def get_job_status(job_id: str) -> dict:
-    return _serialize(get_job(job_id))
+def get_job_status(job_id: str, owner_id: str | None = None) -> dict:
+    return _serialize(get_job(job_id, owner_id))
 
 
-def request_cancel_merge_job(job_id: str) -> bool:
+def request_cancel_merge_job(job_id: str, owner_id: str | None = None) -> bool:
     """Request cooperative cancellation. Returns False if job is missing or already terminal."""
     with _lock:
         job = _jobs.get(job_id)
         if not job:
             return False
+        _assert_owner(job, owner_id)
         if job["status"] in ("completed", "failed", "cancelled"):
             return False
         job["cancelled"] = True
         return True
 
 
-def get_job_download(job_id: str) -> tuple[Path, str, Path]:
-    job = get_job(job_id)
+def get_job_download(job_id: str, owner_id: str | None = None) -> tuple[Path, str, Path]:
+    job = get_job(job_id, owner_id)
     if job["status"] == "cancelled":
         raise HTTPException(status_code=409, detail="Birleştirme işlemi iptal edildi.")
     if job["status"] != "completed":

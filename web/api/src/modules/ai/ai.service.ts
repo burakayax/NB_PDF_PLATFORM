@@ -5,6 +5,8 @@ import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 const API_URL = "https://api.anthropic.com/v1/messages";
 /** Maliyet sınırı: belge bu karakter sayısının üstündeyse kırpılır (~15K token). */
 const MAX_DOC_CHARS = 60_000;
+/** Tek bir yapay zekâ isteğinin üst süre sınırı. */
+const AI_REQUEST_TIMEOUT_MS = 90_000;
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
 type Lang = "tr" | "en";
@@ -42,20 +44,31 @@ async function callClaude(
   if (!env.ANTHROPIC_API_KEY) {
     throw new Error("AI not configured");
   }
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: env.AI_MODEL,
-      max_tokens: maxTokens,
-      system,
-      messages,
-    }),
-  });
+  // Zaman aşımı ŞART: karşı taraf yanıt vermezse istek süresiz asılı kalır ve
+  // sunucu işçisini bloklar. 90 sn sonra istek iptal edilir.
+  let res: Response;
+  try {
+    res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: env.AI_MODEL,
+        max_tokens: maxTokens,
+        system,
+        messages,
+      }),
+      signal: AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    if (err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError")) {
+      throw new Error("Claude API zaman aşımı");
+    }
+    throw err;
+  }
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
     throw new Error(`Claude API ${res.status}: ${detail.slice(0, 300)}`);
