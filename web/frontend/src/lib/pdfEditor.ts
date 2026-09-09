@@ -1,5 +1,6 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 
 /** Tüm koordinatlar 0..1 normalize (sayfa genişlik/yüksekliğine göre). */
 export type EditAnno =
@@ -92,5 +93,5 @@ export async function exportEditedPdf(
     }
   }
 
-  return pdf.save();
+  return pdf.save(PDF_SAVE_OPTIONS);
 }

@@ -12,6 +12,7 @@ import { PDFDocument, degrees, rgb, LineCapStyle } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { zipSync } from "fflate";
 import { PdfEncryptedError } from "./clientPdfCore";
+import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 import type {
   SearchableWord,
   SearchablePage,
@@ -51,7 +52,7 @@ export async function mergePdfs(
     const copied = await out.copyPages(src, src.getPageIndices());
     copied.forEach((p) => out.addPage(p));
   }
-  return out.save();
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 type ImageInput = { bytes: ArrayBuffer | Uint8Array; mime: string };
@@ -73,7 +74,7 @@ export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
       height: embedded.height,
     });
   }
-  return out.save();
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -113,7 +114,7 @@ export async function imagesToSearchablePdf(
       }
     }
   }
-  return out.save();
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -162,7 +163,7 @@ export async function applySignatures(
       });
     }
   }
-  return doc.save();
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -243,7 +244,7 @@ export async function applyAnnotations(
       page.drawImage(img, { x, y, width: w, height: h });
     }
   }
-  return doc.save();
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /** Sayfaları döndürür. `rotations`: sayfa index → derece (0/90/180/270). */
@@ -260,7 +261,7 @@ export async function rotatePdf(
       pages[i]!.setRotation(degrees((current + deg) % 360));
     }
   }
-  return doc.save();
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /** Belirtilen (0-tabanlı) sayfaları siler. */
@@ -275,7 +276,7 @@ export async function deletePages(
     if (i >= 0 && i < doc.getPageCount()) doc.removePage(i);
   }
   if (doc.getPageCount() === 0) throw new Error("All pages would be deleted.");
-  return doc.save();
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /** Sayfaları yeni sıraya göre yeniden dizer. `order`: yeni sırada eski index'ler. */
@@ -287,7 +288,7 @@ export async function reorderPages(
   const out = await PDFDocument.create();
   const copied = await out.copyPages(src, order);
   copied.forEach((p) => out.addPage(p));
-  return out.save();
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /** PDF sayfa sayısı (şifreliyse `PdfEncryptedError` fırlatır). Görsel seçici
@@ -312,7 +313,7 @@ export async function splitPagesToZip(
     const out = await PDFDocument.create();
     const copied = await out.copyPages(src, [i]);
     copied.forEach((p) => out.addPage(p));
-    files[`${baseName}_${i + 1}.pdf`] = await out.save();
+    files[`${baseName}_${i + 1}.pdf`] = await out.save(PDF_SAVE_OPTIONS);
   }
   return zipSync(files);
 }
@@ -361,5 +362,5 @@ export async function cropPdf(
       if (page) setPageCrop(page, rect);
     }
   }
-  return doc.save();
+  return doc.save(PDF_SAVE_OPTIONS);
 }
