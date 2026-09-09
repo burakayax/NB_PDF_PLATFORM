@@ -32,7 +32,7 @@ export function ApiKeysPanel({
     setKeys(await listApiKeys(accessToken));
     setLoading(false);
   }
-  useEffect(() => { void refresh(); /* eslint-disable-next-line */ }, [accessToken]);
+  useEffect(() => { void refresh(); }, [accessToken]);
 
   async function create() {
     if (!hasApiAccess) { onUpgrade?.(); return; }

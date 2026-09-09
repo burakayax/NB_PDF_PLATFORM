@@ -119,9 +119,11 @@ class ChangePasswordDialog(ctk.CTkToplevel):
                 self.auth_client.change_password(self.access_token, cur, new)
                 self.after(0, self._ok)
             except (DesktopAuthError, DesktopNetworkError) as e:
-                self.after(0, lambda: self._fail(str(e)))
+                message = str(e)
+                self.after(0, lambda: self._fail(message))
             except Exception as e:
-                self.after(0, lambda: self._fail(str(e)))
+                message = str(e)
+                self.after(0, lambda: self._fail(message))
 
         threading.Thread(target=worker, daemon=True).start()
 

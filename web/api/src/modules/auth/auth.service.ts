@@ -321,8 +321,8 @@ function deriveGoogleFirstLast(parts: {
   familyName: string | null;
   displayName: string | null;
 }): { firstName: string | null; lastName: string | null } {
-  let fn = parts.givenName?.trim() || null;
-  let ln = parts.familyName?.trim() || null;
+  const fn = parts.givenName?.trim() || null;
+  const ln = parts.familyName?.trim() || null;
   if (fn && ln) {
     return { firstName: fn, lastName: ln };
   }

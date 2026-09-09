@@ -8,7 +8,6 @@ import {
   fetchResultPdfBlobUrl,
 } from "../api";
 
-// eslint-disable-next-line import/no-unresolved -- Vite resolves ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;

@@ -17,7 +17,8 @@
     "prisma:migrate": "node scripts/sqlite-prisma-migrate.mjs",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "tsx prisma/seed.ts",
-    "backfill:gmail-emails": "tsx scripts/backfill-gmail-canonical-emails.ts"
+    "backfill:gmail-emails": "tsx scripts/backfill-gmail-canonical-emails.ts",
+    "lint": "eslint src"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -60,8 +61,11 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vitest/coverage-v8": "^4.1.8",
     "cross-env": "^10.1.0",
+    "eslint": "^10.10.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.8"
   },
   "overrides": {

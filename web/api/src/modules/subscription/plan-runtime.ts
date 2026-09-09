@@ -47,7 +47,7 @@ function mergePlan(base: PlanDefinition, patch: unknown): PlanDefinition {
 }
 
 export async function getPlanDefinitionsResolved(): Promise<Record<Plan, PlanDefinition>> {
-  let out = cloneBase();
+  const out = cloneBase();
   const { plansOverride: parsed } = await getResolvedPackagesConfig();
   try {
     const partial = parsed as Partial<Record<Plan, unknown>>;

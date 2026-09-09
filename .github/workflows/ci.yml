@@ -217,6 +217,61 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npm run build
 
+  # ─── Kod Denetimi (lint) ─────────────────────────────────────────────────
+  # BLOKLAMAZ: denetim yeni kuruldu ve mevcut kod tabanında birikmiş uyarılar var.
+  # Amaç, yeni yazılan kodda hataların görünür olması. Uyarılar kademeli olarak
+  # temizlendikçe `continue-on-error` kaldırılıp deploy koşuluna eklenmelidir.
+  lint-node:
+    name: Lint (web/api + web/frontend)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies (web/api)
+        working-directory: web/api
+        run: npm ci
+
+      - name: Lint web/api
+        working-directory: web/api
+        run: npm run lint
+
+      - name: Install dependencies (web/frontend)
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Lint web/frontend
+        working-directory: web/frontend
+        run: npm run lint
+
+  lint-python:
+    name: Lint (Python)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      # Tanimsiz isim / sozdizimi hatalari GERCEK caliśma zamani hatasidir ve
+      # bloklar; diger bulgular yalnizca raporlanir.
+      - name: Blocking checks (undefined names, syntax)
+        run: ruff check web/backend/app src --select F821,E9
+
+      - name: Full report (advisory)
+        run: ruff check web/backend/app src || true
+
   # ─── TypeScript Tip Denetimi (Auth API) ──────────────────────────────────
   api-typecheck:
     name: TypeScript Type Check (web/api)

@@ -366,10 +366,12 @@ class SubscriptionWorkspaceModal(ctk.CTkToplevel):
                 self.after(0, self._after_checkout)
             except (DesktopAuthError, DesktopNetworkError) as e:
                 _log.warning("legacy checkout başarısız: %s", e)
-                self.after(0, lambda: show_toast(self, str(e), kind="error"))
+                message = str(e)
+                self.after(0, lambda: show_toast(self, message, kind="error"))
             except Exception as e:
                 _log.exception("legacy checkout beklenmeyen hata")
-                self.after(0, lambda: show_toast(self, str(e), kind="error"))
+                message = str(e)
+                self.after(0, lambda: show_toast(self, message, kind="error"))
 
         threading.Thread(target=worker, daemon=True).start()
 

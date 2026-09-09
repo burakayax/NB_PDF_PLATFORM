@@ -703,7 +703,6 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         setMsg("Planlar yüklenemedi");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hist reset + token
   }, [accessToken, loadTick]);
 
   const advanced = uiMode === "advanced";
