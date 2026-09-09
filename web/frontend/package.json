@@ -19,7 +19,8 @@
     "dev:with-api": "concurrently -k -n api,ui -c green,magenta \"npm run dev --prefix ../api\" \"vite\"",
     "dev:fullstack": "npm run dev --prefix ../..",
     "build": "tsc && vite build && node scripts/inject-prerender-assets.mjs && node scripts/stamp-sw-version.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint src"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
@@ -36,8 +37,8 @@
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^4.10.38",
     "qrcode-generator": "^2.0.4",
-    "react": "latest",
-    "react-dom": "latest",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-phone-number-input": "^3.4.16",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.1",
@@ -47,24 +48,28 @@
     "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.13.14",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "@vitejs/plugin-react": "latest",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.8",
     "concurrently": "^9.2.1",
     "esbuild": "^0.27.4",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "javascript-obfuscator": "^5.4.1",
     "jsdom": "^29.1.1",
     "playwright": "^1.59.1",
     "sharp": "^0.35.3",
     "tailwindcss": "^4.2.2",
-    "typescript": "latest",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.70.0",
     "vite": "^8.0.12",
     "vitest": "^4.1.8"
   }

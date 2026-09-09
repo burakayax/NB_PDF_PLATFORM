@@ -14,7 +14,6 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical,
 import type { Language } from "../../i18n/landing";
 import { expandPagesString, formatPageSelection, ws } from "../../i18n/workspace";
 
-// eslint-disable-next-line import/no-unresolved -- Vite resolves ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -680,7 +679,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (rubberPreview.length === 0) {
             return;
           }
-          let next = new Set(selected.current);
+          const next = new Set(selected.current);
           for (const p of rubberPreview) {
             if (next.has(p)) {
               next.delete(p);

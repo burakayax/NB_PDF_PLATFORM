@@ -19,7 +19,7 @@ function readLatestAccessToken(fallback: string): string {
 
 /** Shared by subscription, admin, and entitlement API clients (401 → refresh session). */
 export async function saasAuthorizedFetch(initialToken: string, run: (token: string) => Promise<Response>): Promise<Response> {
-  let response = await run(initialToken);
+  const response = await run(initialToken);
   if (response.status !== 401 || !saasSessionSync) {
     return response;
   }

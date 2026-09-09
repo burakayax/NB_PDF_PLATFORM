@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Camera, Image as ImageIcon, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { DocumentScanner } from "./DocumentScanner";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
+
+// Tarayıcı bileşeni ağırdır; yalnızca pencere açıldığında indirilir. Doğrudan
+// içe aktarım, bu sayfanın ilk açılışını gereksiz yere yavaşlatıyordu.
+const DocumentScanner = lazyWithRetry(() =>
+  import("./DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
+);
 
 /**
  * «Belge Tara» SEO araç sayfasının çalışan çekirdeği. Kamerayla belge tarayıp
@@ -85,17 +91,19 @@ export function DocumentScannerLaunch({
 
       <AnimatePresence>
         {open && (
-          <DocumentScanner
-            open={open}
-            language={language}
-            onClose={() => setOpen(false)}
-            isPro={isPro}
-            isDesktop={isDesktop}
-            onUpgrade={onUpgrade}
-            onUseInTools={onUseInTools}
-            accessToken={accessToken}
-            onLogin={onLogin}
-          />
+          <Suspense fallback={null}>
+            <DocumentScanner
+              open={open}
+              language={language}
+              onClose={() => setOpen(false)}
+              isPro={isPro}
+              isDesktop={isDesktop}
+              onUpgrade={onUpgrade}
+              onUseInTools={onUseInTools}
+              accessToken={accessToken}
+              onLogin={onLogin}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>

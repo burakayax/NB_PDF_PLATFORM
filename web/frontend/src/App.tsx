@@ -1337,7 +1337,7 @@ function App() {
     } catch {
       /* yoksay */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isRestoring, isAuthenticated, view]);
 
   // ── İlk giren kullanıcıya ürün turu (spotlight onboarding) ──────────────────
@@ -3776,7 +3776,6 @@ function App() {
     const authUser = user;
 
     let cancelled = false;
-    let intervalId: number | undefined;
 
     async function loadSubscriptionBlock() {
       setSubscriptionLoading(true);
@@ -3824,15 +3823,13 @@ function App() {
     }
 
     void loadSubscriptionBlock();
-    intervalId = window.setInterval(() => {
+    const intervalId = window.setInterval(() => {
       void loadSubscriptionBlock();
     }, 60_000);
 
     return () => {
       cancelled = true;
-      if (intervalId !== undefined) {
-        window.clearInterval(intervalId);
-      }
+      window.clearInterval(intervalId);
     };
   }, [accessToken, isAuthenticated, refreshSession, user?.id]);
 
@@ -5845,7 +5842,7 @@ function App() {
     }
 
     setUploads((current) => {
-      let mapped = current.map(
+      const mapped = current.map(
         (item) =>
           inspectedNewItems.find((inspected) => inspected.id === item.id) ??
           item,

@@ -56,7 +56,7 @@ export async function getPublicSiteConfig() {
     (flags.betaFeatures as Record<string, boolean> | undefined) ??
     (site.betaFeatures as Record<string, boolean> | undefined) ??
     {};
-  let featureFlags: Record<string, boolean> = {};
+  const featureFlags: Record<string, boolean> = {};
   if (flags.featureFlags != null && typeof flags.featureFlags === "object" && !Array.isArray(flags.featureFlags)) {
     for (const [k, v] of Object.entries(flags.featureFlags as Record<string, unknown>)) {
       if (typeof v === "boolean") {

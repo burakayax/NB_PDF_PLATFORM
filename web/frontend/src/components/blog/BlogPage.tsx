@@ -72,6 +72,18 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 // ─── Blok renderer ────────────────────────────────────────────────────────────
+/**
+ * Arama motorları için sayfaya gömülen yapılandırılmış veriyi güvenli hale getirir.
+ *
+ * Metin içinde kapanış etiketi geçerse tarayıcı betiği erken kapatır ve kalan
+ * içerik sayfaya kod olarak sızabilir. Bu karakterler kaçırılarak engellenir.
+ */
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/[<>&]/g, (ch) =>
+    ch === "<" ? "\\u003c" : ch === ">" ? "\\u003e" : "\\u0026",
+  );
+}
+
 function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; tr: boolean }) {
   // EN yazılarda araç CTA'ları da /en/ önekli olmalı — aksi hâlde İngilizce sayfa
   // Türkçe araç sayfasına link verir (kullanıcıyı yanlış dile atar, Google'a da
@@ -210,7 +222,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
   return (
     <Shell>
       <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8">
         <a href={tr ? "/blog" : "/en/blog"} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
 

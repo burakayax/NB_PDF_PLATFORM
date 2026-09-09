@@ -4,7 +4,7 @@
   - Desktop app: public/screenshots/desktop-app.png (önerilen: 1280×800px)
   Dosyalar bu konuma yerleştirildiğinde sayfa otomatik olarak gösterir.
 */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
@@ -21,7 +21,8 @@ import { AiBatchTool } from "../tools/AiBatchTool";
 import { AiCompareTool } from "../tools/AiCompareTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
-import { DocumentScanner } from "../tools/DocumentScanner";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
+
 import { PdfCropTool } from "../tools/PdfCropTool";
 import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
@@ -52,6 +53,13 @@ import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
+
+// Belge tarayıcı ağır bir bileşendir (kamera + görüntü işleme). Doğrudan içe
+// aktarılırsa ana pakete girer ve açılış sayfasının ilk yüklenmesini yavaşlatır.
+// Yalnızca tarayıcı penceresi açıldığında indirilir.
+const DocumentScanner = lazyWithRetry(() =>
+  import("../tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
+);
 
 /**
  * Landing navbar'da kalıcı "Uygulamayı Yükle" butonu — sm+ (tablet/masaüstü)
@@ -715,7 +723,8 @@ function Hero({
         {/* Belge Tarayıcı (mobil) — tam ekran, cihazda işlenir */}
         <AnimatePresence>
           {scannerOpen && (
-            <DocumentScanner
+            <Suspense fallback={null}>
+              <DocumentScanner
               open={scannerOpen}
               language={language}
               onClose={() => setScannerOpen(false)}
@@ -724,7 +733,8 @@ function Hero({
               onUpgrade={onScannerUpgrade ?? onUpgrade}
               accessToken={accessToken}
               onLogin={accessToken ? undefined : (onScannerLogin ?? onLogin)}
-            />
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 

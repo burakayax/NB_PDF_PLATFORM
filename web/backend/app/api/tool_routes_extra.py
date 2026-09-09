@@ -1638,7 +1638,10 @@ async def tool_image_to_pdf(
         cleanup_path(workdir)
         raise
     except Exception as e:
-        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="image-to-pdf")
+        # `file` diye bir parametre YOK; bu uç `files` listesi alıyor. Eski kod
+        # hata anında NameError üretiyor, gerçek hatayı ve temizliği gizliyordu.
+        first_name = getattr(files[0], "filename", None) if files else None
+        cleanup_and_raise(workdir, e, filename=first_name or "<?>", client_ip=_client_ip(request), operation="image-to-pdf")
     finally:
         if workdir.exists():
             cleanup_path(workdir)
@@ -1704,7 +1707,9 @@ async def tool_html_to_pdf(
         cleanup_path(workdir)
         raise
     except Exception as e:
-        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="html-to-pdf")
+        # Bu uç dosya değil URL/HTML metni alıyor; `file` tanımsızdı ve hata
+        # anında asıl hatanın üstünü örten ikinci bir hata oluşuyordu.
+        cleanup_and_raise(workdir, e, filename=(source_url or "html"), client_ip=_client_ip(request), operation="html-to-pdf")
     finally:
         if workdir.exists():
             cleanup_path(workdir)

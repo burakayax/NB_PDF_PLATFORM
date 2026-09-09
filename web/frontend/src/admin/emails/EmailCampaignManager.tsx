@@ -49,7 +49,7 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
       setErr(e instanceof Error ? e.message : "Yüklenemedi");
     }
   }
-  useEffect(() => { void refresh(); /* eslint-disable-next-line */ }, [accessToken]);
+  useEffect(() => { void refresh(); }, [accessToken]);
 
   function startNew() { setEditing({ id: null, draft: { ...EMPTY } }); setErr(null); setNote(null); }
   function startEdit(c: AdminCampaignRow) {
