@@ -10,7 +10,7 @@ import {
   detectSensitive,
   type ChatTurn,
 } from "./ai.service.js";
-import { getAiQuota, consumeAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
+import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
 
 /** Gönderilebilecek ham metin üst sınırı (service ayrıca 60K'ya kırpar). */
 const MAX_TEXT = 200_000;
@@ -19,14 +19,21 @@ function getLang(req: Request): "tr" | "en" {
   return req.body?.lang === "en" ? "en" : "tr";
 }
 
-/** Kota kontrolü: doluysa 429 döner (true = engellendi, çağıran return etmeli). */
-async function blockedByQuota(req: Request, res: Response): Promise<boolean> {
+/**
+ * Hakkı İŞLEMDEN ÖNCE rezerve eder (kontrol + düşüm tek adımda). Hak yoksa 429
+ * döner ve `true` verir — çağıran hemen `return` etmelidir.
+ *
+ * Rezervasyon başarılıysa çağıran, yapay zekâ isteği hata verdiğinde
+ * `releaseQuota` ile hakkı iade etmekle yükümlüdür.
+ */
+async function reserveQuota(req: Request, res: Response, op: string): Promise<boolean> {
   const u = req.authUser;
   if (!u) {
     throw new HttpError(401, "Oturum gerekli.");
   }
-  const quota = await getAiQuota(u.id, u.plan, u.role);
-  if (!quota.unlimited && (quota.remaining ?? 0) <= 0) {
+  const reserved = await reserveAiQuota(u.id, u.plan, u.role, op);
+  if (!reserved) {
+    const quota = await getAiQuota(u.id, u.plan, u.role);
     res.status(429).json({
       error: "quota_exceeded",
       message:
@@ -36,6 +43,34 @@ async function blockedByQuota(req: Request, res: Response): Promise<boolean> {
     return true;
   }
   return false;
+}
+
+/** İstek başarısız olursa rezerve edilen hakkı iade eder. */
+async function releaseQuota(req: Request): Promise<void> {
+  const u = req.authUser;
+  if (!u) return;
+  await refundAiQuota(u.id, u.plan, u.role);
+}
+
+/**
+ * Hakkı rezerve eder, işi çalıştırır, iş hata verirse hakkı iade eder.
+ * `ok: false` → 429 yanıtı zaten yazıldı, çağıran `return` etmeli.
+ */
+async function runWithQuota<T>(
+  req: Request,
+  res: Response,
+  op: string,
+  work: () => Promise<T>,
+): Promise<{ ok: true; value: T } | { ok: false }> {
+  if (await reserveQuota(req, res, op)) {
+    return { ok: false };
+  }
+  try {
+    return { ok: true, value: await work() };
+  } catch (error) {
+    await releaseQuota(req);
+    throw error;
+  }
 }
 
 /** GET /api/ai/topup/packs → { packs } — ek AI kredisi paketleri. */
@@ -74,13 +109,13 @@ export async function summarizeController(req: Request, res: Response): Promise<
   if (!text.trim()) {
     throw new HttpError(400, "Özetlenecek metin boş. PDF'ten metin çıkarılamamış olabilir.");
   }
-  if (await blockedByQuota(req, res)) return;
-
-  const summary = await summarizeDocument(text.slice(0, MAX_TEXT), getLang(req));
+  const run = await runWithQuota(req, res, "summarize", () =>
+    summarizeDocument(text.slice(0, MAX_TEXT), getLang(req)),
+  );
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "summarize");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ summary, quota });
+  res.json({ summary: run.value, quota });
 }
 
 /** POST /api/ai/extract — { text, lang? } → { data, quota } */
@@ -89,21 +124,20 @@ export async function extractController(req: Request, res: Response): Promise<vo
   if (!text.trim()) {
     throw new HttpError(400, "Veri çıkarılacak metin boş. PDF'ten metin çıkarılamamış olabilir.");
   }
-  if (await blockedByQuota(req, res)) return;
-
-  let data;
-  try {
-    data = await extractData(text.slice(0, MAX_TEXT), getLang(req));
-  } catch (e) {
-    if (e instanceof Error && e.message === "AI_EXTRACT_PARSE") {
-      throw new HttpError(422, "Belgeden yapılandırılmış veri çıkarılamadı. Farklı bir belge deneyin.");
+  const run = await runWithQuota(req, res, "extract", async () => {
+    try {
+      return await extractData(text.slice(0, MAX_TEXT), getLang(req));
+    } catch (e) {
+      if (e instanceof Error && e.message === "AI_EXTRACT_PARSE") {
+        throw new HttpError(422, "Belgeden yapılandırılmış veri çıkarılamadı. Farklı bir belge deneyin.");
+      }
+      throw e;
     }
-    throw e;
-  }
+  });
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "extract");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ data, quota });
+  res.json({ data: run.value, quota });
 }
 
 /** POST /api/ai/translate — { text, target } → { translation, quota } */
@@ -113,13 +147,13 @@ export async function translateController(req: Request, res: Response): Promise<
   if (!text.trim()) {
     throw new HttpError(400, "Çevrilecek metin boş. PDF'ten metin çıkarılamamış olabilir.");
   }
-  if (await blockedByQuota(req, res)) return;
-
-  const translation = await translateDocument(text.slice(0, MAX_TEXT), target);
+  const run = await runWithQuota(req, res, "translate", () =>
+    translateDocument(text.slice(0, MAX_TEXT), target),
+  );
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "translate");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ translation, quota });
+  res.json({ translation: run.value, quota });
 }
 
 /** POST /api/ai/translate-segments — { segments: string[], target } → { translations, quota }.
@@ -132,12 +166,11 @@ export async function translateSegmentsController(req: Request, res: Response): 
   if (segments.length === 0) {
     throw new HttpError(400, "Çevrilecek metin bulunamadı. PDF'te metin katmanı olmayabilir.");
   }
-  if (await blockedByQuota(req, res)) return;
-  const translations = await translateSegments(segments, target);
+  const run = await runWithQuota(req, res, "translate", () => translateSegments(segments, target));
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "translate");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ translations, quota });
+  res.json({ translations: run.value, quota });
 }
 
 /** POST /api/ai/compare — { textA, textB, lang? } → { result, quota } */
@@ -147,21 +180,20 @@ export async function compareController(req: Request, res: Response): Promise<vo
   if (!textA.trim() || !textB.trim()) {
     throw new HttpError(400, "Karşılaştırmak için iki belge metni de gerekli.");
   }
-  if (await blockedByQuota(req, res)) return;
-
-  let result;
-  try {
-    result = await compareDocuments(textA.slice(0, MAX_TEXT), textB.slice(0, MAX_TEXT), getLang(req));
-  } catch (e) {
-    if (e instanceof Error && e.message === "AI_COMPARE_PARSE") {
-      throw new HttpError(422, "Belgeler karşılaştırılamadı. Farklı belgeler deneyin.");
+  const run = await runWithQuota(req, res, "compare", async () => {
+    try {
+      return await compareDocuments(textA.slice(0, MAX_TEXT), textB.slice(0, MAX_TEXT), getLang(req));
+    } catch (e) {
+      if (e instanceof Error && e.message === "AI_COMPARE_PARSE") {
+        throw new HttpError(422, "Belgeler karşılaştırılamadı. Farklı belgeler deneyin.");
+      }
+      throw e;
     }
-    throw e;
-  }
+  });
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "compare");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ result, quota });
+  res.json({ result: run.value, quota });
 }
 
 /** POST /api/ai/detect-sensitive — { text, lang? } → { items, quota } */
@@ -170,13 +202,13 @@ export async function detectSensitiveController(req: Request, res: Response): Pr
   if (!text.trim()) {
     throw new HttpError(400, "Metin boş.");
   }
-  if (await blockedByQuota(req, res)) return;
-
-  const items = await detectSensitive(text.slice(0, MAX_TEXT), getLang(req));
+  const run = await runWithQuota(req, res, "redact", () =>
+    detectSensitive(text.slice(0, MAX_TEXT), getLang(req)),
+  );
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "redact");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ items, quota });
+  res.json({ items: run.value, quota });
 }
 
 /** POST /api/ai/chat — { text, question, history?, lang? } → { answer, quota } */
@@ -189,7 +221,6 @@ export async function chatController(req: Request, res: Response): Promise<void>
   if (!question.trim()) {
     throw new HttpError(400, "Soru boş.");
   }
-  if (await blockedByQuota(req, res)) return;
 
   const rawHistory: unknown[] = Array.isArray(req.body?.history) ? req.body.history : [];
   const history: ChatTurn[] = [];
@@ -203,14 +234,11 @@ export async function chatController(req: Request, res: Response): Promise<void>
     }
   }
 
-  const answer = await chatWithDocument(
-    text.slice(0, MAX_TEXT),
-    history,
-    question.slice(0, 2000),
-    getLang(req),
+  const run = await runWithQuota(req, res, "chat", () =>
+    chatWithDocument(text.slice(0, MAX_TEXT), history, question.slice(0, 2000), getLang(req)),
   );
+  if (!run.ok) return;
   const u = req.authUser!;
-  await consumeAiQuota(u.id, u.plan, u.role, "chat");
   const quota = await getAiQuota(u.id, u.plan, u.role);
-  res.json({ answer, quota });
+  res.json({ answer: run.value, quota });
 }

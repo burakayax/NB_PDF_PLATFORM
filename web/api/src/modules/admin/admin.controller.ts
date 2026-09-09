@@ -1104,6 +1104,7 @@ export async function adminListCouponsController(
       discountPercent: c.discountPercent,
       isActive: c.isActive,
       usageLimitPerUser: c.usageLimitPerUser,
+      usageLimitTotal: c.usageLimitTotal ?? null,
       expiresAt: c.expiresAt ? c.expiresAt.toISOString() : null,
       totalUses: c._count.uses,
       createdAt: c.createdAt.toISOString(),
@@ -1130,6 +1131,7 @@ export async function adminCreateCouponController(
         discountPercent: parsed.data.discountPercent,
         isActive: parsed.data.isActive ?? true,
         usageLimitPerUser: parsed.data.usageLimitPerUser ?? 1,
+        usageLimitTotal: parsed.data.usageLimitTotal ?? null,
         expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
       },
     });
@@ -1139,6 +1141,7 @@ export async function adminCreateCouponController(
       discountPercent: created.discountPercent,
       isActive: created.isActive,
       usageLimitPerUser: created.usageLimitPerUser,
+      usageLimitTotal: created.usageLimitTotal ?? null,
       expiresAt: created.expiresAt ? created.expiresAt.toISOString() : null,
       totalUses: 0,
       createdAt: created.createdAt.toISOString(),
@@ -1175,9 +1178,13 @@ export async function adminPatchCouponController(
   if (Object.keys(parsed.data).length === 0) {
     throw new HttpError(400, "No fields to update.");
   }
+  const { expiresAt, ...rest } = parsed.data;
   const updated = await prisma.coupon.update({
     where: { id },
-    data: parsed.data,
+    data: {
+      ...rest,
+      ...(expiresAt === undefined ? {} : { expiresAt: expiresAt === null ? null : new Date(expiresAt) }),
+    },
   });
   const totalUses = await prisma.couponUse.count({ where: { couponId: id } });
   response.json({
@@ -1186,6 +1193,8 @@ export async function adminPatchCouponController(
     discountPercent: updated.discountPercent,
     isActive: updated.isActive,
     usageLimitPerUser: updated.usageLimitPerUser,
+    usageLimitTotal: updated.usageLimitTotal ?? null,
+    expiresAt: updated.expiresAt ? updated.expiresAt.toISOString() : null,
     totalUses,
     createdAt: updated.createdAt.toISOString(),
   });

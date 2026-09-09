@@ -728,6 +728,8 @@ export type AdminCouponRow = {
   discountPercent: number;
   isActive: boolean;
   usageLimitPerUser: number;
+  /** Toplam kontenjan (tüm kullanıcılar); null = sınırsız. */
+  usageLimitTotal?: number | null;
   expiresAt?: string | null;
   totalUses: number;
   createdAt: string;
@@ -743,7 +745,14 @@ export async function fetchAdminCoupons(accessToken: string): Promise<{ items: A
 
 export async function postAdminCoupon(
   accessToken: string,
-  body: { code: string; discountPercent: number; isActive?: boolean; usageLimitPerUser?: number; expiresAt?: string | null },
+  body: {
+    code: string;
+    discountPercent: number;
+    isActive?: boolean;
+    usageLimitPerUser?: number;
+    usageLimitTotal?: number | null;
+    expiresAt?: string | null;
+  },
 ): Promise<AdminCouponRow> {
   const r = await adminFetch(accessToken, "/coupons", { method: "POST", body: JSON.stringify(body) });
   if (!r.ok) {
@@ -755,7 +764,7 @@ export async function postAdminCoupon(
 export async function patchAdminCoupon(
   accessToken: string,
   id: string,
-  body: Partial<Pick<AdminCouponRow, "isActive" | "discountPercent" | "usageLimitPerUser">>,
+  body: Partial<Pick<AdminCouponRow, "isActive" | "discountPercent" | "usageLimitPerUser" | "usageLimitTotal" | "expiresAt">>,
 ): Promise<AdminCouponRow> {
   const r = await adminFetch(accessToken, `/coupons/${encodeURIComponent(id)}`, {
     method: "PATCH",

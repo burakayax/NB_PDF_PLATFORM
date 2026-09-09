@@ -308,6 +308,105 @@ def generate_hero_watermarked_preview_png_from_path(pdf_path: Union[str, Path]) 
     return buffer.getvalue()
 
 
+_PREVIEW_PDF_MAX_PAGES = 10
+_PREVIEW_PDF_RENDER_DPI = 120
+_PREVIEW_PDF_TARGET_WIDTH_PX = 1000
+
+
+def _tile_watermark(image, msg: str):
+    """Görselin üstüne çapraz döşenmiş filigran bindirir (hero ile aynı görünüm)."""
+    from PIL import Image, ImageDraw
+
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    font = _load_watermark_font(size=max(20, min(40, image.width // 26)))
+    try:
+        bbox = draw.textbbox((0, 0), msg, font=font)
+        tw = bbox[2] - bbox[0]
+        th = bbox[3] - bbox[1]
+    except Exception:
+        tw, th = len(msg) * 10, 24
+
+    step_x = int(tw * 1.8) + 32
+    step_y = int(th * 2.8) + 36
+    w, h = image.size
+    y = -step_y * 2
+    row = 0
+    while y < h + step_y * 3:
+        x = -step_x * 2 + (row % 2) * (step_x // 2)
+        while x < w + step_x * 3:
+            draw.text((x + 2, y + 2), msg, font=font, fill=(0, 0, 0, 85))
+            draw.text((x, y), msg, font=font, fill=(255, 255, 255, 130))
+            x += step_x
+        y += step_y
+        row += 1
+    return Image.alpha_composite(image.convert("RGBA"), overlay).convert("RGB")
+
+
+def generate_watermarked_preview_pdf_from_path(
+    pdf_path: Union[str, Path],
+    max_pages: int = _PREVIEW_PDF_MAX_PAGES,
+) -> Optional[bytes]:
+    """Ödeme/kota kapısından ÖNCE gösterilebilecek güvenli çok sayfalı önizleme.
+
+    Kaynak PDF'in ilk ``max_pages`` sayfasını düşük çözünürlükte görüntüye çevirir,
+    her sayfaya çapraz filigran basar ve bunlardan YENİ bir PDF üretir. Çıktı
+    metin katmanı içermez ve filigranlıdır; tarayıcıya inen dosya kopyalansa bile
+    orijinal belgenin yerini tutmaz. Tam ve temiz çıktı yalnızca onaylı indirme
+    ucundan verilir.
+    """
+    p = Path(pdf_path)
+    if not p.is_file():
+        return None
+
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        logger.warning("preview_pdf: PyMuPDF missing")
+        return None
+
+    try:
+        from PIL import Image
+    except ImportError:
+        logger.warning("preview_pdf: Pillow missing")
+        return None
+
+    try:
+        src = fitz.open(p)
+    except Exception:
+        logger.exception("preview_pdf: open failed")
+        return None
+
+    out = fitz.open()
+    try:
+        page_count = min(src.page_count, max(1, int(max_pages)))
+        if page_count < 1:
+            return None
+        zoom = _PREVIEW_PDF_RENDER_DPI / 72.0
+        matrix = fitz.Matrix(zoom, zoom)
+        for index in range(page_count):
+            pix = src.load_page(index).get_pixmap(matrix=matrix, alpha=False)
+            image = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
+            if image.width > _PREVIEW_PDF_TARGET_WIDTH_PX:
+                ratio = _PREVIEW_PDF_TARGET_WIDTH_PX / float(image.width)
+                image = image.resize(
+                    (_PREVIEW_PDF_TARGET_WIDTH_PX, max(1, int(image.height * ratio))),
+                    Image.LANCZOS,
+                )
+            image = _tile_watermark(image, _HERO_WATERMARK)
+            buffer = io.BytesIO()
+            image.save(buffer, format="JPEG", quality=72, optimize=True)
+            page = out.new_page(width=image.width, height=image.height)
+            page.insert_image(fitz.Rect(0, 0, image.width, image.height), stream=buffer.getvalue())
+        return out.tobytes()
+    except Exception:
+        logger.exception("preview_pdf: render failed")
+        return None
+    finally:
+        out.close()
+        src.close()
+
+
 def _load_watermark_font(size: int):
     from PIL import ImageFont
 

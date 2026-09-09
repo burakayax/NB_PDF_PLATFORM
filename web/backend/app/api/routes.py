@@ -48,6 +48,7 @@ from app.core.jobs import (
 from app.core.thread_pool import run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
 from app.core.preview_gate import (
+    generate_watermarked_preview_pdf_queued_from_path,
     generate_hero_watermarked_preview_png_queued,
     generate_hero_watermarked_preview_png_queued_from_path,
 )
@@ -196,6 +197,7 @@ async def merge_pdfs(
 
     # Merge: kota indirme onayında (frontend ack) düşülür; burada sadece limit kontrolü.
     decision = await entitlement_check(token, "merge")
+    owner_id = await saas_current_user_id(token)
 
     workdir = create_workdir()
     try:
@@ -237,6 +239,7 @@ async def merge_pdfs(
             workdir,
             output_name,
             watermark_enabled=bool(decision.get("watermarkEnabled", False)),
+            owner_id=owner_id,
         )
         return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
     except Exception as error:
@@ -245,19 +248,19 @@ async def merge_pdfs(
 
 @router.get("/jobs/{job_id}")
 @limiter.exempt
-def job_status(job_id: str, _token: Annotated[str, Depends(extract_bearer_header_only)]):
+async def job_status(job_id: str, token: Annotated[str, Depends(extract_bearer_header_only)]):
     """İstemci sık aralıklarla durum sorar; @limiter.exempt ile genel dakikalık kota merge akışını kesmez."""
-    return get_job_status(job_id)
+    return get_job_status(job_id, await saas_current_user_id(token))
 
 
 @router.post("/jobs/{job_id}/cancel")
 @limiter.exempt
 async def cancel_merge_job(
     job_id: str,
-    _token: Annotated[str, Depends(extract_bearer_header_only)],
+    token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
     """Cooperative cancel for the in-memory merge worker (sets a flag; worker stops between pages)."""
-    if not request_cancel_merge_job(job_id):
+    if not request_cancel_merge_job(job_id, await saas_current_user_id(token)):
         raise HTTPException(
             status_code=404,
             detail="İşlem bulunamadı, tamamlanmış veya iptal edilemez.",
@@ -280,7 +283,7 @@ async def download_job_output(
             status_code=402,
             content={"error": "payment_required", "saasGating": _saas_gating_from_check(decision)},
         )
-    output_path, output_name, _workdir = get_job_download(job_id)
+    output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     background_tasks.add_task(cleanup_job, job_id)
     # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback).
     # Starlette'in FileResponse(filename=) varsayılanı bazı sürümlerde Türkçe adı
@@ -302,8 +305,7 @@ async def preview_merge_job_hero(
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
     """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
-    await saas_session_ok(token)
-    output_path, _output_name, _workdir = get_job_download(job_id)
+    output_path, _output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     png = await generate_hero_watermarked_preview_png_queued_from_path(output_path)
     if not png:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
@@ -316,16 +318,15 @@ async def preview_merge_job_pdf(
     job_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
-    """Tam PDF önizlemesi (inline); kota düşmez — düşüm onaylı indirmede."""
-    await saas_session_ok(token)
-    output_path, output_name, _workdir = get_job_download(job_id)
+    """Çok sayfalı önizleme (inline). FİLİGRANLI ve düşük çözünürlüklü bir kopya
+    döner — kota düşmez. Ham çıktı burada ASLA servis edilmez: tarayıcıya inen
+    dosya, indirme kapısını atlamak için kullanılabiliyordu."""
+    output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
+    preview = await generate_watermarked_preview_pdf_queued_from_path(output_path)
+    if not preview:
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp_headers = {"Content-Disposition": content_disposition(output_name, disposition="inline")}
-    return FileResponse(
-        path=str(output_path),
-        filename=output_name,
-        media_type="application/pdf",
-        headers=disp_headers,
-    )
+    return Response(content=preview, media_type="application/pdf", headers=disp_headers)
 
 
 @router.post("/inspect-pdf")
@@ -1097,7 +1098,9 @@ async def preview_result_pdf(
     result_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
-    """Sahibine özel tam PDF önizlemesi (inline). Kota düşmez; sonucu silmez."""
+    """Sahibine özel çok sayfalı önizleme (inline). FİLİGRANLI ve düşük
+    çözünürlüklü bir kopya döner; kota düşmez, sonucu silmez. Ham çıktı burada
+    servis edilmez — aksi halde önizleme penceresi indirme kapısını atlatıyordu."""
     await saas_session_ok(token)
     user_id = await saas_current_user_id(token)
     meta = read_meta_only(result_id)
@@ -1107,13 +1110,11 @@ async def preview_result_pdf(
     read = get_result(result_id, user_id)
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
+    preview = await generate_watermarked_preview_pdf_queued_from_path(read.payload_path)
+    if not preview:
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}
-    return FileResponse(
-        path=str(read.payload_path),
-        filename=read.filename,
-        media_type=read.mime or "application/pdf",
-        headers=disp,
-    )
+    return Response(content=preview, media_type="application/pdf", headers=disp)
 
 
 @router.get("/pdf/result/{result_id}/download")

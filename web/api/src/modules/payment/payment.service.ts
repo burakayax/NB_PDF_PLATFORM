@@ -1231,21 +1231,10 @@ export async function processPaymentCallback(
               couponId: current.couponId,
             },
           });
-          // Toplam kullanım sayısı usageLimitPerUser'a ulaştıysa kuponu pasif yap
-          const coupon = await tx.coupon.findUnique({
-            where: { id: current.couponId },
-            select: { usageLimitPerUser: true },
-          });
-          if (coupon) {
-            const totalUses = await tx.couponUse.count({ where: { couponId: current.couponId } });
-            if (totalUses >= coupon.usageLimitPerUser) {
-              await tx.coupon.update({
-                where: { id: current.couponId },
-                data: { isActive: false },
-              });
-              logger.info("payment",`${PC_LOG} coupon auto-deactivated couponId=${current.couponId} totalUses=${totalUses}`);
-            }
-          }
+          // NOT: Kupon burada otomatik PASİFLEŞTİRİLMEZ. Eski kod kuponun toplam
+          // kullanımını "kullanıcı başına limit" ile kıyasladığı için (varsayılan 1)
+          // her kampanya kuponu ilk satıştan sonra kapanıyordu. Limitler artık
+          // yalnızca kupon doğrulamasında uygulanır.
           logger.info("payment",`${PC_LOG} coupon use recorded couponId=${current.couponId} userId=${current.userId}`);
         }
       });

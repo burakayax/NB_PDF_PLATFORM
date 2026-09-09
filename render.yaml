@@ -69,6 +69,12 @@ services:
       # AYNI değeri nb-auth-api'de de gir. Boşsa yerel SQLite'a düşer (instance başına, deploy'da sıfırlanır).
       - key: INTERNAL_SERVICE_SECRET
         sync: false
+      # Oturum jetonu imzalama sırrı — nb-auth-api ile AYNI değer olmalı.
+      # Tanımlıysa jeton doğrulaması ve kullanıcı kimliği BURADA çözülür; her PDF
+      # isteği için Auth API'ye HTTP çağrısı yapılmaz (gecikme + tek noktadan
+      # kilitlenme riski ortadan kalkar). Boşsa eski davranışa düşülür.
+      - key: JWT_ACCESS_SECRET
+        sync: false
       - key: EDITOR_GUEST_DAILY_LIMIT
         value: "2"
       - key: EDITOR_FREE_DAILY_LIMIT

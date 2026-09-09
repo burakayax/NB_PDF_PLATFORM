@@ -13,20 +13,12 @@ export async function recordCreditPackPurchaseMeta(params: {
       await tx.couponUse.create({
         data: { userId: params.userId, couponId: params.couponId },
       });
-      // Toplam kullanım usageLimitPerUser'a ulaştıysa kuponu pasif yap
-      const coupon = await tx.coupon.findUnique({
-        where: { id: params.couponId },
-        select: { usageLimitPerUser: true },
-      });
-      if (coupon) {
-        const totalUses = await tx.couponUse.count({ where: { couponId: params.couponId } });
-        if (totalUses >= coupon.usageLimitPerUser) {
-          await tx.coupon.update({
-            where: { id: params.couponId },
-            data: { isActive: false },
-          });
-        }
-      }
+      // NOT: Burada kuponu otomatik PASİFLEŞTİRMİYORUZ. Eskiden kuponun toplam
+      // kullanımı "kullanıcı başına limit" ile karşılaştırılıyordu; varsayılan 1
+      // olduğu için her kampanya kuponu ilk müşteriden sonra herkese kapanıyordu.
+      // Kullanıcı başına limit ve (varsa) toplam kontenjan artık kupon
+      // doğrulamasında uygulanır; kuponun açık/kapalı olması yalnızca yöneticinin
+      // kararıdır.
     }
     // lastExitIntentCreditDiscountAt field removed from User model
   });

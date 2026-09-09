@@ -167,6 +167,49 @@ def _detail_from_response(r: httpx.Response) -> str:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Yerel oturum çözümleme (Node'a gitmeden)
+# ---------------------------------------------------------------------------
+#
+# Oturum jetonu Node tarafında paylaşılan bir sır ile imzalanır; aynı sır bu
+# serviste de tanımlıysa jetonu BURADA doğrulayabiliriz. Böylece her PDF isteği
+# için Node'a HTTP çağrısı yapmak gerekmez.
+#
+# NEDEN ÖNEMLİ: Bu çağrılar tek bir çıkış adresinden gittiği için Node'un
+# istek sayacı tüm kullanıcıları ortak bir tavana koyuyordu ve eşik aşılınca
+# giriş yapmış herkes kilitleniyordu. Ayrıca Node yavaşladığında PDF servisinin
+# tamamı yavaşlıyordu.
+#
+# SADECE değişmeyen bilgiler yerel çözülür: jetonun geçerliliği ve kullanıcı
+# kimliği. Plan/rol gibi sonradan değişebilen bilgiler HÂLÂ Node'dan okunur —
+# aksi halde plan yükseltmesi jeton yenilenene kadar görünmezdi.
+
+
+def _local_jwt_secret() -> str:
+    return os.getenv("JWT_ACCESS_SECRET", "").strip()
+
+
+def _user_id_from_local_token(token: str) -> str | None:
+    """Jetonu yerel doğrulayıp kullanıcı kimliğini döndürür.
+
+    Sır tanımlı değilse veya jeton çözülemezse ``None`` döner → çağıran Node'a
+    sorar (davranış değişmez, yalnızca hızlanma kaybedilir).
+    """
+    secret = _local_jwt_secret()
+    if not secret:
+        return None
+    try:
+        from app.auth.jwt_utils import decode_access_token
+
+        return decode_access_token(token, secret).sub
+    except ValueError:
+        # Jeton gerçekten geçersiz/süresi dolmuş → Node da 401 verecek.
+        raise HTTPException(status_code=401, detail="Oturum süresi doldu. Lütfen tekrar giriş yapın.")
+    except Exception:
+        logger.warning("local token decode failed unexpectedly", exc_info=True)
+        return None
+
+
 async def saas_session_ok(token: str) -> None:
     """Validate the bearer token against Node's subscription status endpoint.
 
@@ -181,6 +224,11 @@ async def saas_session_ok(token: str) -> None:
         logger.debug(
             "saas_session_ok: development bypass (Node GET /api/subscription/status skipped)",
         )
+        return
+
+    # Jeton yerel doğrulanabiliyorsa Node'a gitmeye gerek yok: bu uç yalnızca
+    # "oturum geçerli mi" sorusunu yanıtlıyor.
+    if _user_id_from_local_token(token) is not None:
         return
 
     base = saas_api_base()
@@ -257,6 +305,10 @@ async def saas_current_user_id(token: str) -> str:
     to enforce ownership BEFORE any credit-bearing call, so foreign callers
     never decrement another user's credit balance.
     """
+    local_id = _user_id_from_local_token(token)
+    if local_id:
+        return local_id
+
     base = saas_api_base()
     url = f"{base}/api/auth/me"
     try:
