@@ -10,10 +10,11 @@
  *   • <description>      → düz metin özet; gönderi metni olarak kullanılır
  *   • <content:encoded>  → yazının tam gövdesi (HTML)
  *   • <category>         → etiketler; hashtag üretmek için kullanılabilir
+ *   • <enclosure> ve <media:content> → yazının KENDİ markalı kapak görseli
  *
- * Beslemede yazı görseli DUYURULMAZ: paylaşım görseli otomasyon tarafında
- * yazının konusuna göre ayrıca seçiliyor. Her yazı için aynı site görselini
- * duyurmak, tüm gönderilerin aynı resimle çıkmasına yol açardı.
+ * Kapak görselleri kendi build'imizde üretiliyor (generate-covers.mjs), yani
+ * her yazının kendine ait bir görseli var. Otomasyonun dışarıdan stok fotoğraf
+ * çekmesine gerek kalmaz; görsel alanı iki standart etiketten de okunabilir.
  *
  * Kaynak tek: blogContent.mjs. Yeni yazı eklendiğinde besleme kendiliğinden
  * güncellenir, elle bakım gerekmez.
@@ -162,7 +163,7 @@ function renderBlocksHtml(blocks, baseUrl, lang) {
 
 // ─── Besleme üretimi ──────────────────────────────────────────────────────────
 
-function buildFeed(lang, baseUrl) {
+function buildFeed(lang, baseUrl, coverMap) {
   const text = FEED_TEXT[lang];
   const posts = getBlogPostsSorted().slice(0, MAX_ITEMS);
   const feedUrl = `${baseUrl}${text.path}`;
@@ -174,6 +175,12 @@ function buildFeed(lang, baseUrl) {
       if (!copy) return "";
 
       const url = `${baseUrl}${localizedPath(`/blog/${post.slug}`, lang)}`;
+      // Kapak yoksa site paylaşım görseline düşülür: Instagram ve Pinterest
+      // görselsiz gönderi kabul etmiyor, alan asla boş kalmamalı.
+      const coverRel =
+        coverMap?.get(`${lang}:${post.slug}`) ??
+        (lang === "en" ? "/og-image-en.png" : "/og-image.png");
+      const image = `${baseUrl}${coverRel}`;
       const tags = post.tags?.[lang] ?? post.tags?.tr ?? [];
       const summary = copy.excerpt || copy.description || "";
       const body = renderBlocksHtml(copy.blocks, baseUrl, lang);
@@ -187,6 +194,9 @@ function buildFeed(lang, baseUrl) {
       <description>${cdata(summary)}</description>
       <content:encoded>${cdata(body)}</content:encoded>
 ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}
+      <enclosure url="${escapeXml(image)}" type="image/png" length="0" />
+      <media:content url="${escapeXml(image)}" medium="image" type="image/png" />
+      <media:thumbnail url="${escapeXml(image)}" />
     </item>`;
     })
     .filter(Boolean)
@@ -202,7 +212,8 @@ ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}
 <rss version="2.0"
      xmlns:atom="http://www.w3.org/2005/Atom"
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
-     xmlns:dc="http://purl.org/dc/elements/1.1/">
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>${escapeXml(text.title)}</title>
     <link>${escapeXml(blogUrl)}</link>
@@ -230,14 +241,14 @@ ${items}
  * `blockIndexing` açıkken (yerel / önizleme ortamı) besleme YAZILMAZ: önizleme
  * adresi otomasyona bağlanırsa yayınlanmamış içerik paylaşılabilir.
  */
-export function writeRssFeeds({ publicDir, baseUrl, blockIndexing }) {
+export function writeRssFeeds({ publicDir, baseUrl, blockIndexing, coverMap }) {
   if (blockIndexing) {
     return { written: [], skipped: true };
   }
 
   const written = [];
   for (const lang of ["tr", "en"]) {
-    const xml = buildFeed(lang, baseUrl);
+    const xml = buildFeed(lang, baseUrl, coverMap);
     const target = join(publicDir, FEED_TEXT[lang].path.replace(/^\//, ""));
     mkdirSync(join(target, ".."), { recursive: true });
     writeFileSync(target, xml, "utf8");

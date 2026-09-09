@@ -2,7 +2,8 @@
 <rss version="2.0"
      xmlns:atom="http://www.w3.org/2005/Atom"
      xmlns:content="http://purl.org/rss/1.0/modules/content/"
-     xmlns:dc="http://purl.org/dc/elements/1.1/">
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>PDF Platform Blog</title>
     <link>https://www.pdfplatform.app/en/blog</link>
@@ -46,6 +47,9 @@
       <category>PDF Tools</category>
       <category>Images</category>
       <category>Extraction</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" />
     </item>
     <item>
       <title>How to Edit a PDF on Your Phone (No App): Text, Signature, Markup</title>
@@ -65,6 +69,9 @@
 <blockquote><p>For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Mobile</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" />
     </item>
     <item>
       <title>How to Shrink a PDF to Email or Send on WhatsApp</title>
@@ -84,6 +91,9 @@
 <blockquote><p>Still too big? Remove unneeded pages with "Split/Delete", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with "Merge PDF".</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Compress</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" />
     </item>
     <item>
       <title>How to Choose a Free PDF Tool in 2026 (Privacy &amp; Security Guide)</title>
@@ -108,6 +118,9 @@
 <blockquote><p>A quick test: open the tool, pick a file, and watch how fast it finishes. If you get instant results with no upload bar, the operation is likely running on your device — meaning your file didn't go to the internet.</p></blockquote>]]></content:encoded>
       <category>Guide</category>
       <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" />
     </item>
     <item>
       <title>How to Crop a PDF: Trim Margins and Focus the Page (Free)</title>
@@ -127,6 +140,9 @@
 <blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Crop</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" />
     </item>
     <item>
       <title>Free PDF Editor: Add and Delete Text, Sign and Fill Forms</title>
@@ -148,6 +164,9 @@
 <blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Editing</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" />
     </item>
     <item>
       <title>Free Adobe Acrobat Alternative: PDF Tasks With No Install</title>
@@ -167,6 +186,9 @@
 <blockquote><p>Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" />
     </item>
     <item>
       <title>How to Fill Out a PDF Form Online for Free (Flat Forms Too)</title>
@@ -186,6 +208,9 @@
 <blockquote><p>For checkboxes, add a small "X" or "✓" text. If the form has multiple pages, add text/marks to each page separately.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Forms</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" />
     </item>
     <item>
       <title>SmallPDF Alternative: Free PDF Tools With No Daily Limit or Watermark</title>
@@ -206,6 +231,9 @@
 <blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" />
     </item>
     <item>
       <title>How to Convert a CV (Résumé) From Word to PDF the Right Way</title>
@@ -225,6 +253,9 @@
 <blockquote><p>If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with "Merge PDF".</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Conversion</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" />
     </item>
     <item>
       <title>iLovePDF Alternative: Free PDF Tools That Keep Your File On Your Device</title>
@@ -247,6 +278,9 @@
 <blockquote><p>If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" />
     </item>
     <item>
       <title>The Best Free Online PDF Tools (2026 Guide)</title>
@@ -274,6 +308,9 @@
       <category>Guide</category>
       <category>PDF Tools</category>
       <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" />
     </item>
     <item>
       <title>PDF on Your Phone: Merge, Edit and Scan Without an App</title>
@@ -296,6 +333,9 @@
       <category>Mobile</category>
       <category>On-device</category>
       <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" />
     </item>
     <item>
       <title>Process PDFs Without Uploading: Why On-Device Is Safer</title>
@@ -317,6 +357,9 @@
       <category>Privacy</category>
       <category>On-device</category>
       <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" />
     </item>
     <item>
       <title>Redact Sensitive Data in a PDF: Share Safely (GDPR/KVKK)</title>
@@ -338,6 +381,9 @@
       <category>Privacy</category>
       <category>Redaction</category>
       <category>GDPR</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" />
     </item>
     <item>
       <title>How to Compare Two PDFs: Find the Differences Between Contract Versions</title>
@@ -359,6 +405,9 @@
       <category>AI</category>
       <category>Compare</category>
       <category>Contract</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" />
     </item>
     <item>
       <title>How to Repair a Corrupt / Won&apos;t-Open PDF: Ways to Recover Content</title>
@@ -379,6 +428,9 @@
       <category>Troubleshooting</category>
       <category>PDF</category>
       <category>Repair</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" />
     </item>
     <item>
       <title>How to Add Page Numbers to a PDF: Choose Position and Format</title>
@@ -398,6 +450,9 @@
       <category>Editing</category>
       <category>PDF</category>
       <category>Page Numbers</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" />
     </item>
     <item>
       <title>How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)</title>
@@ -418,6 +473,9 @@
       <category>Convert</category>
       <category>PowerPoint</category>
       <category>Slides</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" />
     </item>
     <item>
       <title>How to Convert Excel to PDF Keeping Tables and Layout (2026)</title>
@@ -440,6 +498,9 @@
       <category>Convert</category>
       <category>Excel</category>
       <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
     </item>
     <item>
       <title>How to Convert PDF to Excel: Export Tables to .xlsx (2026)</title>
@@ -459,6 +520,9 @@
       <category>Convert</category>
       <category>Excel</category>
       <category>Table</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" />
     </item>
     <item>
       <title>How to Edit a PDF: Actually Delete and Replace Existing Text</title>
@@ -480,6 +544,9 @@
       <category>Editing</category>
       <category>PDF</category>
       <category>Text</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" />
     </item>
     <item>
       <title>How to Convert PDF to JPG / Images: One Image per Page</title>
@@ -505,6 +572,9 @@
       <category>Convert</category>
       <category>Image</category>
       <category>JPG</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" />
     </item>
     <item>
       <title>How to Convert Word to PDF Without Breaking Formatting (2026)</title>
@@ -526,6 +596,9 @@
       <category>Convert</category>
       <category>Word</category>
       <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" />
     </item>
     <item>
       <title>A Free, Private CamScanner Alternative: Scan Documents in Your Browser</title>
@@ -549,6 +622,9 @@
       <category>Scanning</category>
       <category>Alternative</category>
       <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" />
     </item>
     <item>
       <title>Turn a Document Photo into a Clean PDF: Skew, Shadows and Edges</title>
@@ -571,6 +647,9 @@
       <category>Scanning</category>
       <category>Quality</category>
       <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" />
     </item>
     <item>
       <title>How to Create a Searchable PDF: OCR So You Can Find Text with Ctrl+F</title>
@@ -593,6 +672,9 @@
       <category>OCR</category>
       <category>Searchable PDF</category>
       <category>Scanning</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" />
     </item>
     <item>
       <title>Scan Documents with Your Phone: No App, Free, On Your Device (2026)</title>
@@ -615,6 +697,9 @@
       <category>Scanning</category>
       <category>Mobile</category>
       <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" />
     </item>
     <item>
       <title>How to Write and Mark Up a PDF: Highlight, Note and Draw</title>
@@ -635,6 +720,9 @@
       <category>Markup</category>
       <category>Highlight</category>
       <category>Notes</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/write-and-mark-up-a-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/write-and-mark-up-a-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/write-and-mark-up-a-pdf.png" />
     </item>
     <item>
       <title>How to Add a Watermark to a PDF: Text, Color and Opacity</title>
@@ -656,6 +744,9 @@
       <category>Watermark</category>
       <category>Branding</category>
       <category>Document</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" type="image/png" length="0" />
+      <media:content url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" />
     </item>
   </channel>
 </rss>
