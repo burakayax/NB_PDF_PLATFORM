@@ -20,6 +20,7 @@
  * güncellenir, elle bakım gerekmez.
  */
 
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -80,12 +81,34 @@ const RFC822_MONTHS = [
 ];
 
 /**
+ * Aynı güne denk gelen yazılara gün içinde FARKLI saat verir.
+ *
+ * NEDEN: Yazı tarihleri gün hassasiyetinde tutuluyor ve aynı gün yayınlanan
+ * yazılar (kimi günde 15 tane var) beslemede birebir aynı zaman damgasını
+ * alıyordu. Otomasyon araçları "bunu daha önce işledim mi" kararını çoğu zaman
+ * zaman damgasına bakarak verir; aynı damgayı taşıyan yazılardan bir kısmı
+ * atlanabilir ya da tekrar paylaşılabilir.
+ *
+ * Saat, yazının kalıcı adresinden türetilir → her build'de AYNI sonucu verir
+ * (rastgele olsaydı her yayında tüm yazılar "güncellenmiş" görünürdü).
+ * Gün değişmez: en fazla 09:00–20:59 arasına dağıtılır.
+ */
+function stableTimeOfDay(slug) {
+  const hex = createHash("sha1").update(String(slug ?? "")).digest("hex").slice(0, 6);
+  const minutes = parseInt(hex, 16) % 720; // 12 saatlik pencere
+  const hh = String(9 + Math.floor(minutes / 60)).padStart(2, "0");
+  const mm = String(minutes % 60).padStart(2, "0");
+  return `${hh}:${mm}:00`;
+}
+
+/**
  * RSS 2.0 tarihleri RFC 822 biçiminde olmalıdır. ISO tarih ("2026-07-24")
  * doğrudan yazılırsa birçok okuyucu ve otomasyon aracı tarihi çözemez;
  * yazılar ya sırasız görünür ya da "tarihsiz" sayılıp atlanır.
  */
-function toRfc822(dateInput) {
-  const d = dateInput instanceof Date ? dateInput : new Date(`${dateInput}T09:00:00Z`);
+function toRfc822(dateInput, slug) {
+  const time = stableTimeOfDay(slug);
+  const d = dateInput instanceof Date ? dateInput : new Date(`${dateInput}T${time}Z`);
   const safe = Number.isNaN(d.getTime()) ? new Date() : d;
   const day = RFC822_DAYS[safe.getUTCDay()];
   const date = String(safe.getUTCDate()).padStart(2, "0");
@@ -163,9 +186,20 @@ function renderBlocksHtml(blocks, baseUrl, lang) {
 
 // ─── Besleme üretimi ──────────────────────────────────────────────────────────
 
+/** Yazının beslemedeki tam zaman damgası (gün + türetilmiş saat). */
+function itemTimestamp(post) {
+  return new Date(`${post.date}T${stableTimeOfDay(post.slug)}Z`).getTime();
+}
+
 function buildFeed(lang, baseUrl, coverMap) {
   const text = FEED_TEXT[lang];
-  const posts = getBlogPostsSorted().slice(0, MAX_ITEMS);
+  // Gün içi saat eklendiği için sıralamayı TAM zaman damgasına göre yeniden
+  // yapıyoruz: kaynak liste yalnızca güne göre sıralı, aynı günün yazıları
+  // aksi halde beslemede karışık sırayla çıkardı.
+  const posts = getBlogPostsSorted()
+    .slice()
+    .sort((a, b) => itemTimestamp(b) - itemTimestamp(a))
+    .slice(0, MAX_ITEMS);
   const feedUrl = `${baseUrl}${text.path}`;
   const blogUrl = `${baseUrl}${localizedPath(text.blogPath, lang)}`;
 
@@ -189,7 +223,7 @@ function buildFeed(lang, baseUrl, coverMap) {
       <title>${escapeXml(copy.title)}</title>
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
-      <pubDate>${toRfc822(post.date)}</pubDate>
+      <pubDate>${toRfc822(post.date, post.slug)}</pubDate>
       <dc:creator>${escapeXml(AUTHOR_NAME)}</dc:creator>
       <description>${cdata(summary)}</description>
       <content:encoded>${cdata(body)}</content:encoded>
@@ -205,7 +239,9 @@ ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}
   // En yeni yazının tarihi = beslemenin son güncellenme tarihi. Her üretimde
   // "şu an" yazmak, içerik değişmese bile okuyuculara "güncellendi" sinyali
   // gönderir ve otomasyonun aynı yazıyı tekrar paylaşmasına yol açabilir.
-  const lastBuild = posts.length ? toRfc822(posts[0].updated || posts[0].date) : toRfc822(new Date());
+  const lastBuild = posts.length
+    ? toRfc822(posts[0].updated || posts[0].date, posts[0].slug)
+    : toRfc822(new Date(), "");
   const siteImage = `${baseUrl}${lang === "en" ? "/og-image-en.png" : "/og-image.png"}`;
 
   return `<?xml version="1.0" encoding="UTF-8"?>
