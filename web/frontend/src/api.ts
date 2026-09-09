@@ -1461,6 +1461,17 @@ export async function postToolToResult(
 ): Promise<CompressResult> {
   const path = endpoint.replace(/^\//, "");
   appendSaasAccessToken(formData, accessToken);
+  // TEK DENEME (retries = 1). Bu istek bir dosya yükleyip sunucuda PAHALI ve
+  // TEKRARLANAMAZ bir dönüşüm başlatır: sonuç kaydı oluşturur, kotaya dokunur.
+  //
+  // Varsayılan 4 denemeyle, uzun süren bir dönüşümde bağlantı düşerse istemci
+  // sessizce dosyayı baştan yükleyip dönüşümü YENİDEN başlatıyordu. Sunucu aynı
+  // anda tek ağır işlem çalıştırdığı için denemeler birbirini bekliyor, kullanıcı
+  // ilerleme çubuğunun sonunda dört kat uzun süre takılı kalıyor ve sunucu
+  // gereksiz yere aynı işi dört kez yapıyordu.
+  //
+  // Tek denemeyle hata artık gizlenmiyor: kullanıcı net bir mesaj görüyor ve
+  // isterse kendisi tekrar deniyor.
   const response = await pdfFetchWithRetry(
     `${API_BASE}/api/${path}`,
     {
@@ -1469,8 +1480,7 @@ export async function postToolToResult(
       headers: saasAuthHeaders(accessToken),
       signal: options?.signal,
     },
-    4,
-    400,
+    1,
   );
   await ensureOk(response, options?.errorMessage ?? "İşlem başarısız oldu.");
   const data = (await response.json()) as CompressResult;
