@@ -34,6 +34,7 @@ import {
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -730,6 +731,8 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     <meta name="robots" content="${robots}" />
     <meta name="googlebot" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    ${rssDiscoveryLink(baseUrl, lang)}
     <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
     ${renderHreflangLinks(baseUrl, routePath)}
     <meta property="og:type" content="website" />
@@ -822,6 +825,22 @@ try {
 } catch {
   /* ilk üretim — önceki sitemap yok */
 }
+/**
+ * Sayfanın OKUYUCU İÇİN anlamlı olmayan işaretlemesini karşılaştırma dışında
+ * bırakır. Yalnızca lastmod kararında kullanılır; yazılan dosya tam haliyle
+ * kaydedilir.
+ */
+function stripNonContentMarkup(html) {
+  if (html == null) return null;
+  return html
+    // Satir sonlarini esitle: dosya diskten CRLF ile okunmus olabilir, uretilen
+    // metin ise LF. Esitlenmezse HER satir farkli gorunur ve tum sayfalar
+    // "degisti" sayilir.
+    .replace(new RegExp(String.fromCharCode(13,10),"g"), String.fromCharCode(10))
+    .replace(/^\s*<!-- Blog beslemesi:[^\n]*\n/gm, "")
+    .replace(/^\s*<link rel="alternate" type="application\/rss\+xml"[^\n]*\n/gm, "");
+}
+
 /** Prerender sırasında içeriği gerçekten değişen route'lar (dil fark etmeksizin). */
 const changedRoutes = new Set();
 
@@ -855,7 +874,13 @@ for (const lang of LANGS) {
     } catch {
       /* yeni sayfa */
     }
-    if (previousHtml !== html) changedRoutes.add(routePath);
+    // "İçerik değişti mi" karşılaştırması ÖNCE teknik satırlardan arındırılır.
+    // Aksi halde <head>'e eklenen tek bir satır (ör. besleme duyurusu) TÜM
+    // sayfaları "bugün güncellendi" yapar; sitemap'teki tarih sinyali anlamını
+    // yitirir ve Google tarama sıklığını düşürür (bkz. previousLastmod notu).
+    if (stripNonContentMarkup(previousHtml) !== stripNonContentMarkup(html)) {
+      changedRoutes.add(routePath);
+    }
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, html, "utf8");
     pageCount++;
@@ -936,6 +961,16 @@ ${renderSitemapHreflang(base, u.routePath)}
 }
 
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
+
+// ─── RSS beslemeleri ──────────────────────────────────────────────────────────
+// Sitemap'ten SONRA üretilir; yetim prerender temizliği yalnızca index.html
+// dosyalarına dokunduğu için beslemeler silinmez.
+const rss = writeRssFeeds({ publicDir, baseUrl: base, blockIndexing });
+if (rss.skipped) {
+  console.log("[seo] RSS beslemesi atlandı (indeksleme kapalı ortam)");
+} else {
+  console.log("[seo] RSS beslemeleri üretildi:", rss.written.join(", "));
+}
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",

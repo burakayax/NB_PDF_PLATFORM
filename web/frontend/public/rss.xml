@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>PDF Platform Blog</title>
+    <link>https://www.pdfplatform.app/blog</link>
+    <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
+    <language>tr-TR</language>
+    <copyright>© 2026 PDF Platform</copyright>
+    <lastBuildDate>Fri, 24 Jul 2026 09:00:00 GMT</lastBuildDate>
+    <ttl>60</ttl>
+    <generator>PDF Platform</generator>
+    <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
+    <image>
+      <url>https://www.pdfplatform.app/og-image.png</url>
+      <title>PDF Platform Blog</title>
+      <link>https://www.pdfplatform.app/blog</link>
+    </image>
+    <item>
+      <title>PDF&apos;ten Resim (Görsel) Çıkarma: Gömülü Fotoğrafları Kayıpsız İndirin</title>
+      <link>https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma</guid>
+      <pubDate>Fri, 24 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[PDF'in içindeki resimleri kaydetmek istiyor ama ekran görüntüsüyle kalite mi kaybediyorsunuz? PDF'i resme çevirmekle gömülü görselleri çıkarmak farklı şeylerdir — bu yazıda ikisini ayırıp en kolay yolu gösteriyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir PDF'in içinde işinize yarayan bir fotoğraf, logo veya grafik var ve onu ayrı bir dosya olarak kaydetmek istiyorsunuz. Ekran görüntüsü almak kalite kaybettirir. İşin doğru yolu, dokümana gömülü asıl görseli özgün haliyle çıkarmaktır — bu yazıda nasıl yapıldığını gösteriyoruz.</p>
+<h2>Önemli fark: "PDF'i resme çevirme" ≠ "PDF'ten görsel çıkarma"</h2>
+<p>Bu iki iş sık karıştırılır ama farklıdır. Doğru aracı seçmek sonuç kalitesini belirler:</p>
+<ul><li>PDF'i resme çevirme: Her sayfanın tamamının bir ekran görüntüsünü (JPG/PNG) alır. Sayfadaki metin, çizgi ve resim hep birlikte tek bir düz görüntüye dönüşür.</li><li>PDF'ten görsel çıkarma: Sayfayı resme çevirmez; dokümanın içine gömülü asıl görsel dosyalarını (fotoğraf, logo) özgün formatında ve çözünürlüğünde ayıklar.</li></ul>
+<blockquote><p>Tüm sayfayı bir resim olarak istiyorsanız "PDF → Görsel" aracını; yalnızca içindeki fotoğraf/logoları özgün kalitede istiyorsanız "PDF'ten Görsel Çıkar" aracını kullanın.</p></blockquote>
+<h2>Yöntem 1 — Ekran görüntüsü (önerilmez)</h2>
+<p>PDF'i açıp görselin üstünden ekran görüntüsü almak en bilinen ama en kötü yoldur: elde ettiğiniz resim ekranınızın çözünürlüğüyle sınırlıdır, kenarları kırpmak zordur ve özgün kalite kaybolur.</p>
+<h2>Yöntem 2 — Sayfayı resme çevirme</h2>
+<p>Görsel sayfanın tamamını kaplıyorsa, sayfayı yüksek çözünürlüklü bir görüntüye çevirmek işinizi görebilir. Ama sayfada metin ve başka öğeler de varsa hepsi görsele karışır; sadece fotoğrafı izole edemezsiniz.</p>
+<p><strong>PDF → Görsel</strong> — Sayfaların tamamını yüksek çözünürlüklü JPG/PNG olarak indirin. <a href="https://www.pdfplatform.app/tools/pdf-to-image">Aracı aç</a></p>
+<h2>Yöntem 3 — Gömülü görselleri çıkarma (en temizi)</h2>
+<p>En doğru sonuç, dokümana gömülü asıl görsel akışlarını çıkarmaktır. PDF Platform'un PDF'ten Görsel Çıkar aracı tam olarak bunu yapar:</p>
+<ol><li><strong>PDF'i yükleyin</strong> — İçinde fotoğraf/logo bulunan belgenizi seçin. Şifreli bir PDF ise parolasını girin.</li><li><strong>"Görselleri Çıkar" deyin</strong> — Araç sayfaları tek tek tarayıp gömülü tüm görselleri özgün formatında (JPG/PNG) ayıklar; aynı görsel birden çok sayfada varsa tekilleştirir.</li><li><strong>ZIP olarak indirin</strong> — Çıkarılan tüm görseller tek bir ZIP arşivinde toplanır; tek tıkla indirin.</li></ol>
+<p><strong>PDF'ten Görsel Çıkar</strong> — Bir PDF yükleyin — içindeki tüm fotoğraf ve logolar kayıpsız çıksın. <a href="https://www.pdfplatform.app/tools/extract-images">Aracı aç</a></p>
+<h2>Ne işe yarar?</h2>
+<ul><li>Bir sunum veya rapordaki fotoğrafları yeniden kullanma.</li><li>Eski bir PDF'ten şirket logosunu özgün kalitede geri alma.</li><li>Katalog/broşürdeki ürün görsellerini toplu indirme.</li></ul>
+<h2>Gizlilik notu</h2>
+<p>Görsel çıkarma sunucuda yapılır ancak dosyanız kalıcı olarak saklanmaz; işlem biter bitmez geçici veriler temizlenir. Birleştirme, döndürme, sayfa silme gibi araçlarımızın çoğu ise tamamen tarayıcınızda çalışır.</p>]]></content:encoded>
+      <category>PDF Araçları</category>
+      <category>Görsel</category>
+      <category>Resim Çıkarma</category>
+    </item>
+    <item>
+      <title>Telefonda PDF Düzenleme (Uygulamasız): Metin, İmza ve İşaretleme</title>
+      <link>https://www.pdfplatform.app/blog/telefonda-pdf-duzenleme-uygulamasiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/telefonda-pdf-duzenleme-uygulamasiz</guid>
+      <pubDate>Thu, 23 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Telefona uygulama kurmadan PDF'e metin ekle, imzala, işaretle — hepsi tarayıcıda. Android ve iPhone'da nasıl yapılır.]]></description>
+      <content:encoded><![CDATA[<p>Yolda bir belgeyi imzalaman ya da bir forma not eklemen gerekti ama telefonuna PDF uygulaması kurmak istemiyorsun. Gerek de yok — bunların çoğunu telefon tarayıcında, kurulum olmadan yapabilirsin.</p>
+<h2>Telefonda uygulamasız neler yapabilirsin?</h2>
+<ul><li>Üzerine metin/not ekleme ve boşlukları doldurma → İşaretle aracı</li><li>İmza atma (parmakla çiz, yaz veya fotoğrafını yükle) → İmzala aracı</li><li>Fosforlu, kutu, çizim ile işaretleme → İşaretle aracı</li><li>Mevcut yazıyı gerçekten silip değiştirme → Düzenle aracı</li></ul>
+<h2>Adım adım (Android ve iPhone)</h2>
+<ol><li><strong>Tarayıcıda aracı aç</strong> — Telefonunun tarayıcısında (Chrome/Safari) araç sayfasını aç — kurulum yok.</li><li><strong>PDF'ini yükle</strong> — Dosyanı seç; işaretle/imzala aracı doğrudan telefonda çalışır.</li><li><strong>Düzenle ve indir</strong> — Parmakla imzala/işaretle, sonra "Uygula ve İndir" ile kaydet.</li></ol>
+<p><strong>Telefonda PDF İşaretle</strong> — Metin ekle, imzala, işaretle — telefonunda, uygulamasız ve ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-yorumla">Aracı aç</a></p>
+<h2>Dosyam güvende mi?</h2>
+<p>İşaretleme ve imzalama tamamen telefonunun tarayıcısında (cihazında) yapılır; PDF sunucuya yüklenmez, %100 gizlidir. Yalnızca gerçek metin silme/değiştirme sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p>
+<blockquote><p>İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Mobil</category>
+    </item>
+    <item>
+      <title>PDF&apos;i E-postayla veya WhatsApp&apos;ta Gönderilecek Kadar Küçültme</title>
+      <link>https://www.pdfplatform.app/blog/pdf-kucultme-eposta-whatsapp</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-kucultme-eposta-whatsapp</guid>
+      <pubDate>Thu, 23 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA["Dosya çok büyük" hatası mı alıyorsun? PDF'i e-posta ve WhatsApp sınırlarının altına indirmenin en kolay yolu — adım adım.]]></description>
+      <content:encoded><![CDATA[<p>Bir PDF'i e-postayla göndermek istiyorsun ama "dosya çok büyük" diyor; ya da WhatsApp belgeyi kabul etmiyor. Çözüm dosyayı bölmek değil, sıkıştırmak: boyutu düşürüp içeriği korumak.</p>
+<h2>Neden büyük? Ve tipik sınırlar</h2>
+<ul><li>Taranmış belgeler ve bol görselli PDF'ler en çok yer kaplar.</li><li>Gmail eki: ~25 MB · Outlook: ~20 MB · WhatsApp belge: ~100 MB ama pratikte çok büyük dosyalar takılır.</li><li>Portal/başvuru sistemleri sık sık 2–10 MB sınırı koyar.</li></ul>
+<h2>PDF'i küçültme — adım adım</h2>
+<ol><li><strong>PDF'i yükle</strong> — Sıkıştırma aracına dosyanı sürükleyip bırak.</li><li><strong>Sıkıştırma düzeyini seç</strong> — Dengeli düzeyde belirgin kalite kaybı olmaz; daha yüksek düzey boyutu daha çok düşürür.</li><li><strong>İndir ve gönder</strong> — Optimize edilmiş dosyayı indir; artık e-posta/WhatsApp sınırının altında.</li></ol>
+<p><strong>PDF Küçült</strong> — Dosyanı yükle, sıkıştır ve gönderime hazır hâlde indir — ücretsiz. <a href="https://www.pdfplatform.app/tools/compress">Aracı aç</a></p>
+<h2>Küçültünce kalite bozulur mu?</h2>
+<p>Dengeli düzeyde hayır — metin seçilebilir ve net kalır, görseller okunaklı olur. Metin katmanı korunduğu için sıkıştırılmış PDF'te de arama yapabilir, kopyalayabilirsin. En büyük kazanç genellikle taranmış (görsel ağırlıklı) PDF'lerde olur.</p>
+<blockquote><p>Hâlâ büyükse: gereksiz sayfaları "PDF Böl/Sil" ile çıkar ya da yalnız gereken sayfaları gönder. Birden çok belgeyi tek dosyada göndereceksen önce sıkıştır, sonra "PDF Birleştir" ile topla.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Sıkıştırma</category>
+    </item>
+    <item>
+      <title>Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)</title>
+      <link>https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir</guid>
+      <pubDate>Thu, 23 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Dosyanı sunucuya yükleyen mi, cihazında işleyen mi? Ücretsiz bir PDF aracını seçmeden önce bakman gereken 6 şey — dürüst bir rehber.]]></description>
+      <content:encoded><![CDATA[<p>"Ücretsiz online PDF aracı" araması yüzlerce sonuç verir ama hepsi aynı değildir. Bazısı dosyanı sunucusuna yükler, bazısı çıktıya filigran koyar, bazısı basit bir işlem için üyelik ister. Bu rehber, doğru aracı seçmen için nelere bakman gerektiğini adım adım anlatır.</p>
+<h2>Çoğu online PDF aracının görünmeyen tarafı: dosya yükleme</h2>
+<p>Çoğu online PDF aracında birleştirme, bölme ya da dönüştürme için dosyan önce onların sunucusuna yüklenir, orada işlenir, sonra silinir. Genelde güvenlidir; ama bir sözleşme, kimlik ya da mali tablo için dosyanın bir süreliğine de olsa internete çıkması bir soru işareti bırakır. Alternatif yaklaşım: işlemin dosyanın hiç cihazından çıkmadan, doğrudan tarayıcıda yapılması.</p>
+<h2>İyi bir ücretsiz PDF aracında aranacak 6 şey</h2>
+<ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcında mı (cihazında) işleniyor? Hassas belgeler için cihazda işleme en güvenlisidir.</li><li>Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu? Profesyonel bir belge için bu can sıkıcıdır.</li><li>Üyelik zorunluluğu: Basit bir birleştirme için hesap açmak gerekiyor mu?</li><li>Günlük/işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemen ya da ödeme yapman isteniyor mu?</li><li>Kurulum: Tarayıcıda mı çalışıyor, yoksa program/eklenti mi istiyor?</li><li>Kapsam: Sadece birleştirme mi, yoksa böl/kırp/döndür/dönüştür/imza gibi ihtiyaç duyacağın araçlar da var mı?</li></ul>
+<h2>Neden "cihazda işleme" fark yaratır?</h2>
+<p>Bir araç işlemi tarayıcında yapıyorsa üç şey kazanırsın: gizlilik (dosya internete gitmez), hız (yükleme/indirme beklemezsin, anında sonuç) ve çevrimdışı çalışma (bir kez açıldıktan sonra bağlantı kesilse de çalışır). PDF Platform'da birleştir, böl, kırp, döndür, sayfa sil, sırala ve görsel→PDF gibi yapısal araçlar tamamen cihazında çalışır — dosyan sunucuya hiç gitmez.</p>
+<p><strong>PDF Araçlarını Dene</strong> — Birleştir, böl, kırp, döndür — dosyan cihazından çıkmadan, üyeliksiz ve ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Hangi işlem cihazda yapılabilir, hangisi sunucu ister?</h2>
+<p>Dürüst olmak gerekir: her işlem tarayıcıda yapılamaz. Doğru araç, bu ayrımı sana açıkça söyleyendir. Genel kural:</p>
+<ul><li>Cihazda yapılabilir (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, kırp, görsel→PDF, imza ve işaretleme.</li><li>Sunucu gerektirir: Word/Excel/PowerPoint dönüştürme, OCR (taranmış belgeyi metne çevirme), yüksek oranlı sıkıştırma ve yapay zekâ (özet, sohbet, çeviri). Burada da iyi bir araç içeriği saklamaz ve şifreli bağlantı kullanır.</li></ul>
+<h2>Kısa özet: nasıl seçmeli?</h2>
+<ol><li><strong>Hassas belge mi?</strong> — Evetse, işlemi cihazında (tarayıcıda) yapan bir araç seç — dosya internete gitmesin.</li><li><strong>Sadece basit bir iş mi (birleştir/böl/kırp)?</strong> — Üyelik ve kurulum isteyeni ele; bunlar üyeliksiz ve anında yapılabilir.</li><li><strong>Dönüştürme/OCR gerekiyor mu?</strong> — Bunlar sunucu ister; içeriğin saklanmadığını ve şifreli aktarım kullanıldığını doğrula.</li></ol>
+<blockquote><p>Pratik test: Aracı aç, bir dosya seç ve işlemin ne kadar sürede bittiğine bak. Yükleme çubuğu görmeden anında sonuç geliyorsa, işlem büyük olasılıkla cihazında yapılıyordur — yani dosyan internete gitmemiştir.</p></blockquote>]]></content:encoded>
+      <category>Rehber</category>
+      <category>Gizlilik</category>
+    </item>
+    <item>
+      <title>PDF Kırpma: Kenar Boşluklarını Kesme ve Sayfayı Daraltma (Ücretsiz)</title>
+      <link>https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Taranmış belgelerin geniş boşlukları, tek bir tabloya odaklanma ya da üst/alt bilgiyi çıkarma... PDF'i cihazınızda nasıl kırparsınız — adım adım.]]></description>
+      <content:encoded><![CDATA[<p>Taranmış bir belgenin kocaman beyaz kenarları mı var, yoksa bir sayfadaki tek bir tabloya mı odaklanmak istiyorsunuz? PDF kırpma, sayfanın görünür alanını istediğiniz dikdörtgene daraltır — hem de dosyanız cihazınızdan hiç çıkmadan.</p>
+<h2>PDF kırpma ne işe yarar?</h2>
+<ul><li>Taranmış belgelerdeki geniş kenar boşluklarını kesmek.</li><li>Bir sayfadaki tek bir tabloya, grafiğe veya bölüme odaklanmak.</li><li>Tekrar eden üst bilgi/alt bilgi (header/footer) alanını görünümden çıkarmak.</li><li>Sunum veya baskı için sayfayı düzgün bir çerçeveye getirmek.</li></ul>
+<h2>PDF nasıl kırpılır — adım adım</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — Kırpma aracına PDF'inizi sürükleyip bırakın; ilk sayfa önizlemede açılır.</li><li><strong>Kırpma kutusunu ayarlayın</strong> — Kutuyu sürükleyerek taşıyın, köşelerden veya kenarlardan boyutlandırarak tutmak istediğiniz alanı seçin.</li><li><strong>Kapsamı seçip indirin</strong> — 'Tüm sayfalar' ya da 'Yalnız bu sayfa' deyin ve 'Kırp ve İndir' ile sonucu alın.</li></ol>
+<p><strong>PDF Kırp</strong> — Kutuyu sürükleyip boyutlandırın, kırpın ve indirin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/crop-pdf">Aracı aç</a></p>
+<h2>Kırpma içeriği siler mi?</h2>
+<p>Hayır. Kırpma, sayfanın görünür alanını (CropBox) daraltan standart bir PDF işlemidir; kalan alan net biçimde görüntülenir ve yazdırılır. İşlem tamamen tarayıcınızda çalışır, dosyanız sunucuya gitmez.</p>
+<blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Kırpma</category>
+    </item>
+    <item>
+      <title>Ücretsiz PDF Düzenleyici: Metin Ekleme, Silme, İmza ve Form Doldurma</title>
+      <link>https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[PDF düzenlemenin tek bir yolu yok: yazıyı değiştirmek, metin eklemek, imzalamak, işaretlemek... İhtiyacınıza göre hangi aracı kullanacağınızı gösteren rehber.]]></description>
+      <content:encoded><![CDATA[<p>"PDF düzenleme" herkes için aynı şey değildir: kimi mevcut yazıyı değiştirmek, kimi üzerine not eklemek, kimi imzalamak ister. Doğru aracı seçince iş saniyeler sürer. İşte ihtiyaca göre yol haritası.</p>
+<h2>1) Mevcut yazıyı değiştirmek veya silmek</h2>
+<p>PDF'teki bir yazıyı gerçekten silip yenisini yazmak istiyorsanız "PDF Düzenle" aracını kullanın. Değiştirmek istediğiniz metnin üzerine kutu çizin, yenisini yazın (boş bırakırsanız silinir) ve indirin.</p>
+<p><strong>PDF Düzenle</strong> — Mevcut yazıyı gerçekten silip değiştirin — kutu çizin, yeni metni yazın, indirin. <a href="https://www.pdfplatform.app/tools/pdf-duzenle">Aracı aç</a></p>
+<h2>2) Üzerine metin, not veya işaret eklemek</h2>
+<p>Mevcut yazıya dokunmadan üzerine metin, vurgu, kutu veya çizim eklemek istiyorsanız "PDF İşaretle" aracı idealdir. Formlardaki boşlukları doldurmak için de bunu kullanabilirsiniz.</p>
+<h2>3) İmza atmak</h2>
+<p>Belgeyi imzalamak için "PDF İmzala" aracıyla imzanızı çizin, yazın veya yükleyin; sayfada istediğiniz yere yerleştirin. İmzalama tamamen cihazınızda yapılır.</p>
+<h2>4) Form doldurmak</h2>
+<p>Doldurulabilir alanı olmayan (düz) formlarda metni doğrudan üzerine ekleyerek doldurabilirsiniz — ayrıntılı adımlar için form doldurma rehberimize bakın.</p>
+<blockquote><p>Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Düzenleme</category>
+    </item>
+    <item>
+      <title>Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri</title>
+      <link>https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Çoğu PDF işi için pahalı Acrobat aboneliğine gerek yok. Birleştirmeden imzaya, kurulum olmadan tarayıcıda yapabileceğiniz işler ve dürüst sınırlar.]]></description>
+      <content:encoded><![CDATA[<p>Adobe Acrobat güçlü bir program, ama tam sürümü ücretli ve kurulum ister. İyi haber: gündelik PDF işlerinin büyük kısmı için ne abonelik ne de kurulum gerekir — hepsini tarayıcınızda ücretsiz yapabilirsiniz.</p>
+<h2>Acrobat olmadan hangi işleri yapabilirsiniz?</h2>
+<ul><li>Birleştir, böl, döndür, sayfa sil, sayfa sırala — hepsi ücretsiz ve cihazınızda.</li><li>Görselden PDF, belge tarama, sayfa numarası ve filigran ekleme.</li><li>Metin ekleme, işaretleme ve imza atma.</li><li>Word/Excel/PowerPoint dönüştürme, sıkıştırma ve OCR (sunucuda, içerik saklanmaz).</li></ul>
+<h2>Kurulum ve abonelik derdi yok</h2>
+<p>PDF Platform tamamen tarayıcıda çalışır — indirme, kurulum veya eklenti gerektirmez. Birleştirme, bölme ve imza gibi yapısal işlemler cihazınızda yapılır; dosyanız sunucuya bile gitmez. Üyelik yalnızca daha büyük dosyalar, geçmiş kaydı ve gelişmiş dönüştürme için gerekir.</p>
+<p><strong>PDF Araçlarını Aç</strong> — Birleştirin, dönüştürün, imzalayın — kurulum olmadan, ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Peki Acrobat ne zaman gerekir?</h2>
+<p>Dürüst olalım: karmaşık form tasarımı, ileri düzey ön kontrol (prepress) veya kurumsal doküman iş akışları için Acrobat Pro hâlâ güçlü bir seçenektir. Ama çoğu kullanıcının ihtiyacı birleştirmek, dönüştürmek, imzalamak ve metin eklemek — bunlar için ücretli bir programa gerek yok.</p>
+<blockquote><p>Yalnızca bir PDF'i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz.</p></blockquote>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>Ücretsiz</category>
+    </item>
+    <item>
+      <title>PDF Form Doldurma: Yazdırmadan, Online ve Ücretsiz (Düz Formlar Dahil)</title>
+      <link>https://www.pdfplatform.app/blog/pdf-form-doldurma-online-ucretsiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-form-doldurma-online-ucretsiz</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Elinize gelen PDF formu yazdırıp elle doldurmaya gerek yok. Doldurulabilir alanı olsun olmasın, PDF'e nasıl metin ekleyip imzalarsınız — adım adım.]]></description>
+      <content:encoded><![CDATA[<p>Başvuru, sözleşme ya da dilekçe... Çoğu PDF form aslında "düz"dür; yani içinde tıklayıp yazabileceğiniz hazır alan yoktur. Yazdırıp elle doldurmak yerine, metni doğrudan formun üzerine ekleyebilirsiniz.</p>
+<h2>İki tür PDF form vardır</h2>
+<ul><li>Doldurulabilir (interaktif) form: İçinde hazır alanlar vardır; herhangi bir PDF okuyucuda alanlara tıklayıp yazabilirsiniz.</li><li>Düz form: Çoğu resmi/taranmış belge böyledir; hazır alan yoktur. Bunlarda metni formun uygun yerine "üzerine" eklemeniz gerekir.</li></ul>
+<h2>Düz bir PDF formunu doldurma — adım adım</h2>
+<ol><li><strong>Formu yükleyin</strong> — PDF formunuzu işaretleme/metin aracına yükleyin.</li><li><strong>Metin ekleyin</strong> — Metin/not aracıyla ilgili boşluğa tıklayıp cevabınızı yazın; her alana ayrı kutu ekleyebilirsiniz.</li><li><strong>İmzalayın ve indirin</strong> — Gerekiyorsa imzanızı ekleyip "Uygula ve İndir" ile doldurulmuş PDF'i indirin.</li></ol>
+<p><strong>PDF'e Metin/İşaret Ekle</strong> — Formunuzu yükleyin, boşluklara metin ekleyin ve doldurulmuş PDF'i indirin — ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-yorumla">Aracı aç</a></p>
+<h2>İmza gerekiyorsa</h2>
+<p>Form imza istiyorsa, metni ekledikten sonra imzanızı çizip/yazıp yerleştirebilirsiniz. İmzalama tamamen cihazınızda yapılır; belgeniz sunucuya gitmez.</p>
+<blockquote><p>Onay kutuları için küçük bir "X" veya "✓" metni ekleyebilirsiniz. Formu birden çok sayfaysa her sayfaya ayrı ayrı metin/işaret ekleyebilirsiniz.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Form</category>
+    </item>
+    <item>
+      <title>SmallPDF Alternatifi: Günlük Sınır ve Filigran Olmadan Ücretsiz PDF Araçları</title>
+      <link>https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[SmallPDF alternatifi ararken en çok takılınan yer: günlük işlem sınırı ve üyelik duvarı. Sınırsız, üyeliksiz ve zorunlu filigransız araçlarla karşılaştırma.]]></description>
+      <content:encoded><![CDATA[<p>SmallPDF iyi bir araç, ama ücretsiz kullanımda günlük işlem sınırına ve sık sık üyelik/Pro duvarına takılırsınız. Peki aynı işleri sınır olmadan, üye olmadan yapmak mümkün mü? Evet.</p>
+<h2>SmallPDF ücretsiz sürümünün sınırları</h2>
+<ul><li>Günlük işlem sınırı: Ücretsizde belirli sayıda işlemden sonra beklemeniz ya da Pro'ya geçmeniz istenir.</li><li>Üyelik/Pro baskısı: Bazı araçlar veya toplu işlemler hesap ister.</li><li>Yükleme: Çoğu işlemde dosyanız sunucuya gider.</li></ul>
+<h2>PDF Platform'da sınır yok, üyelik yok</h2>
+<p>PDF Platform'da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal araçlar üyeliksiz, günlük sınır olmadan ve zorunlu filigran eklenmeden çalışır. Üstelik bu işlemler tamamen tarayıcınızda (cihazınızda) yapılır — dosyanız sunucuya hiç gitmez.</p>
+<p><strong>PDF Birleştir</strong> — Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — sınırsız ve ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Hangi işler ücretsiz, hangileri hesap ister?</h2>
+<p>Dürüst ayrım: yapısal araçlar tamamen ücretsiz ve üyeliksizdir. Word/Excel dönüştürme, OCR ve yapay zekâ araçları (özet, sohbet, çeviri) sunucuda çalışır; bunlar için daha büyük dosyalar ve geçmiş kaydı hesap gerektirir ancak içerik saklanmaz.</p>
+<ul><li>Sınırsız &amp; üyeliksiz: birleştir, böl, döndür, sil, sırala, görsel → PDF, belge tara, imza, işaretleme.</li><li>Hesap/plan: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve AI araçları (daha büyük dosya + geçmiş için).</li></ul>
+<blockquote><p>Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz.</p></blockquote>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>Ücretsiz</category>
+    </item>
+    <item>
+      <title>CV&apos;yi (Özgeçmiş) Word&apos;den PDF&apos;e Çevirme — İş Başvurusu İçin Doğru Yöntem</title>
+      <link>https://www.pdfplatform.app/blog/cv-ozgecmis-word-pdf-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/cv-ozgecmis-word-pdf-cevirme</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[İş başvurusunda CV'nizi neden PDF göndermelisiniz ve Word'den biçimi bozulmadan nasıl çevirirsiniz — adım adım.]]></description>
+      <content:encoded><![CDATA[<p>Bir CV, işverenin sizinle ilgili gördüğü ilk belgedir. Word'de hazırladığınız özgeçmiş farklı bilgisayarlarda kayabilir, yazı tipleri değişebilir. Çözüm basit: göndermeden önce PDF'e çevirmek.</p>
+<h2>CV neden PDF olarak gönderilmeli?</h2>
+<ul><li>Her cihazda aynı görünür: Yazı tipleri, satır aralıkları ve düzen, açan kişiden bağımsız olarak korunur.</li><li>Profesyonel standart: Çoğu işveren ve kariyer portalı PDF'i tercih eder, hatta zorunlu tutar.</li><li>Yanlışlıkla değişmez: Word dosyası açılırken kayabilir; PDF sabittir.</li></ul>
+<h2>Word CV'yi PDF'e çevirme — adım adım</h2>
+<ol><li><strong>Word dosyanızı yükleyin</strong> — Word'den PDF'e aracına .doc veya .docx özgeçmişinizi sürükleyip bırakın.</li><li><strong>Dönüştürün</strong> — "Dönüştür" deyin; yazı tipleri, tablolar ve düzen korunarak PDF anında hazırlanır.</li><li><strong>İndirin ve adlandırın</strong> — PDF'i indirin ve "Ad_Soyad_CV.pdf" gibi düzgün bir adla kaydedin.</li></ol>
+<p><strong>Word'ü PDF'e Çevir</strong> — Özgeçmişinizi yükleyin, biçimi bozulmadan PDF olarak indirin — ücretsiz. <a href="https://www.pdfplatform.app/tools/word-to-pdf">Aracı aç</a></p>
+<h2>Göndermeden önce son kontroller</h2>
+<ul><li>Dosya adı profesyonel mi? "belge1.pdf" yerine "Ad_Soyad_CV.pdf".</li><li>PDF'te yazı tipleri ve hizalama Word'deki gibi mi görünüyor?</li><li>Fotoğraf ve bağlantılar (LinkedIn, e-posta) doğru yerinde mi?</li><li>Dosya çok büyükse "PDF Küçült" ile e-posta boyutuna indirin.</li></ul>
+<blockquote><p>Birden çok belgeyi (CV + ön yazı + sertifikalar) tek dosyada göndermeniz istenirse, PDF'e çevirdikten sonra "PDF Birleştir" ile tek belgede toplayabilirsiniz.</p></blockquote>]]></content:encoded>
+      <category>Nasıl Yapılır</category>
+      <category>Dönüştürme</category>
+    </item>
+    <item>
+      <title>iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları</title>
+      <link>https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz</guid>
+      <pubDate>Wed, 22 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[iLovePDF alternatifi ararken en kritik soru: dosyam nereye gidiyor? Cihazda çalışan, üyeliksiz ve zorunlu filigransız araçlarla dürüst bir karşılaştırma.]]></description>
+      <content:encoded><![CDATA[<p>iLovePDF popüler bir araç, ama çoğu işlemde dosyanız önce sunucularına yüklenir. Hassas bir sözleşme, kimlik ya da mali tabloyu işlerken bu bir soru işareti bırakır. İşte dosyanızı cihazınızdan çıkarmadan aynı işleri yapmanın yolu.</p>
+<h2>iLovePDF'de dosyanız nereye gidiyor?</h2>
+<p>iLovePDF gibi çoğu online araçta birleştirme, bölme veya dönüştürme için dosyanız sunucuya yüklenir, orada işlenir ve sonra silinir. Genelde güvenlidir; ama dosya yine de bir süre internete çıkar. Gizli belgelerde en güvenli yaklaşım, dosyanın cihazdan hiç ayrılmamasıdır.</p>
+<h2>Bir alternatifte neye bakmalısınız?</h2>
+<ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa tarayıcınızda mı işleniyor?</li><li>Zorunlu filigran: Ücretsiz çıktıya damga ekleniyor mu?</li><li>Üyelik zorunluluğu: Basit bir işlem için hesap isteniyor mu?</li><li>Günlük/işlem sınırı: Ücretsizde kaç işlem yapabiliyorsunuz?</li></ul>
+<h2>PDF Platform'un farkı: yapısal araçlar cihazda çalışır</h2>
+<p>PDF Platform'da birleştirme, bölme, döndürme, sayfa silme, sayfa sıralama ve görselden PDF gibi yapısal işlemler tamamen tarayıcınızda (cihazınızda) çalışır — dosyanız internete hiç gönderilmez. Üyelik gerekmez, ücretsiz çıktıya zorunlu filigran eklenmez ve internet kesilse bile çalışır.</p>
+<p><strong>PDF Birleştir</strong> — Dosyalarınızı ekleyin, sıralayın ve tek PDF olarak indirin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Hangi araçlar cihazda, hangileri sunucuda?</h2>
+<p>Dürüst olmak gerekirse her işlem tarayıcıda yapılamaz. Ayrımı net söyleyelim:</p>
+<ul><li>Cihazda (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, görsel → PDF, belge tara, imza ve işaretleme.</li><li>Sunucuda (içerik saklanmaz, şifreli bağlantı): Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları (özet, sohbet, çeviri).</li></ul>
+<blockquote><p>Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz.</p></blockquote>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>Gizlilik</category>
+    </item>
+    <item>
+      <title>En İyi Ücretsiz Online PDF Araçları (2026 Rehberi)</title>
+      <link>https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA["En iyi ücretsiz PDF aracı" diye tek bir cevap yok — işe göre değişir. Bu rehberde PDF işlerini kategorilere ayırıp her biri için doğru aracı ve nelere dikkat etmeniz gerektiğini anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>İnternette yüzlerce PDF aracı var ama hangisi ne zaman gerekir? Bu rehber, PDF işlerini beş kategoriye ayırıp her biri için doğru aracı gösteriyor — ve bir aracı seçerken nelere (gizlilik, filigran, dosya boyutu) dikkat etmeniz gerektiğini.</p>
+<h2>1) Düzenleme ve organizasyon</h2>
+<p>Sayfaları birleştirmek, ayırmak, silmek, döndürmek veya yeniden sıralamak en sık ihtiyaçtır. Bu işlemler hafiftir ve iyi araçlarda cihazınızda (tarayıcıda) çalışır — dosyanız sunucuya gitmez, anında sonuç alırsınız.</p>
+<p><strong>PDF Birleştir</strong> — Birden çok PDF'i tek belgede toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>2) Dönüştürme</h2>
+<p>PDF'i Word/Excel/PowerPoint'e ya da tersine çevirmek; PDF'i JPG'ye almak. Bunlar ağır işlemlerdir ve genelde sunucuda yapılır. Bir dönüştürücü seçerken en önemli ölçüt: biçimin (düzen, tablo, yazı tipi) ne kadar korunduğu.</p>
+<p><strong>PDF → Word</strong> — PDF'i düzenlenebilir Word belgesine çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">Aracı aç</a></p>
+<h2>3) Optimizasyon ve güvenlik</h2>
+<p>Dosya boyutunu küçültmek (sıkıştırma), şifre koymak/kaldırmak, filigran veya sayfa numarası eklemek. E-postayla göndermek için sıkıştırma, paylaşmadan önce şifreleme sık kullanılır.</p>
+<p><strong>PDF Sıkıştır</strong> — PDF boyutunu e-postaya uygun hâle getirin. <a href="https://www.pdfplatform.app/tools/compress">Aracı aç</a></p>
+<h2>4) Yapay zekâ ile PDF</h2>
+<p>Uzun belgeleri özetlemek, belgeye soru sormak, faturalardan veri çıkarmak veya iki sözleşmeyi karşılaştırmak. Yapay zekâ araçlarında genelde dosyanın kendisi yüklenmez; metin çıkarılıp yalnızca metin işlenir.</p>
+<p><strong>PDF Özetle</strong> — Uzun bir belgeyi saniyeler içinde özetleyin. <a href="https://www.pdfplatform.app/tools/pdf-ozetle">Aracı aç</a></p>
+<h2>5) Bir aracı seçerken nelere dikkat etmeli?</h2>
+<ul><li>Gizlilik: Dosya sunucuya mı yükleniyor, yoksa cihazınızda mı işleniyor? Hassas belgelerde cihazda işleme tercih edin.</li><li>Filigran: Ücretsiz çıktıya zorunlu filigran ekleniyor mu?</li><li>Üyelik: Basit bir iş için hesap açmaya zorluyor mu?</li><li>Dosya boyutu/limit: Kaç MB'a kadar, günde kaç işlem?</li></ul>
+<blockquote><p>PDF Platform'da yapısal araçlar (birleştir, böl, döndür, tara) cihazınızda çalışır, çıktıya zorunlu filigran eklenmez ve çoğu işlem üyeliksiz yapılabilir.</p></blockquote>]]></content:encoded>
+      <category>Rehber</category>
+      <category>PDF Araçları</category>
+      <category>Ücretsiz</category>
+    </item>
+    <item>
+      <title>Telefonda PDF İşlemleri: Uygulama Yüklemeden Birleştir, Düzenle, Tara</title>
+      <link>https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[PDF işlemek için telefonuna bir sürü uygulama yüklemene gerek yok. Birleştirme, sayfa silme, döndürme ve belge tarama gibi işler doğrudan telefon tarayıcında, dosyan cihazından çıkmadan yapılabilir.]]></description>
+      <content:encoded><![CDATA[<p>Telefonda hızlıca iki PDF'i birleştirmek ya da bir belge taramak gerektiğinde, uygulama mağazasına gidip yer kaplayan, reklamlı bir uygulama indirmek zorunda değilsin. Bu işlerin çoğu doğrudan telefon tarayıcında, cihazında çalışır.</p>
+<h2>Telefonda tarayıcıda çalışan işlemler</h2>
+<ul><li>PDF birleştirme ve sayfalara ayırma</li><li>Sayfa silme, döndürme, yeniden sıralama</li><li>Görsellerden (fotoğraf) PDF oluşturma</li><li>Kamerayla belge tarama (kenar bulma + perspektif düzeltme)</li></ul>
+<h2>Neden uygulama yüklemeden daha iyi?</h2>
+<p>Uygulama kurmak yer kaplar, güncelleme ister ve çoğu ücretsiz uygulama işlevleri kilitler ya da çıktıya zorunlu filigran ekler. Tarayıcıda ise link açılır, iş biter. Üstelik bu yapısal işlemler cihazında çalıştığı için dosyan internete gönderilmez — hız ve gizlilik bir arada.</p>
+<p><strong>Telefonda Birleştir</strong> — İki PDF'i telefonunda, uygulama yüklemeden birleştir. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Belgeyi telefonla tarama</h2>
+<p>Belge Tarayıcı, telefon kameranı kullanarak belgenin köşelerini otomatik bulur, perspektifi düzeltir ve temiz bir PDF üretir — tamamen cihazında. Kimlik, sözleşme veya fatura gibi belgeleri buluta göndermeden dijitalleştirebilirsin.</p>
+<p><strong>Belge Tara</strong> — Telefon kameranla belgeyi tarayıp PDF yap — cihazında, gizli. <a href="https://www.pdfplatform.app/tools/belge-tara">Tarayıcıyı aç</a></p>
+<h2>Peki ağır işler?</h2>
+<p>Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler telefonda pratik olmadığı için sunucuda yapılır; telefonda da çalışırlar, sadece dosya yüklenir. Yapısal işlemler ise (birleştir, tara vb.) tamamen cihazında kalır.</p>]]></content:encoded>
+      <category>Mobil</category>
+      <category>Cihazda İşleme</category>
+      <category>PDF Araçları</category>
+    </item>
+    <item>
+      <title>Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli?</title>
+      <link>https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir PDF'i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.]]></description>
+      <content:encoded><![CDATA[<p>Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok.</p>
+<h2>"Cihazda işleme" ne demek?</h2>
+<p>Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme.</p>
+<h2>Tarayıcınızda çalışan araçlar</h2>
+<ul><li>Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.</li><li>Görselden PDF, PDF'e imza atma ve yorumlama — cihazınızda.</li><li>Belge Tarayıcı — kamera görüntüsü de dahil, tamamen cihazınızda.</li></ul>
+<p><strong>Cihazda Birleştir</strong> — PDF'lerinizi sunucuya yüklemeden, tarayıcınızda birleştirin. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Peki her araç cihazda mı çalışır?</h2>
+<p>Dürüst olalım: hayır. Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır (bunlar tarayıcıda pratik değildir). Yapay zekâ araçlarında ise dosyanız yüklenmez — metin cihazınızda çıkarılıp yalnızca metin işlenir. Yani hangi aracın nerede çalıştığı bellidir.</p>
+<blockquote><p>Gizliliğin en önemli olduğu belgelerde (kimlik, sözleşme, sağlık) cihazda çalışan yapısal araçları ve belge tarayıcıyı tercih edin; paylaşım öncesi gerekiyorsa hassas verileri gerçek redaction ile kaldırın.</p></blockquote>
+<p><strong>Hassas Veri Gizle</strong> — Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Redaction aracı</a></p>]]></content:encoded>
+      <category>Gizlilik</category>
+      <category>Cihazda İşleme</category>
+      <category>PDF Araçları</category>
+    </item>
+    <item>
+      <title>PDF&apos;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım</title>
+      <link>https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir belgeyi paylaşmadan önce içindeki TC kimlik, IBAN veya adres gibi kişisel verileri gizlemek çoğu zaman yasal bir zorunluluktur. Ama siyah kutu koymak yetmez — veri altta durmaya devam eder. Gerçek redaction'ı anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir sözleşmeyi, faturayı ya da resmî belgeyi paylaşmadan önce içindeki kişisel verileri (TC kimlik, IBAN, telefon, adres) gizlemeniz gerekir — bu çoğu zaman KVKK açısından bir zorunluluktur. Ama dikkat: metnin üzerine siyah kutu koymak GERÇEK bir gizleme değildir.</p>
+<h2>Neden "siyah kutu" güvenli değil?</h2>
+<p>Çoğu araçta hassas veriyi "gizlemek" için üzerine siyah bir dikdörtgen çizersiniz. Ancak orijinal yazı belgenin içinde durmaya devam eder: PDF'i bir metin düzenleyicide açan, kutuyu kaldıran ya da metni kopyalayan biri veriyi geri okuyabilir. Bu, sızıntı ve KVKK ihlali riski demektir.</p>
+<blockquote><p>Gerçek redaction, veriyi belgenin İÇERİĞİNDEN kaldırır. Hassas Veri Gizleme aracımız PyMuPDF redaction ile veriyi tamamen siler — üzerini örtmez. Kaldırılan yerde arama, kopyalama veya kurtarma mümkün olmaz.</p></blockquote>
+<h2>Nasıl çalışır — adım adım</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — Hassas Veri Gizleme aracına belgenizi ekleyin.</li><li><strong>Hassas alanlar bulunsun</strong> — TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir.</li><li><strong>Kalıcı olarak kaldırın</strong> — Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF'i indirin.</li></ol>
+<p><strong>Hassas Veri Gizle</strong> — Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Aracı aç</a></p>
+<h2>Ne zaman gerekir?</h2>
+<ul><li>Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.</li><li>Resmî başvuru, ihale veya mahkeme dosyalarında.</li><li>Örnek/şablon olarak yayınlanacak belgelerde.</li></ul>
+<p>Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir.</p>]]></content:encoded>
+      <category>KVKK</category>
+      <category>Gizlilik</category>
+      <category>Redaction</category>
+    </item>
+    <item>
+      <title>İki PDF&apos;i Karşılaştırma: Sözleşme Sürümleri Arasındaki Farkı Bulma</title>
+      <link>https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir sözleşmenin iki sürümünü satır satır karşılaştırmak yorucu ve risklidir; küçük bir değişiklik gözden kaçabilir. Yapay zekâ ile iki PDF arasındaki bağlayıcı farkları saniyeler içinde nasıl bulacağınızı anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>"Bu, geçen hafta gönderdikleri sürümün aynısı mı, yoksa bir madde mi değişti?" — sözleşmelerde en riskli sorulardan biri. İki PDF'i elle karşılaştırmak hem yorucu hem de tehlikeli: değişen tek bir tarih ya da tutar gözden kaçabilir. Yapay zekâ bu işi saniyelere indirir.</p>
+<h2>Elle karşılaştırmanın riski</h2>
+<p>İki uzun belgeyi yan yana okumak dikkat ister; sayfalarca metinde eklenen bir cümleyi, silinen bir istisnayı ya da değişen bir rakamı kaçırmak kolaydır. Üstelik biçim farkları (yeniden numaralanmış maddeler, kayan paragraflar) gerçek içerik değişikliğini gizleyebilir.</p>
+<h2>Yapay zekâ ile karşılaştırma — adım adım</h2>
+<ol><li><strong>İki sürümü yükleyin</strong> — A (eski) ve B (yeni) belgelerini PDF Karşılaştırma aracına ekleyin.</li><li><strong>Karşılaştırın</strong> — Yapay zekâ metni anlar ve eklenen, çıkarılan, değiştirilen maddeleri ayıklar.</li><li><strong>Farkları inceleyin</strong> — Özellikle bağlayıcı değişiklikleri görün: tutar, tarih, süre, taraf, yükümlülük ve ceza maddeleri.</li></ol>
+<p><strong>PDF Karşılaştır</strong> — Bir sözleşmenin iki sürümünü karşılaştırın — bağlayıcı farkları saniyeler içinde görün. <a href="https://www.pdfplatform.app/tools/pdf-karsilastir">Aracı aç</a></p>
+<h2>Ne zaman çok işe yarar?</h2>
+<ul><li>Sözleşme revizyonlarını onaylamadan önce kontrol etmek.</li><li>İhale/şartname güncellemelerinde neyin değiştiğini görmek.</li><li>Karşı tarafın gönderdiği 'küçük düzeltme'lerin gerçekte ne içerdiğini anlamak.</li></ul>
+<blockquote><p>Bir sözleşmeyi imzalamadan önce yalnızca farkı değil, tamamını da anlamak isterseniz; PDF Özetle ve PDF ile Sohbet araçlarıyla belgeye soru sorabilirsiniz.</p></blockquote>
+<p><strong>PDF ile Sohbet</strong> — Belgeye "ceza maddesi nedir?" gibi sorular sorup net cevaplar alın. <a href="https://www.pdfplatform.app/tools/pdf-sohbet">Sohbet aracı</a></p>]]></content:encoded>
+      <category>Yapay Zekâ</category>
+      <category>Karşılaştırma</category>
+      <category>Sözleşme</category>
+    </item>
+    <item>
+      <title>Açılmayan / Bozuk PDF&apos;i Onarma: İçeriği Kurtarma Yolları</title>
+      <link>https://www.pdfplatform.app/blog/bozuk-pdf-onarma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/bozuk-pdf-onarma</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA["PDF açılamıyor" ya da "dosya bozuk" hatası, önemli bir belgede can sıkıcıdır. PDF'in neden bozulduğunu ve yapıyı yeniden paketleyerek kurtarılabilen içeriği nasıl geri alacağınızı anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Önemli bir PDF'i açmaya çalışırken "dosya hasarlı" veya "açılamıyor" hatasıyla karşılaşmak sinir bozucudur. İyi haber: çoğu bozuk PDF'te içerik hâlâ oradadır, sadece dosyanın yapısı zarar görmüştür — ve bu genelde onarılabilir.</p>
+<h2>PDF neden bozulur?</h2>
+<ul><li>Yarım kalan indirme veya aktarım (bağlantı koptu).</li><li>USB/disk hatası ya da dosyanın eksik kaydedilmesi.</li><li>Uyumsuz bir programla düzenleme veya hatalı dışa aktarma.</li><li>E-posta/eklenti sıkıştırmasının dosyayı bozması.</li></ul>
+<h2>Onarmayı deneyin — adım adım</h2>
+<ol><li><strong>Bozuk PDF'i yükleyin</strong> — PDF Onarma aracına açılmayan dosyanızı ekleyin.</li><li><strong>Onarım çalışsın</strong> — Araç dosyanın yapısını yeniden paketleyip kurtarılabilen içeriği toplar.</li><li><strong>Sonucu indirin</strong> — Onarılmış PDF'i indirip açmayı deneyin. İçerik büyük ölçüde geri gelebilir.</li></ol>
+<p><strong>PDF Onar</strong> — Açılmayan PDF'inizi onarıp içeriği kurtarmayı deneyin. <a href="https://www.pdfplatform.app/tools/repair-pdf">Aracı aç</a></p>
+<h2>Ne beklemeli?</h2>
+<p>Onarım her zaman %100 garanti değildir — hasarın derecesine bağlıdır. Yapısı bozulmuş ama içeriği duran dosyalarda başarı yüksektir; tamamen silinmiş/şifreli veriyi geri getiremez. Yine de denemek çoğu zaman belgeyi kurtarır.</p>
+<blockquote><p>Onarımdan sonra dosya çok büyük geldiyse, sıkıştırma aracıyla boyutu düşürebilir; taranmış ve metni gitmişse OCR ile yeniden metin katmanı ekleyebilirsiniz.</p></blockquote>]]></content:encoded>
+      <category>Sorun Giderme</category>
+      <category>PDF</category>
+      <category>Onarma</category>
+    </item>
+    <item>
+      <title>PDF&apos;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek</title>
+      <link>https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Uzun bir raporu, tezi ya da sözleşmeyi düzenli hâle getirmenin en kolay yolu sayfa numarası eklemektir. Konumu ve biçimi seçerek PDF'e nasıl sayfa numarası ekleyeceğinizi gösteriyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Çok sayfalı bir belgeyi paylaşırken sayfa numaraları büyük fark yaratır: okuyucu yönünü kaybetmez, baskıda sayfalar karışmaz, atıf yapmak kolaylaşır. PDF'inize dakikalar içinde numara eklemenin yolu burada.</p>
+<h2>Ne zaman gerekir?</h2>
+<ul><li>Rapor, tez ve akademik belgelerde referans kolaylığı.</li><li>Sözleşme ve resmî evrakta sayfa bütünlüğü.</li><li>Baskıya gidecek uzun belgelerde sıralamayı korumak.</li></ul>
+<h2>Adım adım</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — Sayfa Numarası aracına belgenizi ekleyin.</li><li><strong>Konum ve biçimi seçin</strong> — Numaranın üstte mi altta mı olacağını ve biçimini belirleyin.</li><li><strong>İndirin</strong> — Numaralandırılmış PDF'i indirin — her sayfa profesyonelce numaralanmış olur.</li></ol>
+<p><strong>Sayfa Numarası Ekle</strong> — PDF'inize konum ve biçim seçerek sayfa numarası ekleyin. <a href="https://www.pdfplatform.app/tools/page-numbers">Aracı aç</a></p>
+<h2>İpucu</h2>
+<blockquote><p>Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur.</p></blockquote>]]></content:encoded>
+      <category>Düzenleme</category>
+      <category>PDF</category>
+      <category>Sayfa Numarası</category>
+    </item>
+    <item>
+      <title>PowerPoint&apos;i PDF&apos;e Çevirme (ve PDF&apos;i PowerPoint&apos;e)</title>
+      <link>https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Sunumu PDF olarak paylaşmak, slaytların herkeste aynı görünmesini ve yanlışlıkla değişmemesini sağlar. PowerPoint'i PDF'e — ve gerektiğinde tersini — nasıl yapacağınızı anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir sunumu PowerPoint dosyası olarak göndermek riskli olabilir: karşı tarafta yazı tipleri kayabilir, animasyonlar bozulabilir ya da slaytlar yanlışlıkla değiştirilebilir. PDF, sunumu herkeste birebir aynı ve değiştirilemez hâle getirir.</p>
+<h2>PowerPoint'i PDF'e çevirme</h2>
+<ol><li><strong>Sunumu yükleyin</strong> — PowerPoint'ten PDF'e aracına .ppt veya .pptx dosyanızı ekleyin.</li><li><strong>Dönüştürün</strong> — Tüm slaytlar tasarımı korunarak tek bir PDF'te toplanır.</li><li><strong>İndirin</strong> — PDF'i indirin — her cihazda aynı görünen, paylaşıma hazır sunum.</li></ol>
+<p><strong>PowerPoint'ten PDF'e</strong> — Sunumunuzu tasarımı bozulmadan tek PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/ppt-to-pdf">Aracı aç</a></p>
+<h2>PDF'i tekrar PowerPoint'e çevirme</h2>
+<p>Elinizde yalnızca PDF hâli olan bir sunumu düzenlemek isterseniz, PDF'i tekrar PowerPoint slaytlarına dönüştürebilirsiniz — her sayfa bir slayt olur ve içeriği yeniden kullanabilirsiniz.</p>
+<p><strong>PDF'den PowerPoint'e</strong> — PDF sunumunu düzenlenebilir .pptx slaytlarına çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
+<h2>Hangisini ne zaman kullanmalı?</h2>
+<ul><li>Paylaşmak / sunmak / arşivlemek için: PowerPoint → PDF.</li><li>Eski bir sunumu düzenlemek / içeriği yeniden kullanmak için: PDF → PowerPoint.</li></ul>]]></content:encoded>
+      <category>Dönüştürme</category>
+      <category>PowerPoint</category>
+      <category>Sunum</category>
+    </item>
+    <item>
+      <title>Excel&apos;i PDF&apos;e Çevirme: Tabloları ve Düzeni Koruyarak (2026)</title>
+      <link>https://www.pdfplatform.app/blog/excel-pdf-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/excel-pdf-cevirme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Excel dosyasını olduğu gibi göndermek çoğu zaman kayan hücreler ve bozuk sayfa düzeniyle sonuçlanır. Tabloları koruyarak Excel'i PDF'e çevirmenin ve baskıya hazır hâle getirmenin yolunu anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir Excel tablosunu göndermek, çoğu zaman karşı tarafta kayan sütunlar, bölünen sayfalar ve bozuk yazdırma alanıyla sonuçlanır. PDF bu sorunu çözer: tablo herkeste birebir aynı, baskıya hazır görünür. İşte Excel'i düzeni bozmadan PDF'e çevirmenin yolu.</p>
+<h2>Neden Excel'i PDF'e çevirmelisiniz?</h2>
+<ul><li>Düzen kilitlenir: hücreler, sütun genişlikleri ve sayfa sonları herkeste aynı görünür.</li><li>Baskıya hazır: yazdırma alanı ve sığdırma sorunları ortadan kalkar.</li><li>Yanlışlıkla değiştirilmez: rapor, teklif ve fatura tabloları için güvenli.</li><li>Excel kurulu olmayan cihazlarda da açılır.</li></ul>
+<h2>Adım adım dönüştürme</h2>
+<ol><li><strong>Excel'i yükleyin</strong> — Excel'den PDF'e aracına .xls, .xlsx, .ods veya .csv dosyanızı ekleyin.</li><li><strong>Dönüştürün</strong> — Belge sunucuda işlenir; tablolar, hücreler ve biçimlendirme korunarak PDF'e çevrilir.</li><li><strong>Önizleyip indirin</strong> — Sonucu kontrol edip PDF'i indirin — tablonuz paylaşıma ve baskıya hazırdır.</li></ol>
+<p><strong>Excel'den PDF'e</strong> — Excel tablonuzu düzeni bozulmadan PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/excel-to-pdf">Aracı aç</a></p>
+<h2>Geniş tablolar için ipucu</h2>
+<blockquote><p>Çok sütunlu geniş tablolarda, çevirmeden önce Excel'de sayfa düzenini 'Yatay (Landscape)' yapmak ve yazdırma alanını ayarlamak, çıktının sığmasını ve okunaklı olmasını sağlar.</p></blockquote>
+<h2>Tersi: PDF'teki tabloyu Excel'e almak</h2>
+<p>Elinizde bir PDF var ve içindeki tabloyu Excel'de düzenlemek istiyorsanız, bunun için ayrı bir aracımız var — tabloları .xlsx'e çıkarır.</p>
+<p><strong>PDF'den Excel'e</strong> — PDF'teki tabloları düzenlenebilir Excel'e aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">PDF → Excel</a></p>]]></content:encoded>
+      <category>Dönüştürme</category>
+      <category>Excel</category>
+      <category>PDF</category>
+    </item>
+    <item>
+      <title>PDF&apos;i Excel&apos;e Çevirme: Tabloları .xlsx&apos;e Aktarma (2026)</title>
+      <link>https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[PDF'teki bir tabloyu Excel'de düzenlemek istiyorsanız, kopyala-yapıştır çoğu zaman hizalamayı bozar. Tabloları temiz şekilde .xlsx'e aktarmanın yolunu ve ne zaman AI'nın daha iyi olduğunu anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>PDF'teki bir raporu, fiyat listesini ya da tabloyu Excel'de analiz etmek için önce veriyi hücrelere düzgün taşımanız gerekir. Kopyala-yapıştır genelde her şeyi tek sütuna yığar. İşte tabloları temizce Excel'e aktarmanın yolu.</p>
+<h2>Adım adım dönüştürme</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — PDF'den Excel'e aracına tablo içeren belgenizi ekleyin.</li><li><strong>Tablolar çıkarılsın</strong> — Sayfalardaki tablo yapısı algılanıp satır/sütunlar korunarak .xlsx'e dökülür.</li><li><strong>Excel dosyasını indirin</strong> — Sonucu indirin ve Excel'de doğrudan düzenleyin, filtreleyin, hesaplayın.</li></ol>
+<p><strong>PDF'den Excel'e</strong> — PDF tablolarını düzenlenebilir Excel dosyasına aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">Aracı aç</a></p>
+<h2>Düz dönüştürme mi, yapay zekâ mı?</h2>
+<p>PDF'te net, ızgara şeklinde tablolar varsa düz dönüştürme hızlı ve yeterlidir. Ancak fatura, irsaliye gibi her biri farklı düzende olan belgelerden alan çıkarmak istiyorsanız — fatura no, tarih, tutar, kalemler gibi — yapay zekâ ile veri çıkarma çok daha isabetlidir.</p>
+<blockquote><p>Onlarca faturayı tek bir CSV tablosunda toplamak istiyorsanız, AI Veri Çıkar ve AI Toplu İşlem araçları bu iş için tasarlandı — her satır bir belge olacak şekilde birleştirir.</p></blockquote>
+<p><strong>AI Veri Çıkar</strong> — Faturalar gibi karmaşık belgelerden alanları yapay zekâ ile çıkarın. <a href="https://www.pdfplatform.app/tools/pdf-veri-cikar">AI ile çıkar</a></p>]]></content:encoded>
+      <category>Dönüştürme</category>
+      <category>Excel</category>
+      <category>Tablo</category>
+    </item>
+    <item>
+      <title>PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme</title>
+      <link>https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir PDF'te yanlış bir tarih, fiyat veya isim mi var? Çoğu 'düzenleyici' yazının üzerini beyaz kutuyla kapatır — metin altta durmaya devam eder. Gerçek düzenleme bundan farklıdır; işte nasıl yapıldığı.]]></description>
+      <content:encoded><![CDATA[<p>PDF'te küçük bir hatayı düzeltmek — yanlış bir tarih, güncel olmayan bir fiyat, bir yazım hatası — göründüğünden zor olabilir. Çünkü çoğu online 'PDF düzenleyici' aslında metni silmez; sadece üzerine beyaz bir kutu koyar. Bu yazıda gerçek düzenlemeyi anlatıyoruz.</p>
+<h2>"Üzerini kapatma" ile "gerçek silme" farkı</h2>
+<p>Metnin üzerine kutu koyan araçlarda orijinal yazı belgenin içinde kalır: kopyala-yapıştır yapıldığında ya da metin arandığında eski içerik hâlâ görünebilir. Bu hem dağınık hem de gizlilik açısından risklidir. Gerçek düzenleme, yazıyı belgenin içinden kaldırıp yerine yenisini koyar.</p>
+<blockquote><p>PDF Düzenle aracımız PyMuPDF ile mevcut metni GERÇEKTEN kaldırır ve yerine yazdığınızı koyar — üzerini örtmez. Türkçe karakterler tam desteklenir.</p></blockquote>
+<h2>Adım adım düzenleme</h2>
+<ol><li><strong>PDF'i açın</strong> — PDF Düzenle aracına belgenizi yükleyin.</li><li><strong>Metne tıklayın</strong> — Değiştirmek istediğiniz yazıya tıklayın; mevcut metin seçilir.</li><li><strong>Silin veya yeniden yazın</strong> — Yazıyı kaldırın ya da yerine yenisini yazın. Metin ekleyebilir, düzeltebilirsiniz.</li><li><strong>İndirin</strong> — Düzenlenmiş PDF'i indirin — değişiklik belgeye işlenmiş olur.</li></ol>
+<p><strong>PDF Düzenle</strong> — PDF'teki yazıyı gerçekten silip değiştirin — üzerini örtmeden. <a href="https://www.pdfplatform.app/tools/pdf-duzenle">Aracı aç</a></p>
+<h2>Ne zaman iyi çalışır, ne zaman çalışmaz?</h2>
+<p>Bu araç, içinde gerçek metin katmanı olan PDF'lerde çalışır (örneğin Word'den üretilmiş bir PDF). Taranmış / fotoğraf PDF'lerde yazı aslında bir görüntüdür; bu durumda önce OCR ile metne çevirmeniz gerekir.</p>
+<p><strong>Taranmış PDF'i metne çevir</strong> — Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracı</a></p>]]></content:encoded>
+      <category>Düzenleme</category>
+      <category>PDF</category>
+      <category>Metin</category>
+    </item>
+    <item>
+      <title>PDF&apos;i JPG&apos;ye / Resme Çevirme: Her Sayfa Ayrı Görsel</title>
+      <link>https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir PDF sayfasını görsel olarak paylaşmak, web'e koymak veya sunuma eklemek gerektiğinde en temiz yol onu JPG/PNG'ye çevirmektir. Nasıl yapılacağını ve JPG mi PNG mi seçeceğinizi anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>PDF'i her yere gömemezsiniz — ama bir görseli gömebilirsiniz. Bir sayfayı sosyal medyada paylaşmak, bir web sayfasına koymak ya da sunuma eklemek için PDF'i JPG veya PNG'ye çevirmek en pratik yoldur.</p>
+<h2>Ne zaman işe yarar?</h2>
+<ul><li>Sosyal medyada tek bir sayfayı görsel olarak paylaşmak.</li><li>Web sitesine veya blog yazısına önizleme koymak.</li><li>Sunuma (PowerPoint/Slides) bir sayfayı resim olarak eklemek.</li><li>PDF açamayan birine sayfayı hızlıca göstermek.</li></ul>
+<h2>Adım adım dönüştürme</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — PDF'den JPG'ye aracına belgenizi ekleyin.</li><li><strong>Sayfalar görsele dönüşsün</strong> — Her sayfa yüksek çözünürlüklü ayrı bir JPG/PNG olarak işlenir.</li><li><strong>İndirin</strong> — Görselleri tek tek ya da hepsini bir ZIP olarak indirin.</li></ol>
+<p><strong>PDF'den JPG'ye</strong> — PDF sayfalarını yüksek kaliteli görsellere çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-image">Aracı aç</a></p>
+<h2>JPG mi PNG mi?</h2>
+<p>JPG dosya boyutu küçüktür ve fotoğraf/yoğun içerikli sayfalar için idealdir. PNG ise keskin kenarları ve metni daha net korur, şeffaflık destekler — logo, diyagram veya çok metinli sayfalarda tercih edin.</p>
+<h2>Sayfayı resme çevirmek mi, içindeki görselleri çıkarmak mı?</h2>
+<p>Bu araç sayfanın TAMAMINI resme çevirir. Ama amacınız yalnızca PDF içindeki bir fotoğrafı veya logoyu özgün kalitesinde kaydetmekse, sayfayı resme çevirmek yerine gömülü görselleri doğrudan çıkarmalısınız — böylece kalite kaybı olmaz.</p>
+<p><strong>PDF'ten Görsel Çıkar</strong> — PDF içindeki gömülü fotoğraf ve logoları özgün formatında ayıklayın. <a href="https://www.pdfplatform.app/tools/extract-images">Aracı aç</a></p>
+<h2>Tersi: Görselleri PDF yapmak</h2>
+<p>Elinizde birden çok fotoğraf/görsel varsa ve bunları tek bir PDF'te toplamak istiyorsanız, bunun için ayrı bir aracımız var — üstelik tamamen cihazınızda çalışır.</p>
+<p><strong>Görselden PDF'e</strong> — Fotoğraflarınızı tek bir PDF'te toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Görsel → PDF</a></p>]]></content:encoded>
+      <category>Dönüştürme</category>
+      <category>Görsel</category>
+      <category>JPG</category>
+    </item>
+    <item>
+      <title>Word&apos;ü PDF&apos;e Çevirme: Biçimi Bozmadan (2026 Rehberi)</title>
+      <link>https://www.pdfplatform.app/blog/word-pdf-cevirme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/word-pdf-cevirme</guid>
+      <pubDate>Tue, 21 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Word belgenizi paylaşmadan önce PDF'e çevirmek, düzenin herkeste aynı görünmesini garanti eder. Biçimi bozmadan Word'den PDF'e dönüştürmenin en pratik yolunu ve püf noktalarını anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir Word belgesini başkasına gönderdiğinizde, karşı taraftaki farklı Office sürümü veya eksik yazı tipi yüzünden düzen kayabilir. PDF bu sorunu çözer: belge herkeste birebir aynı görünür. İşte Word'ü biçimi bozmadan PDF'e çevirmenin yolu.</p>
+<h2>Neden Word'ü PDF'e çevirmelisiniz?</h2>
+<ul><li>Düzen kilitlenir: yazı tipleri, tablolar ve boşluklar herkeste aynı görünür.</li><li>Her cihazda açılır: telefon, tablet, bilgisayar — özel program gerekmez.</li><li>Yanlışlıkla değiştirilmez: teklif, sözleşme ve CV'ler için güvenli.</li><li>Resmî gönderimler genelde PDF ister.</li></ul>
+<h2>Adım adım dönüştürme</h2>
+<ol><li><strong>Belgeyi yükleyin</strong> — Word'den PDF'e aracına .doc, .docx, .odt veya .rtf dosyanızı sürükleyip bırakın.</li><li><strong>Dönüştürün</strong> — Belge sunucuda işlenir; düzen, yazı tipleri ve tablolar korunarak PDF'e çevrilir.</li><li><strong>Önizleyip indirin</strong> — Sonucu kontrol edin ve PDF'i indirin. Sayfa yapısı orijinal belgenizle aynı kalır.</li></ol>
+<p><strong>Word'den PDF'e</strong> — Word belgenizi düzeni bozulmadan PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/word-to-pdf">Aracı aç</a></p>
+<h2>Biçim korunması için ipuçları</h2>
+<blockquote><p>Belgenizde standart yazı tipleri (Arial, Times New Roman, Calibri) kullanırsanız çıktı orijinaline en yakın olur. Çok özel/kurulu olmayan yazı tipleri bazı sistemlerde farklı görünebilir.</p></blockquote>
+<p>Ters yönde ihtiyacınız varsa — yani PDF'i tekrar düzenlenebilir Word'e çevirmek — bunun için ayrı bir aracımız var.</p>
+<p><strong>PDF'den Word'e</strong> — Elinizde düzenlenebilir hâli yoksa, PDF'i tekrar Word'e çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">PDF → Word</a></p>]]></content:encoded>
+      <category>Dönüştürme</category>
+      <category>Word</category>
+      <category>PDF</category>
+    </item>
+    <item>
+      <title>CamScanner&apos;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama</title>
+      <link>https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif</guid>
+      <pubDate>Mon, 13 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Belge tarama uygulamaları pratik ama çoğu reklam gösterir, çıktıya filigran koyar ya da dosyanızı buluta yükler. Tarayıcıda çalışan, cihazınızda işleyen ve temel özellikleri ücretsiz olan bir alternatifi tanıtıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>CamScanner gibi tarama uygulamaları işi görür; ama birçoğu üyelik ister, ücretsiz sürümde çıktıya filigran koyar, reklam gösterir ve belgelerinizi işlemek için kendi bulutlarına yükler. Hassas belgeler söz konusuysa bu son madde tek başına yeterince rahatsız edici.</p>
+<h2>Tarayıcıda + cihazda ne değişiyor?</h2>
+<p>PDF Platform'un belge tarayıcısı telefon tarayıcınızda açılır — kurulum yok. Daha önemlisi, tüm işlem cihazınızda çalışır: kamera görüntüsü, otomatik kenar bulma, perspektif düzeltme ve PDF oluşturma. Belgeniz herhangi bir sunucuya yüklenmez, çıktıya zorunlu filigran konmaz.</p>
+<h2>Dürüst karşılaştırma</h2>
+<ul><li>Kurulum: Uygulama yok — telefon tarayıcısında açılır.</li><li>Gizlilik: Tarama cihazınızda; belge buluta yüklenmez.</li><li>Filigran: Çıktıya zorunlu filigran yok.</li><li>Ücretsiz: Tarama, PDF, kaydetme ve paylaşma ücretsiz; tek taramada 3 sayfa.</li><li>Pro: Otomatik gölge temizleme, sınırsız sayfa ve aranabilir PDF (OCR).</li></ul>
+<h2>Temelde ücretsiz olan ne?</h2>
+<p>Belgeyi tarama, otomatik kenar bulma, perspektif düzeltme, Renkli/Gri/Siyah-Beyaz filtreler, PDF oluşturma, kaydetme ve paylaşma — tümü ücretsizdir ve üyelik istemez. Tek taramada 3 sayfaya kadar tarayabilirsiniz.</p>
+<h2>Pro neyi ekler?</h2>
+<p>Daha profesyonel taramalar için Pro üç şey ekler: gölgeleri temizleyip zemini beyazlatan «Otomatik» filtre, tek taramada sınırsız sayfa ve metni Ctrl+F ile aranabilir/kopyalanabilir yapan aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır.</p>
+<p><strong>Görsel → PDF</strong> — Belgelerinizi ya da fotoğraflarınızı tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Hemen deneyin</a></p>
+<h2>Kimler için ideal?</h2>
+<p>Ara sıra bir belge tarayan ama telefonuna bir uygulama daha kurmak istemeyen; kimlik, sözleşme, fatura gibi belgeleri buluta yüklemeden dijitalleştirmek isteyen herkes için. Bir bağlantıdan açılır, işini görür ve belgeniz sizde kalır.</p>]]></content:encoded>
+      <category>Belge Tarama</category>
+      <category>Alternatif</category>
+      <category>Gizlilik</category>
+    </item>
+    <item>
+      <title>Belge Fotoğrafını Düzgün PDF&apos;e Çevirme: Eğiklik, Gölge ve Kenar Sorunları</title>
+      <link>https://www.pdfplatform.app/blog/belge-fotografini-kaliteli-pdf-yapma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/belge-fotografini-kaliteli-pdf-yapma</guid>
+      <pubDate>Mon, 13 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir belgeyi telefonla çektiğinizde sonuç genelde eğri, köşeleri kırpık ve tek yanı gölgeli olur. İyi bir belge tarayıcı bunları otomatik düzeltir. Perspektif düzeltme ve gölge temizlemenin nasıl çalıştığını gösteriyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Kağıt bir belgeyi telefonla çekmek kolaydır; ama sonuç çoğu zaman «tarama» gibi görünmez: belge eğridir, masa da kadraja girmiştir, bir köşe gölgede kalmıştır. İyi bir tarayıcı işte tam burada devreye girer — fotoğrafı düz, temiz bir belgeye çevirir.</p>
+<h2>Perspektif düzeltme: eğri belgeyi «dümdüz» yapmak</h2>
+<p>Belgeyi tam tepeden çekmediğiniz için kenarlar birbirine paralel çıkmaz; belge yamuk görünür. Belge tarayıcı, dört köşeyi otomatik bularak görüntüyü yeniden hesaplar ve belgeyi karşıdan bakılmış gibi düz bir dikdörtgene dönüştürür. Böylece arka plandaki masa da kırpılır, yalnız belge kalır.</p>
+<h2>Gölge temizleme ve kontrast (Otomatik filtre)</h2>
+<p>Elle çekimde ışık her zaman eşit gelmez; bir kenar koyu, bir kenar parlak olur. «Otomatik» filtre, her renk kanalında arka plan aydınlatmasını tahmin edip dengeleyerek gölgeleri temizler ve zemini dümdüz beyaza yaklaştırır — metin keskinleşir, renkler korunur. Bu, tarama uygulamalarındaki «magic color» etkisine benzer.</p>
+<h2>Hangi filtreyi ne zaman kullanmalı?</h2>
+<ul><li>Renkli: logolu, renkli faturalar ve fotoğraflı belgeler için.</li><li>Gri: metin ağırlıklı belgeler; daha küçük dosya.</li><li>Siyah-Beyaz: en keskin metin, en küçük dosya — düz metin belgeler için ideal.</li><li>Otomatik (Pro): gölge temizleme + kontrast; en profesyonel, tarayıcı benzeri çıktı.</li></ul>
+<h2>Adım adım kaliteli tarama</h2>
+<ol><li><strong>İyi ışık ve düz zemin</strong> — Belgeyi düz bir zemine koyun, gölge düşürmeyecek şekilde üstten çekin. Zeminle belge arasında renk farkı olsun ki kenarlar kolay bulunsun.</li><li><strong>Otomatik yakalamayı bekleyin</strong> — Kamerayı sabit tutun; kenarlar yeşil çerçeveyle işaretlenip belge kendiliğinden yakalanır.</li><li><strong>Filtreyi seçin ve oluşturun</strong> — Belgeye uygun filtreyi seçip PDF'i oluşturun; gerekirse köşeleri düzeltin.</li></ol>
+<p><strong>Görsel → PDF</strong> — Elinizdeki belge fotoğraflarını tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Aracı aç</a></p>
+<p>Tarama sonrası dosya büyükse Sıkıştır aracıyla boyutu küçültebilir; sayfaları yeniden sıralamak, döndürmek veya silmek isterseniz taradığınız PDF'i doğrudan ilgili araçta açabilirsiniz.</p>]]></content:encoded>
+      <category>Belge Tarama</category>
+      <category>Kalite</category>
+      <category>PDF</category>
+    </item>
+    <item>
+      <title>Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&apos;te Bulunan Belgeler</title>
+      <link>https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr</guid>
+      <pubDate>Mon, 13 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Telefonla taradığınız belge göze yazı gibi görünse de aslında bir fotoğraftır; Ctrl+F ile arayamaz, metni kopyalayamazsınız. Aranabilir PDF, görüntünün üzerine görünmez bir metin katmanı ekleyerek bunu çözer. Nasıl yapıldığını anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir belgeyi tarayıp PDF yaptığınızda, o PDF içindeki yazı bilgisayar için metin değil, sadece piksellerden oluşan bir resimdir. Bu yüzden belgede kelime aratamaz, bir cümleyi seçip kopyalayamazsınız. «Aranabilir PDF» tam olarak bu sorunu çözer.</p>
+<h2>Aranabilir PDF nedir?</h2>
+<p>Aranabilir PDF, taranan görüntünün tam üzerine hizalanmış, gözle görünmeyen bir metin katmanı gömülmüş PDF'tir. Belge göze aynı görünür — fotoğrafı görürsünüz — ama arkada gerçek, seçilebilir metin durur. Böylece Ctrl+F ile kelime arayabilir, metni seçip kopyalayabilir; arşiv ve doküman sistemleri de belgenin içeriğine göre arama yapabilir.</p>
+<h2>OCR bu işi nasıl yapar?</h2>
+<p>OCR (Optik Karakter Tanıma), görüntüdeki yazıyı «okur» ve her kelimenin metnini ve konumunu çıkarır. Ardından bu kelimeler, görüntünün üzerine tam kendi konumlarına, görünmez biçimde yerleştirilir. Sonuç: görünüşü bozulmamış ama içi aranabilir bir belge.</p>
+<h2>PDF Platform'da aranabilir PDF yapmak</h2>
+<ol><li><strong>Belgeyi tarayın veya yükleyin</strong> — Telefonla belge tarayıcısını kullanın ya da elinizdeki taranmış PDF'i açın.</li><li><strong>«Aranabilir PDF yap» deyin</strong> — Belge tarayıcıda PDF'i oluşturduktan sonra «🔍 Aranabilir PDF yap» seçeneğini kullanın; metin cihazınızda tanınır (Türkçe + İngilizce).</li><li><strong>Kaydedin ve arayın</strong> — Oluşan PDF'i kaydedin. Artık herhangi bir PDF görüntüleyicide Ctrl+F ile kelime arayabilir, metni kopyalayabilirsiniz.</li></ol>
+<blockquote><p>OCR tamamen cihazınızda çalışır — Türkçe karakterler dahil (ş, ğ, ı, İ). Belgeniz metne çevrilmek için hiçbir sunucuya gönderilmez. Aranabilir PDF üretimi bir Pro özelliğidir.</p></blockquote>
+<p><strong>Taranmış PDF → Metin (OCR)</strong> — Yalnızca metni mi istiyorsunuz? Taranmış PDF'i cihazınızda düz metne çevirin. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracını aç</a></p>
+<h2>Nerede işe yarar?</h2>
+<ul><li>Arşivleme: yüzlerce taranmış belge arasında kelimeyle arama yapabilmek.</li><li>Hukuk ve muhasebe: sözleşme veya faturada bir tutarı/maddeyi anında bulmak.</li><li>Öğrenciler: ders notu fotoğraflarında konu araması.</li><li>Erişilebilirlik: ekran okuyucuların belgeyi okuyabilmesi.</li></ul>]]></content:encoded>
+      <category>OCR</category>
+      <category>Aranabilir PDF</category>
+      <category>Tarama</category>
+    </item>
+    <item>
+      <title>Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)</title>
+      <link>https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf</guid>
+      <pubDate>Mon, 13 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir sözleşmeyi, faturayı ya da not kağıdını hızlıca dijitalleştirmek için ayrı bir uygulama kurmanıza gerek yok. Telefonunuzun tarayıcısından belgeyi çekin; kenarları otomatik bulunsun, perspektifi düzelsin ve tek dokunuşla PDF olsun — hepsi cihazınızda.]]></description>
+      <content:encoded><![CDATA[<p>Elinizde kağıt bir belge var ve onu hızlıca PDF yapmanız gerekiyor. Çoğu kişi bunun için mağazadan bir tarayıcı uygulaması indirir; reklamlar, üyelik ekranları ve dosyalarını buluta yükleyen izinlerle uğraşır. Oysa telefonunuzun tarayıcısında, hiçbir şey kurmadan, belgeyi çekip düzgün bir PDF'e çevirebilirsiniz — üstelik dosyanız cihazınızdan hiç çıkmadan.</p>
+<h2>Neden tarayıcıda ve cihazda?</h2>
+<p>Uygulama kurmak yer kaplar, güncelleme ister ve çoğu tarama uygulaması belgenizi işlemek için sunucularına gönderir. PDF Platform'un belge tarayıcısı ise doğrudan telefon tarayıcınızda açılır ve tüm işlemi — kenar bulma, perspektif düzeltme, PDF oluşturma — cihazınızda yapar. Bu, iki büyük fark demektir: kurulum yok ve belgeniz internete yüklenmez.</p>
+<h2>Nasıl çalışır? Adım adım</h2>
+<ol><li><strong>Ana sayfada «Belge Tara»ya dokunun</strong> — Telefonunuzda pdfplatform.app'i açın; araç seçicinin üstündeki «📸 Kamerayla Belge Tara» düğmesine dokunun. Kamera izni verin.</li><li><strong>Kamerayı belgeye doğrultun</strong> — Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Telefonu sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar — deklanşöre basmanıza gerek yok.</li><li><strong>Filtreyi seçin, köşeleri onaylayın</strong> — Renkli, Gri veya Siyah-Beyaz arasından seçin. Otomatik bulunan köşeler hazırdır; istersen parmakla ince ayar yapabilirsin.</li><li><strong>PDF'i oluşturun</strong> — Tek sayfa ya da birden çok sayfa ekleyin, ardından «PDF Oluştur» deyin. Sonuçta Kaydet, Paylaş veya PDF araçlarında açma seçenekleri çıkar.</li></ol>
+<blockquote><p>Kenar tespiti tamamen otomatiktir: belgeyi çerçeveye alıp sabit tutmanız yeterli. Işık iyiyse ve belge zeminden ayrıştıysa kenarlar anında bulunur; bulunamazsa köşeleri elle sürükleyerek düzeltebilirsiniz.</p></blockquote>
+<h2>Çok sayfalı belgeleri tek PDF'te toplayın</h2>
+<p>Bir sözleşmenin tüm sayfalarını ya da bir defter dolusu notu arka arkaya tarayıp tek bir PDF'te birleştirebilirsiniz. Her sayfa tarandıkça küçük bir önizleme olarak eklenir; sırasını görür, istemediğinizi silersiniz. Ücretsiz planda tek taramada 3 sayfaya kadar tarayabilir; sınırsız sayfa için Pro'ya geçebilirsiniz.</p>
+<p><strong>Görsel → PDF</strong> — Zaten çektiğiniz fotoğraflar varsa onları da saniyeler içinde tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Aracı aç</a></p>
+<h2>Gizlilik: belgeniz cihazınızdan çıkmaz</h2>
+<p>Kimlik, sözleşme, fatura gibi belgeleri tararken en büyük endişe, dosyanın bir sunucuya gitmesidir. Burada böyle bir şey olmaz: kamera görüntüsü, kenar tespiti ve PDF oluşturma tamamen tarayıcınızda çalışır. Oluşan PDF yalnızca sizin kaydettiğiniz veya paylaştığınız yere gider.</p>]]></content:encoded>
+      <category>Belge Tarama</category>
+      <category>Mobil</category>
+      <category>PDF</category>
+    </item>
+    <item>
+      <title>PDF Üzerine Yazma ve İşaretleme: Vurgu, Not ve Çizim</title>
+      <link>https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-uzerine-yazma-isaretleme</guid>
+      <pubDate>Fri, 10 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir belgeyi incelerken önemli yerleri işaretlemek, kenara not düşmek veya bir yeri kutuya almak istersiniz. PDF İşaretle aracıyla fosforlu vurgu, çizim, kutu, ok ve metin notunu — yazıyı silmeden, cihazınızdan çıkmadan — nasıl ekleyeceğinizi gösteriyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir sözleşmeyi, ödevi ya da raporu incelerken kalem elinizde olsun istersiniz: önemli cümleyi fosforlu boyayın, kenara not düşün, bir maddeyi kutuya alın, bir yeri okla gösterin. PDF İşaretle bunu tarayıcıda, dosyanız cihazınızdan çıkmadan yapmanızı sağlar.</p>
+<h2>Hangi işaretleme araçları var?</h2>
+<ul><li>Fosforlu: metnin üzerini yarı saydam boyar; alttaki yazı okunur kalır.</li><li>Kalem: serbest çizim; düz çizgi modu da var.</li><li>Kutu ve Ok: bir bölgeyi çerçeveleyin veya işaret edin.</li><li>Metin: kenara veya belge üzerine not yazın.</li></ul>
+<h2>Adım adım: PDF'i işaretleme</h2>
+<ol><li><strong>PDF'i açın</strong> — İşaretlemek istediğiniz belgeyi sürükleyip bırakın ya da seçin.</li><li><strong>Bir araç ve renk seçin</strong> — Fosforlu, kalem, kutu, ok veya metin; ardından bir renk ve kalınlık seçin.</li><li><strong>Sayfada çizin</strong> — Sürükleyerek işaretleyin. Fosforlu/kalemde «Düz» modu satırların üstünü düzgün çekmenizi sağlar.</li><li><strong>Düzenleyin ve indirin</strong> — «Seç» aracıyla bir işareti taşıyın, boyutlandırın, rengini değiştirin; Ctrl+Z ile geri alın. «Uygula ve İndir» deyin.</li></ol>
+<blockquote><p>İşaretlemeler belgenin ÜZERİNE eklenir; mevcut yazı asla silinmez veya değişmez. Fosforlu ve kalem yarı saydam olduğundan altındaki metin okunmaya devam eder.</p></blockquote>
+<p><strong>PDF İşaretle</strong> — Belgenizi fosforlu, çizim ve notlarla işaretleyin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/pdf-yorumla">Aracı aç</a></p>
+<h2>İnceleme ve iş birliği için pratik</h2>
+<p>İşaretli PDF'i indirip e-postayla paylaşabilirsiniz; karşı taraf herhangi bir PDF görüntüleyicide notlarınızı görür. Bir imza da gerekiyorsa PDF İmzala, metin düzeltmesi gerekiyorsa PDF Düzenle araçlarıyla aynı belgede devam edebilirsiniz.</p>]]></content:encoded>
+      <category>İşaretleme</category>
+      <category>Vurgu</category>
+      <category>Not</category>
+    </item>
+    <item>
+      <title>PDF&apos;e Filigran Ekleme: Metin, Renk ve Saydamlık Ayarıyla</title>
+      <link>https://www.pdfplatform.app/blog/pdf-filigran-ekleme</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-filigran-ekleme</guid>
+      <pubDate>Fri, 10 Jul 2026 09:00:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Bir belgeyi "TASLAK" veya "GİZLİ" olarak işaretlemek, ya da paylaştığınız PDF'lere şirket adınızı basmak istiyorsanız filigran en pratik yoldur. Renk, yazı tipi ve saydamlığı ayarlayarak dakikalar içinde nasıl ekleyeceğinizi anlatıyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Filigran; bir PDF'in üzerine yarı saydam bir yazı basarak belgenin durumunu (taslak, gizli, kopya) veya sahibini belirtmenin en hızlı yoludur. Sözleşme paylaşırken, teklif gönderirken ya da belge sızıntısını caydırmak isterken işe yarar.</p>
+<h2>Filigran ne işe yarar?</h2>
+<ul><li>Belge durumunu belirtir: TASLAK, GİZLİ, ONAYLANMADI.</li><li>Sahiplik/marka basar: şirket adınız veya web siteniz.</li><li>İzinsiz paylaşımı caydırır: yarı saydam metin ekran görüntüsünde de kalır.</li></ul>
+<h2>Adım adım: PDF'e filigran ekleme</h2>
+<ol><li><strong>PDF'i yükleyin</strong> — Filigran eklemek istediğiniz belgeyi seçin.</li><li><strong>Filigran metnini yazın</strong> — "TASLAK", "GİZLİ" ya da şirket adınız gibi bir metin girin.</li><li><strong>Renk, yazı tipi ve saydamlığı ayarlayın</strong> — Rengi (#RRGGBB), yazı tipini ve saydamlığı belgeyi okunur bırakacak şekilde seçin.</li><li><strong>Önizleyip indirin</strong> — Sonucu önizleyin, uygun görünüyorsa filigranlı PDF'i indirin.</li></ol>
+<blockquote><p>Saydamlığı çok düşük (koyu) tutarsanız filigran metni okumayı zorlaştırır; çok yüksek (soluk) tutarsanız fark edilmez. %10–20 arası çoğu belge için idealdir.</p></blockquote>
+<p><strong>Filigran Ekle</strong> — Belgenize TASLAK, GİZLİ veya markanızı dakikalar içinde basın. <a href="https://www.pdfplatform.app/tools/watermark">Aracı aç</a></p>
+<h2>Filigrandan sonra: koruma ve numaralandırma</h2>
+<p>Filigran, belgeyi görsel olarak işaretler ama düzenlenmesini engellemez. Belgeyi gerçekten korumak istiyorsanız parola ile şifreleyebilir; resmî belgelerde sayfa numarası da ekleyebilirsiniz. Bu araçlar birbirini tamamlar.</p>
+<ul><li>Parola korumak için: PDF Şifrele.</li><li>Sayfa numarası için: Sayfa Numarası Ekle.</li><li>İmza gerekiyorsa: PDF İmzala.</li></ul>]]></content:encoded>
+      <category>Filigran</category>
+      <category>Watermark</category>
+      <category>Belge</category>
+    </item>
+  </channel>
+</rss>
