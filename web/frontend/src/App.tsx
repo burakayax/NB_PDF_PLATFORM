@@ -585,8 +585,40 @@ const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
   "ppt-to-pdf": ["compress", "merge", "watermark", "page-numbers"],
   "html-to-pdf": ["compress", "page-numbers", "watermark", "merge"],
   // encrypt → çıktı şifreli (zincir parola ister) → öneri yok.
-  // pdf-to-word/excel/ppt/image/text → çıktı PDF değil → zincirleme yok.
 };
+
+/**
+ * PDF OLMAYAN çıktılar için öneriler — dosya UZANTISINA göre.
+ *
+ * Word/Excel/PowerPoint/görsel çıktısı veren araçlardan sonra da kullanıcı
+ * genelde bir sonraki adımı yapmak ister; eskiden bu çıktılarda hiç öneri
+ * gösterilmiyordu ve akış orada bitiyordu. Burada, o dosya türünü GERÇEKTEN
+ * kabul eden araçlar listelenir — yanlış araca yönlendirme olmaz.
+ */
+const CHAIN_BY_OUTPUT_EXT: Record<string, FeatureId[]> = {
+  xlsx: ["excel-to-pdf"],
+  xls: ["excel-to-pdf"],
+  docx: ["word-to-pdf"],
+  doc: ["word-to-pdf"],
+  pptx: ["ppt-to-pdf"],
+  ppt: ["ppt-to-pdf"],
+  png: ["image-to-pdf"],
+  jpg: ["image-to-pdf"],
+  jpeg: ["image-to-pdf"],
+  webp: ["image-to-pdf"],
+  // .zip (toplu çıktı) ve .txt için anlamlı bir sonraki adım yok.
+};
+
+/** Tarayıcıda görüntülenebilen türler — yalnız bunlarda "Aç" düğmesi anlamlı.
+ *  Diğerlerinde tarayıcı dosyayı açamaz, sessizce indirir; kullanıcı "açtım ama
+ *  bir şey olmadı" sanır. */
+const BROWSER_VIEWABLE_EXT = new Set(["pdf", "png", "jpg", "jpeg", "webp", "gif", "txt"]);
+
+/** Dosya adından küçük harfli uzantı. */
+function fileExt(name: string): string {
+  const m = /\.([A-Za-z0-9]+)$/.exec(name.trim());
+  return m ? m[1]!.toLowerCase() : "";
+}
 
 // Zincirleme başlığında kullanılan "işlem sonucu" dosya adı — kullanıcı bunun
 // yüklediği orijinal değil, az önce OLUŞTURDUĞU dosya olduğunu anlasın diye.
@@ -2177,7 +2209,11 @@ function App() {
   // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
   const chainToTool = useCallback(
     (targetId: FeatureId, blob: Blob, filename: string) => {
-      carryFilesToTool(targetId, [new File([blob], filename, { type: "application/pdf" })]);
+      // Tür SABİT DEĞİL: Excel/Word/görsel çıktıları da zincirlenebiliyor.
+      // Sabit "application/pdf" verilirse hedef araç dosyayı reddeder.
+      carryFilesToTool(targetId, [
+        new File([blob], filename, { type: blob.type || "application/octet-stream" }),
+      ]);
     },
     [carryFilesToTool],
   );
@@ -4062,7 +4098,6 @@ function App() {
   const chainSuggestions = useMemo<Feature[]>(() => {
     const r = mergeShareReady;
     if (!r?.toolId) return [];
-    if (!/\.pdf$/i.test(r.filename)) return []; // .zip/.docx vb. çıktılar zincirlenmez
     const byId = new Map(workspaceFeatures.map((f) => [f.id, f]));
     const out: Feature[] = [];
     const seen = new Set<FeatureId>([r.toolId]);
@@ -4074,6 +4109,13 @@ function App() {
         seen.add(id);
       }
     };
+    const ext = fileExt(r.filename);
+    if (ext !== "pdf") {
+      // PDF olmayan çıktı: yalnızca bu türü kabul eden araçlar. Genel yedek
+      // havuz KULLANILMAZ — o havuzdaki araçlar PDF bekler.
+      for (const id of CHAIN_BY_OUTPUT_EXT[ext] ?? []) tryPush(id);
+      return out;
+    }
     // Önce araca-özgü ilgili öneriler, sonra 3'e tamamlamak için genel yedek havuz.
     for (const id of CHAIN_SUGGESTIONS[r.toolId] ?? []) tryPush(id);
     if (out.length < 3) for (const id of CHAIN_FALLBACK) tryPush(id);
@@ -7164,6 +7206,59 @@ function App() {
               </div>
             </div>
             <div className="merge-toast__actions">
+              {/* KAYDET — her çıktı türünde görünür. Destekleyen tarayıcıda
+                  işletim sisteminin "nereye kaydedilsin?" penceresi açılır;
+                  desteklemiyorsa normal indirmeye düşer. */}
+              <button
+                type="button"
+                className="merge-share-btn merge-share-btn--open"
+                onClick={() => {
+                  void saveBlobToUser(
+                    mergeShareReady.blob,
+                    mergeShareReady.filename,
+                  )
+                    .then((name) => {
+                      showToast(
+                        "success",
+                        language === "tr" ? "Kaydedildi" : "Saved",
+                        name,
+                      );
+                    })
+                    .catch((e: unknown) => {
+                      // Kullanıcı pencereyi kapattıysa hata gösterme.
+                      if (e instanceof DOMException && e.name === "AbortError") {
+                        return;
+                      }
+                      showToast(
+                        "error",
+                        language === "tr" ? "Kaydedilemedi" : "Save failed",
+                        language === "tr"
+                          ? "Lütfen tekrar deneyin."
+                          : "Please try again.",
+                      );
+                    });
+                }}
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <path d="M17 21v-8H7v8M7 3v5h8" />
+                </svg>
+                {language === "tr" ? "Kaydet" : "Save"}
+              </button>
+              {/* AÇ — yalnızca tarayıcının GÖRÜNTÜLEYEBİLECEĞİ türlerde.
+                  Excel/Word gibi türlerde tarayıcı dosyayı açamaz, sessizce
+                  indirir; kullanıcı "açtım ama bir şey olmadı" sanıyordu. */}
+              {BROWSER_VIEWABLE_EXT.has(fileExt(mergeShareReady.filename)) ? (
               <button
                 type="button"
                 className="merge-share-btn merge-share-btn--open"
@@ -7190,6 +7285,7 @@ function App() {
                 </svg>
                 {language === "tr" ? "Aç" : "Open"}
               </button>
+              ) : null}
               {isShareApiAvailable() ? (
                 <button
                   type="button"
@@ -7225,14 +7321,30 @@ function App() {
               <div className="merge-toast__chain">
                 <span className="merge-toast__chain-label">
                   {(() => {
-                    const noun = mergeShareReady.toolId
-                      ? CHAIN_RESULT_NOUN[mergeShareReady.toolId]
-                      : undefined;
+                    const outExt = fileExt(mergeShareReady.filename);
+                    // Çıktı PDF değilse "PDF" demek yanıltıcı olur.
+                    const OUT_LABEL: Record<string, { tr: string; en: string }> = {
+                      xlsx: { tr: "Oluşturduğunuz Excel dosyası", en: "new Excel file" },
+                      xls: { tr: "Oluşturduğunuz Excel dosyası", en: "new Excel file" },
+                      docx: { tr: "Oluşturduğunuz Word belgesi", en: "new Word document" },
+                      doc: { tr: "Oluşturduğunuz Word belgesi", en: "new Word document" },
+                      pptx: { tr: "Oluşturduğunuz sunum", en: "new presentation" },
+                      ppt: { tr: "Oluşturduğunuz sunum", en: "new presentation" },
+                      png: { tr: "Oluşturduğunuz görsel", en: "new image" },
+                      jpg: { tr: "Oluşturduğunuz görsel", en: "new image" },
+                      jpeg: { tr: "Oluşturduğunuz görsel", en: "new image" },
+                      webp: { tr: "Oluşturduğunuz görsel", en: "new image" },
+                    };
+                    const noun =
+                      OUT_LABEL[outExt] ??
+                      (mergeShareReady.toolId
+                        ? CHAIN_RESULT_NOUN[mergeShareReady.toolId]
+                        : undefined);
                     if (language === "tr") {
-                      const n = noun?.tr ?? "Oluşturduğunuz PDF";
+                      const n = noun?.tr ?? "Oluşturduğunuz dosya";
                       return `${n} ile yeniden yükleme yapmadan şunları da yapabilirsiniz:`;
                     }
-                    const n = noun?.en ?? "new PDF";
+                    const n = noun?.en ?? "new file";
                     return `Do more with your ${n} — no re-upload needed:`;
                   })()}
                 </span>
