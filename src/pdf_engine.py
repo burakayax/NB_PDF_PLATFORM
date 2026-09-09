@@ -2280,6 +2280,20 @@ def _extract_table_by_word_gaps(page) -> list[list[list[str]]]:
 
 
 def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
+    """PDF'teki tabloları Excel'e aktarır.
+
+    ÇIKTI BİÇİMİ — sayfa başına ayrı sekme DEĞİL, KESİNTİSİZ tek tablo.
+
+    Banka ekstresi, cari hesap dökümü, fatura listesi gibi belgelerde tablo
+    onlarca sayfa boyunca devam eder ve her sayfada aynı başlık satırı tekrarlanır.
+    Her sayfayı ayrı sekmeye yazmak bu belgeleri Excel'de kullanılamaz hale
+    getiriyordu: kullanıcı sıralama, filtreleme, toplam alma ya da özet tablo
+    yapamıyor, 45 sekmeyi elle birleştirmek zorunda kalıyordu.
+
+    Burada sayfalar arasında DEVAM EDEN tablolar tek bir listeye birleştirilir:
+    başlık bir kez yazılır, tekrarları atlanır. Sütun sayısı değişirse yeni bir
+    mantıksal tablo başlar ve araya boş satır konur.
+    """
     try:
         import pdfplumber
         from openpyxl import Workbook
@@ -2291,41 +2305,29 @@ def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, 
         ) from e
 
     try:
-        wb = Workbook()
-        default_ws = wb.active
-        wb.remove(default_ws)
-
         if is_pdf_encrypted(pdf_path) and not password:
             raise Exception(f"PDF -> Excel için şifre gerekli: {os.path.basename(pdf_path)}")
+
+        # ── 1) Tüm sayfaları oku, tabloları ve metinleri topla ──────────────
+        collected: list[list[list[str]]] = []          # mantıksal tablolar
+        text_pages: list[tuple[int, str]] = []          # tablosuz sayfaların metni
+        headers: list[Optional[list[str]]] = []         # her mantıksal tablonun başlığı
+
         with pdfplumber.open(pdf_path, password=password) as pdf:
             total_pages = len(pdf.pages)
-            border = Border(
-                left=Side(style="thin", color="D7DEE8"),
-                right=Side(style="thin", color="D7DEE8"),
-                top=Side(style="thin", color="D7DEE8"),
-                bottom=Side(style="thin", color="D7DEE8"),
-            )
-            title_fill = PatternFill("solid", fgColor="1F4E78")
-            header_fill = PatternFill("solid", fgColor="DCE6F1")
+            TABLE_SETTINGS = {
+                "vertical_strategy": "lines",
+                "horizontal_strategy": "lines",
+                "snap_tolerance": 4,
+                "join_tolerance": 4,
+                "intersection_tolerance": 6,
+            }
+
             for i, page in enumerate(pdf.pages, start=1):
                 if progress_callback:
                     progress_callback(i, max(1, total_pages), f"Tablo aranıyor: Sayfa {i}/{total_pages}")
 
-                ws = wb.create_sheet(_sanitize_sheet_title(f"Sayfa {i}"))
-                ws.sheet_view.showGridLines = False
-                ws.freeze_panes = "A2"
-
-                # Önce gerçek çizgilere dayalı tablo tespiti dene
-                TABLE_SETTINGS = {
-                    "vertical_strategy": "lines",
-                    "horizontal_strategy": "lines",
-                    "snap_tolerance": 4,
-                    "join_tolerance": 4,
-                    "intersection_tolerance": 6,
-                }
                 found_tables = page.find_tables(table_settings=TABLE_SETTINGS)
-
-                current_row = 1
                 cleaned_tables: list[list[list[str]]] = []
 
                 if found_tables:
@@ -2354,66 +2356,126 @@ def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, 
                     cleaned_tables = _extract_table_by_word_gaps(page)
 
                 if cleaned_tables:
-                    for table_index, table_rows in enumerate(cleaned_tables, start=1):
-                        title_cell = ws.cell(row=current_row, column=1, value=f"Tablo {table_index}")
-                        title_cell.font = Font(bold=True, color="FFFFFF")
-                        title_cell.fill = title_fill
-                        title_cell.alignment = Alignment(horizontal="left", vertical="center")
-                        current_row += 1
-                        max_cols = max(len(r) for r in table_rows)
-                        col_max = [0] * max_cols
-                        for row_offset, row in enumerate(table_rows, start=0):
-                            padded = row + [""] * (max_cols - len(row))
-                            for col_index, value in enumerate(padded, start=1):
-                                cell = ws.cell(row=current_row, column=col_index, value=value)
-                                cell.border = border
-                                cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
-                                if row_offset == 0:
-                                    cell.font = Font(bold=True)
-                                    cell.fill = header_fill
-                                col_max[col_index - 1] = max(col_max[col_index - 1], len(str(value or "")))
-                            ws.row_dimensions[current_row].height = 22
-                            current_row += 1
-                        for col_index, length in enumerate(col_max, start=1):
-                            ws.column_dimensions[get_column_letter(col_index)].width = min(40, max(12, length + 2))
-                        current_row += 2
+                    for table_rows in cleaned_tables:
+                        cols = max(len(r) for r in table_rows)
+                        # Aynı sütun sayısına sahip bir tablo hemen önce geldiyse
+                        # bu, önceki tablonun DEVAMIDIR (sayfa kırılması).
+                        if collected and headers and cols == max(len(r) for r in collected[-1]):
+                            head = headers[-1]
+                            body = table_rows
+                            # Sayfa başında tekrarlanan başlık satırını atla.
+                            if head is not None and body and _rows_match(body[0], head):
+                                body = body[1:]
+                            collected[-1].extend(body)
+                        else:
+                            collected.append(list(table_rows))
+                            headers.append(table_rows[0] if table_rows else None)
                 else:
                     text = (page.extract_text() or "").strip()
-                    ws.cell(row=1, column=1, value="Bu sayfada tablo bulunamadı.")
                     if text:
-                        ws.cell(row=3, column=1, value="Algılanan metin")
-                        for row_index, line in enumerate([ln.strip() for ln in text.splitlines() if ln.strip()], start=4):
-                            ws.cell(row=row_index, column=1, value=line)
+                        text_pages.append((i, text))
 
-                # SAYFA ÖNBELLEĞİNİ BOŞALT — bellek için ŞART.
+                # Sayfa önbelleğini boşalt — bellek için ŞART.
                 #
                 # pdfplumber, her sayfanın çözümlenmiş karakter/çizgi/tablo
                 # nesnelerini sayfa üzerinde önbellekte tutar ve belge kapanana
                 # kadar SERBEST BIRAKMAZ. Sayfa sayısı arttıkça kullanım
                 # doğrusal büyür: 45 sayfalık gerçek bir belgede ölçülen artış
                 # ~354 MB. Sunucunun toplam belleği bunun altında kaldığı için
-                # işlem yarıda öldürülüyor, istek hiç yanıtlanmıyor ve kullanıcı
-                # ilerleme çubuğunun sonunda takılı kalıyordu.
-                #
-                # Aşağıdaki iki çağrı ile aynı belge ~0 MB artışla işleniyor.
-                # Sayfa verisi bu noktada Excel'e yazılmış durumda; önbelleğe
-                # bir daha ihtiyaç yok.
+                # işlem yarıda öldürülüyor, istek hiç yanıtlanmıyordu.
                 try:
                     page.flush_cache()
                     page.get_textmap.cache_clear()
                 except Exception:
-                    # Kütüphane sürümü bu yardımcıları sunmuyorsa sessiz geç:
-                    # dönüşüm yine doğru çalışır, yalnız bellek avantajı olmaz.
                     pass
 
-        if not wb.sheetnames:
-            ws = wb.create_sheet("Sayfa 1")
+        # ── 2) Tek sayfada, kesintisiz yaz ─────────────────────────────────
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Tablo"
+        ws.sheet_view.showGridLines = False
+
+        border = Border(
+            left=Side(style="thin", color="D7DEE8"),
+            right=Side(style="thin", color="D7DEE8"),
+            top=Side(style="thin", color="D7DEE8"),
+            bottom=Side(style="thin", color="D7DEE8"),
+        )
+        header_fill = PatternFill("solid", fgColor="DCE6F1")
+
+        current_row = 1
+        col_max: dict[int, int] = {}
+        # En BÜYÜK mantıksal tablo asıl tablodur (ekstre gövdesi). Süzme ve
+        # dondurma onun başlık satırına bağlanır; belgenin başındaki künye
+        # bloğuna (Şube/Hesap/IBAN...) bağlanırsa süzme işe yaramaz.
+        main_header_row = 1
+        main_last_row = 1
+        main_len = -1
+
+        for table_index, table_rows in enumerate(collected):
+            if table_index > 0:
+                current_row += 1  # mantıksal tablolar arasında boş satır
+            if len(table_rows) > main_len:
+                main_len = len(table_rows)
+                main_header_row = current_row
+                main_last_row = current_row + len(table_rows) - 1
+            max_cols = max(len(r) for r in table_rows)
+            for row_offset, row in enumerate(table_rows):
+                padded = list(row) + [""] * (max_cols - len(row))
+                for col_index, value in enumerate(padded, start=1):
+                    cell = ws.cell(row=current_row, column=col_index, value=value)
+                    cell.border = border
+                    cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
+                    if row_offset == 0:
+                        cell.font = Font(bold=True)
+                        cell.fill = header_fill
+                    col_max[col_index] = max(col_max.get(col_index, 0), len(str(value or "")))
+                current_row += 1
+
+        # Asıl tablonun başlığında dondur + süz → dosya kullanıcıya hazır gelsin.
+        if current_row > 1 and main_len > 1:
+            try:
+                ws.freeze_panes = f"A{main_header_row + 1}"
+                last_col = get_column_letter(max(col_max) if col_max else 1)
+                ws.auto_filter.ref = f"A{main_header_row}:{last_col}{main_last_row}"
+            except Exception:
+                pass
+
+        for col_index, length in col_max.items():
+            ws.column_dimensions[get_column_letter(col_index)].width = min(40, max(12, length + 2))
+
+        # ── 3) Tablosuz sayfaların metni ayrı sekmede ──────────────────────
+        if text_pages:
+            tws = wb.create_sheet("Metin")
+            tws.cell(row=1, column=1, value="Sayfa").font = Font(bold=True)
+            tws.cell(row=1, column=2, value="Metin").font = Font(bold=True)
+            r = 2
+            for page_no, text in text_pages:
+                for line in [ln.strip() for ln in text.splitlines() if ln.strip()]:
+                    tws.cell(row=r, column=1, value=page_no)
+                    tws.cell(row=r, column=2, value=line)
+                    r += 1
+            tws.column_dimensions["A"].width = 8
+            tws.column_dimensions["B"].width = 100
+            tws.freeze_panes = "A2"
+
+        if current_row == 1 and not text_pages:
             ws.cell(row=1, column=1, value="İçerik bulunamadı.")
 
         wb.save(xlsx_path)
         return True
     except Exception as e:
         raise Exception(f"PDF tablo -> Excel Hatası: {e}") from e
+
+
+def _rows_match(a: list, b: list) -> bool:
+    """İki satırın aynı başlık olup olmadığını karşılaştırır.
+
+    Sayfa başlarında tekrarlanan başlık satırını yakalamak için kullanılır;
+    boşluk ve büyük/küçük harf farkları yok sayılır.
+    """
+    norm = lambda row: [" ".join(str(c or "").split()).casefold() for c in row]
+    return norm(a) == norm(b)
 
 
 def pdf_text_to_excel(
