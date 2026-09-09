@@ -14,6 +14,9 @@ const ACCENTS: Record<string, Accent> = {
   cyan: { grad: "from-cyan-500 to-blue-600", soft: "from-cyan-500/20 to-blue-600/20", text: "text-cyan-300", ring: "border-cyan-400/30", chip: "border-cyan-400/25 bg-cyan-500/10 text-cyan-200" },
   emerald: { grad: "from-emerald-500 to-teal-600", soft: "from-emerald-500/20 to-teal-600/20", text: "text-emerald-300", ring: "border-emerald-400/30", chip: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200" },
   amber: { grad: "from-amber-500 to-orange-600", soft: "from-amber-500/20 to-orange-600/20", text: "text-amber-300", ring: "border-amber-400/30", chip: "border-amber-400/25 bg-amber-500/10 text-amber-200" },
+  // "sky" üç yazıda kullanılıyordu ama bu tabloda tanımlı değildi; o yazılar
+  // sessizce fuchsia rengiyle görünüyordu.
+  sky: { grad: "from-sky-500 to-blue-600", soft: "from-sky-500/20 to-blue-600/20", text: "text-sky-300", ring: "border-sky-400/30", chip: "border-sky-400/25 bg-sky-500/10 text-sky-200" },
 };
 const accentOf = (a: string) => ACCENTS[a] ?? ACCENTS.fuchsia;
 

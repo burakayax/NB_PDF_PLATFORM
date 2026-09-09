@@ -35,6 +35,7 @@ import {
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
+import { writeBlogCovers } from "./generate-covers.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -962,10 +963,24 @@ ${renderSitemapHreflang(base, u.routePath)}
 
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
 
+// ─── Blog kapak görselleri ────────────────────────────────────────────────────
+// Her yazı için markalı 1200x630 kapak. Beslemede bu görsel duyurulur; sosyal
+// medya otomasyonu dışarıdan stok fotoğraf çekmek zorunda kalmaz.
+let coverMap;
+if (blockIndexing) {
+  console.log("[seo] kapak görselleri atlandı (indeksleme kapalı ortam)");
+} else {
+  const covers = await writeBlogCovers({ frontendRoot, publicDir, baseUrl: base });
+  coverMap = covers.map;
+  console.log(
+    `[seo] kapak görselleri: ${covers.written.length} üretildi, ${covers.skipped} değişmedi`,
+  );
+}
+
 // ─── RSS beslemeleri ──────────────────────────────────────────────────────────
 // Sitemap'ten SONRA üretilir; yetim prerender temizliği yalnızca index.html
 // dosyalarına dokunduğu için beslemeler silinmez.
-const rss = writeRssFeeds({ publicDir, baseUrl: base, blockIndexing });
+const rss = writeRssFeeds({ publicDir, baseUrl: base, blockIndexing, coverMap });
 if (rss.skipped) {
   console.log("[seo] RSS beslemesi atlandı (indeksleme kapalı ortam)");
 } else {
