@@ -248,6 +248,7 @@ import {
   EmptyStateIllustration,
   EmptyState,
 } from "./components/workspace/EmptyState";
+import { GenericToolProgressBar } from "./components/workspace/GenericToolProgressBar";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -8636,98 +8637,20 @@ function App() {
             </div>
           ) : null}
           {TOOLSuccessBarActive ? null : genericToolProgressActive ? (
-            <div
-              className="merge-progress-fixed merge-progress-fixed--generic"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner">
-                <div className="merge-progress-fixed__head">
-                  <div className="merge-progress-fixed__titles">
-                    <strong className="merge-progress-fixed__title">
-                      {selectedFeature.title}
-                    </strong>
-                    <p className="merge-progress-fixed__phase">
-                      {/* Arka plan işinde sunucunun bildirdiği GERÇEK konum
-                          gösterilir (ör. "Sayfa 23/45"); kullanıcı işlemin
-                          gerçekten ilerlediğini görür. */}
-                      {toolJobProgress?.where
-                        ? toolJobProgress.where
-                        : genericToolPhaseLabel(
-                            selectedFeatureId,
-                            genericToolPercent,
-                            genericProgressIndeterminate,
-                            W,
-                            false,
-                          )}
-                    </p>
-                  </div>
-                  {showToolCancelButton ? (
-                    <button
-                      type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
-                      onClick={handleCancelCurrentOperation}
-                    >
-                      {W.toolRunCancel}
-                    </button>
-                  ) : null}
-                  <span className="merge-progress-fixed__pct">
-                    {genericProgressIndeterminate
-                      ? "…"
-                      : `%${genericToolPercent}`}
-                  </span>
-                </div>
-                <div
-                  className={`progress-bar progress-bar--merge progress-bar--gradient ${genericProgressIndeterminate ? "progress-bar--indeterminate" : ""}`}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={
-                    genericProgressIndeterminate
-                      ? undefined
-                      : genericToolPercent
-                  }
-                  aria-label={genericToolPhaseLabel(
-                    selectedFeatureId,
-                    genericToolPercent,
-                    genericProgressIndeterminate,
-                    W,
-                    false,
-                  )}
-                >
-                  {genericProgressIndeterminate ? (
-                    <div className="progress-bar__fill progress-bar__fill--indeterminate" />
-                  ) : (
-                    <div
-                      className="progress-bar__fill progress-bar__fill--gradient"
-                      style={{ width: `${genericToolPercent}%` }}
-                    />
-                  )}
-                </div>
-                <div className="merge-progress-fixed__meta merge-progress-fixed__meta--generic">
-                  <span>
-                    {premiumProcessingLane
-                      ? W.toolProgressSubPremium
-                      : W.toolProgressSub}
-                  </span>
-                  {genericToolFileMb >= 5 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.toolProgressLargeFileHint(genericToolFileMb)}
-                    </span>
-                  ) : null}
-                  {genericToolElapsedSec >= 1 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.toolProgressElapsed(genericToolElapsedSec)}
-                    </span>
-                  ) : null}
-                  {genericToolRemainingSec > 0 && genericToolElapsedSec >= 4 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.mergeEtaLine(genericToolRemainingSec)}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <GenericToolProgressBar
+              W={W}
+              selectedFeature={selectedFeature}
+              selectedFeatureId={selectedFeatureId}
+              toolJobProgress={toolJobProgress}
+              percent={genericToolPercent}
+              indeterminate={genericProgressIndeterminate}
+              elapsedSec={genericToolElapsedSec}
+              remainingSec={genericToolRemainingSec}
+              fileMb={genericToolFileMb}
+              premiumLane={premiumProcessingLane}
+              showCancel={showToolCancelButton}
+              onCancel={handleCancelCurrentOperation}
+            />
           ) : null}
         </div>
 
