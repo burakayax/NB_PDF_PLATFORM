@@ -249,6 +249,11 @@ import {
   EmptyState,
 } from "./components/workspace/EmptyState";
 import { GenericToolProgressBar } from "./components/workspace/GenericToolProgressBar";
+import { MergeProgressBar } from "./components/workspace/MergeProgressBar";
+import {
+  ToolSuccessBar,
+  type ToolProgressSuccessState,
+} from "./components/workspace/ToolSuccessBar";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -571,33 +576,8 @@ function App() {
   const [toolRunStartedAt, setToolRunStartedAt] = useState<number | null>(null);
   const [toolRunFileBytes, setToolRunFileBytes] = useState(0);
   const [toolRunClock, setToolRunClock] = useState(0);
-  const [toolProgressSuccess, setToolProgressSuccess] = useState<{
-    filename: string;
-    featureTitle: string;
-    replay?: () => void;
-    /**
-     * Access-gated preview (compress pilot). When present, the success
-     * banner renders a preview card (thumbnail if available) and the
-     * action button performs the gated download via
-     * `downloadResult` instead of re-triggering a blob replay.
-     */
-    gatedDownload?: {
-      /** Tool that produced this output — used for `/download-log` & balance refresh; avoids wrong id if user switched sidebar. */
-      toolId: FeatureKey;
-      /** GET `/api/pdf/result/{id}/download`. */
-      resultId?: string;
-      /** GET `/api/jobs/{id}/download` — merge workflow. */
-      mergeJobId?: string;
-      fallbackName: string;
-      thumbnailBlobUrl: string | null;
-      /**
-       * Entitlement decision from the Node entitlement engine. When present,
-       * `SaasGatedPreview` renders the blur/lock/upgrade UX; when absent, the
-       * card falls back to the legacy 402-driven flow.
-       */
-      saasGating?: SaaSGating | null;
-    };
-  } | null>(null);
+  const [toolProgressSuccess, setToolProgressSuccess] =
+    useState<ToolProgressSuccessState | null>(null);
   const toolProgressSuccessRef = useRef(toolProgressSuccess);
   /** When true, the next `selectedFeatureId` change skips `disposeToolProgressSuccess` (payment resume navigation). */
   const suppressDisposeSuccessOnFeatureChangeRef = useRef(false);
@@ -8386,255 +8366,43 @@ function App() {
             ) : null}
           </div>
           {TOOLSuccessBarActive && toolProgressSuccess ? (
-            <div
-              className="merge-progress-fixed merge-progress-fixed--success tool-success-shell"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner tool-success-shell__card">
-                <div className="tool-success-shell__row">
-                  <div
-                    className="tool-success-shell__mark"
-                    aria-hidden="true"
-                  />
-                  <div className="tool-success-shell__text">
-                    <strong className="tool-success-shell__title">
-                      {W.toolProgressSuccessTitle}
-                    </strong>
-                    <p className="tool-success-shell__subtitle">
-                      {toolProgressSuccess.featureTitle} ·{" "}
-                      {toolProgressSuccess.filename}
-                    </p>
-                  </div>
-                  <span className="tool-success-shell__pill" aria-hidden="true">
-                    %100
-                  </span>
-                </div>
-                <div
-                  className="tool-success-shell__meter"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={100}
-                  aria-label={W.toolProgressSuccessTitle}
-                >
-                  <span className="tool-success-shell__meter-fill" />
-                </div>
-                {toolProgressSuccess?.gatedDownload ? (
-                  <SaasGatedPreview
-                    gating={
-                      toolProgressSuccess.gatedDownload.saasGating ?? null
-                    }
-                    language={language}
-                    filename={toolProgressSuccess.filename}
-                    thumbnailUrl={
-                      toolProgressSuccess.gatedDownload.thumbnailBlobUrl
-                    }
-                    onOpenFullPreview={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) {
-                        return;
-                      }
-                      if (gd.mergeJobId) {
-                        setGatedHeroResultId(null);
-                        setGatedHeroMergeJobId(gd.mergeJobId);
-                        setGatedHeroModalOpen(true);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        setGatedHeroMergeJobId(null);
-                        setGatedHeroResultId(gd.resultId);
-                        setGatedHeroModalOpen(true);
-                      }
-                    }}
-                    onDownload={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) {
-                        return;
-                      }
-                      if (gd.mergeJobId) {
-                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        queueGatedDownload(
-                          gd.resultId,
-                          gd.fallbackName,
-                          gd.toolId,
-                        );
-                      }
-                    }}
-                    onShare={
-                      isShareApiAvailable() &&
-                      (toolProgressSuccess.gatedDownload.mergeJobId ||
-                        toolProgressSuccess.gatedDownload.resultId)
-                        ? () => {
-                            const gd = toolProgressSuccess.gatedDownload;
-                            if (!gd) return;
-                            if (gd.mergeJobId) {
-                              setMergeShare({
-                                jobId: gd.mergeJobId,
-                                defaultName: gd.fallbackName,
-                              });
-                            } else if (gd.resultId) {
-                              setMergeShare({
-                                resultId: gd.resultId,
-                                defaultName: gd.fallbackName,
-                              });
-                            }
-                          }
-                        : undefined
-                    }
-                    onUpgrade={() => openConversionUpgradeModalManual()}
-                    onInsufficientCredits={() => {
-                      setUpgradeModalOpen(true);
-                    }}
-                    onRetry={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) return;
-                      if (gd.mergeJobId) {
-                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        queueGatedDownload(
-                          gd.resultId,
-                          gd.fallbackName,
-                          gd.toolId,
-                        );
-                      }
-                    }}
-                    onDismiss={dismissToolSuccessBar}
-                    dismissLabel={W.toolProgressDismiss}
-                  />
-                ) : (
-                  <div className="merge-progress-fixed__success-actions">
-                    {toolProgressSuccess.replay ? (
-                      <button
-                        type="button"
-                        className="merge-progress-fixed__download"
-                        onClick={() => toolProgressSuccess.replay?.()}
-                      >
-                        {W.toolDownloadAgain}
-                      </button>
-                    ) : (
-                      <p className="merge-progress-fixed__native-hint">
-                        {W.toolProgressNativeDownloadHint}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      className="merge-progress-fixed__dismiss"
-                      onClick={dismissToolSuccessBar}
-                    >
-                      {W.toolProgressDismiss}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ToolSuccessBar
+              W={W}
+              language={language}
+              success={toolProgressSuccess}
+              onOpenFullPreview={(target) => {
+                if (target.mergeJobId) {
+                  setGatedHeroResultId(null);
+                  setGatedHeroMergeJobId(target.mergeJobId);
+                  setGatedHeroModalOpen(true);
+                  return;
+                }
+                if (target.resultId) {
+                  setGatedHeroMergeJobId(null);
+                  setGatedHeroResultId(target.resultId);
+                  setGatedHeroModalOpen(true);
+                }
+              }}
+              onDownloadResult={queueGatedDownload}
+              onDownloadMergeJob={queueMergeGatedDownload}
+              onShare={setMergeShare}
+              onUpgrade={openConversionUpgradeModalManual}
+              onInsufficientCredits={() => setUpgradeModalOpen(true)}
+              onDismiss={dismissToolSuccessBar}
+            />
           ) : null}
           {TOOLSuccessBarActive ? null : mergeProgressActive && mergeJob ? (
-            <div
-              className="merge-progress-fixed"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner">
-                <div className="merge-progress-fixed__head">
-                  <div className="merge-progress-fixed__titles">
-                    <strong className="merge-progress-fixed__title">
-                      {mergeJob.status === "failed"
-                        ? language === "tr"
-                          ? "Birleştirme başarısız"
-                          : "Merge failed"
-                        : selectedFeature.title}
-                    </strong>
-                    {mergeJob.status !== "failed" ? (
-                      <p className="merge-progress-fixed__phase">
-                        {mergeJob.id === MERGE_JOB_PENDING_ID
-                          ? premiumProcessingLane
-                            ? W.mergeProgressQueuePremium
-                            : W.mergeProgressStarting
-                          : mergeToolPhaseLabel(
-                              mergeJob,
-                              mergeProgressIndeterminate,
-                              W,
-                            )}
-                      </p>
-                    ) : null}
-                  </div>
-                  {showToolCancelButton ? (
-                    <button
-                      type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
-                      onClick={handleCancelCurrentOperation}
-                    >
-                      {W.toolRunCancel}
-                    </button>
-                  ) : null}
-                  <span className="merge-progress-fixed__pct">
-                    {mergeProgressIndeterminate ? "…" : `%${mergeJob.percent}`}
-                  </span>
-                </div>
-                <div
-                  className={`progress-bar progress-bar--merge progress-bar--gradient ${mergeProgressIndeterminate ? "progress-bar--indeterminate" : ""} ${mergeJob.status === "failed" ? "progress-bar--failed" : ""}`}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={
-                    mergeProgressIndeterminate
-                      ? undefined
-                      : mergeJob.status === "failed"
-                        ? 100
-                        : mergeJob.percent
-                  }
-                  aria-label={
-                    mergeToolPhaseLabel(
-                      mergeJob,
-                      mergeProgressIndeterminate,
-                      W,
-                    ) || selectedFeature.title
-                  }
-                >
-                  {mergeProgressIndeterminate ? (
-                    <div className="progress-bar__fill progress-bar__fill--indeterminate" />
-                  ) : (
-                    <div
-                      className="progress-bar__fill progress-bar__fill--gradient"
-                      style={{
-                        width: `${mergeJob.status === "failed" ? 100 : Math.max(mergeJob.percent, 2)}%`,
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="merge-progress-fixed__meta">
-                  <span>
-                    {mergeJob.total > 1
-                      ? W.mergeFileProgress(
-                          mergeJob.current,
-                          mergeJob.total,
-                          mergeJob.where,
-                        )
-                      : `${W.mergeStatus}: ${mergeJob.current}/${mergeJob.total}${
-                          mergeJob.where ? ` · ${mergeJob.where}` : ""
-                        }`}
-                  </span>
-                  {mergeEtaSeconds !== null &&
-                  mergeJob.status === "running" &&
-                  !mergeProgressIndeterminate ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.mergeEtaLine(mergeEtaSeconds)}
-                    </span>
-                  ) : null}
-                </div>
-                {mergeJob.status === "failed" ? (
-                  <p className="merge-progress-fixed__err">
-                    {friendlyOperationFailedMessage(language)}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <MergeProgressBar
+              W={W}
+              language={language}
+              selectedFeature={selectedFeature}
+              mergeJob={mergeJob}
+              indeterminate={mergeProgressIndeterminate}
+              etaSeconds={mergeEtaSeconds}
+              premiumLane={premiumProcessingLane}
+              showCancel={showToolCancelButton}
+              onCancel={handleCancelCurrentOperation}
+            />
           ) : null}
           {TOOLSuccessBarActive ? null : genericToolProgressActive ? (
             <GenericToolProgressBar
