@@ -2,9 +2,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Download, ExternalLink, Loader2, Share2, Trash2, Image as ImageIcon } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { ToolDropzone } from "./ToolDropzone";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
+import {
+  canEncode,
+  compressImage,
+  extForFormat,
+  extOfName,
+  type CompressOutcome,
+  type OutputFormat,
+} from "../../lib/imageCompress";
 
 /**
  * GÖRSEL SIKIŞTIR — Görsel→PDF (GuestToolCore) ile AYNI akış/kabuk:
@@ -13,9 +21,20 @@ import { zipStore } from "../../lib/zipStore";
  * Tek görsel → sıkıştırılmış görsel; çok görsel → tek ZIP.
  */
 
-type Format = "image/jpeg" | "image/webp" | "image/png";
+/** "auto" = her görsel için en küçük sonucu veren biçimi kendisi seçer. */
+type Format = OutputFormat | "auto";
 type Picked = { id: string; file: File; previewUrl: string };
-type Result = { blob: Blob; filename: string; saved: "picker" | "download"; count: number };
+type Result = {
+  blob: Blob;
+  filename: string;
+  saved: "picker" | "download";
+  count: number;
+  /** Girdi ve çıktı toplam boyutları — kazancı göstermek için. */
+  inBytes: number;
+  outBytes: number;
+  /** Sıkıştırma kazanç sağlamadığı için orijinali korunan görsel sayısı. */
+  keptCount: number;
+};
 
 const MAX_FILES = 30;
 const MAX_BYTES = 80 * 1024 * 1024;
@@ -26,59 +45,35 @@ function humanSize(b: number): string {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
-const extFor = (f: Format) => (f === "image/webp" ? "webp" : f === "image/png" ? "png" : "jpg");
 /** Save picker'da gösterilecek zengin uzantı listesi (biçime göre). */
-function acceptFor(f: Format): Record<string, string[]> {
+function acceptFor(f: OutputFormat): Record<string, string[]> {
   if (f === "image/png") return { "image/png": [".png"] };
   if (f === "image/webp") return { "image/webp": [".webp"] };
   return { "image/jpeg": [".jpg", ".jpeg"] };
 }
 
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("image load failed"));
-    };
-    img.src = url;
-  });
-}
-
-async function compress(file: File, quality: number, maxDim: number, format: Format): Promise<Blob> {
-  const img = await loadImage(file);
-  try {
-    let { width, height } = img;
-    if (maxDim > 0 && Math.max(width, height) > maxDim) {
-      const s = maxDim / Math.max(width, height);
-      width = Math.round(width * s);
-      height = Math.round(height * s);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, width);
-    canvas.height = Math.max(1, height);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("canvas ctx yok");
-    if (format === "image/jpeg") {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), format, quality);
-    });
-  } finally {
-    if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
-  }
+/**
+ * "Otomatik" biçim kararı — dosya seçme penceresi işlemden ÖNCE açıldığı için
+ * uzantının baştan bilinmesi şart; bu yüzden karar kaynağın türüne göre anında
+ * verilir. WebP en küçük sonucu verir; tarayıcı WebP kodlayamıyorsa şeffaflık
+ * taşıyabilen kaynaklar PNG, diğerleri JPEG olur.
+ */
+function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputFormat {
+  if (chosen !== "auto") return chosen;
+  if (webpOk) return "image/webp";
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/png" || t === "image/webp" || t === "image/gif") return "image/png";
+  return "image/jpeg";
 }
 
 export function ImageCompressTool({ language }: { language: Language }) {
   const tr = language === "tr";
   const [files, setFiles] = useState<Picked[]>([]);
   const [quality, setQuality] = useState(70);
-  const [format, setFormat] = useState<Format>("image/jpeg");
+  const [format, setFormat] = useState<Format>("auto");
+  /** 0 = orijinal ölçü. Uzun kenar sınırı — en büyük kazancı bu sağlar. */
+  const [maxDim, setMaxDim] = useState(0);
+  const [webpOk, setWebpOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -89,6 +84,13 @@ export function ImageCompressTool({ language }: { language: Language }) {
   useEffect(() => {
     if (files.length > 0) listRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [files.length]);
+
+  // Tarayıcı WebP kodlayabiliyor mu? ("Otomatik" biçim kararı buna bakar.)
+  useEffect(() => {
+    let alive = true;
+    void canEncode("image/webp").then((ok) => { if (alive) setWebpOk(ok); });
+    return () => { alive = false; };
+  }, []);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     setError(null);
@@ -147,7 +149,12 @@ export function ImageCompressTool({ language }: { language: Language }) {
     }
     const q = Math.min(0.95, Math.max(0.2, quality / 100));
     const multi = files.length > 1;
-    const outName = multi ? "sikistirilmis-gorseller.zip" : `${(files[0]!.file.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extFor(format)}`;
+    const first = files[0]!.file;
+    // Kaydetme penceresi işlemden ÖNCE açıldığı için uzantı şimdiden belli olmalı.
+    const firstFormat = resolveFormat(format, first, webpOk);
+    const outName = multi
+      ? "sikistirilmis-gorseller.zip"
+      : `${(first.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extForFormat(firstFormat)}`;
 
     // Kaydetme yerini SOR (ağır işlemden önce, kullanıcı aktivasyonu geçerliyken).
     let saveHandle: FileSystemFileHandle | null = null;
@@ -164,7 +171,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
           types: [
             {
               description: multi ? (tr ? "ZIP arşivi" : "ZIP archive") : (tr ? "Görsel" : "Image"),
-              accept: multi ? { "application/zip": [".zip"] } : acceptFor(format),
+              accept: multi ? { "application/zip": [".zip"] } : acceptFor(firstFormat),
             },
           ],
         });
@@ -175,29 +182,67 @@ export function ImageCompressTool({ language }: { language: Language }) {
 
     try {
       setBusy(true);
-      const compressed = await Promise.all(files.map((f) => compress(f.file, q, 0, format)));
+      // Sıralı işle: aynı anda 30 büyük görseli çözmek belleği şişirir.
+      const outcomes: CompressOutcome[] = [];
+      for (const p of files) {
+        outcomes.push(
+          await compressImage(p.file, {
+            quality: q,
+            maxDim,
+            format: resolveFormat(format, p.file, webpOk),
+          }),
+        );
+      }
+      const keptCount = outcomes.filter((o) => o.kept).length;
+      const outSum = outcomes.reduce((n, o) => n + o.blob.size, 0);
+
       let outBlob: Blob;
       if (multi) {
         const entries = await Promise.all(
-          compressed.map(async (b, i) => {
+          outcomes.map(async (o, i) => {
             const base = (files[i]!.file.name || `gorsel-${i + 1}`).replace(/\.[^.]+$/, "");
-            return { name: `${base}.${extFor(format)}`, data: new Uint8Array(await b.arrayBuffer()) };
+            return { name: `${base}.${o.ext}`, data: new Uint8Array(await o.blob.arrayBuffer()) };
           }),
         );
         outBlob = new Blob([zipStore(entries) as BlobPart], { type: "application/zip" });
       } else {
-        outBlob = compressed[0]!;
+        outBlob = outcomes[0]!.blob;
       }
 
-      if (saveHandle) {
+      // Tek görselde orijinal korunduysa uzantı seçilen adla uyuşmayabilir
+      // (ör. .webp adına JPEG baytı yazmak). Bu durumda dosyayı kendi adıyla indir.
+      const single = !multi ? outcomes[0]! : null;
+      const extMismatch =
+        !!single && single.kept && extOfName(saveHandle?.name || outName) !== (single.ext || "");
+      const finalName =
+        single && single.kept && extMismatch ? first.name : saveHandle?.name || outName;
+
+      if (saveHandle && !extMismatch) {
         const w = await saveHandle.createWritable();
         await w.write(outBlob);
         await w.close();
         saveHandleRef.current = saveHandle;
-        setResult({ blob: outBlob, filename: saveHandle.name || outName, saved: "picker", count: files.length });
+        setResult({
+          blob: outBlob,
+          filename: saveHandle.name || outName,
+          saved: "picker",
+          count: files.length,
+          inBytes: totalIn,
+          outBytes: multi ? outBlob.size : outSum,
+          keptCount,
+        });
       } else {
-        downloadBlob(outBlob, outName);
-        setResult({ blob: outBlob, filename: outName, saved: "download", count: files.length });
+        saveHandleRef.current = null;
+        downloadBlob(outBlob, finalName);
+        setResult({
+          blob: outBlob,
+          filename: finalName,
+          saved: "download",
+          count: files.length,
+          inBytes: totalIn,
+          outBytes: multi ? outBlob.size : outSum,
+          keptCount,
+        });
       }
     } catch {
       setError(tr ? "İşlem sırasında bir hata oluştu." : "Something went wrong.");
@@ -278,6 +323,34 @@ export function ImageCompressTool({ language }: { language: Language }) {
                 : `«${result.filename}» saved to your Downloads folder`}
           </span>
         </div>
+        {(() => {
+          const saved = result.inBytes - result.outBytes;
+          const pct = result.inBytes > 0 ? Math.round((saved / result.inBytes) * 100) : 0;
+          if (saved > 0) {
+            return (
+              <p className="mt-3 text-[13px] font-semibold text-emerald-200">
+                {humanSize(result.inBytes)} → {humanSize(result.outBytes)}{" "}
+                <span className="text-emerald-300">
+                  ({tr ? `%${pct} küçüldü` : `${pct}% smaller`})
+                </span>
+              </p>
+            );
+          }
+          return (
+            <p className="mt-3 text-[13px] font-semibold text-slate-300">
+              {tr
+                ? `Görselleriniz zaten optimize — ${humanSize(result.inBytes)} olarak korundu.`
+                : `Your images were already optimized — kept at ${humanSize(result.inBytes)}.`}
+            </p>
+          );
+        })()}
+        {result.keptCount > 0 && result.outBytes < result.inBytes && (
+          <p className="mt-1 text-[12px] text-slate-400">
+            {tr
+              ? `${result.keptCount} görsel zaten optimizeydi; orijinali korundu.`
+              : `${result.keptCount} image(s) were already optimized; the original was kept.`}
+          </p>
+        )}
         <p className="mt-2 text-sm text-slate-400">
           {tr ? "Görselin cihazından hiç çıkmadı — tamamen gizli." : "Your image never left your device — fully private."}
         </p>
@@ -325,39 +398,66 @@ export function ImageCompressTool({ language }: { language: Language }) {
 
   return (
     <div>
-      <ToolDropzone
-        toolId="gorsel-sikistir"
-        tr={tr}
-        accept="image/png,image/jpeg,image/jpg,image/webp"
-        multiple
-        busy={busy}
-        showBenefits={files.length === 0}
-        onFiles={(fl) => addFiles(fl)}
-        titleTr="Görselleri buraya sürükle"
-        titleEn="Drag your images here"
-        hintTr="ya da tıklayıp seç · JPG, PNG, WebP · 80 MB'a kadar"
-        hintEn="or click to choose · JPG, PNG, WebP · up to 80 MB"
-      />
+      <div className="tool-form">
+        <WorkspaceUploadField
+          language={language}
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          multiple
+          disabled={busy}
+          appendMode={files.length > 0}
+          note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
+          onFiles={(fl) => addFiles(fl)}
+        />
+      </div>
 
       {files.length > 0 && (
         <>
           {/* Ayarlar — kalite + biçim */}
-          <div className="mt-4 grid gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 sm:grid-cols-2">
+          <div className="mt-4 grid gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 sm:grid-cols-3">
             <label className="flex flex-col gap-1.5">
               <span className="text-[12px] font-semibold text-slate-300">
                 {tr ? "Kalite" : "Quality"}: <span className="text-cyan-300">%{quality}</span>
               </span>
-              <input type="range" min={20} max={95} step={5} value={quality} onChange={(e) => setQuality(Number(e.target.value))} className="accent-cyan-500" />
+              <input
+                type="range"
+                min={20}
+                max={95}
+                step={5}
+                value={quality}
+                disabled={format === "image/png"}
+                onChange={(e) => setQuality(Number(e.target.value))}
+                className="accent-cyan-500 disabled:opacity-40"
+              />
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-[12px] font-semibold text-slate-300">{tr ? "Biçim" : "Format"}</span>
               <select value={format} onChange={(e) => setFormat(e.target.value as Format)} className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100">
-                <option value="image/jpeg">JPEG (.jpg)</option>
+                <option value="auto">{tr ? "Otomatik (en küçük)" : "Automatic (smallest)"}</option>
                 <option value="image/webp">WebP (.webp)</option>
+                <option value="image/jpeg">JPEG (.jpg)</option>
                 <option value="image/png">PNG (.png)</option>
               </select>
             </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-[12px] font-semibold text-slate-300">{tr ? "Ölçü" : "Size"}</span>
+              <select value={maxDim} onChange={(e) => setMaxDim(Number(e.target.value))} className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100">
+                <option value={0}>{tr ? "Orijinal ölçü" : "Original size"}</option>
+                <option value={2560}>{tr ? "Uzun kenar 2560 px" : "Long edge 2560 px"}</option>
+                <option value={1920}>{tr ? "Uzun kenar 1920 px" : "Long edge 1920 px"}</option>
+                <option value={1280}>{tr ? "Uzun kenar 1280 px" : "Long edge 1280 px"}</option>
+                <option value={800}>{tr ? "Uzun kenar 800 px" : "Long edge 800 px"}</option>
+              </select>
+            </label>
           </div>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            {format === "image/png"
+              ? tr
+                ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için «Otomatik» veya WebP seçin."
+                : "PNG is lossless — the quality slider has no effect. Pick «Automatic» or WebP for the biggest savings."
+              : tr
+                ? "Sonuç orijinalden büyük çıkarsa dosyanız olduğu gibi korunur — hiçbir görsel büyümez."
+                : "If the result would be larger than the original, your file is kept as-is — nothing ever grows."}
+          </p>
 
           {/* Dosya listesi */}
           <div className="mt-3 mb-2 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 text-[12px]">
