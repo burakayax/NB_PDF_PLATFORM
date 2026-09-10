@@ -124,6 +124,7 @@ import {
   deletePages,
   reorderPages,
   splitPagesToZip,
+  getPdfPageCount,
   pdfBytesToBlob,
   zipBytesToBlob,
   PdfEncryptedError,
@@ -3760,6 +3761,9 @@ function App() {
   /** Özel panele geç — açık PDF varsa beraberinde taşı. */
   async function openPanelWithOpenPdf(panel: ContentPanel) {
     await carryOpenPdfToPanel();
+    // Açık "PDF hazır" ekranı geride kalmasın — forma dönünce tekrar karşılamasın.
+    setMergeShareReady(null);
+    setMergeShare(null);
     setContentPanel(panel);
   }
 
@@ -3770,6 +3774,8 @@ function App() {
     if (mode !== "batch" && mode !== "compare") {
       await carryOpenPdfToPanel();
     }
+    setMergeShareReady(null);
+    setMergeShare(null);
     setAiModal(mode);
     setContentPanel("ai");
   }
@@ -3974,6 +3980,12 @@ function App() {
           return;
         }
       }
+    }
+    // "PDF hazır" ekranı açıkken başka bir araca geçilebilmeli: sonucu kapat ve
+    // hedef aracın formuyla temiz başla (kullanıcı «Kapat»a basmak zorunda kalmasın).
+    if (id !== selectedFeatureId) {
+      setMergeShareReady(null);
+      setMergeShare(null);
     }
     setContentPanel("tool");
     setSelectedFeatureId(id);
@@ -4556,7 +4568,15 @@ function App() {
               // Tek-dosya sayfa araçları — seçim grid state'inden okunur (1-tabanlı
               // → clientPdf 0-tabanlı). Seçim yoksa resultBytes null → sunucuya düşer.
               const src = new Uint8Array(await uploads[0].file.arrayBuffer());
-              const pc = uploads[0].pageCount ?? 0;
+              // Sayfa sayısı normalde yükleme sırasındaki sunucu ön kontrolünden
+              // gelir. O kontrol başarısızsa (oturum düşmüş, ağ kopmuş) değer boş
+              // kalıyor ve sayfa araçları cihaz-içi hızlı yoldan çıkıp sunucuya
+              // düşüyordu — yani ön kontrolü başarısız kılan sebep işlemi de
+              // baştan başarısız kılıyordu. Dosya zaten elimizde: sayfa sayısını
+              // burada kendimiz sayıyoruz.
+              const pc =
+                uploads[0].pageCount ??
+                (await getPdfPageCount(src).catch(() => 0));
               if (cid === "rotate-pdf") {
                 const r0: Record<number, number> = {};
                 for (const [p1, deg] of Object.entries(rotatePageRotations)) {
@@ -6727,7 +6747,7 @@ function App() {
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
-          onOpenCompressImage={() => setContentPanel("compress-image")}
+          onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6757,7 +6777,7 @@ function App() {
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
-          onOpenCompressImage={() => setContentPanel("compress-image")}
+          onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
