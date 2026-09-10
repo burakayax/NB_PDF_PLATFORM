@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
@@ -27,7 +28,6 @@ import {
   Trash2,
   Type,
   Underline,
-  UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
@@ -170,7 +170,6 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrTried, setOcrTried] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   // Sonuç sunucuda saklanır; blob İLK indirmede (günlük limit düşerek) alınır ve
   // önbelleğe konur → sonraki aç/paylaş tekrar limit düşmez.
@@ -216,7 +215,6 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const pageEls = analysis?.pages[current]?.elements ?? [];
@@ -905,12 +903,13 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           )}
         </div>
       ) : !file ? (
-        <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); void pickFile(e.dataTransfer.files[0]); }} onClick={() => inputRef.current?.click()}
-          className={`group cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-12 text-center transition ${dragOver ? "border-cyan-400/70 bg-cyan-400/[0.07]" : "border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent hover:border-cyan-400/40 hover:bg-white/[0.04]"}`}>
-          <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-white/10 transition group-hover:scale-105"><UploadCloud className="h-9 w-9" /></div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "Düzenlemek için PDF'i sürükle veya seç" : "Drag or choose a PDF to edit"}</p>
-          <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}</p>
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
+            accept="application/pdf,.pdf"
+            note={tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}
+            onFiles={(files) => { void pickFile(files[0]); }}
+          />
         </div>
       ) : (
         <div>

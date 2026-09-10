@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
@@ -12,7 +13,6 @@ import {
   Trash2,
   Type as TypeIcon,
   Upload,
-  UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
@@ -100,12 +100,10 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [drag, setDrag] = useState<Drag>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [textColor, setTextColor] = useState("#0b2447"); // metin/tarih rengi
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const clipboardRef = useRef<Placement | null>(null); // Ctrl+C ile kopyalanan imza
 
   const openFile = useCallback(async (f: File) => {
@@ -419,39 +417,13 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       </div>
 
       {!editorOpen && (
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const f = e.dataTransfer.files?.[0];
-            if (f) void openFile(f);
-          }}
-          onClick={() => fileInputRef.current?.click()}
-          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition sm:p-12 ${
-            dragOver ? "border-cyan-400/70 bg-cyan-400/[0.06]" : "border-white/15 hover:border-cyan-400/40 hover:bg-white/[0.02]"
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
             accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void openFile(f);
-              e.target.value = "";
-            }}
+            note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
+            onFiles={(files) => { void openFile(files[0]); }}
           />
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-white/10 transition group-hover:scale-105">
-            <UploadCloud className="h-9 w-9" />
-          </div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "İmzalanacak PDF'i sürükle veya seç" : "Drag or choose a PDF to sign"}</p>
-          <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}</p>
         </div>
       )}
 
