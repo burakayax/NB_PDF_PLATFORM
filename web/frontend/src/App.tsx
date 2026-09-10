@@ -237,6 +237,17 @@ import {
   UpgradeNudgeInline,
   mergeToolPhaseLabel,
 } from "./components/workspace/toolProgressUi";
+import {
+  createUploadItems,
+  formatElapsed,
+  isUserAbortError,
+  mergePointerYToIndex,
+  getReorderPreviewOffset,
+} from "./lib/workspaceHelpers";
+import {
+  EmptyStateIllustration,
+  EmptyState,
+} from "./components/workspace/EmptyState";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -407,146 +418,9 @@ const pdfInspectionFeatures: FeatureId[] = [
   "extract-images",
 ];
 
-function EmptyStateIllustration() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-      />
-    </svg>
-  );
-}
-
-function EmptyState({
-  title,
-  hint,
-  compact = false,
-}: {
-  title: string;
-  hint: string;
-  compact?: boolean;
-}) {
-  return (
-    <div
-      className={`nb-empty-state${compact ? " nb-empty-state--compact" : ""}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div className="nb-empty-state__icon">
-        <EmptyStateIllustration />
-      </div>
-      <p className="nb-empty-state__title">{title}</p>
-      <p className="nb-empty-state__hint">{hint}</p>
-    </div>
-  );
-}
 
 
 
-function createUploadItems(fileList: File[]) {
-  // Tarayıcı File listesini arayüz state modeline çevirir; her öğeye kararlı id ve şifre alanı ekler.
-  // Birleştirme sırası ve liste render'ı bu yapı üzerinden yürüdüğünden tutarlı şema gereklidir.
-  // Id üretimi zayıflarsa React anahtarları çakışır; sürükle-bırak ve güncelleme davranışı bozulabilir.
-  return fileList.map((file) => ({
-    id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
-    file,
-    encrypted: false,
-    inspecting: false,
-    password: "",
-    pageCount: null,
-    mergePasswordVerified: false,
-    corrupt: false,
-  }));
-}
-
-function formatElapsed(seconds: number) {
-  const total = Math.max(0, seconds);
-  const minutes = Math.floor(total / 60);
-  const remainder = total % 60;
-  return `${minutes}:${String(remainder).padStart(2, "0")}`;
-}
-
-function isUserAbortError(e: unknown): boolean {
-  if (e instanceof DOMException && e.name === "AbortError") {
-    return true;
-  }
-  if (e instanceof Error && e.name === "AbortError") {
-    return true;
-  }
-  return false;
-}
-
-/** Birleştirme listesinde imleç Y konumuna göre hedef satır indeksi (yer değiştirme önizlemesi için). */
-function mergePointerYToIndex(
-  clientY: number,
-  container: HTMLElement | null,
-): number {
-  if (!container) {
-    return 0;
-  }
-  const cards = [
-    ...container.querySelectorAll("[data-merge-row-index]"),
-  ] as HTMLElement[];
-  if (cards.length === 0) {
-    return 0;
-  }
-  for (let i = 0; i < cards.length; i++) {
-    const br = cards[i].getBoundingClientRect();
-    if (clientY >= br.top && clientY <= br.bottom) {
-      return i;
-    }
-  }
-  const first = cards[0].getBoundingClientRect();
-  if (clientY < first.top) {
-    return 0;
-  }
-  const last = cards[cards.length - 1].getBoundingClientRect();
-  if (clientY > last.bottom) {
-    return cards.length - 1;
-  }
-  let best = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < cards.length; i++) {
-    const br = cards[i].getBoundingClientRect();
-    const mid = br.top + br.height / 2;
-    const d = Math.abs(clientY - mid);
-    if (d < bestDist) {
-      bestDist = d;
-      best = i;
-    }
-  }
-  return best;
-}
-
-/** Sürüklerken diğer satırların kayarak ara açılmasını sağlar (kaynak ve hedef indeks arası). */
-function getReorderPreviewOffset(
-  index: number,
-  from: number,
-  to: number,
-  slot: number,
-): number {
-  if (from < 0 || from === to || slot <= 0) {
-    return 0;
-  }
-  if (from < to) {
-    if (index > from && index <= to) {
-      return -slot;
-    }
-  } else if (from > to) {
-    if (index >= to && index < from) {
-      return slot;
-    }
-  }
-  return 0;
-}
 
 
 function App() {
