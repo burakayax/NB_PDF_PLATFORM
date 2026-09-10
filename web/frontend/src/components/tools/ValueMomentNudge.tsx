@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
+import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
 
 /**
  * "Değer-anı" upsell kartı — kullanıcı ücretsiz bir işlemi BAŞARIYLA bitirdiğinde
@@ -34,7 +35,11 @@ type Props = { language: Language; source?: string };
 
 export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   const tr = language === "tr";
+  const planState = useCurrentPlan();
   const [hidden, setHidden] = useState(() => isSnoozed());
+  // Ücretli abone (ve ekip üyesi) bu daveti HİÇBİR araçta görmez — zaten üye,
+  // "bunu ücretsiz yaptın" mesajı yanlış ve rahatsız edici olur.
+  if (isPaidPlan(planState)) return null;
   if (hidden) return null;
 
   const dismiss = () => {
