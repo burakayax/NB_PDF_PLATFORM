@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 14:05:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 20:54:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,74 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>Snip from a PDF: Save a Table, Chart or Question as a Sharp Image</title>
+      <link>https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</guid>
+      <pubDate>Thu, 10 Sep 2026 20:54:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Want to reuse a table, chart or question from a PDF but your screenshot looks blurry? Snipping is a different job entirely — here's the difference and the easiest way to do it.]]></description>
+      <content:encoded><![CDATA[<p>There's a table, chart, diagram or a single question inside a PDF and you want it in a slide, a report or a lesson. The first instinct is to take a screenshot, and the result is usually a soft, crookedly cropped image. The right way is to cut that region straight out of the document at the resolution you choose. This guide explains the difference and the practical route.</p>
+<h2>Why isn't a screenshot enough?</h2>
+<p>A screenshot copies your SCREEN. The image you get is limited to your screen's resolution, not the PDF's. So:</p>
+<ul><li>Text and thin lines go soft and fall apart when you zoom in.</li><li>The difference shows immediately on a projector or in print.</li><li>Cropping the edges by hand is fiddly — a pixel too much here, too little there.</li><li>Even zooming into the PDF first won't give you more than your screen has.</li></ul>
+<h2>What does snipping do instead?</h2>
+<p>A snip is generated from the document itself, not from your screen. You select an area on the page and the tool redraws only that region at the resolution you picked. A table that looks small on screen can still become a print-quality image.</p>
+<blockquote><p>The resolution options are 1x, 2x and 3x. 1x is for screen use, 2x is plenty for print and slides; save 3x for large output or when you need to blow up a very small detail.</p></blockquote>
+<h2>Step by step: save a region as an image</h2>
+<ol><li><strong>Add your PDF</strong> — Drop in your document. It never leaves your device.</li><li><strong>Pick the page</strong> — Use the page strip on the left to move to the page you want.</li><li><strong>Select the area</strong> — Drag a box on the page; move it around and resize it from the corners.</li><li><strong>Set resolution and format</strong> — 1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos.</li><li><strong>Add the snip</strong> — It drops into the basket. Take as many snips as you like, from any page.</li><li><strong>Download</strong> — Save snips one by one, grab them all as a ZIP, or combine them into a single PDF.</li></ol>
+<p><strong>Snip PDF to Image</strong> — Upload a PDF — take the table, chart or question out as a sharp image. <a href="https://www.pdfplatform.app/en/tools/crop-pdf-to-image">Open the tool</a></p>
+<h2>What is the snip basket for?</h2>
+<p>One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you're done, download the lot in one go instead of handling files one at a time. The single-PDF option lines your snips up into one document — perfect when you're assembling a worksheet or a summary sheet.</p>
+<h2>Where does it help?</h2>
+<ul><li>Moving a chart from a report into a slide deck.</li><li>Pulling one product shot out of a catalogue.</li><li>Collecting specific questions from lesson notes or a question bank.</li><li>Sharing a clause from a contract legibly instead of as a soft screenshot.</li><li>Lifting a logo or stamp cleanly out of an old document.</li></ul>
+<h2>Snipping, converting pages to images, or extracting embedded images?</h2>
+<p>These are three different jobs; knowing which one you want gets you the right result first time:</p>
+<ul><li>Snipping: Turns THE REGION YOU CHOOSE into an image. A table, a chart, a paragraph — you draw the boundary.</li><li>PDF to image: Converts the WHOLE page into a single image.</li><li>Extracting embedded images: Pulls out the original photo files stored inside the document; it won't capture page text or vector drawings.</li></ul>
+<p><strong>PDF to Image</strong> — Download whole pages as high-resolution JPG/PNG. <a href="https://www.pdfplatform.app/en/tools/pdf-to-image">Open the tool</a></p>
+<h2>A note on privacy</h2>
+<p>Snipping runs entirely in your browser; your PDF is never uploaded. And the whole page isn't drawn at a huge scale — only the region you selected is rendered, which keeps it fast and easy on your device's memory.</p>]]></content:encoded>
+      <category>PDF Tools</category>
+      <category>Images</category>
+      <category>Snipping</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" type="image/png" length="56478" />
+      <media:content url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" />
+    </item>
+    <item>
+      <title>Image Resizing: The Right Pixel Sizes for Social Media (2026)</title>
+      <link>https://www.pdfplatform.app/en/blog/resize-images-for-social-media</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/resize-images-for-social-media</guid>
+      <pubDate>Thu, 10 Sep 2026 11:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Does your image get cropped or look blurry after uploading? Here are the current social media sizes and how to resize a picture to exactly the size you need without losing quality.]]></description>
+      <content:encoded><![CDATA[<p>You upload an image to a social network and it gets cropped, cut off at the edges, or looks soft. The reason is almost always the same: the pixel size of your image doesn't match what the platform expects. This guide lists the sizes each platform wants and shows how to resize a picture to fit them without losing quality.</p>
+<h2>Why does the size matter so much?</h2>
+<p>Social networks automatically crop and rescale whatever you upload to fit their frames. That automatic step is out of your hands: your text can end up outside the frame, faces can be cut off, and an oversized file can be compressed so aggressively that detail falls apart. Resize before you upload and you decide both the framing and the sharpness.</p>
+<h2>2026 social media image sizes</h2>
+<ul><li>Instagram post (square): 1080 × 1080 px</li><li>Instagram post (portrait, 4:5): 1080 × 1350 px — the tallest ratio the feed allows</li><li>Instagram story and Reels: 1080 × 1920 px (9:16)</li><li>Facebook shared image: 1200 × 630 px</li><li>Facebook cover photo: 851 × 315 px</li><li>X (Twitter) in-stream image: 1600 × 900 px — header: 1500 × 500 px</li><li>LinkedIn post (square): 1200 × 1200 px — company cover: 1128 × 191 px</li><li>YouTube thumbnail: 1280 × 720 px — channel banner: 2560 × 1440 px</li><li>Link preview image (OG image): 1200 × 630 px</li></ul>
+<blockquote><p>Publishing one image across several platforms? Start from 1080 × 1350 (4:5): it crops cleanly to both square and 9:16.</p></blockquote>
+<h2>Three ways to fit a size: Fill, Fit, Stretch</h2>
+<p>If your image's aspect ratio doesn't match the target, you have to make a choice. There are three options:</p>
+<ul><li>Fill (crop): Fills the size exactly; overflowing edges are cropped from the centre. The natural choice for photos.</li><li>Fit (add padding): The whole image stays visible and the gaps are filled with a colour you choose. Best for product shots, logos and posters where nothing may be cut.</li><li>Stretch: Pulls the image to the exact size, ignoring the ratio. Avoid it for faces and text — everything looks squashed.</li></ul>
+<h2>How is quality preserved?</h2>
+<p>Resizing is really resampling, and the filter decides the result. A browser's built-in scaling is fast but crude: thin lines get jagged and text goes soft. The PDF Platform Resize Image tool uses the mks2013 filter from the Lanczos family instead — it scales and sharpens in one pass, so fine detail survives.</p>
+<ul><li>The larger your source, the better the downscale — crop first, then resize.</li><li>Enlarging cannot create detail. Blowing a 600 px wide image up to 1920 px won't sharpen it; the tool warns you when that happens.</li><li>Use JPEG or WebP for photos, and PNG or WebP for logos that need transparency. WebP usually gives the smallest file at the same quality.</li></ul>
+<h2>Step by step: resize an image to any size</h2>
+<ol><li><strong>Add your image</strong> — Drop in a JPG, PNG or WebP file. It never leaves your device.</li><li><strong>Choose the size</strong> — Pick a ready-made social size or type a width and height yourself. With Keep aspect ratio on, one side is enough.</li><li><strong>Pick how it fits</strong> — Fill, Fit or Stretch. In Fit mode you can also choose the padding colour.</li><li><strong>Resize and download</strong> — Set the format and quality, click Resize, and the result downloads instantly.</li></ol>
+<p><strong>Resize Image</strong> — Upload an image — get it at exactly the pixel size you need, sharp. <a href="https://www.pdfplatform.app/en/tools/resize-image">Open the tool</a></p>
+<h2>Resizing or compressing?</h2>
+<p>These are two different jobs that often get mixed up. Resizing changes the pixel dimensions of an image (like 1920 × 1080); compressing keeps the dimensions and reduces the file size in MB. Getting the dimensions right usually cuts the file size a lot on its own — if it's still too big, run it through the compressor next.</p>
+<p><strong>Compress Image</strong> — Keep the dimensions, shrink the file size. <a href="https://www.pdfplatform.app/en/tools/compress-image">Open the tool</a></p>
+<h2>A note on privacy</h2>
+<p>Resizing runs entirely in your browser. Your image is never uploaded and never reaches the internet — the work happens on your computer or phone.</p>]]></content:encoded>
+      <category>Images</category>
+      <category>Social Media</category>
+      <category>Resizing</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" type="image/png" length="57602" />
+      <media:content url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" />
+    </item>
     <item>
       <title>Extract Images from a PDF: Save Embedded Photos Without Quality Loss</title>
       <link>https://www.pdfplatform.app/en/blog/extract-images-from-pdf</link>
@@ -47,7 +115,7 @@
       <category>PDF Tools</category>
       <category>Images</category>
       <category>Extraction</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" type="image/png" length="59223" />
       <media:content url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" />
     </item>
@@ -74,7 +142,7 @@
 <blockquote><p>A quick test: open the tool, pick a file, and watch how fast it finishes. If you get instant results with no upload bar, the operation is likely running on your device — meaning your file didn't go to the internet.</p></blockquote>]]></content:encoded>
       <category>Guide</category>
       <category>Privacy</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" type="image/png" length="54235" />
       <media:content url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" />
     </item>
@@ -96,7 +164,7 @@
 <blockquote><p>Still too big? Remove unneeded pages with "Split/Delete", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with "Merge PDF".</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Compress</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="51559" />
       <media:content url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" />
     </item>
@@ -118,7 +186,7 @@
 <blockquote><p>For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Mobile</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="57206" />
       <media:content url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" />
     </item>
@@ -140,7 +208,7 @@
 <blockquote><p>Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="56183" />
       <media:content url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" />
     </item>
@@ -162,7 +230,7 @@
 <blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Crop</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="56208" />
       <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" />
     </item>
@@ -184,7 +252,7 @@
 <blockquote><p>If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with "Merge PDF".</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Conversion</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="56492" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" />
     </item>
@@ -206,7 +274,7 @@
 <blockquote><p>For checkboxes, add a small "X" or "✓" text. If the form has multiple pages, add text/marks to each page separately.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Forms</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="51692" />
       <media:content url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" />
     </item>
@@ -231,7 +299,7 @@
 <blockquote><p>If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Privacy</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="57545" />
       <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" />
     </item>
@@ -254,7 +322,7 @@
 <blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="58607" />
       <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" />
     </item>
@@ -278,7 +346,7 @@
 <blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>]]></content:encoded>
       <category>How-to</category>
       <category>Editing</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="54836" />
       <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" />
     </item>
@@ -302,7 +370,7 @@
       <category>Convert</category>
       <category>Word</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="57242" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" />
     </item>
@@ -332,7 +400,7 @@
       <category>Guide</category>
       <category>PDF Tools</category>
       <category>Free</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="53083" />
       <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" />
     </item>
@@ -357,7 +425,7 @@
       <category>Convert</category>
       <category>Excel</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="56728" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
     </item>
@@ -385,7 +453,7 @@
       <category>Convert</category>
       <category>Image</category>
       <category>JPG</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="56017" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" />
     </item>
@@ -409,7 +477,7 @@
       <category>Privacy</category>
       <category>On-device</category>
       <category>PDF Tools</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="56859" />
       <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" />
     </item>
@@ -432,7 +500,7 @@
       <category>Troubleshooting</category>
       <category>PDF</category>
       <category>Repair</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="57949" />
       <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" />
     </item>
@@ -454,7 +522,7 @@
       <category>Convert</category>
       <category>Excel</category>
       <category>Table</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="55315" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" />
     </item>
@@ -479,7 +547,7 @@
       <category>Mobile</category>
       <category>On-device</category>
       <category>PDF Tools</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="55047" />
       <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" />
     </item>
@@ -502,7 +570,7 @@
       <category>Convert</category>
       <category>PowerPoint</category>
       <category>Slides</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="57444" />
       <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" />
     </item>
@@ -526,7 +594,7 @@
       <category>AI</category>
       <category>Compare</category>
       <category>Contract</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="60488" />
       <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" />
     </item>
@@ -550,7 +618,7 @@
       <category>Privacy</category>
       <category>Redaction</category>
       <category>GDPR</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="57019" />
       <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" />
     </item>
@@ -574,7 +642,7 @@
       <category>Editing</category>
       <category>PDF</category>
       <category>Text</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="55818" />
       <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" />
     </item>
@@ -596,7 +664,7 @@
       <category>Editing</category>
       <category>PDF</category>
       <category>Page Numbers</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="56646" />
       <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" />
     </item>
@@ -622,7 +690,7 @@
       <category>Scanning</category>
       <category>Alternative</category>
       <category>Privacy</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" type="image/png" length="58850" />
       <media:content url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" />
     </item>
@@ -647,7 +715,7 @@
       <category>Scanning</category>
       <category>Mobile</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" type="image/png" length="58549" />
       <media:content url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" />
     </item>
@@ -672,7 +740,7 @@
       <category>Scanning</category>
       <category>Quality</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" type="image/png" length="53657" />
       <media:content url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" />
     </item>
@@ -697,61 +765,9 @@
       <category>OCR</category>
       <category>Searchable PDF</category>
       <category>Scanning</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" type="image/png" length="58895" />
       <media:content url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" />
-    </item>
-    <item>
-      <title>How to Add a Watermark to a PDF: Text, Color and Opacity</title>
-      <link>https://www.pdfplatform.app/en/blog/add-watermark-to-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/add-watermark-to-pdf</guid>
-      <pubDate>Fri, 10 Jul 2026 17:58:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <description><![CDATA[Whether you want to mark a document as "DRAFT" or "CONFIDENTIAL", or stamp your company name on shared PDFs, a watermark is the quickest way. Here's how to add one in minutes with color, font and opacity control.]]></description>
-      <content:encoded><![CDATA[<p>A watermark stamps a semi-transparent line of text over a PDF to signal its status (draft, confidential, copy) or its owner. It's handy when sharing contracts, sending quotes or discouraging leaks.</p>
-<h2>What is a watermark good for?</h2>
-<ul><li>State the status: DRAFT, CONFIDENTIAL, NOT APPROVED.</li><li>Stamp ownership/brand: your company name or website.</li><li>Discourage sharing: the semi-transparent text stays visible in screenshots too.</li></ul>
-<h2>Step by step: add a watermark</h2>
-<ol><li><strong>Upload the PDF</strong> — Choose the document you want to watermark.</li><li><strong>Type the watermark text</strong> — Enter text such as "DRAFT", "CONFIDENTIAL" or your company name.</li><li><strong>Set color, font and opacity</strong> — Pick the color (#RRGGBB), font and an opacity that keeps the document readable.</li><li><strong>Preview and download</strong> — Preview the result and, if it looks right, download the watermarked PDF.</li></ol>
-<blockquote><p>Too dark (low opacity) makes text hard to read; too faint (high opacity) and it's barely visible. 10–20% works for most documents.</p></blockquote>
-<p><strong>Add Watermark</strong> — Stamp DRAFT, CONFIDENTIAL or your brand in minutes. <a href="https://www.pdfplatform.app/en/tools/watermark">Open the tool</a></p>
-<h2>After the watermark: protect and number</h2>
-<p>A watermark marks a document visually but doesn't prevent editing. To really protect it, encrypt with a password; for official documents you can also add page numbers. These tools complement each other.</p>
-<ul><li>To password-protect: Encrypt PDF.</li><li>For page numbers: Add Page Numbers.</li><li>If you need a signature: Sign PDF.</li></ul>]]></content:encoded>
-      <category>Watermark</category>
-      <category>Branding</category>
-      <category>Document</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" type="image/png" length="0" />
-      <media:content url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" medium="image" type="image/png" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-watermark-to-pdf.png" />
-    </item>
-    <item>
-      <title>How to Sign a PDF Electronically: Free, No Sign-up (2026)</title>
-      <link>https://www.pdfplatform.app/en/blog/how-to-sign-a-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/how-to-sign-a-pdf</guid>
-      <pubDate>Fri, 10 Jul 2026 12:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <description><![CDATA[Stop printing, wet-signing and re-scanning contracts. This guide shows how to sign a PDF electronically — by drawing, typing or uploading your signature — without your file ever leaving your device.]]></description>
-      <content:encoded><![CDATA[<p>Printing a contract, signing it by hand and scanning it back is slow and lossy. Signing the PDF directly is far faster and cleaner. Here's how to do it without your file leaving your device and without an account.</p>
-<h2>Electronic signature vs. qualified e-signature</h2>
-<p>In everyday use, "signing a PDF" means placing your signature image on the document — enough for most contracts, quotes, rental forms and letters. A qualified electronic signature (QES) required by some authorities needs a separate certificate/device. This tool provides the first kind: quick, visible signature placement.</p>
-<h2>Create your signature three ways</h2>
-<p>The Sign PDF tool lets you capture your signature by drawing with the mouse/finger, typing your name in a handwriting font, or uploading a signature image (transparent PNG works best).</p>
-<ul><li>Draw: most natural with a finger on touch screens.</li><li>Type: your name becomes a handwriting font.</li><li>Upload: add your stamp/signature image.</li></ul>
-<h2>Step by step: sign a PDF</h2>
-<ol><li><strong>Open the PDF</strong> — Drag and drop or choose the contract or form to sign. The file opens in your browser.</li><li><strong>Create your signature</strong> — Click «Add signature» to draw, type or upload it. It's placed in the center of the page as soon as it's created.</li><li><strong>Place and adjust</strong> — Drag it where you want, resize from the corner, rotate with the top handle, and adjust opacity if needed. You can also add a date or text.</li><li><strong>Apply and download</strong> — For multi-page files use «Apply to all pages» to copy it to the same spot, then click «Apply &amp; download». Your signed PDF is ready.</li></ol>
-<blockquote><p>Your signature and file are NOT uploaded — signing happens entirely in your browser (on your device), so you can sign confidential documents safely.</p></blockquote>
-<p><strong>Sign PDF</strong> — Sign your contract in seconds — no sign-up, on your device. <a href="https://www.pdfplatform.app/en/tools/sign-pdf">Open the tool</a></p>
-<h2>Put the same signature on every page</h2>
-<p>Multi-page contracts often need a signature on each page. Place your signature once and click «Apply to all pages» to copy it to the same position across all pages. You can also use Ctrl+C / Ctrl+V to copy an item elsewhere.</p>
-<h2>Signature + date + text together</h2>
-<p>You can add a date and free text (e.g. "Read and approved") next to the signature, pick any text color, and position everything by dragging — all burned into the PDF in one pass.</p>]]></content:encoded>
-      <category>Signature</category>
-      <category>E-sign</category>
-      <category>No sign-up</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-sign-a-pdf.png" type="image/png" length="0" />
-      <media:content url="https://www.pdfplatform.app/en/covers/how-to-sign-a-pdf.png" medium="image" type="image/png" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-sign-a-pdf.png" />
     </item>
   </channel>
 </rss>

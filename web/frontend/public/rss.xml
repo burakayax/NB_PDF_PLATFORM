@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 14:05:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 10 Sep 2026 20:54:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,74 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>PDF&apos;ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin</title>
+      <link>https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma</guid>
+      <pubDate>Thu, 10 Sep 2026 20:54:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[PDF'teki bir tabloyu, grafiği ya da soruyu sunuma almak istiyor ama ekran görüntüsü bulanık mı çıkıyor? Kesit almak bambaşka bir iş — bu yazıda farkı ve en kolay yolu gösteriyoruz.]]></description>
+      <content:encoded><![CDATA[<p>Bir PDF'in içinde işinize yarayan bir tablo, grafik, şema ya da tek bir soru var; onu sunuma, rapora veya derse almak istiyorsunuz. İlk refleks ekran görüntüsü almak oluyor ve sonuç çoğu zaman bulanık, kenarları eğri bir görsel. Doğru yol, o bölgeyi doğrudan belgeden, istediğiniz çözünürlükte kesip almak. Bu yazıda ikisinin farkını ve pratik yolunu anlatıyoruz.</p>
+<h2>Neden ekran görüntüsü yetmiyor?</h2>
+<p>Ekran görüntüsü, adı üstünde, EKRANINIZI kopyalar. Elde ettiğiniz görselin çözünürlüğü ekranınızın çözünürlüğüyle sınırlıdır; PDF'in kendi çözünürlüğüyle değil. Bu yüzden:</p>
+<ul><li>Yazılar ve ince çizgiler yumuşar, yakınlaştırınca dağılır.</li><li>Sunum perdesine veya baskıya verdiğinizde fark hemen belli olur.</li><li>Kenarları elle kırpmak zordur; bir yerden bir piksel fazla, başka yerden eksik kalır.</li><li>PDF'i büyütüp öyle ekran görüntüsü alsanız bile ekranınızdan fazlasını elde edemezsiniz.</li></ul>
+<h2>Kesit almak ne yapar?</h2>
+<p>Kesit alırken görsel ekrandan değil, belgenin kendisinden üretilir. Siz sayfada bir alan seçersiniz; araç yalnızca o bölgeyi, seçtiğiniz çözünürlükte yeniden çizer. Ekranınızda küçük görünen bir tablo bile baskı kalitesinde bir görsele dönüşebilir.</p>
+<blockquote><p>Çözünürlük seçeneği 1x, 2x ve 3x olarak sunulur. 1x ekran için, 2x baskı ve sunum için yeterlidir; 3x'i afiş gibi büyük çıktılarda veya çok küçük bir detayı büyütmek istediğinizde kullanın.</p></blockquote>
+<h2>Adım adım: bir bölgeyi görsel olarak kaydetme</h2>
+<ol><li><strong>PDF'i ekleyin</strong> — Belgenizi sürükleyip bırakın. Dosya cihazınızdan çıkmaz.</li><li><strong>Sayfayı seçin</strong> — Solda beliren sayfa şeridinden istediğiniz sayfaya geçin.</li><li><strong>Alanı seçin</strong> — Sayfada sürükleyerek bir kutu çizin; kutuyu taşıyabilir, köşelerinden boyutlandırabilirsiniz.</li><li><strong>Çözünürlük ve biçimi belirleyin</strong> — 1x/2x/3x ve PNG ya da JPEG. Metin ve grafikte PNG, fotoğrafta JPEG daha iyi sonuç verir.</li><li><strong>Kesiti ekleyin</strong> — Kesit sepete düşer. Aynı sayfadan ya da başka sayfalardan istediğiniz kadar kesit ekleyebilirsiniz.</li><li><strong>İndirin</strong> — Kesitleri tek tek indirin, hepsini birden ZIP olarak alın ya da tek bir PDF'te toplayın.</li></ol>
+<p><strong>PDF'ten Kesit Al</strong> — Bir PDF yükleyin — sayfadaki tabloyu, grafiği ya da soruyu net bir görsel olarak alın. <a href="https://www.pdfplatform.app/tools/pdf-kesit-al">Aracı aç</a></p>
+<h2>Kesit sepeti ne işe yarıyor?</h2>
+<p>Çoğu zaman tek bir kesit yetmez: bir rapordan üç grafik, bir kitaptan beş soru toplarsınız. Aldığınız her kesit sepette birikir; sayfa şeridinde hangi sayfadan kaç kesit aldığınız rozet olarak görünür. İşiniz bitince hepsini tek seferde indirirsiniz — dosya dosya uğraşmazsınız. Tek PDF seçeneğiyse topladığınız kesitleri sırayla tek bir belgeye dizer; çalışma kâğıdı ya da özet doküman hazırlarken işi bir adımda bitirir.</p>
+<h2>Nerelerde işinize yarar?</h2>
+<ul><li>Rapordaki bir grafiği sunuma almak.</li><li>Katalogdan tek bir ürün görselini ayırmak.</li><li>Ders notundan ya da soru bankasından belirli soruları toplamak.</li><li>Sözleşmedeki bir maddeyi ekran görüntüsü kalitesinde değil, okunur biçimde paylaşmak.</li><li>Eski bir belgeden logo veya damgayı temiz şekilde çıkarmak.</li></ul>
+<h2>Kesit almak mı, sayfayı resme çevirmek mi, gömülü görseli çıkarmak mı?</h2>
+<p>Üçü farklı işlerdir; hangisini istediğinizi bilirseniz doğru sonucu ilk seferde alırsınız:</p>
+<ul><li>Kesit alma: Sayfanın SİZİN SEÇTİĞİNİZ bölgesini görsel yapar. Tablo, grafik, bir paragraf — sınırı siz çizersiniz.</li><li>PDF'i resme çevirme: Sayfanın TAMAMINI tek bir görsele dönüştürür.</li><li>Gömülü görsel çıkarma: Belgenin içine gömülmüş asıl fotoğraf dosyalarını özgün haliyle ayıklar; sayfadaki metni veya çizimi almaz.</li></ul>
+<p><strong>PDF → Görsel</strong> — Sayfaların tamamını yüksek çözünürlüklü JPG/PNG olarak indirin. <a href="https://www.pdfplatform.app/tools/pdf-to-image">Aracı aç</a></p>
+<h2>Gizlilik notu</h2>
+<p>Kesit alma tamamen tarayıcınızda çalışır; PDF'iniz sunucuya yüklenmez. Üstelik sayfanın tamamı büyük ölçekte çizilmez, yalnızca seçtiğiniz bölge işlenir — bu hem hızlı hem de cihazınızın belleğine yük bindirmeyen bir yol.</p>]]></content:encoded>
+      <category>PDF Araçları</category>
+      <category>Görsel</category>
+      <category>Kesit Alma</category>
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" type="image/png" length="61279" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" />
+    </item>
+    <item>
+      <title>Görsel Boyutlandırma: Sosyal Medya İçin Doğru Piksel Ölçüleri (2026)</title>
+      <link>https://www.pdfplatform.app/blog/gorsel-boyutlandirma-sosyal-medya</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/gorsel-boyutlandirma-sosyal-medya</guid>
+      <pubDate>Thu, 10 Sep 2026 11:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <description><![CDATA[Yüklediğiniz görsel platformda kırpılıyor ya da bulanıklaşıyor mu? Güncel sosyal medya ölçüleri ve resmi kalite kaybetmeden tam o ölçüye getirmenin yolu bu yazıda.]]></description>
+      <content:encoded><![CDATA[<p>Bir görseli sosyal medyaya yüklüyorsunuz ve platform onu kırpıyor, kenarlarını kesiyor ya da bulanıklaştırıyor. Sebep neredeyse her zaman aynı: görselin piksel ölçüsü platformun beklediği ölçüyle uyuşmuyor. Bu yazıda hangi platformun hangi ölçüyü istediğini ve bir resmi kalitesini koruyarak o ölçüye nasıl getireceğinizi anlatıyoruz.</p>
+<h2>Neden ölçü bu kadar önemli?</h2>
+<p>Sosyal ağlar yüklediğiniz görseli kendi çerçevelerine sığdırmak için otomatik olarak kırpar ve yeniden ölçekler. Bu otomatik işlem sizin kontrolünüzde değildir: yazınız kadraj dışında kalabilir, yüzler kenardan kesilebilir, çok büyük bir dosya agresif biçimde sıkıştırıldığı için detaylar dağılabilir. Görseli daha yüklemeden doğru ölçüye getirdiğinizde kadrajı da netliği de siz belirlersiniz.</p>
+<h2>2026 sosyal medya görsel ölçüleri</h2>
+<ul><li>Instagram gönderi (kare): 1080 × 1080 px</li><li>Instagram gönderi (dikey, 4:5): 1080 × 1350 px — akışta en çok yer kaplayan oran</li><li>Instagram hikâye ve Reels: 1080 × 1920 px (9:16)</li><li>Facebook paylaşım görseli: 1200 × 630 px</li><li>Facebook kapak fotoğrafı: 851 × 315 px</li><li>X (Twitter) gönderi görseli: 1600 × 900 px — kapak/başlık: 1500 × 500 px</li><li>LinkedIn gönderi (kare): 1200 × 1200 px — şirket kapağı: 1128 × 191 px</li><li>YouTube küçük resmi: 1280 × 720 px — kanal başlığı: 2560 × 1440 px</li><li>Site link önizlemesi (OG görseli): 1200 × 630 px</li></ul>
+<blockquote><p>Tek bir görselle birden çok platforma çıkacaksanız 1080 × 1350 (4:5) ile başlayın: kareye de 9:16'ya da temiz kırpılır.</p></blockquote>
+<h2>Üç farklı yol: Doldur, Sığdır, Esnet</h2>
+<p>Görselinizin oranı hedef ölçüyle aynı değilse bir karar vermek gerekir. Üç yol vardır:</p>
+<ul><li>Doldur (kırp): Ölçüyü tam doldurur, taşan kenarlar ortadan kırpılır. Fotoğraflar için en doğal seçim.</li><li>Sığdır (boşluk ekle): Görselin tamamı görünür, artan yerler seçtiğiniz renkle dolar. Ürün görseli, logo ve afiş gibi hiçbir yeri kesilmemesi gerekenler için.</li><li>Esnet: Oranı bozarak tam ölçüye çeker. Yüz ve metin içeren görsellerde kullanmayın — görüntü yayvanlaşır.</li></ul>
+<h2>Kalite nasıl korunur?</h2>
+<p>Bir görseli küçültmek aslında yeniden örnekleme (resampling) işlemidir ve kullanılan süzgeç sonucu doğrudan belirler. Tarayıcıların yerleşik ölçeklemesi hızlıdır ama kabadır: ince çizgiler tırtıklanır, metinler bulanıklaşır. PDF Platform'un Görsel Boyutlandır aracı bunun yerine Lanczos ailesinden mks2013 süzgecini kullanır — ölçekleme ve keskinleştirmeyi birlikte yürütür, ince detaylar korunur.</p>
+<ul><li>Küçültürken kaynağınız ne kadar büyükse sonuç o kadar iyi olur; önce kırpın, sonra küçültün.</li><li>Büyütme yeni detay yaratmaz. 600 piksel genişliğindeki bir görseli 1920 piksele çıkarmak onu netleştirmez; araç bu durumda sizi uyarır.</li><li>Fotoğraflarda JPEG veya WebP, saydamlık gereken logolarda PNG veya WebP kullanın. WebP çoğu zaman aynı kalitede en küçük dosyayı verir.</li></ul>
+<h2>Adım adım: bir görseli istediğiniz ölçüye getirme</h2>
+<ol><li><strong>Görseli ekleyin</strong> — JPG, PNG veya WebP dosyanızı sürükleyip bırakın. Dosya cihazınızdan çıkmaz.</li><li><strong>Ölçüyü seçin</strong> — Hazır sosyal medya ölçülerinden birini seçin ya da genişlik-yüksekliği kendiniz yazın. Oranı koru açıkken bir kenarı yazmanız yeter.</li><li><strong>Oturtma biçimini belirleyin</strong> — Doldur, Sığdır ya da Esnet. Sığdır'da boşlukların rengini de seçebilirsiniz.</li><li><strong>Boyutlandırın ve indirin</strong> — Biçim ve kaliteyi ayarlayıp Boyutlandır deyin; sonuç anında iner.</li></ol>
+<p><strong>Görsel Boyutlandır</strong> — Bir görsel yükleyin — istediğiniz piksel ölçüsüne net biçimde gelsin. <a href="https://www.pdfplatform.app/tools/gorsel-boyutlandir">Aracı aç</a></p>
+<h2>Boyutlandırma mı, sıkıştırma mı?</h2>
+<p>İkisi farklı işlerdir ve sık karıştırılır. Boyutlandırma görselin piksel ölçüsünü değiştirir (1920 × 1080 gibi); sıkıştırma ise ölçüyü koruyup dosya boyutunu küçültür (MB). Çoğu zaman önce doğru ölçüye getirmek dosya boyutunu da ciddi biçimde düşürür; hâlâ büyükse sıkıştırma aracıyla devam edebilirsiniz.</p>
+<p><strong>Görsel Sıkıştır</strong> — Ölçü aynı kalsın, dosya boyutu küçülsün. <a href="https://www.pdfplatform.app/tools/gorsel-sikistir">Aracı aç</a></p>
+<h2>Gizlilik notu</h2>
+<p>Görsel boyutlandırma tamamen tarayıcınızda çalışır. Görseliniz sunucuya yüklenmez, internete hiç çıkmaz — işlem bilgisayarınızda ya da telefonunuzda yapılır.</p>]]></content:encoded>
+      <category>Görsel</category>
+      <category>Sosyal Medya</category>
+      <category>Boyutlandırma</category>
+      <enclosure url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" type="image/png" length="59672" />
+      <media:content url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" medium="image" type="image/png" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" />
+    </item>
     <item>
       <title>PDF&apos;ten Resim (Görsel) Çıkarma: Gömülü Fotoğrafları Kayıpsız İndirin</title>
       <link>https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma</link>
@@ -47,7 +115,7 @@
       <category>PDF Araçları</category>
       <category>Görsel</category>
       <category>Resim Çıkarma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" type="image/png" length="58077" />
       <media:content url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" />
     </item>
@@ -74,7 +142,7 @@
 <blockquote><p>Pratik test: Aracı aç, bir dosya seç ve işlemin ne kadar sürede bittiğine bak. Yükleme çubuğu görmeden anında sonuç geliyorsa, işlem büyük olasılıkla cihazında yapılıyordur — yani dosyan internete gitmemiştir.</p></blockquote>]]></content:encoded>
       <category>Rehber</category>
       <category>Gizlilik</category>
-      <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" type="image/png" length="54209" />
       <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" />
     </item>
@@ -96,7 +164,7 @@
 <blockquote><p>Hâlâ büyükse: gereksiz sayfaları "PDF Böl/Sil" ile çıkar ya da yalnız gereken sayfaları gönder. Birden çok belgeyi tek dosyada göndereceksen önce sıkıştır, sonra "PDF Birleştir" ile topla.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Sıkıştırma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" type="image/png" length="54702" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" />
     </item>
@@ -118,7 +186,7 @@
 <blockquote><p>İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Mobil</category>
-      <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" type="image/png" length="58244" />
       <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" />
     </item>
@@ -140,7 +208,7 @@
 <blockquote><p>Yalnızca bir PDF'i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz.</p></blockquote>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" type="image/png" length="58643" />
       <media:content url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" />
     </item>
@@ -162,7 +230,7 @@
 <blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Kırpma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="57772" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" />
     </item>
@@ -184,7 +252,7 @@
 <blockquote><p>Birden çok belgeyi (CV + ön yazı + sertifikalar) tek dosyada göndermeniz istenirse, PDF'e çevirdikten sonra "PDF Birleştir" ile tek belgede toplayabilirsiniz.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Dönüştürme</category>
-      <enclosure url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" type="image/png" length="60612" />
       <media:content url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" />
     </item>
@@ -206,7 +274,7 @@
 <blockquote><p>Onay kutuları için küçük bir "X" veya "✓" metni ekleyebilirsiniz. Formu birden çok sayfaysa her sayfaya ayrı ayrı metin/işaret ekleyebilirsiniz.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Form</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" type="image/png" length="55310" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" />
     </item>
@@ -231,7 +299,7 @@
 <blockquote><p>Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz.</p></blockquote>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Gizlilik</category>
-      <enclosure url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" type="image/png" length="58887" />
       <media:content url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" />
     </item>
@@ -254,7 +322,7 @@
 <blockquote><p>Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz.</p></blockquote>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" type="image/png" length="59636" />
       <media:content url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" />
     </item>
@@ -278,7 +346,7 @@
 <blockquote><p>Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p></blockquote>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Düzenleme</category>
-      <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" type="image/png" length="57731" />
       <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" />
     </item>
@@ -302,7 +370,7 @@
       <category>Dönüştürme</category>
       <category>Word</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" type="image/png" length="55963" />
       <media:content url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" />
     </item>
@@ -332,7 +400,7 @@
       <category>Rehber</category>
       <category>PDF Araçları</category>
       <category>Ücretsiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" type="image/png" length="54657" />
       <media:content url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" />
     </item>
@@ -357,7 +425,7 @@
       <category>Dönüştürme</category>
       <category>Excel</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" type="image/png" length="56033" />
       <media:content url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" />
     </item>
@@ -385,7 +453,7 @@
       <category>Dönüştürme</category>
       <category>Görsel</category>
       <category>JPG</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" type="image/png" length="54879" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" />
     </item>
@@ -409,7 +477,7 @@
       <category>Gizlilik</category>
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
-      <enclosure url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" type="image/png" length="59958" />
       <media:content url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" />
     </item>
@@ -432,7 +500,7 @@
       <category>Sorun Giderme</category>
       <category>PDF</category>
       <category>Onarma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" type="image/png" length="55918" />
       <media:content url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" />
     </item>
@@ -454,7 +522,7 @@
       <category>Dönüştürme</category>
       <category>Excel</category>
       <category>Tablo</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" type="image/png" length="55693" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" />
     </item>
@@ -479,7 +547,7 @@
       <category>Mobil</category>
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
-      <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" type="image/png" length="57764" />
       <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" />
     </item>
@@ -502,7 +570,7 @@
       <category>Dönüştürme</category>
       <category>PowerPoint</category>
       <category>Sunum</category>
-      <enclosure url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" type="image/png" length="55691" />
       <media:content url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" />
     </item>
@@ -526,7 +594,7 @@
       <category>Yapay Zekâ</category>
       <category>Karşılaştırma</category>
       <category>Sözleşme</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" type="image/png" length="57344" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" />
     </item>
@@ -550,7 +618,7 @@
       <category>KVKK</category>
       <category>Gizlilik</category>
       <category>Redaction</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" type="image/png" length="57262" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" />
     </item>
@@ -574,7 +642,7 @@
       <category>Düzenleme</category>
       <category>PDF</category>
       <category>Metin</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" type="image/png" length="56746" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" />
     </item>
@@ -596,7 +664,7 @@
       <category>Düzenleme</category>
       <category>PDF</category>
       <category>Sayfa Numarası</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" type="image/png" length="55251" />
       <media:content url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" />
     </item>
@@ -622,7 +690,7 @@
       <category>Belge Tarama</category>
       <category>Alternatif</category>
       <category>Gizlilik</category>
-      <enclosure url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" type="image/png" length="56923" />
       <media:content url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" />
     </item>
@@ -647,7 +715,7 @@
       <category>Belge Tarama</category>
       <category>Mobil</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" type="image/png" length="58215" />
       <media:content url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" />
     </item>
@@ -672,7 +740,7 @@
       <category>Belge Tarama</category>
       <category>Kalite</category>
       <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" type="image/png" length="56808" />
       <media:content url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" />
     </item>
@@ -697,61 +765,9 @@
       <category>OCR</category>
       <category>Aranabilir PDF</category>
       <category>Tarama</category>
-      <enclosure url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" type="image/png" length="0" />
+      <enclosure url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" type="image/png" length="58069" />
       <media:content url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" />
-    </item>
-    <item>
-      <title>PDF&apos;e Filigran Ekleme: Metin, Renk ve Saydamlık Ayarıyla</title>
-      <link>https://www.pdfplatform.app/blog/pdf-filigran-ekleme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-filigran-ekleme</guid>
-      <pubDate>Fri, 10 Jul 2026 17:58:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <description><![CDATA[Bir belgeyi "TASLAK" veya "GİZLİ" olarak işaretlemek, ya da paylaştığınız PDF'lere şirket adınızı basmak istiyorsanız filigran en pratik yoldur. Renk, yazı tipi ve saydamlığı ayarlayarak dakikalar içinde nasıl ekleyeceğinizi anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Filigran; bir PDF'in üzerine yarı saydam bir yazı basarak belgenin durumunu (taslak, gizli, kopya) veya sahibini belirtmenin en hızlı yoludur. Sözleşme paylaşırken, teklif gönderirken ya da belge sızıntısını caydırmak isterken işe yarar.</p>
-<h2>Filigran ne işe yarar?</h2>
-<ul><li>Belge durumunu belirtir: TASLAK, GİZLİ, ONAYLANMADI.</li><li>Sahiplik/marka basar: şirket adınız veya web siteniz.</li><li>İzinsiz paylaşımı caydırır: yarı saydam metin ekran görüntüsünde de kalır.</li></ul>
-<h2>Adım adım: PDF'e filigran ekleme</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — Filigran eklemek istediğiniz belgeyi seçin.</li><li><strong>Filigran metnini yazın</strong> — "TASLAK", "GİZLİ" ya da şirket adınız gibi bir metin girin.</li><li><strong>Renk, yazı tipi ve saydamlığı ayarlayın</strong> — Rengi (#RRGGBB), yazı tipini ve saydamlığı belgeyi okunur bırakacak şekilde seçin.</li><li><strong>Önizleyip indirin</strong> — Sonucu önizleyin, uygun görünüyorsa filigranlı PDF'i indirin.</li></ol>
-<blockquote><p>Saydamlığı çok düşük (koyu) tutarsanız filigran metni okumayı zorlaştırır; çok yüksek (soluk) tutarsanız fark edilmez. %10–20 arası çoğu belge için idealdir.</p></blockquote>
-<p><strong>Filigran Ekle</strong> — Belgenize TASLAK, GİZLİ veya markanızı dakikalar içinde basın. <a href="https://www.pdfplatform.app/tools/watermark">Aracı aç</a></p>
-<h2>Filigrandan sonra: koruma ve numaralandırma</h2>
-<p>Filigran, belgeyi görsel olarak işaretler ama düzenlenmesini engellemez. Belgeyi gerçekten korumak istiyorsanız parola ile şifreleyebilir; resmî belgelerde sayfa numarası da ekleyebilirsiniz. Bu araçlar birbirini tamamlar.</p>
-<ul><li>Parola korumak için: PDF Şifrele.</li><li>Sayfa numarası için: Sayfa Numarası Ekle.</li><li>İmza gerekiyorsa: PDF İmzala.</li></ul>]]></content:encoded>
-      <category>Filigran</category>
-      <category>Watermark</category>
-      <category>Belge</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-filigran-ekleme.png" type="image/png" length="0" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-filigran-ekleme.png" medium="image" type="image/png" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-filigran-ekleme.png" />
-    </item>
-    <item>
-      <title>PDF&apos;e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)</title>
-      <link>https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-e-imza-atma-nasil-yapilir</guid>
-      <pubDate>Fri, 10 Jul 2026 12:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <description><![CDATA[Sözleşme, form ve dilekçeleri yazdırıp ıslak imzalayıp tekrar taramaya son. Bu rehberde PDF'e elektronik imzayı — imzayı çizerek, yazarak veya yükleyerek — cihazınızdan çıkmadan nasıl atacağınızı adım adım gösteriyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir sözleşmeyi imzalamak için onu yazdırıp ıslak imza atıp tekrar taramak; hem zaman kaybı hem de kalite kaybıdır. PDF'e doğrudan elektronik imza atmak çok daha hızlı ve temizdir. İşte cihazınızdan çıkmadan, üyelik gerektirmeden bunu yapmanın yolu.</p>
-<h2>Elektronik imza nedir, e-imza (nitelikli) ile farkı ne?</h2>
-<p>Gündelik kullanımda "PDF'e imza atmak", belgeye imza görselinizi yerleştirmek demektir; sözleşme, teklif, kira formu, dilekçe gibi belgelerin büyük çoğunluğu için yeterlidir. Resmî kurumların istediği nitelikli elektronik imza (NES) ise ayrı bir e-imza cihazı/sertifikası gerektirir. Bu araç birinci türü — hızlı, görünür imza yerleştirmeyi — sağlar.</p>
-<h2>İmzanızı üç şekilde oluşturun</h2>
-<p>PDF İmzala aracı imzanızı üç yolla almanıza izin verir: fareyle/parmağınızla çizin, adınızı el yazısı fontuyla yazın veya hazır bir imza görselini (şeffaf PNG en iyisi) yükleyin.</p>
-<ul><li>Çiz: dokunmatik ekranda parmağınızla en doğal sonuç.</li><li>Yaz: adınız el yazısı fontuna dönüşür.</li><li>Yükle: kaşe/imza görselinizi ekleyin.</li></ul>
-<h2>Adım adım: PDF'e imza atma</h2>
-<ol><li><strong>PDF'i açın</strong> — İmzalanacak sözleşme veya formu sürükleyip bırakın ya da seçin. Dosya tarayıcınızda açılır.</li><li><strong>İmzanızı oluşturun</strong> — «İmza Ekle» ile imzanızı çizin, yazın veya yükleyin. İmza oluşur oluşmaz sayfanın ortasına yerleşir.</li><li><strong>Yerleştirin ve ayarlayın</strong> — İmzayı sürükleyerek istediğiniz yere taşıyın, köşeden boyutlandırın, üstteki tutamakla döndürün; gerekirse saydamlığını ayarlayın. Tarih veya metin de ekleyebilirsiniz.</li><li><strong>Uygulayın ve indirin</strong> — Çok sayfalıysa «Tüm sayfalara uygula» ile aynı yere kopyalayın, sonra «Uygula ve İndir» deyin. İmzalı PDF hazır.</li></ol>
-<blockquote><p>İmzanız ve dosyanız sunucuya GİTMEZ — imzalama tamamen tarayıcınızda (cihazınızda) yapılır. Bu yüzden gizli belgeleri de gönül rahatlığıyla imzalayabilirsiniz.</p></blockquote>
-<p><strong>PDF İmzala</strong> — Sözleşmenizi saniyeler içinde imzalayın — üyeliksiz, cihazınızda. <a href="https://www.pdfplatform.app/tools/pdf-imzala">Aracı aç</a></p>
-<h2>Aynı imzayı birden çok sayfaya koyma</h2>
-<p>Çok sayfalı sözleşmelerde her sayfanın altına imza gerekebilir. İmzanızı bir sayfaya yerleştirip «Tüm sayfalara uygula» dediğinizde, aynı imza tüm sayfalarda aynı hizaya kopyalanır. Bir öğeyi kopyalayıp başka yere yapıştırmak için Ctrl+C / Ctrl+V kısayollarını da kullanabilirsiniz.</p>
-<h2>İmza + tarih + metin birlikte</h2>
-<p>İmzanın yanına tarih ve serbest metin (ör. "Okudum, onaylıyorum") de ekleyebilirsiniz. Metin rengini istediğiniz gibi seçebilir, konumunu sürükleyerek ayarlayabilirsiniz — hepsi tek geçişte PDF'e gömülür.</p>]]></content:encoded>
-      <category>İmza</category>
-      <category>E-İmza</category>
-      <category>Üyeliksiz</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-e-imza-atma-nasil-yapilir.png" type="image/png" length="0" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-e-imza-atma-nasil-yapilir.png" medium="image" type="image/png" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-e-imza-atma-nasil-yapilir.png" />
     </item>
   </channel>
 </rss>
