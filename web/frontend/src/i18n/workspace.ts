@@ -254,13 +254,16 @@ export function ws(lang: Language) {
     inspecting: tr ? "PDF kontrol ediliyor…" : "Checking PDF…",
     encryptedBadge: tr ? "Şifreli PDF" : "Encrypted PDF",
     ready: tr ? "Hazır" : "Ready",
-    compressEstimateLine: (minMB: number, maxMB: number) =>
+    compressEstimateLine: (minPct: number, maxPct: number) =>
       tr
-        ? `Tahmini boyut düşüşü: ~${minMB}–${maxMB} MB (tipik)`
-        : `Est. size reduction: ~${minMB}–${maxMB} MB (typical)`,
+        ? `Beklenen küçülme: %${minPct}–${maxPct}`
+        : `Expected reduction: ${minPct}–${maxPct}%`,
     compressEstimateTooltip: tr
-      ? "Yaklaşık tahmin; gerçek sonuç PDF içeriğine göre değişir."
-      : "Approximate; actual savings depend on PDF content.",
+      ? "Bu dosyanın içeriğine bakılarak hesaplandı; kazanç görsellerden gelir."
+      : "Calculated from this file's content; savings come from images.",
+    compressTextHeavyNote: tr
+      ? "Bu PDF metin ağırlıklı: içindeki metin zaten sıkıştırılmış geldiği için kazanç sınırlı olur. Kalite kademesi yalnızca görselleri etkiler."
+      : "This PDF is text-heavy: its text is already compressed, so savings are limited. The quality level only affects images.",
     notesTitle: tr ? "Web sürümü notları" : "Web edition notes",
     platform: tr ? "Platform" : "Platform",
     tesseract: tr ? "Tesseract" : "Tesseract",

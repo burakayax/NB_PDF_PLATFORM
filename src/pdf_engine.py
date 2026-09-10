@@ -3283,6 +3283,39 @@ _COMPRESS_GS_SETTINGS = {
 _COMPRESS_GS_FALLBACK_THRESHOLD = 0.40
 
 
+def pdf_image_byte_ratio(input_path: str, password: Optional[str] = None) -> float:
+    """Dosyanın ne kadarının görüntü olduğunu döndürür (0.0 - 1.0).
+
+    Sıkıştırmadan gerçekte ne kadar kazanılacağını belirleyen tek şey budur:
+    kazanç görüntülerden gelir, metin akışları zaten sıkıştırılmış gelir. Arayüz
+    kullanıcıya gerçekçi bir beklenti gösterebilsin diye ölçülür.
+
+    Akışlar AÇILMAZ, yalnızca ham uzunlukları toplanır; büyük taranmış
+    belgelerde bile maliyeti ihmal edilebilir.
+    """
+    try:
+        import pikepdf
+
+        total = os.path.getsize(input_path)
+        if total <= 0:
+            return 0.0
+        pwd = (password or "").strip() or None
+        image_bytes = 0
+        with pikepdf.open(input_path, password=pwd or "") as pdf:
+            for obj in pdf.objects:
+                try:
+                    if not isinstance(obj, pikepdf.Stream):
+                        continue
+                    if str(obj.get("/Subtype", "")) != "/Image":
+                        continue
+                    image_bytes += len(obj.read_raw_bytes())
+                except Exception:
+                    continue
+        return max(0.0, min(1.0, image_bytes / total))
+    except Exception:
+        return 0.0
+
+
 def compress_pdf(input_path: str, output_path: str, progress_callback=None, password: Optional[str] = None, quality: str = "auto") -> bool:
     """İki aşamalı sıkıştırma: pikepdf+Pillow görüntü yeniden örnekleme + gerekirse Ghostscript.
 

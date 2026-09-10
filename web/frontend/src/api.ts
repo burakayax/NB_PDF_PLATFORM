@@ -1086,6 +1086,8 @@ export async function inspectPdf(
         filename: string;
         encrypted: boolean;
         page_count: number | null;
+        /** Dosyanın görüntü olan oranı (0-1). Sıkıştırma beklentisi bundan çıkar. */
+        image_ratio?: number;
         inspect_error?: string | null;
         inspect_diagnostic?: Record<string, unknown>;
       };

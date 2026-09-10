@@ -2526,6 +2526,14 @@ textarea {
   cursor: help;
 }
 
+/* Metin ağırlıklı PDF uyarısı — beklentiyi baştan doğru kurar. */
+.selected-file-card__compress-note {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(148, 163, 184, 0.95);
+}
+
 .selected-file-card__text {
   flex: 1;
   min-width: 0;

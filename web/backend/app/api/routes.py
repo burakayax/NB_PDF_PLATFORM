@@ -372,6 +372,10 @@ async def inspect_pdf(
         pwd = password.strip() or None
         page_count = None
         inspect_error = None
+        # Dosyanın ne kadarı görüntü? Sıkıştırmadan gelecek kazancın tek
+        # belirleyicisi bu; arayüz gerçekçi bir beklenti gösterebilsin diye
+        # ölçülüp geri veriliyor.
+        image_ratio = 0.0
         if corrupt:
             inspect_error = "Dosya geçersiz veya bozuk — PDF olarak açılamıyor."
         elif encrypted and not pwd:
@@ -382,10 +386,17 @@ async def inspect_pdf(
             except Exception as exc:
                 page_count = None
                 inspect_error = str(exc)
+            try:
+                image_ratio = await run_sandboxed(
+                    engine.pdf_image_byte_ratio, p, password=pwd
+                )
+            except Exception:
+                image_ratio = 0.0
         return {
             "filename": file.filename,
             "encrypted": encrypted,
             "page_count": page_count,
+            "image_ratio": image_ratio,
             "corrupt": corrupt,
             "inspect_error": inspect_error,
             "inspect_diagnostic": encrypt_diag,
