@@ -375,7 +375,10 @@ async def inspect_pdf(
         # Dosyanın ne kadarı görüntü? Sıkıştırmadan gelecek kazancın tek
         # belirleyicisi bu; arayüz gerçekçi bir beklenti gösterebilsin diye
         # ölçülüp geri veriliyor.
-        image_ratio = 0.0
+        # Ölçülemediğinde 0 DEĞİL, boş dönülür: 0 "hiç görsel yok" demektir ve
+        # arayüz buna bakıp gerçekçi olmayan bir beklenti yazardı. Şifreli veya
+        # okunamayan dosyada hiçbir şey söylememek doğrusu.
+        image_ratio: float | None = None
         if corrupt:
             inspect_error = "Dosya geçersiz veya bozuk — PDF olarak açılamıyor."
         elif encrypted and not pwd:
@@ -391,7 +394,7 @@ async def inspect_pdf(
                     engine.pdf_image_byte_ratio, p, password=pwd
                 )
             except Exception:
-                image_ratio = 0.0
+                image_ratio = None
         return {
             "filename": file.filename,
             "encrypted": encrypted,

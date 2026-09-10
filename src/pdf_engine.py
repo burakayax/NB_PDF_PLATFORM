@@ -3328,18 +3328,30 @@ def compress_pdf(input_path: str, output_path: str, progress_callback=None, pass
          high   → /printer  (300 DPI, en kaliteli)
     Her iki aşamada da en küçük sonuç seçilir.
     """
+    # Geçici dosya adları try'dan ÖNCE tanımlanmalı: aşağıdaki `finally` bunları
+    # temizliyor, ama şifre kontrolü gibi erken bir hata bu satırlara hiç
+    # gelmeden çıkıyordu. O durumda `finally` tanımsız değişkene dokunup asıl
+    # hatayı gizliyor, kullanıcıya "parola gerekli" yerine anlamsız bir Python
+    # iletisi gidiyordu.
+    pike_keep: Optional[str] = None
+    gs_keep: Optional[str] = None
     try:
         if progress_callback:
             progress_callback(0, 2, "PDF sıkıştırılıyor...")
-        if is_pdf_encrypted(input_path) and not password:
-            raise Exception(f"PDF sıkıştırma için şifre gerekli: {os.path.basename(input_path)}")
+        if is_pdf_encrypted(input_path):
+            if not password:
+                raise Exception(f"PDF sıkıştırma için şifre gerekli: {os.path.basename(input_path)}")
+            # Parolanın belgeyi GERÇEKTEN açtığı burada doğrulanmalı. Aksi hâlde
+            # aşağıdaki aşamalar sessizce başarısız oluyor, hiçbiri dosyayı
+            # küçültemediği için girdi olduğu gibi kopyalanıyor ve kullanıcıya
+            # "işlem başarılı" deniyordu: hakkı harcanıyor, elindeki dosya ise
+            # hâlâ şifreli ve hiç değişmemiş oluyordu.
+            _fitz_open_for_tool(input_path, password, context="PDF sıkıştırma").close()
         open_password = (password or "").strip()
         in_size = os.path.getsize(input_path)
         timeout_sec = _tool_subprocess_timeout_sec()
 
         out_dir = os.path.dirname(output_path) or None
-        pike_keep: Optional[str] = None
-        gs_keep: Optional[str] = None
 
         # --- 1. pikepdf + Pillow görüntü yeniden sıkıştırma ---
         fd1, pike_out = tempfile.mkstemp(suffix=".pdf", dir=out_dir)
