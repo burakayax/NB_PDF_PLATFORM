@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Snip from a PDF: Save a Table, Chart or Question as a Sharp Image — PDF Platform</title>
+    <meta name="description" content="Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Snip from a PDF: Save a Table, Chart or Question as a Sharp Image — PDF Platform" />
+    <meta property="og:description" content="Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Snip from a PDF: Save a Table, Chart or Question as a Sharp Image — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Snip from a PDF: Save a Table, Chart or Question as a Sharp Image — PDF Platform" />
+    <meta name="twitter:description" content="Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" />
+    <meta name="twitter:image:alt" content="Snip from a PDF: Save a Table, Chart or Question as a Sharp Image — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"Merge PDF, convert, compress — free and no sign-up. Merge and image-to-PDF run in your browser; your files never leave your device. No installation.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Snip from a PDF: Save a Table, Chart or Question as a Sharp Image","description":"Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step.","datePublished":"2026-09-10","dateModified":"2026-09-10","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Snip from a PDF: Save a Table, Chart or Question as a Sharp Image","description":"Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Add your PDF","text":"Drop in your document. It never leaves your device."},{"@type":"HowToStep","position":2,"name":"Pick the page","text":"Use the page strip on the left to move to the page you want."},{"@type":"HowToStep","position":3,"name":"Select the area","text":"Drag a box on the page; move it around and resize it from the corners."},{"@type":"HowToStep","position":4,"name":"Set resolution and format","text":"1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos."},{"@type":"HowToStep","position":5,"name":"Add the snip","text":"It drops into the basket. Take as many snips as you like, from any page."},{"@type":"HowToStep","position":6,"name":"Download","text":"Save snips one by one, grab them all as a ZIP, or combine them into a single PDF."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I save a region of a PDF as an image?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF to the Snip PDF to Image tool, drag to select the area you want, and click Add snip. It is captured as a high-resolution image in your basket, ready to download individually or all together."}},{"@type":"Question","name":"How is this different from a screenshot?","acceptedAnswer":{"@type":"Answer","text":"A screenshot is limited to your screen resolution. A snip is rendered straight from the PDF at the resolution you pick (2x or 3x), so text and lines stay sharp enough to print."}},{"@type":"Question","name":"Can I get several snips in one file?","acceptedAnswer":{"@type":"Answer","text":"Yes. Download every snip as a single ZIP archive, or combine them all into one PDF document."}},{"@type":"Question","name":"Should I pick PNG or JPEG?","acceptedAnswer":{"@type":"Answer","text":"PNG (lossless and sharp) for text, tables, charts and drawings; JPEG (smaller file) for photo-heavy snips."}},{"@type":"Question","name":"Is my document uploaded to a server?","acceptedAnswer":{"@type":"Answer","text":"No. Everything runs in your browser; your PDF is never sent to the internet and stays 100% private."}},{"@type":"Question","name":"Is snipping from a PDF free?","acceptedAnswer":{"@type":"Answer","text":"Yes. It's free with no signup or installation and runs directly in the browser on computers, tablets and phones."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Snip from a PDF: Save a Table, Chart or Question as a Sharp Image</h1><p class="seo-intro">Want to reuse a table, chart or question from a PDF but your screenshot looks blurry? Snipping is a different job entirely — here&#39;s the difference and the easiest way to do it.</p><article class="seo-article"><p class="seo-lead">There&#39;s a table, chart, diagram or a single question inside a PDF and you want it in a slide, a report or a lesson. The first instinct is to take a screenshot, and the result is usually a soft, crookedly cropped image. The right way is to cut that region straight out of the document at the resolution you choose. This guide explains the difference and the practical route.</p><h2>Why isn&#39;t a screenshot enough?</h2><p>A screenshot copies your SCREEN. The image you get is limited to your screen&#39;s resolution, not the PDF&#39;s. So:</p><ul><li>Text and thin lines go soft and fall apart when you zoom in.</li><li>The difference shows immediately on a projector or in print.</li><li>Cropping the edges by hand is fiddly — a pixel too much here, too little there.</li><li>Even zooming into the PDF first won&#39;t give you more than your screen has.</li></ul><h2>What does snipping do instead?</h2><p>A snip is generated from the document itself, not from your screen. You select an area on the page and the tool redraws only that region at the resolution you picked. A table that looks small on screen can still become a print-quality image.</p><p>The resolution options are 1x, 2x and 3x. 1x is for screen use, 2x is plenty for print and slides; save 3x for large output or when you need to blow up a very small detail.</p><h2>Step by step: save a region as an image</h2><ol><li><strong>Add your PDF:</strong> Drop in your document. It never leaves your device.</li><li><strong>Pick the page:</strong> Use the page strip on the left to move to the page you want.</li><li><strong>Select the area:</strong> Drag a box on the page; move it around and resize it from the corners.</li><li><strong>Set resolution and format:</strong> 1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos.</li><li><strong>Add the snip:</strong> It drops into the basket. Take as many snips as you like, from any page.</li><li><strong>Download:</strong> Save snips one by one, grab them all as a ZIP, or combine them into a single PDF.</li></ol><p><a href="/en/tools/crop-pdf-to-image"><strong>Snip PDF to Image</strong> — Upload a PDF — take the table, chart or question out as a sharp image.</a></p><h2>What is the snip basket for?</h2><p>One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you&#39;re done, download the lot in one go instead of handling files one at a time. The single-PDF option lines your snips up into one document — perfect when you&#39;re assembling a worksheet or a summary sheet.</p><h2>Where does it help?</h2><ul><li>Moving a chart from a report into a slide deck.</li><li>Pulling one product shot out of a catalogue.</li><li>Collecting specific questions from lesson notes or a question bank.</li><li>Sharing a clause from a contract legibly instead of as a soft screenshot.</li><li>Lifting a logo or stamp cleanly out of an old document.</li></ul><h2>Snipping, converting pages to images, or extracting embedded images?</h2><p>These are three different jobs; knowing which one you want gets you the right result first time:</p><ul><li>Snipping: Turns THE REGION YOU CHOOSE into an image. A table, a chart, a paragraph — you draw the boundary.</li><li>PDF to image: Converts the WHOLE page into a single image.</li><li>Extracting embedded images: Pulls out the original photo files stored inside the document; it won&#39;t capture page text or vector drawings.</li></ul><p><a href="/en/tools/pdf-to-image"><strong>PDF to Image</strong> — Download whole pages as high-resolution JPG/PNG.</a></p><h2>A note on privacy</h2><p>Snipping runs entirely in your browser; your PDF is never uploaded. And the whole page isn&#39;t drawn at a huge scale — only the region you selected is rendered, which keeps it fast and easy on your device&#39;s memory.</p></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/crop-pdf-to-image">Snip PDF to Image</a></li><li><a href="/en/tools/pdf-to-image">PDF to JPG</a></li><li><a href="/en/tools/extract-images">Extract Images from PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I save a region of a PDF as an image?</h3><p>Upload the PDF to the Snip PDF to Image tool, drag to select the area you want, and click Add snip. It is captured as a high-resolution image in your basket, ready to download individually or all together.</p></div><div class="seo-faq-item"><h3>How is this different from a screenshot?</h3><p>A screenshot is limited to your screen resolution. A snip is rendered straight from the PDF at the resolution you pick (2x or 3x), so text and lines stay sharp enough to print.</p></div><div class="seo-faq-item"><h3>Can I get several snips in one file?</h3><p>Yes. Download every snip as a single ZIP archive, or combine them all into one PDF document.</p></div><div class="seo-faq-item"><h3>Should I pick PNG or JPEG?</h3><p>PNG (lossless and sharp) for text, tables, charts and drawings; JPEG (smaller file) for photo-heavy snips.</p></div><div class="seo-faq-item"><h3>Is my document uploaded to a server?</h3><p>No. Everything runs in your browser; your PDF is never sent to the internet and stays 100% private.</p></div><div class="seo-faq-item"><h3>Is snipping from a PDF free?</h3><p>Yes. It&#39;s free with no signup or installation and runs directly in the browser on computers, tablets and phones.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
