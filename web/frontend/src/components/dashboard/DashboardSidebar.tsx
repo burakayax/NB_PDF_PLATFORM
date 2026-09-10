@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { Crop, ImageDown } from "lucide-react";
+import { Crop, ImageDown, Scaling, Scissors } from "lucide-react";
 import type { FeatureKey } from "../../api/subscription";
 import type { UserBalance } from "../../api/entitlement";
 import type { Language } from "../../i18n/landing";
@@ -168,7 +168,11 @@ type DashboardSidebarProps = {
   /** PDF Yorumla aracını aç (cihazda işaretleme). */
   onOpenAnnotate?: () => void;
   onOpenCrop?: () => void;
+  /** PDF'ten Kesit Al aracını aç (alan seçip görsel çıkarma). */
+  onOpenSnip?: () => void;
   onOpenCompressImage?: () => void;
+  /** Görsel Boyutlandır aracını aç (cihazda ölçekleme). */
+  onOpenResizeImage?: () => void;
   /** Belge Tara aracını aç (kamerayla tarama — cihazda). */
   onOpenScan?: () => void;
   /** Taramalarım panelini aç (buluta kaydedilen taramalar). Sadece oturum açıkken. */
@@ -214,7 +218,9 @@ export function DashboardSidebar({
   onOpenScan,
   onScansClick,
   onOpenCrop,
+  onOpenSnip,
   onOpenCompressImage,
+  onOpenResizeImage,
   contentPanel,
   overlay = false,
   overlayOpen = false,
@@ -228,6 +234,14 @@ export function DashboardSidebar({
     resolveToolLabel ?? ((id: FeatureKey) => sidebarToolLabel(id, language));
   const { favorites, isFavorite, toggleFavorite } = useFavoriteTools();
   const tr = language === "tr";
+  // FeatureKey olmayan araçlar (Düzenle/İmzala/İşaretle/Kırp/Görsel Sıkıştır/AI)
+  // kendi panelinde açılır; o sırada listedeki araç seçili GÖRÜNMEMELİ.
+  const panelId = contentPanel && contentPanel !== "tool" ? contentPanel : null;
+  const ACTIVE_ROW_CLASS =
+    "border border-nb-primary/45 bg-nb-primary/14 text-nb-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_0_28px_-8px_rgba(59,130,246,0.45)]";
+  const IDLE_ROW_CLASS =
+    "border border-transparent text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md";
+  const rowClass = (isActive: boolean) => (isActive ? ACTIVE_ROW_CLASS : IDLE_ROW_CLASS);
   // Masaüstü sidebar: araçlar kategori bölümlerine ayrılır (Düzenle / Dönüştür /
   // İyileştir / İşaretle / Güvenlik) — mobil launcher ile aynı gruplama.
   // PDF Düzenle de favori olabilir (FeatureKey olmadığı için ayrı bayrak).
@@ -264,7 +278,7 @@ export function DashboardSidebar({
     userRole !== "ADMIN" && Boolean(limitsizProActive && userBalance);
 
   const renderTool = (id: FeatureKey, keyPrefix = "") => {
-    const isActive = active === id;
+    const isActive = active === id && !panelId;
     const locked = lockedFeatures.has(id);
     const label = labelForTool(id);
     return (
@@ -320,7 +334,7 @@ export function DashboardSidebar({
         key={`${keyPrefix}editor`}
         type="button"
         onClick={onOpenEditor}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "editor")}`}
       >
         <span className="text-base text-cyan-400" aria-hidden>✏️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -345,7 +359,7 @@ export function DashboardSidebar({
         key={`${keyPrefix}sign`}
         type="button"
         onClick={onOpenSign}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "sign")}`}
       >
         <span className="text-base text-amber-300" aria-hidden>✍️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -413,7 +427,7 @@ export function DashboardSidebar({
         key={`${keyPrefix}annotate`}
         type="button"
         onClick={onOpenAnnotate}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "annotate")}`}
       >
         <span className="text-base text-orange-300" aria-hidden>🖍️</span>
         <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -438,9 +452,25 @@ export function DashboardSidebar({
         key={`${keyPrefix}crop`}
         type="button"
         onClick={onOpenCrop}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "crop")}`}
       >
         <Crop className="h-5 w-5 text-cyan-300" aria-hidden />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
+  const renderSnipRow = (keyPrefix = "") => {
+    if (!onOpenSnip) return null;
+    const label = tr ? "PDF'ten Kesit Al" : "Snip PDF to Image";
+    return (
+      <button
+        key={`${keyPrefix}snip`}
+        type="button"
+        onClick={onOpenSnip}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "snip")}`}
+      >
+        <Scissors className="h-5 w-5 text-cyan-300" aria-hidden />
         <span className="truncate">{label}</span>
       </button>
     );
@@ -454,9 +484,25 @@ export function DashboardSidebar({
         key={`${keyPrefix}compress-image`}
         type="button"
         onClick={onOpenCompressImage}
-        className="group nb-transition flex w-full items-center gap-3 rounded-2xl border border-transparent px-3 py-2.5 text-left text-sm font-medium text-nb-muted hover:scale-[1.02] hover:bg-white/[0.06] hover:text-nb-text hover:shadow-md"
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "compress-image")}`}
       >
         <ImageDown className="h-5 w-5 text-cyan-300" aria-hidden />
+        <span className="truncate">{label}</span>
+      </button>
+    );
+  };
+
+  const renderResizeImageRow = (keyPrefix = "") => {
+    if (!onOpenResizeImage) return null;
+    const label = tr ? "Görsel Boyutlandır" : "Resize Image";
+    return (
+      <button
+        key={`${keyPrefix}resize-image`}
+        type="button"
+        onClick={onOpenResizeImage}
+        className={`group nb-transition flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-medium ${rowClass(panelId === "resize-image")}`}
+      >
+        <Scaling className="h-5 w-5 text-cyan-300" aria-hidden />
         <span className="truncate">{label}</span>
       </button>
     );
@@ -600,8 +646,12 @@ export function DashboardSidebar({
                   {/* PDF Düzenle — Düzenle grubunda her zaman ilk; Favoriler'de favoriyse */}
                   {group.id === "organize" ? renderEditorRow("organize-") : null}
                   {group.id === "organize" ? renderCropRow("organize-") : null}
+                  {/* PDF'ten Kesit Al — sayfadan alan seçip görsel çıkarma */}
+                  {group.id === "organize" ? renderSnipRow("organize-") : null}
                   {/* Görsel Sıkıştır — İyileştir grubu (PDF Sıkıştır'ın görsel karşılığı) */}
                   {group.id === "optimize" ? renderCompressImageRow("optimize-") : null}
+                  {/* Görsel Boyutlandır — İyileştir grubu (sosyal medya ölçüleri) */}
+                  {group.id === "optimize" ? renderResizeImageRow("optimize-") : null}
                   {group.id === "favorites" && editorFavorited ? renderEditorRow("fav-") : null}
                   {/* PDF İmzala + Yorumla — İşaretle grubunda önde; Favoriler'de favoriyse */}
                   {group.id === "annotate" ? renderSignRow("annotate-") : null}
@@ -733,6 +783,14 @@ export function DashboardSidebarMobileLauncher({
         ? tr ? "PDF İmzala" : "Sign PDF"
         : contentPanel === "annotate"
           ? tr ? "PDF İşaretle" : "Markup PDF"
+          : contentPanel === "crop"
+          ? tr ? "PDF Kırp" : "Crop PDF"
+          : contentPanel === "compress-image"
+          ? tr ? "Görsel Sıkıştır" : "Compress Image"
+          : contentPanel === "resize-image"
+          ? tr ? "Görsel Boyutlandır" : "Resize Image"
+          : contentPanel === "snip"
+          ? tr ? "PDF'ten Kesit Al" : "Snip PDF to Image"
           : contentPanel === "ai" && aiMode
             ? (() => {
                 const t = AI_TOOLS.find((x) => x.mode === aiMode);
@@ -1184,7 +1242,7 @@ export function DashboardSidebarMobileLauncher({
                               ))
                             : null}
                           {group.tools.map((id) => {
-                            const isActive = active === id;
+                            const isActive = active === id && !panelLabel;
                             const locked = lockedFeatures.has(id);
                             const label = labelForTool(id);
                             return (

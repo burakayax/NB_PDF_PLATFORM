@@ -10,7 +10,6 @@ import {
   Lock,
   RotateCcw,
   ShieldCheck,
-  UploadCloud,
   Zap,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
@@ -18,6 +17,7 @@ import { cropPdf, pdfBytesToBlob, PdfEncryptedError } from "../../lib/clientPdfW
 import type { CropRect } from "../../lib/clientPdf";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { ToolResultPanel } from "../common/ToolResultPanel";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 
 // Gerçek kaydırılan kapsayıcıyı bul (dashboard'da içerik `window` değil bir div'de
 // kayar). Bulamazsa null → window kullanılır. Oto-kaydırmanın her yerde çalışması için.
@@ -121,8 +121,9 @@ export function PdfCropTool({ language, initialFile }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
-  const [hover, setHover] = useState(false);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
+  // Sol sayfa şeridi (PDF Düzenle ile aynı yaklaşım): küçük önizlemeler.
+  const [thumbs, setThumbs] = useState<string[]>([]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -144,6 +145,8 @@ export function PdfCropTool({ language, initialFile }: Props) {
         setPageCount(doc.numPages);
         setPageIndex(0);
         setCrop(DEFAULT_CROP);
+        setPageCrops({});
+        setThumbs([]);
       } catch {
         setError(t.failed);
       }
@@ -159,6 +162,33 @@ export function PdfCropTool({ language, initialFile }: Props) {
       void loadFile(initialFile);
     }
   }, [initialFile, loadFile]);
+
+  // Sayfa şeridi önizlemeleri — PDF Düzenle'deki ile aynı ölçek/kalite.
+  useEffect(() => {
+    const doc = docRef.current;
+    if (!doc || !bytes) return;
+    let alive = true;
+    (async () => {
+      const out: string[] = [];
+      for (let i = 1; i <= Math.min(doc.numPages, 60); i++) {
+        if (!alive) return;
+        try {
+          const page = await doc.getPage(i);
+          const vp = page.getViewport({ scale: 0.2 });
+          const c = document.createElement("canvas");
+          c.width = Math.ceil(vp.width);
+          c.height = Math.ceil(vp.height);
+          const ctx = c.getContext("2d");
+          if (ctx) {
+            await page.render({ canvasContext: ctx, viewport: vp }).promise;
+            out[i - 1] = c.toDataURL("image/jpeg", 0.6);
+          }
+          if (alive) setThumbs([...out]);
+        } catch { /* atla */ }
+      }
+    })();
+    return () => { alive = false; };
+  }, [bytes]);
 
   useEffect(() => {
     let cancelled = false;
@@ -344,46 +374,15 @@ export function PdfCropTool({ language, initialFile }: Props) {
   if (!bytes) {
     return (
       <div className="mx-auto w-full max-w-2xl">
-        <label
-          onDragOver={(e) => {
-            e.preventDefault();
-            setHover(true);
-          }}
-          onDragLeave={() => setHover(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setHover(false);
-            const f = e.dataTransfer.files?.[0];
-            if (f) void loadFile(f);
-          }}
-          className={`group relative flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-3xl border-2 border-dashed px-6 py-16 text-center transition-all duration-300 ${
-            hover
-              ? "border-cyan-400/70 bg-cyan-400/[0.07] scale-[1.01]"
-              : "border-white/15 bg-gradient-to-b from-white/[0.04] to-white/[0.015] hover:border-cyan-400/40 hover:bg-white/[0.05]"
-          }`}
-        >
-          {/* arka plan parıltısı */}
-          <div className="pointer-events-none absolute -top-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-cyan-500/20 blur-3xl transition-opacity duration-300 group-hover:opacity-100 opacity-60" />
-          <div className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/25 to-blue-500/25 ring-1 ring-cyan-300/30 shadow-lg shadow-cyan-500/10">
-            <Crop className="h-8 w-8 text-cyan-200" />
-          </div>
-          <span className="relative text-lg font-bold text-white">{t.drop}</span>
-          <span className="relative mt-1 text-sm text-slate-400">{t.or}</span>
-          <span className="relative mt-3 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition group-hover:brightness-110">
-            <UploadCloud className="h-4 w-4" /> {t.choose}
-          </span>
-          <span className="relative mt-4 text-[13px] text-slate-500">{t.hint}</span>
-          <input
-            type="file"
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
             accept="application/pdf,.pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void loadFile(f);
-            }}
+            note={t.hint}
+            onFiles={(files) => { void loadFile(files[0]); }}
           />
-          {error && <span className="relative mt-3 text-[13px] text-rose-300">{error}</span>}
-        </label>
+        </div>
+        {error && <p className="mt-3 text-[13px] text-rose-300">{error}</p>}
         {/* güven çipleri */}
         <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
           {[
@@ -465,8 +464,36 @@ export function PdfCropTool({ language, initialFile }: Props) {
         </button>
       </div>
 
-      {/* Kırpma sahnesi */}
-      <div ref={stageRef} className="mx-auto w-full max-w-[820px] select-none">
+      {/* Sayfa şeridi + kırpma sahnesi */}
+      <div className="flex min-h-0 items-start gap-3">
+        {pageCount > 1 ? (
+          <div className="sticky top-2 max-h-[72vh] w-24 shrink-0 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 p-2 sm:w-28">
+            {Array.from({ length: pageCount }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goToPage(i)}
+                aria-current={pageIndex === i}
+                className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${
+                  pageIndex === i ? "border-cyan-400" : "border-transparent hover:border-white/20"
+                }`}
+              >
+                {thumbs[i] ? (
+                  <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" />
+                ) : (
+                  <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>
+                )}
+                {scope === "each" && pageCrops[i] ? (
+                  <span className="absolute right-1 top-1 rounded-md bg-cyan-500/90 px-1 py-px text-[9px] font-bold text-white shadow" aria-hidden>
+                    ✓
+                  </span>
+                ) : null}
+                <span className={`block py-0.5 text-center text-[10px] ${pageIndex === i ? "text-cyan-300" : "text-slate-500"}`}>{i + 1}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+      <div ref={stageRef} className="mx-auto w-full min-w-0 max-w-[820px] select-none">
         <div className="relative inline-block w-full overflow-hidden rounded-xl bg-slate-950/40 shadow-2xl ring-1 ring-white/10">
           <canvas ref={canvasRef} className="block w-full" />
           <div className="absolute inset-0" onPointerMove={onPointerMove} onPointerUp={onPointerUp}>
@@ -518,6 +545,7 @@ export function PdfCropTool({ language, initialFile }: Props) {
         <p className={`mt-2.5 text-center text-[12px] transition-colors ${dragging ? "text-cyan-300" : "text-slate-500"}`}>
           {t.dragHint}
         </p>
+      </div>
       </div>
 
       {/* Kontrol çubuğu */}
