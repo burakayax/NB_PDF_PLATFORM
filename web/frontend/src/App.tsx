@@ -258,6 +258,7 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
+import { buildToolFormData } from "./lib/toolFormData";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -4831,123 +4832,31 @@ function App() {
         toolRunAbortRef.current?.abort();
       }, TOOL_PIPELINE_WATCHDOG_MS);
 
-      const formData = new FormData();
       const fid = selectedFeature.id;
-
-      if (fid === "html-to-pdf") {
-        if (htmlToPdfMode === "url") {
-          formData.append("source_url", htmlToPdfUrl.trim());
-        } else {
-          formData.append("html", htmlToPdfRaw);
-        }
-      } else if (fid === "image-to-pdf") {
-        for (const u of uploads) {
-          formData.append("files", u.file);
-        }
-      } else {
-        formData.append("file", uploads[0]!.file);
-        switch (fid) {
-          case "split":
-            formData.append("pages_text", pagesText.trim());
-            formData.append("mode", splitMode);
-            formData.append("password", password.trim());
-            break;
-          case "pdf-to-word":
-          case "pdf-to-excel":
-          case "compress":
-            formData.append("quality", compressQuality);
-            formData.append("password", password.trim());
-            break;
-          case "delete-pages":
-            formData.append("pages_to_delete", deletePagesText.trim());
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "rotate-pdf": {
-            const rotObj: Record<string, number> = {};
-            for (const [k, d] of Object.entries(rotatePageRotations)) {
-              if (d && d !== 0) {
-                rotObj[k] = d;
-              }
-            }
-            if (Object.keys(rotObj).length > 0) {
-              formData.append("pages_rotation_json", JSON.stringify(rotObj));
-            } else {
-              formData.append("degrees", "90");
-            }
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          }
-          case "organize-pdf": {
-            const order = organizePageOrder.join(",");
-            formData.append("page_order", order);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          }
-          case "unlock-pdf":
-            formData.append("password", unlockOpenPassword.trim());
-            break;
-          case "watermark":
-            formData.append("watermark_text", watermarkPhrase.trim());
-            formData.append("watermark_color", watermarkColor);
-            formData.append("watermark_font", watermarkFont);
-            formData.append("watermark_opacity", watermarkOpacity);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "page-numbers":
-            formData.append("start_at", pageNumStart.trim() || "1");
-            formData.append("position", pageNumPos);
-            formData.append("fmt", pageNumFmt);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "repair-pdf":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "pdf-to-ppt":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "pdf-to-image":
-            formData.append("image_format", pdfToImgFmt);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "encrypt":
-            formData.append("input_password", inputPassword.trim());
-            formData.append("user_password", outputPassword.trim());
-            break;
-          case "pdf-to-text":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "flatten-pdf":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "extract-images":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          default:
-            break;
-        }
-      }
+      const formData = buildToolFormData(fid, {
+        files: uploads.map((u) => u.file),
+        password,
+        htmlToPdfMode,
+        htmlToPdfUrl,
+        htmlToPdfRaw,
+        pagesText,
+        splitMode,
+        compressQuality,
+        deletePagesText,
+        rotatePageRotations,
+        organizePageOrder,
+        unlockOpenPassword,
+        watermarkPhrase,
+        watermarkColor,
+        watermarkFont,
+        watermarkOpacity,
+        pageNumStart,
+        pageNumPos,
+        pageNumFmt,
+        pdfToImgFmt,
+        inputPassword,
+        outputPassword,
+      });
 
       const batchSourceFiles =
         uploads.length > 1 && BATCHABLE_TOOLS.has(fid)
