@@ -598,7 +598,13 @@ def html_url_to_pdf(url: str, output_path: str) -> bool:
     return html_to_pdf_file(r.text, output_path, base_url=u)
 
 
-def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, dpi: int = PDF_EXPORT_DPI_WEB) -> bool:
+def pdf_to_pptx(
+    pdf_path: str,
+    pptx_path: str,
+    password: Optional[str] = None,
+    dpi: int = PDF_EXPORT_DPI_WEB,
+    progress_callback=None,
+) -> bool:
     from pdf2image import convert_from_path
     from pptx import Presentation
     from pptx.util import Emu
@@ -643,11 +649,17 @@ def pdf_to_pptx(pdf_path: str, pptx_path: str, password: Optional[str] = None, d
     slide_w = prs.slide_width
     slide_h = prs.slide_height
 
+    _done = 0
     for start in range(1, n + 1, _RASTER_PAGE_BATCH):
         end = min(start + _RASTER_PAGE_BATCH - 1, n)
         kw = {**kw_base, "first_page": start, "last_page": end}
         images = convert_from_path(pdf_path, **kw)
         for im in images:
+            # Arka plan isinde kullaniciya GERCEK ilerleme gosterilir; islem
+            # dakikalar surdugu icin donuk bir cubuk "takildi" izlenimi verir.
+            _done += 1
+            if progress_callback:
+                progress_callback(_done, n, f"Sayfa {_done}/{n} slayta aktarılıyor")
             slide = prs.slides.add_slide(blank)
             fd, tmp = tempfile.mkstemp(suffix=".png")
             os.close(fd)

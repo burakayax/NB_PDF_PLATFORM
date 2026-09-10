@@ -44,6 +44,7 @@ import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
+import { ToolResultPanel } from "./components/common/ToolResultPanel";
 import {
   canShareFile,
   isShareApiAvailable,
@@ -581,7 +582,11 @@ function mergeToolPhaseLabel(
  * Yeni bir aracı buraya eklemeden önce sunucuda `<uç>/start` yolunun açıldığını
  * doğrula; aksi halde istek 404 döner.
  */
-const BACKGROUND_JOB_TOOLS = new Set<FeatureId>(["pdf-to-excel"]);
+const BACKGROUND_JOB_TOOLS = new Set<FeatureId>([
+  "pdf-to-excel",
+  "pdf-to-word",
+  "pdf-to-ppt",
+]);
 
 const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
   merge: ["organize-pdf", "split", "rotate-pdf", "compress", "page-numbers", "watermark"],
@@ -624,11 +629,6 @@ const CHAIN_BY_OUTPUT_EXT: Record<string, FeatureId[]> = {
   webp: ["image-to-pdf"],
   // .zip (toplu çıktı) ve .txt için anlamlı bir sonraki adım yok.
 };
-
-/** Tarayıcıda görüntülenebilen türler — yalnız bunlarda "Aç" düğmesi anlamlı.
- *  Diğerlerinde tarayıcı dosyayı açamaz, sessizce indirir; kullanıcı "açtım ama
- *  bir şey olmadı" sanır. */
-const BROWSER_VIEWABLE_EXT = new Set(["pdf", "png", "jpg", "jpeg", "webp", "gif", "txt"]);
 
 /** Dosya adından küçük harfli uzantı. */
 function fileExt(name: string): string {
@@ -1620,6 +1620,8 @@ function App() {
     blob: Blob;
     filename: string;
     toolId?: FeatureId;
+    /** Cihazda mı işlendi (sonuç panelindeki gizlilik cümlesi için). */
+    onDevice?: boolean;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
@@ -4145,6 +4147,8 @@ function App() {
     if (out.length < 3) for (const id of CHAIN_FALLBACK) tryPush(id);
     return out;
   }, [mergeShareReady, workspaceFeatures]);
+  /** Sonuç paneli açık mı (paylaşım diyaloğu öndeyken gizlenir). */
+  const resultReady = mergeShareReady && !mergeShare ? mergeShareReady : null;
   const submitDisabled =
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
@@ -5235,7 +5239,7 @@ function App() {
                       ? "sayfalar.zip"
                       : selectedFeature.fallbackFilename;
                   const savedSplitName = await saveBlobToUser(splitBlob, splitName);
-                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName, toolId: "split" });
+                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName, toolId: "split", onDevice: true });
                   applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
                   setSubmitting(false);
                   return;
@@ -5246,7 +5250,7 @@ function App() {
               const filename = selectedFeature.fallbackFilename;
               const blob = pdfBytesToBlob(resultBytes);
               const savedName = await saveBlobToUser(blob, filename);
-              setMergeShareReady({ blob, filename: savedName, toolId: cid });
+              setMergeShareReady({ blob, filename: savedName, toolId: cid, onDevice: true });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
               return;
@@ -7211,243 +7215,6 @@ function App() {
           }}
         />
 
-        {mergeShareReady && !mergeShare ? (
-          <div className="merge-toast" role="status" aria-live="polite">
-            <button
-              type="button"
-              className="merge-toast__close"
-              onClick={() => setMergeShareReady(null)}
-              aria-label={language === "tr" ? "Kapat" : "Close"}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="merge-toast__head">
-              <span className="merge-toast__icon" aria-hidden="true">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </span>
-              <div className="merge-toast__texts">
-                <span className="merge-toast__title">
-                  {language === "tr" ? "Dosyan kaydedildi" : "File saved"}
-                </span>
-                <span
-                  className="merge-toast__name"
-                  title={mergeShareReady.filename}
-                >
-                  {mergeShareReady.filename}
-                </span>
-              </div>
-            </div>
-            <div className="merge-toast__actions">
-              {/* KAYDET — her çıktı türünde görünür. Destekleyen tarayıcıda
-                  işletim sisteminin "nereye kaydedilsin?" penceresi açılır;
-                  desteklemiyorsa normal indirmeye düşer. */}
-              <button
-                type="button"
-                className="merge-share-btn merge-share-btn--open"
-                onClick={() => {
-                  void saveBlobToUser(
-                    mergeShareReady.blob,
-                    mergeShareReady.filename,
-                  )
-                    .then((name) => {
-                      showToast(
-                        "success",
-                        language === "tr" ? "Kaydedildi" : "Saved",
-                        name,
-                      );
-                    })
-                    .catch((e: unknown) => {
-                      // Kullanıcı pencereyi kapattıysa hata gösterme.
-                      if (e instanceof DOMException && e.name === "AbortError") {
-                        return;
-                      }
-                      showToast(
-                        "error",
-                        language === "tr" ? "Kaydedilemedi" : "Save failed",
-                        language === "tr"
-                          ? "Lütfen tekrar deneyin."
-                          : "Please try again.",
-                      );
-                    });
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                  <path d="M17 21v-8H7v8M7 3v5h8" />
-                </svg>
-                {language === "tr" ? "Kaydet" : "Save"}
-              </button>
-              {/* AÇ — yalnızca tarayıcının GÖRÜNTÜLEYEBİLECEĞİ türlerde.
-                  Excel/Word gibi türlerde tarayıcı dosyayı açamaz, sessizce
-                  indirir; kullanıcı "açtım ama bir şey olmadı" sanıyordu. */}
-              {BROWSER_VIEWABLE_EXT.has(fileExt(mergeShareReady.filename)) ? (
-              <button
-                type="button"
-                className="merge-share-btn merge-share-btn--open"
-                onClick={() => {
-                  const url = URL.createObjectURL(mergeShareReady.blob);
-                  window.open(url, "_blank", "noopener,noreferrer");
-                  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M15 3h6v6" />
-                  <path d="M10 14 21 3" />
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                </svg>
-                {language === "tr" ? "Aç" : "Open"}
-              </button>
-              ) : null}
-              {isShareApiAvailable() ? (
-                <button
-                  type="button"
-                  className="merge-share-btn merge-share-btn--share"
-                  onClick={() => {
-                    setMergeShare({
-                      defaultName: mergeShareReady.filename,
-                      blob: mergeShareReady.blob,
-                    });
-                  }}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
-                  </svg>
-                  {language === "tr" ? "Paylaş" : "Share"}
-                </button>
-              ) : null}
-            </div>
-            {chainSuggestions.length > 0 ? (
-              <div className="merge-toast__chain">
-                <span className="merge-toast__chain-label">
-                  {(() => {
-                    const outExt = fileExt(mergeShareReady.filename);
-                    // Çıktı PDF değilse "PDF" demek yanıltıcı olur.
-                    const OUT_LABEL: Record<string, { tr: string; en: string }> = {
-                      xlsx: { tr: "Oluşturduğunuz Excel dosyası", en: "new Excel file" },
-                      xls: { tr: "Oluşturduğunuz Excel dosyası", en: "new Excel file" },
-                      docx: { tr: "Oluşturduğunuz Word belgesi", en: "new Word document" },
-                      doc: { tr: "Oluşturduğunuz Word belgesi", en: "new Word document" },
-                      pptx: { tr: "Oluşturduğunuz sunum", en: "new presentation" },
-                      ppt: { tr: "Oluşturduğunuz sunum", en: "new presentation" },
-                      png: { tr: "Oluşturduğunuz görsel", en: "new image" },
-                      jpg: { tr: "Oluşturduğunuz görsel", en: "new image" },
-                      jpeg: { tr: "Oluşturduğunuz görsel", en: "new image" },
-                      webp: { tr: "Oluşturduğunuz görsel", en: "new image" },
-                    };
-                    const noun =
-                      OUT_LABEL[outExt] ??
-                      (mergeShareReady.toolId
-                        ? CHAIN_RESULT_NOUN[mergeShareReady.toolId]
-                        : undefined);
-                    if (language === "tr") {
-                      const n = noun?.tr ?? "Oluşturduğunuz dosya";
-                      return `${n} ile yeniden yükleme yapmadan şunları da yapabilirsiniz:`;
-                    }
-                    const n = noun?.en ?? "new file";
-                    return `Do more with your ${n} — no re-upload needed:`;
-                  })()}
-                </span>
-                <div className="merge-toast__chain-chips">
-                  {chainSuggestions.map((f) => {
-                    const locked = lockedFeatures.has(f.id);
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={`merge-share-chip${locked ? " merge-share-chip--locked" : ""}`}
-                        onClick={() =>
-                          chainToTool(
-                            f.id,
-                            mergeShareReady.blob,
-                            mergeShareReady.filename,
-                          )
-                        }
-                        title={
-                          locked
-                            ? language === "tr"
-                              ? `${f.title} — Pro ile aç`
-                              : `${f.title} — unlock with Pro`
-                            : language === "tr"
-                              ? `${f.title} aracına aktar`
-                              : `Send to ${f.title}`
-                        }
-                      >
-                        <span
-                          className="merge-share-chip__icon"
-                          aria-hidden="true"
-                        >
-                          {f.icon}
-                        </span>
-                        {f.title}
-                        {locked ? (
-                          <span className="merge-share-chip__lock" aria-hidden="true">
-                            🔒
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
 
         {excelDialogOpen ? (
           <div
@@ -7894,7 +7661,64 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
-                <section className="workspace-card relative overflow-x-hidden">
+                {/* İŞ BİTTİ EKRANI — tüm araçlarda ortak (PDF Kırp referans).
+                    Yeni araç eklenirse sonuç için yine ToolResultPanel kullanın. */}
+                {resultReady ? (
+                  <section className="workspace-card relative overflow-x-hidden">
+                    <ToolResultPanel
+                      blob={resultReady.blob}
+                      filename={resultReady.filename}
+                      language={language}
+                      processedOnDevice={!!resultReady.onDevice}
+                      onClose={() => setMergeShareReady(null)}
+                    >
+                      {chainSuggestions.length > 0 ? (
+                        <div className="mt-7 border-t border-white/10 pt-5">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            {language === "tr"
+                              ? "Yeniden yükleme yapmadan şunları da yapabilirsiniz"
+                              : "Do more with it — no re-upload needed"}
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                            {chainSuggestions.map((f) => {
+                              const locked = lockedFeatures.has(f.id);
+                              return (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.08]"
+                                  onClick={() =>
+                                    chainToTool(
+                                      f.id,
+                                      resultReady.blob,
+                                      resultReady.filename,
+                                    )
+                                  }
+                                  title={
+                                    locked
+                                      ? language === "tr"
+                                        ? `${f.title} — Pro ile aç`
+                                        : `${f.title} — unlock with Pro`
+                                      : language === "tr"
+                                        ? `${f.title} aracına aktar`
+                                        : `Send to ${f.title}`
+                                  }
+                                >
+                                  <span aria-hidden="true">{f.icon}</span>
+                                  {f.title}
+                                  {locked ? <span aria-hidden="true">🔒</span> : null}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </ToolResultPanel>
+                  </section>
+                ) : null}
+                <section
+                  className={`workspace-card relative overflow-x-hidden${resultReady ? " hidden" : ""}`}
+                >
                   <div className="workspace-card__header">
                     <div>
                       <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">
