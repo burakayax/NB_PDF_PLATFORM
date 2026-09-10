@@ -421,6 +421,11 @@ export type MergeJobStatus = {
   elapsed_seconds: number;
   error?: string | null;
   ready: boolean;
+  /** Dönüştürme işleri bitince çıktının kimliği (birleştirmede boştur). */
+  result_id?: string | null;
+  filename?: string | null;
+  mime?: string | null;
+  size_bytes?: number | null;
 };
 
 function extractFilename(response: Response, fallback: string) {
@@ -1170,6 +1175,74 @@ export async function fetchMergeJob(
   }
   await ensureOk(response, "İşlem durumu okunamadı.");
   return response.json() as Promise<MergeJobStatus>;
+}
+
+/**
+ * UZUN SÜREN dönüştürmeyi arka planda başlatır ve iş numarasını döndürür.
+ *
+ * NEDEN: Bu işlemler dakikalar sürebiliyor. Cevabı bekleyen tek bir istekte
+ * bağlantı koparsa (mobil ağ, ara sunucu zaman aşımı, sekmenin uykuya geçmesi)
+ * yapılan iş boşa gidiyor ve kullanıcı ilerleme çubuğunun sonunda takılı
+ * kalıyordu. Arka plan işinde istek anında yanıtlanır, işlem sunucuda sürer.
+ */
+export async function startToolJob(
+  endpoint: string,
+  formData: FormData,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal; errorMessage?: string },
+): Promise<{ job_id: string; saasGating: SaaSGating | null }> {
+  const path = endpoint.replace(/^\//, "");
+  appendSaasAccessToken(formData, accessToken);
+  // Tek deneme: yükleme tekrarlanırsa sunucuda ikinci bir iş başlar.
+  const response = await pdfFetchWithRetry(
+    `${API_BASE}/api/${path}`,
+    {
+      method: "POST",
+      body: formData,
+      headers: saasAuthHeaders(accessToken),
+      signal: options?.signal,
+    },
+    1,
+  );
+  await ensureOk(response, options?.errorMessage ?? "İşlem başlatılamadı.");
+  const raw = (await response.json()) as { job_id: string; saasGating?: unknown };
+  return { job_id: raw.job_id, saasGating: normaliseSaasGating(raw.saasGating) };
+}
+
+/**
+ * İş bitene kadar durumu sorar. Her durum değişiminde `onProgress` çağrılır ki
+ * kullanıcı GERÇEK ilerlemeyi görsün (tahmini bir çubuk değil).
+ *
+ * Sorgu aralığı bilerek 1,5 saniye: daha sık sormak sunucuya yük bindirir,
+ * daha seyrek sormak ilerlemeyi donuk gösterir.
+ */
+export async function waitForToolJob(
+  jobId: string,
+  accessToken?: string | null,
+  options?: {
+    signal?: AbortSignal;
+    onProgress?: (status: MergeJobStatus) => void;
+    intervalMs?: number;
+  },
+): Promise<MergeJobStatus> {
+  const interval = options?.intervalMs ?? 1500;
+  for (;;) {
+    if (options?.signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    const status = await fetchMergeJob(jobId, accessToken, { signal: options?.signal });
+    options?.onProgress?.(status);
+    if (status.status === "completed") {
+      return status;
+    }
+    if (status.status === "failed") {
+      throw new Error(status.error || "İşlem başarısız oldu.");
+    }
+    if (status.status === "cancelled") {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    await new Promise((r) => setTimeout(r, interval));
+  }
 }
 
 /** İstemci merge işlemini bırakınca sunucu tarafında işi kooperatif iptal eder. */
