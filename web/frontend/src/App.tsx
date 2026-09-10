@@ -262,6 +262,7 @@ import {
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
 import { buildToolFormData } from "./lib/toolFormData";
+import { runClientPdfTool } from "./lib/clientToolRun";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -4576,7 +4577,6 @@ function App() {
         if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
           try {
             setSubmitting(true);
-            let resultBytes: Uint8Array | null = null;
             const cid = selectedFeature.id;
             // İndirme yeri sorusu, cihaz-içi işleme await'lerinden ÖNCE alınmalı
             // (user activation hâlâ geçerliyken). Aksi halde bu araçlar sonucu
@@ -4605,74 +4605,30 @@ function App() {
                 }
               }
             }
-            if (cid === "merge") {
-              const buffers = await Promise.all(
-                uploads.map((u) => u.file.arrayBuffer()),
+            const produced = await runClientPdfTool({
+              toolId: cid,
+              files: uploads.map((u) => u.file),
+              pageCountHint: uploads[0]?.pageCount ?? null,
+              rotatePageRotations,
+              deletePagesText,
+              organizePageOrder,
+              pagesText,
+              splitMode,
+              language,
+              fallbackFilename: selectedFeature.fallbackFilename,
+              expandPages: expandPagesString,
+            });
+            if (produced) {
+              const savedName = await saveBlobToUser(
+                produced.blob,
+                produced.filename,
               );
-              resultBytes = await mergePdfs(buffers);
-            } else if (cid === "image-to-pdf") {
-              const imgs = await Promise.all(
-                uploads.map(async (u) => ({
-                  bytes: await u.file.arrayBuffer(),
-                  mime: u.file.type,
-                })),
-              );
-              resultBytes = await imagesToPdf(imgs);
-            } else if (uploads[0]) {
-              // Tek-dosya sayfa araçları — seçim grid state'inden okunur (1-tabanlı
-              // → clientPdf 0-tabanlı). Seçim yoksa resultBytes null → sunucuya düşer.
-              const src = new Uint8Array(await uploads[0].file.arrayBuffer());
-              // Sayfa sayısı normalde yükleme sırasındaki sunucu ön kontrolünden
-              // gelir. O kontrol başarısızsa (oturum düşmüş, ağ kopmuş) değer boş
-              // kalıyor ve sayfa araçları cihaz-içi hızlı yoldan çıkıp sunucuya
-              // düşüyordu — yani ön kontrolü başarısız kılan sebep işlemi de
-              // baştan başarısız kılıyordu. Dosya zaten elimizde: sayfa sayısını
-              // burada kendimiz sayıyoruz.
-              const pc =
-                uploads[0].pageCount ??
-                (await getPdfPageCount(src).catch(() => 0));
-              if (cid === "rotate-pdf") {
-                const r0: Record<number, number> = {};
-                for (const [p1, deg] of Object.entries(rotatePageRotations)) {
-                  const d = Number(deg);
-                  if (d % 360 !== 0) r0[Number(p1) - 1] = d;
-                }
-                if (Object.keys(r0).length > 0) resultBytes = await rotatePdf(src, r0);
-              } else if (cid === "delete-pages" && pc > 0) {
-                const pages1 = expandPagesString(deletePagesText, pc, language) ?? [];
-                if (pages1.length > 0 && pages1.length < pc) {
-                  resultBytes = await deletePages(src, pages1.map((p) => p - 1));
-                }
-              } else if (cid === "organize-pdf" && organizePageOrder.length > 0) {
-                resultBytes = await reorderPages(
-                  src,
-                  organizePageOrder.map((p) => p - 1),
-                );
-              } else if (cid === "split" && pc > 0) {
-                const pages1 = expandPagesString(pagesText, pc, language) ?? [];
-                if (pages1.length > 0) {
-                  const p0 = pages1.map((p) => p - 1);
-                  const splitBlob =
-                    splitMode === "separate"
-                      ? zipBytesToBlob(await splitPagesToZip(src, p0, "sayfa"))
-                      : pdfBytesToBlob(await reorderPages(src, p0));
-                  const splitName =
-                    splitMode === "separate"
-                      ? "sayfalar.zip"
-                      : selectedFeature.fallbackFilename;
-                  const savedSplitName = await saveBlobToUser(splitBlob, splitName);
-                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName, toolId: "split", onDevice: true });
-                  applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
-                  setSubmitting(false);
-                  return;
-                }
-              }
-            }
-            if (resultBytes) {
-              const filename = selectedFeature.fallbackFilename;
-              const blob = pdfBytesToBlob(resultBytes);
-              const savedName = await saveBlobToUser(blob, filename);
-              setMergeShareReady({ blob, filename: savedName, toolId: cid, onDevice: true });
+              setMergeShareReady({
+                blob: produced.blob,
+                filename: savedName,
+                toolId: cid,
+                onDevice: true,
+              });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
               return;
@@ -4680,7 +4636,7 @@ function App() {
             setSubmitting(false);
           } catch (err) {
             setSubmitting(false);
-            // Şifreli/işlenemez → sessizce sunucu akışına düş (aşağıda devam eder).
+            // Şifreli/işlenemez — sessizce sunucu akışına düşülür (aşağıda devam eder).
             if (!(err instanceof PdfEncryptedError)) {
               console.warn("[clientpdf] sunucuya düşülüyor:", err);
             }
@@ -5550,7 +5506,7 @@ function App() {
     }
     if (seoSlug === "pdf-kesit-al") {
       return (
-        <GuestSeoToolPage slug="pdf-kesit-al" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+        <GuestSeoToolPage slug="pdf-kesit-al" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfSnipTool language={language} initialFile={pendingToolFile} />
           </Suspense>
@@ -6820,7 +6776,7 @@ function App() {
             ) : null}
 
             {contentPanel === "snip" ? (
-              <section className="mx-auto w-full max-w-4xl py-2">
+              <section className="mx-auto w-full max-w-6xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSnipTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
