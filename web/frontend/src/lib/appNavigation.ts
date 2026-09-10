@@ -138,6 +138,8 @@ export function getInitialViewFromLocation(): AppView {
     rawPath === "/tools/aranabilir-pdf" ||
     rawPath === "/tools/crop-pdf" ||
     rawPath === "/tools/gorsel-sikistir" ||
+    rawPath === "/tools/gorsel-boyutlandir" ||
+    rawPath === "/tools/pdf-kesit-al" ||
     rawPath === "/pdf-api" ||
     rawPath.startsWith("/pdf-api/") ||
     rawPath === "/blog" ||
@@ -209,6 +211,7 @@ export const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
   "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
   "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
   "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/crop-pdf", "/tools/gorsel-sikistir",
+  "/tools/gorsel-boyutlandir", "/tools/pdf-kesit-al",
 ]);
 export function isFullPageSeoToolPath(p: string): boolean {
   return FULLPAGE_SEO_TOOL_PATHS.has(p);
@@ -225,6 +228,8 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "pdf-yorumla": "annotate",
   "crop-pdf": "crop",
   "gorsel-sikistir": "compress-image",
+  "gorsel-boyutlandir": "resize-image",
+  "pdf-kesit-al": "snip",
   "aranabilir-pdf": "searchable",
   "taranmis-pdf-ocr": "searchable",
   "belge-tara": "scanner",

@@ -354,6 +354,9 @@ const DocumentScanner = lazyWithRetry(() =>
 const PdfCropTool = lazyWithRetry(() =>
   import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
 );
+const PdfSnipTool = lazyWithRetry(() =>
+  import("./components/tools/PdfSnipTool").then((m) => ({ default: m.PdfSnipTool })),
+);
 const ImageResizeTool = lazyWithRetry(() =>
   import("./components/tools/ImageResizeTool").then((m) => ({ default: m.ImageResizeTool })),
 );
@@ -5545,6 +5548,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-kesit-al") {
+      return (
+        <GuestSeoToolPage slug="pdf-kesit-al" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfSnipTool language={language} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "gorsel-boyutlandir") {
       return (
         <GuestSeoToolPage slug="gorsel-boyutlandir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -6658,6 +6670,7 @@ function App() {
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
+          onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
@@ -6689,6 +6702,7 @@ function App() {
           onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
+          onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
           onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
@@ -6801,6 +6815,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "snip" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfSnipTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
