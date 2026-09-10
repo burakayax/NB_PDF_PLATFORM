@@ -21,7 +21,7 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { BRAND } from "../src/seo/seoContent.mjs";
@@ -191,7 +191,19 @@ function itemTimestamp(post) {
   return new Date(`${post.date}T${stableTimeOfDay(post.slug)}Z`).getTime();
 }
 
-function buildFeed(lang, baseUrl, coverMap) {
+/**
+ * Kapak dosyasının gerçek boyutu. RSS'te `enclosure length` bayt cinsinden
+ * beklenir; 0 yazmak bazı okuyucularda görseli "boş" saydırıp atlatıyor.
+ */
+function fileBytes(publicDir, relPath) {
+  try {
+    return statSync(join(publicDir, relPath.replace(/^\//, ""))).size;
+  } catch {
+    return 0;
+  }
+}
+
+function buildFeed(lang, baseUrl, coverMap, publicDir) {
   const text = FEED_TEXT[lang];
   // Gün içi saat eklendiği için sıralamayı TAM zaman damgasına göre yeniden
   // yapıyoruz: kaynak liste yalnızca güne göre sıralı, aynı günün yazıları
@@ -215,6 +227,7 @@ function buildFeed(lang, baseUrl, coverMap) {
         coverMap?.get(`${lang}:${post.slug}`) ??
         (lang === "en" ? "/og-image-en.png" : "/og-image.png");
       const image = `${baseUrl}${coverRel}`;
+      const imageBytes = fileBytes(publicDir, coverRel);
       const tags = post.tags?.[lang] ?? post.tags?.tr ?? [];
       const summary = copy.excerpt || copy.description || "";
       const body = renderBlocksHtml(copy.blocks, baseUrl, lang);
@@ -228,7 +241,7 @@ function buildFeed(lang, baseUrl, coverMap) {
       <description>${cdata(summary)}</description>
       <content:encoded>${cdata(body)}</content:encoded>
 ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}
-      <enclosure url="${escapeXml(image)}" type="image/png" length="0" />
+      <enclosure url="${escapeXml(image)}" type="image/png" length="${imageBytes}" />
       <media:content url="${escapeXml(image)}" medium="image" type="image/png" />
       <media:thumbnail url="${escapeXml(image)}" />
     </item>`;
@@ -284,7 +297,7 @@ export function writeRssFeeds({ publicDir, baseUrl, blockIndexing, coverMap }) {
 
   const written = [];
   for (const lang of ["tr", "en"]) {
-    const xml = buildFeed(lang, baseUrl, coverMap);
+    const xml = buildFeed(lang, baseUrl, coverMap, publicDir);
     const target = join(publicDir, FEED_TEXT[lang].path.replace(/^\//, ""));
     mkdirSync(join(target, ".."), { recursive: true });
     writeFileSync(target, xml, "utf8");

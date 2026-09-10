@@ -480,7 +480,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       mainEntityOfPage: canonicalUrl,
       author: { "@type": "Organization", name: BRAND, "@id": orgId },
       publisher: { "@id": orgId },
-      image: `${baseUrl}${ogImageForLang(lang)}`,
+      image: `${baseUrl}${shareImageForRoute(meta, lang)}`,
     });
 
     const stepsBlock = Array.isArray(meta.blocks)
@@ -696,7 +696,7 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     : "noindex, nofollow";
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
-  const ogImage = `${baseUrl}${ogImageForLang(lang)}`;
+  const ogImage = `${baseUrl}${shareImageForRoute(meta, lang)}`;
 
   return `<!doctype html>
 <html lang="${lang}">
@@ -860,6 +860,30 @@ const prerenderRoutes = [
   ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];
 
+// ─── Blog kapak görselleri ────────────────────────────────────────────────────
+// Her yazı için markalı 1200x630 kapak. Hem beslemede duyurulur hem de yazının
+// KENDİ og:image'i olur — paylaşımda her yazı kendi görseliyle çıksın diye
+// prerender HTML'lerinden ÖNCE üretilir.
+let coverMap;
+if (blockIndexing) {
+  console.log("[seo] kapak görselleri atlandı (indeksleme kapalı ortam)");
+} else {
+  const covers = await writeBlogCovers({ frontendRoot, publicDir, baseUrl: base });
+  coverMap = covers.map;
+  console.log(
+    `[seo] kapak görselleri: ${covers.written.length} üretildi, ${covers.skipped} değişmedi`,
+  );
+}
+
+/** Bu sayfanın paylaşım görseli: blog yazısında kendi kapağı, diğerlerinde genel görsel. */
+function shareImageForRoute(meta, lang) {
+  if (meta.kind === "blogpost" && meta.post && coverMap) {
+    const rel = coverMap.get(`${lang}:${meta.post.slug}`);
+    if (rel) return rel;
+  }
+  return ogImageForLang(lang);
+}
+
 let pageCount = 0;
 /** Bu build'de üretilen prerender dosyaları — yetim temizliği için. */
 const writtenFiles = new Set();
@@ -962,20 +986,6 @@ ${renderSitemapHreflang(base, u.routePath)}
 }
 
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
-
-// ─── Blog kapak görselleri ────────────────────────────────────────────────────
-// Her yazı için markalı 1200x630 kapak. Beslemede bu görsel duyurulur; sosyal
-// medya otomasyonu dışarıdan stok fotoğraf çekmek zorunda kalmaz.
-let coverMap;
-if (blockIndexing) {
-  console.log("[seo] kapak görselleri atlandı (indeksleme kapalı ortam)");
-} else {
-  const covers = await writeBlogCovers({ frontendRoot, publicDir, baseUrl: base });
-  coverMap = covers.map;
-  console.log(
-    `[seo] kapak görselleri: ${covers.written.length} üretildi, ${covers.skipped} değişmedi`,
-  );
-}
 
 // ─── RSS beslemeleri ──────────────────────────────────────────────────────────
 // Sitemap'ten SONRA üretilir; yetim prerender temizliği yalnızca index.html
