@@ -41,6 +41,7 @@ from app.core.operations import (
 from app.core.jobs import (
     cleanup_job,
     create_merge_job,
+    create_conversion_job,
     get_job_download,
     get_job_status,
     request_cancel_merge_job,
@@ -652,6 +653,78 @@ async def pdf_to_excel(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+@router.post("/pdf-to-excel/start")
+async def pdf_to_excel_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Excel dönüşümünü ARKA PLANDA başlatır ve iş numarası döner.
+
+    NEDEN AYRI BİR UÇ: Dönüşüm, sayfa sayısına göre dakikalar sürebiliyor.
+    Eski uç (`POST /pdf-to-excel`) cevabı üretene kadar bağlantıyı açık
+    tutuyordu; bağlantı koptuğunda (mobil ağ, ara sunucu zaman aşımı, sekmenin
+    uykuya geçmesi) yapılan iş boşa gidiyor ve kullanıcı ilerleme çubuğunun
+    sonunda süresiz takılı kalıyordu.
+
+    Burada istek hemen yanıtlanır. İstemci `GET /api/jobs/{job_id}` ile gerçek
+    sayfa ilerlemesini okur; iş bitince aynı yanıtta çıktının kimliği döner ve
+    mevcut indirme akışı değişmeden çalışır.
+
+    Eski uç GERİYE DÖNÜK UYUMLULUK için duruyor; önbellekte eski sürümü olan
+    tarayıcılar çalışmaya devam etsin.
+    """
+    decision = await entitlement_check(token, "pdf-to-excel")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        output_name = format_derived_filename(file.filename or saved_file.name, "Excel", "xlsx")
+        output_path = workdir / output_name
+        pwd = password.strip() or None
+
+        def _run(progress_cb):
+            engine.pdf_text_to_excel(
+                str(saved_file),
+                str(output_path),
+                progress_callback=progress_cb,
+                preserve_tables=True,
+                password=pwd,
+            )
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-excel",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Excel'e dönüştürülüyor...",
+            done_message="Excel dosyanız hazır.",
+            fail_message="Excel'e dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        # İş başlatılamadıysa geçici klasörü hemen temizle. Başlatıldıysa
+        # temizlik işin kendi sonunda yapılır (dosya hâlâ kullanılıyor).
+        cleanup_and_raise(workdir, error)
 
 
 @router.post("/compress")

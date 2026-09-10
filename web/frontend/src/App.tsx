@@ -29,6 +29,8 @@ import {
   inspectPdf,
   MergeJobNotFoundError,
   postToolToResult,
+  startToolJob,
+  waitForToolJob,
   requestMergeJobCancel,
   hasPendingSaveHandle,
   saveBlobToUser,
@@ -567,6 +569,20 @@ function mergeToolPhaseLabel(
 // yapısal (çoğu bağlamda görünür) araçlar, sonra server-side olanlar gelir ki
 // bazı araçlar gizli/kilitli olsa bile eleme sonrası 2-3 öneri kalabilsin.
 // Ters/anlamsız dönüşüm zincirleri (pdf→excel→pdf gibi) kasıtla dışarıda.
+/**
+ * ARKA PLANDA çalıştırılan araçlar.
+ *
+ * Bu dönüşümler sayfa sayısına göre dakikalar sürebiliyor. Cevabı bekleyen tek
+ * bir istekte bağlantı koparsa (mobil ağ, ara sunucu zaman aşımı, sekmenin
+ * uykuya geçmesi) yapılan iş boşa gidiyor ve ilerleme çubuğu sonunda takılı
+ * kalıyordu. Buradaki araçlar önce sunucuda sıraya alınır, sonra gerçek sayfa
+ * ilerlemesi okunur.
+ *
+ * Yeni bir aracı buraya eklemeden önce sunucuda `<uç>/start` yolunun açıldığını
+ * doğrula; aksi halde istek 404 döner.
+ */
+const BACKGROUND_JOB_TOOLS = new Set<FeatureId>(["pdf-to-excel"]);
+
 const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
   merge: ["organize-pdf", "split", "rotate-pdf", "compress", "page-numbers", "watermark"],
   split: ["merge", "organize-pdf", "rotate-pdf", "compress", "watermark", "page-numbers"],
@@ -1598,6 +1614,8 @@ function App() {
   } | null>(null);
   const [mergeShareBusy, setMergeShareBusy] = useState(false);
   /** Post-download "Dosyan indirildi — Paylaş?" bar; holds the already-downloaded bytes. */
+  /** Arka plan işinin GERÇEK ilerlemesi (sayfa sayacı). Tahmini çubuğun yerine geçer. */
+  const [toolJobProgress, setToolJobProgress] = useState<MergeJobStatus | null>(null);
   const [mergeShareReady, setMergeShareReady] = useState<{
     blob: Blob;
     filename: string;
@@ -4041,16 +4059,22 @@ function App() {
     0,
     genericToolEstimateSec - genericToolElapsedSec,
   );
-  const genericToolPercent = Math.min(
-    99,
-    Math.max(
-      2,
-      Math.round(
-        (genericToolElapsedSec / Math.max(genericToolEstimateSec, 1)) * 100,
-      ),
-    ),
-  );
+  // Arka planda çalışan araçlarda sunucu GERÇEK sayfa ilerlemesini bildirir;
+  // o varsa süre tahminine dayalı çubuk kullanılmaz. Tahmini çubuk, işlem
+  // tahminden uzun sürdüğünde %99'da donup "takıldı" izlenimi veriyordu.
+  const genericToolPercent = toolJobProgress
+    ? Math.min(99, Math.max(2, toolJobProgress.percent))
+    : Math.min(
+        99,
+        Math.max(
+          2,
+          Math.round(
+            (genericToolElapsedSec / Math.max(genericToolEstimateSec, 1)) * 100,
+          ),
+        ),
+      );
   const genericProgressIndeterminate =
+    !toolJobProgress &&
     genericToolProgressActive &&
     (premiumProcessingLane
       ? genericToolElapsedSec < 4 || genericToolPercent < 5
@@ -5558,18 +5582,49 @@ function App() {
 
       if (isResultStoreTool(fid)) {
         const uploadPageCount = uploads[0]?.pageCount ?? undefined;
-        const res = await postToolToResult(
-          selectedFeature.endpoint,
-          formData,
-          accessToken,
-          {
-            signal: toolSignal,
-            errorMessage:
-              language === "tr"
-                ? "İşlem başarısız oldu."
-                : "The operation failed.",
-          },
-        );
+        // ARKA PLANDA ÇALIŞAN ARAÇLAR: dönüşüm dakikalar sürebildiği için istek
+        // cevabı beklemez. Sunucu işi sıraya alır, biz gerçek sayfa ilerlemesini
+        // okuruz. Bağlantı koparsa iş sunucuda devam eder.
+        const res = BACKGROUND_JOB_TOOLS.has(fid)
+          ? await (async () => {
+              const started = await startToolJob(
+                `${selectedFeature.endpoint}/start`,
+                formData,
+                accessToken,
+                {
+                  signal: toolSignal,
+                  errorMessage:
+                    language === "tr"
+                      ? "İşlem başlatılamadı."
+                      : "Could not start the operation.",
+                },
+              );
+              const done = await waitForToolJob(started.job_id, accessToken, {
+                signal: toolSignal,
+                onProgress: (st) => setToolJobProgress(st),
+              });
+              setToolJobProgress(null);
+              return {
+                result_id: done.result_id ?? "",
+                filename: done.filename ?? "",
+                mime: done.mime ?? "",
+                size_bytes: done.size_bytes ?? 0,
+                has_thumbnail: false,
+                saasGating: started.saasGating,
+              };
+            })()
+          : await postToolToResult(
+              selectedFeature.endpoint,
+              formData,
+              accessToken,
+              {
+                signal: toolSignal,
+                errorMessage:
+                  language === "tr"
+                    ? "İşlem başarısız oldu."
+                    : "The operation failed.",
+              },
+            );
 
         resetForm(true);
 
@@ -9402,13 +9457,18 @@ function App() {
                       {selectedFeature.title}
                     </strong>
                     <p className="merge-progress-fixed__phase">
-                      {genericToolPhaseLabel(
-                        selectedFeatureId,
-                        genericToolPercent,
-                        genericProgressIndeterminate,
-                        W,
-                        false,
-                      )}
+                      {/* Arka plan işinde sunucunun bildirdiği GERÇEK konum
+                          gösterilir (ör. "Sayfa 23/45"); kullanıcı işlemin
+                          gerçekten ilerlediğini görür. */}
+                      {toolJobProgress?.where
+                        ? toolJobProgress.where
+                        : genericToolPhaseLabel(
+                            selectedFeatureId,
+                            genericToolPercent,
+                            genericProgressIndeterminate,
+                            W,
+                            false,
+                          )}
                     </p>
                   </div>
                   {showToolCancelButton ? (
