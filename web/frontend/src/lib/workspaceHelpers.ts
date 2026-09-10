@@ -15,6 +15,7 @@ export function createUploadItems(fileList: File[]) {
     inspecting: false,
     password: "",
     pageCount: null,
+    imageRatio: null,
     mergePasswordVerified: false,
     corrupt: false,
   }));

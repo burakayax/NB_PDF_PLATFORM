@@ -188,6 +188,7 @@ import {
 } from "./lib/oauthRedirect";
 import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
+import { setCurrentPlan } from "./lib/currentPlan";
 import {
   persistWorkspaceTool,
   readInitialWorkspaceToolSelection,
@@ -233,7 +234,8 @@ import type {
 } from "./lib/appViews";
 import {
   formatFileSize,
-  compressEstimateMBRange,
+  compressGainPercentRange,
+  COMPRESS_TEXT_HEAVY_RATIO,
   genericToolPhaseLabel,
   UpgradeNudgeInline,
   mergeToolPhaseLabel,
@@ -347,6 +349,9 @@ const DocumentScanner = lazyWithRetry(() =>
 const PdfCropTool = lazyWithRetry(() =>
   import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
 );
+const ImageResizeTool = lazyWithRetry(() =>
+  import("./components/tools/ImageResizeTool").then((m) => ({ default: m.ImageResizeTool })),
+);
 const ImageCompressTool = lazyWithRetry(() =>
   import("./components/tools/ImageCompressTool").then((m) => ({ default: m.ImageCompressTool })),
 );
@@ -379,6 +384,8 @@ type UploadItem = {
   inspecting: boolean;
   password: string;
   pageCount: number | null;
+  /** Dosyanın görüntü olan oranı (0-1); sıkıştırma beklentisi buradan hesaplanır. */
+  imageRatio: number | null;
   /** Birleştirme: şifreli dosyada parola sunucuda doğrulandı mı */
   mergePasswordVerified: boolean;
   /** Dosya bozuk, boş veya geçerli bir PDF değil */
@@ -648,6 +655,11 @@ function App() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
+  // Plan bilgisini uygulama geneline duyur — sonuç ekranındaki üyelik daveti
+  // ücretli aboneye çıkmasın (araçların çoğu kimlik bilgisini prop almıyor).
+  useEffect(() => {
+    setCurrentPlan(user?.plan ?? null, Boolean(user?.isTeamMember));
+  }, [user?.plan, user?.isTeamMember]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
@@ -5259,6 +5271,10 @@ function App() {
             encrypted: Boolean(result.encrypted),
             inspecting: false,
             pageCount: result.page_count ?? null,
+            imageRatio:
+              typeof result.image_ratio === "number"
+                ? result.image_ratio
+                : null,
             mergePasswordVerified: false,
             corrupt: false,
           };
@@ -5639,6 +5655,15 @@ function App() {
         <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <ImageCompressTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "gorsel-boyutlandir") {
+      return (
+        <GuestSeoToolPage slug="gorsel-boyutlandir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <ImageResizeTool language={language} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6748,6 +6773,7 @@ function App() {
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
+          onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -6778,6 +6804,7 @@ function App() {
           onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
           onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
           onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
+          onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
@@ -6888,6 +6915,14 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "resize-image" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <Suspense fallback={<PageSkeleton />}>
+                  <ImageResizeTool language={language} />
                 </Suspense>
               </section>
             ) : null}
@@ -7905,28 +7940,28 @@ function App() {
                               >
                                 <option value="auto">
                                   {language === "tr"
-                                    ? "Otomatik — ~%50–70 küçülme (önerilen)"
-                                    : "Auto — ~50–70% smaller (recommended)"}
+                                    ? "Otomatik — görseller ekran çözünürlüğünde (önerilen)"
+                                    : "Auto — images at screen resolution (recommended)"}
                                 </option>
                                 <option value="low">
                                   {language === "tr"
-                                    ? "Agresif — ~%65–80 küçülme"
-                                    : "Aggressive — ~65–80% smaller"}
+                                    ? "Agresif — en küçük dosya, görseller en çok küçülür"
+                                    : "Aggressive — smallest file, images shrink most"}
                                 </option>
                                 <option value="medium">
                                   {language === "tr"
-                                    ? "Dengeli — ~%40–60 küçülme"
-                                    : "Balanced — ~40–60% smaller"}
+                                    ? "Dengeli — görsellerde daha az bozulma"
+                                    : "Balanced — less loss in images"}
                                 </option>
                                 <option value="high">
                                   {userBalance?.plan === "FREE" &&
                                   !userBalance?.isAdmin
                                     ? language === "tr"
-                                      ? "Kaliteli — ~%25–45 küçülme 🔒 Plus+"
-                                      : "Quality — ~25–45% smaller 🔒 Plus+"
+                                      ? "Kaliteli — baskı çözünürlüğü korunur 🔒 Plus+"
+                                      : "Quality — keeps print resolution 🔒 Plus+"
                                     : language === "tr"
-                                      ? "Kaliteli — ~%25–45 küçülme"
-                                      : "Quality — ~25–45% smaller"}
+                                      ? "Kaliteli — baskı çözünürlüğü korunur"
+                                      : "Quality — keeps print resolution"}
                                 </option>
                               </select>
                             </label>
@@ -8058,8 +8093,15 @@ function App() {
                                   const compressEst =
                                     selectedFeature.id === "compress" &&
                                     !item.inspecting
-                                      ? compressEstimateMBRange(item.file.size)
+                                      ? compressGainPercentRange(
+                                          item.imageRatio,
+                                          compressQuality,
+                                        )
                                       : null;
+                                  const compressTextHeavy =
+                                    selectedFeature.id === "compress" &&
+                                    typeof item.imageRatio === "number" &&
+                                    item.imageRatio < COMPRESS_TEXT_HEAVY_RATIO;
                                   const dragFromIdx =
                                     mergePointerDraggingId !== null
                                       ? uploads.findIndex(
@@ -8161,6 +8203,11 @@ function App() {
                                                     compressEst.min,
                                                     compressEst.max,
                                                   )}
+                                                </span>
+                                              ) : null}
+                                              {compressTextHeavy ? (
+                                                <span className="selected-file-card__compress-note">
+                                                  {W.compressTextHeavyNote}
                                                 </span>
                                               ) : null}
                                               {item.inspecting ? (
