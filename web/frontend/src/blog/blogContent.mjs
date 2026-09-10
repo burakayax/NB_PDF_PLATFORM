@@ -3731,6 +3731,294 @@ export const BLOG_POSTS = [
       ],
     },
   ),
+  post(
+    {
+      slug: "gorsel-boyutlandirma-sosyal-medya",
+      date: "2026-09-10",
+      updated: "2026-09-10",
+      readMinutes: 6,
+      tags: { tr: ["Görsel", "Sosyal Medya", "Boyutlandırma"], en: ["Images", "Social Media", "Resizing"] },
+      accent: "cyan",
+      tool: "/tools/gorsel-boyutlandir",
+    },
+    {
+      title: "Görsel Boyutlandırma: Sosyal Medya İçin Doğru Piksel Ölçüleri (2026)",
+      description:
+        "Instagram, Facebook, X, LinkedIn ve YouTube için güncel görsel ölçüleri ve bir resmi kalitesini bozmadan istediğiniz piksel ölçüsüne getirmenin en kolay yolu.",
+      excerpt:
+        "Yüklediğiniz görsel platformda kırpılıyor ya da bulanıklaşıyor mu? Güncel sosyal medya ölçüleri ve resmi kalite kaybetmeden tam o ölçüye getirmenin yolu bu yazıda.",
+      blocks: [
+        { t: "lead", x: "Bir görseli sosyal medyaya yüklüyorsunuz ve platform onu kırpıyor, kenarlarını kesiyor ya da bulanıklaştırıyor. Sebep neredeyse her zaman aynı: görselin piksel ölçüsü platformun beklediği ölçüyle uyuşmuyor. Bu yazıda hangi platformun hangi ölçüyü istediğini ve bir resmi kalitesini koruyarak o ölçüye nasıl getireceğinizi anlatıyoruz." },
+
+        { t: "h2", x: "Neden ölçü bu kadar önemli?" },
+        { t: "p", x: "Sosyal ağlar yüklediğiniz görseli kendi çerçevelerine sığdırmak için otomatik olarak kırpar ve yeniden ölçekler. Bu otomatik işlem sizin kontrolünüzde değildir: yazınız kadraj dışında kalabilir, yüzler kenardan kesilebilir, çok büyük bir dosya agresif biçimde sıkıştırıldığı için detaylar dağılabilir. Görseli daha yüklemeden doğru ölçüye getirdiğinizde kadrajı da netliği de siz belirlersiniz." },
+
+        { t: "h2", x: "2026 sosyal medya görsel ölçüleri" },
+        { t: "ul", items: [
+          "Instagram gönderi (kare): 1080 × 1080 px",
+          "Instagram gönderi (dikey, 4:5): 1080 × 1350 px — akışta en çok yer kaplayan oran",
+          "Instagram hikâye ve Reels: 1080 × 1920 px (9:16)",
+          "Facebook paylaşım görseli: 1200 × 630 px",
+          "Facebook kapak fotoğrafı: 851 × 315 px",
+          "X (Twitter) gönderi görseli: 1600 × 900 px — kapak/başlık: 1500 × 500 px",
+          "LinkedIn gönderi (kare): 1200 × 1200 px — şirket kapağı: 1128 × 191 px",
+          "YouTube küçük resmi: 1280 × 720 px — kanal başlığı: 2560 × 1440 px",
+          "Site link önizlemesi (OG görseli): 1200 × 630 px",
+        ] },
+        { t: "tip", x: "Tek bir görselle birden çok platforma çıkacaksanız 1080 × 1350 (4:5) ile başlayın: kareye de 9:16'ya da temiz kırpılır." },
+
+        { t: "h2", x: "Üç farklı yol: Doldur, Sığdır, Esnet" },
+        { t: "p", x: "Görselinizin oranı hedef ölçüyle aynı değilse bir karar vermek gerekir. Üç yol vardır:" },
+        { t: "ul", items: [
+          "Doldur (kırp): Ölçüyü tam doldurur, taşan kenarlar ortadan kırpılır. Fotoğraflar için en doğal seçim.",
+          "Sığdır (boşluk ekle): Görselin tamamı görünür, artan yerler seçtiğiniz renkle dolar. Ürün görseli, logo ve afiş gibi hiçbir yeri kesilmemesi gerekenler için.",
+          "Esnet: Oranı bozarak tam ölçüye çeker. Yüz ve metin içeren görsellerde kullanmayın — görüntü yayvanlaşır.",
+        ] },
+
+        { t: "h2", x: "Kalite nasıl korunur?" },
+        { t: "p", x: "Bir görseli küçültmek aslında yeniden örnekleme (resampling) işlemidir ve kullanılan süzgeç sonucu doğrudan belirler. Tarayıcıların yerleşik ölçeklemesi hızlıdır ama kabadır: ince çizgiler tırtıklanır, metinler bulanıklaşır. PDF Platform'un Görsel Boyutlandır aracı bunun yerine Lanczos ailesinden mks2013 süzgecini kullanır — ölçekleme ve keskinleştirmeyi birlikte yürütür, ince detaylar korunur." },
+        { t: "ul", items: [
+          "Küçültürken kaynağınız ne kadar büyükse sonuç o kadar iyi olur; önce kırpın, sonra küçültün.",
+          "Büyütme yeni detay yaratmaz. 600 piksel genişliğindeki bir görseli 1920 piksele çıkarmak onu netleştirmez; araç bu durumda sizi uyarır.",
+          "Fotoğraflarda JPEG veya WebP, saydamlık gereken logolarda PNG veya WebP kullanın. WebP çoğu zaman aynı kalitede en küçük dosyayı verir.",
+        ] },
+
+        { t: "h2", x: "Adım adım: bir görseli istediğiniz ölçüye getirme" },
+        { t: "steps", items: [
+          { title: "Görseli ekleyin", x: "JPG, PNG veya WebP dosyanızı sürükleyip bırakın. Dosya cihazınızdan çıkmaz." },
+          { title: "Ölçüyü seçin", x: "Hazır sosyal medya ölçülerinden birini seçin ya da genişlik-yüksekliği kendiniz yazın. Oranı koru açıkken bir kenarı yazmanız yeter." },
+          { title: "Oturtma biçimini belirleyin", x: "Doldur, Sığdır ya da Esnet. Sığdır'da boşlukların rengini de seçebilirsiniz." },
+          { title: "Boyutlandırın ve indirin", x: "Biçim ve kaliteyi ayarlayıp Boyutlandır deyin; sonuç anında iner." },
+        ] },
+        { t: "cta", title: "Görsel Boyutlandır", x: "Bir görsel yükleyin — istediğiniz piksel ölçüsüne net biçimde gelsin.", btn: "Aracı aç", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Boyutlandırma mı, sıkıştırma mı?" },
+        { t: "p", x: "İkisi farklı işlerdir ve sık karıştırılır. Boyutlandırma görselin piksel ölçüsünü değiştirir (1920 × 1080 gibi); sıkıştırma ise ölçüyü koruyup dosya boyutunu küçültür (MB). Çoğu zaman önce doğru ölçüye getirmek dosya boyutunu da ciddi biçimde düşürür; hâlâ büyükse sıkıştırma aracıyla devam edebilirsiniz." },
+        { t: "cta", title: "Görsel Sıkıştır", x: "Ölçü aynı kalsın, dosya boyutu küçülsün.", btn: "Aracı aç", tool: "/tools/gorsel-sikistir" },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "Görsel boyutlandırma tamamen tarayıcınızda çalışır. Görseliniz sunucuya yüklenmez, internete hiç çıkmaz — işlem bilgisayarınızda ya da telefonunuzda yapılır." },
+      ],
+      faq: [
+        { q: "Görsel boyutu nasıl değiştirilir?", a: "Görselinizi Görsel Boyutlandır aracına ekleyin, istediğiniz genişlik ve yüksekliği yazın (ya da hazır bir sosyal medya ölçüsü seçin) ve Boyutlandır deyin. Sonuç anında indirilir; işlem cihazınızda yapılır." },
+        { q: "Instagram gönderi görseli kaç piksel olmalı?", a: "Kare gönderi için 1080 × 1080 piksel, dikey gönderi için 1080 × 1350 piksel, hikâye ve Reels için 1080 × 1920 piksel önerilir." },
+        { q: "Görseli oranını bozmadan boyutlandırabilir miyim?", a: "Evet. Oranı koru seçeneğiyle bir kenarı yazdığınızda diğeri otomatik hesaplanır. Sabit bir ölçüye oran bozulmadan oturması için Doldur (ortadan kırpar) veya Sığdır (boşluk ekler) modunu kullanın." },
+        { q: "Görseli büyütünce kalite artar mı?", a: "Hayır. Büyütme var olmayan detayı geri getiremez; yalnızca mevcut pikselleri esnetir. En iyi sonuç için mümkün olan en büyük kaynak görselden başlayın." },
+        { q: "Boyutlandırma ile sıkıştırma arasındaki fark ne?", a: "Boyutlandırma piksel ölçüsünü (ör. 1920 × 1080) değiştirir; sıkıştırma ölçüyü koruyarak dosyanın MB cinsinden boyutunu küçültür." },
+        { q: "Görselim sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; görseliniz internete gönderilmez, %100 gizlidir." },
+      ],
+    },
+    {
+      title: "Image Resizing: The Right Pixel Sizes for Social Media (2026)",
+      description:
+        "Up-to-date image sizes for Instagram, Facebook, X, LinkedIn and YouTube, plus the easiest way to resize a picture to an exact pixel size without losing quality.",
+      excerpt:
+        "Does your image get cropped or look blurry after uploading? Here are the current social media sizes and how to resize a picture to exactly the size you need without losing quality.",
+      blocks: [
+        { t: "lead", x: "You upload an image to a social network and it gets cropped, cut off at the edges, or looks soft. The reason is almost always the same: the pixel size of your image doesn't match what the platform expects. This guide lists the sizes each platform wants and shows how to resize a picture to fit them without losing quality." },
+
+        { t: "h2", x: "Why does the size matter so much?" },
+        { t: "p", x: "Social networks automatically crop and rescale whatever you upload to fit their frames. That automatic step is out of your hands: your text can end up outside the frame, faces can be cut off, and an oversized file can be compressed so aggressively that detail falls apart. Resize before you upload and you decide both the framing and the sharpness." },
+
+        { t: "h2", x: "2026 social media image sizes" },
+        { t: "ul", items: [
+          "Instagram post (square): 1080 × 1080 px",
+          "Instagram post (portrait, 4:5): 1080 × 1350 px — the tallest ratio the feed allows",
+          "Instagram story and Reels: 1080 × 1920 px (9:16)",
+          "Facebook shared image: 1200 × 630 px",
+          "Facebook cover photo: 851 × 315 px",
+          "X (Twitter) in-stream image: 1600 × 900 px — header: 1500 × 500 px",
+          "LinkedIn post (square): 1200 × 1200 px — company cover: 1128 × 191 px",
+          "YouTube thumbnail: 1280 × 720 px — channel banner: 2560 × 1440 px",
+          "Link preview image (OG image): 1200 × 630 px",
+        ] },
+        { t: "tip", x: "Publishing one image across several platforms? Start from 1080 × 1350 (4:5): it crops cleanly to both square and 9:16." },
+
+        { t: "h2", x: "Three ways to fit a size: Fill, Fit, Stretch" },
+        { t: "p", x: "If your image's aspect ratio doesn't match the target, you have to make a choice. There are three options:" },
+        { t: "ul", items: [
+          "Fill (crop): Fills the size exactly; overflowing edges are cropped from the centre. The natural choice for photos.",
+          "Fit (add padding): The whole image stays visible and the gaps are filled with a colour you choose. Best for product shots, logos and posters where nothing may be cut.",
+          "Stretch: Pulls the image to the exact size, ignoring the ratio. Avoid it for faces and text — everything looks squashed.",
+        ] },
+
+        { t: "h2", x: "How is quality preserved?" },
+        { t: "p", x: "Resizing is really resampling, and the filter decides the result. A browser's built-in scaling is fast but crude: thin lines get jagged and text goes soft. The PDF Platform Resize Image tool uses the mks2013 filter from the Lanczos family instead — it scales and sharpens in one pass, so fine detail survives." },
+        { t: "ul", items: [
+          "The larger your source, the better the downscale — crop first, then resize.",
+          "Enlarging cannot create detail. Blowing a 600 px wide image up to 1920 px won't sharpen it; the tool warns you when that happens.",
+          "Use JPEG or WebP for photos, and PNG or WebP for logos that need transparency. WebP usually gives the smallest file at the same quality.",
+        ] },
+
+        { t: "h2", x: "Step by step: resize an image to any size" },
+        { t: "steps", items: [
+          { title: "Add your image", x: "Drop in a JPG, PNG or WebP file. It never leaves your device." },
+          { title: "Choose the size", x: "Pick a ready-made social size or type a width and height yourself. With Keep aspect ratio on, one side is enough." },
+          { title: "Pick how it fits", x: "Fill, Fit or Stretch. In Fit mode you can also choose the padding colour." },
+          { title: "Resize and download", x: "Set the format and quality, click Resize, and the result downloads instantly." },
+        ] },
+        { t: "cta", title: "Resize Image", x: "Upload an image — get it at exactly the pixel size you need, sharp.", btn: "Open the tool", tool: "/tools/gorsel-boyutlandir" },
+
+        { t: "h2", x: "Resizing or compressing?" },
+        { t: "p", x: "These are two different jobs that often get mixed up. Resizing changes the pixel dimensions of an image (like 1920 × 1080); compressing keeps the dimensions and reduces the file size in MB. Getting the dimensions right usually cuts the file size a lot on its own — if it's still too big, run it through the compressor next." },
+        { t: "cta", title: "Compress Image", x: "Keep the dimensions, shrink the file size.", btn: "Open the tool", tool: "/tools/gorsel-sikistir" },
+
+        { t: "h2", x: "A note on privacy" },
+        { t: "p", x: "Resizing runs entirely in your browser. Your image is never uploaded and never reaches the internet — the work happens on your computer or phone." },
+      ],
+      faq: [
+        { q: "How do I change an image's size?", a: "Add your image to the Resize Image tool, type the width and height you need (or pick a ready-made social size) and click Resize. The result downloads instantly and the work happens on your device." },
+        { q: "What size should an Instagram post be?", a: "1080 × 1080 px for a square post, 1080 × 1350 px for a portrait post, and 1080 × 1920 px for stories and Reels." },
+        { q: "Can I resize without distorting the image?", a: "Yes. With Keep aspect ratio on, typing one side computes the other. To hit a fixed size without distortion, use Fill (centre crop) or Fit (adds padding)." },
+        { q: "Does enlarging an image improve quality?", a: "No. Enlarging cannot bring back detail that isn't there; it only stretches existing pixels. Start from the largest source image you have." },
+        { q: "What is the difference between resizing and compressing?", a: "Resizing changes the pixel dimensions (e.g. 1920 × 1080); compressing keeps the dimensions and reduces the file size in MB." },
+        { q: "Is my image uploaded to a server?", a: "No. Everything runs in your browser; your image is never sent to the internet and stays 100% private." },
+      ],
+    },
+  ),
+  post(
+    {
+      slug: "pdf-ten-kesit-alma-gorsel-kirpma",
+      date: "2026-09-10",
+      updated: "2026-09-10",
+      readMinutes: 6,
+      tags: { tr: ["PDF Araçları", "Görsel", "Kesit Alma"], en: ["PDF Tools", "Images", "Snipping"] },
+      accent: "cyan",
+      tool: "/tools/pdf-kesit-al",
+    },
+    {
+      title: "PDF'ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin",
+      description:
+        "PDF sayfasının bir bölümünü yüksek çözünürlüklü görsel olarak kaydedin. Ekran görüntüsünün neden bulanık kaldığını ve kesit almanın nasıl çalıştığını adım adım anlatıyoruz.",
+      excerpt:
+        "PDF'teki bir tabloyu, grafiği ya da soruyu sunuma almak istiyor ama ekran görüntüsü bulanık mı çıkıyor? Kesit almak bambaşka bir iş — bu yazıda farkı ve en kolay yolu gösteriyoruz.",
+      blocks: [
+        { t: "lead", x: "Bir PDF'in içinde işinize yarayan bir tablo, grafik, şema ya da tek bir soru var; onu sunuma, rapora veya derse almak istiyorsunuz. İlk refleks ekran görüntüsü almak oluyor ve sonuç çoğu zaman bulanık, kenarları eğri bir görsel. Doğru yol, o bölgeyi doğrudan belgeden, istediğiniz çözünürlükte kesip almak. Bu yazıda ikisinin farkını ve pratik yolunu anlatıyoruz." },
+
+        { t: "h2", x: "Neden ekran görüntüsü yetmiyor?" },
+        { t: "p", x: "Ekran görüntüsü, adı üstünde, EKRANINIZI kopyalar. Elde ettiğiniz görselin çözünürlüğü ekranınızın çözünürlüğüyle sınırlıdır; PDF'in kendi çözünürlüğüyle değil. Bu yüzden:" },
+        { t: "ul", items: [
+          "Yazılar ve ince çizgiler yumuşar, yakınlaştırınca dağılır.",
+          "Sunum perdesine veya baskıya verdiğinizde fark hemen belli olur.",
+          "Kenarları elle kırpmak zordur; bir yerden bir piksel fazla, başka yerden eksik kalır.",
+          "PDF'i büyütüp öyle ekran görüntüsü alsanız bile ekranınızdan fazlasını elde edemezsiniz.",
+        ] },
+
+        { t: "h2", x: "Kesit almak ne yapar?" },
+        { t: "p", x: "Kesit alırken görsel ekrandan değil, belgenin kendisinden üretilir. Siz sayfada bir alan seçersiniz; araç yalnızca o bölgeyi, seçtiğiniz çözünürlükte yeniden çizer. Ekranınızda küçük görünen bir tablo bile baskı kalitesinde bir görsele dönüşebilir." },
+        { t: "tip", x: "Çözünürlük seçeneği 1x, 2x ve 3x olarak sunulur. 1x ekran için, 2x baskı ve sunum için yeterlidir; 3x'i afiş gibi büyük çıktılarda veya çok küçük bir detayı büyütmek istediğinizde kullanın." },
+
+        { t: "h2", x: "Adım adım: bir bölgeyi görsel olarak kaydetme" },
+        { t: "steps", items: [
+          { title: "PDF'i ekleyin", x: "Belgenizi sürükleyip bırakın. Dosya cihazınızdan çıkmaz." },
+          { title: "Sayfayı seçin", x: "Solda beliren sayfa şeridinden istediğiniz sayfaya geçin." },
+          { title: "Alanı seçin", x: "Sayfada sürükleyerek bir kutu çizin; kutuyu taşıyabilir, köşelerinden boyutlandırabilirsiniz." },
+          { title: "Çözünürlük ve biçimi belirleyin", x: "1x/2x/3x ve PNG ya da JPEG. Metin ve grafikte PNG, fotoğrafta JPEG daha iyi sonuç verir." },
+          { title: "Kesiti ekleyin", x: "Kesit sepete düşer. Aynı sayfadan ya da başka sayfalardan istediğiniz kadar kesit ekleyebilirsiniz." },
+          { title: "İndirin", x: "Kesitleri tek tek indirin, hepsini birden ZIP olarak alın ya da tek bir PDF'te toplayın." },
+        ] },
+        { t: "cta", title: "PDF'ten Kesit Al", x: "Bir PDF yükleyin — sayfadaki tabloyu, grafiği ya da soruyu net bir görsel olarak alın.", btn: "Aracı aç", tool: "/tools/pdf-kesit-al" },
+
+        { t: "h2", x: "Kesit sepeti ne işe yarıyor?" },
+        { t: "p", x: "Çoğu zaman tek bir kesit yetmez: bir rapordan üç grafik, bir kitaptan beş soru toplarsınız. Aldığınız her kesit sepette birikir; sayfa şeridinde hangi sayfadan kaç kesit aldığınız rozet olarak görünür. İşiniz bitince hepsini tek seferde indirirsiniz — dosya dosya uğraşmazsınız. Tek PDF seçeneğiyse topladığınız kesitleri sırayla tek bir belgeye dizer; çalışma kâğıdı ya da özet doküman hazırlarken işi bir adımda bitirir." },
+
+        { t: "h2", x: "Nerelerde işinize yarar?" },
+        { t: "ul", items: [
+          "Rapordaki bir grafiği sunuma almak.",
+          "Katalogdan tek bir ürün görselini ayırmak.",
+          "Ders notundan ya da soru bankasından belirli soruları toplamak.",
+          "Sözleşmedeki bir maddeyi ekran görüntüsü kalitesinde değil, okunur biçimde paylaşmak.",
+          "Eski bir belgeden logo veya damgayı temiz şekilde çıkarmak.",
+        ] },
+
+        { t: "h2", x: "Kesit almak mı, sayfayı resme çevirmek mi, gömülü görseli çıkarmak mı?" },
+        { t: "p", x: "Üçü farklı işlerdir; hangisini istediğinizi bilirseniz doğru sonucu ilk seferde alırsınız:" },
+        { t: "ul", items: [
+          "Kesit alma: Sayfanın SİZİN SEÇTİĞİNİZ bölgesini görsel yapar. Tablo, grafik, bir paragraf — sınırı siz çizersiniz.",
+          "PDF'i resme çevirme: Sayfanın TAMAMINI tek bir görsele dönüştürür.",
+          "Gömülü görsel çıkarma: Belgenin içine gömülmüş asıl fotoğraf dosyalarını özgün haliyle ayıklar; sayfadaki metni veya çizimi almaz.",
+        ] },
+        { t: "cta", title: "PDF → Görsel", x: "Sayfaların tamamını yüksek çözünürlüklü JPG/PNG olarak indirin.", btn: "Aracı aç", tool: "/tools/pdf-to-image" },
+
+        { t: "h2", x: "Gizlilik notu" },
+        { t: "p", x: "Kesit alma tamamen tarayıcınızda çalışır; PDF'iniz sunucuya yüklenmez. Üstelik sayfanın tamamı büyük ölçekte çizilmez, yalnızca seçtiğiniz bölge işlenir — bu hem hızlı hem de cihazınızın belleğine yük bindirmeyen bir yol." },
+      ],
+      faq: [
+        { q: "PDF'ten bir bölgeyi nasıl görsel olarak kaydederim?", a: "PDF'i PDF'ten Kesit Al aracına yükleyin, sayfada istediğiniz alanı sürükleyerek seçin ve Kesiti Ekle deyin. Kesit yüksek çözünürlüklü bir görsel olarak sepete eklenir; tek tek ya da toplu indirebilirsiniz." },
+        { q: "Ekran görüntüsünden farkı ne?", a: "Ekran görüntüsü ekranınızın çözünürlüğüyle sınırlıdır. Kesit doğrudan PDF'ten, seçtiğiniz çözünürlükte (2x veya 3x) çizilir; yazılar ve çizgiler baskıya uygun netlikte çıkar." },
+        { q: "Birden fazla kesiti tek dosyada alabilir miyim?", a: "Evet. Tüm kesitleri tek bir ZIP arşivi olarak indirebilir veya hepsini tek bir PDF belgesinde toplayabilirsiniz." },
+        { q: "PNG mi JPEG mi seçmeliyim?", a: "Metin, tablo, grafik ve çizim içeren kesitlerde PNG (kayıpsız, keskin); fotoğraf ağırlıklı kesitlerde JPEG (daha küçük dosya) daha iyidir." },
+        { q: "Belgem sunucuya yüklenir mi?", a: "Hayır. İşlem tamamen tarayıcınızda yapılır; PDF'iniz internete hiç gönderilmez, %100 gizlidir." },
+        { q: "PDF'ten kesit almak ücretsiz mi?", a: "Evet. Üyeliksiz ve ücretsizdir, kurulum gerekmez; bilgisayar, tablet ve telefonda doğrudan tarayıcıda çalışır." },
+      ],
+    },
+    {
+      title: "Snip from a PDF: Save a Table, Chart or Question as a Sharp Image",
+      description:
+        "Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step.",
+      excerpt:
+        "Want to reuse a table, chart or question from a PDF but your screenshot looks blurry? Snipping is a different job entirely — here's the difference and the easiest way to do it.",
+      blocks: [
+        { t: "lead", x: "There's a table, chart, diagram or a single question inside a PDF and you want it in a slide, a report or a lesson. The first instinct is to take a screenshot, and the result is usually a soft, crookedly cropped image. The right way is to cut that region straight out of the document at the resolution you choose. This guide explains the difference and the practical route." },
+
+        { t: "h2", x: "Why isn't a screenshot enough?" },
+        { t: "p", x: "A screenshot copies your SCREEN. The image you get is limited to your screen's resolution, not the PDF's. So:" },
+        { t: "ul", items: [
+          "Text and thin lines go soft and fall apart when you zoom in.",
+          "The difference shows immediately on a projector or in print.",
+          "Cropping the edges by hand is fiddly — a pixel too much here, too little there.",
+          "Even zooming into the PDF first won't give you more than your screen has.",
+        ] },
+
+        { t: "h2", x: "What does snipping do instead?" },
+        { t: "p", x: "A snip is generated from the document itself, not from your screen. You select an area on the page and the tool redraws only that region at the resolution you picked. A table that looks small on screen can still become a print-quality image." },
+        { t: "tip", x: "The resolution options are 1x, 2x and 3x. 1x is for screen use, 2x is plenty for print and slides; save 3x for large output or when you need to blow up a very small detail." },
+
+        { t: "h2", x: "Step by step: save a region as an image" },
+        { t: "steps", items: [
+          { title: "Add your PDF", x: "Drop in your document. It never leaves your device." },
+          { title: "Pick the page", x: "Use the page strip on the left to move to the page you want." },
+          { title: "Select the area", x: "Drag a box on the page; move it around and resize it from the corners." },
+          { title: "Set resolution and format", x: "1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos." },
+          { title: "Add the snip", x: "It drops into the basket. Take as many snips as you like, from any page." },
+          { title: "Download", x: "Save snips one by one, grab them all as a ZIP, or combine them into a single PDF." },
+        ] },
+        { t: "cta", title: "Snip PDF to Image", x: "Upload a PDF — take the table, chart or question out as a sharp image.", btn: "Open the tool", tool: "/tools/pdf-kesit-al" },
+
+        { t: "h2", x: "What is the snip basket for?" },
+        { t: "p", x: "One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you're done, download the lot in one go instead of handling files one at a time. The single-PDF option lines your snips up into one document — perfect when you're assembling a worksheet or a summary sheet." },
+
+        { t: "h2", x: "Where does it help?" },
+        { t: "ul", items: [
+          "Moving a chart from a report into a slide deck.",
+          "Pulling one product shot out of a catalogue.",
+          "Collecting specific questions from lesson notes or a question bank.",
+          "Sharing a clause from a contract legibly instead of as a soft screenshot.",
+          "Lifting a logo or stamp cleanly out of an old document.",
+        ] },
+
+        { t: "h2", x: "Snipping, converting pages to images, or extracting embedded images?" },
+        { t: "p", x: "These are three different jobs; knowing which one you want gets you the right result first time:" },
+        { t: "ul", items: [
+          "Snipping: Turns THE REGION YOU CHOOSE into an image. A table, a chart, a paragraph — you draw the boundary.",
+          "PDF to image: Converts the WHOLE page into a single image.",
+          "Extracting embedded images: Pulls out the original photo files stored inside the document; it won't capture page text or vector drawings.",
+        ] },
+        { t: "cta", title: "PDF to Image", x: "Download whole pages as high-resolution JPG/PNG.", btn: "Open the tool", tool: "/tools/pdf-to-image" },
+
+        { t: "h2", x: "A note on privacy" },
+        { t: "p", x: "Snipping runs entirely in your browser; your PDF is never uploaded. And the whole page isn't drawn at a huge scale — only the region you selected is rendered, which keeps it fast and easy on your device's memory." },
+      ],
+      faq: [
+        { q: "How do I save a region of a PDF as an image?", a: "Upload the PDF to the Snip PDF to Image tool, drag to select the area you want, and click Add snip. It is captured as a high-resolution image in your basket, ready to download individually or all together." },
+        { q: "How is this different from a screenshot?", a: "A screenshot is limited to your screen resolution. A snip is rendered straight from the PDF at the resolution you pick (2x or 3x), so text and lines stay sharp enough to print." },
+        { q: "Can I get several snips in one file?", a: "Yes. Download every snip as a single ZIP archive, or combine them all into one PDF document." },
+        { q: "Should I pick PNG or JPEG?", a: "PNG (lossless and sharp) for text, tables, charts and drawings; JPEG (smaller file) for photo-heavy snips." },
+        { q: "Is my document uploaded to a server?", a: "No. Everything runs in your browser; your PDF is never sent to the internet and stays 100% private." },
+        { q: "Is snipping from a PDF free?", a: "Yes. It's free with no signup or installation and runs directly in the browser on computers, tablets and phones." },
+      ],
+    },
+  ),
 ];
 
 /** Slug → post. */

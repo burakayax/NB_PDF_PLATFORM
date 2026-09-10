@@ -17,6 +17,8 @@
 /** TR araç slug'ı → EN araç slug'ı. Listede olmayan slug zaten İngilizce. */
 export const EN_TOOL_SLUGS = {
   "gorsel-sikistir": "compress-image",
+  "gorsel-boyutlandir": "resize-image",
+  "pdf-kesit-al": "crop-pdf-to-image",
   "belge-tara": "scan-document",
   "aranabilir-pdf": "searchable-pdf",
   "pdf-ozetle": "summarize-pdf",
@@ -84,6 +86,8 @@ export const EN_BLOG_SLUGS = {
   "ucretsiz-pdf-araci-nasil-secilir": "how-to-choose-a-free-pdf-tool",
   "pdf-kucultme-eposta-whatsapp": "shrink-a-pdf-for-email",
   "telefonda-pdf-duzenleme-uygulamasiz": "edit-a-pdf-on-your-phone",
+  "gorsel-boyutlandirma-sosyal-medya": "resize-images-for-social-media",
+  "pdf-ten-kesit-alma-gorsel-kirpma": "snip-images-from-a-pdf",
 };
 
 /** Ters yön tabloları (EN slug → TR slug); modül yüklenirken bir kez kurulur. */

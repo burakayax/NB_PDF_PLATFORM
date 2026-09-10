@@ -45,6 +45,8 @@ export type ContentPanel =
   | "annotate"
   | "crop"
   | "compress-image"
+  | "resize-image"
+  | "snip"
   | "searchable"
   | "scanner"
   | "scans"

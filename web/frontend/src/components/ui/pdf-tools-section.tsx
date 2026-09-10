@@ -25,6 +25,8 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "taranmis-pdf-ocr",
   "crop-pdf",
   "gorsel-sikistir",
+  "gorsel-boyutlandir",
+  "pdf-kesit-al",
 ]);
 
 const toolCategories = (lang: Language) => [
@@ -154,6 +156,12 @@ const toolCategories = (lang: Language) => [
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
+        id: "pdf-kesit-al",
+        icon: "✂️",
+        name: lang === "tr" ? "PDF'ten Kesit Al" : "Snip PDF to Image",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
         id: "crop-pdf",
         icon: <Crop className="h-6 w-6 text-cyan-300" strokeWidth={2} />,
         name: lang === "tr" ? "PDF Kırp" : "Crop PDF",
@@ -163,6 +171,12 @@ const toolCategories = (lang: Language) => [
         id: "gorsel-sikistir",
         icon: "🗜️",
         name: lang === "tr" ? "Görsel Sıkıştır" : "Compress Image",
+        badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
+      },
+      {
+        id: "gorsel-boyutlandir",
+        icon: "📐",
+        name: lang === "tr" ? "Görsel Boyutlandır" : "Resize Image",
         badge: lang === "tr" ? "Üyeliksiz" : "No sign-up",
       },
       {
