@@ -164,7 +164,10 @@ import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
+import {
+  friendlyOperationFailedMessage,
+  toolFailureNotice,
+} from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
@@ -5075,11 +5078,11 @@ function App() {
         setUpgradeModalOpen(true);
         return;
       }
-      showToast(
-        "error",
-        "İşlem başarısız",
-        friendlyOperationFailedMessage(language),
-      );
+      // Sunucunun söylediğini kullanıcıya aktar: "parola hatalı" gibi somut bir
+      // sebep varken "dosyanızı kontrol edin" demek kullanıcıyı yanlış yere
+      // bakmaya itiyordu.
+      const notice = toolFailureNotice(error, language);
+      showToast("error", notice.title, notice.detail);
     } finally {
       if (toolStalemateWatchdogId !== undefined) {
         window.clearTimeout(toolStalemateWatchdogId);
