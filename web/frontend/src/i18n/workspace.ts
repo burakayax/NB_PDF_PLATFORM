@@ -261,6 +261,14 @@ export function ws(lang: Language) {
     compressEstimateTooltip: tr
       ? "Bu dosyanın içeriğine bakılarak hesaplandı; kazanç görsellerden gelir."
       : "Calculated from this file's content; savings come from images.",
+    /** Sonuç ekranı: gerçekten ne kazanıldı. */
+    compressResultGain: (from: string, to: string, pct: number) =>
+      tr
+        ? `${from} → ${to} · %${pct} küçüldü`
+        : `${from} → ${to} · ${pct}% smaller`,
+    compressResultNoGain: tr
+      ? "Bu dosya daha fazla küçültülemedi: içeriği zaten sıkıştırılmış durumdaydı."
+      : "This file could not be reduced further: its content was already compressed.",
     compressTextHeavyNote: tr
       ? "Bu PDF metin ağırlıklı: içindeki metin zaten sıkıştırılmış geldiği için kazanç sınırlı olur. Kalite kademesi yalnızca görselleri etkiler."
       : "This PDF is text-heavy: its text is already compressed, so savings are limited. The quality level only affects images.",

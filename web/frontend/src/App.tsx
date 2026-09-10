@@ -582,6 +582,12 @@ function App() {
   const [mergeJob, setMergeJob] = useState<MergeJobStatus | null>(null);
   /** Birleştirme dışı araçlarda ETA / süre göstergesi için başlangıç zamanı ve dosya boyutu. */
   const [toolRunStartedAt, setToolRunStartedAt] = useState<number | null>(null);
+  /**
+   * Son çalıştırmanın GİRDİ boyutu. İşlem bitince sonuç ekranında "şu kadardan
+   * bu kadara indi" diyebilmek için tutulur; `toolRunFileBytes` state'i işlem
+   * biter bitmez sıfırlandığı için indirme tamamlandığında elde kalmıyor.
+   */
+  const lastRunInputBytesRef = useRef(0);
   const [toolRunFileBytes, setToolRunFileBytes] = useState(0);
   const [toolRunClock, setToolRunClock] = useState(0);
   const [toolProgressSuccess, setToolProgressSuccess] =
@@ -983,6 +989,8 @@ function App() {
     toolId?: FeatureId;
     /** Cihazda mı işlendi (sonuç panelindeki gizlilik cümlesi için). */
     onDevice?: boolean;
+    /** İşleme giren dosyanın boyutu — sıkıştırmada kazancı göstermek için. */
+    sourceBytes?: number;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
@@ -2120,7 +2128,12 @@ function App() {
         if (shareBlob) {
           // Kullanıcı native diyalogda dosyayı yeniden adlandırmış olabilir —
           // şeritte gerçek kaydedilen ismi göster (yoksa istenen isme düş).
-          setMergeShareReady({ blob: shareBlob, filename: outcome.download.filename ?? clientFileName, toolId });
+          setMergeShareReady({
+            blob: shareBlob,
+            filename: outcome.download.filename ?? clientFileName,
+            toolId,
+            sourceBytes: lastRunInputBytesRef.current || undefined,
+          });
         } else {
           showToast(
             "success",
@@ -3510,6 +3523,27 @@ function App() {
   }, [mergeShareReady, workspaceFeatures]);
   /** Sonuç paneli açık mı (paylaşım diyaloğu öndeyken gizlenir). */
   const resultReady = mergeShareReady && !mergeShare ? mergeShareReady : null;
+  /**
+   * Sıkıştırma sonucunda GERÇEKTE ne kazanıldığı. Kullanıcı sonuç ekranında
+   * yalnızca "hazır" görüyordu; kazancı görmeden aracın işe yarayıp
+   * yaramadığını anlayamıyordu. Yalnızca sıkıştırmada ve girdi boyutu
+   * biliniyorsa gösterilir.
+   */
+  const compressResultSubtitle = useMemo(() => {
+    if (!resultReady || resultReady.toolId !== "compress") {
+      return undefined;
+    }
+    const from = resultReady.sourceBytes ?? 0;
+    const to = resultReady.blob.size;
+    if (from <= 0 || to <= 0) {
+      return undefined;
+    }
+    const pct = Math.round((1 - to / from) * 100);
+    if (pct <= 0) {
+      return W.compressResultNoGain;
+    }
+    return W.compressResultGain(formatFileSize(from), formatFileSize(to), pct);
+  }, [resultReady, W]);
   const submitDisabled =
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
@@ -4787,6 +4821,7 @@ function App() {
             ? uploads.reduce((a, u) => a + u.file.size, 0)
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
+      lastRunInputBytesRef.current = runBytes;
       setToolRunClock(0);
 
       genericToolStalemateTriggeredRef.current = false;
@@ -7073,6 +7108,7 @@ function App() {
                       filename={resultReady.filename}
                       language={language}
                       processedOnDevice={!!resultReady.onDevice}
+                      subtitle={compressResultSubtitle}
                       onClose={() => setMergeShareReady(null)}
                     >
                       {chainSuggestions.length > 0 ? (
