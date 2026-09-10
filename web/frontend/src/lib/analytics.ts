@@ -13,6 +13,23 @@ declare global {
 
 const GA_PLACEHOLDER = "G-XXXXXXXXXX";
 
+/**
+ * KULLANICININ SİTEYE GİRDİĞİ İLK ADRES ve GELDİĞİ YER — modül yüklenir yüklenmez,
+ * React çalışmadan ve adres çubuğu değişmeden yakalanır.
+ *
+ * NEDEN GEREKLİ: Analytics yalnızca kullanıcı çerez onayı verdikten SONRA
+ * başlatılıyor. O ana kadar kullanıcı sayfalar arasında gezinmiş, uygulama da
+ * adresi birkaç kez değiştirmiş oluyor. Onay geldiğinde ölçüm aracı O ANKİ
+ * adresi "giriş sayfası" sanıyor; arama motorundan ya da reklamdan gelen
+ * kampanya bilgisi (utm_source, gclid gibi) çoktan silinmiş oluyor.
+ *
+ * Sonuç: oturum hiçbir kanala eşlenemiyor ve raporlarda "Unassigned"
+ * (atanmamış) olarak görünüyor. Aşağıdaki iki değer ilk yapılandırmaya
+ * verilerek kaynak bilgisi korunur.
+ */
+const LANDING_HREF = typeof window !== "undefined" ? window.location.href : "";
+const LANDING_REFERRER = typeof document !== "undefined" ? document.referrer : "";
+
 function normalizeMeasurementId(raw: string | undefined): string | null {
   const id = raw?.trim() ?? "";
   if (!id || id === GA_PLACEHOLDER) {
@@ -43,6 +60,8 @@ export function getDisplayMode(): "standalone" | "browser" {
 }
 
 let gaInitialized = false;
+/** İlk sayfa görüntülemesi `config` ile zaten gönderildi mi? */
+let firstPageViewSent = false;
 
 /** gtag.js ekler ve ilk config ile GA4’ü başlatır. Çoklu çağrıda yalnızca bir kez çalışır. */
 export function initializeGA(): boolean {
@@ -65,7 +84,15 @@ export function initializeGA(): boolean {
   }
 
   window.gtag("js", new Date());
-  window.gtag("config", id);
+  // Giriş adresi + yönlendiren AÇIKÇA verilir; onay geç geldiğinde bile oturum
+  // doğru kanala (arama, sosyal, reklam, doğrudan) atanır.
+  window.gtag("config", id, {
+    page_location: LANDING_HREF || undefined,
+    page_referrer: LANDING_REFERRER || undefined,
+  });
+  // Bu `config` çağrısı giriş sayfası için bir görüntüleme kaydı gönderir;
+  // aynı sayfa iki kez sayılmasın diye ilk `trackGAPageView` atlanır.
+  firstPageViewSent = true;
 
   // "App olarak mı, tarayıcıdan mı açıldı?" — her oturuma kullanıcı-özelliği olarak
   // etiket (GA4'te boyut/segment) + bir kez `app_open` olayı (kurulu app açılışları).
@@ -101,17 +128,35 @@ export function trackGAEvent(
   window.gtag("event", name, params ?? {});
 }
 
-/** SPA rota / sorgu değişiminde page_view gönderir (özellikle /tools/&lt;slug&gt;). */
+/**
+ * SPA rota / sorgu değişiminde sayfa görüntülemesi gönderir.
+ *
+ * ÖNEMLİ İKİ DÜZELTME:
+ *  • Artık her geçişte yeniden YAPILANDIRMA yapılmıyor. Eskiden her sayfa
+ *    değişiminde ölçüm aracı baştan kuruluyordu; bu, oturum ve kaynak
+ *    bilgisinin bozulmasına yol açabiliyordu. Doğrusu, tek seferlik
+ *    yapılandırmadan sonra yalnızca "sayfa görüntülendi" olayı göndermektir.
+ *  • Sayfa kimliği olarak kısa yol yerine TAM ADRES gönderiliyor. Ölçüm aracı
+ *    kampanya bilgisini adresin tamamından okur; kısa yol verildiğinde bu
+ *    bilgi kaybolur.
+ */
 export function trackGAPageView(pagePath: string, pageTitle?: string): void {
   const id = getGaMeasurementId();
   if (!id || typeof window.gtag !== "function") {
     return;
   }
+  // Giriş sayfası ilk yapılandırmada zaten sayıldı — çift saymayı önle.
+  if (firstPageViewSent) {
+    firstPageViewSent = false;
+    return;
+  }
+  const path = pagePath.startsWith("/") ? pagePath : `/${pagePath}`;
   const payload: Record<string, string> = {
-    page_path: pagePath.startsWith("/") ? pagePath : `/${pagePath}`,
+    page_location:
+      typeof window !== "undefined" ? `${window.location.origin}${path}` : path,
   };
   if (pageTitle?.trim()) {
     payload.page_title = pageTitle.trim();
   }
-  window.gtag("config", id, payload);
+  window.gtag("event", "page_view", payload);
 }
