@@ -1273,19 +1273,22 @@ def pdf_to_word(
                     progress_callback(4, 4, "Tamamlandı.")
                 return True
 
+        # ─────────────────────────────────────────────────────────────────
+        # BURAYA GELEN PDF'İN METİN KATMANI VAR (taranmış olanlar yukarıda
+        # ayrıldı). Bu yüzden ÖNCE metin katmanını doğrudan kullanan dönüştürücü
+        # denenir; görüntü tanıma yalnızca o başarısız olursa devreye girer.
+        #
+        # ESKİDEN TERSİYDİ ve pahalıya mal oluyordu: metni zaten hazır olan bir
+        # belgede önce sinir ağı tabanlı tanıma çalıştırılıyordu. Ölçüm (45
+        # sayfalık gerçek belge): sıralama yüzünden tepe bellek 4 GB'a çıkıyordu;
+        # sunucunun toplam belleği 512 MB olduğu için işlem öldürülüyor ve istek
+        # hiç yanıtlanmıyordu. Üstelik hazır metni tanımaya çalışmak doğruluğu
+        # ARTIRMAZ, yalnızca zaman ve bellek harcar.
+        # ─────────────────────────────────────────────────────────────────
         if progress_callback:
-            progress_callback(0, 4, "EasyOCR ile düzen analizi başlatılıyor...")
+            progress_callback(0, 4, "Metin katmanı Word'e aktarılıyor...")
 
-        # 1. EasyOCR — Türkçe+İngilizce, koordinat bazlı layout, hızlı (6s/sayfa CPU)
-        if _pdf_to_word_easyocr(pdf_path, docx_path, password=password, progress_callback=progress_callback):
-            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
-                if progress_callback:
-                    progress_callback(4, 4, "Tamamlandı.")
-                return True
-
-        # 2. pdf2docx fallback (dijital PDF)
-        if progress_callback:
-            progress_callback(1, 4, "EasyOCR başarısız — pdf2docx ile deneniyor...")
+        # 1. pdf2docx — metin katmanı olan (dijital) PDF'ler için doğru araç
         try:
             from pdf2docx import Converter
             if os.path.isfile(docx_path):
@@ -1314,6 +1317,15 @@ def pdf_to_word(
                 return True
         except Exception as pdf2docx_err:
             print(f"[pdf_to_word] pdf2docx başarısız: {pdf2docx_err}")
+
+        # 2. Görüntü tanıma — yalnızca yukarıdaki başarısız olursa.
+        if progress_callback:
+            progress_callback(1, 4, "Metin katmanı okunamadı — görüntüden tanınıyor...")
+        if _pdf_to_word_easyocr(pdf_path, docx_path, password=password, progress_callback=progress_callback):
+            if os.path.isfile(docx_path) and os.path.getsize(docx_path) > 0:
+                if progress_callback:
+                    progress_callback(4, 4, "Tamamlandı.")
+                return True
 
         # 3. Tesseract OCR son çare
         if progress_callback:

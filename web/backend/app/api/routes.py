@@ -655,6 +655,119 @@ async def pdf_to_excel(
             cleanup_path(workdir)
 
 
+@router.post("/pdf-to-word/start")
+async def pdf_to_word_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Word dönüşümünü ARKA PLANDA başlatır.
+
+    Bu aracın süresi ölçüldüğünde en uzun olanıydı: karmaşık bir belgede sayfa
+    düzeni analizi dakikalar sürebiliyor. Cevabı bekleyen tek bir istekte
+    bağlantı bu süreyi kaldıramıyordu.
+    """
+    decision = await entitlement_check(token, "pdf-to-word")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        pwd = password.strip() or None
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
+        output_path = workdir / output_name
+
+        def _run(progress_cb):
+            if engine.is_pdf_encrypted(sp) and not pwd:
+                raise Exception("Şifreli PDF için kaynak parolası gerekli.")
+            engine.pdf_to_word(sp, str(output_path), progress_callback=progress_cb, password=pwd)
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-word",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Word'e dönüştürülüyor...",
+            done_message="Word dosyanız hazır.",
+            fail_message="Word'e dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+
+
+@router.post("/pdf-to-ppt/start")
+async def pdf_to_ppt_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Sunum dönüşümünü ARKA PLANDA başlatır.
+
+    Her sayfa görüntüye çevrilip slayta yerleştirildiği için süre sayfa sayısıyla
+    doğrusal artıyor; ölçümde 45 sayfa ~50 saniye sürdü (sunucuda daha uzun).
+    """
+    decision = await entitlement_check(token, "pdf-to-ppt")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        pwd = password.strip() or None
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Sunum", "pptx")
+        output_path = workdir / output_name
+
+        def _run(progress_cb):
+            ptx.pdf_to_pptx(sp, str(output_path), password=pwd, progress_callback=progress_cb)
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-ppt",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Sunuma dönüştürülüyor...",
+            done_message="Sunumunuz hazır.",
+            fail_message="Sunuma dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+
+
 @router.post("/pdf-to-excel/start")
 async def pdf_to_excel_start(
     token: Annotated[str, Depends(extract_pdf_access_token)],
