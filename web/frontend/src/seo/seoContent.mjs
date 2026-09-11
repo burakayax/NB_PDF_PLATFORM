@@ -180,12 +180,12 @@ export const TOOL_SEO = {
       "PDF'ten Kesit Alma — sayfadan görsel kırp, ücretsiz",
       "PDF sayfasında istediğiniz alanı seçip yüksek çözünürlüklü görsel olarak kaydedin. Tablo, grafik, soru ya da şemayı PNG/JPG olarak alın — belgeniz cihazınızdan çıkmaz.",
       "PDF'ten Kesit Alma",
-      "Bir PDF sayfasının istediğiniz bölgesini seçip yüksek çözünürlüklü görsel olarak dışa aktarın: tablo, grafik, şema, logo ya da tek bir soru. Ekran görüntüsünden farklı olarak kesit doğrudan belgeden, seçtiğiniz çözünürlükte (1x/2x/3x) çizilir; bu yüzden çok daha nettir. Aldığınız kesitler bir sepette birikir — hepsini tek seferde ZIP olarak indirebilir veya tek bir PDF'te toplayabilirsiniz. Tüm işlem tarayıcınızda çalışır; belgeniz sunucuya yüklenmez, üyelik ve kurulum gerekmez.",
+      "Bir PDF sayfasının istediğiniz bölgesini seçip yüksek çözünürlüklü görsel olarak dışa aktarın: tablo, grafik, şema, logo ya da tek bir soru. Ekran görüntüsünden farklı olarak kesit doğrudan belgeden, seçtiğiniz çözünürlükte (1x/2x/3x) çizilir; bu yüzden çok daha nettir. Aldığınız kesitler bir sepette birikir: sırasını değiştirebilir, hepsini tek seferde ZIP olarak indirebilir ya da A4 sayfalara sırayla dizilmiş, yazdırmaya hazır tek bir çalışma kâğıdına dönüştürebilirsiniz (tek veya iki sütun). Tüm işlem tarayıcınızda çalışır; belgeniz sunucuya yüklenmez, üyelik ve kurulum gerekmez.",
       ["pdf kesit alma", "pdf'ten görsel kırpma", "pdf'ten resim kesme", "pdf tablo görsel kaydetme", "pdf ekran görüntüsü", "pdf'ten soru kırpma", "pdf alan seçip kaydetme"],
       [
         { q: "PDF'ten nasıl kesit alınır?", a: "PDF'inizi yükleyin, sayfada istediğiniz alanı sürükleyerek seçin ve 'Kesiti Ekle' deyin. Kesit yüksek çözünürlüklü görsel olarak sepete eklenir; tek tek ya da toplu indirebilirsiniz." },
         { q: "Ekran görüntüsü almaktan farkı ne?", a: "Ekran görüntüsü ekranınızın çözünürlüğüyle sınırlıdır. Kesit ise doğrudan PDF'ten, seçtiğiniz çözünürlükte (2x veya 3x) çizilir; yazılar ve çizgiler baskıya uygun netlikte çıkar." },
-        { q: "Birden fazla kesiti tek dosyada alabilir miyim?", a: "Evet. Aldığınız tüm kesitleri tek bir ZIP arşivi olarak indirebilir ya da hepsini tek bir PDF belgesinde toplayabilirsiniz." },
+        { q: "Birden fazla kesiti tek dosyada alabilir miyim?", a: "Evet. Kesitler A4 sayfalara sırayla dizilerek yazdırmaya hazır tek bir çalışma kâğıdına dönüşür (tek veya iki sütun). Dilerseniz her kesiti ayrı sayfa yapan PDF ya da görsellerin bulunduğu ZIP olarak da indirebilirsiniz." },
         { q: "Hangi biçimlerde kaydedebilirim?", a: "PNG (metin ve grafikler için keskin, kayıpsız) veya JPEG (fotoğraflar için daha küçük dosya) seçebilirsiniz." },
         { q: "Belgem sunucuya yüklenir mi?", a: "Hayır. Kesit alma tamamen tarayıcınızda çalışır; PDF'iniz internete hiç gönderilmez, %100 gizlidir." },
         { q: "PDF'ten kesit almak ücretsiz mi?", a: "Evet. Üyeliksiz ve ücretsizdir, kurulum gerekmez; bilgisayar, tablet ve telefonda doğrudan tarayıcıda çalışır." },
@@ -195,7 +195,7 @@ export const TOOL_SEO = {
       "Snip PDF to Image — crop any area of a page, free",
       "Select any area of a PDF page and save it as a high-resolution image. Grab a table, chart, question or diagram as PNG/JPG — your document never leaves your device.",
       "Snip PDF to Image",
-      "Export any region of a PDF page as a high-resolution image: a table, chart, diagram, logo or a single question. Unlike a screenshot, the snip is rendered straight from the document at the resolution you choose (1x/2x/3x), so it is far sharper. Your snips collect in a basket — download them all as a ZIP or combine them into a single PDF. Everything runs in your browser; your document is never uploaded, and no signup or installation is needed.",
+      "Export any region of a PDF page as a high-resolution image: a table, chart, diagram, logo or a single question. Unlike a screenshot, the snip is rendered straight from the document at the resolution you choose (1x/2x/3x), so it is far sharper. Your snips collect in a basket: reorder them, download them all as a ZIP, or turn them into a single print-ready A4 worksheet with the snips laid out in order (one or two columns). Everything runs in your browser; your document is never uploaded, and no signup or installation is needed.",
       ["snip pdf", "crop image from pdf", "extract part of pdf as image", "save pdf table as image", "pdf screenshot tool", "crop pdf region", "pdf to png region"],
       [
         { q: "How do I snip an area from a PDF?", a: "Upload your PDF, drag to select the area you want on the page, and click 'Add snip'. The snip is captured as a high-resolution image and added to your basket, ready to download one by one or all at once." },
