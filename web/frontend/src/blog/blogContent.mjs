@@ -3915,12 +3915,12 @@ export const BLOG_POSTS = [
           { title: "Alanı seçin", x: "Sayfada sürükleyerek bir kutu çizin; kutuyu taşıyabilir, köşelerinden boyutlandırabilirsiniz." },
           { title: "Çözünürlük ve biçimi belirleyin", x: "1x/2x/3x ve PNG ya da JPEG. Metin ve grafikte PNG, fotoğrafta JPEG daha iyi sonuç verir." },
           { title: "Kesiti ekleyin", x: "Kesit sepete düşer. Aynı sayfadan ya da başka sayfalardan istediğiniz kadar kesit ekleyebilirsiniz." },
-          { title: "İndirin", x: "Kesitleri tek tek indirin, hepsini birden ZIP olarak alın ya da tek bir PDF'te toplayın." },
+          { title: "İndirin", x: "Kesitleri tek tek indirin, hepsini ZIP olarak alın ya da A4 sayfalara dizilmiş, yazdırmaya hazır tek bir çalışma kâğıdına dönüştürün." },
         ] },
         { t: "cta", title: "PDF'ten Kesit Al", x: "Bir PDF yükleyin — sayfadaki tabloyu, grafiği ya da soruyu net bir görsel olarak alın.", btn: "Aracı aç", tool: "/tools/pdf-kesit-al" },
 
         { t: "h2", x: "Kesit sepeti ne işe yarıyor?" },
-        { t: "p", x: "Çoğu zaman tek bir kesit yetmez: bir rapordan üç grafik, bir kitaptan beş soru toplarsınız. Aldığınız her kesit sepette birikir; sayfa şeridinde hangi sayfadan kaç kesit aldığınız rozet olarak görünür. İşiniz bitince hepsini tek seferde indirirsiniz — dosya dosya uğraşmazsınız. Tek PDF seçeneğiyse topladığınız kesitleri sırayla tek bir belgeye dizer; çalışma kâğıdı ya da özet doküman hazırlarken işi bir adımda bitirir." },
+        { t: "p", x: "Çoğu zaman tek bir kesit yetmez: bir rapordan üç grafik, bir kitaptan beş soru toplarsınız. Aldığınız her kesit sepette birikir; sayfa şeridinde hangi sayfadan kaç kesit aldığınız rozet olarak görünür. İşiniz bitince hepsini tek seferde indirirsiniz — dosya dosya uğraşmazsınız. Çalışma kâğıdı seçeneği ise topladığınız kesitleri A4 sayfalara sırayla dizer — tek veya iki sütun, yazdırmaya hazır. Sırayı sepetten değiştirebilirsiniz; soru sırası neyse kâğıda o sırayla iner." },
 
         { t: "h2", x: "Nerelerde işinize yarar?" },
         { t: "ul", items: [
@@ -3981,12 +3981,12 @@ export const BLOG_POSTS = [
           { title: "Select the area", x: "Drag a box on the page; move it around and resize it from the corners." },
           { title: "Set resolution and format", x: "1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos." },
           { title: "Add the snip", x: "It drops into the basket. Take as many snips as you like, from any page." },
-          { title: "Download", x: "Save snips one by one, grab them all as a ZIP, or combine them into a single PDF." },
+          { title: "Download", x: "Save snips one by one, grab them all as a ZIP, or turn them into a print-ready A4 worksheet." },
         ] },
         { t: "cta", title: "Snip PDF to Image", x: "Upload a PDF — take the table, chart or question out as a sharp image.", btn: "Open the tool", tool: "/tools/pdf-kesit-al" },
 
         { t: "h2", x: "What is the snip basket for?" },
-        { t: "p", x: "One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you're done, download the lot in one go instead of handling files one at a time. The single-PDF option lines your snips up into one document — perfect when you're assembling a worksheet or a summary sheet." },
+        { t: "p", x: "One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you're done, download the lot in one go instead of handling files one at a time. The worksheet option lays your snips out on A4 pages in order — one or two columns, ready to print. Reorder them in the basket and the sheet follows that order." },
 
         { t: "h2", x: "Where does it help?" },
         { t: "ul", items: [
