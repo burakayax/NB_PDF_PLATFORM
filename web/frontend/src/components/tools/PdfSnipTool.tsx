@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Crop,
   Download,
   FileArchive,
@@ -66,9 +68,19 @@ const L = {
     basket: "Kesitler",
     empty: "Henüz kesit yok. Sayfada bir alan seçip «Kesiti Ekle» deyin.",
     clear: "Tümünü sil",
-    downloadZip: "Tümünü ZIP indir",
-    downloadPdf: "Tek PDF yap",
+    output: "Çıktı",
+    sheet: "Çalışma kâğıdı (A4)",
+    sheetHint: "Kesitler A4 sayfalara sırayla dizilir — yazdırmaya hazır.",
+    columns: "Sütun",
+    col1: "Tek sütun",
+    col2: "İki sütun",
+    perPage: "Her kesit ayrı sayfa",
+    downloadZip: "Görselleri ZIP indir",
     downloadOne: "İndir",
+    up: "Yukarı taşı",
+    down: "Aşağı taşı",
+    settings: "Kesit ayarları",
+    why: "Bir kitapçıktan soruları, bir rapordan grafikleri tek tek ekleyin; sırayı ayarlayın; hepsini tek bir çalışma kâğıdına dönüştürün.",
     quality: "Çözünürlük",
     format: "Biçim",
     failed: "İşlem başarısız oldu. Lütfen tekrar deneyin.",
@@ -90,9 +102,19 @@ const L = {
     basket: "Snips",
     empty: "No snips yet. Select an area on the page and click «Add snip».",
     clear: "Clear all",
-    downloadZip: "Download all as ZIP",
-    downloadPdf: "Make one PDF",
+    output: "Output",
+    sheet: "Worksheet (A4)",
+    sheetHint: "Snips are laid out in order on A4 pages — ready to print.",
+    columns: "Columns",
+    col1: "One column",
+    col2: "Two columns",
+    perPage: "One snip per page",
+    downloadZip: "Download images as ZIP",
     downloadOne: "Download",
+    up: "Move up",
+    down: "Move down",
+    settings: "Snip settings",
+    why: "Add questions from a booklet or charts from a report one by one, put them in order, and turn them into a single worksheet.",
     quality: "Resolution",
     format: "Format",
     failed: "Something went wrong. Please try again.",
@@ -121,7 +143,8 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [scaleMul, setScaleMul] = useState(2);
   const [mime, setMime] = useState<"image/png" | "image/jpeg">("image/png");
   const [busy, setBusy] = useState(false);
-  const [exporting, setExporting] = useState<"zip" | "pdf" | null>(null);
+  const [exporting, setExporting] = useState<"zip" | "pdf" | "sheet" | null>(null);
+  const [columns, setColumns] = useState<1 | 2>(1);
   const [error, setError] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -209,13 +232,21 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       const stage = stageRef.current;
       const canvas = canvasRef.current;
       if (!stage || !canvas) return;
-      const maxW = Math.min(stage.clientWidth || 680, 820);
-      const maxH = Math.max(380, window.innerHeight - 260);
+      const cssW = Math.min(stage.clientWidth || 680, 900);
+      const maxH = Math.max(420, window.innerHeight - 220);
       const base = page.getViewport({ scale: 1 });
-      const scale = Math.min(maxW / base.width, maxH / base.height);
-      const vp = page.getViewport({ scale });
+      const cssScale = Math.min(cssW / base.width, maxH / base.height);
+      // Tuval EKRAN PİKSELİ kadar çizilir (retina/125-150% ölçekte 1 CSS pikseli
+      // 2-3 gerçek piksel eder). Yalnızca CSS ölçüsünde çizersek tarayıcı görüntüyü
+      // büyütür ve sayfa bulanık görünür. Üst sınır: aşırı büyük tuval açmayalım.
+      // Alt sınır 1.5: normal ekranda bile sayfayı bir miktar fazla çizip
+      // tarayıcıya küçülterek gösteriyoruz — yazılar belirgin biçimde netleşiyor.
+      const dpr = Math.min(3, Math.max(1.5, window.devicePixelRatio || 1));
+      const vp = page.getViewport({ scale: cssScale * dpr });
       canvas.width = Math.ceil(vp.width);
       canvas.height = Math.ceil(vp.height);
+      canvas.style.width = `${Math.round(base.width * cssScale)}px`;
+      canvas.style.height = `${Math.round(base.height * cssScale)}px`;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
@@ -401,17 +432,36 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
     }
   };
 
-  const downloadPdf = async () => {
+  /** Sepetteki sırayı değiştir — çalışma kâğıdındaki sıra budur. */
+  const moveSnip = (index: number, dir: -1 | 1) =>
+    setSnips((prev) => {
+      const next = [...prev];
+      const target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target]!, next[index]!];
+      return next;
+    });
+
+  /**
+   * Kesitleri PDF olarak indir.
+   * `sheet` → A4 sayfalara sırayla dizer (çalışma kâğıdı);
+   * `perPage` → her kesit kendi sayfasında (eski davranış, poster/tek görsel için).
+   */
+  const downloadAsPdf = async (mode: "sheet" | "perPage") => {
     if (snips.length === 0) return;
-    setExporting("pdf");
+    setExporting(mode === "sheet" ? "sheet" : "pdf");
     try {
       // pdf-lib yalnızca burada yüklenir (ana paket şişmesin).
-      const { imagesToPdf, pdfBytesToBlob } = await import("../../lib/clientPdfWorker");
+      const { imagesToPdf, imagesToSheets, pdfBytesToBlob } = await import("../../lib/clientPdfWorker");
       const images = await Promise.all(
         snips.map(async (s) => ({ bytes: await s.blob.arrayBuffer(), mime: s.mime })),
       );
-      const out = await imagesToPdf(images);
-      downloadBlob(pdfBytesToBlob(out), `${baseName}-kesitler.pdf`);
+      const out =
+        mode === "sheet" ? await imagesToSheets(images, { columns }) : await imagesToPdf(images);
+      downloadBlob(
+        pdfBytesToBlob(out),
+        mode === "sheet" ? `${baseName}-calisma-kagidi.pdf` : `${baseName}-kesitler.pdf`,
+      );
     } catch {
       setError(t.failed);
     } finally {
@@ -482,24 +532,24 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         </button>
       </div>
 
-      {/* Sayfa şeridi + seçim sahnesi */}
-      <div className="flex min-h-0 items-start gap-3">
+      {/* Sol şerit · sayfa · sağ panel */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start">
         {pageCount > 1 ? (
-          <div className="sticky top-2 max-h-[72vh] w-24 shrink-0 overflow-y-auto rounded-2xl border border-white/[0.07] bg-black/20 p-2 sm:w-28">
+          <div className="flex max-h-[24vh] shrink-0 gap-2 overflow-x-auto rounded-2xl border border-white/[0.07] bg-black/20 p-2 lg:sticky lg:top-2 lg:max-h-[76vh] lg:w-24 lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
             {Array.from({ length: pageCount }).map((_, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => goToPage(i)}
                 aria-current={pageIndex === i}
-                className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${
+                className={`relative block w-16 shrink-0 overflow-hidden rounded-lg border-2 transition lg:w-full ${
                   pageIndex === i ? "border-cyan-400" : "border-transparent hover:border-white/20"
                 }`}
               >
                 {thumbs[i] ? (
                   <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" />
                 ) : (
-                  <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>
+                  <div className="flex h-20 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>
                 )}
                 {snips.some((s) => s.page === i + 1) ? (
                   <span className="absolute right-1 top-1 rounded-md bg-cyan-500/90 px-1 py-px text-[9px] font-bold text-white shadow" aria-hidden>
@@ -512,9 +562,10 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
           </div>
         ) : null}
 
-        <div ref={stageRef} className="mx-auto w-full min-w-0 max-w-[820px] select-none">
-          <div className="relative inline-block w-full overflow-hidden rounded-xl bg-slate-950/40 shadow-2xl ring-1 ring-white/10">
-            <canvas ref={canvasRef} className="block w-full" />
+        {/* Sayfa + seçim */}
+        <div ref={stageRef} className="min-w-0 flex-1 select-none">
+          <div className="relative mx-auto inline-block overflow-hidden rounded-xl bg-slate-950/40 shadow-2xl ring-1 ring-white/10">
+            <canvas ref={canvasRef} className="block max-w-full" />
             <div
               className="absolute inset-0 cursor-crosshair"
               onPointerDown={onPointerDown("new")}
@@ -557,116 +608,161 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             {t.dragHint}
           </p>
         </div>
-      </div>
 
-      {/* Kontrol çubuğu */}
-      <div className="flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
-        <label className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-slate-400">{t.quality}</span>
-          <select
-            value={scaleMul}
-            onChange={(e) => setScaleMul(Number(e.target.value))}
-            className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100"
-          >
-            <option value={1}>{t.qLow}</option>
-            <option value={2}>{t.qMid}</option>
-            <option value={3}>{t.qHigh}</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2">
-          <span className="text-[13px] font-medium text-slate-400">{t.format}</span>
-          <select
-            value={mime}
-            onChange={(e) => setMime(e.target.value as "image/png" | "image/jpeg")}
-            className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100"
-          >
-            <option value="image/png">{t.fmtPng}</option>
-            <option value="image/jpeg">{t.fmtJpeg}</option>
-          </select>
-        </label>
-        <button
-          type="button"
-          onClick={() => void addSnip()}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110 disabled:opacity-60"
-        >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          {busy ? t.adding : t.add}
-        </button>
-      </div>
+        {/* Sağ panel: ayarlar · sepet · çıktı */}
+        <aside className="w-full shrink-0 space-y-3 lg:sticky lg:top-2 lg:max-h-[86vh] lg:w-[320px] lg:overflow-y-auto lg:pr-1">
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-slate-400">{t.settings}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium text-slate-400">{t.quality}</span>
+                <select
+                  value={scaleMul}
+                  onChange={(e) => setScaleMul(Number(e.target.value))}
+                  className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[12px] text-slate-100"
+                >
+                  <option value={1}>{t.qLow}</option>
+                  <option value={2}>{t.qMid}</option>
+                  <option value={3}>{t.qHigh}</option>
+                </select>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] font-medium text-slate-400">{t.format}</span>
+                <select
+                  value={mime}
+                  onChange={(e) => setMime(e.target.value as "image/png" | "image/jpeg")}
+                  className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[12px] text-slate-100"
+                >
+                  <option value="image/png">PNG</option>
+                  <option value="image/jpeg">JPEG</option>
+                </select>
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => void addSnip()}
+              disabled={busy}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition hover:brightness-110 disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {busy ? t.adding : t.add}
+            </button>
+          </div>
 
-      {/* Kesit sepeti */}
-      <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
-        <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[13px] font-bold text-white">
-            {t.basket} {snips.length > 0 ? `(${snips.length})` : ""}
-          </span>
+          {/* Sepet */}
+          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                {t.basket} {snips.length > 0 ? `(${snips.length})` : ""}
+              </span>
+              {snips.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearSnips}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {t.clear}
+                </button>
+              )}
+            </div>
+
+            {snips.length === 0 ? (
+              <p className="py-3 text-center text-[12px] leading-relaxed text-slate-500">{t.empty}</p>
+            ) : (
+              <ul className="space-y-1.5">
+                {snips.map((s, i) => (
+                  <li key={s.id} className="flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-2 py-1.5">
+                    <span className="w-4 shrink-0 text-center text-[11px] font-bold text-slate-500">{i + 1}</span>
+                    <img src={s.url} alt="" className="h-9 w-12 shrink-0 rounded bg-white object-contain" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[11px] font-medium text-slate-200">
+                        {t.page} {s.page}
+                      </p>
+                      <p className="text-[10px] text-slate-500">{s.width}×{s.height} · {humanSize(s.blob.size)}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col">
+                      <button type="button" onClick={() => moveSnip(i, -1)} disabled={i === 0} aria-label={t.up} title={t.up}
+                        className="rounded p-0.5 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300 disabled:opacity-25">
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button type="button" onClick={() => moveSnip(i, 1)} disabled={i === snips.length - 1} aria-label={t.down} title={t.down}
+                        className="rounded p-0.5 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300 disabled:opacity-25">
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <button type="button" onClick={() => downloadBlob(s.blob, snipName(s, i))} aria-label={t.downloadOne} title={t.downloadOne}
+                      className="shrink-0 rounded p-1 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300">
+                      <Download className="h-3.5 w-3.5" />
+                    </button>
+                    <button type="button" onClick={() => removeSnip(s.id)} aria-label={tr ? "Kaldır" : "Remove"}
+                      className="shrink-0 rounded p-1 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Çıktı */}
           {snips.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.05] p-3">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-cyan-300/90">{t.output}</p>
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-[11px] font-medium text-slate-400">{t.columns}</span>
+                <div className="flex items-center gap-1 rounded-lg bg-slate-950/40 p-0.5 ring-1 ring-white/[0.06]">
+                  {([1, 2] as const).map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setColumns(c)}
+                      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                        columns === c ? "bg-cyan-500/25 text-cyan-100" : "text-slate-400 hover:text-white"
+                      }`}
+                    >
+                      {c === 1 ? t.col1 : t.col2}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={() => void downloadZip()}
+                onClick={() => void downloadAsPdf("sheet")}
                 disabled={exporting !== null}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2.5 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50"
               >
-                {exporting === "zip" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileArchive className="h-3.5 w-3.5" />}
-                {t.downloadZip}
+                {exporting === "sheet" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileType2 className="h-4 w-4" />}
+                {t.sheet}
               </button>
-              <button
-                type="button"
-                onClick={() => void downloadPdf()}
-                disabled={exporting !== null}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/[0.12] px-3 py-1.5 text-[12px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:opacity-50"
-              >
-                {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileType2 className="h-3.5 w-3.5" />}
-                {t.downloadPdf}
-              </button>
-              <button
-                type="button"
-                onClick={clearSnips}
-                className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                {t.clear}
-              </button>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">{t.sheetHint}</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => void downloadAsPdf("perPage")}
+                  disabled={exporting !== null}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                >
+                  {exporting === "pdf" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
+                  {t.perPage}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void downloadZip()}
+                  disabled={exporting !== null}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.05] px-2 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                >
+                  {exporting === "zip" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileArchive className="h-3.5 w-3.5" />}
+                  {t.downloadZip}
+                </button>
+              </div>
             </div>
           )}
-        </div>
 
-        {snips.length === 0 ? (
-          <p className="py-4 text-center text-[12px] text-slate-500">{t.empty}</p>
-        ) : (
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {snips.map((s, i) => (
-              <li key={s.id} className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
-                <img src={s.url} alt="" className="h-10 w-14 shrink-0 rounded-lg bg-white object-contain" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12px] font-medium text-slate-100">
-                    {t.page} {s.page} · {s.width} × {s.height} px
-                  </p>
-                  <p className="text-[11px] text-slate-500">{humanSize(s.blob.size)}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => downloadBlob(s.blob, snipName(s, i))}
-                  aria-label={t.downloadOne}
-                  title={t.downloadOne}
-                  className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-white/[0.08] hover:text-cyan-300"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeSnip(s.id)}
-                  aria-label={tr ? "Kaldır" : "Remove"}
-                  className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+          <p className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-slate-400">
+            {t.why}
+          </p>
+        </aside>
       </div>
 
       {error && <p className="text-center text-[13px] text-rose-300">{error}</p>}

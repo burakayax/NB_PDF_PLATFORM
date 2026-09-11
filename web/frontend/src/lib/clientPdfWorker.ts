@@ -103,6 +103,12 @@ export function mergePdfs(files: Array<ArrayBuffer | Uint8Array>): Promise<Uint8
 export function imagesToPdf(images: Parameters<typeof Direct.imagesToPdf>[0]): Promise<Uint8Array> {
   return call("imagesToPdf", [images]);
 }
+export function imagesToSheets(
+  images: Parameters<typeof Direct.imagesToSheets>[0],
+  options?: Parameters<typeof Direct.imagesToSheets>[1],
+): Promise<Uint8Array> {
+  return call("imagesToSheets", [images, options]);
+}
 export function rotatePdf(
   bytes: ArrayBuffer | Uint8Array,
   rotations: Record<number, number>,

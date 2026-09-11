@@ -7,6 +7,7 @@
 import {
   mergePdfs,
   imagesToPdf,
+  imagesToSheets,
   rotatePdf,
   deletePages,
   reorderPages,
@@ -22,6 +23,7 @@ type Op = (...args: any[]) => Promise<unknown>;
 const ops: Record<string, Op> = {
   mergePdfs,
   imagesToPdf,
+  imagesToSheets,
   rotatePdf,
   deletePages,
   reorderPages,
