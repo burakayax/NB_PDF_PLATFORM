@@ -57,6 +57,75 @@ export async function mergePdfs(
 
 type ImageInput = { bytes: ArrayBuffer | Uint8Array; mime: string };
 
+/** A4 (nokta cinsinden). Çalışma kâğıdı çıktısının varsayılan sayfası. */
+const A4 = { w: 595.28, h: 841.89 };
+
+export type SheetOptions = {
+  /** Sütun sayısı: 1 (geniş içerik) veya 2 (soru/küçük kesit). */
+  columns?: 1 | 2;
+  /** Sayfa kenar boşluğu (nokta). */
+  margin?: number;
+  /** Kesitler arası dikey boşluk (nokta). */
+  gap?: number;
+};
+
+/**
+ * Görselleri A4 sayfalara SIRAYLA DİZER — her görsele ayrı sayfa açmaz.
+ *
+ * Kesit aracının asıl çıktısı budur: bir kitapçıktan alınan 12 soru, 12 ayrı
+ * sayfa değil; sırayla dizilmiş, yazdırılabilir 2-3 sayfalık bir çalışma kâğıdı
+ * olur. Sığmayan kesit bir sonraki sütuna/sayfaya kayar; sayfadan uzun kesit
+ * sayfaya sığacak şekilde küçültülür.
+ */
+export async function imagesToSheets(
+  images: ImageInput[],
+  options: SheetOptions = {},
+): Promise<Uint8Array> {
+  if (images.length === 0) throw new Error("No images.");
+  const columns = options.columns === 2 ? 2 : 1;
+  const margin = options.margin ?? 36;
+  const gap = options.gap ?? 18;
+
+  const out = await PDFDocument.create();
+  const colWidth = (A4.w - margin * 2 - (columns - 1) * gap) / columns;
+  const contentHeight = A4.h - margin * 2;
+
+  let page = out.addPage([A4.w, A4.h]);
+  let col = 0;
+  let cursorY = A4.h - margin; // sütunun o anki üst sınırı (yukarıdan aşağı)
+
+  const nextColumn = () => {
+    col += 1;
+    if (col >= columns) {
+      page = out.addPage([A4.w, A4.h]);
+      col = 0;
+    }
+    cursorY = A4.h - margin;
+  };
+
+  for (const img of images) {
+    const isPng = img.mime.includes("png");
+    const embedded = isPng ? await out.embedPng(img.bytes) : await out.embedJpg(img.bytes);
+
+    // Sütun genişliğine sığdır; sayfadan uzunsa yüksekliğe de sığdır.
+    let scale = Math.min(1, colWidth / embedded.width);
+    if (embedded.height * scale > contentHeight) {
+      scale = contentHeight / embedded.height;
+    }
+    const w = embedded.width * scale;
+    const h = embedded.height * scale;
+
+    // Bu sütunda yer kalmadıysa sonraki sütuna/sayfaya geç.
+    if (cursorY - h < margin) nextColumn();
+
+    const x = margin + col * (colWidth + gap) + (colWidth - w) / 2;
+    page.drawImage(embedded, { x, y: cursorY - h, width: w, height: h });
+    cursorY -= h + gap;
+  }
+
+  return out.save(PDF_SAVE_OPTIONS);
+}
+
 /** Görselleri (JPG/PNG) tek PDF'e çevirir. Her görsel kendi boyutunda bir sayfa olur. */
 export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
   if (images.length === 0) throw new Error("No images.");
