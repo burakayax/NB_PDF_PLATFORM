@@ -163,3 +163,47 @@ export function buildToolFormData(
   return formData;
 }
 
+/**
+ * TOPLU İŞLEM GÖVDESİ — aynı aracı birden çok dosyaya uygulamak için.
+ *
+ * Tek dosyalık gövdeden ayrı durur çünkü sunucu tarafı da ayrıdır: dosyalar tek
+ * alanda toplu gider ve hangi aracın çalışacağı `tool_type` ile bildirilir.
+ * Alan adları tek dosyalık akışla AYNI olmak zorunda; ayrıştıkları an ilgili
+ * ayar sessizce yok sayılır.
+ */
+export function buildBatchFormData(
+  fid: FeatureKey,
+  files: File[],
+  s: ToolFormState,
+): FormData {
+  const form = new FormData();
+  form.append("tool_type", fid);
+  for (const file of files) {
+    form.append("files", file);
+  }
+  if (s.password.trim()) {
+    form.append("password", s.password.trim());
+  }
+  if (fid === "compress") {
+    form.append("quality", s.compressQuality);
+  }
+  if (fid === "encrypt") {
+    form.append("user_password", s.outputPassword.trim());
+    form.append("input_password", s.inputPassword.trim());
+  }
+  if (fid === "watermark") {
+    form.append("watermark_text", s.watermarkPhrase.trim());
+    form.append("watermark_color", s.watermarkColor);
+    form.append("watermark_font", s.watermarkFont);
+    form.append("watermark_opacity", s.watermarkOpacity);
+  }
+  if (fid === "page-numbers") {
+    form.append("start_at", s.pageNumStart.trim() || "1");
+    form.append("position", s.pageNumPos);
+    form.append("fmt", s.pageNumFmt);
+  }
+  if (fid === "pdf-to-image") {
+    form.append("image_format", s.pdfToImgFmt);
+  }
+  return form;
+}
