@@ -47,7 +47,6 @@ import { ShareResultDialog } from "./components/common/ShareResultDialog";
 import { ToolResultPanel } from "./components/common/ToolResultPanel";
 import {
   canShareFile,
-  isShareApiAvailable,
   shareFileWithPromo,
 } from "./lib/shareFile";
 import {
@@ -68,7 +67,6 @@ const GatedResultPreviewModal = lazyWithRetry(() =>
     default: module.GatedResultPreviewModal,
   })),
 );
-import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
 import {
@@ -104,8 +102,6 @@ import {
 } from "./api/entitlement";
 import {
   confirmFakeCheckout,
-  PAYMENT_CHECKOUT_NOT_FOUND,
-  resolveFakePaymentRedirect,
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
@@ -114,19 +110,10 @@ import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
-import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScannedPdf, takeScanForAccount } from "./lib/pendingScan";
+import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
-  mergePdfs,
-  imagesToPdf,
-  rotatePdf,
-  deletePages,
-  reorderPages,
-  splitPagesToZip,
-  getPdfPageCount,
-  pdfBytesToBlob,
-  zipBytesToBlob,
   PdfEncryptedError,
 } from "./lib/clientPdfWorker";
 import {
@@ -176,7 +163,6 @@ import {
   stripLangPrefix,
   withLangPrefix,
 } from "./hooks/usePreferredLanguage";
-import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import {
   allowedExtensionsFromAccept,
   allowedExtensionsLabel,
@@ -204,7 +190,6 @@ import {
   CHAIN_SUGGESTIONS,
   CHAIN_BY_OUTPUT_EXT,
   fileExt,
-  CHAIN_RESULT_NOUN,
   CHAIN_FALLBACK,
 } from "./lib/toolChaining";
 import {
@@ -217,13 +202,11 @@ import {
   getTrackedViewName,
   getTrackedPath,
   getInitialViewFromLocation,
-  FULLPAGE_SEO_TOOL_PATHS,
   isFullPageSeoToolPath,
   SPECIAL_TOOL_PANELS,
   AI_TOOL_MODES,
   hasInAppPanelForSeoSlug,
   currentToolSlugFromUrl,
-  PENDING_TOOL_STORAGE_KEY,
   savePendingTool,
   readPendingToolAndClear,
   clearPendingTool,
@@ -239,19 +222,14 @@ import {
   formatFileSize,
   compressGainPercentRange,
   COMPRESS_TEXT_HEAVY_RATIO,
-  genericToolPhaseLabel,
-  UpgradeNudgeInline,
-  mergeToolPhaseLabel,
 } from "./components/workspace/toolProgressUi";
 import {
   createUploadItems,
-  formatElapsed,
   isUserAbortError,
   mergePointerYToIndex,
   getReorderPreviewOffset,
 } from "./lib/workspaceHelpers";
 import {
-  EmptyStateIllustration,
   EmptyState,
 } from "./components/workspace/EmptyState";
 import { GenericToolProgressBar } from "./components/workspace/GenericToolProgressBar";
@@ -263,6 +241,7 @@ import {
 import { inspectUploadItems } from "./lib/uploadInspection";
 import { buildToolFormData } from "./lib/toolFormData";
 import { runClientPdfTool } from "./lib/clientToolRun";
+import { checkToolSubmission } from "./lib/toolSubmissionCheck";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -4407,153 +4386,40 @@ function App() {
     // Bu akış bölünürse kota veya dosya kontrolü atlanırsa sunucu hataları veya tutarsız UX oluşur.
     event.preventDefault();
 
-    if (selectedFeature.id === "html-to-pdf") {
-      // dosya yok
-    } else if (selectedFeature.id === "image-to-pdf" && uploads.length === 0) {
-      showToast("error", "Dosya seçilmedi", "Lütfen en az bir görüntü seçin.");
-      return;
-    } else if (selectedFeature.id !== "merge" && uploads.length === 0) {
-      showToast(
-        "error",
-        "Dosya seçilmedi",
-        "Lütfen önce işlenecek dosyayı seçin.",
-      );
-      return;
+    const check = checkToolSubmission({
+      featureId: selectedFeature.id,
+      uploads: uploads.map((u) => ({
+        pageCount: u.pageCount,
+        encrypted: u.encrypted,
+      })),
+      pagesText,
+      deletePagesText,
+      password,
+      unlockOpenPassword,
+      inputPassword,
+      outputPassword,
+      showSplitPasswordField,
+      showEncryptSourcePasswordField,
+      showUnlockPasswordField,
+      mergeHasMissingPasswords,
+      hasAccessToken: Boolean(accessToken),
+      excelConfirmed: excelConfirmRef.current,
+      language,
+    });
+    if (check.pagesError !== undefined) {
+      setPagesError(check.pagesError);
     }
-
-    if (selectedFeature.id === "split") {
-      const fmt = validatePagesFormat(pagesText, language);
-      const maxP = uploads[0]?.pageCount ?? null;
-      let over = validatePagesMax(pagesText, maxP, language);
-      if (
-        !fmt &&
-        !over &&
-        Boolean(uploads[0]?.encrypted) &&
-        maxP === null &&
-        pagesText.trim()
-      ) {
-        over = W.validationPagesNeedPassword;
-      }
-      const pageValidation =
-        fmt || over || (!pagesText.trim() ? W.validationPagesRequired : "");
-      setPagesError(pageValidation);
-      if (pageValidation) {
-        showToast(
-          "error",
-          language === "tr"
-            ? "Sayfa numaraları geçersiz"
-            : "Invalid page numbers",
-          pageValidation,
-        );
-        return;
-      }
+    if (check.deletePagesError !== undefined) {
+      setDeletePagesError(check.deletePagesError);
     }
-
-    if (selectedFeature.id === "delete-pages") {
-      const fmt = validatePagesFormat(deletePagesText, language);
-      const maxP = uploads[0]?.pageCount ?? null;
-      let over = validatePagesMax(deletePagesText, maxP, language);
-      if (
-        !fmt &&
-        !over &&
-        Boolean(uploads[0]?.encrypted) &&
-        maxP === null &&
-        deletePagesText.trim()
-      ) {
-        over = W.validationPagesNeedPassword;
-      }
-      const pageValidation =
-        fmt ||
-        over ||
-        (!deletePagesText.trim() ? W.validationPagesRequired : "");
-
-      let finalPageValidation = pageValidation;
-      if (!finalPageValidation && maxP && deletePagesText.trim()) {
-        const expSafe = expandPagesString(deletePagesText, maxP, language);
-        if (expSafe !== null && expSafe.length >= maxP) {
-          finalPageValidation = PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
-        }
-      }
-
-      setDeletePagesError(finalPageValidation);
-      if (finalPageValidation) {
-        const isDeleteAllViolation =
-          finalPageValidation === PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
-        showToast(
-          "error",
-          isDeleteAllViolation
-            ? language === "tr"
-              ? "Uyarı"
-              : "Warning"
-            : language === "tr"
-              ? "Sayfa listesi geçersiz"
-              : "Invalid page list",
-          finalPageValidation,
-        );
-        return;
-      }
-    }
-
-    if (showSplitPasswordField && !password.trim()) {
-      showToast(
-        "error",
-        language === "tr"
-          ? "Kaynak PDF şifresi gerekli"
-          : "Source PDF password required",
-        language === "tr"
-          ? "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor."
-          : "Enter the PDF password below to unlock the file.",
-      );
-      return;
-    }
-
-    if (showEncryptSourcePasswordField && !inputPassword.trim()) {
-      showToast(
-        "error",
-        "Kaynak PDF şifresi gerekli",
-        "Seçilen PDF şifreli olduğu için kaynak PDF şifresini girin.",
-      );
-      return;
-    }
-
-    if (showUnlockPasswordField && !unlockOpenPassword.trim()) {
-      showToast(
-        "error",
-        "Parola gerekli",
-        "PDF'yi açmak için mevcut parolayı girin.",
-      );
-      return;
-    }
-
-    if (selectedFeature.id === "encrypt" && !outputPassword.trim()) {
-      showToast(
-        "error",
-        "Yeni PDF şifresi gerekli",
-        "Şifreli PDF oluşturmak için yeni parola alanını doldurun.",
-      );
-      return;
-    }
-
-    if (mergeHasMissingPasswords) {
-      showToast(
-        "error",
-        language === "tr"
-          ? "Şifre doğrulaması gerekli"
-          : "Password verification required",
-        language === "tr"
-          ? "Şifreli PDF'ler için parolayı girin ve her dosyanın yanındaki «Parolayı doğrula» ile onaylayın."
-          : "For password-protected PDFs, enter the password and tap «Verify password» next to each file.",
-      );
-      return;
-    }
-
-    if (!accessToken) {
-      showToast("error", "Oturum gerekli", "İşlem için yeniden giriş yapın.");
-      return;
-    }
-
-    if (selectedFeature.id === "pdf-to-excel" && !excelConfirmRef.current) {
+    if (check.askExcelConfirm) {
       setExcelDialogOpen(true);
+      return;
+    }
+    if (!check.ok) {
+      if (check.toast) {
+        showToast("error", check.toast.title, check.toast.detail);
+      }
       return;
     }
     if (selectedFeature.id === "pdf-to-excel") {
