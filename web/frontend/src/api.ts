@@ -869,6 +869,48 @@ export function hasPendingSaveHandle(): boolean {
 }
 
 /**
+ * "Nereye kaydedilsin?" sorusu — uzun işlemlerden ÖNCE sorulması gereken tek yer.
+ *
+ * Tarayıcı bu pencereyi yalnızca kullanıcının tıklamasının hemen ardından
+ * açmaya izin verir; araya bir bekleme girerse sessizce reddeder ve dosya
+ * kullanıcıya sorulmadan indirilir. Bu yüzden tüm akışlar aynı anda ve aynı
+ * şekilde sormalı — dört ayrı yerde kopyalanmış hâldeydi.
+ *
+ * Dönüş:
+ *   "secildi"       kullanıcı yer seçti, kayıt işlemi hazır
+ *   "vazgecildi"    kullanıcı pencereyi kapattı — işlem başlatılmamalı
+ *   "desteklenmiyor" tarayıcı bu pencereyi açamıyor; klasik indirmeye düşülür
+ */
+export async function askSaveLocation(
+  suggestedName: string,
+): Promise<"secildi" | "vazgecildi" | "desteklenmiyor"> {
+  const win = window as unknown as {
+    showSaveFilePicker?: (o: {
+      suggestedName?: string;
+      types?: Array<{ description: string; accept: Record<string, string[]> }>;
+    }) => Promise<FileSystemFileHandle>;
+  };
+  if (typeof win.showSaveFilePicker !== "function") {
+    return "desteklenmiyor";
+  }
+  try {
+    const handle = await win.showSaveFilePicker({
+      suggestedName,
+      types: showSavePickerTypesFor(suggestedName),
+    });
+    setPendingSaveHandle(handle);
+    return "secildi";
+  } catch (e: unknown) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return "vazgecildi";
+    }
+    // Güvenli bağlam değil / izin yok gibi durumlar: klasik indirme devreye girer.
+    return "desteklenmiyor";
+  }
+}
+
+
+/**
  * Delivers an in-memory blob (client-side/device-processed results) to the user.
  * Consumes a pre-acquired save handle when present (native "Save as…" dialog),
  * otherwise prompts via `showSaveFilePicker`, and finally falls back to an

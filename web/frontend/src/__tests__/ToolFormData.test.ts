@@ -7,7 +7,11 @@
  * sabitlenmiştir.
  */
 import { describe, it, expect } from "vitest";
-import { buildToolFormData, type ToolFormState } from "../lib/toolFormData";
+import {
+  buildToolFormData,
+  buildBatchFormData,
+  type ToolFormState,
+} from "../lib/toolFormData";
 
 const pdf = (name = "a.pdf") =>
   new File(["%PDF-1.4"], name, { type: "application/pdf" });
@@ -126,5 +130,44 @@ describe("buildToolFormData", () => {
     const fd = buildToolFormData("delete-pages", state({ password: "   " }));
     expect(fd.get("password")).toBeNull();
     expect(fd.get("pages_to_delete")).toBe("2");
+  });
+});
+
+describe("buildBatchFormData", () => {
+  const files = [pdf("1.pdf"), pdf("2.pdf"), pdf("3.pdf")];
+
+  it("hangi aracın çalışacağını ve tüm dosyaları gönderir", () => {
+    const fd = buildBatchFormData("compress", files, state());
+    expect(fd.get("tool_type")).toBe("compress");
+    expect(fd.getAll("files")).toHaveLength(3);
+    expect(fd.get("quality")).toBe("auto");
+  });
+
+  it("alan adları tek dosyalık gövdeyle birebir aynı", () => {
+    // Ayrışırlarsa toplu işlemde ayar sessizce yok sayılır.
+    for (const tool of ["watermark", "page-numbers", "encrypt", "pdf-to-image"] as const) {
+      const tek = buildToolFormData(tool, state());
+      const toplu = buildBatchFormData(tool, files, state());
+      const tekAlanlar = [...tek.keys()].filter((k) => k !== "file").sort();
+      const topluAlanlar = [...toplu.keys()]
+        .filter((k) => k !== "files" && k !== "tool_type")
+        .sort();
+      expect(topluAlanlar, `araç: ${tool}`).toEqual(tekAlanlar);
+    }
+  });
+
+  it("parola boşsa gönderilmez", () => {
+    expect(buildBatchFormData("compress", files, state()).get("password")).toBeNull();
+    expect(
+      buildBatchFormData("compress", files, state({ password: "1234" })).get(
+        "password",
+      ),
+    ).toBe("1234");
+  });
+
+  it("aracı ilgilendirmeyen ayarlar gönderilmez", () => {
+    const fd = buildBatchFormData("compress", files, state());
+    expect(fd.get("watermark_text")).toBeNull();
+    expect(fd.get("start_at")).toBeNull();
   });
 });

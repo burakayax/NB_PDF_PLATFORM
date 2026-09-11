@@ -32,6 +32,7 @@ import {
   startToolJob,
   waitForToolJob,
   requestMergeJobCancel,
+  askSaveLocation,
   hasPendingSaveHandle,
   saveBlobToUser,
   setPendingSaveHandle,
@@ -239,7 +240,10 @@ import {
   type ToolProgressSuccessState,
 } from "./components/workspace/ToolSuccessBar";
 import { inspectUploadItems } from "./lib/uploadInspection";
-import { buildToolFormData } from "./lib/toolFormData";
+import {
+  buildToolFormData,
+  buildBatchFormData,
+} from "./lib/toolFormData";
 import { runClientPdfTool } from "./lib/clientToolRun";
 import { checkToolSubmission } from "./lib/toolSubmissionCheck";
 
@@ -2157,16 +2161,8 @@ function App() {
 
   const queueGatedDownload = useCallback(
     async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-      };
-      if (typeof win.showSaveFilePicker === "function") {
-        try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
-          setPendingSaveHandle(handle);
-        } catch (e: unknown) {
-          if (e instanceof DOMException && e.name === "AbortError") return;
-        }
+      if ((await askSaveLocation(fallbackName)) === "vazgecildi") {
+        return;
       }
       void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
     },
@@ -2288,16 +2284,8 @@ function App() {
 
   const queueMergeGatedDownload = useCallback(
     async (jobId: string, fallbackName: string) => {
-      const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-      };
-      if (typeof win.showSaveFilePicker === "function") {
-        try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
-          setPendingSaveHandle(handle);
-        } catch (e: unknown) {
-          if (e instanceof DOMException && e.name === "AbortError") return;
-        }
+      if ((await askSaveLocation(fallbackName)) === "vazgecildi") {
+        return;
       }
       void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
@@ -4448,27 +4436,13 @@ function App() {
             // (user activation hâlâ geçerliyken). Aksi halde bu araçlar sonucu
             // doğrudan indirir ve "nereye kaydedilsin?" diyaloğu hiç görünmez.
             {
-              const win = window as unknown as {
-                showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-              };
-              if (typeof win.showSaveFilePicker === "function") {
-                try {
-                  const suggestedName =
-                    cid === "split" && splitMode === "separate"
-                      ? "sayfalar.zip"
-                      : selectedFeature.fallbackFilename;
-                  const handle = await win.showSaveFilePicker({
-                    suggestedName,
-                    types: showSavePickerTypesFor(suggestedName),
-                  });
-                  setPendingSaveHandle(handle);
-                } catch (e: unknown) {
-                  if (e instanceof DOMException && e.name === "AbortError") {
-                    setSubmitting(false);
-                    return; // kullanıcı kaydetme diyalogunu iptal etti
-                  }
-                  // desteklenmiyor / güvenli bağlam değil — anchor fallback ile devam
-                }
+              const suggestedName =
+                cid === "split" && splitMode === "separate"
+                  ? "sayfalar.zip"
+                  : selectedFeature.fallbackFilename;
+              if ((await askSaveLocation(suggestedName)) === "vazgecildi") {
+                setSubmitting(false);
+                return; // kullanıcı kaydetme diyalogunu iptal etti
               }
             }
             const produced = await runClientPdfTool({
@@ -4529,25 +4503,13 @@ function App() {
 
         // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
         {
-          const win = window as unknown as {
-            showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-          };
-          // Cihaz-içi yol zaten bir handle aldıysa (ör. şifreli/büyük dosya
+          // Cihaz-içi yol zaten bir yer sorduysa (ör. şifreli/büyük dosya
           // yüzünden sunucuya düşüldüyse) tekrar sorma.
-          if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
-            try {
-              // Kaydetme önerisi tek kaynaktan (paylaşım diyaloğu + backend ile
-              // aynı): Türkçe karakterli "birleştirilmiş.pdf". Eski sabit ASCII
-              // ad Türkçe harfleri düşürüyordu.
-              const _mergeName = selectedFeature.fallbackFilename;
-              const handle = await win.showSaveFilePicker({
-                suggestedName: _mergeName,
-                types: showSavePickerTypesFor(_mergeName),
-              });
-              setPendingSaveHandle(handle);
-            } catch (e: unknown) {
-              if (e instanceof DOMException && e.name === "AbortError") return;
-              // showSaveFilePicker desteklenmiyorsa veya güvenli bağlam değilse devam et
+          if (!hasPendingSaveHandle()) {
+            // Kaydetme önerisi tek kaynaktan: Türkçe karakterli ad korunur.
+            const suggestion = selectedFeature.fallbackFilename;
+            if ((await askSaveLocation(suggestion)) === "vazgecildi") {
+              return;
             }
           }
         }
@@ -4612,27 +4574,14 @@ function App() {
       // Pre-acquire save file handle HERE — user activation is still valid (no awaits above for non-merge tools).
       // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
       {
-        const win = window as unknown as {
-          showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-        };
-        // Cihaz-içi yol zaten bir handle aldıysa (sunucuya düşülen durum) tekrar sorma.
-        if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
-          try {
-            const suggestedSaveName =
-              selectedFeature.id === "split" && splitMode === "separate"
-                ? "ayrılan-sayfalar.zip"
-                : selectedFeature.fallbackFilename;
-            const handle = await win.showSaveFilePicker({
-              suggestedName: suggestedSaveName,
-              types: showSavePickerTypesFor(suggestedSaveName),
-            });
-            setPendingSaveHandle(handle);
-          } catch (e: unknown) {
-            const eName = e instanceof DOMException ? e.name : "";
-            if (eName === "AbortError") {
-              return; // kullanıcı kaydetme diyalogunu iptal etti
-            }
-            // desteklenmiyor veya güvenli bağlam değil — devam et
+        // Cihaz-içi yol zaten bir yer sorduysa tekrar sorma.
+        if (!hasPendingSaveHandle()) {
+          const suggestedSaveName =
+            selectedFeature.id === "split" && splitMode === "separate"
+              ? "ayrılan-sayfalar.zip"
+              : selectedFeature.fallbackFilename;
+          if ((await askSaveLocation(suggestedSaveName)) === "vazgecildi") {
+            return; // kullanıcı kaydetme diyalogunu iptal etti
           }
         }
       }
@@ -4661,7 +4610,8 @@ function App() {
       }, TOOL_PIPELINE_WATCHDOG_MS);
 
       const fid = selectedFeature.id;
-      const formData = buildToolFormData(fid, {
+      // Araç ayarlarının tek paketi: hem tek dosyalık hem toplu gövde bundan üretilir.
+      const formState = {
         files: uploads.map((u) => u.file),
         password,
         htmlToPdfMode,
@@ -4684,7 +4634,8 @@ function App() {
         pdfToImgFmt,
         inputPassword,
         outputPassword,
-      });
+      };
+      const formData = buildToolFormData(fid, formState);
 
       const batchSourceFiles =
         uploads.length > 1 && BATCHABLE_TOOLS.has(fid)
@@ -4692,31 +4643,10 @@ function App() {
           : batchFiles;
 
       if (batchSourceFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
-        const batchForm = new FormData();
-        batchForm.append("tool_type", fid);
-        for (const bf of batchSourceFiles) {
-          batchForm.append("files", bf);
-        }
-        if (password.trim()) batchForm.append("password", password.trim());
-        if (fid === "compress") batchForm.append("quality", compressQuality);
-        if (fid === "encrypt") {
-          batchForm.append("user_password", outputPassword.trim());
-          batchForm.append("input_password", inputPassword.trim());
-        }
-        if (fid === "watermark") {
-          batchForm.append("watermark_text", watermarkPhrase.trim());
-          batchForm.append("watermark_color", watermarkColor);
-          batchForm.append("watermark_font", watermarkFont);
-          batchForm.append("watermark_opacity", watermarkOpacity);
-        }
-        if (fid === "page-numbers") {
-          batchForm.append("start_at", pageNumStart.trim() || "1");
-          batchForm.append("position", pageNumPos);
-          batchForm.append("fmt", pageNumFmt);
-        }
-        if (fid === "pdf-to-image") {
-          batchForm.append("image_format", pdfToImgFmt);
-        }
+        const batchForm = buildBatchFormData(fid, batchSourceFiles, {
+          ...formState,
+          files: batchSourceFiles,
+        });
 
         const res = await postToolToResult("batch", batchForm, accessToken, {
           signal: toolSignal,
