@@ -245,6 +245,7 @@ import {
   buildBatchFormData,
 } from "./lib/toolFormData";
 import { runClientPdfTool } from "./lib/clientToolRun";
+import { reportTeamActivity } from "./lib/teamActivity";
 import { checkToolSubmission } from "./lib/toolSubmissionCheck";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
@@ -2211,20 +2212,7 @@ function App() {
           }
         }
         if (isTeamMember && accessToken) {
-          fetch("/api/team/activity", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              toolId: "merge",
-              toolName: "PDF Birleştir",
-              status: "SUCCESS",
-            }),
-          }).catch(() => {
-            /* noop */
-          });
+          reportTeamActivity({ accessToken, toolId: "merge", language });
         }
         applyWorkspaceCleanSlateAfterDownload("merge");
         // Keep the already-downloaded bytes so the user can re-open/share them
@@ -4758,46 +4746,11 @@ function App() {
         }
       }
       if (isTeamMember && accessToken) {
-        const TOOL_NAMES_TR: Record<string, string> = {
-          split: "PDF Böl",
-          merge: "PDF Birleştir",
-          compress: "PDF Sıkıştır",
-          "pdf-to-word": "PDF → Word",
-          "word-to-pdf": "Word → PDF",
-          "excel-to-pdf": "Excel → PDF",
-          "pdf-to-excel": "PDF → Excel",
-          encrypt: "PDF Şifrele",
-          "unlock-pdf": "PDF Kilidi Aç",
-          "delete-pages": "Sayfa Sil",
-          "rotate-pdf": "PDF Döndür",
-          "organize-pdf": "Sayfa Sırala",
-          watermark: "Filigran",
-          "page-numbers": "Sayfa Numarası",
-          "repair-pdf": "PDF Onar",
-          "pdf-to-ppt": "PDF → PowerPoint",
-          "ppt-to-pdf": "PowerPoint → PDF",
-          "pdf-to-image": "PDF → Görsel",
-          "image-to-pdf": "Görsel → PDF",
-          "html-to-pdf": "HTML → PDF",
-          "pdf-to-text": "PDF → Metin",
-          "flatten-pdf": "PDF Düzleştir",
-          "extract-images": "PDF'ten Görsel Çıkar",
-        };
-        const fid2 = selectedFeature.id;
-        fetch("/api/team/activity", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            toolId: fid2,
-            toolName: TOOL_NAMES_TR[fid2] ?? fid2,
-            status: "SUCCESS",
-            pageCount: directDownloadPageCount ?? null,
-          }),
-        }).catch(() => {
-          /* noop */
+        reportTeamActivity({
+          accessToken,
+          toolId: selectedFeature.id,
+          language,
+          pageCount: directDownloadPageCount ?? null,
         });
       }
       setToolProgressSuccess({
