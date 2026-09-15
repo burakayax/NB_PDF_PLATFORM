@@ -19,6 +19,7 @@ import {
   Users,
   Wrench,
   X,
+  Share2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
@@ -33,6 +34,7 @@ const iconMap: Record<string, LucideIcon> = {
   "cmd-site": Building2,
   "cmd-mkt": Radio,
   "cmd-coupons": Ticket,
+  "cmd-social": Share2,
   "tool-registry": Wrench,
   "cc-site": PanelLeft,
   marketing: Mail,

@@ -50,7 +50,9 @@
       <category>Images</category>
       <category>Snipping</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" type="image/png" length="56478" />
-      <media:content url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" />
     </item>
     <item>
@@ -84,7 +86,9 @@
       <category>Social Media</category>
       <category>Resizing</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" type="image/png" length="57602" />
-      <media:content url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/resize-images-for-social-media.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/resize-images-for-social-media.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" />
     </item>
     <item>
@@ -116,7 +120,9 @@
       <category>Images</category>
       <category>Extraction</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" type="image/png" length="59223" />
-      <media:content url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/extract-images-from-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/extract-images-from-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" />
     </item>
     <item>
@@ -143,7 +149,9 @@
       <category>Guide</category>
       <category>Privacy</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" type="image/png" length="54235" />
-      <media:content url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" />
     </item>
     <item>
@@ -165,7 +173,9 @@
       <category>How-to</category>
       <category>Compress</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="51559" />
-      <media:content url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" />
     </item>
     <item>
@@ -187,7 +197,9 @@
       <category>How-to</category>
       <category>Mobile</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="57206" />
-      <media:content url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" />
     </item>
     <item>
@@ -209,7 +221,9 @@
       <category>Comparison</category>
       <category>Free</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="56183" />
-      <media:content url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" />
     </item>
     <item>
@@ -231,7 +245,9 @@
       <category>How-to</category>
       <category>Crop</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="56208" />
-      <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" />
     </item>
     <item>
@@ -253,7 +269,9 @@
       <category>How-to</category>
       <category>Conversion</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="56492" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" />
     </item>
     <item>
@@ -275,7 +293,9 @@
       <category>How-to</category>
       <category>Forms</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="51692" />
-      <media:content url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" />
     </item>
     <item>
@@ -300,7 +320,9 @@
       <category>Comparison</category>
       <category>Privacy</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="57545" />
-      <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/ilovepdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/ilovepdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" />
     </item>
     <item>
@@ -323,7 +345,9 @@
       <category>Comparison</category>
       <category>Free</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="58607" />
-      <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/smallpdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/smallpdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" />
     </item>
     <item>
@@ -347,7 +371,9 @@
       <category>How-to</category>
       <category>Editing</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="54836" />
-      <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/free-pdf-editor.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/free-pdf-editor.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" />
     </item>
     <item>
@@ -371,7 +397,9 @@
       <category>Word</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="57242" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-word-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-word-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" />
     </item>
     <item>
@@ -401,7 +429,9 @@
       <category>PDF Tools</category>
       <category>Free</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="53083" />
-      <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/best-free-pdf-tools.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/best-free-pdf-tools.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" />
     </item>
     <item>
@@ -426,7 +456,9 @@
       <category>Excel</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="56728" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-excel-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-excel-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
     </item>
     <item>
@@ -454,7 +486,9 @@
       <category>Image</category>
       <category>JPG</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="56017" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" />
     </item>
     <item>
@@ -478,7 +512,9 @@
       <category>On-device</category>
       <category>PDF Tools</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="56859" />
-      <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/process-pdf-without-uploading.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/process-pdf-without-uploading.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" />
     </item>
     <item>
@@ -501,7 +537,9 @@
       <category>PDF</category>
       <category>Repair</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="57949" />
-      <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" />
     </item>
     <item>
@@ -523,7 +561,9 @@
       <category>Excel</category>
       <category>Table</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="55315" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-excel.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-excel.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" />
     </item>
     <item>
@@ -548,7 +588,9 @@
       <category>On-device</category>
       <category>PDF Tools</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="55047" />
-      <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" />
     </item>
     <item>
@@ -571,7 +613,9 @@
       <category>PowerPoint</category>
       <category>Slides</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="57444" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" />
     </item>
     <item>
@@ -595,7 +639,9 @@
       <category>Compare</category>
       <category>Contract</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="60488" />
-      <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/compare-two-pdfs.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/compare-two-pdfs.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" />
     </item>
     <item>
@@ -619,7 +665,9 @@
       <category>Redaction</category>
       <category>GDPR</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="57019" />
-      <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" />
     </item>
     <item>
@@ -643,7 +691,9 @@
       <category>PDF</category>
       <category>Text</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="55818" />
-      <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/edit-pdf-text.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/edit-pdf-text.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" />
     </item>
     <item>
@@ -665,7 +715,9 @@
       <category>PDF</category>
       <category>Page Numbers</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="56646" />
-      <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" />
     </item>
     <item>
@@ -691,7 +743,9 @@
       <category>Alternative</category>
       <category>Privacy</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" type="image/png" length="58850" />
-      <media:content url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/camscanner-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/camscanner-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" />
     </item>
     <item>
@@ -716,7 +770,9 @@
       <category>Mobile</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" type="image/png" length="58549" />
-      <media:content url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" />
     </item>
     <item>
@@ -741,7 +797,9 @@
       <category>Quality</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" type="image/png" length="53657" />
-      <media:content url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/document-photo-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/document-photo-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" />
     </item>
     <item>
@@ -766,7 +824,9 @@
       <category>Searchable PDF</category>
       <category>Scanning</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" type="image/png" length="58895" />
-      <media:content url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" />
     </item>
   </channel>

@@ -22,6 +22,7 @@ import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout
 import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
 import { emailRouter } from "../modules/email/email.routes.js";
+import { socialRouter } from "../modules/social/social.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
@@ -70,6 +71,9 @@ apiRouter.get("/health/db", async (_request, response) => {
 
 apiRouter.use("/public", publicRouter);
 apiRouter.use("/access", accessRouter);
+// Sosyal medya otomasyonu admin yolunun ALTINDA duruyor: hem Vite vekili
+// (/api/admin* → auth API) hem de paneldeki admin istemcisi bu önekle çalışıyor.
+apiRouter.use("/admin/social", socialRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);

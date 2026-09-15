@@ -72,6 +72,7 @@ import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
 import { EmailCampaignManager } from "./emails/EmailCampaignManager";
+import { SocialAutomationManager } from "./social/SocialAutomationManager";
 import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { AdminToolCatalog } from "./tools/AdminToolCatalog";
@@ -101,6 +102,7 @@ type AdminTabId =
   | "cmd-mkt"
   | "cmd-coupons"
   | "cmd-emails"
+  | "cmd-social"
   | "packages"
   | "TOOLS"
   | "content"
@@ -138,6 +140,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-mkt", label: "Pazarlama" },
       { id: "cmd-coupons", label: "Kuponlar" },
       { id: "cmd-emails", label: "E-postalar" },
+      { id: "cmd-social", label: "Sosyal medya" },
     ],
   },
   {
@@ -567,6 +570,7 @@ export function AdminPanel({
         ) : null}
 
         {tab === "cmd-emails" ? <EmailCampaignManager accessToken={accessToken} /> : null}
+        {tab === "cmd-social" ? <SocialAutomationManager accessToken={accessToken} /> : null}
 
         {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
         {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}

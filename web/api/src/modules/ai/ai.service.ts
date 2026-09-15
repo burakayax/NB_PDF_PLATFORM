@@ -36,7 +36,8 @@ export async function isAiEnabledByFlag(): Promise<boolean> {
   return true;
 }
 
-async function callClaude(
+/** Claude'a tek atımlık istek. Sosyal medya otomasyonu da bu yolu kullanır. */
+export async function callClaude(
   system: string,
   messages: ChatTurn[],
   maxTokens: number,
