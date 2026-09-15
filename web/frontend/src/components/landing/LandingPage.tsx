@@ -28,6 +28,22 @@ import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
+import {
+  ArrowRightLeft,
+  Camera,
+  Eraser,
+  Languages,
+  Lock,
+  MessageSquareText,
+  Pencil,
+  Sparkles,
+  Table2,
+  FileStack,
+  Infinity as InfinityIcon,
+  ShieldCheck,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | "gorsel-sikistir" | PageToolId;
@@ -39,6 +55,50 @@ export const isFreeToolId = (id: string): id is FreeToolId =>
   id === "crop-pdf" ||
   id === "gorsel-sikistir" ||
   PAGE_TOOL_IDS.has(id);
+/**
+ * HERO ARAÇ KONSOLU — seçili aracın başlık şeridinde gösterilen kısa tanıtım.
+ * Kullanıcı aracı seçer seçmez ne yapacağını okur; boş bir yükleme kutusuyla
+ * baş başa kalmaz.
+ */
+type AiToolId =
+  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact";
+
+type HeroMeta = { Icon: LucideIcon; tr: string; en: string; trDesc: string; enDesc: string };
+
+const AI_TOOLS: { id: AiToolId; meta: HeroMeta }[] = [
+  { id: "summarize", meta: { Icon: Sparkles, tr: "Özetle", en: "Summarize",
+    trDesc: "Uzun belgenin ana fikrini çıkarır.", enDesc: "Pulls out the key points of a long document." } },
+  { id: "chat", meta: { Icon: MessageSquareText, tr: "Sohbet", en: "Chat",
+    trDesc: "Belgeye soru sorun, cevabı kaynağıyla alın.", enDesc: "Ask the document questions, get sourced answers." } },
+  { id: "extract", meta: { Icon: Table2, tr: "Veri Çıkar", en: "Extract",
+    trDesc: "Fatura ve formlardaki bilgileri tabloya döker.", enDesc: "Turns invoice and form fields into a table." } },
+  { id: "translate", meta: { Icon: Languages, tr: "Çeviri", en: "Translate",
+    trDesc: "Düzeni bozmadan başka dile çevirir.", enDesc: "Translates while keeping the layout." } },
+  { id: "batch", meta: { Icon: FileStack, tr: "Toplu İşlem", en: "Batch",
+    trDesc: "Onlarca belgeyi tek seferde işler.", enDesc: "Handles dozens of documents at once." } },
+  { id: "compare", meta: { Icon: ArrowRightLeft, tr: "Karşılaştır", en: "Compare",
+    trDesc: "İki sürüm arasındaki farkları gösterir.", enDesc: "Shows what changed between two versions." } },
+  { id: "redact", meta: { Icon: Eraser, tr: "Veri Gizle", en: "Redact",
+    trDesc: "Kimlik ve IBAN gibi bilgileri karartır.", enDesc: "Blacks out IDs and account numbers." } },
+];
+
+const EDITOR_META: HeroMeta = {
+  Icon: Pencil, tr: "PDF Düzenle", en: "Edit PDF",
+  trDesc: "Mevcut yazıyı silip yerine yenisini yazın.",
+  enDesc: "Delete existing text and type new text in its place.",
+};
+
+const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
+  merge: { tr: "Birden çok dosyayı sıralayıp tek PDF yapın.", en: "Order several files into one PDF." },
+  split: { tr: "İstediğiniz sayfaları ayrı dosya olarak alın.", en: "Pull the pages you choose into a separate file." },
+  "crop-pdf": { tr: "Kenar boşluklarını kesip sayfayı daraltın.", en: "Cut the margins and tighten the page." },
+  "image-to-pdf": { tr: "Fotoğrafları sıralayıp tek PDF'te toplayın.", en: "Order photos and collect them in one PDF." },
+  "gorsel-sikistir": { tr: "Fotoğrafları kaliteyi koruyarak küçültün.", en: "Make photos smaller while keeping them sharp." },
+  "rotate-pdf": { tr: "Yan duran sayfaları düz çevirin.", en: "Turn sideways pages the right way up." },
+  "delete-pages": { tr: "İstemediğiniz sayfaları çıkarın.", en: "Remove the pages you don't want." },
+  "organize-pdf": { tr: "Sayfaların sırasını sürükleyerek değiştirin.", en: "Drag pages into the order you want." },
+};
+
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
@@ -465,7 +525,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
-  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
+  const [aiTool, setAiTool] = useState<AiToolId | null>(null);
   const [editorOn, setEditorOn] = useState(false);
   // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
   // zaten AI'a yetkili kullanıcı (ADMIN / PRO / BUSINESS) — backend erişim veriyor —
@@ -574,88 +634,180 @@ function Hero({
           {...stagger(3)}
           className="mt-10 mx-auto w-full max-w-4xl"
         >
-          {/* Mobil: kamerayla belge tara (cihazda PDF) */}
-          {isMobileOrTablet && (
-            <button
-              type="button"
-              onClick={() => setScannerOpen(true)}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/[0.14] to-blue-500/[0.14] px-5 py-3.5 text-sm font-bold text-cyan-100 shadow-[0_10px_30px_-14px_rgba(6,182,212,0.7)] transition hover:from-cyan-500/25 hover:to-blue-500/25"
-            >
-              {tr ? "📸 Kamerayla Belge Tara" : "📸 Scan a document with camera"}
-            </button>
-          )}
-          <div className="mb-4 flex flex-wrap justify-center gap-2">
-            {FREE_TOOLS.map((t) => {
-              const A = toolAccent(t.id);
-              const Icon = A.icon;
-              const active = !aiTool && !editorOn && freeTool === t.id;
-              return (
+          {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
+              çipleri, ortada seçili aracın tanıtım şeridi, altında aracın kendisi.
+              Eskiden 16 çip tek bir yığın hâlinde sarılıyor, araç alanı ayrı
+              duruyordu; hepsi tek kartta toplandı. */}
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-2.5 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-3.5">
+            {/* Üst şerit: grup seçimi + (mobil) kamerayla tara */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3">
+              <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
                 <button
-                  key={t.id}
                   type="button"
-                  onClick={() => {
-                    setFreeTool(t.id);
-                    setAiTool(null);
-                    setEditorOn(false);
-                  }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                    active
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
-                      : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                  onClick={() => setAiTool(null)}
+                  className={`rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
+                    !aiTool ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : A.text}`} />
-                  {tr ? t.tr : t.en}
+                  {tr ? "Hızlı araçlar" : "Quick tools"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiTool("summarize");
+                    setEditorOn(false);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
+                    aiTool
+                      ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {tr ? "Yapay zekâ" : "AI"}
+                </button>
+              </div>
+
+              {isMobileOrTablet ? (
+                <button
+                  type="button"
+                  onClick={() => setScannerOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-1.5 text-[13px] font-bold text-cyan-200 transition hover:bg-cyan-500/20"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  {tr ? "Kamerayla tara" : "Scan with camera"}
+                </button>
+              ) : (
+                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-500 sm:inline-flex">
+                  <Lock className="h-3.5 w-3.5" />
+                  {tr ? "Üyelik gerekmez" : "No account needed"}
+                </span>
+              )}
+            </div>
+
+            {/* Araç çipleri — seçili grubun araçları */}
+            <div className="flex flex-wrap gap-1.5 px-1">
+              {!aiTool ? (
+                <>
+                  {FREE_TOOLS.map((t) => {
+                    const A = toolAccent(t.id);
+                    const Icon = A.icon;
+                    const active = !editorOn && freeTool === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setFreeTool(t.id);
+                          setAiTool(null);
+                          setEditorOn(false);
+                        }}
+                        className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                          active
+                            ? "bg-white/[0.12] text-white ring-1 ring-white/25"
+                            : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${A.text} ${active ? "" : "opacity-70"}`} />
+                        {tr ? t.tr : t.en}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditorOn(true);
+                      setAiTool(null);
+                    }}
+                    className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                      editorOn
+                        ? "bg-white/[0.12] text-white ring-1 ring-white/25"
+                        : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                    }`}
+                  >
+                    <Pencil className={`h-4 w-4 ${editorOn ? "text-amber-300" : "text-amber-400/70"}`} />
+                    {tr ? EDITOR_META.tr : EDITOR_META.en}
+                  </button>
+                </>
+              ) : (
+                AI_TOOLS.map(({ id, meta }) => {
+                  const ChipIcon = meta.Icon;
+                  const active = aiTool === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        setAiTool(id);
+                        setEditorOn(false);
+                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                        active
+                          ? "bg-violet-500/20 text-white ring-1 ring-violet-400/40"
+                          : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                      }`}
+                    >
+                      <ChipIcon className={`h-4 w-4 ${active ? "text-fuchsia-300" : "text-violet-400/70"}`} />
+                      {tr ? meta.tr : meta.en}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Seçili aracın tanıtım şeridi */}
+            {(() => {
+              const freeMeta = (): HeroMeta => {
+                const t = FREE_TOOLS.find((x) => x.id === freeTool) ?? FREE_TOOLS[0];
+                const A = toolAccent(t.id);
+                return {
+                  Icon: A.icon,
+                  tr: t.tr,
+                  en: t.en,
+                  trDesc: FREE_TOOL_DESC[t.id].tr,
+                  enDesc: FREE_TOOL_DESC[t.id].en,
+                };
+              };
+              const meta: HeroMeta = aiTool
+                ? (AI_TOOLS.find((a) => a.id === aiTool)?.meta ?? EDITOR_META)
+                : editorOn
+                  ? EDITOR_META
+                  : freeMeta();
+              const HeadIcon = meta.Icon;
+              const onDevice = !aiTool && !editorOn;
+              // Yapay zekâ araçları kendi başlığını çiziyor; iki başlık üst üste
+              // binmesin diye bu şeridi yalnızca hızlı araçlarda gösteriyoruz.
+              if (aiTool) return null;
+              return (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-left">
+                  <span
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ${
+                      aiTool
+                        ? "bg-gradient-to-br from-fuchsia-500/30 to-violet-500/10 text-fuchsia-200 ring-fuchsia-400/25"
+                        : editorOn
+                          ? "bg-gradient-to-br from-amber-500/30 to-amber-500/5 text-amber-200 ring-amber-400/25"
+                          : "bg-gradient-to-br from-sky-500/30 to-sky-500/5 text-sky-200 ring-sky-400/25"
+                    }`}
+                  >
+                    <HeadIcon className="h-5 w-5" strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-white">{tr ? meta.tr : meta.en}</p>
+                    <p className="truncate text-[12.5px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
+                  </div>
+                  {onDevice && (
+                    <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold text-emerald-300 sm:inline-flex">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {tr ? "Cihazında çalışır" : "Runs on your device"}
+                    </span>
+                  )}
+                </div>
               );
-            })}
-            {/* AI araçları (Pro) — yapay zekâ özet + sohbet + veri çıkarma */}
-            {(
-              [
-                ["summarize", tr ? "✨ AI Özet" : "✨ AI Summary"],
-                ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
-                ["extract", tr ? "✨ AI Veri Çıkar" : "✨ AI Extract"],
-                ["translate", tr ? "✨ AI Çeviri" : "✨ AI Translate"],
-                ["batch", tr ? "✨ AI Toplu İşlem" : "✨ AI Batch"],
-                ["compare", tr ? "✨ AI Karşılaştır" : "✨ AI Compare"],
-                ["redact", tr ? "✨ AI Veri Gizle" : "✨ AI Redact"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setAiTool(id);
-                  setEditorOn(false);
-                }}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  aiTool === id
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.7)]"
-                    : "border border-violet-400/25 bg-violet-500/[0.06] text-violet-200 hover:bg-violet-500/[0.12]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-            {/* PDF Düzenle — cihazda editör */}
-            <button
-              type="button"
-              onClick={() => {
-                setEditorOn(true);
-                setAiTool(null);
-              }}
-              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                editorOn
-                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_24px_-8px_rgba(6,182,212,0.7)]"
-                  : "border border-cyan-400/25 bg-cyan-500/[0.06] text-cyan-200 hover:bg-cyan-500/[0.12]"
-              }`}
-            >
-              {tr ? "✏️ PDF Düzenle" : "✏️ Edit PDF"}
-            </button>
-          </div>
+            })()}
+
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
-          <div className="text-left">
+            <div className="mt-3 text-left">
             {editorOn ? (
               <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
             ) : aiTool === "batch" ? (
@@ -714,8 +866,27 @@ function Hero({
                 ]}
               />
             )}
+            </div>
           </div>
-          <p className="mt-4 text-center text-[13px] text-slate-500">
+
+          {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-500">
+            {[
+              { Icon: Lock, tr: "Üyelik gerekmez", en: "No account needed" },
+              { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
+              { Icon: Zap, tr: "Kurulum yok — tarayıcıda çalışır", en: "No install — runs in your browser" },
+            ].map((item) => {
+              const TrustIcon = item.Icon;
+              return (
+                <span key={item.en} className="inline-flex items-center gap-1.5">
+                  <TrustIcon className="h-3.5 w-3.5 text-slate-600" />
+                  {tr ? item.tr : item.en}
+                </span>
+              );
+            })}
+          </div>
+
+          <p className="mt-5 text-center text-[13px] text-slate-500">
             {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>
