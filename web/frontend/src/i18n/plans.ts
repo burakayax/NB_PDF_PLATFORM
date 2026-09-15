@@ -11,12 +11,12 @@ const DESCRIPTIONS: Record<PlanName, { tr: string; en: string }> = {
     en: "Access to core tools with 25 daily operations.",
   },
   PLUS: {
-    tr: "Aylık 600 işlem hakkıyla tüm araçlara sınırsız erişim.",
-    en: "Unlimited access to all tools with 600 monthly operations.",
+    tr: "Tüm araçlara erişim; günlük sınır yok, aylık 600 işlem.",
+    en: "Access to every tool with no daily cap and 600 operations a month.",
   },
   PRO: {
-    tr: "Öncelikli işlem, tam araç seti ve günlük kota olmadan sınırsız kullanım.",
-    en: "Priority processing, the full toolkit, and unlimited usage without a daily cap.",
+    tr: "Öncelikli işlem, tam araç seti; günlük kota yok, aylık 1000 işlem.",
+    en: "Priority processing, the full toolkit, no daily cap and 1000 operations a month.",
   },
   BUSINESS: {
     tr: "Bireysel ve küçük ekipler için sınırsız işlem ve tam araç seti (İşletme).",
