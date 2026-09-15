@@ -4474,22 +4474,9 @@ function App() {
       }
 
       if (selectedFeature.id === "merge") {
-        if (
-          isAuthenticated &&
-          userBalance?.plan === "FREE" &&
-          !userBalance?.isAdmin &&
-          uploads.length > 2
-        ) {
-          showToast(
-            "error",
-            language === "tr" ? "Ücretsiz plan sınırı" : "Free plan limit",
-            language === "tr"
-              ? "Ücretsiz planda en fazla 2 dosya birleştirilebilir. Daha fazlası için planınızı yükseltin."
-              : "Free plan allows merging up to 2 files. Upgrade your plan for more.",
-          );
-          return;
-        }
-
+        // NOT: "Ücretsiz planda en fazla 2 dosya" kuralı kaldırıldı. Birleştirme
+        // kullanıcının cihazında çalışıyor, sunucuya dosya gitmiyor ve maliyeti
+        // yok; kural pratikte hiç devreye girmiyor, yalnızca yanıltıyordu.
         // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
         {
           // Cihaz-içi yol zaten bir yer sorduysa (ör. şifreli/büyük dosya
@@ -5231,7 +5218,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
+            <SearchablePdfTool language={language} isSignedIn={isAuthenticated} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5332,7 +5319,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
+            <SearchablePdfTool language={language} isSignedIn={isAuthenticated} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6555,8 +6542,8 @@ function App() {
                 <Suspense fallback={<PageSkeleton />}>
                   <SearchablePdfTool
                     language={language}
-                    isPro={aiAllowed}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
+                    isSignedIn={isAuthenticated}
+                    onUpgrade={() => setView("register")}
                     onLogin={() => setView("login")}
                     initialFile={pendingToolFile}
                   />
