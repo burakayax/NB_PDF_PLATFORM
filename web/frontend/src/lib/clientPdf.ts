@@ -13,12 +13,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { zipSync } from "fflate";
 import { PdfEncryptedError } from "./clientPdfCore";
 import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
-import type {
-  SearchableWord,
-  SearchablePage,
-  SignatureItem,
-  AnnotationItem,
-} from "./clientPdfCore";
+import type { SearchablePage, SignatureItem, AnnotationItem } from "./clientPdfCore";
 
 // Geriye-uyum: `./clientPdf`'ten doğrudan import eden çağıranlar (SearchablePdfTool,
 // testler, summaryPdf) bu hafif sembolleri buradan almaya devam edebilsin.
@@ -73,9 +68,13 @@ export type SheetOptions = {
  * Görselleri A4 sayfalara SIRAYLA DİZER — her görsele ayrı sayfa açmaz.
  *
  * Kesit aracının asıl çıktısı budur: bir kitapçıktan alınan 12 soru, 12 ayrı
- * sayfa değil; sırayla dizilmiş, yazdırılabilir 2-3 sayfalık bir çalışma kâğıdı
- * olur. Sığmayan kesit bir sonraki sütuna/sayfaya kayar; sayfadan uzun kesit
- * sayfaya sığacak şekilde küçültülür.
+ * sayfa değil; sırayla dizilmiş, yazdırılabilir 2-3 sayfalık bir çalışma
+ * kâğıdı olur.
+ *
+ * İki sütunda yerleşim SATIR SATIR ilerler (1 sol, 2 sağ, 3 alt sola…) —
+ * sütunu baştan sona doldurup diğerine geçmez; kullanıcı iki sütun dediğinde
+ * gördüğü şey yan yana iki kesittir. Satırın yüksekliği o satırdaki en uzun
+ * kesit kadardır; sayfaya sığmayan satır bir sonraki sayfaya iner.
  */
 export async function imagesToSheets(
   images: ImageInput[],
@@ -90,37 +89,38 @@ export async function imagesToSheets(
   const colWidth = (A4.w - margin * 2 - (columns - 1) * gap) / columns;
   const contentHeight = A4.h - margin * 2;
 
-  let page = out.addPage([A4.w, A4.h]);
-  let col = 0;
-  let cursorY = A4.h - margin; // sütunun o anki üst sınırı (yukarıdan aşağı)
-
-  const nextColumn = () => {
-    col += 1;
-    if (col >= columns) {
-      page = out.addPage([A4.w, A4.h]);
-      col = 0;
-    }
-    cursorY = A4.h - margin;
-  };
-
+  // Önce hepsini göm ve yerleşim ölçülerini hesapla.
+  const items: Array<{ img: Awaited<ReturnType<typeof out.embedPng>>; w: number; h: number }> = [];
   for (const img of images) {
     const isPng = img.mime.includes("png");
     const embedded = isPng ? await out.embedPng(img.bytes) : await out.embedJpg(img.bytes);
-
-    // Sütun genişliğine sığdır; sayfadan uzunsa yüksekliğe de sığdır.
     let scale = Math.min(1, colWidth / embedded.width);
-    if (embedded.height * scale > contentHeight) {
-      scale = contentHeight / embedded.height;
+    if (embedded.height * scale > contentHeight) scale = contentHeight / embedded.height;
+    items.push({ img: embedded, w: embedded.width * scale, h: embedded.height * scale });
+  }
+
+  let page = out.addPage([A4.w, A4.h]);
+  let cursorY = A4.h - margin;
+
+  for (let i = 0; i < items.length; i += columns) {
+    const row = items.slice(i, i + columns);
+    const rowHeight = Math.max(...row.map((it) => it.h));
+    // Satır bu sayfaya sığmıyorsa yeni sayfa (sayfanın başındaysak zaten sığar).
+    if (cursorY - rowHeight < margin && cursorY < A4.h - margin) {
+      page = out.addPage([A4.w, A4.h]);
+      cursorY = A4.h - margin;
     }
-    const w = embedded.width * scale;
-    const h = embedded.height * scale;
-
-    // Bu sütunda yer kalmadıysa sonraki sütuna/sayfaya geç.
-    if (cursorY - h < margin) nextColumn();
-
-    const x = margin + col * (colWidth + gap) + (colWidth - w) / 2;
-    page.drawImage(embedded, { x, y: cursorY - h, width: w, height: h });
-    cursorY -= h + gap;
+    row.forEach((it, col) => {
+      // Hücre içinde yatayda ortala, dikeyde satırın üstüne hizala.
+      const cellX = margin + col * (colWidth + gap);
+      page.drawImage(it.img, {
+        x: cellX + (colWidth - it.w) / 2,
+        y: cursorY - it.h,
+        width: it.w,
+        height: it.h,
+      });
+    });
+    cursorY -= rowHeight + gap;
   }
 
   return out.save(PDF_SAVE_OPTIONS);
