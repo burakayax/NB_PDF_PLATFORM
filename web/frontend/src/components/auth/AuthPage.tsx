@@ -1,7 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import React, { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  MapPin,
+  User,
   FileOutput,
   FileSearch,
   ShieldCheck,
@@ -148,8 +155,39 @@ type AuthPageProps = {
   onOpenKvkk: () => void;
 };
 
-const inputClassName =
-  "w-full rounded-xl border border-white/[0.08] bg-nb-bg-soft/95 px-4 py-3.5 text-[15px] leading-snug text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 ease-out placeholder:text-nb-muted focus:border-nb-primary/55 focus:ring-2 focus:ring-nb-primary/20 hover:border-white/14";
+/**
+ * FORM ALANLARI — tek bir görünüm dili.
+ *  • Her alanın solunda ne istendiğini anlatan bir ikon var.
+ *  • Odaklanınca kenar camgöbeğine döner ve etrafında yumuşak bir halka belirir;
+ *    kullanıcı klavyeyle gezerken nerede olduğunu her zaman görür.
+ *  • Hatalı alan kırmızı kenar + kırmızı halka alır (renk tek başına bırakılmaz,
+ *    altında metin de yazar).
+ */
+const inputBase =
+  "w-full rounded-xl border border-white/[0.09] bg-[#070c17]/80 py-3.5 pr-4 text-[15px] leading-snug text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 ease-out placeholder:text-slate-500 hover:border-white/20 focus:border-nb-primary/60 focus:bg-[#070c17] focus:ring-4 focus:ring-nb-primary/15";
+
+/** İkonlu alanlar için sol boşluk; ikonsuz kullanımda px-4'e düşer. */
+const inputClassName = `${inputBase} pl-11`;
+const inputPlainClassName = `${inputBase} pl-4`;
+const inputErrorClassName = " !border-rose-500/60 focus:!ring-rose-500/15";
+
+/** Alanın solundaki sabit ikon. */
+function FieldIcon({ Icon }: { Icon: LucideIcon }) {
+  return (
+    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+      <Icon className="h-[17px] w-[17px]" strokeWidth={2} />
+    </span>
+  );
+}
+
+/** Alan etiketi — hepsi aynı ağırlık ve boşlukta. */
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="mb-2 block text-[13px] font-semibold text-slate-300">
+      {children}
+    </span>
+  );
+}
 
 function GoogleMark() {
   return (
@@ -197,6 +235,7 @@ export function AuthPage({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [registerCity, setRegisterCity] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
   const [urlAuthError, setUrlAuthError] = useState("");
@@ -342,9 +381,11 @@ export function AuthPage({
       <HeroBackground />
 
       <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-12 sm:px-8">
-        <div className="grid w-full items-center gap-12 lg:grid-cols-[1fr_minmax(0,470px)] lg:gap-20">
-          {/* SOL — marka ve kazanım paneli (yalnızca geniş ekran) */}
-          <div className="hidden lg:block">
+        <div className="mx-auto grid w-full max-w-[980px] items-center gap-12 lg:grid-cols-[minmax(0,440px)_minmax(0,460px)] lg:items-start lg:justify-center lg:gap-16">
+          {/* SOL — marka ve kazanım paneli (yalnızca geniş ekran).
+              Form uzun olduğunda yanında kayıp gitmesin diye yapışkan ve
+              kartla aynı hizadan başlıyor. */}
+          <div className="hidden lg:sticky lg:top-24 lg:block lg:pt-[72px]">
             <AuthBenefits mode={mode} language={language} adminPortal={adminPortal} />
           </div>
 
@@ -514,35 +555,37 @@ export function AuthPage({
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-nb-muted">
-                      {copy.shared.firstNameLabel}
+                    <FieldLabel>{copy.shared.firstNameLabel}</FieldLabel>
+                    <span className="relative block">
+                      <FieldIcon Icon={User} />
+                      <input
+                        type="text"
+                        name="given-name"
+                        autoComplete="given-name"
+                        value={firstName}
+                        onChange={(event) => { setFirstName(event.target.value); setFirstNameErr(""); }}
+                        className={firstNameErr ? inputClassName + inputErrorClassName : inputClassName}
+                        placeholder={language === "tr" ? "Adınız" : "Jane"}
+                      />
                     </span>
-                    <input
-                      type="text"
-                      name="given-name"
-                      autoComplete="given-name"
-                      value={firstName}
-                      onChange={(event) => { setFirstName(event.target.value); setFirstNameErr(""); }}
-                      className={firstNameErr ? inputClassName + " !border-rose-500/60" : inputClassName}
-                      placeholder={language === "tr" ? "Adınız" : "Jane"}
-                    />
                   </label>
                   <FieldError msg={firstNameErr} />
                 </div>
                 <div>
                   <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-nb-muted">
-                      {copy.shared.lastNameLabel}
+                    <FieldLabel>{copy.shared.lastNameLabel}</FieldLabel>
+                    <span className="relative block">
+                      <FieldIcon Icon={User} />
+                      <input
+                        type="text"
+                        name="family-name"
+                        autoComplete="family-name"
+                        value={lastName}
+                        onChange={(event) => { setLastName(event.target.value); setLastNameErr(""); }}
+                        className={lastNameErr ? inputClassName + inputErrorClassName : inputClassName}
+                        placeholder={language === "tr" ? "Soyadınız" : "Doe"}
+                      />
                     </span>
-                    <input
-                      type="text"
-                      name="family-name"
-                      autoComplete="family-name"
-                      value={lastName}
-                      onChange={(event) => { setLastName(event.target.value); setLastNameErr(""); }}
-                      className={lastNameErr ? inputClassName + " !border-rose-500/60" : inputClassName}
-                      placeholder={language === "tr" ? "Soyadınız" : "Doe"}
-                    />
                   </label>
                   <FieldError msg={lastNameErr} />
                 </div>
@@ -552,16 +595,19 @@ export function AuthPage({
             {mode === "register" ? (
               <>
                 <label className="block">
-                  <span className="mb-2 block text-sm font-medium text-nb-muted">
+                  <FieldLabel>
                     {language === "tr" ? "Şehir" : "City"}{" "}
-                    <span className="font-normal opacity-75">
+                    <span className="font-normal text-slate-500">
                       ({language === "tr" ? "isteğe bağlı" : "optional"})
                     </span>
-                  </span>
+                  </FieldLabel>
+                  <span className="relative block">
+                    <FieldIcon Icon={MapPin} />
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
                   <select
                     value={registerCity}
                     onChange={(event) => setRegisterCity(event.target.value)}
-                    className={inputClassName}
+                    className={`${inputClassName} appearance-none pr-10`}
                     disabled={submitting}
                   >
                     <option value="">
@@ -573,23 +619,25 @@ export function AuthPage({
                       </option>
                     ))}
                   </select>
+                  </span>
                 </label>
               </>
             ) : null}
 
             <div>
               <label className="block">
-                <span className="mb-2 block text-sm font-medium text-nb-muted">
-                  {copy.shared.emailLabel}
+                <FieldLabel>{copy.shared.emailLabel}</FieldLabel>
+                <span className="relative block">
+                  <FieldIcon Icon={Mail} />
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => { setEmail(event.target.value); setEmailErr(""); }}
+                    className={(emailErr || serverEmailErr) ? inputClassName + inputErrorClassName : inputClassName}
+                    placeholder="name@company.com"
+                  />
                 </span>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(event) => { setEmail(event.target.value); setEmailErr(""); }}
-                  className={(emailErr || serverEmailErr) ? inputClassName + " !border-rose-500/60" : inputClassName}
-                  placeholder="name@company.com"
-                />
               </label>
               <FieldError msg={emailErr || serverEmailErr} />
             </div>
@@ -599,7 +647,7 @@ export function AuthPage({
                   buton label'ın ilk labelable elemanı olup boş alana tıklayınca
                   tetikleniyordu. */}
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="block text-sm font-medium text-nb-muted">
+                <span className="block text-[13px] font-semibold text-slate-300">
                   {copy.shared.passwordLabel}
                 </span>
                 {mode === "login" && onForgotPassword ? (
@@ -612,19 +660,33 @@ export function AuthPage({
                   </button>
                 ) : null}
               </div>
-              <label className="block">
+              <div className="relative">
                 {/* Etiket metni yukarıda (label DIŞINDA, forgot-password butonu için);
                     input'un erişilebilir adını aria-label ile veriyoruz (a11y + test). */}
+                <FieldIcon Icon={Lock} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   aria-label={copy.shared.passwordLabel}
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
                   value={password}
                   onChange={(event) => { setPassword(event.target.value); setPasswordErr(""); }}
-                  className={(passwordErr || serverPasswordErr) ? inputClassName + " !border-rose-500/60" : inputClassName}
+                  className={`${(passwordErr || serverPasswordErr) ? inputClassName + inputErrorClassName : inputClassName} pr-12`}
                   placeholder="••••••••••••••"
                 />
-              </label>
+                {/* Yazdığını görebilme: parola hatalarının en sık sebebi yanlış tuş. */}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={
+                    showPassword
+                      ? language === "tr" ? "Şifreyi gizle" : "Hide password"
+                      : language === "tr" ? "Şifreyi göster" : "Show password"
+                  }
+                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
               <FieldError msg={passwordErr || serverPasswordErr} />
             </div>
 
