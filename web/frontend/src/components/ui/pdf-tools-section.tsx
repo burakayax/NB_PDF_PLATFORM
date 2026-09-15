@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRightLeft,
+  Camera,
   Combine,
   Crop,
   Droplets,
@@ -10,6 +11,7 @@ import {
   FileInput,
   FileOutput,
   FileSearch,
+  FileCheck2,
   FileSpreadsheet,
   FileStack,
   FileText,
@@ -69,6 +71,8 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "pdf-yorumla",
   "hassas-veri-gizle",
   "taranmis-pdf-ocr",
+  "aranabilir-pdf",
+  "belge-tara",
   "crop-pdf",
   "gorsel-sikistir",
   "gorsel-boyutlandir",
@@ -83,6 +87,8 @@ type Tool = {
   Icon: LucideIcon;
   /** Üyelik istemeden, cihazda anında çalışır. */
   free?: boolean;
+  /** Ücretsiz ama üye girişi ister (cihazda çalışır, maliyeti yoktur). */
+  account?: boolean;
   ai?: boolean;
   tr: { name: string; desc: string };
   en: { name: string; desc: string };
@@ -121,9 +127,14 @@ const TOOLS: Tool[] = [
     en: { name: "Batch Process", desc: "Summarizes or processes dozens of files at once." },
   },
   {
-    id: "taranmis-pdf-ocr", cat: "ai", Icon: FileSearch, free: true,
-    tr: { name: "Taranmış PDF (OCR)", desc: "Taranmış sayfadaki yazıyı aranabilir metne çevirir." },
-    en: { name: "Scanned PDF (OCR)", desc: "Turns scanned pages into searchable, copyable text." },
+    id: "taranmis-pdf-ocr", cat: "ai", Icon: FileSearch, account: true,
+    tr: { name: "Taranmış PDF (OCR)", desc: "Taranmış sayfadaki yazıyı okunabilir metne çevirir." },
+    en: { name: "Scanned PDF (OCR)", desc: "Turns scanned pages into text you can read and copy." },
+  },
+  {
+    id: "aranabilir-pdf", cat: "ai", Icon: FileCheck2, account: true,
+    tr: { name: "Aranabilir PDF", desc: "Taranmış belgede Ctrl+F ile arama yapabilir hale gelin." },
+    en: { name: "Searchable PDF", desc: "Make a scanned document findable with Ctrl+F." },
   },
 
   // ── Düzenle ───────────────────────────────────────────────────────────────
@@ -253,6 +264,11 @@ const TOOLS: Tool[] = [
     id: "image-to-pdf", cat: "convert", Icon: Scan, free: true,
     tr: { name: "Görsel → PDF", desc: "Fotoğrafları sıralayıp tek bir PDF'te toplayın." },
     en: { name: "Image → PDF", desc: "Order your photos and collect them in one PDF." },
+  },
+  {
+    id: "belge-tara", cat: "convert", Icon: Camera, free: true,
+    tr: { name: "Belge Tara", desc: "Telefonun kamerasıyla çekip düzgün bir PDF'e çevirin." },
+    en: { name: "Scan Document", desc: "Shoot with your phone camera and get a clean PDF." },
   },
   {
     id: "html-to-pdf", cat: "convert", Icon: Globe,
@@ -484,16 +500,26 @@ export default function PdfToolsSection({
                             <span className="block truncate text-[14.5px] font-semibold text-white/90 transition group-hover:text-white">
                               {copy.name}
                             </span>
-                            {(t.free || t.ai) && (
+                            {(t.free || t.account || t.ai) && (
                               <span
                                 className={`mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold uppercase tracking-wide ${
-                                  t.free ? "text-emerald-300/90" : "text-fuchsia-300/90"
+                                  t.free
+                                    ? "text-emerald-300/90"
+                                    : t.account
+                                      ? "text-sky-300/90"
+                                      : "text-fuchsia-300/90"
                                 }`}
                               >
-                                <span className={`h-1 w-1 rounded-full ${t.free ? "bg-emerald-400" : "bg-fuchsia-400"}`} />
+                                <span
+                                  className={`h-1 w-1 rounded-full ${
+                                    t.free ? "bg-emerald-400" : t.account ? "bg-sky-400" : "bg-fuchsia-400"
+                                  }`}
+                                />
                                 {t.free
                                   ? tr ? "Üyeliksiz" : "No sign-up"
-                                  : tr ? "Yapay zekâ" : "AI"}
+                                  : t.account
+                                    ? tr ? "Ücretsiz üyelik" : "Free account"
+                                    : tr ? "Yapay zekâ" : "AI"}
                               </span>
                             )}
                           </div>
