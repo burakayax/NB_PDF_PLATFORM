@@ -32,6 +32,10 @@ import {
   ArrowRightLeft,
   Camera,
   Eraser,
+  FileSearch,
+  FileType2,
+  Minimize2,
+  Unlock,
   Languages,
   Lock,
   MessageSquareText,
@@ -87,6 +91,19 @@ const EDITOR_META: HeroMeta = {
   trDesc: "Mevcut yazıyı silip yerine yenisini yazın.",
   enDesc: "Delete existing text and type new text in its place.",
 };
+
+/**
+ * ÜYE OLUNCA AÇILAN ÜCRETSİZ ARAÇLAR — misafire somut bir kayıt sebebi verir.
+ * Buradaki araçların hepsi ÜCRETSİZ planda gerçekten açıktır; abartılı vaat yok.
+ * Kaynak: web/api/src/modules/subscription/subscription.config.ts → FREE_TOOLS
+ * ve cihazda çalışan OCR araçları (üye girişi ister).
+ */
+const MEMBER_TOOLS: { slug: string; Icon: LucideIcon; tr: string; en: string }[] = [
+  { slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
+  { slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
+  { slug: "unlock-pdf", Icon: Unlock, tr: "Şifre Kaldır", en: "Unlock PDF" },
+  { slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
+];
 
 const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
   merge: { tr: "Birden çok dosyayı sıralayıp tek PDF yapın.", en: "Order several files into one PDF." },
@@ -685,8 +702,9 @@ function Hero({
               )}
             </div>
 
-            {/* Araç çipleri — seçili grubun araçları */}
-            <div className="flex flex-wrap gap-1.5 px-1">
+            {/* Araç kutuları — her araç kendi karesinde; seçili olan renkli çerçeveyle
+                öne çıkar. Çip sırası yerine ızgara: göz tek tek araçları tarayabilir. */}
+            <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-5 lg:grid-cols-6">
               {!aiTool ? (
                 <>
                   {FREE_TOOLS.map((t) => {
@@ -702,14 +720,20 @@ function Hero({
                           setAiTool(null);
                           setEditorOn(false);
                         }}
-                        className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                           active
-                            ? "bg-white/[0.12] text-white ring-1 ring-white/25"
-                            : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                            ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                            : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                         }`}
                       >
-                        <Icon className={`h-4 w-4 ${A.text} ${active ? "" : "opacity-70"}`} />
-                        {tr ? t.tr : t.en}
+                        <span
+                          className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${A.grad} ${A.text} ring-1 ring-white/10 transition group-hover:scale-105`}
+                        >
+                          <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          {tr ? t.tr : t.en}
+                        </span>
                       </button>
                     );
                   })}
@@ -719,14 +743,18 @@ function Hero({
                       setEditorOn(true);
                       setAiTool(null);
                     }}
-                    className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                    className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                       editorOn
-                        ? "bg-white/[0.12] text-white ring-1 ring-white/25"
-                        : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                        ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                        : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
                     }`}
                   >
-                    <Pencil className={`h-4 w-4 ${editorOn ? "text-amber-300" : "text-amber-400/70"}`} />
-                    {tr ? EDITOR_META.tr : EDITOR_META.en}
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
+                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
+                    </span>
+                    <span className={`text-[12px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
+                      {tr ? EDITOR_META.tr : EDITOR_META.en}
+                    </span>
                   </button>
                 </>
               ) : (
@@ -741,14 +769,18 @@ function Hero({
                         setAiTool(id);
                         setEditorOn(false);
                       }}
-                      className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[13px] font-semibold transition ${
+                      className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
                         active
-                          ? "bg-violet-500/20 text-white ring-1 ring-violet-400/40"
-                          : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                          ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
+                          : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
                       }`}
                     >
-                      <ChipIcon className={`h-4 w-4 ${active ? "text-fuchsia-300" : "text-violet-400/70"}`} />
-                      {tr ? meta.tr : meta.en}
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                        <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                      </span>
+                      <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        {tr ? meta.tr : meta.en}
+                      </span>
                     </button>
                   );
                 })
@@ -867,6 +899,52 @@ function Hero({
               />
             )}
             </div>
+
+            {/* ÜYELİK KAZANIMI — misafire, ücretsiz üyelikle GERÇEKTEN açılan
+                araçları gösterir. Kutular kilitli görünür; tıklayınca kayıt ekranı
+                açılır. Giriş yapmış kullanıcıya hiç gösterilmez. */}
+            {!accessToken && (
+              <div className="mt-3 rounded-2xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/[0.07] to-transparent p-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 pb-3">
+                  <p className="text-[13px] font-bold text-white">
+                    {tr ? "Ücretsiz üyelikle bunlar da açılır" : "A free account also unlocks these"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onRegister}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3.5 py-1.5 text-[12px] font-bold text-emerald-200 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/25"
+                  >
+                    {tr ? "Ücretsiz üye ol" : "Create a free account"}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {MEMBER_TOOLS.map((m) => {
+                    const MemberIcon = m.Icon;
+                    return (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={onRegister}
+                        className="group flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-black/20 px-3 py-2.5 text-left transition hover:border-emerald-400/30 hover:bg-emerald-500/[0.06]"
+                      >
+                        <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-slate-400 ring-1 ring-white/10 transition group-hover:text-emerald-300">
+                          <MemberIcon className="h-4 w-4" strokeWidth={2} />
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-slate-300 transition group-hover:text-white">
+                          {tr ? m.tr : m.en}
+                        </span>
+                        <Lock className="h-3.5 w-3.5 flex-shrink-0 text-slate-600 transition group-hover:text-emerald-400/70" />
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2.5 px-0.5 text-[11.5px] text-slate-500">
+                  {tr
+                    ? "Kart istemez, ücret alınmaz — üyelik ücretsizdir."
+                    : "No card, no charge — the account is free."}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}

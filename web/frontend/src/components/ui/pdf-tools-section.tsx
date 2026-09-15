@@ -79,7 +79,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "pdf-kesit-al",
 ]);
 
-type CategoryId = "ai" | "edit" | "convert" | "security";
+type CategoryId = "ai" | "edit" | "scan" | "convert" | "security";
 
 type Tool = {
   id: string;
@@ -127,12 +127,12 @@ const TOOLS: Tool[] = [
     en: { name: "Batch Process", desc: "Summarizes or processes dozens of files at once." },
   },
   {
-    id: "taranmis-pdf-ocr", cat: "ai", Icon: FileSearch, account: true,
+    id: "taranmis-pdf-ocr", cat: "scan", Icon: FileSearch, account: true,
     tr: { name: "Taranmış PDF (OCR)", desc: "Taranmış sayfadaki yazıyı okunabilir metne çevirir." },
     en: { name: "Scanned PDF (OCR)", desc: "Turns scanned pages into text you can read and copy." },
   },
   {
-    id: "aranabilir-pdf", cat: "ai", Icon: FileCheck2, account: true,
+    id: "aranabilir-pdf", cat: "scan", Icon: FileCheck2, account: true,
     tr: { name: "Aranabilir PDF", desc: "Taranmış belgede Ctrl+F ile arama yapabilir hale gelin." },
     en: { name: "Searchable PDF", desc: "Make a scanned document findable with Ctrl+F." },
   },
@@ -266,7 +266,7 @@ const TOOLS: Tool[] = [
     en: { name: "Image → PDF", desc: "Order your photos and collect them in one PDF." },
   },
   {
-    id: "belge-tara", cat: "convert", Icon: Camera, free: true,
+    id: "belge-tara", cat: "scan", Icon: Camera, free: true,
     tr: { name: "Belge Tara", desc: "Telefonun kamerasıyla çekip düzgün bir PDF'e çevirin." },
     en: { name: "Scan Document", desc: "Shoot with your phone camera and get a clean PDF." },
   },
@@ -293,12 +293,12 @@ const TOOLS: Tool[] = [
     en: { name: "Unlock PDF", desc: "Remove the password from a file you own." },
   },
   {
-    id: "hassas-veri-gizle", cat: "security", Icon: Eraser,
+    id: "hassas-veri-gizle", cat: "security", Icon: Eraser, ai: true,
     tr: { name: "Hassas Veri Gizle", desc: "Kimlik, IBAN ve isimleri geri alınamaz şekilde karartın." },
     en: { name: "Redact PDF", desc: "Black out IDs, account numbers and names for good." },
   },
   {
-    id: "repair-pdf", cat: "security", Icon: Wrench,
+    id: "repair-pdf", cat: "edit", Icon: Wrench,
     tr: { name: "PDF Onar", desc: "Açılmayan veya bozulmuş dosyayı kurtarın." },
     en: { name: "Repair PDF", desc: "Rescue a file that won't open or looks broken." },
   },
@@ -459,6 +459,13 @@ const CATEGORY_META: Record<
     text: "text-sky-300",
     glow: "group-hover:shadow-[0_18px_40px_-20px_rgba(56,189,248,0.55)]",
   },
+  scan: {
+    tr: "Tara & Metin Tanıma", en: "Scan & OCR",
+    ring: "group-hover:border-cyan-400/45",
+    tint: "bg-cyan-500/10 ring-cyan-400/20",
+    text: "text-cyan-300",
+    glow: "group-hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.55)]",
+  },
   security: {
     tr: "Güvenlik", en: "Security",
     ring: "group-hover:border-emerald-400/40",
@@ -468,7 +475,7 @@ const CATEGORY_META: Record<
   },
 };
 
-const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "convert", "security"];
+const CATEGORY_ORDER: CategoryId[] = ["ai", "edit", "scan", "convert", "security"];
 
 /** Arama için: Türkçe karakterleri sadeleştirip küçük harfe indirger. */
 function norm(s: string): string {
