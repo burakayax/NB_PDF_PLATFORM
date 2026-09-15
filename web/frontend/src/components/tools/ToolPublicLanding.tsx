@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getToolSeo } from "../../seo/seoContent.mjs";
+import { ToolHowTo } from "../common/ToolHowTo";
 import type { Language } from "../../i18n/landing";
 
 type ToolPublicLandingProps = {
@@ -83,6 +84,8 @@ export function ToolPublicLanding({
               : "No install · no card required"}
           </span>
         </div>
+
+        <ToolHowTo slug={slug} language={language} className="mt-10" />
 
         {/* SSS — prerender ile aynı içerik */}
         {seo.faq.length > 0 && (
