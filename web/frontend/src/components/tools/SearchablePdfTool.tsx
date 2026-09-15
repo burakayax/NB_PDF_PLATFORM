@@ -15,17 +15,23 @@ const MAX_BYTES = 80 * 1024 * 1024;
 /**
  * ARANABİLİR PDF aracı (SEO araç sayfası çekirdeği). Taranmış PDF veya görselleri
  * cihazda OCR'lar (Türkçe + İngilizce) ve görüntünün üzerine görünmez metin katmanı
- * gömerek aranabilir/kopyalanabilir PDF üretir. Aranabilir PDF üretimi Pro özelliğidir.
+ * gömerek aranabilir/kopyalanabilir PDF üretir.
+ *
+ * ERİŞİM: Metin tanıma tamamen kullanıcının cihazında çalışır, sunucuya dosya
+ * gitmez ve işletme maliyeti yoktur. Bu yüzden araç ÜCRETSİZ planda da açıktır;
+ * yalnızca ÜYE GİRİŞİ ister (misafirde kayıt duvarı çıkar).
  */
 export function SearchablePdfTool({
   language,
-  isPro,
+  isSignedIn,
   onUpgrade,
   onLogin,
   initialFile,
 }: {
   language: Language;
-  isPro?: boolean;
+  /** Üye girişi yapılmış mı? Araç ücretsizdir, yalnızca giriş ister. */
+  isSignedIn?: boolean;
+  /** Misafirde kayıt ekranına götürür. */
   onUpgrade?: () => void;
   onLogin?: () => void;
   /** Araçlar arası aktarım (Taramalarım / PDF Merkezi) ile gelen dosya. */
@@ -35,7 +41,7 @@ export function SearchablePdfTool({
   const [files, setFiles] = useState<File[]>([]);
   const [ocrPct, setOcrPct] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showPro, setShowPro] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
   const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
 
   function addFiles(list: FileList | File[]) {
@@ -76,8 +82,8 @@ export function SearchablePdfTool({
 
   async function run() {
     if (files.length === 0) return;
-    if (!isPro) {
-      setShowPro(true);
+    if (!isSignedIn) {
+      setShowJoin(true);
       return;
     }
     setError(null);
@@ -240,10 +246,12 @@ export function SearchablePdfTool({
         </div>
       )}
 
-      {!isPro && (
+      {!isSignedIn && (
         <p className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-medium text-violet-300/90">
           <Sparkles className="h-3.5 w-3.5" />
-          {tr ? "Aranabilir PDF (OCR) bir Pro özelliğidir" : "Searchable PDF (OCR) is a Pro feature"}
+          {tr
+            ? "Ücretsiz — yalnızca üye girişi gerekir"
+            : "Free — you only need to sign in"}
         </p>
       )}
 
@@ -260,48 +268,48 @@ export function SearchablePdfTool({
           </>
         ) : (
           <>
-            {isPro ? <Search className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
+            {isSignedIn ? <Search className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
             {tr ? "Aranabilir PDF Yap" : "Make searchable PDF"}
           </>
         )}
       </button>
 
-      {/* Pro duvarı */}
-      {showPro && !isPro && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-4 sm:items-center" onClick={() => setShowPro(false)}>
+      {/* Kayıt duvarı — araç ücretsiz, yalnızca giriş ister. */}
+      {showJoin && !isSignedIn && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-4 sm:items-center" onClick={() => setShowJoin(false)}>
           <div onClick={(e) => e.stopPropagation()} className="w-full max-w-md rounded-3xl border border-violet-400/30 bg-[#0f1424] p-6 shadow-2xl">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/25 to-fuchsia-500/25 text-fuchsia-300 ring-1 ring-fuchsia-400/30">
               <Search className="h-7 w-7" />
             </div>
             <p className="mt-4 text-center text-lg font-bold text-white">
-              {tr ? "Aranabilir PDF — Pro" : "Searchable PDF — Pro"}
+              {tr ? "Aranabilir PDF — ücretsiz" : "Searchable PDF — free"}
             </p>
             <p className="mt-1 text-center text-[13px] text-slate-400">
               {tr
-                ? "Belgelerinizi Ctrl+F ile aranabilir, kopyalanabilir yapın — metin cihazınızda tanınır, dosyanız yüklenmez."
-                : "Make documents searchable and copyable with Ctrl+F — text is recognized on your device, your file is not uploaded."}
+                ? "Belgelerinizi Ctrl+F ile aranabilir, kopyalanabilir yapın — metin cihazınızda tanınır, dosyanız yüklenmez. Ücretsiz üyelikle kullanabilirsiniz."
+                : "Make documents searchable and copyable with Ctrl+F — text is recognized on your device, your file is not uploaded. Included with a free account."}
             </p>
             <button
               type="button"
               onClick={() => {
-                setShowPro(false);
+                setShowJoin(false);
                 onUpgrade?.();
               }}
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-violet-500 hover:to-fuchsia-500"
             >
               <Sparkles className="h-4 w-4" />
-              {tr ? "Pro'ya Geç" : "Upgrade to Pro"}
+              {tr ? "Ücretsiz üye ol" : "Create a free account"}
             </button>
             {onLogin && (
               <button
                 type="button"
                 onClick={() => {
-                  setShowPro(false);
+                  setShowJoin(false);
                   onLogin();
                 }}
                 className="mt-2 w-full py-1 text-[13px] font-medium text-slate-400 transition hover:text-slate-200"
               >
-                {tr ? "Zaten Pro üyesiyim — giriş yap" : "I already have Pro — log in"}
+                {tr ? "Zaten üyeyim — giriş yap" : "I already have an account — log in"}
               </button>
             )}
           </div>
