@@ -793,3 +793,76 @@ model ScannedDocument {
   @@index([userId, createdAt])
   @@map("scanned_documents")
 }
+
+// ─── Sosyal Medya Otomasyonu ──────────────────────────────────────────────────
+
+enum SocialPlatform {
+  X
+  LINKEDIN
+  FACEBOOK
+  INSTAGRAM
+  PINTEREST
+}
+
+enum SocialPostStatus {
+  /// Admin elle hazırlattı; onaylanana kadar yayınlanmaz.
+  DRAFT
+  QUEUED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  SKIPPED
+}
+
+/// Bağlı sosyal medya hesabı. Erişim anahtarları AES-256-GCM ile şifreli tutulur
+/// (BILLING_ENCRYPTION_KEY) — düz metin asla DB'ye yazılmaz, asla loglanmaz.
+model SocialAccount {
+  id              String         @id @default(cuid())
+  platform        SocialPlatform @unique
+  displayName     String         @map("display_name")
+  /// Şifreli JSON: platforma göre token / sayfa kimliği / pano kimliği vb.
+  secretsJson     String         @map("secrets_json")
+  /// Token'ın bitiş tarihi (bilinen platformlarda). Yaklaşınca admin uyarılır.
+  tokenExpiresAt  DateTime?      @map("token_expires_at")
+  enabled         Boolean        @default(true)
+  lastCheckedAt   DateTime?      @map("last_checked_at")
+  lastError       String?        @map("last_error")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("social_accounts")
+}
+
+/// Tek bir platforma yapılacak/yapılmış tek bir paylaşım.
+/// (platform, guid) benzersiz → aynı yazı aynı platformda iki kez paylaşılamaz.
+model SocialPost {
+  id          String           @id @default(cuid())
+  platform    SocialPlatform
+  /// RSS <guid> — yazının kalıcı kimliği.
+  guid        String
+  /// Planlandığı takvim günü (YYYY-MM-DD, ayarlanan saat dilimine göre).
+  /// Benzersizliğin parçası: aynı gün içinde aynı yazı aynı ağda iki kez
+  /// kuyruğa giremez, ama aylar sonra yeniden gündeme getirilebilir.
+  dayKey      String           @map("day_key")
+  lang        String           @default("tr")
+  title       String
+  linkUrl     String           @map("link_url")
+  /// Gönderi METNİ. Görselin içine gömülmez; platforma caption olarak gider.
+  body        String
+  /// Gönderiye eklenecek görselin tam adresi (yoksa salt metin paylaşılır).
+  imageUrl    String?          @map("image_url")
+  status      SocialPostStatus @default(QUEUED)
+  scheduledAt DateTime         @map("scheduled_at")
+  publishedAt DateTime?        @map("published_at")
+  externalId  String?          @map("external_id")
+  externalUrl String?          @map("external_url")
+  attempts    Int              @default(0)
+  lastError   String?          @map("last_error")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@unique([platform, guid, dayKey])
+  @@index([status, scheduledAt])
+  @@index([createdAt])
+  @@map("social_posts")
+}
