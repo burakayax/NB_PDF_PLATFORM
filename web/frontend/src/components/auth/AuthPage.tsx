@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  FileOutput,
+  FileSearch,
+  ShieldCheck,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+import { HeroBackground } from "../landing/HeroBackground";
 import { getGoogleOAuthStartUrl } from "../../api/auth";
 import { TURKISH_PROVINCES } from "../../lib/trCities";
 import { authTranslations, getAuthCopy } from "../../i18n/auth";
@@ -10,6 +19,92 @@ import {
   SESSION_POST_OAUTH_REDIRECT_KEY,
 } from "../../lib/oauthRedirect";
 import { trackGAEvent } from "../../lib/analytics";
+
+/**
+ * Giriş/kayıt ekranının SOL sütunu — marka ve kazanım paneli.
+ * Masaüstünde formun yanında durur; dar ekranda gizlenir (form öne çıksın).
+ * Metinler abartısızdır: hepsi üründe gerçekten var olan özellikler.
+ */
+function AuthBenefits({
+  mode,
+  language,
+  adminPortal,
+}: {
+  mode: AuthMode;
+  language: Language;
+  adminPortal: boolean;
+}) {
+  const tr = language === "tr";
+  const items: { Icon: LucideIcon; tr: string; en: string }[] = adminPortal
+    ? [
+        { Icon: ShieldCheck, tr: "Yalnızca yetkili yönetici hesapları", en: "Authorized administrator accounts only" },
+        { Icon: FileOutput, tr: "Plan, kupon ve içerik yönetimi", en: "Plans, coupons and content management" },
+        { Icon: Sparkles, tr: "Kullanım ve gelir raporları", en: "Usage and revenue reports" },
+      ]
+    : mode === "register"
+      ? [
+          { Icon: FileOutput, tr: "Word, Excel ve PowerPoint'e dönüştürme", en: "Convert to Word, Excel and PowerPoint" },
+          { Icon: FileSearch, tr: "Taranmış belgeyi aranabilir metne çevirme", en: "Turn scanned documents into searchable text" },
+          { Icon: Sparkles, tr: "Yapay zekâ ile özetleme ve veri çıkarma", en: "AI summaries and data extraction" },
+          { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı — her planda", en: "No watermark, no ads — on every plan" },
+        ]
+      : [
+          { Icon: FileOutput, tr: "Kaldığınız belgeden devam edin", en: "Pick up from the document you left" },
+          { Icon: FileSearch, tr: "Kaydettiğiniz taramalar hesabınızda durur", en: "Your saved scans stay in your account" },
+          { Icon: Sparkles, tr: "Tüm araçlar tek çalışma alanında", en: "Every tool in one workspace" },
+          { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
+        ];
+
+  return (
+    <div className="max-w-[440px]">
+      <div className="inline-flex items-center gap-2.5">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400/25 to-indigo-500/25 text-cyan-200 ring-1 ring-white/10">
+          <FileOutput className="h-5 w-5" strokeWidth={2} />
+        </span>
+        <span className="text-[13px] font-bold uppercase tracking-[0.3em] text-slate-300">
+          PDF Platform
+        </span>
+      </div>
+
+      <h2 className="mt-7 text-[34px] font-extrabold leading-[1.15] tracking-tight text-white">
+        {adminPortal
+          ? tr ? "Yönetim paneline giriş" : "Sign in to the admin panel"
+          : mode === "register"
+            ? tr ? "Ücretsiz hesabınızı 30 saniyede açın" : "Open your free account in 30 seconds"
+            : tr ? "Tekrar hoş geldiniz" : "Welcome back"}
+      </h2>
+      <p className="mt-4 text-[15px] leading-relaxed text-slate-400">
+        {adminPortal
+          ? tr
+            ? "Bu alan yalnızca yetkili hesaplar içindir."
+            : "This area is for authorized accounts only."
+          : mode === "register"
+            ? tr
+              ? "Kart istemez, ücret alınmaz. Üyelikle açılan araçları hemen kullanmaya başlayın."
+              : "No card, no charge. Start using the tools an account unlocks right away."
+            : tr
+              ? "Çalışma alanınız, kayıtlı taramalarınız ve planınız sizi bekliyor."
+              : "Your workspace, saved scans and plan are waiting for you."}
+      </p>
+
+      <ul className="mt-9 space-y-4">
+        {items.map((item) => {
+          const ItemIcon = item.Icon;
+          return (
+            <li key={item.en} className="flex items-start gap-3.5">
+              <span className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-cyan-300 ring-1 ring-white/10">
+                <ItemIcon className="h-4 w-4" strokeWidth={2} />
+              </span>
+              <span className="pt-1.5 text-[14px] leading-snug text-slate-300">
+                {tr ? item.tr : item.en}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -241,29 +336,37 @@ export function AuthPage({
   const generalDisplayError = serverGeneralErr || urlAuthError;
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-nb-bg font-sans text-nb-text antialiased">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_100%_70%_at_50%_-18%,rgba(34,211,238,0.2),transparent_55%)]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[40vh] bg-[radial-gradient(ellipse_80%_60%_at_50%_100%,rgba(129,140,232,0.09),transparent_65%)]" />
+    <div className="relative min-h-screen font-sans text-nb-text antialiased">
+      {/* Karşılama ekranıyla aynı arka plan — pazarlama sayfasından ürüne geçerken
+          görsel dil kopmasın. */}
+      <HeroBackground />
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-[480px] flex-col justify-center px-5 py-14 sm:px-8">
+      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-12 sm:px-8">
+        <div className="grid w-full items-center gap-12 lg:grid-cols-[1fr_minmax(0,470px)] lg:gap-20">
+          {/* SOL — marka ve kazanım paneli (yalnızca geniş ekran) */}
+          <div className="hidden lg:block">
+            <AuthBenefits mode={mode} language={language} adminPortal={adminPortal} />
+          </div>
+
+          {/* SAĞ — form */}
+          <div className="mx-auto w-full max-w-[470px]">
         <button
           type="button"
           onClick={onBack}
-          className="group mb-10 inline-flex min-h-11 w-fit items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 text-sm font-semibold text-nb-text shadow-sm transition duration-200 ease-out hover:border-nb-primary/30 hover:bg-white/[0.08] hover:text-white"
+          className="group mb-6 inline-flex min-h-10 w-fit items-center gap-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 text-sm font-semibold text-nb-text shadow-sm transition duration-200 ease-out hover:border-nb-primary/30 hover:bg-white/[0.08] hover:text-white"
         >
-          <span className="mr-1 transition group-hover:-translate-x-0.5">
-            ↩️
-          </span>
+          <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-0.5" />
           {backLabel ?? copy.shared.backToLanding}
         </button>
 
-        <div className="rounded-[28px] border border-white/[0.08] bg-nb-panel/55 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.04)_inset] backdrop-blur-xl sm:p-10">
-          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90">
+        <div className="rounded-[28px] border border-white/[0.08] bg-[#0d1424]/80 p-8 shadow-[0_50px_100px_-24px_rgba(0,0,0,0.75),0_0_0_1px_rgba(255,255,255,0.05)_inset] backdrop-blur-xl sm:p-10">
+          {/* Marka satiri: genis ekranda sol panel zaten markayi tasiyor, tekrar olmasin */}
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.38em] text-cyan-300/90 lg:hidden">
             PDF Platform
           </p>
           {adminPortal ? (
             <>
-              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
+              <h1 className="mt-5 text-center lg:mt-0 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
                 {language === "tr"
                   ? "Yönetici girişi"
                   : "Administrator sign-in"}
@@ -276,7 +379,7 @@ export function AuthPage({
             </>
           ) : (
             <>
-              <h1 className="mt-5 text-center text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
+              <h1 className="mt-5 text-center lg:mt-0 text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem] sm:leading-tight">
                 {copy.screen.title}
               </h1>
               <p className="mx-auto mt-3 max-w-[340px] text-center text-sm leading-relaxed text-nb-muted">
@@ -288,7 +391,7 @@ export function AuthPage({
           {/* Kayıt modunda son-metre kazanım+güven şeridi — değer-anı CTA'sından inen
               misafirin tereddüdünü düşürmek için. Dürüst, somut; uydurma sayı YOK. */}
           {!adminPortal && mode === "register" && (
-            <ul className="mx-auto mt-6 flex max-w-[360px] flex-col gap-2">
+            <ul className="mx-auto mt-6 flex max-w-[360px] flex-col gap-2 lg:hidden">
               {[
                 language === "tr"
                   ? "Word · Excel · PPT'ye çevir, sıkıştır, OCR, AI özetle"
@@ -297,8 +400,8 @@ export function AuthPage({
                   ? "Kart gerekmez · 30 saniyede hazır · dilediğin an iptal"
                   : "No card · ready in 30 seconds · cancel anytime",
                 language === "tr"
-                  ? "İşlemler cihazında yapılır — dosyaların gizli kalır"
-                  : "Runs on your device — your files stay private",
+                  ? "Yapısal araçlar cihazında çalışır, dosya yüklenmez"
+                  : "Structural tools run on your device — no upload",
               ].map((text) => (
                 <li key={text} className="flex items-center gap-2.5 text-[13px] text-nb-muted">
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/25">
@@ -612,21 +715,24 @@ export function AuthPage({
           </div>
         </div>
 
-        <div className="mx-auto mt-12 max-w-md px-1">
-          <p className="text-center text-xs font-semibold uppercase tracking-[0.28em] text-nb-muted">
+        {/* Dar ekranda sol panel gizli olduğu için güven maddeleri formun altında */}
+        <div className="mt-10 lg:hidden">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.28em] text-nb-muted">
             {copy.shared.trustTitle}
           </p>
-          <ul className="mt-5 space-y-3">
+          <ul className="mx-auto mt-5 max-w-md space-y-3">
             {copy.shared.trustPoints.map((point) => (
               <li
                 key={point}
-                className="flex items-start gap-3 text-sm leading-relaxed text-nb-muted"
+                className="flex items-start gap-3 text-[13.5px] leading-relaxed text-nb-muted"
               >
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-400/90" />
+                <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-cyan-400/80" />
                 <span>{point}</span>
               </li>
             ))}
           </ul>
+        </div>
+          </div>
         </div>
       </main>
     </div>
