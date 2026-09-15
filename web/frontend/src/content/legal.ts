@@ -286,7 +286,7 @@ export const legalDocuments: Record<
           paragraphs: [
             "Prices are determined by the plan you select and the billing period (monthly/yearly). For users residing in Turkey, 20% VAT is included in the total amount charged.",
             "Payment is made via credit card or debit card through the iyzico infrastructure.",
-            "No refund is provided for the remaining period after the subscription term has commenced.",
+            "While there is no statutory refund obligation for the remaining period once the subscription term has commenced, the SELLER honours, under its own commercial guarantee, any refund request made within 7 days of the first payment, with no reason required. Outside that window, access continues until the end of the paid period.",
           ],
         },
         {
@@ -347,7 +347,7 @@ export const legalDocuments: Record<
           title: "5. Right of Withdrawal",
           paragraphs: [
             "Pursuant to Article 15/1(ğ) of the Distance Sales Regulation, the right of withdrawal cannot be exercised for digital content services whose performance has begun with the BUYER's express consent.",
-            "The BUYER has expressly declared at the payment step that they waive the right of withdrawal. Therefore, no refund can be requested after subscription activation.",
+            "The BUYER has expressly declared at the payment step that they waive the statutory right of withdrawal. Nevertheless, under its commercial guarantee the SELLER honours refund requests made within 7 days of the first payment, with no reason required. After those 7 days there is no refund obligation; if the subscription is cancelled, access continues until the end of the paid period.",
             "In case the service is completely unavailable, the situation will be evaluated upon contact with the SELLER.",
           ],
         },
@@ -680,7 +680,7 @@ export const legalDocuments: Record<
           paragraphs: [
             "Fiyatlar, seçtiğiniz plana ve ödeme dönemine (aylık/yıllık) göre belirlenmektedir. Türkiye'de mukim kullanıcılar için %20 KDV dahil toplam tutar tahsil edilmektedir.",
             "Ödeme iyzico altyapısı üzerinden kredi kartı veya banka kartı ile gerçekleştirilmektedir.",
-            "Abonelik süresi başladıktan sonra kalan süre için ücret iadesi yapılmamaktadır.",
+            "Abonelik süresi başladıktan sonra kalan süre için kanuni bir iade yükümlülüğü bulunmamakla birlikte, SATICI kendi ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde yapılan iade taleplerini gerekçe aranmaksızın karşılar (aşağıda «Ticari İade Garantisi»). Bu süre dışındaki iptallerde, ödenmiş dönem sonuna kadar hizmete erişim devam eder.",
           ],
         },
         {
@@ -688,6 +688,7 @@ export const legalDocuments: Record<
           paragraphs: [
             "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; tüketicinin onayı ile ifasına başlanan dijital içerik niteliğindeki bu hizmet için cayma hakkı uygulanmaz.",
             "Ödeme tamamlandığında ve hizmetin ifasına (abonelik aktivasyonu) başlanması halinde cayma hakkınızı kullanamayacaksınız. Bu durumu onaylıyorsanız ödemeye devam edebilirsiniz.",
+            "Kanuni cayma hakkı uygulanmasa da SATICI, ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar; iade, talebin ulaşmasından itibaren 3–5 iş günü içinde ödeme yöntemine yapılır.",
             "Teknik sorunlar veya hizmetin hiç kullanılamaması halinde destek ekibimizle iletişime geçebilirsiniz.",
           ],
         },
@@ -741,7 +742,7 @@ export const legalDocuments: Record<
           title: "5. Cayma Hakkı",
           paragraphs: [
             "Mesafeli Sözleşmeler Yönetmeliği Madde 15/1-ğ uyarınca; ALICI'nın açık onayı ile ifasına başlanan dijital içerik hizmetlerinde cayma hakkı kullanılamaz.",
-            "ALICI, ödeme adımında cayma hakkından feragat ettiğini açıkça beyan etmiştir. Bu nedenle abonelik aktivasyonu gerçekleştikten sonra iade talep edilemez.",
+            "ALICI, ödeme adımında kanuni cayma hakkından feragat ettiğini açıkça beyan etmiştir. Bununla birlikte SATICI, ticari garantisi kapsamında ilk ödeme tarihinden itibaren 7 gün içinde iletilen iade taleplerini gerekçe aranmaksızın karşılar. 7 günlük süre dolduktan sonra kanuni bir iade yükümlülüğü doğmaz; abonelik iptal edilse dahi ödenmiş dönem sonuna kadar hizmete erişim sürer.",
             "Hizmetin tamamen kullanılamaması durumunda SATICI ile iletişime geçilmesi halinde değerlendirme yapılacaktır.",
           ],
         },
