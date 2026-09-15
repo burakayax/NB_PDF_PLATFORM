@@ -74,13 +74,18 @@ const L = {
     columns: "Sütun",
     col1: "Tek sütun",
     col2: "İki sütun",
+    colHint: "Tek sütun: kesitler sayfa genişliğinde. İki sütun: yan yana iki kesit — dar kesitler (tek soru, küçük tablo) için uygundur.",
     perPage: "Her kesit ayrı sayfa",
     downloadZip: "Görselleri ZIP indir",
     downloadOne: "İndir",
     up: "Yukarı taşı",
     down: "Aşağı taşı",
     settings: "Kesit ayarları",
-    why: "Bir kitapçıktan soruları, bir rapordan grafikleri tek tek ekleyin; sırayı ayarlayın; hepsini tek bir çalışma kâğıdına dönüştürün.",
+    imgFormat: "Görsel biçimi",
+    imgFormatHint: "Kesitin görsel biçimi. PDF çıktısı aşağıdaki «Çıktı» bölümünden alınır.",
+    qualityHint: "Yüksek çözünürlük baskıda daha net, dosya daha büyük olur.",
+    dlOne: "Bu kesiti görsel olarak indir",
+    rmOne: "Bu kesiti listeden çıkar",
     quality: "Çözünürlük",
     format: "Biçim",
     failed: "İşlem başarısız oldu. Lütfen tekrar deneyin.",
@@ -108,13 +113,18 @@ const L = {
     columns: "Columns",
     col1: "One column",
     col2: "Two columns",
+    colHint: "One column: snips span the page width. Two columns: two snips side by side — best for narrow snips (a single question, a small table).",
     perPage: "One snip per page",
     downloadZip: "Download images as ZIP",
     downloadOne: "Download",
     up: "Move up",
     down: "Move down",
     settings: "Snip settings",
-    why: "Add questions from a booklet or charts from a report one by one, put them in order, and turn them into a single worksheet.",
+    imgFormat: "Image format",
+    imgFormatHint: "The format of each snip image. PDF output is in the «Output» section below.",
+    qualityHint: "Higher resolution prints sharper but makes a bigger file.",
+    dlOne: "Save this snip as an image",
+    rmOne: "Remove this snip from the list",
     quality: "Resolution",
     format: "Format",
     failed: "Something went wrong. Please try again.",
@@ -146,6 +156,8 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   const [exporting, setExporting] = useState<"zip" | "pdf" | "sheet" | null>(null);
   const [columns, setColumns] = useState<1 | 2>(1);
   const [error, setError] = useState<string | null>(null);
+  /** Pencere yeniden boyutlandığında sayfayı yeniden çizmek için sayaç. */
+  const [viewportTick, setViewportTick] = useState(0);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -232,8 +244,9 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       const stage = stageRef.current;
       const canvas = canvasRef.current;
       if (!stage || !canvas) return;
-      const cssW = Math.min(stage.clientWidth || 680, 900);
-      const maxH = Math.max(420, window.innerHeight - 220);
+      const cssW = Math.min(stage.clientWidth || 680, 1100);
+      // Sayfayı olabildiğince büyük göster: ekrana sığmıyorsa kullanıcı kaydırır.
+      const maxH = Math.max(680, window.innerHeight - 120);
       const base = page.getViewport({ scale: 1 });
       const cssScale = Math.min(cssW / base.width, maxH / base.height);
       // Tuval EKRAN PİKSELİ kadar çizilir (retina/125-150% ölçekte 1 CSS pikseli
@@ -252,7 +265,22 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
       await page.render({ canvasContext: ctx, viewport: vp }).promise;
     })();
     return () => { cancelled = true; };
-  }, [bytes, pageIndex]);
+  }, [bytes, pageIndex, viewportTick]);
+
+  // Pencere boyutu değişince sayfayı yeni ölçüde yeniden çiz (sabit kalıp
+  // küçücük görünmesin). Sık tetiklenmesin diye gecikmeli.
+  useEffect(() => {
+    let timer: number | undefined;
+    const onResize = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setViewportTick((n) => n + 1), 200);
+    };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   // ── Seçim kutusu etkileşimi ────────────────────────────────────────────────
   const pointFromEvent = (e: React.PointerEvent) => {
@@ -472,7 +500,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
   // ── Yükleme durumu ─────────────────────────────────────────────────────────
   if (!bytes) {
     return (
-      <div className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="tool-form">
           <WorkspaceUploadField
             language={language}
@@ -627,7 +655,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 </select>
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-slate-400">{t.format}</span>
+                <span className="text-[11px] font-medium text-slate-400">{t.imgFormat}</span>
                 <select
                   value={mime}
                   onChange={(e) => setMime(e.target.value as "image/png" | "image/jpeg")}
@@ -638,6 +666,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                 </select>
               </label>
             </div>
+            <p className="mt-1.5 text-[10px] leading-relaxed text-slate-500">{t.imgFormatHint}</p>
             <button
               type="button"
               onClick={() => void addSnip()}
@@ -683,20 +712,30 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                     </div>
                     <div className="flex shrink-0 flex-col">
                       <button type="button" onClick={() => moveSnip(i, -1)} disabled={i === 0} aria-label={t.up} title={t.up}
-                        className="rounded p-0.5 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300 disabled:opacity-25">
+                        className="rounded p-0.5 text-slate-400 transition hover:bg-cyan-500/15 hover:text-cyan-200 disabled:opacity-25">
                         <ChevronUp className="h-3.5 w-3.5" />
                       </button>
                       <button type="button" onClick={() => moveSnip(i, 1)} disabled={i === snips.length - 1} aria-label={t.down} title={t.down}
-                        className="rounded p-0.5 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300 disabled:opacity-25">
+                        className="rounded p-0.5 text-slate-400 transition hover:bg-cyan-500/15 hover:text-cyan-200 disabled:opacity-25">
                         <ChevronDown className="h-3.5 w-3.5" />
                       </button>
                     </div>
-                    <button type="button" onClick={() => downloadBlob(s.blob, snipName(s, i))} aria-label={t.downloadOne} title={t.downloadOne}
-                      className="shrink-0 rounded p-1 text-slate-500 transition hover:bg-white/[0.08] hover:text-cyan-300">
+                    <button
+                      type="button"
+                      onClick={() => downloadBlob(s.blob, snipName(s, i))}
+                      aria-label={`${t.dlOne} (${s.mime === "image/png" ? "PNG" : "JPG"})`}
+                      title={`${t.dlOne} (${s.mime === "image/png" ? "PNG" : "JPG"})`}
+                      className="shrink-0 rounded-lg border border-cyan-400/30 bg-cyan-500/[0.12] p-1.5 text-cyan-300 transition hover:bg-cyan-500/25 hover:text-cyan-100"
+                    >
                       <Download className="h-3.5 w-3.5" />
                     </button>
-                    <button type="button" onClick={() => removeSnip(s.id)} aria-label={tr ? "Kaldır" : "Remove"}
-                      className="shrink-0 rounded p-1 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400">
+                    <button
+                      type="button"
+                      onClick={() => removeSnip(s.id)}
+                      aria-label={t.rmOne}
+                      title={t.rmOne}
+                      className="shrink-0 rounded-lg border border-rose-400/30 bg-rose-500/[0.10] p-1.5 text-rose-300 transition hover:bg-rose-500/25 hover:text-rose-100"
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </li>
@@ -726,6 +765,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
                   ))}
                 </div>
               </div>
+              <p className="mb-2 text-[10px] leading-relaxed text-slate-500">{t.colHint}</p>
               <button
                 type="button"
                 onClick={() => void downloadAsPdf("sheet")}
@@ -759,9 +799,6 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
             </div>
           )}
 
-          <p className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-slate-400">
-            {t.why}
-          </p>
         </aside>
       </div>
 
