@@ -7,6 +7,7 @@ import {
   getRelatedToolLinks,
   getGuideSlugsForTool,
 } from "../../seo/seoContent.mjs";
+import { ToolHowTo } from "../common/ToolHowTo";
 
 type Props = {
   slug: string;
@@ -123,7 +124,9 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
           )}
         </div>
 
-        <div className="mt-9">{children}</div>
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">{children}</div>
 
         <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {(onDevice

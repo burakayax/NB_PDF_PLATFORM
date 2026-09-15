@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowTo } from "../common/ToolHowTo";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { expandPagesString } from "../../i18n/workspace";
 import {
@@ -601,7 +602,9 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
           </h1>
         </div>
 
-        <div className="mt-8">
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">
           <GuestPageToolCore tool={tool} language={language} initialFile={initialFile} />
         </div>
 

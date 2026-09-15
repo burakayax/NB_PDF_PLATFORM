@@ -179,6 +179,7 @@ import {
 import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
 import { setCurrentPlan } from "./lib/currentPlan";
+import { ToolHowTo } from "./components/common/ToolHowTo";
 import {
   persistWorkspaceTool,
   readInitialWorkspaceToolSelection,
@@ -6486,6 +6487,7 @@ function App() {
 
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
@@ -6494,6 +6496,7 @@ function App() {
 
             {contentPanel === "sign" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-imzala" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
@@ -6502,6 +6505,7 @@ function App() {
 
             {contentPanel === "annotate" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-yorumla" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
@@ -6510,6 +6514,7 @@ function App() {
 
             {contentPanel === "crop" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="crop-pdf" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfCropTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
@@ -6518,6 +6523,7 @@ function App() {
 
             {contentPanel === "compress-image" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="gorsel-sikistir" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
                 </Suspense>
@@ -6526,6 +6532,7 @@ function App() {
 
             {contentPanel === "snip" ? (
               <section className="mx-auto w-full max-w-6xl py-2">
+                <ToolHowTo slug="pdf-kesit-al" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSnipTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
@@ -6534,6 +6541,7 @@ function App() {
 
             {contentPanel === "resize-image" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="gorsel-boyutlandir" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageResizeTool language={language} />
                 </Suspense>
@@ -6543,6 +6551,7 @@ function App() {
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="aranabilir-pdf" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <SearchablePdfTool
                     language={language}
@@ -6746,6 +6755,13 @@ function App() {
                       </h2>
                     </div>
                   </div>
+
+                  {/* Nasıl çalışır? — her araçta aynı yerde, formun hemen üstünde. */}
+                  <ToolHowTo
+                    slug={toolSlugForFeature(selectedFeature.id)}
+                    language={language}
+                    className="mb-5"
+                  />
 
                   <div className="relative min-h-[180px] md:min-h-[220px] xl:min-h-[260px]">
                     <div

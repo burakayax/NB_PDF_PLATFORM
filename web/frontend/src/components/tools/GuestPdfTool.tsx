@@ -2,6 +2,7 @@ import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { GuestToolCore, type GuestToolId } from "./GuestToolCore";
+import { ToolHowTo } from "../common/ToolHowTo";
 
 export type { GuestToolId };
 
@@ -71,7 +72,9 @@ export function GuestPdfTool({
           )}
         </div>
 
-        <div className="mt-9">
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">
           <GuestToolCore tool={tool} language={language} onRegister={onRegister} />
         </div>
 
