@@ -1,0 +1,234 @@
+/**
+ * KARŞILAMA EKRANI ARKA PLANI — katmanlı, hareketli "aurora" kurgusu.
+ *
+ * Katmanlar (arkadan öne):
+ *   1. Derin zemin + ufuk parıltısı  — sayfanın rengi ve derinliği
+ *   2. İnce ızgara (maskeli)          — teknik/kurumsal doku, kenarlarda erir
+ *   3. Aurora lekeleri (3 adet)       — yavaşça sürüklenen renk bulutları
+ *   4. Işık huzmesi                   — tepeden süzülen, çok yavaş dönen koni
+ *   5. Parçacıklar                    — yukarı süzülen minik ışık noktaları
+ *   6. Grain                          — bant oluşumunu kıran film dokusu
+ *
+ * PERFORMANS KURALLARI (bozulursa açılış takılır):
+ *   • Yalnızca `transform` ve `opacity` animasyonlanır. `filter`/`background`
+ *     animasyonu her karede yeniden boyama demektir — kullanılmaz.
+ *   • Bulanıklık (blur) pahalıdır: mobilde yarıya indirilir, parçacıklar kapanır.
+ *   • Kullanıcı "hareketi azalt" dediyse (işletim sistemi ayarı) tüm animasyonlar
+ *     durur; kompozisyon sabit görüntü olarak kalır.
+ */
+
+import { useEffect } from "react";
+
+/** Parçacıklar — sabit liste (rastgele üretim her render'da yer değiştirirdi). */
+const PARTICLES = [
+  { left: "8%", delay: 0, dur: 26, size: 2 },
+  { left: "17%", delay: 7, dur: 32, size: 1.5 },
+  { left: "24%", delay: 14, dur: 22, size: 2.5 },
+  { left: "33%", delay: 3, dur: 29, size: 1.5 },
+  { left: "41%", delay: 18, dur: 35, size: 2 },
+  { left: "49%", delay: 9, dur: 24, size: 1.5 },
+  { left: "57%", delay: 21, dur: 31, size: 2.5 },
+  { left: "64%", delay: 5, dur: 27, size: 1.5 },
+  { left: "72%", delay: 16, dur: 33, size: 2 },
+  { left: "79%", delay: 11, dur: 23, size: 1.5 },
+  { left: "86%", delay: 25, dur: 30, size: 2 },
+  { left: "93%", delay: 2, dur: 28, size: 1.5 },
+];
+
+export function HeroBackground() {
+  // Gövdenin (body) kendi opak arka planı bu katmanın ÜSTÜNE boyanıyor ve
+  // kompozisyonu tamamen örtüyordu. Karşılama ekranı açıkken gövdeyi saydam
+  // yapıyoruz; zemin rengini bu katman veriyor. Sayfadan çıkınca geri alınır.
+  useEffect(() => {
+    document.body.classList.add("nb-hero-bg");
+    return () => document.body.classList.remove("nb-hero-bg");
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        body.nb-hero-bg { background: transparent !important; }
+
+        @keyframes hb-drift-a {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50%      { transform: translate3d(5%, 7%, 0) scale(1.12); }
+        }
+        @keyframes hb-drift-b {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+          50%      { transform: translate3d(-6%, -5%, 0) scale(1); }
+        }
+        @keyframes hb-drift-c {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50%      { transform: translate3d(4%, -6%, 0) scale(1.1); }
+        }
+        @keyframes hb-beam {
+          from { transform: translate(-50%, 0) rotate(0deg); }
+          to   { transform: translate(-50%, 0) rotate(360deg); }
+        }
+        @keyframes hb-rise {
+          0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+          10%  { opacity: 0.7; }
+          85%  { opacity: 0.5; }
+          100% { transform: translate3d(0, -70vh, 0); opacity: 0; }
+        }
+        @keyframes hb-pulse {
+          0%, 100% { opacity: 0.55; }
+          50%      { opacity: 0.85; }
+        }
+
+        /* Mobil: bulanıklık yarıya, parçacıklar kapalı — ısınma ve takılma olmasın. */
+        @media (max-width: 767px) {
+          .hb-blob { filter: blur(70px) !important; }
+          .hb-particle, .hb-beam { display: none !important; }
+        }
+
+        /* Kullanıcı hareketi azaltmak istiyorsa her şey durur. */
+        @media (prefers-reduced-motion: reduce) {
+          .hb-anim { animation: none !important; }
+          .hb-particle { display: none !important; }
+        }
+      `}</style>
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 overflow-hidden"
+        style={{ zIndex: -1, background: "#070a12" }}
+      >
+        {/* 1 — Ufuk parıltısı: sayfanın tepesinden inen ışık */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 120% 70% at 50% -20%, rgba(99,102,241,0.38) 0%, rgba(79,70,229,0.13) 38%, transparent 72%)",
+          }}
+        />
+
+        {/* 2 — İnce ızgara; kenarlara doğru eriyip kaybolur */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, rgba(148,163,184,0.075) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.075) 1px, transparent 1px)",
+            backgroundSize: "64px 64px",
+            maskImage:
+              "radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 78%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 90% 60% at 50% 0%, #000 35%, transparent 78%)",
+          }}
+        />
+
+        {/* 3 — Aurora lekeleri */}
+        <div
+          className="hb-blob hb-anim absolute"
+          style={{
+            top: "-32%",
+            left: "-18%",
+            width: "78vw",
+            height: "78vw",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 40% 40%, rgba(37,99,235,0.42), transparent 62%)",
+            filter: "blur(120px)",
+            animation: "hb-drift-a 28s ease-in-out infinite",
+            willChange: "transform",
+          }}
+        />
+        <div
+          className="hb-blob hb-anim absolute"
+          style={{
+            top: "-14%",
+            right: "-22%",
+            width: "66vw",
+            height: "66vw",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 55% 40%, rgba(139,92,246,0.36), transparent 62%)",
+            filter: "blur(130px)",
+            animation: "hb-drift-b 36s ease-in-out infinite",
+            willChange: "transform",
+          }}
+        />
+        <div
+          className="hb-blob hb-anim absolute"
+          style={{
+            top: "34%",
+            left: "22%",
+            width: "52vw",
+            height: "52vw",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 45% 50%, rgba(6,182,212,0.26), transparent 62%)",
+            filter: "blur(110px)",
+            animation: "hb-drift-c 24s ease-in-out infinite",
+            willChange: "transform",
+          }}
+        />
+
+        {/* 4 — Işık huzmesi: tepeden süzülen, çok yavaş dönen koni */}
+        <div
+          className="hb-beam hb-anim absolute"
+          style={{
+            top: "-60vh",
+            left: "50%",
+            width: "150vw",
+            height: "150vh",
+            background:
+              "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(129,140,248,0.13) 12deg, transparent 32deg, transparent 180deg, rgba(34,211,238,0.09) 200deg, transparent 220deg)",
+            animation: "hb-beam 120s linear infinite",
+            willChange: "transform",
+            transformOrigin: "50% 50%",
+          }}
+        />
+
+        {/* 5 — Süzülen parçacıklar */}
+        {PARTICLES.map((p) => (
+          <span
+            key={p.left}
+            className="hb-particle hb-anim absolute rounded-full"
+            style={{
+              left: p.left,
+              bottom: "-6px",
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              background: "rgba(191,219,254,0.85)",
+              boxShadow: "0 0 6px rgba(147,197,253,0.65)",
+              animation: `hb-rise ${p.dur}s linear ${p.delay}s infinite`,
+              willChange: "transform, opacity",
+            }}
+          />
+        ))}
+
+        {/* Üst kenardaki ince ışık çizgisi */}
+        <div
+          className="hb-anim absolute left-[12%] top-0 h-px w-[76%]"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent, rgba(129,140,248,0.45), transparent)",
+            animation: "hb-pulse 7s ease-in-out infinite",
+          }}
+        />
+
+        {/* 6 — Grain: renk bantlarını kırar, baskıdaki film dokusu hissi verir */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+            backgroundSize: "200px 200px",
+            opacity: 0.04,
+            mixBlendMode: "overlay",
+          }}
+        />
+
+        {/* Alt karartma: sayfanın gövdesine yumuşak geçiş */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[38vh]"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent, rgba(7,10,18,0.7) 72%, #070a12)",
+          }}
+        />
+      </div>
+    </>
+  );
+}
