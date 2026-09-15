@@ -304,6 +304,136 @@ const TOOLS: Tool[] = [
   },
 ];
 
+
+/**
+ * ARAÇ RENKLERİ — her aracın kendi rengi var; ikon, renkli bir degrade kutunun
+ * içinde durur. Kategori rengi yalnızca başlık ve süzgeç için kullanılır;
+ * kartlar kategori içinde tek düze görünmesin diye araç bazında renklendirilir.
+ *
+ * Sınıf adları TAM yazılmalıdır (Tailwind derleme sırasında metni tarar);
+ * `bg-${x}-500` gibi birleştirmeler üretimde renksiz kalır.
+ */
+type HueId =
+  | "violet" | "fuchsia" | "purple" | "indigo" | "blue" | "sky"
+  | "cyan" | "teal" | "emerald" | "lime" | "amber" | "orange" | "rose";
+
+const HUES: Record<HueId, { tile: string; icon: string; ring: string; glow: string }> = {
+  violet: {
+    tile: "bg-gradient-to-br from-violet-500/30 to-violet-500/5 ring-violet-400/25",
+    icon: "text-violet-200", ring: "group-hover:border-violet-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(139,92,246,0.65)]",
+  },
+  fuchsia: {
+    tile: "bg-gradient-to-br from-fuchsia-500/30 to-fuchsia-500/5 ring-fuchsia-400/25",
+    icon: "text-fuchsia-200", ring: "group-hover:border-fuchsia-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(217,70,239,0.65)]",
+  },
+  purple: {
+    tile: "bg-gradient-to-br from-purple-500/30 to-purple-500/5 ring-purple-400/25",
+    icon: "text-purple-200", ring: "group-hover:border-purple-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(168,85,247,0.65)]",
+  },
+  indigo: {
+    tile: "bg-gradient-to-br from-indigo-500/30 to-indigo-500/5 ring-indigo-400/25",
+    icon: "text-indigo-200", ring: "group-hover:border-indigo-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(99,102,241,0.65)]",
+  },
+  blue: {
+    tile: "bg-gradient-to-br from-blue-500/30 to-blue-500/5 ring-blue-400/25",
+    icon: "text-blue-200", ring: "group-hover:border-blue-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(59,130,246,0.65)]",
+  },
+  sky: {
+    tile: "bg-gradient-to-br from-sky-500/30 to-sky-500/5 ring-sky-400/25",
+    icon: "text-sky-200", ring: "group-hover:border-sky-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(56,189,248,0.65)]",
+  },
+  cyan: {
+    tile: "bg-gradient-to-br from-cyan-500/30 to-cyan-500/5 ring-cyan-400/25",
+    icon: "text-cyan-200", ring: "group-hover:border-cyan-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(34,211,238,0.65)]",
+  },
+  teal: {
+    tile: "bg-gradient-to-br from-teal-500/30 to-teal-500/5 ring-teal-400/25",
+    icon: "text-teal-200", ring: "group-hover:border-teal-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(20,184,166,0.65)]",
+  },
+  emerald: {
+    tile: "bg-gradient-to-br from-emerald-500/30 to-emerald-500/5 ring-emerald-400/25",
+    icon: "text-emerald-200", ring: "group-hover:border-emerald-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(16,185,129,0.65)]",
+  },
+  lime: {
+    tile: "bg-gradient-to-br from-lime-500/30 to-lime-500/5 ring-lime-400/25",
+    icon: "text-lime-200", ring: "group-hover:border-lime-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(132,204,22,0.65)]",
+  },
+  amber: {
+    tile: "bg-gradient-to-br from-amber-500/30 to-amber-500/5 ring-amber-400/25",
+    icon: "text-amber-200", ring: "group-hover:border-amber-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(245,158,11,0.65)]",
+  },
+  orange: {
+    tile: "bg-gradient-to-br from-orange-500/30 to-orange-500/5 ring-orange-400/25",
+    icon: "text-orange-200", ring: "group-hover:border-orange-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(249,115,22,0.65)]",
+  },
+  rose: {
+    tile: "bg-gradient-to-br from-rose-500/30 to-rose-500/5 ring-rose-400/25",
+    icon: "text-rose-200", ring: "group-hover:border-rose-400/45",
+    glow: "group-hover:shadow-[0_20px_44px_-22px_rgba(244,63,94,0.65)]",
+  },
+};
+
+/** Araç → renk. Anlamla eşleşir: Word mavi, Excel yeşil, PowerPoint turuncu,
+ *  güvenlik yeşil/kırmızı, yapay zekâ mor tonları. */
+const TOOL_HUE: Record<string, HueId> = {
+  // Yapay zekâ
+  "pdf-ozetle": "fuchsia",
+  "pdf-sohbet": "purple",
+  "pdf-ceviri": "indigo",
+  "pdf-karsilastir": "violet",
+  "pdf-veri-cikar": "teal",
+  "ai-toplu-islem": "purple",
+  "taranmis-pdf-ocr": "cyan",
+  "aranabilir-pdf": "sky",
+  // Düzenle
+  "pdf-duzenle": "amber",
+  "pdf-imzala": "rose",
+  "pdf-yorumla": "amber",
+  merge: "violet",
+  split: "indigo",
+  "organize-pdf": "sky",
+  "delete-pages": "rose",
+  "rotate-pdf": "cyan",
+  "crop-pdf": "teal",
+  "pdf-kesit-al": "lime",
+  compress: "emerald",
+  "gorsel-sikistir": "emerald",
+  "gorsel-boyutlandir": "lime",
+  "extract-images": "fuchsia",
+  "page-numbers": "blue",
+  watermark: "sky",
+  "flatten-pdf": "indigo",
+  // Dönüştür
+  "pdf-to-word": "blue",
+  "word-to-pdf": "blue",
+  "pdf-to-excel": "emerald",
+  "excel-to-pdf": "emerald",
+  "pdf-to-ppt": "orange",
+  "ppt-to-pdf": "orange",
+  "pdf-to-image": "cyan",
+  "image-to-pdf": "cyan",
+  "belge-tara": "teal",
+  "html-to-pdf": "sky",
+  "pdf-to-text": "violet",
+  // Güvenlik
+  encrypt: "emerald",
+  "unlock-pdf": "teal",
+  "hassas-veri-gizle": "rose",
+  "repair-pdf": "amber",
+};
+
 const CATEGORY_META: Record<
   CategoryId,
   { tr: string; en: string; ring: string; tint: string; text: string; glow: string }
@@ -481,6 +611,7 @@ export default function PdfToolsSection({
                   {items.map((t, i) => {
                     const { Icon } = t;
                     const copy = t[language];
+                    const hue = HUES[TOOL_HUE[t.id] ?? "violet"];
                     return (
                       <motion.button
                         key={t.id}
@@ -490,11 +621,13 @@ export default function PdfToolsSection({
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, amount: 0.2 }}
                         transition={{ duration: 0.35, delay: Math.min(i * 0.03, 0.2) }}
-                        className={`group relative flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${meta.ring} ${meta.glow}`}
+                        className={`group relative flex h-full flex-col rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:bg-white/[0.055] ${hue.ring} ${hue.glow}`}
                       >
                         <div className="flex items-start gap-3">
-                          <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ${meta.tint} ${meta.text}`}>
-                            <Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
+                          <span
+                            className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl shadow-inner shadow-black/20 ring-1 transition duration-200 group-hover:scale-[1.06] ${hue.tile} ${hue.icon}`}
+                          >
+                            <Icon className="h-5 w-5" strokeWidth={2} />
                           </span>
                           <div className="min-w-0 flex-1">
                             <span className="block truncate text-[14.5px] font-semibold text-white/90 transition group-hover:text-white">
