@@ -67,7 +67,7 @@ export const PLANS: PlanDefinition[] = [
     monthlyOnlyBilling: true,
     featuresTr: [
       "Tüm temel PDF araçları — ücretsiz",
-      "Birleştir, böl, döndür, sıkıştır, PDF→Metin",
+      "Birleştir, böl, döndür, sıkıştır, görsel→PDF",
       "Yapısal araçlar cihazınızda çalışır (dosya yüklenmez)",
       "Filigransız, reklamsız temiz çıktı — her planda",
       "Dosya boyutu ≤ 80 MB",
@@ -75,7 +75,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "All everyday PDF tools — free",
-      "Merge, split, rotate, compress, PDF→Text",
+      "Merge, split, rotate, compress, image→PDF",
       "Structural tools run on your device (no upload)",
       "Clean output — no watermark, no ads (every plan)",
       "Files up to 80 MB",
