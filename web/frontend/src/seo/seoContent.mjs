@@ -410,7 +410,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "PDF to Word converter — keep formatting",
-      "Convert PDF to Word (.docx) without losing fonts, tables, or layout. Fast, accurate PDF converter — free in your browser.",
+      "Convert PDF to Word (.docx) without losing fonts, tables, or layout. Fast, accurate PDF converter — free, no install needed.",
       "PDF to Word",
       "Convert PDF content into an editable Word (.docx) document. Fonts, tables and page layout are preserved so you can edit directly in Word.",
       ["pdf to word", "pdf to docx", "convert pdf to word"],
@@ -441,7 +441,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Word to PDF converter online",
-      "Convert Word documents to PDF online. Preserve layout and fonts — fast, free Word to PDF conversion in your browser.",
+      "Convert Word documents to PDF online. Preserve layout and fonts — fast, free Word to PDF conversion, no install needed.",
       "Word to PDF",
       "Convert DOC and DOCX documents into print-ready PDFs that look identical on every device. Fonts and page layout are preserved exactly.",
       ["word to pdf", "docx to pdf", "convert word to pdf"],
@@ -651,6 +651,7 @@ export const TOOL_SEO = {
       [
         { q: "Telefonla belge taramak için uygulama gerekir mi?", a: "Hayır. Sayfayı telefon tarayıcınızda açıp «Belge Tara»ya dokunmanız yeterli; kamerayı belgeye doğrultun, kenarlar otomatik bulunur ve PDF oluşur. Kurulum veya üyelik gerekmez." },
         { q: "Taradığım belge sunucuya yüklenir mi?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belgeniz internete gönderilmez." },
+        { q: "Otomatik çekim (telefonu tutunca kendi çekmesi) var mı?", a: "Evet, Pro planda. Telefonu belgenin üstünde tuttuğunuzda kenarlar canlı bulunur ve görüntü sabitlenince fotoğraf kendiliğinden çekilir; deklanşöre basmanız gerekmez. Ücretsiz planda fotoğrafı siz çekersiniz, kenarlar çekimden sonra otomatik bulunur." },
         { q: "Birden çok sayfayı tek PDF yapabilir miyim?", a: "Evet. Sayfaları arka arkaya tarayıp tek PDF'te birleştirebilirsiniz. Ücretsizde tek taramada 3 sayfa; sınırsız sayfa, gölge temizleme ve aranabilir PDF (OCR) Pro özellikleridir." },
         { q: "Taranan belgenin kalitesi nasıl artırılıyor?", a: "Araç perspektifi düzeltir (eğik çekimi düzleştirir), kenarları kırpar ve kontrastı iyileştirir; sonuç tarayıcıdan çıkmış gibi net olur." },
         { q: "Bilgisayardan da tarama yapabilir miyim?", a: "Evet. Telefon kamerasının yanı sıra bilgisayarınızdaki fotoğrafları da yükleyip belge PDF'ine dönüştürebilirsiniz." },
@@ -665,6 +666,7 @@ export const TOOL_SEO = {
       [
         { q: "Do I need an app to scan documents with my phone?", a: "No. Just open the page in your phone browser and tap «Scan document»; point the camera at the document, edges are detected automatically and a PDF is created. No install or sign-up needed." },
         { q: "Is my scanned document uploaded to a server?", a: "No. The camera frame, automatic edge detection and PDF creation all run on your device; your document is never sent to the internet." },
+        { q: "Is there automatic capture?", a: "Yes, on the Pro plan. Hold the phone over the document and the edges are tracked live; as soon as the view is steady the photo is taken for you — no shutter tap. On the free plan you take the photo and the edges are detected right after." },
         { q: "Can I make one PDF from several pages?", a: "Yes. Scan pages back-to-back and merge them into one PDF. Free allows 3 pages per scan; unlimited pages, shadow removal and searchable PDF (OCR) are Pro features." },
         { q: "How is the scan quality improved?", a: "The tool corrects perspective (flattens angled shots), crops the edges, and boosts contrast, so the result looks as crisp as a real scanner." },
         { q: "Can I scan from a computer too?", a: "Yes. Besides the phone camera, you can upload photos from your computer and turn them into a document PDF." },
@@ -1054,7 +1056,7 @@ export const TOOL_SEO = {
       [
         { q: "PDF'teki mevcut yazıyı nasıl silip değiştiririm?", a: "PDF'i yükleyin, editör tam ekran açılır. 'Metni Değiştir' ile değiştirmek istediğiniz yazının üstüne kutu çizin — o metin gelir, yenisini yazın (boş bırakırsanız silinir). «Tamam» → «PDF'i Hazırla» → indirin." },
         { q: "Metin gerçekten siliniyor mu, yoksa üstü mü örtülüyor?", a: "Gerçekten siliniyor. PyMuPDF redaction ile seçili bölgedeki metin PDF'ten kaldırılır (örtme değil), yerine yeni metin yazılır." },
-        { q: "Dosyam güvende mi?", a: "Evet. Gerçek metin düzenleme için dosya güvenli sunucumuzda işlenir ve işlem biter bitmez silinir, saklanmaz. (Diğer araçlarımız cihazınızda çalışır.)" },
+        { q: "Dosyam güvende mi?", a: "Evet. Gerçek metin düzenleme için dosya güvenli sunucumuzda işlenir ve işlem biter bitmez silinir, saklanmaz. (Birleştirme, bölme, kırpma, imzalama, işaretleme, tarama ve OCR gibi araçlarımız ise tamamen cihazınızda çalışır.)" },
         { q: "Yeni metin, görsel veya sayfa ekleyebilir miyim?", a: "Evet. Mevcut yazıyı değiştirmenin yanı sıra yeni metin kutuları ve görsel ekleyebilir, düzenlemenizi PDF olarak indirebilirsiniz." },
         { q: "Taranmış PDF'i düzenleyebilir miyim?", a: "Metin katmanı olan PDF'lerde en iyi sonucu alırsınız; taranmış belgelerde önce OCR ile metin oluşturmanız gerekir." },
       ],
@@ -1068,7 +1070,7 @@ export const TOOL_SEO = {
       [
         { q: "How do I delete and change existing text in a PDF?", a: "Upload the PDF and the editor opens full-screen. With 'Replace Text', draw a box over the text you want to change — it's captured, then type the new text (leave empty to delete). Click 'Done' → 'Prepare PDF' → download." },
         { q: "Is the text truly deleted or just covered?", a: "Truly deleted. Using PyMuPDF redaction, the text in the selected area is removed from the PDF (not covered), and new text is written in its place." },
-        { q: "Is my file safe?", a: "Yes. For real text editing the file is processed on our secure server and deleted right after — never stored. (Our other tools run on your device.)" },
+        { q: "Is my file safe?", a: "Yes. For real text editing the file is processed on our secure server and deleted right after — never stored. (Tools such as merge, split, crop, sign, annotate, scan and OCR do run entirely on your device.)" },
         { q: "Can I add new text, images, or pages?", a: "Yes. Besides changing existing text, you can add new text boxes and images, then download your edit as a PDF." },
         { q: "Can I edit a scanned PDF?", a: "You get the best results on PDFs with a text layer; for scanned documents, run OCR first to create the text." },
       ],
@@ -1365,10 +1367,10 @@ export const PRICING_SEO = {
   tr: {
     title: `PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi | ${BRAND}`,
     description:
-      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün koşulsuz para iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin.",
+      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün içinde gerekçesiz iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin.",
     h1: "PDF Platform Fiyatlandırma — Planlar ve Kredi Paketleri",
     intro:
-      "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlar 7 gün koşulsuz para iade garantisiyle gelir; istediğiniz zaman iptal edebilirsiniz.",
+      "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlarda ilk ödemeden itibaren 7 gün içinde gerekçesiz iade; istediğiniz zaman iptal edebilirsiniz.",
   },
   en: {
     title: `PDF Tools Pricing — 7-Day Money-Back Guarantee | ${BRAND}`,

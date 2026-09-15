@@ -234,7 +234,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — target: "edit pdf", "write on pdf"
           title: "Write on, erase and edit your PDF",
           benefit:
-            "White out existing text and type new, add text, highlight or draw — right in your browser, no install.",
+            "White out existing text and type new, add text, highlight or draw — no install, nothing to learn.",
         },
         {
           icon: "secure",
@@ -354,7 +354,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — data privacy / GDPR signal
           title: "Zero data retention — we don't store your files",
           description:
-            "Processed document contents are not retained as part of the core workflow, minimizing exposure and data-handling risk for your team.",
+            "Processed document contents are not retained as part of the core workflow; on server-side jobs the file is deleted as soon as it finishes. Only the scans you choose to save stay in your account.",
         },
       ],
     },
@@ -443,7 +443,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Can I edit and erase text on a PDF?",
         answer:
-          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw. It all runs in your browser with no install, and your file never leaves your device.",
+          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw — no install needed. Real text editing is processed on our secure server and the file is deleted as soon as it is done; highlighting and signing run entirely in your browser.",
       },
       {
         question: "Are my files uploaded to a server? Is it private?",
@@ -702,7 +702,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — veri gizliliği / GDPR / KVKK sinyali
           title: "Sıfır veri saklama — dosyalarınızı tutmuyoruz",
           description:
-            "İşlenen belge içerikleri temel iş akışı kapsamında saklanmaz; bu sayede ekibinizin veri maruziyeti ve işleme riski en aza indirilir.",
+            "İşlenen belge içerikleri iş akışının parçası olarak saklanmaz; sunucuda yapılan işlemlerde dosya işlem biter bitmez silinir. Yalnızca sizin kaydetmeyi seçtiğiniz taramalar hesabınızda tutulur.",
         },
       ],
     },
@@ -789,12 +789,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF üzerindeki yazıları düzenleyip silebilir miyim?",
         answer:
-          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Tümü tarayıcıda çalışır, kurulum gerekmez ve dosyanız cihazınızdan çıkmaz.",
+          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Kurulum gerekmez. Gerçek metin düzenlemesi için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir; vurgulama ve imza gibi işaretlemeler ise tamamen tarayıcınızda yapılır.",
       },
       {
         question: "Dosyalarım sunucuya yükleniyor mu? Güvenli mi?",
         answer:
-          "Temel araçlar (birleştir, böl, döndür, sil, düzenle, OCR) tamamen tarayıcınızda çalışır — dosyalarınız sunucuya yüklenmez. Bu sayede işlemler anında, gizli ve sınırsızdır. Yalnızca yapay zekâ özellikleri, yanıt üretmek için belgenin metnini güvenli biçimde işler.",
+          "Yapısal araçlar (birleştir, böl, döndür, sayfa sil, sırala, kırp), görsel araçları, belge tarama, imza, işaretleme ve OCR tamamen tarayıcınızda çalışır — bu araçlarda dosyanız sunucuya yüklenmez, işlem anında ve sınırsızdır. Dönüştürme, sıkıştırma, şifreleme, filigran ve PDF Düzenle gibi ağır işlemler ise güvenli sunucumuzda yapılır; dosya işlem bitince silinir. Yapay zekâ araçlarında yalnızca belgenin metni gönderilir, dosyanın kendisi yüklenmez.",
       },
       {
         question: "PDF dosyaları nasıl ücretsiz birleştirilir?",
@@ -815,7 +815,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Online PDF aracı kullanırken verilerim güvende mi?",
         answer:
-          "PDF Platform işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
+          "PDF Platform işlenen belge içeriklerini saklamaz; sunucuda yapılan işlemlerde dosya, işlem biter bitmez silinir. Tek istisna, sizin açıkça «Hesabıma kaydet» dediğiniz taramalardır — onları siz silene kadar hesabınızda tutarız. Tüm aktarımlar şifreli bağlantı üzerinden yapılır.",
       },
       {
         question: "PDF Platform yazılım yüklemeden çalışır mı?",

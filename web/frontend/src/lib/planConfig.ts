@@ -24,10 +24,11 @@ export const STARTER_TOOL_IDS: FeatureKey[] = [
   "image-to-pdf",
   "page-numbers",
   "watermark",
+  "extract-images",
 ];
 
 /** Tüm araç kataloğundaki toplam araç sayısı (Plus ve üzeri tüm araçları içerir). */
-export const TOTAL_TOOL_COUNT = 22;
+export const TOTAL_TOOL_COUNT = 23;
 
 export interface PlanDefinition {
   id: PlanId;
@@ -66,16 +67,16 @@ export const PLANS: PlanDefinition[] = [
     monthlyOnlyBilling: true,
     featuresTr: [
       "Tüm temel PDF araçları — ücretsiz",
-      "Birleştir, böl, döndür, sıkıştır, dönüştür",
-      "Çoğu araç cihazınızda çalışır (dosya yüklenmez)",
+      "Birleştir, böl, döndür, sıkıştır, PDF→Metin",
+      "Yapısal araçlar cihazınızda çalışır (dosya yüklenmez)",
       "Filigransız, reklamsız temiz çıktı — her planda",
       "Dosya boyutu ≤ 80 MB",
       "Ağır dönüştürmelerde adil kullanım",
     ],
     featuresEn: [
       "All everyday PDF tools — free",
-      "Merge, split, rotate, compress, convert",
-      "Most tools run on your device (no upload)",
+      "Merge, split, rotate, compress, PDF→Text",
+      "Structural tools run on your device (no upload)",
       "Clean output — no watermark, no ads (every plan)",
       "Files up to 80 MB",
       "Fair use on heavy conversions",
@@ -185,7 +186,7 @@ export const PLANS: PlanDefinition[] = [
       "Plus'taki her şey",
       "✨ Aylık 100 yapay zekâ işlemi",
       "✨ Tüm AI araçları: Özetle, Veri Çıkar, Çeviri, Karşılaştır, Gizle, Toplu",
-      "Geliştirici API erişimi",
+      "Geliştirici API erişimi (AI uçları)",
       "Dosya boyutu ≤ 500 MB",
       "Toplu işlem — 25 dosya",
       "Öncelikli destek",
@@ -194,7 +195,7 @@ export const PLANS: PlanDefinition[] = [
       "Everything in Plus",
       "✨ 100 AI operations/month",
       "✨ All AI tools: Summarize, Extract, Translate, Compare, Redact, Batch",
-      "Developer API access",
+      "Developer API access (AI endpoints)",
       "Files up to 500 MB",
       "Batch — 25 files",
       "Priority support",
