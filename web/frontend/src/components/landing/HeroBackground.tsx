@@ -17,8 +17,6 @@
  *     durur; kompozisyon sabit görüntü olarak kalır.
  */
 
-import { useEffect } from "react";
-
 /** Parçacıklar — sabit liste (rastgele üretim her render'da yer değiştirirdi). */
 const PARTICLES = [
   { left: "8%", delay: 0, dur: 26, size: 2 },
@@ -35,20 +33,20 @@ const PARTICLES = [
   { left: "93%", delay: 2, dur: 28, size: 1.5 },
 ];
 
-export function HeroBackground() {
-  // Gövdenin (body) kendi opak arka planı bu katmanın ÜSTÜNE boyanıyor ve
-  // kompozisyonu tamamen örtüyordu. Karşılama ekranı açıkken gövdeyi saydam
-  // yapıyoruz; zemin rengini bu katman veriyor. Sayfadan çıkınca geri alınır.
-  useEffect(() => {
-    document.body.classList.add("nb-hero-bg");
-    return () => document.body.classList.remove("nb-hero-bg");
-  }, []);
-
+/**
+ * NOT — yerleşim: Katman sayfa boyunca sabit durur (`fixed`), böylece aşağı
+ * inildikçe kompozisyon yavaşça kayar. Kökteki `isolate` sayesinde `-z-10`
+ * içeriğin altında kalır; gövdenin arka plan rengiyle oynamaya gerek yoktur.
+ */
+export function HeroBackground({
+  /** Katmanın kapladığı alan. Gerekirse tek ekranlık sayfalarda değiştirilir. */
+  className = "fixed inset-0",
+}: {
+  className?: string;
+}) {
   return (
     <>
       <style>{`
-        body.nb-hero-bg { background: transparent !important; }
-
         @keyframes hb-drift-a {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
           50%      { transform: translate3d(5%, 7%, 0) scale(1.12); }
@@ -91,8 +89,8 @@ export function HeroBackground() {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 overflow-hidden"
-        style={{ zIndex: -1, background: "#070a12" }}
+        className={`pointer-events-none -z-10 overflow-hidden ${className}`}
+        style={{ background: "#070a12" }}
       >
         {/* 1 — Ufuk parıltısı: sayfanın tepesinden inen ışık */}
         <div
@@ -222,10 +220,10 @@ export function HeroBackground() {
 
         {/* Alt karartma: sayfanın gövdesine yumuşak geçiş */}
         <div
-          className="absolute inset-x-0 bottom-0 h-[38vh]"
+          className="absolute inset-x-0 bottom-0 h-[42vh]"
           style={{
             background:
-              "linear-gradient(to bottom, transparent, rgba(7,10,18,0.7) 72%, #070a12)",
+              "linear-gradient(to bottom, transparent, rgba(7,10,18,0.72) 70%, #070a12)",
           }}
         />
       </div>

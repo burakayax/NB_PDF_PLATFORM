@@ -1923,10 +1923,14 @@ function Faq({ language }: { language: Language }) {
 function FinalCta({
   language,
   onUseWebApp,
+  onRegister,
+  isAuthenticated,
   windowsDownloadUrl,
 }: {
   language: Language;
   onUseWebApp: () => void;
+  onRegister: () => void;
+  isAuthenticated: boolean;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -1962,20 +1966,20 @@ function FinalCta({
             >
               {copy.finalCta.primaryCta}
             </motion.button>
-            <motion.div
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.97, y: 0 }}
-              transition={{ type: "spring", stiffness: 380, damping: 18 }}
-            >
-              <div className="relative">
-                <span className="inline-block px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold opacity-50 cursor-not-allowed">
-                  {copy.finalCta.secondaryCta}
-                </span>
-                <span className="absolute -top-2 -right-1 bg-amber-500 text-black text-[11px] font-bold px-2 py-1 rounded">
-                  {tr ? "Yakında" : "Coming"}
-                </span>
-              </div>
-            </motion.div>
+            {/* Ikinci dugme: eskiden tiklanamayan "Masaustu - Cok Yakinda"
+                rozetiydi. Calismayan bir dugme sayfanin sonunda guven kirar;
+                yerine gercekten ise yarayan ucretsiz kayit cagrisi kondu. */}
+            {!isAuthenticated && (
+              <motion.button
+                onClick={onRegister}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.97, y: 0 }}
+                transition={{ type: "spring", stiffness: 380, damping: 18 }}
+                className="px-8 py-4 rounded-xl border border-white/20 bg-white/[0.05] text-white font-semibold transition-colors hover:border-white/35 hover:bg-white/[0.09]"
+              >
+                {copy.finalCta.secondaryCta}
+              </motion.button>
+            )}
           </div>
         </motion.div>
       </div>
@@ -2304,7 +2308,9 @@ export function LandingPage({
   }, []);
 
   return (
-    <div className="min-h-screen text-white antialiased">
+    <div className="relative isolate min-h-screen text-white antialiased">
+      {/* Aurora katmani sayfanin ust kismina tutturulur; isolate sayesinde -z-10
+          icerigin altinda kalir, govdenin arka planiyla oynamak gerekmez. */}
       <HeroBackground />
       <Navbar
         language={language}
@@ -2358,6 +2364,8 @@ export function LandingPage({
         <FinalCta
           language={language}
           onUseWebApp={onUseWebApp}
+          onRegister={onRegister}
+          isAuthenticated={isAuthenticated}
           windowsDownloadUrl={windowsDownloadUrl}
         />
       </main>

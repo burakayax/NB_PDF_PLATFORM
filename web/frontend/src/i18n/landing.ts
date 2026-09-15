@@ -179,7 +179,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // Also used as meta description — MUST stay ≤155 characters.
       // Current length: 151 chars ✓
       description:
-        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation needed — works right in your browser. A Windows desktop app is coming soon.",
+        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation, no account needed — it works right in your browser.",
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -187,7 +187,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       highlights: [
         { label: "Built for", value: "Business-critical document handling" },
         { label: "Core value", value: "Less manual work, fewer file errors" },
-        { label: "Deployment", value: "Web browser (Windows desktop app coming soon)" },
+        { label: "Deployment", value: "Web browser — no installation" },
       ],
 
       quickStats: [
@@ -241,7 +241,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — target: "private pdf processing", "pdf without upload"
           title: "Your file is processed without leaving your device",
           benefit:
-            "Merge, split, rotate, delete, edit and OCR run in your browser — files are never uploaded. Private, instant and unlimited.",
+            "Merge, split, rotate, delete, crop, sign and OCR run in your browser — those files are never uploaded. Private, instant and unlimited.",
         },
         {
           icon: "merge",
@@ -368,19 +368,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     finalCta: {
-      kicker: "Start with the right PDF workflow for your team",
-      title:
-        "Start instantly in your browser — a dedicated desktop app is on the way.",
+      kicker: "The right PDF workflow for your team",
+      title: "Start right in your browser.",
       description:
-        "Open the web version for immediate PDF access. A Windows desktop app for offline, dedicated workflows is coming soon.",
-      primaryCta: "Use Web Version",
-      secondaryCta: "Desktop App — Coming Soon",
+        "No installation, no account required. Open the workspace and handle your first document in seconds.",
+      primaryCta: "Open the Workspace",
+      secondaryCta: "Create a Free Account",
     },
 
     footer: {
       description:
         "Professional PDF management software — merge, convert, compress, and sign PDFs for business workflows.",
-      availability: "Web · Windows app coming soon",
+      availability: "Runs in your browser · no install",
       security: "Secure document operations",
       contact: "Contact",
       termsLabel: "Terms of Service",
@@ -516,7 +515,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // meta description olarak da kullanılır — ≤155 karakter.
       // Mevcut uzunluk: 148 karakter ✓
       description:
-        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan çalışır. Masaüstü uygulaması çok yakında.",
+        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez, üyelik istemez — doğrudan tarayıcıdan çalışır.",
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",
@@ -532,7 +531,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         },
         {
           label: "Erişim modeli",
-          value: "Web tarayıcısı (Windows masaüstü uygulaması çok yakında)",
+          value: "Web tarayıcısı — kurulum gerekmez",
         },
       ],
 
@@ -587,7 +586,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — hedef: "gizli pdf işleme", "dosya yüklemeden pdf"
           title: "Dosyanız cihazınızdan çıkmadan işlenir",
           benefit:
-            "Birleştir, böl, döndür, sil, düzenle ve OCR işlemleri tarayıcınızda yapılır — dosyalar sunucuya yüklenmez. Gizli, anında ve sınırsız.",
+            "Birleştir, böl, döndür, sil, kırp, imzala ve OCR işlemleri tarayıcınızda yapılır — bu araçlarda dosya sunucuya yüklenmez. Gizli, anında ve sınırsız.",
         },
         {
           icon: "merge",
@@ -687,7 +686,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           // H3 — yerel işleme = gizlilik sinyali (güven + farklılaşma)
           // DÜZELTİLDİ: Önceki sürümde ASCII karakterler kullanılmıştı (cikmaz, uygulamasi)
-          title: "PDF dosyalarınız cihazınızdan çıkmaz (Windows uygulaması — çok yakında)",
+          title: "Yapısal araçlarda PDF dosyalarınız cihazınızdan çıkmaz",
           description:
             "Yakında çıkacak Windows uygulaması tüm dosyaları cihazınızda yerel olarak işleyecek; hassas iş belgeleri her zaman doğrudan sizin kontrolünüzde kalacak.",
         },
@@ -716,18 +715,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     finalCta: {
-      kicker: "Ekibiniz için doğru PDF iş akışını seçin",
-      title: "Hemen tarayıcıdan başlayın — özel masaüstü uygulaması çok yakında.",
+      kicker: "Ekibiniz için doğru PDF iş akışı",
+      title: "Hemen tarayıcıdan başlayın.",
       description:
-        "Anında PDF erişimi için web sürümünü açın. Çevrimdışı ve yüksek hacimli işlemler için Windows uygulaması çok yakında geliyor.",
-      primaryCta: "Web Sürümünü Aç",
-      secondaryCta: "Masaüstü Sürümü — Çok Yakında",
+        "Kurulum yok, üyelik zorunlu değil. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
+      primaryCta: "Çalışma Alanını Aç",
+      secondaryCta: "Ücretsiz Üye Ol",
     },
 
     footer: {
       description:
         "Profesyonel PDF yönetim yazılımı — iş süreçleri için PDF birleştirme, dönüştürme, sıkıştırma ve imzalama.",
-      availability: "Web · Windows uygulaması çok yakında",
+      availability: "Tarayıcıdan çalışır · kurulum gerekmez",
       security: "Güvenli belge operasyonları",
       contact: "İletişim",
       termsLabel: "Hizmet Şartları",
