@@ -50,8 +50,12 @@ export function DocumentScannerLaunch({
         </p>
         <p className="mt-1 text-[13px] leading-relaxed text-slate-400">
           {tr
-            ? "Kamerayı belgeye doğrult — kenarlar otomatik bulunur, belge sabitlenince kendiliğinden çekilir ve PDF olur."
-            : "Point the camera at the document — edges are detected automatically, it captures when steady and becomes a PDF."}
+            ? isPro
+              ? "Kamerayı belgeye doğrult — kenarlar canlı bulunur, belge sabitlenince kendiliğinden çekilir ve PDF olur."
+              : "Kamerayı belgeye doğrult, fotoğrafı çek — kenarlar otomatik bulunur, perspektif düzelir ve PDF olur. (Sabitlenince kendiliğinden çekme Pro'da.)"
+            : isPro
+              ? "Point the camera at the document — edges are tracked live, it captures when steady and becomes a PDF."
+              : "Point the camera and take the shot — edges are detected for you, perspective is fixed and you get a PDF. (Hands-free auto capture is on Pro.)"}
         </p>
 
         <button
