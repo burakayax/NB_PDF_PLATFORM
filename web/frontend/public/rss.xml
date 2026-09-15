@@ -50,7 +50,9 @@
       <category>Görsel</category>
       <category>Kesit Alma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" type="image/png" length="61279" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-ten-kesit-alma-gorsel-kirpma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-ten-kesit-alma-gorsel-kirpma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-ten-kesit-alma-gorsel-kirpma.png" />
     </item>
     <item>
@@ -84,7 +86,9 @@
       <category>Sosyal Medya</category>
       <category>Boyutlandırma</category>
       <enclosure url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" type="image/png" length="59672" />
-      <media:content url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/gorsel-boyutlandirma-sosyal-medya.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/gorsel-boyutlandirma-sosyal-medya.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/gorsel-boyutlandirma-sosyal-medya.png" />
     </item>
     <item>
@@ -116,7 +120,9 @@
       <category>Görsel</category>
       <category>Resim Çıkarma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" type="image/png" length="58077" />
-      <media:content url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdften-gorsel-resim-cikarma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdften-gorsel-resim-cikarma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdften-gorsel-resim-cikarma.png" />
     </item>
     <item>
@@ -143,7 +149,9 @@
       <category>Rehber</category>
       <category>Gizlilik</category>
       <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" type="image/png" length="54209" />
-      <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/ucretsiz-pdf-araci-nasil-secilir.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/ucretsiz-pdf-araci-nasil-secilir.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ucretsiz-pdf-araci-nasil-secilir.png" />
     </item>
     <item>
@@ -165,7 +173,9 @@
       <category>Nasıl Yapılır</category>
       <category>Sıkıştırma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" type="image/png" length="54702" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-kucultme-eposta-whatsapp.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-kucultme-eposta-whatsapp.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" />
     </item>
     <item>
@@ -187,7 +197,9 @@
       <category>Nasıl Yapılır</category>
       <category>Mobil</category>
       <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" type="image/png" length="58244" />
-      <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/telefonda-pdf-duzenleme-uygulamasiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/telefonda-pdf-duzenleme-uygulamasiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" />
     </item>
     <item>
@@ -209,7 +221,9 @@
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
       <enclosure url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" type="image/png" length="58643" />
-      <media:content url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/adobe-acrobat-alternatifi-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/adobe-acrobat-alternatifi-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" />
     </item>
     <item>
@@ -231,7 +245,9 @@
       <category>Nasıl Yapılır</category>
       <category>Kırpma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="57772" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-kirpma-kenar-boslugu-kesme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" />
     </item>
     <item>
@@ -253,7 +269,9 @@
       <category>Nasıl Yapılır</category>
       <category>Dönüştürme</category>
       <enclosure url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" type="image/png" length="60612" />
-      <media:content url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/cv-ozgecmis-word-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/cv-ozgecmis-word-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" />
     </item>
     <item>
@@ -275,7 +293,9 @@
       <category>Nasıl Yapılır</category>
       <category>Form</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" type="image/png" length="55310" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-form-doldurma-online-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-form-doldurma-online-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" />
     </item>
     <item>
@@ -300,7 +320,9 @@
       <category>Karşılaştırma</category>
       <category>Gizlilik</category>
       <enclosure url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" type="image/png" length="58887" />
-      <media:content url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" />
     </item>
     <item>
@@ -323,7 +345,9 @@
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
       <enclosure url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" type="image/png" length="59636" />
-      <media:content url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/smallpdf-alternatifi-sinirsiz-ucretsiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" />
     </item>
     <item>
@@ -347,7 +371,9 @@
       <category>Nasıl Yapılır</category>
       <category>Düzenleme</category>
       <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" type="image/png" length="57731" />
-      <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/ucretsiz-pdf-duzenleyici-rehberi.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" />
     </item>
     <item>
@@ -371,7 +397,9 @@
       <category>Word</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" type="image/png" length="55963" />
-      <media:content url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/word-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/word-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/word-pdf-cevirme.png" />
     </item>
     <item>
@@ -401,7 +429,9 @@
       <category>PDF Araçları</category>
       <category>Ücretsiz</category>
       <enclosure url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" type="image/png" length="54657" />
-      <media:content url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/en-iyi-ucretsiz-pdf-araclari.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/en-iyi-ucretsiz-pdf-araclari.png" />
     </item>
     <item>
@@ -426,7 +456,9 @@
       <category>Excel</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" type="image/png" length="56033" />
-      <media:content url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/excel-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/excel-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" />
     </item>
     <item>
@@ -454,7 +486,9 @@
       <category>Görsel</category>
       <category>JPG</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" type="image/png" length="54879" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" />
     </item>
     <item>
@@ -478,7 +512,9 @@
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
       <enclosure url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" type="image/png" length="59958" />
-      <media:content url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" />
     </item>
     <item>
@@ -501,7 +537,9 @@
       <category>PDF</category>
       <category>Onarma</category>
       <enclosure url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" type="image/png" length="55918" />
-      <media:content url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" />
     </item>
     <item>
@@ -523,7 +561,9 @@
       <category>Excel</category>
       <category>Tablo</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" type="image/png" length="55693" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" />
     </item>
     <item>
@@ -548,7 +588,9 @@
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
       <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" type="image/png" length="57764" />
-      <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" />
     </item>
     <item>
@@ -571,7 +613,9 @@
       <category>PowerPoint</category>
       <category>Sunum</category>
       <enclosure url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" type="image/png" length="55691" />
-      <media:content url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" />
     </item>
     <item>
@@ -595,7 +639,9 @@
       <category>Karşılaştırma</category>
       <category>Sözleşme</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" type="image/png" length="57344" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" />
     </item>
     <item>
@@ -619,7 +665,9 @@
       <category>Gizlilik</category>
       <category>Redaction</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" type="image/png" length="57262" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" />
     </item>
     <item>
@@ -643,7 +691,9 @@
       <category>PDF</category>
       <category>Metin</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" type="image/png" length="56746" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" />
     </item>
     <item>
@@ -665,7 +715,9 @@
       <category>PDF</category>
       <category>Sayfa Numarası</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" type="image/png" length="55251" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" />
     </item>
     <item>
@@ -691,7 +743,9 @@
       <category>Alternatif</category>
       <category>Gizlilik</category>
       <enclosure url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" type="image/png" length="56923" />
-      <media:content url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" />
     </item>
     <item>
@@ -716,7 +770,9 @@
       <category>Mobil</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" type="image/png" length="58215" />
-      <media:content url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" />
     </item>
     <item>
@@ -741,7 +797,9 @@
       <category>Kalite</category>
       <category>PDF</category>
       <enclosure url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" type="image/png" length="56808" />
-      <media:content url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" />
     </item>
     <item>
@@ -766,7 +824,9 @@
       <category>Aranabilir PDF</category>
       <category>Tarama</category>
       <enclosure url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" type="image/png" length="58069" />
-      <media:content url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" />
+      <media:content url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" />
     </item>
   </channel>

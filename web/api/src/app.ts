@@ -29,6 +29,7 @@ import { registerLifecycleEmailJobs } from "./jobs/lifecycleEmailJobs.js";
 import { registerCheckoutRecoveryJobs } from "./jobs/checkoutRecoveryJobs.js";
 import { registerLimitReachedEmailJobs } from "./jobs/limitReachedEmailJobs.js";
 import { registerPlanOverrideJobs } from "./jobs/planOverrideJobs.js";
+import { registerSocialPostJobs } from "./jobs/socialPostJobs.js";
 
 /** localhost ↔ 127.0.0.1 (aynı port) tarayıcıda farklı origin sayılır; ikisini de CORS’ta kabul eder. */
 /**
@@ -195,6 +196,7 @@ registerLifecycleEmailJobs();
 registerCheckoutRecoveryJobs();
 registerLimitReachedEmailJobs();
 registerPlanOverrideJobs();
+registerSocialPostJobs();
 
 // İstek yolunu sorgu dizesi olmadan döndürür; günlük ve hata kayıtlarında tutarlı anahtar üretir.
 // Express'te path ve originalUrl farklı bağlamlarda farklı değerler verebileceği için tek yerde toplanır.

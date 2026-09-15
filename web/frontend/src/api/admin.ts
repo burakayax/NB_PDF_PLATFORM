@@ -880,3 +880,153 @@ export async function adminResetUserRateLimit(
   }
   return r.json();
 }
+
+// ─── Sosyal medya otomasyonu ─────────────────────────────────────────────────
+
+export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST";
+
+export type SocialConfig = {
+  enabled: boolean;
+  hour: number;
+  minute: number;
+  timeZone: string;
+  lang: "tr" | "en";
+  recycleOldPosts: boolean;
+};
+
+export type SocialAccountRow = {
+  platform: SocialPlatformId;
+  label: string;
+  connected: boolean;
+  enabled: boolean;
+  displayName: string;
+  filledFields: string[];
+  tokenExpiresAt: string | null;
+  lastError: string | null;
+  updatedAt: string | null;
+};
+
+export type SocialPlatformSpec = {
+  platform: SocialPlatformId;
+  label: string;
+  maxChars: number;
+  imageRequired: boolean;
+  imageFormat: "wide" | "square" | "tall";
+  fields: { key: string; label: string; help: string }[];
+};
+
+export type SocialPostRow = {
+  id: string;
+  platform: SocialPlatformId;
+  title: string;
+  linkUrl: string;
+  body: string;
+  imageUrl: string | null;
+  status: "DRAFT" | "QUEUED" | "PUBLISHING" | "PUBLISHED" | "FAILED" | "SKIPPED";
+  scheduledAt: string;
+  publishedAt: string | null;
+  externalUrl: string | null;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SocialStats = {
+  draft: number;
+  queued: number;
+  published: number;
+  failed: number;
+  lastPublishedAt: string | null;
+};
+
+export type SocialOverview = {
+  config: SocialConfig;
+  accounts: SocialAccountRow[];
+  platforms: SocialPlatformSpec[];
+  stats: SocialStats;
+  /** Bir sonraki otomatik paylaşım anı (ISO) — otomasyon kapalıysa null. */
+  nextRunAt: string | null;
+  feedUrl: string;
+};
+
+export async function fetchSocialOverview(accessToken: string): Promise<SocialOverview> {
+  const r = await adminFetch(accessToken, "/social/overview");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialOverview>;
+}
+
+export async function saveSocialConfig(
+  accessToken: string,
+  patch: Partial<SocialConfig>,
+): Promise<{ config: SocialConfig }> {
+  const r = await adminFetch(accessToken, "/social/config", { method: "PUT", body: JSON.stringify(patch) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ config: SocialConfig }>;
+}
+
+export async function saveSocialAccount(
+  accessToken: string,
+  body: { platform: SocialPlatformId; displayName?: string; enabled?: boolean; secrets: Record<string, string> },
+): Promise<{ accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, "/social/accounts", { method: "PUT", body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ accounts: SocialAccountRow[] }>;
+}
+
+export async function disconnectSocialAccount(
+  accessToken: string,
+  platform: SocialPlatformId,
+): Promise<{ accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, `/social/accounts/${platform}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ accounts: SocialAccountRow[] }>;
+}
+
+export async function fetchSocialPosts(accessToken: string): Promise<{ posts: SocialPostRow[] }> {
+  const r = await adminFetch(accessToken, "/social/posts");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ posts: SocialPostRow[] }>;
+}
+
+export async function checkSocialFeed(accessToken: string): Promise<{
+  count: number;
+  latest: { title: string; link: string; publishedAt: number; images: Record<string, string> }[];
+}> {
+  const r = await adminFetch(accessToken, "/social/feed-check");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{
+    count: number;
+    latest: { title: string; link: string; publishedAt: number; images: Record<string, string> }[];
+  }>;
+}
+
+export type SocialQueueResult = {
+  queued: { platform: SocialPlatformId; title: string }[];
+  /** platform null → tüm platformları ilgilendiren sebep. */
+  skipped: { platform: SocialPlatformId | null; reason: string }[];
+};
+
+export async function queueSocialPosts(accessToken: string): Promise<SocialQueueResult> {
+  const r = await adminFetch(accessToken, "/social/queue", { method: "POST", body: JSON.stringify({}) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialQueueResult>;
+}
+
+export async function publishSocialPost(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/publish`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+export async function updateSocialPostBody(accessToken: string, id: string, body: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ body }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+export async function deleteSocialPost(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
+}

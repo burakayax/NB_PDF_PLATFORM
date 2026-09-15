@@ -1,0 +1,219 @@
+/**
+ * Sosyal medya otomasyonunun saf mantığı: metin kısaltma, etiket üretimi,
+ * besleme ayrıştırma ve bir sonraki yayın anının hesabı.
+ *
+ * Bu dört nokta sessizce bozulduğunda sonuç yayına çıkmış kusurlu bir gönderi
+ * olur (yarım bağlantı, yanlış saat, kayıp görsel) — bu yüzden testleniyorlar.
+ */
+
+import { describe, it, expect, beforeAll, afterEach, vi } from "vitest";
+
+beforeAll(() => {
+  process.env.FRONTEND_ORIGIN = "https://example.test";
+});
+
+// ─── Metin kısaltma ───────────────────────────────────────────────────────────
+
+describe("clamp — gönderi metnini sınıra sığdırma", () => {
+  it("sınırın altındaki metne dokunmaz", async () => {
+    const { clamp } = await import("../modules/social/copy.service.js");
+    expect(clamp("kısa metin", 100)).toBe("kısa metin");
+  });
+
+  it("uzun gövdeyi keser ama sondaki bağlantıyı bozmadan korur", async () => {
+    const { clamp } = await import("../modules/social/copy.service.js");
+    const url = "https://example.test/blog/uzun-bir-yazi-adresi";
+    const text = `${"kelime ".repeat(80).trim()}\n\n${url}`;
+
+    const out = clamp(text, 250);
+
+    expect(out.length).toBeLessThanOrEqual(250);
+    expect(out).toContain(url);
+    expect(out.endsWith(url)).toBe(true);
+  });
+
+  it("bağlantıyı ve etiket satırını birlikte korur", async () => {
+    const { clamp } = await import("../modules/social/copy.service.js");
+    const url = "https://example.test/blog/yazi";
+    const tags = "#PdfAraclari #Belge";
+    const text = `${"kelime ".repeat(60).trim()}\n\n${url}\n\n${tags}`;
+
+    const out = clamp(text, 200);
+
+    expect(out.length).toBeLessThanOrEqual(200);
+    expect(out).toContain(url);
+    expect(out).toContain(tags);
+  });
+
+  it("gövde içinde kalan yarım adresi tamamen atar", async () => {
+    const { clamp } = await import("../modules/social/copy.service.js");
+    const text = `${"a".repeat(60)} https://example.test/cok/uzun/bir/adres/olsun/da/kesilsin`;
+
+    const out = clamp(text, 80);
+
+    expect(out.length).toBeLessThanOrEqual(80);
+    // Yarım bir adres tıklanmaz ve yanlış sayfaya gidebilir: hiç kalmamalı.
+    expect(out).not.toMatch(/https?:\/\//);
+  });
+});
+
+// ─── Etiketler ────────────────────────────────────────────────────────────────
+
+describe("toHashtag", () => {
+  it("Türkçe harfleri sadeleştirip birleşik yazar", async () => {
+    const { toHashtag } = await import("../modules/social/copy.service.js");
+    expect(toHashtag("PDF Araçları")).toBe("#PdfAraclari");
+    expect(toHashtag("görsel işleme")).toBe("#GorselIsleme");
+  });
+
+  it("harfle başlamayan ya da boş kalan adayı eler", async () => {
+    const { toHashtag } = await import("../modules/social/copy.service.js");
+    expect(toHashtag("2026")).toBe("");
+    expect(toHashtag("!!!")).toBe("");
+  });
+});
+
+// ─── Besleme ayrıştırma ───────────────────────────────────────────────────────
+
+const FEED_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>Kanal</title>
+    <item>
+      <title>Bir&apos;inci Yazı &amp; Başlık</title>
+      <link>https://example.test/blog/bir</link>
+      <guid isPermaLink="true">https://example.test/blog/bir</guid>
+      <pubDate>Thu, 10 Sep 2026 20:54:00 GMT</pubDate>
+      <description><![CDATA[Özet metni]]></description>
+      <category>PDF</category>
+      <category>Belge</category>
+      <enclosure url="https://example.test/covers/bir.png" type="image/png" length="100" />
+      <media:content url="https://example.test/covers/bir.png" medium="image" width="1200" height="630" />
+      <media:content url="https://example.test/covers/square/bir.png" medium="image" width="1080" height="1080" />
+      <media:content url="https://example.test/covers/tall/bir.png" medium="image" width="1000" height="1500" />
+    </item>
+    <item>
+      <title>İkinci Yazı</title>
+      <link>https://example.test/blog/iki</link>
+      <guid isPermaLink="true">https://example.test/blog/iki</guid>
+      <pubDate>Fri, 11 Sep 2026 08:00:00 GMT</pubDate>
+      <description>Kısa özet</description>
+    </item>
+  </channel>
+</rss>`;
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("fetchFeedItems", () => {
+  function stubFeed(xml: string) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(xml, { status: 200, headers: { "content-type": "application/rss+xml" } })),
+    );
+  }
+
+  it("yazıları okur, yeniden eskiye sıralar ve kaçış dizilerini çözer", async () => {
+    stubFeed(FEED_XML);
+    const { fetchFeedItems } = await import("../modules/social/rss.service.js");
+
+    const items = await fetchFeedItems("tr");
+
+    expect(items).toHaveLength(2);
+    // 11 Eylül, 10 Eylül'den yeni: başa gelmeli.
+    expect(items[0]?.title).toBe("İkinci Yazı");
+    expect(items[1]?.title).toBe("Bir'inci Yazı & Başlık");
+    expect(items[1]?.summary).toBe("Özet metni");
+    expect(items[1]?.categories).toEqual(["PDF", "Belge"]);
+  });
+
+  it("görselleri en-boy oranına göre ayırır", async () => {
+    stubFeed(FEED_XML);
+    const { fetchFeedItems } = await import("../modules/social/rss.service.js");
+
+    const withImages = (await fetchFeedItems("tr")).find((i) => i.guid.endsWith("/bir"));
+
+    expect(withImages?.images).toEqual({
+      wide: "https://example.test/covers/bir.png",
+      square: "https://example.test/covers/square/bir.png",
+      tall: "https://example.test/covers/tall/bir.png",
+    });
+  });
+
+  it("görsel etiketi yoksa enclosure'a düşer", async () => {
+    stubFeed(FEED_XML);
+    const { fetchFeedItems } = await import("../modules/social/rss.service.js");
+
+    const plain = (await fetchFeedItems("tr")).find((i) => i.guid.endsWith("/iki"));
+
+    expect(plain?.images.wide).toBeUndefined();
+  });
+
+  it("besleme okunamazsa hata fırlatır", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("yok", { status: 404 })));
+    const { fetchFeedItems } = await import("../modules/social/rss.service.js");
+
+    await expect(fetchFeedItems("tr")).rejects.toThrow(/RSS okunamadı/);
+  });
+});
+
+// ─── Sonraki yayın anı ────────────────────────────────────────────────────────
+
+describe("nextRunAt", () => {
+  const base = {
+    enabled: true,
+    hour: 10,
+    minute: 0,
+    timeZone: "Europe/Istanbul",
+    lang: "tr" as const,
+    recycleOldPosts: true,
+  };
+
+  it("otomasyon kapalıyken null döner", async () => {
+    const { nextRunAt } = await import("../modules/social/social.service.js");
+    expect(nextRunAt({ ...base, enabled: false })).toBeNull();
+  });
+
+  it("saat henüz gelmediyse bugünü verir", async () => {
+    const { nextRunAt } = await import("../modules/social/social.service.js");
+    // 15 Eylül 2026, 06:00 UTC = İstanbul'da 09:00 → hedef 10:00 henüz gelmedi.
+    const next = nextRunAt(base, new Date("2026-09-15T06:00:00Z"));
+    expect(next?.toISOString()).toBe("2026-09-15T07:00:00.000Z");
+  });
+
+  it("saat geçtiyse ertesi güne kayar", async () => {
+    const { nextRunAt } = await import("../modules/social/social.service.js");
+    // İstanbul'da 11:00 → bugünün 10:00'ı geçti.
+    const next = nextRunAt(base, new Date("2026-09-15T08:00:00Z"));
+    expect(next?.toISOString()).toBe("2026-09-16T07:00:00.000Z");
+  });
+
+  it("yaz saati uygulayan bir bölgede yerel saati korur", async () => {
+    const { nextRunAt } = await import("../modules/social/social.service.js");
+    const cfg = { ...base, timeZone: "Europe/Berlin" };
+
+    // Yaz saatinde (UTC+2) ve kış saatinde (UTC+1) aynı YEREL saat beklenir.
+    const summer = nextRunAt(cfg, new Date("2026-07-15T05:00:00Z"));
+    const winter = nextRunAt(cfg, new Date("2026-01-15T05:00:00Z"));
+
+    expect(summer?.toISOString()).toBe("2026-07-15T08:00:00.000Z");
+    expect(winter?.toISOString()).toBe("2026-01-15T09:00:00.000Z");
+  });
+});
+
+// ─── Takvim günü ──────────────────────────────────────────────────────────────
+
+describe("calendarDayKey", () => {
+  it("günü sunucunun değil, ayarlanan bölgenin saatine göre belirler", async () => {
+    const { calendarDayKey } = await import("../modules/social/social.service.js");
+    // UTC'de hâlâ 15 Eylül, İstanbul'da 16 Eylül olmuş.
+    expect(calendarDayKey(new Date("2026-09-15T22:30:00Z"), "Europe/Istanbul")).toBe("2026-09-16");
+    expect(calendarDayKey(new Date("2026-09-15T22:30:00Z"), "UTC")).toBe("2026-09-15");
+  });
+
+  it("geçersiz saat dilimini UTC'ye düşürür", async () => {
+    const { calendarDayKey } = await import("../modules/social/social.service.js");
+    expect(calendarDayKey(new Date("2026-09-15T22:30:00Z"), "Yok/Boyle_Bir_Yer")).toBe("2026-09-15");
+  });
+});

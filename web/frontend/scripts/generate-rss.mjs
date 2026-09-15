@@ -228,6 +228,20 @@ function buildFeed(lang, baseUrl, coverMap, publicDir) {
         (lang === "en" ? "/og-image-en.png" : "/og-image.png");
       const image = `${baseUrl}${coverRel}`;
       const imageBytes = fileBytes(publicDir, coverRel);
+
+      // Her ağ farklı en-boy oranı bekler. Kare (Instagram) ve dikey (Pinterest)
+      // kesimler de beslemeye yazılır; otomasyon hedefe uygun olanı seçer.
+      const variants = [
+        { key: "square", w: 1080, h: 1080 },
+        { key: "tall", w: 1000, h: 1500 },
+      ]
+        .map(({ key, w, h }) => {
+          const rel = coverMap?.get(`${lang}:${post.slug}:${key}`);
+          if (!rel) return "";
+          return `      <media:content url="${escapeXml(`${baseUrl}${rel}`)}" medium="image" type="image/png" width="${w}" height="${h}" />`;
+        })
+        .filter(Boolean)
+        .join("\n");
       const tags = post.tags?.[lang] ?? post.tags?.tr ?? [];
       const summary = copy.excerpt || copy.description || "";
       const body = renderBlocksHtml(copy.blocks, baseUrl, lang);
@@ -242,7 +256,8 @@ function buildFeed(lang, baseUrl, coverMap, publicDir) {
       <content:encoded>${cdata(body)}</content:encoded>
 ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}
       <enclosure url="${escapeXml(image)}" type="image/png" length="${imageBytes}" />
-      <media:content url="${escapeXml(image)}" medium="image" type="image/png" />
+      <media:content url="${escapeXml(image)}" medium="image" type="image/png" width="1200" height="630" />
+${variants}
       <media:thumbnail url="${escapeXml(image)}" />
     </item>`;
     })

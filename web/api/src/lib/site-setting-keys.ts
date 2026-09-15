@@ -19,6 +19,8 @@ export const SITE_SETTING_KEYS = {
   PAYMENT_PRICES_LEGACY: "payment.prices",
   /** Marketing automation: JSON { welcomeEnabled, lifecycleEnabled, upgradeCtaUrl, winbackCouponCode, exitIntentCouponCode, exitIntentDiscountPercent } */
   EMAIL_AUTOMATION: "email.automation",
+  /** Sosyal medya otomasyonu: JSON { enabled, hour, minute, timeZone, lang, platforms[] } */
+  SOCIAL_AUTOMATION: "social.automation",
 } as const;
 
 export type SiteSettingKey = (typeof SITE_SETTING_KEYS)[keyof typeof SITE_SETTING_KEYS];

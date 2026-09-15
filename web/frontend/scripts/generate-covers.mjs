@@ -29,19 +29,40 @@ import { localizedPath } from "../src/seo/enSlugs.mjs";
 
 // ─── Ölçüler ──────────────────────────────────────────────────────────────────
 
-/** 1200×630: LinkedIn, Facebook, X ve site paylaşım görselinin ortak standardı. */
-const W = 1200;
-const H = 630;
+/**
+ * Kapak boyutları. Her sosyal ağ farklı en-boy oranı bekler; tek bir yatay
+ * görseli hepsine göndermek Instagram'da kırpılmaya, Pinterest'te ise akışta
+ * neredeyse görünmemeye yol açar. Bu yüzden her yazı için üç kesim üretilir:
+ *
+ *   wide (1200×630)  → site paylaşım görseli, X, LinkedIn, Facebook
+ *   square (1080×1080) → Instagram
+ *   tall (1000×1500) → Pinterest (2:3, panoların standardı)
+ *
+ * Ölçüler `wide` tasarımından oranlanarak türetilir; punto ve kenar boşlukları
+ * genişlikle birlikte ölçeklenir ki dar kesimde yazı taşmasın.
+ */
+const FORMATS = {
+  wide: { key: "wide", w: 1200, h: 630, maxLines: 4 },
+  square: { key: "square", w: 1080, h: 1080, maxLines: 6 },
+  tall: { key: "tall", w: 1000, h: 1500, maxLines: 7 },
+};
+
+/** Ölçeklendirmenin referans genişliği (wide kesimi). */
+const BASE_W = 1200;
 
 const MARGIN = 72;
 const LOGO_W = 210;
-const TITLE_MAX_LINES = 4;
 const TITLE_SIZE_MAX = 62;
 const TITLE_SIZE_MIN = 34;
 const TITLE_LINE_RATIO = 1.24;
 
 /** Tasarım değişince bu numarayı artır → tüm kapaklar yeniden üretilir. */
-const DESIGN_VERSION = 1;
+const DESIGN_VERSION = 3;
+
+/** Bir formatın ölçek katsayısı — punto ve boşluklar bununla çarpılır. */
+function formatScale(fmt) {
+  return fmt.w / BASE_W;
+}
 
 // ─── Renkler ──────────────────────────────────────────────────────────────────
 
@@ -122,37 +143,45 @@ function wrap(font, text, size, maxWidth) {
 }
 
 /** Başlık kutuya sığana kadar punto düşürülür; sığmazsa son satır kısaltılır. */
-function fitTitle(font, title, maxWidth) {
-  for (let size = TITLE_SIZE_MAX; size >= TITLE_SIZE_MIN; size -= 2) {
+function fitTitle(font, title, maxWidth, maxLines, scale) {
+  const sizeMax = Math.round(TITLE_SIZE_MAX * scale);
+  const sizeMin = Math.round(TITLE_SIZE_MIN * scale);
+  for (let size = sizeMax; size >= sizeMin; size -= 2) {
     const lines = wrap(font, title, size, maxWidth);
-    if (lines.length <= TITLE_MAX_LINES) return { size, lines };
+    if (lines.length <= maxLines) return { size, lines };
   }
-  const lines = wrap(font, title, TITLE_SIZE_MIN, maxWidth).slice(0, TITLE_MAX_LINES);
-  if (lines.length === TITLE_MAX_LINES) {
-    lines[TITLE_MAX_LINES - 1] = `${lines[TITLE_MAX_LINES - 1].replace(/[\s.,;:]+$/, "")}…`;
+  const lines = wrap(font, title, sizeMin, maxWidth).slice(0, maxLines);
+  if (lines.length === maxLines) {
+    lines[maxLines - 1] = `${lines[maxLines - 1].replace(/[\s.,;:]+$/, "")}…`;
   }
-  return { size: TITLE_SIZE_MIN, lines };
+  return { size: sizeMin, lines };
 }
 
 // ─── Kapak SVG'si ─────────────────────────────────────────────────────────────
 
-function buildSvg({ title, footer, accent, bold, regular }) {
+function buildSvg({ title, footer, accent, bold, regular, fmt }) {
   const [c1, c2] = accentPair(accent);
-  const maxWidth = W - MARGIN * 2;
+  const { w: W, h: H } = fmt;
+  const scale = formatScale(fmt);
+  const margin = Math.round(MARGIN * scale);
+  const maxWidth = W - margin * 2;
 
-  const { size, lines } = fitTitle(bold, title, maxWidth);
+  const { size, lines } = fitTitle(bold, title, maxWidth, fmt.maxLines, scale);
   const lineHeight = size * TITLE_LINE_RATIO;
 
   // Başlık bloğu dikeyde ortalanır ama logo ve alt satırdan uzak durur.
+  // Dikey kesimlerde tam orta çok aşağıda kalıyor: Pinterest ve Instagram
+  // akışında görselin üst yarısı okunur, başlık oraya çekilir.
   const blockHeight = lines.length * lineHeight;
-  const firstBaseline = (H - blockHeight) / 2 + size * 0.82;
+  const anchor = fmt.key === "wide" ? 0.5 : 0.42;
+  const firstBaseline = H * anchor - blockHeight / 2 + size * 0.82;
 
   const titlePaths = lines
-    .map((line, i) => textPath(bold, line, size, MARGIN, firstBaseline + i * lineHeight))
+    .map((line, i) => textPath(bold, line, size, margin, firstBaseline + i * lineHeight))
     .filter(Boolean)
     .join(" ");
 
-  const footerPath = textPath(regular, footer, 26, MARGIN, H - MARGIN + 6);
+  const footerPath = textPath(regular, footer, Math.round(26 * scale), margin, H - margin + 6);
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
@@ -174,10 +203,10 @@ function buildSvg({ title, footer, accent, bold, regular }) {
   <rect width="${W}" height="${H}" fill="${BG}"/>
   <rect width="${W}" height="${H}" fill="url(#glow)"/>
   <rect width="${W}" height="${H}" fill="url(#glow2)"/>
-  <rect width="${W}" height="7" fill="url(#bar)"/>
+  <rect width="${W}" height="${Math.max(7, Math.round(7 * scale))}" fill="url(#bar)"/>
 
   <path d="${titlePaths}" fill="${TITLE_COLOR}"/>
-  <circle cx="${MARGIN - 22}" cy="${H - MARGIN - 2}" r="5" fill="${c1}"/>
+  <circle cx="${margin - Math.round(22 * scale)}" cy="${H - margin - 2}" r="${Math.round(5 * scale)}" fill="${c1}"/>
   <path d="${footerPath}" fill="${FOOTER_COLOR}"/>
 </svg>`;
 }
@@ -186,6 +215,16 @@ function buildSvg({ title, footer, accent, bold, regular }) {
 
 function coverRelPath(slug, lang) {
   return lang === "en" ? `/en/covers/${slug}.png` : `/covers/${slug}.png`;
+}
+
+/**
+ * Sosyal ağa özel kesimin yolu. `wide` geriye dönük uyum için eski yolda kalır
+ * (RSS <enclosure> ve sayfa og:image oraya işaret ediyor); diğerleri alt klasörde.
+ */
+function socialCoverRelPath(slug, lang, format) {
+  if (format === "wide") return coverRelPath(slug, lang);
+  const base = lang === "en" ? "/en/covers" : "/covers";
+  return `${base}/${format}/${slug}.png`;
 }
 
 /**
@@ -208,9 +247,13 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
   }
 
   const logoPath = join(publicDir, "logo.png");
-  const logo = existsSync(logoPath)
-    ? await sharp(logoPath).resize({ width: LOGO_W }).png().toBuffer()
-    : null;
+  const logoFor = new Map();
+  if (existsSync(logoPath)) {
+    for (const fmt of Object.values(FORMATS)) {
+      const width = Math.round(LOGO_W * formatScale(fmt));
+      logoFor.set(fmt.key, await sharp(logoPath).resize({ width }).png().toBuffer());
+    }
+  }
 
   const host = baseUrl.replace(/^https?:\/\//, "").replace(/^www\./, "");
   const written = [];
@@ -223,39 +266,46 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
       if (!copy?.title) continue;
 
       const slug = localizedPath(`/blog/${post.slug}`, lang).split("/").pop();
-      const rel = coverRelPath(slug, lang);
-      const outPath = join(publicDir, rel.replace(/^\//, ""));
-      map.set(`${lang}:${post.slug}`, rel);
+      map.set(`${lang}:${post.slug}`, coverRelPath(slug, lang));
 
-      // Girdi imzası: bunlar değişmediyse dosyaya dokunma.
-      const signature = createHash("sha1")
-        .update(JSON.stringify([DESIGN_VERSION, copy.title, post.accent ?? "", host, W, H]))
-        .digest("hex");
+      for (const fmt of Object.values(FORMATS)) {
+        const rel = socialCoverRelPath(slug, lang, fmt.key);
+        const outPath = join(publicDir, rel.replace(/^\//, ""));
+        map.set(`${lang}:${post.slug}:${fmt.key}`, rel);
 
-      if (manifest[rel] === signature && existsSync(outPath)) {
-        skipped++;
-        continue;
+        // Girdi imzası: bunlar değişmediyse dosyaya dokunma.
+        const signature = createHash("sha1")
+          .update(JSON.stringify([DESIGN_VERSION, copy.title, post.accent ?? "", host, fmt.w, fmt.h]))
+          .digest("hex");
+
+        if (manifest[rel] === signature && existsSync(outPath)) {
+          skipped++;
+          continue;
+        }
+
+        const svg = buildSvg({
+          title: copy.title,
+          footer: host,
+          accent: post.accent,
+          bold,
+          regular,
+          fmt,
+        });
+
+        let image = sharp(Buffer.from(svg));
+        const logo = logoFor.get(fmt.key);
+        if (logo) {
+          const scale = formatScale(fmt);
+          image = sharp(await image.png().toBuffer()).composite([
+            { input: logo, top: Math.round((MARGIN - 34) * scale), left: Math.round(MARGIN * scale) },
+          ]);
+        }
+
+        mkdirSync(dirname(outPath), { recursive: true });
+        await image.png({ compressionLevel: 9, palette: true }).toFile(outPath);
+        manifest[rel] = signature;
+        written.push(rel);
       }
-
-      const svg = buildSvg({
-        title: copy.title,
-        footer: host,
-        accent: post.accent,
-        bold,
-        regular,
-      });
-
-      let image = sharp(Buffer.from(svg));
-      if (logo) {
-        image = sharp(await image.png().toBuffer()).composite([
-          { input: logo, top: MARGIN - 34, left: MARGIN },
-        ]);
-      }
-
-      mkdirSync(dirname(outPath), { recursive: true });
-      await image.png({ compressionLevel: 9, palette: true }).toFile(outPath);
-      manifest[rel] = signature;
-      written.push(rel);
     }
   }
 
@@ -270,4 +320,4 @@ export async function writeBlogCovers({ frontendRoot, publicDir, baseUrl }) {
   return { written, skipped, map };
 }
 
-export { coverRelPath };
+export { coverRelPath, socialCoverRelPath, FORMATS as COVER_FORMATS };
