@@ -50,6 +50,10 @@ const FREE_TOOLS: FeatureKey[] = [
   "organize-pdf",
   "unlock-pdf",
   "pdf-to-text",
+  // Görsel→PDF tamamen kullanıcının cihazında (tarayıcıda) çalışır, sunucuya
+  // dosya gitmez. Maliyeti olmadığı için ücretsiz planda da açıktır; misafirde
+  // zaten açıktı, üye olan kullanıcının hakkı daralmasın diye buraya alındı.
+  "image-to-pdf",
 ];
 
 /** Starter'a ek olarak açılan araçlar */
@@ -57,7 +61,6 @@ const STARTER_TOOLS: FeatureKey[] = [
   ...FREE_TOOLS,
   "encrypt",
   "pdf-to-image",
-  "image-to-pdf",
   "page-numbers",
   "watermark",
   "extract-images",
