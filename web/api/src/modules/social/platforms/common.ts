@@ -12,6 +12,16 @@ export type PublishInput = {
 
 export type Publisher = (input: PublishInput) => Promise<PublishResult>;
 
+/**
+ * Kayıtlı anahtarların ağ tarafından gerçekten kabul edildiğini sınar.
+ *
+ * SINIRI: yalnızca kimliğin geçerli olduğunu kanıtlar. Ağlar "bu anahtar
+ * paylaşım da yapabilir mi" sorusunu ucuza cevaplayan bir uç sunmuyor; yazma
+ * yetkisinin tek kesin kanıtı gerçek bir gönderidir. Dönen metin admin'e
+ * gösterilir, bu yüzden hesap adı gibi tanınır bir bilgi içermeli.
+ */
+export type Verifier = (secrets: Record<string, string>) => Promise<string>;
+
 const REQUEST_TIMEOUT_MS = 45_000;
 
 /** Dış API hatalarını okunur tek satıra indirger (anahtar sızdırmadan). */

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, ChevronDown, Eye, EyeOff, KeyRound, Loader2, Pause, Play, Unplug } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, Eye, EyeOff, KeyRound, Loader2, Pause, Play, PlugZap, Unplug } from "lucide-react";
 import type { SocialAccountRow, SocialPlatformId, SocialPlatformSpec } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 
@@ -21,9 +21,12 @@ type Props = {
   busy: boolean;
   onSave: (platform: SocialPlatformId, secrets: Record<string, string>, enabled: boolean) => void;
   onDisconnect: (platform: SocialPlatformId) => void;
+  onTest: (platform: SocialPlatformId) => void;
+  /** Son sınamanın sonucu — kart yeniden çizilse de kaybolmasın diye dışarıda tutulur. */
+  testResult?: { ok: boolean; message: string };
 };
 
-export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect }: Props) {
+export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, onTest, testResult }: Props) {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [visible, setVisible] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
@@ -159,17 +162,46 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect }
               Vazgeç
             </button>
             {connected ? (
-              <button
-                type="button"
-                className={`${ghostButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
-                disabled={busy}
-                onClick={() => onDisconnect(spec.platform)}
-              >
-                <Unplug className="h-3.5 w-3.5" />
-                Bağlantıyı kaldır
-              </button>
+              <>
+                <button
+                  type="button"
+                  className={ghostButton}
+                  disabled={busy}
+                  onClick={() => onTest(spec.platform)}
+                >
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <PlugZap className="h-3.5 w-3.5" />}
+                  Bağlantıyı sına
+                </button>
+                <button
+                  type="button"
+                  className={`${ghostButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
+                  disabled={busy}
+                  onClick={() => onDisconnect(spec.platform)}
+                >
+                  <Unplug className="h-3.5 w-3.5" />
+                  Bağlantıyı kaldır
+                </button>
+              </>
             ) : null}
           </div>
+
+          {testResult ? (
+            <p
+              className={`mt-3 rounded-lg border px-3 py-2 text-xs leading-relaxed ${
+                testResult.ok
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                  : "border-rose-500/30 bg-rose-500/10 text-rose-200"
+              }`}
+            >
+              {testResult.message}
+              {testResult.ok ? (
+                <span className="mt-1 block text-emerald-300/70">
+                  Bu, anahtarların geçerli olduğunu gösterir. Paylaşım yetkisinin kesin kanıtı
+                  gerçek bir gönderidir — bir taslağı “Şimdi paylaş” ile deneyebilirsin.
+                </span>
+              ) : null}
+            </p>
+          ) : null}
         </div>
       ) : null}
     </article>

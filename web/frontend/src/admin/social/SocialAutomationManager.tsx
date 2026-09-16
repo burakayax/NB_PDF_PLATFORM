@@ -16,6 +16,7 @@ import {
   checkSocialFeed,
   deleteSocialPost,
   disconnectSocialAccount,
+  testSocialAccount,
   fetchSocialOverview,
   fetchSocialPosts,
   publishSocialPost,
@@ -163,6 +164,10 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
   const [note, setNote] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  /** Ağ başına son sınama sonucu — sunucuda değil, ekranda tutulur. */
+  const [testResults, setTestResults] = useState<
+    Partial<Record<SocialPlatformId, { ok: boolean; message: string }>>
+  >({});
 
   // Geri sayım canlı kalsın; dakika hassasiyeti yettiği için 30 saniyede bir.
   useEffect(() => {
@@ -512,8 +517,21 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               onDisconnect={(platform: SocialPlatformId) =>
                 void run(async () => {
                   await disconnectSocialAccount(accessToken, platform);
+                  setTestResults((prev) => {
+                    const next = { ...prev };
+                    delete next[platform];
+                    return next;
+                  });
                   await refresh();
                 }, "Bağlantı kaldırıldı.")
+              }
+              testResult={testResults[spec.platform]}
+              onTest={(platform: SocialPlatformId) =>
+                void run(async () => {
+                  const r = await testSocialAccount(accessToken, platform);
+                  setTestResults((prev) => ({ ...prev, [platform]: { ok: r.ok, message: r.message } }));
+                  await refresh();
+                })
               }
             />
           ))}
