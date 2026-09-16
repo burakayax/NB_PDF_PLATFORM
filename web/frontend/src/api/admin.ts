@@ -891,6 +891,8 @@ export type SocialConfig = {
   minute: number;
   timeZone: string;
   recycleOldPosts: boolean;
+  /** Paylaşım temposu: her gün / gün aşırı / haftada üç. */
+  cadence: "daily" | "alternate" | "thrice";
   /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
   bilingual: boolean;
   /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */

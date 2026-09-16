@@ -464,3 +464,52 @@ describe("coverAltText", () => {
     expect(long.endsWith("…")).toBe(true);
   });
 });
+
+
+// ─── Paylaşım temposu ────────────────────────────────────────────────────────
+
+describe("isPostingDay", () => {
+  it("her gün temposunda hiçbir günü atlamaz", async () => {
+    const { isPostingDay } = await import("../modules/social/social.service.js");
+    for (const d of ["2026-09-16", "2026-09-17", "2026-09-18"]) {
+      expect(isPostingDay(d, "daily")).toBe(true);
+    }
+  });
+
+  it("gün aşırı temposunda ardışık iki günden yalnızca biri seçilir", async () => {
+    const { isPostingDay } = await import("../modules/social/social.service.js");
+    // Karar sayaçla değil takvimle veriliyor: sunucu yeniden başlasa da ritim kaymaz.
+    const a = isPostingDay("2026-09-16", "alternate");
+    const b = isPostingDay("2026-09-17", "alternate");
+    const c = isPostingDay("2026-09-18", "alternate");
+    expect(a).not.toBe(b);
+    expect(a).toBe(c);
+  });
+
+  it("haftada üç temposunda Pazartesi, Çarşamba ve Cuma seçilir", async () => {
+    const { isPostingDay } = await import("../modules/social/social.service.js");
+    expect(isPostingDay("2026-09-14", "thrice")).toBe(true); // Pazartesi
+    expect(isPostingDay("2026-09-15", "thrice")).toBe(false); // Salı
+    expect(isPostingDay("2026-09-16", "thrice")).toBe(true); // Çarşamba
+    expect(isPostingDay("2026-09-18", "thrice")).toBe(true); // Cuma
+    expect(isPostingDay("2026-09-19", "thrice")).toBe(false); // Cumartesi
+  });
+
+  it("sıradaki yayın anı, tempoya uymayan günleri atlar", async () => {
+    const { nextRunAt } = await import("../modules/social/social.service.js");
+    const config = {
+      enabled: true,
+      hour: 10,
+      minute: 0,
+      timeZone: "Europe/Istanbul",
+      recycleOldPosts: true,
+      cadence: "thrice" as const,
+      bilingual: true,
+      singleLang: "en" as const,
+      researchKeywords: true,
+    };
+    // 19 Eylül 2026 Cumartesi → sıradaki uygun gün Pazartesi 21 Eylül.
+    const next = nextRunAt(config, new Date("2026-09-19T12:00:00+03:00"));
+    expect(next?.toISOString().slice(0, 10)).toBe("2026-09-21");
+  });
+});

@@ -36,6 +36,15 @@ export type SocialAutomationConfig = {
   timeZone: string;
   /** Yeni içerik bittiğinde eski yazılar tekrar paylaşılsın mı? */
   recycleOldPosts: boolean;
+  /**
+   * Ne sıklıkta paylaşılsın?
+   *
+   * NEDEN GEREKLİ: Arşiv 52 yazı. Günde bir paylaşımda döngü iki ayda başa
+   * dönüyor ve aynı yazı yeniden geliyor. Gün aşırı paylaşmak döngüyü üç buçuk
+   * aya çıkarıyor — hem tekrar seyrekleşiyor hem de yeni bir hesap için daha
+   * doğal bir tempo oluyor.
+   */
+  cadence: "daily" | "alternate" | "thrice";
   /** Gönderiler çift dilli mi yazılsın (İngilizce üstte, Türkçe altta)? */
   bilingual: boolean;
   /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
@@ -50,6 +59,7 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   minute: 0,
   timeZone: "Europe/Istanbul",
   recycleOldPosts: true,
+  cadence: "daily",
   bilingual: true,
   singleLang: "en",
   researchKeywords: true,
@@ -66,6 +76,8 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     minute: clampInt(raw.minute, 0, 59, DEFAULT_CONFIG.minute),
     timeZone: typeof raw.timeZone === "string" && raw.timeZone ? raw.timeZone : DEFAULT_CONFIG.timeZone,
     recycleOldPosts: raw.recycleOldPosts !== false,
+    cadence:
+      raw.cadence === "alternate" || raw.cadence === "thrice" ? raw.cadence : "daily",
     bilingual: raw.bilingual !== false,
     singleLang: raw.singleLang === "tr" ? "tr" : "en",
     researchKeywords: raw.researchKeywords !== false,
@@ -104,6 +116,28 @@ function zoneOffsetMs(at: Date, timeZone: string): number {
  * Bugünün saati geçtiyse yarına kayar. Hesap saat dilimi üzerinden yapılır ki
  * sunucu UTC çalışsa bile panelde yazan saat ile gerçek yayın anı aynı olsun.
  */
+/**
+ * Bu takvim günü paylaşım günü mü?
+ *
+ * Durum tutmadan karar verilir: "gün aşırı" için çağın başından beri geçen gün
+ * sayısının tekliği, "haftada üç" için Pazartesi/Çarşamba/Cuma. Sayaç tutulsaydı
+ * sunucu yeniden başladığında ya da bir gün atlandığında ritim kayardı.
+ */
+export function isPostingDay(dayKey: string, cadence: SocialAutomationConfig["cadence"]): boolean {
+  // Tanınmayan değer "her gün" sayılır. Aksi hâlde eksik/bozuk bir ayar
+  // paylaşımı sessizce durdururdu — susmak, fazla paylaşmaktan kötüdür.
+  if (cadence !== "alternate" && cadence !== "thrice") return true;
+  const [y, m, d] = dayKey.split("-").map((v) => Number.parseInt(v, 10));
+  const utc = Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1);
+  if (cadence === "alternate") {
+    const days = Math.floor(utc / 86_400_000);
+    return days % 2 === 0;
+  }
+  // Pazartesi(1), Çarşamba(3), Cuma(5)
+  const weekday = new Date(utc).getUTCDay();
+  return weekday === 1 || weekday === 3 || weekday === 5;
+}
+
 export function nextRunAt(config: SocialAutomationConfig, from: Date = new Date()): Date | null {
   if (!config.enabled) return null;
   try {
@@ -118,8 +152,16 @@ export function nextRunAt(config: SocialAutomationConfig, from: Date = new Date(
       return instant;
     };
 
-    const today = resolve(0);
-    return today.getTime() > from.getTime() ? today : resolve(1);
+    // Sıradaki UYGUN günü ara: bugünün saati geçtiyse ya da bugün paylaşım
+    // günü değilse ileri kaydırılır. İki hafta yeterli — en seyrek tempo
+    // haftada üç gün.
+    for (let offset = 0; offset <= 14; offset++) {
+      const candidate = resolve(offset);
+      if (candidate.getTime() <= from.getTime()) continue;
+      if (!isPostingDay(calendarDayKey(candidate, config.timeZone), config.cadence)) continue;
+      return candidate;
+    }
+    return null;
   } catch {
     return null;
   }

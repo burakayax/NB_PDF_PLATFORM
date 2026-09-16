@@ -67,6 +67,7 @@ const configSchema = z.object({
   minute: z.number().int().min(0).max(59).optional(),
   timeZone: z.string().min(1).max(64).optional(),
   recycleOldPosts: z.boolean().optional(),
+  cadence: z.enum(["daily", "alternate", "thrice"]).optional(),
   bilingual: z.boolean().optional(),
   singleLang: z.enum(["tr", "en"]).optional(),
   researchKeywords: z.boolean().optional(),

@@ -217,11 +217,21 @@ yazman yeterli.
 | Ayar | Anlamı |
 |---|---|
 | Otomatik paylaşım | Kapalıyken hiçbir şey kendiliğinden paylaşılmaz. |
-| Saat | Her gün bu saatte paylaşılır (seçtiğin saat dilimine göre). |
+| Saat | Bu saatte paylaşılır (seçtiğin saat dilimine göre). |
+| Paylaşım temposu | Her gün · Gün aşırı · Haftada üç (Pzt/Çar/Cum). |
 | Çift dilli paylaş | Kapalıyken yalnızca ana besleme dilinde paylaşılır. |
 | X (Twitter) dili | X'te 280 karaktere iki dil sığmaz; yalnız oradaki gönderinin dili. |
 | Etiketleri internette araştır | Kapalıyken yalnızca sitenin kendi SEO terimleri kullanılır (ücretsiz). |
 | Yeni yazı yoksa eski yazıları tekrar paylaş | Kapalıysa yeni içerik olmayan günlerde hesap sessiz kalır. |
+
+**Tempo neden önemli:** Arşivde 52 yazı var. Her gün paylaşırsan döngü iki ayda
+başa döner ve aynı yazı yeniden gelir (metni yeniden üretilir ama kapak görseli
+aynıdır). Gün aşırı paylaşmak döngüyü üç buçuk aya çıkarır. Yeni bir hesap için
+seyrek tempo ayrıca daha doğal görünür.
+
+Tempo takvimden hesaplanır, sayaç tutulmaz — sunucu yeniden başlasa da ritim
+kaymaz. Ayar bozuk ya da eksikse "her gün" sayılır; susmak fazla paylaşmaktan
+kötüdür.
 
 ---
 

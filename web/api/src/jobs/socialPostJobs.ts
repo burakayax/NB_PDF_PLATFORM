@@ -16,6 +16,7 @@ import {
   calendarDayKey,
   publishDuePosts,
   queueDailyPosts,
+  isPostingDay,
   readSocialConfig,
 } from "../modules/social/social.service.js";
 
@@ -73,6 +74,8 @@ async function tick(): Promise<void> {
   if (nowMinutes < targetMinutes) return;
 
   const dayKey = calendarDayKey(new Date(), config.timeZone);
+  // Seçilen tempo (her gün / gün aşırı / haftada üç) bugüne denk gelmiyorsa geç.
+  if (!isPostingDay(dayKey, config.cadence)) return;
   const alreadyQueued = await prisma.socialPost.count({ where: { dayKey } });
   if (alreadyQueued > 0) return;
 
