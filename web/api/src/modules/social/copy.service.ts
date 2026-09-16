@@ -155,6 +155,26 @@ export function sanitizeHashtags(text: string, lang: "tr" | "en" = "tr"): string
   return text.replace(/#[^\s#]+/gu, (token) => toHashtag(token.slice(1), lang) || "");
 }
 
+/** X'in bağlantı için saydığı sabit uzunluk (t.co kısaltması). */
+const X_LINK_LENGTH = 23;
+
+/**
+ * Platformun HAM metin bütçesi.
+ *
+ * X, bağlantının gerçek uzunluğunu değil her zaman 23 karakteri sayar. Biz ham
+ * uzunluğu ölçtüğümüz için, aradaki farkı bütçeye geri ekliyoruz — aksi hâlde
+ * uzun bir adres yüzünden boşuna 30+ karakter kaybediliyordu.
+ */
+export function effectiveMax(platform: SocialPlatform, sides: { link: string }[]): number {
+  const spec = PLATFORM_SPECS[platform];
+  if (platform !== "X" || spec.linkStyle !== "url") return spec.maxChars;
+  const extra = sides.reduce(
+    (sum, side) => sum + Math.max(0, side.link.length - X_LINK_LENGTH),
+    0,
+  );
+  return spec.maxChars + extra;
+}
+
 /** Bir blok için etiket dizesi (doğrulanmış terimlerden, sabit yazımla). */
 function tagsFor(side: LangSide, count: number): string {
   return side.terms.slice(0, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
@@ -181,7 +201,7 @@ function fallbackBlock(
 /** Model kullanılamadığında devreye giren sade şablon. */
 function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
   const spec = PLATFORM_SPECS[platform];
-  const per = Math.floor(spec.maxChars / sides.length);
+  const per = Math.floor(effectiveMax(platform, sides) / sides.length);
   return sides
     .map((side) => fallbackBlock(side, per, spec.linkStyle, spec.hashtagCount))
     .join(LANG_SEPARATOR);
@@ -229,7 +249,7 @@ const LONG_FORM: SocialPlatform[] = ["FACEBOOK", "INSTAGRAM", "LINKEDIN"];
 function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
   const spec = PLATFORM_SPECS[platform];
   const sides = sidesFor(req, platform);
-  const perBlock = Math.floor(spec.maxChars / Math.max(1, sides.length));
+  const perBlock = Math.floor(effectiveMax(platform, sides) / Math.max(1, sides.length));
   const side = sides[0];
   const tagLen = side ? tagsFor(side, spec.hashtagCount).length : 0;
   const linkLen = side ? linkLine(side, spec.linkStyle).length : 0;
@@ -339,7 +359,7 @@ Uzunluklar:
     });
     // Bir dil için metin gelmediyse o platformda şablon korunur.
     if (blocks.some((b) => !b)) continue;
-    result[p] = clamp(blocks.join(LANG_SEPARATOR), PLATFORM_SPECS[p].maxChars);
+    result[p] = clamp(blocks.join(LANG_SEPARATOR), effectiveMax(p, sides));
   }
   return result;
 }
