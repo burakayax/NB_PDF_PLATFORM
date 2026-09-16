@@ -334,3 +334,21 @@ describe("calendarDayKey", () => {
     expect(calendarDayKey(new Date("2026-09-15T22:30:00Z"), "Yok/Boyle_Bir_Yer")).toBe("2026-09-15");
   });
 });
+
+// ─── Bakiye reddi mi, yanlış anahtar mı? ─────────────────────────────────────
+
+describe("PlatformError.looksLikeBilling", () => {
+  it("ödeme kaynaklı retleri anahtar hatasından ayırır", async () => {
+    const { PlatformError } = await import("../modules/social/platforms/common.js");
+
+    // X bakiye bitince okumayı da kesiyor; bu ret anahtarla ilgili değildir.
+    expect(new PlatformError("X", 402, "Payment required").looksLikeBilling).toBe(true);
+    expect(new PlatformError("X", 403, "insufficient credit balance").looksLikeBilling).toBe(true);
+    expect(new PlatformError("X", 429, "Usage cap exceeded").looksLikeBilling).toBe(true);
+
+    // Gerçek kimlik hatası bakiyeye yıkılmamalı.
+    expect(new PlatformError("X", 401, "Unauthorized").looksLikeBilling).toBe(false);
+    expect(new PlatformError("X", 403, "Read-only application cannot POST").looksLikeBilling).toBe(false);
+    expect(new PlatformError("X", 500, "Internal error").looksLikeBilling).toBe(false);
+  });
+});

@@ -44,6 +44,24 @@ X'te anahtarlar "Read and write" yetkisi verilmeden ÖNCE üretildiyse kimlik
 sınaması geçer ama paylaşım reddedilir; bu durumda anahtarları X panelinden
 yeniden üret.
 
+## X (Twitter) ücretli hâle geldi
+
+X, Şubat 2026'da ücretsiz katmanı kaldırdı; her istek tek tek ücretlendiriliyor
+ve **bakiye sıfırken okuma dahil her şey engelleniyor**.
+
+| İşlem | Yaklaşık ücret |
+|---|---|
+| Bağlantı sınaması (okuma) | 0,005 $ |
+| Düz gönderi | 0,015 $ |
+| **Bağlantılı gönderi** | **0,20 $** |
+
+Bizim X gönderilerimiz her zaman yazının bağlantısını taşır, yani gönderi başına
+~0,20 $. Günlük paylaşım ayda ~6 $ eder. Diğer dört ağ bu ücretten etkilenmez.
+
+Bakiye bittiğinde sınama "bakiye yüzünden reddetti" der; bunu anahtar hatası
+sanma. X'i kullanmak istemiyorsan kartı duraklat, diğer ağlar çalışmaya devam
+eder.
+
 ## Anahtar kelimeler nereden geliyor?
 
 Etiketler uydurulmaz; iki kaynaktan beslenir:

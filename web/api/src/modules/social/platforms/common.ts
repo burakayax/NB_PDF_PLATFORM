@@ -26,9 +26,28 @@ const REQUEST_TIMEOUT_MS = 45_000;
 
 /** Dış API hatalarını okunur tek satıra indirger (anahtar sızdırmadan). */
 export class PlatformError extends Error {
+  readonly status: number;
+  readonly detail: string;
+
   constructor(platform: string, status: number, detail: string) {
     super(`${platform} reddetti (HTTP ${status}): ${detail.slice(0, 400)}`);
     this.name = "PlatformError";
+    this.status = status;
+    this.detail = detail;
+  }
+
+  /**
+   * Ret, anahtarların yanlış olmasından değil ödemeden mi kaynaklanıyor?
+   *
+   * NEDEN ÖNEMLİ: X Şubat 2026'da kullandıkça öde modeline geçti ve bakiye
+   * bitince OKUMA isteklerini de engelliyor. Bunu ayırt etmezsek panel,
+   * anahtarlar gayet doğruyken "bağlantı çalışmıyor" der ve admin saatlerce
+   * yanlış yerde arar.
+   */
+  get looksLikeBilling(): boolean {
+    if (this.status === 402) return true;
+    if (this.status !== 401 && this.status !== 403 && this.status !== 429) return false;
+    return /payment|billing|credit|balance|insufficient|quota|usage-cap|usage cap/i.test(this.detail);
   }
 }
 
