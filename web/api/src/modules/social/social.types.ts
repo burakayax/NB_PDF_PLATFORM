@@ -10,6 +10,16 @@
 
 import type { SocialPlatform } from "@prisma/client";
 
+/**
+ * Sıranın patronu olan besleme dili.
+ *
+ * NEDEN SABİT: Türkçe ve İngilizce yazılar birebir eşleşiyor, dolayısıyla hangi
+ * listeden başladığımız yalnızca "hangi yazı sırada" sorusunu etkilerdi ve
+ * ayarlanabilir olması gereksiz bir karardı. İngilizce besleme esas alınır;
+ * Türkçe karşılık çift dilli gönderinin alt bloğunu besler.
+ */
+export const PRIMARY_FEED_LANG = "en" as const;
+
 /** Yayınlanacak içerik — RSS'ten türetilmiş, platformdan bağımsız hâli. */
 export type FeedItem = {
   /** RSS <guid> — yazının kalıcı kimliği; mükerrer paylaşımı bu engeller. */

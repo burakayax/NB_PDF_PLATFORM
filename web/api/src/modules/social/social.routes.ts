@@ -12,7 +12,7 @@ import { HttpError } from "../../lib/http-error.js";
 import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { logAdminAudit } from "../admin/admin-audit.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
-import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
+import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import {
   deletePost,
   disconnectAccount,
@@ -47,7 +47,7 @@ socialRouter.get(
       accounts,
       stats,
       nextRunAt: nextRunAt(config)?.toISOString() ?? null,
-      feedUrl: feedUrlFor(config.lang),
+      feedUrl: feedUrlFor(PRIMARY_FEED_LANG),
       platforms: ALL_PLATFORMS.map((p) => ({
         platform: p,
         label: PLATFORM_SPECS[p].label,
@@ -65,7 +65,6 @@ const configSchema = z.object({
   hour: z.number().int().min(0).max(23).optional(),
   minute: z.number().int().min(0).max(59).optional(),
   timeZone: z.string().min(1).max(64).optional(),
-  lang: z.enum(["tr", "en"]).optional(),
   recycleOldPosts: z.boolean().optional(),
   bilingual: z.boolean().optional(),
   singleLang: z.enum(["tr", "en"]).optional(),
@@ -134,8 +133,7 @@ socialRouter.get(
 socialRouter.get(
   "/feed-check",
   asyncHandler(async (_request, response) => {
-    const config = await readSocialConfig();
-    const items = await fetchFeedItems(config.lang);
+    const items = await fetchFeedItems(PRIMARY_FEED_LANG);
     response.json({
       count: items.length,
       latest: items.slice(0, 5).map((i) => ({

@@ -22,7 +22,7 @@ import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
 import { PUBLISHERS } from "./platforms/index.js";
-import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
+import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 
 // ─── Ayarlar ──────────────────────────────────────────────────────────────────
@@ -34,8 +34,6 @@ export type SocialAutomationConfig = {
   hour: number;
   minute: number;
   timeZone: string;
-  /** Hangi dildeki besleme paylaşılsın. */
-  lang: "tr" | "en";
   /** Yeni içerik bittiğinde eski yazılar tekrar paylaşılsın mı? */
   recycleOldPosts: boolean;
   /** Gönderiler çift dilli mi yazılsın (İngilizce üstte, Türkçe altta)? */
@@ -51,7 +49,6 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   hour: 10,
   minute: 0,
   timeZone: "Europe/Istanbul",
-  lang: "tr",
   recycleOldPosts: true,
   bilingual: true,
   singleLang: "en",
@@ -68,7 +65,6 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     hour: clampInt(raw.hour, 0, 23, DEFAULT_CONFIG.hour),
     minute: clampInt(raw.minute, 0, 59, DEFAULT_CONFIG.minute),
     timeZone: typeof raw.timeZone === "string" && raw.timeZone ? raw.timeZone : DEFAULT_CONFIG.timeZone,
-    lang: raw.lang === "en" ? "en" : "tr",
     recycleOldPosts: raw.recycleOldPosts !== false,
     bilingual: raw.bilingual !== false,
     singleLang: raw.singleLang === "tr" ? "tr" : "en",
@@ -350,7 +346,7 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
     return result;
   }
 
-  const items = await fetchPairedFeedItems(config.lang);
+  const items = await fetchPairedFeedItems(PRIMARY_FEED_LANG);
   if (items.length === 0) {
     result.skipped.push({ platform: null, reason: "Beslemede paylaşılacak yazı bulunamadı" });
     return result;

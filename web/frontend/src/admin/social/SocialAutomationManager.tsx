@@ -632,30 +632,21 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               </span>
             </label>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block">
-                <span className="text-xs font-medium text-slate-300">Ana besleme dili</span>
-                <select
-                  className={`${selectClass} mt-1.5`}
-                  value={config.lang}
-                  onChange={(e) => patchConfig({ lang: e.target.value === "en" ? "en" : "tr" })}
-                >
-                  <option value="tr">Türkçe</option>
-                  <option value="en">İngilizce</option>
-                </select>
-              </label>
-              <label className="block">
-                <span className="text-xs font-medium text-slate-300">X (Twitter) dili</span>
-                <select
-                  className={`${selectClass} mt-1.5`}
-                  value={config.singleLang}
-                  onChange={(e) => patchConfig({ singleLang: e.target.value === "tr" ? "tr" : "en" })}
-                >
-                  <option value="en">İngilizce</option>
-                  <option value="tr">Türkçe</option>
-                </select>
-              </label>
-            </div>
+            <label className="block">
+              <span className="text-xs font-medium text-slate-300">X (Twitter) dili</span>
+              <select
+                className={`${selectClass} mt-1.5`}
+                value={config.singleLang}
+                onChange={(e) => patchConfig({ singleLang: e.target.value === "tr" ? "tr" : "en" })}
+              >
+                <option value="en">İngilizce</option>
+                <option value="tr">Türkçe</option>
+              </select>
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+                X&apos;te 280 karaktere iki dil sığmadığı için gönderi tek dilli paylaşılır.
+                Yalnızca X için geçerlidir; diğer ağlar çift dilli gider.
+              </span>
+            </label>
 
             <div className="flex items-center gap-2.5 rounded-xl border border-slate-700/50 bg-slate-900/40 px-3.5 py-3">
               <Rss className="h-4 w-4 shrink-0 text-amber-400/80" />
