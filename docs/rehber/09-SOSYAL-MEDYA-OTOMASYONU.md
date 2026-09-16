@@ -110,6 +110,15 @@ X'te bağlantı, gerçek uzunluğu ne olursa olsun **23 karakter** sayılıyor
 (t.co kısaltması). Sistem bunu hesaba katıyor; aksi hâlde uzun bir adres
 yüzünden boşuna 30+ karakter kaybediliyordu.
 
+## Görsel alternatif metni
+
+Her kapak görseli, yazının başlığını taşıyan bir alternatif metinle gönderiliyor
+(`PDF Platform kapak görseli — "…"`). Ekran okuyucu kullanan kişi gönderinin
+görselini böylece algılıyor; ağlar da bu metni içeriği anlamak için kullanıyor.
+
+Facebook, Instagram, LinkedIn ve Pinterest'te otomatik ekleniyor. X'te alternatif
+metin ayrı bir istek gerektiriyor, henüz eklenmedi.
+
 ## Elle paylaşmak
 
 Bir ağ henüz bağlı değilse ya da bir gönderiyi elle atmak istersen, taslak

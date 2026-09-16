@@ -6,7 +6,7 @@
  * metni olarak yayınlanır.
  */
 
-import { PlatformError, downloadImage, requestJson, requireSecret } from "./common.js";
+import { PlatformError, coverAltText, downloadImage, requestJson, requireSecret } from "./common.js";
 import type { Publisher } from "./common.js";
 
 const API = "https://api.linkedin.com/rest";
@@ -61,7 +61,12 @@ export const publishToLinkedIn: Publisher = async ({ body, imageUrl, item, secre
 
   if (imageUrl) {
     payload.content = {
-      media: { id: await uploadImage(token, author, imageUrl), title: item.title.slice(0, 200) },
+      media: {
+        id: await uploadImage(token, author, imageUrl),
+        title: item.title.slice(0, 200),
+        // LinkedIn alternatif metni 120 karakterle sınırlı.
+        altText: coverAltText(item, 120),
+      },
     };
   }
 

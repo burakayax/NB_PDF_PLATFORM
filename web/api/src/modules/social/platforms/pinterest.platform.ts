@@ -5,7 +5,7 @@
  * Bu yüzden gönderi metnine adres yazılmaz (bkz. PLATFORM_SPECS.linkStyle).
  */
 
-import { requestJson, requireSecret } from "./common.js";
+import { coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 
 const API = "https://api.pinterest.com/v5/pins";
@@ -23,6 +23,7 @@ export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secr
       title: item.title.slice(0, 100),
       description: body,
       link: item.link,
+      alt_text: coverAltText(item, 500),
       media_source: { source_type: "image_url", url: imageUrl },
     }),
   });
