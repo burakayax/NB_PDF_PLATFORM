@@ -2,7 +2,7 @@
  * Pinterest yayıncısı.
  *
  * Pin'de metin üç ayrı alana bölünür: başlık, açıklama ve TIKLANABİLİR bağlantı.
- * Bu yüzden gönderi metnine adres yazılmaz (bkz. PLATFORM_SPECS.inlineLink).
+ * Bu yüzden gönderi metnine adres yazılmaz (bkz. PLATFORM_SPECS.linkStyle).
  */
 
 import { requestJson, requireSecret } from "./common.js";

@@ -164,9 +164,15 @@ function tagsFor(side: LangSide, count: number): string {
 type LangSide = { lang: "tr" | "en"; title: string; summary: string; link: string; terms: string[] };
 
 /** Bir dil için şablon bloğu (model kullanılamadığında). */
-function fallbackBlock(side: LangSide, room: number, withLink: boolean, tagCount: number): string {
+function fallbackBlock(
+  side: LangSide,
+  room: number,
+  style: "url" | "bio" | "none",
+  tagCount: number,
+): string {
   const tags = side.terms.slice(0, tagCount).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
-  const link = withLink ? `\n\n${side.link}` : "";
+  const linkText = linkLine(side, style);
+  const link = linkText ? `\n\n${linkText}` : "";
   const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
   const lead = side.summary ? `${side.title}\n\n${side.summary}` : side.title;
   return `${truncateWords(lead, Math.max(40, room - tail.length))}${tail}`;
@@ -177,7 +183,7 @@ function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
   const spec = PLATFORM_SPECS[platform];
   const per = Math.floor(spec.maxChars / sides.length);
   return sides
-    .map((side) => fallbackBlock(side, per, spec.inlineLink, spec.hashtagCount))
+    .map((side) => fallbackBlock(side, per, spec.linkStyle, spec.hashtagCount))
     .join(LANG_SEPARATOR);
 }
 
@@ -226,9 +232,30 @@ function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
   const perBlock = Math.floor(spec.maxChars / Math.max(1, sides.length));
   const side = sides[0];
   const tagLen = side ? tagsFor(side, spec.hashtagCount).length : 0;
-  const linkLen = spec.inlineLink && side ? side.link.length : 0;
+  const linkLen = side ? linkLine(side, spec.linkStyle).length : 0;
   // +4: bloğu ayıran satır sonları.
   return Math.max(60, perBlock - tagLen - linkLen - 4);
+}
+
+/**
+ * Bağlantının bu ağdaki yazılışı.
+ *
+ * Instagram'da caption içindeki adres TIKLANMIYOR (2026 itibarıyla tıklanabilir
+ * bağlantı yalnızca Meta Verified aboneliği olan küçük bir test grubunda).
+ * Tam adres yazmak 55 karakter harcayıp kullanıcıdan kopyalamasını beklemek
+ * demek; onun yerine Instagram'ın kendi geleneği kullanılıyor: bağlantı
+ * profilde, metinde yalnızca alan adı anılıyor.
+ */
+function linkLine(side: LangSide, style: "url" | "bio" | "none"): string {
+  if (style === "none") return "";
+  if (style === "url") return side.link;
+  let host = "";
+  try {
+    host = new URL(side.link).host.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+  return side.lang === "tr" ? `Bağlantı profilde: ${host}` : `Link in bio: ${host}`;
 }
 
 /** Bir dil bloğunu kurar: gövde + (varsa) bağlantı + etiketler. */
@@ -240,7 +267,8 @@ function buildBlock(body: string, side: LangSide, platform: SocialPlatform): str
     .trim();
   const tags = tagsFor(side, spec.hashtagCount);
   const parts = [clean];
-  if (spec.inlineLink) parts.push(side.link);
+  const link = linkLine(side, spec.linkStyle);
+  if (link) parts.push(link);
   if (tags) parts.push(tags);
   return parts.filter(Boolean).join("\n\n");
 }

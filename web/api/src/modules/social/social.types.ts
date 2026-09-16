@@ -70,8 +70,15 @@ export type PlatformSpec = {
   imageFormat: "wide" | "square" | "tall";
   /** Kaç etiket (hashtag) üretilsin. */
   hashtagCount: number;
-  /** Metin içinde bağlantı gösterilsin mi? (Instagram'da tıklanmaz.) */
-  inlineLink: boolean;
+  /**
+   * Bağlantı metinde nasıl görünsün?
+   *   "url"  → tam adres (tıklanabilir ağlar)
+   *   "bio"  → "Bağlantı profilde: alanadı" (Instagram: caption'daki adres
+   *            tıklanmıyor, tam adres yazmak 55 karakter harcayıp kopyalanmayı
+   *            bekleyen bir metin bırakıyor)
+   *   "none" → hiç yazılmaz (ayrı alanda gidiyor)
+   */
+  linkStyle: "url" | "bio" | "none";
   /**
    * Bu ağda çift dilli (EN üstte, TR altta) gönderi yapılabilir mi?
    * X kapalı: 280 karakterde iki dil okunur bir gönderi çıkarmıyor.
@@ -90,7 +97,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 2,
-    inlineLink: true,
+    linkStyle: "url",
     bilingual: false,
     secretFields: [
       { key: "apiKey", label: "API Key", help: "X geliştirici uygulamasının Consumer Key değeri" },
@@ -106,7 +113,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 3,
-    inlineLink: true,
+    linkStyle: "url",
     bilingual: true,
     secretFields: [
       { key: "accessToken", label: "Access Token", help: "w_organization_social yetkili erişim anahtarı" },
@@ -120,7 +127,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 3,
-    inlineLink: true,
+    linkStyle: "url",
     bilingual: true,
     secretFields: [
       { key: "pageId", label: "Sayfa ID", help: "Facebook sayfasının sayısal kimliği" },
@@ -136,9 +143,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "square",
     hashtagCount: 6,
     bilingual: true,
-    // Instagram caption'ındaki bağlantı tıklanmaz; yine de adresi yazıyoruz ki
-    // kullanıcı kopyalayabilsin.
-    inlineLink: true,
+    linkStyle: "bio",
     secretFields: [
       { key: "igUserId", label: "Instagram İşletme Hesabı ID", help: "Facebook sayfasına bağlı IG Business hesabının kimliği" },
       { key: "pageAccessToken", label: "Sayfa Erişim Anahtarı", help: "Bağlı Facebook sayfasının erişim anahtarı" },
@@ -152,7 +157,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "tall",
     hashtagCount: 2,
     // Pinterest'te bağlantı ayrı bir alanda (link) taşınır; metne yazmaya gerek yok.
-    inlineLink: false,
+    linkStyle: "none",
     bilingual: true,
     secretFields: [
       { key: "accessToken", label: "Access Token", help: "pins:write yetkili erişim anahtarı" },

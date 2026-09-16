@@ -394,3 +394,21 @@ describe("etiketlerin eklenmesi", () => {
     expect(toHashtag("pdf içerik", "tr")).toBe("#PDFİçerik");
   });
 });
+
+
+// ─── Bağlantının ağa göre yazılışı ───────────────────────────────────────────
+
+describe("linkStyle", () => {
+  it("Instagram tam adres yazmaz, profildeki bağlantıya yönlendirir", async () => {
+    const { PLATFORM_SPECS } = await import("../modules/social/social.types.js");
+    // Instagram caption'ındaki adres tıklanmıyor; tam adres yazmak 55 karakter
+    // harcayıp kullanıcıdan kopyalamasını beklemek olurdu.
+    expect(PLATFORM_SPECS.INSTAGRAM.linkStyle).toBe("bio");
+    // Tıklanabilir ağlarda tam adres kalmalı.
+    expect(PLATFORM_SPECS.FACEBOOK.linkStyle).toBe("url");
+    expect(PLATFORM_SPECS.LINKEDIN.linkStyle).toBe("url");
+    expect(PLATFORM_SPECS.X.linkStyle).toBe("url");
+    // Pinterest'te adres ayrı alanda gidiyor, metne yazılmaz.
+    expect(PLATFORM_SPECS.PINTEREST.linkStyle).toBe("none");
+  });
+});

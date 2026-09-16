@@ -89,6 +89,22 @@ başına yaklaşık 2 kuruş; yeni yazı üretmediğin aylarda sıfıra yakın.
 Araştırmayı panelden kapatabilirsin; o zaman yalnızca 1. kaynak kullanılır ve
 maliyet tamamen sıfırlanır.
 
+## Bağlantı her ağda aynı görünmez
+
+| Ağ | Bağlantı |
+|---|---|
+| Facebook, LinkedIn, X | Tam adres — tıklanabilir |
+| Instagram | "Bağlantı profilde: pdfplatform.app" |
+| Pinterest | Metne yazılmaz; pinin kendi bağlantı alanında gider |
+
+Instagram'ın açıklama metnindeki adresler **tıklanmıyor** (2026'da tıklanabilir
+bağlantı yalnızca Meta Verified aboneliği olan küçük bir test grubunda). Tam
+adres yazmak 55 karakter harcayıp kullanıcıdan kopyalamasını beklemek olurdu.
+
+**Bu yüzden Instagram profilindeki web sitesi alanını doldurman şart** —
+`https://www.pdfplatform.app`. Metin oraya yönlendiriyor; alan boşsa gönderiler
+hiçbir yere götürmez.
+
 **Önemli:** Metin görselin içine yazılmaz. Metin gönderinin kendi yazı alanına,
 görsel ayrı bir ek olarak gider. Bu sayede bağlantı tıklanabilir kalır ve yazı
 aramalarda görünür. (Make.com'da yaşanan "yazıyı resim olarak paylaştı" sorunu
