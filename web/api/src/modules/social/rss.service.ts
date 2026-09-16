@@ -74,6 +74,27 @@ function extractImages(itemXml: string): FeedItem["images"] {
   return images;
 }
 
+/**
+ * `<atom:link rel="alternate" hreflang="xx" href="...">` — yazının diğer
+ * dildeki adresi. İki beslemedeki aynı yazıyı eşleştirmek için kullanılır.
+ */
+function extractAltLink(itemXml: string): { lang: "tr" | "en"; url: string } | null {
+  const re = /<atom:link\s([^>]*)\/?>/g;
+  let m = re.exec(itemXml);
+  while (m) {
+    const attrs = m[1] ?? "";
+    if (/rel="alternate"/.test(attrs)) {
+      const url = /href="([^"]+)"/.exec(attrs)?.[1];
+      const lang = /hreflang="([^"]+)"/.exec(attrs)?.[1];
+      if (url && (lang === "tr" || lang === "en")) {
+        return { lang, url: decodeEntities(url) };
+      }
+    }
+    m = re.exec(itemXml);
+  }
+  return null;
+}
+
 /** Beslemenin tam adresi. Site kökü FRONTEND_ORIGIN'den alınır. */
 export function feedUrlFor(lang: "tr" | "en"): string {
   const base = env.FRONTEND_ORIGIN.replace(/\/$/, "");
@@ -113,10 +134,41 @@ export async function fetchFeedItems(lang: "tr" | "en"): Promise<FeedItem[]> {
         publishedAt: Number.isNaN(pub) ? 0 : pub,
         categories: allTagTexts(block, "category"),
         images: extractImages(block),
+        altRef: extractAltLink(block),
       });
     }
     m = re.exec(xml);
   }
 
   return items.sort((a, b) => b.publishedAt - a.publishedAt);
+}
+
+/**
+ * Her iki beslemeyi okur ve aynı yazının iki dildeki hâlini eşleştirir.
+ *
+ * Eşleştirme, beslemedeki `rel="alternate"` bağlantısı üzerinden yapılır —
+ * sıraya veya tarihe güvenmez. Karşılığı olmayan yazı `alt` olmadan döner ve
+ * tek dilli paylaşılır.
+ *
+ * @param primaryLang Gönderinin ana dili (sıralama ve seçim bu dile göre).
+ */
+export async function fetchPairedFeedItems(primaryLang: "tr" | "en"): Promise<FeedItem[]> {
+  const otherLang = primaryLang === "tr" ? "en" : "tr";
+
+  const [primary, other] = await Promise.all([
+    fetchFeedItems(primaryLang),
+    // Diğer besleme okunamazsa çift dillilik kaybolur ama otomasyon durmaz.
+    fetchFeedItems(otherLang).catch(() => [] as FeedItem[]),
+  ]);
+
+  const byUrl = new Map(other.map((i) => [i.link, i]));
+
+  return primary.map((item) => {
+    const match = item.altRef ? byUrl.get(item.altRef.url) : undefined;
+    if (!match) return item;
+    return {
+      ...item,
+      alt: { lang: match.lang, title: match.title, summary: match.summary, link: match.link },
+    };
+  });
 }

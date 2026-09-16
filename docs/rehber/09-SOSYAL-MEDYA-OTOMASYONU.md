@@ -15,6 +15,37 @@ Panelde yeri: **Yönetim Paneli → Büyüme → Sosyal medya**
 4. Yazının markalı kapak görseli gönderiye **ek** olarak iliştirilir.
 5. Gönderi yayınlanır ve panelde listelenir.
 
+## Çift dil — üstte İngilizce, altta Türkçe
+
+Gönderiler iki dilli paylaşılır: önce İngilizce bloğu, bir ayıraç, sonra Türkçe
+bloğu. Her blok **kendi dilinin sayfasına** bağlanır.
+
+**Çeviri yapılmıyor.** Blog yazılarını zaten iki dilde ayrı ayrı yazıyorsun;
+yapay zekâya ikisini birden veriyoruz ve her dil için o dilin kendi gönderi
+metnini yazdırıyoruz. Make.com'daki "çeviri gibi duran, sıradan" metin sorunu bu
+yüzden oluşmuyor. Etiketler de dile göre ayrışır (`#PDFKırpma` / `#CropPDF`).
+
+**X (Twitter) çift dilli değildir** — 280 karakterde iki dil okunur bir gönderi
+çıkmıyor. X'in dili panelden seçilir (varsayılan: İngilizce).
+
+Bir yazının yalnızca tek dilde karşılığı varsa o gönderi tek dilli paylaşılır.
+
+## Anahtar kelimeler nereden geliyor?
+
+Etiketler uydurulmaz; iki kaynaktan beslenir:
+
+1. **Sitenin kendi SEO terimleri** — her araç sayfasının hedeflediği gerçek
+   arama terimleri ve yazının etiketleri. Ücretsiz, her zaman devrede.
+2. **Canlı araştırma** — açıkken yapay zekâ internete bakıp o konuda gerçekten
+   kullanılan terimleri doğrular.
+
+Araştırma **yazı başına bir kez** yapılır ve saklanır. Eski bir yazı tekrar
+gündeme geldiğinde yeniden araştırma ücreti çıkmaz. Ölçülen maliyet: araştırma
+başına yaklaşık 2 kuruş; yeni yazı üretmediğin aylarda sıfıra yakın.
+
+Araştırmayı panelden kapatabilirsin; o zaman yalnızca 1. kaynak kullanılır ve
+maliyet tamamen sıfırlanır.
+
 **Önemli:** Metin görselin içine yazılmaz. Metin gönderinin kendi yazı alanına,
 görsel ayrı bir ek olarak gider. Bu sayede bağlantı tıklanabilir kalır ve yazı
 aramalarda görünür. (Make.com'da yaşanan "yazıyı resim olarak paylaştı" sorunu
@@ -91,7 +122,10 @@ yazman yeterli.
 |---|---|
 | Otomatik paylaşım | Kapalıyken hiçbir şey kendiliğinden paylaşılmaz. |
 | Saat | Her gün bu saatte paylaşılır (seçtiğin saat dilimine göre). |
-| İçerik dili | Türkçe veya İngilizce besleme. |
+| Çift dilli paylaş | Kapalıyken yalnızca ana besleme dilinde paylaşılır. |
+| Ana besleme dili | Hangi dildeki yazı listesi esas alınsın. |
+| X (Twitter) dili | Çift dil sığmayan tek ağın dili. |
+| Etiketleri internette araştır | Kapalıyken yalnızca sitenin kendi SEO terimleri kullanılır (ücretsiz). |
 | Yeni yazı yoksa eski yazıları tekrar paylaş | Kapalıysa yeni içerik olmayan günlerde hesap sessiz kalır. |
 
 ---

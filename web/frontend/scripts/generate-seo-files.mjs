@@ -36,6 +36,7 @@ import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 import { writeBlogCovers } from "./generate-covers.mjs";
+import { writeSocialKeywords } from "./generate-social-keywords.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -996,6 +997,11 @@ if (rss.skipped) {
 } else {
   console.log("[seo] RSS beslemeleri üretildi:", rss.written.join(", "));
 }
+
+// ─── Sosyal medya anahtar kelime bankası ──────────────────────────────────────
+// Otomasyon etiketleri buradan alır; sitenin hedef arama terimleriyle aynı.
+const social = writeSocialKeywords({ publicDir, baseUrl: base });
+console.log(`[seo] sosyal medya anahtar kelimeleri: ${social.count} yazı → ${social.path}`);
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",

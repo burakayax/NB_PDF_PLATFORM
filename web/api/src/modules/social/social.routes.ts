@@ -67,6 +67,9 @@ const configSchema = z.object({
   timeZone: z.string().min(1).max(64).optional(),
   lang: z.enum(["tr", "en"]).optional(),
   recycleOldPosts: z.boolean().optional(),
+  bilingual: z.boolean().optional(),
+  singleLang: z.enum(["tr", "en"]).optional(),
+  researchKeywords: z.boolean().optional(),
 });
 
 socialRouter.put(

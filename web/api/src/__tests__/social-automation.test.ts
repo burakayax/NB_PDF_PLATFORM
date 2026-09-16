@@ -60,16 +60,38 @@ describe("clamp — gönderi metnini sınıra sığdırma", () => {
 // ─── Etiketler ────────────────────────────────────────────────────────────────
 
 describe("toHashtag", () => {
-  it("Türkçe harfleri sadeleştirip birleşik yazar", async () => {
+  it("kelimeleri birleştirir ve Türkçe harfleri KORUR", async () => {
     const { toHashtag } = await import("../modules/social/copy.service.js");
-    expect(toHashtag("PDF Araçları")).toBe("#PdfAraclari");
-    expect(toHashtag("görsel işleme")).toBe("#GorselIsleme");
+    // Türk kullanıcı "#PDFKırpma" arıyor; harfleri sadeleştirmek erişimi düşürür.
+    expect(toHashtag("PDF kırpma")).toBe("#PDFKırpma");
+    expect(toHashtag("pdf tablo görseli")).toBe("#PdfTabloGörseli");
+  });
+
+  it("etikette geçersiz karakterleri ayıklar", async () => {
+    const { toHashtag } = await import("../modules/social/copy.service.js");
+    expect(toHashtag("pdf'ten resim kesme")).toBe("#PdfTenResimKesme");
   });
 
   it("harfle başlamayan ya da boş kalan adayı eler", async () => {
     const { toHashtag } = await import("../modules/social/copy.service.js");
     expect(toHashtag("2026")).toBe("");
     expect(toHashtag("!!!")).toBe("");
+  });
+});
+
+describe("sanitizeHashtags", () => {
+  it("modelin yazdığı bozuk etiketi geçerli hâle getirir", async () => {
+    const { sanitizeHashtags } = await import("../modules/social/copy.service.js");
+    // Etikete yapışık noktalama etiketin parçası sayılır ve temizlenir;
+    // aksi hâlde platformda etiket değil düz metin olarak görünür.
+    expect(sanitizeHashtags("Deneme #pdf-kırpma! son")).toBe("Deneme #PdfKırpma son");
+    expect(sanitizeHashtags("#PDFAraçları")).toBe("#PDFAraçları");
+  });
+
+  it("gövde metnine dokunmaz", async () => {
+    const { sanitizeHashtags } = await import("../modules/social/copy.service.js");
+    const body = "Bulanık ekran görüntüsü mü? Şu adrese bak: https://a.test/x";
+    expect(sanitizeHashtags(body)).toBe(body);
   });
 });
 
@@ -158,6 +180,98 @@ describe("fetchFeedItems", () => {
   });
 });
 
+// ─── Çift dil eşleştirme ──────────────────────────────────────────────────────
+
+const TR_FEED = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <item>
+      <title>Türkçe Yazı</title>
+      <link>https://example.test/blog/tr-yazi</link>
+      <guid isPermaLink="true">https://example.test/blog/tr-yazi</guid>
+      <pubDate>Fri, 11 Sep 2026 08:00:00 GMT</pubDate>
+      <description>Türkçe özet</description>
+      <atom:link rel="alternate" hreflang="en" href="https://example.test/en/blog/en-post" />
+    </item>
+    <item>
+      <title>Eşi Olmayan Yazı</title>
+      <link>https://example.test/blog/yalniz</link>
+      <guid isPermaLink="true">https://example.test/blog/yalniz</guid>
+      <pubDate>Thu, 10 Sep 2026 08:00:00 GMT</pubDate>
+      <description>Tek dil</description>
+    </item>
+  </channel>
+</rss>`;
+
+const EN_FEED = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <item>
+      <title>English Post</title>
+      <link>https://example.test/en/blog/en-post</link>
+      <guid isPermaLink="true">https://example.test/en/blog/en-post</guid>
+      <pubDate>Fri, 11 Sep 2026 08:00:00 GMT</pubDate>
+      <description>English summary</description>
+      <atom:link rel="alternate" hreflang="tr" href="https://example.test/blog/tr-yazi" />
+    </item>
+  </channel>
+</rss>`;
+
+describe("fetchPairedFeedItems — çift dilli eşleştirme", () => {
+  function stubBothFeeds() {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown) => {
+        const url = String(input);
+        const xml = url.includes("/en/") ? EN_FEED : TR_FEED;
+        return new Response(xml, { status: 200 });
+      }),
+    );
+  }
+
+  it("yazının diğer dildeki hâlini bağlantı üzerinden eşleştirir", async () => {
+    stubBothFeeds();
+    const { fetchPairedFeedItems } = await import("../modules/social/rss.service.js");
+
+    const items = await fetchPairedFeedItems("tr");
+    const paired = items.find((i) => i.link.endsWith("/tr-yazi"));
+
+    // Sıraya veya tarihe değil, beslemedeki alternate bağlantısına güvenilir.
+    expect(paired?.alt).toEqual({
+      lang: "en",
+      title: "English Post",
+      summary: "English summary",
+      link: "https://example.test/en/blog/en-post",
+    });
+  });
+
+  it("karşılığı olmayan yazı tek dilli kalır", async () => {
+    stubBothFeeds();
+    const { fetchPairedFeedItems } = await import("../modules/social/rss.service.js");
+
+    const lonely = (await fetchPairedFeedItems("tr")).find((i) => i.link.endsWith("/yalniz"));
+
+    expect(lonely?.alt).toBeUndefined();
+  });
+
+  it("diğer besleme okunamazsa tek dile düşer, hata fırlatmaz", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown) =>
+        String(input).includes("/en/")
+          ? new Response("yok", { status: 500 })
+          : new Response(TR_FEED, { status: 200 }),
+      ),
+    );
+    const { fetchPairedFeedItems } = await import("../modules/social/rss.service.js");
+
+    const items = await fetchPairedFeedItems("tr");
+
+    expect(items).toHaveLength(2);
+    expect(items.every((i) => i.alt === undefined)).toBe(true);
+  });
+});
+
 // ─── Sonraki yayın anı ────────────────────────────────────────────────────────
 
 describe("nextRunAt", () => {
@@ -168,6 +282,9 @@ describe("nextRunAt", () => {
     timeZone: "Europe/Istanbul",
     lang: "tr" as const,
     recycleOldPosts: true,
+    bilingual: true,
+    singleLang: "en" as const,
+    researchKeywords: false,
   };
 
   it("otomasyon kapalıyken null döner", async () => {

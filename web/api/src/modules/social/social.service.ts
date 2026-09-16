@@ -18,7 +18,8 @@ import { getSettingWithFallback, setSetting } from "../../lib/site-config.servic
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { logError } from "../../lib/app-logger.js";
 import { logger } from "../../lib/file-log.js";
-import { fetchFeedItems } from "./rss.service.js";
+import { fetchPairedFeedItems } from "./rss.service.js";
+import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
 import { PUBLISHERS } from "./platforms/index.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
@@ -37,6 +38,12 @@ export type SocialAutomationConfig = {
   lang: "tr" | "en";
   /** Yeni içerik bittiğinde eski yazılar tekrar paylaşılsın mı? */
   recycleOldPosts: boolean;
+  /** Gönderiler çift dilli mi yazılsın (İngilizce üstte, Türkçe altta)? */
+  bilingual: boolean;
+  /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
+  singleLang: "tr" | "en";
+  /** Etiketler için internette canlı araştırma yapılsın mı? (Ücretli) */
+  researchKeywords: boolean;
 };
 
 const DEFAULT_CONFIG: SocialAutomationConfig = {
@@ -46,6 +53,9 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   timeZone: "Europe/Istanbul",
   lang: "tr",
   recycleOldPosts: true,
+  bilingual: true,
+  singleLang: "en",
+  researchKeywords: true,
 };
 
 export async function readSocialConfig(): Promise<SocialAutomationConfig> {
@@ -60,6 +70,9 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     timeZone: typeof raw.timeZone === "string" && raw.timeZone ? raw.timeZone : DEFAULT_CONFIG.timeZone,
     lang: raw.lang === "en" ? "en" : "tr",
     recycleOldPosts: raw.recycleOldPosts !== false,
+    bilingual: raw.bilingual !== false,
+    singleLang: raw.singleLang === "tr" ? "tr" : "en",
+    researchKeywords: raw.researchKeywords !== false,
   };
 }
 
@@ -337,7 +350,7 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
     return result;
   }
 
-  const items = await fetchFeedItems(config.lang);
+  const items = await fetchPairedFeedItems(config.lang);
   if (items.length === 0) {
     result.skipped.push({ platform: null, reason: "Beslemede paylaşılacak yazı bulunamadı" });
     return result;
@@ -370,7 +383,16 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
   }
 
   for (const { item, platforms } of byGuid.values()) {
-    const bodies = await writePostBodies(item, platforms);
+    // Etiketlerin dayanağı: SEO bankası (+ açıksa canlı araştırma). Araştırma
+    // yazı başına bir kez yapılır, sonucu önbellekten gelir.
+    const keywords = await keywordsFor(item, config.researchKeywords);
+    const bodies = await writePostBodies({
+      item,
+      platforms,
+      keywords,
+      bilingual: config.bilingual,
+      singleLang: config.singleLang,
+    });
     for (const platform of platforms) {
       const imageUrl = pickImage(item, platform);
       try {

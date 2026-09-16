@@ -221,6 +221,17 @@ function buildFeed(lang, baseUrl, coverMap, publicDir) {
       if (!copy) return "";
 
       const url = `${baseUrl}${localizedPath(`/blog/${post.slug}`, lang)}`;
+
+      // Yazının DİĞER dildeki karşılığı. Çift dilli sosyal medya gönderisi
+      // üretilirken iki metnin de özgün hâli gerekiyor; otomasyon bu bağlantı
+      // sayesinde iki beslemedeki aynı yazıyı eşleştirebiliyor. (Çeviri
+      // yapılmıyor — her iki dil de bizim kendi yazdığımız metin.)
+      const otherLang = lang === "tr" ? "en" : "tr";
+      const altLink = post[otherLang]?.title
+        ? `      <atom:link rel="alternate" hreflang="${otherLang}" href="${escapeXml(
+            `${baseUrl}${localizedPath(`/blog/${post.slug}`, otherLang)}`,
+          )}" />`
+        : "";
       // Kapak yoksa site paylaşım görseline düşülür: Instagram ve Pinterest
       // görselsiz gönderi kabul etmiyor, alan asla boş kalmamalı.
       const coverRel =
@@ -252,6 +263,7 @@ function buildFeed(lang, baseUrl, coverMap, publicDir) {
       <guid isPermaLink="true">${escapeXml(url)}</guid>
       <pubDate>${toRfc822(post.date, post.slug)}</pubDate>
       <dc:creator>${escapeXml(AUTHOR_NAME)}</dc:creator>
+${altLink}
       <description>${cdata(summary)}</description>
       <content:encoded>${cdata(body)}</content:encoded>
 ${tags.map((t) => `      <category>${escapeXml(t)}</category>`).join("\n")}

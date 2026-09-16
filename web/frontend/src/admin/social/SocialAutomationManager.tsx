@@ -588,23 +588,74 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 </span>
               </span>
             </label>
+
+            <label className="flex items-start gap-3 rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800 accent-cyan-500"
+                checked={config.researchKeywords}
+                onChange={(e) => patchConfig({ researchKeywords: e.target.checked })}
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-200">
+                  Etiketleri internette araştır
+                </span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                  Açıkken yapay zekâ, etiketleri uydurmak yerine o konuda gerçekten aranan
+                  terimleri doğrular. Araştırma yazı başına bir kez yapılır ve saklanır; eski
+                  yazılar tekrar paylaşıldığında ücret çıkmaz. Kapalıyken yalnızca sitenin
+                  kendi hedef arama terimleri kullanılır (ücretsiz).
+                </span>
+              </span>
+            </label>
           </SectionCard>
 
           <SectionCard
             title="İçerik kaynağı"
             description="Paylaşımlar sitenin kendi blog beslemesinden üretilir. Yeni yazı yayınladığında otomatik olarak sıraya girer."
           >
-            <label className="block">
-              <span className="text-xs font-medium text-slate-300">Besleme dili</span>
-              <select
-                className={`${selectClass} mt-1.5`}
-                value={config.lang}
-                onChange={(e) => patchConfig({ lang: e.target.value === "en" ? "en" : "tr" })}
-              >
-                <option value="tr">Türkçe</option>
-                <option value="en">İngilizce</option>
-              </select>
+            <label className="flex items-start gap-3 rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
+              <input
+                type="checkbox"
+                className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-800 accent-cyan-500"
+                checked={config.bilingual}
+                onChange={(e) => patchConfig({ bilingual: e.target.checked })}
+              />
+              <span>
+                <span className="block text-sm font-medium text-slate-200">
+                  Çift dilli paylaş (üstte İngilizce, altta Türkçe)
+                </span>
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                  Çeviri yapılmaz: her iki metin de yazının sitedeki kendi dilindeki hâlinden
+                  üretilir. X&apos;te iki dil sığmadığı için tek dil kullanılır.
+                </span>
+              </span>
             </label>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">Ana besleme dili</span>
+                <select
+                  className={`${selectClass} mt-1.5`}
+                  value={config.lang}
+                  onChange={(e) => patchConfig({ lang: e.target.value === "en" ? "en" : "tr" })}
+                >
+                  <option value="tr">Türkçe</option>
+                  <option value="en">İngilizce</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="text-xs font-medium text-slate-300">X (Twitter) dili</span>
+                <select
+                  className={`${selectClass} mt-1.5`}
+                  value={config.singleLang}
+                  onChange={(e) => patchConfig({ singleLang: e.target.value === "tr" ? "tr" : "en" })}
+                >
+                  <option value="en">İngilizce</option>
+                  <option value="tr">Türkçe</option>
+                </select>
+              </label>
+            </div>
 
             <div className="flex items-center gap-2.5 rounded-xl border border-slate-700/50 bg-slate-900/40 px-3.5 py-3">
               <Rss className="h-4 w-4 shrink-0 text-amber-400/80" />
