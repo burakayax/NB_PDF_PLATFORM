@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, ExternalLink, ImageOff, Loader2, Pencil, Send, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, ExternalLink, ImageOff, Loader2, Maximize2, Pencil, Send, Trash2, X } from "lucide-react";
 import type { SocialPlatformSpec, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 
@@ -67,6 +67,7 @@ export function PostPreviewCard({
 }) {
   const [draft, setDraft] = useState(post.body);
   const [editing, setEditing] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const brand = BRANDS[post.platform];
   const status = STATUS_META[post.status];
   const editable = post.status === "DRAFT" || post.status === "QUEUED" || post.status === "FAILED";
@@ -149,15 +150,27 @@ export function PostPreviewCard({
         {/* Görsel, gideceği oranda gösterilir: kırpılma sürprizi kalmasın. */}
         <div className="hidden w-32 shrink-0 sm:block">
           {post.imageUrl ? (
-            <img
-              src={post.imageUrl}
-              alt=""
-              loading="lazy"
-              className="w-full rounded-xl border border-slate-700/60 object-cover"
-              // Dikey kesim (Pinterest) kartı gereksiz uzatmasın: yükseklik
-              // sınırlanıyor, oran yine doğru görünüyor.
-              style={{ aspectRatio: brand.ratio, maxHeight: 190 }}
-            />
+            // Kart içindeki önizleme küçük; yazının okunup okunmadığı ancak
+            // büyütünce görülüyor. Tıklayınca tam boyda açılır.
+            <button
+              type="button"
+              onClick={() => setZoomed(true)}
+              className="group relative block w-full"
+              title="Görseli büyüt"
+            >
+              <img
+                src={post.imageUrl}
+                alt=""
+                loading="lazy"
+                className="w-full rounded-xl border border-slate-700/60 object-cover transition group-hover:border-slate-500"
+                // Dikey kesim (Pinterest) kartı gereksiz uzatmasın: yükseklik
+                // sınırlanıyor, oran yine doğru görünüyor.
+                style={{ aspectRatio: brand.ratio, maxHeight: 190 }}
+              />
+              <span className="absolute inset-0 flex items-center justify-center rounded-xl bg-slate-950/0 opacity-0 transition group-hover:bg-slate-950/40 group-hover:opacity-100">
+                <Maximize2 className="h-5 w-5 text-white" />
+              </span>
+            </button>
           ) : (
             <div
               className="flex w-full flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 text-amber-300/70"
@@ -215,6 +228,30 @@ export function PostPreviewCard({
               ) : null}
             </>
           )}
+        </div>
+      ) : null}
+
+      {zoomed && post.imageUrl ? (
+        // Tam boy görsel: yazının okunabilirliği ve kırpılma ancak burada görülür.
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/90 p-4"
+          onClick={() => setZoomed(false)}
+          role="presentation"
+        >
+          <img
+            src={post.imageUrl}
+            alt=""
+            className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            onClick={() => setZoomed(false)}
+            className="absolute right-5 top-5 rounded-full bg-slate-900/80 p-2 text-slate-200 transition hover:text-white"
+            aria-label="Kapat"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
       ) : null}
     </article>
