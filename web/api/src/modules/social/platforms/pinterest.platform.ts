@@ -6,7 +6,7 @@
  */
 
 import { requestJson, requireSecret } from "./common.js";
-import type { Publisher } from "./common.js";
+import type { Publisher, Verifier } from "./common.js";
 
 const API = "https://api.pinterest.com/v5/pins";
 
@@ -29,4 +29,16 @@ export const publishToPinterest: Publisher = async ({ body, imageUrl, item, secr
 
   const id = (json.id as string | undefined) ?? null;
   return { externalId: id, externalUrl: id ? `https://www.pinterest.com/pin/${id}/` : null };
+};
+
+/** Pinterest anahtarının geçerli olduğunu ve hangi hesaba ait olduğunu söyler. */
+export const verifyPinterest: Verifier = async (secrets) => {
+  const token = requireSecret(secrets, "accessToken", "Pinterest Access Token");
+  const json = await requestJson("Pinterest", "https://api.pinterest.com/v5/user_account", {
+    method: "GET",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const username = typeof json.username === "string" ? json.username : null;
+  if (!username) throw new Error("Pinterest hesabı okunamadı");
+  return `@${username}`;
 };
