@@ -892,6 +892,12 @@ export type SocialConfig = {
   timeZone: string;
   lang: "tr" | "en";
   recycleOldPosts: boolean;
+  /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
+  bilingual: boolean;
+  /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
+  singleLang: "tr" | "en";
+  /** Etiketler için canlı internet araştırması (ücretli). */
+  researchKeywords: boolean;
 };
 
 export type SocialAccountRow = {

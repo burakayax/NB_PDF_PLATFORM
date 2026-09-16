@@ -865,3 +865,23 @@ model SocialPost {
   @@index([createdAt])
   @@map("social_posts")
 }
+
+/// Bir yazı için bulunmuş anahtar kelimeler — yazı başına BİR kez araştırılır.
+/// NEDEN ÖNBELLEK: Eski yazılar tekrar gündeme geldiğinde aynı araştırmayı
+/// yeniden yapmak hem para hem de gereksiz gecikme demek. Terimler `ttlDays`
+/// sonra bayatlamış sayılır ve bir dahaki sefere yenilenir.
+model SocialKeywordCache {
+  id          String   @id @default(cuid())
+  /// RSS <guid> — yazının kalıcı kimliği.
+  guid        String   @unique
+  /// JSON dizi: Türkçe terimler.
+  trJson      String   @map("tr_json")
+  /// JSON dizi: İngilizce terimler.
+  enJson      String   @map("en_json")
+  /// "research" (internetten araştırıldı) ya da "seo" (yalnızca kendi bankamız).
+  source      String   @default("seo")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("social_keyword_cache")
+}

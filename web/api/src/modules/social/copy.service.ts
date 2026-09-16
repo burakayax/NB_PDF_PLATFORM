@@ -4,26 +4,40 @@
  * Tek istekte TÜM platformların metni birlikte üretilir: hem ucuz (yazı bir kez
  * okunur) hem de metinler birbirini tekrar etmez. Model yanıt veremezse veya
  * biçimi bozarsa şablon yedeğine düşülür — otomasyon asla metinsiz kalmaz.
+ *
+ * ÇİFT DİL: Metin ÇEVİRİLMEZ. Blog yazısının Türkçesi de İngilizcesi de sitede
+ * ayrı ayrı yazılmış özgün metinler; modele ikisini birden verip her dil için o
+ * dilin kendi gönderi metnini yazdırıyoruz. Makine çevirisinin o "sıradan"
+ * tonu bu yüzden oluşmuyor.
  */
 
 import { callClaude } from "../ai/ai.service.js";
 import { isAiConfigured } from "../ai/ai.service.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
+import type { KeywordSet } from "./keywords.service.js";
 import type { SocialPlatform } from "@prisma/client";
+
+/** İki dilli gönderide blokları ayıran çizgi. */
+const LANG_SEPARATOR = "\n\n— — —\n\n";
 
 const SYSTEM = `Sen bir SaaS ürününün sosyal medya editörüsün. Ürün: çevrimiçi PDF araçları platformu.
 Görevin, verilen blog yazısı için her sosyal ağa AYRI, o ağın diline uygun bir gönderi metni yazmak.
 
 Kurallar:
-- Dil: yazının dili neyse o (Türkçe yazıya Türkçe, İngilizce yazıya İngilizce).
-- Türkçe yazarken dilbilgisi kusursuz olmalı: yabancı kelime kullanma, çeviri kokan ifade kurma.
 - Tıklama isteği uyandır: yazının somut faydasını söyle, başlığı olduğu gibi kopyalama.
 - Abartı ve tıklama tuzağı yok. Emoji en fazla bir tane, gerekliyse.
-- Etiketler (hashtag) arama amaçlı seçilir: aranan, gerçek terimler olsun; uydurma marka etiketi yazma.
+- Türkçe yazarken dilbilgisi kusursuz olmalı: yabancı kelime kullanma, çeviri kokan ifade kurma.
+- İngilizce yazarken de metin o dilde DOĞRUDAN yazılmış gibi olmalı; Türkçeden çeviri gibi durmasın.
+- ETİKETLER: yalnızca sana verilen "doğrulanmış terimler" listesinden türet. Listede olmayan
+  terimden etiket uydurma. Terimi HARFİ HARFİNE kullan — harf değiştirme, kısaltma, kendin
+  bir kelime uydurma. Etiketi birleşik ve kelime başları büyük yaz (#PDFKırpma gibi);
+  Türkçe harfleri olduğu gibi bırak.
+- Her dil bloğunun etiketleri KENDİ dilinden olsun: Türkçe blokta Türkçe terimler,
+  İngilizce blokta İngilizce terimler.
 - Etiketleri metnin SONUNA koy.
 - Bağlantıyı yalnızca senden istendiği platformda, metnin sonunda (etiketlerden önce) ver.
-- Karakter sınırını ASLA aşma.
+- Karakter sınırını ASLA aşma. Sınır, iki dilli gönderilerde İKİ BLOĞUN TOPLAMI için geçerlidir.
 
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
 {"X":"...","LINKEDIN":"...","FACEBOOK":"...","INSTAGRAM":"...","PINTEREST":"..."}`;
@@ -88,73 +102,134 @@ export function clamp(text: string, max: number): string {
   return `${truncateWords(blocks.join("\n\n"), max - tailText.length)}${tailText}`;
 }
 
-/** Etiket adayını geçerli bir hashtag'e çevirir (Türkçe harfler sadeleştirilir). */
+/**
+ * Terimi geçerli bir etikete çevirir.
+ *
+ * Türkçe harfler KORUNUR: Instagram, X, Facebook ve Pinterest Unicode etiketi
+ * destekliyor ve Türk kullanıcı "#PDFKırpma" arıyor, "#PdfKirpma" değil.
+ * Yalnızca etiket içinde geçersiz olan karakterler (boşluk, noktalama, emoji)
+ * ayıklanır.
+ */
 export function toHashtag(term: string): string {
-  const map: Record<string, string> = { ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u" };
-  const ascii = term
-    .toLocaleLowerCase("tr")
-    .replace(/[çğıöşü]/g, (c) => map[c] ?? c)
-    .replace(/[^a-z0-9\s]/g, " ")
-    .trim();
-  if (!ascii) return "";
-  const pascal = ascii
+  const cleaned = term.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
+  if (!cleaned) return "";
+  const joined = cleaned
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => `${w.charAt(0).toUpperCase()}${w.slice(1)}`)
+    .map((w) => `${w.charAt(0).toLocaleUpperCase("tr")}${w.slice(1)}`)
     .join("");
   // Rakamla başlayan etiket birçok ağda geçersiz sayılır.
-  return /^[a-zA-Z]/.test(pascal) ? `#${pascal}` : "";
+  return /^\p{L}/u.test(joined) ? `#${joined}` : "";
+}
+
+/**
+ * Modelin kendi yazdığı etiketleri de aynı kurala sokar.
+ *
+ * NEDEN: Model etiketi bazen boşluklu, noktalamalı ya da yarım bırakıyor;
+ * bu hâliyle paylaşılan etiket platformda tıklanamaz bir metne dönüşüyor.
+ * Metin içindeki her "#..." parçası burada yeniden kurulur.
+ */
+export function sanitizeHashtags(text: string): string {
+  return text.replace(/#[^\s#]+/gu, (token) => toHashtag(token.slice(1)) || "");
+}
+
+/** Bir dilin metin parçaları — çift dilli gönderinin yarısı. */
+type LangSide = { lang: "tr" | "en"; title: string; summary: string; link: string; terms: string[] };
+
+/** Bir dil için şablon bloğu (model kullanılamadığında). */
+function fallbackBlock(side: LangSide, room: number, withLink: boolean, tagCount: number): string {
+  const tags = side.terms.slice(0, tagCount).map(toHashtag).filter(Boolean).join(" ");
+  const link = withLink ? `\n\n${side.link}` : "";
+  const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
+  const lead = side.summary ? `${side.title}\n\n${side.summary}` : side.title;
+  return `${truncateWords(lead, Math.max(40, room - tail.length))}${tail}`;
 }
 
 /** Model kullanılamadığında devreye giren sade şablon. */
-function fallbackBody(item: FeedItem, platform: SocialPlatform): string {
+function fallbackBody(sides: LangSide[], platform: SocialPlatform): string {
   const spec = PLATFORM_SPECS[platform];
-  const tags = item.categories
-    .slice(0, spec.hashtagCount)
-    .map(toHashtag)
-    .filter(Boolean)
-    .join(" ");
-  const link = spec.inlineLink ? `\n\n${item.link}` : "";
-  const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
-  const room = Math.max(40, spec.maxChars - tail.length);
-  const lead = item.summary ? `${item.title}\n\n${item.summary}` : item.title;
-  return `${clamp(lead, room)}${tail}`;
+  const per = Math.floor(spec.maxChars / sides.length);
+  return sides
+    .map((side) => fallbackBlock(side, per, spec.inlineLink, spec.hashtagCount))
+    .join(LANG_SEPARATOR);
+}
+
+export type CopyRequest = {
+  item: FeedItem;
+  platforms: SocialPlatform[];
+  keywords: KeywordSet;
+  /** Çift dilli yazılsın mı? (Yazının diğer dildeki hâli yoksa yok sayılır.) */
+  bilingual: boolean;
+  /** Tek dilli platformların (X) dili. */
+  singleLang: "tr" | "en";
+};
+
+/** Bir gönderide hangi dil(ler) yer alacak? */
+function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
+  const { item, keywords } = req;
+  const sideOf = (lang: "tr" | "en"): LangSide => {
+    const isPrimary = lang === item.lang;
+    return {
+      lang,
+      title: isPrimary ? item.title : (item.alt?.title ?? item.title),
+      summary: isPrimary ? item.summary : (item.alt?.summary ?? item.summary),
+      link: isPrimary ? item.link : (item.alt?.link ?? item.link),
+      terms: lang === "tr" ? keywords.tr : keywords.en,
+    };
+  };
+
+  const bilingualPossible = req.bilingual && Boolean(item.alt) && PLATFORM_SPECS[platform].bilingual;
+  // Çift dilde İngilizce üstte: uluslararası kitle önce okur, Türkçe altta tam
+  // karşılığıyla durur (Make.com'daki düzenin aynısı).
+  if (bilingualPossible) return [sideOf("en"), sideOf("tr")];
+  return [sideOf(req.singleLang)];
 }
 
 /**
  * Yazı için her platformun gönderi metnini üretir.
  * Dönen kayıtta HER platform için bir metin bulunur (model başarısızsa şablon).
  */
-export async function writePostBodies(
-  item: FeedItem,
-  platforms: SocialPlatform[],
-): Promise<Record<SocialPlatform, string>> {
+export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPlatform, string>> {
   const result = {} as Record<SocialPlatform, string>;
-  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(item, p);
+  for (const p of ALL_PLATFORMS) result[p] = fallbackBody(sidesFor(req, p), p);
 
-  if (!isAiConfigured() || platforms.length === 0) return result;
+  if (!isAiConfigured() || req.platforms.length === 0) return result;
 
-  const brief = platforms
+  const brief = req.platforms
     .map((p) => {
       const spec = PLATFORM_SPECS[p];
-      return `- ${p}: en fazla ${spec.maxChars} karakter, ${spec.hashtagCount} etiket, bağlantı ${
-        spec.inlineLink ? "metne eklensin" : "EKLENMESİN (ayrı alanda gidiyor)"
-      }.`;
+      const sides = sidesFor(req, p);
+      const langs =
+        sides.length > 1
+          ? `İKİ DİLLİ — önce İngilizce bloğu, sonra "${LANG_SEPARATOR.trim()}" ayıracı, sonra Türkçe bloğu. Her blok kendi dilinde özgün yazılsın, çeviri olmasın.`
+          : `TEK DİLLİ — ${sides[0]?.lang === "en" ? "İngilizce" : "Türkçe"}.`;
+      return `- ${p}: en fazla ${spec.maxChars} karakter (toplam), her blokta ${spec.hashtagCount} etiket, bağlantı ${
+        spec.inlineLink ? "her blokta KENDİ dilinin adresi olacak" : "EKLENMESİN (ayrı alanda gidiyor)"
+      }. ${langs}`;
     })
     .join("\n");
 
-  const prompt = `Blog yazısı:
-Başlık: ${item.title}
-Özet: ${item.summary || "(özet yok)"}
-Bağlantı: ${item.link}
-Konu etiketleri: ${item.categories.join(", ") || "(yok)"}
+  const { item, keywords } = req;
+  const prompt = `Blog yazısı — Türkçe hâli:
+Başlık: ${item.lang === "tr" ? item.title : (item.alt?.title ?? "(yok)")}
+Özet: ${item.lang === "tr" ? item.summary : (item.alt?.summary ?? "(yok)")}
+Adres: ${item.lang === "tr" ? item.link : (item.alt?.link ?? "(yok)")}
 
-İstenen platformlar ve sınırları:
+Blog yazısı — İngilizce hâli:
+Başlık: ${item.lang === "en" ? item.title : (item.alt?.title ?? "(yok)")}
+Özet: ${item.lang === "en" ? item.summary : (item.alt?.summary ?? "(yok)")}
+Adres: ${item.lang === "en" ? item.link : (item.alt?.link ?? "(yok)")}
+
+DOĞRULANMIŞ TERİMLER — etiketler yalnızca bunlardan türetilecek:
+Türkçe: ${keywords.tr.join(", ") || "(yok)"}
+İngilizce: ${keywords.en.join(", ") || "(yok)"}
+
+İstenen platformlar ve kuralları:
 ${brief}`;
 
   let raw: string;
   try {
-    raw = await callClaude(SYSTEM, [{ role: "user", content: prompt }], 1600);
+    raw = await callClaude(SYSTEM, [{ role: "user", content: prompt }], 3000);
   } catch {
     // Model erişilemedi → şablon metinler kalır, otomasyon durmaz.
     return result;
@@ -163,10 +238,10 @@ ${brief}`;
   const parsed = parseJsonObject(raw);
   if (!parsed) return result;
 
-  for (const p of platforms) {
+  for (const p of req.platforms) {
     const value = parsed[p];
     if (typeof value === "string" && value.trim().length > 0) {
-      result[p] = clamp(value, PLATFORM_SPECS[p].maxChars);
+      result[p] = clamp(sanitizeHashtags(value), PLATFORM_SPECS[p].maxChars);
     }
   }
   return result;

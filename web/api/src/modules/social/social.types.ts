@@ -23,6 +23,15 @@ export type FeedItem = {
   categories: string[];
   /** En-boy oranına göre kapak adresleri. */
   images: { wide?: string; square?: string; tall?: string };
+  /** Beslemedeki "diğer dil" işareti — eşleştirme için ham veri. */
+  altRef?: { lang: "tr" | "en"; url: string } | null;
+  /**
+   * Yazının DİĞER dildeki hâli — varsa çift dilli gönderi buradan üretilir.
+   * Çeviri DEĞİL: her iki metin de sitede zaten o dilde yazılmış özgün metin.
+   */
+  alt?: { lang: "tr" | "en"; title: string; summary: string; link: string };
+  /** Sitenin hedeflediği gerçek arama terimleri (etiket üretiminin dayanağı). */
+  keywords?: { tr: string[]; en: string[] };
 };
 
 /** Bir platforma gönderilecek hazır gönderi. */
@@ -53,6 +62,11 @@ export type PlatformSpec = {
   hashtagCount: number;
   /** Metin içinde bağlantı gösterilsin mi? (Instagram'da tıklanmaz.) */
   inlineLink: boolean;
+  /**
+   * Bu ağda çift dilli (EN üstte, TR altta) gönderi yapılabilir mi?
+   * X kapalı: 280 karakterde iki dil okunur bir gönderi çıkarmıyor.
+   */
+  bilingual: boolean;
   /** Bu platformda saklanması gereken gizli alanlar. */
   secretFields: { key: string; label: string; help: string }[];
 };
@@ -67,6 +81,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "wide",
     hashtagCount: 2,
     inlineLink: true,
+    bilingual: false,
     secretFields: [
       { key: "apiKey", label: "API Key", help: "X geliştirici uygulamasının Consumer Key değeri" },
       { key: "apiSecret", label: "API Key Secret", help: "Consumer Secret değeri" },
@@ -82,6 +97,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "wide",
     hashtagCount: 3,
     inlineLink: true,
+    bilingual: true,
     secretFields: [
       { key: "accessToken", label: "Access Token", help: "w_organization_social yetkili erişim anahtarı" },
       { key: "organizationId", label: "Şirket Sayfası ID", help: "Yalnızca sayı — örn. 12345678" },
@@ -95,6 +111,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     imageFormat: "wide",
     hashtagCount: 3,
     inlineLink: true,
+    bilingual: true,
     secretFields: [
       { key: "pageId", label: "Sayfa ID", help: "Facebook sayfasının sayısal kimliği" },
       { key: "pageAccessToken", label: "Sayfa Erişim Anahtarı", help: "Süresiz (long-lived) page access token" },
@@ -107,7 +124,8 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     // Instagram görselsiz gönderi kabul etmez.
     imageRequired: true,
     imageFormat: "square",
-    hashtagCount: 8,
+    hashtagCount: 6,
+    bilingual: true,
     // Instagram caption'ındaki bağlantı tıklanmaz; yine de adresi yazıyoruz ki
     // kullanıcı kopyalayabilsin.
     inlineLink: true,
@@ -122,9 +140,10 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
     maxChars: 480,
     imageRequired: true,
     imageFormat: "tall",
-    hashtagCount: 3,
+    hashtagCount: 2,
     // Pinterest'te bağlantı ayrı bir alanda (link) taşınır; metne yazmaya gerek yok.
     inlineLink: false,
+    bilingual: true,
     secretFields: [
       { key: "accessToken", label: "Access Token", help: "pins:write yetkili erişim anahtarı" },
       { key: "boardId", label: "Pano ID", help: "Pinlerin ekleneceği panonun kimliği" },
