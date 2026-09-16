@@ -1,11 +1,19 @@
+import { PLAN_PRICES } from "./plan-catalogue.js";
 import { getSetting, registerPackagesMergedInvalidator, setSetting } from "./site-config.service.js";
 import { SITE_SETTING_KEYS } from "./site-setting-keys.js";
 
+/**
+ * Yönetim panelinden değiştirilebilen TL fiyatları. Varsayılanlar fiyat
+ * kataloğundan gelir — katalog tek kaynaktır ([[plan-catalogue.ts]]).
+ *
+ * DİKKAT: Bu tutarlar KDV DAHİLDİR (müşterinin gördüğü ve ödediği rakam).
+ * Panelden girilen değer de KDV dahil olmalıdır.
+ */
 export const DEFAULT_PAYMENT_PRICES_TRY: Record<"PRO" | "BUSINESS" | "PRO_ANNUAL", string> = {
-  BUSINESS: "499.00",
-  PRO: "249.00",
+  BUSINESS: PLAN_PRICES.BUSINESS.tryGrossMonthly,
+  PRO: PLAN_PRICES.PRO.tryGrossMonthly,
   // Yıllık PRO = 10 ay fiyatına (2 ay bedava, ~%17 indirim). Yıllık TOPLAM tutar.
-  PRO_ANNUAL: "2490.00",
+  PRO_ANNUAL: PLAN_PRICES.PRO.tryGrossYearly,
 };
 
 type UnifiedPackagesShape = {
