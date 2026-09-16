@@ -9,13 +9,14 @@
 import { oauth1Header } from "./oauth1.js";
 import type { OAuth1Keys } from "./oauth1.js";
 import { PlatformError, downloadImage, requestJson, requireSecret } from "./common.js";
-import type { Publisher } from "./common.js";
+import type { Publisher, Verifier } from "./common.js";
 
 /** Güncel medya ucu. X, eski 1.1 ucunu kullanımdan kaldırma sürecinde. */
 const MEDIA_UPLOAD_URL = "https://api.x.com/2/media/upload";
 /** Yeni uç bir hesapta henüz açık değilse düşülecek eski uç. */
 const LEGACY_MEDIA_UPLOAD_URL = "https://upload.twitter.com/1.1/media/upload.json";
 const TWEET_URL = "https://api.x.com/2/tweets";
+const ME_URL = "https://api.x.com/2/users/me";
 
 function keysFrom(secrets: Record<string, string>): OAuth1Keys {
   return {
@@ -130,4 +131,16 @@ export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
   const data = json.data as { id?: string } | undefined;
   const id = data?.id ?? null;
   return { externalId: id, externalUrl: id ? `https://x.com/i/web/status/${id}` : null };
+};
+
+/** Anahtarların X tarafından kabul edildiğini ve hangi hesaba ait olduğunu söyler. */
+export const verifyX: Verifier = async (secrets) => {
+  const keys = keysFrom(secrets);
+  const json = await requestJson("X", ME_URL, {
+    method: "GET",
+    headers: { authorization: oauth1Header("GET", ME_URL, keys) },
+  });
+  const data = json.data as { username?: string; name?: string } | undefined;
+  if (!data?.username) throw new Error("X hesabı okunamadı");
+  return `@${data.username}`;
 };

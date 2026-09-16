@@ -23,6 +23,7 @@ import {
   publishNow,
   queueDailyPosts,
   saveAccount,
+  testAccount,
   readSocialConfig,
   updatePostBody,
   writeSocialConfig,
@@ -108,6 +109,21 @@ socialRouter.put(
       { fields: Object.keys(body.secrets) },
     );
     response.json({ accounts });
+  }),
+);
+
+socialRouter.post(
+  "/accounts/:platform/test",
+  asyncHandler(async (request, response) => {
+    const platform = platformSchema.parse(request.params.platform);
+    const result = await testAccount(platform as never);
+    await logAdminAudit(
+      actorOf(request),
+      "social.account.test",
+      platform,
+      `${platform} bağlantısı sınandı: ${result.ok ? "başarılı" : "başarısız"}`,
+    );
+    response.json(result);
   }),
 );
 

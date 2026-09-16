@@ -31,6 +31,19 @@ yüzden oluşmuyor. Etiketler de dile göre ayrışır (`#PDFKırpma` / `#CropPD
 Sıra İngilizce yazı listesinden ilerler; Türkçe karşılık alt bloğu besler. Bir
 yazının yalnızca tek dilde karşılığı varsa o gönderi tek dilli paylaşılır.
 
+## Bağlantı gerçekten çalışıyor mu?
+
+Karttaki "bağlı" rozeti yalnızca **dört alanın dolu olduğunu** söyler; anahtarın
+ağ tarafından kabul edildiğini söylemez. Bunu öğrenmek için kartı aç ve
+**"Bağlantıyı sına"** düğmesine bas. Sınama ağa sorar ve hangi hesaba
+bağlandığını söyler (örn. `@pdfplatform`).
+
+Sınama kimliği doğrular. **Paylaşım yetkisinin kesin kanıtı gerçek bir
+gönderidir** — bir taslağı "Şimdi paylaş" ile denemek en güvenli doğrulamadır.
+X'te anahtarlar "Read and write" yetkisi verilmeden ÖNCE üretildiyse kimlik
+sınaması geçer ama paylaşım reddedilir; bu durumda anahtarları X panelinden
+yeniden üret.
+
 ## Anahtar kelimeler nereden geliyor?
 
 Etiketler uydurulmaz; iki kaynaktan beslenir:

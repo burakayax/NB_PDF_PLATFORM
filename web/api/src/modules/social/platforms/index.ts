@@ -1,6 +1,6 @@
 import type { SocialPlatform } from "@prisma/client";
-import type { Publisher } from "./common.js";
-import { publishToX } from "./x.platform.js";
+import type { Publisher, Verifier } from "./common.js";
+import { publishToX, verifyX } from "./x.platform.js";
 import { publishToLinkedIn } from "./linkedin.platform.js";
 import { publishToFacebook, publishToInstagram } from "./meta.platform.js";
 import { publishToPinterest } from "./pinterest.platform.js";
@@ -14,4 +14,12 @@ export const PUBLISHERS: Record<SocialPlatform, Publisher> = {
   PINTEREST: publishToPinterest,
 };
 
-export type { Publisher, PublishInput } from "./common.js";
+/**
+ * Platform → bağlantı sınayıcı. Eksik olan ağ için panel "sınama yok" der;
+ * yanlışlıkla "sorun yok" demez.
+ */
+export const VERIFIERS: Partial<Record<SocialPlatform, Verifier>> = {
+  X: verifyX,
+};
+
+export type { Publisher, PublishInput, Verifier } from "./common.js";

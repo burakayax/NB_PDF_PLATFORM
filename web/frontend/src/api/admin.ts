@@ -988,6 +988,16 @@ export async function disconnectSocialAccount(
   return r.json() as Promise<{ accounts: SocialAccountRow[] }>;
 }
 
+/** Kayıtlı anahtarları ağa sorar — "bağlı" rozeti yalnızca alanların dolu olduğunu söyler. */
+export async function testSocialAccount(
+  accessToken: string,
+  platform: SocialPlatformId,
+): Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, `/social/accounts/${platform}/test`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }>;
+}
+
 export async function fetchSocialPosts(accessToken: string): Promise<{ posts: SocialPostRow[] }> {
   const r = await adminFetch(accessToken, "/social/posts");
   if (!r.ok) throw new Error(await r.text());

@@ -21,7 +21,7 @@ import { logger } from "../../lib/file-log.js";
 import { fetchPairedFeedItems } from "./rss.service.js";
 import { keywordsFor } from "./keywords.service.js";
 import { writePostBodies } from "./copy.service.js";
-import { PUBLISHERS } from "./platforms/index.js";
+import { PUBLISHERS, VERIFIERS } from "./platforms/index.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import type { FeedItem } from "./social.types.js";
 
@@ -240,6 +240,40 @@ export async function saveAccount(input: {
   });
 
   return listAccounts();
+}
+
+/**
+ * Kayıtlı anahtarları ağa sorar. Sonuç `lastError`'a da yazılır ki panel
+ * yenilendiğinde son sınamanın ne dediği kaybolmasın.
+ */
+export async function testAccount(
+  platform: SocialPlatform,
+): Promise<{ ok: boolean; message: string; accounts: AccountView[] }> {
+  const finish = async (ok: boolean, message: string) => {
+    await prisma.socialAccount.updateMany({
+      where: { platform },
+      data: { lastCheckedAt: new Date(), lastError: ok ? null : message.slice(0, 900) },
+    });
+    return { ok, message, accounts: await listAccounts() };
+  };
+
+  const verify = VERIFIERS[platform];
+  if (!verify) {
+    return { ok: false, message: `${PLATFORM_SPECS[platform].label} için sınama henüz yok.`, accounts: await listAccounts() };
+  }
+
+  const row = await prisma.socialAccount.findUnique({ where: { platform } });
+  if (!row) return finish(false, "Bu ağ için kayıtlı anahtar yok.");
+
+  const secrets = decodeSecrets(row);
+  if (!secrets) return finish(false, "Kayıtlı anahtarlar okunamadı — yeniden girilmeli.");
+
+  try {
+    const who = await verify(secrets);
+    return finish(true, `Bağlantı çalışıyor. Hesap: ${who}`);
+  } catch (error) {
+    return finish(false, error instanceof Error ? error.message : "Bilinmeyen hata");
+  }
 }
 
 export async function disconnectAccount(platform: SocialPlatform): Promise<AccountView[]> {
