@@ -383,4 +383,14 @@ describe("etiketlerin eklenmesi", () => {
     expect(toHashtag("pdf kesit alma")).toBe("#PDFKesitAlma");
     expect(toHashtag("taranmış pdf ocr")).toBe("#TaranmışPDFOCR");
   });
+
+  it("İngilizce terimde Türkçe büyük harf kuralını UYGULAMAZ", async () => {
+    const { toHashtag } = await import("../modules/social/copy.service.js");
+    // Türkçe kuralında "i" → "İ". İngilizce terime uygulanınca "#CropPDFİmage"
+    // gibi bozuk etiket çıkıyordu; dil bilgisi bu yüzden zorunlu.
+    expect(toHashtag("crop pdf image", "en")).toBe("#CropPDFImage");
+    expect(toHashtag("save chart as image", "en")).toBe("#SaveChartAsImage");
+    // Türkçe tarafta kural aynen geçerli kalmalı.
+    expect(toHashtag("pdf içerik", "tr")).toBe("#PDFİçerik");
+  });
 });

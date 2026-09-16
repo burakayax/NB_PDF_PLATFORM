@@ -6,7 +6,7 @@
  * yazının görsele gömülmesi diye bir durum yok.
  */
 
-import { PlatformError, requestJson, requireSecret } from "./common.js";
+import { requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
