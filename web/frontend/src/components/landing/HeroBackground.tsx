@@ -5,7 +5,7 @@
  *   1. Derin zemin + ufuk parıltısı  — sayfanın rengi ve derinliği
  *   2. İnce ızgara (maskeli)          — teknik/kurumsal doku, kenarlarda erir
  *   3. Aurora lekeleri (3 adet)       — yavaşça sürüklenen renk bulutları
- *   4. Işık huzmesi                   — tepeden süzülen sabit koni
+ *   4. Işık huzmesi                   — tepeden süzülen, çok yavaş dönen koni
  *   5. Parçacıklar                    — yukarı süzülen minik ışık noktaları
  *   6. Grain                          — bant oluşumunu kıran film dokusu
  *
@@ -18,8 +18,9 @@
  *     vardı; açılışta ve kaydırmada donmanın asıl sebebi buydu.)
  *   • `mix-blend-mode` tam ekran katmanda kullanılmaz — altındaki her şeyi
  *     yeniden karıştırmaya zorlar.
- *   • Huzme (conic-gradient) sabittir; dönmesi ekran boyutunda sürekli
- *     yeniden boyama üretiyordu.
+ *   • Hareket yalnızca kaydırma/ölçek/döndürme ile yapılır: bunlar ekran
+ *     kartında yürür, yeniden boyama gerektirmez. Bulanıklık kalktığı için
+ *     ölçek animasyonu da artık ucuzdur.
  *   • Katman `contain` ile yalıtılır, boyama sayfanın geri kalanına yayılmaz.
  *   • Kullanıcı "hareketi azalt" dediyse (işletim sistemi ayarı) tüm animasyonlar
  *     durur; kompozisyon sabit görüntü olarak kalır.
@@ -27,12 +28,18 @@
 
 /** Parçacıklar — sabit liste (rastgele üretim her render'da yer değiştirirdi). */
 const PARTICLES = [
-  { left: "12%", delay: 0, dur: 26, size: 2 },
-  { left: "29%", delay: 9, dur: 32, size: 1.5 },
-  { left: "46%", delay: 18, dur: 24, size: 2 },
-  { left: "63%", delay: 5, dur: 30, size: 1.5 },
-  { left: "81%", delay: 14, dur: 28, size: 2 },
-  { left: "93%", delay: 22, dur: 34, size: 1.5 },
+  { left: "8%", delay: 0, dur: 26, size: 2 },
+  { left: "17%", delay: 7, dur: 32, size: 1.5 },
+  { left: "24%", delay: 14, dur: 22, size: 2.5 },
+  { left: "33%", delay: 3, dur: 29, size: 1.5 },
+  { left: "41%", delay: 18, dur: 35, size: 2 },
+  { left: "49%", delay: 9, dur: 24, size: 1.5 },
+  { left: "57%", delay: 21, dur: 31, size: 2.5 },
+  { left: "64%", delay: 5, dur: 27, size: 1.5 },
+  { left: "72%", delay: 16, dur: 33, size: 2 },
+  { left: "79%", delay: 11, dur: 23, size: 1.5 },
+  { left: "86%", delay: 25, dur: 30, size: 2 },
+  { left: "93%", delay: 2, dur: 28, size: 1.5 },
 ];
 
 /**
@@ -50,16 +57,20 @@ export function HeroBackground({
     <>
       <style>{`
         @keyframes hb-drift-a {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50%      { transform: translate3d(4%, 5%, 0); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50%      { transform: translate3d(5%, 7%, 0) scale(1.12); }
         }
         @keyframes hb-drift-b {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50%      { transform: translate3d(-5%, -4%, 0); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+          50%      { transform: translate3d(-6%, -5%, 0) scale(1); }
         }
         @keyframes hb-drift-c {
-          0%, 100% { transform: translate3d(0, 0, 0); }
-          50%      { transform: translate3d(3%, -5%, 0); }
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50%      { transform: translate3d(4%, -6%, 0) scale(1.1); }
+        }
+        @keyframes hb-beam {
+          from { transform: translate(-50%, 0) rotate(0deg); }
+          to   { transform: translate(-50%, 0) rotate(360deg); }
         }
         @keyframes hb-rise {
           0%   { transform: translate3d(0, 0, 0); opacity: 0; }
@@ -154,15 +165,17 @@ export function HeroBackground({
           }}
         />
 
-        {/* 4 — Işık huzmesi: tepeden süzülen sabit koni (dönmüyor) */}
+        {/* 4 — Işık huzmesi: tepeden süzülen, çok yavaş dönen koni */}
         <div
-          className="hb-beam absolute"
+          className="hb-beam hb-anim absolute"
           style={{
-            top: "-60vh",
+            top: "-45vh",
             left: "50%",
-            width: "150vw",
-            height: "150vh",
-            transform: "translate(-50%, 0)",
+            width: "115vw",
+            height: "115vh",
+            animation: "hb-beam 140s linear infinite",
+            transformOrigin: "50% 50%",
+            willChange: "transform",
             background:
               "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(129,140,248,0.13) 12deg, transparent 32deg, transparent 180deg, rgba(34,211,238,0.09) 200deg, transparent 220deg)",
           }}
