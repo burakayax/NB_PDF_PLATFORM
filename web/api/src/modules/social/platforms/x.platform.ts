@@ -136,10 +136,21 @@ export const publishToX: Publisher = async ({ body, imageUrl, secrets }) => {
 /** Anahtarların X tarafından kabul edildiğini ve hangi hesaba ait olduğunu söyler. */
 export const verifyX: Verifier = async (secrets) => {
   const keys = keysFrom(secrets);
-  const json = await requestJson("X", ME_URL, {
-    method: "GET",
-    headers: { authorization: oauth1Header("GET", ME_URL, keys) },
-  });
+  let json: Record<string, unknown>;
+  try {
+    json = await requestJson("X", ME_URL, {
+      method: "GET",
+      headers: { authorization: oauth1Header("GET", ME_URL, keys) },
+    });
+  } catch (error) {
+    if (error instanceof PlatformError && error.looksLikeBilling) {
+      throw new Error(
+        "X isteği bakiye yüzünden reddetti — anahtarlarla ilgili bir sorun görünmüyor. " +
+          "X geliştirici panelinden bakiye yükleyip tekrar sına.",
+      );
+    }
+    throw error;
+  }
   const data = json.data as { username?: string; name?: string } | undefined;
   if (!data?.username) throw new Error("X hesabı okunamadı");
   return `@${data.username}`;
