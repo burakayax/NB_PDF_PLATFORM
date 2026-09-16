@@ -612,9 +612,9 @@ type AdminPlansPayload = {
 
 function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("249.00");
-  const [businessPrice, setBusinessPrice] = useState("499.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("2490.00");
+  const [proPrice, setProPrice] = useState("299.00");
+  const [businessPrice, setBusinessPrice] = useState("799.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("2990.00");
   const [pricingBusy, setPricingBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
@@ -966,7 +966,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           return (
             <>
               <div className="grid gap-4 sm:grid-cols-3">
-                <AdminField label="Pro — aylık" description="Pro aboneliğinde her ay tahsil edilen tutar.">
+                <AdminField label="Pro — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar. KDV bu tutarın içindedir.">
                   <input
                     value={proPrice}
                     onChange={(e) => setProPrice(e.target.value)}
@@ -974,7 +974,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                     inputMode="decimal"
                   />
                 </AdminField>
-                <AdminField label="Pro — yıllık (toplam)" description="Yılda tek seferde tahsil. Boş bırakılamaz.">
+                <AdminField label="Pro — yıllık, toplam (KDV dahil)" description="Yılda tek seferde tahsil edilen, KDV dahil tutar. Boş bırakılamaz.">
                   <input
                     value={proAnnualPrice}
                     onChange={(e) => setProAnnualPrice(e.target.value)}
@@ -982,7 +982,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                     inputMode="decimal"
                   />
                 </AdminField>
-                <AdminField label="Business — aylık" description="Business aboneliğinde her ay tahsil edilen tutar. (Yıllık yok.)">
+                <AdminField label="Business — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar; KDV içindedir. (Yıllık yok.)">
                   <input
                     value={businessPrice}
                     onChange={(e) => setBusinessPrice(e.target.value)}
