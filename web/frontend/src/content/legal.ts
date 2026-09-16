@@ -112,7 +112,7 @@ export const legalDocuments: Record<
           title: "10. Changes and contact",
           paragraphs: [
             "We may update these Terms from time to time. We will post the revised version with an updated effective date. Material changes may be communicated by email or in-product notice where appropriate.",
-            "Questions about these Terms: nbglobalstudio@gmail.com.",
+            "Questions about these Terms: info@pdfplatform.app.",
           ],
         },
       ],
@@ -209,7 +209,7 @@ export const legalDocuments: Record<
           title: "9. Your rights",
           paragraphs: [
             "Depending on where you live, you may have rights to access, rectify, delete, restrict, or object to certain processing of your personal data, and to lodge a complaint with a supervisory authority.",
-            "To exercise rights, contact nbglobalstudio@gmail.com with a clear description of your request. We may need to verify your identity before responding.",
+            "To exercise rights, contact info@pdfplatform.app with a clear description of your request. We may need to verify your identity before responding.",
           ],
         },
         {
@@ -226,7 +226,7 @@ export const legalDocuments: Record<
         },
         {
           title: "12. Contact",
-          paragraphs: ["Privacy inquiries: nbglobalstudio@gmail.com."],
+          paragraphs: ["Privacy inquiries: info@pdfplatform.app."],
         },
       ],
     },
@@ -253,7 +253,7 @@ export const legalDocuments: Record<
         {
           title: "3. Rights & contact",
           paragraphs: [
-            "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: nbglobalstudio@gmail.com.",
+            "You may request access, rectification, erasure, restriction or objection under Articles 11–13 KVKK / GDPR-style rights. Contact: info@pdfplatform.app.",
           ],
         },
       ],
@@ -269,7 +269,7 @@ export const legalDocuments: Record<
           title: "1. Seller Information",
           paragraphs: [
             "Seller: NB Global Studio",
-            "Email: nbglobalstudio@gmail.com",
+            "Email: info@pdfplatform.app",
             "Website: nbglobalstudio.com",
             "Service: PDF Platform — cloud-based PDF processing services",
           ],
@@ -300,7 +300,7 @@ export const legalDocuments: Record<
         {
           title: "5. Complaints and Disputes",
           paragraphs: [
-            "For complaints, you may send an email to nbglobalstudio@gmail.com.",
+            "For complaints, you may send an email to info@pdfplatform.app.",
             "Your right to apply to Consumer Arbitration Committees and Consumer Courts remains reserved.",
           ],
         },
@@ -316,7 +316,7 @@ export const legalDocuments: Record<
         {
           title: "1. Parties",
           paragraphs: [
-            "SELLER: NB Global Studio, Email: nbglobalstudio@gmail.com",
+            "SELLER: NB Global Studio, Email: info@pdfplatform.app",
             "BUYER: The user identified by the name, surname, and email address provided at the payment step.",
           ],
         },
@@ -456,7 +456,7 @@ export const legalDocuments: Record<
           title: "10. Değişiklikler ve iletişim",
           paragraphs: [
             "Bu Şartları zaman zaman güncelleyebiliriz. Güncellenmiş sürümü güncellenmiş yürürlük tarihiyle yayınlarız. Önemli değişiklikleri yasal gereklilik ve uygunluk çerçevesinde e-posta veya ürün içi bildirimle duyurabiliriz.",
-            "Şartlarla ilgili sorular: nbglobalstudio@gmail.com.",
+            "Şartlarla ilgili sorular: info@pdfplatform.app.",
           ],
         },
       ],
@@ -553,7 +553,7 @@ export const legalDocuments: Record<
           title: "9. Haklarınız",
           paragraphs: [
             "Yaşadığınız yere bağlı olarak kişisel verilerinize erişme, düzeltme, silme, işlemeyi kısıtlama veya itiraz etme ve bir denetim otoritesine şikâyette bulunma haklarınız olabilir.",
-            "Taleplerinizi nbglobalstudio@gmail.com adresine net bir açıklamayla iletebilirsiniz. Yanıt vermeden önce kimliğinizi doğrulamamız gerekebilir.",
+            "Taleplerinizi info@pdfplatform.app adresine net bir açıklamayla iletebilirsiniz. Yanıt vermeden önce kimliğinizi doğrulamamız gerekebilir.",
           ],
         },
         {
@@ -570,7 +570,7 @@ export const legalDocuments: Record<
         },
         {
           title: "12. İletişim",
-          paragraphs: ["Gizlilik soruları: nbglobalstudio@gmail.com."],
+          paragraphs: ["Gizlilik soruları: info@pdfplatform.app."],
         },
       ],
     },
@@ -585,7 +585,7 @@ export const legalDocuments: Record<
           title: "1. Veri Sorumlusu",
           paragraphs: [
             "Veri sorumlusu: NB Global Studio (bundan böyle ‘Şirket’ olarak anılacaktır).",
-            "İletişim: nbglobalstudio@gmail.com — KVKK kapsamındaki tüm başvurularınızı bu adrese iletebilirsiniz.",
+            "İletişim: info@pdfplatform.app — KVKK kapsamındaki tüm başvurularınızı bu adrese iletebilirsiniz.",
           ],
         },
         {
@@ -645,7 +645,7 @@ export const legalDocuments: Record<
         {
           title: "7. Başvuru Yolu",
           paragraphs: [
-            "Yukarıda belirtilen haklarınızı kullanmak için nbglobalstudio@gmail.com adresine kimliğinizi doğrulayan bilgilerle birlikte yazılı başvuruda bulunabilirsiniz.",
+            "Yukarıda belirtilen haklarınızı kullanmak için info@pdfplatform.app adresine kimliğinizi doğrulayan bilgilerle birlikte yazılı başvuruda bulunabilirsiniz.",
             "Başvurunuzda; adınız, soyadınız, e-posta adresiniz, talebinizin konusu ve açıklaması yer almalıdır. Kimlik teyidi yapıldıktan sonra talebiniz KVKK’da öngörülen süreler içinde (en geç 30 gün) sonuçlandırılır.",
             "Başvurunuzun olumsuz sonuçlanması veya başvuruya hiç yanıt verilmemesi hâlinde Kişisel Verileri Koruma Kurumu’na (www.kvkk.gov.tr) şikâyette bulunma hakkınız saklıdır.",
           ],
@@ -663,7 +663,7 @@ export const legalDocuments: Record<
           title: "1. Satıcı Bilgileri",
           paragraphs: [
             "Satıcı: NB Global Studio",
-            "E-posta: nbglobalstudio@gmail.com",
+            "E-posta: info@pdfplatform.app",
             "Web sitesi: nbglobalstudio.com",
             "Hizmet: PDF Platform — bulut tabanlı PDF işleme hizmetleri",
           ],
@@ -695,7 +695,7 @@ export const legalDocuments: Record<
         {
           title: "5. Şikayet ve İtiraz",
           paragraphs: [
-            "Şikayetleriniz için nbglobalstudio@gmail.com adresine e-posta gönderebilirsiniz.",
+            "Şikayetleriniz için info@pdfplatform.app adresine e-posta gönderebilirsiniz.",
             "Tüketici olarak Tüketici Hakem Heyetlerine ve Tüketici Mahkemelerine başvurma hakkınız saklıdır.",
           ],
         },
@@ -711,7 +711,7 @@ export const legalDocuments: Record<
         {
           title: "1. Taraflar",
           paragraphs: [
-            "SATICI: NB Global Studio, E-posta: nbglobalstudio@gmail.com",
+            "SATICI: NB Global Studio, E-posta: info@pdfplatform.app",
             "ALICI: Ödeme adımında belirtilen ad-soyad ve e-posta adresiyle tanımlanan kullanıcı.",
           ],
         },
