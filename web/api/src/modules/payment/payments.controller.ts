@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { PLAN_PRICES, EXTRA_SEAT_PRICE, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
+import { PLAN_PRICES, EXTRA_SEAT_PRICE, YEARLY_BILLING_PLANS, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
@@ -150,6 +150,11 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const isYearly = billingCycle === "YEARLY";
+  // Satılmayan bir döngü için ödeme başlatılmaz: Başlangıç ve Plus yalnızca
+  // aylıktır ve ekranda yıllık seçeneği hiç gösterilmez.
+  if (isYearly && !YEARLY_BILLING_PLANS.includes(planId)) {
+    throw new HttpError(400, "Bu pakette yıllık ödeme seçeneği bulunmuyor. Lütfen aylık seçeneğiyle devam edin.");
+  }
   const priceObj = checkoutCurrency === "USD" ? PLAN_PRICES_USD[planId] : PLAN_PRICES_TRY[planId];
   const seatUnitPrice = checkoutCurrency === "USD" ? EXTRA_SEAT_PRICE_USD : EXTRA_SEAT_PRICE_TRY;
   const seatMonthlyTotal = (extraSeats ?? 0) * seatUnitPrice;

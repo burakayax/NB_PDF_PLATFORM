@@ -20,13 +20,15 @@ tüketiciye gösterilen fiyatın vergi dahil olması yasal zorunluluktur.
 | Plan | Aylık (TL) | Yıllık (TL) | Aylık (USD) | Yıllık (USD) | Yapay zekâ / ay |
 |---|---|---|---|---|---|
 | Ücretsiz | — | — | — | — | 0 |
-| Başlangıç | 99 ₺ | 990 ₺ | $3.99 | $39.99 | 5 |
-| Plus | 179 ₺ | 1.790 ₺ | $6.99 | $69.99 | 15 |
+| Başlangıç | 99 ₺ | — | $3.99 | — | 5 |
+| Plus | 179 ₺ | — | $6.99 | — | 15 |
 | Pro | 299 ₺ | 2.990 ₺ | $11.99 | $119.99 | 40 |
 | Business | 799 ₺ | 7.990 ₺ | $39.99 | $399.99 | 100 |
 | Ek koltuk | 159 ₺ | — | $7.99 | — | — |
 
-Yıllık ödeme = 10 ay fiyatına 12 ay (iki ay bedava).
+**Yıllık ödeme yalnızca Pro ve Business'ta vardır** (10 ay fiyatına 12 ay, iki
+ay bedava). Başlangıç ve Plus yalnızca aylıktır; ekranda yıllık seçeneği hiç
+gösterilmez ve ödeme tarafı da yıllık isteği reddeder.
 
 Dolar fiyatları yurt dışı müşteriler içindir ve **KDV'siz**dir (ihracat
 istisnası): gösterilen tutar ödenen tutardır.
