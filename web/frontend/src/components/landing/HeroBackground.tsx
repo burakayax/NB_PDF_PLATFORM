@@ -5,32 +5,34 @@
  *   1. Derin zemin + ufuk parıltısı  — sayfanın rengi ve derinliği
  *   2. İnce ızgara (maskeli)          — teknik/kurumsal doku, kenarlarda erir
  *   3. Aurora lekeleri (3 adet)       — yavaşça sürüklenen renk bulutları
- *   4. Işık huzmesi                   — tepeden süzülen, çok yavaş dönen koni
+ *   4. Işık huzmesi                   — tepeden süzülen sabit koni
  *   5. Parçacıklar                    — yukarı süzülen minik ışık noktaları
  *   6. Grain                          — bant oluşumunu kıran film dokusu
  *
  * PERFORMANS KURALLARI (bozulursa açılış takılır):
  *   • Yalnızca `transform` ve `opacity` animasyonlanır. `filter`/`background`
  *     animasyonu her karede yeniden boyama demektir — kullanılmaz.
- *   • Bulanıklık (blur) pahalıdır: mobilde yarıya indirilir, parçacıklar kapanır.
+ *   • CSS `blur()` KULLANILMAZ. Bulanık leke görüntüsü, kenarı zaten yumuşak
+ *     radial-gradient ile üretilir; böylece leke hareket ederken yeniden
+ *     bulanıklık hesabı yapılmaz. (Eskiden blur(120px) + scale animasyonu
+ *     vardı; açılışta ve kaydırmada donmanın asıl sebebi buydu.)
+ *   • `mix-blend-mode` tam ekran katmanda kullanılmaz — altındaki her şeyi
+ *     yeniden karıştırmaya zorlar.
+ *   • Huzme (conic-gradient) sabittir; dönmesi ekran boyutunda sürekli
+ *     yeniden boyama üretiyordu.
+ *   • Katman `contain` ile yalıtılır, boyama sayfanın geri kalanına yayılmaz.
  *   • Kullanıcı "hareketi azalt" dediyse (işletim sistemi ayarı) tüm animasyonlar
  *     durur; kompozisyon sabit görüntü olarak kalır.
  */
 
 /** Parçacıklar — sabit liste (rastgele üretim her render'da yer değiştirirdi). */
 const PARTICLES = [
-  { left: "8%", delay: 0, dur: 26, size: 2 },
-  { left: "17%", delay: 7, dur: 32, size: 1.5 },
-  { left: "24%", delay: 14, dur: 22, size: 2.5 },
-  { left: "33%", delay: 3, dur: 29, size: 1.5 },
-  { left: "41%", delay: 18, dur: 35, size: 2 },
-  { left: "49%", delay: 9, dur: 24, size: 1.5 },
-  { left: "57%", delay: 21, dur: 31, size: 2.5 },
-  { left: "64%", delay: 5, dur: 27, size: 1.5 },
-  { left: "72%", delay: 16, dur: 33, size: 2 },
-  { left: "79%", delay: 11, dur: 23, size: 1.5 },
-  { left: "86%", delay: 25, dur: 30, size: 2 },
-  { left: "93%", delay: 2, dur: 28, size: 1.5 },
+  { left: "12%", delay: 0, dur: 26, size: 2 },
+  { left: "29%", delay: 9, dur: 32, size: 1.5 },
+  { left: "46%", delay: 18, dur: 24, size: 2 },
+  { left: "63%", delay: 5, dur: 30, size: 1.5 },
+  { left: "81%", delay: 14, dur: 28, size: 2 },
+  { left: "93%", delay: 22, dur: 34, size: 1.5 },
 ];
 
 /**
@@ -48,20 +50,16 @@ export function HeroBackground({
     <>
       <style>{`
         @keyframes hb-drift-a {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-          50%      { transform: translate3d(5%, 7%, 0) scale(1.12); }
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50%      { transform: translate3d(4%, 5%, 0); }
         }
         @keyframes hb-drift-b {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
-          50%      { transform: translate3d(-6%, -5%, 0) scale(1); }
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50%      { transform: translate3d(-5%, -4%, 0); }
         }
         @keyframes hb-drift-c {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-          50%      { transform: translate3d(4%, -6%, 0) scale(1.1); }
-        }
-        @keyframes hb-beam {
-          from { transform: translate(-50%, 0) rotate(0deg); }
-          to   { transform: translate(-50%, 0) rotate(360deg); }
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50%      { transform: translate3d(3%, -5%, 0); }
         }
         @keyframes hb-rise {
           0%   { transform: translate3d(0, 0, 0); opacity: 0; }
@@ -74,9 +72,8 @@ export function HeroBackground({
           50%      { opacity: 0.85; }
         }
 
-        /* Mobil: bulanıklık yarıya, parçacıklar kapalı — ısınma ve takılma olmasın. */
+        /* Mobil: parçacıklar ve huzme kapalı — ısınma ve takılma olmasın. */
         @media (max-width: 767px) {
-          .hb-blob { filter: blur(70px) !important; }
           .hb-particle, .hb-beam { display: none !important; }
         }
 
@@ -90,7 +87,7 @@ export function HeroBackground({
       <div
         aria-hidden="true"
         className={`pointer-events-none -z-10 overflow-hidden ${className}`}
-        style={{ background: "#070a12" }}
+        style={{ background: "#070a12", contain: "layout paint" }}
       >
         {/* 1 — Ufuk parıltısı: sayfanın tepesinden inen ışık */}
         <div
@@ -115,66 +112,59 @@ export function HeroBackground({
           }}
         />
 
-        {/* 3 — Aurora lekeleri */}
+        {/* 3 — Aurora lekeleri. Yumuşaklık gradient'in kendisinden gelir:
+            renk merkezde başlar, %70'te tamamen erir. Blur filtresi YOK. */}
         <div
-          className="hb-blob hb-anim absolute"
+          className="hb-anim absolute"
           style={{
             top: "-32%",
             left: "-18%",
             width: "78vw",
             height: "78vw",
-            borderRadius: "50%",
             background:
-              "radial-gradient(circle at 40% 40%, rgba(37,99,235,0.42), transparent 62%)",
-            filter: "blur(120px)",
+              "radial-gradient(circle at 50% 50%, rgba(37,99,235,0.40) 0%, rgba(37,99,235,0.18) 34%, rgba(37,99,235,0.05) 55%, transparent 70%)",
             animation: "hb-drift-a 28s ease-in-out infinite",
             willChange: "transform",
           }}
         />
         <div
-          className="hb-blob hb-anim absolute"
+          className="hb-anim absolute"
           style={{
             top: "-14%",
             right: "-22%",
             width: "66vw",
             height: "66vw",
-            borderRadius: "50%",
             background:
-              "radial-gradient(circle at 55% 40%, rgba(139,92,246,0.36), transparent 62%)",
-            filter: "blur(130px)",
+              "radial-gradient(circle at 50% 50%, rgba(139,92,246,0.34) 0%, rgba(139,92,246,0.15) 34%, rgba(139,92,246,0.04) 55%, transparent 70%)",
             animation: "hb-drift-b 36s ease-in-out infinite",
             willChange: "transform",
           }}
         />
         <div
-          className="hb-blob hb-anim absolute"
+          className="hb-anim absolute"
           style={{
             top: "34%",
             left: "22%",
             width: "52vw",
             height: "52vw",
-            borderRadius: "50%",
             background:
-              "radial-gradient(circle at 45% 50%, rgba(6,182,212,0.26), transparent 62%)",
-            filter: "blur(110px)",
+              "radial-gradient(circle at 50% 50%, rgba(6,182,212,0.24) 0%, rgba(6,182,212,0.10) 34%, rgba(6,182,212,0.03) 55%, transparent 70%)",
             animation: "hb-drift-c 24s ease-in-out infinite",
             willChange: "transform",
           }}
         />
 
-        {/* 4 — Işık huzmesi: tepeden süzülen, çok yavaş dönen koni */}
+        {/* 4 — Işık huzmesi: tepeden süzülen sabit koni (dönmüyor) */}
         <div
-          className="hb-beam hb-anim absolute"
+          className="hb-beam absolute"
           style={{
             top: "-60vh",
             left: "50%",
             width: "150vw",
             height: "150vh",
+            transform: "translate(-50%, 0)",
             background:
               "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(129,140,248,0.13) 12deg, transparent 32deg, transparent 180deg, rgba(34,211,238,0.09) 200deg, transparent 220deg)",
-            animation: "hb-beam 120s linear infinite",
-            willChange: "transform",
-            transformOrigin: "50% 50%",
           }}
         />
 
@@ -206,15 +196,15 @@ export function HeroBackground({
           }}
         />
 
-        {/* 6 — Grain: renk bantlarını kırar, baskıdaki film dokusu hissi verir */}
+        {/* 6 — Grain: renk bantlarını kırar. Karışım kipi YOK; düz düşük
+            opaklık, tam ekran blend'in maliyeti olmadan aynı işi görür. */}
         <div
           className="absolute inset-0"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
             backgroundSize: "200px 200px",
-            opacity: 0.04,
-            mixBlendMode: "overlay",
+            opacity: 0.05,
           }}
         />
 
