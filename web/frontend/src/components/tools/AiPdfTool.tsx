@@ -175,6 +175,16 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   }, [accessToken]);
 
   const charCount = docText.length;
+
+  /**
+   * Çevirinin kaç hak tüketeceği. Sunucu aynı hesabı yapar ve ASIL DENETİM
+   * ORADADIR — buradaki kopya yalnızca kullanıcıya işlem öncesi maliyeti
+   * göstermek için. Değerler değişirse ai.service.ts ile birlikte güncellenmeli.
+   */
+  const TRANSLATE_CHARS_PER_CREDIT = 20_000;
+  const MAX_TRANSLATE_CHARS = 300_000;
+  const translateCost = Math.max(1, Math.ceil(charCount / TRANSLATE_CHARS_PER_CREDIT));
+  const translateTooLong = charCount > MAX_TRANSLATE_CHARS;
   const readTime = Math.max(1, Math.round(charCount / 1000));
 
   function handleAiError(e: unknown) {
@@ -934,8 +944,21 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                     {TRANSLATE_TARGETS.map((l) => <option key={l.code} value={l.code} className="text-black">{tr ? l.tr : l.en}</option>)}
                   </select>
                 </div>
-                <button type="button" onClick={() => void runTranslate()}
-                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                {translateTooLong ? (
+                  <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] leading-relaxed text-amber-200">
+                    {tr
+                      ? `Bu belge tek seferde çevrilemeyecek kadar uzun (${Math.round(charCount / 1000)} bin karakter, üst sınır ${MAX_TRANSLATE_CHARS / 1000} bin). Belgeyi bölüp parça parça çevirin.`
+                      : `This document is too long to translate in one go (${Math.round(charCount / 1000)}k characters; limit ${MAX_TRANSLATE_CHARS / 1000}k). Split it and translate the parts.`}
+                  </p>
+                ) : (
+                  <p className="px-1 text-[12.5px] text-slate-400">
+                    {tr
+                      ? `Bu çeviri ${translateCost} yapay zekâ hakkı kullanacak (belge uzunluğuna göre).`
+                      : `This translation will use ${translateCost} AI credit${translateCost === 1 ? "" : "s"} (based on document length).`}
+                  </p>
+                )}
+                <button type="button" onClick={() => void runTranslate()} disabled={translateTooLong}
+                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">
                   <Languages className="h-5 w-5" />
                   {tr ? `${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).tr} diline çevir` : `Translate to ${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).en}`}
                 </button>
