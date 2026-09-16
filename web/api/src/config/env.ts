@@ -108,10 +108,10 @@ const rawEnvSchema = z
     ADMIN_EMAIL: z.string().email(),
     /** ADMIN rolü verilen tek e-posta; kaynak kodda sabit değil, env'den okunur. */
     ROLE_ADMIN_EMAIL: z.string().email(),
-    /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: nbglobalstudio@gmail.com). */
-    CONTACT_TO_EMAIL: z.string().email().default("nbglobalstudio@gmail.com"),
+    /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: info@pdfplatform.app). */
+    CONTACT_TO_EMAIL: z.string().email().default("info@pdfplatform.app"),
     /**
-     * İlk sunucu açılışında isteğe bağlı hesap (ikisi de dolu olmalı). Rol e-postaya göre (yalnızca nbglobalstudio@gmail.com → ADMIN).
+     * İlk sunucu açılışında isteğe bağlı hesap (ikisi de dolu olmalı). Rol e-postaya göre belirlenir (yalnızca ROLE_ADMIN_EMAIL ile eşleşen adres → ADMIN).
      */
     BOOTSTRAP_ADMIN_EMAIL: z.string().optional().default(""),
     BOOTSTRAP_ADMIN_PASSWORD: z.string().optional().default(""),
