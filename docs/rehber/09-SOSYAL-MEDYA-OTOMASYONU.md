@@ -89,6 +89,13 @@ başına yaklaşık 2 kuruş; yeni yazı üretmediğin aylarda sıfıra yakın.
 Araştırmayı panelden kapatabilirsin; o zaman yalnızca 1. kaynak kullanılır ve
 maliyet tamamen sıfırlanır.
 
+## Elle paylaşmak
+
+Bir ağ henüz bağlı değilse ya da bir gönderiyi elle atmak istersen, taslak
+kartındaki iki düğme işini görür: **Metni kopyala** (etiketler ve satır sonları
+bozulmadan panoya alır) ve **Görseli indir**. Görsele tıklayıp büyüttüğünde de
+indirme düğmesi orada duruyor.
+
 ## Bağlantı her ağda aynı görünmez
 
 | Ağ | Bağlantı |

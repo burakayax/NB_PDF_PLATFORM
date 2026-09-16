@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, ExternalLink, ImageOff, Loader2, Maximize2, Pencil, Send, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, ClipboardCheck, Copy, Download, ExternalLink, ImageOff, Loader2, Maximize2, Pencil, Send, Trash2, X } from "lucide-react";
 import type { SocialPlatformSpec, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 
@@ -68,6 +68,24 @@ export function PostPreviewCard({
   const [draft, setDraft] = useState(post.body);
   const [editing, setEditing] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  /**
+   * Elle paylaşım için metni panoya alır.
+   *
+   * NEDEN: Henüz bağlanmamış ağlara (ya da bağlantı sorunu olan bir ağa)
+   * gönderiyi elle atmak gerekebiliyor. Metni kart içinden seçmek, etiketleri
+   * ve satır sonlarını bozmadan kopyalamayı zorlaştırıyor.
+   */
+  async function copyBody() {
+    try {
+      await navigator.clipboard.writeText(post.body);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Pano izni yoksa sessiz kal: metin zaten ekranda seçilebilir durumda.
+    }
+  }
   const brand = BRANDS[post.platform];
   const status = STATUS_META[post.status];
   const editable = post.status === "DRAFT" || post.status === "QUEUED" || post.status === "FAILED";
@@ -207,6 +225,25 @@ export function PostPreviewCard({
                 <Pencil className="h-3.5 w-3.5" />
                 Metni düzenle
               </button>
+              <button type="button" className={iconButton} onClick={() => void copyBody()}>
+                {copied ? (
+                  <ClipboardCheck className="h-3.5 w-3.5 text-emerald-300" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+                {copied ? "Kopyalandı" : "Metni kopyala"}
+              </button>
+              {post.imageUrl ? (
+                <a
+                  className={iconButton}
+                  href={post.imageUrl}
+                  download
+                  // Görsel kendi alan adımızdan geliyor; indirme dosya olarak iner.
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Görseli indir
+                </a>
+              ) : null}
               <button
                 type="button"
                 className={`${iconButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
@@ -244,6 +281,15 @@ export function PostPreviewCard({
             className="max-h-full max-w-full rounded-xl object-contain shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           />
+          <a
+            href={post.imageUrl}
+            download
+            onClick={(e) => e.stopPropagation()}
+            className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-2 text-xs font-medium text-slate-200 transition hover:text-white"
+          >
+            <Download className="h-4 w-4" />
+            Görseli indir
+          </a>
           <button
             type="button"
             onClick={() => setZoomed(false)}
