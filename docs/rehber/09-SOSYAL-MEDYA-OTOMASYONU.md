@@ -65,7 +65,11 @@ eder.
 
 ## Anahtar kelimeler nereden geliyor?
 
-Etiketler uydurulmaz; iki kaynaktan beslenir:
+Etiketleri yapay zekâ **yazmaz** — sistem, doğrulanmış terim listesinden kendisi
+üretir. Böylece yazım her gönderide aynı olur ve kısaltmalar büyük harfle
+yazılır (`#PDFKesitAlma`, `#ExtractTableFromPDF`).
+
+Terimler iki kaynaktan beslenir:
 
 1. **Sitenin kendi SEO terimleri** — her araç sayfasının hedeflediği gerçek
    arama terimleri ve yazının etiketleri. Ücretsiz, her zaman devrede.
