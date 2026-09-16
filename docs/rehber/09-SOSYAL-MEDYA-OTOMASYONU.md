@@ -38,7 +38,8 @@ ağ tarafından kabul edildiğini söylemez. Bunu öğrenmek için kartı aç ve
 **"Bağlantıyı sına"** düğmesine bas. Sınama ağa sorar ve hangi hesaba
 bağlandığını söyler (örn. `@pdfplatform`).
 
-Sınama kimliği doğrular. **Paylaşım yetkisinin kesin kanıtı gerçek bir
+Sınama X, Facebook, Instagram ve Pinterest için çalışır (LinkedIn'de erişim
+anahtarı alınınca eklenecek). Sınama kimliği doğrular. **Paylaşım yetkisinin kesin kanıtı gerçek bir
 gönderidir** — bir taslağı "Şimdi paylaş" ile denemek en güvenli doğrulamadır.
 X'te anahtarlar "Read and write" yetkisi verilmeden ÖNCE üretildiyse kimlik
 sınaması geçer ama paylaşım reddedilir; bu durumda anahtarları X panelinden

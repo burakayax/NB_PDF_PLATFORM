@@ -6,8 +6,8 @@
  * yazının görsele gömülmesi diye bir durum yok.
  */
 
-import { requestJson, requireSecret } from "./common.js";
-import type { Publisher } from "./common.js";
+import { PlatformError, requestJson, requireSecret } from "./common.js";
+import type { Publisher, Verifier } from "./common.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
@@ -94,3 +94,38 @@ async function waitForContainer(creationId: string, token: string): Promise<void
   }
   throw new Error("Instagram görseli zamanında işlemedi");
 }
+
+/**
+ * Sayfa anahtarının gerçekten o sayfaya ait ve geçerli olduğunu sınar.
+ * Paylaşım yapmaz — yalnızca sayfanın adını okur.
+ */
+export const verifyFacebook: Verifier = async (secrets) => {
+  const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
+  const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
+  const json = await requestJson(
+    "Facebook",
+    `${GRAPH}/${pageId}?fields=name&access_token=${encodeURIComponent(token)}`,
+    { method: "GET" },
+  );
+  const name = typeof json.name === "string" ? json.name : null;
+  if (!name) throw new Error("Sayfa adı okunamadı — anahtar bu sayfaya ait olmayabilir.");
+  return name;
+};
+
+/** Instagram işletme hesabının anahtarla okunabildiğini sınar. */
+export const verifyInstagram: Verifier = async (secrets) => {
+  const igUserId = requireSecret(secrets, "igUserId", "Instagram İşletme Hesabı ID");
+  const token = requireSecret(secrets, "pageAccessToken", "Instagram Sayfa Erişim Anahtarı");
+  const json = await requestJson(
+    "Instagram",
+    `${GRAPH}/${igUserId}?fields=username&access_token=${encodeURIComponent(token)}`,
+    { method: "GET" },
+  );
+  const username = typeof json.username === "string" ? json.username : null;
+  if (!username) {
+    throw new Error(
+      "Instagram hesabı okunamadı — hesap İşletme tipinde ve Facebook sayfasına bağlı olmalı.",
+    );
+  }
+  return `@${username}`;
+};

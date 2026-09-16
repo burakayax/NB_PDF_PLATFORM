@@ -352,3 +352,20 @@ describe("PlatformError.looksLikeBilling", () => {
     expect(new PlatformError("X", 500, "Internal error").looksLikeBilling).toBe(false);
   });
 });
+
+
+// ─── Sınayıcı kapsamı ────────────────────────────────────────────────────────
+
+describe("bağlantı sınayıcıları", () => {
+  it("anahtar isteyen her ağ için sınayıcı tanımlı", async () => {
+    const { VERIFIERS } = await import("../modules/social/platforms/index.js");
+    const { ALL_PLATFORMS } = await import("../modules/social/social.types.js");
+
+    // LinkedIn dışındaki ağlar sınanabilmeli: anahtar girildikten sonra
+    // kullanıcı, paylaşım yapmadan çalıştığını görebilmeli.
+    for (const p of ALL_PLATFORMS) {
+      if (p === "LINKEDIN") continue; // erişim anahtarı henüz alınmadı
+      expect(VERIFIERS[p], `${p} için sınayıcı yok`).toBeTypeOf("function");
+    }
+  });
+});
