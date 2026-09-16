@@ -20,6 +20,12 @@ Panelde yeri: **Yönetim Paneli → Büyüme → Sosyal medya**
 Gönderiler iki dilli paylaşılır: önce İngilizce bloğu, bir ayıraç, sonra Türkçe
 bloğu. Her blok **kendi dilinin sayfasına** bağlanır.
 
+**Metin her ağda AYNI.** Yapay zekâ ağ başına ayrı metin yazmıyor; dil başına
+iki uzunluk üretiyor. Uzun metin Facebook, Instagram ve LinkedIn'de aynen
+kullanılıyor; kısa metin X ve Pinterest'te. Ağ başına ayrı yazdırmak aynı yazıyı
+her ağda başka türlü anlatıyordu — aynı markayı birden çok ağda takip eden kişi
+için tutarsız görünüyordu.
+
 **Çeviri yapılmıyor.** Blog yazılarını zaten iki dilde ayrı ayrı yazıyorsun;
 yapay zekâya ikisini birden veriyoruz ve her dil için o dilin kendi gönderi
 metnini yazdırıyoruz. Make.com'daki "çeviri gibi duran, sıradan" metin sorunu bu
