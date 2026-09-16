@@ -820,7 +820,10 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: proM }, yearly: { ...p.pricing.yearly, TRY: proY ?? p.pricing.yearly.TRY } } };
       }
       if (p.id === "BUSINESS" && bizM) {
-        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 12 } } };
+        // Yıllık = 10 ay fiyatına (iki ay bedava) — Pro ile AYNI kural ve
+        // fiyat kataloğuyla aynı. Burada 12 ile çarpılırsa ekranda indirimsiz
+        // tutar görünür ama ödemede indirimli tutar çekilir.
+        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 10 } } };
       }
       return p;
     });

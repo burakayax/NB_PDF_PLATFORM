@@ -22,6 +22,7 @@ import {
   EXTRA_SEAT_PRICE,
   AI_MONTHLY_CREDITS,
   AI_COST_PER_CREDIT_USD,
+  YEARLY_BILLING_PLANS,
   KDV_RATE,
   netFromGrossTry,
   type PaidPlanId,
@@ -126,6 +127,21 @@ describe("fiyat merdiveni", () => {
       const p = PLAN_PRICES[plan];
       expect(minor(p.tryGrossYearly)).toBeLessThan(minor(p.tryGrossMonthly) * 12);
       expect(minor(p.usdYearly)).toBeLessThan(minor(p.usdMonthly) * 12);
+    }
+  });
+
+  it("yıllık faturalandırma yalnızca ekranda sunulan planlarda açıktır", () => {
+    // Başlangıç ve Plus ekranda aylık-tek karttır (MonthlyOnlyCard). Ödeme
+    // tarafı da bunu reddetmeli, yoksa satılmayan bir döngü tahsil edilir.
+    expect([...YEARLY_BILLING_PLANS].sort()).toEqual(["BUSINESS", "PRO"]);
+  });
+
+  it("yıllık tutar aylığın tam 10 katıdır (iki ay bedava)", () => {
+    // Ekranda Business yıllığı bir dönem 12 katla hesaplanıyordu; ödeme ise 10
+    // katı çekiyordu. Kural her iki planda da aynı kalmalı.
+    for (const plan of YEARLY_BILLING_PLANS) {
+      const p = PLAN_PRICES[plan];
+      expect(minor(p.tryGrossYearly)).toBe(minor(p.tryGrossMonthly) * 10);
     }
   });
 

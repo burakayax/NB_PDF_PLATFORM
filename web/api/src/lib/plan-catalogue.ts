@@ -19,6 +19,14 @@
 export const KDV_RATE = 0.2;
 
 export type PaidPlanId = "STARTER" | "PLUS" | "PRO" | "BUSINESS";
+
+/**
+ * Yıllık faturalandırma YALNIZCA bu planlarda sunulur. Başlangıç ve Plus
+ * aylıktır; ekranda da yıllık seçeneği gösterilmez (`MonthlyOnlyCard`).
+ * Diğer planların yıllık tutarları yine tanımlıdır ki elle üretilmiş bir
+ * istek fiyatsız kalmasın, ama satın alma yolu kapalıdır.
+ */
+export const YEARLY_BILLING_PLANS: readonly PaidPlanId[] = ["PRO", "BUSINESS"];
 export type CataloguePlanId = "FREE" | PaidPlanId;
 
 export type PlanPrice = {
