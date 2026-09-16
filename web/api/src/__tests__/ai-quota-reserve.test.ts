@@ -62,10 +62,11 @@ describe("reserveAiQuota", () => {
     // Kontrol ve düşüm aynı çağrıda: koşul, limitin altında olmayı zorunlu kılar.
     expect(usageUpdateMany).toHaveBeenCalledTimes(1);
     const arg = usageUpdateMany.mock.calls[0]?.[0] as {
-      where: { count: { lt: number } };
+      where: { count: { lte: number } };
       data: { count: { increment: number } };
     };
-    expect(arg.where.count.lt).toBe(10);
+    // 1 hak için: sayaç en fazla (limit - 1) olabilir.
+    expect(arg.where.count.lte).toBe(9);
     expect(arg.data.count.increment).toBe(1);
     // Sağlayıcı çağrısından önce düşüldüğü için ayrıca bir "tüket" adımı yok.
     expect(userUpdateMany).not.toHaveBeenCalled();
@@ -80,11 +81,11 @@ describe("reserveAiQuota", () => {
 
     expect(ok).toBe(true);
     const arg = userUpdateMany.mock.calls[0]?.[0] as {
-      where: { bonusAiCredits: { gt: number } };
+      where: { bonusAiCredits: { gte: number } };
       data: { bonusAiCredits: { decrement: number } };
     };
-    // Kredi yalnızca 0'dan büyükse düşer → eksiye inemez.
-    expect(arg.where.bonusAiCredits.gt).toBe(0);
+    // Kredi yalnızca TAMAMI varsa düşer → eksiye inemez.
+    expect(arg.where.bonusAiCredits.gte).toBe(1);
     expect(arg.data.bonusAiCredits.decrement).toBe(1);
   });
 
@@ -135,10 +136,10 @@ describe("refundAiQuota", () => {
     await refundAiQuota("u1", "PRO", "USER");
 
     const arg = usageUpdateMany.mock.calls[0]?.[0] as {
-      where: { count: { gt: number } };
+      where: { count: { gte: number } };
       data: { count: { decrement: number } };
     };
-    expect(arg.where.count.gt).toBe(0);
+    expect(arg.where.count.gte).toBe(1);
     expect(arg.data.count.decrement).toBe(1);
     expect(userUpdateMany).not.toHaveBeenCalled();
   });
@@ -153,5 +154,76 @@ describe("refundAiQuota", () => {
       data: { bonusAiCredits: { increment: number } };
     };
     expect(arg.data.bonusAiCredits.increment).toBe(1);
+  });
+});
+
+/**
+ * ÇEVİRİ MALİYET AÇIĞI (regresyon koruması).
+ *
+ * Çeviri belgeyi parçalara bölüp her parça için ayrı model çağrısı yapar. Tek
+ * hak düşülürse uzun bir belge aylık abonelik ücretinin katlarına mal olur.
+ * Hak, belge boyutuyla orantılı düşmeli ve yetmiyorsa HİÇ düşmemeli.
+ */
+describe("çok birimli hak rezervasyonu (çeviri)", () => {
+  it("istenen birimin tamamını tek adımda düşer", async () => {
+    usageUpdateMany.mockResolvedValue({ count: 1 });
+
+    const ok = await reserveAiQuota("u1", "PRO", "USER", "translate", 6);
+
+    expect(ok).toBe(true);
+    const arg = usageUpdateMany.mock.calls[0]?.[0] as {
+      where: { count: { lte: number } };
+      data: { count: { increment: number } };
+    };
+    // 10 limit, 6 birim → sayaç en fazla 4 olabilir.
+    expect(arg.where.count.lte).toBe(4);
+    expect(arg.data.count.increment).toBe(6);
+  });
+
+  it("kalan hak yetmiyorsa kısmi düşüm YAPMAZ", async () => {
+    usageUpdateMany.mockResolvedValue({ count: 0 });
+    usageFindUnique.mockResolvedValue({ count: 8, operationCounts: {} });
+    userUpdateMany.mockResolvedValue({ count: 0 }); // bonus da yok
+
+    const ok = await reserveAiQuota("u1", "PRO", "USER", "translate", 6);
+
+    expect(ok).toBe(false);
+    // Bonus da tamamı istenerek sorulmalı — 6 birimin 2'si düşürülüp kalınmamalı.
+    const arg = userUpdateMany.mock.calls[0]?.[0] as {
+      where: { bonusAiCredits: { gte: number } };
+    };
+    expect(arg.where.bonusAiCredits.gte).toBe(6);
+  });
+
+  it("iş hata verirse düşülen birimin tamamını iade eder", async () => {
+    usageUpdateMany.mockResolvedValue({ count: 1 });
+
+    await refundAiQuota("u1", "PRO", "USER", 6);
+
+    const arg = usageUpdateMany.mock.calls[0]?.[0] as {
+      where: { count: { gte: number } };
+      data: { count: { decrement: number } };
+    };
+    expect(arg.where.count.gte).toBe(6);
+    expect(arg.data.count.decrement).toBe(6);
+  });
+});
+
+describe("translationCreditCost", () => {
+  it("belge boyutuyla orantılı hak hesaplar", async () => {
+    const { translationCreditCost, totalSegmentChars } = await import("../modules/ai/ai.service.js");
+
+    // Kısa belge → en az 1 hak.
+    expect(translationCreditCost(["kısa metin"])).toBe(1);
+    // Tam bir kova sınırı → hâlâ 1 hak.
+    expect(translationCreditCost(["x".repeat(20_000)])).toBe(1);
+    // Bir karakter fazlası → 2 hak (yukarı yuvarlar).
+    expect(translationCreditCost(["x".repeat(20_001)])).toBe(2);
+    // Parçalar toplanarak sayılır — tek tek değil.
+    expect(translationCreditCost(["x".repeat(15_000), "y".repeat(15_000)])).toBe(2);
+    // 200 sayfalık bir belge tek hakla geçemez.
+    expect(translationCreditCost(["x".repeat(250_000)])).toBe(13);
+
+    expect(totalSegmentChars(["abc", "de"])).toBe(5);
   });
 });

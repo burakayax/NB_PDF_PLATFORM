@@ -5,6 +5,33 @@ import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 const API_URL = "https://api.anthropic.com/v1/messages";
 /** Maliyet sınırı: belge bu karakter sayısının üstündeyse kırpılır (~15K token). */
 const MAX_DOC_CHARS = 60_000;
+/**
+ * ÇEVİRİ ÜCRETLENDİRMESİ — belge boyutuyla orantılı.
+ *
+ * Diğer araçlar belgeyi tek istekte işler; maliyetleri sabittir ve 1 hak eder.
+ * Çeviri ise belgeyi parçalara bölüp her parça için ayrı model çağrısı yapar,
+ * yani maliyeti sayfa sayısıyla doğrusal büyür. Tek hak düşülseydi uzun bir
+ * belge, bir özetin onlarca katı maliyet çıkarır ve aylık abonelik ücretini
+ * tek işlemde aşabilirdi.
+ *
+ * Kova boyutu, bir çeviri hakkının maliyetini diğer araçların hak başına
+ * maliyetiyle (~0,03 $) aynı hizaya getirecek şekilde seçildi.
+ */
+export const TRANSLATE_CHARS_PER_CREDIT = 20_000;
+/** Tek seferde çevrilebilecek mutlak üst sınır (~15 hak). */
+export const MAX_TRANSLATE_CHARS = 300_000;
+
+/** Verilen parçalar için düşülecek hak sayısı (en az 1). */
+export function translationCreditCost(segments: string[]): number {
+  const chars = segments.reduce((sum, t) => sum + t.length, 0);
+  return Math.max(1, Math.ceil(chars / TRANSLATE_CHARS_PER_CREDIT));
+}
+
+/** Parçaların toplam karakter sayısı — üst sınır denetimi için. */
+export function totalSegmentChars(segments: string[]): number {
+  return segments.reduce((sum, t) => sum + t.length, 0);
+}
+
 /** Tek bir yapay zekâ isteğinin üst süre sınırı. */
 const AI_REQUEST_TIMEOUT_MS = 90_000;
 

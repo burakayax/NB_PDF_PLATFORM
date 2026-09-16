@@ -8,6 +8,9 @@ import {
   translateSegments,
   compareDocuments,
   detectSensitive,
+  translationCreditCost,
+  totalSegmentChars,
+  MAX_TRANSLATE_CHARS,
   type ChatTurn,
 } from "./ai.service.js";
 import { getAiQuota, reserveAiQuota, refundAiQuota, grantAiCredits, TOPUP_PACKS, topupPackById } from "./ai.quota.js";
@@ -26,12 +29,12 @@ function getLang(req: Request): "tr" | "en" {
  * Rezervasyon başarılıysa çağıran, yapay zekâ isteği hata verdiğinde
  * `releaseQuota` ile hakkı iade etmekle yükümlüdür.
  */
-async function reserveQuota(req: Request, res: Response, op: string): Promise<boolean> {
+async function reserveQuota(req: Request, res: Response, op: string, units = 1): Promise<boolean> {
   const u = req.authUser;
   if (!u) {
     throw new HttpError(401, "Oturum gerekli.");
   }
-  const reserved = await reserveAiQuota(u.id, u.plan, u.role, op);
+  const reserved = await reserveAiQuota(u.id, u.plan, u.role, op, units);
   if (!reserved) {
     const quota = await getAiQuota(u.id, u.plan, u.role);
     res.status(429).json({
@@ -46,10 +49,10 @@ async function reserveQuota(req: Request, res: Response, op: string): Promise<bo
 }
 
 /** İstek başarısız olursa rezerve edilen hakkı iade eder. */
-async function releaseQuota(req: Request): Promise<void> {
+async function releaseQuota(req: Request, units = 1): Promise<void> {
   const u = req.authUser;
   if (!u) return;
-  await refundAiQuota(u.id, u.plan, u.role);
+  await refundAiQuota(u.id, u.plan, u.role, units);
 }
 
 /**
@@ -61,14 +64,15 @@ async function runWithQuota<T>(
   res: Response,
   op: string,
   work: () => Promise<T>,
+  units = 1,
 ): Promise<{ ok: true; value: T } | { ok: false }> {
-  if (await reserveQuota(req, res, op)) {
+  if (await reserveQuota(req, res, op, units)) {
     return { ok: false };
   }
   try {
     return { ok: true, value: await work() };
   } catch (error) {
-    await releaseQuota(req);
+    await releaseQuota(req, units);
     throw error;
   }
 }
@@ -166,7 +170,16 @@ export async function translateSegmentsController(req: Request, res: Response): 
   if (segments.length === 0) {
     throw new HttpError(400, "Çevrilecek metin bulunamadı. PDF'te metin katmanı olmayabilir.");
   }
-  const run = await runWithQuota(req, res, "translate", () => translateSegments(segments, target));
+  const chars = totalSegmentChars(segments);
+  if (chars > MAX_TRANSLATE_CHARS) {
+    throw new HttpError(
+      413,
+      `Belge tek seferde çevrilemeyecek kadar uzun (${Math.round(chars / 1000)} bin karakter; ` +
+        `üst sınır ${Math.round(MAX_TRANSLATE_CHARS / 1000)} bin). Belgeyi bölüp parça parça çevirin.`,
+    );
+  }
+  const cost = translationCreditCost(segments);
+  const run = await runWithQuota(req, res, "translate", () => translateSegments(segments, target), cost);
   if (!run.ok) return;
   const u = req.authUser!;
   const quota = await getAiQuota(u.id, u.plan, u.role);
