@@ -6,12 +6,12 @@
  * yazının görsele gömülmesi diye bir durum yok.
  */
 
-import { requestJson, requireSecret } from "./common.js";
+import { coverAltText, requestJson, requireSecret } from "./common.js";
 import type { Publisher, Verifier } from "./common.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
-export const publishToFacebook: Publisher = async ({ body, imageUrl, secrets }) => {
+export const publishToFacebook: Publisher = async ({ body, imageUrl, item, secrets }) => {
   const pageId = requireSecret(secrets, "pageId", "Facebook Sayfa ID");
   const token = requireSecret(secrets, "pageAccessToken", "Facebook Sayfa Erişim Anahtarı");
 
@@ -22,6 +22,9 @@ export const publishToFacebook: Publisher = async ({ body, imageUrl, secrets }) 
   if (imageUrl) {
     form.set("url", imageUrl);
     form.set("caption", body);
+    // Ekran okuyucuların gördüğü metin; Facebook kendi ürettiği tahmini
+    // açıklamanın yerine bunu kullanır.
+    form.set("alt_text_custom", coverAltText(item));
   } else {
     form.set("message", body);
   }
@@ -36,7 +39,7 @@ export const publishToFacebook: Publisher = async ({ body, imageUrl, secrets }) 
   return { externalId: id, externalUrl: id ? `https://www.facebook.com/${id}` : null };
 };
 
-export const publishToInstagram: Publisher = async ({ body, imageUrl, secrets }) => {
+export const publishToInstagram: Publisher = async ({ body, imageUrl, item, secrets }) => {
   const igUserId = requireSecret(secrets, "igUserId", "Instagram İşletme Hesabı ID");
   const token = requireSecret(secrets, "pageAccessToken", "Instagram Sayfa Erişim Anahtarı");
   if (!imageUrl) throw new Error("Instagram görselsiz gönderi kabul etmiyor");
@@ -46,6 +49,7 @@ export const publishToInstagram: Publisher = async ({ body, imageUrl, secrets })
   container.set("access_token", token);
   container.set("image_url", imageUrl);
   container.set("caption", body);
+  container.set("alt_text", coverAltText(item));
 
   const created = await requestJson("Instagram", `${GRAPH}/${igUserId}/media`, {
     method: "POST",

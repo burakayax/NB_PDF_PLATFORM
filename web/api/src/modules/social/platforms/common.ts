@@ -75,6 +75,23 @@ export async function downloadImage(url: string): Promise<{ bytes: Buffer; mime:
   return { bytes: Buffer.from(await res.arrayBuffer()), mime };
 }
 
+/**
+ * Kapak görselinin alternatif metni.
+ *
+ * NEDEN: Kapak, yazının başlığını taşıyan markalı bir görsel. Alternatif metin
+ * olmadan ekran okuyucu kullanan kişi gönderinin görselini hiç algılamıyor;
+ * ayrıca ağlar bu metni içeriği anlamak için kullanıyor. Başlık zaten elimizde,
+ * uydurmaya gerek yok.
+ */
+export function coverAltText(item: FeedItem, max = 300): string {
+  const title = item.title.trim();
+  const text =
+    item.lang === "tr"
+      ? `PDF Platform kapak görseli — “${title}”`
+      : `PDF Platform cover image — “${title}”`;
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
 export function requireSecret(secrets: Record<string, string>, key: string, label: string): string {
   const value = secrets[key]?.trim();
   if (!value) throw new Error(`Eksik bilgi: ${label}`);

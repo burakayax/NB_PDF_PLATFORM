@@ -438,3 +438,29 @@ describe("karakter sınırları", () => {
     expect(effectiveMax("FACEBOOK", [{ link }])).toBe(2200);
   });
 });
+
+
+// ─── Görsel alternatif metni ─────────────────────────────────────────────────
+
+describe("coverAltText", () => {
+  it("başlığı kullanır ve dile göre yazılır", async () => {
+    const { coverAltText } = await import("../modules/social/platforms/common.js");
+    const base = { guid: "g", link: "l", summary: "", publishedAt: 0, categories: [], images: {} };
+
+    const tr = coverAltText({ ...base, lang: "tr", title: "PDF Kırpma Rehberi" } as never);
+    expect(tr).toContain("PDF Kırpma Rehberi");
+    expect(tr).toContain("kapak görseli");
+
+    const en = coverAltText({ ...base, lang: "en", title: "Crop PDF Guide" } as never);
+    expect(en).toContain("cover image");
+  });
+
+  it("ağın sınırını aşmaz", async () => {
+    const { coverAltText } = await import("../modules/social/platforms/common.js");
+    const base = { guid: "g", link: "l", summary: "", publishedAt: 0, categories: [], images: {} };
+    // LinkedIn alternatif metni 120 karakterle sınırlı; aşılırsa istek reddedilir.
+    const long = coverAltText({ ...base, lang: "tr", title: "x".repeat(400) } as never, 120);
+    expect(long.length).toBeLessThanOrEqual(120);
+    expect(long.endsWith("…")).toBe(true);
+  });
+});
