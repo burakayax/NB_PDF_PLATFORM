@@ -890,7 +890,6 @@ export type SocialConfig = {
   hour: number;
   minute: number;
   timeZone: string;
-  lang: "tr" | "en";
   recycleOldPosts: boolean;
   /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
   bilingual: boolean;
