@@ -412,3 +412,29 @@ describe("linkStyle", () => {
     expect(PLATFORM_SPECS.PINTEREST.linkStyle).toBe("none");
   });
 });
+
+
+// ─── Karakter sınırları ──────────────────────────────────────────────────────
+
+describe("karakter sınırları", () => {
+  it("ağların gerçek sınırlarıyla aynı", async () => {
+    const { PLATFORM_SPECS } = await import("../modules/social/social.types.js");
+    // 2026 itibarıyla ağların yayımladığı sınırlar.
+    expect(PLATFORM_SPECS.X.maxChars).toBe(280);
+    expect(PLATFORM_SPECS.INSTAGRAM.maxChars).toBe(2200);
+    expect(PLATFORM_SPECS.LINKEDIN.maxChars).toBe(3000);
+    expect(PLATFORM_SPECS.PINTEREST.maxChars).toBe(500);
+    // Facebook'un sınırı 63.206 ama metin Instagram ile ORTAK; en dar sınır geçerli.
+    expect(PLATFORM_SPECS.FACEBOOK.maxChars).toBe(PLATFORM_SPECS.INSTAGRAM.maxChars);
+  });
+
+  it("X'te bağlantı 23 karakter sayılır, ham uzunluğu değil", async () => {
+    const { effectiveMax } = await import("../modules/social/copy.service.js");
+    const link = "https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf"; // 57 karakter
+    // X uzun adresi 23'e kısaltıyor; aradaki fark bütçeye geri eklenmeli,
+    // yoksa boşuna 34 karakter kaybedilir.
+    expect(effectiveMax("X", [{ link }])).toBe(280 + (link.length - 23));
+    // Diğer ağlarda böyle bir kural yok.
+    expect(effectiveMax("FACEBOOK", [{ link }])).toBe(2200);
+  });
+});

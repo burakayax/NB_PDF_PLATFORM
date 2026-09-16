@@ -89,6 +89,27 @@ başına yaklaşık 2 kuruş; yeni yazı üretmediğin aylarda sıfıra yakın.
 Araştırmayı panelden kapatabilirsin; o zaman yalnızca 1. kaynak kullanılır ve
 maliyet tamamen sıfırlanır.
 
+## Ölçüler ve sınırlar
+
+Her yazı için **üç ayrı kesim** kapak görseli üretiliyor; punto ve kenar
+boşlukları kesime göre ölçekleniyor:
+
+| Ağ | Görsel | Metin sınırı | Etiket |
+|---|---|---|---|
+| X | 1200×630 | 280 | 2 |
+| LinkedIn | 1200×630 | 3.000 | 3 |
+| Facebook | 1200×630 | 2.200 | 3 |
+| Instagram | 1080×1080 | 2.200 | 6 |
+| Pinterest | 1000×1500 | 500 | 2 |
+
+Sınırlar ağların 2026'da yayımladığı gerçek değerler. Facebook'un sınırı aslında
+63.206 ama metin Instagram ve LinkedIn ile ortak olduğu için en dar sınır
+(Instagram 2.200) belirleyici.
+
+X'te bağlantı, gerçek uzunluğu ne olursa olsun **23 karakter** sayılıyor
+(t.co kısaltması). Sistem bunu hesaba katıyor; aksi hâlde uzun bir adres
+yüzünden boşuna 30+ karakter kaybediliyordu.
+
 ## Elle paylaşmak
 
 Bir ağ henüz bağlı değilse ya da bir gönderiyi elle atmak istersen, taslak

@@ -92,8 +92,9 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   X: {
     platform: "X",
     label: "X (Twitter)",
-    // 280 sınırı; bağlantı her zaman 23 karakter sayılır (t.co kısaltması).
-    maxChars: 250,
+    // X'in gerçek sınırı. Bağlantı uzunluğu ne olursa olsun 23 karakter
+    // sayılır (t.co kısaltması) — bu hesap `effectiveMax` içinde yapılır.
+    maxChars: 280,
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 2,
@@ -109,7 +110,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   LINKEDIN: {
     platform: "LINKEDIN",
     label: "LinkedIn",
-    maxChars: 2800,
+    maxChars: 3000, // LinkedIn'in gerçek sınırı
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 3,
@@ -123,7 +124,9 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   FACEBOOK: {
     platform: "FACEBOOK",
     label: "Facebook Sayfası",
-    maxChars: 2000,
+    // Facebook'un gerçek sınırı 63.206; ama metin Instagram ve LinkedIn ile
+    // ORTAK olduğu için pratikte en dar sınır (Instagram 2.200) belirleyici.
+    maxChars: 2200,
     imageRequired: false,
     imageFormat: "wide",
     hashtagCount: 3,
@@ -137,7 +140,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   INSTAGRAM: {
     platform: "INSTAGRAM",
     label: "Instagram",
-    maxChars: 2100,
+    maxChars: 2200, // Instagram açıklama sınırı
     // Instagram görselsiz gönderi kabul etmez.
     imageRequired: true,
     imageFormat: "square",
@@ -152,7 +155,7 @@ export const PLATFORM_SPECS: Record<SocialPlatform, PlatformSpec> = {
   PINTEREST: {
     platform: "PINTEREST",
     label: "Pinterest",
-    maxChars: 480,
+    maxChars: 500, // Pinterest açıklama sınırı
     imageRequired: true,
     imageFormat: "tall",
     hashtagCount: 2,
