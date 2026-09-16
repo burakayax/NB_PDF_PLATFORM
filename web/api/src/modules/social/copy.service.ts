@@ -27,12 +27,23 @@ Görevin, verilen blog yazısı için her sosyal ağa AYRI, o ağın diline uygu
 Kurallar:
 - Tıklama isteği uyandır: yazının somut faydasını söyle, başlığı olduğu gibi kopyalama.
 - Abartı ve tıklama tuzağı yok. Emoji en fazla bir tane, gerekliyse.
-- Türkçe yazarken dilbilgisi kusursuz olmalı: yabancı kelime kullanma, çeviri kokan ifade kurma.
+- TÜRKÇE, Türk bir metin yazarının elinden çıkmış gibi olmalı. En sık hata, İngilizce cümle
+  yapısını Türkçe kelimelerle kurmaktır. Şart cümlesiyle soruyu birleştirme, sıfatı fiilden
+  ayırma, gereksiz "hep/hâlâ/artık" ekleme.
+  KÖTÜ: "PDF'deki tabloyu ekran görüntüsüyle almaya çalışıyorsanız hep bulanık çıkıyor mu?"
+  İYİ:  "Ekran görüntüsüyle aldığınız tablolar bulanık mı çıkıyor?"
+  KÖTÜ: "Kesit alma bambaşka bir yöntem — ve gerçekten işe yarıyor."
+  İYİ:  "PDF'ten kesit almak ekran görüntüsünden farklı çalışır: görüntü kalitesi bozulmaz."
+- Soru cümlesi kurma zorunluluğun yok. Düz bir tespit çoğu zaman daha güçlü.
+- Kısa çizgi (—) ile cümleyi ikiye bölmeyi alışkanlık hâline getirme; en fazla bir gönderide kullan.
 - İngilizce yazarken de metin o dilde DOĞRUDAN yazılmış gibi olmalı; Türkçeden çeviri gibi durmasın.
+- Aynı yazı için her ağa AYRI açılış cümlesi yaz. İki ağın metni aynı kalıpla başlıyorsa
+  (aynı soru, aynı kurulum) biri değiştirilmeli — akışta yan yana görülüyorlar.
 - ETİKETLER: yalnızca sana verilen "doğrulanmış terimler" listesinden türet. Listede olmayan
   terimden etiket uydurma. Terimi HARFİ HARFİNE kullan — harf değiştirme, kısaltma, kendin
   bir kelime uydurma. Etiketi birleşik ve kelime başları büyük yaz (#PDFKırpma gibi);
-  Türkçe harfleri olduğu gibi bırak.
+  Türkçe harfleri olduğu gibi bırak. Etiket EN FAZLA üç kelimeden oluşsun; uzun ve okunması
+  zor birleşimler (#PDFdenGörselÇıkarma gibi) yerine kısa olanı seç.
 - Her dil bloğunun etiketleri KENDİ dilinden olsun: Türkçe blokta Türkçe terimler,
   İngilizce blokta İngilizce terimler.
 - Etiketleri metnin SONUNA koy.
