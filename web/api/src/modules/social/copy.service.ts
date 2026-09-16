@@ -39,14 +39,8 @@ Kurallar:
 - İngilizce yazarken de metin o dilde DOĞRUDAN yazılmış gibi olmalı; Türkçeden çeviri gibi durmasın.
 - Aynı yazı için her ağa AYRI açılış cümlesi yaz. İki ağın metni aynı kalıpla başlıyorsa
   (aynı soru, aynı kurulum) biri değiştirilmeli — akışta yan yana görülüyorlar.
-- ETİKETLER: yalnızca sana verilen "doğrulanmış terimler" listesinden türet. Listede olmayan
-  terimden etiket uydurma. Terimi HARFİ HARFİNE kullan — harf değiştirme, kısaltma, kendin
-  bir kelime uydurma. Etiketi birleşik ve kelime başları büyük yaz (#PDFKırpma gibi);
-  Türkçe harfleri olduğu gibi bırak. Etiket EN FAZLA üç kelimeden oluşsun; uzun ve okunması
-  zor birleşimler (#PDFdenGörselÇıkarma gibi) yerine kısa olanı seç.
-- Her dil bloğunun etiketleri KENDİ dilinden olsun: Türkçe blokta Türkçe terimler,
-  İngilizce blokta İngilizce terimler.
-- Etiketleri metnin SONUNA koy.
+- ETİKET YAZMA. Hiçbir yere "#" koyma. Etiketleri sistem, doğrulanmış terim listesinden
+  kendisi ekleyecek — böylece yazımları her gönderide aynı olur.
 - Bağlantıyı yalnızca senden istendiği platformda, metnin sonunda (etiketlerden önce) ver.
 - Karakter sınırını ASLA aşma. Sınır, iki dilli gönderilerde İKİ BLOĞUN TOPLAMI için geçerlidir.
 
@@ -121,13 +115,20 @@ export function clamp(text: string, max: number): string {
  * Yalnızca etiket içinde geçersiz olan karakterler (boşluk, noktalama, emoji)
  * ayıklanır.
  */
+const ACRONYMS = new Set(["pdf", "ocr", "jpg", "jpeg", "png", "api", "ai", "kvkk", "gdpr", "url", "qr"]);
+
 export function toHashtag(term: string): string {
   const cleaned = term.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
   if (!cleaned) return "";
   const joined = cleaned
     .split(/\s+/)
     .filter(Boolean)
-    .map((w) => `${w.charAt(0).toLocaleUpperCase("tr")}${w.slice(1)}`)
+    .map((w) =>
+      // "pdf" → "PDF": kısaltmanın küçük harfle yazılması etiketi amatör gösterir.
+      ACRONYMS.has(w.toLocaleLowerCase("tr"))
+        ? w.toLocaleUpperCase("tr")
+        : `${w.charAt(0).toLocaleUpperCase("tr")}${w.slice(1)}`,
+    )
     .join("");
   // Rakamla başlayan etiket birçok ağda geçersiz sayılır.
   return /^\p{L}/u.test(joined) ? `#${joined}` : "";
@@ -142,6 +143,65 @@ export function toHashtag(term: string): string {
  */
 export function sanitizeHashtags(text: string): string {
   return text.replace(/#[^\s#]+/gu, (token) => toHashtag(token.slice(1)) || "");
+}
+
+/** Bir blok için etiket dizesi (doğrulanmış terimlerden, sabit yazımla). */
+function tagsFor(side: LangSide, count: number): string {
+  return side.terms.slice(0, count).map(toHashtag).filter(Boolean).join(" ");
+}
+
+/**
+ * Etiketlerin kaplayacağı yer. Modele verilen karakter bütçesinden düşülür ki
+ * etiketler eklenince sınır aşılmasın ve gövde sondan kırpılmasın.
+ */
+function hashtagRoom(req: CopyRequest, platform: SocialPlatform): number {
+  const spec = PLATFORM_SPECS[platform];
+  return sidesFor(req, platform).reduce(
+    (sum, side) => sum + tagsFor(side, spec.hashtagCount).length + 2,
+    0,
+  );
+}
+
+/**
+ * Modelin yazdığı gövdeye etiketleri ekler.
+ *
+ * NEDEN KODDA: Etiketleri model yazdığında yazımları her gönderide değişiyordu
+ * ("#Extracttablefrompdf", "#PDFkesitAlma"). Terim listesi zaten elimizde;
+ * buradan üretilince yazım her seferinde aynı ve dil bloğuyla eşleşiyor.
+ */
+function appendHashtags(body: string, req: CopyRequest, platform: SocialPlatform): string {
+  const spec = PLATFORM_SPECS[platform];
+  const sides = sidesFor(req, platform);
+  // Modelin yine de yazdığı etiket varsa ayıklanır; tek kaynak biz olalım.
+  const blocks = body.split(LANG_SEPARATOR).map((b) => b.replace(/#[^\s#]+/gu, "").trimEnd());
+
+  // Bloğun dili SIRAYA GÖRE DEĞİL, içindeki bağlantıdan bulunur: model istenen
+  // sırayı bazen bozuyor (bir gönderide İngilizce, diğerinde Türkçe öne
+  // geçiyordu) ve sıraya güvenilirse etiketler yanlış dile ekleniyor.
+  const identify = (block: string): LangSide | undefined =>
+    sides.find((side) => side.link && block.includes(side.link));
+
+  const ordered = sides
+    .map((side) => {
+      const match = blocks.find((b) => b.includes(side.link));
+      return { side, block: match };
+    })
+    .filter((x): x is { side: LangSide; block: string } => typeof x.block === "string");
+
+  // Her blok tanınabildiyse istenen sıraya (önce İngilizce) dizilir.
+  const pairs =
+    ordered.length === blocks.length && blocks.length === sides.length
+      ? ordered
+      : blocks.map((block, i) => ({ side: identify(block) ?? sides[i] ?? sides[0], block }));
+
+  return pairs
+    .map(({ side, block }) => {
+      if (!side) return block;
+      const tags = tagsFor(side, spec.hashtagCount);
+      return tags ? `${block}
+${tags}` : block;
+    })
+    .join(LANG_SEPARATOR);
 }
 
 /** Bir dilin metin parçaları — çift dilli gönderinin yarısı. */
@@ -214,7 +274,9 @@ export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPl
         sides.length > 1
           ? `İKİ DİLLİ — önce İngilizce bloğu, sonra "${LANG_SEPARATOR.trim()}" ayıracı, sonra Türkçe bloğu. Her blok kendi dilinde özgün yazılsın, çeviri olmasın.`
           : `TEK DİLLİ — ${sides[0]?.lang === "en" ? "İngilizce" : "Türkçe"}.`;
-      return `- ${p}: en fazla ${spec.maxChars} karakter (toplam), her blokta ${spec.hashtagCount} etiket, bağlantı ${
+      // Etiketler sonradan eklendiği için modele bırakılan yer payı düşülür.
+      const room = spec.maxChars - hashtagRoom(req, p);
+      return `- ${p}: en fazla ${room} karakter (toplam), bağlantı ${
         spec.inlineLink ? "her blokta KENDİ dilinin adresi olacak" : "EKLENMESİN (ayrı alanda gidiyor)"
       }. ${langs}`;
     })
@@ -252,7 +314,8 @@ ${brief}`;
   for (const p of req.platforms) {
     const value = parsed[p];
     if (typeof value === "string" && value.trim().length > 0) {
-      result[p] = clamp(sanitizeHashtags(value), PLATFORM_SPECS[p].maxChars);
+      const withTags = appendHashtags(value.trim(), req, p);
+      result[p] = clamp(sanitizeHashtags(withTags), PLATFORM_SPECS[p].maxChars);
     }
   }
   return result;

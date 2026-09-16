@@ -64,12 +64,13 @@ describe("toHashtag", () => {
     const { toHashtag } = await import("../modules/social/copy.service.js");
     // Türk kullanıcı "#PDFKırpma" arıyor; harfleri sadeleştirmek erişimi düşürür.
     expect(toHashtag("PDF kırpma")).toBe("#PDFKırpma");
-    expect(toHashtag("pdf tablo görseli")).toBe("#PdfTabloGörseli");
+    // Kısaltma tamamen büyük kalır: "#PdfTablo" amatör görünüyordu.
+    expect(toHashtag("pdf tablo görseli")).toBe("#PDFTabloGörseli");
   });
 
   it("etikette geçersiz karakterleri ayıklar", async () => {
     const { toHashtag } = await import("../modules/social/copy.service.js");
-    expect(toHashtag("pdf'ten resim kesme")).toBe("#PdfTenResimKesme");
+    expect(toHashtag("pdf'ten resim kesme")).toBe("#PDFTenResimKesme");
   });
 
   it("harfle başlamayan ya da boş kalan adayı eler", async () => {
@@ -84,7 +85,7 @@ describe("sanitizeHashtags", () => {
     const { sanitizeHashtags } = await import("../modules/social/copy.service.js");
     // Etikete yapışık noktalama etiketin parçası sayılır ve temizlenir;
     // aksi hâlde platformda etiket değil düz metin olarak görünür.
-    expect(sanitizeHashtags("Deneme #pdf-kırpma! son")).toBe("Deneme #PdfKırpma son");
+    expect(sanitizeHashtags("Deneme #pdf-kırpma! son")).toBe("Deneme #PDFKırpma son");
     expect(sanitizeHashtags("#PDFAraçları")).toBe("#PDFAraçları");
   });
 
@@ -367,5 +368,19 @@ describe("bağlantı sınayıcıları", () => {
       if (p === "LINKEDIN") continue; // erişim anahtarı henüz alınmadı
       expect(VERIFIERS[p], `${p} için sınayıcı yok`).toBeTypeOf("function");
     }
+  });
+});
+
+
+// ─── Etiket ve blok sırası ───────────────────────────────────────────────────
+
+describe("etiketlerin eklenmesi", () => {
+  it("kısaltmaları büyük harfle yazar, kelime başlarını büyütür", async () => {
+    const { toHashtag } = await import("../modules/social/copy.service.js");
+    // Modelin ürettiği yazımlar tutarsızdı ("#Extracttablefrompdf"); artık
+    // etiketler koddan geliyor ve her gönderide aynı yazılıyor.
+    expect(toHashtag("extract table from pdf")).toBe("#ExtractTableFromPDF");
+    expect(toHashtag("pdf kesit alma")).toBe("#PDFKesitAlma");
+    expect(toHashtag("taranmış pdf ocr")).toBe("#TaranmışPDFOCR");
   });
 });
