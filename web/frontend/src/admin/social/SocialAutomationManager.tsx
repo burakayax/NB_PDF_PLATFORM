@@ -651,6 +651,27 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             </label>
 
             <label className="block">
+              <span className="text-xs font-medium text-slate-300">Paylaşım temposu</span>
+              <select
+                className={`${selectClass} mt-1.5`}
+                value={config.cadence}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  patchConfig({ cadence: v === "alternate" || v === "thrice" ? v : "daily" });
+                }}
+              >
+                <option value="daily">Her gün</option>
+                <option value="alternate">Gün aşırı</option>
+                <option value="thrice">Haftada üç (Pzt · Çar · Cum)</option>
+              </select>
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+                Arşivde sınırlı sayıda yazı var; her gün paylaşınca döngü daha çabuk başa
+                dönüyor ve aynı yazı yeniden geliyor. Seyrek tempo hem tekrarı azaltır hem de
+                yeni bir hesap için daha doğal görünür.
+              </span>
+            </label>
+
+            <label className="block">
               <span className="text-xs font-medium text-slate-300">X (Twitter) dili</span>
               <select
                 className={`${selectClass} mt-1.5`}
