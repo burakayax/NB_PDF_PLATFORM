@@ -119,6 +119,25 @@ görselini böylece algılıyor; ağlar da bu metni içeriği anlamak için kull
 Facebook, Instagram, LinkedIn ve Pinterest'te otomatik ekleniyor. X'te alternatif
 metin ayrı bir istek gerektiriyor, henüz eklenmedi.
 
+## Gönderiler yayından önce hazırlanır
+
+Metin ve görsel, paylaşım saatini **beklemeden** üretilir. Saati 09:00 yaptıysan
+ve hazırlık süresi 2 saat ise, gönderiler saat 07:00 civarında panelde “Sırada”
+olarak belirir ve 09:00'ı bekler.
+
+Bu aralıkta:
+
+- Metni okuyup **düzeltebilirsin** (değişiklik yayına aynen gider).
+- Beğenmediğin gönderiyi **silebilirsin** — o gün o ağda paylaşım olmaz.
+- İstersen **Şimdi paylaş** deyip erkene alabilirsin.
+
+Süreyi Zamanlama sekmesinden değiştirirsin: 30 dakika ile 1 gün arası. “Tam
+yayın anında” seçilirse eski davranışa dönülür — gönderi üretildiği anda gider,
+önceden görme şansın olmaz.
+
+Durum kartında hazırlığa ne kadar kaldığı, hazırlık yapıldıysa da “yayın saatini
+bekliyor” bilgisi yazar.
+
 ## Elle paylaşmak
 
 **Her gönderi kartında** — taslakta, sırada bekleyende ve geçmişte paylaşılmış
@@ -235,6 +254,7 @@ yazman yeterli.
 |---|---|
 | Otomatik paylaşım | Kapalıyken hiçbir şey kendiliğinden paylaşılmaz. |
 | Saat | Bu saatte paylaşılır (seçtiğin saat dilimine göre). |
+| Gönderiler ne kadar önce hazırlansın | Metin ve görsel yayından bu kadar önce üretilip ekranda belirir (varsayılan 2 saat). |
 | Paylaşım temposu | Her gün · Gün aşırı · Haftada üç (Pzt/Çar/Cum). |
 | Çift dilli paylaş | Kapalıyken yalnızca ana besleme dilinde paylaşılır. |
 | X (Twitter) dili | X'te 280 karaktere iki dil sığmaz; yalnız oradaki gönderinin dili. |

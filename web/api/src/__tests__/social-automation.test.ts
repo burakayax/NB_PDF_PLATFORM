@@ -275,6 +275,42 @@ describe("fetchPairedFeedItems — çift dilli eşleştirme", () => {
 
 // ─── Sonraki yayın anı ────────────────────────────────────────────────────────
 
+describe("runInstantOn — belirli günün yayın anı", () => {
+  const base = {
+    enabled: true,
+    hour: 9,
+    minute: 0,
+    timeZone: "Europe/Istanbul",
+    lang: "tr" as const,
+    recycleOldPosts: true,
+    cadence: "daily" as const,
+    prepareLeadMinutes: 120,
+    bilingual: true,
+    singleLang: "en" as const,
+    researchKeywords: false,
+  };
+
+  it("ayarlanan yerel saati o günün gerçek anına çevirir", async () => {
+    const { runInstantOn } = await import("../modules/social/social.service.js");
+    // İstanbul UTC+3 → 09:00 yerel = 06:00 UTC.
+    expect(runInstantOn("2026-09-15", base).toISOString()).toBe("2026-09-15T06:00:00.000Z");
+  });
+
+  it("yaz saati değişse de yerel saat sabit kalır", async () => {
+    const { runInstantOn } = await import("../modules/social/social.service.js");
+    const cfg = { ...base, timeZone: "Europe/Berlin" };
+    expect(runInstantOn("2026-07-15", cfg).toISOString()).toBe("2026-07-15T07:00:00.000Z");
+    expect(runInstantOn("2026-01-15", cfg).toISOString()).toBe("2026-01-15T08:00:00.000Z");
+  });
+
+  it("hazırlık anı, yayın anından ayarlanan süre kadar öncedir", async () => {
+    const { runInstantOn } = await import("../modules/social/social.service.js");
+    const run = runInstantOn("2026-09-15", base);
+    const prepare = new Date(run.getTime() - base.prepareLeadMinutes * 60_000);
+    expect(prepare.toISOString()).toBe("2026-09-15T04:00:00.000Z");
+  });
+});
+
 describe("nextRunAt", () => {
   const base = {
     enabled: true,

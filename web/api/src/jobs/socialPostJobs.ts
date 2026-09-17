@@ -17,6 +17,7 @@ import {
   publishDuePosts,
   queueDailyPosts,
   isPostingDay,
+  runInstantOn,
   readSocialConfig,
 } from "../modules/social/social.service.js";
 
@@ -35,24 +36,6 @@ function safeRun(name: string, fn: () => Promise<void>) {
   });
 }
 
-/** Verilen saat diliminde şu anki saat ve dakika. */
-function localHourMinute(timeZone: string): { hour: number; minute: number } {
-  try {
-    const parts = new Intl.DateTimeFormat("en-GB", {
-      timeZone,
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(new Date());
-    const hour = Number.parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
-    const minute = Number.parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
-    return { hour, minute };
-  } catch {
-    const now = new Date();
-    return { hour: now.getUTCHours(), minute: now.getUTCMinutes() };
-  }
-}
-
 async function tick(): Promise<void> {
   const config = await readSocialConfig();
 
@@ -66,26 +49,45 @@ async function tick(): Promise<void> {
 
   if (!config.enabled) return;
 
-  const { hour, minute } = localHourMinute(config.timeZone);
-  const nowMinutes = hour * 60 + minute;
-  const targetMinutes = config.hour * 60 + config.minute;
-  // Tur 5 dakikada bir attığı için hedef dakikayı tam yakalamak yerine
-  // hedeften sonraki ilk turda çalışılır.
-  if (nowMinutes < targetMinutes) return;
+  // ── Hazırlık turu ───────────────────────────────────────────────────────
+  //
+  // Gönderiler yayın saatinden `prepareLeadMinutes` dakika ÖNCE hazırlanır ve
+  // yayın anını bekleyerek "sırada" durur. Böylece admin metni okuyup
+  // düzeltebilir; eskiden metin yayın anında üretildiği için gönderi ancak
+  // gittikten sonra görülüyordu.
+  //
+  // Hangi güne hazırlanacağı: önce bugün, sonra yarın. Hazırlık penceresi gece
+  // yarısını aşabildiği için (örn. 01:00 paylaşım + 3 saat hazırlık) yarın da
+  // aday sayılır.
+  const now = new Date();
+  const lead = config.prepareLeadMinutes * 60_000;
 
-  const dayKey = calendarDayKey(new Date(), config.timeZone);
-  // Seçilen tempo (her gün / gün aşırı / haftada üç) bugüne denk gelmiyorsa geç.
-  if (!isPostingDay(dayKey, config.cadence)) return;
-  const alreadyQueued = await prisma.socialPost.count({ where: { dayKey } });
-  if (alreadyQueued > 0) return;
+  for (const dayOffset of [0, 1]) {
+    const dayKey = calendarDayKey(new Date(now.getTime() + dayOffset * 86_400_000), config.timeZone);
+    // Seçilen tempo (her gün / gün aşırı / haftada üç) bu güne denk gelmiyorsa geç.
+    if (!isPostingDay(dayKey, config.cadence)) continue;
 
-  const result = await queueDailyPosts(new Date());
-  if (result.queued.length > 0) {
-    logger.info("social", `${dayKey} için ${result.queued.length} gönderi kuyruğa alındı`);
-    // Kuyruğa alınanlar aynı turda yayınlansın; bir sonraki turu beklemesin.
-    await publishDuePosts();
-  } else if (result.skipped.length > 0) {
-    logger.info("social", `${dayKey}: paylaşım yapılmadı — ${result.skipped[0]?.reason ?? ""}`);
+    const runAt = runInstantOn(dayKey, config);
+    // Hazırlık anı gelmediyse bekle. Geçmiş bir yayın anı (sunucu kapalıyken
+    // kaçmış gün) yine de hazırlanır ve ilk turda gider.
+    if (now.getTime() < runAt.getTime() - lead) continue;
+
+    const alreadyQueued = await prisma.socialPost.count({ where: { dayKey } });
+    if (alreadyQueued > 0) continue;
+
+    // scheduledAt = gerçek yayın anı. Yayın turu bu ana kadar kayda dokunmaz.
+    const result = await queueDailyPosts(runAt);
+    if (result.queued.length > 0) {
+      logger.info(
+        "social",
+        `${dayKey} için ${result.queued.length} gönderi hazırlandı (yayın: ${runAt.toISOString()})`,
+      );
+      // Yayın anı çoktan geçtiyse bekletmeden gitsin.
+      if (runAt.getTime() <= Date.now()) await publishDuePosts();
+    } else if (result.skipped.length > 0) {
+      logger.info("social", `${dayKey}: paylaşım yapılmadı — ${result.skipped[0]?.reason ?? ""}`);
+    }
+    return;
   }
 }
 
