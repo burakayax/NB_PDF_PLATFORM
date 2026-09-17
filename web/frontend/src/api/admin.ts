@@ -929,7 +929,7 @@ export type SocialPostRow = {
   linkUrl: string;
   body: string;
   imageUrl: string | null;
-  status: "DRAFT" | "QUEUED" | "PUBLISHING" | "PUBLISHED" | "FAILED" | "SKIPPED";
+  status: "DRAFT" | "QUEUED" | "PUBLISHING" | "PUBLISHED" | "FAILED" | "SKIPPED" | "MANUAL";
   scheduledAt: string;
   publishedAt: string | null;
   externalUrl: string | null;
@@ -941,6 +941,8 @@ export type SocialPostRow = {
 
 export type SocialStats = {
   draft: number;
+  /** Hesabı bağlı olmayan ağlar için hazırlanmış, elle paylaşılacak gönderiler. */
+  manual: number;
   queued: number;
   published: number;
   failed: number;
@@ -1019,7 +1021,7 @@ export async function checkSocialFeed(accessToken: string): Promise<{
 }
 
 export type SocialQueueResult = {
-  queued: { platform: SocialPlatformId; title: string }[];
+  queued: { platform: SocialPlatformId; title: string; manual?: boolean }[];
   /** platform null → tüm platformları ilgilendiren sebep. */
   skipped: { platform: SocialPlatformId | null; reason: string }[];
 };
@@ -1032,6 +1034,12 @@ export async function queueSocialPosts(accessToken: string): Promise<SocialQueue
 
 export async function publishSocialPost(accessToken: string, id: string): Promise<void> {
   const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/publish`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+/** Elle paylaşılan gönderiyi "paylaşıldı" olarak işaretler. */
+export async function markSocialPostShared(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/shared`, { method: "POST" });
   if (!r.ok) throw new Error(await r.text());
 }
 

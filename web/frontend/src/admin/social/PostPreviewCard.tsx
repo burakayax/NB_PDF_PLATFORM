@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Check, ClipboardCheck, Copy, Download, ExternalLink, ImageOff, Loader2, Maximize2, Pencil, Send, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, CheckCheck, ClipboardCheck, Copy, Download, ExternalLink, ImageOff, Loader2, Maximize2, Pencil, Send, Trash2, X } from "lucide-react";
 import type { SocialPlatformSpec, SocialPostRow } from "../../api/admin";
 import { BRANDS, PlatformBadge } from "./platformBrand";
 
@@ -20,6 +20,7 @@ const STATUS_META: Record<Status, { label: string; className: string }> = {
   PUBLISHED: { label: "Paylaşıldı", className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200" },
   FAILED: { label: "Başarısız", className: "border-rose-500/30 bg-rose-500/10 text-rose-200" },
   SKIPPED: { label: "Atlandı", className: "border-slate-600/50 bg-slate-800/70 text-slate-400" },
+  MANUAL: { label: "Elle paylaş", className: "border-violet-500/30 bg-violet-500/10 text-violet-200" },
 };
 
 const iconButton =
@@ -57,6 +58,7 @@ export function PostPreviewCard({
   onPublish,
   onDelete,
   onSaveBody,
+  onMarkShared,
 }: {
   post: SocialPostRow;
   spec: SocialPlatformSpec | undefined;
@@ -64,6 +66,8 @@ export function PostPreviewCard({
   onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onSaveBody: (id: string, body: string) => void;
+  /** Elle paylaşılan gönderiyi "paylaşıldı" saymak için (yalnızca MANUAL). */
+  onMarkShared?: (id: string) => void;
 }) {
   const [draft, setDraft] = useState(post.body);
   const [editing, setEditing] = useState(false);
@@ -86,9 +90,25 @@ export function PostPreviewCard({
       // Pano izni yoksa sessiz kal: metin zaten ekranda seçilebilir durumda.
     }
   }
+  /**
+   * İndirilen görselin adı: "instagram-pdf-birlestirme.jpg" gibi. Aynı yazının
+   * beş ağdaki kesimi aynı klasöre inince, adı olmayan dosyalar birbirine
+   * karışıyordu.
+   */
+  function imageFileName(): string {
+    const slug = post.title
+      .toLocaleLowerCase("tr")
+      .replace(/[^a-z0-9ğüşıöç]+/gi, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 48);
+    const ext = (post.imageUrl?.split("?")[0]?.split(".").pop() ?? "jpg").slice(0, 4);
+    return `${post.platform.toLowerCase()}-${slug || "gonderi"}.${ext}`;
+  }
+
   const brand = BRANDS[post.platform];
   const status = STATUS_META[post.status];
-  const editable = post.status === "DRAFT" || post.status === "QUEUED" || post.status === "FAILED";
+  const manual = post.status === "MANUAL";
+  const editable = post.status === "DRAFT" || post.status === "QUEUED" || post.status === "FAILED" || manual;
   const maxChars = spec?.maxChars ?? 2000;
   const busy = busyId === post.id;
 
@@ -210,7 +230,47 @@ export function PostPreviewCard({
 
       {!editing ? (
         <div className="flex flex-wrap items-center gap-2 border-t border-slate-700/40 px-4 py-2.5 pl-5">
-          {editable ? (
+          {/* Kopyalama ve indirme HER durumda açık: paylaşılmış bir gönderinin
+              metnini/görselini başka bir ağa elle taşımak en sık yapılan iş. */}
+          <button type="button" className={iconButton} onClick={() => void copyBody()}>
+            {copied ? (
+              <ClipboardCheck className="h-3.5 w-3.5 text-emerald-300" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
+            {copied ? "Kopyalandı" : "Metni kopyala"}
+          </button>
+          {post.imageUrl ? (
+            <a
+              className={iconButton}
+              href={post.imageUrl}
+              download={imageFileName()}
+              // Görsel kendi alan adımızdan geliyor; indirme dosya olarak iner.
+            >
+              <Download className="h-3.5 w-3.5" />
+              Görseli indir
+            </a>
+          ) : null}
+
+          {manual ? (
+            <>
+              <button type="button" className={iconButton} disabled={busy} onClick={() => setEditing(true)}>
+                <Pencil className="h-3.5 w-3.5" />
+                Metni düzenle
+              </button>
+              {onMarkShared ? (
+                <button
+                  type="button"
+                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-200 transition hover:bg-emerald-500/20 disabled:opacity-40"
+                  disabled={busy}
+                  onClick={() => onMarkShared(post.id)}
+                >
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCheck className="h-3.5 w-3.5" />}
+                  Paylaştım
+                </button>
+              ) : null}
+            </>
+          ) : editable ? (
             <>
               <button
                 type="button"
@@ -225,45 +285,26 @@ export function PostPreviewCard({
                 <Pencil className="h-3.5 w-3.5" />
                 Metni düzenle
               </button>
-              <button type="button" className={iconButton} onClick={() => void copyBody()}>
-                {copied ? (
-                  <ClipboardCheck className="h-3.5 w-3.5 text-emerald-300" />
-                ) : (
-                  <Copy className="h-3.5 w-3.5" />
-                )}
-                {copied ? "Kopyalandı" : "Metni kopyala"}
-              </button>
-              {post.imageUrl ? (
-                <a
-                  className={iconButton}
-                  href={post.imageUrl}
-                  download
-                  // Görsel kendi alan adımızdan geliyor; indirme dosya olarak iner.
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  Görseli indir
-                </a>
-              ) : null}
-              <button
-                type="button"
-                className={`${iconButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
-                disabled={busy}
-                onClick={() => onDelete(post.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                Sil
-              </button>
             </>
+          ) : post.externalUrl ? (
+            <a className={iconButton} href={post.externalUrl} target="_blank" rel="noreferrer">
+              <ExternalLink className="h-3.5 w-3.5" />
+              Gönderiyi aç
+            </a>
+          ) : null}
+
+          {editable ? (
+            <button
+              type="button"
+              className={`${iconButton} ml-auto text-rose-300 hover:border-rose-500/50 hover:text-rose-200`}
+              disabled={busy}
+              onClick={() => onDelete(post.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Sil
+            </button>
           ) : (
-            <>
-              <span className="text-[11px] text-slate-500">Yayınlanmış gönderi düzenlenemez.</span>
-              {post.externalUrl ? (
-                <a className={`${iconButton} ml-auto`} href={post.externalUrl} target="_blank" rel="noreferrer">
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Gönderiyi aç
-                </a>
-              ) : null}
-            </>
+            <span className="ml-auto text-[11px] text-slate-500">Yayınlanmış gönderi düzenlenemez.</span>
           )}
         </div>
       ) : null}
@@ -283,7 +324,7 @@ export function PostPreviewCard({
           />
           <a
             href={post.imageUrl}
-            download
+            download={imageFileName()}
             onClick={(e) => e.stopPropagation()}
             className="absolute left-5 top-5 inline-flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-2 text-xs font-medium text-slate-200 transition hover:text-white"
           >

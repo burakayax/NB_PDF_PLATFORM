@@ -121,10 +121,27 @@ metin ayrı bir istek gerektiriyor, henüz eklenmedi.
 
 ## Elle paylaşmak
 
-Bir ağ henüz bağlı değilse ya da bir gönderiyi elle atmak istersen, taslak
-kartındaki iki düğme işini görür: **Metni kopyala** (etiketler ve satır sonları
+**Her gönderi kartında** — taslakta, sırada bekleyende ve geçmişte paylaşılmış
+olanda — iki düğme her zaman açık: **Metni kopyala** (etiketler ve satır sonları
 bozulmadan panoya alır) ve **Görseli indir**. Görsele tıklayıp büyüttüğünde de
-indirme düğmesi orada duruyor.
+indirme düğmesi orada duruyor. İnen dosyanın adı ağ + yazı başlığı oluyor
+(`instagram-pdf-birlestirme.jpg`), böylece beş ağın kesimi aynı klasörde
+birbirine karışmıyor.
+
+### Bağlı olmayan ağlar da hazırlanıyor
+
+Gönderi **tüm ağlar için** hazırlanır — hesabı bağlı olmayanlar dâhil. Metin
+zaten bir kez yazılıyor; değişen tek şey görselin o ağa uygun kesimi. Hesabı
+bağlı olmayan ağın gönderisi panelde **"Elle paylaşılacaklar"** başlığı altında
+mor bir rozetle durur:
+
+- Otomatik yayına **asla** girmez; oradan hiçbir şey kendiliğinden paylaşılmaz.
+- Metnini düzenleyebilir, kopyalayabilir, görselini indirebilirsin.
+- Kendi hesabından paylaştıktan sonra **Paylaştım** dersin; kart geçmişe geçer
+  ve liste temizlenir.
+
+Sayaç satırındaki **"Elle paylaşılacak"** kutusu kaç gönderinin seni beklediğini
+gösterir.
 
 ## Bağlantı her ağda aynı görünmez
 
@@ -239,7 +256,7 @@ kötüdür.
 
 Ekran üç sekmeden oluşur:
 
-- **Gönderi akışı** — yayın bekleyenler ve geçmiş. Her gönderi, yayına gideceği
+- **Gönderi akışı** — yayın bekleyenler, elle paylaşılacaklar ve geçmiş. Her gönderi, yayına gideceği
   biçimde görünür: metin, karakter sayacı ve görselin gerçek en-boy oranı.
 - **Hesaplar** — bağlantı durumları ve erişim anahtarları.
 - **Zamanlama** — saat, saat dilimi, içerik dili ve besleme sınaması.
@@ -252,7 +269,9 @@ ne kadar kaldığını ve hangi hesaplarda yayınlanacağını gösterir.
 - **Taslak hazırla** — bugünün gönderilerini yazdırır ama **yayınlamaz**.
   Taslaklar "Onay bekliyor" olarak durur; sen **Şimdi paylaş** demeden hiçbir
   yere gitmez.
-- **Metni düzenle** — taslak ya da başarısız gönderinin metnini değiştirirsin;
+- **Paylaştım** — elle attığın bir gönderiyi paylaşıldı olarak işaretler.
+- **Metni düzenle** — taslak, elle paylaşılacak ya da başarısız gönderinin
+  metnini değiştirirsin;
   karakter sayacı sınırı aşıp aşmadığını anında gösterir.
 - **Beslemeyi sına** — sitenin beslemesinin okunabildiğini doğrular.
 
