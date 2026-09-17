@@ -20,7 +20,33 @@ from src.pdf_engine import _open_pdf_reader, is_pdf_encrypted, get_num_pages, oc
 
 # Web SaaS: single quality tier (DPI not user-configurable).
 PDF_EXPORT_DPI_WEB = 300
-_RASTER_PAGE_BATCH = 6
+
+# SAYFA SAYFA İŞLE — TOPLU DEĞİL.
+#
+# NEDEN 1: A4 bir sayfa 300 DPI'da 2480x3508 piksele açılır; ham hâlde ~26 MB.
+# Altı sayfayı dört iş parçacığıyla aynı anda açmak tek seferde 150 MB+ ham veri
+# demekti. Sunucunun toplam belleği 512 MB olduğu için 30 sayfalık sıradan bir
+# belge SÜRECİ ÖLDÜRÜYORDU: canlı ölçümde yalnız o istek değil, TÜM PDF servisi
+# yaklaşık bir dakika kapandı (sağlık ucu dâhil 502). Yani tek bir kullanıcının
+# isteği sitedeki herkesi etkiliyordu.
+#
+# NEDEN 2: Sayfa sayfa işlemek aynı zamanda daha hızlı — bellek baskısı altında
+# takas/çöp toplama maliyeti, paralellikten kazanılandan fazlaydı.
+_RASTER_PAGE_BATCH = 1
+
+
+def _guvenli_raster_dpi(sayfa_sayisi: int, istenen_dpi: int) -> int:
+    """Sayfa sayısına göre güvenli çözünürlük.
+
+    Çok sayfalı belgelerde 300 DPI hem dakikalar sürer hem de yüzlerce megabaytlık
+    bir arşiv üretir; kullanıcı onu indiremez bile. Kısa belgelerde tam kalite
+    korunur, uzun belgelerde ekran kalitesine düşülür.
+    """
+    if sayfa_sayisi <= 30:
+        return istenen_dpi
+    if sayfa_sayisi <= 80:
+        return min(istenen_dpi, 200)
+    return min(istenen_dpi, 150)
 
 
 def _fitz_open(pdf_path: str, password: Optional[str] = None):
@@ -478,7 +504,12 @@ def pdf_to_images_zip(
     dpi: int = PDF_EXPORT_DPI_WEB,
     password: Optional[str] = None,
 ) -> str:
-    """ZIP dosya yolunu döndürür; pdf2image + Poppler gerekir. Sayfalar partiler halinde rasterize edilir (bellek)."""
+    """ZIP dosya yolunu döndürür; sayfalar TEK TEK rasterize edilip doğrudan arşive yazılır.
+
+    Bellek, sayfa sayısından bağımsız olarak tek sayfalık kalır (bkz.
+    `_RASTER_PAGE_BATCH`); çözünürlük uzun belgelerde otomatik düşürülür
+    (bkz. `_guvenli_raster_dpi`).
+    """
     from pdf2image import convert_from_path
 
     fmt = (image_format or "jpg").lower()
@@ -487,17 +518,20 @@ def pdf_to_images_zip(
     ext = "png" if fmt == "png" else "jpg"
     import src.pdf_engine as pe
 
-    import os as _os
-    _cpu = max(1, min((_os.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png" if ext == "png" else "jpeg", "thread_count": _cpu}
-    if poppler and os.path.isdir(poppler):
-        kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()
-    if pwd:
-        kw_base["userpw"] = pwd
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
+
+    # Tek sayfa işlendiği için ek iş parçacığı kazanç sağlamaz, yalnızca bellek
+    # tüketir: bilerek 1.
+    guvenli_dpi = _guvenli_raster_dpi(n, int(dpi))
+    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png" if ext == "png" else "jpeg", "thread_count": 1}
+    if poppler and os.path.isdir(poppler):
+        kw_base["poppler_path"] = poppler
+    if pwd:
+        kw_base["userpw"] = pwd
+
     zip_path = os.path.join(workdir, "sayfalar.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
         page_index = 0
@@ -821,17 +855,20 @@ def pdf_to_pptx(
     import pdfplumber
     import src.pdf_engine as pe
 
-    import os as _os2
-    _cpu2 = max(1, min((_os2.cpu_count() or 2), 4))
     poppler = getattr(pe, "poppler_bin_path", None) or None
-    kw_base: dict = {"dpi": int(dpi), "fmt": "png", "thread_count": _cpu2}
-    if poppler and os.path.isdir(poppler):
-        kw_base["poppler_path"] = poppler
     pwd = (password or "").strip()
-    if pwd:
-        kw_base["userpw"] = pwd
     _open_pdf_reader(pdf_path, password=password)
     n = get_num_pages(pdf_path, password=password)
+
+    # Sayfa sayfa ve tek iş parçacığıyla — PDF→Görsel ile aynı sebep: 300 DPI'da
+    # birkaç sayfayı birden açmak 512 MB'lık sunucuda süreci öldürüyor ve TÜM
+    # servisi düşürüyordu. Uzun belgelerde çözünürlük de otomatik düşer.
+    guvenli_dpi = _guvenli_raster_dpi(n, int(dpi))
+    kw_base: dict = {"dpi": guvenli_dpi, "fmt": "png", "thread_count": 1}
+    if poppler and os.path.isdir(poppler):
+        kw_base["poppler_path"] = poppler
+    if pwd:
+        kw_base["userpw"] = pwd
 
     # PDF'in gerçek sayfa boyutunu al (ilk sayfa referans)
     # pdfplumber sayfa boyutunu pt cinsinden verir; 1 pt = 12700 EMU
