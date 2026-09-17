@@ -34,6 +34,17 @@ def _blurred_png_bytes_from_fitz_doc(doc: object) -> Optional[bytes]:
     except ImportError:
         return None
 
+    # Parola korumalı belgeden önizleme üretilemez — bu bir ARIZA DEĞİL, beklenen
+    # bir durumdur (şifreleme aracının çıktısı gibi). Eskiden bu da diğer hatalarla
+    # aynı sepete giriyor, hata izleme sistemine "istisna" olarak düşüyordu; gerçek
+    # sorunlar bu gürültünün içinde kayboluyordu.
+    try:
+        if getattr(doc, "needs_pass", False) or getattr(doc, "is_encrypted", False):
+            logger.info("preview_thumbnail: belge parola korumalı, önizleme atlandı")
+            return None
+    except Exception:
+        pass
+
     try:
         if doc.page_count < 1:
             return None
