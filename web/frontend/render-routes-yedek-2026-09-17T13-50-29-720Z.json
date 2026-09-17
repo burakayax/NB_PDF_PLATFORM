@@ -1,0 +1,576 @@
+[
+  {
+    "destination": "/en/blog/extract-images-from-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2f0",
+    "priority": 0,
+    "source": "/en/blog/pdften-gorsel-resim-cikarma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/invoice-data-to-excel",
+    "id": "rdr-dalurnbm8hqs73e6g2fg",
+    "priority": 1,
+    "source": "/en/blog/faturadan-excele-veri-aktarma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/merge-two-pdfs-free",
+    "id": "rdr-dalurnbm8hqs73e6g2g0",
+    "priority": 2,
+    "source": "/en/blog/iki-pdf-birlestirme-ucretsiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/translate-pdf-online",
+    "id": "rdr-dalurnbm8hqs73e6g2gg",
+    "priority": 3,
+    "source": "/en/blog/pdf-baska-dile-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-pdf-to-word",
+    "id": "rdr-dalurnbm8hqs73e6g2h0",
+    "priority": 4,
+    "source": "/en/blog/pdf-word-donusturme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/reduce-pdf-file-size",
+    "id": "rdr-dalurnbm8hqs73e6g2hg",
+    "priority": 5,
+    "source": "/en/blog/pdf-boyutu-kucultme-sikistirma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/remove-pdf-password",
+    "id": "rdr-dalurnbm8hqs73e6g2i0",
+    "priority": 6,
+    "source": "/en/blog/pdf-sifre-kaldirma-koyma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/images-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2ig",
+    "priority": 7,
+    "source": "/en/blog/resimleri-pdf-yapma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/summarize-long-documents-with-ai",
+    "id": "rdr-dalurnbm8hqs73e6g2j0",
+    "priority": 8,
+    "source": "/en/blog/uzun-belgeleri-ai-ile-ozetleme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/scanned-pdf-to-text-ocr",
+    "id": "rdr-dalurnbm8hqs73e6g2jg",
+    "priority": 9,
+    "source": "/en/blog/taranmis-pdf-metne-cevirme-ocr",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/how-to-read-a-tender-document",
+    "id": "rdr-dalurnbm8hqs73e6g2k0",
+    "priority": 10,
+    "source": "/en/blog/ihale-sartnamesi-nasil-okunur",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/lease-agreement-checklist",
+    "id": "rdr-dalurnbm8hqs73e6g2kg",
+    "priority": 11,
+    "source": "/en/blog/kira-kontrati-dikkat-edilecek-maddeler",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/bank-statement-to-excel",
+    "id": "rdr-dalurnbm8hqs73e6g2l0",
+    "priority": 12,
+    "source": "/en/blog/banka-ekstresi-excele-aktarma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/understand-a-foreign-language-contract",
+    "id": "rdr-dalurnbm8hqs73e6g2lg",
+    "priority": 13,
+    "source": "/en/blog/yabanci-dildeki-sozlesmeyi-anlama",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/summarize-academic-papers",
+    "id": "rdr-dalurnbm8hqs73e6g2m0",
+    "priority": 14,
+    "source": "/en/blog/akademik-makale-ozetleme-literatur",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/batch-invoices-for-accounting",
+    "id": "rdr-dalurnbm8hqs73e6g2n0",
+    "priority": 15,
+    "source": "/en/blog/faturalari-toplu-muhasebeye-hazirlama",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/delete-pages-from-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2ng",
+    "priority": 16,
+    "source": "/en/blog/pdf-sayfa-silme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/rotate-pdf-and-save",
+    "id": "rdr-dalurnbm8hqs73e6g2o0",
+    "priority": 17,
+    "source": "/en/blog/pdf-dondurme-kaydetme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/reorder-pdf-pages",
+    "id": "rdr-dalurnbm8hqs73e6g2og",
+    "priority": 18,
+    "source": "/en/blog/pdf-sayfa-sirasi-degistirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/split-pdf-into-pages",
+    "id": "rdr-dalurnbm8hqs73e6g2p0",
+    "priority": 19,
+    "source": "/en/blog/pdf-bolme-sayfalara-ayirma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/how-to-sign-a-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2pg",
+    "priority": 20,
+    "source": "/en/blog/pdf-e-imza-atma-nasil-yapilir",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/add-watermark-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2q0",
+    "priority": 21,
+    "source": "/en/blog/pdf-filigran-ekleme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/write-and-mark-up-a-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2qg",
+    "priority": 22,
+    "source": "/en/blog/pdf-uzerine-yazma-isaretleme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/scan-documents-with-your-phone",
+    "id": "rdr-dalurnbm8hqs73e6g2r0",
+    "priority": 23,
+    "source": "/en/blog/telefonla-belge-tarama-pdf",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/create-a-searchable-pdf-ocr",
+    "id": "rdr-dalurnbm8hqs73e6g2rg",
+    "priority": 24,
+    "source": "/en/blog/aranabilir-pdf-olusturma-ocr",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/document-photo-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2s0",
+    "priority": 25,
+    "source": "/en/blog/belge-fotografini-kaliteli-pdf-yapma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/camscanner-alternative",
+    "id": "rdr-dalurnbm8hqs73e6g2sg",
+    "priority": 26,
+    "source": "/en/blog/camscanner-ucretsiz-gizli-alternatif",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-word-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2t0",
+    "priority": 27,
+    "source": "/en/blog/word-pdf-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-pdf-to-jpg",
+    "id": "rdr-dalurnbm8hqs73e6g2tg",
+    "priority": 28,
+    "source": "/en/blog/pdf-jpg-resme-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/edit-pdf-text",
+    "id": "rdr-dalurnbm8hqs73e6g2u0",
+    "priority": 29,
+    "source": "/en/blog/pdf-metin-duzenleme-silme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-pdf-to-excel",
+    "id": "rdr-dalurnbm8hqs73e6g2ug",
+    "priority": 30,
+    "source": "/en/blog/pdf-excel-tablo-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-excel-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2v0",
+    "priority": 31,
+    "source": "/en/blog/excel-pdf-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-powerpoint-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g2vg",
+    "priority": 32,
+    "source": "/en/blog/powerpoint-pdf-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/add-page-numbers-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g300",
+    "priority": 33,
+    "source": "/en/blog/pdf-sayfa-numarasi-ekleme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/repair-a-corrupt-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g30g",
+    "priority": 34,
+    "source": "/en/blog/bozuk-pdf-onarma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/compare-two-pdfs",
+    "id": "rdr-dalurnbm8hqs73e6g310",
+    "priority": 35,
+    "source": "/en/blog/pdf-karsilastirma-farklari-bulma",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/redact-sensitive-data-in-a-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g31g",
+    "priority": 36,
+    "source": "/en/blog/pdf-hassas-veri-gizleme-kvkk",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/process-pdf-without-uploading",
+    "id": "rdr-dalurnbm8hqs73e6g320",
+    "priority": 37,
+    "source": "/en/blog/dosya-yuklemeden-pdf-isleme-gizlilik",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/pdf-tools-on-your-phone-no-app",
+    "id": "rdr-dalurnbm8hqs73e6g32g",
+    "priority": 38,
+    "source": "/en/blog/telefonda-pdf-islemleri-uygulamasiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/best-free-pdf-tools",
+    "id": "rdr-dalurnbm8hqs73e6g330",
+    "priority": 39,
+    "source": "/en/blog/en-iyi-ucretsiz-pdf-araclari",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/ilovepdf-alternative",
+    "id": "rdr-dalurnbm8hqs73e6g33g",
+    "priority": 40,
+    "source": "/en/blog/ilovepdf-alternatifi-cihazda-ucretsiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/convert-cv-from-word-to-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g340",
+    "priority": 41,
+    "source": "/en/blog/cv-ozgecmis-word-pdf-cevirme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/smallpdf-alternative",
+    "id": "rdr-dalurnbm8hqs73e6g34g",
+    "priority": 42,
+    "source": "/en/blog/smallpdf-alternatifi-sinirsiz-ucretsiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/fill-out-a-pdf-form-online",
+    "id": "rdr-dalurnbm8hqs73e6g350",
+    "priority": 43,
+    "source": "/en/blog/pdf-form-doldurma-online-ucretsiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/adobe-acrobat-alternative",
+    "id": "rdr-dalurnbm8hqs73e6g35g",
+    "priority": 44,
+    "source": "/en/blog/adobe-acrobat-alternatifi-ucretsiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/free-pdf-editor",
+    "id": "rdr-dalurnbm8hqs73e6g360",
+    "priority": 45,
+    "source": "/en/blog/ucretsiz-pdf-duzenleyici-rehberi",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/crop-a-pdf-trim-margins",
+    "id": "rdr-dalurnbm8hqs73e6g36g",
+    "priority": 46,
+    "source": "/en/blog/pdf-kirpma-kenar-boslugu-kesme",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/how-to-choose-a-free-pdf-tool",
+    "id": "rdr-dalurnbm8hqs73e6g370",
+    "priority": 47,
+    "source": "/en/blog/ucretsiz-pdf-araci-nasil-secilir",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/shrink-a-pdf-for-email",
+    "id": "rdr-dalurnbm8hqs73e6g37g",
+    "priority": 48,
+    "source": "/en/blog/pdf-kucultme-eposta-whatsapp",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/blog/edit-a-pdf-on-your-phone",
+    "id": "rdr-dalurnbm8hqs73e6g380",
+    "priority": 49,
+    "source": "/en/blog/telefonda-pdf-duzenleme-uygulamasiz",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/compress-image",
+    "id": "rdr-dalurnbm8hqs73e6g390",
+    "priority": 50,
+    "source": "/en/tools/gorsel-sikistir",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/scan-document",
+    "id": "rdr-dalurnbm8hqs73e6g39g",
+    "priority": 51,
+    "source": "/en/tools/belge-tara",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/searchable-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3a0",
+    "priority": 52,
+    "source": "/en/tools/aranabilir-pdf",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/summarize-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3ag",
+    "priority": 53,
+    "source": "/en/tools/pdf-ozetle",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/chat-with-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3b0",
+    "priority": 54,
+    "source": "/en/tools/pdf-sohbet",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/edit-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3bg",
+    "priority": 55,
+    "source": "/en/tools/pdf-duzenle",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/sign-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3c0",
+    "priority": 56,
+    "source": "/en/tools/pdf-imzala",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/annotate-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3cg",
+    "priority": 57,
+    "source": "/en/tools/pdf-yorumla",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/ocr-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3d0",
+    "priority": 58,
+    "source": "/en/tools/taranmis-pdf-ocr",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/extract-data-from-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3dg",
+    "priority": 59,
+    "source": "/en/tools/pdf-veri-cikar",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/translate-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3e0",
+    "priority": 60,
+    "source": "/en/tools/pdf-ceviri",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/batch-process-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3eg",
+    "priority": 61,
+    "source": "/en/tools/ai-toplu-islem",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/compare-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3f0",
+    "priority": 62,
+    "source": "/en/tools/pdf-karsilastir",
+    "type": "redirect"
+  },
+  {
+    "destination": "/en/tools/redact-pdf",
+    "id": "rdr-dalurnbm8hqs73e6g3fg",
+    "priority": 63,
+    "source": "/en/tools/hassas-veri-gizle",
+    "type": "redirect"
+  },
+  {
+    "destination": "/pricing/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3g0",
+    "priority": 64,
+    "source": "/pricing",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/terms/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3gg",
+    "priority": 65,
+    "source": "/terms",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/privacy/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3h0",
+    "priority": 66,
+    "source": "/privacy",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/kvkk/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3hg",
+    "priority": 67,
+    "source": "/kvkk",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/pdf-api/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3i0",
+    "priority": 68,
+    "source": "/pdf-api",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/blog/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3ig",
+    "priority": 69,
+    "source": "/blog",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3j0",
+    "priority": 70,
+    "source": "/en",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/pricing/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3jg",
+    "priority": 71,
+    "source": "/en/pricing",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/terms/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3k0",
+    "priority": 72,
+    "source": "/en/terms",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/privacy/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3kg",
+    "priority": 73,
+    "source": "/en/privacy",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/kvkk/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3l0",
+    "priority": 74,
+    "source": "/en/kvkk",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/pdf-api/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3lg",
+    "priority": 75,
+    "source": "/en/pdf-api",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/blog/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3m0",
+    "priority": 76,
+    "source": "/en/blog",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/tools/:slug/",
+    "id": "rdr-dalurnbm8hqs73e6g3mg",
+    "priority": 77,
+    "source": "/tools/:slug",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/tools/:slug/",
+    "id": "rdr-dalurnbm8hqs73e6g3n0",
+    "priority": 78,
+    "source": "/en/tools/:slug",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/blog/:slug/",
+    "id": "rdr-dalurnbm8hqs73e6g3ng",
+    "priority": 79,
+    "source": "/blog/:slug",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/en/blog/:slug/",
+    "id": "rdr-dalurnbm8hqs73e6g3o0",
+    "priority": 80,
+    "source": "/en/blog/:slug",
+    "type": "rewrite"
+  },
+  {
+    "destination": "/index.html",
+    "id": "rdr-dalurnbm8hqs73e6g3og",
+    "priority": 81,
+    "source": "/*",
+    "type": "rewrite"
+  }
+]
