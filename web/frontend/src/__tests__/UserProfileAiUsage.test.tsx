@@ -6,6 +6,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { UserProfilePanel } from "../components/dashboard/UserProfilePanel";
 import type { AuthUser } from "../api/auth";
+import { writeAccessToken } from "../lib/accessTokenStore";
 
 vi.mock("../api/auth", async (importOriginal) => {
   const original = await importOriginal<typeof import("../api/auth")>();
@@ -54,7 +55,9 @@ const baseProps = {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
-  localStorage.setItem("nbpdf-access-token", "fake-token-for-test");
+  // Erişim anahtarı artık tarayıcı deposunda değil bellekte tutuluyor
+  // (güvenlik: depodaki anahtarı sayfadaki herhangi bir betik okuyabiliyordu).
+  writeAccessToken("fake-token-for-test");
 });
 
 describe("UserProfilePanel — AI Kullanımı", () => {

@@ -3,6 +3,7 @@ import type { Language } from "../../i18n/landing";
 import { getSaasApiBase } from "../../api/saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { NbPhoneInput } from "../common/NbPhoneInput";
+import { readAccessToken } from "../../lib/accessTokenStore";
 
 interface BillingFormState {
   invoiceType: "individual" | "corporate";
@@ -242,7 +243,7 @@ const EMPTY_FORM: BillingFormState = {
 
 function readToken(fallback: string): string {
   if (typeof window === "undefined") return fallback;
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 async function fetchSavedBillingInfo(

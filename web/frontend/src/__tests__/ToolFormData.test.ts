@@ -26,6 +26,7 @@ function state(over: Partial<ToolFormState> = {}): ToolFormState {
     pagesText: "1-3",
     splitMode: "single",
     compressQuality: "auto",
+    pdfToImgQuality: "normal",
     deletePagesText: "2",
     rotatePageRotations: {},
     organizePageOrder: [3, 1, 2],
@@ -169,5 +170,12 @@ describe("buildBatchFormData", () => {
     const fd = buildBatchFormData("compress", files, state());
     expect(fd.get("watermark_text")).toBeNull();
     expect(fd.get("start_at")).toBeNull();
+  });
+});
+
+describe("PDF → Görsel çözünürlük seçimi", () => {
+  it("seçilen kaliteyi sunucuya gönderir", () => {
+    const fd = buildToolFormData("pdf-to-image", state({ pdfToImgQuality: "baski" }));
+    expect(fd.get("quality")).toBe("baski");
   });
 });

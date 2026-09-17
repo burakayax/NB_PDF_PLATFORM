@@ -105,9 +105,6 @@ import {
   confirmFakeCheckout,
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
-import { NotFoundPage } from "./components/common/NotFoundPage";
-import { TOOL_SLUGS } from "./seo/seoContent.mjs";
-import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
@@ -251,6 +248,7 @@ import {
 import { runClientPdfTool } from "./lib/clientToolRun";
 import { reportTeamActivity } from "./lib/teamActivity";
 import { checkToolSubmission } from "./lib/toolSubmissionCheck";
+import { readAccessToken } from "./lib/accessTokenStore";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
@@ -571,6 +569,10 @@ function App() {
     "auto" | "low" | "medium" | "high"
   >("auto");
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
+  // Görsel kalitesi: uzun belgelerde sunucu çözünürlüğü kendiliğinden düşürüyor;
+  // bu seçim kullanıcının baskı kalitesi isteyebilmesi (ya da hız için düşürmesi)
+  // için var.
+  const [pdfToImgQuality, setPdfToImgQuality] = useState("normal");
   const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
   const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("");
   const [htmlToPdfRaw, setHtmlToPdfRaw] = useState(
@@ -4653,6 +4655,7 @@ function App() {
         pageNumPos,
         pageNumFmt,
         pdfToImgFmt,
+        pdfToImgQuality,
         inputPassword,
         outputPassword,
       };
@@ -5234,31 +5237,6 @@ function App() {
   // ÖNEMLİ: Giriş YAPMIŞ kullanıcıda, workspace'te karşılığı olan araçlar (editör/imza/
   // yorum/kırp/AI) burada YAKALANMAZ → aşağıdaki workspace render'ı çalışır ve araç
   // panelin içinde, sidebar + "Merhaba <ad>" üst barıyla açılır (harici SEO sayfası değil).
-  // TANINMAYAN ARAÇ ADRESİ → "sayfa bulunamadı".
-  //
-  // NEDEN: Eskiden /tools/olmayan-bir-sey gibi bir adres BOMBOŞ BEYAZ SAYFA
-  // veriyordu: ne hata, ne menü, ne de siteye dönüş bağlantısı. Eski/yanlış
-  // yazılmış bir bağlantıya tıklayan kullanıcı sitenin bozulduğunu sanıyor,
-  // arama motoru da içeriksiz sayfa görüyordu.
-  if (pathname.startsWith("/tools/")) {
-    const istenenSlug = (pathname.split("/tools/")[1] ?? "").split("/")[0] ?? "";
-    const bilinen = TOOL_SLUGS.includes(toolSlugToTr(istenenSlug));
-    if (istenenSlug && !bilinen) {
-      return (
-        <>
-          <SeoRouteManager pathname={pathname} view="notfound" language={language} />
-          <NotFoundPage
-            language={language}
-            onGoHome={() => {
-              window.history.pushState({}, "", "/");
-              setView("landing");
-            }}
-          />
-        </>
-      );
-    }
-  }
-
   if (
     pathname.startsWith("/tools/") &&
     !(isAuthenticated && hasInAppPanelForSeoSlug(pathname.split("/tools/")[1] ?? ""))
@@ -5506,7 +5484,7 @@ function App() {
   ) {
     const tokenPending =
       typeof window !== "undefined"
-        ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY)
+        ? readAccessToken()
         : null;
     if (isRestoring && tokenPending) {
       return (
@@ -7520,6 +7498,26 @@ function App() {
                             >
                               <option value="jpg">JPG</option>
                               <option value="png">PNG</option>
+                            </select>
+                          </label>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-image" ? (
+                          <label className="field">
+                            <span>{language === "tr" ? "Çözünürlük" : "Resolution"}</span>
+                            <select
+                              value={pdfToImgQuality}
+                              onChange={(e) => setPdfToImgQuality(e.target.value)}
+                            >
+                              <option value="ekran">
+                                {language === "tr" ? "Ekran (hızlı, küçük dosya)" : "Screen (fast, small file)"}
+                              </option>
+                              <option value="normal">
+                                {language === "tr" ? "Normal (önerilen)" : "Normal (recommended)"}
+                              </option>
+                              <option value="baski">
+                                {language === "tr" ? "Baskı (en yüksek kalite)" : "Print (highest quality)"}
+                              </option>
                             </select>
                           </label>
                         ) : null}

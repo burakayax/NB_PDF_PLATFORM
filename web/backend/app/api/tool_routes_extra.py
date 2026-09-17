@@ -42,6 +42,7 @@ from app.core.result_store import (
 )
 from app.core.thread_pool import CpuCapacityTimeout, run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
+from app.core.jobs import create_conversion_job
 from app.core.saas_gate import (
     consume_editor_download,
     entitlement_check,
@@ -1514,6 +1515,7 @@ async def tool_pdf_to_image(
     file: UploadFile = File(...),
     image_format: str = Form("jpg"),
     password: str = Form(""),
+    quality: str = Form("normal"),
 ):
     decision = await entitlement_check(token, "pdf-to-image")
     workdir = create_workdir()
@@ -1529,7 +1531,7 @@ async def tool_pdf_to_image(
                 sp,
                 str(workdir),
                 image_format=image_format,
-                dpi=int(ptx.PDF_EXPORT_DPI_WEB),
+                dpi=_gorsel_dpi(quality),
                 password=pwd,
             )
             return save_result_from_file(
@@ -1558,6 +1560,81 @@ async def tool_pdf_to_image(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+def _gorsel_dpi(kalite: str) -> int:
+    """Kullanıcının seçtiği kaliteyi çözünürlüğe çevirir.
+
+    NEDEN SEÇENEK VAR: Uzun belgelerde çözünürlük otomatik düşürülüyor (bellek ve
+    süre için). Baskı kalitesi isteyen kullanıcının bunu isteyebilmesi, sadece
+    ekranda bakacak olanın da hızlı ve küçük dosya alabilmesi gerekiyor.
+    Değerler sabit listeden seçilir; serbest sayı kabul edilmez (çok yüksek bir
+    değer sunucuyu zorlar).
+    """
+    return {"ekran": 150, "normal": 300, "baski": 400}.get((kalite or "").strip(), 300)
+
+
+@router.post("/pdf-to-image/start")
+@limiter.limit("10/minute")
+async def tool_pdf_to_image_start(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    image_format: str = Form("jpg"),
+    password: str = Form(""),
+    # "ekran" (150 DPI, hızlı ve küçük) / "normal" (300) / "baski" (400).
+    quality: str = Form("normal"),
+):
+    """PDF → Görsel dönüşümünü ARKA PLANDA başlatır.
+
+    NEDEN: Ölçümde 150 sayfalık bir belge 48 saniye sürüyor. Tek istekte
+    beklenince kullanıcı ekranda yalnızca "işlem sürüyor" görüyor, kaçıncı
+    sayfada olduğunu bilmiyor ve çoğu kişi sekmeyi kapatıyor. Arka plan işinde
+    sayfa sayfa ilerleme gösterilir ve bağlantı kopsa bile iş sunucuda sürer.
+    """
+    decision = await entitlement_check(token, "pdf-to-image")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+
+        def _run(progress_cb):
+            zpath = ptx.pdf_to_images_zip(
+                sp,
+                str(workdir),
+                image_format=image_format,
+                dpi=_gorsel_dpi(quality),
+                password=pwd,
+                progress_callback=progress_cb,
+            )
+            return Path(zpath)
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                "sayfalar.zip",
+                "application/zip",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-image",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_g_check(decision),
+            running_message="Sayfalar görsele çevriliyor...",
+            done_message="Görselleriniz hazır.",
+            fail_message="Görsele çevirme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _g_check(decision)}
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-image")
 
 
 @router.post("/extract-images")

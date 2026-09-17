@@ -36,6 +36,12 @@ export const BACKGROUND_JOB_TOOLS = new Set<FeatureId>([
   "pdf-to-excel",
   "pdf-to-word",
   "pdf-to-ppt",
+  // Ağır belgelerde ölçülen süreler: sıkıştırma 150 sayfada 69 sn, görsele
+  // çevirme 48 sn. Tek istekte beklenirken ekranda yalnızca "işlem sürüyor"
+  // yazıyordu; bir dakikayı aşan sessiz bekleme kullanıcının sekmeyi kapattığı
+  // yer. Artık ikisi de sayfa sayfa ilerleme gösteriyor.
+  "compress",
+  "pdf-to-image",
 ]);
 
 export const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {

@@ -2,12 +2,13 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 import { getSaasApiBase } from "./saasBase";
 import { saasAuthorizedFetch } from "./subscription";
 import { emitAdminToast, readAdminErrorMessage } from "../admin/lib/adminToast";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 /** Mutasyon (kaydet/sil/oluştur) isteklerinin sonucunu panel geneli toast olarak bildirir. */
