@@ -3,6 +3,7 @@ import {
   CalendarClock,
   CheckCircle2,
   FileText,
+  Hand,
   Inbox,
   Loader2,
   Radio,
@@ -19,6 +20,7 @@ import {
   testSocialAccount,
   fetchSocialOverview,
   fetchSocialPosts,
+  markSocialPostShared,
   publishSocialPost,
   queueSocialPosts,
   saveSocialAccount,
@@ -93,13 +95,14 @@ function StatTile({
   icon: typeof Inbox;
   label: string;
   value: number;
-  tone: "slate" | "amber" | "emerald" | "rose";
+  tone: "slate" | "amber" | "emerald" | "rose" | "violet";
 }) {
   const tones = {
     slate: "text-slate-300",
     amber: "text-amber-300",
     emerald: "text-emerald-300",
     rose: "text-rose-300",
+    violet: "text-violet-300",
   } as const;
   return (
     <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 px-4 py-3">
@@ -227,6 +230,8 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
 
   const livePlatforms = (overview?.accounts ?? []).filter((a) => a.connected && a.enabled);
   const pendingPosts = posts.filter((p) => p.status === "DRAFT" || p.status === "QUEUED" || p.status === "FAILED");
+  // Bağlı olmayan ağların gönderileri: otomatik yayına girmez, elle paylaşılır.
+  const manualPosts = posts.filter((p) => p.status === "MANUAL");
   const historyPosts = posts.filter((p) => p.status === "PUBLISHED" || p.status === "SKIPPED" || p.status === "PUBLISHING");
 
   if (!overview || !config) {
@@ -329,10 +334,11 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
       </section>
 
       {/* ── Sayaçlar ──────────────────────────────────────────────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <StatTile icon={FileText} label="Onay bekleyen" value={overview.stats.draft} tone="amber" />
         <StatTile icon={CalendarClock} label="Sırada" value={overview.stats.queued} tone="slate" />
         <StatTile icon={CheckCircle2} label="Paylaşılan" value={overview.stats.published} tone="emerald" />
+        <StatTile icon={Hand} label="Elle paylaşılacak" value={overview.stats.manual} tone="violet" />
         <StatTile icon={TriangleAlert} label="Başarısız" value={overview.stats.failed} tone="rose" />
       </div>
 
@@ -384,9 +390,13 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 const r = await queueSocialPosts(accessToken);
                 await refresh();
                 setTab("flow");
+                const manualCount = r.queued.filter((q) => q.manual).length;
                 setNote(
                   r.queued.length > 0
-                    ? `${r.queued.length} gönderi hazırlandı. Okuyup onaylayana kadar hiçbir yere gitmez.`
+                    ? `${r.queued.length} gönderi hazırlandı. Okuyup onaylayana kadar hiçbir yere gitmez.` +
+                        (manualCount > 0
+                          ? ` ${manualCount} tanesi hesabı bağlı olmayan ağlar için — “Elle paylaşılacaklar” listesinden kopyalayıp paylaşabilirsin.`
+                          : "")
                     : `Gönderi hazırlanmadı — ${r.skipped[0]?.reason ?? "uygun içerik bulunamadı"}.`,
                 );
               })
@@ -405,7 +415,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
       {/* ── Gönderi akışı ─────────────────────────────────────────────────── */}
       {tab === "flow" ? (
         <div className="space-y-5">
-          {pendingPosts.length === 0 && historyPosts.length === 0 ? (
+          {pendingPosts.length === 0 && manualPosts.length === 0 && historyPosts.length === 0 ? (
             <EmptyState
               icon={Inbox}
               title="Henüz gönderi yok"
@@ -414,7 +424,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <button
                   type="button"
                   className={primaryButton}
-                  disabled={busy || livePlatforms.length === 0}
+                  disabled={busy}
                   onClick={() =>
                     void run(async () => {
                       const r = await queueSocialPosts(accessToken);
@@ -428,7 +438,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   }
                 >
                   <Wand2 className="h-3.5 w-3.5" />
-                  {livePlatforms.length === 0 ? "Önce bir hesap bağla" : "İlk taslağı hazırla"}
+                  İlk taslağı hazırla
                 </button>
               }
             />
@@ -468,6 +478,50 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                       await updateSocialPostBody(accessToken, id, body);
                       await refresh();
                     }, "Metin kaydedildi.");
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {manualPosts.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-sm font-semibold text-white">Elle paylaşılacaklar</h3>
+                <span className="text-[11px] text-slate-500">{manualPosts.length} gönderi</span>
+              </div>
+              <p className="rounded-xl border border-violet-500/25 bg-violet-500/5 px-4 py-3 text-xs leading-relaxed text-violet-100/80">
+                Bu ağların hesabı bağlı değil. Metin ve görsel yine de o ağın ölçülerine göre hazırlandı: metni
+                kopyala, görseli indir, kendi hesabından paylaş. Paylaştıktan sonra “Paylaştım” de ki liste
+                temizlensin.
+              </p>
+              {manualPosts.map((post) => (
+                <PostPreviewCard
+                  key={`${post.id}:${post.updatedAt}`}
+                  post={post}
+                  spec={specByPlatform.get(post.platform)}
+                  busyId={busyPostId}
+                  onPublish={() => undefined}
+                  onDelete={(id) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await deleteSocialPost(accessToken, id);
+                      await refresh();
+                    });
+                  }}
+                  onSaveBody={(id, body) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await updateSocialPostBody(accessToken, id, body);
+                      await refresh();
+                    }, "Metin kaydedildi.");
+                  }}
+                  onMarkShared={(id) => {
+                    setBusyPostId(id);
+                    void run(async () => {
+                      await markSocialPostShared(accessToken, id);
+                      await refresh();
+                    }, "Paylaşıldı olarak işaretlendi.");
                   }}
                 />
               ))}

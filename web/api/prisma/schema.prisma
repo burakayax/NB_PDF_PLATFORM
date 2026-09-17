@@ -811,6 +811,9 @@ enum SocialPostStatus {
   PUBLISHED
   FAILED
   SKIPPED
+  /// Hesabı bağlı olmayan ağ için hazırlandı: metin ve görsel panelde bekler,
+  /// paylaşımı admin elle yapar. Otomatik yayın bu kayda ASLA dokunmaz.
+  MANUAL
 }
 
 /// Bağlı sosyal medya hesabı. Erişim anahtarları AES-256-GCM ile şifreli tutulur

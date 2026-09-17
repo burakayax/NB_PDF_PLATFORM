@@ -399,7 +399,7 @@ async function pickNextItem(
 }
 
 export type QueueResult = {
-  queued: { platform: SocialPlatform; title: string; body: string; imageUrl: string | null }[];
+  queued: { platform: SocialPlatform; title: string; body: string; imageUrl: string | null; manual: boolean }[];
   /** `platform: null` → tüm platformları birden ilgilendiren sebep. */
   skipped: { platform: SocialPlatform | null; reason: string }[];
 };
@@ -417,11 +417,6 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
   const accounts = await readyAccounts();
   const result: QueueResult = { queued: [], skipped: [] };
 
-  if (accounts.size === 0) {
-    result.skipped.push({ platform: null, reason: "Bağlı ve paylaşıma açık hesap yok" });
-    return result;
-  }
-
   const items = await fetchPairedFeedItems(PRIMARY_FEED_LANG);
   if (items.length === 0) {
     result.skipped.push({ platform: null, reason: "Beslemede paylaşılacak yazı bulunamadı" });
@@ -430,8 +425,13 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
 
   // Platform başına ayrı seçim: bir ağ yeni eklendiğinde geçmişi ondan bağımsız
   // ilerlesin, hepsi aynı yazıda kilitlenmesin.
+  //
+  // HESABI BAĞLI OLMAYAN AĞLAR DA HAZIRLANIR: metin zaten bir kez yazılıyor,
+  // görselin yalnızca kesimi değişiyor. Bağlı olmayan ağın gönderisi MANUAL
+  // olarak kaydedilir — otomatik yayına asla girmez, panelde metni kopyalanıp
+  // görseli indirilerek elle paylaşılır.
   const targets: { platform: SocialPlatform; item: FeedItem }[] = [];
-  for (const platform of accounts.keys()) {
+  for (const platform of ALL_PLATFORMS) {
     const item = await pickNextItem(items, platform, config.recycleOldPosts);
     if (!item) {
       result.skipped.push({ platform, reason: "Paylaşılacak yeni yazı yok" });
@@ -468,6 +468,7 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
     for (const platform of platforms) {
       const imageUrl = pickImage(item, platform);
       try {
+        const manual = !accounts.has(platform);
         await prisma.socialPost.create({
           data: {
             platform,
@@ -479,10 +480,10 @@ export async function queueDailyPosts(scheduledAt: Date, hold = false): Promise<
             imageUrl,
             scheduledAt,
             dayKey,
-            status: hold ? "DRAFT" : "QUEUED",
+            status: manual ? "MANUAL" : hold ? "DRAFT" : "QUEUED",
           },
         });
-        result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl });
+        result.queued.push({ platform, title: item.title, body: bodies[platform], imageUrl, manual });
       } catch (err) {
         // Benzersiz kısıt → bu yazı bu ağda zaten kuyrukta/paylaşılmış.
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -641,13 +642,28 @@ export async function publishNow(postId: string): Promise<{ ok: boolean; error: 
   return { ok: false, error: after?.lastError ?? "Yayınlanamadı" };
 }
 
+/**
+ * "Elle paylaştım" işareti.
+ *
+ * NEDEN: Bağlı olmayan ağların gönderisini admin kendi eliyle atıyor. İşaret
+ * konmazsa aynı kart günlerce "bekliyor" görünür ve hangi ağa atıldığı takip
+ * edilemez. Yalnızca MANUAL kayıtlar için geçerli — otomatik akışın durumlarını
+ * elle "paylaşıldı" yapmaya izin verilmez.
+ */
+export async function markPostShared(postId: string): Promise<void> {
+  await prisma.socialPost.updateMany({
+    where: { id: postId, status: "MANUAL" },
+    data: { status: "PUBLISHED", publishedAt: new Date(), lastError: null },
+  });
+}
+
 export async function deletePost(postId: string): Promise<void> {
   await prisma.socialPost.deleteMany({ where: { id: postId, status: { not: "PUBLISHED" } } });
 }
 
 export async function updatePostBody(postId: string, body: string): Promise<void> {
   await prisma.socialPost.updateMany({
-    where: { id: postId, status: { in: ["DRAFT", "QUEUED", "FAILED"] } },
+    where: { id: postId, status: { in: ["DRAFT", "QUEUED", "FAILED", "MANUAL"] } },
     data: { body: body.trim(), lastError: null },
   });
 }
@@ -655,6 +671,7 @@ export async function updatePostBody(postId: string, body: string): Promise<void
 /** Panel özeti: kuyruk ve geçmiş sayıları. */
 export async function postStats(): Promise<{
   draft: number;
+  manual: number;
   queued: number;
   published: number;
   failed: number;
@@ -673,6 +690,7 @@ export async function postStats(): Promise<{
 
   return {
     draft: count("DRAFT"),
+    manual: count("MANUAL"),
     // Gönderim anındaki kayıt da kullanıcı için "sırada" demektir.
     queued: count("QUEUED") + count("PUBLISHING"),
     published: count("PUBLISHED"),

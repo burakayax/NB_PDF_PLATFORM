@@ -18,6 +18,7 @@ import {
   disconnectAccount,
   listAccounts,
   listPosts,
+  markPostShared,
   nextRunAt,
   postStats,
   publishNow,
@@ -189,6 +190,21 @@ socialRouter.post(
     const result = await publishNow(String(request.params.id));
     if (!result.ok) throw new HttpError(502, result.error ?? "Yayınlanamadı");
     await logAdminAudit(actorOf(request), "social.publish", String(request.params.id), "Gönderi elle yayınlandı");
+    response.json({ ok: true });
+  }),
+);
+
+/** Bağlı olmayan ağa elle atılan gönderinin "paylaştım" işareti. */
+socialRouter.post(
+  "/posts/:id/shared",
+  asyncHandler(async (request, response) => {
+    await markPostShared(String(request.params.id));
+    await logAdminAudit(
+      actorOf(request),
+      "social.manual-shared",
+      String(request.params.id),
+      "Gönderi elle paylaşıldı olarak işaretlendi",
+    );
     response.json({ ok: true });
   }),
 );
