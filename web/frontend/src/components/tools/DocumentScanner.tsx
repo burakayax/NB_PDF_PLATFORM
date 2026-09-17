@@ -164,7 +164,18 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [captured, setCaptured] = useState<HTMLCanvasElement | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
   const [quad, setQuad] = useState<Quad | null>(null);
-  const [enhance, setEnhance] = useState<EnhanceMode>("color");
+  /**
+   * İyileştirme modu. PRO KULLANICIDA VARSAYILAN "Oto".
+   *
+   * NEDEN: Varsayılan "Renkli" idi, yani telefonun çektiği HAM fotoğraf —
+   * hiçbir düzeltme yok. Gerçek taramalarda sonuç mavimsi/soluk çıkıyor
+   * (kullanıcının arşivindeki taramalarda görüldü): kâğıt beyaz görünmüyor,
+   * dosya gereksiz büyüyor ve metin tanıma zorlaşıyor. Tarayıcı uygulamalarının
+   * tamamı varsayılan olarak düzeltilmiş "belge" görünümü verir. Hakkı olan
+   * kullanıcı bunu elle seçmek zorunda kalmamalı; ücretsiz kullanıcıda davranış
+   * değişmiyor (Oto zaten Pro özelliği).
+   */
+  const [enhance, setEnhance] = useState<EnhanceMode>(isPro ? "auto" : "color");
   // Manuel köşe ayarında sürüklenen köşe indeksi → büyüteç (loupe) önizlemesi.
   const [activeCorner, setActiveCorner] = useState<number | null>(null);
   // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
