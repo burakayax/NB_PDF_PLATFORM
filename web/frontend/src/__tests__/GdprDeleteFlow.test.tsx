@@ -17,6 +17,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserProfilePanel } from "../components/dashboard/UserProfilePanel";
 import type { AuthUser } from "../api/auth";
+import { writeAccessToken } from "../lib/accessTokenStore";
 
 // ── Mock'lar ──────────────────────────────────────────────────────────────────
 
@@ -68,7 +69,9 @@ const defaultProps = {
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
-  localStorage.setItem("nbpdf-access-token", "fake-token-for-test");
+  // Erişim anahtarı artık tarayıcı deposunda değil bellekte tutuluyor
+  // (güvenlik: depodaki anahtarı sayfadaki herhangi bir betik okuyabiliyordu).
+  writeAccessToken("fake-token-for-test");
 });
 
 // ── Testler ───────────────────────────────────────────────────────────────────

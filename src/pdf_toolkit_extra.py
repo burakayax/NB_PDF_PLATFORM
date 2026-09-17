@@ -503,6 +503,7 @@ def pdf_to_images_zip(
     image_format: str = "jpg",
     dpi: int = PDF_EXPORT_DPI_WEB,
     password: Optional[str] = None,
+    progress_callback=None,
 ) -> str:
     """ZIP dosya yolunu döndürür; sayfalar TEK TEK rasterize edilip doğrudan arşive yazılır.
 
@@ -541,6 +542,11 @@ def pdf_to_images_zip(
             images = convert_from_path(pdf_path, **kw)
             for im in images:
                 page_index += 1
+                # Sayfa sayfa ilerleme: 150 sayfalık bir belgede işlem dakikayı
+                # aşıyor; kullanıcı kaçıncı sayfada olduğunu görmezse sekmeyi
+                # kapatıyor.
+                if progress_callback:
+                    progress_callback(page_index, max(1, n), f"Sayfa {page_index}/{n} görsele çevriliyor")
                 buf = io.BytesIO()
                 if ext == "png":
                     im.save(buf, format="PNG")

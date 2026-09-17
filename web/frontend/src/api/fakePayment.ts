@@ -1,6 +1,7 @@
 import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 /**
  * Client for `/api/fake-payment/*` — exercises checkout → redirect or
@@ -48,7 +49,7 @@ function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 /** Absolute URL for SPA navigation (API returns a path-only `redirectUrl`). */

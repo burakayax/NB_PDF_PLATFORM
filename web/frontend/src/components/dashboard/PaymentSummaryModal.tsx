@@ -10,6 +10,7 @@ import { trackGAEvent } from "../../lib/analytics";
 import { saasAuthorizedFetch } from "../../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { LegalDocumentBody } from "../legal/LegalPage";
+import { readAccessToken } from "../../lib/accessTokenStore";
 
 type IyzicoCheckoutResponse = {
   mode: "iyzico";
@@ -31,7 +32,7 @@ type PlanCheckoutResponse = IyzicoCheckoutResponse | FakeCheckoutResponse;
 
 function readToken(fallback: string): string {
   if (typeof window === "undefined") return fallback;
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 async function initializePlanPayment(

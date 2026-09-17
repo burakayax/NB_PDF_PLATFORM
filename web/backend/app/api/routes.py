@@ -854,6 +854,67 @@ async def pdf_to_excel_start(
         cleanup_and_raise(workdir, error)
 
 
+@router.post("/compress/start")
+async def compress_pdf_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+    quality: str = Form(default="auto"),
+):
+    """Sıkıştırmayı ARKA PLANDA başlatır.
+
+    NEDEN: Ölçümde 150 sayfalık bir belge 69 saniye sürüyor. Tek istekte
+    beklenirken ekranda yalnızca "işlem sürüyor" yazıyor; bir dakikayı aşan
+    sessiz bekleme kullanıcının sekmeyi kapattığı yer. Arka plan işinde ilerleme
+    gösterilir ve bağlantı kopsa bile iş sunucuda devam eder.
+    """
+    decision = await entitlement_check(token, "compress")
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Sıkıştırılmış", "pdf")
+        output_path = workdir / output_name
+        pwd = password.strip() or None
+        user_id = await saas_current_user_id(token)
+        q = quality if quality in ("auto", "low", "medium", "high") else "auto"
+
+        def _run(progress_cb):
+            engine.compress_pdf(sp, str(output_path), progress_callback=progress_cb, password=pwd, quality=q)
+            return output_path
+
+        def _store(outp: Path):
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
+            thumb = None
+            try:
+                thumb = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb = None
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb,
+                tool="compress",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="PDF sıkıştırılıyor...",
+            done_message="Sıkıştırılmış PDF hazır.",
+            fail_message="Sıkıştırma başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+
+
 @router.post("/compress")
 async def compress_pdf(
     token: Annotated[str, Depends(extract_pdf_access_token)],

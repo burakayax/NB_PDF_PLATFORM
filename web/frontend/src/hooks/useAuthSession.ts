@@ -17,6 +17,7 @@ import {
 import { registerSaasSessionSync } from "../api/subscription";
 import { clearPersistedWorkspaceTool } from "../lib/workspaceToolSelection";
 import type { Language } from "../i18n/landing";
+import { clearAccessToken, readAccessToken, writeAccessToken } from "../lib/accessTokenStore";
 
 /**
  * Erişim anahtarının bitiş zamanı (ms). Okunamazsa `null`.
@@ -48,7 +49,7 @@ export function useAuthSession() {
   const persistSession = useCallback((nextAccessToken: string, nextUser: AuthUser) => {
     setAccessToken(nextAccessToken);
     setUser(nextUser);
-    window.localStorage.setItem(AUTH_ACCESS_TOKEN_STORAGE_KEY, nextAccessToken);
+    writeAccessToken(nextAccessToken);
     // Oturum ipucu: httpOnly refresh çerezi JS'ten okunamaz; bu işaret, açılışta
     // "daha önce giriş yapıldı mı"yı bilip gereksiz /api/auth/refresh 401'lerini önler.
     window.localStorage.setItem(SESSION_HINT_KEY, "1");
@@ -57,7 +58,7 @@ export function useAuthSession() {
   const clearSession = useCallback(() => {
     setAccessToken(null);
     setUser(null);
-    window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    clearAccessToken();
     window.localStorage.removeItem(SESSION_HINT_KEY);
     clearPersistedWorkspaceTool();
   }, []);
@@ -91,7 +92,7 @@ export function useAuthSession() {
   }, [persistSession]);
 
   const restoreSession = useCallback(async () => {
-    const storedToken = window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    const storedToken = readAccessToken();
 
     if (storedToken) {
       try {
@@ -107,7 +108,7 @@ export function useAuthSession() {
         // Yalnızca yetkisiz (geçersiz/süresi dolmuş) token'ı sil; zaman aşımı/ağ
         // hatasında token'ı koru (geçici olabilir) ve refresh akışına düş.
         if (e instanceof Error && e.message === "Unauthorized") {
-          window.localStorage.removeItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+          clearAccessToken();
         }
       }
     }

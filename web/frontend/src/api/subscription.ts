@@ -1,5 +1,6 @@
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, refreshAuthSession, type AuthUser } from "./auth";
 import { getSaasApiBase } from "./saasBase";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 type SaasSessionSync = (session: { accessToken: string; user: AuthUser }) => void;
 
@@ -14,7 +15,7 @@ function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 /** Shared by subscription, admin, and entitlement API clients (401 → refresh session). */

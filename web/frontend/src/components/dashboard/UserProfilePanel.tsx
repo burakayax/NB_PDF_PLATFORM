@@ -9,6 +9,7 @@ import { getSaasApiBase } from "../../api/saasBase";
 import { fetchAiQuota, type AiQuota } from "../../api/ai";
 import { TopUpModal } from "../tools/TopUpModal";
 import { Sparkles, Zap } from "lucide-react";
+import { readAccessToken } from "../../lib/accessTokenStore";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -69,7 +70,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const handleDeleteAccount = async (e: FormEvent) => {
     e.preventDefault();
     if (deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
-    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    const token = readAccessToken();
     if (!token) return;
     setDeleteSubmitting(true);
     try {
@@ -86,7 +87,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const [exporting, setExporting] = useState(false);
 
   const handleExportData = async () => {
-    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    const token = readAccessToken();
     if (!token) {
       showToast("error", lang === "tr" ? "Oturum bulunamadı" : "Session not found", lang === "tr" ? "Lütfen tekrar giriş yapın." : "Please sign in again.");
       return;
@@ -188,7 +189,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   async function handleCancelSubscription() {
     setCancelling(true);
     try {
-      const token = window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? "";
+      const token = readAccessToken() ?? "";
       const res = await fetch(`${getSaasApiBase()}/api/subscription/cancel`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -248,7 +249,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const startedAtDate = formatDate(subscriptionStartedAt, language);
 
   // ── Yapay Zekâ kullanımı (kalan hak) — mobil kullanıcı buradan da görebilir. ──
-  const aiToken = accessToken ?? (typeof window !== "undefined" ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) : null);
+  const aiToken = accessToken ?? (typeof window !== "undefined" ? readAccessToken() : null);
   const hasAiAccess =
     user.role === "ADMIN" || ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(planName);
   const [aiQuota, setAiQuota] = useState<AiQuota | null>(null);

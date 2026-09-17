@@ -93,6 +93,7 @@ import {
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
 import { SystemControlTab } from "./SystemControlTab";
 import { AdminToaster } from "./AdminToaster";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 type AdminTabId =
   | "dashboard"
@@ -169,7 +170,7 @@ function adminTabLabel(id: AdminTabId): string {
 
 function readToken(fallback: string) {
   if (typeof window === "undefined") return fallback;
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 async function downloadUsageExport(accessToken: string, from: string, to: string) {

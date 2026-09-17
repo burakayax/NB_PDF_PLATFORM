@@ -35,6 +35,8 @@ export type ToolFormState = {
   pageNumPos: string;
   pageNumFmt: string;
   pdfToImgFmt: string;
+  /** "ekran" | "normal" | "baski" — sunucu güvenli bir çözünürlüğe çevirir. */
+  pdfToImgQuality: string;
   inputPassword: string;
   outputPassword: string;
 };
@@ -132,6 +134,7 @@ export function buildToolFormData(
         break;
       case "pdf-to-image":
         formData.append("image_format", s.pdfToImgFmt);
+        formData.append("quality", s.pdfToImgQuality);
         if (s.password.trim()) {
           formData.append("password", s.password.trim());
         }
@@ -204,6 +207,7 @@ export function buildBatchFormData(
   }
   if (fid === "pdf-to-image") {
     form.append("image_format", s.pdfToImgFmt);
+    form.append("quality", s.pdfToImgQuality);
   }
   return form;
 }
