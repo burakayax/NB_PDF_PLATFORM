@@ -437,6 +437,30 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
     ];
   }
 
+  /**
+   * Metin kutusu yerleştirilince yazı alanına ODAKLAN.
+   *
+   * NEDEN: Araçla sayfaya tıklayınca belgeye "Metin" yer tutucusu damgalanıyor
+   * ve düzenleme kutusu araç çubuğunda açılıyordu — ama odak sayfada kalıyordu.
+   * Kullanıcı yazmaya başlıyor, hiçbir şey olmuyor; küçük kutuyu fark etmezse
+   * belgesini "Metin" yazısıyla indiriyordu (canlı testte tam olarak bu oldu).
+   * Artık kutu odaklanır ve yer tutucu seçili gelir: yazmaya başlamak onu siler.
+   */
+  const metinKutusuRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!selected) return;
+    const secili = annos.find((a) => a.id === selected);
+    if (!secili || secili.kind !== "text") return;
+    const kutu = metinKutusuRef.current;
+    if (!kutu) return;
+    kutu.focus();
+    kutu.select();
+    // BAGIMLILIK BILEREK SADECE `selected`: `annos` da eklenirse kullanici her
+    // harf yazdiginda efekt yeniden calisir, metni bastan secer ve yazmayi
+    // imkansiz hale getirir. Burada yalnizca "secim degisti mi" onemli.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
   function onOverlayPointerDown(e: React.PointerEvent) {
     if (tool === "select") {
       // Boşluğa tıklama seçimi kaldırır (nesneler kendi pointerdown'ında durdurur).
@@ -758,6 +782,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
 
               {selected && annos.find((a) => a.id === selected)?.kind === "text" && (
                 <input
+                  ref={metinKutusuRef}
                   autoFocus
                   value={(annos.find((a) => a.id === selected) as Extract<Anno, { kind: "text" }>).text}
                   onChange={(e) => updateText(selected, e.target.value)}
