@@ -1195,9 +1195,15 @@ async def encrypt_pdf(
         def _store():
             outp = Path(str(output_path))
             _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
+            # ÖNİZLEME KAYNAK DOSYADAN ÜRETİLİR.
+            #
+            # Çıktı parola korumalı olduğu için açılamıyor; önizleme üreticisi
+            # onu her denediğinde hata kaydı düşüyordu (Sentry: "document closed
+            # or encrypted") ve kullanıcı da önizlemesiz kalıyordu. Şifrelenmemiş
+            # kaynak zaten aynı belge; önizleme ondan üretilir (bulanık + filigranlı).
             thumb_png = None
             try:
-                thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(Path(sp))
             except OSError:
                 thumb_png = None
             return save_result_from_file(
