@@ -18,6 +18,25 @@ import { registerSaasSessionSync } from "../api/subscription";
 import { clearPersistedWorkspaceTool } from "../lib/workspaceToolSelection";
 import type { Language } from "../i18n/landing";
 
+/**
+ * Erişim anahtarının bitiş zamanı (ms). Okunamazsa `null`.
+ *
+ * İmza DOĞRULANMAZ ve doğrulanmamalı: bu değer yalnızca "ne zaman yenileyelim"
+ * sorusuna yanıt için okunur, yetki kararı her zaman sunucuda verilir.
+ */
+function anahtarBitisZamani(token: string | null): number | null {
+  if (!token) return null;
+  const parcalar = token.split(".");
+  if (parcalar.length < 2) return null;
+  try {
+    const govde = parcalar[1]!.replace(/-/g, "+").replace(/_/g, "/");
+    const veri = JSON.parse(atob(govde)) as { exp?: number };
+    return typeof veri.exp === "number" ? veri.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 /** "Daha önce giriş yapıldı" ipucu — açılışta gereksiz refresh 401'lerini önler. */
 const SESSION_HINT_KEY = "nb_session_hint";
 
@@ -249,6 +268,32 @@ export function useAuthSession() {
       return null;
     }
   }, [persistSession]);
+
+  /**
+   * SESSİZ YENİLEME — oturum, kullanıcı çalışırken kendiliğinden tazelenir.
+   *
+   * NEDEN: Erişim anahtarının ömrü 15 dakika. Yenileme yalnızca bir istek 401
+   * aldığında deneniyordu ve PDF servisine giden isteklerde o yol yok; sonuçta
+   * kısa bir aradan sonra dönen kullanıcı, dosyasını yükleyip düğmeye bastığında
+   * "işlem başarısız" alıyor, bazen de giriş ekranına atılıp yaptığı işi
+   * kaybediyordu (canlı testte iki kez yaşandı). Artık anahtar dolmadan kısa
+   * süre önce sessizce yenilenir; kullanıcı hiçbir şey fark etmez.
+   */
+  useEffect(() => {
+    if (!accessToken) return;
+    const bitis = anahtarBitisZamani(accessToken);
+    if (!bitis) return;
+
+    // Bitişten 90 saniye önce yenile; süre çoktan geçtiyse hemen dene.
+    const gecikme = Math.max(5_000, bitis - Date.now() - 90_000);
+    // Tarayıcı zamanlayıcısı ~24 günü aşan gecikmede taşar; makul bir üst sınır.
+    if (gecikme > 6 * 60 * 60 * 1000) return;
+
+    const zamanlayici = window.setTimeout(() => {
+      void refreshSession();
+    }, gecikme);
+    return () => window.clearTimeout(zamanlayici);
+  }, [accessToken, refreshSession]);
 
   return {
     user,

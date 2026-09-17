@@ -24,6 +24,22 @@ export function LoginSuccessPage({
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token")?.trim();
 
+    // ANAHTARI ADRES ÇUBUĞUNDAN HEMEN SİL.
+    //
+    // Google girişi kullanıcıyı `/login-success?token=<erişim anahtarı>`
+    // adresine düşürüyor. Adres orada kaldığı sürece: tarayıcı geçmişine ve
+    // senkronize cihazlara yazılır, dışarıya verilen bağlantılarda referans
+    // başlığıyla sızabilir, kullanıcı adresi kopyalayıp paylaşırsa hesabını
+    // paylaşmış olur. Anahtar okunduğu anda adresten temizlenir; oturum zaten
+    // bellekte/depolamada kurulmuş olur.
+    if (token && typeof window.history?.replaceState === "function") {
+      try {
+        window.history.replaceState({}, "", window.location.pathname);
+      } catch {
+        // Adres temizlenemezse giriş yine tamamlanır; akışı bozma.
+      }
+    }
+
     if (!token) {
       if (import.meta.env.DEV) {
         console.warn("[LoginSuccessPage] missing ?token= in URL");
