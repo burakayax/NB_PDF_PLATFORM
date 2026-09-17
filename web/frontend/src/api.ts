@@ -1133,7 +1133,11 @@ export async function inspectPdf(
         inspect_error?: string | null;
         inspect_diagnostic?: Record<string, unknown>;
       };
+      // Tanılama kaydı YALNIZCA geliştirmede. Canlıda her dosya için konsola
+      // iç işleyiş dökülüyordu; kullanıcıya faydası yok, teknik bilgisi olan
+      // birine sistemin içini gösteriyordu.
       if (
+        import.meta.env.DEV &&
         typeof data.inspect_diagnostic !== "undefined" &&
         typeof console !== "undefined" &&
         typeof console.debug === "function"

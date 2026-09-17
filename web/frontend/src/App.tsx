@@ -105,6 +105,9 @@ import {
   confirmFakeCheckout,
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
+import { NotFoundPage } from "./components/common/NotFoundPage";
+import { TOOL_SLUGS } from "./seo/seoContent.mjs";
+import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
 import { GuestPdfTool, type GuestToolId } from "./components/tools/GuestPdfTool";
 import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
@@ -1253,6 +1256,32 @@ function App() {
     accessToken,
   });
 
+  /**
+   * Kaydetme yerini sorarken kullanıcıya ne beklendiğini söyler.
+   *
+   * NEDEN: Tarayıcının "Farklı kaydet" penceresi işletim sistemine ait; başka
+   * bir pencerenin arkasında kalabiliyor. O sırada ekranda yalnızca "işlem
+   * sürüyor" yazdığı için kullanıcı sitenin donduğunu sanıyordu (canlı testte
+   * bizim de başımıza geldi, dakikalarca bekledik). Artık ne yapması gerektiği
+   * açıkça yazıyor.
+   */
+  async function kaydetmeYeriSor(
+    onerilenAd: string,
+  ): Promise<"secildi" | "vazgecildi" | "desteklenmiyor"> {
+    showToast(
+      "loading",
+      language === "tr" ? "Kaydetme penceresi açıldı" : "Save dialog opened",
+      language === "tr"
+        ? "Dosyanın nereye kaydedileceğini onayla. Pencere görünmüyorsa diğer pencerelerin arkasında olabilir."
+        : "Confirm where the file should be saved. If you can't see the dialog, it may be behind other windows.",
+    );
+    try {
+      return await askSaveLocation(onerilenAd);
+    } finally {
+      clearToast();
+    }
+  }
+
   function showToast(type: ToastType, title: string, detail: string) {
     // Global toast ile mesajı viewport'ta sabit katmanda gösterir; scroll konumundan bağımsızdır.
     // Uzun işlemlerde yükleme, başarı ve hata geri bildiriminin tek giriş noktasıdır.
@@ -2163,7 +2192,7 @@ function App() {
 
   const queueGatedDownload = useCallback(
     async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      if ((await askSaveLocation(fallbackName)) === "vazgecildi") {
+      if ((await kaydetmeYeriSor(fallbackName)) === "vazgecildi") {
         return;
       }
       void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
@@ -2273,7 +2302,7 @@ function App() {
 
   const queueMergeGatedDownload = useCallback(
     async (jobId: string, fallbackName: string) => {
-      if ((await askSaveLocation(fallbackName)) === "vazgecildi") {
+      if ((await kaydetmeYeriSor(fallbackName)) === "vazgecildi") {
         return;
       }
       void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
@@ -4363,6 +4392,22 @@ function App() {
     // Bu akış bölünürse kota veya dosya kontrolü atlanırsa sunucu hataları veya tutarsız UX oluşur.
     event.preventDefault();
 
+    // TEK PAROLA, İKİ KUTU.
+    //
+    // Şifre kaldırma ekranında parola iki yerde isteniyor: üstteki "Mevcut PDF
+    // parolası" ve dosya satırının yanındaki kutu. Kullanıcı dosyanın yanındaki
+    // kutuyu doldurup gönderdiğinde işlem SESSİZCE başlamıyordu (üstteki boş
+    // olduğu için). Hangi kutu doldurulduysa o geçerli sayılır.
+    const etkinAcmaParolasi =
+      unlockOpenPassword.trim() || (uploads[0]?.password ?? "").trim();
+    if (
+      selectedFeature.id === "unlock-pdf" &&
+      !unlockOpenPassword.trim() &&
+      etkinAcmaParolasi
+    ) {
+      setUnlockOpenPassword(etkinAcmaParolasi);
+    }
+
     const check = checkToolSubmission({
       featureId: selectedFeature.id,
       uploads: uploads.map((u) => ({
@@ -4372,7 +4417,7 @@ function App() {
       pagesText,
       deletePagesText,
       password,
-      unlockOpenPassword,
+      unlockOpenPassword: etkinAcmaParolasi,
       inputPassword,
       outputPassword,
       showSplitPasswordField,
@@ -4429,7 +4474,7 @@ function App() {
                 cid === "split" && splitMode === "separate"
                   ? "sayfalar.zip"
                   : selectedFeature.fallbackFilename;
-              if ((await askSaveLocation(suggestedName)) === "vazgecildi") {
+              if ((await kaydetmeYeriSor(suggestedName)) === "vazgecildi") {
                 setSubmitting(false);
                 return; // kullanıcı kaydetme diyalogunu iptal etti
               }
@@ -4484,7 +4529,7 @@ function App() {
           if (!hasPendingSaveHandle()) {
             // Kaydetme önerisi tek kaynaktan: Türkçe karakterli ad korunur.
             const suggestion = selectedFeature.fallbackFilename;
-            if ((await askSaveLocation(suggestion)) === "vazgecildi") {
+            if ((await kaydetmeYeriSor(suggestion)) === "vazgecildi") {
               return;
             }
           }
@@ -4556,7 +4601,7 @@ function App() {
             selectedFeature.id === "split" && splitMode === "separate"
               ? "ayrılan-sayfalar.zip"
               : selectedFeature.fallbackFilename;
-          if ((await askSaveLocation(suggestedSaveName)) === "vazgecildi") {
+          if ((await kaydetmeYeriSor(suggestedSaveName)) === "vazgecildi") {
             return; // kullanıcı kaydetme diyalogunu iptal etti
           }
         }
@@ -4599,7 +4644,7 @@ function App() {
         deletePagesText,
         rotatePageRotations,
         organizePageOrder,
-        unlockOpenPassword,
+        unlockOpenPassword: etkinAcmaParolasi,
         watermarkPhrase,
         watermarkColor,
         watermarkFont,
@@ -5189,6 +5234,31 @@ function App() {
   // ÖNEMLİ: Giriş YAPMIŞ kullanıcıda, workspace'te karşılığı olan araçlar (editör/imza/
   // yorum/kırp/AI) burada YAKALANMAZ → aşağıdaki workspace render'ı çalışır ve araç
   // panelin içinde, sidebar + "Merhaba <ad>" üst barıyla açılır (harici SEO sayfası değil).
+  // TANINMAYAN ARAÇ ADRESİ → "sayfa bulunamadı".
+  //
+  // NEDEN: Eskiden /tools/olmayan-bir-sey gibi bir adres BOMBOŞ BEYAZ SAYFA
+  // veriyordu: ne hata, ne menü, ne de siteye dönüş bağlantısı. Eski/yanlış
+  // yazılmış bir bağlantıya tıklayan kullanıcı sitenin bozulduğunu sanıyor,
+  // arama motoru da içeriksiz sayfa görüyordu.
+  if (pathname.startsWith("/tools/")) {
+    const istenenSlug = (pathname.split("/tools/")[1] ?? "").split("/")[0] ?? "";
+    const bilinen = TOOL_SLUGS.includes(toolSlugToTr(istenenSlug));
+    if (istenenSlug && !bilinen) {
+      return (
+        <>
+          <SeoRouteManager pathname={pathname} view="notfound" language={language} />
+          <NotFoundPage
+            language={language}
+            onGoHome={() => {
+              window.history.pushState({}, "", "/");
+              setView("landing");
+            }}
+          />
+        </>
+      );
+    }
+  }
+
   if (
     pathname.startsWith("/tools/") &&
     !(isAuthenticated && hasInAppPanelForSeoSlug(pathname.split("/tools/")[1] ?? ""))

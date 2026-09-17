@@ -200,23 +200,63 @@ def add_watermark_text(
         raise Exception("Filigran metni boş olamaz.")
     op = max(0.01, min(0.5, float(opacity)))
     color = _hex_to_rgb(font_color)
-    valid_fonts = {"helv", "tiro", "cour", "zadb", "symb"}
-    fn = font_name if font_name in valid_fonts else "helv"
+    metin = (text or "").strip()
+
+    # TÜRKÇE HARFLER İÇİN GÖMÜLÜ YAZI TİPİ.
+    #
+    # NEDEN: PDF'in yerleşik yazı tipleri (helv/tiro/cour) WinAnsi kodlamasıyla
+    # sınırlı; İ, Ş, Ğ, ı harfleri yok. "GİZLİ ŞİRKET BİLGİSİ" yazan bir filigran
+    # çıktıda "G·ZL· ··RKET B·LG·S·" görünüyordu. Ürün Türkçe olduğu için bu
+    # kabul edilemez. Aynı klasördeki gömülü TTF'ler (metin düzenleme aracının
+    # kullandığı yazı tipleri) tam Türkçe destekler; yazı tipi seçimi kullanıcıya
+    # göründüğü gibi (düz / tırnaklı / daktilo) bunlara eşlenir.
+    _ttf = {
+        "helv": "Roboto-Regular.ttf",
+        "tiro": "NotoSerif-Regular.ttf",
+        "cour": "RobotoMono-Regular.ttf",
+    }.get(font_name, "Roboto-Regular.ttf")
+    _yollar = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "web", "backend", "app", "assets", _ttf),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", _ttf),
+    ]
+    ttf_yolu = next((y for y in _yollar if os.path.isfile(y)), None)
+
     doc = _fitz_open(input_path, password=password)
     try:
         for i in range(doc.page_count):
             page = doc[i]
             r = page.rect
-            c = fitz.Point((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2)
-            page.insert_text(
-                c,
-                (text or "").strip(),
-                fontname=fn,
-                fontsize=22,
-                color=color,
-                render_mode=0,
-                fill_opacity=op,
-            )
+            genislik = r.x1 - r.x0
+            yukseklik = r.y1 - r.y0
+
+            # Boyut sayfaya göre: metin sayfanın yaklaşık %70'ini kaplasın.
+            # Sabit 22 punto A4'te kaybolacak kadar küçük kalıyordu.
+            punto = max(14.0, min(72.0, (genislik * 0.70) / max(1, len(metin)) * 1.9))
+
+            if ttf_yolu:
+                yazici = fitz.TextWriter(r)
+                font = fitz.Font(fontfile=ttf_yolu)
+                uzunluk = font.text_length(metin, fontsize=punto)
+                # Önce sayfanın TAM ORTASINA yatay yazılır, sonra aynı nokta
+                # etrafında döndürülür: böylece filigran her sayfa ölçüsünde
+                # ortada kalır (önce köşegene göre hesaplanıyordu ve metin sağ
+                # alt köşeye kayıyordu).
+                orta_x = r.x0 + genislik / 2
+                orta_y = r.y0 + yukseklik / 2
+                baslangic = fitz.Point(orta_x - uzunluk / 2, orta_y)
+                yazici.append(baslangic, metin, font=font, fontsize=punto)
+                # 45 derece çapraz: filigranın beklenen görünümü budur.
+                yazici.write_text(page, color=color, opacity=op, morph=(
+                    fitz.Point(orta_x, orta_y),
+                    fitz.Matrix(45),
+                ))
+            else:
+                # Gömülü yazı tipi bulunamazsa eski davranış (yalnız acil yedek).
+                c = fitz.Point((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2)
+                page.insert_text(
+                    c, metin, fontname="helv", fontsize=22,
+                    color=color, render_mode=0, fill_opacity=op,
+                )
         doc.save(output_path, garbage=0, deflate=False, linear=False)
     finally:
         doc.close()
@@ -269,6 +309,31 @@ def add_page_numbers(
     return True
 
 
+def _onarim_kazanci(output_path: str) -> tuple[int, int]:
+    """Onarım çıktısını ölçer: (sayfa sayısı, içerik taşıyan sayfa sayısı).
+
+    NEDEN: Onarım stratejileri "dosya yazıldı" diye başarılı sayılıyordu; ağır
+    hasarlı bir belgede bu, kullanıcıya BOŞ bir PDF vermek demekti ve hiçbir
+    uyarı çıkmıyordu. Metni ya da görseli olan sayfa sayısı, gerçekten bir şey
+    kurtarılıp kurtarılmadığının ölçüsüdür.
+    """
+    try:
+        doc = fitz.open(output_path)
+    except Exception:
+        return (0, 0)
+    try:
+        icerikli = 0
+        for sayfa in doc:
+            try:
+                if sayfa.get_text().strip() or sayfa.get_images():
+                    icerikli += 1
+            except Exception:
+                continue
+        return (doc.page_count, icerikli)
+    finally:
+        doc.close()
+
+
 def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None) -> bool:
     """Bozuk PDF'i çok aşamalı strateji ile onarır. Tüm yöntemler başarısız olursa açıklayıcı hata verir."""
     try:
@@ -284,7 +349,10 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
         with pikepdf.open(input_path, password=op, suppress_warnings=True) as pdf:
             pdf.save(output_path, compress_streams=True, recompress_flate=True)
         if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-            return True
+            _sayfa, _icerikli = _onarim_kazanci(output_path)
+            if _icerikli > 0:
+                return True
+            errors.append("pikepdf: dosya yazıldı ama sayfalar boş çıktı")
     except pikepdf.PasswordError:
         raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
     except Exception as e1:
@@ -298,7 +366,10 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
         finally:
             doc.close()
         if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-            return True
+            _sayfa, _icerikli = _onarim_kazanci(output_path)
+            if _icerikli > 0:
+                return True
+            errors.append("fitz: dosya yazıldı ama sayfalar boş çıktı")
     except Exception as e2:
         if "password" in str(e2).lower() or "encrypted" in str(e2).lower():
             raise Exception("PDF şifreli; onarım için doğru parolayı girin.")
@@ -312,11 +383,29 @@ def repair_pdf(input_path: str, output_path: str, password: Optional[str] = None
             else:
                 pdf.save(output_path, compress_streams=True)
                 if os.path.isfile(output_path) and os.path.getsize(output_path) > 32:
-                    return True
+                    _sayfa, _icerikli = _onarim_kazanci(output_path)
+                    if _icerikli > 0:
+                        return True
+                    errors.append("pikepdf-lenient: sayfalar boş çıktı")
     except Exception as e3:
         errors.append(f"pikepdf-lenient: {e3!s:.150}")
 
+    # Buraya gelindiyse ya hiç dosya üretilemedi ya da üretilen dosya BOŞTU.
+    # Kullanıcıya boş bir PDF verip "onarıldı" demek en kötü sonuçtur: dosyasını
+    # kurtardığını sanır, yedeğini silebilir.
+    bos_cikti = any("boş çıktı" in e for e in errors)
     err_summary = " | ".join(errors[:3])
+    if bos_cikti:
+        try:
+            if os.path.isfile(output_path):
+                os.remove(output_path)
+        except OSError:
+            pass
+        raise Exception(
+            "Dosyanın yapısı onarıldı ama içeriği kurtarılamadı: sayfalar boş çıkıyor. "
+            "Bu, belgenin yazı ve görsel verisinin bulunduğu bölümün zarar gördüğü "
+            "anlamına gelir. Varsa dosyanın önceki bir kopyasını kullanın."
+        )
     raise Exception(
         f"PDF onarılamadı. Dosya kurtarılamayacak kadar ciddi biçimde bozulmuş olabilir. "
         f"Orijinal dosyanın yedeği varsa onu kullanın. ({err_summary})"
@@ -421,10 +510,10 @@ def pdf_to_images_zip(
                 buf = io.BytesIO()
                 if ext == "png":
                     im.save(buf, format="PNG")
-                    name = f"page_{page_index:04d}.png"
+                    name = f"sayfa_{page_index:04d}.png"
                 else:
                     im.save(buf, format="JPEG", quality=90)
-                    name = f"page_{page_index:04d}.jpg"
+                    name = f"sayfa_{page_index:04d}.jpg"
                 zf.writestr(name, buf.getvalue())
                 del im
     return zip_path
@@ -464,7 +553,7 @@ def extract_images_zip(
                         continue
                     ext = (info.get("ext") or "png").lower()
                     count += 1
-                    zf.writestr(f"image_{count:04d}.{ext}", data)
+                    zf.writestr(f"gorsel_{count:04d}.{ext}", data)
         if count == 0:
             try:
                 os.remove(zip_path)
@@ -476,29 +565,70 @@ def extract_images_zip(
         doc.close()
 
 
-def images_to_pdf(image_paths: List[str], output_path: str) -> bool:
-    try:
-        import img2pdf
-    except ImportError:
-        merged = fitz.open()
+def images_to_pdf(
+    image_paths: List[str],
+    output_path: str,
+    page_size: str = "a4",
+) -> bool:
+    """Görselleri tek PDF'te toplar.
+
+    page_size:
+        "a4"       → görsel, yönü korunarak A4 sayfaya sığdırılır (VARSAYILAN)
+        "original" → sayfa, görselin kendi ölçüsü kadar olur (eski davranış)
+
+    NEDEN A4 VARSAYILAN: Görselin piksel ölçüsü doğrudan sayfa ölçüsü sayıldığında
+    1600x1200 piksellik sıradan bir fotoğraf 56x42 cm'lik bir sayfa üretiyordu;
+    yazdırmak isteyen kullanıcı ölçeklenmiş, kenarları taşan bir çıktı alıyordu.
+    """
+    if page_size not in ("a4", "original"):
+        page_size = "a4"
+
+    if page_size == "original":
         try:
-            for p in image_paths:
-                imgdoc = fitz.open(p)
-                try:
-                    pdfb = imgdoc.convert_to_pdf()
-                finally:
-                    imgdoc.close()
-                m = fitz.open("pdf", pdfb)
-                try:
+            import img2pdf
+            with open(output_path, "wb") as f:
+                f.write(img2pdf.convert(image_paths))
+            return True
+        except ImportError:
+            pass
+
+    A4_W, A4_H = 595.28, 841.89
+    BOSLUK = 18.0
+    merged = fitz.open()
+    try:
+        for p in image_paths:
+            imgdoc = fitz.open(p)
+            try:
+                pdfb = imgdoc.convert_to_pdf()
+            finally:
+                imgdoc.close()
+            m = fitz.open("pdf", pdfb)
+            try:
+                if page_size == "original":
                     merged.insert_pdf(m)
-                finally:
-                    m.close()
-            merged.save(output_path, garbage=1, deflate=False)
-        finally:
-            merged.close()
-        return True
-    with open(output_path, "wb") as f:
-        f.write(img2pdf.convert(image_paths))
+                    continue
+                kaynak = m[0].rect
+                yatay = kaynak.width > kaynak.height
+                sayfa_w, sayfa_h = (A4_H, A4_W) if yatay else (A4_W, A4_H)
+                sayfa = merged.new_page(width=sayfa_w, height=sayfa_h)
+                olcek = min(
+                    (sayfa_w - 2 * BOSLUK) / kaynak.width,
+                    (sayfa_h - 2 * BOSLUK) / kaynak.height,
+                )
+                w = kaynak.width * olcek
+                h = kaynak.height * olcek
+                hedef = fitz.Rect(
+                    (sayfa_w - w) / 2,
+                    (sayfa_h - h) / 2,
+                    (sayfa_w + w) / 2,
+                    (sayfa_h + h) / 2,
+                )
+                sayfa.show_pdf_page(hedef, m, 0)
+            finally:
+                m.close()
+        merged.save(output_path, garbage=1, deflate=False)
+    finally:
+        merged.close()
     return True
 
 

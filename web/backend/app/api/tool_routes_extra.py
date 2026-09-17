@@ -1613,6 +1613,8 @@ async def tool_image_to_pdf(
     request: Request,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     files: list[UploadFile] = File(...),
+    # "a4" (varsayılan): görsel A4'e sığdırılır — "original": sayfa görselin ölçüsünde olur.
+    page_size: str = Form("a4"),
 ):
     if not files or len(files) < 1:
         raise HTTPException(status_code=400, detail="En az bir görüntü seçin.")
@@ -1627,7 +1629,7 @@ async def tool_image_to_pdf(
         out_p = workdir / "fotograflar.pdf"
 
         def _run():
-            ptx.images_to_pdf(paths, str(out_p))
+            ptx.images_to_pdf(paths, str(out_p), page_size=page_size)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return _pack_pdf_result_file(out_p, "fotograflar.pdf", user_id, "image-to-pdf")
 
@@ -1673,14 +1675,35 @@ async def tool_html_to_pdf(
         port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
         path_qs = (parsed_url.path or "/") + (f"?{parsed_url.query}" if parsed_url.query else "")
         direct_url = f"{parsed_url.scheme}://{resolved_ip}:{port}{path_qs}"
+        # BAĞLANTI IP'YE, KİMLİK ADRESE GÖRE.
+        #
+        # NEDEN: İç ağa sızmayı (SSRF) önlemek için bağlantı, doğrulanmış IP'ye
+        # kurulur. Ancak TLS el sıkışmasında sunucuya "hangi site için geldim"
+        # bilgisi (SNI) gönderilmezse günümüzdeki neredeyse tüm sunucular
+        # bağlantıyı reddeder — ölçümde her adres SSLV3_ALERT_HANDSHAKE_FAILURE
+        # veriyordu, yani araç hiç çalışmıyordu. `sni_hostname` uzantısı bunu
+        # düzeltir: bağlantı yine IP'ye gider, el sıkışma ve sertifika denetimi
+        # gerçek alan adı üzerinden yapılır. Böylece sertifika doğrulaması da
+        # (verify=True) yeniden açılabildi.
+        _host = parsed_url.hostname or ""
+        # Kimliksiz istekleri reddeden siteler var (ölçüm: Wikipedia kimliksiz
+        # istekte 403, kimlikle 200). Kendimizi açıkça tanıtıyoruz.
+        _basliklar = {
+            "Host": _host,
+            "User-Agent": "Mozilla/5.0 (compatible; PDFPlatformBot/1.0; +https://pdfplatform.app)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "tr,en;q=0.8",
+        }
         try:
-            resp = _httpx.get(
-                direct_url,
-                headers={"Host": parsed_url.hostname or ""},
-                timeout=30.0,
-                follow_redirects=False,  # Yönlendirme iç ağa gidebilir
-                verify=False,            # IP üzerinden bağlanıldığında SNI sertifika doğrulaması yapılamaz
-            )
+            with _httpx.Client(verify=True, timeout=30.0, follow_redirects=False) as _istemci:
+                resp = _istemci.send(
+                    _istemci.build_request(
+                        "GET",
+                        direct_url,
+                        headers=_basliklar,
+                        extensions={"sni_hostname": _host},
+                    )
+                )
             resp.raise_for_status()
         except _httpx.HTTPError as exc:
             raise HTTPException(status_code=400, detail=f"URL içeriği alınamadı: {exc}") from exc

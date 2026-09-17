@@ -707,7 +707,7 @@ export function DashboardSidebar({
             className="nb-transition flex w-full items-center gap-2.5 rounded-2xl border border-cyan-500/30 bg-cyan-500/8 px-3 py-2.5 text-left text-sm font-semibold text-cyan-200 hover:bg-cyan-500/16 hover:text-cyan-100 hover:shadow-[0_0_20px_-6px_rgba(6,182,212,0.4)]"
           >
             <span className="text-lg">👥</span>
-            <span>Ekip Yönetimi</span>
+            <span>{tr ? "Ekip Yönetimi" : "Team management"}</span>
           </button>
         </div>
       ) : null}
@@ -733,7 +733,7 @@ export function DashboardSidebar({
                 d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 11.943c0 6.001 4.448 10.956 10.22 11.944C19.122 22.899 23.57 17.944 23.57 11.943a11.955 11.955 0 00-.598-5.943A11.959 11.959 0 0112 2.714z"
               />
             </svg>
-            <span>Admin Paneli</span>
+            <span>{tr ? "Admin Paneli" : "Admin panel"}</span>
           </button>
         </div>
       ) : null}
