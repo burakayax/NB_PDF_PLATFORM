@@ -45,6 +45,17 @@ export type SocialAutomationConfig = {
    * doğal bir tempo oluyor.
    */
   cadence: "daily" | "alternate" | "thrice";
+  /**
+   * Gönderiler paylaşım saatinden kaç dakika ÖNCE hazırlansın?
+   *
+   * NEDEN: Metin ve görsel yayın anında üretilirse admin'in okuyup düzeltme
+   * şansı olmuyor — gönderi görüldüğü an çoktan gitmiş oluyor. Bu süre kadar
+   * önce hazırlanıp "sırada" bekler; saat gelene dek metni düzenlenebilir,
+   * silinebilir ya da elle erkenden paylaşılabilir.
+   *
+   * 0 = eski davranış: tam yayın anında hazırla.
+   */
+  prepareLeadMinutes: number;
   /** Gönderiler çift dilli mi yazılsın (İngilizce üstte, Türkçe altta)? */
   bilingual: boolean;
   /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
@@ -60,6 +71,8 @@ const DEFAULT_CONFIG: SocialAutomationConfig = {
   timeZone: "Europe/Istanbul",
   recycleOldPosts: true,
   cadence: "daily",
+  // İki saat: sabah kahvesiyle bakıp düzeltmeye yetecek, içeriği bayatlatmayacak süre.
+  prepareLeadMinutes: 120,
   bilingual: true,
   singleLang: "en",
   researchKeywords: true,
@@ -78,6 +91,9 @@ export async function readSocialConfig(): Promise<SocialAutomationConfig> {
     recycleOldPosts: raw.recycleOldPosts !== false,
     cadence:
       raw.cadence === "alternate" || raw.cadence === "thrice" ? raw.cadence : "daily",
+    // Üst sınır 24 saat: daha uzunu "bugünün gönderisi" olmaktan çıkar ve
+    // tempo hesabıyla çakışır.
+    prepareLeadMinutes: clampInt(raw.prepareLeadMinutes, 0, 1440, DEFAULT_CONFIG.prepareLeadMinutes),
     bilingual: raw.bilingual !== false,
     singleLang: raw.singleLang === "tr" ? "tr" : "en",
     researchKeywords: raw.researchKeywords !== false,
@@ -136,6 +152,18 @@ export function isPostingDay(dayKey: string, cadence: SocialAutomationConfig["ca
   // Pazartesi(1), Çarşamba(3), Cuma(5)
   const weekday = new Date(utc).getUTCDay();
   return weekday === 1 || weekday === 3 || weekday === 5;
+}
+
+/**
+ * Verilen takvim gününde (YYYY-MM-DD) ayarlanan yayın saatinin gerçek anı.
+ * Saat dilimi farkı yaz saati sınırında kaydığı için iki geçişle çözülür.
+ */
+export function runInstantOn(dayKey: string, config: SocialAutomationConfig): Date {
+  const [y, m, d] = dayKey.split("-").map((v) => Number.parseInt(v, 10));
+  const wall = Date.UTC(y ?? 1970, (m ?? 1) - 1, d ?? 1, config.hour, config.minute);
+  let instant = new Date(wall - zoneOffsetMs(new Date(wall), config.timeZone));
+  instant = new Date(wall - zoneOffsetMs(instant, config.timeZone));
+  return instant;
 }
 
 export function nextRunAt(config: SocialAutomationConfig, from: Date = new Date()): Date | null {

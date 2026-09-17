@@ -49,6 +49,12 @@ socialRouter.get(
       accounts,
       stats,
       nextRunAt: nextRunAt(config)?.toISOString() ?? null,
+      // Gönderilerin panelde görüneceği an — admin'in düzeltme penceresi buradan başlar.
+      nextPrepareAt: (() => {
+        const run = nextRunAt(config);
+        if (!run) return null;
+        return new Date(run.getTime() - config.prepareLeadMinutes * 60_000).toISOString();
+      })(),
       feedUrl: feedUrlFor(PRIMARY_FEED_LANG),
       platforms: ALL_PLATFORMS.map((p) => ({
         platform: p,
@@ -69,6 +75,7 @@ const configSchema = z.object({
   timeZone: z.string().min(1).max(64).optional(),
   recycleOldPosts: z.boolean().optional(),
   cadence: z.enum(["daily", "alternate", "thrice"]).optional(),
+  prepareLeadMinutes: z.number().int().min(0).max(1440).optional(),
   bilingual: z.boolean().optional(),
   singleLang: z.enum(["tr", "en"]).optional(),
   researchKeywords: z.boolean().optional(),

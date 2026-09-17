@@ -46,6 +46,18 @@ import { PlatformBadge } from "./platformBrand";
 
 type TabId = "flow" | "accounts" | "schedule";
 
+/** Hazırlık süresi seçenekleri — dakika cinsinden saklanır. */
+const LEAD_OPTIONS = [
+  { minutes: 0, label: "Tam yayın anında (inceleme yok)" },
+  { minutes: 30, label: "30 dakika önce" },
+  { minutes: 60, label: "1 saat önce" },
+  { minutes: 120, label: "2 saat önce" },
+  { minutes: 240, label: "4 saat önce" },
+  { minutes: 480, label: "8 saat önce" },
+  { minutes: 720, label: "12 saat önce" },
+  { minutes: 1440, label: "1 gün önce" },
+] as const;
+
 const TABS: { id: TabId; label: string }[] = [
   { id: "flow", label: "Gönderi akışı" },
   { id: "accounts", label: "Hesaplar" },
@@ -251,6 +263,10 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
   }
 
   const nextRun = overview.nextRunAt ? new Date(overview.nextRunAt).getTime() : null;
+  const nextPrepare = overview.nextPrepareAt ? new Date(overview.nextPrepareAt).getTime() : null;
+  /** Hazırlık anı henüz gelmediyse önce onu göstermek daha doğru: ekranda
+      gönderiler o an belirecek. */
+  const prepareAhead = nextPrepare !== null && nextPrepare > now;
 
   return (
     <div className="space-y-5">
@@ -287,6 +303,17 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   } hesapta yayınlanacak`
                 : "Açtığında site beslemendeki yeni yazı her gün seçtiğin saatte paylaşılır."}
             </p>
+            {config.enabled && nextRun ? (
+              <p className="mt-1 text-xs text-slate-500">
+                {config.prepareLeadMinutes === 0
+                  ? "Gönderiler tam yayın anında hazırlanıyor — öncesinde inceleme şansın olmaz."
+                  : prepareAhead
+                    ? `Metin ve görsel ${humanizeUntil(nextPrepare, now)} içinde hazırlanıp bu ekranda belirecek (${new Date(
+                        nextPrepare,
+                      ).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}). Yayın saatine kadar düzeltebilirsin.`
+                    : "Gönderiler hazırlandı; yayın saatini bekliyor. Metni düzeltmek için vaktin var."}
+              </p>
+            ) : null}
 
             <div className="mt-4 flex flex-wrap items-center gap-2">
               {livePlatforms.length > 0 ? (
@@ -643,6 +670,26 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 </select>
               </label>
             </div>
+
+            <label className="block">
+              <span className="text-xs font-medium text-slate-300">Gönderiler ne kadar önce hazırlansın?</span>
+              <select
+                className={`${selectClass} mt-1.5`}
+                value={config.prepareLeadMinutes}
+                onChange={(e) => patchConfig({ prepareLeadMinutes: Number(e.target.value) })}
+              >
+                {LEAD_OPTIONS.map((o) => (
+                  <option key={o.minutes} value={o.minutes}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+                Metin ve görsel bu süre kadar önce üretilip “Sırada” olarak ekranda belirir, yayın
+                saatini bekler. Bu aralıkta metni düzeltebilir, gönderiyi silebilir ya da erkenden
+                paylaşabilirsin. “Tam yayın anında” seçilirse inceleme şansın olmaz.
+              </span>
+            </label>
 
             <label className="flex items-start gap-3 rounded-xl border border-slate-700/50 bg-slate-900/40 p-3.5">
               <input

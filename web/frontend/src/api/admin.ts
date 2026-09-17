@@ -893,6 +893,8 @@ export type SocialConfig = {
   recycleOldPosts: boolean;
   /** Paylaşım temposu: her gün / gün aşırı / haftada üç. */
   cadence: "daily" | "alternate" | "thrice";
+  /** Gönderiler yayın saatinden kaç dakika önce hazırlanıp panelde görünsün. */
+  prepareLeadMinutes: number;
   /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
   bilingual: boolean;
   /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
@@ -956,6 +958,8 @@ export type SocialOverview = {
   stats: SocialStats;
   /** Bir sonraki otomatik paylaşım anı (ISO) — otomasyon kapalıysa null. */
   nextRunAt: string | null;
+  /** Gönderilerin panelde görüneceği an (ISO) — düzeltme penceresinin başı. */
+  nextPrepareAt: string | null;
   feedUrl: string;
 };
 
