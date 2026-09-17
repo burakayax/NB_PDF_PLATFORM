@@ -2058,6 +2058,17 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                 </button>
                               </div>
 
+                              {/* ÖZGÜN SAYFA NUMARASI — sol üst.
+                                  Alt kutudaki sayı YENİ SIRAYI gösteriyor; küçük
+                                  yakınlaştırmada küçük resimler okunmadığı için
+                                  kullanıcı hangi sayfayı taşıdığını göremiyordu.
+                                  Belgedeki asıl numara burada sabit durur. */}
+                              <div className="pointer-events-none absolute left-1 top-1 z-[15]">
+                                <span className="rounded bg-slate-950/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-white/10">
+                                  {language === "tr" ? `s.${page1}` : `p.${page1}`}
+                                </span>
+                              </div>
+
                               {/* Pozisyon girişi — alt */}
                               <div className="absolute bottom-1 left-0 right-0 z-[15] flex items-center justify-center">
                                 <input

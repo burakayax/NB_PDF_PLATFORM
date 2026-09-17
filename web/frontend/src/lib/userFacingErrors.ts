@@ -44,11 +44,42 @@ export function isPasswordProblem(text: string): boolean {
  * edin." deniyordu. Sunucu "parola hatalı" dediği hâlde kullanıcı sebebi
  * öğrenemiyor, dosyayı suçlayıp aynı yanlış parolayla tekrar deniyordu.
  */
+/**
+ * Hata, oturumun düşmesinden mi kaynaklanıyor?
+ *
+ * NEDEN: Canlı testte uzun bir aradan sonra işlem başlatıldığında oturum
+ * sessizce düşmüştü; ekranda yalnızca genel bir "işlem başarısız" yazıyordu.
+ * Kullanıcı dosyasında ya da araçta sorun olduğunu sanıp aynı işlemi tekrar
+ * deniyor. Oysa yapması gereken tek şey yeniden giriş yapmak.
+ */
+function oturumSorunuMu(raw: string, error: unknown): boolean {
+  const durum = (error as { status?: number } | null)?.status;
+  if (durum === 401 || durum === 403) return true;
+  const t = raw.toLowerCase();
+  return (
+    t.includes("oturum gerekli") ||
+    t.includes("oturumun süresi") ||
+    t.includes("unauthorized") ||
+    t.includes("token")
+  );
+}
+
 export function toolFailureNotice(
   error: unknown,
   language: Language,
 ): { title: string; detail: string } {
   const raw = error instanceof Error ? error.message.trim() : "";
+
+  if (oturumSorunuMu(raw, error)) {
+    return {
+      title: language === "tr" ? "Oturumun süresi dolmuş" : "Your session expired",
+      detail:
+        language === "tr"
+          ? "Yeniden giriş yapıp işlemi tekrar başlat. Seçtiğin dosyalar ekranda duruyor, baştan yüklemene gerek yok."
+          : "Sign in again and start the operation once more. Your selected files are still here — no need to upload them again.",
+    };
+  }
+
   const usable = raw.length > 0 && raw.length <= 260 && !looksTechnical(raw);
   const passwordIssue = usable && isPasswordProblem(raw);
   return {
