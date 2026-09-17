@@ -56,3 +56,16 @@ describe("toolFailureNotice", () => {
     );
   });
 });
+
+describe("oturum süresi dolduğunda", () => {
+  it("kullanıcıya yeniden giriş yapmasını söyler (dosyaya suç atmaz)", () => {
+    const hata = Object.assign(new Error("Unauthorized"), { status: 401 });
+    const n = toolFailureNotice(hata, "tr");
+    expect(n.title).toContain("Oturum");
+    expect(n.detail).toContain("Yeniden giriş");
+  });
+  it("sunucunun 'Oturum gerekli' metnini de tanır", () => {
+    const n = toolFailureNotice(new Error("Oturum gerekli. Authorization: Bearer ..."), "tr");
+    expect(n.title).toContain("Oturum");
+  });
+});

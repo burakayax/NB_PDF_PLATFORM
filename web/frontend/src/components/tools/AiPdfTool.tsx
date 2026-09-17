@@ -356,6 +356,36 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           const newLine = !!(el.line && s.lastLine && el.line !== s.lastLine);
           const xgap = el.bbox[0] - s.lastX1 > (el.size ?? 12) * 0.22;
           const sep = newLine || xgap;
+
+          // TABLO HÜCRELERİ AYRI BLOK OLMALI.
+          //
+          // Bir tablo satırındaki hücreler aynı satır kimliğini paylaşıyor; hepsi
+          // tek bloğa toplanınca çevrilmiş metin İLK hücrenin kutusuna yığılıyor,
+          // sütunlar çöküyordu (canlı testte 4 sütunlu fatura tablosu tek sütuna
+          // indi). Aynı satırda geniş bir yatay boşluktan sonra gelen metin, ayrı
+          // bir hücredir: kendi kutusuyla yeni blok açılır, konumu korunur.
+          // Eşik bilerek YÜKSEK (2,5 kat): iki yana yaslanmış paragraflarda
+          // kelime araları genişleyebilir; oradaki boşluğu "sütun" sanıp
+          // paragrafı bölmemek için sütun boşluğuna yakın bir değer seçildi.
+          const buyukBosluk =
+            !newLine && el.bbox[0] - s.lastX1 > (el.size ?? 12) * 2.5;
+          if (buyukBosluk) {
+            const yeniKey = `${blockKey}#hucre:${el.bbox[0].toFixed(0)}`;
+            byBlock.set(yeniKey, blocks.length);
+            st.set(blocks.length, { lastX1: el.bbox[2], lastLine: el.line });
+            blocks.push({
+              page: pi,
+              bbox: [...el.bbox] as [number, number, number, number],
+              size: el.size ?? 12,
+              font: el.font,
+              align: "left",
+              lineIds: new Set(el.line ? [el.line] : []),
+              runs: [{ text: raw, bold, color, lead: false }],
+            });
+            // Sonraki span bu YENİ hücreye eklensin.
+            byBlock.set(blockKey, blocks.length - 1);
+            return;
+          }
           const last = b.runs[b.runs.length - 1];
           if (last.bold === bold && (last.color ?? "") === (color ?? "")) {
             last.text += sep && !last.text.endsWith(" ") && !raw.startsWith(" ") ? " " + raw : raw;

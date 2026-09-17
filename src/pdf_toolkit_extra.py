@@ -728,6 +728,86 @@ def html_url_to_pdf(url: str, output_path: str) -> bool:
     return html_to_pdf_file(r.text, output_path, base_url=u)
 
 
+def _slayta_gorunmez_metin(slide, sayfa, slide_w, slide_h, sayfa_w_pt, sayfa_h_pt) -> int:
+    """Slayttaki görselin üzerine, PDF'teki yerlerinde GÖRÜNMEZ metin kutuları koyar.
+
+    NEDEN: PDF→PowerPoint çıktısı her sayfayı tek parça GÖRSEL olarak koyuyordu;
+    tanıtımda "düzenlenebilir slayt" dendiği hâlde kullanıcı tek bir kelimeyi bile
+    seçemiyor, kopyalayamıyordu. Görselin üstüne saydam (alfa=0) metin konunca
+    slayt göze aynı görünür ama metin seçilebilir, aranabilir ve kopyalanabilir
+    olur — arama motorları için ürettiğimiz "aranabilir PDF" ile aynı yaklaşım.
+
+    Satır bazında çalışır (kelime bazında değil): büyük belgelerde slayt başına
+    binlerce şekil üretmemek için. Dönüş: eklenen kutu sayısı.
+    """
+    from pptx.util import Emu, Pt
+
+    PT_TO_EMU = 12700
+    try:
+        satirlar = sayfa.extract_text_lines(layout=False, strip=True, return_chars=False) or []
+    except Exception:
+        return 0
+
+    # Aşırı yoğun sayfalarda (tablo dökümleri) şekil sayısını sınırla: dosya
+    # şişer, PowerPoint yavaşlar. 300 satır pratikte tüm normal belgeleri kapsar.
+    if len(satirlar) > 300:
+        satirlar = satirlar[:300]
+
+    olcek_x = slide_w / (sayfa_w_pt * PT_TO_EMU) if sayfa_w_pt else 1.0
+    olcek_y = slide_h / (sayfa_h_pt * PT_TO_EMU) if sayfa_h_pt else 1.0
+    eklenen = 0
+
+    for ln in satirlar:
+        metin = (ln.get("text") or "").strip()
+        if not metin:
+            continue
+        x0 = float(ln.get("x0", 0.0))
+        ust = float(ln.get("top", 0.0))
+        x1 = float(ln.get("x1", x0 + 10))
+        alt = float(ln.get("bottom", ust + 10))
+        yukseklik_pt = max(4.0, alt - ust)
+
+        kutu = slide.shapes.add_textbox(
+            Emu(int(x0 * PT_TO_EMU * olcek_x)),
+            Emu(int(ust * PT_TO_EMU * olcek_y)),
+            Emu(int(max(1.0, x1 - x0) * PT_TO_EMU * olcek_x)),
+            Emu(int(yukseklik_pt * PT_TO_EMU * olcek_y)),
+        )
+        tf = kutu.text_frame
+        tf.word_wrap = False
+        try:
+            tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+        except Exception:
+            pass
+        par = tf.paragraphs[0]
+        run = par.add_run()
+        run.text = metin
+        run.font.size = Pt(max(4.0, yukseklik_pt * 0.82))
+
+        # Metni GÖRÜNMEZ yap: rengin alfa değeri 0. python-pptx'te doğrudan alfa
+        # ayarı yok; renk düğümüne alfa çocuğu eklenir.
+        try:
+            from pptx.oxml.ns import qn
+            rPr = run._r.get_or_add_rPr()
+            fill = rPr.makeelement(qn("a:solidFill"), {})
+            srgb = rPr.makeelement(qn("a:srgbClr"), {"val": "000000"})
+            alpha = rPr.makeelement(qn("a:alpha"), {"val": "0"})
+            srgb.append(alpha)
+            fill.append(srgb)
+            rPr.append(fill)
+        except Exception:
+            # Alfa eklenemezse metni hiç koyma: görünür metin, görselin üstüne
+            # binip çıktıyı bozardı.
+            try:
+                slide.shapes._spTree.remove(kutu._element)
+            except Exception:
+                pass
+            continue
+        eklenen += 1
+
+    return eklenen
+
+
 def pdf_to_pptx(
     pdf_path: str,
     pptx_path: str,
@@ -779,6 +859,18 @@ def pdf_to_pptx(
     slide_w = prs.slide_width
     slide_h = prs.slide_height
 
+    # Metin katmanı için pdfplumber belgesi döngü boyunca açık kalır. Sayfalar
+    # tembel yüklenir ve her sayfadan sonra önbelleği boşaltılır: 200 sayfalık bir
+    # belgede bellek sayfa sayısıyla büyümesin (sunucu 512 MB ile çalışıyor).
+    _pdfplumber_belge = None
+    _pdfplumber_sayfalari = None
+    try:
+        _pdfplumber_belge = pdfplumber.open(pdf_path, password=pwd or "")
+        _pdfplumber_sayfalari = _pdfplumber_belge.pages
+    except Exception:
+        _pdfplumber_belge = None
+        _pdfplumber_sayfalari = None
+
     _done = 0
     for start in range(1, n + 1, _RASTER_PAGE_BATCH):
         end = min(start + _RASTER_PAGE_BATCH - 1, n)
@@ -803,12 +895,43 @@ def pdf_to_pptx(
                 left = Emu(int((slide_w - pic_w) / 2))
                 top = Emu(int((slide_h - pic_h) / 2))
                 slide.shapes.add_picture(tmp, left, top, width=pic_w, height=pic_h)
+                # Görselin üzerine seçilebilir (görünmez) metin katmanı.
+                try:
+                    if _pdfplumber_sayfalari is not None:
+                        _sayfa_no = _done - 1
+                        if 0 <= _sayfa_no < len(_pdfplumber_sayfalari):
+                            _slayta_gorunmez_metin(
+                                slide,
+                                _pdfplumber_sayfalari[_sayfa_no],
+                                slide_w,
+                                slide_h,
+                                page_w_pt,
+                                page_h_pt,
+                            )
+                except Exception:
+                    # Metin katmanı eklenemezse slayt yine geçerlidir (yalnız görsel).
+                    pass
             finally:
                 try:
                     os.remove(tmp)
                 except OSError:
                     pass
+            # Sayfa önbelleğini bırak: uzun belgelerde bellek birikmesin.
+            try:
+                if _pdfplumber_sayfalari is not None and 0 <= _done - 1 < len(_pdfplumber_sayfalari):
+                    _s = _pdfplumber_sayfalari[_done - 1]
+                    _s.flush_cache()
+                    _s.get_textmap.cache_clear()
+            except Exception:
+                pass
             del im
+
+    if _pdfplumber_belge is not None:
+        try:
+            _pdfplumber_belge.close()
+        except Exception:
+            pass
+
     prs.save(pptx_path)
     return True
 
