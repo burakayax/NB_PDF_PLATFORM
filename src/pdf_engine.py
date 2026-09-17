@@ -1276,6 +1276,41 @@ def _looks_table_heavy(pdf_path: str, password: Optional[str] = None, sample_pag
         return False
 
 
+def _tablo_disi_satirlar(page, tablo_kutulari) -> list[tuple[float, str]]:
+    """Sayfadaki, hiçbir tablonun içinde kalmayan metin satırları.
+
+    Dönüş: (satırın sayfadaki dikey konumu, metin) çiftleri. Sıralama çağıran
+    tarafta tablolarla birleştirilerek yapılır ki belge sayfadaki gerçek okuma
+    sırasını korusun.
+
+    Bir satır, dikey olarak bir tablonun aralığına düşüyorsa tabloya ait sayılır
+    ve atlanır: aksi hâlde tablo hücrelerindeki yazılar hem tabloda hem paragraf
+    olarak iki kez görünürdü.
+    """
+    try:
+        satirlar = page.extract_text_lines(layout=False, strip=True, return_chars=False)
+    except Exception:
+        return []
+
+    out: list[tuple[float, str]] = []
+    for ln in satirlar or []:
+        metin = (ln.get("text") or "").strip()
+        if not metin:
+            continue
+        ust = float(ln.get("top", 0.0))
+        alt = float(ln.get("bottom", ust))
+        orta = (ust + alt) / 2.0
+        iceride = False
+        for (x0, y0, x1, y1) in tablo_kutulari:
+            # Küçük bir pay: tablo çizgisine değen başlık satırı tabloya sayılmasın.
+            if (y0 - 1.0) <= orta <= (y1 + 1.0):
+                iceride = True
+                break
+        if not iceride:
+            out.append((ust, metin))
+    return out
+
+
 def _pdf_tables_to_docx(
     pdf_path: str,
     docx_path: str,
@@ -1308,7 +1343,27 @@ def _pdf_tables_to_docx(
             try:
                 found = page.find_tables(table_settings=_TABLE_SETTINGS_LINES)
                 if found:
-                    for ft in found:
+                    # SAYFADAKİ TABLO DIŞI YAZILAR DA AKTARILIR.
+                    #
+                    # NEDEN: Eskiden tablo bulunan sayfanın yalnızca tabloları
+                    # yazılırdı; başlık, müşteri bilgisi, fatura numarası ve
+                    # "GENEL TOPLAM" satırı sessizce kaybolurdu. Faturada toplam
+                    # tutarın yok olması, kullanıcının fark etmeden yanlış belge
+                    # taşıması demekti. Artık tablo dışı satırlar da sayfadaki
+                    # dikey sıralarına göre araya yerleştirilir.
+                    tablo_kutulari = [ft.bbox for ft in found]
+                    bloklar: list[tuple[float, str, object]] = [
+                        (float(ft.bbox[1]), "tablo", ft) for ft in found
+                    ]
+                    for ust, satir in _tablo_disi_satirlar(page, tablo_kutulari):
+                        bloklar.append((ust, "metin", satir))
+                    bloklar.sort(key=lambda b: b[0])
+
+                    for _, tur, icerik in bloklar:
+                        if tur == "metin":
+                            doc.add_paragraph(str(icerik))
+                            continue
+                        ft = icerik
                         rows: list[list[str]] = []
                         for trow in ft.rows:
                             cells: list[str] = []
@@ -2437,6 +2492,64 @@ def _extract_table_by_word_gaps(page) -> list[list[list[str]]]:
     return [table] if table else []
 
 
+def _excel_hucre_degeri(ham: str):
+    """Hücre metnini uygunsa SAYIYA çevirir; değilse metni olduğu gibi döndürür.
+
+    NEDEN: Tablo Excel'e aktarıldığında "3.500,00" bir YAZI olarak yazılıyordu;
+    kullanıcı toplama alamıyor, sıralayamıyor, grafik çizemiyordu — oysa Excel'e
+    aktarmanın tek sebebi buydu. Türk biçimi (binlik nokta, ondalık virgül) ve
+    İngilizce biçim (binlik virgül, ondalık nokta) birlikte desteklenir.
+
+    Dönüş: (değer, sayı_mı). Para birimi simgesi/işareti olan hücreler de
+    sayıya çevrilir; biçimlendirme çağıran tarafta yapılır.
+    """
+    metin = (ham or "").strip()
+    if not metin:
+        return "", False
+
+    # Yüzde, para birimi ve boşlukları ayıkla (değerin kendisini bozmadan).
+    temiz = metin.replace(" ", " ").strip()
+    for simge in ("TL", "₺", "$", "€", "£", "USD", "EUR", "TRY"):
+        temiz = temiz.replace(simge, "")
+    temiz = temiz.strip()
+
+    negatif = temiz.startswith("(") and temiz.endswith(")")
+    if negatif:
+        temiz = temiz[1:-1].strip()
+
+    if not temiz or not any(k.isdigit() for k in temiz):
+        return metin, False
+    if not all(k.isdigit() or k in ".,-+ " for k in temiz):
+        return metin, False
+
+    aday = temiz.replace(" ", "")
+    son_nokta = aday.rfind(".")
+    son_virgul = aday.rfind(",")
+    if son_virgul > son_nokta:
+        # Türk biçimi: 1.234,56
+        aday = aday.replace(".", "").replace(",", ".")
+    elif son_nokta > son_virgul:
+        # İngiliz biçimi: 1,234.56
+        aday = aday.replace(",", "")
+    else:
+        aday = aday.replace(",", "").replace(".", "")
+
+    try:
+        sayi = float(aday)
+    except ValueError:
+        return metin, False
+
+    if negatif:
+        sayi = -sayi
+
+    # Kaynakta ondalık kısım VARSA (3.500,00) çıktı da ondalıklı kalır: para
+    # sütununda "3500" yerine "3.500,00" görünsün. Yoksa (adet: 2) tam sayı yazılır.
+    ondalikli = "." in aday
+    if not ondalikli and sayi == int(sayi) and abs(sayi) < 1e15:
+        return int(sayi), True
+    return sayi, True
+
+
 def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, password: Optional[str] = None) -> bool:
     """PDF'teki tabloları Excel'e aktarır.
 
@@ -2581,9 +2694,22 @@ def _pdf_tables_to_excel(pdf_path: str, xlsx_path: str, progress_callback=None, 
             for row_offset, row in enumerate(table_rows):
                 padded = list(row) + [""] * (max_cols - len(row))
                 for col_index, value in enumerate(padded, start=1):
-                    cell = ws.cell(row=current_row, column=col_index, value=value)
+                    # Başlık satırı her zaman metindir; gövdede sayılar SAYI olarak yazılır
+                    # ki kullanıcı Excel'de toplayabilsin/sıralayabilsin.
+                    if row_offset == 0:
+                        yazilacak, sayi_mi = value, False
+                    else:
+                        yazilacak, sayi_mi = _excel_hucre_degeri(value)
+                    cell = ws.cell(row=current_row, column=col_index, value=yazilacak)
                     cell.border = border
-                    cell.alignment = Alignment(vertical="center", horizontal="left", wrap_text=True)
+                    cell.alignment = Alignment(
+                        vertical="center",
+                        horizontal="right" if sayi_mi else "left",
+                        wrap_text=not sayi_mi,
+                    )
+                    if sayi_mi and not isinstance(yazilacak, int):
+                        # Türk kullanıcıya tanıdık gelen görünüm: 1.234,56
+                        cell.number_format = "#,##0.00"
                     if row_offset == 0:
                         cell.font = Font(bold=True)
                         cell.fill = header_fill

@@ -51,6 +51,27 @@ function stripEmptySections(md: string): string {
  * Hafif markdown renderer (bağımlılıksız) — AI özet/yanıt çıktısı için.
  * Destekler: #/##/### başlık, - / * / 1. liste, **kalın**, `kod`, paragraf, --- ayraç.
  */
+/** "| a | b |" biçiminde bir tablo satırı mı? */
+function tabloSatiriMi(satir: string): boolean {
+  const t = satir.trim();
+  return t.startsWith("|") && t.endsWith("|") && t.length > 2;
+}
+
+/** "|---|:---:|" gibi ayraç satırı mı? (başlıkla gövdeyi ayırır, ekranda gösterilmez) */
+function tabloAyraciMi(satir: string): boolean {
+  const t = satir.trim();
+  return tabloSatiriMi(t) && /^\|[\s:|-]+\|$/.test(t) && t.includes("-");
+}
+
+/** Bir tablo satırını hücrelere böler. */
+function tabloHucreleri(satir: string): string[] {
+  return satir
+    .trim()
+    .slice(1, -1)
+    .split("|")
+    .map((h) => h.trim());
+}
+
 export function SimpleMarkdown({ text }: { text: string }) {
   const lines = stripEmptySections(text).split("\n");
   const blocks: ReactNode[] = [];
@@ -84,13 +105,61 @@ export function SimpleMarkdown({ text }: { text: string }) {
     list = null;
   };
 
-  for (const raw of lines) {
+  for (let li = 0; li < lines.length; li++) {
+    const raw = lines[li] ?? "";
     const line = raw.trimEnd();
     const trimmed = line.trim();
 
     if (!trimmed) {
       flushList();
       continue;
+    }
+
+    // TABLO — yapay zekâ özetleri kalemleri markdown tablosu olarak yazıyor.
+    // Eskiden bu satırlar ham hâliyle ("| Kalem | Adet |" ve "|----|----|")
+    // ekrana basılıyordu; profesyonel bir özet yerine bozuk metin görünüyordu.
+    if (tabloSatiriMi(trimmed)) {
+      const tabloSatirlari: string[] = [];
+      let j = li;
+      while (j < lines.length && tabloSatiriMi((lines[j] ?? "").trim())) {
+        tabloSatirlari.push((lines[j] ?? "").trim());
+        j++;
+      }
+      // En az bir başlık + bir veri satırı olmalı; değilse normal metin gibi işle.
+      const veriSatirlari = tabloSatirlari.filter((t) => !tabloAyraciMi(t));
+      if (veriSatirlari.length >= 2) {
+        flushList();
+        const basliklar = tabloHucreleri(veriSatirlari[0] ?? "");
+        const govde = veriSatirlari.slice(1).map((t) => tabloHucreleri(t));
+        blocks.push(
+          <div key={`tbl-${key++}`} className="my-4 overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full border-collapse text-left text-[13px]">
+              <thead>
+                <tr className="bg-white/[0.04]">
+                  {basliklar.map((b, i) => (
+                    <th key={i} className="border-b border-white/10 px-3 py-2 font-semibold text-slate-200">
+                      {renderInline(b, `th-${key}-${i}`)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {govde.map((satir, ri) => (
+                  <tr key={ri} className="odd:bg-white/[0.02]">
+                    {basliklar.map((_, ci) => (
+                      <td key={ci} className="border-b border-white/5 px-3 py-2 align-top text-slate-300">
+                        {renderInline(satir[ci] ?? "", `td-${key}-${ri}-${ci}`)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>,
+        );
+        li = j - 1;
+        continue;
+      }
     }
     // Ayraç
     if (/^---+$/.test(trimmed)) {

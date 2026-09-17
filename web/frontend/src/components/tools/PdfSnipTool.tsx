@@ -485,7 +485,10 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
         snips.map(async (s) => ({ bytes: await s.blob.arrayBuffer(), mime: s.mime })),
       );
       const out =
-        mode === "sheet" ? await imagesToSheets(images, { columns }) : await imagesToPdf(images);
+        mode === "sheet"
+          ? await imagesToSheets(images, { columns })
+          // Kesitler keyfi ölçülerde; A4'e yerleştirmek kocaman boşluk bırakırdı.
+          : await imagesToPdf(images, "original");
       downloadBlob(
         pdfBytesToBlob(out),
         mode === "sheet" ? `${baseName}-calisma-kagidi.pdf` : `${baseName}-kesitler.pdf`,
