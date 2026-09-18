@@ -160,7 +160,8 @@ async function main() {
   // ── Son kural /* mı? ──────────────────────────────────────────────────────
   const sonuncu = kurallar[kurallar.length - 1];
   console.log(
-    `\nEn düşük öncelikli kural: ${sonuncu ? `${sonuncu.type} ${sonuncu.source} → ${sonuncu.destination}` : "(yok)"}`,
+    `
+En son değerlendirilen kural: ${sonuncu ? `[öncelik ${sonuncu.priority}] ${sonuncu.type} ${sonuncu.source} → ${sonuncu.destination}` : "(yok)"}`,
   );
   const yakalaIndex = kurallar.findIndex((k) => String(k.source) === "/*");
   if (yakalaIndex === -1) {
