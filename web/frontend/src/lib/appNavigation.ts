@@ -225,6 +225,7 @@ export function isFullPageSeoToolPath(p: string): boolean {
 export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "pdf-duzenle": "editor",
   "pdf-imzala": "sign",
+  "form-doldur": "formfill",
   "pdf-yorumla": "annotate",
   "crop-pdf": "crop",
   "gorsel-sikistir": "compress-image",

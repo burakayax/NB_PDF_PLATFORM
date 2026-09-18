@@ -327,9 +327,20 @@
 <h2>Which tools run on-device, which on the server?</h2>
 <p>To be honest, not every operation can run in the browser. Here's the clear split:</p>
 <ul><li>On-device (file never leaves): merge, split, rotate, delete pages, reorder pages, image → PDF, document scan, sign and annotate.</li><li>On the server (content not stored, encrypted connection): Word/Excel/PowerPoint conversion, OCR, compression and AI tools (summarize, chat, translate).</li></ul>
-<blockquote><p>If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing.</p></blockquote>]]></content:encoded>
+<blockquote><p>If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing.</p></blockquote>
+<h2>What iLovePDF does well</h2>
+<p>A comparison is only useful if it is honest. iLovePDF has been doing this for a long time and does it well, so you should know what you would be giving up:</p>
+<ul><li>Years of track record and mature infrastructure.</li><li>Desktop and mobile apps — you are not limited to a browser.</li><li>Very broad language support and a large user base.</li><li>Developer tooling for organisations that need it.</li></ul>
+<p>If what you need is a desktop program or an enterprise-scale setup, staying where you are may well be the better call. We run in the browser and have no separate desktop app.</p>
+<h2>Which one should you pick?</h2>
+<p>There is no single right answer — it depends on what you are doing.</p>
+<ul><li>If the document is sensitive (a contract, an ID, a medical report, customer data) and the job is page-level editing: pick the on-device tool. A file that is never uploaded beats a promise to delete it later, every time.</li><li>If you want a desktop program: we run in the browser, so look elsewhere.</li><li>If you only process a few files now and then: the free plan is enough, and with no watermark you can use the result as-is.</li><li>If you work with Turkish documents: the interface, the OCR and the AI tools treat Turkish as a first language rather than a translation layer added afterwards.</li></ul>
+<h2>Test the claim yourself</h2>
+<p>You do not have to take "your file stays on your device" on trust. You can check it in thirty seconds:</p>
+<ol><li><strong>Open the merge tool</strong> — No account needed. Pick a couple of PDFs you want to merge.</li><li><strong>Disconnect from the internet</strong> — Turn off Wi-Fi or unplug the cable. Do not reload the page.</li><li><strong>Run the merge</strong> — It completes and you download your file. If it works with no connection, your file is not going anywhere.</li></ol>]]></content:encoded>
       <category>Comparison</category>
       <category>Privacy</category>
+      <category>PDF Tools</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="57545" />
       <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
       <media:content url="https://www.pdfplatform.app/en/covers/square/ilovepdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />

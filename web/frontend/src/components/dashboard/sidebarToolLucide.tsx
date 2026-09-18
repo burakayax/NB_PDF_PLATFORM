@@ -47,6 +47,7 @@ const byId: Record<FeatureKey, LucideIcon> = {
   encrypt: Lock,
   "pdf-to-text": FileText,
   "flatten-pdf": Layers2,
+  "form-doldur": FileText,
   "extract-images": ImageDown,
 };
 
@@ -74,6 +75,7 @@ const colorById: Record<FeatureKey, string> = {
   encrypt: "text-red-400",
   "pdf-to-text": "text-blue-400",
   "flatten-pdf": "text-purple-400",
+  "form-doldur": "text-emerald-400",
   "extract-images": "text-fuchsia-400",
 };
 

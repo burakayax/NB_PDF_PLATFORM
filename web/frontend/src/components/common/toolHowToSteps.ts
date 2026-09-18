@@ -304,6 +304,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "form-doldur": S(
+    [
+      PICK_TR(),
+      { title: "Alanları doldur", detail: "Formun doldurulabilir alanları otomatik bulunup listelenir; her birini yazıp seçersin." },
+      { title: "İstersen kilitle", detail: "«Doldurduktan sonra kilitle» açıkken alanlar kalıcı içeriğe dönüşür; karşı taraf yazdıklarını değiştiremez." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Fill the fields", detail: "The form's fillable fields are detected and listed for you; type or pick a value for each." },
+      { title: "Lock it if you want", detail: "With «Lock after filling» on, fields become permanent content so the recipient cannot change them." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "flatten-pdf": S(
     [
       PICK_TR(),

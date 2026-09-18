@@ -32,6 +32,7 @@ export const EN_TOOL_SLUGS = {
   "ai-toplu-islem": "batch-process-pdf",
   "pdf-karsilastir": "compare-pdf",
   "hassas-veri-gizle": "redact-pdf",
+  "form-doldur": "fill-pdf-form",
 };
 
 /** TR blog slug'ı → EN blog slug'ı. */

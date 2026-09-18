@@ -61,6 +61,7 @@ export type FeatureKey =
   | "html-to-pdf"
   | "pdf-to-text"
   | "flatten-pdf"
+  | "form-doldur"
   | "extract-images";
 
 /*

@@ -327,9 +327,20 @@
 <h2>Hangi araçlar cihazda, hangileri sunucuda?</h2>
 <p>Dürüst olmak gerekirse her işlem tarayıcıda yapılamaz. Ayrımı net söyleyelim:</p>
 <ul><li>Cihazda (dosya çıkmaz): birleştir, böl, döndür, sayfa sil, sayfa sırala, görsel → PDF, belge tara, imza ve işaretleme.</li><li>Sunucuda (içerik saklanmaz, şifreli bağlantı): Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları (özet, sohbet, çeviri).</li></ul>
-<blockquote><p>Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz.</p></blockquote>
+<h2>iLovePDF'in iyi olduğu yerler</h2>
+<p>Bir karşılaştırmanın işe yaraması için dürüst olması gerekir. iLovePDF bu işi uzun süredir yapıyor ve iyi yapıyor; alternatife geçerken neyi bırakacağınızı bilmelisiniz:</p>
+<ul><li>Uzun yıllara dayanan bir geçmiş ve oturmuş altyapı.</li><li>Masaüstü ve mobil uygulamaları var — her şey tarayıcıda olmak zorunda değil.</li><li>Çok geniş bir dil desteği ve büyük bir kullanıcı kitlesi.</li><li>Kurumsal kullanım için geliştirici araçları.</li></ul>
+<p>Aradığınız şey bir masaüstü programıysa ya da kurumsal ölçekte bir çözümse, alternatif aramak yerine orada kalmanız daha mantıklı olabilir. Biz tarayıcıda çalışıyoruz ve ayrı bir masaüstü programımız yok.</p>
+<h2>Hangisini seçmelisiniz?</h2>
+<p>Tek bir doğru cevap yok; yapacağınız işe göre değişiyor.</p>
+<ul><li>Belge hassassa (sözleşme, kimlik, sağlık raporu, müşteri verisi) ve iş sayfa düzenlemeyse: cihazda çalışan aracı seçin. Dosyanın hiç yüklenmemesi, "sonra siliyoruz" sözünden her zaman daha güçlüdür.</li><li>Masaüstü programı istiyorsanız: biz tarayıcıda çalışıyoruz, aradığınız bu değilse başka yere bakın.</li><li>Ara sıra birkaç dosya işliyorsanız: ücretsiz plan yeter ve çıktıda filigran olmadığı için sonucu olduğu gibi kullanabilirsiniz.</li><li>Türkçe belgelerle çalışıyorsanız: arayüz, yazı tanıma ve yapay zekâ araçları Türkçeyi sonradan eklenmiş bir çeviri katmanı olarak değil, birinci dil olarak ele alır.</li></ul>
+<h2>İddiayı kendiniz sınayın</h2>
+<p>"Dosyanız cihazınızdan çıkmıyor" cümlesini bize inanarak kabul etmenize gerek yok. Otuz saniyede kendiniz doğrulayabilirsiniz:</p>
+<ol><li><strong>Birleştirme aracını açın</strong> — Üye olmanıza gerek yok. Birleştirmek istediğiniz birkaç PDF'i seçin.</li><li><strong>İnternet bağlantınızı kesin</strong> — Wi-Fi'ı kapatın ya da kabloyu çıkarın. Sayfayı yenilemeyin.</li><li><strong>Birleştirmeyi çalıştırın</strong> — İşlem tamamlanır ve dosyanızı indirirsiniz. İnternet yokken çalışıyorsa, dosyanız hiçbir yere gitmiyor demektir.</li></ol>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Gizlilik</category>
+      <category>PDF Araçları</category>
       <enclosure url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" type="image/png" length="58887" />
       <media:content url="https://www.pdfplatform.app/covers/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1200" height="630" />
       <media:content url="https://www.pdfplatform.app/covers/square/ilovepdf-alternatifi-cihazda-ucretsiz.png" medium="image" type="image/png" width="1080" height="1080" />

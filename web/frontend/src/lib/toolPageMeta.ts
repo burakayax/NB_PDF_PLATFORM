@@ -231,6 +231,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "form-doldur": {
+    tr: {
+      title: "PDF form doldurma | PDF Platform",
+      description:
+        "Doldurulabilir PDF formlarını cihazınızda doldurun; isterseniz kilitleyin.",
+    },
+    en: {
+      title: "Fill PDF form | PDF Platform",
+      description:
+        "Fill fillable PDF forms on your device and optionally lock them.",
+    },
+  },
   "flatten-pdf": {
     tr: {
       title: "PDF düzleştir | PDF Platform",
