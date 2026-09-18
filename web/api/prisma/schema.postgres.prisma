@@ -397,11 +397,16 @@ model RefreshToken {
   // Ağ adresi AÇIK saklanmaz; yalnız özeti tutulur (hesap paylaşımı sinyali).
   ipHash     String?   @map("ip_hash")
   lastUsedAt DateTime  @default(now()) @map("last_used_at")
+  // Cihaz parmak izi özeti (tarayıcı kimliği + ağ özeti). Hesap paylaşımının
+  // GERÇEK sinyali eşzamanlı oturum değil, zaman içinde biriken FARKLI CİHAZ
+  // sayısıdır; bu alan o sayımı mümkün kılar.
+  deviceKey  String?   @map("device_key")
   isDesktop  Boolean   @default(false) @map("is_desktop")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, createdAt])
 }
 
 model EmailVerificationToken {
