@@ -894,6 +894,11 @@ model SocialKeywordCache {
   trJson      String   @map("tr_json")
   /// JSON dizi: İngilizce terimler.
   enJson      String   @map("en_json")
+  /// JSON dizi: Türkçe ETİKETLER (arama terimlerinden ayrı; platformda
+  /// gerçekten kullanıldığı doğrulanmış olanlar).
+  trTagsJson  String?  @map("tr_tags_json")
+  /// JSON dizi: İngilizce etiketler.
+  enTagsJson  String?  @map("en_tags_json")
   /// "research" (internetten araştırıldı) ya da "seo" (yalnızca kendi bankamız).
   source      String   @default("seo")
   createdAt   DateTime @default(now()) @map("created_at")
