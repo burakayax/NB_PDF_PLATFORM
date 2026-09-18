@@ -32,7 +32,13 @@ Görevin, verilen blog yazısı için AYNI metnin iki uzunlukta ve iki dilde hâ
 
 NEDEN TEK METİN: Aynı yazı için her ağa farklı metin yazmak tutarsızlık üretiyordu; insanlar
 aynı markayı birden çok ağda takip ediyor. Uzun metin Facebook, Instagram ve LinkedIn'de
-AYNEN kullanılır; kısa metin X ve Pinterest'te.
+AYNEN kullanılır; kısa metin X'te.
+
+PINTEREST AYRI YAZILIR: Pinterest bir sosyal ağ değil, görsel arama motorudur. Orada sıralamayı
+etiketler değil AÇIKLAMADAKİ KELİMELER belirler. PIN metinleri bu yüzden bilerek arama terimi
+yüklüdür — aşağıdaki "Konu terimleri" listesindeki ifadeleri olabildiğince çok, ama okunabilir
+bir cümle akışı içinde kullan. Anahtar kelime yığını yazma; insanın okuyabileceği 2-3 cümle
+olsun, içinde terimler geçsin.
 
 Kurallar:
 - Tıklama isteği uyandır: yazının somut faydasını söyle, başlığı olduğu gibi kopyalama.
@@ -50,7 +56,7 @@ Kurallar:
 - Karakter sınırlarını ASLA aşma.
 
 Yanıtı YALNIZCA şu JSON biçiminde ver, başka hiçbir şey yazma:
-{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"..."}`;
+{"LONG_EN":"...","LONG_TR":"...","SHORT_EN":"...","SHORT_TR":"...","PIN_EN":"...","PIN_TR":"..."}`;
 
 /** Modelin bazen eklediği ```json çitlerini ve ön/arka gevezeliği ayıklar. */
 function parseJsonObject(raw: string): Record<string, unknown> | null {
@@ -175,13 +181,87 @@ export function effectiveMax(platform: SocialPlatform, sides: { link: string }[]
   return spec.maxChars + extra;
 }
 
-/** Bir blok için etiket dizesi (doğrulanmış terimlerden, sabit yazımla). */
+/** Her gönderide yer alan marka etiketi — gönderileri tek arşivde toplar. */
+const BRAND_TAG = "PDFPlatform";
+
+/**
+ * Geniş etiket havuzu.
+ *
+ * NEDEN: Dar etiketin altında kimse yoktur; erişim geniş etiketten gelir.
+ * Her gönderide en az bir tane geniş etiket bulunur, araştırma hiç sonuç
+ * vermese bile. Havuz elle yazılmıştır: yapay zekânın uydurmasına açık
+ * bırakılmayacak kadar kritik.
+ */
+const BROAD_TAGS: Record<"tr" | "en", string[]> = {
+  tr: ["PDF", "Verimlilik", "Ofis İpuçları", "Dijitalleşme", "İpucu"],
+  en: ["PDF", "Productivity", "WorkSmarter", "OfficeTips", "SaaS"],
+};
+
+/**
+ * Bu yazıya düşen geniş etiket.
+ *
+ * Hep aynısını kullanmak hesabı tekdüze gösterir; rastgele seçmek ise aynı
+ * gönderinin önizlemesiyle yayınını farklılaştırır. Adresten türetilen sabit
+ * bir seçim ikisini de çözüyor: yazı başına değişken, çalıştırma başına aynı.
+ */
+function broadTagFor(side: LangSide): string {
+  const pool = BROAD_TAGS[side.lang];
+  let hash = 0;
+  for (let i = 0; i < side.link.length; i++) hash = (hash * 31 + side.link.charCodeAt(i)) >>> 0;
+  return pool[hash % pool.length] ?? pool[0] ?? "";
+}
+
+/**
+ * Bir gönderinin etiket karışımı: 1 geniş + dar etiketler + marka.
+ *
+ * Marka etiketi yalnızca üç ve üzeri etiket sığan ağlarda eklenir; X'te iki
+ * yer var ve orayı markaya harcamak erişimden çalmak olur.
+ */
+function tagTermsFor(side: LangSide, count: number): string[] {
+  if (count <= 0) return [];
+  const out: string[] = [];
+  const key = (t: string) => t.toLocaleLowerCase(side.lang);
+  const push = (term: string) => {
+    const t = term.trim();
+    if (!t || out.length >= count) return;
+    if (out.some((x) => key(x) === key(t))) return;
+    out.push(t);
+  };
+
+  push(broadTagFor(side));
+  // Marka etiketi en SONA konur; araya girerse gönderi etiket listesi değil
+  // reklam gibi okunuyor.
+  const brandSlot = count >= 3 ? 1 : 0;
+  const room = count - brandSlot;
+  for (const t of side.tags) {
+    if (out.length >= room) break;
+    push(t);
+  }
+  // Dar etiket yetmediyse havuzun kalanı tamamlar — eksik etiket satırı kalmasın.
+  for (const t of BROAD_TAGS[side.lang]) {
+    if (out.length >= room) break;
+    push(t);
+  }
+  if (brandSlot) push(BRAND_TAG);
+  return out;
+}
+
+/** Bir blok için etiket dizesi (karışım kuralına göre, sabit yazımla). */
 function tagsFor(side: LangSide, count: number): string {
-  return side.terms.slice(0, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
+  return tagTermsFor(side, count).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
 }
 
 /** Bir dilin metin parçaları — çift dilli gönderinin yarısı. */
-type LangSide = { lang: "tr" | "en"; title: string; summary: string; link: string; terms: string[] };
+type LangSide = {
+  lang: "tr" | "en";
+  title: string;
+  summary: string;
+  link: string;
+  /** Arama terimleri — metnin içinde geçmesi için. */
+  terms: string[];
+  /** Dar etiket adayları — etiket satırı için. */
+  tags: string[];
+};
 
 /** Bir dil için şablon bloğu (model kullanılamadığında). */
 function fallbackBlock(
@@ -190,7 +270,7 @@ function fallbackBlock(
   style: "url" | "bio" | "none",
   tagCount: number,
 ): string {
-  const tags = side.terms.slice(0, tagCount).map((t) => toHashtag(t, side.lang)).filter(Boolean).join(" ");
+  const tags = tagsFor(side, tagCount);
   const linkText = linkLine(side, style);
   const link = linkText ? `\n\n${linkText}` : "";
   const tail = `${link}${tags ? `\n\n${tags}` : ""}`;
@@ -228,6 +308,7 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
       summary: isPrimary ? item.summary : (item.alt?.summary ?? item.summary),
       link: isPrimary ? item.link : (item.alt?.link ?? item.link),
       terms: lang === "tr" ? keywords.tr : keywords.en,
+      tags: lang === "tr" ? keywords.tagsTr : keywords.tagsEn,
     };
   };
 
@@ -244,6 +325,13 @@ function sidesFor(req: CopyRequest, platform: SocialPlatform): LangSide[] {
  */
 /** Uzun metni kullanan ağlar — üçünde de AYNI metin görünür. */
 const LONG_FORM: SocialPlatform[] = ["FACEBOOK", "INSTAGRAM", "LINKEDIN"];
+
+/** Bir ağ hangi metni kullanır? */
+type BodyKind = "long" | "short" | "pin";
+function bodyKind(platform: SocialPlatform): BodyKind {
+  if (LONG_FORM.includes(platform)) return "long";
+  return platform === "PINTEREST" ? "pin" : "short";
+}
 
 /** Bir platformda tek bir dil bloğuna kalan gövde payı (etiket ve bağlantı düşülmüş). */
 function bodyRoom(req: CopyRequest, platform: SocialPlatform): number {
@@ -312,8 +400,12 @@ export async function writePostBodies(req: CopyRequest): Promise<Record<SocialPl
     900,
   );
   const shortRoom = Math.min(
-    ...wanted.filter((p) => !LONG_FORM.includes(p)).map((p) => bodyRoom(req, p)),
+    ...wanted.filter((p) => bodyKind(p) === "short").map((p) => bodyRoom(req, p)),
     220,
+  );
+  const pinRoom = Math.min(
+    ...wanted.filter((p) => bodyKind(p) === "pin").map((p) => bodyRoom(req, p)),
+    400,
   );
 
   const { item, keywords } = req;
@@ -331,7 +423,8 @@ Türkçe: ${keywords.tr.join(", ") || "(yok)"}
 
 Uzunluklar:
 - LONG_EN ve LONG_TR: en fazla ${Number.isFinite(longRoom) ? longRoom : 900} karakter.
-- SHORT_EN ve SHORT_TR: en fazla ${Number.isFinite(shortRoom) ? shortRoom : 220} karakter.`;
+- SHORT_EN ve SHORT_TR: en fazla ${Number.isFinite(shortRoom) ? shortRoom : 220} karakter.
+- PIN_EN ve PIN_TR: en fazla ${Number.isFinite(pinRoom) ? pinRoom : 400} karakter (arama terimi yüklü).`;
 
   let raw: string;
   try {
@@ -345,14 +438,16 @@ Uzunluklar:
 
   const pick = (key: string): string =>
     typeof parsed[key] === "string" ? (parsed[key] as string).trim() : "";
-  const bodies = {
+  const bodies: Record<BodyKind, { en: string; tr: string }> = {
     long: { en: pick("LONG_EN"), tr: pick("LONG_TR") },
     short: { en: pick("SHORT_EN"), tr: pick("SHORT_TR") },
+    // Pin metni gelmediyse kısa metne düşülür: Pinterest metinsiz kalmasın.
+    pin: { en: pick("PIN_EN") || pick("SHORT_EN"), tr: pick("PIN_TR") || pick("SHORT_TR") },
   };
 
   for (const p of req.platforms) {
     const sides = sidesFor(req, p);
-    const kind = LONG_FORM.includes(p) ? "long" : "short";
+    const kind = bodyKind(p);
     const blocks = sides.map((side) => {
       const body = bodies[kind][side.lang];
       return body ? buildBlock(body, side, p) : "";
