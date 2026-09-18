@@ -33,6 +33,9 @@
  *   4) Sonuç doğruysa uygula:
  *        node scripts/render-routes-sync.mjs --uygula
  *
+ *   Yalnızca yanıt başlıklarını düzeltmek (yönlendirme kurallarına dokunmadan):
+ *        node scripts/render-routes-sync.mjs --sadece-baslik --uygula
+ *
  * Uygulamadan önce mevcut kuralların yedeği `render-routes-yedek-<tarih>.json`
  * olarak yazılır; geri almak için:
  *        node scripts/render-routes-sync.mjs --geri-al <yedek-dosyası>
@@ -82,16 +85,33 @@ async function istek(yol, secenekler = {}) {
  */
 async function tumKayitlar(yol, anahtarAd) {
   const hepsi = [];
+  const gorulenKimlikler = new Set();
   let cursor = null;
+
   for (let tur = 0; tur < 50; tur++) {
     const ayrac = yol.includes("?") ? "&" : "?";
     const sayfa = await istek(`${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
-    const liste = sayfa || [];
+    const liste = Array.isArray(sayfa) ? sayfa : [];
     if (liste.length === 0) break;
-    for (const satir of liste) hepsi.push(satir[anahtarAd] || satir);
+
+    // AYNI SAYFA TEKRAR GELDİ Mİ? Geçersiz bir cursor'da sunucu baştan
+    // döndürebiliyor; bu fark edilmezse döngü aynı kayıtları biriktirip
+    // "5000 kural" gibi anlamsız sonuçlar üretir (ölçüldü).
+    let yeniEklendi = 0;
+    for (const satir of liste) {
+      const kayit = satir?.[anahtarAd] ?? satir;
+      const kimlik = kayit?.id ?? JSON.stringify(kayit);
+      if (gorulenKimlikler.has(kimlik)) continue;
+      gorulenKimlikler.add(kimlik);
+      hepsi.push(kayit);
+      yeniEklendi += 1;
+    }
+    if (yeniEklendi === 0) break;
+
     const sonuncu = liste[liste.length - 1];
-    cursor = sonuncu && sonuncu.cursor;
-    if (!cursor || liste.length < 100) break;
+    const sonrakiCursor = sonuncu?.cursor ?? null;
+    if (!sonrakiCursor || sonrakiCursor === cursor || liste.length < 100) break;
+    cursor = sonrakiCursor;
   }
   return hepsi;
 }
@@ -160,7 +180,7 @@ async function main() {
   // bile görünmüyor (ölçüldü). Belge Tarayıcı bu yüzden kamerayı hiç açamıyordu.
   // Mikrofon ve konum kapalı kalır — hiçbir aracımız kullanmıyor.
   const DOGRU_IZIN = "camera=(self), microphone=(), geolocation=(), interest-cohort=()";
-  const basliklar = await tumKayitlar(`/services/${servis.id}/headers`, "headerRule");
+  const basliklar = await tumKayitlar(`/services/${servis.id}/headers`, "header");
   const izinBasligi = basliklar.find((h) => (h.name || "").toLowerCase() === "permissions-policy");
   const izinGuncelMi = izinBasligi && izinBasligi.value === DOGRU_IZIN;
   console.log(
@@ -168,6 +188,16 @@ async function main() {
   );
 
   if (uygula && !izinGuncelMi) {
+    // GÜVENLİK AĞI: Okuma yanlış giderse (alan adı değişmiş, sarmal farklı)
+    // eksik kayıtlarla PUT atmak TÜM başlıkları silerdi. Her kaydın üç alanı da
+    // dolu değilse hiçbir şey yazma.
+    const bozuk = basliklar.filter((h) => !h?.path || !h?.name || !h?.value);
+    if (bozuk.length > 0) {
+      throw new Error(
+        `Başlık listesi beklenen biçimde değil (${bozuk.length}/${basliklar.length} kayıt eksik). ` +
+          `Güvenlik için hiçbir değişiklik yapılmadı.`,
+      );
+    }
     const yeniBasliklar = basliklar
       .filter((h) => (h.name || "").toLowerCase() !== "permissions-policy")
       .map(({ path, name, value }) => ({ path, name, value }));
@@ -179,6 +209,11 @@ async function main() {
     );
     await istek(`/services/${servis.id}/headers`, { method: "PUT", body: JSON.stringify(yeniBasliklar) });
     console.log(`Başlıklar güncellendi (${yeniBasliklar.length} kural). Kamera artık kendi sitemize açık.`);
+  }
+
+  if (process.argv.includes("--sadece-baslik")) {
+    console.log("Yalnızca başlık kipi — yönlendirme kurallarına dokunulmadı.");
+    return;
   }
 
   // ── Hedef liste ─────────────────────────────────────────────────────────────
