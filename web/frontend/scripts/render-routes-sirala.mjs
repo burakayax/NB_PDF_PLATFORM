@@ -1,5 +1,5 @@
 /**
- * "/*" KURALINI EN SONA AL — başka hiçbir şeye dokunmadan.
+ * KURAL SIRASINI DÜZELT — kural eklemeden, silmeden.
  *
  * SORUN (denetimde ölçüldü): Render kuralları liste sırasına göre değerlendirir
  * ve İLK eşleşende durur. "/*" kuralı her adrese uyduğu için ondan sonraki her
@@ -7,6 +7,18 @@
  * adreslerin yeni adreslere yönlendirmeleri — hiç çalışmıyordu. Sonuç: eski bir
  * bağlantıya tıklayan ziyaretçi doğru sayfaya gitmiyor, arama motoru da o
  * adresleri yönlendirme olarak göremiyor.
+ *
+ * İKİNCİ SORUN (aynı sebep, farklı kural): Blog joker kuralı `/en/blog/:slug`
+ * de her blog adresine uyuyor ve listede eski adres yönlendirmelerinden ÖNCE
+ * geliyor. Yalnızca "/*" sona alınsaydı blog yönlendirmeleri yine çalışmazdı:
+ * joker önce eşleşir ve artık var olmayan bir dosyaya yönlendirip BOŞ SAYFA
+ * döndürür. Bu yüzden sıralama şu kurala göre yapılır:
+ *
+ *   1) SPESİFİK kurallar (adresi birebir yazılmış olanlar)
+ *   2) JOKER kurallar (`:slug` ya da `*` içerenler)
+ *   3) "/*" en sonda
+ *
+ * Her grubun KENDİ İÇİNDEKİ sırası korunur; hiçbir kural eklenmez/silinmez.
  *
  * NEDEN AYRI BETİK: `render-routes-sync.mjs` listeyi yeniden KURAR (araç
  * sayfalarını yeniden üretir) ve mevcut kurallarla birlikte 200 sınırını aşar.
@@ -110,31 +122,44 @@ async function main() {
     );
   }
 
-  const yakalaIndex = mevcut.findIndex((k) => String(k.source) === "/*");
-  if (yakalaIndex === -1) {
-    console.log('"/*" kuralı yok — sıralanacak bir şey yok.');
-    return;
-  }
-  if (yakalaIndex === mevcut.length - 1) {
-    console.log('"/*" zaten en sonda — yapılacak bir şey yok.');
-    return;
-  }
+  const hepsiniYakalaMi = (k) => String(k.source) === "/*";
+  /** Adresinde `:param` ya da `*` geçen kural, birçok adrese birden uyar. */
+  const jokerMi = (k) => /[:*]/.test(String(k.source || "")) && !hepsiniYakalaMi(k);
 
-  const oluKurallar = mevcut.slice(yakalaIndex + 1);
-  console.log(
-    `\n"/*" ${yakalaIndex + 1}. sırada; ARKASINDAKİ ${oluKurallar.length} kural hiç çalışmıyor:`,
-  );
-  for (const k of oluKurallar) console.log(`  - ${k.type} ${k.source} → ${k.destination}`);
+  const spesifik = mevcut.filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k));
+  const jokerler = mevcut.filter(jokerMi);
+  const yakala = mevcut.filter(hepsiniYakalaMi);
 
-  // Sıra korunur, yalnız "/*" sona alınır. Kural sayısı ve içeriği DEĞİŞMEZ.
-  const hedef = [
-    ...mevcut.slice(0, yakalaIndex).map(sade),
-    ...oluKurallar.map(sade),
-    sade(mevcut[yakalaIndex]),
-  ];
+  const hedef = [...spesifik, ...jokerler, ...yakala].map(sade);
   if (hedef.length !== mevcut.length) {
     throw new Error(`İç tutarlılık hatası: ${mevcut.length} → ${hedef.length}. Hiçbir şey yapılmadı.`);
   }
+
+  // Sırası DEĞİŞEN kurallar — yani şu an gölgede kalıp çalışmayanlar.
+  const eskiSira = mevcut.map((k) => `${k.type} ${k.source}`);
+  const yeniSira = hedef.map((k) => `${k.type} ${k.source}`);
+  const degisti = eskiSira.some((v, i) => v !== yeniSira[i]);
+  if (!degisti) {
+    console.log("Sıralama zaten doğru — yapılacak bir şey yok.");
+    return;
+  }
+
+  // Şu an gölgede kalan kurallar: kendisinden ÖNCE gelen bir joker/"/*" varsa.
+  const ilkJokerIndex = mevcut.findIndex((k) => jokerMi(k) || hepsiniYakalaMi(k));
+  const golgede =
+    ilkJokerIndex === -1 ? [] : mevcut.slice(ilkJokerIndex + 1).filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k));
+
+  console.log(`
+Şu an gölgede kalan (çalışmayan) kural sayısı: ${golgede.length}`);
+  for (const k of golgede.slice(0, 60)) console.log(`  - ${k.type} ${k.source} → ${k.destination}`);
+  if (golgede.length > 60) console.log(`  … ve ${golgede.length - 60} tane daha`);
+
+  console.log(
+    `
+Yeni sıra: ${spesifik.length} spesifik → ${jokerler.length} joker → ${yakala.length} yakala-hepsini`,
+  );
+  console.log("Joker kurallar (spesifiklerden SONRA gelecek):");
+  for (const k of jokerler) console.log(`  * ${k.type} ${k.source} → ${k.destination}`);
 
   if (!uygula) {
     console.log(
@@ -153,11 +178,15 @@ async function main() {
 
   const sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
   const yeniIndex = sonra.findIndex((k) => String(k.source) === "/*");
+  const ilkJoker = sonra.findIndex((k) => /[:*]/.test(String(k.source || "")));
+  const halaGolgede = sonra
+    .slice(ilkJoker + 1)
+    .filter((k) => !/[:*]/.test(String(k.source || ""))).length;
   console.log(`Uygulandı. Kural sayısı: ${sonra.length}`);
   console.log(
-    yeniIndex === sonra.length - 1
-      ? '"/*" artık EN SONDA — arkasındaki kurallar yeniden çalışıyor.'
-      : `UYARI: "/*" hâlâ ${yeniIndex + 1}. sırada. Yedekten geri al: --geri-al ${yedekDosya}`,
+    yeniIndex === sonra.length - 1 && halaGolgede === 0
+      ? "Sıra doğru: spesifik kurallar önde, jokerler arkada, \"/*\" en sonda. Gölgede kural kalmadı."
+      : `UYARI: hâlâ ${halaGolgede} kural gölgede. Yedekten geri al: --geri-al ${yedekDosya}`,
   );
 }
 
