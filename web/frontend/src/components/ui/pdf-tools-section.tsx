@@ -219,6 +219,11 @@ const TOOLS: Tool[] = [
     en: { name: "Add Watermark", desc: "Stamp your own mark or text onto the pages." },
   },
   {
+    id: "ustveri-temizle", cat: "edit", Icon: Eraser,
+    tr: { name: "PDF Üstveri Temizle", desc: "Yazar, program, tarih, XMP ve fotoğraf GPS izlerini siler." },
+    en: { name: "Remove PDF Metadata", desc: "Strips author, software, dates, XMP and photo GPS traces." },
+  },
+  {
     id: "form-doldur", cat: "edit", Icon: FileText,
     tr: { name: "PDF Form Doldur", desc: "Doldurulabilir form alanlarını bulur ve cihazınızda doldurur." },
     en: { name: "Fill PDF Form", desc: "Detects fillable fields and fills them on your device." },
@@ -421,6 +426,7 @@ const TOOL_HUE: Record<string, HueId> = {
   watermark: "sky",
   "flatten-pdf": "indigo",
   "form-doldur": "emerald",
+  "ustveri-temizle": "rose",
   // Dönüştür
   "pdf-to-word": "blue",
   "word-to-pdf": "blue",

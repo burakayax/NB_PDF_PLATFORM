@@ -226,6 +226,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "pdf-duzenle": "editor",
   "pdf-imzala": "sign",
   "form-doldur": "formfill",
+  "ustveri-temizle": "metadata",
   "pdf-yorumla": "annotate",
   "crop-pdf": "crop",
   "gorsel-sikistir": "compress-image",

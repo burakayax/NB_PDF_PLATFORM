@@ -304,6 +304,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "ustveri-temizle": S(
+    [
+      PICK_TR(),
+      { title: "Ne taşıdığını gör", detail: "Belgedeki yazar adı, üreten program, tarihler, XMP bloğu ve fotoğrafların EXIF/GPS bilgisi listelenir." },
+      { title: "«Üstveriyi temizle» de", detail: "Tüm bu izler silinir; istersen gömülü fotoğrafların konum bilgisi de temizlenir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "See what it carries", detail: "Author name, producing software, dates, the XMP block and photo EXIF/GPS data are listed." },
+      { title: "Click «Remove metadata»", detail: "All of those traces are stripped, including GPS data in embedded photos if you want." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "form-doldur": S(
     [
       PICK_TR(),

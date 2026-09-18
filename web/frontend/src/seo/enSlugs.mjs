@@ -33,6 +33,7 @@ export const EN_TOOL_SLUGS = {
   "pdf-karsilastir": "compare-pdf",
   "hassas-veri-gizle": "redact-pdf",
   "form-doldur": "fill-pdf-form",
+  "ustveri-temizle": "remove-pdf-metadata",
 };
 
 /** TR blog slug'ı → EN blog slug'ı. */

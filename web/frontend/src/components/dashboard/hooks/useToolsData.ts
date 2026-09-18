@@ -20,6 +20,7 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "html-to-pdf",
   "flatten-pdf",
   "form-doldur",
+  "ustveri-temizle",
   "extract-images",
 ]);
 

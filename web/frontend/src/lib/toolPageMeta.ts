@@ -231,6 +231,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "ustveri-temizle": {
+    tr: {
+      title: "PDF üstveri temizleme | PDF Platform",
+      description:
+        "Yazar, program, tarih, XMP ve fotoğraf GPS izlerini cihazınızda silin.",
+    },
+    en: {
+      title: "Remove PDF metadata | PDF Platform",
+      description:
+        "Strip author, software, dates, XMP and photo GPS traces on your device.",
+    },
+  },
   "form-doldur": {
     tr: {
       title: "PDF form doldurma | PDF Platform",
