@@ -28,6 +28,7 @@ export const featureCatalog = [
   "flatten-pdf",
   "form-doldur",
   "ustveri-temizle",
+  "pdf-to-pdfa",
   "extract-images",
 ] as const;
 

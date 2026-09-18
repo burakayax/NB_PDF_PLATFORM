@@ -34,6 +34,7 @@ const GATED_TOOL_LABELS: Record<string, { tr: string; en: string }> = {
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
+  "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
 };
 
 interface PlanUpgradeModalProps {

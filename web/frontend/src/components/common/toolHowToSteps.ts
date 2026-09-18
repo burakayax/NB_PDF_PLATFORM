@@ -304,6 +304,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "pdf-to-pdfa": S(
+    [
+      PICK_TR(),
+      { title: "Uyumluluk düzeyini seç", detail: "Çoğu kurum için PDF/A-2b uygundur; kurum başka bir düzey istiyorsa onu seç." },
+      { title: "«Arşive çevir» de", detail: "Yazı tipleri belgenin içine gömülür, renkler standart hale getirilir, dış bağlantılar kaldırılır." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Pick the conformance level", detail: "PDF/A-2b suits most institutions; choose another level only if yours asks for it." },
+      { title: "Click «Convert»", detail: "Fonts are embedded in the file, colours are standardised and external dependencies are removed." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "ustveri-temizle": S(
     [
       PICK_TR(),

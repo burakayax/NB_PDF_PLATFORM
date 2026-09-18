@@ -21,6 +21,7 @@ function state(over: Partial<ToolFormState> = {}): ToolFormState {
     files: [pdf()],
     password: "",
     htmlToPdfMode: "url",
+    pdfaVersion: "2b",
     htmlToPdfUrl: "https://ornek.com",
     htmlToPdfRaw: "<p>merhaba</p>",
     pagesText: "1-3",

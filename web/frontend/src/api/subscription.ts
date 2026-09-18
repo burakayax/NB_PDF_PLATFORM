@@ -63,6 +63,7 @@ export type FeatureKey =
   | "flatten-pdf"
   | "form-doldur"
   | "ustveri-temizle"
+  | "pdf-to-pdfa"
   | "extract-images";
 
 /*

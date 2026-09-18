@@ -1094,3 +1094,188 @@ def pptx_to_pdf(pptx_path: str, pdf_path: str) -> bool:
             "Windows'ta PowerPoint yüklüyse o da denenir."
         )
     return _via_libreoffice()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  PDF/A — ARŞİV BİÇİMİ
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#  NEDEN GEREKLİ: Kamu ihaleleri, e-arşiv, mahkeme ve üniversite tesliminde
+#  belgenin "PDF/A" olması isteniyor. PDF/A, belgenin 20 yıl sonra da aynı
+#  görünmesini garanti eden ISO biçimidir: yazı tipleri dosyanın İÇİNE gömülür,
+#  renkler cihazdan bağımsız tanımlanır, dış kaynağa bağlanma ve şifreleme
+#  yasaktır.
+#
+#  NASIL: Ghostscript'in belgelenmiş yolu kullanılır — `-dPDFA=<1|2|3>` ve bir
+#  "PDF/A tanım dosyası" (PDFA_def.ps). Tanım dosyası, çıktının hangi renk
+#  uzayına göre yorumlanacağını söyleyen ICC profilini bildirir; belgelerde bu
+#  dosyanın ICC yolunun ELLE düzeltilmesi gerektiği yazar, biz de çalışma anında
+#  üretiyoruz.
+#
+#  `-dPDFACompatibilityPolicy=1`: PDF/A'ya aykırı bir öğe (ör. dış bağlantı,
+#  gömülemeyen yazı tipi) görülürse o öğe ATILIR ve belge uyumlu kalır.
+#  Varsayılan olan 0 seçilseydi öğe korunur ama dosya PDF/A SAYILMAZDI — yani
+#  kullanıcı uyumlu sandığı bir dosyayı kuruma gönderirdi.
+#
+#  Ghostscript yalnızca "b" (temel) uyumluluk düzeyini üretebilir; PDF/A-1a gibi
+#  etiketleme gerektiren düzeyler desteklenmez, bu yüzden kullanıcıya da
+#  sunulmaz.
+
+_PDFA_SURUMLERI = {"1b": 1, "2b": 2, "3b": 3}
+
+
+def _ghostscript_yolu() -> str:
+    """Ghostscript çalıştırılabiliri (Linux: gs, Windows: gswin64c)."""
+    for ad in ("gs", "gswin64c", "gswin32c"):
+        yol = shutil.which(ad)
+        if yol:
+            return yol
+    raise Exception(
+        "PDF/A dönüşümü için Ghostscript gerekli ancak sistemde bulunamadı."
+    )
+
+
+def _icc_profili_bul() -> str | None:
+    """
+    Çıktı niyeti (OutputIntent) için bir ICC profili bulur.
+
+    Ghostscript kendi profillerini `iccprofiles/` klasöründe dağıtır; dağıtımdan
+    dağıtıma yol değiştiği için sabit yol yazmak yerine aranır. Bulunamazsa
+    çağıran taraf cihazdan bağımsız renk kipine düşer.
+    """
+    import glob
+
+    adaylar: list[str] = []
+    for kalip in (
+        "/usr/share/ghostscript/*/iccprofiles/srgb.icc",
+        "/usr/share/ghostscript/*/iccprofiles/default_rgb.icc",
+        "/usr/lib/ghostscript/*/iccprofiles/srgb.icc",
+        "/usr/share/color/icc/sRGB.icc",
+        "/usr/share/color/icc/colord/sRGB.icc",
+    ):
+        adaylar.extend(sorted(glob.glob(kalip)))
+    for yol in adaylar:
+        if os.path.isfile(yol):
+            return yol
+    return None
+
+
+def _pdfa_tanim_dosyasi(klasor: str, icc_yolu: str | None) -> str:
+    """
+    PDF/A tanım dosyasını (PostScript) üretir.
+
+    İçeriği Ghostscript'in örnek dosyasıyla aynı işi yapar: belgeye bir
+    "çıktı niyeti" ekler. ICC profili yoksa niyet bildirilmez; bu durumda
+    renkler cihazdan bağımsız kipte dönüştürülür.
+    """
+    yol = os.path.join(klasor, "PDFA_def.ps")
+    if icc_yolu:
+        # PostScript dizgesinde ters bölü kaçış karakteridir; Windows yolları bozulmasın.
+        icc_ps = icc_yolu.replace("\\", "/")
+        icerik = f"""%!
+% PDF/A tanım dosyası — çalışma anında üretildi.
+[ /Title (Belge) /DOCINFO pdfmark
+
+[/_objdef {{icc_PDFA}} /type /stream /OBJ pdfmark
+[{{icc_PDFA}} <</N 3>> /PUT pdfmark
+[{{icc_PDFA}} ({icc_ps}) (r) file /PUT pdfmark
+
+[/_objdef {{OutputIntent_PDFA}} /type /dict /OBJ pdfmark
+[{{OutputIntent_PDFA}} <<
+  /Type /OutputIntent
+  /S /GTS_PDFA1
+  /DestOutputProfile {{icc_PDFA}}
+  /OutputConditionIdentifier (sRGB)
+>> /PUT pdfmark
+[{{Catalog}} <</OutputIntents [ {{OutputIntent_PDFA}} ]>> /PUT pdfmark
+"""
+    else:
+        icerik = "%!\n% ICC profili bulunamadı — çıktı niyeti bildirilmiyor.\n"
+    with open(yol, "w", encoding="utf-8") as f:
+        f.write(icerik)
+    return yol
+
+
+def pdfa_komutu(
+    gs: str,
+    surum: str,
+    tanim_dosyasi: str,
+    girdi: str,
+    cikti: str,
+    icc_var: bool,
+) -> list[str]:
+    """
+    Ghostscript komutunu kurar (ayrı işlev: parametreler testle sabitlenebilsin).
+
+    `-dPDFACompatibilityPolicy=1` kritik: PDF/A'ya aykırı bir öğe görülürse o öğe
+    ATILIR ve belge uyumlu kalır. Varsayılan 0 olsaydı öğe korunur ama dosya
+    PDF/A SAYILMAZDI — kullanıcı uyumlu sandığı bir belgeyi kuruma gönderirdi.
+    """
+    return [
+        gs,
+        "-dBATCH",
+        "-dNOPAUSE",
+        "-dQUIET",
+        f"-dPDFA={_PDFA_SURUMLERI[surum]}",
+        "-dPDFACompatibilityPolicy=1",
+        "-sDEVICE=pdfwrite",
+        # ICC varsa RGB'ye, yoksa cihazdan bağımsız renge dönüştür.
+        "-sColorConversionStrategy=RGB" if icc_var else "-sColorConversionStrategy=UseDeviceIndependentColor",
+        f"-sOutputFile={cikti}",
+        tanim_dosyasi,
+        girdi,
+    ]
+
+
+def pdf_to_pdfa(
+    input_path: str,
+    output_path: str,
+    surum: str = "2b",
+) -> dict:
+    """
+    PDF'i PDF/A arşiv biçimine dönüştürür.
+
+    Args:
+        surum: "1b", "2b" ya da "3b". Varsayılan 2b — şeffaflığı desteklediği
+            için modern belgelerde en az bozulmayı veren düzey budur.
+
+    Returns:
+        {"surum": "2b", "cikti_niyeti": bool, "uyari": str | None}
+    """
+    if surum not in _PDFA_SURUMLERI:
+        raise Exception("Geçersiz PDF/A sürümü. Seçenekler: 1b, 2b, 3b.")
+
+    gs = _ghostscript_yolu()
+    icc = _icc_profili_bul()
+
+    with tempfile.TemporaryDirectory() as gecici:
+        tanim = _pdfa_tanim_dosyasi(gecici, icc)
+        komut = pdfa_komutu(gs, surum, tanim, input_path, output_path, bool(icc))
+        try:
+            proc = subprocess.run(
+                komut,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=300,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise Exception(
+                "PDF/A dönüşümü çok uzun sürdü. Belge çok büyük olabilir."
+            ) from exc
+
+        if proc.returncode != 0 or not os.path.isfile(output_path) or os.path.getsize(output_path) < 64:
+            hata = (proc.stderr or b"").decode("utf-8", "ignore").strip()
+            # Ghostscript hatası kullanıcıya ham gösterilmez; son satır ipucu olarak taşınır.
+            son = hata.splitlines()[-1][:200] if hata else ""
+            raise Exception(
+                "Belge PDF/A biçimine dönüştürülemedi."
+                + (f" (Ayrıntı: {son})" if son else "")
+            )
+
+    uyari = None
+    if not icc:
+        uyari = (
+            "Sistemde renk profili bulunamadığından belge, renkleri cihazdan "
+            "bağımsız kipte dönüştürülerek üretildi."
+        )
+    return {"surum": surum, "cikti_niyeti": bool(icc), "uyari": uyari}

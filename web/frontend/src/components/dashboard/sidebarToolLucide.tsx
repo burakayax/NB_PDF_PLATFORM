@@ -6,6 +6,7 @@ import {
   FileSpreadsheet,
   FileText,
   Eraser,
+  Archive,
   File as FileIcon,
   Layers2,
   Globe,
@@ -50,6 +51,7 @@ const byId: Record<FeatureKey, LucideIcon> = {
   "flatten-pdf": Layers2,
   "form-doldur": FileText,
   "ustveri-temizle": Eraser,
+  "pdf-to-pdfa": Archive,
   "extract-images": ImageDown,
 };
 
@@ -79,6 +81,7 @@ const colorById: Record<FeatureKey, string> = {
   "flatten-pdf": "text-purple-400",
   "form-doldur": "text-emerald-400",
   "ustveri-temizle": "text-rose-400",
+  "pdf-to-pdfa": "text-amber-400",
   "extract-images": "text-fuchsia-400",
 };
 
