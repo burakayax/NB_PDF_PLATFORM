@@ -1553,6 +1553,46 @@ export const PRICING_SEO = {
 };
 
 // ─── Geliştirici API landing ──────────────────────────────────────────────────
+/**
+ * API dokümantasyon sayfası (/pdf-api/docs).
+ *
+ * NEDEN AYRI: Geliştiricilerin bağlantı verdiği sayfa tanıtım sayfası değil,
+ * REFERANS sayfasıdır. Ön-render edilmediği sürece arama motorları ve yapay
+ * zekâ araçları burada genel ana sayfa başlığını görüyordu.
+ */
+export const API_DOCS_SEO = {
+  tr: {
+    title: `API Dokümantasyonu — Uçlar, Kimlik Doğrulama, Hatalar | ${BRAND}`,
+    description:
+      "PDF Platform REST API referansı: kimlik doğrulama, /v1 uçları, istek ve yanıt örnekleri, RFC 9457 hata biçimi, istek sınırları, tekrar güvenliği ve sürüm politikası.",
+    h1: "API Dokümantasyonu",
+    intro:
+      "PDF Platform API referansı. Anahtar bazlı kimlik doğrulama, /v1 altında sürümlenen uçlar, her uç için istek ve yanıt örneği, RFC 9457 biçiminde hatalar, IETF taslağına uygun istek sınırı başlıkları ve Idempotency-Key ile tekrar güvenliği. Makine-okur OpenAPI tanımı da yayınlanır.",
+    keywords: ["pdf api dokümantasyonu", "pdf api referans", "belge işleme api dokümanı", "rest api pdf", "openapi pdf"],
+    faq: [
+      { q: "API'yi nasıl doğrularım?", a: "Panelden ürettiğiniz anahtarı her istekte Authorization: Bearer başlığında gönderin. Anahtarın çalıştığını GET /v1/me ile kredi harcamadan sınayabilirsiniz." },
+      { q: "Hatalar hangi biçimde döner?", a: "Hatalar RFC 9457 uyarınca application/problem+json biçiminde döner; type, title, status, code, detail ve request_id alanlarını içerir." },
+      { q: "İstek sınırı nedir?", a: "Anahtar başına dakikada 60 istek. Yanıtlar RateLimit başlıklarını taşır; sınır aşıldığında 429 ve Retry-After döner." },
+      { q: "Bir uç kaldırılırsa ne olur?", a: "Kırıcı değişiklikler yeni sürümde yapılır. Bir uç emekliye ayrılacaksa yanıtlar RFC 9745 uyarınca Deprecation ve Sunset başlıklarını taşımaya başlar ve kapanmaya en az 6 ay kalır." },
+    ],
+  },
+  en: {
+    title: `API Documentation — Endpoints, Auth, Errors | ${BRAND}`,
+    description:
+      "PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 error format, rate limits, idempotency and the versioning policy.",
+    h1: "API Documentation",
+    intro:
+      "The PDF Platform API reference. API-key authentication, endpoints versioned under /v1, a request and response example for every endpoint, RFC 9457 errors, rate-limit headers following the IETF draft, and retry-safe POSTs via Idempotency-Key. A machine-readable OpenAPI spec is published too.",
+    keywords: ["pdf api documentation", "pdf api reference", "document processing api docs", "rest api pdf", "openapi pdf"],
+    faq: [
+      { q: "How do I authenticate?", a: "Send the key you generated in the dashboard in the Authorization: Bearer header on every request. You can verify it with GET /v1/me, which costs no credits." },
+      { q: "What format do errors use?", a: "Errors follow RFC 9457 and return as application/problem+json with type, title, status, code, detail and request_id fields." },
+      { q: "What is the rate limit?", a: "60 requests per minute per key. Responses carry RateLimit headers; exceeding the limit returns 429 with Retry-After." },
+      { q: "What happens if an endpoint is removed?", a: "Breaking changes ship in a new version. When an endpoint is retired, responses start carrying RFC 9745 Deprecation and Sunset headers, with at least six months before shutdown." },
+    ],
+  },
+};
+
 export const API_SEO = {
   tr: {
     title: `PDF & Yapay Zekâ API — Belge İşlemeyi Yazılımınıza Gömün | ${BRAND}`,
