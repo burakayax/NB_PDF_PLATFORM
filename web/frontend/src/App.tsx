@@ -331,6 +331,9 @@ const PdfFormFill = lazyWithRetry(() =>
 const PdfMetadataTool = lazyWithRetry(() =>
   import("./components/tools/PdfMetadataTool").then((m) => ({ default: m.PdfMetadataTool })),
 );
+const PdfLayoutTool = lazyWithRetry(() =>
+  import("./components/tools/PdfLayoutTool").then((m) => ({ default: m.PdfLayoutTool })),
+);
 const PdfSign = lazyWithRetry(() =>
   import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
 );
@@ -2137,6 +2140,7 @@ function App() {
             "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
             "form-doldur": "PDF Form Doldur",
             "ustveri-temizle": "PDF Üstveri Temizle",
+            "sayfa-duzeni": "Sayfa Düzeni",
             "extract-images": "PDF'ten Görsel Çıkar",
           };
           fetch("/api/team/activity", {
@@ -2997,6 +3001,7 @@ function App() {
         p === "/tools/pdf-imzala" ||
         p === "/tools/form-doldur" ||
         p === "/tools/ustveri-temizle" ||
+        p === "/tools/sayfa-duzeni" ||
         p === "/tools/pdf-yorumla" ||
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
@@ -5332,6 +5337,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "sayfa-duzeni") {
+      return (
+        <GuestSeoToolPage slug="sayfa-duzeni" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "ustveri-temizle") {
       return (
         <GuestSeoToolPage slug="ustveri-temizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -6559,6 +6573,15 @@ function App() {
                 <ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "layout" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="sayfa-duzeni" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}

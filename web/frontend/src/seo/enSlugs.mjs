@@ -34,6 +34,7 @@ export const EN_TOOL_SLUGS = {
   "hassas-veri-gizle": "redact-pdf",
   "form-doldur": "fill-pdf-form",
   "ustveri-temizle": "remove-pdf-metadata",
+  "sayfa-duzeni": "pdf-page-layout",
 };
 
 /** TR blog slug'ı → EN blog slug'ı. */

@@ -24,6 +24,7 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "form-doldur": "PDF Form Doldur",
   "ustveri-temizle": "PDF Üstveri Temizle",
   "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
+  "sayfa-duzeni": "Sayfa Düzeni",
   "extract-images": "PDF'ten Görsel Çıkar",
 };
 

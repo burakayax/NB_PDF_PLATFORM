@@ -61,6 +61,7 @@ export const DEFAULT_POST_LIMIT_THROTTLE_RUNTIME: PostLimitThrottleRuntime = {
     "form-doldur": 0.85,
     "ustveri-temizle": 0.85,
     "pdf-to-pdfa": 0.8,
+    "sayfa-duzeni": 0.85,
   },
   fileTiers: [
     { minMb: 12, factor: 1.22 },

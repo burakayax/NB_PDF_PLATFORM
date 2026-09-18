@@ -58,6 +58,7 @@ function isFeatureKey(v: unknown): v is FeatureKey {
     "form-doldur",
     "ustveri-temizle",
     "pdf-to-pdfa",
+    "sayfa-duzeni",
     "extract-images",
   ]);
   return typeof v === "string" && keys.has(v);

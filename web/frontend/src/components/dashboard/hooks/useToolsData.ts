@@ -22,6 +22,7 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "form-doldur",
   "ustveri-temizle",
   "pdf-to-pdfa",
+  "sayfa-duzeni",
   "extract-images",
 ]);
 

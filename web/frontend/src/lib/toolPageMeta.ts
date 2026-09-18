@@ -231,6 +231,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "sayfa-duzeni": {
+    tr: {
+      title: "PDF sayfa düzeni (2-4-8'li, kitapçık) | PDF Platform",
+      description:
+        "Birden çok sayfayı tek kâğıda sığdırın ya da katlanan kitapçık dizin.",
+    },
+    en: {
+      title: "PDF page layout (2/4/8-up, booklet) | PDF Platform",
+      description:
+        "Fit several pages on one sheet or impose a foldable booklet.",
+    },
+  },
   "pdf-to-pdfa": {
     tr: {
       title: "PDF/A dönüştürme (arşiv) | PDF Platform",
