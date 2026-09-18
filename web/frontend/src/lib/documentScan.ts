@@ -72,6 +72,72 @@ async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise
   return null;
 }
 
+/**
+ * CANLI kare için belge köşeleri — önce klasik, bulunamazsa YAPAY SİNİR AĞI.
+ *
+ * NEDEN DEĞİŞTİ: Canlı önizlemede yalnızca klasik (kenar/kontur) dedektör
+ * çalışıyordu; sinir ağı yalnız deklanşör anında devreye giriyordu. Klasik
+ * yöntem dağınık masa, desenli zemin, gölge ve düşük kontrastta belgeyi
+ * bulamıyor — kullanıcı ekranda hiçbir çerçeve görmüyor, "sabit tut" göstergesi
+ * hiç çıkmıyor ve otomatik çekim tetiklenmiyordu (kullanıcı bildirdi).
+ *
+ * Kütüphanenin kendi ölçümü: sinir ağı taraması kare başına ~7 ms (çok iş
+ * parçacıklı) / ~13 ms (tek), yani canlı kullanım için uygun; önerilen kurulum
+ * da "önce klasik, sonuç yoksa ya da güven düşükse ML" biçiminde.
+ *
+ * ML her karede değil, klasik başarısız olduğunda ve en fazla `mlAralikMs`'de
+ * bir denenir: telefon ısınmasın, pil erimesin.
+ */
+let sonMlDenemesi = 0;
+export async function detectDocumentQuadLive(
+  canvas: HTMLCanvasElement,
+  mlAralikMs = 220,
+): Promise<Quad | null> {
+  const s = await getScanner();
+
+  const klasik = await classicalQuad(s, canvas);
+  if (klasik) return klasik;
+
+  const simdi = Date.now();
+  if (simdi - sonMlDenemesi < mlAralikMs) return null;
+  sonMlDenemesi = simdi;
+
+  try {
+    const r = await s.scan(canvas, {
+      mode: "detect",
+      detector: "ml",
+      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/", minScore: 0.4 },
+    });
+    if (r.success && r.corners) return cornersToQuad(r.corners);
+  } catch {
+    /* ML yüklenemedi → çerçeve gösterilmez, manuel deklanşör çalışmaya devam eder */
+  }
+  return null;
+}
+
+/**
+ * Sinir ağı modelini ÖNCEDEN yükler (kamera açılır açılmaz, arka planda).
+ *
+ * Model + çalışma zamanı ~2 MB. Önceden yüklenmezse ilk ihtiyaç anında inmesi
+ * gerekir ve kullanıcı o sırada elinde telefonla belgeyi çerçeveye sığdırmaya
+ * çalışıyordur; ilk saniyeler boş geçer.
+ */
+export async function isitScanner(): Promise<void> {
+  try {
+    const s = await getScanner();
+    const bos = document.createElement("canvas");
+    bos.width = 64;
+    bos.height = 64;
+    await s.scan(bos, {
+      mode: "detect",
+      detector: "ml",
+      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/" },
+    });
+  } catch {
+    /* ısıtma başarısızsa akış bozulmaz; ilk gerçek denemede yeniden denenir */
+  }
+}
+
 export async function detectDocumentQuad(
   canvas: HTMLCanvasElement,
   useMl = false,
