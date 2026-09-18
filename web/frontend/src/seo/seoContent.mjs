@@ -67,6 +67,7 @@ export const TOOL_SLUGS = [
   "ustveri-temizle",
   "pdf-to-pdfa",
   "sayfa-duzeni",
+  "imza-iste",
   "pdf-yorumla",
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
@@ -1112,6 +1113,39 @@ export const TOOL_SEO = {
     ),
   },
 
+  "imza-iste": {
+    tr: T(
+      "İmza İste — Belgeyi Karşı Tarafa İmzalat (Online)",
+      "Sözleşme, teklif ve formu e-postayla imzaya gönderin. İmzalayanın hesap açmasına gerek yok; imzalı kopya, sürecin zaman damgalı kaydını taşıyan denetim sertifikasıyla gelir.",
+      "Belgeyi Karşı Tarafa İmzalat",
+      "Sözleşmeyi yazdırıp imzalatıp taratma döngüsüne gerek yok. Belgeyi yükleyin, imzalayacak kişinin e-posta adresini yazın; o kişiye yalnızca kendisi için üretilmiş bir bağlantı gider. Karşı taraf hesap açmadan belgeyi görüntüler, adını yazar, imzasını çizer ve onay kutusunu işaretleyerek imzalar. İmza, SUNUCUDA saklanan özgün belgeye uygulanır — imzalayandan dosya kabul edilmez; böylece «imzalanan belge, gönderilen belgedir» güvencesi yapısal olarak sağlanır. İmzalı belgenin sonuna, ne zaman gönderildiği, görüntülendiği ve imzalandığı ile belgenin imzadan önceki ve sonraki parmak izlerini gösteren bir denetim sertifikası eklenir.",
+      ["imza iste", "pdf imzaya gönderme", "online sözleşme imzalatma", "uzaktan imza", "e-imza isteme", "belge imzalatma", "dijital imza talebi"],
+      [
+        { q: "İmzalayacak kişinin hesap açması gerekiyor mu?", a: "Hayır. E-postasına giden bağlantıyı açar, belgeyi görür, adını yazıp imzasını çizer ve onaylar. Hesap, kurulum ya da ödeme gerekmez." },
+        { q: "İmzalanan belgenin değiştirilmediğini nereden bileceğim?", a: "İmza, imzalayanın gönderdiği bir dosyaya değil, sunucuda saklanan özgün belgeye uygulanır. Ayrıca belgenin imzadan önceki ve sonraki parmak izleri (SHA-256) kaydedilir ve denetim sertifikasına yazılır." },
+        { q: "Denetim sertifikasında ne var?", a: "İsteğin oluşturulma, gönderilme, görüntülenme ve imzalanma anları; imzalayanın adı ve e-postası; kimlik doğrulama yöntemi; onay kutusunun işaretlendiği an ve belgenin parmak izleri." },
+        { q: "Bu imza hukuken geçerli mi?", a: "Görsel (ıslak imza görünümlü) elektronik imza üretilir ve sürecin kaydı belgeye eklenir; birçok ticari belge için kullanılan yöntem budur. Nitelikli elektronik imza (e-imza) ayrı bir hukuki kategoridir ve nitelikli hizmet sağlayıcıdan alınan sertifika gerektirir." },
+        { q: "Bağlantı ne kadar geçerli?", a: "14 gün. Süre dolduğunda bağlantı çalışmaz; isteği iptal edip yenisini gönderebilirsiniz." },
+        { q: "İmzalayan reddedebilir mi?", a: "Evet. İsterse sebep yazarak reddeder; size e-posta ile bildirilir ve bu da denetim kaydına işlenir." },
+      ],
+    ),
+    en: T(
+      "Request a Signature — Get Your Document Signed Online",
+      "Send a contract, quote or form out for signature by email. The signer needs no account, and the signed copy arrives with an audit certificate recording the whole process.",
+      "Get Your Document Signed by Someone Else",
+      "No more print-sign-scan loops. Upload the document, enter the signer's email address, and they receive a link generated only for them. Without creating an account they view the document, type their name, draw their signature and tick the consent box. The signature is applied to the ORIGINAL document stored on the server — no file is accepted back from the signer — so «what was signed is what was sent» holds by construction. A certificate is appended to the signed document showing when it was sent, viewed and signed, along with the document's fingerprints before and after signing.",
+      ["request signature", "send pdf for signature", "sign contract online", "remote signing", "e-signature request", "get document signed", "digital signature request"],
+      [
+        { q: "Does the signer need an account?", a: "No. They open the link from their email, view the document, type their name, draw their signature and confirm. No account, install or payment." },
+        { q: "How do I know the signed document was not altered?", a: "The signature is applied to the original document held on the server, not to a file uploaded by the signer. The document's fingerprints (SHA-256) before and after signing are recorded and printed on the audit certificate." },
+        { q: "What is on the audit certificate?", a: "When the request was created, sent, viewed and signed; the signer's name and email; the authentication method; the moment consent was given; and the document fingerprints." },
+        { q: "Is this signature legally valid?", a: "It produces a visual (wet-ink-style) electronic signature with a record of the process attached — the approach used for many commercial documents. A qualified electronic signature is a separate legal category requiring a certificate from a qualified trust service provider." },
+        { q: "How long is the link valid?", a: "14 days. After that the link stops working; you can cancel the request and send a new one." },
+        { q: "Can the signer decline?", a: "Yes. They can decline with an optional reason; you are notified by email and it is written into the audit record." },
+      ],
+    ),
+  },
+
   "sayfa-duzeni": {
     tr: T(
       "PDF Sayfa Düzeni — Tek Kâğıda 2/4/8 Sayfa, Kitapçık Dizgisi",
@@ -1720,7 +1754,7 @@ export const BLOG_RELATED_TOOLS = {
   "ihale-sartnamesi-nasil-okunur": ["pdf-ozetle", "pdf-sohbet", "pdf-veri-cikar"],
   "kira-kontrati-dikkat-edilecek-maddeler": ["pdf-ozetle", "pdf-sohbet"],
   "taranmis-pdf-metne-cevirme-ocr": ["taranmis-pdf-ocr", "pdf-to-text"],
-  "pdf-e-imza-atma-nasil-yapilir": ["pdf-imzala", "pdf-duzenle", "pdf-yorumla"],
+  "pdf-e-imza-atma-nasil-yapilir": ["pdf-imzala", "imza-iste", "pdf-duzenle", "pdf-yorumla"],
   "pdf-filigran-ekleme": ["watermark", "encrypt", "page-numbers"],
   "pdf-uzerine-yazma-isaretleme": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
   "telefonla-belge-tarama-pdf": ["image-to-pdf", "pdf-to-image", "compress"],

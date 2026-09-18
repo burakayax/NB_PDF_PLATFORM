@@ -304,6 +304,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "imza-iste": S(
+    [
+      PICK_TR(),
+      { title: "İmzalayacak kişiyi yaz", detail: "E-posta adresini gir, istersen kısa bir not ekle; o kişiye yalnız kendisi için üretilmiş bir bağlantı gider." },
+      { title: "İmzayı bekle", detail: "Listede belgenin görüntülendiğini ve imzalandığını takip edersin; imzalanınca e-posta gelir." },
+      { title: "İmzalı belgeyi indir", detail: "Belgenin sonuna imzalama sürecinin zaman damgalı kaydı (denetim sertifikası) eklenir." },
+    ],
+    [
+      PICK_EN(),
+      { title: "Enter the signer", detail: "Type their email and optionally a short note; they receive a link generated only for them." },
+      { title: "Track the signature", detail: "The list shows when the document was viewed and signed, and you get an email once it is done." },
+      { title: "Download the signed file", detail: "A timestamped record of the signing process (audit certificate) is appended to the document." },
+    ],
+  ),
   "sayfa-duzeni": S(
     [
       PICK_TR(),

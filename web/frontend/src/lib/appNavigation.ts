@@ -228,6 +228,7 @@ export const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
   "form-doldur": "formfill",
   "ustveri-temizle": "metadata",
   "sayfa-duzeni": "layout",
+  "imza-iste": "signrequest",
   "pdf-yorumla": "annotate",
   "crop-pdf": "crop",
   "gorsel-sikistir": "compress-image",

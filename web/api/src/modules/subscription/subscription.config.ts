@@ -30,6 +30,7 @@ export const featureCatalog = [
   "ustveri-temizle",
   "pdf-to-pdfa",
   "sayfa-duzeni",
+  "imza-iste",
   "extract-images",
 ] as const;
 

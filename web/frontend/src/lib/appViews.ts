@@ -45,6 +45,7 @@ export type ContentPanel =
   | "formfill"
   | "metadata"
   | "layout"
+  | "signrequest"
   | "annotate"
   | "crop"
   | "compress-image"

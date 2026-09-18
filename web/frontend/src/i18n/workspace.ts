@@ -23,6 +23,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "ustveri-temizle",
   "pdf-to-pdfa",
   "sayfa-duzeni",
+  "imza-iste",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -152,6 +153,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
   "sayfa-duzeni": { tr: "Sayfa Düzeni", en: "Page Layout" },
+  "imza-iste": { tr: "İmza İste", en: "Request Signature" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -625,6 +627,13 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "imza-iste": {
+      title: tr ? "İMZA İSTE" : "REQUEST SIGNATURE",
+      description: tr
+        ? "Belgeyi karşı tarafa imzalatır; imzalı kopya denetim sertifikasıyla gelir."
+        : "Sends a document out for signature; the signed copy arrives with an audit certificate.",
+      button: tr ? "İMZA İSTE" : "REQUEST",
     },
     "sayfa-duzeni": {
       title: tr ? "SAYFA DÜZENİ" : "PAGE LAYOUT",

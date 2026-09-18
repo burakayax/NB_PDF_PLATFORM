@@ -35,6 +35,7 @@ export const EN_TOOL_SLUGS = {
   "form-doldur": "fill-pdf-form",
   "ustveri-temizle": "remove-pdf-metadata",
   "sayfa-duzeni": "pdf-page-layout",
+  "imza-iste": "request-signature",
 };
 
 /** TR blog slug'ı → EN blog slug'ı. */

@@ -9,6 +9,7 @@ import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards, installChunkReloadGuard } from "./lib/productionGuards";
 import { getCountryCode } from "./lib/geoCountry";
 import { NotFoundPage } from "./components/common/NotFoundPage";
+import { SignDocumentPage } from "./components/tools/SignDocumentPage";
 import { TOOL_SLUGS } from "./seo/seoContent.mjs";
 import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import "./styles/app.css";
@@ -73,9 +74,30 @@ function taninmayanAracAdresiMi(): boolean {
   return Boolean(slug) && !TOOL_SLUGS.includes(slug);
 }
 
-const kok = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+/**
+ * İmza bağlantısı (/imzala/<anahtar>) — imzalayacak kişinin hesabı YOKTUR.
+ *
+ * Uygulamanın tamamını (oturum, çalışma alanı, araç kataloğu) yüklemek yerine
+ * yalnız imza sayfası açılır: karşı taraf çoğu zaman telefonundan, tek seferlik
+ * bir iş için giriyor; onu ürün arayüzüyle karşılamak gereksiz.
+ */
+function imzaAnahtari(): string | null {
+  const m = /^\/imzala\/([A-Za-z0-9_-]{16,})\/?$/.exec(window.location.pathname);
+  return m?.[1] ?? null;
+}
 
-if (taninmayanAracAdresiMi()) {
+const kok = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+const imzaToken = imzaAnahtari();
+
+if (imzaToken) {
+  kok.render(
+    <React.StrictMode>
+      <GlobalErrorBoundary>
+        <SignDocumentPage token={imzaToken} />
+      </GlobalErrorBoundary>
+    </React.StrictMode>,
+  );
+} else if (taninmayanAracAdresiMi()) {
   const dil = document.documentElement.lang === "en" ? "en" : "tr";
   kok.render(
     <React.StrictMode>

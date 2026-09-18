@@ -8,6 +8,7 @@ import {
   Eraser,
   Archive,
   Grid2x2,
+  FileSignature,
   File as FileIcon,
   Layers2,
   Globe,
@@ -54,6 +55,7 @@ const byId: Record<FeatureKey, LucideIcon> = {
   "ustveri-temizle": Eraser,
   "pdf-to-pdfa": Archive,
   "sayfa-duzeni": Grid2x2,
+  "imza-iste": FileSignature,
   "extract-images": ImageDown,
 };
 
@@ -85,6 +87,7 @@ const colorById: Record<FeatureKey, string> = {
   "ustveri-temizle": "text-rose-400",
   "pdf-to-pdfa": "text-amber-400",
   "sayfa-duzeni": "text-lime-400",
+  "imza-iste": "text-violet-400",
   "extract-images": "text-fuchsia-400",
 };
 

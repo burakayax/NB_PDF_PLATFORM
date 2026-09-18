@@ -299,6 +299,12 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/payments/callback" && method === "POST") return true;
   if (p === "/payments/pricing" && method === "GET") return true;
   if (p === "/team/invite/preview" && method === "GET") return true;
+  /**
+   * İmza bağlantısı — imzalayacak kişinin hesabı YOKTUR; kimlik, e-postasına
+   * giden tahmin edilemez tek kullanımlık anahtarla kurulur. Anahtarın kendisi
+   * saklanmaz, yalnız özeti tutulur; rota ayrıca hız sınırlıdır.
+   */
+  if (p.startsWith("/sign/")) return true;
   return false;
 }
 
