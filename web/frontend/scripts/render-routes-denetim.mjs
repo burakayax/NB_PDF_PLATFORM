@@ -39,6 +39,27 @@ async function istek(yol) {
   return metin ? JSON.parse(metin) : null;
 }
 
+/**
+ * ÖNEMLİ — SIRA "priority" ALANINDADIR, DİZİ SIRASINDA DEĞİL.
+ *
+ * Render'ın API'si kuralları döndürürken dizi sırası ile ÖNCELİK SIRASI aynı
+ * değildir; her kaydın kendi `priority` sayısı vardır ve KÜÇÜK numara önce
+ * değerlendirilir. Bu ölçüldü: canlıdaki "/*" yakala-hepsini kuralı en büyük
+ * numaradaydı (159) — eğer büyük numara önce değerlendirilseydi her adres ana
+ * sayfaya düşerdi ve site hiç çalışmazdı.
+ *
+ * BU AYRIM ATLANIRSA NE OLUR: Dizi sırasına bakan bir denetim, aslında en önde
+ * olan kuralları "gölgede kalmış" sanır ve olmayan bir sorunu rapor eder
+ * (bir kez yaşandı). Bu yüzden okunan liste ÖNCE önceliğe göre sıralanır.
+ */
+function oncelikSirala(kayitlar) {
+  return [...kayitlar].sort((a, b) => {
+    const x = typeof a?.priority === "number" ? a.priority : Number.MAX_SAFE_INTEGER;
+    const y = typeof b?.priority === "number" ? b.priority : Number.MAX_SAFE_INTEGER;
+    return x - y;
+  });
+}
+
 /** Sayfalama — aynı sayfa tekrar gelirse durur (geçersiz cursor koruması). */
 async function tumKayitlar(yol, anahtarAd) {
   const hepsi = [];
@@ -65,7 +86,7 @@ async function tumKayitlar(yol, anahtarAd) {
     if (!sonrakiCursor || sonrakiCursor === cursor || liste.length < 100) break;
     cursor = sonrakiCursor;
   }
-  return hepsi;
+  return oncelikSirala(hepsi);
 }
 
 /** Yayınlanan klasörde gerçekten index.html'i olan alt klasörler. */
@@ -149,7 +170,7 @@ async function main() {
       `UYARI: "/*" kuralı ${yakalaIndex + 1}. sırada, ondan SONRAKİ ${kurallar.length - yakalaIndex - 1} kural hiç çalışmaz.`,
     );
   } else {
-    console.log('"/*" en sonda — doğru.');
+    console.log('"/*" en sonda (öncelik sırasına göre) — doğru.');
   }
 
   // ── Başlıklar ─────────────────────────────────────────────────────────────

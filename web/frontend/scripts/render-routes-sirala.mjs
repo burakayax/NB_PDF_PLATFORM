@@ -64,6 +64,27 @@ async function istek(yol, secenekler = {}) {
   return metin ? JSON.parse(metin) : null;
 }
 
+/**
+ * ÖNEMLİ — SIRA "priority" ALANINDADIR, DİZİ SIRASINDA DEĞİL.
+ *
+ * Render'ın API'si kuralları döndürürken dizi sırası ile ÖNCELİK SIRASI aynı
+ * değildir; her kaydın kendi `priority` sayısı vardır ve KÜÇÜK numara önce
+ * değerlendirilir. Bu ölçüldü: canlıdaki "/*" yakala-hepsini kuralı en büyük
+ * numaradaydı (159) — eğer büyük numara önce değerlendirilseydi her adres ana
+ * sayfaya düşerdi ve site hiç çalışmazdı.
+ *
+ * BU AYRIM ATLANIRSA NE OLUR: Dizi sırasına bakan bir denetim, aslında en önde
+ * olan kuralları "gölgede kalmış" sanır ve olmayan bir sorunu rapor eder
+ * (bir kez yaşandı). Bu yüzden okunan liste ÖNCE önceliğe göre sıralanır.
+ */
+function oncelikSirala(kayitlar) {
+  return [...kayitlar].sort((a, b) => {
+    const x = typeof a?.priority === "number" ? a.priority : Number.MAX_SAFE_INTEGER;
+    const y = typeof b?.priority === "number" ? b.priority : Number.MAX_SAFE_INTEGER;
+    return x - y;
+  });
+}
+
 async function tumKayitlar(yol, anahtarAd) {
   const hepsi = [];
   const gorulen = new Set();
@@ -87,7 +108,7 @@ async function tumKayitlar(yol, anahtarAd) {
     if (!sonraki || sonraki === cursor || liste.length < 100) break;
     cursor = sonraki;
   }
-  return hepsi;
+  return oncelikSirala(hepsi);
 }
 
 const sade = ({ type, source, destination }) => ({ type, source, destination });
