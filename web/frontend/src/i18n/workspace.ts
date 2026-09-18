@@ -22,6 +22,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "form-doldur",
   "ustveri-temizle",
   "pdf-to-pdfa",
+  "sayfa-duzeni",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -150,6 +151,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
+  "sayfa-duzeni": { tr: "Sayfa Düzeni", en: "Page Layout" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -623,6 +625,13 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "sayfa-duzeni": {
+      title: tr ? "SAYFA DÜZENİ" : "PAGE LAYOUT",
+      description: tr
+        ? "Birden çok sayfayı tek kâğıda sığdırır ya da katlanınca okunan kitapçık dizer."
+        : "Fits several pages on one sheet, or imposes a foldable booklet.",
+      button: tr ? "DÜZENLE" : "APPLY",
     },
     "pdf-to-pdfa": {
       title: tr ? "PDF → PDF/A" : "PDF TO PDF/A",

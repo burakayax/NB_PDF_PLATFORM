@@ -29,6 +29,7 @@ export const featureCatalog = [
   "form-doldur",
   "ustveri-temizle",
   "pdf-to-pdfa",
+  "sayfa-duzeni",
   "extract-images",
 ] as const;
 

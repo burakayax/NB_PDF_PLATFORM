@@ -304,6 +304,20 @@ export const TOOL_HOW_TO: Record<string, Entry> = {
       EN_DOWNLOAD,
     ],
   ),
+  "sayfa-duzeni": S(
+    [
+      PICK_TR(),
+      { title: "Kipi seç", detail: "«Yaprağa sığdır» birden çok sayfayı tek kâğıda koyar; «Kitapçık» katlanınca sırayla okunan düzen üretir." },
+      { title: "Ayarını yap", detail: "Yaprağa kaç sayfa gireceğini seç; istersen her sayfanın çevresine ince çerçeve çizdir." },
+      TR_DOWNLOAD,
+    ],
+    [
+      PICK_EN(),
+      { title: "Pick a mode", detail: "«Fit on sheet» puts several pages on one sheet; «Booklet» produces a foldable, in-order layout." },
+      { title: "Set it up", detail: "Choose how many pages go on a sheet, and optionally draw a thin frame around each page." },
+      EN_DOWNLOAD,
+    ],
+  ),
   "pdf-to-pdfa": S(
     [
       PICK_TR(),

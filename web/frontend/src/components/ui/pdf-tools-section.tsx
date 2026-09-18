@@ -16,6 +16,7 @@ import {
   FileStack,
   FileText,
   Archive,
+  Grid2x2,
   FileType2,
   Files,
   Globe,
@@ -218,6 +219,11 @@ const TOOLS: Tool[] = [
     id: "watermark", cat: "edit", Icon: Droplets,
     tr: { name: "Filigran Ekle", desc: "Sayfalara kendi damganızı veya yazınızı basın." },
     en: { name: "Add Watermark", desc: "Stamp your own mark or text onto the pages." },
+  },
+  {
+    id: "sayfa-duzeni", cat: "edit", Icon: Grid2x2,
+    tr: { name: "PDF Sayfa Düzeni", desc: "2/4/8 sayfayı tek kâğıda sığdırın ya da kitapçık dizin." },
+    en: { name: "PDF Page Layout", desc: "Fit 2/4/8 pages on one sheet, or impose a booklet." },
   },
   {
     id: "pdf-to-pdfa", cat: "edit", Icon: Archive,
@@ -434,6 +440,7 @@ const TOOL_HUE: Record<string, HueId> = {
   "form-doldur": "emerald",
   "ustveri-temizle": "rose",
   "pdf-to-pdfa": "amber",
+  "sayfa-duzeni": "lime",
   // Dönüştür
   "pdf-to-word": "blue",
   "word-to-pdf": "blue",
