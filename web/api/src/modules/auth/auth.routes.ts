@@ -11,6 +11,9 @@ import {
   loginController,
   logoutController,
   meController,
+  listSessionsController,
+  revokeSessionController,
+  revokeOtherSessionsController,
   refreshController,
   registerController,
   updatePreferredLanguageController,
@@ -44,6 +47,11 @@ authRouter.post("/logout", csrfOriginCheck, asyncHandler(logoutController));
 // yeni geliştirici için dokümantasyon görevi görür ve beklenmeyen konfigürasyon
 // değişikliklerinde ek güvenlik katmanı sağlar.
 authRouter.get("/me", requireAuth, asyncHandler(meController));
+// Açık oturumlar: kullanıcı hesabının nerelerde açık olduğunu görür ve
+// istediğini uzaktan kapatır (OWASP oturum yönetimi önerisi).
+authRouter.get("/sessions", requireAuth, asyncHandler(listSessionsController));
+authRouter.delete("/sessions/:id", csrfOriginCheck, requireAuth, asyncHandler(revokeSessionController));
+authRouter.post("/sessions/revoke-others", csrfOriginCheck, requireAuth, asyncHandler(revokeOtherSessionsController));
 // GDPR: authenticated user can delete their own account (rate-limited: 1 req/min).
 authRouter.delete("/me", deleteAccountLimiter, requireAuth, asyncHandler(deleteMyAccountController));
 authRouter.get("/verify-email", asyncHandler(verifyEmailController));

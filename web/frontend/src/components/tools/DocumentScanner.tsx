@@ -205,8 +205,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   // Otomatik yakalama PRO özelliğidir: ücretsiz planda canlı kenar tespiti hiç
   // çalışmaz (kullanıcı deklanşöre basar, kenarlar çekimden sonra bulunur).
   const [autoCapture, setAutoCapture] = useState(true);
-  /** Bu oturumda kaç sayfa otomatik yakalandı — Pro'nun somut karşılığı. */
-  const [autoShotCount, setAutoShotCount] = useState(0);
   /** İncele ekranında köşeleri elle düzeltme modu. */
   const [manualEdit, setManualEdit] = useState(false);
   const [liveQuad, setLiveQuad] = useState<Quad | null>(null);
@@ -446,7 +444,6 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       setLiveQuad(null);
       setHoldPct(0);
       setManualEdit(false);
-      setAutoShotCount((n) => n + 1);
       setPhase("review");
     },
     [stopStream],
@@ -1363,14 +1360,17 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── SAYFALAR ── */}
           {phase === "pages" && (
             <motion.div key="pages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
-              {/* Pro'ya somut karşılık: bu taramada kaç sayfa kendiliğinden yakalandı. */}
-              {isPro && autoShotCount > 0 && (
+              {/* Otomatik çekim AÇIKKEN ne yapması gerektiğini söyler.
+                  Eskiden burada "bu taramada N sayfa otomatik yakalandı"
+                  yazıyordu: sayı beğenilmeyip silinen denemeleri de sayıyordu ve
+                  kullanıcı listeye o kadar sayfa eklenmiş sanıyordu. */}
+              {isPro && autoCapture && (
                 <div className="mx-auto mb-3 flex max-w-md items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3.5 py-2.5 text-[12px] text-emerald-100">
                   <Zap className="h-4 w-4 shrink-0 text-emerald-300" />
                   <span>
                     {tr
-                      ? `Bu taramada ${autoShotCount} sayfa otomatik yakalandı — deklanşöre basmadın.`
-                      : `${autoShotCount} page(s) captured automatically in this scan — you never tapped the shutter.`}
+                      ? "Otomatik çekim açık: sıradaki sayfayı kameraya tut, çerçeve oturunca kendiliğinden çekilir."
+                      : "Auto-capture is on: hold the next page in view and it will be captured on its own."}
                   </span>
                 </div>
               )}

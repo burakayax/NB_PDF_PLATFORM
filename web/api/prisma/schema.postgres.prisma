@@ -391,6 +391,13 @@ model RefreshToken {
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime @default(now())
+  // Kullanıcının "hesabım nerelerde açık" listesini görebilmesi ve istediği
+  // cihazı uzaktan kapatabilmesi için oturumun kimliği saklanır.
+  userAgent  String?   @map("user_agent")
+  // Ağ adresi AÇIK saklanmaz; yalnız özeti tutulur (hesap paylaşımı sinyali).
+  ipHash     String?   @map("ip_hash")
+  lastUsedAt DateTime  @default(now()) @map("last_used_at")
+  isDesktop  Boolean   @default(false) @map("is_desktop")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

@@ -405,3 +405,41 @@ export async function completePasswordResetApi(resetToken: string, newPassword: 
   return response.json() as Promise<{ message: string }>;
 }
 
+
+/* ── Açık oturumlar: hesabın nerelerde açık olduğu ── */
+
+export type AktifOturum = {
+  id: string;
+  cihaz: string;
+  masaustu: boolean;
+  suAnki: boolean;
+  sonKullanim: string;
+  acilis: string;
+};
+
+export async function fetchAktifOturumlar(accessToken: string): Promise<AktifOturum[]> {
+  const response = await saasFetch(`/api/auth/sessions`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  await ensureOk(response, "Sessions could not be loaded.");
+  const payload = (await response.json()) as { sessions: AktifOturum[] };
+  return payload.sessions ?? [];
+}
+
+export async function kapatAktifOturum(accessToken: string, id: string): Promise<void> {
+  const response = await saasFetch(`/api/auth/sessions/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  await ensureOk(response, "Session could not be closed.");
+}
+
+export async function kapatDigerOturumlar(accessToken: string): Promise<number> {
+  const response = await saasFetch(`/api/auth/sessions/revoke-others`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  await ensureOk(response, "Sessions could not be closed.");
+  const payload = (await response.json()) as { closed?: number };
+  return payload.closed ?? 0;
+}

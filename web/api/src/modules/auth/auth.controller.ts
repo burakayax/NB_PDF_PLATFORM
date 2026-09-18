@@ -46,6 +46,9 @@ import {
   updatePreferredLanguage,
   updateUserProfile,
   verifyEmailToken,
+  listeleAcikOturumlar,
+  kapatOturum,
+  kapatDigerOturumlar,
 } from "./auth.service.js";
 import {
   getDesktopDeviceIdFromHeaders,
@@ -393,7 +396,11 @@ export async function loginController(request: Request, response: Response) {
     ? getDesktopDeviceIdFromHeaders(request.headers)
     : "";
   try {
-    const session = await loginUser(parsed.data, deviceId || undefined);
+    const session = await loginUser(parsed.data, deviceId || undefined, {
+      userAgent: meta.userAgent,
+      ip: meta.ip,
+      isDesktop: meta.desktop,
+    });
     logLoginAttempt({
       outcome: "success",
       email: session.user.email,
@@ -423,7 +430,12 @@ export async function refreshController(request: Request, response: Response) {
     throw new HttpError(401, "No active session found.");
   }
 
-  const session = await refreshSession(refreshToken);
+  const meta = clientRequestMeta(request);
+  const session = await refreshSession(refreshToken, {
+    userAgent: meta.userAgent,
+    ip: meta.ip,
+    isDesktop: meta.desktop,
+  });
   writeSession(response, session);
 }
 
@@ -1080,4 +1092,39 @@ export async function exportMyDataController(request: Request, response: Respons
   response.setHeader("Content-Type", "application/json");
   response.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
   response.json(exportPayload);
+}
+
+
+/* ── AÇIK OTURUMLAR ── */
+
+export async function listSessionsController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "No active session found.");
+  }
+  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+  response.json({ sessions: await listeleAcikOturumlar(userId, refreshToken) });
+}
+
+export async function revokeSessionController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "No active session found.");
+  }
+  const id = String(request.params.id ?? "");
+  if (!id) {
+    throw new HttpError(400, "Session id is required.");
+  }
+  await kapatOturum(userId, id);
+  response.status(204).send();
+}
+
+export async function revokeOtherSessionsController(request: Request, response: Response) {
+  const userId = request.authUser?.id;
+  if (!userId) {
+    throw new HttpError(401, "No active session found.");
+  }
+  const refreshToken = request.cookies[REFRESH_COOKIE_NAME] as string | undefined;
+  const kapatilan = await kapatDigerOturumlar(userId, refreshToken);
+  response.json({ closed: kapatilan });
 }
