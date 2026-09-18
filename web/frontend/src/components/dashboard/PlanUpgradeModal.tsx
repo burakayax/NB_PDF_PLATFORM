@@ -32,6 +32,7 @@ const GATED_TOOL_LABELS: Record<string, { tr: string; en: string }> = {
   encrypt: { tr: "PDF Şifrele", en: "Encrypt PDF" },
   "pdf-to-text": { tr: "PDF'i Metne Çevir", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
+  "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
 };
 
 interface PlanUpgradeModalProps {

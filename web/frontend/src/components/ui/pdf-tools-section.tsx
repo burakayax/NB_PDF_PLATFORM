@@ -219,6 +219,11 @@ const TOOLS: Tool[] = [
     en: { name: "Add Watermark", desc: "Stamp your own mark or text onto the pages." },
   },
   {
+    id: "form-doldur", cat: "edit", Icon: FileText,
+    tr: { name: "PDF Form Doldur", desc: "Doldurulabilir form alanlarını bulur ve cihazınızda doldurur." },
+    en: { name: "Fill PDF Form", desc: "Detects fillable fields and fills them on your device." },
+  },
+  {
     id: "flatten-pdf", cat: "edit", Icon: Layers,
     tr: { name: "PDF Düzleştir", desc: "Form ve katmanları sabitleyip değiştirilemez yapın." },
     en: { name: "Flatten PDF", desc: "Lock forms and layers so nothing can shift." },
@@ -415,6 +420,7 @@ const TOOL_HUE: Record<string, HueId> = {
   "page-numbers": "blue",
   watermark: "sky",
   "flatten-pdf": "indigo",
+  "form-doldur": "emerald",
   // Dönüştür
   "pdf-to-word": "blue",
   "word-to-pdf": "blue",

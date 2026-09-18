@@ -26,6 +26,7 @@ export const featureCatalog = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "form-doldur",
   "extract-images",
 ] as const;
 

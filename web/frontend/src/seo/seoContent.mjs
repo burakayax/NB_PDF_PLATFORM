@@ -63,6 +63,7 @@ export const TOOL_SLUGS = [
   "pdf-sohbet",
   "pdf-duzenle",
   "pdf-imzala",
+  "form-doldur",
   "pdf-yorumla",
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
@@ -1108,6 +1109,39 @@ export const TOOL_SEO = {
     ),
   },
 
+  "form-doldur": {
+    tr: T(
+      "PDF Form Doldurma — Online, Üyeliksiz, Cihazda",
+      "Doldurulabilir PDF formlarını tarayıcınızda doldurun. Alanlar otomatik bulunur, Türkçe karakterler bozulmaz, isterseniz kilitleyip gönderin. Dosyanız cihazınızdan çıkmaz.",
+      "PDF Formu Doldur — Cihazında, Gizli",
+      "Başvuru, sözleşme, izin ve kurum formlarını bilgisayarınızda doldurun. Dosyayı seçtiğiniz anda formun alanları (metin kutuları, onay kutuları, açılır listeler) otomatik bulunur ve karşınıza gelir; doldurup indirirsiniz. «Kilitle» seçeneğiyle alanlar kalıcı içeriğe dönüşür, karşı taraf yazdıklarınızı değiştiremez. Türkçe harfler (ğ, ş, İ, ı) kaybolmadan yazılır. Tüm işlem tarayıcınızda gerçekleşir — belgeniz SUNUCUYA GİTMEZ; kimlik ve başvuru belgelerinde bu fark önemlidir.",
+      ["pdf form doldurma", "pdf form doldur", "doldurulabilir pdf", "online form doldurma", "pdf form doldurma ücretsiz", "pdf başvuru formu doldurma", "acroform doldurma"],
+      [
+        { q: "PDF formunu nasıl doldururum?", a: "Formu seçin; doldurulabilir alanlar otomatik bulunup listelenir. Alanları doldurup «Formu doldur» deyin ve dosyayı indirin." },
+        { q: "Dosyam sunucuya gidiyor mu?", a: "Hayır. Form okuma ve doldurma tamamen tarayıcınızda (cihazınızda) yapılır; belge asla yüklenmez." },
+        { q: "Türkçe karakterler bozuluyor mu?", a: "Hayır. Alan görünümleri Unicode bir yazı tipiyle üretildiği için ğ, ş, İ, ı gibi harfler doğru görünür." },
+        { q: "Doldurduğum alanlar sonradan değiştirilebilir mi?", a: "«Doldurduktan sonra kilitle» seçeneği açıksa hayır: alanlar kalıcı içeriğe dönüşür. Kapalı bırakırsanız form düzenlenebilir kalır." },
+        { q: "PDF'imde doldurulabilir alan yoksa ne yapmalıyım?", a: "Belge düz bir PDF demektir. Üzerine yazmak için PDF Düzenle ya da PDF İşaretle aracını kullanabilirsiniz." },
+        { q: "Her PDF formu destekleniyor mu?", a: "Yaygın PDF formları (AcroForm) desteklenir. Eski tip Adobe LiveCycle (XFA) formları tarayıcıda doldurulamaz; araç bunu açıkça söyler." },
+      ],
+    ),
+    en: T(
+      "Fill PDF Form — Online, No Sign-up, On-device",
+      "Fill fillable PDF forms in your browser. Fields are detected automatically, accented characters are preserved, and you can lock the form before sending. Your file never leaves your device.",
+      "Fill a PDF Form — On Your Device, Private",
+      "Fill applications, contracts, consent and agency forms on your own computer. The moment you pick a file, its fields (text boxes, checkboxes, dropdowns) are detected and listed for you; fill them in and download. With «Lock after filling», the fields become permanent content so the recipient cannot change what you wrote. Everything happens in your browser — your document is NEVER uploaded, which matters for identity and application paperwork.",
+      ["fill pdf form", "pdf form filler", "fillable pdf", "fill out pdf online", "free pdf form filler", "acroform fill", "complete pdf form"],
+      [
+        { q: "How do I fill a PDF form?", a: "Pick the form; fillable fields are detected and listed automatically. Fill them in, click 'Fill form' and download the file." },
+        { q: "Does my file get uploaded?", a: "No. Reading and filling happen entirely in your browser (on your device); the document is never uploaded." },
+        { q: "Are accented characters preserved?", a: "Yes. Field appearances are generated with a Unicode font, so characters outside the basic Latin set render correctly." },
+        { q: "Can the filled fields be changed later?", a: "Not if 'Lock after filling' is on: fields become permanent content. Leave it off to keep the form editable." },
+        { q: "What if my PDF has no fillable fields?", a: "Then it is a flat PDF. Use Edit PDF or Annotate PDF to write on top of it." },
+        { q: "Are all PDF forms supported?", a: "Standard PDF forms (AcroForm) are supported. Legacy Adobe LiveCycle (XFA) forms cannot be filled in a browser; the tool tells you when it sees one." },
+      ],
+    ),
+  },
+
   "pdf-yorumla": {
     tr: T(
       "PDF İşaretle — Vurgu, Not, Çizim Ekle (Üyeliksiz, Cihazda)",
@@ -1551,7 +1585,7 @@ export const BLOG_RELATED_TOOLS = {
   "pdf-kirpma-kenar-boslugu-kesme": ["crop-pdf", "rotate-pdf", "organize-pdf"],
   "ucretsiz-pdf-duzenleyici-rehberi": ["pdf-duzenle", "pdf-yorumla", "pdf-imzala"],
   "cv-ozgecmis-word-pdf-cevirme": ["word-to-pdf", "compress", "merge-pdf"],
-  "pdf-form-doldurma-online-ucretsiz": ["pdf-yorumla", "pdf-imzala", "pdf-duzenle"],
+  "pdf-form-doldurma-online-ucretsiz": ["form-doldur", "pdf-imzala", "pdf-duzenle"],
   "telefonda-pdf-islemleri-uygulamasiz": ["merge-pdf", "belge-tara", "split-pdf"],
   "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle", "html-to-pdf"],
   "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],

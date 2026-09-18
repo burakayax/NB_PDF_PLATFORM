@@ -30,10 +30,13 @@
  *        node scripts/render-routes-sirala.mjs
  *   2) Sonuç doğruysa uygula (önce yedek dosyası yazılır):
  *        node scripts/render-routes-sirala.mjs --uygula
- *   3) Geri almak için:
+ *   3) Yeni yayınlanan araç sayfaları için eksik kuralları ekle:
+ *        node scripts/render-routes-sirala.mjs --eksikleri-ekle          (prova)
+ *        node scripts/render-routes-sirala.mjs --eksikleri-ekle --uygula
+ *   4) Geri almak için:
  *        node scripts/render-routes-sirala.mjs --geri-al <yedek-dosyası>
  */
-import { writeFileSync, readFileSync } from "node:fs";
+import { writeFileSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -113,6 +116,53 @@ async function tumKayitlar(yol, anahtarAd) {
 
 const sade = ({ type, source, destination }) => ({ type, source, destination });
 
+/** Yayınlanan klasörde gerçekten index.html'i olan alt klasörler. */
+function sayfalar(gorecel) {
+  const tam = join(frontendKok, "public", gorecel);
+  try {
+    return readdirSync(tam)
+      .filter((ad) => {
+        try {
+          return (
+            statSync(join(tam, ad)).isDirectory() &&
+            statSync(join(tam, ad, "index.html")).isFile()
+          );
+        } catch {
+          return false;
+        }
+      })
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Kuralı olmayan araç sayfaları için kural üretir.
+ *
+ * NEDEN GEREKLİ: Slash'siz adreste (/tools/x) Render gerçek bir dosya görmediği
+ * için "/*" kuralına düşer ve ARAMA MOTORUNA boş uygulama iskeletini gönderir;
+ * o sayfa için hazırlanmış SEO içeriği hiç sunulmaz. Sayfa başına kural bunu
+ * önler. Yeni bir araç yayınlandığında bu kip çalıştırılmalıdır.
+ */
+function eksikSayfaKurallari(mevcut) {
+  const kaynaklar = new Set(mevcut.map((k) => String(k.source || "")));
+  const gruplar = [
+    ["/tools", "tools"],
+    ["/en/tools", "en/tools"],
+  ];
+  const eksik = [];
+  for (const [onek, klasor] of gruplar) {
+    for (const slug of sayfalar(klasor)) {
+      const kaynak = `${onek}/${slug}`;
+      if (!kaynaklar.has(kaynak)) {
+        eksik.push({ type: "rewrite", source: kaynak, destination: `${kaynak}/index.html` });
+      }
+    }
+  }
+  return eksik;
+}
+
 async function main() {
   const uygula = process.argv.includes("--uygula");
   const geriAlIndex = process.argv.indexOf("--geri-al");
@@ -143,25 +193,40 @@ async function main() {
     );
   }
 
+  const eksikleriEkle = process.argv.includes("--eksikleri-ekle");
+  const eklenecek = eksikleriEkle ? eksikSayfaKurallari(mevcut) : [];
+  if (eksikleriEkle) {
+    console.log(`
+Kuralı olmayan araç sayfası: ${eklenecek.length}`);
+    for (const k of eklenecek) console.log(`  + ${k.source} → ${k.destination}`);
+    if (mevcut.length + eklenecek.length > 200) {
+      throw new Error(
+        `${mevcut.length} + ${eklenecek.length} = ${mevcut.length + eklenecek.length} kural — Render sınırı 200. Hiçbir şey yapılmadı.`,
+      );
+    }
+  }
+
   const hepsiniYakalaMi = (k) => String(k.source) === "/*";
   /** Adresinde `:param` ya da `*` geçen kural, birçok adrese birden uyar. */
   const jokerMi = (k) => /[:*]/.test(String(k.source || "")) && !hepsiniYakalaMi(k);
 
-  const spesifik = mevcut.filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k));
+  const spesifik = [...mevcut.filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k)), ...eklenecek];
   const jokerler = mevcut.filter(jokerMi);
   const yakala = mevcut.filter(hepsiniYakalaMi);
 
   const hedef = [...spesifik, ...jokerler, ...yakala].map(sade);
-  if (hedef.length !== mevcut.length) {
-    throw new Error(`İç tutarlılık hatası: ${mevcut.length} → ${hedef.length}. Hiçbir şey yapılmadı.`);
+  if (hedef.length !== mevcut.length + eklenecek.length) {
+    throw new Error(
+      `İç tutarlılık hatası: ${mevcut.length} + ${eklenecek.length} ≠ ${hedef.length}. Hiçbir şey yapılmadı.`,
+    );
   }
 
   // Sırası DEĞİŞEN kurallar — yani şu an gölgede kalıp çalışmayanlar.
   const eskiSira = mevcut.map((k) => `${k.type} ${k.source}`);
   const yeniSira = hedef.map((k) => `${k.type} ${k.source}`);
   const degisti = eskiSira.some((v, i) => v !== yeniSira[i]);
-  if (!degisti) {
-    console.log("Sıralama zaten doğru — yapılacak bir şey yok.");
+  if (!degisti && eklenecek.length === 0) {
+    console.log("Sıralama doğru ve eksik kural yok — yapılacak bir şey yok.");
     return;
   }
 

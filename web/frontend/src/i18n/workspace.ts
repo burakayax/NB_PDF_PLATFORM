@@ -19,6 +19,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "form-doldur",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -144,6 +145,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
   "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
+  "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -617,6 +619,13 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "form-doldur": {
+      title: tr ? "PDF FORM DOLDUR" : "FILL PDF FORM",
+      description: tr
+        ? "Doldurulabilir PDF formlarının alanlarını bulur, doldurur ve isterseniz kilitler."
+        : "Detects fillable PDF form fields, fills them in and optionally locks them.",
+      button: tr ? "FORM DOLDUR" : "FILL FORM",
     },
     "flatten-pdf": {
       title: tr ? "PDF DÜZLEŞTIR" : "FLATTEN PDF",

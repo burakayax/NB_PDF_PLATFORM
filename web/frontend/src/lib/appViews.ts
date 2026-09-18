@@ -42,6 +42,7 @@ export type ContentPanel =
   | "ai"
   | "editor"
   | "sign"
+  | "formfill"
   | "annotate"
   | "crop"
   | "compress-image"

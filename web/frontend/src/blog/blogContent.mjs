@@ -2943,9 +2943,9 @@ export const BLOG_POSTS = [
     {
       slug: "ilovepdf-alternatifi-cihazda-ucretsiz",
       date: "2026-07-22",
-      updated: "2026-07-22",
-      readMinutes: 5,
-      tags: { tr: ["Karşılaştırma", "Gizlilik"], en: ["Comparison", "Privacy"] },
+      updated: "2026-09-18",
+      readMinutes: 7,
+      tags: { tr: ["Karşılaştırma", "Gizlilik", "PDF Araçları"], en: ["Comparison", "Privacy", "PDF Tools"] },
       accent: "cyan",
       tool: "/tools/merge-pdf",
     },
@@ -2976,12 +2976,41 @@ export const BLOG_POSTS = [
           "Sunucuda (içerik saklanmaz, şifreli bağlantı): Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları (özet, sohbet, çeviri).",
         ] },
         { t: "tip", x: "Gizli bir belgeyi yalnızca birleştirmek/bölmek istiyorsanız cihazda çalışan araçları seçin; dosyanız hiç internete çıkmaz. Dönüştürme gerekiyorsa işlem sonrası içerik saklanmaz." },
+
+        { t: "h2", x: "iLovePDF'in iyi olduğu yerler" },
+        { t: "p", x: "Bir karşılaştırmanın işe yaraması için dürüst olması gerekir. iLovePDF bu işi uzun süredir yapıyor ve iyi yapıyor; alternatife geçerken neyi bırakacağınızı bilmelisiniz:" },
+        { t: "ul", items: [
+          "Uzun yıllara dayanan bir geçmiş ve oturmuş altyapı.",
+          "Masaüstü ve mobil uygulamaları var — her şey tarayıcıda olmak zorunda değil.",
+          "Çok geniş bir dil desteği ve büyük bir kullanıcı kitlesi.",
+          "Kurumsal kullanım için geliştirici araçları.",
+        ] },
+        { t: "p", x: "Aradığınız şey bir masaüstü programıysa ya da kurumsal ölçekte bir çözümse, alternatif aramak yerine orada kalmanız daha mantıklı olabilir. Biz tarayıcıda çalışıyoruz ve ayrı bir masaüstü programımız yok." },
+
+        { t: "h2", x: "Hangisini seçmelisiniz?" },
+        { t: "p", x: "Tek bir doğru cevap yok; yapacağınız işe göre değişiyor." },
+        { t: "ul", items: [
+          "Belge hassassa (sözleşme, kimlik, sağlık raporu, müşteri verisi) ve iş sayfa düzenlemeyse: cihazda çalışan aracı seçin. Dosyanın hiç yüklenmemesi, \"sonra siliyoruz\" sözünden her zaman daha güçlüdür.",
+          "Masaüstü programı istiyorsanız: biz tarayıcıda çalışıyoruz, aradığınız bu değilse başka yere bakın.",
+          "Ara sıra birkaç dosya işliyorsanız: ücretsiz plan yeter ve çıktıda filigran olmadığı için sonucu olduğu gibi kullanabilirsiniz.",
+          "Türkçe belgelerle çalışıyorsanız: arayüz, yazı tanıma ve yapay zekâ araçları Türkçeyi sonradan eklenmiş bir çeviri katmanı olarak değil, birinci dil olarak ele alır.",
+        ] },
+
+        { t: "h2", x: "İddiayı kendiniz sınayın" },
+        { t: "p", x: "\"Dosyanız cihazınızdan çıkmıyor\" cümlesini bize inanarak kabul etmenize gerek yok. Otuz saniyede kendiniz doğrulayabilirsiniz:" },
+        { t: "steps", items: [
+          { title: "Birleştirme aracını açın", x: "Üye olmanıza gerek yok. Birleştirmek istediğiniz birkaç PDF'i seçin." },
+          { title: "İnternet bağlantınızı kesin", x: "Wi-Fi'ı kapatın ya da kabloyu çıkarın. Sayfayı yenilemeyin." },
+          { title: "Birleştirmeyi çalıştırın", x: "İşlem tamamlanır ve dosyanızı indirirsiniz. İnternet yokken çalışıyorsa, dosyanız hiçbir yere gitmiyor demektir." },
+        ] },
       ],
       faq: [
         { q: "iLovePDF'ye tamamen ücretsiz bir alternatif var mı?", a: "Evet. PDF Platform'da birleştir, böl, döndür, sil gibi yapısal araçlar üyeliksiz, ücretsiz ve zorunlu filigransızdır; işlem tarayıcınızda çalışır." },
         { q: "Dosyam gerçekten sunucuya yüklenmiyor mu?", a: "Yapısal araçlarda (birleştir, böl, döndür, sil, sırala, görsel → PDF) dosyanız tamamen cihazınızda işlenir, internete hiç gönderilmez. Dönüştürme ve OCR gibi işlemler sunucuda yapılır ancak içerik saklanmaz." },
         { q: "Ücretsiz çıktıya filigran ekleniyor mu?", a: "Hayır. PDF Platform ücretsiz çıktılara zorunlu filigran eklemez." },
         { q: "Üye olmadan kullanabilir miyim?", a: "Evet. Temel araçlar üyelik veya kurulum gerektirmez; doğrudan tarayıcıda çalışırsınız." },
+        { q: "Masaüstü uygulaması var mı?", a: "Hayır. PDF Platform tarayıcıda çalışır. Telefonda ana ekrana eklenip uygulama gibi kullanılabilir, ancak ayrı bir masaüstü programı bulunmuyor." },
+        { q: "Dosyamın cihazdan çıkmadığını nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
       ],
     },
     {
@@ -3011,12 +3040,41 @@ export const BLOG_POSTS = [
           "On the server (content not stored, encrypted connection): Word/Excel/PowerPoint conversion, OCR, compression and AI tools (summarize, chat, translate).",
         ] },
         { t: "tip", x: "If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing." },
+
+        { t: "h2", x: "What iLovePDF does well" },
+        { t: "p", x: "A comparison is only useful if it is honest. iLovePDF has been doing this for a long time and does it well, so you should know what you would be giving up:" },
+        { t: "ul", items: [
+          "Years of track record and mature infrastructure.",
+          "Desktop and mobile apps — you are not limited to a browser.",
+          "Very broad language support and a large user base.",
+          "Developer tooling for organisations that need it.",
+        ] },
+        { t: "p", x: "If what you need is a desktop program or an enterprise-scale setup, staying where you are may well be the better call. We run in the browser and have no separate desktop app." },
+
+        { t: "h2", x: "Which one should you pick?" },
+        { t: "p", x: "There is no single right answer — it depends on what you are doing." },
+        { t: "ul", items: [
+          "If the document is sensitive (a contract, an ID, a medical report, customer data) and the job is page-level editing: pick the on-device tool. A file that is never uploaded beats a promise to delete it later, every time.",
+          "If you want a desktop program: we run in the browser, so look elsewhere.",
+          "If you only process a few files now and then: the free plan is enough, and with no watermark you can use the result as-is.",
+          "If you work with Turkish documents: the interface, the OCR and the AI tools treat Turkish as a first language rather than a translation layer added afterwards.",
+        ] },
+
+        { t: "h2", x: "Test the claim yourself" },
+        { t: "p", x: "You do not have to take \"your file stays on your device\" on trust. You can check it in thirty seconds:" },
+        { t: "steps", items: [
+          { title: "Open the merge tool", x: "No account needed. Pick a couple of PDFs you want to merge." },
+          { title: "Disconnect from the internet", x: "Turn off Wi-Fi or unplug the cable. Do not reload the page." },
+          { title: "Run the merge", x: "It completes and you download your file. If it works with no connection, your file is not going anywhere." },
+        ] },
       ],
       faq: [
         { q: "Is there a completely free alternative to iLovePDF?", a: "Yes. On PDF Platform, structural tools like merge, split, rotate and delete are free, need no signup and add no forced watermark; processing runs in your browser." },
         { q: "Is my file really not uploaded to a server?", a: "For structural tools (merge, split, rotate, delete, reorder, image → PDF) your file is processed entirely on your device and never sent to the internet. Operations like conversion and OCR run on the server, but content is not stored." },
         { q: "Is a watermark added to the free output?", a: "No. PDF Platform does not add a forced watermark to free output." },
         { q: "Can I use it without an account?", a: "Yes. The basic tools need no account or installation; you work directly in the browser." },
+        { q: "Is there a desktop app?", a: "No. PDF Platform runs in the browser. You can add it to your phone's home screen and use it like an app, but there is no separate desktop program." },
+        { q: "How can I verify my file never leaves my device?", a: "Disconnect from the internet and try the tool. On-device tools keep working without a connection; anything that needs a server will not." },
       ],
     },
   ),
