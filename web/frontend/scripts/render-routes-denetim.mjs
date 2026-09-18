@@ -180,6 +180,14 @@ En son değerlendirilen kural: ${sonuncu ? `[öncelik ${sonuncu.priority}] ${son
   console.log(`\nPermissions-Policy: ${izin ? izin.value : "yok"}`);
   console.log(`Toplam başlık kuralı: ${basliklar.length}`);
 
+  // --dok: canlıdaki kuralların TAMAMINI dosyaya yazar. Yedekle karşılaştırıp
+  // "hangi kural gitti / geldi" sorusunu tahminle değil ölçümle yanıtlamak için.
+  if (process.argv.includes("--dok")) {
+    const dosya = join(frontendKok, "render-routes-canli.json");
+    writeFileSync(dosya, JSON.stringify(kurallar, null, 2), "utf8");
+    console.log(`\nCanlı kural listesi yazıldı: ${dosya}`);
+  }
+
   console.log("\n— Denetim bitti. Hiçbir şey değiştirilmedi. —");
 }
 
