@@ -64,6 +64,7 @@ export const TOOL_SLUGS = [
   "pdf-duzenle",
   "pdf-imzala",
   "form-doldur",
+  "ustveri-temizle",
   "pdf-yorumla",
   "taranmis-pdf-ocr",
   "pdf-veri-cikar",
@@ -1109,6 +1110,39 @@ export const TOOL_SEO = {
     ),
   },
 
+  "ustveri-temizle": {
+    tr: T(
+      "PDF Üstveri Temizleme — Gizli Bilgileri Sil (Cihazda)",
+      "PDF'inizde kalan yazar adı, üreten program, tarihler, XMP bloğu ve fotoğrafların GPS konumunu silin. Dosyanız cihazınızdan çıkmaz; üyeliksiz ve ücretsiz.",
+      "PDF'teki Gizli Bilgileri Temizle",
+      "Bir PDF, sayfada görünenin dışında iz taşır: belgeyi hazırlayanın ADI, kullandığı program, oluşturma ve değiştirme tarihleri, XML biçimli XMP bloğu ve belgenin benzersiz kimliği. İçinde fotoğraf varsa o fotoğrafların EXIF bilgisi — makine modeli, çekim tarihi ve GPS KONUMU — dosyada durmaya devam eder. Özgeçmiş, teklif, sözleşme ya da resmî başvuru gönderirken bunlar karşı tarafa gider. Bu araç önce belgede ne olduğunu gösterir, sonra hepsini siler. Tüm işlem tarayıcınızda yapılır — belgeniz SUNUCUYA GİTMEZ.",
+      ["pdf üstveri temizleme", "pdf metadata silme", "pdf yazar bilgisi kaldırma", "pdf exif temizleme", "pdf gizli bilgi silme", "pdf anonimleştirme", "pdf gps konum silme"],
+      [
+        { q: "PDF'te hangi gizli bilgiler bulunur?", a: "Belge özellikleri (yazar, başlık, konu, üreten program, tarihler), XML biçimli XMP üstveri bloğu, belgenin benzersiz kimliği ve gömülü fotoğrafların EXIF bilgisi (makine modeli, çekim tarihi, GPS konumu)." },
+        { q: "Dosyam sunucuya gidiyor mu?", a: "Hayır. İnceleme ve temizlik tamamen tarayıcınızda yapılır; belge asla yüklenmez. Amacı gizlilik olan bir aracın dosyayı yüklemesi çelişki olurdu." },
+        { q: "XMP bloğu nedir, neden önemli?", a: "Programların belgeye eklediği XML biçimli ikinci bir üstveri katmanıdır; sürüm geçmişi ve belge kimlikleri orada durur. Birçok temizleme aracı yalnızca belge özelliklerini siler, bu blok dosyada kalır." },
+        { q: "Fotoğrafların konum bilgisi de siliniyor mu?", a: "Evet, seçenek açıkken gömülü JPEG'lerin EXIF/GPS blokları ayıklanır. Renk profili korunduğu için görüntü kalitesi ve renkler değişmez." },
+        { q: "Belge bozulur mu?", a: "Hayır. Yalnızca üstveri katmanları kaldırılır; sayfalar, yazılar ve görseller olduğu gibi kalır." },
+        { q: "Temizledikten sonra kendi bilgilerimi yazabilir miyim?", a: "Evet. İsterseniz temizlik sonrası yeni bir başlık ve yazar adı belirleyebilirsiniz." },
+      ],
+    ),
+    en: T(
+      "Remove PDF Metadata — Strip Hidden Data (On-device)",
+      "Remove the author name, producing software, dates, XMP block and photo GPS location left in your PDF. Your file never leaves your device — free, no sign-up.",
+      "Strip Hidden Data From Your PDF",
+      "A PDF carries more than what you see on the page: the NAME of whoever prepared it, the software used, creation and modification dates, an XML-based XMP block and a unique document ID. If it contains photos, their EXIF data — camera model, capture date and GPS LOCATION — stays inside the file too. All of that travels with your CV, quote, contract or official application. This tool first shows you what is in the document, then strips it. Everything happens in your browser — your document is NEVER uploaded.",
+      ["remove pdf metadata", "strip pdf metadata", "pdf metadata remover", "remove author from pdf", "pdf exif removal", "anonymize pdf", "remove gps from pdf"],
+      [
+        { q: "What hidden data does a PDF hold?", a: "Document properties (author, title, subject, producing software, dates), an XML-based XMP metadata block, a unique document ID, and EXIF data inside embedded photos (camera model, capture date, GPS location)." },
+        { q: "Does my file get uploaded?", a: "No. Inspection and cleaning happen entirely in your browser; the document is never uploaded. A privacy tool that uploaded your file would defeat its own purpose." },
+        { q: "What is the XMP block and why does it matter?", a: "It is a second, XML-based metadata layer that software writes into the file; version history and document IDs live there. Many cleaners only clear the document properties and leave this block behind." },
+        { q: "Is photo location data removed too?", a: "Yes, when the option is on, EXIF/GPS segments are stripped from embedded JPEGs. The colour profile is preserved, so image quality and colours are unchanged." },
+        { q: "Will the document break?", a: "No. Only the metadata layers are removed; pages, text and images stay exactly as they were." },
+        { q: "Can I set my own details after cleaning?", a: "Yes. You can optionally set a new title and author once the old data is gone." },
+      ],
+    ),
+  },
+
   "form-doldur": {
     tr: T(
       "PDF Form Doldurma — Online, Üyeliksiz, Cihazda",
@@ -1590,7 +1624,7 @@ export const BLOG_RELATED_TOOLS = {
   "en-iyi-ucretsiz-pdf-araclari": ["merge-pdf", "pdf-to-word", "compress", "pdf-ozetle", "html-to-pdf"],
   "pdf-karsilastirma-farklari-bulma": ["pdf-karsilastir", "pdf-sohbet", "pdf-ozetle"],
   "pdf-hassas-veri-gizleme-kvkk": ["hassas-veri-gizle", "pdf-duzenle"],
-  "dosya-yuklemeden-pdf-isleme-gizlilik": ["merge-pdf", "belge-tara", "hassas-veri-gizle"],
+  "dosya-yuklemeden-pdf-isleme-gizlilik": ["ustveri-temizle", "merge-pdf", "belge-tara", "hassas-veri-gizle"],
   "excel-pdf-cevirme": ["excel-to-pdf", "pdf-to-excel"],
   "powerpoint-pdf-cevirme": ["ppt-to-pdf", "pdf-to-ppt"],
   "pdf-sayfa-numarasi-ekleme": ["page-numbers", "watermark"],

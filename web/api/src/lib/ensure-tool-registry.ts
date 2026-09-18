@@ -35,6 +35,7 @@ const DEFAULT_TOOL_REGISTRY: readonly { id: string; strategy: string }[] = [
   { id: "pdf-to-text", strategy: "per_run" },
   { id: "flatten-pdf", strategy: "per_run" },
   { id: "form-doldur", strategy: "per_run" },
+  { id: "ustveri-temizle", strategy: "per_run" },
 ];
 
 export async function ensureToolRegistry(): Promise<void> {

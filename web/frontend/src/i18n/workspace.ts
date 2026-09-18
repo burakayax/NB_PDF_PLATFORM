@@ -20,6 +20,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "pdf-to-text",
   "flatten-pdf",
   "form-doldur",
+  "ustveri-temizle",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -146,6 +147,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
+  "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -619,6 +621,13 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "ustveri-temizle": {
+      title: tr ? "ÜSTVERİ TEMİZLE" : "REMOVE METADATA",
+      description: tr
+        ? "Yazar adı, program bilgisi, tarihler, XMP bloğu ve fotoğraf EXIF/GPS izlerini siler."
+        : "Removes author name, software info, dates, the XMP block and photo EXIF/GPS traces.",
+      button: tr ? "TEMİZLE" : "CLEAN",
     },
     "form-doldur": {
       title: tr ? "PDF FORM DOLDUR" : "FILL PDF FORM",

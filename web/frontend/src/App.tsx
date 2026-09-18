@@ -328,6 +328,9 @@ const PdfEditor = lazyWithRetry(() =>
 const PdfFormFill = lazyWithRetry(() =>
   import("./components/tools/PdfFormFill").then((m) => ({ default: m.PdfFormFill })),
 );
+const PdfMetadataTool = lazyWithRetry(() =>
+  import("./components/tools/PdfMetadataTool").then((m) => ({ default: m.PdfMetadataTool })),
+);
 const PdfSign = lazyWithRetry(() =>
   import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
 );
@@ -2129,6 +2132,7 @@ function App() {
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
             "form-doldur": "PDF Form Doldur",
+            "ustveri-temizle": "PDF Üstveri Temizle",
             "extract-images": "PDF'ten Görsel Çıkar",
           };
           fetch("/api/team/activity", {
@@ -2988,6 +2992,7 @@ function App() {
         p === "/tools/pdf-duzenle" ||
         p === "/tools/pdf-imzala" ||
         p === "/tools/form-doldur" ||
+        p === "/tools/ustveri-temizle" ||
         p === "/tools/pdf-yorumla" ||
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
@@ -5321,6 +5326,15 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "ustveri-temizle") {
+      return (
+        <GuestSeoToolPage slug="ustveri-temizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "form-doldur") {
       return (
         <GuestSeoToolPage slug="form-doldur" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
@@ -6539,6 +6553,15 @@ function App() {
                 <ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "metadata" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="ustveri-temizle" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
