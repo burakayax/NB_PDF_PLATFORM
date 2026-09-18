@@ -21,7 +21,7 @@ import { DocumentScanner } from "../components/tools/DocumentScanner";
 vi.mock("../lib/documentScan", () => ({
   detectDocumentQuad: vi.fn(async () => null),
   // Canlı döngü artık klasik + sinir ağı karışımını kullanıyor; ısıtma da eklendi.
-  detectDocumentQuadLive: vi.fn(async () => null),
+  olcumAl: vi.fn(async () => null),
   isitScanner: vi.fn(async () => undefined),
   warpDocument: vi.fn(async (c: unknown) => c),
   cropQuadFallback: vi.fn((c: unknown) => c),

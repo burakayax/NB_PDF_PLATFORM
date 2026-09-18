@@ -76,6 +76,21 @@ describe("canlı kenar takipçisi", () => {
     expect(d.cekilsin).toBe(false);
   });
 
+  it("zayıf güvenli ölçümle otomatik çekim yapmaz (çerçeve yine çizilir)", () => {
+    const t = new QuadTakipci({ gerekliKararliMs: 600, cekimGuveni: 0.6 });
+    let d = t.guncelle(kare(100, 100), W, 0, 0.35);
+    for (let i = 1; i <= 10; i++) d = t.guncelle(kare(100, 100), W, i * 120, 0.35);
+    expect(d.quad).not.toBeNull();
+    expect(d.cekilsin).toBe(false);
+  });
+
+  it("güven yükselince çekim tetiklenir", () => {
+    const t = new QuadTakipci({ gerekliKararliMs: 600, cekimGuveni: 0.6 });
+    let d = t.guncelle(kare(100, 100), W, 0, 0.9);
+    for (let i = 1; i <= 10; i++) d = t.guncelle(kare(100, 100), W, i * 120, 0.9);
+    expect(d.cekilsin).toBe(true);
+  });
+
   it("sıfırlayınca hiçbir şey hatırlamaz", () => {
     const t = new QuadTakipci();
     t.guncelle(kare(100, 100), W, 0);

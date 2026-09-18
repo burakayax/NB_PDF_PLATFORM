@@ -43,7 +43,7 @@ import {
   canvasToJpegBlob,
   cropQuadFallback,
   detectDocumentQuad,
-  detectDocumentQuadLive,
+  olcumAl,
   isitScanner,
   fullFrameQuad,
   warpDocument,
@@ -139,6 +139,11 @@ type Props = {
 function sanitizeFileName(name: string): string {
   return (name.trim() || "taranan-belge").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 100);
 }
+/** Kamera karesi hazır olduğunda geri çağıran tarayıcılar (Chrome/Safari). */
+type VideoWithFrameCb = HTMLVideoElement & {
+  requestVideoFrameCallback?: (cb: () => void) => number;
+};
+
 /** Ücretsiz planda tek taramada izin verilen sayfa sayısı (Pro: sınırsız). */
 const FREE_PAGE_LIMIT = 3;
 
@@ -459,12 +464,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           off.width = ow;
           off.height = oh;
           off.getContext("2d")?.drawImage(v, 0, 0, ow, oh);
-          const q = await detectDocumentQuadLive(off);
+          const o = await olcumAl(off);
           if (!cancelled && !capturingRef.current) {
             const s = vw / ow;
-            const olcum = q ? (q.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad) : null;
+            const olcum = o ? (o.quad.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad) : null;
             // Takipçi: düzleştirme + kayıp kare koruması + sıçrama reddi.
-            const d = takipci.guncelle(olcum, vw);
+            const d = takipci.guncelle(olcum, vw, Date.now(), o?.guven ?? 1);
             setLiveQuad(d.quad);
             if (d.quad) {
               sonBulunmaRef.current = Date.now();
@@ -492,9 +497,13 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           running = false;
         }
       }
-      // Tespit kare başına ~10-20 ms; 220 ms bekleme çerçeveyi geç güncelliyor
-      // ve el hareketi olduğunda takip kopuk görünüyordu.
-      if (!cancelled) timer = window.setTimeout(tick, 120);
+      // Tespit kare başına ~10-20 ms. Sabit bekleme yerine KAMERANIN kendi kare
+      // akışına bağlanılır (destekleyen tarayıcıda): çerçeve görüntüyle aynı anda
+      // güncellenir, gecikmeli/kopuk takip hissi kalkar.
+      if (cancelled) return;
+      const v2 = videoRef.current as VideoWithFrameCb | null;
+      if (v2?.requestVideoFrameCallback) v2.requestVideoFrameCallback(() => void tick());
+      else timer = window.setTimeout(tick, 80);
     };
     timer = window.setTimeout(tick, 500); // kamera ısınması için kısa gecikme
     return () => {

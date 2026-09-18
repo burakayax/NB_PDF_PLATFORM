@@ -37,6 +37,8 @@ export type TakipAyarlari = {
   kararliOran: number;
   /** Otomatik çekim için gereken kesintisiz kararlı süre (ms). */
   gerekliKararliMs: number;
+  /** Otomatik çekim için ölçümün en az bu kadar güvenilir olması gerekir (0-1). */
+  cekimGuveni: number;
 };
 
 export const VARSAYILAN_TAKIP: TakipAyarlari = {
@@ -46,6 +48,7 @@ export const VARSAYILAN_TAKIP: TakipAyarlari = {
   sicramaOnayi: 2,
   kararliOran: 0.045,
   gerekliKararliMs: 1100,
+  cekimGuveni: 0.6,
 };
 
 export type TakipDurumu = {
@@ -99,8 +102,14 @@ export class QuadTakipci {
    * @param olcum   bu karede bulunan dörtgen (bulunamadıysa null)
    * @param genislik kare genişliği (eşikler buna göre ölçeklenir)
    * @param simdi   zaman damgası (ms)
+   * @param guven   ölçümün güvenilirliği (0-1); düşükse çerçeve çizilir ama çekim yapılmaz
    */
-  guncelle(olcum: Quad | null, genislik: number, simdi: number = Date.now()): TakipDurumu {
+  guncelle(
+    olcum: Quad | null,
+    genislik: number,
+    simdi: number = Date.now(),
+    guven = 1,
+  ): TakipDurumu {
     const dt = this.sonAn ? Math.min(simdi - this.sonAn, 500) : 0;
     this.sonAn = simdi;
     const a = this.ayar;
@@ -145,7 +154,10 @@ export class QuadTakipci {
     this.aday = null;
     this.adaySayisi = 0;
     this.sonOlcumAni = simdi;
-    this.kararliMs = kayma < genislik * a.kararliOran ? this.kararliMs + dt : 0;
+    // Kararlılık yalnızca ölçüm HEM sabit HEM güvenilirse birikir: zayıf bir
+    // tespitle otomatik çekim yapmak, yanlış kırpılmış sayfa demektir.
+    const sabit = kayma < genislik * a.kararliOran;
+    this.kararliMs = sabit && guven >= a.cekimGuveni ? this.kararliMs + dt : sabit ? this.kararliMs : 0;
     this.duzlenmis = harmanla(this.duzlenmis, olcum, a.alfa);
     return this.durum(true);
   }
