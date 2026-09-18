@@ -118,6 +118,22 @@ const rawEnvSchema = z
     /** Web "Google ile devam et" OAuth; boş bırakılırsa Google girişi devre dışı kalır. */
     GOOGLE_CLIENT_ID: z.string().optional().default(""),
     GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
+    /**
+     * Google Search Console — sosyal medya anahtar kelimelerini SİTENİN KENDİ
+     * gerçek arama verisine dayandırmak için (salt okunur).
+     *
+     * Üçü de doluysa devreye girer; biri bile boşsa otomasyon sessizce yalnızca
+     * otomatik tamamlama ve yapay zekâ araştırmasıyla çalışmaya devam eder.
+     *
+     * GSC_SITE_URL: Search Console'daki mülk kimliği. Alan adı mülkü için
+     *   "sc-domain:pdfplatform.app", adres önekli mülk için tam adres.
+     * GSC_PRIVATE_KEY: servis hesabı JSON'undaki private_key alanı. Tek satıra
+     *   sıkıştırılmış "
+" dizileri otomatik çözülür.
+     */
+    GSC_SITE_URL: z.string().optional().default(""),
+    GSC_CLIENT_EMAIL: z.string().optional().default(""),
+    GSC_PRIVATE_KEY: z.string().optional().default(""),
     /** Claude API anahtarı — AI özellikleri (PDF Özetle / PDF ile Sohbet) için.
      * Boşsa AI tamamen devre dışı (uçlar 503 döner). console.anthropic.com'dan alınır. */
     ANTHROPIC_API_KEY: z.string().optional().default(""),
@@ -336,6 +352,11 @@ export const env = {
   SMTP_FROM_EMAIL: smtpFromEmail,
   GOOGLE_CLIENT_ID: raw.GOOGLE_CLIENT_ID?.trim() ?? "",
   GOOGLE_CLIENT_SECRET: raw.GOOGLE_CLIENT_SECRET?.trim() ?? "",
+  GSC_SITE_URL: raw.GSC_SITE_URL?.trim() ?? "",
+  GSC_CLIENT_EMAIL: raw.GSC_CLIENT_EMAIL?.trim() ?? "",
+  // .env tek satır tutar; anahtarın gerçek satır sonları iki karakterlik
+  // kaçış dizisi olarak yazılır — burada gerçek satır sonuna çevriliyor.
+  GSC_PRIVATE_KEY: (raw.GSC_PRIVATE_KEY ?? "").replace(/\\n/g, "\n").trim(),
   LOG_FILE_ENABLED: raw.LOG_FILE_ENABLED === "true",
   BOOTSTRAP_ADMIN_EMAIL: raw.BOOTSTRAP_ADMIN_EMAIL?.trim() ?? "",
   BOOTSTRAP_ADMIN_PASSWORD: raw.BOOTSTRAP_ADMIN_PASSWORD ?? "",
