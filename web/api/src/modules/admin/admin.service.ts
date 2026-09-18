@@ -56,10 +56,28 @@ export type AdminOverview = {
   usageByDay: Array<{ date: string; totalOperations: number }>;
   pageViewsByDay: Array<{ date: string; count: number }>;
   pageViewsTodayByHourUtc: Array<{ hour: number; count: number }>;
+  /**
+   * DÖNÜŞÜM HUNİSİ — sırayla: kayıt → aktivasyon → kota duvarı → ödeme.
+   *
+   * "Aktivasyon" adımı sonradan eklendi çünkü eksikti: huninin en altı (ödeme)
+   * ölçülüyor ama en kritik basamağı — kullanıcının üründen İLK KEZ gerçek
+   * sonuç alması — ölçülmüyordu. Değeri hiç görmemiş kullanıcı zaten ödemez;
+   * dönüşüm düşükse önce burada mı kaybediyoruz yoksa fiyatta mı, ancak bu
+   * adım görünürse anlaşılır.
+   */
   conversionFunnel: {
+    totalUsers: number;
+    /** En az bir gerçek işlem yapmış kullanıcı (değeri yaşamış olan). */
+    activatedUsers: number;
     freeTierEverHitLimit: number;
     usersWithCompletedCheckout: number;
-    totalUsers: number;
+    /** Basamaklar arası geçiş oranları (yüzde, 1 ondalık). */
+    rates: {
+      signupToActivation: number;
+      activationToWall: number;
+      wallToPaid: number;
+      signupToPaid: number;
+    };
   };
   /** Son N dakikada en az bir sayfa görüntülemesi olan benzersiz tarayıcı oturumu. */
   presenceWindowMinutes: number;
@@ -106,6 +124,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     pageViewsRecent,
     pvsToday,
     freeTierEverHitLimit,
+    activatedUserRows,
     checkoutUsersDistinct,
     pvsLastPresenceWindow,
   ] = await Promise.all([
@@ -149,6 +168,8 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       select: { createdAt: true },
     }),
     prisma.user.count({ where: { freeLimitFirstExceededAt: { not: null } } }),
+    // Aktivasyon: en az bir işlem kaydı olan farklı kullanıcı sayısı.
+    prisma.operationLog.findMany({ select: { userId: true }, distinct: ["userId"] }),
     prisma.paymentCheckout.findMany({
       where: { status: "completed" },
       select: { userId: true },
@@ -315,11 +336,26 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     usageByDay,
     pageViewsByDay,
     pageViewsTodayByHourUtc,
-    conversionFunnel: {
-      freeTierEverHitLimit,
-      usersWithCompletedCheckout: checkoutUsersDistinct.length,
-      totalUsers,
-    },
+    conversionFunnel: (() => {
+      const activatedUsers = activatedUserRows.length;
+      const paid = checkoutUsersDistinct.length;
+      // Payda sıfırken oran anlamsızdır; "0" yazmak "kötü gidiyor" izlenimi
+      // verir, bu yüzden sıfır döndürülür ve arayüz "—" gösterir.
+      const oran = (ust: number, alt: number) =>
+        alt > 0 ? Math.round((ust / alt) * 1000) / 10 : 0;
+      return {
+        totalUsers,
+        activatedUsers,
+        freeTierEverHitLimit,
+        usersWithCompletedCheckout: paid,
+        rates: {
+          signupToActivation: oran(activatedUsers, totalUsers),
+          activationToWall: oran(freeTierEverHitLimit, activatedUsers),
+          wallToPaid: oran(paid, freeTierEverHitLimit),
+          signupToPaid: oran(paid, totalUsers),
+        },
+      };
+    })(),
     presenceWindowMinutes,
     distinctSessionsActiveNow,
     registeredUsersActiveNow,

@@ -641,6 +641,42 @@ export default function PdfToolsSection({
           </div>
         </div>
 
+        {/*
+          ÜCRETSİZ ÜYELİK ŞERİDİ — araçların TAM ÜSTÜNDE.
+          Aynı çağrı sayfanın en altındayken kullanıcı araçlara bakarken
+          görmüyordu; kayıt kararı araçları incelerken veriliyor, sayfa
+          sonunda değil. Şerit kısa tutuldu: burada iş, aracı kullanmaya
+          gelen kişiyi durdurmak değil, "bunlar da var" demek.
+        */}
+        {!isAuthenticated && (
+          <div className="mx-auto mt-8 flex max-w-3xl flex-col items-center gap-3 rounded-2xl border border-sky-400/25 bg-sky-500/[0.07] px-5 py-4 text-center sm:flex-row sm:text-left">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/15 text-sky-300">
+              <Sparkles className="h-4.5 w-4.5" />
+            </span>
+            <p className="flex-1 text-[13px] leading-relaxed text-slate-300">
+              {tr ? (
+                <>
+                  <strong className="text-white">Mavi işaretli {hesapAracSayisi} araç</strong> ücretsiz
+                  üyelikle açılıyor — taranmış belgeyi metne çevirme, form doldurma, üstveri temizleme.
+                  Kart bilgisi istenmez.
+                </>
+              ) : (
+                <>
+                  <strong className="text-white">{hesapAracSayisi} tools marked in blue</strong> unlock
+                  with a free account — scanned-document OCR, form filling, metadata removal. No card required.
+                </>
+              )}
+            </p>
+            <button
+              type="button"
+              onClick={() => (onRegister ? onRegister() : onUseWebApp())}
+              className="shrink-0 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 px-5 py-2.5 text-[13px] font-bold text-slate-950 transition hover:brightness-110"
+            >
+              {tr ? "Ücretsiz üye ol" : "Create free account"}
+            </button>
+          </div>
+        )}
+
         {/* Kategoriler + kartlar */}
         <div className="mt-12 space-y-12">
           {grouped.map(({ cat, items }) => {
@@ -749,40 +785,6 @@ export default function PdfToolsSection({
           </button>
         </div>
 
-        {/* ÜCRETSİZ ÜYELİK ÇAĞRISI — misafire.
-            Ziyaretçi burada üyeliksiz araçları kullanıyor ama ücretsiz üyelikle
-            AÇILAN araçların varlığını hiçbir yerde görmüyordu; kayıt için somut
-            bir sebep sunulmadan kayıt beklemek olmuyor. Sayı listeden hesaplanır
-            ki yeni araç eklendiğinde metin kendiliğinden güncellensin. */}
-        {!isAuthenticated && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mx-auto mt-10 max-w-3xl rounded-3xl border border-sky-400/25 bg-gradient-to-br from-sky-500/[0.10] to-cyan-500/[0.06] p-6 text-center sm:p-7"
-          >
-            <p className="text-lg font-bold text-white sm:text-xl">
-              {tr
-                ? `Ücretsiz üyelikle ${hesapAracSayisi} araç daha açılıyor`
-                : `A free account unlocks ${hesapAracSayisi} more tools`}
-            </p>
-            <p className="mx-auto mt-2 max-w-xl text-[14px] leading-relaxed text-slate-300">
-              {tr
-                ? "Taranmış belgeyi metne çevirme, aranabilir PDF, form doldurma ve üstveri temizleme — hepsi ücretsiz, hepsi cihazınızda çalışır. Kart bilgisi istenmez."
-                : "Scanned-document OCR, searchable PDF, form filling and metadata removal — all free, all running on your device. No card required."}
-            </p>
-            <button
-              type="button"
-              onClick={() => (onRegister ? onRegister() : onUseWebApp())}
-              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-7 py-3.5 text-sm font-bold text-slate-950 shadow-[0_18px_44px_-14px_rgba(56,189,248,0.75)] transition hover:brightness-110"
-            >
-              {tr ? "Ücretsiz üye ol" : "Create a free account"}
-            </button>
-            <p className="mt-2 text-[12px] text-slate-500">
-              {tr ? "30 saniye sürer, e-posta yeter." : "Takes 30 seconds, email is enough."}
-            </p>
-          </motion.div>
-        )}
       </div>
     </section>
   );

@@ -78,9 +78,17 @@ export type AdminOverview = {
   pageViewsByDay: Array<{ date: string; count: number }>;
   pageViewsTodayByHourUtc: Array<{ hour: number; count: number }>;
   conversionFunnel: {
+    totalUsers: number;
+    /** En az bir gerçek işlem yapmış kullanıcı (değeri yaşamış olan). */
+    activatedUsers: number;
     freeTierEverHitLimit: number;
     usersWithCompletedCheckout: number;
-    totalUsers: number;
+    rates: {
+      signupToActivation: number;
+      activationToWall: number;
+      wallToPaid: number;
+      signupToPaid: number;
+    };
   };
   presenceWindowMinutes: number;
   distinctSessionsActiveNow: number;
