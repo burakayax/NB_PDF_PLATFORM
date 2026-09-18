@@ -1,0 +1,33 @@
+# PDF Platform
+
+> Online toolkit of 30+ PDF and image tools at https://www.pdfplatform.app. Most page-level operations (merge, split, rotate, crop, delete and reorder pages, image-to-PDF, signing, annotation) run entirely in the visitor's browser and never upload the file. OCR, format conversion and AI features run server-side. No plan adds a watermark to the output. Interface and content are available in Turkish and English. A REST API is available on the Pro and Business plans.
+
+The HTTP API is versioned under `/v1` at `https://api.pdfplatform.app/v1`. It authenticates with a bearer API key (`Authorization: Bearer nb_live_...`), returns errors as RFC 9457 `application/problem+json`, advertises limits through the IETF `RateLimit` header fields (60 requests per minute per key), and supports retry-safe POSTs via the `Idempotency-Key` header. Every successful response includes a `usage` object with the remaining credit count. Live endpoints are `GET /v1/me`, `POST /v1/summarize`, `POST /v1/extract` and `POST /v1/translate`; each POST accepts either a `text` field or a PDF `file` (multipart/form-data, up to 20 MB).
+
+## API
+
+- [API documentation](https://www.pdfplatform.app/en/pdf-api/docs): Authentication, endpoints with request and response examples, error glossary, rate limits, versioning policy and changelog.
+- [OpenAPI specification](https://api.pdfplatform.app/v1/openapi.json): Machine-readable definition of every endpoint; works with Postman and OpenAPI Generator.
+- [API overview](https://www.pdfplatform.app/en/pdf-api): What the API does and which plans include it.
+
+## Tools
+
+- [Merge PDF](https://www.pdfplatform.app/en/tools/merge-pdf): Combine several PDFs into one, in the browser, with no upload.
+- [Split PDF](https://www.pdfplatform.app/en/tools/split-pdf): Extract or separate pages, in the browser.
+- [Compress PDF](https://www.pdfplatform.app/en/tools/compress): Reduce file size; runs server-side.
+- [PDF to Word](https://www.pdfplatform.app/en/tools/pdf-to-word): Convert a PDF into an editable Word document; runs server-side.
+- [Searchable PDF (OCR)](https://www.pdfplatform.app/en/tools/searchable-pdf): Recognise text in a scanned document; runs server-side.
+- [Edit PDF](https://www.pdfplatform.app/en/tools/edit-pdf): Change or delete the existing text inside a PDF; runs server-side.
+- [Sign PDF](https://www.pdfplatform.app/en/tools/sign-pdf): Add a signature, in the browser, with no upload.
+- [Summarize PDF](https://www.pdfplatform.app/en/tools/summarize-pdf): AI summary of a long document; also available as an API endpoint.
+- [All tools](https://www.pdfplatform.app/en/): The full list of tools on the home page.
+
+## Company
+
+- [Pricing](https://www.pdfplatform.app/en/pricing): Free plan plus paid plans starting at $3.99 per month; the top tier is a multi-seat team plan.
+- [Blog](https://www.pdfplatform.app/en/blog): Guides on working with PDFs, in English and Turkish.
+
+## Optional
+
+- [Turkish API documentation](https://www.pdfplatform.app/pdf-api/docs): The same API reference in Turkish.
+- [Turkish home page](https://www.pdfplatform.app/): Turkish version of the site.

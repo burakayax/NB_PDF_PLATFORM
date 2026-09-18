@@ -26,7 +26,7 @@ import {
   TOOL_SEO,
   LANDING_SEO,
   PRICING_SEO,
-  API_SEO,
+  API_SEO, API_DOCS_SEO,
   LEGAL_SEO,
   SOFTWARE_FEATURE_LIST,
   RELATED_TOOLS as TOOL_RELATED_TOOLS,
@@ -303,6 +303,11 @@ function pageMetaForRoute(routePath, lang) {
   if (routePath === "/pdf-api") {
     const c = API_SEO[lang];
     return { ...c, kind: "apilanding", index: true, follow: true, includeFaq: true };
+  }
+
+  if (routePath === "/pdf-api/docs") {
+    const c = API_DOCS_SEO[lang];
+    return { ...c, kind: "apidocs", index: true, follow: true, includeFaq: true };
   }
 
   if (routePath === "/blog") {
@@ -804,6 +809,7 @@ const LOGICAL_ROUTES = [
   { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
   ...TOOL_SLUGS.map((slug) => ({ path: `/tools/${slug}`, changefreq: "weekly", priority: "0.9" })),
   { path: "/pdf-api", changefreq: "monthly", priority: "0.7" },
+  { path: "/pdf-api/docs", changefreq: "monthly", priority: "0.7" },
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   ...BLOG_POSTS.map((p) => ({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" })),
 ];
@@ -857,6 +863,7 @@ const prerenderRoutes = [
   "/kvkk",
   ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
   "/pdf-api",
+  "/pdf-api/docs",
   "/blog",
   ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];
