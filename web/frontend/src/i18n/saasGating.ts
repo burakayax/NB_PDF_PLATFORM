@@ -26,11 +26,18 @@ const REASON_COPY: Record<SaaSGatingReason, { title: Dict; body: Dict }> = {
     title: { tr: "Yönetici erişimi", en: "Admin access" },
     body: { tr: "Yönetici hesabı — kota uygulanmaz.", en: "Admin account — quota bypassed." },
   },
+  /**
+   * NOT: Bu metin bilerek "limitiniz doldu, yükseltin" demiyor.
+   * Ölçülmüş bulgu: kısıtı öne çıkaran metinler en zayıf dönüşümü veriyor;
+   * kullanıcının O ANA kadar aldığı değeri ve yükseltmenin ne KAZANDIRACAĞINI
+   * söyleyen metinler en iyisini. Kullanıcı zaten engellendiğini görüyor —
+   * ona bunu tekrar söylemek yerine karşılığını anlatmak gerekiyor.
+   */
   plan_limit_reached: {
-    title: { tr: "Plan limitine ulaştınız", en: "Plan limit reached" },
+    title: { tr: "Bugünlük bu kadar", en: "That's today's quota" },
     body: {
-      tr: "Bu ay için işlem limitiniz doldu. Daha fazla işlem için planınızı yükseltin.",
-      en: "You've used all operations for this period. Upgrade your plan to continue.",
+      tr: "Bugün hakkını sonuna kadar kullandın. Pro'da günlük sınır yok: belgeleri arka arkaya işler, büyük dosyalar yükler ve toplu dönüştürme yaparsın.",
+      en: "You've used everything today. Pro removes the daily cap: process documents back to back, upload larger files and convert in batches.",
     },
   },
   tool_not_registered: {

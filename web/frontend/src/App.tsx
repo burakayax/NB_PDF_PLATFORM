@@ -179,6 +179,7 @@ import {
 import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
 import { setCurrentPlan } from "./lib/currentPlan";
+import { QuotaMeter } from "./components/workspace/QuotaMeter";
 import { ToolHowTo } from "./components/common/ToolHowTo";
 import {
   persistWorkspaceTool,
@@ -6904,6 +6905,21 @@ function App() {
                           : undefined
                       }
                     >
+                      {/* GÜNLÜK HAK — işe BAŞLAMADAN önce görünür.
+                          Kullanıcı hakkının bittiğini işi yarıda kesildiğinde
+                          öğreniyordu; sayaç önceden görünürse yükseltmeyi
+                          planlayabiliyor. */}
+                      {userBalance && (
+                        <QuotaMeter
+                          language={language}
+                          used={userBalance.daily?.used ?? 0}
+                          limit={userBalance.daily?.limit ?? null}
+                          resetAt={userBalance.daily?.resetAt ?? null}
+                          onUpgrade={() => setContentPanel("pricing")}
+                          className="mb-4"
+                        />
+                      )}
+
                       <form
                         key={workspaceSlateNonce}
                         id="nb-workspace-tool-form"
