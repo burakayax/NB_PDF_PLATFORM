@@ -99,3 +99,4 @@ web/frontend/public/scanic-ml/
 # Render kural/başlık yedekleri — elle çalıştırılan betiklerin çıktısı, depoya girmez.
 web/frontend/render-routes-yedek-*.json
 web/frontend/render-headers-yedek-*.json
+web/frontend/chk.mjs
