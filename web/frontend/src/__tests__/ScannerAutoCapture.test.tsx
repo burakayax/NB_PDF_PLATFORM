@@ -43,7 +43,11 @@ function fakeCamera() {
   Object.defineProperty(navigator, "mediaDevices", {
     configurable: true,
     value: {
-      getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })),
+      // Telefon benzetimi: açılan parça ARKA kamera olduğunu bildirir.
+      getUserMedia: vi.fn(async () => ({
+        getTracks: () => [track],
+        getVideoTracks: () => [{ ...track, getSettings: () => ({ facingMode: "environment" }) }],
+      })),
       // Kamera taraması artık ekran genişliğine değil ARKA KAMERA varlığına
       // bakıyor; sahte cihaz listesi olmadan bileşen "kamera yok" ekranını açar.
       enumerateDevices: vi.fn(async () => [
@@ -98,19 +102,22 @@ describe("Belge Tarayıcı — otomatik çekim plan ayrımı", () => {
 describe("kamera taraması cihaz yeteneğine göre açılır", () => {
   it("arka kamera yoksa kamera ekranı yerine yükleme ekranı gösterilir", async () => {
     // Dizüstü bilgisayar: yalnız ön kamera → arka kamera isteği reddedilir.
+    // Dizüstü: kamera açılır ama ÖN kameradır ve cihaz dokunmatik değildir.
+    const t = { stop: vi.fn() };
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
-        enumerateDevices: vi.fn(async () => [{ kind: "videoinput", deviceId: "on", label: "front" }]),
-        getUserMedia: vi.fn(async () => {
-          throw new Error("OverconstrainedError");
-        }),
+        getUserMedia: vi.fn(async () => ({
+          getTracks: () => [t],
+          getVideoTracks: () => [{ ...t, getSettings: () => ({ facingMode: "user" }) }],
+        })),
       },
     });
+    Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, value: 0 });
 
     render(<DocumentScanner {...baseProps} isPro isDesktop={false} onUpgrade={vi.fn()} />);
 
-    // Genişlik "mobil" olsa bile arka kamera yoksa tarama açılmaz.
-    expect(await screen.findByText(/arka kamera bulunamadı/i)).toBeTruthy();
+    // Ekran genişliğinden bağımsız: ön kamerayla belge taranmaz, telefona yönlendirilir.
+    expect(await screen.findByText(/telefonda kullanılır/i)).toBeTruthy();
   });
 });

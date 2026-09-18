@@ -230,62 +230,30 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   }, []);
 
   /**
-   * ARKA KAMERA VAR MI? — "masaüstü mü" sorusunun yerine geçer.
-   *
-   * NEDEN DEĞİŞTİ: Kamera taraması pencere GENİŞLİĞİNE göre açılıp kapanıyordu
-   * (>=1024 piksel ise "masaüstü"). Bu ölçüt yanlış: arka kamerası olan bir
-   * tablet ya da yatay tutulan geniş bir cihaz "masaüstü" sayılıp tarama
-   * kapanıyor, kullanıcı dosya seçiciye düşüyor ve telefonunda "Fotoğraf Çek"
-   * sorusuyla karşılaşıyordu — otomatik çekim de o yüzden hiç devreye girmiyordu.
-   * Doğru soru ekranın kaç piksel olduğu değil, cihazda ARKA kamera bulunup
-   * bulunmadığıdır; dizüstü bilgisayarların ön kamerası bu sınavı geçemez.
-   *
-   * null = henüz bilinmiyor (sorulmadı/cevap beklenmiyor).
+   * Kamera açılamadıysa SEBEBİ — ekranda doğru şeyi yazabilmek için.
+   *   "izin"      → kullanıcı reddetti / tarayıcı engelledi
+   *   "arka-yok"  → kamera var ama arka kamera yok (tipik dizüstü)
+   *   "yok"       → hiç kamera yok / erişilemedi
    */
-  const [arkaKameraVar, setArkaKameraVar] = useState<boolean | null>(null);
+  const [kameraSorunu, setKameraSorunu] = useState<null | "izin" | "arka-yok" | "yok">(null);
+  /** Kullanıcı "tekrar dene" dediğinde kamerayı yeniden açmak için sayaç. */
+  const [kameraDeneme, setKameraDeneme] = useState(0);
 
+  // KAMERAYI DOĞRUDAN AÇMAYI DENE — önce "cihazda kamera var mı" diye YOKLAMA YAPMA.
+  //
+  // NEDEN: Bir ara cihaz listesi (enumerateDevices) ile ön kontrol yapılıyordu.
+  // Safari/WebKit gizlilik gereği İZİN VERİLMEDEN ÖNCE bu listeyi boş döndürüyor;
+  // kontrol "kamera yok" sonucuna varıp izin istemeden yükleme ekranına düşüyordu.
+  // Kullanıcı hiç izin sorusu görmeden "arka kamera bulunamadı" yazısıyla
+  // karşılaşıyordu. Doğrusu: kamerayı açmayı dene — izin istemi böyle çıkar,
+  // sonucu da hatanın türünden anla.
   useEffect(() => {
-    if (!open) return;
-    let iptal = false;
-    (async () => {
-      try {
-        const cihazlar = await navigator.mediaDevices?.enumerateDevices?.();
-        const videoGirisi = (cihazlar ?? []).filter((d) => d.kind === "videoinput");
-        if (videoGirisi.length === 0) {
-          if (!iptal) setArkaKameraVar(false);
-          return;
-        }
-        // İzin verilmeden önce cihaz adları boş gelir; bu yüzden asıl sınav
-        // "arka kamera isteyip açılıyor mu". Açılan akış hemen kapatılır.
-        const test = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } },
-          audio: false,
-        });
-        test.getTracks().forEach((t) => t.stop());
-        if (!iptal) setArkaKameraVar(true);
-      } catch {
-        // OverconstrainedError → arka kamera yok (tipik dizüstü).
-        // NotAllowedError → kullanıcı izni reddetti; kamera akışı da açılamaz.
-        if (!iptal) setArkaKameraVar(false);
-      }
-    })();
-    return () => {
-      iptal = true;
-    };
-  }, [open]);
-
-  /** Kamera taraması bu cihazda mümkün mü? Yetenek bilinene kadar ekran genişliği
-   *  yalnızca ilk tahmin olarak kullanılır (titremeyi önler). */
-  const kameraTaramasiMumkun = arkaKameraVar === null ? !isDesktop : arkaKameraVar;
-
-  // Kamerayı yalnız "camera" fazında ve modal açıkken çalıştır (mobil kaynağı boşa tutma).
-  // Masaüstünde (arka kamera yok) kamerayı hiç açma → "telefonda açın" ekranı gösterilir.
-  useEffect(() => {
-    if (!open || phase !== "camera" || !kameraTaramasiMumkun) return;
+    if (!open || phase !== "camera") return;
     let cancelled = false;
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
+          setKameraSorunu("yok");
           setCameraError(true);
           return;
         }
@@ -297,21 +265,39 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
+
+        // Açılan kamera ARKA kamera mı? Dizüstü bilgisayarın ön kamerasıyla belge
+        // taramak işe yaramaz (ters görüntü, kötü açı); orada yükleme akışı daha
+        // doğru. Dokunmatik olmayan cihazda ön kamera geldiyse tarama açılmaz.
+        const ayar = stream.getVideoTracks?.()?.[0]?.getSettings?.() as { facingMode?: string } | undefined;
+        const arkaKamera = ayar?.facingMode === "environment";
+        const dokunmatik = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+        if (!arkaKamera && !dokunmatik) {
+          stream.getTracks().forEach((t) => t.stop());
+          setKameraSorunu("arka-yok");
+          setCameraError(true);
+          return;
+        }
+
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
         }
+        setKameraSorunu(null);
         setCameraError(false);
-      } catch {
-        if (!cancelled) setCameraError(true);
+      } catch (e) {
+        if (cancelled) return;
+        const ad = (e as { name?: string } | null)?.name ?? "";
+        setKameraSorunu(ad === "NotAllowedError" || ad === "SecurityError" ? "izin" : "yok");
+        setCameraError(true);
       }
     })();
     return () => {
       cancelled = true;
       stopStream();
     };
-  }, [open, phase, stopStream, kameraTaramasiMumkun]);
+  }, [open, phase, stopStream, kameraDeneme]);
 
   // Sayfa kaydırmasını kilitle + kapanınca her şeyi sıfırla.
   useEffect(() => {
@@ -443,7 +429,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   // ── CANLI kenar tespiti döngüsü (yalnız kamera fazında) ──
   useEffect(() => {
-    if (!open || phase !== "camera" || cameraError || !kameraTaramasiMumkun || !isPro) return;
+    if (!open || phase !== "camera" || cameraError || !isPro) return;
     // Kameraya her girişte temiz başla.
     capturingRef.current = false;
     stableRef.current = 0;
@@ -961,54 +947,57 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── KAMERA ── */}
           {phase === "camera" && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col">
-              {!kameraTaramasiMumkun ? (
+              {cameraError ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
                   <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30">
-                    <Smartphone className="h-8 w-8" />
+                    {kameraSorunu === "arka-yok" ? <Smartphone className="h-8 w-8" /> : <Camera className="h-8 w-8" />}
                   </span>
                   <div>
                     <p className="text-lg font-bold">
-                      {tr ? "Bu araç telefonda kullanılır" : "Use this tool on your phone"}
+                      {kameraSorunu === "izin"
+                        ? tr ? "Kamera izni gerekli" : "Camera permission needed"
+                        : kameraSorunu === "arka-yok"
+                          ? tr ? "Bu araç telefonda kullanılır" : "Use this tool on your phone"
+                          : tr ? "Kamera açılamadı" : "Couldn't open the camera"}
                     </p>
                     <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-                      {tr
-                        ? "Belge Tara, cihazın ARKA kamerasıyla belgeyi çekip PDF'e çevirir. Bu cihazda arka kamera bulunamadı (ya da kamera izni verilmedi). Telefonunuzdan pdfplatform.app adresine girip Belge Tara'yı açın; izin sorulursa kameraya izin verin."
-                        : "Scan Document uses your device's REAR camera to capture a document and turn it into a PDF. No rear camera was found on this device (or camera permission was denied). Open pdfplatform.app on your phone and start Scan Document; allow camera access when asked."}
+                      {kameraSorunu === "izin"
+                        ? tr
+                          ? "Belgeyi taramak için kameraya erişim izni vermen gerekiyor. Tarayıcı ayarlarından bu siteye kamera iznini aç, sonra tekrar dene."
+                          : "Scanning needs camera access. Allow the camera for this site in your browser settings, then try again."
+                        : kameraSorunu === "arka-yok"
+                          ? tr
+                            ? "Belge tarama cihazın ARKA kamerasıyla çalışır; bu bilgisayarda yalnızca ön kamera var. Telefonundan pdfplatform.app adresine girip Belge Tara'yı aç — kenarlar canlı bulunur, sabitleyince kendiliğinden çeker."
+                            : "Scanning uses the REAR camera; this computer only has a front camera. Open pdfplatform.app on your phone and start Scan Document — edges are tracked live and it captures when steady."
+                          : tr
+                            ? "Kamera şu an kullanılamıyor. Başka bir uygulama kamerayı kullanıyor olabilir; kapatıp tekrar dene ya da hazır bir görsel yükle."
+                            : "The camera isn't available right now. Another app may be using it — close it and try again, or upload an image instead."}
                     </p>
                   </div>
                   <div className="mt-1 flex flex-col items-center gap-2">
+                    {kameraSorunu !== "arka-yok" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCameraError(false);
+                          setKameraSorunu(null);
+                          setKameraDeneme((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3.5 text-sm font-bold text-white"
+                      >
+                        <Camera className="h-4 w-4" />
+                        {tr ? "Kamerayı tekrar dene" : "Try the camera again"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.1]"
                     >
                       <ImageIcon className="h-4 w-4" />
-                      {tr ? "Bilgisayardan görsel yükle" : "Upload an image instead"}
+                      {tr ? "Hazır görsel yükle" : "Upload an image instead"}
                     </button>
-                    <p className="inline-flex items-center gap-1.5 text-[12px] text-slate-500">
-                      <Smartphone className="h-3.5 w-3.5" />
-                      {tr ? "En iyi sonuç: telefonun arka kamerası" : "Best result: phone rear camera"}
-                    </p>
                   </div>
-                </div>
-              ) : cameraError ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.06] text-cyan-300">
-                    <Camera className="h-7 w-7" />
-                  </span>
-                  <p className="max-w-xs text-sm text-slate-300">
-                    {tr
-                      ? "Kameraya erişilemedi. Telefonun kamerasıyla fotoğraf çekmek için aşağıdaki düğmeye dokun."
-                      : "Camera unavailable. Tap below to take a photo with your phone camera."}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3.5 text-sm font-bold text-white"
-                  >
-                    <Camera className="h-4 w-4" />
-                    {tr ? "Kamerayı Aç" : "Open camera"}
-                  </button>
                 </div>
               ) : (
                 <>
