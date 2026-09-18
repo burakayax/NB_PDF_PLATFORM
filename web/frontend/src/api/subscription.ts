@@ -65,6 +65,7 @@ export type FeatureKey =
   | "ustveri-temizle"
   | "pdf-to-pdfa"
   | "sayfa-duzeni"
+  | "imza-iste"
   | "extract-images";
 
 /*

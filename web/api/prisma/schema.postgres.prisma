@@ -232,6 +232,7 @@ model User {
   bonusAiCredits  Int              @default(0) @map("bonus_ai_credits")
 
   refreshTokens RefreshToken[]
+  signatureRequests SignatureRequest[] @relation("SignatureRequestOwner")
   dailyUsages  DailyUsage[]
   aiUsages     AiUsage[]
   apiKeys      ApiKey[]
@@ -905,4 +906,74 @@ model SocialKeywordCache {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("social_keyword_cache")
+}
+
+/// İmza isteğinin yaşam döngüsü.
+enum SignatureRequestStatus {
+  PENDING
+  VIEWED
+  SIGNED
+  DECLINED
+  CANCELLED
+  EXPIRED
+}
+
+/// BAŞKASINDAN İMZA İSTEME.
+///
+/// Gönderen belgeyi yükler, imzalayacak kişinin e-postasını yazar; karşı tarafa
+/// tek kullanımlık bir bağlantı gider. İmza, SUNUCUDA saklanan ÖZGÜN belgeye
+/// gömülür — imzalayanın gönderdiği bir dosya kabul edilmez; aksi hâlde belge
+/// içeriği imzalanmadan önce değiştirilebilirdi.
+model SignatureRequest {
+  id           String   @id @default(cuid())
+  ownerId      String   @map("owner_id")
+  owner        User     @relation("SignatureRequestOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  title        String
+  filename     String
+  /// İmzalanacak özgün belge.
+  originalData Bytes    @map("original_data")
+  /// Özgün belgenin parmak izi (SHA-256) — sonradan değişmediğini kanıtlar.
+  originalHash String   @map("original_hash")
+  /// İmzalanmış belge (imza tamamlanınca dolar).
+  signedData   Bytes?   @map("signed_data")
+  signedHash   String?  @map("signed_hash")
+  message      String?
+  status       SignatureRequestStatus @default(PENDING)
+  signerEmail  String   @map("signer_email")
+  signerName   String?  @map("signer_name")
+  /// Bağlantı anahtarının ÖZETİ; anahtarın kendisi saklanmaz.
+  tokenHash    String   @unique @map("token_hash")
+  expiresAt    DateTime @map("expires_at")
+  viewedAt     DateTime? @map("viewed_at")
+  signedAt     DateTime? @map("signed_at")
+  declinedAt   DateTime? @map("declined_at")
+  declineReason String?  @map("decline_reason")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  events       SignatureEvent[]
+
+  @@index([ownerId, createdAt])
+  @@index([signerEmail])
+  @@map("signature_requests")
+}
+
+/// Denetim izi: kim, ne zaman, hangi ağdan ne yaptı.
+///
+/// Elektronik imzanın hukuki dayanağı «niyet, rıza, kime ait olduğu ve
+/// bütünlük» dörtlüsünün kanıtlanmasıdır; bu kayıtlar o kanıtı oluşturur.
+/// Ağ adresi AÇIK saklanmaz, yalnız özeti tutulur.
+model SignatureEvent {
+  id        String   @id @default(cuid())
+  requestId String   @map("request_id")
+  request   SignatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  /// created | sent | viewed | signed | declined | cancelled | downloaded
+  type      String
+  at        DateTime @default(now())
+  ipHash    String?  @map("ip_hash")
+  userAgent String?  @map("user_agent")
+  detail    String?
+  actor     String?
+
+  @@index([requestId, at])
+  @@map("signature_events")
 }

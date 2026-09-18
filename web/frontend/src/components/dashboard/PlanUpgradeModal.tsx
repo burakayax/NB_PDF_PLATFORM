@@ -36,6 +36,7 @@ const GATED_TOOL_LABELS: Record<string, { tr: string; en: string }> = {
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
   "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
   "sayfa-duzeni": { tr: "Sayfa Düzeni", en: "Page Layout" },
+  "imza-iste": { tr: "İmza İste", en: "Request Signature" },
 };
 
 interface PlanUpgradeModalProps {

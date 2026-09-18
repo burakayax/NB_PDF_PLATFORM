@@ -231,6 +231,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "imza-iste": {
+    tr: {
+      title: "PDF imza isteme (karşı tarafa imzalatma) | PDF Platform",
+      description:
+        "Belgeyi e-postayla imzaya gönderin; imzalı kopya denetim kaydıyla gelir.",
+    },
+    en: {
+      title: "Request a PDF signature | PDF Platform",
+      description:
+        "Send a document out for signature; the signed copy arrives with an audit record.",
+    },
+  },
   "sayfa-duzeni": {
     tr: {
       title: "PDF sayfa düzeni (2-4-8'li, kitapçık) | PDF Platform",

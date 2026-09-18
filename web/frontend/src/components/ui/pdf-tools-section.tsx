@@ -17,6 +17,7 @@ import {
   FileText,
   Archive,
   Grid2x2,
+  FileSignature,
   FileType2,
   Files,
   Globe,
@@ -219,6 +220,11 @@ const TOOLS: Tool[] = [
     id: "watermark", cat: "edit", Icon: Droplets,
     tr: { name: "Filigran Ekle", desc: "Sayfalara kendi damganızı veya yazınızı basın." },
     en: { name: "Add Watermark", desc: "Stamp your own mark or text onto the pages." },
+  },
+  {
+    id: "imza-iste", cat: "security", Icon: FileSignature,
+    tr: { name: "İmza İste", desc: "Belgeyi karşı tarafa imzalatın; denetim kayıtlı imzalı kopya gelsin." },
+    en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
     id: "sayfa-duzeni", cat: "edit", Icon: Grid2x2,
@@ -441,6 +447,7 @@ const TOOL_HUE: Record<string, HueId> = {
   "ustveri-temizle": "rose",
   "pdf-to-pdfa": "amber",
   "sayfa-duzeni": "lime",
+  "imza-iste": "violet",
   // Dönüştür
   "pdf-to-word": "blue",
   "word-to-pdf": "blue",

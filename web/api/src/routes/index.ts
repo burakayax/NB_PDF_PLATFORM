@@ -15,6 +15,7 @@ import { paymentsRouter } from "../modules/payment/payments.routes.js";
 import { publicRouter } from "../modules/public/public.routes.js";
 import { subscriptionRouter } from "../modules/subscription/subscription.routes.js";
 import { userRouter } from "../modules/user/user.routes.js";
+import { signatureRouter, publicSignRouter } from "../modules/signature/signature.routes.js";
 import orgRouter from "../modules/organization/organization.routes.js";
 import billingRouter from "../modules/billing/billing.routes.js";
 import teamRouter from "../modules/team/team.controller.js";
@@ -90,6 +91,9 @@ apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/license", licenseRouter);
 apiRouter.use("/subscription", subscriptionRouter);
 apiRouter.use("/user", userRouter);
+// İmza istekleri: /signatures oturum ister, /sign bağlantı anahtarıyla gelir.
+apiRouter.use("/signatures", signatureRouter);
+apiRouter.use("/sign", publicSignRouter);
 apiRouter.use("/org", orgRouter);
 apiRouter.use("/billing", billingRouter);
 apiRouter.use("/team", teamRouter);
