@@ -152,6 +152,35 @@ async function main() {
     return;
   }
 
+  // ── YANIT BAŞLIKLARI: kamera iznini kendi sitemize aç ───────────────────────
+  //
+  // NEDEN: Canlıda `Permissions-Policy: camera=()` gönderiliyordu. Bu "kamerayı
+  // hiçbir kaynağa, kendi sitene bile kapat" demek; tarayıcı kamera isteğini hiç
+  // işleme almıyor, kullanıcıya izin sorulmuyor ve site ayarlarında kamera satırı
+  // bile görünmüyor (ölçüldü). Belge Tarayıcı bu yüzden kamerayı hiç açamıyordu.
+  // Mikrofon ve konum kapalı kalır — hiçbir aracımız kullanmıyor.
+  const DOGRU_IZIN = "camera=(self), microphone=(), geolocation=(), interest-cohort=()";
+  const basliklar = await tumKayitlar(`/services/${servis.id}/headers`, "headerRule");
+  const izinBasligi = basliklar.find((h) => (h.name || "").toLowerCase() === "permissions-policy");
+  const izinGuncelMi = izinBasligi && izinBasligi.value === DOGRU_IZIN;
+  console.log(
+    `Permissions-Policy: ${izinBasligi ? (izinGuncelMi ? "zaten doğru" : `düzeltilecek → "${izinBasligi.value}"`) : "yok, eklenecek"}`,
+  );
+
+  if (uygula && !izinGuncelMi) {
+    const yeniBasliklar = basliklar
+      .filter((h) => (h.name || "").toLowerCase() !== "permissions-policy")
+      .map(({ path, name, value }) => ({ path, name, value }));
+    yeniBasliklar.push({ path: "/*", name: "Permissions-Policy", value: DOGRU_IZIN });
+    writeFileSync(
+      join(frontendKok, `render-headers-yedek-${new Date().toISOString().replace(/[:.]/g, "-")}.json`),
+      JSON.stringify(basliklar, null, 2),
+      "utf8",
+    );
+    await istek(`/services/${servis.id}/headers`, { method: "PUT", body: JSON.stringify(yeniBasliklar) });
+    console.log(`Başlıklar güncellendi (${yeniBasliklar.length} kural). Kamera artık kendi sitemize açık.`);
+  }
+
   // ── Hedef liste ─────────────────────────────────────────────────────────────
   // 1) Mevcut kurallardan joker ve /* dışındakiler (eski slug yönlendirmeleri,
   //    /pricing gibi düz sayfalar) OLDUĞU SIRAYLA korunur.
