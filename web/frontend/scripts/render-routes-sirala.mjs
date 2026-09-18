@@ -262,7 +262,25 @@ Yeni sıra: ${spesifik.length} spesifik → ${jokerler.length} joker → ${yakal
 
   await istek(`/services/${servis.id}/routes`, { method: "PUT", body: JSON.stringify(hedef) });
 
-  const sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  // Yazma sonrası okumada Render bazen ESKİ listeyi döndürebiliyor (yayılma
+  // gecikmesi). Sayı beklenenden azsa kısa bir bekleyip bir kez daha okunur;
+  // yine tutmazsa bu AÇIKÇA bildirilir — "uygulandı" deyip geçmek, kullanıcının
+  // olmayan kuralları var sanmasına yol açar.
+  let sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  if (sonra.length !== hedef.length) {
+    await new Promise((c) => setTimeout(c, 3000));
+    sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  }
+  if (sonra.length !== hedef.length) {
+    console.log(
+      `
+UYARI: ${hedef.length} kural yazıldı ama sunucu ${sonra.length} kural bildiriyor.` +
+        `
+Yeni kurallar uygulanmamış olabilir; denetimi çalıştırıp doğrula:` +
+        `
+  node scripts/render-routes-denetim.mjs`,
+    );
+  }
   const yeniIndex = sonra.findIndex((k) => String(k.source) === "/*");
   const ilkJoker = sonra.findIndex((k) => /[:*]/.test(String(k.source || "")));
   const halaGolgede = sonra
