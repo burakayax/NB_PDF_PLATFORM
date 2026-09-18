@@ -43,6 +43,8 @@ import {
   canvasToJpegBlob,
   cropQuadFallback,
   detectDocumentQuad,
+  detectDocumentQuadLive,
+  isitScanner,
   fullFrameQuad,
   warpDocument,
   type EnhanceMode,
@@ -206,6 +208,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [liveQuad, setLiveQuad] = useState<Quad | null>(null);
   const [videoDims, setVideoDims] = useState<{ w: number; h: number } | null>(null);
   const [holdPct, setHoldPct] = useState(0);
+  /** Uzun süredir belge bulunamıyorsa somut ipucu göster (zemin/ışık/çerçeve). */
+  const [uzunSuredirBulunamadi, setUzunSuredirBulunamadi] = useState(false);
+  const sonBulunmaRef = useRef<number>(Date.now());
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -278,6 +283,10 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           setCameraError(true);
           return;
         }
+
+        // Sinir ağı modelini arka planda indir: kullanıcı belgeyi çerçeveye
+        // yerleştirirken hazır olsun.
+        void isitScanner();
 
         streamRef.current = stream;
         if (videoRef.current) {
@@ -450,17 +459,21 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           const vw = v.videoWidth;
           const vh = v.videoHeight;
           const off = offscreenRef.current ?? (offscreenRef.current = document.createElement("canvas"));
-          const ow = Math.min(vw, 640);
+          // 640 → 800: kütüphanenin önerdiği işleme boyutu. Küçük karede ince
+          // kenarlar kayboluyor, belge bulunamıyordu.
+          const ow = Math.min(vw, 800);
           const oh = Math.max(1, Math.round(vh * (ow / vw)));
           off.width = ow;
           off.height = oh;
           off.getContext("2d")?.drawImage(v, 0, 0, ow, oh);
-          const q = await detectDocumentQuad(off);
+          const q = await detectDocumentQuadLive(off);
           if (!cancelled && !capturingRef.current) {
             if (q) {
               const s = vw / ow;
               const scaled = q.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad;
               setLiveQuad(scaled);
+              sonBulunmaRef.current = Date.now();
+              setUzunSuredirBulunamadi(false);
               const prev = prevLiveRef.current;
               const moved = prev ? quadDiff(prev, scaled) : Infinity;
               stableRef.current = moved < vw * 0.03 ? stableRef.current + 1 : 0;
@@ -479,6 +492,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
               stableRef.current = 0;
               prevLiveRef.current = null;
               setHoldPct(0);
+              // 4 saniyedir hiçbir kenar bulunamadıysa kullanıcı neyi
+              // değiştireceğini bilmiyor; genel "belgeyi göster" yazısı yetmiyor.
+              if (Date.now() - sonBulunmaRef.current > 4000) setUzunSuredirBulunamadi(true);
             }
           }
         } catch {
@@ -1046,6 +1062,13 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                               : tr ? "Belge bulundu — sabit tut" : "Document found — hold steady"
                             : tr ? "Belgeyi kameraya göster" : "Point at the document"}
                     </p>
+                    {uzunSuredirBulunamadi && !liveQuad && (
+                      <p className="pointer-events-none absolute inset-x-6 top-14 rounded-xl bg-black/55 px-3 py-2 text-center text-[12px] leading-relaxed text-amber-200">
+                        {tr
+                          ? "Belge seçilemiyor: kâğıdın dört kenarı da görünsün, zemin kâğıttan koyu olsun ve gölge düşmesin."
+                          : "Can't lock on: keep all four edges in view, use a background darker than the paper, and avoid shadows."}
+                      </p>
+                    )}
                     {/* Otomatik yakalama ilerleme çubuğu */}
                     {autoCapture && holdPct > 0 && (
                       <div className="pointer-events-none absolute inset-x-10 top-12 h-1 overflow-hidden rounded-full bg-white/15">
