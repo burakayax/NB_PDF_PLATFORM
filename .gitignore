@@ -100,3 +100,4 @@ web/frontend/public/scanic-ml/
 web/frontend/render-routes-yedek-*.json
 web/frontend/render-headers-yedek-*.json
 web/frontend/chk.mjs
+web/frontend/render-routes-canli.json

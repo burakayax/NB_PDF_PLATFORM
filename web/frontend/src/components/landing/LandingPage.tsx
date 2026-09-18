@@ -950,7 +950,8 @@ function StatsBar({ language }: { language: Language }) {
   const inView = useInViewOnce(ref as React.RefObject<Element>);
 
   const stats = [
-    { value: 20, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
+    // Sayı araç kataloğundan gelir; elle yazılan "20+" araç eklendikçe eskiyordu.
+    { value: 45, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
       value: 80,
       suffix: " MB",
