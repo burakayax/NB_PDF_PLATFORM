@@ -303,6 +303,23 @@ export async function checkAndIncrementQuota(
     if (!user) return { allowed: false, reason: "user_not_found" };
 
     if (user.role === "ADMIN") {
+      // Yönetici kotadan muaftır AMA işlemi yine de kaydederiz: aksi hâlde
+      // yöneticinin kendi hesabıyla yaptığı denemeler hiçbir yerde görünmüyor,
+      // yönetim panelindeki "araç kullanımı" ekranı boş kalıyordu.
+      if (user.organizationId) {
+        await tx.operationLog.create({
+          data: {
+            userId,
+            organizationId: user.organizationId,
+            toolType,
+            fileCount,
+            totalFileSizeMB: totalSizeMB,
+            isBatch: fileCount > 1,
+            status: "SUCCESS",
+            processingTimeMs: processingTimeMs ?? null,
+          },
+        });
+      }
       return { allowed: true, reason: "admin_bypass", fileSizeLimitMB: 999999, watermarkEnabled: false, batchLimit: 999, dailyUsed: 0, dailyLimit: null, monthlyUsed: 0, monthlyLimit: null };
     }
 

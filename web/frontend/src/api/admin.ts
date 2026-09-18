@@ -173,6 +173,8 @@ export type AdminUserDetail = {
   createdAt: string;
   credit_balance: number;
   toolUsageCounts: Record<string, number>;
+  /** Araç kullanımı — gerçek işlem kaydından, son kullanım tarihiyle. */
+  toolUsageDetails?: { toolId: string; count: number; sonKullanim: string | null }[];
   creditTransactions: {
     id: string;
     type: string;
