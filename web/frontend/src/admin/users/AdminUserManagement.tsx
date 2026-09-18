@@ -899,7 +899,7 @@ function UserDetailPanel({
             </div>
           ) : (
             <div className="space-y-2">
-              {Object.keys(detail.toolUsageCounts).length === 0 ? (
+              {(detail.toolUsageDetails ?? []).length === 0 ? (
                 <p className="py-6 text-center text-sm text-slate-500">Araç kullanım kaydı yok.</p>
               ) : (
                 <div className="overflow-x-auto rounded-xl border border-slate-800/60">
@@ -907,18 +907,26 @@ function UserDetailPanel({
                     <thead>
                       <tr className="border-b border-slate-800 text-left text-slate-500">
                         <th className="px-3 py-2">Araç</th>
+                        <th className="px-3 py-2">Son kullanım</th>
                         <th className="px-3 py-2 text-right">Kullanım</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Object.entries(detail.toolUsageCounts)
-                        .sort(([, a], [, b]) => b - a)
-                        .map(([toolId, count]) => (
-                          <tr key={toolId} className="border-b border-slate-800/40 last:border-0">
-                            <td className="px-3 py-2 font-mono text-slate-300">{toolId}</td>
-                            <td className="px-3 py-2 text-right font-bold tabular-nums text-cyan-200">{count}</td>
-                          </tr>
-                        ))}
+                      {(detail.toolUsageDetails ?? []).map((a) => (
+                        <tr key={a.toolId} className="border-b border-slate-800/40 last:border-0">
+                          <td className="px-3 py-2 font-mono text-slate-300">{a.toolId}</td>
+                          <td className="px-3 py-2 text-slate-400">
+                            {a.sonKullanim
+                              ? new Date(a.sonKullanim).toLocaleDateString("tr-TR", {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })
+                              : "—"}
+                          </td>
+                          <td className="px-3 py-2 text-right font-bold tabular-nums text-cyan-200">{a.count}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

@@ -246,15 +246,32 @@ export async function adminGetUserDetailController(
   if (!user) {
     throw new HttpError(404, "User not found.");
   }
-  let toolUsageCounts: Record<string, number> = {};
-  try {
-    toolUsageCounts = JSON.parse(user.toolUsageCountsJson) as Record<
-      string,
-      number
-    >;
-  } catch {
-    /* ignore */
+  /**
+   * ARAÇ KULLANIMI — kaynak: gerçek işlem kaydı (OperationLog).
+   *
+   * Önceden kullanıcı satırındaki özet alan (`toolUsageCountsJson`) okunuyordu;
+   * o alan web araçları çalıştırıldığında HİÇ güncellenmiyordu, bu yüzden panel
+   * her kullanıcıda "Araç kullanım kaydı yok" diyordu. Her işlem zaten ayrı bir
+   * kayıt olarak yazılıyor; sayım doğrudan oradan yapılınca hem doğru oluyor hem
+   * de geçmiş kullanım geriye dönük görünüyor.
+   */
+  const araclar = await prisma.operationLog.groupBy({
+    by: ["toolType"],
+    where: { userId: user.id },
+    _count: { _all: true },
+    _max: { createdAt: true },
+  });
+  const toolUsageCounts: Record<string, number> = {};
+  for (const a of araclar) {
+    toolUsageCounts[a.toolType] = a._count._all;
   }
+  const toolUsageDetails = araclar
+    .map((a) => ({
+      toolId: a.toolType,
+      count: a._count._all,
+      sonKullanim: a._max.createdAt ? a._max.createdAt.toISOString() : null,
+    }))
+    .sort((x, y) => y.count - x.count);
   // Günlük kullanım hakkı paneli için özet (efektif = (özel ?? plan) + bugünkü bonus).
   const org = user.organization;
   const base = org?.customDailyLimit ?? org?.dailyOperationLimit ?? null;
@@ -272,7 +289,7 @@ export async function adminGetUserDetailController(
   // alana eriştiği için boş dizi döndürülür (undefined → çökme "beklenmedik hata" idi).
   // Hesap paylaşımı görünürlüğü — otomatik yaptırım YOK, yalnız bilgi.
   const paylasim = await hesapPaylasimSinyali(user.id);
-  response.json({ ...user, toolUsageCounts, usage, creditPackCheckouts: [], paylasim });
+  response.json({ ...user, toolUsageCounts, toolUsageDetails, usage, creditPackCheckouts: [], paylasim });
 }
 
 export async function adminListBlockedEmailsController(
