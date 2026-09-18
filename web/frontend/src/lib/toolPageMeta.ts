@@ -231,6 +231,18 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "pdf-to-pdfa": {
+    tr: {
+      title: "PDF/A dönüştürme (arşiv) | PDF Platform",
+      description:
+        "Belgenizi ISO arşiv biçimi PDF/A'ya çevirin; yazı tipleri gömülür.",
+    },
+    en: {
+      title: "Convert PDF to PDF/A | PDF Platform",
+      description:
+        "Convert your document to the ISO archival format PDF/A with embedded fonts.",
+    },
+  },
   "ustveri-temizle": {
     tr: {
       title: "PDF üstveri temizleme | PDF Platform",

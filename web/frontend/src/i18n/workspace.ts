@@ -21,6 +21,7 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "flatten-pdf",
   "form-doldur",
   "ustveri-temizle",
+  "pdf-to-pdfa",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -148,6 +149,7 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
   "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
   "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
+  "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -621,6 +623,13 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "pdf-to-pdfa": {
+      title: tr ? "PDF → PDF/A" : "PDF TO PDF/A",
+      description: tr
+        ? "Belgeyi arşiv biçimine çevirir: yazı tipleri gömülür, yıllar sonra da aynı görünür."
+        : "Converts to the archival format: fonts are embedded so it looks the same years later.",
+      button: tr ? "ARŞİVE ÇEVİR" : "CONVERT",
     },
     "ustveri-temizle": {
       title: tr ? "ÜSTVERİ TEMİZLE" : "REMOVE METADATA",

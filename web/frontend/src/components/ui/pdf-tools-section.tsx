@@ -15,6 +15,7 @@ import {
   FileSpreadsheet,
   FileStack,
   FileText,
+  Archive,
   FileType2,
   Files,
   Globe,
@@ -217,6 +218,11 @@ const TOOLS: Tool[] = [
     id: "watermark", cat: "edit", Icon: Droplets,
     tr: { name: "Filigran Ekle", desc: "Sayfalara kendi damganızı veya yazınızı basın." },
     en: { name: "Add Watermark", desc: "Stamp your own mark or text onto the pages." },
+  },
+  {
+    id: "pdf-to-pdfa", cat: "edit", Icon: Archive,
+    tr: { name: "PDF → PDF/A (Arşiv)", desc: "Kurumların istediği ISO arşiv biçimi; yazı tipleri gömülür." },
+    en: { name: "PDF to PDF/A (Archive)", desc: "The ISO archival format institutions ask for; fonts embedded." },
   },
   {
     id: "ustveri-temizle", cat: "edit", Icon: Eraser,
@@ -427,6 +433,7 @@ const TOOL_HUE: Record<string, HueId> = {
   "flatten-pdf": "indigo",
   "form-doldur": "emerald",
   "ustveri-temizle": "rose",
+  "pdf-to-pdfa": "amber",
   // Dönüştür
   "pdf-to-word": "blue",
   "word-to-pdf": "blue",

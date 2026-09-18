@@ -430,6 +430,7 @@ const pdfInspectionFeatures: FeatureId[] = [
   "pdf-to-image",
   "pdf-to-text",
   "flatten-pdf",
+  "pdf-to-pdfa",
   "extract-images",
 ];
 
@@ -575,6 +576,8 @@ function App() {
     "auto" | "low" | "medium" | "high"
   >("auto");
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
+  /** PDF/A uyumluluk düzeyi — 2b çoğu kurumun istediği düzey. */
+  const [pdfaVersion, setPdfaVersion] = useState("2b");
   // Görsel kalitesi: uzun belgelerde sunucu çözünürlüğü kendiliğinden düşürüyor;
   // bu seçim kullanıcının baskı kalitesi isteyebilmesi (ya da hız için düşürmesi)
   // için var.
@@ -2131,6 +2134,7 @@ function App() {
             "html-to-pdf": "HTML → PDF",
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
+            "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
             "form-doldur": "PDF Form Doldur",
             "ustveri-temizle": "PDF Üstveri Temizle",
             "extract-images": "PDF'ten Görsel Çıkar",
@@ -3301,6 +3305,7 @@ function App() {
     "pdf-to-image",
     "pdf-to-text",
     "flatten-pdf",
+    "pdf-to-pdfa",
     "extract-images",
   ];
   const anyUploadEncrypted =
@@ -4666,6 +4671,7 @@ function App() {
         pageNumFmt,
         pdfToImgFmt,
         pdfToImgQuality,
+        pdfaVersion,
         inputPassword,
         outputPassword,
       };
@@ -7529,6 +7535,34 @@ function App() {
                               </select>
                             </label>
                           </>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-pdfa" ? (
+                          <label className="field">
+                            <span>
+                              {language === "tr" ? "Uyumluluk düzeyi" : "Conformance level"}
+                            </span>
+                            <select
+                              value={pdfaVersion}
+                              onChange={(e) => setPdfaVersion(e.target.value)}
+                            >
+                              <option value="2b">
+                                {language === "tr"
+                                  ? "PDF/A-2b — önerilen (çoğu kurum)"
+                                  : "PDF/A-2b — recommended (most institutions)"}
+                              </option>
+                              <option value="1b">
+                                {language === "tr"
+                                  ? "PDF/A-1b — en katı, en geniş uyum"
+                                  : "PDF/A-1b — strictest, widest support"}
+                              </option>
+                              <option value="3b">
+                                {language === "tr"
+                                  ? "PDF/A-3b — ek dosya eklenebilen"
+                                  : "PDF/A-3b — allows attached files"}
+                              </option>
+                            </select>
+                          </label>
                         ) : null}
 
                         {selectedFeature.id === "pdf-to-image" ? (

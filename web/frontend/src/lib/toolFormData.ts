@@ -35,6 +35,8 @@ export type ToolFormState = {
   pageNumPos: string;
   pageNumFmt: string;
   pdfToImgFmt: string;
+  /** "1b" | "2b" | "3b" — PDF/A uyumluluk düzeyi. */
+  pdfaVersion: string;
   /** "ekran" | "normal" | "baski" — sunucu güvenli bir çözünürlüğe çevirir. */
   pdfToImgQuality: string;
   inputPassword: string;
@@ -135,6 +137,12 @@ export function buildToolFormData(
       case "pdf-to-image":
         formData.append("image_format", s.pdfToImgFmt);
         formData.append("quality", s.pdfToImgQuality);
+        if (s.password.trim()) {
+          formData.append("password", s.password.trim());
+        }
+        break;
+      case "pdf-to-pdfa":
+        formData.append("version", s.pdfaVersion);
         if (s.password.trim()) {
           formData.append("password", s.password.trim());
         }

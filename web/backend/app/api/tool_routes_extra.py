@@ -1850,6 +1850,62 @@ async def tool_pdf_to_text(
             cleanup_path(workdir)
 
 
+@router.post("/pdf-to-pdfa")
+@limiter.limit("10/minute")
+async def tool_pdf_to_pdfa(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    version: str = Form("2b"),
+    password: str = Form(""),
+):
+    """
+    PDF → PDF/A (arşiv biçimi).
+
+    Kamu ihalesi, e-arşiv, mahkeme ve üniversite tesliminde istenen ISO biçimi.
+    Yazı tipleri belgenin içine gömülür, renkler cihazdan bağımsız tanımlanır ve
+    dış kaynağa bağımlılık kaldırılır; belge yıllar sonra da aynı görünür.
+    """
+    decision = await entitlement_check(token, "pdf-to-pdfa")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        surum = (version or "2b").strip().lower()
+        if surum not in {"1b", "2b", "3b"}:
+            surum = "2b"
+        out_p = workdir / "arsiv.pdf"
+        out_n = format_derived_filename(file.filename or "dosya.pdf", f"pdfa-{surum}", ".pdf")
+        pwd = (password or "").strip() or None
+
+        def _run():
+            kaynak = sp
+            # Şifreli belge: PDF/A şifrelemeye izin VERMEZ, bu yüzden önce çözülür.
+            if pwd:
+                cozulmus = workdir / "cozulmus.pdf"
+                ptx.unlock_pdf_pikepdf(str(sp), str(cozulmus), pwd)
+                kaynak = cozulmus
+            bilgi = ptx.pdf_to_pdfa(str(kaynak), str(out_p), surum=surum)
+            # NOT: Çıktıya filigran EKLENMEZ — sonradan yapılan her müdahale
+            # belgenin PDF/A uyumluluğunu bozar.
+            govde = _pack_pdf_result_file(out_p, out_n, user_id, "pdf-to-pdfa")
+            govde["pdfa"] = bilgi
+            return govde
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-pdfa")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
 @router.post("/flatten-pdf")
 @limiter.limit("20/minute")
 async def tool_flatten_pdf(

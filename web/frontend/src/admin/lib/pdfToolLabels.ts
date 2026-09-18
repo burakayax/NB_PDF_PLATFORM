@@ -23,6 +23,7 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "flatten-pdf": "PDF Düzleştir",
   "form-doldur": "PDF Form Doldur",
   "ustveri-temizle": "PDF Üstveri Temizle",
+  "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
   "extract-images": "PDF'ten Görsel Çıkar",
 };
 
