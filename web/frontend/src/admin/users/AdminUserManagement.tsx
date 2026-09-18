@@ -796,6 +796,33 @@ function UserDetailPanel({
             ))}
           </div>
 
+          {/* HESAP PAYLAŞIMI GÖRÜNÜRLÜĞÜ — otomatik yaptırım yok, karar yöneticinin.
+              Paylaşımın gerçek izi eşzamanlı oturum değil, zaman içinde biriken
+              farklı cihaz sayısıdır; burada o sayı gösterilir. */}
+          {detail?.paylasim && (
+            <div
+              className={`rounded-xl border px-3.5 py-2.5 text-[12px] leading-relaxed ${
+                detail.paylasim.risk === "yuksek"
+                  ? "border-rose-500/30 bg-rose-500/[0.08] text-rose-200"
+                  : detail.paylasim.risk === "izlenmeli"
+                    ? "border-amber-400/30 bg-amber-500/[0.08] text-amber-200"
+                    : "border-slate-700/60 bg-slate-900/40 text-slate-400"
+              }`}
+            >
+              <p className="font-semibold">
+                {detail.paylasim.risk === "yuksek"
+                  ? "Olağandışı cihaz sayısı"
+                  : detail.paylasim.risk === "izlenmeli"
+                    ? "İzlenmeli"
+                    : "Cihaz kullanımı olağan"}
+              </p>
+              <p className="mt-0.5">{detail.paylasim.aciklama}</p>
+              <p className="mt-1 text-slate-500">
+                Şu an açık oturum: {detail.paylasim.acikOturum} · Farklı ağ: {detail.paylasim.agSayisi}
+              </p>
+            </div>
+          )}
+
           {loading ? (
             <p className="py-8 text-center text-sm text-slate-500">Yükleniyor…</p>
           ) : !detail ? (

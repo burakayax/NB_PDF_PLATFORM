@@ -157,6 +157,20 @@ function ipOzeti(ip?: string | null): string | null {
   return ip ? hashToken(ip) : null;
 }
 
+/**
+ * Cihazı temsil eden özet: tarayıcı kimliği + ağ özeti.
+ *
+ * Hesap paylaşımının gerçek işareti "aynı anda kaç oturum açık" değil, zaman
+ * içinde hesapta kaç FARKLI cihazın göründüğüdür: normal kullanıcı aylar içinde
+ * cihaz ekler, paylaşılan hesapta günler içinde çok sayıda farklı cihaz belirir.
+ * Bu alan o sayımı mümkün kılar; içinde açık kişisel veri taşımaz.
+ */
+function cihazAnahtari(userAgent?: string | null, ip?: string | null): string | null {
+  const ua = (userAgent ?? "").trim();
+  if (!ua && !ip) return null;
+  return hashToken(`${ua}|${ip ?? ""}`);
+}
+
 export type OturumBilgisi = {
   userAgent?: string | null;
   ip?: string | null;
@@ -211,6 +225,7 @@ async function createSession(user: User, isDesktop = false, bilgi: OturumBilgisi
       userId: user.id,
       userAgent: bilgi.userAgent ? bilgi.userAgent.slice(0, 500) : null,
       ipHash: ipOzeti(bilgi.ip),
+      deviceKey: cihazAnahtari(bilgi.userAgent, bilgi.ip),
       isDesktop: Boolean(isDesktop || bilgi.isDesktop),
     },
   });

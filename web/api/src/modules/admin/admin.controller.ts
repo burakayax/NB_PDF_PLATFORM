@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
+import { hesapPaylasimSinyali } from "../auth/session-insight.service.js";
 import { env } from "../../config/env.js";
 import { sendCampaignTest } from "../email/emailCampaign.service.js";
 import { normalizeCouponCode } from "../coupon/coupon.service.js";
@@ -269,7 +270,9 @@ export async function adminGetUserDetailController(
     : null;
   // creditPackCheckouts: ayrı model yok (top-up'lar PaymentCheckout'ta). Frontend bu
   // alana eriştiği için boş dizi döndürülür (undefined → çökme "beklenmedik hata" idi).
-  response.json({ ...user, toolUsageCounts, usage, creditPackCheckouts: [] });
+  // Hesap paylaşımı görünürlüğü — otomatik yaptırım YOK, yalnız bilgi.
+  const paylasim = await hesapPaylasimSinyali(user.id);
+  response.json({ ...user, toolUsageCounts, usage, creditPackCheckouts: [], paylasim });
 }
 
 export async function adminListBlockedEmailsController(

@@ -199,6 +199,18 @@ export type AdminUserDetail = {
     createdAt: string;
     completedAt: string | null;
   }[];
+  /**
+   * Hesap paylaşımı görünürlüğü: son 30 günde kaç farklı cihaz/ağ görüldü.
+   * Yalnız BİLGİ amaçlıdır; hiçbir otomatik kısıtlama uygulanmaz.
+   */
+  paylasim?: {
+    pencereGun: number;
+    cihazSayisi: number;
+    agSayisi: number;
+    acikOturum: number;
+    risk: "normal" | "izlenmeli" | "yuksek";
+    aciklama: string;
+  } | null;
   /** Günlük kullanım hakkı özeti (efektif = (özel ?? plan) + bugünkü bonus). */
   usage?: {
     planDailyLimit: number | null;
