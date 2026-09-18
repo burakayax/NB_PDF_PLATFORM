@@ -455,7 +455,15 @@ services:
         value: strict-origin-when-cross-origin
       - path: "/*"
         name: Permissions-Policy
-        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        # KAMERA KENDİ SİTEMİZE AÇIK (self) — Belge Tara arka kamerayı kullanır.
+        #
+        # ÖNCEDEN `camera=()` idi: bu "hiçbir kaynağa, kendi sitene bile kapat"
+        # demek. Tarayıcı kamera isteğini hiç işleme almıyordu; kullanıcıya izin
+        # sorulmuyor, site ayarlarında kamera satırı bile görünmüyordu. Belge
+        # Tarayıcı bu yüzden canlıda kamerayı hiç açamıyordu (ölçüldü).
+        #
+        # Mikrofon ve konum KAPALI kalır: hiçbir aracımız kullanmıyor.
+        value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()"
       - path: "/*"
         name: Strict-Transport-Security
         value: "max-age=31536000; includeSubDomains; preload"
