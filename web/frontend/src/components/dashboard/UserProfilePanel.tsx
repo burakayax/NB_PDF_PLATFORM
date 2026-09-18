@@ -10,6 +10,7 @@ import { fetchAiQuota, type AiQuota } from "../../api/ai";
 import { TopUpModal } from "../tools/TopUpModal";
 import { Sparkles, Zap } from "lucide-react";
 import { readAccessToken } from "../../lib/accessTokenStore";
+import { ActiveSessionsPanel } from "./ActiveSessionsPanel";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -676,6 +677,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           </div>
         )}
       </section>
+
+      {/* Hesabın hangi cihazlarda açık olduğu + uzaktan çıkış */}
+      {aiToken && <ActiveSessionsPanel accessToken={aiToken} language={language} />}
 
       {topUpOpen && (
         <TopUpModal
