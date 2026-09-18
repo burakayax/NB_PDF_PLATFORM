@@ -19,10 +19,10 @@ const PRO_TOOLS: Set<FeatureKey> = new Set([
   "ppt-to-pdf",
   "html-to-pdf",
   "flatten-pdf",
-  "form-doldur",
-  "ustveri-temizle",
+  // NOT: form-doldur, ustveri-temizle ve sayfa-duzeni ücretsizdir (cihazda
+  // çalışırlar). İlk ikisi üye girişi ister ama bu bir Pro kapısı DEĞİLDİR;
+  // burada "Pro" rozeti verilirse kullanıcıya tutmadığımız bir söz verilmiş olur.
   "pdf-to-pdfa",
-  "sayfa-duzeni",
   "imza-iste",
   "extract-images",
 ]);

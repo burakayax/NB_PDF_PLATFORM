@@ -9,7 +9,7 @@
  * Her şey cihazda yapılır — gizlilik aracının dosyayı sunucuya yüklemesi çelişki olurdu.
  */
 import { useCallback, useState } from "react";
-import { Eraser, FileText, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import { Eraser, FileText, Loader2, Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { alanAdi, ustveriOku, ustveriTemizle, type UstveriOzeti } from "../../lib/pdfMetadata";
 import { ValueMomentNudge } from "./ValueMomentNudge";
@@ -39,6 +39,12 @@ const METIN = {
     working: "Temizleniyor…",
     another: "Başka dosya seç",
     cleanedImages: "fotoğrafın üstverisi temizlendi",
+    freeWithAccount: "Ücretsiz — yalnızca üye girişi gerekir",
+    joinTitle: "Üstveri temizleme — ücretsiz",
+    joinText:
+      "Belgende ne taşındığını gördün. Temizlemek için ücretsiz üyelik yeterli — dosyan yine cihazından çıkmaz.",
+    joinCta: "Ücretsiz üye ol",
+    joinLater: "Daha sonra",
   },
   en: {
     hint: "Pick a PDF — the hidden data left inside is listed for you.",
@@ -62,17 +68,34 @@ const METIN = {
     working: "Cleaning…",
     another: "Choose another file",
     cleanedImages: "photos had their metadata removed",
+    freeWithAccount: "Free — you only need to sign in",
+    joinTitle: "Metadata removal — free",
+    joinText:
+      "You have seen what your document carries. A free account is all it takes to strip it — your file still never leaves your device.",
+    joinCta: "Create a free account",
+    joinLater: "Later",
   },
 } as const;
 
 type Sonuc = { blob: Blob; filename: string; temizlenenGorsel: number };
 
+/**
+ * ÜYE GİRİŞİ NEREDE İSTENİYOR: İnceleme HERKESE açıktır — belgesinde ne
+ * taşıdığını görmek için kimse kayıt olmak zorunda değil; asıl değer o listede.
+ * Temizleme üye girişi ister. Bu bir ücret kapısı değil (araç ücretsiz);
+ * değeri yüksek bir araçta kayıt anıdır ve kullanıcıya bedeli ödenmiş bir
+ * karşılık sunar: ne kaybettiğini zaten görmüştür.
+ */
 export function PdfMetadataTool({
   language,
+  isSignedIn,
+  onLogin,
 }: {
   language: Language;
   accessToken?: string | null;
   initialFile?: File | null;
+  isSignedIn?: boolean;
+  onLogin?: () => void;
 }) {
   const dil = language === "tr" ? "tr" : "en";
   const t = METIN[dil];
@@ -84,6 +107,7 @@ export function PdfMetadataTool({
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [sonuc, setSonuc] = useState<Sonuc | null>(null);
+  const [kayitDuvari, setKayitDuvari] = useState(false);
 
   const dosyaYukle = useCallback(
     async (f: File | undefined) => {
@@ -108,6 +132,10 @@ export function PdfMetadataTool({
 
   const temizle = async () => {
     if (!bytes) return;
+    if (!isSignedIn) {
+      setKayitDuvari(true);
+      return;
+    }
     setCalisiyor(true);
     setHata(null);
     try {
@@ -252,6 +280,13 @@ export function PdfMetadataTool({
         </span>
       </label>
 
+      {!isSignedIn && (
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-medium text-violet-300/90">
+          <Sparkles className="h-3.5 w-3.5" />
+          {t.freeWithAccount}
+        </p>
+      )}
+
       {hata && <p className="mt-3 text-[13px] text-rose-300">{hata}</p>}
 
       <div className="mt-5 flex gap-2.5">
@@ -271,10 +306,53 @@ export function PdfMetadataTool({
           disabled={calisiyor}
           className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
         >
-          {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eraser className="h-4 w-4" />}
+          {calisiyor ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isSignedIn ? (
+            <Eraser className="h-4 w-4" />
+          ) : (
+            <Lock className="h-4 w-4" />
+          )}
           {calisiyor ? t.working : t.apply}
         </button>
       </div>
+
+      {/* Kayıt duvarı — araç ücretsiz, yalnızca giriş ister. */}
+      {kayitDuvari && !isSignedIn && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-4 sm:items-center"
+          onClick={() => setKayitDuvari(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl border border-violet-400/30 bg-[#0f1424] p-6 shadow-2xl"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/25 to-fuchsia-500/25 text-fuchsia-300 ring-1 ring-fuchsia-400/30">
+              <Eraser className="h-7 w-7" />
+            </div>
+            <p className="mt-4 text-center text-lg font-bold text-white">{t.joinTitle}</p>
+            <p className="mt-1 text-center text-[13px] leading-relaxed text-slate-400">{t.joinText}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setKayitDuvari(false);
+                onLogin?.();
+              }}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-violet-500 hover:to-fuchsia-500"
+            >
+              <Sparkles className="h-4 w-4" />
+              {t.joinCta}
+            </button>
+            <button
+              type="button"
+              onClick={() => setKayitDuvari(false)}
+              className="mt-2 w-full rounded-2xl px-6 py-2.5 text-[13px] font-semibold text-slate-400 hover:text-slate-200"
+            >
+              {t.joinLater}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

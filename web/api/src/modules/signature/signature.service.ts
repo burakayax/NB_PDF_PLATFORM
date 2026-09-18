@@ -39,6 +39,55 @@ const GECERLILIK_GUN = 14;
 /** Belge boyutu üst sınırı (veritabanında saklandığı için sınırlı tutulur). */
 const EN_BUYUK_BELGE = 15 * 1024 * 1024;
 
+/**
+ * AYLIK İMZA İSTEĞİ KONTENJANI.
+ *
+ * İmza isteme, cihazda çalışan araçlardan farklı: belge sunucuda saklanır ve her
+ * istek e-posta gönderir — yani gerçek bir maliyeti vardır. Ayrıca sözleşme
+ * imzalatan kişi tanım gereği iş yapıyordur; ürünün ücretli tarafının karşılığı
+ * burasıdır.
+ *
+ * Ücretsiz planda 1: "tadına bakma" hakkı. Deneyemeyen kullanıcı, ödemeye değip
+ * değmeyeceğini de bilemez.
+ */
+const AYLIK_KONTENJAN: Record<string, number | null> = {
+  FREE: 1,
+  STARTER: 3,
+  PLUS: 10,
+  PRO: 20,
+  BUSINESS: null, // sınırsız
+};
+
+function ayBasi(): Date {
+  const simdi = new Date();
+  return new Date(Date.UTC(simdi.getUTCFullYear(), simdi.getUTCMonth(), 1));
+}
+
+/** Bu ay kaç istek gönderilmiş ve hak kaldı mı. */
+export async function imzaKontenjani(ownerId: string): Promise<{
+  kullanilan: number;
+  sinir: number | null;
+  kaldi: number | null;
+}> {
+  const kullanici = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { plan: true, role: true },
+  });
+  // DİKKAT: Tabloda `null` "sınırsız" demek. `??` kullanılırsa null da "değer
+  // yok" sayılır ve Business planı 1 isteğe düşerdi (test yakaladı).
+  const plan = kullanici?.plan ?? "FREE";
+  const sinir =
+    kullanici?.role === "ADMIN"
+      ? null
+      : plan in AYLIK_KONTENJAN
+        ? AYLIK_KONTENJAN[plan]!
+        : 1;
+  const kullanilan = await prisma.signatureRequest.count({
+    where: { ownerId, createdAt: { gte: ayBasi() } },
+  });
+  return { kullanilan, sinir, kaldi: sinir === null ? null : Math.max(0, sinir - kullanilan) };
+}
+
 export type IstekBilgisi = {
   userAgent?: string | null;
   ip?: string | null;
@@ -101,6 +150,15 @@ export async function imzaIstegiOlustur(
     select: { email: true, name: true, firstName: true },
   });
   if (!gonderen) throw new HttpError(404, "Kullanıcı bulunamadı.");
+
+  const kontenjan = await imzaKontenjani(ownerId);
+  if (kontenjan.sinir !== null && kontenjan.kullanilan >= kontenjan.sinir) {
+    throw new HttpError(
+      402,
+      `Bu ay için imza isteği hakkınız doldu (${kontenjan.sinir}). ` +
+        `Planınızı yükselterek daha fazla belge imzalatabilirsiniz.`,
+    );
+  }
 
   const token = createUrlSafeToken(32);
   const istek = await prisma.signatureRequest.create({
