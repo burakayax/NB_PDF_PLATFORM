@@ -84,36 +84,55 @@ async function istek(yol, secenekler = {}) {
  * cursor'ı bir sonraki sayfanın başlangıcı olarak veriliyor.
  */
 async function tumKayitlar(yol, anahtarAd) {
-  const hepsi = [];
+  /**
+   * SAYFALAMA — ÖLÇÜLDÜ, TAHMİN DEĞİL.
+   *
+   * Render'ın `cursor` değeri "BU KAYDIN ÖNCESİNDEKİ N kayıt" anlamına geliyor
+   * ve liste varsayılan olarak SON N kaydı (en yüksek öncelikleri) döndürüyor.
+   * Eski kod her sayfada SON kaydın cursor'ını gönderiyordu; bu yüzden pencere
+   * yalnız 1 kayıt geriye kayıyor, baştaki kayıtlara hiç ulaşılamıyordu:
+   * canlıda 159 kural varken okuma 149 döndürüyordu (ölçüldü).
+   *
+   * BUNUN BEDELİ: "hepsini değiştir" ucu OKUNAN listeyi geri yazıyor; görünmeyen
+   * kayıtlar yazılan listede olmadığı için siliniyorlardı. Yani okuma hatası
+   * sessiz kural kaybına dönüşüyordu.
+   *
+   * DOĞRUSU: bir önceki pencereye gitmek için İLK kaydın cursor'ı gönderilir ve
+   * sayfalar BAŞA eklenir (liste öncelik sırasında kalsın).
+   */
+  const sayfalar = [];
   const gorulenKimlikler = new Set();
   let cursor = null;
 
-  for (let tur = 0; tur < 50; tur++) {
+  for (let tur = 0; tur < 60; tur++) {
     const ayrac = yol.includes("?") ? "&" : "?";
-    const sayfa = await istek(`${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+    const sayfa = await istek(
+      `${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+    );
     const liste = Array.isArray(sayfa) ? sayfa : [];
     if (liste.length === 0) break;
 
-    // AYNI SAYFA TEKRAR GELDİ Mİ? Geçersiz bir cursor'da sunucu baştan
-    // döndürebiliyor; bu fark edilmezse döngü aynı kayıtları biriktirip
-    // "5000 kural" gibi anlamsız sonuçlar üretir (ölçüldü).
+    const bu = [];
     let yeniEklendi = 0;
     for (const satir of liste) {
       const kayit = satir?.[anahtarAd] ?? satir;
       const kimlik = kayit?.id ?? JSON.stringify(kayit);
       if (gorulenKimlikler.has(kimlik)) continue;
       gorulenKimlikler.add(kimlik);
-      hepsi.push(kayit);
+      bu.push(kayit);
       yeniEklendi += 1;
     }
-    if (yeniEklendi === 0) break;
+    if (yeniEklendi === 0) break; // aynı pencere tekrar geldi
+    sayfalar.unshift(bu);
 
-    const sonuncu = liste[liste.length - 1];
-    const sonrakiCursor = sonuncu?.cursor ?? null;
-    if (!sonrakiCursor || sonrakiCursor === cursor || liste.length < 100) break;
-    cursor = sonrakiCursor;
+    // Bir önceki pencere: BU sayfanın İLK kaydının cursor'ı.
+    const ilk = liste[0];
+    const oncekiCursor = ilk?.cursor ?? null;
+    if (!oncekiCursor || oncekiCursor === cursor || liste.length < 100) break;
+    cursor = oncekiCursor;
   }
-  return hepsi;
+
+  return sayfalar.flat();
 }
 
 /** Yayınlanan klasörde gerçekten index.html'i olan alt klasörler. */

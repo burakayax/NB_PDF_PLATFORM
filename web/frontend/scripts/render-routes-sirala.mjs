@@ -39,6 +39,7 @@
 import { writeFileSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { EN_TOOL_SLUGS, EN_BLOG_SLUGS } from "../src/seo/enSlugs.mjs";
 
 const API = "https://api.render.com/v1";
 const SERVIS_ADI = "nb-pdf-frontend";
@@ -89,29 +90,55 @@ function oncelikSirala(kayitlar) {
 }
 
 async function tumKayitlar(yol, anahtarAd) {
-  const hepsi = [];
-  const gorulen = new Set();
+  /**
+   * SAYFALAMA — ÖLÇÜLDÜ, TAHMİN DEĞİL.
+   *
+   * Render'ın `cursor` değeri "BU KAYDIN ÖNCESİNDEKİ N kayıt" anlamına geliyor
+   * ve liste varsayılan olarak SON N kaydı (en yüksek öncelikleri) döndürüyor.
+   * Eski kod her sayfada SON kaydın cursor'ını gönderiyordu; bu yüzden pencere
+   * yalnız 1 kayıt geriye kayıyor, baştaki kayıtlara hiç ulaşılamıyordu:
+   * canlıda 159 kural varken okuma 149 döndürüyordu (ölçüldü).
+   *
+   * BUNUN BEDELİ: "hepsini değiştir" ucu OKUNAN listeyi geri yazıyor; görünmeyen
+   * kayıtlar yazılan listede olmadığı için siliniyorlardı. Yani okuma hatası
+   * sessiz kural kaybına dönüşüyordu.
+   *
+   * DOĞRUSU: bir önceki pencereye gitmek için İLK kaydın cursor'ı gönderilir ve
+   * sayfalar BAŞA eklenir (liste öncelik sırasında kalsın).
+   */
+  const sayfalar = [];
+  const gorulenKimlikler = new Set();
   let cursor = null;
-  for (let tur = 0; tur < 50; tur++) {
+
+  for (let tur = 0; tur < 60; tur++) {
     const ayrac = yol.includes("?") ? "&" : "?";
-    const sayfa = await istek(`${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`);
+    const sayfa = await istek(
+      `${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+    );
     const liste = Array.isArray(sayfa) ? sayfa : [];
-    if (!liste.length) break;
-    let yeni = 0;
+    if (liste.length === 0) break;
+
+    const bu = [];
+    let yeniEklendi = 0;
     for (const satir of liste) {
       const kayit = satir?.[anahtarAd] ?? satir;
       const kimlik = kayit?.id ?? JSON.stringify(kayit);
-      if (gorulen.has(kimlik)) continue;
-      gorulen.add(kimlik);
-      hepsi.push(kayit);
-      yeni += 1;
+      if (gorulenKimlikler.has(kimlik)) continue;
+      gorulenKimlikler.add(kimlik);
+      bu.push(kayit);
+      yeniEklendi += 1;
     }
-    if (!yeni) break;
-    const sonraki = liste[liste.length - 1]?.cursor ?? null;
-    if (!sonraki || sonraki === cursor || liste.length < 100) break;
-    cursor = sonraki;
+    if (yeniEklendi === 0) break; // aynı pencere tekrar geldi
+    sayfalar.unshift(bu);
+
+    // Bir önceki pencere: BU sayfanın İLK kaydının cursor'ı.
+    const ilk = liste[0];
+    const oncekiCursor = ilk?.cursor ?? null;
+    if (!oncekiCursor || oncekiCursor === cursor || liste.length < 100) break;
+    cursor = oncekiCursor;
   }
-  return oncelikSirala(hepsi);
+
+  return oncelikSirala(sayfalar.flat());
 }
 
 const sade = ({ type, source, destination }) => ({ type, source, destination });
@@ -147,11 +174,13 @@ function sayfalar(gorecel) {
  */
 function eksikSayfaKurallari(mevcut) {
   const kaynaklar = new Set(mevcut.map((k) => String(k.source || "")));
+  const eksik = [];
+
+  // 1) Sayfa başına kurallar — slash'siz adres SEO içeriğini sunsun.
   const gruplar = [
     ["/tools", "tools"],
     ["/en/tools", "en/tools"],
   ];
-  const eksik = [];
   for (const [onek, klasor] of gruplar) {
     for (const slug of sayfalar(klasor)) {
       const kaynak = `${onek}/${slug}`;
@@ -160,6 +189,27 @@ function eksikSayfaKurallari(mevcut) {
       }
     }
   }
+
+  /**
+   * 2) ESKİ TÜRKÇE ADRESLERİN İNGİLİZCE KARŞILIĞINA YÖNLENDİRMESİ.
+   *
+   * /en/ altındaki sayfaların adresleri İngilizceye çevrildiğinde eski Türkçe
+   * adresler geçerliliğini yitirdi; onlara gelen ziyaretçi ve arama motoru
+   * yönlendirilmezse boş sayfaya düşer ve o adresin biriktirdiği değer yeni
+   * adrese geçmez. Kaynak: enSlugs.mjs (tek gerçek kaynak) — yeni bir araç ya da
+   * yazı eklendiğinde bu kural kendiliğinden üretilir.
+   */
+  for (const [onek, harita] of [
+    ["/en/tools", EN_TOOL_SLUGS],
+    ["/en/blog", EN_BLOG_SLUGS],
+  ]) {
+    for (const [tr, en] of Object.entries(harita)) {
+      const kaynak = `${onek}/${tr}`;
+      if (tr === en || kaynaklar.has(kaynak)) continue;
+      eksik.push({ type: "redirect", source: kaynak, destination: `${onek}/${en}` });
+    }
+  }
+
   return eksik;
 }
 
