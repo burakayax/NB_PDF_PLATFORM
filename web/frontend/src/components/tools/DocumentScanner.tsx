@@ -229,10 +229,59 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
+  /**
+   * ARKA KAMERA VAR MI? — "masaüstü mü" sorusunun yerine geçer.
+   *
+   * NEDEN DEĞİŞTİ: Kamera taraması pencere GENİŞLİĞİNE göre açılıp kapanıyordu
+   * (>=1024 piksel ise "masaüstü"). Bu ölçüt yanlış: arka kamerası olan bir
+   * tablet ya da yatay tutulan geniş bir cihaz "masaüstü" sayılıp tarama
+   * kapanıyor, kullanıcı dosya seçiciye düşüyor ve telefonunda "Fotoğraf Çek"
+   * sorusuyla karşılaşıyordu — otomatik çekim de o yüzden hiç devreye girmiyordu.
+   * Doğru soru ekranın kaç piksel olduğu değil, cihazda ARKA kamera bulunup
+   * bulunmadığıdır; dizüstü bilgisayarların ön kamerası bu sınavı geçemez.
+   *
+   * null = henüz bilinmiyor (sorulmadı/cevap beklenmiyor).
+   */
+  const [arkaKameraVar, setArkaKameraVar] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let iptal = false;
+    (async () => {
+      try {
+        const cihazlar = await navigator.mediaDevices?.enumerateDevices?.();
+        const videoGirisi = (cihazlar ?? []).filter((d) => d.kind === "videoinput");
+        if (videoGirisi.length === 0) {
+          if (!iptal) setArkaKameraVar(false);
+          return;
+        }
+        // İzin verilmeden önce cihaz adları boş gelir; bu yüzden asıl sınav
+        // "arka kamera isteyip açılıyor mu". Açılan akış hemen kapatılır.
+        const test = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { exact: "environment" } },
+          audio: false,
+        });
+        test.getTracks().forEach((t) => t.stop());
+        if (!iptal) setArkaKameraVar(true);
+      } catch {
+        // OverconstrainedError → arka kamera yok (tipik dizüstü).
+        // NotAllowedError → kullanıcı izni reddetti; kamera akışı da açılamaz.
+        if (!iptal) setArkaKameraVar(false);
+      }
+    })();
+    return () => {
+      iptal = true;
+    };
+  }, [open]);
+
+  /** Kamera taraması bu cihazda mümkün mü? Yetenek bilinene kadar ekran genişliği
+   *  yalnızca ilk tahmin olarak kullanılır (titremeyi önler). */
+  const kameraTaramasiMumkun = arkaKameraVar === null ? !isDesktop : arkaKameraVar;
+
   // Kamerayı yalnız "camera" fazında ve modal açıkken çalıştır (mobil kaynağı boşa tutma).
   // Masaüstünde (arka kamera yok) kamerayı hiç açma → "telefonda açın" ekranı gösterilir.
   useEffect(() => {
-    if (!open || phase !== "camera" || isDesktop) return;
+    if (!open || phase !== "camera" || !kameraTaramasiMumkun) return;
     let cancelled = false;
     (async () => {
       try {
@@ -262,7 +311,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       cancelled = true;
       stopStream();
     };
-  }, [open, phase, stopStream, isDesktop]);
+  }, [open, phase, stopStream, kameraTaramasiMumkun]);
 
   // Sayfa kaydırmasını kilitle + kapanınca her şeyi sıfırla.
   useEffect(() => {
@@ -394,7 +443,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   // ── CANLI kenar tespiti döngüsü (yalnız kamera fazında) ──
   useEffect(() => {
-    if (!open || phase !== "camera" || cameraError || isDesktop || !isPro) return;
+    if (!open || phase !== "camera" || cameraError || !kameraTaramasiMumkun || !isPro) return;
     // Kameraya her girişte temiz başla.
     capturingRef.current = false;
     stableRef.current = 0;
@@ -912,7 +961,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── KAMERA ── */}
           {phase === "camera" && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col">
-              {isDesktop ? (
+              {!kameraTaramasiMumkun ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
                   <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30">
                     <Smartphone className="h-8 w-8" />
@@ -923,8 +972,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     </p>
                     <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
                       {tr
-                        ? "Belge Tara, telefonunuzun arka kamerasıyla belgeyi çekip cihazınızda PDF'e çevirir. Bilgisayarda kamera tarama çalışmaz — telefonunuzdan pdfplatform.app adresine girip Belge Tara'yı açın."
-                        : "Scan Document uses your phone's rear camera to capture a document and turn it into a PDF on-device. Camera scanning isn't available on desktop — open pdfplatform.app on your phone and start Scan Document."}
+                        ? "Belge Tara, cihazın ARKA kamerasıyla belgeyi çekip PDF'e çevirir. Bu cihazda arka kamera bulunamadı (ya da kamera izni verilmedi). Telefonunuzdan pdfplatform.app adresine girip Belge Tara'yı açın; izin sorulursa kameraya izin verin."
+                        : "Scan Document uses your device's REAR camera to capture a document and turn it into a PDF. No rear camera was found on this device (or camera permission was denied). Open pdfplatform.app on your phone and start Scan Document; allow camera access when asked."}
                     </p>
                   </div>
                   <div className="mt-1 flex flex-col items-center gap-2">

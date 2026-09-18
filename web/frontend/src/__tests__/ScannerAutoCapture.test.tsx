@@ -42,7 +42,14 @@ function fakeCamera() {
   const track = { stop: vi.fn() };
   Object.defineProperty(navigator, "mediaDevices", {
     configurable: true,
-    value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) },
+    value: {
+      getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })),
+      // Kamera taraması artık ekran genişliğine değil ARKA KAMERA varlığına
+      // bakıyor; sahte cihaz listesi olmadan bileşen "kamera yok" ekranını açar.
+      enumerateDevices: vi.fn(async () => [
+        { kind: "videoinput", deviceId: "arka", label: "back camera" },
+      ]),
+    },
   });
   // jsdom'da video.play() yok.
   Object.defineProperty(HTMLMediaElement.prototype, "play", {
@@ -85,5 +92,25 @@ describe("Belge Tarayıcı — otomatik çekim plan ayrımı", () => {
     fireEvent.click(chip);
     expect(await screen.findByText(/Otomatik Çekim — Pro/)).toBeInTheDocument();
     expect(screen.getByText(/kenarları canlı bulur/)).toBeInTheDocument();
+  });
+});
+
+describe("kamera taraması cihaz yeteneğine göre açılır", () => {
+  it("arka kamera yoksa kamera ekranı yerine yükleme ekranı gösterilir", async () => {
+    // Dizüstü bilgisayar: yalnız ön kamera → arka kamera isteği reddedilir.
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        enumerateDevices: vi.fn(async () => [{ kind: "videoinput", deviceId: "on", label: "front" }]),
+        getUserMedia: vi.fn(async () => {
+          throw new Error("OverconstrainedError");
+        }),
+      },
+    });
+
+    render(<DocumentScanner {...baseProps} isPro isDesktop={false} onUpgrade={vi.fn()} />);
+
+    // Genişlik "mobil" olsa bile arka kamera yoksa tarama açılmaz.
+    expect(await screen.findByText(/arka kamera bulunamadı/i)).toBeTruthy();
   });
 });
