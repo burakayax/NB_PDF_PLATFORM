@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Check, Download, ExternalLink, Share2, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { trackGAEvent } from "../../lib/analytics";
 
 /**
  * TÜM araçların ortak "işlem bitti" ekranı.
@@ -93,6 +94,28 @@ export function ToolResultPanel({
 }: ToolResultPanelProps) {
   const t = L[language] ?? L.tr;
   const isPdf = /\.pdf$/i.test(filename.trim());
+
+  /**
+   * AKTİVASYON ÖLÇÜMÜ — "değeri yaşayan" kullanıcı sayısı.
+   *
+   * Dönüşümün ön koşulu, kişinin üründen BİR KEZ gerçek sonuç almasıdır; değeri
+   * hiç görmeyen kullanıcı zaten ödemez. Buna rağmen elimizde "kaç ziyaretçi
+   * araca girdi, kaçı sonuca ulaştı" verisi yoktu; huninin en alt basamağı
+   * (ödeme) ölçülüyor ama en kritik basamağı ölçülmüyordu.
+   *
+   * Bu ekran YALNIZCA iş başarıyla bittiğinde çizilir, bu yüzden aktivasyonun
+   * doğru işaretidir. Dosya adı ya da içeriği GÖNDERİLMEZ; yalnız türü ve
+   * işlemin nerede yapıldığı.
+   */
+  const bildirildiRef = useRef(false);
+  useEffect(() => {
+    if (bildirildiRef.current) return;
+    bildirildiRef.current = true;
+    trackGAEvent("tool_result_ready", {
+      file_type: isPdf ? "pdf" : "other",
+      on_device: processedOnDevice,
+    });
+  }, [isPdf, processedOnDevice]);
 
   async function save() {
     const win = window as unknown as {

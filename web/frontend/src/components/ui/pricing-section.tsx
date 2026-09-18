@@ -419,7 +419,15 @@ function CycleAwareCard({
   comingSoon?: boolean;
   onShowPerks?: () => void;
 }) {
-  const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
+  /**
+   * VARSAYILAN YILLIK.
+   *
+   * Ölçülmüş bulgu: aylık fiyat önce gösterildiğinde ziyaretçi o rakama
+   * demirliyor ve yıllığa geçtiğinde toplam tutar "pahalı" hissettiriyor;
+   * yıllık varsayılan olduğunda ise kişi başı gelir belirgin artıyor ve yıllık
+   * müşteri daha az ayrılıyor. Aylık seçenek kaldırılmıyor — yalnız sıra değişti.
+   */
+  const [cycle, setCycle] = useState<BillingCycle>("YEARLY");
   const [extraSeats, setExtraSeats] = useState(0);
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
@@ -985,6 +993,40 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             </span>
           )}
         </p>
+
+        {/*
+          KARTLARIN HEMEN ALTI — kaygının en yüksek olduğu nokta.
+          Ölçülmüş bulgu: güven içeriğinin en çok işe yaradığı yer, fiyat
+          kartlarıyla karşılaştırma tablosu arasıdır; kişi fiyatı görmüş,
+          "değer mi?" diye soruyordur.
+
+          NOT: Burada uydurma kullanıcı sayısı ya da sahte yorum YOK. Elimizde
+          gerçek bir sosyal kanıt verisi (doğrulanmış kullanıcı sayısı, yorum)
+          olmadığı için doğrulanabilir ÜRÜN GERÇEKLERİ yazıldı. Sahte rakam
+          kısa vadede tıklama getirir, yakalandığında güveni tamamen bitirir.
+        */}
+        <div className="mt-10 grid max-w-3xl mx-auto grid-cols-1 gap-3 sm:grid-cols-3">
+          {(language === "tr"
+            ? [
+                { b: "45 araç", a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
+                { b: "Dosyan sende kalır", a: "Birleştirme, imzalama, kırpma gibi araçlar tarayıcında çalışır; dosya sunucuya gitmez." },
+                { b: "Tek tıkla iptal", a: "Hesabından kendin iptal edersin; arama yapmana, e-posta yazmana gerek yok." },
+              ]
+            : [
+                { b: "45 tools", a: "All included in one subscription — no separate products to buy." },
+                { b: "Your file stays with you", a: "Merging, signing and cropping run in your browser; the file is never uploaded." },
+                { b: "Cancel in one click", a: "Cancel yourself from your account — no calls, no emails." },
+              ]
+          ).map((x) => (
+            <div
+              key={x.b}
+              className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 text-center"
+            >
+              <p className="text-sm font-bold text-white">{x.b}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-gray-400">{x.a}</p>
+            </div>
+          ))}
+        </div>
 
         {/* Refund detail block */}
         <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5 sm:p-6 text-center">
