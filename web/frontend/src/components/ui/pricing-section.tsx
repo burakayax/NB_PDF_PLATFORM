@@ -236,6 +236,9 @@ function FreeCard({
       >
         {tr ? "Ücretsiz Başla" : "Start for Free"}
       </button>
+      <p className="mt-3 text-center text-[11px] text-gray-400">
+        {tr ? "Kart bilgisi istenmez · 30 saniyede hazır" : "No card required · ready in 30 seconds"}
+      </p>
     </motion.div>
   );
 }
@@ -612,6 +615,7 @@ function CycleAwareCard({
               ? `Business'ı Başlat${extraSeats > 0 ? ` · ${5 + extraSeats} Kişi` : ""}`
               : `Start Business${extraSeats > 0 ? ` · ${5 + extraSeats} Seats` : ""}`)}
       </button>
+      {!comingSoon && <GuvenSatiri language={lang} />}
       {onShowPerks && (
         <button
           type="button"
@@ -624,6 +628,31 @@ function CycleAwareCard({
         </button>
       )}
     </motion.div>
+  );
+}
+
+/**
+ * GÜVEN SATIRI — ödeme düğmesinin HEMEN ALTINDA.
+ *
+ * Ölçülmüş bulgu: güven işaretleri (iade, iptal, ödeme güvenliği) düğmenin
+ * görsel yakınında durduğunda dönüşüm belirgin yükseliyor; aşağıdaki SSS'te
+ * durduklarında ise kullanıcı onları görmeden karar veriyor. Fiyatı gördüğü an
+ * kaygının en yüksek olduğu andır — cevap orada verilmeli.
+ */
+function GuvenSatiri({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const maddeler = tr
+    ? ["7 gün koşulsuz iade", "İstediğin an iptal", "Güvenli ödeme (iyzico)"]
+    : ["7-day money-back", "Cancel anytime", "Secure payment (iyzico)"];
+  return (
+    <ul className="mt-3 space-y-1">
+      {maddeler.map((m) => (
+        <li key={m} className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+          <span className="text-emerald-400">✓</span>
+          {m}
+        </li>
+      ))}
+    </ul>
   );
 }
 
