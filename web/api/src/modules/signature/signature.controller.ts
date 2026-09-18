@@ -11,6 +11,7 @@ import {
   imzayiUygula,
   imzayiReddet,
   imzalayanKopyasi,
+  imzaKontenjani,
 } from "./signature.service.js";
 
 function bilgi(request: Request) {
@@ -57,7 +58,12 @@ export async function createSignatureRequestController(request: Request, respons
 }
 
 export async function listSignatureRequestsController(request: Request, response: Response) {
-  response.json({ requests: await imzaIstekleriniListele(kullanici(request)) });
+  const id = kullanici(request);
+  const [requests, kontenjan] = await Promise.all([
+    imzaIstekleriniListele(id),
+    imzaKontenjani(id),
+  ]);
+  response.json({ requests, quota: kontenjan });
 }
 
 export async function signatureRequestDetailController(request: Request, response: Response) {

@@ -8,7 +8,7 @@
  * belgeyi açtığında yazdıklarını değiştiremez ve belge her okuyucuda aynı görünür.
  */
 import { useCallback, useState } from "react";
-import { FileText, Loader2, Lock, ShieldCheck, Zap } from "lucide-react";
+import { FileText, Loader2, Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import {
   formAlanlariniOku,
@@ -41,6 +41,12 @@ const METIN = {
     working: "Dolduruluyor…",
     select: "Seç…",
     another: "Başka dosya seç",
+    freeWithAccount: "Ücretsiz — yalnızca üye girişi gerekir",
+    joinTitle: "Form doldurma — ücretsiz",
+    joinText:
+      "Alanları doldurdun. İndirmek için ücretsiz üyelik yeterli — belgen yine cihazından çıkmaz.",
+    joinCta: "Ücretsiz üye ol",
+    joinLater: "Daha sonra",
   },
   en: {
     hint: "Choose a fillable PDF form — fields are detected automatically.",
@@ -61,17 +67,33 @@ const METIN = {
     working: "Filling…",
     select: "Select…",
     another: "Choose another file",
+    freeWithAccount: "Free — you only need to sign in",
+    joinTitle: "Form filling — free",
+    joinText:
+      "You have filled the fields. A free account is all it takes to download — your document still never leaves your device.",
+    joinCta: "Create a free account",
+    joinLater: "Later",
   },
 } as const;
 
 type Sonuc = { blob: Blob; filename: string };
 
+/**
+ * ÜYE GİRİŞİ NEREDE İSTENİYOR: Form alanlarını görmek ve doldurmak serbesttir;
+ * üyelik yalnız İNDİRMEDE istenir. Kullanıcı o noktada işin tamamını yapmış ve
+ * karşılığını görmüştür — kapıyı en başa koymak, aracı hiç denemeden çıkmasına
+ * yol açardı. Bu bir ücret kapısı değildir; araç ücretsizdir.
+ */
 export function PdfFormFill({
   language,
+  isSignedIn,
+  onLogin,
 }: {
   language: Language;
   accessToken?: string | null;
   initialFile?: File | null;
+  isSignedIn?: boolean;
+  onLogin?: () => void;
 }) {
   const t = METIN[language === "tr" ? "tr" : "en"];
   const [bytes, setBytes] = useState<Uint8Array | null>(null);
@@ -83,6 +105,7 @@ export function PdfFormFill({
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [sonuc, setSonuc] = useState<Sonuc | null>(null);
+  const [kayitDuvari, setKayitDuvari] = useState(false);
 
   const dosyaYukle = useCallback(
     async (f: File | undefined) => {
@@ -115,6 +138,10 @@ export function PdfFormFill({
 
   const doldur = async () => {
     if (!bytes) return;
+    if (!isSignedIn) {
+      setKayitDuvari(true);
+      return;
+    }
     setCalisiyor(true);
     setHata(null);
     try {
@@ -314,9 +341,59 @@ export function PdfFormFill({
         disabled={calisiyor}
         className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
       >
-        {calisiyor ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+        {calisiyor ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isSignedIn ? (
+          <FileText className="h-4 w-4" />
+        ) : (
+          <Lock className="h-4 w-4" />
+        )}
         {calisiyor ? t.working : t.apply}
       </button>
+
+      {!isSignedIn && (
+        <p className="mt-3 flex items-center justify-center gap-1.5 text-[12px] font-medium text-violet-300/90">
+          <Sparkles className="h-3.5 w-3.5" />
+          {t.freeWithAccount}
+        </p>
+      )}
+
+      {/* Kayıt duvarı — araç ücretsiz, yalnızca giriş ister. */}
+      {kayitDuvari && !isSignedIn && (
+        <div
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/65 p-4 sm:items-center"
+          onClick={() => setKayitDuvari(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl border border-violet-400/30 bg-[#0f1424] p-6 shadow-2xl"
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/25 to-fuchsia-500/25 text-fuchsia-300 ring-1 ring-fuchsia-400/30">
+              <FileText className="h-7 w-7" />
+            </div>
+            <p className="mt-4 text-center text-lg font-bold text-white">{t.joinTitle}</p>
+            <p className="mt-1 text-center text-[13px] leading-relaxed text-slate-400">{t.joinText}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setKayitDuvari(false);
+                onLogin?.();
+              }}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-3.5 text-sm font-bold text-white transition hover:from-violet-500 hover:to-fuchsia-500"
+            >
+              <Sparkles className="h-4 w-4" />
+              {t.joinCta}
+            </button>
+            <button
+              type="button"
+              onClick={() => setKayitDuvari(false)}
+              className="mt-2 w-full rounded-2xl px-6 py-2.5 text-[13px] font-semibold text-slate-400 hover:text-slate-200"
+            >
+              {t.joinLater}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

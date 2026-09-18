@@ -28,6 +28,7 @@ import {
   imzaBelgesiniIndir,
   type ImzaIstegi,
   type ImzaDurumu,
+  type ImzaKontenjani,
 } from "../../api/signatures";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 
@@ -49,6 +50,9 @@ const METIN = {
     signedBy: "imzaladı",
     waiting: "bekleniyor",
     loginNeeded: "İmza istemek için oturum açman gerekiyor.",
+    quotaLeft: "Bu ay kalan imza isteği hakkın:",
+    quotaUnlimited: "Bu ay sınırsız imza isteği gönderebilirsin.",
+    quotaNone: "Bu ayki imza isteği hakkın doldu. Planını yükselterek devam edebilirsin.",
     legalNote:
       "Bu araç görsel (ıslak imza görünümlü) elektronik imza üretir ve imzalama sürecinin zaman damgalı kaydını belgeye ekler. Nitelikli elektronik imza (e-imza) ayrı bir hukuki kategoridir ve nitelikli hizmet sağlayıcıdan alınan sertifika gerektirir.",
     durumlar: {
@@ -77,6 +81,9 @@ const METIN = {
     signedBy: "signed",
     waiting: "waiting",
     loginNeeded: "You need to sign in to request a signature.",
+    quotaLeft: "Signature requests left this month:",
+    quotaUnlimited: "You can send unlimited signature requests this month.",
+    quotaNone: "You have used this month's signature requests. Upgrade your plan to continue.",
     legalNote:
       "This tool produces a visual (wet-ink-style) electronic signature and attaches a timestamped record of the signing process to the document. A qualified electronic signature is a separate legal category and requires a certificate from a qualified trust service provider.",
     durumlar: {
@@ -125,11 +132,14 @@ export function SignatureRequestTool({
   const [hata, setHata] = useState<string | null>(null);
   const [bilgi, setBilgi] = useState<string | null>(null);
   const [istekler, setIstekler] = useState<ImzaIstegi[] | null>(null);
+  const [kontenjan, setKontenjan] = useState<ImzaKontenjani | null>(null);
 
   const yukle = useCallback(async () => {
     if (!accessToken) return;
     try {
-      setIstekler(await imzaIstekleriniGetir(accessToken));
+      const { istekler: liste, kontenjan: k } = await imzaIstekleriniGetir(accessToken);
+      setIstekler(liste);
+      setKontenjan(k);
     } catch {
       setIstekler([]);
     }
@@ -292,6 +302,22 @@ export function SignatureRequestTool({
         </p>
       )}
       {hata && <p className="mt-3 text-[13px] text-rose-300">{hata}</p>}
+
+      {kontenjan && (
+        <p
+          className={`mt-4 rounded-xl border px-4 py-2.5 text-[12px] ${
+            kontenjan.kaldi === 0
+              ? "border-amber-400/25 bg-amber-500/[0.08] text-amber-200"
+              : "border-white/[0.08] bg-white/[0.02] text-slate-400"
+          }`}
+        >
+          {kontenjan.sinir === null
+            ? t.quotaUnlimited
+            : kontenjan.kaldi === 0
+              ? t.quotaNone
+              : `${t.quotaLeft} ${kontenjan.kaldi} / ${kontenjan.sinir}`}
+        </p>
+      )}
 
       <p className="mt-4 text-[11px] leading-relaxed text-slate-500">{t.legalNote}</p>
 

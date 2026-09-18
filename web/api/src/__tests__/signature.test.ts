@@ -11,6 +11,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
  */
 
 const requestCreate = vi.fn();
+const requestCount = vi.fn();
 const requestFindUnique = vi.fn();
 const requestFindFirst = vi.fn();
 const requestFindMany = vi.fn();
@@ -29,6 +30,7 @@ vi.mock("../lib/prisma.js", () => ({
       findFirst: (...a: unknown[]) => requestFindFirst(...a),
       findMany: (...a: unknown[]) => requestFindMany(...a),
       update: (...a: unknown[]) => requestUpdate(...a),
+      count: (...a: unknown[]) => requestCount(...a),
     },
     signatureEvent: {
       create: (...a: unknown[]) => eventCreate(...a),
@@ -61,12 +63,15 @@ const imzaPng = Buffer.from("x".repeat(500)).toString("base64");
 
 beforeEach(() => {
   [requestCreate, requestFindUnique, requestFindFirst, requestFindMany, requestUpdate,
-   eventCreate, eventFindMany, userFindUnique, imzaliBelgeUret].forEach((f) => f.mockReset());
+   eventCreate, eventFindMany, userFindUnique, imzaliBelgeUret, requestCount].forEach((f) => f.mockReset());
+  requestCount.mockResolvedValue(0);
   gonderilenPostalar.length = 0;
   eventCreate.mockResolvedValue({});
   eventFindMany.mockResolvedValue([]);
   imzaliBelgeUret.mockResolvedValue(new Uint8Array([1, 2, 3, 4]));
-  userFindUnique.mockResolvedValue({ email: "gonderen@ornek.com", name: "Ayşe Yılmaz", firstName: "Ayşe" });
+  userFindUnique.mockResolvedValue({
+    email: "gonderen@ornek.com", name: "Ayşe Yılmaz", firstName: "Ayşe", plan: "PRO", role: "USER",
+  });
   requestCreate.mockResolvedValue({ id: "istek1", title: "Sözleşme" });
 });
 
@@ -130,6 +135,61 @@ describe("istek oluşturma", () => {
       belge: pdf, filename: "a.pdf", title: "Sözleşme", signerEmail: "imzalayan@ornek.com",
     });
     expect(gonderilenPostalar[0]!.to).toBe("imzalayan@ornek.com");
+  });
+});
+
+describe("aylık kontenjan", () => {
+  it("hak dolduğunda yeni istek gönderilemez", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "FREE", role: "USER",
+    });
+    requestCount.mockResolvedValue(1); // ücretsiz planda 1 hak
+    await expect(
+      svc.imzaIstegiOlustur("u1", { belge: pdf, filename: "a.pdf", title: "x", signerEmail: "c@d.com" }),
+    ).rejects.toMatchObject({ statusCode: 402 });
+    expect(requestCreate).not.toHaveBeenCalled();
+  });
+
+  it("hak varken gönderilir", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "FREE", role: "USER",
+    });
+    requestCount.mockResolvedValue(0);
+    await expect(
+      svc.imzaIstegiOlustur("u1", { belge: pdf, filename: "a.pdf", title: "x", signerEmail: "c@d.com" }),
+    ).resolves.toMatchObject({ id: "istek1" });
+  });
+
+  it("yönetici kontenjana takılmaz", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "FREE", role: "ADMIN",
+    });
+    requestCount.mockResolvedValue(99);
+    await expect(
+      svc.imzaIstegiOlustur("u1", { belge: pdf, filename: "a.pdf", title: "x", signerEmail: "c@d.com" }),
+    ).resolves.toMatchObject({ id: "istek1" });
+  });
+
+  it("kontenjan yalnız BU AYI sayar", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "PRO", role: "USER",
+    });
+    requestCount.mockResolvedValue(0);
+    await svc.imzaKontenjani("u1");
+    const where = requestCount.mock.calls[0]![0].where;
+    const baslangic = where.createdAt.gte as Date;
+    expect(baslangic.getUTCDate()).toBe(1);
+    expect(baslangic.getUTCMonth()).toBe(new Date().getUTCMonth());
+  });
+
+  it("Business planda sınır yoktur", async () => {
+    userFindUnique.mockResolvedValue({
+      email: "a@b.com", name: "A", firstName: "A", plan: "BUSINESS", role: "USER",
+    });
+    requestCount.mockResolvedValue(500);
+    const k = await svc.imzaKontenjani("u1");
+    expect(k.sinir).toBeNull();
+    expect(k.kaldi).toBeNull();
   });
 });
 

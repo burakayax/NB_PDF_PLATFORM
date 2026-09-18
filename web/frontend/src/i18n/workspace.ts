@@ -62,7 +62,7 @@ export const TOOL_CATEGORY_LABELS: Record<
 export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   {
     id: "organize",
-    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf"],
+    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "sayfa-duzeni"],
   },
   {
     id: "convert",
@@ -78,6 +78,7 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
       "extract-images",
       "html-to-pdf",
       "pdf-to-text",
+      "pdf-to-pdfa",
     ],
   },
   {
@@ -86,11 +87,11 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   },
   {
     id: "annotate",
-    tools: ["watermark", "page-numbers"],
+    tools: ["watermark", "page-numbers", "form-doldur"],
   },
   {
     id: "secure",
-    tools: ["encrypt", "unlock-pdf"],
+    tools: ["encrypt", "unlock-pdf", "ustveri-temizle", "imza-iste"],
   },
 ];
 

@@ -67,12 +67,18 @@ export async function imzaIstegiGonder(
   return (await r.json()) as { id: string };
 }
 
-export async function imzaIstekleriniGetir(accessToken: string): Promise<ImzaIstegi[]> {
+/** Aylık imza isteği hakkı (null = sınırsız). */
+export type ImzaKontenjani = { kullanilan: number; sinir: number | null; kaldi: number | null };
+
+export async function imzaIstekleriniGetir(
+  accessToken: string,
+): Promise<{ istekler: ImzaIstegi[]; kontenjan: ImzaKontenjani | null }> {
   const r = await saasFetch(`/api/signatures`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   await ensureOk(r, "İmza istekleri getirilemedi.");
-  return ((await r.json()) as { requests: ImzaIstegi[] }).requests ?? [];
+  const govde = (await r.json()) as { requests?: ImzaIstegi[]; quota?: ImzaKontenjani };
+  return { istekler: govde.requests ?? [], kontenjan: govde.quota ?? null };
 }
 
 export async function imzaIstegiDetayiGetir(

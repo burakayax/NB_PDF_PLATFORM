@@ -59,6 +59,13 @@ const FREE_TOOLS: FeatureKey[] = [
   // dosya gitmez. Maliyeti olmadığı için ücretsiz planda da açıktır; misafirde
   // zaten açıktı, üye olan kullanıcının hakkı daralmasın diye buraya alındı.
   "image-to-pdf",
+  // Sayfa düzeni, form doldurma ve üstveri temizleme de TAMAMEN cihazda çalışır
+  // (sunucuya dosya gitmez). Bize maliyeti olmadığı için ücretsiz planda açıktır;
+  // form doldurma ve üstveri temizleme ayrıca üye girişi ister — bu bir ücret
+  // kapısı değil, değeri yüksek araçlarda kayıt anıdır (OCR ile aynı mantık).
+  "sayfa-duzeni",
+  "form-doldur",
+  "ustveri-temizle",
 ];
 
 /** Starter'a ek olarak açılan araçlar */

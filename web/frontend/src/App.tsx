@@ -5364,7 +5364,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="ustveri-temizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+            <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -5373,7 +5373,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="form-doldur" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+            <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6613,7 +6613,7 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <ToolHowTo slug="ustveri-temizle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                  <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
               </section>
             ) : null}
@@ -6622,7 +6622,7 @@ function App() {
               <section className="mx-auto w-full max-w-4xl py-2">
                 <ToolHowTo slug="form-doldur" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
-                  <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                  <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
                 </Suspense>
               </section>
             ) : null}

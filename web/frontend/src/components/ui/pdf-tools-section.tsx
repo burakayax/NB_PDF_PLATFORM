@@ -227,7 +227,7 @@ const TOOLS: Tool[] = [
     en: { name: "Request Signature", desc: "Send a document out for signature and get an audited signed copy." },
   },
   {
-    id: "sayfa-duzeni", cat: "edit", Icon: Grid2x2,
+    id: "sayfa-duzeni", cat: "edit", Icon: Grid2x2, free: true,
     tr: { name: "PDF Sayfa Düzeni", desc: "2/4/8 sayfayı tek kâğıda sığdırın ya da kitapçık dizin." },
     en: { name: "PDF Page Layout", desc: "Fit 2/4/8 pages on one sheet, or impose a booklet." },
   },
@@ -237,12 +237,12 @@ const TOOLS: Tool[] = [
     en: { name: "PDF to PDF/A (Archive)", desc: "The ISO archival format institutions ask for; fonts embedded." },
   },
   {
-    id: "ustveri-temizle", cat: "edit", Icon: Eraser,
+    id: "ustveri-temizle", cat: "edit", Icon: Eraser, account: true,
     tr: { name: "PDF Üstveri Temizle", desc: "Yazar, program, tarih, XMP ve fotoğraf GPS izlerini siler." },
     en: { name: "Remove PDF Metadata", desc: "Strips author, software, dates, XMP and photo GPS traces." },
   },
   {
-    id: "form-doldur", cat: "edit", Icon: FileText,
+    id: "form-doldur", cat: "edit", Icon: FileText, account: true,
     tr: { name: "PDF Form Doldur", desc: "Doldurulabilir form alanlarını bulur ve cihazınızda doldurur." },
     en: { name: "Fill PDF Form", desc: "Detects fillable fields and fills them on your device." },
   },
@@ -523,14 +523,21 @@ interface PdfToolsSectionProps {
   language: Language;
   onUseWebApp: () => void;
   onOpenTool: (id: FeatureKey) => void;
+  /** Ziyaretçi giriş yapmış mı — kayıt çağrısı yalnız misafire gösterilir. */
+  isAuthenticated?: boolean;
+  onRegister?: () => void;
 }
 
 export default function PdfToolsSection({
   language,
   onUseWebApp,
   onOpenTool,
+  isAuthenticated,
+  onRegister,
 }: PdfToolsSectionProps) {
   const tr = language === "tr";
+  /** Ücretsiz üyelikle açılan araç sayısı — listeden hesaplanır. */
+  const hesapAracSayisi = useMemo(() => TOOLS.filter((t) => t.account).length, []);
   const [filter, setFilter] = useState<CategoryId | "all">("all");
   const [query, setQuery] = useState("");
 
@@ -741,6 +748,41 @@ export default function PdfToolsSection({
             {tr ? "Çalışma alanını aç →" : "Open the workspace →"}
           </button>
         </div>
+
+        {/* ÜCRETSİZ ÜYELİK ÇAĞRISI — misafire.
+            Ziyaretçi burada üyeliksiz araçları kullanıyor ama ücretsiz üyelikle
+            AÇILAN araçların varlığını hiçbir yerde görmüyordu; kayıt için somut
+            bir sebep sunulmadan kayıt beklemek olmuyor. Sayı listeden hesaplanır
+            ki yeni araç eklendiğinde metin kendiliğinden güncellensin. */}
+        {!isAuthenticated && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mx-auto mt-10 max-w-3xl rounded-3xl border border-sky-400/25 bg-gradient-to-br from-sky-500/[0.10] to-cyan-500/[0.06] p-6 text-center sm:p-7"
+          >
+            <p className="text-lg font-bold text-white sm:text-xl">
+              {tr
+                ? `Ücretsiz üyelikle ${hesapAracSayisi} araç daha açılıyor`
+                : `A free account unlocks ${hesapAracSayisi} more tools`}
+            </p>
+            <p className="mx-auto mt-2 max-w-xl text-[14px] leading-relaxed text-slate-300">
+              {tr
+                ? "Taranmış belgeyi metne çevirme, aranabilir PDF, form doldurma ve üstveri temizleme — hepsi ücretsiz, hepsi cihazınızda çalışır. Kart bilgisi istenmez."
+                : "Scanned-document OCR, searchable PDF, form filling and metadata removal — all free, all running on your device. No card required."}
+            </p>
+            <button
+              type="button"
+              onClick={() => (onRegister ? onRegister() : onUseWebApp())}
+              className="mt-5 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-7 py-3.5 text-sm font-bold text-slate-950 shadow-[0_18px_44px_-14px_rgba(56,189,248,0.75)] transition hover:brightness-110"
+            >
+              {tr ? "Ücretsiz üye ol" : "Create a free account"}
+            </button>
+            <p className="mt-2 text-[12px] text-slate-500">
+              {tr ? "30 saniye sürer, e-posta yeter." : "Takes 30 seconds, email is enough."}
+            </p>
+          </motion.div>
+        )}
       </div>
     </section>
   );

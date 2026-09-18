@@ -1979,6 +1979,8 @@ export function LandingPage({
           language={language}
           onUseWebApp={onUseWebApp}
           onOpenTool={onOpenTool}
+          isAuthenticated={isAuthenticated}
+          onRegister={onRegister}
         />
         <StatsBar language={language} />
         <ProductGallery language={language} onUseWebApp={onUseWebApp} />
