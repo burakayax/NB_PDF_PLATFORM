@@ -2619,21 +2619,69 @@ function AnalyticsTab({
         {!advanced ? " UTC saat grafiği, ham API serisi ve CSV dışa aktarma Gelişmiş moddadır." : null}
       </AdminMutedBox>
       {funnel ? (
-        <section className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Ücretsiz kota aşımı (tüm zamanlar)</p>
-            <p className="mt-1 text-2xl font-bold text-amber-200">{funnel.freeTierEverHitLimit}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Kota sınırını en az bir kez aşmış kullanıcılar</p>
+        <section className="space-y-3">
+          {/* DÖNÜŞÜM HUNİSİ — basamaklar ve aralarındaki geçiş oranı.
+              Tek tek sayılar "iyi mi kötü mü" sorusunu yanıtlamıyordu; asıl
+              bilgi basamaklar ARASINDAKİ düşüşte. Hangi adımda kaybediyoruz
+              sorusu ancak böyle görünür. */}
+          <div className="grid gap-3 sm:grid-cols-4">
+            {[
+              {
+                ad: "Kayıtlı kullanıcı",
+                deger: funnel.totalUsers,
+                renk: "text-slate-100",
+                alt: "Huninin girişi",
+              },
+              {
+                ad: "Değeri yaşadı (aktivasyon)",
+                deger: funnel.activatedUsers,
+                renk: "text-sky-200",
+                alt: "En az bir işlem yapmış",
+                oran: funnel.rates?.signupToActivation,
+                oranAd: "kayıttan",
+              },
+              {
+                ad: "Kota duvarına çarptı",
+                deger: funnel.freeTierEverHitLimit,
+                renk: "text-amber-200",
+                alt: "Ücretsiz sınırı en az bir kez aştı",
+                oran: funnel.rates?.activationToWall,
+                oranAd: "aktivasyondan",
+              },
+              {
+                ad: "Ödeme yaptı",
+                deger: funnel.usersWithCompletedCheckout,
+                renk: "text-emerald-300",
+                alt: "Ödemesi tamamlanmış kullanıcı",
+                oran: funnel.rates?.wallToPaid,
+                oranAd: "duvardan",
+              },
+            ].map((k) => (
+              <div key={k.ad} className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">{k.ad}</p>
+                <p className={`mt-1 text-2xl font-bold ${k.renk}`}>{k.deger}</p>
+                {typeof k.oran === "number" ? (
+                  <p className="mt-1 text-[11px] font-semibold text-slate-300">
+                    {k.oran > 0 ? `%${k.oran} ${k.oranAd}` : `— ${k.oranAd}`}
+                  </p>
+                ) : null}
+                <p className="mt-1 text-[11px] text-slate-400">{k.alt}</p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Tamamlanan ödeme (benzersiz kullanıcı)</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">{funnel.usersWithCompletedCheckout}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Ödemesi tamamlanmış farklı kullanıcı sayısı</p>
-          </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Kayıtlı kullanıcılar</p>
-            <p className="mt-1 text-2xl font-bold text-slate-100">{funnel.totalUsers}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Huni bağlamı (özet)</p>
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.05] p-4">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-200">
+              Kayıttan ödemeye toplam dönüşüm
+            </p>
+            <p className="mt-1 text-3xl font-bold text-emerald-200">
+              {funnel.rates?.signupToPaid ? `%${funnel.rates.signupToPaid}` : "—"}
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              Sektör ölçütü: ücretsiz→ücretli dönüşüm genelde %2–5 arasında; sert
+              kullanım sınırı olan ürünlerde %15'e kadar çıkabiliyor. Düşük görünüyorsa
+              önce hangi basamakta kaybettiğimize bakılmalı — ödemeden önceki adımlar
+              zayıfsa fiyat değiştirmenin faydası olmaz.
+            </p>
           </div>
         </section>
       ) : null}
