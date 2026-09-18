@@ -89,14 +89,24 @@ async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise
  * bir denenir: telefon ısınmasın, pil erimesin.
  */
 let sonMlDenemesi = 0;
+
+/** Kadrajın tamamını ya da bir kırıntısını seçen sonuç belge değildir. */
+function makulBelge(q: Quad, w: number, h: number): boolean {
+  const oran = quadArea(q) / (w * h);
+  return oran > 0.04 && oran < 0.95;
+}
+
 export async function detectDocumentQuadLive(
   canvas: HTMLCanvasElement,
-  mlAralikMs = 220,
+  mlAralikMs = 150,
 ): Promise<Quad | null> {
   const s = await getScanner();
+  const { width: w, height: h } = canvas;
 
   const klasik = await classicalQuad(s, canvas);
-  if (klasik) return klasik;
+  // Klasik dedektör sık sık tüm kadrajı (masa/ekran kenarı) "belge" sanıyor;
+  // böyle bir sonuç kabul edilirse çerçeve bir görünüp bir kayboluyordu.
+  if (klasik && makulBelge(klasik, w, h)) return klasik;
 
   const simdi = Date.now();
   if (simdi - sonMlDenemesi < mlAralikMs) return null;
@@ -106,9 +116,12 @@ export async function detectDocumentQuadLive(
     const r = await s.scan(canvas, {
       mode: "detect",
       detector: "ml",
-      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/", minScore: 0.4 },
+      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/", minScore: 0.35 },
     });
-    if (r.success && r.corners) return cornersToQuad(r.corners);
+    if (r.success && r.corners) {
+      const q = cornersToQuad(r.corners);
+      if (makulBelge(q, w, h)) return q;
+    }
   } catch {
     /* ML yüklenemedi → çerçeve gösterilmez, manuel deklanşör çalışmaya devam eder */
   }

@@ -51,6 +51,7 @@ import {
   type Pt,
   type Quad,
 } from "../../lib/documentScan";
+import { QuadTakipci } from "../../lib/quadTracker";
 
 type Phase = "camera" | "review" | "pages" | "result";
 // Kaydetme formatı: PDF (belge standardı, çok sayfa), JPG (paylaşım/küçük boyut),
@@ -141,14 +142,6 @@ function sanitizeFileName(name: string): string {
 /** Ücretsiz planda tek taramada izin verilen sayfa sayısı (Pro: sınırsız). */
 const FREE_PAGE_LIMIT = 3;
 
-/** İki dörtgenin ortalama köşe kayması (kararlılık ölçümü için). */
-function quadDiff(a: Quad, b: Quad): number {
-  let s = 0;
-  for (let i = 0; i < 4; i++) s += Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y);
-  return s / 4;
-}
-// Belge kaç ardışık kararlı karede otomatik yakalanır (~220ms/kare → ~1.3sn).
-const STABLE_FRAMES = 6;
 
 /**
  * BELGE TARAYICI — mobil kamerayla belge fotoğrafı çekip cihazda otomatik kenar
@@ -222,8 +215,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const autoCaptureRef = useRef(true);
   autoCaptureRef.current = autoCapture && !!isPro;
-  const stableRef = useRef(0);
-  const prevLiveRef = useRef<Quad | null>(null);
+  /** Kare kare tespiti sakin bir çerçeveye çeviren zamansal takipçi. */
+  const takipciRef = useRef<QuadTakipci | null>(null);
   const capturingRef = useRef(false);
   /** Misafir "Hesabıma kaydet"e bastı → giriş yapılır yapılmaz otomatik yükle. */
   const pendingAcctSaveRef = useRef(false);
@@ -441,8 +434,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     if (!open || phase !== "camera" || cameraError || !isPro) return;
     // Kameraya her girişte temiz başla.
     capturingRef.current = false;
-    stableRef.current = 0;
-    prevLiveRef.current = null;
+    const takipci = (takipciRef.current ??= new QuadTakipci());
+    takipci.sifirla();
     setLiveQuad(null);
     setHoldPct(0);
 
@@ -468,29 +461,24 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           off.getContext("2d")?.drawImage(v, 0, 0, ow, oh);
           const q = await detectDocumentQuadLive(off);
           if (!cancelled && !capturingRef.current) {
-            if (q) {
-              const s = vw / ow;
-              const scaled = q.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad;
-              setLiveQuad(scaled);
+            const s = vw / ow;
+            const olcum = q ? (q.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad) : null;
+            // Takipçi: düzleştirme + kayıp kare koruması + sıçrama reddi.
+            const d = takipci.guncelle(olcum, vw);
+            setLiveQuad(d.quad);
+            if (d.quad) {
               sonBulunmaRef.current = Date.now();
               setUzunSuredirBulunamadi(false);
-              const prev = prevLiveRef.current;
-              const moved = prev ? quadDiff(prev, scaled) : Infinity;
-              stableRef.current = moved < vw * 0.03 ? stableRef.current + 1 : 0;
-              prevLiveRef.current = scaled;
               if (autoCaptureRef.current) {
-                setHoldPct(Math.min(1, stableRef.current / STABLE_FRAMES));
-                if (stableRef.current >= STABLE_FRAMES) {
+                setHoldPct(d.kararlilik);
+                if (d.cekilsin) {
                   capturingRef.current = true;
-                  autoShot(scaled);
+                  autoShot(d.quad);
                 }
               } else {
                 setHoldPct(0);
               }
             } else {
-              setLiveQuad(null);
-              stableRef.current = 0;
-              prevLiveRef.current = null;
               setHoldPct(0);
               // 4 saniyedir hiçbir kenar bulunamadıysa kullanıcı neyi
               // değiştireceğini bilmiyor; genel "belgeyi göster" yazısı yetmiyor.
@@ -504,7 +492,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           running = false;
         }
       }
-      if (!cancelled) timer = window.setTimeout(tick, 220);
+      // Tespit kare başına ~10-20 ms; 220 ms bekleme çerçeveyi geç güncelliyor
+      // ve el hareketi olduğunda takip kopuk görünüyordu.
+      if (!cancelled) timer = window.setTimeout(tick, 120);
     };
     timer = window.setTimeout(tick, 500); // kamera ısınması için kısa gecikme
     return () => {
