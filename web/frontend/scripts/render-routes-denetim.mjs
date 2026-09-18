@@ -14,7 +14,7 @@
  *   PowerShell:  $env:RENDER_API_KEY = "rnd_..."
  *                node scripts/render-routes-denetim.mjs
  */
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
