@@ -176,6 +176,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
    * değişmiyor (Oto zaten Pro özelliği).
    */
   const [enhance, setEnhance] = useState<EnhanceMode>(isPro ? "auto" : "color");
+  /** Kullanıcı modu ELLE seçti mi — seçtiyse varsayılan bir daha üzerine yazmaz. */
+  const enhanceSecildiRef = useRef(false);
+  const enhanceSec = useCallback((m: EnhanceMode) => {
+    enhanceSecildiRef.current = true;
+    setEnhance(m);
+  }, []);
   // Manuel köşe ayarında sürüklenen köşe indeksi → büyüteç (loupe) önizlemesi.
   const [activeCorner, setActiveCorner] = useState<number | null>(null);
   // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
@@ -325,7 +331,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setCaptured(null);
     setCapturedUrl(null);
     setQuad(null);
-    setEnhance("color");
+    setEnhance(isPro ? "auto" : "color");
+    enhanceSecildiRef.current = false;
     setPages((p) => {
       p.forEach((x) => URL.revokeObjectURL(x.url));
       return [];
@@ -348,7 +355,18 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setSavedAcct(false);
     setSavingAcct(false);
     saveHandleRef.current = null;
-  }, [stopStream]);
+  }, [stopStream, isPro]);
+
+  /**
+   * Pro kullanıcıda iyileştirme varsayılanı "Oto" olmalı. Bileşen ilk kuruluşunda
+   * plan bilgisi HENÜZ gelmemiş olabiliyor (oturum doğrulaması sürüyor); o anda
+   * "Renkli" seçiliyor ve plan gelince kimse düzeltmiyordu — kullanıcı taramayı
+   * hep renkli modda açılmış buluyordu. Kullanıcı elle bir mod seçmediyse plan
+   * bilgisi geldiğinde varsayılan güncellenir.
+   */
+  useEffect(() => {
+    if (!enhanceSecildiRef.current) setEnhance(isPro ? "auto" : "color");
+  }, [isPro, open]);
 
   // Modal kapandığında temizle.
   useEffect(() => {
@@ -1192,10 +1210,18 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   <svg
                     ref={svgRef}
                     viewBox={`0 0 ${captured.width} ${captured.height}`}
-                    className="absolute inset-0 h-full w-full touch-none"
-                    onPointerMove={onMove}
-                    onPointerUp={endDrag}
-                    onPointerLeave={endDrag}
+                    /* Kaplama katmanı eskiden dokunuşun TAMAMINI yutuyordu
+                       (touch-none): kullanıcı belgenin üzerinden parmağını
+                       kaydırdığında sayfa kaymıyor, aşağıdaki düğmelere
+                       ulaşamıyordu. Artık yalnız köşe düzeltme açıkken dokunuş
+                       yakalanır; diğer zamanlarda kaplama şeffaftır ve sayfa
+                       normal biçimde kaydırılır. */
+                    className={`absolute inset-0 h-full w-full ${
+                      manualEdit ? "touch-none" : "pointer-events-none touch-pan-y"
+                    }`}
+                    onPointerMove={manualEdit ? onMove : undefined}
+                    onPointerUp={manualEdit ? endDrag : undefined}
+                    onPointerLeave={manualEdit ? endDrag : undefined}
                   >
                     <polygon
                       points={quad.map((p) => `${p.x},${p.y}`).join(" ")}
@@ -1223,13 +1249,29 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 )}
               </div>
 
+              {/* Kenar düzeltme artık İSTİSNA: otomatik tespit köşeleri zaten
+                  doğru buluyor, bu yüzden ana düğme sırasını işgal etmiyor.
+                  Nadiren gerektiğinde buradan açılır. */}
+              <button
+                type="button"
+                onClick={() => setManualEdit((v) => !v)}
+                className={`mx-auto mt-2.5 flex w-full max-w-md items-center justify-center gap-1.5 text-[12px] font-semibold transition ${
+                  manualEdit ? "text-cyan-200" : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Crop className="h-3.5 w-3.5" />
+                {manualEdit
+                  ? tr ? "Düzeltmeyi bitir" : "Done adjusting"
+                  : tr ? "Kenarlar yanlışsa elle düzelt" : "Edges wrong? Adjust manually"}
+              </button>
+
               {/* İyileştirme modu — "Oto" Pro (gölge temizleme + kontrast) */}
               <div className="mx-auto mt-4 flex w-full max-w-md items-center gap-2">
                 <Wand2 className="h-4 w-4 shrink-0 text-slate-400" />
                 <div className="grid flex-1 grid-cols-4 gap-1.5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1.5">
                   <button
                     type="button"
-                    onClick={() => (isPro ? setEnhance("auto") : setUpsell("auto"))}
+                    onClick={() => (isPro ? enhanceSec("auto") : setUpsell("auto"))}
                     className={`inline-flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[13px] font-semibold transition ${
                       enhance === "auto" && isPro
                         ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white"
@@ -1247,7 +1289,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     <button
                       key={m}
                       type="button"
-                      onClick={() => setEnhance(m)}
+                      onClick={() => enhanceSec(m)}
                       className={`rounded-xl px-2 py-2 text-[13px] font-semibold transition ${
                         enhance === m ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white" : "text-slate-300 hover:bg-white/[0.06]"
                       }`}
@@ -1290,38 +1332,28 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </div>
               )}
 
-              <div className="mx-auto mt-4 flex w-full max-w-md flex-col gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => void commitPage()}
-                  disabled={busy || detecting || !quad}
-                  className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {tr ? "Kullan" : "Use this page"}
-                </button>
-                <div className="flex gap-2.5">
+              {/* İŞLEM ÇUBUĞU — ekranın altına YAPIŞIK.
+                  Önceden sayfanın en altındaydı; uzun belgelerde "Kullan" ve
+                  "Yeniden çek" görünmüyor, kullanıcı aşağı kaydırmak zorunda
+                  kalıyordu. Artık her zaman parmağın altında. */}
+              <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-white/[0.08] bg-[#0b1220]/85 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-md gap-2.5">
                   <button
                     type="button"
                     onClick={retake}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-3 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
                   >
                     <RotateCcw className="h-4 w-4" />
                     {tr ? "Yeniden çek" : "Retake"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setManualEdit((v) => !v)}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-2xl border px-3 py-3 text-[13px] font-semibold transition ${
-                      manualEdit
-                        ? "border-cyan-400/40 bg-cyan-500/15 text-cyan-100"
-                        : "border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]"
-                    }`}
+                    onClick={() => void commitPage()}
+                    disabled={busy || detecting || !quad}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
                   >
-                    <Crop className="h-4 w-4" />
-                    {manualEdit
-                      ? tr ? "Düzeltmeyi bitir" : "Done adjusting"
-                      : tr ? "Kenarları düzelt" : "Adjust edges"}
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {tr ? "Kullan" : "Use this page"}
                   </button>
                 </div>
               </div>
