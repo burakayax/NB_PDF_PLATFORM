@@ -24,11 +24,15 @@ function loadScanic() {
 
 // Kalıcı WASM örneği (canlı/tekrarlı tarama için yeniden init maliyeti yok).
 let scanner: ScannerType | null = null;
+/** Sinir ağı varlıkları KENDİ sunucumuzda (CDN'e gitmez, gizlilik + CSP). */
+const ML_AYAR = { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/" } as const;
 async function getScanner(): Promise<ScannerType> {
   const m = await loadScanic();
   if (!scanner) scanner = new m.Scanner();
   return scanner;
 }
+/** Sinir ağı modeli inip hazır olduğunda true — canlı döngü buna göre yol seçer. */
+let mlHazir = false;
 
 function cornersToQuad(c: CornerPoints): Quad {
   return [c.topLeft, c.topRight, c.bottomRight, c.bottomLeft];
@@ -72,6 +76,19 @@ async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise
   return null;
 }
 
+/** Klasik dedektörün sonucu + kendi güven değeri (0-1). */
+async function klasikOlcum(s: ScannerType, canvas: HTMLCanvasElement): Promise<Olcum | null> {
+  try {
+    const r = await s.scan(canvas, { mode: "detect" });
+    if (r.success && r.corners) {
+      return { quad: cornersToQuad(r.corners), guven: typeof r.confidence === "number" ? r.confidence : 0.5 };
+    }
+  } catch {
+    /* yoksay */
+  }
+  return null;
+}
+
 /**
  * CANLI kare için belge köşeleri — önce klasik, bulunamazsa YAPAY SİNİR AĞI.
  *
@@ -88,7 +105,8 @@ async function classicalQuad(s: ScannerType, canvas: HTMLCanvasElement): Promise
  * ML her karede değil, klasik başarısız olduğunda ve en fazla `mlAralikMs`'de
  * bir denenir: telefon ısınmasın, pil erimesin.
  */
-let sonMlDenemesi = 0;
+/** Canlı karede bir ölçüm: dörtgen + o ölçüme ne kadar güvenildiği (0-1). */
+export type Olcum = { quad: Quad; guven: number };
 
 /** Kadrajın tamamını ya da bir kırıntısını seçen sonuç belge değildir. */
 function makulBelge(q: Quad, w: number, h: number): boolean {
@@ -96,34 +114,57 @@ function makulBelge(q: Quad, w: number, h: number): boolean {
   return oran > 0.04 && oran < 0.95;
 }
 
-export async function detectDocumentQuadLive(
-  canvas: HTMLCanvasElement,
-  mlAralikMs = 150,
-): Promise<Quad | null> {
+/**
+ * Klasik dedektörün "bu sonucu yeniden denemeye gerek yok" dediği güven eşiği.
+ * Kütüphanenin kendi varsayılanı (ek geçişleri tetikleme eşiği) ile aynı: 0.68.
+ * Bunun ALTINDAKİ sonuçlar canlı görüntüde belgeye oturmuyor, bir kare görünüp
+ * ertesinde kayboluyordu — artık doğrudan sinir ağına geçiliyor.
+ */
+const KLASIK_GUVEN_ESIGI = 0.68;
+
+/**
+ * CANLI kare için belge ölçümü.
+ *
+ * Kütüphanenin resmî önerisi: "önce klasik, sonuç YOKSA **ya da güveni DÜŞÜKSE**
+ * sinir ağına düş; bildiğin dağınık kamera sahnelerinde doğrudan sinir ağını
+ * kullan." Önceki sürüm yalnızca "sonuç yoksa" durumunu ele alıyordu; elde
+ * tutulan telefonun gördüğü sahne (masa, gölge, desenli zemin) tam da "dağınık"
+ * tanımına giriyor. Bu yüzden:
+ *   - model hazırsa DOĞRUDAN sinir ağı (kare başına ~13 ms),
+ *   - model daha inmediyse klasik dedektör köprü görevi görür.
+ * Sinir ağı bir kareyi kaçırırsa klasik sonuç yedek olarak değerlendirilir.
+ */
+export async function olcumAl(canvas: HTMLCanvasElement): Promise<Olcum | null> {
   const s = await getScanner();
   const { width: w, height: h } = canvas;
 
-  const klasik = await classicalQuad(s, canvas);
-  // Klasik dedektör sık sık tüm kadrajı (masa/ekran kenarı) "belge" sanıyor;
-  // böyle bir sonuç kabul edilirse çerçeve bir görünüp bir kayboluyordu.
-  if (klasik && makulBelge(klasik, w, h)) return klasik;
+  if (mlHazir) {
+    const ml = await mlOlcum(s, canvas);
+    if (ml && makulBelge(ml.quad, w, h)) return ml;
+    const k = await klasikOlcum(s, canvas);
+    if (k && k.guven >= KLASIK_GUVEN_ESIGI && makulBelge(k.quad, w, h)) return k;
+    return null;
+  }
 
-  const simdi = Date.now();
-  if (simdi - sonMlDenemesi < mlAralikMs) return null;
-  sonMlDenemesi = simdi;
+  const k = await klasikOlcum(s, canvas);
+  if (k && k.guven >= KLASIK_GUVEN_ESIGI && makulBelge(k.quad, w, h)) return k;
+  return null;
+}
 
+async function mlOlcum(s: ScannerType, canvas: HTMLCanvasElement): Promise<Olcum | null> {
   try {
     const r = await s.scan(canvas, {
       mode: "detect",
       detector: "ml",
-      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/", minScore: 0.35 },
+      // Canlı TAKİP için eşik düşük tutulur (çerçeveyi kaybetmemek için);
+      // otomatik ÇEKİM kararı ayrıca skora bakar, zayıf ölçümle çekim yapılmaz.
+      ml: { ...ML_AYAR, minScore: 0.3, threaded: true },
     });
     if (r.success && r.corners) {
-      const q = cornersToQuad(r.corners);
-      if (makulBelge(q, w, h)) return q;
+      return { quad: cornersToQuad(r.corners), guven: typeof r.score === "number" ? r.score : 0.5 };
     }
   } catch {
-    /* ML yüklenemedi → çerçeve gösterilmez, manuel deklanşör çalışmaya devam eder */
+    mlHazir = false; // model düştü → klasik köprüye geri dön
   }
   return null;
 }
@@ -133,21 +174,20 @@ export async function detectDocumentQuadLive(
  *
  * Model + çalışma zamanı ~2 MB. Önceden yüklenmezse ilk ihtiyaç anında inmesi
  * gerekir ve kullanıcı o sırada elinde telefonla belgeyi çerçeveye sığdırmaya
- * çalışıyordur; ilk saniyeler boş geçer.
+ * çalışıyordur; ilk saniyeler boş geçer. Hazır olana kadar klasik dedektör
+ * çalışır, model inince canlı döngü kendiliğinden sinir ağına geçer.
  */
 export async function isitScanner(): Promise<void> {
   try {
     const s = await getScanner();
+    await s.initialize();
     const bos = document.createElement("canvas");
-    bos.width = 64;
-    bos.height = 64;
-    await s.scan(bos, {
-      mode: "detect",
-      detector: "ml",
-      ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/" },
-    });
+    bos.width = 256;
+    bos.height = 256;
+    await s.scan(bos, { mode: "detect", detector: "ml", ml: { ...ML_AYAR, threaded: true } });
+    mlHazir = true;
   } catch {
-    /* ısıtma başarısızsa akış bozulmaz; ilk gerçek denemede yeniden denenir */
+    mlHazir = false; // ısıtma başarısızsa klasik dedektörle devam edilir
   }
 }
 
@@ -165,7 +205,7 @@ export async function detectDocumentQuad(
       const r = await s.scan(canvas, {
         mode: "detect",
         detector: "ml",
-        ml: { assetBaseUrl: "/scanic-ml/", wasmPaths: "/scanic-ml/" },
+        ml: { ...ML_AYAR, threaded: true },
       });
       if (r.success && r.corners) {
         const q = cornersToQuad(r.corners);
