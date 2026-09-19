@@ -168,18 +168,20 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
       // H1 — primary keyword "merge PDF" first; "PDF converter" second;
       // "compress PDF" and "PDF editor" follow. ≤70 chars for full display.
+      // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
+      // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
       headline:
-        "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
+        "PDF to Word, Merge, Compress and Edit — 45 PDF Tools in One Place",
 
       alternatives: [
         "Fast, Secure PDF Management for Business Workflows",
         "Handle Your PDFs in Seconds — Built for Professionals",
       ],
 
-      // Also used as meta description — MUST stay ≤155 characters.
-      // Current length: 151 chars ✓
+      // On-screen subheading. (The meta description does NOT come from here —
+      // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation, no account needed — it works right in your browser.",
+        "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools in one place. No install, no account — everything runs in your browser.",
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -502,20 +504,34 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kicker — intent/brand çerçevesi, başlık değil
       kicker: "İş Süreçleri İçin PDF Yönetimi",
 
-      // H1 — birincil keyword "PDF birleştirme" öne alındı;
-      // "PDF dönüştürme", "PDF sıkıştırma", "PDF düzenleme" takip ediyor.
+      /**
+       * H1 — sıralama ÖLÇÜLDÜ, tahmin edilmedi.
+       *
+       * Google otomatik tamamlama (tr) popülerlik sırasıyla döner; "pdf" için
+       * ilk sıralar: birleştirme → to word → küçültme → dönüştürücü → to jpg →
+       * düzenleme → to excel. Eski başlıkta "Word'e çevir" hiç geçmiyordu, oysa
+       * en çok aranan İKİNCİ ifade odur.
+       *
+       * Ayrıca araç sayısı yazılıyor: eski metni okuyan kişi sitede yalnızca
+       * sayılan dört aracın olduğunu sanıyordu (kullanıcı bildirdi).
+       */
       headline:
-        "PDF Birleştir, Dönüştür, Sıkıştır ve Düzenle — Tüm PDF Araçları Tek Platformda",
+        "PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — 45 PDF Aracı Tek Platformda",
 
       alternatives: [
         "İş Süreçleri İçin Hızlı ve Güvenli PDF Yönetimi",
         "PDF İşlemlerinizi Saniyeler İçinde Tamamlayın — Profesyoneller İçin",
       ],
 
-      // meta description olarak da kullanılır — ≤155 karakter.
-      // Mevcut uzunluk: 148 karakter ✓
+      // EKRANDA görünen alt başlık. (Meta açıklama BURADAN GELMEZ; ana sayfanın
+      // meta açıklaması seo/seoContent.mjs → LANDING_SEO içindedir. Buradaki
+      // eski yorum "meta description olarak da kullanılır" diyordu, doğru değil;
+      // ikisi ayrı yerlerde ve ayrı ayrı güncellenmeli.)
+      // En çok aranan ifadeler önce; "sıkıştırma" ve "küçültme" ikisi de
+      // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
+      // başlıkta biri burada geçiyor.
       description:
-        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez, üyelik istemez — doğrudan tarayıcıdan çalışır.",
+        "PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve 40+ araç daha. Kurulum ve üyelik gerekmez — tarayıcınızda çalışır.",
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",

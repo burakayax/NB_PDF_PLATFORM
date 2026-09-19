@@ -13,6 +13,163 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const BLOG_POSTS = [
   post(
     {
+      slug: "docusign-alternatifi-imza-istegi",
+      date: "2026-09-19",
+      updated: "2026-09-19",
+      readMinutes: 7,
+      tags: { tr: ["Karşılaştırma", "İmza", "Sözleşme"], en: ["Comparison", "Signatures", "Contracts"] },
+      accent: "emerald",
+      tool: "/tools/imza-iste",
+    },
+    {
+      title: "DocuSign Alternatifi: Ayda 5 Belge Sınırına Takılıyorsanız",
+      description:
+        "DocuSign'ın bireysel planı ayda 5 belgeyle sınırlı. Daha fazlasına ihtiyacı olan ama kurumsal pakete de ihtiyacı olmayanlar için imza isteme akışını, denetim kaydını ve maliyeti karşılaştırıyoruz.",
+      excerpt:
+        "DocuSign iyi bir ürün ama fiyatlandırması «zarf» üzerinden işliyor ve bireysel plan ayda 5 belgeyle sınırlı. Ayda on sözleşme gönderen küçük bir işletme için bu erken biten bir paket.",
+      blocks: [
+        { t: "lead", x: "Elektronik imza denince akla ilk DocuSign geliyor ve bunun sebebi var — kategoriyi o kurdu. Ama fiyatlandırması gönderdiğiniz belge sayısı üzerinden işliyor ve bireysel plan ayda 5 belgede bitiyor. Ayda on sözleşme gönderen tek kişilik bir şirket için bu, ayın ortasında biten bir paket demek." },
+
+        { t: "h2", x: "DocuSign'ın fiyatlandırması nasıl işliyor?" },
+        { t: "p", x: "DocuSign «zarf» (envelope) birimini kullanıyor: imzaya gönderdiğiniz her belge paketi bir zarf sayılıyor. Kendi fiyat sayfasındaki güncel rakamlar:" },
+        { t: "ul", items: [
+          "Personal — aylık 11 dolar (yıllık ödemede), ayda 5 zarf.",
+          "Standard — kullanıcı başına aylık 30 dolar, kullanıcı başına yılda 100 zarf.",
+          "Business Pro — kullanıcı başına aylık 45 dolar, kullanıcı başına yılda 100 zarf.",
+        ] },
+        { t: "p", x: "Dikkat edilmesi gereken yer şu: üst planlarda bile sınır yıllık 100 zarf. Yani ayda ortalama sekiz belge. Daha fazlası için kurumsal görüşme gerekiyor." },
+
+        { t: "h2", x: "DocuSign'ın gerçekten güçlü olduğu yerler" },
+        { t: "p", x: "Alternatif ararken neyi bırakacağınızı bilmeniz gerek. DocuSign'ın öne çıktığı yerler tartışmasız:" },
+        { t: "ul", items: [
+          "Salesforce, SAP, Google Workspace gibi sistemlerle hazır bütünleşmeler.",
+          "Nitelikli elektronik imza seçenekleri ve düzenlemeye tabi sektörler için sertifikasyonlar.",
+          "Toplu gönderim, şablon yönetimi, yüz yüze imzalama gibi ileri akışlar.",
+          "iOS ve Android uygulamaları, kurumsal kullanıcı yönetimi.",
+        ] },
+        { t: "p", x: "Bunlara ihtiyacınız varsa alternatif aramak yanlış yönde bir tasarruf olur. Aşağısı, ihtiyacı bunlar olmayanlar için." },
+
+        { t: "h2", x: "Çoğu kişinin ihtiyacı aslında ne?" },
+        { t: "p", x: "Pratikte en sık kurulan cümle şu: «Şu sözleşmeyi karşı tarafa göndereyim, imzalasın, imzalandığına dair elimde bir kayıt kalsın.» Serbest çalışanlar, küçük ajanslar, muhasebeciler, emlakçılar, tek kişilik şirketler. Zarf kotası, entegrasyon kataloğu ya da kurumsal kullanıcı yönetimi bu işin parçası değil." },
+
+        { t: "h2", x: "PDF Platform'da imza isteme" },
+        { t: "p", x: "Belgeyi yüklersiniz, imzalayacak kişinin e-posta adresini girersiniz, o kişiye yalnızca kendisi için üretilmiş bir bağlantı gider. Karşı taraf hesap açmadan belgeyi görür, adını yazar, imzasını çizer ve onay kutusunu işaretler." },
+        { t: "p", x: "Kritik ayrıntı şurada: imza, sunucuda duran ASIL belgeye uygulanır. İmzalayandan geri dosya kabul edilmez. Yani «gönderilen belge ile imzalanan belge aynı mı» sorusu tasarım gereği çözülmüştür — sonradan denetlenecek bir şey değil." },
+        { t: "p", x: "İmzalanan belgenin sonuna bir denetim sertifikası ekleniyor. İçinde şunlar yazıyor:" },
+        { t: "ul", items: [
+          "İsteğin oluşturulduğu, gönderildiği, görüntülendiği ve imzalandığı anlar.",
+          "İmzalayanın adı ve e-posta adresi, kimlik doğrulama yöntemi.",
+          "Onayın verildiği an.",
+          "Belgenin imza öncesi ve sonrası parmak izleri (SHA-256).",
+        ] },
+        { t: "p", x: "Bağlantı 14 gün geçerli. Karşı taraf imzalamayı reddedebilir — isterse gerekçe yazar, size e-postayla bildirilir ve bu da denetim kaydına işlenir." },
+
+        { t: "h2", x: "Hukuki geçerlilik — burada dürüst olmak şart" },
+        { t: "p", x: "Bu, görsel (ıslak imza görünümlü) bir elektronik imzadır ve yanında sürecin kaydı bulunur. Ticari belgelerin büyük bölümünde kullanılan yaklaşım budur." },
+        { t: "p", x: "Ama nitelikli elektronik imza AYRI bir hukuki kategoridir ve yetkilendirilmiş bir hizmet sağlayıcıdan alınmış sertifika gerektirir. Bunu sunmuyoruz. Noter onayı gerektiren, resmî makama sunulacak ya da mevzuatın nitelikli imza şart koştuğu belgelerde bu araç doğru seçim değildir — DocuSign'ın nitelikli imza seçenekleri ya da yerel bir e-imza sağlayıcısı gerekir." },
+
+        { t: "h2", x: "Maliyet karşılaştırması" },
+        { t: "ul", items: [
+          "DocuSign Personal: aylık 11 dolar, ayda 5 belge.",
+          "PDF Platform Plus: aylık 6,99 dolar, aylık 600 işlem hakkı ve 34 aracın tamamı. İmza isteme Plus ve üzeri planlarda bulunur.",
+        ] },
+        { t: "p", x: "Rakamları karşılaştırırken elmayla elmayı karşılaştırdığınızdan emin olun: DocuSign'ın paketi imza etrafında kurulmuş bir iş akışı ürünü; buradaki paket, içinde imza isteme de bulunan bir belge araç takımı. İhtiyacınız yalnızca imzaysa ikincisi daha ucuza geliyor; ihtiyacınız kurumsal bir imza altyapısıysa ilki daha fazlasını veriyor." },
+
+        { t: "cta", title: "İmza İste", x: "Belgeyi yükleyin, e-posta adresini girin — karşı taraf hesap açmadan imzalasın, denetim sertifikası belgeye eklensin.", btn: "Aracı aç", tool: "/tools/imza-iste" },
+
+        { t: "h2", x: "Hangisini seçmelisiniz?" },
+        { t: "ul", items: [
+          "Ayda birkaç sözleşme gönderiyor ve süreç kaydı istiyorsanız: imza isteme akışı yeterlidir ve daha ucuzdur.",
+          "Nitelikli elektronik imza ya da sektörel sertifikasyon gerekiyorsa: DocuSign ya da yerel bir e-imza sağlayıcısı.",
+          "CRM'inizle bütünleşme, toplu gönderim ya da şablon yönetimi gerekiyorsa: DocuSign.",
+          "Sadece kendi belgenize imza atacaksanız: hiçbirine gerek yok — PDF imzalama aracı üyeliksiz ve cihazınızda çalışır.",
+        ] },
+      ],
+      faq: [
+        { q: "DocuSign'ın ücretsiz planı var mı?", a: "Fiyat sayfasında ücretsiz bir plan görünmüyor; planlar Personal (aylık 11 dolar, ayda 5 zarf) ile başlıyor. Deneme süresi sunulup sunulmadığı sayfada belirtilmiyor." },
+        { q: "İmzalayacak kişinin hesap açması gerekiyor mu?", a: "Hayır. E-postasına gelen bağlantıyı açar, belgeyi görür, adını yazar, imzasını çizer ve onaylar. Hesap, kurulum ya da ödeme gerekmez." },
+        { q: "İmzalanan belgenin değiştirilmediğini nasıl bilirim?", a: "İmza, sunucuda duran asıl belgeye uygulanır; imzalayandan dosya kabul edilmez. Belgenin imza öncesi ve sonrası SHA-256 parmak izleri kaydedilir ve denetim sertifikasına yazılır." },
+        { q: "Bu imza hukuken geçerli mi?", a: "Görsel bir elektronik imza üretir ve yanına sürecin kaydını ekler; ticari belgelerin çoğunda kullanılan yaklaşım budur. Nitelikli elektronik imza ayrı bir hukuki kategoridir, yetkilendirilmiş sağlayıcıdan sertifika gerektirir ve bu araç onu sunmaz." },
+        { q: "İmza isteme hangi planda?", a: "Plus ve üzeri planlarda. Ücretsiz ve Başlangıç planlarında bulunmuyor. Kendi belgenize imza atmak ise üyeliksiz ve ücretsizdir." },
+        { q: "Bağlantı ne kadar geçerli?", a: "14 gün. Süre dolduğunda bağlantı çalışmaz; isteği iptal edip yenisini gönderebilirsiniz." },
+      ],
+    },
+    {
+      title: "DocuSign Alternatives: When Five Documents a Month Is Not Enough",
+      description:
+        "DocuSign's personal plan caps at five documents a month. For people who need more than that but do not need an enterprise contract, here is an honest comparison of signature requests, audit records and cost.",
+      excerpt:
+        "DocuSign is a good product, but it is priced per envelope and the personal plan stops at five documents a month. For a small business sending ten contracts, that is a plan that runs out mid-month.",
+      blocks: [
+        { t: "lead", x: "DocuSign is the first name people think of for e-signatures, and deservedly — it created the category. But it is priced by how many documents you send, and the personal plan stops at five a month. For a one-person company sending ten contracts, that is a plan that runs out halfway through the month." },
+
+        { t: "h2", x: "How DocuSign's pricing works" },
+        { t: "p", x: "DocuSign counts «envelopes»: each document package you send for signature is one envelope. The current figures from their own pricing page:" },
+        { t: "ul", items: [
+          "Personal — $11 per month (billed annually), 5 envelopes per month.",
+          "Standard — $30 per user per month, 100 envelopes per user per year.",
+          "Business Pro — $45 per user per month, 100 envelopes per user per year.",
+        ] },
+        { t: "p", x: "The part worth noticing: even the higher plans cap at 100 envelopes a year — about eight a month. Beyond that you are talking to sales." },
+
+        { t: "h2", x: "What DocuSign genuinely does better" },
+        { t: "p", x: "You should know what you would be giving up. DocuSign's strengths are not in question:" },
+        { t: "ul", items: [
+          "Ready-made integrations with Salesforce, SAP, Google Workspace and others.",
+          "Qualified electronic signature options and certifications for regulated industries.",
+          "Bulk send, template management, in-person signing and other advanced flows.",
+          "iOS and Android apps, and enterprise user management.",
+        ] },
+        { t: "p", x: "If you need those, switching would be a false economy. What follows is for people who do not." },
+
+        { t: "h2", x: "What most people actually need" },
+        { t: "p", x: "In practice the sentence is usually this: «Send this contract to the other party, let them sign it, and leave me a record that they did.» Freelancers, small agencies, accountants, estate agents, one-person companies. Envelope quotas, integration catalogues and enterprise user management are not part of that job." },
+
+        { t: "h2", x: "How signature requests work here" },
+        { t: "p", x: "You upload the document and enter the signer's email address. They receive a link generated only for them. Without creating an account they view the document, type their name, draw their signature and tick the consent box." },
+        { t: "p", x: "Here is the detail that matters: the signature is applied to the original document held on the server. No file is accepted back from the signer. So «is the signed document the same one I sent?» is answered by construction, not by trusting an audit afterwards." },
+        { t: "p", x: "A certificate is appended to the signed document. It records:" },
+        { t: "ul", items: [
+          "When the request was created, sent, viewed and signed.",
+          "The signer's name and email address, and the authentication method.",
+          "The moment consent was given.",
+          "The document's fingerprints (SHA-256) before and after signing.",
+        ] },
+        { t: "p", x: "The link is valid for 14 days. The signer can decline, optionally with a reason — you are notified by email and it goes into the audit record." },
+
+        { t: "h2", x: "Legal validity — the part that has to be honest" },
+        { t: "p", x: "This produces a visual (wet-ink-style) electronic signature with a record of the process attached. That is the approach used for the majority of commercial documents." },
+        { t: "p", x: "But a qualified electronic signature is a separate legal category, and it requires a certificate from a qualified trust service provider. We do not offer that. For documents that need notarisation, that go to a public authority, or where the law specifically requires a qualified signature, this is the wrong tool — you need DocuSign's qualified options or a local trust service provider." },
+
+        { t: "h2", x: "What it costs" },
+        { t: "ul", items: [
+          "DocuSign Personal: $11 per month, 5 documents per month.",
+          "PDF Platform Plus: $6.99 per month, 600 operations per month and all 34 tools. Signature requests are on Plus and above.",
+        ] },
+        { t: "p", x: "Compare like with like, though: DocuSign's package is a workflow product built around signing; this one is a document toolkit that happens to include signature requests. If signing is all you need, the second is cheaper. If you need a signing infrastructure, the first gives you more." },
+
+        { t: "cta", title: "Request a Signature", x: "Upload the document, enter an email address — they sign without an account, and the audit certificate is attached.", btn: "Open the tool", tool: "/tools/imza-iste" },
+
+        { t: "h2", x: "Which should you pick?" },
+        { t: "ul", items: [
+          "Sending a few contracts a month and want a record of the process: signature requests are enough, and cheaper.",
+          "Need a qualified electronic signature or industry certification: DocuSign, or a local trust service provider.",
+          "Need CRM integration, bulk send or template management: DocuSign.",
+          "Only signing your own document: you need neither — the PDF signing tool is free, needs no account and runs on your device.",
+        ] },
+      ],
+      faq: [
+        { q: "Does DocuSign have a free plan?", a: "No free plan appears on their pricing page; plans start at Personal ($11 per month, 5 envelopes per month). The page does not state whether a trial is offered." },
+        { q: "Does the signer need an account?", a: "No. They open the link from their email, view the document, type their name, draw their signature and confirm. No account, install or payment." },
+        { q: "How do I know the signed document was not altered?", a: "The signature is applied to the original document held on the server; no file is accepted back from the signer. The document's SHA-256 fingerprints before and after signing are recorded and printed on the audit certificate." },
+        { q: "Is this signature legally valid?", a: "It produces a visual electronic signature with a record of the process attached — the approach used for most commercial documents. A qualified electronic signature is a separate legal category requiring a certificate from a qualified trust service provider, which this tool does not offer." },
+        { q: "Which plan includes signature requests?", a: "Plus and above. They are not on the Free or Starter plans. Signing your own document, by contrast, is free and needs no account." },
+        { q: "How long is the link valid?", a: "14 days. After that the link stops working; you can cancel the request and send a new one." },
+      ],
+    },
+  ),
+  post(
+    {
       slug: "pdf24-alternatifi-mac-linux",
       date: "2026-09-19",
       updated: "2026-09-19",
