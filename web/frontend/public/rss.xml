@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Thu, 10 Sep 2026 20:54:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 19 Sep 2026 20:47:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,48 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>Microsoft Lens Kapandı: Telefonla Belge Taramaya Ne Kaldı?</title>
+      <link>https://www.pdfplatform.app/blog/microsoft-lens-alternatifi</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/microsoft-lens-alternatifi</guid>
+      <pubDate>Sat, 19 Sep 2026 20:47:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/microsoft-lens-alternative" />
+      <description><![CDATA[On yıldır kullanılan Microsoft Lens kapandı ve Microsoft kullanıcıları OneDrive'a yönlendiriyor. Ama herkes buluta yüklemek istemiyor. Telefonla belge taramanın bugünkü seçeneklerine bakalım.]]></description>
+      <content:encoded><![CDATA[<p>Microsoft Lens — eski adıyla Office Lens — 9 Mart 2026 itibarıyla artık yeni tarama yapmıyor. Uygulama Şubat ayında mağazalardan kaldırıldı. Telefonunda duruyorsa eski taramalarınızı görebilirsiniz ama yenisini oluşturamazsınız. On yıllık bir alışkanlık böylece sona erdi.</p>
+<h2>Tam olarak ne oldu?</h2>
+<ul><li>9 Ocak 2026: Emeklilik duyuruldu, destek sona erdi.</li><li>9 Şubat 2026: Uygulama App Store ve Google Play'den kaldırıldı.</li><li>9 Mart 2026: Yeni tarama yapma özelliği kapandı.</li></ul>
+<p>Microsoft, yerine OneDrive uygulamasını öneriyor; içinde bir tarama özelliği var.</p>
+<h2>OneDrive neden herkese uymuyor?</h2>
+<p>Çalışıyor, ama iki şeyi beraberinde getiriyor: Microsoft hesabı ve bulut. Taradığınız belge OneDrive'a yükleniyor. Bir market fişi için sorun değil; ama kimlik fotokopisi, sağlık raporu, kira sözleşmesi ya da müşteri evrakı tarıyorsanız aynı şey değil.</p>
+<p>Bir de şu var: sırf belge taramak için bir bulut hesabına bağlanmak, ihtiyacınızdan büyük bir çözüm. Lens'in sevilen yanı basitliğiydi — aç, çek, PDF.</p>
+<h2>Önce şunu deneyin: telefonunuzda zaten bir tarayıcı olabilir</h2>
+<p>Dürüst olalım, en pratik çözüm bazen zaten cebinizde:</p>
+<ul><li>iPhone'da Notlar uygulaması: yeni not → kamera simgesi → «Belgeleri Tara». Kenar tespiti ve perspektif düzeltmesi var, tamamen cihazda çalışır.</li><li>Android'de Google Drive: artı düğmesi → «Tara». Sonuç Drive'a yüklenir.</li><li>Samsung telefonlarda kamera uygulaması bir belgeye tutulduğunda kendiliğinden tarama önerir.</li></ul>
+<blockquote><p>Ara sıra tek sayfa tarıyorsanız bunlar fazlasıyla yeter ve hiçbir şey kurmanız gerekmez. Aşağıdakileri okumaya bile gerek yok.</p></blockquote>
+<h2>Peki bunlar yetmiyorsa?</h2>
+<p>Yerleşik tarayıcıların tıkandığı yerler belli: birden çok sayfayı düzgün birleştirmek, sonucu PDF olarak paylaşmak, taranan yazının aranabilir olması, ve bilgisayardan da aynı işi yapabilmek. Bir de bazı kurumlarda telefona uygulama kurmak serbest değildir.</p>
+<p>Bu noktada tarayıcıda çalışan bir tarayıcı işe yarıyor: kurulum yok, hesap yok, ve belge cihazdan çıkmıyor.</p>
+<h2>PDF Platform Belge Tarayıcı</h2>
+<p>Telefonunuzun tarayıcısında açılır, kamerayı belgeye tutarsınız; kenarlar otomatik bulunur, eğri çekilen fotoğraf düzleştirilir, kontrast artırılır ve PDF oluşur. Kamera görüntüsü, kenar tespiti ve PDF üretimi tamamen cihazınızda çalışır — belge internete gönderilmez.</p>
+<p>Neyin ücretsiz, neyin ücretli olduğunu peşinen söyleyelim:</p>
+<ul><li>Ücretsiz: kamerayla tarama, otomatik kenar tespiti, perspektif düzeltme, kontrast iyileştirme, tarama başına 3 sayfa, PDF indirme. Üyelik gerekmez.</li><li>Pro: sınırsız sayfa, otomatik çekim (telefonu sabit tuttuğunuzda kendi çeker), gölge temizleme ve aranabilir PDF (OCR).</li></ul>
+<p><strong>Belge Tarayıcı</strong> — Telefonunuzun tarayıcısında açın, kamerayı belgeye tutun — kurulum ve üyelik yok. <a href="https://www.pdfplatform.app/tools/belge-tara">Aracı aç</a></p>
+<h2>Nasıl kullanılır</h2>
+<ol><li><strong>Telefonun tarayıcısında açın</strong> — Uygulama indirmenize gerek yok. Sayfayı açıp «Belge tara» deyin ve kamera iznini verin.</li><li><strong>Kamerayı belgeye tutun</strong> — Kenarlar otomatik bulunur. Eğri açıdan çekseniz de sonuç düzleştirilir.</li><li><strong>PDF olarak indirin</strong> — Birden çok sayfa taradıysanız tek PDF'te birleşir. İsterseniz doğrudan paylaşabilirsiniz.</li></ol>
+<h2>Neyi kaybedersiniz?</h2>
+<p>Dürüst bir karşılaştırma için bunu da söylemek gerek. Tarayıcıda çalışan bir araç, kurulu bir uygulamanın her şeyini vermez:</p>
+<ul><li>Cihazlar arası senkronizasyon yok. Taramalar bulutta birikmez; PDF'i siz kaydeder ya da paylaşırsınız.</li><li>Ana ekrandan açılan yerel bir uygulama değil. Siteyi ana ekrana ekleyip uygulama gibi kullanabilirsiniz ama mağazadan kurulan bir uygulama değildir.</li><li>İlk açılışta internet gerekir. Sonrasında tarama işlemi bağlantı olmadan da çalışır, çünkü işlem zaten cihazda yapılıyor.</li></ul>
+<p>Bulutta birikmesini istiyorsanız Microsoft'un önerdiği OneDrive doğru seçimdir. Belgenin cihazdan çıkmamasını istiyorsanız burası.</p>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>Belge Tarama</category>
+      <category>Mobil</category>
+      <enclosure url="https://www.pdfplatform.app/covers/microsoft-lens-alternatifi.png" type="image/png" length="58720" />
+      <media:content url="https://www.pdfplatform.app/covers/microsoft-lens-alternatifi.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/microsoft-lens-alternatifi.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/microsoft-lens-alternatifi.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/microsoft-lens-alternatifi.png" />
+    </item>
     <item>
       <title>PDF&apos;ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin</title>
       <link>https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma</link>
@@ -841,34 +883,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" />
-    </item>
-    <item>
-      <title>Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F&apos;te Bulunan Belgeler</title>
-      <link>https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr</guid>
-      <pubDate>Mon, 13 Jul 2026 10:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/create-a-searchable-pdf-ocr" />
-      <description><![CDATA[Telefonla taradığınız belge göze yazı gibi görünse de aslında bir fotoğraftır; Ctrl+F ile arayamaz, metni kopyalayamazsınız. Aranabilir PDF, görüntünün üzerine görünmez bir metin katmanı ekleyerek bunu çözer. Nasıl yapıldığını anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir belgeyi tarayıp PDF yaptığınızda, o PDF içindeki yazı bilgisayar için metin değil, sadece piksellerden oluşan bir resimdir. Bu yüzden belgede kelime aratamaz, bir cümleyi seçip kopyalayamazsınız. «Aranabilir PDF» tam olarak bu sorunu çözer.</p>
-<h2>Aranabilir PDF nedir?</h2>
-<p>Aranabilir PDF, taranan görüntünün tam üzerine hizalanmış, gözle görünmeyen bir metin katmanı gömülmüş PDF'tir. Belge göze aynı görünür — fotoğrafı görürsünüz — ama arkada gerçek, seçilebilir metin durur. Böylece Ctrl+F ile kelime arayabilir, metni seçip kopyalayabilir; arşiv ve doküman sistemleri de belgenin içeriğine göre arama yapabilir.</p>
-<h2>OCR bu işi nasıl yapar?</h2>
-<p>OCR (Optik Karakter Tanıma), görüntüdeki yazıyı «okur» ve her kelimenin metnini ve konumunu çıkarır. Ardından bu kelimeler, görüntünün üzerine tam kendi konumlarına, görünmez biçimde yerleştirilir. Sonuç: görünüşü bozulmamış ama içi aranabilir bir belge.</p>
-<h2>PDF Platform'da aranabilir PDF yapmak</h2>
-<ol><li><strong>Belgeyi tarayın veya yükleyin</strong> — Telefonla belge tarayıcısını kullanın ya da elinizdeki taranmış PDF'i açın.</li><li><strong>«Aranabilir PDF yap» deyin</strong> — Belge tarayıcıda PDF'i oluşturduktan sonra «🔍 Aranabilir PDF yap» seçeneğini kullanın; metin cihazınızda tanınır (Türkçe + İngilizce).</li><li><strong>Kaydedin ve arayın</strong> — Oluşan PDF'i kaydedin. Artık herhangi bir PDF görüntüleyicide Ctrl+F ile kelime arayabilir, metni kopyalayabilirsiniz.</li></ol>
-<blockquote><p>OCR tamamen cihazınızda çalışır — Türkçe karakterler dahil (ş, ğ, ı, İ). Belgeniz metne çevrilmek için hiçbir sunucuya gönderilmez. Aranabilir PDF üretimi bir Pro özelliğidir.</p></blockquote>
-<p><strong>Taranmış PDF → Metin (OCR)</strong> — Yalnızca metni mi istiyorsunuz? Taranmış PDF'i cihazınızda düz metne çevirin. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracını aç</a></p>
-<h2>Nerede işe yarar?</h2>
-<ul><li>Arşivleme: yüzlerce taranmış belge arasında kelimeyle arama yapabilmek.</li><li>Hukuk ve muhasebe: sözleşme veya faturada bir tutarı/maddeyi anında bulmak.</li><li>Öğrenciler: ders notu fotoğraflarında konu araması.</li><li>Erişilebilirlik: ekran okuyucuların belgeyi okuyabilmesi.</li></ul>]]></content:encoded>
-      <category>OCR</category>
-      <category>Aranabilir PDF</category>
-      <category>Tarama</category>
-      <enclosure url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" type="image/png" length="58069" />
-      <media:content url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/aranabilir-pdf-olusturma-ocr.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/aranabilir-pdf-olusturma-ocr.png" />
     </item>
   </channel>
 </rss>

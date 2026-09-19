@@ -13,6 +13,153 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const BLOG_POSTS = [
   post(
     {
+      slug: "microsoft-lens-alternatifi",
+      date: "2026-09-19",
+      updated: "2026-09-19",
+      readMinutes: 6,
+      tags: { tr: ["Karşılaştırma", "Belge Tarama", "Mobil"], en: ["Comparison", "Scanning", "Mobile"] },
+      accent: "violet",
+      tool: "/tools/belge-tara",
+    },
+    {
+      title: "Microsoft Lens Kapandı: Telefonla Belge Taramaya Ne Kaldı?",
+      description:
+        "Microsoft Lens 9 Mart 2026'da emekliye ayrıldı. Yerine ne kullanılır? Uygulama kurmadan, telefon tarayıcısından, belge cihazdan çıkmadan tarama dahil seçenekleri dürüstçe karşılaştırıyoruz.",
+      excerpt:
+        "On yıldır kullanılan Microsoft Lens kapandı ve Microsoft kullanıcıları OneDrive'a yönlendiriyor. Ama herkes buluta yüklemek istemiyor. Telefonla belge taramanın bugünkü seçeneklerine bakalım.",
+      blocks: [
+        { t: "lead", x: "Microsoft Lens — eski adıyla Office Lens — 9 Mart 2026 itibarıyla artık yeni tarama yapmıyor. Uygulama Şubat ayında mağazalardan kaldırıldı. Telefonunda duruyorsa eski taramalarınızı görebilirsiniz ama yenisini oluşturamazsınız. On yıllık bir alışkanlık böylece sona erdi." },
+
+        { t: "h2", x: "Tam olarak ne oldu?" },
+        { t: "ul", items: [
+          "9 Ocak 2026: Emeklilik duyuruldu, destek sona erdi.",
+          "9 Şubat 2026: Uygulama App Store ve Google Play'den kaldırıldı.",
+          "9 Mart 2026: Yeni tarama yapma özelliği kapandı.",
+        ] },
+        { t: "p", x: "Microsoft, yerine OneDrive uygulamasını öneriyor; içinde bir tarama özelliği var." },
+
+        { t: "h2", x: "OneDrive neden herkese uymuyor?" },
+        { t: "p", x: "Çalışıyor, ama iki şeyi beraberinde getiriyor: Microsoft hesabı ve bulut. Taradığınız belge OneDrive'a yükleniyor. Bir market fişi için sorun değil; ama kimlik fotokopisi, sağlık raporu, kira sözleşmesi ya da müşteri evrakı tarıyorsanız aynı şey değil." },
+        { t: "p", x: "Bir de şu var: sırf belge taramak için bir bulut hesabına bağlanmak, ihtiyacınızdan büyük bir çözüm. Lens'in sevilen yanı basitliğiydi — aç, çek, PDF." },
+
+        { t: "h2", x: "Önce şunu deneyin: telefonunuzda zaten bir tarayıcı olabilir" },
+        { t: "p", x: "Dürüst olalım, en pratik çözüm bazen zaten cebinizde:" },
+        { t: "ul", items: [
+          "iPhone'da Notlar uygulaması: yeni not → kamera simgesi → «Belgeleri Tara». Kenar tespiti ve perspektif düzeltmesi var, tamamen cihazda çalışır.",
+          "Android'de Google Drive: artı düğmesi → «Tara». Sonuç Drive'a yüklenir.",
+          "Samsung telefonlarda kamera uygulaması bir belgeye tutulduğunda kendiliğinden tarama önerir.",
+        ] },
+        { t: "tip", x: "Ara sıra tek sayfa tarıyorsanız bunlar fazlasıyla yeter ve hiçbir şey kurmanız gerekmez. Aşağıdakileri okumaya bile gerek yok." },
+
+        { t: "h2", x: "Peki bunlar yetmiyorsa?" },
+        { t: "p", x: "Yerleşik tarayıcıların tıkandığı yerler belli: birden çok sayfayı düzgün birleştirmek, sonucu PDF olarak paylaşmak, taranan yazının aranabilir olması, ve bilgisayardan da aynı işi yapabilmek. Bir de bazı kurumlarda telefona uygulama kurmak serbest değildir." },
+        { t: "p", x: "Bu noktada tarayıcıda çalışan bir tarayıcı işe yarıyor: kurulum yok, hesap yok, ve belge cihazdan çıkmıyor." },
+
+        { t: "h2", x: "PDF Platform Belge Tarayıcı" },
+        { t: "p", x: "Telefonunuzun tarayıcısında açılır, kamerayı belgeye tutarsınız; kenarlar otomatik bulunur, eğri çekilen fotoğraf düzleştirilir, kontrast artırılır ve PDF oluşur. Kamera görüntüsü, kenar tespiti ve PDF üretimi tamamen cihazınızda çalışır — belge internete gönderilmez." },
+        { t: "p", x: "Neyin ücretsiz, neyin ücretli olduğunu peşinen söyleyelim:" },
+        { t: "ul", items: [
+          "Ücretsiz: kamerayla tarama, otomatik kenar tespiti, perspektif düzeltme, kontrast iyileştirme, tarama başına 3 sayfa, PDF indirme. Üyelik gerekmez.",
+          "Pro: sınırsız sayfa, otomatik çekim (telefonu sabit tuttuğunuzda kendi çeker), gölge temizleme ve aranabilir PDF (OCR).",
+        ] },
+        { t: "cta", title: "Belge Tarayıcı", x: "Telefonunuzun tarayıcısında açın, kamerayı belgeye tutun — kurulum ve üyelik yok.", btn: "Aracı aç", tool: "/tools/belge-tara" },
+
+        { t: "h2", x: "Nasıl kullanılır" },
+        { t: "steps", items: [
+          { title: "Telefonun tarayıcısında açın", x: "Uygulama indirmenize gerek yok. Sayfayı açıp «Belge tara» deyin ve kamera iznini verin." },
+          { title: "Kamerayı belgeye tutun", x: "Kenarlar otomatik bulunur. Eğri açıdan çekseniz de sonuç düzleştirilir." },
+          { title: "PDF olarak indirin", x: "Birden çok sayfa taradıysanız tek PDF'te birleşir. İsterseniz doğrudan paylaşabilirsiniz." },
+        ] },
+
+        { t: "h2", x: "Neyi kaybedersiniz?" },
+        { t: "p", x: "Dürüst bir karşılaştırma için bunu da söylemek gerek. Tarayıcıda çalışan bir araç, kurulu bir uygulamanın her şeyini vermez:" },
+        { t: "ul", items: [
+          "Cihazlar arası senkronizasyon yok. Taramalar bulutta birikmez; PDF'i siz kaydeder ya da paylaşırsınız.",
+          "Ana ekrandan açılan yerel bir uygulama değil. Siteyi ana ekrana ekleyip uygulama gibi kullanabilirsiniz ama mağazadan kurulan bir uygulama değildir.",
+          "İlk açılışta internet gerekir. Sonrasında tarama işlemi bağlantı olmadan da çalışır, çünkü işlem zaten cihazda yapılıyor.",
+        ] },
+        { t: "p", x: "Bulutta birikmesini istiyorsanız Microsoft'un önerdiği OneDrive doğru seçimdir. Belgenin cihazdan çıkmamasını istiyorsanız burası." },
+      ],
+      faq: [
+        { q: "Microsoft Lens neden kapandı?", a: "Microsoft uygulamayı emekliye ayırdı: 9 Şubat 2026'da mağazalardan kaldırıldı, 9 Mart 2026'da yeni tarama yapma özelliği kapandı. Microsoft yerine OneDrive uygulamasındaki tarama özelliğini öneriyor." },
+        { q: "Eski taramalarıma ne olacak?", a: "Uygulama telefonunuzda duruyorsa eski taramalarınıza erişmeye devam edebilirsiniz; yalnızca yeni tarama oluşturamazsınız. Önemli belgeleri başka bir yere aktarmakta fayda var." },
+        { q: "Uygulama kurmadan belge tarayabilir miyim?", a: "Evet. PDF Platform Belge Tarayıcı telefonunuzun tarayıcısında çalışır; sayfayı açıp kamera iznini vermeniz yeterli, kurulum ve üyelik gerekmez." },
+        { q: "Taradığım belge sunucuya yükleniyor mu?", a: "Hayır. Kamera görüntüsü, otomatik kenar tespiti ve PDF oluşturma tamamen cihazınızda çalışır; belge internete gönderilmez." },
+        { q: "Ücretsiz planda kaç sayfa tarayabilirim?", a: "Tarama başına 3 sayfa. Sınırsız sayfa, otomatik çekim, gölge temizleme ve aranabilir PDF (OCR) Pro planındadır." },
+        { q: "Bilgisayardan da tarayabilir miyim?", a: "Doğrudan kamerayla değil ama bilgisayarınızdaki fotoğrafları yükleyip belge PDF'ine çevirebilirsiniz." },
+      ],
+    },
+    {
+      title: "Microsoft Lens Is Gone: What to Use for Phone Scanning Now",
+      description:
+        "Microsoft Lens was retired on 9 March 2026. What replaces it? An honest look at the options, including scanning from your phone browser with no app to install and nothing uploaded.",
+      excerpt:
+        "Microsoft Lens is retired and Microsoft points users at OneDrive — but not everyone wants their documents in someone's cloud. Here are the realistic options for scanning with your phone in 2026.",
+      blocks: [
+        { t: "lead", x: "Microsoft Lens — once called Office Lens — stopped creating new scans on 9 March 2026, and the app was pulled from the stores a month earlier. If it is still on your phone you can open old scans, but you cannot make new ones. A decade-old habit ended that quietly." },
+
+        { t: "h2", x: "What actually happened" },
+        { t: "ul", items: [
+          "9 January 2026: retirement announced, support ended.",
+          "9 February 2026: the app was removed from the App Store and Google Play.",
+          "9 March 2026: creating new scans stopped working.",
+        ] },
+        { t: "p", x: "Microsoft points people at the OneDrive app, which has a built-in scanning feature." },
+
+        { t: "h2", x: "Why OneDrive does not suit everyone" },
+        { t: "p", x: "It works, but it brings two things with it: a Microsoft account and the cloud. Whatever you scan is uploaded to OneDrive. For a receipt that is fine. For an ID, a medical report, a tenancy agreement or a client's paperwork, it is a different question." },
+        { t: "p", x: "There is also a simpler objection: signing into a cloud service just to photograph a piece of paper is a bigger solution than the problem. What people liked about Lens was that it was small — open, shoot, PDF." },
+
+        { t: "h2", x: "First, check what your phone already does" },
+        { t: "p", x: "Being honest: the most practical answer is sometimes already in your pocket." },
+        { t: "ul", items: [
+          "On iPhone, the Notes app: new note → camera icon → «Scan Documents». It detects edges, corrects perspective and runs entirely on the device.",
+          "On Android, Google Drive: the plus button → «Scan». The result is uploaded to Drive.",
+          "On many Samsung phones the camera app offers to scan on its own when you point it at a document.",
+        ] },
+        { t: "tip", x: "If you scan the odd single page, these are more than enough and you need to install nothing. You can stop reading here." },
+
+        { t: "h2", x: "And when that is not enough?" },
+        { t: "p", x: "The built-in scanners run out of road in predictable places: joining several pages cleanly, sharing the result as a PDF, making the scanned text searchable, and doing the same job from a computer. And in some workplaces you simply cannot install apps on a phone." },
+        { t: "p", x: "That is where a scanner that runs in the browser earns its place: nothing to install, no account, and the document never leaves the device." },
+
+        { t: "h2", x: "The PDF Platform document scanner" },
+        { t: "p", x: "It opens in your phone's browser. Point the camera at the document and the edges are found automatically, an angled shot is flattened, contrast is lifted and a PDF comes out. The camera frame, the edge detection and the PDF generation all run on your device — the document is not sent anywhere." },
+        { t: "p", x: "What is free and what is not, up front:" },
+        { t: "ul", items: [
+          "Free: camera scanning, automatic edge detection, perspective correction, contrast improvement, 3 pages per scan, PDF download. No account needed.",
+          "Pro: unlimited pages, automatic capture (it takes the shot when you hold the phone steady), shadow removal and searchable PDF (OCR).",
+        ] },
+        { t: "cta", title: "Document Scanner", x: "Open it in your phone's browser and point the camera — no install, no account.", btn: "Open the tool", tool: "/tools/belge-tara" },
+
+        { t: "h2", x: "How it works" },
+        { t: "steps", items: [
+          { title: "Open it in your phone browser", x: "Nothing to download. Open the page, tap «Scan document» and allow camera access." },
+          { title: "Point the camera at the document", x: "Edges are found automatically. Shooting from an angle is fine — the result is flattened." },
+          { title: "Download the PDF", x: "Several pages are joined into one PDF. You can also share it straight from the phone." },
+        ] },
+
+        { t: "h2", x: "What you give up" },
+        { t: "p", x: "An honest comparison has to say this too. A browser-based tool does not give you everything an installed app does:" },
+        { t: "ul", items: [
+          "No sync across devices. Scans do not pile up in a cloud; you save or share the PDF yourself.",
+          "It is not a native app launched from your home screen. You can add the site to the home screen and use it like one, but it does not come from a store.",
+          "You need a connection the first time. After that the scanning itself works offline, because the work was always happening on your device.",
+        ] },
+        { t: "p", x: "If you want scans collected in a cloud, Microsoft's OneDrive suggestion is the right call. If you want the document to stay on your phone, this is." },
+      ],
+      faq: [
+        { q: "Why was Microsoft Lens discontinued?", a: "Microsoft retired the app: it was removed from the app stores on 9 February 2026 and stopped creating new scans on 9 March 2026. Microsoft recommends the scanning feature in the OneDrive app instead." },
+        { q: "What happens to my old scans?", a: "If the app is still installed you can keep opening old scans; you just cannot create new ones. It is worth moving anything important somewhere else." },
+        { q: "Can I scan documents without installing an app?", a: "Yes. The PDF Platform document scanner runs in your phone's browser — open the page and allow camera access. No install, no account." },
+        { q: "Is my scanned document uploaded to a server?", a: "No. The camera frame, automatic edge detection and PDF generation all run on your device; the document is never sent to the internet." },
+        { q: "How many pages can I scan on the free plan?", a: "Three pages per scan. Unlimited pages, automatic capture, shadow removal and searchable PDF (OCR) are on the Pro plan." },
+        { q: "Can I scan from a computer too?", a: "Not with a camera directly, but you can upload photos from your computer and turn them into a document PDF." },
+      ],
+    },
+  ),
+  post(
+    {
       slug: "pdften-gorsel-resim-cikarma",
       date: "2026-07-24",
       updated: "2026-07-24",
