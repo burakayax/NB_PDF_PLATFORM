@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
@@ -37,12 +37,31 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   const tr = language === "tr";
   const planState = useCurrentPlan();
   const [hidden, setHidden] = useState(() => isSnoozed());
+
   // Ücretli abone (ve ekip üyesi) bu daveti HİÇBİR araçta görmez — zaten üye,
   // "bunu ücretsiz yaptın" mesajı yanlış ve rahatsız edici olur.
-  if (isPaidPlan(planState)) return null;
-  if (hidden) return null;
+  const gosterilir = !isPaidPlan(planState) && !hidden;
+
+  /**
+   * GÖSTERİM ÖLÇÜMÜ.
+   *
+   * Kart yalnızca TIKLAMAYI bildiriyordu. Tıklama tek başına işe yaramaz: kaç
+   * kişiye gösterildiği bilinmeden "kimse görmüyor" ile "herkes görüyor ama
+   * ilgilenmiyor" ayırt edilemez — ve bu ikisinin çözümü birbirinin zıddıdır
+   * (biri gösterim mantığını, diğeri teklifin kendisini düzeltmeyi gerektirir).
+   * Gösterim bir kez bildirilir; her yeniden çizimde değil.
+   */
+  const bildirildiRef = useRef(false);
+  useEffect(() => {
+    if (!gosterilir || bildirildiRef.current) return;
+    bildirildiRef.current = true;
+    trackGAEvent("sign_up_cta_shown", { source });
+  }, [gosterilir, source]);
+
+  if (!gosterilir) return null;
 
   const dismiss = () => {
+    trackGAEvent("sign_up_cta_dismissed", { source });
     try {
       localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
     } catch {
