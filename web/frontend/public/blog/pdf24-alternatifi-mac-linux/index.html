@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok? — PDF Platform</title>
+    <meta name="description" content="PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows&#39;ta vardır. Mac, Linux ve Android&#39;de bu boşluğun nasıl kapandığını anlatıyoruz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf24-alternative-mac-linux" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok? — PDF Platform" />
+    <meta property="og:description" content="PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows&#39;ta vardır. Mac, Linux ve Android&#39;de bu boşluğun nasıl kapandığını anlatıyoruz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok? — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok? — PDF Platform" />
+    <meta name="twitter:description" content="PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows&#39;ta vardır. Mac, Linux ve Android&#39;de bu boşluğun nasıl kapandığını anlatıyoruz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" />
+    <meta name="twitter:image:alt" content="PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok? — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştir, dönüştür, sıkıştır — üyeliksiz ve ücretsiz. Birleştirme ve görselden PDF tarayıcınızda, dosyalarınız cihazınızdan çıkmadan çalışır; kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"PDF24 Alternatifi: Mac ve Linux'ta Çevrimdışı Seçenek Neden Yok?","description":"PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows'ta vardır. Mac, Linux ve Android'de bu boşluğun nasıl kapandığını anlatıyoruz.","datePublished":"2026-09-19","dateModified":"2026-09-19","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"PDF24 Mac'te çalışıyor mu?","acceptedAnswer":{"@type":"Answer","text":"Çevrimiçi araçları (PDF24 Tools) Mac'te tarayıcıdan çalışır. Kurulan sürüm olan PDF24 Creator ise yalnızca Windows içindir; Mac ve Linux sürümü yoktur."}},{"@type":"Question","name":"PDF24 dosyalarımı sunucuya yüklüyor mu?","acceptedAnswer":{"@type":"Answer","text":"Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez."}},{"@type":"Question","name":"Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?","acceptedAnswer":{"@type":"Answer","text":"Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez."}},{"@type":"Question","name":"Dosyamın yüklenmediğini nasıl doğrularım?","acceptedAnswer":{"@type":"Answer","text":"İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz."}},{"@type":"Question","name":"Ücretsiz mi?","acceptedAnswer":{"@type":"Answer","text":"Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>PDF24 Alternatifi: Mac ve Linux&#39;ta Çevrimdışı Seçenek Neden Yok?</h1><p class="seo-intro">PDF24 kullanıcılarının Mac ve Linux için alternatif aramasının somut bir sebebi var: çevrimdışı sürüm yalnızca Windows&#39;ta. Diğer sistemlerde geriye dosyayı sunucuya yükleyen çevrimiçi araçlar kalıyor.</p><article class="seo-article"><p class="seo-lead">PDF24 iyi bir araç takımı ve uzun süredir ücretsiz. Ama tek bir ürün değil, iki ayrı ürün — ve hangisine erişebildiğiniz işletim sisteminize bağlı. Bu ayrım, Mac ve Linux kullanıcılarının neden alternatif aradığını tek başına açıklıyor.</p><h2>PDF24 aslında iki ürün</h2><ul><li>PDF24 Tools — çevrimiçi araçlar. Windows, Mac, Linux, telefon; hepsinde tarayıcıdan çalışır. Ücretsiz, üyelik istemez, kısıtlama koymaz. Ancak dosyalarınız işlenmek üzere PDF24&#39;ün sunucularına yüklenir; kendi ifadeleriyle &quot;tüm dosyalar kısa bir süre sonra sunucularımızdan tamamen silinir&quot;.</li><li>PDF24 Creator — bilgisayara kurulan sürüm. Aynı araçları çevrimdışı sunar, yani dosya hiçbir yere gitmez. Fakat yalnızca Windows için vardır.</li></ul><p>PDF24&#39;ün kendi sitesi bunu açıkça söylüyor: çevrimdışı çalışmak isteyenler Creator&#39;ı kursun. Sorun şu ki bu öneri yalnızca Windows kullanıcıları için geçerli.</p><h2>Mac, Linux ve Android&#39;de ne oluyor?</h2><p>Bu sistemlerde Creator yok. Geriye çevrimiçi araçlar kalıyor — yani dosyanızın yüklendiği seçenek. Windows kullanıcısının sahip olduğu &quot;belgem bilgisayarımdan çıkmasın&quot; tercihi diğer sistemlerde mevcut değil.</p><p>Bir market fişi için bu önemsiz. Ama sözleşme, kimlik fotokopisi, sağlık raporu ya da müşteri evrakı işliyorsanız aynı şey değil — ve işletim sisteminize göre farklı bir gizlilik seviyesine razı olmanız için bir sebep yok.</p><h2>PDF24&#39;ün gerçekten iyi olduğu yerler</h2><p>Karşılaştırmanın dürüst olması için: PDF24&#39;ün güçlü yanları var ve bunları bırakacağınızı bilmelisiniz.</p><ul><li>Çevrimiçi araçlar tamamen ücretsiz, üyelik istemiyor ve günlük kısıtlama koymuyor.</li><li>Windows&#39;ta Creator gerçek bir masaüstü programı — çevrimdışı çalışır, sistemle bütünleşir.</li><li>Uzun süredir ortada olan, oturmuş ve geniş bir araç takımı.</li></ul><p>Windows kullanıyorsanız ve Creator&#39;ı kurmaktan rahatsız değilseniz, alternatif aramanıza gerek olmayabilir.</p><h2>Boşluk nasıl kapanıyor</h2><p>PDF Platform, Creator&#39;ın gizlilik tarafını Tools&#39;un platform bağımsızlığıyla birleştiriyor: tarayıcıda çalışır, dolayısıyla Mac, Linux, Windows ve telefon fark etmez; ve sayfa işlemleri cihazınızda yapılır, dolayısıyla dosya yüklenmez.</p><ul><li>Cihazda çalışanlar (dosya yüklenmez): birleştirme, bölme, döndürme, kırpma, sayfa silme, sayfa sıralama, görselden PDF, imzalama ve işaretleme.</li><li>Sunucuda çalışanlar: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları. Bunlar tarayıcının yapabileceğinin dışında; her aracın sayfasında hangisinin hangisi olduğu yazıyor.</li></ul><p>İddiayı sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir.</p><h2>Neyin ücretsiz olduğu</h2><p>Burada da açık olalım, çünkü PDF24&#39;ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:</p><ul><li>Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB&#39;a kadar). Çıktıya filigran eklenmez.</li><li>Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.</li></ul><p>Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR&#39;de durum farklıdır — bunu bilerek seçin.</p><p><a href="/tools/merge-pdf"><strong>PDF Birleştir</strong> — Mac, Linux, Windows fark etmez — tarayıcınızda çalışır, dosyanız yüklenmez.</a></p><h2>Hangisini seçmelisiniz?</h2><ul><li>Windows&#39;tasınız ve program kurmak sorun değilse: PDF24 Creator zaten çevrimdışı çalışıyor, yerinde kalın.</li><li>Mac, Linux ya da Android&#39;desiniz ve belge hassas: tarayıcıda çalışan, dosyayı yüklemeyen bir araç seçin.</li><li>Yapacağınız iş dönüştürme ya da OCR ise: ikisinde de dosya sunucuya gider. Burada seçim, kimin sunucusuna güvendiğinizle ilgilidir — kısıtsız ücretsizlik istiyorsanız PDF24 güçlüdür.</li><li>Kurumsal bir bilgisayardasınız ve program kuramıyorsanız: tarayıcıda çalışan araç zaten tek seçenektir.</li></ul></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>PDF24 Mac&#39;te çalışıyor mu?</h3><p>Çevrimiçi araçları (PDF24 Tools) Mac&#39;te tarayıcıdan çalışır. Kurulan sürüm olan PDF24 Creator ise yalnızca Windows içindir; Mac ve Linux sürümü yoktur.</p></div><div class="seo-faq-item"><h3>PDF24 dosyalarımı sunucuya yüklüyor mu?</h3><p>Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24&#39;ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows&#39;taki Creator sürümü çevrimdışı çalıştığı için yüklemez.</p></div><div class="seo-faq-item"><h3>Mac veya Linux&#39;ta dosyamı yüklemeden PDF işleyebilir miyim?</h3><p>Evet. PDF Platform&#39;da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez.</p></div><div class="seo-faq-item"><h3>Dosyamın yüklenmediğini nasıl doğrularım?</h3><p>İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz.</p></div><div class="seo-faq-item"><h3>Ücretsiz mi?</h3><p>Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

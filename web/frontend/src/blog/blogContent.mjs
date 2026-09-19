@@ -13,6 +13,143 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const BLOG_POSTS = [
   post(
     {
+      slug: "pdf24-alternatifi-mac-linux",
+      date: "2026-09-19",
+      updated: "2026-09-19",
+      readMinutes: 6,
+      tags: { tr: ["Karşılaştırma", "Gizlilik", "PDF Araçları"], en: ["Comparison", "Privacy", "PDF Tools"] },
+      accent: "sky",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "PDF24 Alternatifi: Mac ve Linux'ta Çevrimdışı Seçenek Neden Yok?",
+      description:
+        "PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows'ta vardır. Mac, Linux ve Android'de bu boşluğun nasıl kapandığını anlatıyoruz.",
+      excerpt:
+        "PDF24 kullanıcılarının Mac ve Linux için alternatif aramasının somut bir sebebi var: çevrimdışı sürüm yalnızca Windows'ta. Diğer sistemlerde geriye dosyayı sunucuya yükleyen çevrimiçi araçlar kalıyor.",
+      blocks: [
+        { t: "lead", x: "PDF24 iyi bir araç takımı ve uzun süredir ücretsiz. Ama tek bir ürün değil, iki ayrı ürün — ve hangisine erişebildiğiniz işletim sisteminize bağlı. Bu ayrım, Mac ve Linux kullanıcılarının neden alternatif aradığını tek başına açıklıyor." },
+
+        { t: "h2", x: "PDF24 aslında iki ürün" },
+        { t: "ul", items: [
+          "PDF24 Tools — çevrimiçi araçlar. Windows, Mac, Linux, telefon; hepsinde tarayıcıdan çalışır. Ücretsiz, üyelik istemez, kısıtlama koymaz. Ancak dosyalarınız işlenmek üzere PDF24'ün sunucularına yüklenir; kendi ifadeleriyle \"tüm dosyalar kısa bir süre sonra sunucularımızdan tamamen silinir\".",
+          "PDF24 Creator — bilgisayara kurulan sürüm. Aynı araçları çevrimdışı sunar, yani dosya hiçbir yere gitmez. Fakat yalnızca Windows için vardır.",
+        ] },
+        { t: "p", x: "PDF24'ün kendi sitesi bunu açıkça söylüyor: çevrimdışı çalışmak isteyenler Creator'ı kursun. Sorun şu ki bu öneri yalnızca Windows kullanıcıları için geçerli." },
+
+        { t: "h2", x: "Mac, Linux ve Android'de ne oluyor?" },
+        { t: "p", x: "Bu sistemlerde Creator yok. Geriye çevrimiçi araçlar kalıyor — yani dosyanızın yüklendiği seçenek. Windows kullanıcısının sahip olduğu \"belgem bilgisayarımdan çıkmasın\" tercihi diğer sistemlerde mevcut değil." },
+        { t: "p", x: "Bir market fişi için bu önemsiz. Ama sözleşme, kimlik fotokopisi, sağlık raporu ya da müşteri evrakı işliyorsanız aynı şey değil — ve işletim sisteminize göre farklı bir gizlilik seviyesine razı olmanız için bir sebep yok." },
+
+        { t: "h2", x: "PDF24'ün gerçekten iyi olduğu yerler" },
+        { t: "p", x: "Karşılaştırmanın dürüst olması için: PDF24'ün güçlü yanları var ve bunları bırakacağınızı bilmelisiniz." },
+        { t: "ul", items: [
+          "Çevrimiçi araçlar tamamen ücretsiz, üyelik istemiyor ve günlük kısıtlama koymuyor.",
+          "Windows'ta Creator gerçek bir masaüstü programı — çevrimdışı çalışır, sistemle bütünleşir.",
+          "Uzun süredir ortada olan, oturmuş ve geniş bir araç takımı.",
+        ] },
+        { t: "p", x: "Windows kullanıyorsanız ve Creator'ı kurmaktan rahatsız değilseniz, alternatif aramanıza gerek olmayabilir." },
+
+        { t: "h2", x: "Boşluk nasıl kapanıyor" },
+        { t: "p", x: "PDF Platform, Creator'ın gizlilik tarafını Tools'un platform bağımsızlığıyla birleştiriyor: tarayıcıda çalışır, dolayısıyla Mac, Linux, Windows ve telefon fark etmez; ve sayfa işlemleri cihazınızda yapılır, dolayısıyla dosya yüklenmez." },
+        { t: "ul", items: [
+          "Cihazda çalışanlar (dosya yüklenmez): birleştirme, bölme, döndürme, kırpma, sayfa silme, sayfa sıralama, görselden PDF, imzalama ve işaretleme.",
+          "Sunucuda çalışanlar: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları. Bunlar tarayıcının yapabileceğinin dışında; her aracın sayfasında hangisinin hangisi olduğu yazıyor.",
+        ] },
+        { t: "tip", x: "İddiayı sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir." },
+
+        { t: "h2", x: "Neyin ücretsiz olduğu" },
+        { t: "p", x: "Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:" },
+        { t: "ul", items: [
+          "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.",
+          "Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.",
+        ] },
+        { t: "p", x: "Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin." },
+
+        { t: "cta", title: "PDF Birleştir", x: "Mac, Linux, Windows fark etmez — tarayıcınızda çalışır, dosyanız yüklenmez.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Hangisini seçmelisiniz?" },
+        { t: "ul", items: [
+          "Windows'tasınız ve program kurmak sorun değilse: PDF24 Creator zaten çevrimdışı çalışıyor, yerinde kalın.",
+          "Mac, Linux ya da Android'desiniz ve belge hassas: tarayıcıda çalışan, dosyayı yüklemeyen bir araç seçin.",
+          "Yapacağınız iş dönüştürme ya da OCR ise: ikisinde de dosya sunucuya gider. Burada seçim, kimin sunucusuna güvendiğinizle ilgilidir — kısıtsız ücretsizlik istiyorsanız PDF24 güçlüdür.",
+          "Kurumsal bir bilgisayardasınız ve program kuramıyorsanız: tarayıcıda çalışan araç zaten tek seçenektir.",
+        ] },
+      ],
+      faq: [
+        { q: "PDF24 Mac'te çalışıyor mu?", a: "Çevrimiçi araçları (PDF24 Tools) Mac'te tarayıcıdan çalışır. Kurulan sürüm olan PDF24 Creator ise yalnızca Windows içindir; Mac ve Linux sürümü yoktur." },
+        { q: "PDF24 dosyalarımı sunucuya yüklüyor mu?", a: "Çevrimiçi araçlarda evet — dosya işlenmek üzere PDF24'ün sunucularına gider ve kendi ifadeleriyle kısa süre sonra silinir. Windows'taki Creator sürümü çevrimdışı çalıştığı için yüklemez." },
+        { q: "Mac veya Linux'ta dosyamı yüklemeden PDF işleyebilir miyim?", a: "Evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama, görselden PDF, imzalama ve işaretleme tamamen tarayıcınızda çalışır; işletim sistemi fark etmez ve dosya yüklenmez." },
+        { q: "Dosyamın yüklenmediğini nasıl doğrularım?", a: "İnternet bağlantınızı kesip aracı kullanmayı deneyin. Cihazda çalışan araçlar bağlantı olmadan da çalışır; sunucu gerektiren bir araç çalışmaz." },
+        { q: "Ücretsiz mi?", a: "Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır; çıktıya filigran eklenmez. Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir." },
+      ],
+    },
+    {
+      title: "A PDF24 Alternative for Mac and Linux: Why There Is No Offline Option",
+      description:
+        "PDF24 is two products: the online tools run everywhere but upload your file; the offline Creator does not upload but exists only for Windows. Here is how that gap gets closed on Mac, Linux and Android.",
+      excerpt:
+        "There is a concrete reason PDF24 users search for a Mac or Linux alternative: the offline version is Windows-only. On every other system you are left with the online tools, which upload your file.",
+      blocks: [
+        { t: "lead", x: "PDF24 is a good toolkit and it has been free for a long time. But it is not one product — it is two, and which one you can have depends on your operating system. That split alone explains why Mac and Linux users go looking for an alternative." },
+
+        { t: "h2", x: "PDF24 is really two products" },
+        { t: "ul", items: [
+          "PDF24 Tools — the online tools. They run in the browser on Windows, Mac, Linux and phones. Free, no account, no restrictions. But your files are uploaded to PDF24's servers to be processed; in their own words, \"all files are completely removed from our servers after a short time\".",
+          "PDF24 Creator — the installed version. It offers the same tools offline, so nothing is uploaded. It exists for Windows only.",
+        ] },
+        { t: "p", x: "PDF24's own site says it plainly: if you prefer to work offline, install the Creator. The catch is that this advice only applies to Windows users." },
+
+        { t: "h2", x: "What happens on Mac, Linux and Android" },
+        { t: "p", x: "There is no Creator on those systems. What remains is the online tools — the option where your file is uploaded. The choice a Windows user has, \"keep my document on my machine\", simply is not offered elsewhere." },
+        { t: "p", x: "For a receipt this does not matter. For a contract, a copy of an ID, a medical report or a client's paperwork it does — and there is no good reason to accept a different level of privacy because of which laptop you bought." },
+
+        { t: "h2", x: "What PDF24 genuinely does well" },
+        { t: "p", x: "For the comparison to be worth anything: PDF24 has real strengths, and you should know what you would be giving up." },
+        { t: "ul", items: [
+          "The online tools are completely free, need no account and impose no daily cap.",
+          "On Windows, Creator is a proper desktop application — it works offline and integrates with the system.",
+          "A mature, broad toolkit that has been around for years.",
+        ] },
+        { t: "p", x: "If you are on Windows and do not mind installing Creator, you may not need an alternative at all." },
+
+        { t: "h2", x: "How the gap closes" },
+        { t: "p", x: "PDF Platform combines Creator's privacy with Tools' platform independence: it runs in the browser, so Mac, Linux, Windows and phones are all the same; and page operations happen on your device, so nothing is uploaded." },
+        { t: "ul", items: [
+          "On-device (nothing uploaded): merge, split, rotate, crop, delete and reorder pages, image-to-PDF, signing and annotation.",
+          "Server-side: Word/Excel/PowerPoint conversion, OCR, compression and the AI tools. These are beyond what a browser can do; each tool's page says which is which.",
+        ] },
+        { t: "tip", x: "Testing the claim takes thirty seconds: open the merge tool, disconnect from the internet, run the merge. If it completes, your file is not going anywhere." },
+
+        { t: "h2", x: "What is free" },
+        { t: "p", x: "Let us be equally clear here, because PDF24's online tools being free without limits is a serious advantage:" },
+        { t: "ul", items: [
+          "The on-device tools are free, unlimited and need no account (up to 80 MB per file). No watermark is added to the output.",
+          "Tools that need a server (conversion, OCR) come with a small daily allowance on the free plan; more is on the paid plans.",
+        ] },
+        { t: "p", x: "So if your work is page editing, the free side is unlimited for you too. For conversion and OCR it is not — choose knowing that." },
+
+        { t: "cta", title: "Merge PDF", x: "Mac, Linux or Windows — it runs in your browser and your file is not uploaded.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Which should you pick?" },
+        { t: "ul", items: [
+          "On Windows and happy to install software: PDF24 Creator already works offline — stay where you are.",
+          "On Mac, Linux or Android with a sensitive document: pick a browser-based tool that does not upload.",
+          "If the job is conversion or OCR: both send the file to a server. Here the choice is about whose server you trust — and if you want unlimited free use, PDF24 is strong.",
+          "On a locked-down work computer where you cannot install anything: a browser-based tool is the only option anyway.",
+        ] },
+      ],
+      faq: [
+        { q: "Does PDF24 work on a Mac?", a: "The online tools (PDF24 Tools) work on a Mac in the browser. The installed version, PDF24 Creator, is Windows-only — there is no Mac or Linux build." },
+        { q: "Does PDF24 upload my files?", a: "With the online tools, yes — the file goes to PDF24's servers to be processed and, in their words, is removed after a short time. The Windows Creator version works offline and does not upload." },
+        { q: "Can I process PDFs on Mac or Linux without uploading them?", a: "Yes. On PDF Platform, merging, splitting, rotating, cropping, deleting and reordering pages, image-to-PDF, signing and annotation all run in your browser regardless of operating system, with no upload." },
+        { q: "How can I verify nothing is uploaded?", a: "Disconnect from the internet and try the tool. On-device tools keep working without a connection; anything that needs a server will not." },
+        { q: "Is it free?", a: "The on-device tools are free, unlimited and need no account, and no watermark is added to the output. Tools that need a server (conversion, OCR) come with a small daily allowance on the free plan." },
+      ],
+    },
+  ),
+  post(
+    {
       slug: "microsoft-lens-alternatifi",
       date: "2026-09-19",
       updated: "2026-09-19",
