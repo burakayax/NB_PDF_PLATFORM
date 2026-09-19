@@ -11,6 +11,8 @@ import { asyncHandler } from "../../lib/async-handler.js";
 import { HttpError } from "../../lib/http-error.js";
 import { requireAdmin } from "../../middleware/admin.middleware.js";
 import { logAdminAudit } from "../admin/admin-audit.service.js";
+import { env } from "../../config/env.js";
+import { isGscConfigured } from "./gsc.service.js";
 import { fetchFeedItems, feedUrlFor } from "./rss.service.js";
 import { ALL_PLATFORMS, PLATFORM_SPECS, PRIMARY_FEED_LANG } from "./social.types.js";
 import {
@@ -56,6 +58,24 @@ socialRouter.get(
         return new Date(run.getTime() - config.prepareLeadMinutes * 60_000).toISOString();
       })(),
       feedUrl: feedUrlFor(PRIMARY_FEED_LANG),
+      /**
+       * Anahtar kelimelerin hangi kaynaklardan beslendiği.
+       *
+       * NEDEN PANELDE: Search Console ve yapay zekâ araştırması, ayarları eksik
+       * olduğunda SESSİZCE devre dışı kalır — otomasyon çalışmaya devam eder,
+       * sadece zayıf terim üretir. Sessiz bir arıza, panelden görülmüyorsa
+       * aylarca fark edilmez. Yalnızca "kurulu mu" bilgisi döner; hiçbir gizli
+       * değer buradan dışarı çıkmaz.
+       */
+      keywordSources: {
+        suggest: true,
+        gsc: isGscConfigured(),
+        // Mülk kimliği gizli değil (herkese açık bir adres) ama en sık hata
+        // burada yapılıyor: www'lu ve www'suz hali Search Console'da AYRI
+        // mülktür ve yanlışı 403 verir. Görünür olması teşhisi anında bitirir.
+        gscSite: env.GSC_SITE_URL || null,
+        research: Boolean(env.ANTHROPIC_API_KEY),
+      },
       platforms: ALL_PLATFORMS.map((p) => ({
         platform: p,
         label: PLATFORM_SPECS[p].label,
