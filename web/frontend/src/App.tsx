@@ -3896,7 +3896,19 @@ function App() {
     }
   }
 
-  // PWA file_handlers: telefonda "PDF ile aç → PDF Platform" → launchQueue ile PDF gelir.
+  /**
+   * PWA dosya açma: "PDF ile aç → PDF Platform" seçildiğinde dosya launchQueue
+   * ile gelir.
+   *
+   * PENCERE DAVRANIŞI manifest'te belirlenir, burada değil: `launch_handler`
+   * ayarı `navigate-new` olduğu için her dosya YENİ bir pencerede açılır.
+   * Önceki değer (`navigate-existing`) açık olan pencereyi dosyanın adresine
+   * TAŞIYORDU; kullanıcı bir belge üzerinde çalışırken başka bir PDF açtığında
+   * üzerinde çalıştığı iş ekrandan siliniyordu (kullanıcı bildirdi).
+   *
+   * Birden çok dosya tek pencereye düşerse (Windows dışı) yalnızca ilki açılır;
+   * Windows'ta işletim sistemi zaten dosya başına bir pencere başlatır.
+   */
   useEffect(() => {
     const w = window as unknown as {
       launchQueue?: {
