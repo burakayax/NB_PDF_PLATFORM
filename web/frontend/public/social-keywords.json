@@ -53,6 +53,56 @@
     ],
     "tool": "/tools/belge-tara"
   },
+  "https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux": {
+    "tr": [
+      "Karşılaştırma",
+      "Gizlilik",
+      "PDF Araçları",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Comparison",
+      "Privacy",
+      "PDF Tools",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/pdf24-alternative-mac-linux": {
+    "tr": [
+      "Karşılaştırma",
+      "Gizlilik",
+      "PDF Araçları",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Comparison",
+      "Privacy",
+      "PDF Tools",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
   "https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma": {
     "tr": [
       "PDF Araçları",

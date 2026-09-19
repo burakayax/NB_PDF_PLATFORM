@@ -62,6 +62,45 @@
       <media:thumbnail url="https://www.pdfplatform.app/covers/microsoft-lens-alternatifi.png" />
     </item>
     <item>
+      <title>PDF24 Alternatifi: Mac ve Linux&apos;ta Çevrimdışı Seçenek Neden Yok?</title>
+      <link>https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux</guid>
+      <pubDate>Sat, 19 Sep 2026 13:59:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf24-alternative-mac-linux" />
+      <description><![CDATA[PDF24 kullanıcılarının Mac ve Linux için alternatif aramasının somut bir sebebi var: çevrimdışı sürüm yalnızca Windows'ta. Diğer sistemlerde geriye dosyayı sunucuya yükleyen çevrimiçi araçlar kalıyor.]]></description>
+      <content:encoded><![CDATA[<p>PDF24 iyi bir araç takımı ve uzun süredir ücretsiz. Ama tek bir ürün değil, iki ayrı ürün — ve hangisine erişebildiğiniz işletim sisteminize bağlı. Bu ayrım, Mac ve Linux kullanıcılarının neden alternatif aradığını tek başına açıklıyor.</p>
+<h2>PDF24 aslında iki ürün</h2>
+<ul><li>PDF24 Tools — çevrimiçi araçlar. Windows, Mac, Linux, telefon; hepsinde tarayıcıdan çalışır. Ücretsiz, üyelik istemez, kısıtlama koymaz. Ancak dosyalarınız işlenmek üzere PDF24'ün sunucularına yüklenir; kendi ifadeleriyle "tüm dosyalar kısa bir süre sonra sunucularımızdan tamamen silinir".</li><li>PDF24 Creator — bilgisayara kurulan sürüm. Aynı araçları çevrimdışı sunar, yani dosya hiçbir yere gitmez. Fakat yalnızca Windows için vardır.</li></ul>
+<p>PDF24'ün kendi sitesi bunu açıkça söylüyor: çevrimdışı çalışmak isteyenler Creator'ı kursun. Sorun şu ki bu öneri yalnızca Windows kullanıcıları için geçerli.</p>
+<h2>Mac, Linux ve Android'de ne oluyor?</h2>
+<p>Bu sistemlerde Creator yok. Geriye çevrimiçi araçlar kalıyor — yani dosyanızın yüklendiği seçenek. Windows kullanıcısının sahip olduğu "belgem bilgisayarımdan çıkmasın" tercihi diğer sistemlerde mevcut değil.</p>
+<p>Bir market fişi için bu önemsiz. Ama sözleşme, kimlik fotokopisi, sağlık raporu ya da müşteri evrakı işliyorsanız aynı şey değil — ve işletim sisteminize göre farklı bir gizlilik seviyesine razı olmanız için bir sebep yok.</p>
+<h2>PDF24'ün gerçekten iyi olduğu yerler</h2>
+<p>Karşılaştırmanın dürüst olması için: PDF24'ün güçlü yanları var ve bunları bırakacağınızı bilmelisiniz.</p>
+<ul><li>Çevrimiçi araçlar tamamen ücretsiz, üyelik istemiyor ve günlük kısıtlama koymuyor.</li><li>Windows'ta Creator gerçek bir masaüstü programı — çevrimdışı çalışır, sistemle bütünleşir.</li><li>Uzun süredir ortada olan, oturmuş ve geniş bir araç takımı.</li></ul>
+<p>Windows kullanıyorsanız ve Creator'ı kurmaktan rahatsız değilseniz, alternatif aramanıza gerek olmayabilir.</p>
+<h2>Boşluk nasıl kapanıyor</h2>
+<p>PDF Platform, Creator'ın gizlilik tarafını Tools'un platform bağımsızlığıyla birleştiriyor: tarayıcıda çalışır, dolayısıyla Mac, Linux, Windows ve telefon fark etmez; ve sayfa işlemleri cihazınızda yapılır, dolayısıyla dosya yüklenmez.</p>
+<ul><li>Cihazda çalışanlar (dosya yüklenmez): birleştirme, bölme, döndürme, kırpma, sayfa silme, sayfa sıralama, görselden PDF, imzalama ve işaretleme.</li><li>Sunucuda çalışanlar: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve yapay zekâ araçları. Bunlar tarayıcının yapabileceğinin dışında; her aracın sayfasında hangisinin hangisi olduğu yazıyor.</li></ul>
+<blockquote><p>İddiayı sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa dosyanız hiçbir yere gitmiyor demektir.</p></blockquote>
+<h2>Neyin ücretsiz olduğu</h2>
+<p>Burada da açık olalım, çünkü PDF24'ün çevrimiçi araçları kısıtsız ücretsiz ve bu ciddi bir avantaj:</p>
+<ul><li>Cihazda çalışan araçlar üyeliksiz, ücretsiz ve sınırsızdır (dosya başına 80 MB'a kadar). Çıktıya filigran eklenmez.</li><li>Sunucu gerektiren araçlarda (dönüştürme, OCR) ücretsiz plan günlük bir işlem hakkı verir; fazlası ücretli planlardadır.</li></ul>
+<p>Yani yalnızca sayfa düzenleme işleri yapıyorsanız ücretsiz taraf sizin için de kısıtsızdır. Dönüştürme ve OCR'de durum farklıdır — bunu bilerek seçin.</p>
+<p><strong>PDF Birleştir</strong> — Mac, Linux, Windows fark etmez — tarayıcınızda çalışır, dosyanız yüklenmez. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Hangisini seçmelisiniz?</h2>
+<ul><li>Windows'tasınız ve program kurmak sorun değilse: PDF24 Creator zaten çevrimdışı çalışıyor, yerinde kalın.</li><li>Mac, Linux ya da Android'desiniz ve belge hassas: tarayıcıda çalışan, dosyayı yüklemeyen bir araç seçin.</li><li>Yapacağınız iş dönüştürme ya da OCR ise: ikisinde de dosya sunucuya gider. Burada seçim, kimin sunucusuna güvendiğinizle ilgilidir — kısıtsız ücretsizlik istiyorsanız PDF24 güçlüdür.</li><li>Kurumsal bir bilgisayardasınız ve program kuramıyorsanız: tarayıcıda çalışan araç zaten tek seçenektir.</li></ul>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>Gizlilik</category>
+      <category>PDF Araçları</category>
+      <enclosure url="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" type="image/png" length="58088" />
+      <media:content url="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/pdf24-alternatifi-mac-linux.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/pdf24-alternatifi-mac-linux.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" />
+    </item>
+    <item>
       <title>PDF&apos;ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin</title>
       <link>https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma</link>
       <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma</guid>
@@ -855,34 +894,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" />
-    </item>
-    <item>
-      <title>Belge Fotoğrafını Düzgün PDF&apos;e Çevirme: Eğiklik, Gölge ve Kenar Sorunları</title>
-      <link>https://www.pdfplatform.app/blog/belge-fotografini-kaliteli-pdf-yapma</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/belge-fotografini-kaliteli-pdf-yapma</guid>
-      <pubDate>Mon, 13 Jul 2026 14:32:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/document-photo-to-pdf" />
-      <description><![CDATA[Bir belgeyi telefonla çektiğinizde sonuç genelde eğri, köşeleri kırpık ve tek yanı gölgeli olur. İyi bir belge tarayıcı bunları otomatik düzeltir. Perspektif düzeltme ve gölge temizlemenin nasıl çalıştığını gösteriyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Kağıt bir belgeyi telefonla çekmek kolaydır; ama sonuç çoğu zaman «tarama» gibi görünmez: belge eğridir, masa da kadraja girmiştir, bir köşe gölgede kalmıştır. İyi bir tarayıcı işte tam burada devreye girer — fotoğrafı düz, temiz bir belgeye çevirir.</p>
-<h2>Perspektif düzeltme: eğri belgeyi «dümdüz» yapmak</h2>
-<p>Belgeyi tam tepeden çekmediğiniz için kenarlar birbirine paralel çıkmaz; belge yamuk görünür. Belge tarayıcı, dört köşeyi otomatik bularak görüntüyü yeniden hesaplar ve belgeyi karşıdan bakılmış gibi düz bir dikdörtgene dönüştürür. Böylece arka plandaki masa da kırpılır, yalnız belge kalır.</p>
-<h2>Gölge temizleme ve kontrast (Otomatik filtre)</h2>
-<p>Elle çekimde ışık her zaman eşit gelmez; bir kenar koyu, bir kenar parlak olur. «Otomatik» filtre, her renk kanalında arka plan aydınlatmasını tahmin edip dengeleyerek gölgeleri temizler ve zemini dümdüz beyaza yaklaştırır — metin keskinleşir, renkler korunur. Bu, tarama uygulamalarındaki «magic color» etkisine benzer.</p>
-<h2>Hangi filtreyi ne zaman kullanmalı?</h2>
-<ul><li>Renkli: logolu, renkli faturalar ve fotoğraflı belgeler için.</li><li>Gri: metin ağırlıklı belgeler; daha küçük dosya.</li><li>Siyah-Beyaz: en keskin metin, en küçük dosya — düz metin belgeler için ideal.</li><li>Otomatik (Pro): gölge temizleme + kontrast; en profesyonel, tarayıcı benzeri çıktı.</li></ul>
-<h2>Adım adım kaliteli tarama</h2>
-<ol><li><strong>İyi ışık ve düz zemin</strong> — Belgeyi düz bir zemine koyun, gölge düşürmeyecek şekilde üstten çekin. Zeminle belge arasında renk farkı olsun ki kenarlar kolay bulunsun.</li><li><strong>Otomatik yakalamayı bekleyin</strong> — Kamerayı sabit tutun; kenarlar yeşil çerçeveyle işaretlenip belge kendiliğinden yakalanır.</li><li><strong>Filtreyi seçin ve oluşturun</strong> — Belgeye uygun filtreyi seçip PDF'i oluşturun; gerekirse köşeleri düzeltin.</li></ol>
-<p><strong>Görsel → PDF</strong> — Elinizdeki belge fotoğraflarını tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Aracı aç</a></p>
-<p>Tarama sonrası dosya büyükse Sıkıştır aracıyla boyutu küçültebilir; sayfaları yeniden sıralamak, döndürmek veya silmek isterseniz taradığınız PDF'i doğrudan ilgili araçta açabilirsiniz.</p>]]></content:encoded>
-      <category>Belge Tarama</category>
-      <category>Kalite</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" type="image/png" length="56808" />
-      <media:content url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/belge-fotografini-kaliteli-pdf-yapma.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/belge-fotografini-kaliteli-pdf-yapma.png" />
     </item>
   </channel>
 </rss>
