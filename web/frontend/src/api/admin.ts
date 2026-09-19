@@ -984,6 +984,17 @@ export type SocialOverview = {
   /** Gönderilerin panelde görüneceği an (ISO) — düzeltme penceresinin başı. */
   nextPrepareAt: string | null;
   feedUrl: string;
+  /**
+   * Anahtar kelimelerin beslendiği kaynaklar. Eksik ayar otomasyonu DURDURMAZ,
+   * sessizce zayıflatır — bu yüzden panelde görünür olmalı.
+   */
+  keywordSources: {
+    suggest: boolean;
+    gsc: boolean;
+    /** Search Console mülk kimliği; www'lu/www'suz karışıklığı burada görülür. */
+    gscSite: string | null;
+    research: boolean;
+  };
 };
 
 export async function fetchSocialOverview(accessToken: string): Promise<SocialOverview> {

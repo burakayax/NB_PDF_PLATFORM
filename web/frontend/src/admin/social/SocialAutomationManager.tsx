@@ -793,6 +793,32 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-slate-400">{overview.feedUrl}</code>
             </div>
 
+            {/* Anahtar kelime kaynakları — eksik ayar sessizce zayıf etiket üretir. */}
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 px-3.5 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Anahtar kelime kaynakları
+              </p>
+              <div className="mt-2 space-y-1.5">
+                {[
+                  { ok: overview.keywordSources.suggest, label: "Google otomatik tamamlama", note: "ayar gerektirmez" },
+                  {
+                    ok: overview.keywordSources.gsc,
+                    label: "Search Console",
+                    note: overview.keywordSources.gsc
+                      ? (overview.keywordSources.gscSite ?? "")
+                      : "GSC_SITE_URL / GSC_CLIENT_EMAIL / GSC_PRIVATE_KEY eksik",
+                  },
+                  { ok: overview.keywordSources.research, label: "Yapay zekâ araştırması", note: overview.keywordSources.research ? "" : "ANTHROPIC_API_KEY eksik" },
+                ].map((row) => (
+                  <div key={row.label} className="flex items-center gap-2 text-[12px]">
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.ok ? "bg-emerald-400" : "bg-slate-600"}`} />
+                    <span className={row.ok ? "text-slate-300" : "text-slate-500"}>{row.label}</span>
+                    {row.note ? <span className="min-w-0 truncate font-mono text-[10.5px] text-slate-600">{row.note}</span> : null}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <button
               type="button"
               className={ghostButton}
