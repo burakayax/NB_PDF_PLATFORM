@@ -35,6 +35,11 @@ import {
   FileSearch,
   FileType2,
   Minimize2,
+  PenTool,
+  Highlighter,
+  ScanLine,
+  Crop,
+  Maximize2,
   Unlock,
   Languages,
   Lock,
@@ -115,6 +120,27 @@ const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
   "delete-pages": { tr: "İstemediğiniz sayfaları çıkarın.", en: "Remove the pages you don't want." },
   "organize-pdf": { tr: "Sayfaların sırasını sürükleyerek değiştirin.", en: "Drag pages into the order you want." },
 };
+
+/**
+ * ÜYELİKSİZ ama hero içinde çalışan sürümü OLMAYAN araçlar.
+ *
+ * Aşağıdaki tam araç listesinde bu araçların üzerinde "Üyeliksiz" yazıyor; ama
+ * yukarıdaki hızlı kullanım alanında hiç görünmüyorlardı. Ziyaretçi aşağıda
+ * gördüğü aracı yukarıda bulamayınca rozete güvenmiyor. Bunlar da ızgarada
+ * gösterilir; tıklanınca kendi sayfalarında açılırlar (orada da üyelik istemez).
+ */
+const SAYFADA_ACILAN_MISAFIR_ARACLARI: {
+  slug: string;
+  Icon: LucideIcon;
+  tr: string;
+  en: string;
+}[] = [
+  { slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
+  { slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },
+  { slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan" },
+  { slug: "pdf-kesit-al", Icon: Crop, tr: "Kesit Al", en: "Snip" },
+  { slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
+];
 
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
@@ -440,6 +466,7 @@ function Hero({
   onScannerUpgrade,
   onScannerLogin,
   aiAllowed,
+  onOpenTool,
 }: {
   language: Language;
   onUseWebApp: () => void;
@@ -451,6 +478,7 @@ function Hero({
   onScannerLogin?: () => void;
   aiAllowed?: boolean;
   windowsDownloadUrl: string;
+  onOpenTool: (id: FeatureKey) => void;
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
@@ -630,7 +658,25 @@ function Hero({
             </div>
 
             {/* Araç kutuları — her araç kendi karesinde; seçili olan renkli çerçeveyle
-                öne çıkar. Çip sırası yerine ızgara: göz tek tek araçları tarayabilir. */}
+                öne çıkar. Çip sırası yerine ızgara: göz tek tek araçları tarayabilir.
+                Izgarada üç tür kutu var: burada çalışanlar, kendi sayfasında
+                açılanlar ve ücretsiz üyelikle açılan kilitli olanlar. */}
+            {!accessToken && !aiTool && (
+              <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-1 text-[11.5px] font-medium">
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                  {tr ? "Üyeliksiz kullan" : "Use without an account"}
+                </span>
+                <button
+                  type="button"
+                  onClick={onRegister}
+                  className="flex items-center gap-1.5 text-emerald-300 transition hover:text-emerald-200"
+                >
+                  <Lock className="h-3 w-3" />
+                  {tr ? "Ücretsiz üyelikle açılır — üye ol" : "Unlocks with a free account — sign up"}
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-5 lg:grid-cols-6">
               {!aiTool ? (
                 <>
@@ -683,6 +729,57 @@ function Hero({
                       {tr ? EDITOR_META.tr : EDITOR_META.en}
                     </span>
                   </button>
+
+                  {/* Üyeliksiz ama kendi sayfasında açılan araçlar — aşağıdaki
+                      tam listede "Üyeliksiz" rozeti taşıyorlar; burada da
+                      görünmeleri gerekiyor ki rozet tutarlı olsun. */}
+                  {SAYFADA_ACILAN_MISAFIR_ARACLARI.map((m) => {
+                    const MIcon = m.Icon;
+                    return (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={() => onOpenTool(m.slug as FeatureKey)}
+                        className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                      >
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <MIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                          {tr ? m.tr : m.en}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  {/* ÜCRETSİZ ÜYELİKLE AÇILANLAR — araçların ALTINDA değil,
+                      aralarında. Blok araç alanının altındayken ekranın altında
+                      kalıyor ve kimse görmüyordu (kullanıcı bildirdi). Kilit
+                      simgesi ve yeşil çerçeve bunları ücretsiz araçlardan
+                      ayırır; tıklayınca kayıt ekranı açılır. */}
+                  {!accessToken &&
+                    MEMBER_TOOLS.map((m) => {
+                      const MemberIcon = m.Icon;
+                      return (
+                        <button
+                          key={m.slug}
+                          type="button"
+                          onClick={onRegister}
+                          title={tr ? "Ücretsiz üyelikle açılır" : "Unlocks with a free account"}
+                          className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-3.5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
+                        >
+                          <span className="absolute right-1.5 top-1.5">
+                            <Lock className="h-3 w-3 text-emerald-400/70" />
+                          </span>
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
+                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className="text-[12px] font-semibold leading-tight text-emerald-100/90">
+                            {tr ? m.tr : m.en}
+                          </span>
+                        </button>
+                      );
+                    })}
                 </>
               ) : (
                 AI_TOOLS.map(({ id, meta }) => {
@@ -827,51 +924,10 @@ function Hero({
             )}
             </div>
 
-            {/* ÜYELİK KAZANIMI — misafire, ücretsiz üyelikle GERÇEKTEN açılan
-                araçları gösterir. Kutular kilitli görünür; tıklayınca kayıt ekranı
-                açılır. Giriş yapmış kullanıcıya hiç gösterilmez. */}
-            {!accessToken && (
-              <div className="mt-3 rounded-2xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/[0.07] to-transparent p-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-2 px-0.5 pb-3">
-                  <p className="text-[13px] font-bold text-white">
-                    {tr ? "Ücretsiz üyelikle bunlar da açılır" : "A free account also unlocks these"}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={onRegister}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3.5 py-1.5 text-[12px] font-bold text-emerald-200 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/25"
-                  >
-                    {tr ? "Ücretsiz üye ol" : "Create a free account"}
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {MEMBER_TOOLS.map((m) => {
-                    const MemberIcon = m.Icon;
-                    return (
-                      <button
-                        key={m.slug}
-                        type="button"
-                        onClick={onRegister}
-                        className="group flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-black/20 px-3 py-2.5 text-left transition hover:border-emerald-400/30 hover:bg-emerald-500/[0.06]"
-                      >
-                        <span className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/[0.05] text-slate-400 ring-1 ring-white/10 transition group-hover:text-emerald-300">
-                          <MemberIcon className="h-4 w-4" strokeWidth={2} />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-slate-300 transition group-hover:text-white">
-                          {tr ? m.tr : m.en}
-                        </span>
-                        <Lock className="h-3.5 w-3.5 flex-shrink-0 text-slate-600 transition group-hover:text-emerald-400/70" />
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2.5 px-0.5 text-[11.5px] text-slate-500">
-                  {tr
-                    ? "Kart istemez, ücret alınmaz — üyelik ücretsizdir."
-                    : "No card, no charge — the account is free."}
-                </p>
-              </div>
-            )}
+            {/* NOT: "Ücretsiz üyelikle bunlar da açılır" bloğu buradaydı; araç
+                çalışma alanının ALTINDA kaldığı için ekranda görünmüyordu.
+                Kilitli kutular artık araç ızgarasının İÇİNDE, araçların yanında
+                duruyor — kullanıcı onları araçları tararken görüyor. */}
           </div>
 
           {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
@@ -1973,6 +2029,7 @@ export function LandingPage({
           onScannerLogin={onScannerLogin}
           aiAllowed={aiAllowed}
           windowsDownloadUrl={windowsDownloadUrl}
+          onOpenTool={onOpenTool}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
             açmaz ücretsiz araçlara tıklayıp (login'siz) kullanabilir. */}
