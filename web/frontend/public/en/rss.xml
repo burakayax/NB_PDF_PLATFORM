@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Thu, 10 Sep 2026 20:54:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 19 Sep 2026 20:47:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,48 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>Microsoft Lens Is Gone: What to Use for Phone Scanning Now</title>
+      <link>https://www.pdfplatform.app/en/blog/microsoft-lens-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/microsoft-lens-alternative</guid>
+      <pubDate>Sat, 19 Sep 2026 20:47:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/microsoft-lens-alternatifi" />
+      <description><![CDATA[Microsoft Lens is retired and Microsoft points users at OneDrive — but not everyone wants their documents in someone's cloud. Here are the realistic options for scanning with your phone in 2026.]]></description>
+      <content:encoded><![CDATA[<p>Microsoft Lens — once called Office Lens — stopped creating new scans on 9 March 2026, and the app was pulled from the stores a month earlier. If it is still on your phone you can open old scans, but you cannot make new ones. A decade-old habit ended that quietly.</p>
+<h2>What actually happened</h2>
+<ul><li>9 January 2026: retirement announced, support ended.</li><li>9 February 2026: the app was removed from the App Store and Google Play.</li><li>9 March 2026: creating new scans stopped working.</li></ul>
+<p>Microsoft points people at the OneDrive app, which has a built-in scanning feature.</p>
+<h2>Why OneDrive does not suit everyone</h2>
+<p>It works, but it brings two things with it: a Microsoft account and the cloud. Whatever you scan is uploaded to OneDrive. For a receipt that is fine. For an ID, a medical report, a tenancy agreement or a client's paperwork, it is a different question.</p>
+<p>There is also a simpler objection: signing into a cloud service just to photograph a piece of paper is a bigger solution than the problem. What people liked about Lens was that it was small — open, shoot, PDF.</p>
+<h2>First, check what your phone already does</h2>
+<p>Being honest: the most practical answer is sometimes already in your pocket.</p>
+<ul><li>On iPhone, the Notes app: new note → camera icon → «Scan Documents». It detects edges, corrects perspective and runs entirely on the device.</li><li>On Android, Google Drive: the plus button → «Scan». The result is uploaded to Drive.</li><li>On many Samsung phones the camera app offers to scan on its own when you point it at a document.</li></ul>
+<blockquote><p>If you scan the odd single page, these are more than enough and you need to install nothing. You can stop reading here.</p></blockquote>
+<h2>And when that is not enough?</h2>
+<p>The built-in scanners run out of road in predictable places: joining several pages cleanly, sharing the result as a PDF, making the scanned text searchable, and doing the same job from a computer. And in some workplaces you simply cannot install apps on a phone.</p>
+<p>That is where a scanner that runs in the browser earns its place: nothing to install, no account, and the document never leaves the device.</p>
+<h2>The PDF Platform document scanner</h2>
+<p>It opens in your phone's browser. Point the camera at the document and the edges are found automatically, an angled shot is flattened, contrast is lifted and a PDF comes out. The camera frame, the edge detection and the PDF generation all run on your device — the document is not sent anywhere.</p>
+<p>What is free and what is not, up front:</p>
+<ul><li>Free: camera scanning, automatic edge detection, perspective correction, contrast improvement, 3 pages per scan, PDF download. No account needed.</li><li>Pro: unlimited pages, automatic capture (it takes the shot when you hold the phone steady), shadow removal and searchable PDF (OCR).</li></ul>
+<p><strong>Document Scanner</strong> — Open it in your phone's browser and point the camera — no install, no account. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the tool</a></p>
+<h2>How it works</h2>
+<ol><li><strong>Open it in your phone browser</strong> — Nothing to download. Open the page, tap «Scan document» and allow camera access.</li><li><strong>Point the camera at the document</strong> — Edges are found automatically. Shooting from an angle is fine — the result is flattened.</li><li><strong>Download the PDF</strong> — Several pages are joined into one PDF. You can also share it straight from the phone.</li></ol>
+<h2>What you give up</h2>
+<p>An honest comparison has to say this too. A browser-based tool does not give you everything an installed app does:</p>
+<ul><li>No sync across devices. Scans do not pile up in a cloud; you save or share the PDF yourself.</li><li>It is not a native app launched from your home screen. You can add the site to the home screen and use it like one, but it does not come from a store.</li><li>You need a connection the first time. After that the scanning itself works offline, because the work was always happening on your device.</li></ul>
+<p>If you want scans collected in a cloud, Microsoft's OneDrive suggestion is the right call. If you want the document to stay on your phone, this is.</p>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Scanning</category>
+      <category>Mobile</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" type="image/png" length="57601" />
+      <media:content url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/microsoft-lens-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/microsoft-lens-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" />
+    </item>
     <item>
       <title>Snip from a PDF: Save a Table, Chart or Question as a Sharp Image</title>
       <link>https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</link>
@@ -841,34 +883,6 @@
       <media:content url="https://www.pdfplatform.app/en/covers/square/document-photo-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/document-photo-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/document-photo-to-pdf.png" />
-    </item>
-    <item>
-      <title>How to Create a Searchable PDF: OCR So You Can Find Text with Ctrl+F</title>
-      <link>https://www.pdfplatform.app/en/blog/create-a-searchable-pdf-ocr</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/create-a-searchable-pdf-ocr</guid>
-      <pubDate>Mon, 13 Jul 2026 10:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/aranabilir-pdf-olusturma-ocr" />
-      <description><![CDATA[A document you scan with your phone looks like text but is actually a photo; you can't search it with Ctrl+F or copy the text. A searchable PDF fixes this by adding an invisible text layer over the image. Here's how.]]></description>
-      <content:encoded><![CDATA[<p>When you scan a document to PDF, the text inside is not text to a computer — it's an image made of pixels. That's why you can't search for a word or select and copy a sentence. A «searchable PDF» solves exactly this.</p>
-<h2>What is a searchable PDF?</h2>
-<p>A searchable PDF has an invisible text layer embedded right over the scanned image, aligned to each word. The document looks the same — you see the photo — but real, selectable text sits behind it. So you can search with Ctrl+F, select and copy text; archive and document systems can also search by content.</p>
-<h2>How does OCR do it?</h2>
-<p>OCR (Optical Character Recognition) «reads» the text in the image and extracts each word's text and position. Those words are then placed invisibly over the image at their exact positions. The result: a document that looks untouched but is searchable inside.</p>
-<h2>Making a searchable PDF on PDF Platform</h2>
-<ol><li><strong>Scan or upload the document</strong> — Use the phone document scanner, or open a scanned PDF you already have.</li><li><strong>Choose «Make searchable»</strong> — After creating the PDF in the scanner, use «🔍 Make searchable»; text is recognized on your device (Turkish + English).</li><li><strong>Save and search</strong> — Save the resulting PDF. Now you can search with Ctrl+F and copy text in any PDF viewer.</li></ol>
-<blockquote><p>OCR runs entirely on your device — including Turkish characters (ş, ğ, ı, İ). Your document is never sent to a server for recognition. Searchable PDF output is a Pro feature.</p></blockquote>
-<p><strong>Scanned PDF → Text (OCR)</strong> — Just want the text? Convert a scanned PDF to plain text on your device. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">Open the OCR tool</a></p>
-<h2>Where is it useful?</h2>
-<ul><li>Archiving: search by keyword across hundreds of scanned documents.</li><li>Legal and accounting: instantly find an amount or clause in a contract or invoice.</li><li>Students: search topics in photos of lecture notes.</li><li>Accessibility: screen readers can read the document.</li></ul>]]></content:encoded>
-      <category>OCR</category>
-      <category>Searchable PDF</category>
-      <category>Scanning</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" type="image/png" length="58895" />
-      <media:content url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/create-a-searchable-pdf-ocr.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/create-a-searchable-pdf-ocr.png" />
     </item>
   </channel>
 </rss>

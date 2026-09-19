@@ -40,6 +40,7 @@ export const EN_TOOL_SLUGS = {
 
 /** TR blog slug'ı → EN blog slug'ı. */
 export const EN_BLOG_SLUGS = {
+  "microsoft-lens-alternatifi": "microsoft-lens-alternative",
   "pdften-gorsel-resim-cikarma": "extract-images-from-pdf",
   "faturadan-excele-veri-aktarma": "invoice-data-to-excel",
   "iki-pdf-birlestirme-ucretsiz": "merge-two-pdfs-free",
