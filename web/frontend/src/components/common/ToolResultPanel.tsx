@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Check, Download, ExternalLink, Share2, X } from "lucide-react";
 import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
@@ -41,8 +41,11 @@ const L = {
     ready: "PDF hazır 🎉",
     readyGeneric: "Dosyan hazır 🎉",
     subDevice: "Dosyan cihazından hiç çıkmadı.",
-    subServer: "İşlem tamamlandı; dosyan kaydedildi.",
+    subServer: "İşlem tamamlandı. İndir'e basınca kaydetme yerini soracağız.",
     download: "İndir",
+    downloaded: "İndirildi",
+    downloadAgain: "Tekrar indir",
+    closeConfirm: "İndirmeden kapat?",
     share: "Paylaş",
     open: "Aç",
     close: "Kapat",
@@ -51,8 +54,11 @@ const L = {
     ready: "Your PDF is ready 🎉",
     readyGeneric: "Your file is ready 🎉",
     subDevice: "Your file never left your device.",
-    subServer: "All done — your file has been saved.",
+    subServer: "All done — hit Download and we'll ask where to save it.",
     download: "Download",
+    downloaded: "Downloaded",
+    downloadAgain: "Download again",
+    closeConfirm: "Close without saving?",
     share: "Share",
     open: "Open",
     close: "Close",
@@ -126,29 +132,85 @@ export function ToolResultPanel({
     });
   }, [isPdf, processedOnDevice]);
 
+  /**
+   * Düğmenin üç hâli var: önce "İndir", kayıt başarılı olunca kısa süre
+   * "İndirildi" onayı, sonrasında da "Tekrar indir" olarak kalır. Onay geçince
+   * yeniden "İndir" yazmıyor; dosya zaten alındığı için bu yanıltıcı oluyordu.
+   */
+  const [saving, setSaving] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+  /** Bu sonuç bir kez bile kaydedildi mi (düğme metni + kapatma onayı için). */
+  const [everDownloaded, setEverDownloaded] = useState(false);
+  const [closeArmed, setCloseArmed] = useState(false);
+  const downloadedTimerRef = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (downloadedTimerRef.current) window.clearTimeout(downloadedTimerRef.current);
+    },
+    [],
+  );
+  function markDownloaded() {
+    setEverDownloaded(true);
+    setCloseArmed(false);
+    setDownloaded(true);
+    if (downloadedTimerRef.current) window.clearTimeout(downloadedTimerRef.current);
+    downloadedTimerRef.current = window.setTimeout(() => setDownloaded(false), 3000);
+  }
+
+  /**
+   * İNDİRME YALNIZ BURADA OLUR.
+   *
+   * İşlem biter bitmez dosyayı diske yazmak (ve "nereye kaydedeyim?" diye
+   * sormak) kullanıcıyı şaşırtıyordu: kişi daha sonucu görmeden bir kaydetme
+   * penceresiyle karşılaşıyordu. Artık soru, kullanıcı bu düğmeye bastığında
+   * soruluyor. Tıklama taze bir kullanıcı etkileşimi olduğu için kaydetme
+   * penceresi güvenle açılabiliyor.
+   */
   async function save() {
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: {
-        suggestedName?: string;
-        types?: Array<{ description: string; accept: Record<string, string[]> }>;
-      }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        const handle = await win.showSaveFilePicker({
-          suggestedName: filename,
-          types: pickerTypesFor(filename, blob),
-        });
-        const w = await handle.createWritable();
-        await w.write(blob);
-        await w.close();
-        return;
-      } catch (e) {
-        // Kullanıcı vazgeçtiyse indirmeye düşme; desteklenmiyorsa düş.
-        if (e instanceof DOMException && e.name === "AbortError") return;
+    if (saving) return;
+    setSaving(true);
+    try {
+      const win = window as unknown as {
+        showSaveFilePicker?: (o: {
+          suggestedName?: string;
+          types?: Array<{ description: string; accept: Record<string, string[]> }>;
+        }) => Promise<FileSystemFileHandle>;
+      };
+      if (typeof win.showSaveFilePicker === "function") {
+        try {
+          const handle = await win.showSaveFilePicker({
+            suggestedName: filename,
+            types: pickerTypesFor(filename, blob),
+          });
+          const w = await handle.createWritable();
+          await w.write(blob);
+          await w.close();
+          markDownloaded();
+          return;
+        } catch (e) {
+          // Kullanıcı vazgeçtiyse indirmeye düşme; desteklenmiyorsa düş.
+          if (e instanceof DOMException && e.name === "AbortError") return;
+        }
       }
+      downloadBlob(blob, filename);
+      markDownloaded();
+    } finally {
+      setSaving(false);
     }
-    downloadBlob(blob, filename);
+  }
+
+  /**
+   * Kapatırken kaza önleme: dosya henüz kaydedilmediyse ilk tıklama yalnızca
+   * uyarır. Sonuç yalnızca bellekte durduğu için panel kapanınca kaybolur ve
+   * işlem (ücretli araçlarda hakkıyla birlikte) boşa gitmiş olur.
+   */
+  function handleClose() {
+    if (!everDownloaded && !closeArmed) {
+      setCloseArmed(true);
+      window.setTimeout(() => setCloseArmed(false), 5000);
+      return;
+    }
+    onClose();
   }
 
   function open() {
@@ -193,9 +255,26 @@ export function ToolResultPanel({
         <button
           type="button"
           onClick={() => void save()}
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+          disabled={saving}
+          aria-live="polite"
+          className={
+            downloaded
+              ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
+              : everDownloaded
+                ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-70"
+                : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500 disabled:opacity-70"
+          }
         >
-          <Download className="h-4 w-4" /> {t.download}
+          {downloaded ? (
+            <>
+              <Check className="h-4 w-4" /> {t.downloaded}
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />{" "}
+              {everDownloaded ? t.downloadAgain : t.download}
+            </>
+          )}
         </button>
         {isShareSupported(blob, filename) && (
           <button type="button" onClick={() => void share()} className={btnGhost}>
@@ -207,10 +286,15 @@ export function ToolResultPanel({
         </button>
         <button
           type="button"
-          onClick={onClose}
-          className="inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+          onClick={handleClose}
+          aria-live="polite"
+          className={
+            closeArmed
+              ? "inline-flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-6 py-3 text-sm font-semibold text-amber-200 transition hover:bg-amber-500/20"
+              : "inline-flex items-center gap-2 rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/[0.06]"
+          }
         >
-          <X className="h-4 w-4" /> {t.close}
+          <X className="h-4 w-4" /> {closeArmed ? t.closeConfirm : t.close}
         </button>
       </div>
       {ratingToolSlug ? <ToolRating toolSlug={ratingToolSlug} language={language} /> : null}

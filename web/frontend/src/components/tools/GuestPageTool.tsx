@@ -31,6 +31,7 @@ import {
   zipBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdfWorker";
+import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
@@ -200,6 +201,19 @@ export function GuestPageToolCore({
   // "İndir": dashboard'daki gibi KAYDETME YERİNİ SORAR (File System Access).
   // İndir tıklaması kullanıcı aktivasyonudur; blob hazır olduğundan picker direkt
   // çağrılır. Desteklemeyen tarayıcıda (Firefox/Safari/mobil) İndirilenler'e iner.
+  /**
+   * Düğmenin üç hâli: "İndir" → kısa süre "İndirildi" onayı → "Tekrar indir".
+   * Onay geçtikten sonra yeniden "İndir" yazması, dosya zaten alınmışken
+   * yanıltıcı oluyordu.
+   */
+  const [downloaded, setDownloaded] = useState(false);
+  const [everDownloaded, setEverDownloaded] = useState(false);
+  function markDownloaded() {
+    setEverDownloaded(true);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 3000);
+  }
+
   async function saveResult() {
     if (!result) return;
     const win = window as unknown as {
@@ -217,6 +231,7 @@ export function GuestPageToolCore({
         const w = await handle.createWritable();
         await w.write(result.blob);
         await w.close();
+        markDownloaded();
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
@@ -224,6 +239,7 @@ export function GuestPageToolCore({
       }
     }
     downloadBlob(result.blob, result.filename);
+    markDownloaded();
   }
 
   function openResult() {
@@ -334,10 +350,21 @@ export function GuestPageToolCore({
           <button
             type="button"
             onClick={() => void saveResult()}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+            aria-live="polite"
+            className={
+              downloaded
+                ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
+                : everDownloaded
+                  ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                  : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+            }
           >
-            <Download className="h-4 w-4" />
-            {tr ? "İndir" : "Download"}
+            {downloaded ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            {downloaded
+              ? tr ? "İndirildi" : "Downloaded"
+              : everDownloaded
+                ? tr ? "Tekrar indir" : "Download again"
+                : tr ? "İndir" : "Download"}
           </button>
           {canShare() && (
             <button
@@ -368,6 +395,7 @@ export function GuestPageToolCore({
             {tr ? "Kapat" : "Close"}
           </button>
         </div>
+        <ToolRating toolSlug={tool === "split" ? "split-pdf" : tool} language={language} />
         <ValueMomentNudge language={language} source="page_tool_success" />
       </div>
     );
