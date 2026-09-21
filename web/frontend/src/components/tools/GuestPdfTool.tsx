@@ -3,6 +3,7 @@ import type { Language } from "../../i18n/landing";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { GuestToolCore, type GuestToolId } from "./GuestToolCore";
 import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 
 export type { GuestToolId };
 
@@ -70,6 +71,10 @@ export function GuestPdfTool({
               {seo.intro}
             </p>
           )}
+          {/* Puan satırı: hem oyunu değiştirmek isteyenin geri dönebileceği yer,
+              hem de yıldızların sayfada GÖRÜNÜR olması (arama sonucunda yıldız
+              çıkarmanın ön koşulu). */}
+          <ToolScore slug={slug} language={language} className="mt-5 justify-center" />
         </div>
 
         <ToolHowTo slug={slug} language={language} className="mt-8" />

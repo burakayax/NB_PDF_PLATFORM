@@ -8,6 +8,7 @@ import {
   getGuideSlugsForTool,
 } from "../../seo/seoContent.mjs";
 import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 
 type Props = {
   slug: string;
@@ -122,6 +123,10 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
               {seo.intro}
             </p>
           )}
+          {/* Puan satırı: hem oyunu değiştirmek isteyenin geri dönebileceği yer,
+              hem de yıldızların sayfada GÖRÜNÜR olması (arama sonucunda yıldız
+              çıkarmanın ön koşulu). */}
+          <ToolScore slug={slug} language={language} className="mt-5 justify-center" />
         </div>
 
         <ToolHowTo slug={slug} language={language} className="mt-8" />
