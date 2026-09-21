@@ -244,6 +244,18 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   }
 
   // ── Auth / admin — noindex ────────────────────────────────────────────────
+  //
+  // CANONICAL KENDİNİ GÖSTERİR, ANA SAYFAYI DEĞİL.
+  //
+  // Eskiden bu sayfalar hem "noindex" diyor hem de canonical ile ana sayfayı
+  // gösteriyordu. Bu iki sinyal BİRBİRİYLE ÇELİŞİR: canonical "asıl sayfa şu,
+  // onu dizine al" derken noindex "hiçbirini dizine alma" der. Google'ın
+  // yönlendirmesi de bu ikisinin birlikte kullanılmamasıdır; karıştırıldığında
+  // hangisinin kazanacağı belirsizdir ve Search Console tuhaf durumlar
+  // bildirir (canlıda /en/register bu yüzden "yönlendirmeli sayfa" göründü).
+  //
+  // Doğrusu tek net sinyal vermektir: sayfa noindex kalır, canonical kendini
+  // gösterir — yönetici girişinde zaten böyle yapılıyordu.
   if (
     context.view === "login" ||
     context.view === "register" ||
@@ -255,7 +267,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
         context.language === "tr"
           ? "PDF çalışma alanınıza erişmek için giriş yapın veya hesap oluşturun."
           : "Sign in or create an account to access your PDF workspace.",
-      canonicalPath: "/",
+      canonicalPath: pathname.replace(/^\/en(?=\/|$)/, "") || "/",
       index: false,
       follow: false,
       ogLocale: locale,
