@@ -85,7 +85,7 @@ export const BLOG_POSTS = [
     {
       title: "A Sejda Alternative for When Three Tasks an Hour Runs Out",
       description:
-        "Sejda's free tier is capped at three tasks per hour. If you work through documents in batches, that wall arrives early. An honest comparison with tools that have no hourly cap because they run in your browser.",
+        "Looking for a Sejda alternative? The free tier is capped at three tasks per hour, and that wall arrives early if you work in batches. An honest comparison with tools that have no hourly cap because they run in your browser.",
       excerpt:
         "Sejda is a good tool — one of the few online editors that genuinely changes the text inside a PDF. But its free tier is metered by the hour, and anyone working through a batch hits that wall fast.",
       blocks: [
@@ -230,7 +230,7 @@ export const BLOG_POSTS = [
     {
       title: "DocuSign Alternatives: When Five Documents a Month Is Not Enough",
       description:
-        "DocuSign's personal plan caps at five documents a month. For people who need more than that but do not need an enterprise contract, here is an honest comparison of signature requests, audit records and cost.",
+        "Looking at DocuSign alternatives? The personal plan caps at five documents a month. For people who need more but do not need an enterprise contract, an honest comparison of signature requests, audit records and cost.",
       excerpt:
         "DocuSign is a good product, but it is priced per envelope and the personal plan stops at five documents a month. For a small business sending ten contracts, that is a plan that runs out mid-month.",
       blocks: [
@@ -377,7 +377,7 @@ export const BLOG_POSTS = [
     {
       title: "A PDF24 Alternative for Mac and Linux: Why There Is No Offline Option",
       description:
-        "PDF24 is two products: the online tools run everywhere but upload your file; the offline Creator does not upload but exists only for Windows. Here is how that gap gets closed on Mac, Linux and Android.",
+        "Looking for a PDF24 alternative on Mac or Linux? PDF24 is two products: the online tools run everywhere but upload your file, while the offline Creator exists only for Windows. Here is how that gap gets closed.",
       excerpt:
         "There is a concrete reason PDF24 users search for a Mac or Linux alternative: the offline version is Windows-only. On every other system you are left with the online tools, which upload your file.",
       blocks: [
@@ -519,7 +519,7 @@ export const BLOG_POSTS = [
     {
       title: "Microsoft Lens Is Gone: What to Use for Phone Scanning Now",
       description:
-        "Microsoft Lens was retired on 9 March 2026. What replaces it? An honest look at the options, including scanning from your phone browser with no app to install and nothing uploaded.",
+        "Looking for a Microsoft Lens alternative? Lens was retired on 9 March 2026. An honest look at what replaces it, including scanning from your phone browser with no app to install and nothing uploaded.",
       excerpt:
         "Microsoft Lens is retired and Microsoft points users at OneDrive — but not everyone wants their documents in someone's cloud. Here are the realistic options for scanning with your phone in 2026.",
       blocks: [
