@@ -35,6 +35,7 @@ import {
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
 import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.mjs";
 import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
 import { writeBlogCovers } from "./generate-covers.mjs";
 import { writeSocialKeywords } from "./generate-social-keywords.mjs";
@@ -461,6 +462,20 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       brand: { "@type": "Brand", name: BRAND },
       publisher: { "@id": orgId },
       featureList: SOFTWARE_FEATURE_LIST[lang],
+      // Yıldızlar — YALNIZCA eşiği geçmiş gerçek oylar. Uydurma ortalama yok:
+      // kayıt yoksa alan hiç eklenmez. Uygulama tarafı (src/seo/jsonLd.ts) aynı
+      // dosyayı okur; ikisi ayrışırsa sayfa açılınca yıldızlar kaybolurdu.
+      ...(meta.slug && TOOL_RATINGS[meta.slug]
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: TOOL_RATINGS[meta.slug].ratingValue,
+              ratingCount: TOOL_RATINGS[meta.slug].ratingCount,
+              bestRating: RATING_BEST,
+              worstRating: RATING_WORST,
+            },
+          }
+        : {}),
     });
   }
 
