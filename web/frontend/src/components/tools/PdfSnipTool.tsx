@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
 
@@ -807,6 +808,7 @@ export function PdfSnipTool({ language, initialFile }: { language: Language; ini
 
       {error && <p className="text-center text-[13px] text-rose-300">{error}</p>}
 
+      {snips.length > 0 && <ToolRating toolSlug="pdf-kesit-al" language={language} />}
       {snips.length > 0 && <ValueMomentNudge language={language} source="snip_success" />}
 
       <p className="text-center text-[11px] text-slate-500">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
@@ -901,6 +902,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           {limitMsg && (
             <p className="mx-auto mt-5 max-w-md rounded-xl border border-amber-400/30 bg-amber-500/[0.08] px-4 py-3 text-[13px] text-amber-200">{limitMsg}</p>
           )}
+          <ToolRating toolSlug="pdf-duzenle" language={language} />
         </div>
       ) : !file ? (
         <div className="tool-form">

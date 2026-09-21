@@ -12,6 +12,8 @@ import type { FeatureKey } from "../../api/subscription";
 import type { ws } from "../../i18n/workspace";
 import type { Language } from "../../i18n/landing";
 import type { SaaSGating } from "../../lib/saasGating";
+import { ToolRating } from "../common/ToolRating";
+import { toolSlugForFeature } from "../../lib/toolRoutes";
 import { SaasGatedPreview } from "../SaasGatedPreview";
 import { isShareApiAvailable } from "../../lib/shareFile";
 
@@ -20,6 +22,12 @@ export type ToolProgressSuccessState = {
   filename: string;
   featureTitle: string;
   replay?: () => void;
+  /**
+   * Çıktıyı üreten araç — puanlama sorusunun hangi araca yazılacağını belirler.
+   * Erişim kontrollü akışta `gatedDownload.toolId` zaten var; tarayıcının kendi
+   * indirme yolunda ise yalnızca burası dolar.
+   */
+  toolId?: FeatureKey;
   /**
    * Erişim kontrollü önizleme. Varsa şerit, indirme düğmesi yerine
    * önizleme kartını (varsa küçük görselle) çizer.
@@ -78,6 +86,7 @@ export function ToolSuccessBar({
   onInsufficientCredits,
   onDismiss,
 }: ToolSuccessBarProps) {
+  const ratingToolId = success.gatedDownload?.toolId ?? success.toolId ?? null;
   return (
     <div
       className="merge-progress-fixed merge-progress-fixed--success tool-success-shell"
@@ -207,6 +216,9 @@ export function ToolSuccessBar({
             </button>
           </div>
         )}
+        {ratingToolId ? (
+          <ToolRating toolSlug={toolSlugForFeature(ratingToolId)} language={language} />
+        ) : null}
       </div>
     </div>
   );

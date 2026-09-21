@@ -30,6 +30,7 @@ import {
   type ImzaDurumu,
   type ImzaKontenjani,
 } from "../../api/signatures";
+import { ToolRating } from "../common/ToolRating";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 
 const METIN = {
@@ -297,9 +298,12 @@ export function SignatureRequestTool({
       )}
 
       {bilgi && (
-        <p className="mt-3 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-4 py-2.5 text-[13px] text-emerald-200">
-          {bilgi}
-        </p>
+        <>
+          <p className="mt-3 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-4 py-2.5 text-[13px] text-emerald-200">
+            {bilgi}
+          </p>
+          <ToolRating toolSlug="imza-iste" language={language} />
+        </>
       )}
       {hata && <p className="mt-3 text-[13px] text-rose-300">{hata}</p>}
 

@@ -15,6 +15,7 @@ import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { redactPdf, saveBlobToUser } from "../../api";
 import { aiDetectSensitive, fetchAiQuota, type AiError, type AiQuota } from "../../api/ai";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
 import { detectSensitiveByRegex } from "../../lib/redactDetectors";
 
@@ -198,6 +199,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
             <button type="button" onClick={download} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><Download className="h-4 w-4" />{tr ? "İndir" : "Download"}</button>
             <button type="button" onClick={() => { setResult(null); setFile(null); setItems([]); setDocText(""); setAiDone(false); }} className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]">{tr ? "Yeni belge" : "New document"}</button>
           </div>
+          <ToolRating toolSlug="hassas-veri-gizle" language={language} />
         </div>
       ) : (
         <>
