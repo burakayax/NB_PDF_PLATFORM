@@ -580,7 +580,18 @@
 <h2>Tips for preserving formatting</h2>
 <blockquote><p>If your document uses standard fonts (Arial, Times New Roman, Calibri), the output will be closest to the original. Very custom, non-installed fonts may render differently on some systems.</p></blockquote>
 <p>Need the other direction — turning a PDF back into an editable Word file? We have a separate tool for that.</p>
-<p><strong>PDF to Word</strong> — No editable version on hand? Convert the PDF back to Word. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">PDF → Word</a></p>]]></content:encoded>
+<p><strong>PDF to Word</strong> — No editable version on hand? Convert the PDF back to Word. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">PDF → Word</a></p>
+<h2>Prepare the document before converting</h2>
+<p>A PDF freezes the Word document as it stands, so whatever is in the file ends up in the output. A few minutes of preparation prevents surprises you would otherwise notice after sending.</p>
+<ul><li>Turn off track changes and accept all revisions, or the markup can end up in the output.</li><li>Clear comments, especially leftovers from internal review.</li><li>Run the spell check once; fixing it in a PDF is far harder.</li><li>Update the automatic contents page and field codes, or old page numbers get frozen in.</li><li>Review the author and company details in document properties.</li></ul>
+<h2>Why fonts shift</h2>
+<p>A Word file usually does not embed its typefaces; it only records their names. If the font is not installed on the other end, the program substitutes something similar, line lengths change, tables overflow and even the page count differs. A PDF embeds the fonts it uses. That is PDF's most useful property, and it explains why official submissions ask for it.</p>
+<h2>A note on CVs and applications</h2>
+<p>Documents sent with job applications are often uploaded into a system and scanned automatically, so it matters that the text inside the PDF is real text. A document produced straight from Word satisfies that; a CV exported as an image from a design tool or captured as a screenshot does not. There is a simple test: open the PDF and try to select your name with the cursor. If you cannot, the document is an image.</p>
+<h2>Checklist after converting</h2>
+<ul><li>Is the page count as expected, or did an extra blank page appear?</li><li>Are tables split across a page break?</li><li>Is there an unwanted break between a heading and its text?</li><li>Did links stay clickable?</li><li>Does the file size fit the channel you are sending through?</li></ul>
+<h2>What you can do afterwards</h2>
+<p>Once you have the PDF you can keep working on it: merge it with annexes, add page numbers, reduce its size or permanently remove sensitive details. Most of these operate at page level, so they leave the content and appearance of the document untouched.</p>]]></content:encoded>
       <category>Convert</category>
       <category>Word</category>
       <category>PDF</category>
@@ -641,7 +652,18 @@
 <blockquote><p>For wide, many-column tables, setting the page orientation to Landscape and adjusting the print area in Excel before converting helps everything fit and stay readable.</p></blockquote>
 <h2>The reverse: getting a table out of a PDF</h2>
 <p>If you have a PDF and want to edit the table inside it in Excel, we have a separate tool that extracts tables to .xlsx.</p>
-<p><strong>PDF to Excel</strong> — Export tables from a PDF into editable Excel. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">PDF → Excel</a></p>]]></content:encoded>
+<p><strong>PDF to Excel</strong> — Export tables from a PDF into editable Excel. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">PDF → Excel</a></p>
+<h2>Set the print options before converting</h2>
+<p>What the resulting PDF looks like is decided by the print settings in the file. A wide table converted without them comes out with columns scattered across pages and is unreadable. A couple of minutes of setup completely changes how usable the output is.</p>
+<ul><li>Set orientation to landscape: with many columns this is almost always needed.</li><li>Define the print area to stop empty cells spreading across pages.</li><li>Use the «fit all columns on one page» option.</li><li>Set the header row to repeat on every page — it decides readability on multi-page tables.</li><li>Decide whether gridlines should print.</li></ul>
+<h2>Files with several sheets</h2>
+<p>An Excel file usually holds several worksheets, and not all of them need sharing. When working calculations, raw data or old period tabs end up in the output, the document both bloats and can carry information that was never meant to leave. Deciding which sheets go into the output before converting is cleaner than deleting pages from the PDF afterwards.</p>
+<h2>Watch for hidden information</h2>
+<p>Excel files carry more than they show: hidden rows and columns, data concealed by filters, cell notes and other sheets that formulas point at. Hidden rows usually stay out of the PDF, but cell notes and filtered data can appear unexpectedly. Reviewing everything hidden before converting a table that is going outside is a good habit.</p>
+<h2>For invoice and quote tables</h2>
+<p>The real reason for converting quotes and invoices prepared in Excel is to create a fixed document whose figures the recipient cannot change. Two extra steps help when sending it: page numbers show completeness on multi-page quotes, and a permissions password restricts copying and editing.</p>
+<h2>Before you send the output</h2>
+<ul><li>Do page breaks fall in sensible places, or is a line item split in half?</li><li>Do amounts and currency display correctly?</li><li>Is the smallest type readable, especially if it will be printed?</li><li>Is there a note or column left in that you did not want shown?</li></ul>]]></content:encoded>
       <category>Convert</category>
       <category>Excel</category>
       <category>PDF</category>
@@ -750,7 +772,18 @@
 <h2>Plain conversion or AI?</h2>
 <p>If the PDF has clean, grid-like tables, plain conversion is fast and enough. But if you need to pull fields from documents that each have a different layout — like invoices (invoice no, date, totals, line items) — AI data extraction is far more accurate.</p>
 <blockquote><p>To gather dozens of invoices into a single CSV table, the Extract Data and Batch tools are built for exactly this — merging one row per document.</p></blockquote>
-<p><strong>Extract Data</strong> — Pull fields from complex documents like invoices with AI. <a href="https://www.pdfplatform.app/en/tools/extract-data-from-pdf">Extract with AI</a></p>]]></content:encoded>
+<p><strong>Extract Data</strong> — Pull fields from complex documents like invoices with AI. <a href="https://www.pdfplatform.app/en/tools/extract-data-from-pdf">Extract with AI</a></p>
+<h2>Why tables sometimes come out wrong</h2>
+<p>There is no table object in a PDF. The grid you see is drawn with lines and aligned pieces of text; no row-and-column relationship exists underneath. The conversion infers that relationship from positions. The cases where inference is hard are predictable, and knowing them sets the right expectation.</p>
+<ul><li>Tables without rules: when columns are separated only by whitespace, the boundaries blur.</li><li>Merged cells: a heading spanning two columns breaks the alignment.</li><li>Long text wrapping to a second line makes it unclear whether it is one row or two.</li><li>On tables running across pages, a repeated header row can look like a new table.</li><li>Scanned documents need OCR first, otherwise cells come back empty.</li></ul>
+<h2>First fixes after opening in Excel</h2>
+<p>A few standard corrections make the output usable, and making them a habit avoids starting from scratch each time: format columns that did not arrive as numbers, convert amounts that became text because of thousand separators, check the date column format, delete repeated header rows and remove empty columns.</p>
+<h2>When data extraction is the better fit</h2>
+<p>Plain conversion tries to carry the table across as it is. Often, though, what you want is not the table but specific fields: the amount, date and seller on an invoice. If every document has a different layout, moving the table does not help; you need the fields by name. The test is simple: same template with a clean grid means conversion, differing documents with specific fields means extraction.</p>
+<h2>A practical route for large tables</h2>
+<p>If you only need the table on page fifteen of a hundred-page report, converting the whole document is unnecessary work and unnecessary waiting. Splitting out the relevant page range and converting only that is faster and cleaner, with no surplus rows to remove.</p>
+<h2>A quick way to check the result</h2>
+<p>Rather than reading row by row, check with totals: does the amount column sum to the document's grand total, does the row count match the number of line items, are there empty cells? Those three checks catch most errors in seconds.</p>]]></content:encoded>
       <category>Convert</category>
       <category>Excel</category>
       <category>Table</category>
