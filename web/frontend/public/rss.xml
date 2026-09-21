@@ -804,7 +804,18 @@
 <p>Elinizde yalnızca PDF hâli olan bir sunumu düzenlemek isterseniz, PDF'i tekrar PowerPoint slaytlarına dönüştürebilirsiniz — her sayfa bir slayt olur ve içeriği yeniden kullanabilirsiniz.</p>
 <p><strong>PDF'den PowerPoint'e</strong> — PDF sunumunu düzenlenebilir .pptx slaytlarına çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
 <h2>Hangisini ne zaman kullanmalı?</h2>
-<ul><li>Paylaşmak / sunmak / arşivlemek için: PowerPoint → PDF.</li><li>Eski bir sunumu düzenlemek / içeriği yeniden kullanmak için: PDF → PowerPoint.</li></ul>]]></content:encoded>
+<ul><li>Paylaşmak / sunmak / arşivlemek için: PowerPoint → PDF.</li><li>Eski bir sunumu düzenlemek / içeriği yeniden kullanmak için: PDF → PowerPoint.</li></ul>
+<h2>Dönüştürmede neler korunur, neler kaybolur?</h2>
+<p>PDF sabit bir çıktı biçimidir; slaytların görünümünü korur ama etkileşimli olan her şeyi düzleştirir. Beklentiyi baştan bilmek, sunumu gönderdikten sonraki sürprizleri önler.</p>
+<ul><li>Korunur: yerleşim, renkler, yazı tipleri, görseller, tablolar ve grafiklerin görünümü.</li><li>Korunur: slayt sırası ve sayfa oranı (16:9 ya da 4:3).</li><li>Kaybolur: geçişler ve animasyonlar — animasyonlu bir slayt, animasyonun son hâliyle tek sayfa olur.</li><li>Kaybolur: gömülü video ve ses; yerinde yalnızca kapak görüntüsü kalır.</li><li>Değişir: konuşmacı notları varsayılan olarak çıktıya girmez.</li></ul>
+<h2>Yazı tipi neden kayar, PDF bunu nasıl çözer?</h2>
+<p>PowerPoint dosyası yazı tipini çoğu zaman içine gömmez; sadece adını yazar. Karşı tarafta o yazı tipi yoksa program benzerini koyar ve satırlar kayar, kutular taşar. PDF'te ise kullanılan yazı tipleri belgenin içine gömülür; dosya kimde açılırsa açılsın aynı görünür. Sunumu bilmediğiniz bir bilgisayarda açacaksanız, PDF kopyayı da yanınızda bulundurmak en güvenli yoldur.</p>
+<h2>Baskı ve dağıtım için pratik ayarlar</h2>
+<p>Sunum çıktısını dinleyiciye dağıtacaksanız, her slaydı ayrı sayfaya basmak çoğu zaman gereksiz kâğıt harcar. PDF'e çevirdikten sonra sayfa düzeni aracıyla tek kâğıda 2 ya da 4 slayt yerleştirebilirsiniz; hem okunaklı kalır hem baskı maliyeti düşer. Uzun sunumlarda bu, on sayfalık bir çıktıyı üç sayfaya indirir.</p>
+<h2>PDF'ten PowerPoint'e dönüşte gerçekçi beklenti</h2>
+<p>Ters yöndeki dönüşüm, sunumun özgün hâlini geri getirmez; PDF'in içinde slaytların düzenlenebilir yapısı yoktur. Her sayfa bir slayda dönüşür ve metin kutuları yeniden oluşturulur. Metni yeniden kullanmak, başlıkları kopyalamak ya da eski bir sunumu güncellemek için yeterlidir; ama özgün tasarımı birebir düzenlemeyi bekliyorsanız, mümkünse kaynak dosyayı bulmak daha az iş çıkarır.</p>
+<h2>Göndermeden önceki son kontrol</h2>
+<ul><li>Animasyonla ortaya çıkan içerik doğru hâliyle görünüyor mu?</li><li>Grafik ve tablolardaki küçük yazılar okunuyor mu?</li><li>Gizli slaytlar çıktıya girmiş mi — girmesini istiyor musunuz?</li><li>Dosya boyutu paylaşacağınız kanala sığıyor mu?</li></ul>]]></content:encoded>
       <category>Dönüştürme</category>
       <category>PowerPoint</category>
       <category>Sunum</category>
@@ -910,7 +921,20 @@
 <ol><li><strong>PDF'i yükleyin</strong> — Sayfa Numarası aracına belgenizi ekleyin.</li><li><strong>Konum ve biçimi seçin</strong> — Numaranın üstte mi altta mı olacağını ve biçimini belirleyin.</li><li><strong>İndirin</strong> — Numaralandırılmış PDF'i indirin — her sayfa profesyonelce numaralanmış olur.</li></ol>
 <p><strong>Sayfa Numarası Ekle</strong> — PDF'inize konum ve biçim seçerek sayfa numarası ekleyin. <a href="https://www.pdfplatform.app/tools/page-numbers">Aracı aç</a></p>
 <h2>İpucu</h2>
-<blockquote><p>Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur.</p></blockquote>]]></content:encoded>
+<blockquote><p>Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur.</p></blockquote>
+<h2>Hangi numara biçimini seçmeli?</h2>
+<p>Biçim, belgenin türüne göre değişir. Kural koyan bir standart yok ama okuyucunun beklentisi var: resmî bir evrakta süslü bir numaralandırma dikkat dağıtır, uzun bir raporda ise yalın bir rakam yetersiz kalabilir.</p>
+<ul><li>Sade rakam (1, 2, 3): rapor, sunum çıktısı ve günlük belgelerin çoğu için en güvenli seçim.</li><li>«Sayfa 1» biçimi: okuyucunun belgeyi basılı hâlde takip edeceği durumlarda yön duygusunu güçlendirir.</li><li>«1 / 12» biçimi: sözleşme ve teklif gibi eksiksizliğin kanıtlanması gereken belgelerde tercih edilir; karşı taraf sayfa eksik mi anlar.</li><li>Roma rakamı (i, ii, iii): önsöz, içindekiler ve teşekkür gibi ön bölümlerde kullanılır; asıl metin 1'den yeniden başlar.</li></ul>
+<h2>Numaralandırma nereden başlamalı?</h2>
+<p>Kapak sayfası neredeyse hiçbir zaman numaralanmaz. Akademik çalışmalarda yaygın uygulama şudur: kapak numarasızdır, ön bölümler roma rakamıyla numaralanır, asıl metnin ilk sayfası 1 olur. Kurumsal raporlarda ise çoğu zaman kapak dışındaki her sayfa 1'den başlayarak numaralanır.</p>
+<p>Belgeyi teslim edeceğiniz kurumun bir yazım kılavuzu varsa, bu tercih size bırakılmış olmayabilir. Üniversitelerin tez yazım kılavuzları ve kamu kurumlarının evrak standartları genellikle numaranın konumunu ve biçimini açıkça yazar; eklemeden önce bir bakmak, belgeyi ikinci kez hazırlamaktan ucuzdur.</p>
+<h2>Numara eklemeden önce sayfa sırasını kesinleştirin</h2>
+<p>Sayfa numarası belgeye sabit olarak basılır. Numaraları ekledikten sonra sayfa eklemek, silmek ya da sırayı değiştirmek, numaraların içerikle uyuşmamasına yol açar; ikinci sayfada «3» yazan bir belge, hazırlayanın dikkatsizliğini anlatır.</p>
+<ul><li>Önce eksik sayfaları ekleyin, gereksizleri silin, sırayı kesinleştirin.</li><li>Birden çok dosyayı birleştirecekseniz birleştirmeyi numaralandırmadan önce yapın.</li><li>Yan dönmüş sayfa varsa döndürmeyi de önce halledin; numara sayfanın yönüne göre yerleşir.</li><li>Numaralandırmayı en son adım olarak bırakın.</li></ul>
+<h2>Numara içeriğin üstüne denk gelirse</h2>
+<p>Bazı belgelerde alt kenar boşluğu dar olur ve numara mevcut bir dipnotla ya da tablo satırıyla çakışır. İki pratik çözüm vardır: numarayı üst kenara almak ya da sayfayı numaralandırmadan önce kırpma aracıyla kenar boşluğunu düzenlemek. İkisi de belgenin metnine dokunmaz.</p>
+<h2>Sık yapılan hatalar</h2>
+<ul><li>Numaraları ekledikten sonra sayfa eklemek — numaralar içerikle kayar.</li><li>Kapağı da numaralandırmak — resmî belgelerde amatörce durur.</li><li>Belge zaten numaralıyken ikinci bir numara katmanı eklemek; önce mevcut numaraya bakın.</li><li>Çift taraflı basılacak bir belgede numarayı tek tarafa göre hizalamak.</li></ul>]]></content:encoded>
       <category>Düzenleme</category>
       <category>PDF</category>
       <category>Sayfa Numarası</category>
