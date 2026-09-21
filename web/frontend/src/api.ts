@@ -1025,6 +1025,16 @@ async function triggerDownloadFromResponse(
   options?: {
     retainBlob?: boolean;
     clientDownloadName?: string;
+    /**
+     * Sonucu HEMEN diske yazma (varsayılan: yazar).
+     *
+     * `false` verildiğinde dosya yalnızca bellekte hazırlanır ve çağırana
+     * döndürülür; kaydetme yeri sorusu, kullanıcı sonuç ekranındaki "İndir"e
+     * bastığında sorulur. İş bitince kullanıcıya sormadan diske yazmak
+     * şaşırtıcıydı: kişi daha sonucu görmeden bir "Farklı kaydet" penceresiyle
+     * karşılaşıyordu.
+     */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   const saasGating = parseSaasGatingFromResponse(response);
@@ -1050,6 +1060,19 @@ async function triggerDownloadFromResponse(
     ? options.clientDownloadName.trim()
     : extractFilename(response, fallbackName);
   const retain = !!options?.retainBlob;
+  if (options?.deliver === false) {
+    // Diske yazılmadı: çağıran sonucu ekranda gösterir, indirme kullanıcının
+    // "İndir" tıklamasıyla (replay) yapılır.
+    return {
+      blob,
+      filename,
+      replay: () => {
+        void deliverBlobAsDownload(blob, filename, false);
+      },
+      dispose: () => {},
+      saasGating,
+    };
+  }
   const delivered = await deliverBlobAsDownload(blob, filename, retain);
   if (!retain) {
     return { saasGating };
@@ -1348,6 +1371,8 @@ export async function downloadMergeJob(
   options?: {
     signal?: AbortSignal;
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
@@ -1367,7 +1392,10 @@ export async function downloadMergeJob(
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
     await options?.onBeforeReadBody?.();
-    return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+    return triggerDownloadFromResponse(response, fallbackName, {
+      retainBlob: true,
+      deliver: options?.deliver,
+    });
   }
 
   if (shouldUseNativeMergeDownload(href) && !options?.signal) {
@@ -1386,7 +1414,10 @@ export async function downloadMergeJob(
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
   await options?.onBeforeReadBody?.();
-  return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+  return triggerDownloadFromResponse(response, fallbackName, {
+    retainBlob: true,
+    deliver: options?.deliver,
+  });
 }
 
 /**
@@ -1466,6 +1497,8 @@ export async function downloadFromApi(
   options?: {
     signal?: AbortSignal;
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
@@ -1489,7 +1522,10 @@ export async function downloadFromApi(
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "İşlem başarısız oldu.");
     await options?.onBeforeReadBody?.();
-    return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+    return triggerDownloadFromResponse(response, fallbackName, {
+      retainBlob: true,
+      deliver: options?.deliver,
+    });
   }
 
   if (shouldUseBrowserNativeDownload(url) && !options?.signal) {
@@ -1511,7 +1547,10 @@ export async function downloadFromApi(
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "İşlem başarısız oldu.");
   await options?.onBeforeReadBody?.();
-  return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+  return triggerDownloadFromResponse(response, fallbackName, {
+    retainBlob: true,
+    deliver: options?.deliver,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1788,6 +1827,8 @@ export async function downloadResult(
     clientDownloadName?: string;
     /** After 200 OK, before reading the response body — used to create a pending `download_logs` row at stream start. */
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<DownloadResultOutcome> {
   const id = encodeURIComponent(resultId);
@@ -1819,6 +1860,7 @@ export async function downloadResult(
   const download = await triggerDownloadFromResponse(response, fallbackName, {
     retainBlob: true,
     clientDownloadName: options?.clientDownloadName,
+    deliver: options?.deliver,
   });
   return { status: "ok", download };
 }

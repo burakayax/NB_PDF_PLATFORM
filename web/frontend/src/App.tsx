@@ -32,10 +32,6 @@ import {
   startToolJob,
   waitForToolJob,
   requestMergeJobCancel,
-  askSaveLocation,
-  hasPendingSaveHandle,
-  saveBlobToUser,
-  setPendingSaveHandle,
   showSavePickerTypesFor,
   type MergeJobStatus,
 } from "./api";
@@ -46,6 +42,7 @@ import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
 import { ToolResultPanel } from "./components/common/ToolResultPanel";
+import { ToolScore } from "./components/common/ToolScore";
 import {
   canShareFile,
   shareFileWithPromo,
@@ -1274,32 +1271,6 @@ function App() {
     accessToken,
   });
 
-  /**
-   * Kaydetme yerini sorarken kullanıcıya ne beklendiğini söyler.
-   *
-   * NEDEN: Tarayıcının "Farklı kaydet" penceresi işletim sistemine ait; başka
-   * bir pencerenin arkasında kalabiliyor. O sırada ekranda yalnızca "işlem
-   * sürüyor" yazdığı için kullanıcı sitenin donduğunu sanıyordu (canlı testte
-   * bizim de başımıza geldi, dakikalarca bekledik). Artık ne yapması gerektiği
-   * açıkça yazıyor.
-   */
-  async function kaydetmeYeriSor(
-    onerilenAd: string,
-  ): Promise<"secildi" | "vazgecildi" | "desteklenmiyor"> {
-    showToast(
-      "loading",
-      language === "tr" ? "Kaydetme penceresi açıldı" : "Save dialog opened",
-      language === "tr"
-        ? "Dosyanın nereye kaydedileceğini onayla. Pencere görünmüyorsa diğer pencerelerin arkasında olabilir."
-        : "Confirm where the file should be saved. If you can't see the dialog, it may be behind other windows.",
-    );
-    try {
-      return await askSaveLocation(onerilenAd);
-    } finally {
-      clearToast();
-    }
-  }
-
   function showToast(type: ToastType, title: string, detail: string) {
     // Global toast ile mesajı viewport'ta sabit katmanda gösterir; scroll konumundan bağımsızdır.
     // Uzun işlemlerde yükleme, başarı ve hata geri bildiriminin tek giriş noktasıdır.
@@ -2082,6 +2053,9 @@ function App() {
           currentToken,
           {
             clientDownloadName: clientFileName,
+            // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+            // "İndir"e bastığında sorulur.
+            deliver: false,
             onBeforeReadBody: currentToken
               ? async () => {
                   try {
@@ -2165,15 +2139,11 @@ function App() {
           });
         }
         applyWorkspaceCleanSlateAfterDownload(toolId);
-        // Keep the already-downloaded bytes so the user can re-open/share them
-        // without a second fetch/charge — same post-download "Paylaş?" bar as
-        // merge. The bar already confirms the download (Dosyan indirildi + dosya
-        // adı), so skip the redundant timed toast; only fall back to a toast when
-        // we somehow have no bytes to back the bar.
+        // Dosya belleğe alındı ama HENÜZ diske yazılmadı: sonuç ekranı çizilir,
+        // kaydetme yeri kullanıcı "İndir"e bastığında sorulur. Aynı baytlar
+        // Aç/Paylaş için de kullanılır (ikinci istek/ücret yok).
         const shareBlob = outcome.download.blob ?? null;
         if (shareBlob) {
-          // Kullanıcı native diyalogda dosyayı yeniden adlandırmış olabilir —
-          // şeritte gerçek kaydedilen ismi göster (yoksa istenen isme düş).
           setMergeShareReady({
             blob: shareBlob,
             filename: outcome.download.filename ?? clientFileName,
@@ -2183,7 +2153,7 @@ function App() {
         } else {
           showToast(
             "success",
-            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            language === "tr" ? "Dosyan hazır" : "Your file is ready",
             clientFileName,
           );
         }
@@ -2215,10 +2185,9 @@ function App() {
 
   const queueGatedDownload = useCallback(
     async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      if ((await kaydetmeYeriSor(fallbackName)) === "vazgecildi") {
-        return;
-      }
-      void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
+      // Kaydetme yeri burada sorulmaz: dosya getirilir, sonuç ekranı açılır ve
+      // soru oradaki "İndir" düğmesinde sorulur.
+      await runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
     },
     [runGatedDownloadWithFilename],
   );
@@ -2242,6 +2211,9 @@ function App() {
           serverFallbackName,
           accessToken,
           {
+            // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+            // "İndir"e bastığında sorulur.
+            deliver: false,
             onBeforeReadBody: accessToken
               ? async () => {
                   try {
@@ -2276,13 +2248,12 @@ function App() {
         if (dl.blob) {
           setMergeShareReady({ blob: dl.blob, filename: dl.filename ?? clientFileName, toolId: "merge" });
         }
-        // The bar already confirms the download (Dosyan indirildi + dosya adı),
-        // so skip the redundant timed toast when it will be shown. Only fall back
-        // to a toast when we somehow have no bytes to back the bar.
+        // Sonuç ekranı açılıyorsa ayrıca bildirim gösterme; açılamıyorsa
+        // (baytlar elimizde değilse) kullanıcı en azından bilgilendirilsin.
         if (!showShareBar) {
           showToast(
             "success",
-            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            language === "tr" ? "Dosyan hazır" : "Your file is ready",
             clientFileName,
           );
         }
@@ -2325,10 +2296,8 @@ function App() {
 
   const queueMergeGatedDownload = useCallback(
     async (jobId: string, fallbackName: string) => {
-      if ((await kaydetmeYeriSor(fallbackName)) === "vazgecildi") {
-        return;
-      }
-      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
+      // Kaydetme yeri sorusu sonuç ekranındaki "İndir" düğmesinde sorulur.
+      await runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
     [runMergeJobGatedDownloadWithFilename],
   );
@@ -4506,19 +4475,11 @@ function App() {
           try {
             setSubmitting(true);
             const cid = selectedFeature.id;
-            // İndirme yeri sorusu, cihaz-içi işleme await'lerinden ÖNCE alınmalı
-            // (user activation hâlâ geçerliyken). Aksi halde bu araçlar sonucu
-            // doğrudan indirir ve "nereye kaydedilsin?" diyaloğu hiç görünmez.
-            {
-              const suggestedName =
-                cid === "split" && splitMode === "separate"
-                  ? "sayfalar.zip"
-                  : selectedFeature.fallbackFilename;
-              if ((await kaydetmeYeriSor(suggestedName)) === "vazgecildi") {
-                setSubmitting(false);
-                return; // kullanıcı kaydetme diyalogunu iptal etti
-              }
-            }
+            // NOT: Burada "nereye kaydedilsin?" SORULMAZ. İşlem biter bitmez
+            // kaydetme penceresi açmak, kullanıcı daha sonucu görmeden onu bir
+            // sistem diyaloguyla karşılaştırıyordu. Dosya bellekte hazırlanır,
+            // sonuç ekranı çizilir; kaydetme yeri yalnızca "İndir"e basınca
+            // sorulur (ToolResultPanel).
             const produced = await runClientPdfTool({
               toolId: cid,
               files: uploads.map((u) => u.file),
@@ -4533,13 +4494,9 @@ function App() {
               expandPages: expandPagesString,
             });
             if (produced) {
-              const savedName = await saveBlobToUser(
-                produced.blob,
-                produced.filename,
-              );
               setMergeShareReady({
                 blob: produced.blob,
-                filename: savedName,
+                filename: produced.filename,
                 toolId: cid,
                 onDevice: true,
               });
@@ -4562,18 +4519,8 @@ function App() {
         // NOT: "Ücretsiz planda en fazla 2 dosya" kuralı kaldırıldı. Birleştirme
         // kullanıcının cihazında çalışıyor, sunucuya dosya gitmiyor ve maliyeti
         // yok; kural pratikte hiç devreye girmiyor, yalnızca yanıltıyordu.
-        // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
-        {
-          // Cihaz-içi yol zaten bir yer sorduysa (ör. şifreli/büyük dosya
-          // yüzünden sunucuya düşüldüyse) tekrar sorma.
-          if (!hasPendingSaveHandle()) {
-            // Kaydetme önerisi tek kaynaktan: Türkçe karakterli ad korunur.
-            const suggestion = selectedFeature.fallbackFilename;
-            if ((await kaydetmeYeriSor(suggestion)) === "vazgecildi") {
-              return;
-            }
-          }
-        }
+        // NOT: Kaydetme yeri burada SORULMAZ; sonuç ekranındaki "İndir"e
+        // basıldığında sorulur.
 
         mergeFlowAbortRef.current?.abort();
         mergeFlowAbortRef.current = new AbortController();
@@ -4632,20 +4579,11 @@ function App() {
         return;
       }
 
-      // Pre-acquire save file handle HERE — user activation is still valid (no awaits above for non-merge tools).
-      // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
-      {
-        // Cihaz-içi yol zaten bir yer sorduysa tekrar sorma.
-        if (!hasPendingSaveHandle()) {
-          const suggestedSaveName =
-            selectedFeature.id === "split" && splitMode === "separate"
-              ? "ayrılan-sayfalar.zip"
-              : selectedFeature.fallbackFilename;
-          if ((await kaydetmeYeriSor(suggestedSaveName)) === "vazgecildi") {
-            return; // kullanıcı kaydetme diyalogunu iptal etti
-          }
-        }
-      }
+      // NOT: Kaydetme yeri burada SORULMAZ. Eskiden, uzun HTTP çağrısı kullanıcı
+      // etkileşimini "tüketmeden" önce pencere açılsın diye işin EN BAŞINDA
+      // soruluyordu; sonuç da biter bitmez diske yazılıyordu. Kullanıcı bunu
+      // beklemiyor. Artık sonuç ekranda gösterilir ve kaydetme yeri yalnızca
+      // "İndir"e basınca (taze tıklama) sorulur.
 
       toolRunAbortRef.current?.abort();
       toolRunAbortRef.current = new AbortController();
@@ -4798,6 +4736,9 @@ function App() {
         accessToken,
         {
           signal: toolSignal,
+          // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+          // "İndir"e bastığında sorulur.
+          deliver: false,
           onBeforeReadBody: accessToken
             ? async () => {
                 try {
@@ -4828,18 +4769,32 @@ function App() {
           pageCount: directDownloadPageCount ?? null,
         });
       }
-      setToolProgressSuccess({
-        filename: selectedFeature.fallbackFilename,
-        featureTitle: selectedFeature.title,
-        replay: dl.replay,
-      });
-      applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
-      showToast(
-        "success",
-        "İşlem tamamlandı",
-        "Çıktı dosyası başarıyla indirildi.",
-      );
-      dl.dispose?.();
+      // Sonuç ekranda gösterilir (ortak ToolResultPanel); dosya henüz diske
+      // yazılmadı — kullanıcı "İndir"e basınca kaydetme yeri sorulacak.
+      if (dl.blob) {
+        setMergeShareReady({
+          blob: dl.blob,
+          filename: dl.filename ?? selectedFeature.fallbackFilename,
+          toolId: selectedFeature.id,
+          sourceBytes: lastRunInputBytesRef.current || undefined,
+        });
+        applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+      } else {
+        // Blob elimizde değil (tarayıcının kendi indirme yolu kullanıldı):
+        // dosya zaten indi, eski bildirim akışı geçerli.
+        setToolProgressSuccess({
+          filename: selectedFeature.fallbackFilename,
+          featureTitle: selectedFeature.title,
+          replay: dl.replay,
+          toolId: selectedFeature.id,
+        });
+        applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+        showToast(
+          "success",
+          "İşlem tamamlandı",
+          "Çıktı dosyası başarıyla indirildi.",
+        );
+      }
       toolProgressDisposeRef.current = null;
       offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
       void refreshSubscriptionState();
@@ -6840,6 +6795,11 @@ function App() {
                       blob={resultReady.blob}
                       filename={resultReady.filename}
                       language={language}
+                      /* Puanlama, işin bittiği bu anda sorulur. Araç kimliği
+                         SEO slug'ıyla aynı olmalı (yıldızlar o sayfada çıkacak). */
+                      ratingToolSlug={
+                        resultReady.toolId ? toolSlugForFeature(resultReady.toolId) : undefined
+                      }
                       processedOnDevice={!!resultReady.onDevice}
                       subtitle={compressResultSubtitle}
                       onClose={() => setMergeShareReady(null)}
@@ -6896,6 +6856,14 @@ function App() {
                       <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">
                         {selectedFeature.title}
                       </h1>
+                      {/* Kalıcı puan satırı — işi biten kişiye bir kez sorulan
+                          soruya EK olarak, fikrini değiştirmek isteyenin geri
+                          dönebileceği yer. */}
+                      <ToolScore
+                        slug={toolSlugForFeature(selectedFeature.id)}
+                        language={language}
+                        className="mt-2.5"
+                      />
                       <h2 className="mt-2 text-base font-normal leading-relaxed text-nb-muted md:text-lg">
                         {selectedFeature.description}
                       </h2>
