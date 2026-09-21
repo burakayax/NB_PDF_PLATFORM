@@ -804,7 +804,18 @@
 <p>If you only have the PDF version of a deck and want to edit it, you can convert the PDF back into PowerPoint slides — each page becomes a slide and you can reuse the content.</p>
 <p><strong>PDF to PowerPoint</strong> — Turn a PDF deck into editable .pptx slides. <a href="https://www.pdfplatform.app/en/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
 <h2>Which one, when?</h2>
-<ul><li>To share / present / archive: PowerPoint → PDF.</li><li>To edit an old deck / reuse content: PDF → PowerPoint.</li></ul>]]></content:encoded>
+<ul><li>To share / present / archive: PowerPoint → PDF.</li><li>To edit an old deck / reuse content: PDF → PowerPoint.</li></ul>
+<h2>What survives the conversion, and what doesn't</h2>
+<p>PDF is a fixed output format: it preserves how slides look but flattens everything interactive. Knowing this upfront avoids surprises after you send the deck.</p>
+<ul><li>Preserved: layout, colours, fonts, images, and the appearance of tables and charts.</li><li>Preserved: slide order and aspect ratio (16:9 or 4:3).</li><li>Lost: transitions and animations — an animated slide becomes one page in its final state.</li><li>Lost: embedded video and audio; only a poster image remains in place.</li><li>Changed: speaker notes are not included in the default output.</li></ul>
+<h2>Why fonts shift, and how PDF fixes it</h2>
+<p>A PowerPoint file often does not embed the typeface; it only records its name. If the recipient does not have that font, the program substitutes something similar, lines shift and boxes overflow. In a PDF the fonts used are embedded in the document, so it looks the same wherever it is opened. If you will present from an unfamiliar computer, carrying a PDF copy is the safest route.</p>
+<h2>Practical settings for print and handouts</h2>
+<p>If you plan to hand the deck out, printing one slide per page usually wastes paper. After converting, use the page layout tool to place 2 or 4 slides on a sheet; it stays legible and costs less to print. On long decks this turns ten pages into three.</p>
+<h2>Realistic expectations going back to PowerPoint</h2>
+<p>The reverse conversion does not restore the original deck; a PDF does not contain the editable structure of slides. Each page becomes a slide and text boxes are rebuilt. That is enough to reuse text, copy headings or refresh an old deck, but if you expect to edit the original design precisely, finding the source file is far less work.</p>
+<h2>A last check before sending</h2>
+<ul><li>Does content that appeared through animation show in the right state?</li><li>Is the small type in charts and tables readable?</li><li>Did hidden slides make it into the output — and do you want them there?</li><li>Does the file size fit the channel you are sharing through?</li></ul>]]></content:encoded>
       <category>Convert</category>
       <category>PowerPoint</category>
       <category>Slides</category>
@@ -910,7 +921,20 @@
 <ol><li><strong>Upload the PDF</strong> — Add your document to the Page Numbers tool.</li><li><strong>Choose position and format</strong> — Set whether the number goes at the top or bottom, and pick its format.</li><li><strong>Download</strong> — Download the numbered PDF — every page is professionally numbered.</li></ol>
 <p><strong>Add Page Numbers</strong> — Add page numbers to your PDF with your choice of position and format. <a href="https://www.pdfplatform.app/en/tools/page-numbers">Open the tool</a></p>
 <h2>Tip</h2>
-<blockquote><p>If your document has a cover page, consider starting numbering from the content page — leaving the cover without a number looks more professional.</p></blockquote>]]></content:encoded>
+<blockquote><p>If your document has a cover page, consider starting numbering from the content page — leaving the cover without a number looks more professional.</p></blockquote>
+<h2>Which number format should you pick?</h2>
+<p>Format depends on the document. No standard forces your hand, but readers have expectations: an ornate numbering style distracts on official paperwork, while a bare digit can feel thin in a long report.</p>
+<ul><li>Plain digit (1, 2, 3): the safest choice for most reports, printed slides and everyday documents.</li><li>«Page 1» style: helps orientation when the document will be read on paper.</li><li>«1 / 12» style: preferred for contracts and quotes, where completeness matters — the other side can tell whether a page is missing.</li><li>Roman numerals (i, ii, iii): used for front matter such as preface and contents, with the main text restarting at 1.</li></ul>
+<h2>Where should numbering start?</h2>
+<p>Cover pages are almost never numbered. The common academic pattern is: no number on the cover, roman numerals through the front matter, and 1 on the first page of the main text. Corporate reports usually number every page except the cover, starting at 1.</p>
+<p>If the organization receiving the document has a style guide, the choice may not be yours. University thesis guides and public-sector document standards often state the position and format explicitly; checking first is cheaper than preparing the document twice.</p>
+<h2>Finalize page order before numbering</h2>
+<p>Page numbers are printed into the document. Adding, deleting or reordering pages afterwards leaves numbers that no longer match the content, and a second page that reads «3» tells the reader the document was put together carelessly.</p>
+<ul><li>Add missing pages, delete the unnecessary ones and settle the order first.</li><li>If you are merging several files, merge before you number.</li><li>Fix sideways pages first — the number is placed relative to page orientation.</li><li>Leave numbering as the last step.</li></ul>
+<h2>When the number lands on existing content</h2>
+<p>Some documents have narrow bottom margins, and the number collides with a footnote or a table row. Two practical fixes: move the number to the top edge, or adjust the margin with the crop tool before numbering. Neither touches the text of the document.</p>
+<h2>Common mistakes</h2>
+<ul><li>Adding pages after numbering — the numbers drift out of sync with the content.</li><li>Numbering the cover as well, which looks amateurish on official documents.</li><li>Adding a second layer of numbers to a document that already has them; check first.</li><li>Aligning numbers for single-sided pages on a document that will be printed double-sided.</li></ul>]]></content:encoded>
       <category>Editing</category>
       <category>PDF</category>
       <category>Page Numbers</category>
