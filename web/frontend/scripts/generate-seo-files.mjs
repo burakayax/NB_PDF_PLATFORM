@@ -92,6 +92,18 @@ const UI = {
     ariaBlogPosts: "Blog yazıları",
     ariaAllTools: "PDF araçları",
     ariaFaq: "Sık sorulan sorular",
+    ariaSiteNav: "Site bölümleri",
+    siteNavHeading: "Site Haritası",
+    siteNav: [
+      ["/", "Ana Sayfa — Tüm PDF Araçları"],
+      ["/blog", "Blog — PDF Rehberleri"],
+      ["/pricing", "Fiyatlandırma ve Planlar"],
+      ["/pdf-api", "PDF ve Yapay Zekâ API"],
+      ["/pdf-api/docs", "API Dokümantasyonu"],
+      ["/terms", "Hizmet Şartları"],
+      ["/privacy", "Gizlilik Politikası"],
+      ["/kvkk", "KVKK Aydınlatma Metni"],
+    ],
     pricingCta: (base) =>
       `<p><a href="${base}/register">Ücretsiz başlayın</a> veya <a href="${base || "/"}">tüm PDF araçlarını</a> inceleyin.</p>`,
     blogIndex: {
@@ -134,6 +146,18 @@ const UI = {
     ariaBlogPosts: "Blog posts",
     ariaAllTools: "PDF tools",
     ariaFaq: "Frequently asked questions",
+    ariaSiteNav: "Site sections",
+    siteNavHeading: "Site Map",
+    siteNav: [
+      ["/", "Home — All PDF Tools"],
+      ["/blog", "Blog — PDF Guides"],
+      ["/pricing", "Pricing and Plans"],
+      ["/pdf-api", "PDF & AI API"],
+      ["/pdf-api/docs", "API Documentation"],
+      ["/terms", "Terms of Service"],
+      ["/privacy", "Privacy Policy"],
+      ["/kvkk", "KVKK Notice"],
+    ],
     pricingCta: (base) =>
       `<p><a href="${base}/register">Start for free</a> or explore <a href="${base || "/"}">all PDF tools</a>.</p>`,
     blogIndex: {
@@ -440,19 +464,20 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
     });
   }
 
-  if (meta.breadcrumb && meta.kind === "tool") {
+  // YOL İZİ — arama sonucunda çıplak adres yerine "PDF Platform > Blog > yazı"
+  // görünmesini sağlar. Önceden YALNIZCA araç sayfalarında vardı; blog yazıları,
+  // fiyatlandırma, API ve yasal sayfalar (128 sayfa) bundan yararlanmıyordu.
+  const yolIzi = breadcrumbTrail(meta, lang);
+  if (yolIzi.length > 1) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: BRAND, item: urlForRoute(baseUrl, "/", lang) },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: meta.h1,
-          item: canonicalUrl,
-        },
-      ],
+      itemListElement: yolIzi.map((adim, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: adim.name,
+        item: adim.url === null ? canonicalUrl : urlForRoute(baseUrl, adim.url, lang),
+      })),
     });
   }
 
@@ -576,12 +601,62 @@ function guidesForTool(toolSlug) {
   return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(toolSlug));
 }
 
+/**
+ * Sayfanın yol izi adımları: [{name, url}] — son adım url:null (sayfanın kendisi).
+ * Ara adım yoksa tek adım döner ve yol izi basılmaz.
+ */
+function breadcrumbTrail(meta, lang) {
+  const t = UI[lang];
+  const kok = { name: BRAND, url: "/" };
+  const blogAdi = lang === "tr" ? "Blog" : "Blog";
+  const araclarAdi = lang === "tr" ? "PDF Araçları" : "PDF Tools";
+  const apiAdi = lang === "tr" ? "PDF ve Yapay Zekâ API" : "PDF & AI API";
+  const yasalAdi = lang === "tr" ? "Yasal" : "Legal";
+
+  switch (meta.kind) {
+    case "tool":
+      return [kok, { name: araclarAdi, url: "/" }, { name: meta.h1, url: null }];
+    case "blogpost":
+      return [kok, { name: blogAdi, url: "/blog" }, { name: meta.h1, url: null }];
+    case "blogindex":
+      return [kok, { name: blogAdi, url: null }];
+    case "pricing":
+      return [kok, { name: meta.h1, url: null }];
+    case "apilanding":
+      return [kok, { name: apiAdi, url: null }];
+    case "apidocs":
+      return [kok, { name: apiAdi, url: "/pdf-api" }, { name: meta.h1, url: null }];
+    case "legal":
+      return [kok, { name: yasalAdi, url: "/terms" }, { name: meta.h1, url: null }];
+    default:
+      return [kok];
+  }
+}
+
+/** Gezinme listesinde sayfanın kendisini gizlemek için mantıksal yolu. */
+function routePathOf(meta) {
+  return meta.routePath || "";
+}
+
 function renderVisibleBody(baseUrl, meta, lang) {
   const t = UI[lang];
   const base = linkBase(lang);
   const parts = [];
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
   parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
+
+  // Blog yazısının KAPAK GÖRSELİ — gövdede de görünsün.
+  // Kapaklar üretiliyordu ama yalnızca paylaşım etiketinde kullanılıyordu;
+  // yazının kendi sayfasında hiç görsel yoktu. Bu, görsel aramasında hiç
+  // görünmemek ve 56 yazıda alt metin fırsatını kullanmamak demekti.
+  if (meta.kind === "blogpost" && meta.post && coverMap) {
+    const kapak = coverMap.get(`${lang}:${meta.post.slug}`);
+    if (kapak) {
+      parts.push(
+        `<figure class="seo-cover"><img src="${escapeHtml(kapak)}" width="1200" height="630" loading="lazy" decoding="async" alt="${escapeHtml(meta.h1)}" /></figure>`,
+      );
+    }
+  }
 
   // Blog yazısı — tam makale gövdesi (crawler görünür metin)
   if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
@@ -627,7 +702,9 @@ function renderVisibleBody(baseUrl, meta, lang) {
 
   // Araç ve landing sayfalarında tüm araçlara iç bağlantı
   if (meta.kind === "tool" || meta.kind === "landing") {
-    const links = TOOL_SLUGS.map((slug) => {
+    // Sayfanın kendisi listeden çıkarılır; kendine bağlantı bir sinyal taşımaz,
+    // yalnızca listeyi uzatır ve gerçek bağlantıları seyreltir.
+    const links = TOOL_SLUGS.filter((slug) => slug !== meta.slug).map((slug) => {
       const c = TOOL_SEO[slug]?.[lang];
       const label = c ? c.h1 : slug.replace(/-/g, " ");
       return `<li><a href="${href(`/tools/${slug}`, lang)}">${escapeHtml(label)}</a></li>`;
@@ -676,6 +753,19 @@ function renderVisibleBody(baseUrl, meta, lang) {
     );
   }
 
+  // SİTE GEZİNMESİ — her sayfanın altında.
+  // Altbilgi yalnızca JavaScript çalıştıktan sonra oluşuyordu; arama motorunun
+  // ilk gördüğü HTML'de blog, fiyatlandırma, API ve yasal sayfalara giden
+  // HİÇBİR bağlantı yoktu (denetimde 14 sayfa "öksüz" çıktı). İç bağlantı,
+  // "bu sayfa önemli mi" kararındaki en güçlü sinyallerden biridir.
+  const gezinme = t.siteNav
+    .filter(([p]) => p !== routePathOf(meta))
+    .map(([p, ad]) => `<li><a href="${href(p, lang)}">${escapeHtml(ad)}</a></li>`)
+    .join("");
+  parts.push(
+    `<nav aria-label="${t.ariaSiteNav}" class="seo-sitenav"><h2>${t.siteNavHeading}</h2><ul>${gezinme}</ul></nav>`,
+  );
+
   return `<div id="root"><main class="seo-prerender">${parts.join("")}</main></div>`;
 }
 
@@ -721,7 +811,8 @@ function renderSitemapHreflang(baseUrl, routePath) {
 // ─── Tam HTML ─────────────────────────────────────────────────────────────────
 function renderPrerenderHtml(baseUrl, routePath, lang) {
   const t = UI[lang];
-  const meta = pageMetaForRoute(routePath, lang);
+  // routePath: gövdedeki site gezinmesinin sayfanın kendisini gizlemesi için.
+  const meta = { ...pageMetaForRoute(routePath, lang), routePath };
   const canonicalUrl = urlForRoute(baseUrl, routePath, lang);
   const robots = meta.index
     ? meta.follow
