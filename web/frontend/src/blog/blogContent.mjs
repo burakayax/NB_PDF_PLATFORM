@@ -24,7 +24,7 @@ export const BLOG_POSTS = [
     {
       title: "Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız",
       description:
-        "Sejda'nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz.",
+        "Sejda'nın ücretsiz planı saatte 3 işlemle sınırlı. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz.",
       excerpt:
         "Sejda iyi bir araç — özellikle PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri. Ama ücretsiz planı saat başına ölçülüyor ve arka arkaya belge işlerken o duvara sık çarpılıyor.",
       blocks: [
@@ -85,7 +85,7 @@ export const BLOG_POSTS = [
     {
       title: "A Sejda Alternative for When Three Tasks an Hour Runs Out",
       description:
-        "Looking for a Sejda alternative? The free tier is capped at three tasks per hour, and that wall arrives early if you work in batches. An honest comparison with tools that have no hourly cap because they run in your browser.",
+        "Looking for a Sejda alternative? The free tier is capped at three tasks per hour. An honest comparison with tools that have no hourly cap.",
       excerpt:
         "Sejda is a good tool — one of the few online editors that genuinely changes the text inside a PDF. But its free tier is metered by the hour, and anyone working through a batch hits that wall fast.",
       blocks: [
@@ -157,7 +157,7 @@ export const BLOG_POSTS = [
     {
       title: "DocuSign Alternatifi: Ayda 5 Belge Sınırına Takılıyorsanız",
       description:
-        "DocuSign'ın bireysel planı ayda 5 belgeyle sınırlı. Daha fazlasına ihtiyacı olan ama kurumsal pakete de ihtiyacı olmayanlar için imza isteme akışını, denetim kaydını ve maliyeti karşılaştırıyoruz.",
+        "DocuSign'ın bireysel planı ayda 5 belgeyle sınırlı. Daha fazlasına ihtiyacı olanlar için imza akışını, denetim kaydını ve maliyeti karşılaştırıyoruz.",
       excerpt:
         "DocuSign iyi bir ürün ama fiyatlandırması «zarf» üzerinden işliyor ve bireysel plan ayda 5 belgeyle sınırlı. Ayda on sözleşme gönderen küçük bir işletme için bu erken biten bir paket.",
       blocks: [
@@ -228,9 +228,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "DocuSign Alternatives: When Five Documents a Month Is Not Enough",
+      title: "DocuSign Alternatives When 5 Documents a Month Runs Out",
       description:
-        "Looking at DocuSign alternatives? The personal plan caps at five documents a month. For people who need more but do not need an enterprise contract, an honest comparison of signature requests, audit records and cost.",
+        "Looking at DocuSign alternatives? The personal plan caps at five documents a month. An honest comparison of signature requests, audit records and cost.",
       excerpt:
         "DocuSign is a good product, but it is priced per envelope and the personal plan stops at five documents a month. For a small business sending ten contracts, that is a plan that runs out mid-month.",
       blocks: [
@@ -312,9 +312,9 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "PDF24 Alternatifi: Mac ve Linux'ta Çevrimdışı Seçenek Neden Yok?",
+      title: "PDF24 Alternatifi: Mac ve Linux İçin Çözüm",
       description:
-        "PDF24 iki ayrı ürün: çevrimiçi araçlar her sistemde çalışır ama dosyayı sunucuya yükler; çevrimdışı Creator yüklemez ama yalnızca Windows'ta vardır. Mac, Linux ve Android'de bu boşluğun nasıl kapandığını anlatıyoruz.",
+        "PDF24'ün çevrimiçi araçları dosyayı sunucuya yükler; çevrimdışı Creator yalnızca Windows'ta. Mac ve Linux'ta bu boşluk nasıl kapanır, anlatıyoruz.",
       excerpt:
         "PDF24 kullanıcılarının Mac ve Linux için alternatif aramasının somut bir sebebi var: çevrimdışı sürüm yalnızca Windows'ta. Diğer sistemlerde geriye dosyayı sunucuya yükleyen çevrimiçi araçlar kalıyor.",
       blocks: [
@@ -375,9 +375,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "A PDF24 Alternative for Mac and Linux: Why There Is No Offline Option",
+      title: "A PDF24 Alternative for Mac and Linux (No Offline App)",
       description:
-        "Looking for a PDF24 alternative on Mac or Linux? PDF24 is two products: the online tools run everywhere but upload your file, while the offline Creator exists only for Windows. Here is how that gap gets closed.",
+        "Looking for a PDF24 alternative on Mac or Linux? The online tools upload your file and the offline Creator is Windows-only. Here is how to close that gap.",
       excerpt:
         "There is a concrete reason PDF24 users search for a Mac or Linux alternative: the offline version is Windows-only. On every other system you are left with the online tools, which upload your file.",
       blocks: [
@@ -451,7 +451,7 @@ export const BLOG_POSTS = [
     {
       title: "Microsoft Lens Kapandı: Telefonla Belge Taramaya Ne Kaldı?",
       description:
-        "Microsoft Lens 9 Mart 2026'da emekliye ayrıldı. Yerine ne kullanılır? Uygulama kurmadan, telefon tarayıcısından, belge cihazdan çıkmadan tarama dahil seçenekleri dürüstçe karşılaştırıyoruz.",
+        "Microsoft Lens 9 Mart 2026'da emekliye ayrıldı. Yerine ne kullanılır? Uygulama kurmadan, telefon tarayıcısından tarama seçeneklerini karşılaştırıyoruz.",
       excerpt:
         "On yıldır kullanılan Microsoft Lens kapandı ve Microsoft kullanıcıları OneDrive'a yönlendiriyor. Ama herkes buluta yüklemek istemiyor. Telefonla belge taramanın bugünkü seçeneklerine bakalım.",
       blocks: [
@@ -519,7 +519,7 @@ export const BLOG_POSTS = [
     {
       title: "Microsoft Lens Is Gone: What to Use for Phone Scanning Now",
       description:
-        "Looking for a Microsoft Lens alternative? Lens was retired on 9 March 2026. An honest look at what replaces it, including scanning from your phone browser with no app to install and nothing uploaded.",
+        "Looking for a Microsoft Lens alternative? Lens was retired in March 2026. What replaces it, including scanning from your phone browser with no app.",
       excerpt:
         "Microsoft Lens is retired and Microsoft points users at OneDrive — but not everyone wants their documents in someone's cloud. Here are the realistic options for scanning with your phone in 2026.",
       blocks: [
@@ -596,9 +596,9 @@ export const BLOG_POSTS = [
       tool: "/tools/extract-images",
     },
     {
-      title: "PDF'ten Resim (Görsel) Çıkarma: Gömülü Fotoğrafları Kayıpsız İndirin",
+      title: "PDF'ten Resim Çıkarma: Gömülü Fotoğrafları Kayıpsız İndir",
       description:
-        "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın. \"PDF'i resme çevirme\" ile \"PDF'ten görsel çıkarma\" arasındaki farkı açıklıyor, en kolay yolu adım adım gösteriyoruz.",
+        "PDF içindeki gömülü fotoğraf ve logoları özgün kalitesinde çıkarın. Resme çevirme ile görsel çıkarma arasındaki farkı adım adım anlatıyoruz.",
       excerpt:
         "PDF'in içindeki resimleri kaydetmek istiyor ama ekran görüntüsüyle kalite mi kaybediyorsunuz? PDF'i resme çevirmekle gömülü görselleri çıkarmak farklı şeylerdir — bu yazıda ikisini ayırıp en kolay yolu gösteriyoruz.",
       blocks: [
@@ -646,9 +646,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Extract Images from a PDF: Save Embedded Photos Without Quality Loss",
+      title: "Extract Images from a PDF Without Quality Loss",
       description:
-        "Pull embedded photos and logos out of a PDF at original quality. We explain the difference between \"PDF to image\" and \"extract images from PDF\" and show the easiest way, step by step.",
+        "Pull embedded photos and logos out of a PDF at original quality. We explain how this differs from PDF-to-image and show the easiest way, step by step.",
       excerpt:
         "Want to save the pictures inside a PDF but keep losing quality with screenshots? Converting pages to images and extracting embedded images are different things — this guide separates them and shows the easiest way.",
       blocks: [
@@ -710,7 +710,7 @@ export const BLOG_POSTS = [
     {
       title: "Faturadan Excel'e Veri Aktarma: 2026 Rehberi (3 Yöntem)",
       description:
-        "PDF faturalardaki verileri Excel'e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya nasıl dökeceğinizi adım adım anlatıyoruz.",
+        "PDF faturalardaki verileri Excel'e (CSV) aktarmanın 3 yolu — elle, OCR ile ve yapay zekâ ile. Onlarca faturayı tek tabloya adım adım dökün.",
       excerpt:
         "PDF faturaları elle Excel'e girmek yavaş ve hataya açık. Bu rehberde faturadan veri aktarmanın 3 yöntemini karşılaştırıp, onlarca faturayı tek tabloya saniyeler içinde nasıl dökeceğinizi gösteriyoruz.",
       blocks: [
@@ -991,7 +991,7 @@ export const BLOG_POSTS = [
     },
     {
       title: "PDF Boyutunu Küçültme (Sıkıştırma): E-postaya Sığdırın",
-      description: "PDF dosya boyutunu küçültün — e-posta eki sınırlarına takılmadan, gereksiz kalite kaybı olmadan paylaşın. PDF'lerin neden büyüdüğünü ve nasıl küçülteceğinizi anlatıyoruz.",
+      description: "PDF dosya boyutunu küçültün — e-posta eki sınırlarına takılmadan, gereksiz kalite kaybı olmadan paylaşın. PDF'ler neden büyür, nasıl küçülür?",
       excerpt: "E-posta \"dosya çok büyük\" mü diyor? PDF'ler çoğunlukla içindeki görseller yüzünden şişer. Bu yazıda boyutu nasıl küçülteceğinizi ve neye dikkat edeceğinizi anlatıyoruz.",
       blocks: [
         { t: "lead", x: "Çoğu e-posta servisi 20-25 MB ek sınırı koyar. Taranmış ya da görsel yoğun bir PDF bu sınırı kolayca aşar. İyi haber: çoğu PDF, gözle görülür kalite kaybı olmadan önemli ölçüde küçültülebilir." },
@@ -1265,7 +1265,7 @@ export const BLOG_POSTS = [
     },
     {
       title: "İhale Şartnamesi Nasıl Okunur? Nelere Dikkat Etmeli",
-      description: "İhale şartnamesindeki kritik maddeleri kaçırmadan okuyun: teminat, cayma bedeli, son teklif tarihi, istenen belgeler. Yapay zekâ ile şartnameyi dakikalar yerine saniyelerde kavrayın.",
+      description: "İhale şartnamesindeki kritik maddeleri kaçırmayın: teminat, cayma bedeli, son teklif tarihi, istenen belgeler. Yapay zekâ ile saniyede kavrayın.",
       excerpt: "Onlarca sayfalık bir ihale şartnamesinde asıl önemli olan birkaç maddeyi kaçırmak pahalıya patlar. Yapay zekânın şartnameyi nasıl okunur hale getirdiğini anlatıyoruz.",
       blocks: [
         { t: "lead", x: "İhale şartnameleri uzun, teknik ve yoğundur; ama başarı ya da eleme çoğu zaman birkaç kritik maddeye bağlıdır. Bu yazıda bir şartnamede mutlaka bakmanız gerekenleri ve süreci nasıl hızlandıracağınızı anlatıyoruz." },
@@ -1561,7 +1561,7 @@ export const BLOG_POSTS = [
     },
     {
       title: "Onlarca Faturayı Muhasebeye Hazırlama (Toplu İşlem)",
-      description: "Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu muhasebe kapanışını saatlerden dakikalara indirin.",
+      description: "Bir klasör dolusu PDF faturayı tek seferde işleyip verilerini tek bir Excel (CSV) tablosunda toplayın. Ay sonu kapanışı saatlerden dakikalara insin.",
       excerpt: "Ay sonu geldi, elinizde onlarca PDF fatura var ve hepsini tek tek muhasebeye girmeniz gerekiyor. Bunu toplu işlemle nasıl dakikalara indireceğinizi anlatıyoruz.",
       blocks: [
         { t: "lead", x: "Küçük işletmeler ve serbest çalışanlar için ay sonu, PDF faturaları tek tek açıp muhasebe tablosuna girmekle geçer. Toplu işlemle bu iş, her faturayı ayrı ayrı açmadan, tek adımda hallolur." },
@@ -1616,9 +1616,9 @@ export const BLOG_POSTS = [
       tool: "/tools/delete-pages",
     },
     {
-      title: "PDF'ten Sayfa Silme: Üyeliksiz, Ücretsiz ve Cihazınızda (2026)",
+      title: "PDF'ten Sayfa Silme: Üyeliksiz ve Ücretsiz (2026)",
       description:
-        "PDF'ten istediğiniz sayfaları silmenin en kolay yolu — üyeliksiz, ücretsiz ve dosyanız cihazınızdan çıkmadan. Boş, gereksiz ya da hatalı sayfaları saniyeler içinde çıkarın.",
+        "PDF'ten istediğiniz sayfaları silmenin en kolay yolu — üyeliksiz, ücretsiz ve dosyanız cihazınızdan çıkmadan. Boş ya da hatalı sayfaları çıkarın.",
       excerpt:
         "Bir PDF'te boş, tekrar eden ya da istemediğiniz sayfalar mı var? Bunları silmek için pahalı programa veya üyeliğe gerek yok. İşte tamamen tarayıcınızda, adım adım.",
       blocks: [
@@ -1662,7 +1662,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Delete Pages from a PDF: Free, No Signup, On Your Device (2026)",
+      title: "How to Delete Pages from a PDF: Free, No Signup (2026)",
       description:
         "The easiest way to delete pages from a PDF — free, no signup and your file never leaves your device. Remove blank, duplicate or unwanted pages in seconds.",
       excerpt:
@@ -1720,9 +1720,9 @@ export const BLOG_POSTS = [
       tool: "/tools/rotate-pdf",
     },
     {
-      title: "Yan Dönmüş PDF'i Düzeltme: PDF Döndürme ve Kalıcı Kaydetme (2026)",
+      title: "PDF Döndürme ve Kalıcı Kaydetme (2026)",
       description:
-        "Yan ya da ters taranmış bir PDF'i doğru yöne çevirip kalıcı olarak kaydedin — üyeliksiz, ücretsiz ve cihazınızda. Tek sayfa ya da tüm belgeyi saniyeler içinde düzeltin.",
+        "Yan ya da ters taranmış bir PDF'i doğru yöne çevirip kalıcı olarak kaydedin — üyeliksiz, ücretsiz ve cihazınızda. Tek sayfa ya da tüm belge.",
       excerpt:
         "Taradığınız belge yan mı çıktı? Görüntüleyicide çevirdiğinizde tekrar bozuluyor mu? PDF'i kalıcı olarak döndürüp doğru yönde kaydetmenin yolu — tamamen tarayıcınızda.",
       blocks: [
@@ -1760,7 +1760,7 @@ export const BLOG_POSTS = [
     {
       title: "Fix a Sideways PDF: Rotate Pages and Save Permanently (2026)",
       description:
-        "Rotate a sideways or upside-down scanned PDF to the right orientation and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds.",
+        "Rotate a sideways or upside-down scanned PDF and save it permanently — free, no signup, on your device. Fix one page or the whole file in seconds.",
       excerpt:
         "Did your scan come out sideways? Does rotating in the viewer reset every time? Here's how to rotate a PDF permanently and save it the right way up — entirely in your browser.",
       blocks: [
@@ -1808,7 +1808,7 @@ export const BLOG_POSTS = [
       tool: "/tools/organize-pdf",
     },
     {
-      title: "PDF Sayfa Sırasını Değiştirme: Sayfaları Yeniden Düzenleme (2026)",
+      title: "PDF Sayfa Sırasını Değiştirme ve Yeniden Düzenleme",
       description:
         "PDF sayfalarını sürükleyerek yeniden sıralayın, karışık taranmış belgeleri düzeltin — üyeliksiz, ücretsiz ve cihazınızda. Adım adım rehber.",
       excerpt:
@@ -2010,7 +2010,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF'e Elektronik İmza Atma: Ücretsiz ve Üyeliksiz (2026)",
       description:
-        "PDF'e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşme ve formları saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz — üyeliksiz ve ücretsiz.",
+        "PDF'e imza nasıl atılır? İmzanızı çizin, yazın veya görsel yükleyin; sözleşmeleri saniyeler içinde imzalayın. İmzanız cihazınızdan çıkmaz.",
       excerpt:
         "Sözleşme, form ve dilekçeleri yazdırıp ıslak imzalayıp tekrar taramaya son. Bu rehberde PDF'e elektronik imzayı — imzayı çizerek, yazarak veya yükleyerek — cihazınızdan çıkmadan nasıl atacağınızı adım adım gösteriyoruz.",
       blocks: [
@@ -2170,7 +2170,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF Üzerine Yazma ve İşaretleme: Vurgu, Not ve Çizim",
       description:
-        "PDF üzerine nasıl yazılır ve işaretlenir? Fosforlu kalemle vurgu, serbest çizim, kutu, ok ve metin notu ekleyin. Yazı silinmez, her şey cihazınızda işlenir — üyeliksiz.",
+        "PDF üzerine nasıl yazılır ve işaretlenir? Fosforlu vurgu, serbest çizim, kutu, ok ve metin notu ekleyin. Her şey cihazınızda işlenir — üyeliksiz.",
       excerpt:
         "Bir belgeyi incelerken önemli yerleri işaretlemek, kenara not düşmek veya bir yeri kutuya almak istersiniz. PDF İşaretle aracıyla fosforlu vurgu, çizim, kutu, ok ve metin notunu — yazıyı silmeden, cihazınızdan çıkmadan — nasıl ekleyeceğinizi gösteriyoruz.",
       blocks: [
@@ -2203,7 +2203,7 @@ export const BLOG_POSTS = [
     {
       title: "How to Write and Mark Up a PDF: Highlight, Note and Draw",
       description:
-        "How to write on and mark up a PDF: add highlighter marks, freehand drawing, boxes, arrows and text notes. The text stays intact and everything runs on your device — no sign-up.",
+        "How to write on and mark up a PDF: add highlights, freehand drawing, boxes, arrows and text notes. Everything runs on your device — no sign-up.",
       excerpt:
         "Reviewing a document, you want to highlight what matters, jot a note in the margin or box a clause. Markup PDF lets you add highlights, drawings, boxes, arrows and text notes — without erasing the text and without your file leaving your device.",
       blocks: [
@@ -2241,9 +2241,9 @@ export const BLOG_POSTS = [
       tool: "/tools/image-to-pdf",
     },
     {
-      title: "Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)",
+      title: "Telefonla Belge Tarama: Uygulamasız ve Ücretsiz (2026)",
       description:
-        "Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, perspektif düzeltilir ve dosyanız cihazınızdan çıkmaz.",
+        "Telefonunuzun kamerasıyla belge tarayıp PDF yapın — uygulama kurmadan, tarayıcıda. Kenarlar otomatik bulunur, dosyanız cihazınızdan çıkmaz.",
       excerpt:
         "Bir sözleşmeyi, faturayı ya da not kağıdını hızlıca dijitalleştirmek için ayrı bir uygulama kurmanıza gerek yok. Telefonunuzun tarayıcısından belgeyi çekin; kenarları otomatik bulunsun, perspektifi düzelsin ve tek dokunuşla PDF olsun — hepsi cihazınızda.",
       blocks: [
@@ -2278,9 +2278,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Scan Documents with Your Phone: No App, Free, On Your Device (2026)",
+      title: "Scan Documents with Your Phone: No App, Free (2026)",
       description:
-        "Scan documents to PDF with your phone camera — no app to install, right in the browser. Edges are detected automatically, perspective is fixed and your file never leaves your device.",
+        "Scan documents to PDF with your phone camera — no app to install, right in the browser. Edges are detected automatically and nothing is uploaded.",
       excerpt:
         "You don't need a separate app to digitize a contract, invoice or note. Capture the document from your phone's browser; edges are detected, perspective is corrected and it becomes a PDF in one tap — all on your device.",
       blocks: [
@@ -2321,9 +2321,9 @@ export const BLOG_POSTS = [
       tool: "/tools/taranmis-pdf-ocr",
     },
     {
-      title: "Aranabilir PDF Nasıl Oluşturulur? OCR ile Ctrl+F'te Bulunan Belgeler",
+      title: "Aranabilir PDF Nasıl Oluşturulur? OCR ile Adım Adım",
       description:
-        "Taranmış bir belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyerek PDF'i aranabilir yapın — Türkçe destekli, tamamen cihazınızda.",
+        "Taranmış belge aslında bir resimdir; içinde arama yapılamaz. OCR ile görünmez metin katmanı ekleyip PDF'i aranabilir yapın — Türkçe destekli.",
       excerpt:
         "Telefonla taradığınız belge göze yazı gibi görünse de aslında bir fotoğraftır; Ctrl+F ile arayamaz, metni kopyalayamazsınız. Aranabilir PDF, görüntünün üzerine görünmez bir metin katmanı ekleyerek bunu çözer. Nasıl yapıldığını anlatıyoruz.",
       blocks: [
@@ -2357,9 +2357,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Create a Searchable PDF: OCR So You Can Find Text with Ctrl+F",
+      title: "How to Create a Searchable PDF with OCR (Step by Step)",
       description:
-        "A scanned document is really an image — you can't search it. Add an invisible text layer with OCR to make the PDF searchable — Turkish supported, entirely on your device.",
+        "A scanned document is really an image — you can't search it. Add an invisible text layer with OCR to make the PDF searchable, on your device.",
       excerpt:
         "A document you scan with your phone looks like text but is actually a photo; you can't search it with Ctrl+F or copy the text. A searchable PDF fixes this by adding an invisible text layer over the image. Here's how.",
       blocks: [
@@ -2399,9 +2399,9 @@ export const BLOG_POSTS = [
       tool: "/tools/image-to-pdf",
     },
     {
-      title: "Belge Fotoğrafını Düzgün PDF'e Çevirme: Eğiklik, Gölge ve Kenar Sorunları",
+      title: "Belge Fotoğrafını Düzgün PDF'e Çevirme (Eğiklik, Gölge)",
       description:
-        "Telefonla çekilen belge fotoğrafları çoğu zaman eğri ve gölgelidir. Otomatik perspektif düzeltme ve gölge temizleme ile fotoğrafı tarayıcı çıktısı gibi düzgün bir PDF'e çevirin.",
+        "Telefonla çekilen belge fotoğrafları çoğu zaman eğri ve gölgelidir. Otomatik perspektif ve gölge düzeltmeyle tarayıcı çıktısı gibi PDF alın.",
       excerpt:
         "Bir belgeyi telefonla çektiğinizde sonuç genelde eğri, köşeleri kırpık ve tek yanı gölgeli olur. İyi bir belge tarayıcı bunları otomatik düzeltir. Perspektif düzeltme ve gölge temizlemenin nasıl çalıştığını gösteriyoruz.",
       blocks: [
@@ -2434,9 +2434,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Turn a Document Photo into a Clean PDF: Skew, Shadows and Edges",
+      title: "Turn a Document Photo into a Clean PDF",
       description:
-        "Phone photos of documents are usually skewed and shadowed. With automatic perspective correction and shadow removal, turn the photo into a clean, scanner-like PDF.",
+        "Phone photos of documents are usually skewed and shadowed. With automatic perspective correction and shadow removal, get a clean, scanner-like PDF.",
       excerpt:
         "When you photograph a document, the result is usually skewed, with clipped corners and a shadow on one side. A good document scanner fixes these automatically. Here's how perspective correction and shadow removal work.",
       blocks: [
@@ -2475,7 +2475,7 @@ export const BLOG_POSTS = [
       tool: "/tools/image-to-pdf",
     },
     {
-      title: "CamScanner'a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama",
+      title: "CamScanner'a Ücretsiz Alternatif: Tarayıcıda Tarama",
       description:
         "Uygulama kurmadan, filigransız ve dosyalarınızı buluta yüklemeden belge tarayın. Tarayıcıda çalışan, cihazınızda işleyen ücretsiz bir belge tarama alternatifi.",
       excerpt:
@@ -2508,9 +2508,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "A Free, Private CamScanner Alternative: Scan Documents in Your Browser",
+      title: "A Free, Private CamScanner Alternative for Your Browser",
       description:
-        "Scan documents without installing an app, without watermarks, and without uploading your files to the cloud. A free document-scanning alternative that runs in your browser and processes on your device.",
+        "Scan documents without installing an app, without watermarks and without uploading files. A free scanner that runs in your browser, on your device.",
       excerpt:
         "Document scanning apps are handy, but most show ads, stamp a watermark on the output, or upload your file to the cloud. Here's an alternative that runs in your browser, processes on your device, and keeps the core features free.",
       blocks: [
@@ -2555,7 +2555,7 @@ export const BLOG_POSTS = [
     {
       title: "Word'ü PDF'e Çevirme: Biçimi Bozmadan (2026 Rehberi)",
       description:
-        "Word (.doc/.docx) belgelerini düzen ve yazı tipleri korunacak şekilde PDF'e dönüştürün. Neden PDF'e çevirmelisiniz, nasıl yapılır ve nelere dikkat etmelisiniz — adım adım.",
+        "Word (.doc/.docx) belgelerini düzen ve yazı tipleri korunacak şekilde PDF'e dönüştürün. Nasıl yapılır, nelere dikkat etmelisiniz — adım adım.",
       excerpt:
         "Word belgenizi paylaşmadan önce PDF'e çevirmek, düzenin herkeste aynı görünmesini garanti eder. Biçimi bozmadan Word'den PDF'e dönüştürmenin en pratik yolunu ve püf noktalarını anlatıyoruz.",
       blocks: [
@@ -2586,7 +2586,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Convert Word to PDF Without Breaking Formatting (2026)",
+      title: "Convert Word to PDF Without Breaking Formatting",
       description:
         "Convert Word (.doc/.docx) documents to PDF while keeping layout and fonts intact. Why convert to PDF, how to do it, and what to watch for — step by step.",
       excerpt:
@@ -2633,7 +2633,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF'i JPG'ye / Resme Çevirme: Her Sayfa Ayrı Görsel",
       description:
-        "PDF sayfalarını yüksek çözünürlüklü JPG veya PNG görsellerine dönüştürün. Her sayfa ayrı bir görsel olur — sosyal medya, sunum ve web için pratik. Adım adım anlatım.",
+        "PDF sayfalarını yüksek çözünürlüklü JPG veya PNG görsellerine dönüştürün. Her sayfa ayrı bir görsel olur — adım adım anlatım.",
       excerpt:
         "Bir PDF sayfasını görsel olarak paylaşmak, web'e koymak veya sunuma eklemek gerektiğinde en temiz yol onu JPG/PNG'ye çevirmektir. Nasıl yapılacağını ve JPG mi PNG mi seçeceğinizi anlatıyoruz.",
       blocks: [
@@ -2717,9 +2717,9 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-duzenle",
     },
     {
-      title: "PDF Nasıl Düzenlenir: Mevcut Metni Gerçekten Silip Değiştirme",
+      title: "PDF Nasıl Düzenlenir: Metni Gerçekten Silip Değiştirme",
       description:
-        "Çoğu araç PDF metnini yalnızca ÜZERİNİ kapatır. PDF Düzenle aracı mevcut yazıyı gerçekten siler ve yerine yenisini yazar — Türkçe destekli. Nasıl yapılır, adım adım.",
+        "Çoğu araç PDF metninin yalnızca üzerini kapatır. PDF Düzenle mevcut yazıyı gerçekten siler ve yenisini yazar — Türkçe destekli, adım adım.",
       excerpt:
         "Bir PDF'te yanlış bir tarih, fiyat veya isim mi var? Çoğu 'düzenleyici' yazının üzerini beyaz kutuyla kapatır — metin altta durmaya devam eder. Gerçek düzenleme bundan farklıdır; işte nasıl yapıldığı.",
       blocks: [
@@ -2789,7 +2789,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF'i Excel'e Çevirme: Tabloları .xlsx'e Aktarma (2026)",
       description:
-        "PDF'teki tabloları düzenlenebilir Excel (.xlsx) dosyasına aktarın. Ne zaman düz dönüştürme, ne zaman yapay zekâ ile veri çıkarma daha iyi — adım adım anlatıyoruz.",
+        "PDF'teki tabloları düzenlenebilir Excel (.xlsx) dosyasına aktarın. Ne zaman düz dönüştürme, ne zaman yapay zekâ daha iyi — adım adım.",
       excerpt:
         "PDF'teki bir tabloyu Excel'de düzenlemek istiyorsanız, kopyala-yapıştır çoğu zaman hizalamayı bozar. Tabloları temiz şekilde .xlsx'e aktarmanın yolunu ve ne zaman AI'nın daha iyi olduğunu anlatıyoruz.",
       blocks: [
@@ -2853,7 +2853,7 @@ export const BLOG_POSTS = [
     {
       title: "Excel'i PDF'e Çevirme: Tabloları ve Düzeni Koruyarak (2026)",
       description:
-        "Excel (.xls/.xlsx) tablolarınızı hücreler ve düzen korunacak şekilde paylaşıma ve baskıya hazır PDF'e dönüştürün. Neden PDF'e çevirmeli, nasıl yapılır — adım adım.",
+        "Excel (.xls/.xlsx) tablolarınızı hücreler ve düzen korunacak şekilde baskıya hazır PDF'e dönüştürün. Neden ve nasıl — adım adım.",
       excerpt:
         "Excel dosyasını olduğu gibi göndermek çoğu zaman kayan hücreler ve bozuk sayfa düzeniyle sonuçlanır. Tabloları koruyarak Excel'i PDF'e çevirmenin ve baskıya hazır hâle getirmenin yolunu anlatıyoruz.",
       blocks: [
@@ -2961,7 +2961,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Convert PowerPoint to PDF (and PDF Back to PowerPoint)",
+      title: "How to Convert PowerPoint to PDF (and Back)",
       description:
         "Convert PPT/PPTX slides into a single PDF with the design preserved, or turn a PDF back into editable PowerPoint slides. Both directions, step by step.",
       excerpt:
@@ -3107,7 +3107,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Repair a Corrupt / Won't-Open PDF: Ways to Recover Content",
+      title: "How to Repair a Corrupt PDF That Won't Open",
       description:
         "PDF won't open, throws an error or looks corrupt? Try repairing the broken PDF and recovering its content. Why PDFs break and how to fix them — step by step.",
       excerpt:
@@ -3151,9 +3151,9 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-karsilastir",
     },
     {
-      title: "İki PDF'i Karşılaştırma: Sözleşme Sürümleri Arasındaki Farkı Bulma",
+      title: "İki PDF'i Karşılaştırma: Aradaki Farkı Bulma",
       description:
-        "İki PDF'i (ör. sözleşmenin eski ve yeni sürümü) yapay zekâ ile karşılaştırın; eklenen, çıkarılan ve değişen maddeleri — özellikle tutar, tarih ve yükümlülükleri — saniyeler içinde görün.",
+        "İki PDF'i yapay zekâ ile karşılaştırın; eklenen, çıkarılan ve değişen maddeleri — özellikle tutar, tarih ve yükümlülükleri — saniyede görün.",
       excerpt:
         "Bir sözleşmenin iki sürümünü satır satır karşılaştırmak yorucu ve risklidir; küçük bir değişiklik gözden kaçabilir. Yapay zekâ ile iki PDF arasındaki bağlayıcı farkları saniyeler içinde nasıl bulacağınızı anlatıyoruz.",
       blocks: [
@@ -3183,9 +3183,9 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Compare Two PDFs: Find the Differences Between Contract Versions",
+      title: "How to Compare Two PDFs and Find the Differences",
       description:
-        "Compare two PDFs (e.g., old and new versions of a contract) with AI; see added, removed and changed clauses — especially amounts, dates and obligations — in seconds.",
+        "Compare two PDFs with AI; see added, removed and changed clauses — especially amounts, dates and obligations — in seconds.",
       excerpt:
         "Comparing two versions of a contract line by line is tedious and risky; a small change can slip through. Here's how to find the binding differences between two PDFs in seconds with AI.",
       blocks: [
@@ -3229,7 +3229,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF'te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım",
       description:
-        "PDF'teki TC, IBAN, telefon, e-posta, isim ve adres gibi kişisel verileri KALICI olarak kaldırın — üzerini örtme değil, gerçek redaction. KVKK uyumlu paylaşım için adım adım.",
+        "PDF'teki TC, IBAN, telefon, e-posta ve adres gibi kişisel verileri kalıcı olarak kaldırın — üzerini örtme değil, gerçek redaction. Adım adım.",
       excerpt:
         "Bir belgeyi paylaşmadan önce içindeki TC kimlik, IBAN veya adres gibi kişisel verileri gizlemek çoğu zaman yasal bir zorunluluktur. Ama siyah kutu koymak yetmez — veri altta durmaya devam eder. Gerçek redaction'ı anlatıyoruz.",
       blocks: [
@@ -3261,7 +3261,7 @@ export const BLOG_POSTS = [
     {
       title: "Redact Sensitive Data in a PDF: Share Safely (GDPR/KVKK)",
       description:
-        "Permanently remove personal data like national ID, IBAN, phone, email, name and address from a PDF — real redaction, not covering up. Step by step for compliant sharing.",
+        "Permanently remove personal data like ID numbers, IBAN, phone, email and address from a PDF — real redaction, not covering up. Step by step.",
       excerpt:
         "Before sharing a document, hiding personal data like an ID number, IBAN or address is often a legal requirement. But a black box isn't enough — the data still sits underneath. Here's real redaction.",
       blocks: [
@@ -3303,9 +3303,9 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "Dosyanı Yüklemeden PDF İşleme: Neden Cihazda Çalışmak Daha Güvenli?",
+      title: "Dosya Yüklemeden PDF İşleme: Neden Daha Güvenli?",
       description:
-        "Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform'un yapısal araçları ise tamamen tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz. Neden önemli, hangi araçlar?",
+        "Çoğu online PDF aracı dosyanızı sunucuya yükler. PDF Platform'un yapısal araçları tarayıcınızda çalışır — dosyanız cihazınızdan hiç çıkmaz.",
       excerpt:
         "Bir PDF'i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.",
       blocks: [
@@ -3333,7 +3333,7 @@ export const BLOG_POSTS = [
     {
       title: "Process PDFs Without Uploading: Why On-Device Is Safer",
       description:
-        "Most online PDF tools upload your file to a server. PDF Platform's structural tools run entirely in your browser — your file never leaves your device. Why it matters, and which tools.",
+        "Most online PDF tools upload your file to a server. PDF Platform's structural tools run in your browser — your file never leaves your device.",
       excerpt:
         "Do you have to upload a PDF to an unknown server just to merge it? No. Most structural PDF operations can run entirely in your browser — without your file ever being sent to the internet.",
       blocks: [
@@ -3371,9 +3371,9 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "Telefonda PDF İşlemleri: Uygulama Yüklemeden Birleştir, Düzenle, Tara",
+      title: "Telefonda PDF İşlemleri: Uygulama Yüklemeden (2026)",
       description:
-        "Telefonda PDF birleştirme, sayfa silme, döndürme ve belge tarama — uygulama yüklemeden, doğrudan tarayıcıda. Yapısal işlemler cihazınızda çalışır, dosyanız gizli kalır.",
+        "Telefonda PDF birleştirme, sayfa silme, döndürme ve belge tarama — uygulama yüklemeden, doğrudan tarayıcıda. Dosyanız cihazınızda kalır.",
       excerpt:
         "PDF işlemek için telefonuna bir sürü uygulama yüklemene gerek yok. Birleştirme, sayfa silme, döndürme ve belge tarama gibi işler doğrudan telefon tarayıcında, dosyan cihazından çıkmadan yapılabilir.",
       blocks: [
@@ -3403,7 +3403,7 @@ export const BLOG_POSTS = [
     {
       title: "PDF on Your Phone: Merge, Edit and Scan Without an App",
       description:
-        "Merge, delete pages, rotate and scan documents on your phone — without installing an app, right in the browser. Structural tools run on your device; your file stays private.",
+        "Merge, delete pages, rotate and scan documents on your phone — no app to install, right in the browser. Your file stays on your device.",
       excerpt:
         "You don't need to install a bunch of apps to work with PDFs on your phone. Merging, deleting pages, rotating and scanning documents can happen right in your phone's browser, without your file leaving the device.",
       blocks: [
@@ -3445,7 +3445,7 @@ export const BLOG_POSTS = [
     {
       title: "En İyi Ücretsiz Online PDF Araçları (2026 Rehberi)",
       description:
-        "Birleştirme, dönüştürme, sıkıştırma, düzenleme ve yapay zekâ — ihtiyacınıza göre en iyi ücretsiz online PDF araçları. Hangi işi hangi araçla yapacağınızı kategorilere göre anlattık.",
+        "Birleştirme, dönüştürme, sıkıştırma, düzenleme ve yapay zekâ — ihtiyacınıza göre en iyi ücretsiz online PDF araçları, kategorilere göre.",
       excerpt:
         "\"En iyi ücretsiz PDF aracı\" diye tek bir cevap yok — işe göre değişir. Bu rehberde PDF işlerini kategorilere ayırıp her biri için doğru aracı ve nelere dikkat etmeniz gerektiğini anlatıyoruz.",
       blocks: [
@@ -3524,7 +3524,7 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan Ücretsiz PDF Araçları",
+      title: "iLovePDF Alternatifi: Dosyanız Cihazdan Çıkmadan",
       description:
         "iLovePDF'ye ücretsiz ve gizli bir alternatif mi arıyorsunuz? Birleştir, böl, döndür, sil gibi araçları dosyanız sunucuya hiç gitmeden, tarayıcınızda kullanın.",
       excerpt:
@@ -3588,7 +3588,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "iLovePDF Alternative: Free PDF Tools That Keep Your File On Your Device",
+      title: "iLovePDF Alternative: Free PDF Tools, File Stays On Device",
       description:
         "Looking for a free, private alternative to iLovePDF? Use merge, split, rotate and delete right in your browser — your file is never uploaded to a server.",
       excerpt:
@@ -3663,7 +3663,7 @@ export const BLOG_POSTS = [
       tool: "/tools/word-to-pdf",
     },
     {
-      title: "CV'yi (Özgeçmiş) Word'den PDF'e Çevirme — İş Başvurusu İçin Doğru Yöntem",
+      title: "CV'yi Word'den PDF'e Çevirme: İş Başvurusu İçin Doğrusu",
       description:
         "Word'de hazırladığınız özgeçmişi biçimi bozulmadan PDF'e çevirin. İşverenlerin beklediği profesyonel format, doğru dosya adı ve adım adım dönüştürme.",
       excerpt:
@@ -3748,7 +3748,7 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "SmallPDF Alternatifi: Günlük Sınır ve Filigran Olmadan Ücretsiz PDF Araçları",
+      title: "SmallPDF Alternatifi: Günlük Sınır ve Filigran Olmadan",
       description:
         "SmallPDF'nin günlük işlem sınırı ve üyelik baskısı olmadan PDF araçları arıyorsanız: birleştir, böl, döndür, sıkıştır — sınırsız, üyeliksiz ve cihazınızda.",
       excerpt:
@@ -3780,7 +3780,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "SmallPDF Alternative: Free PDF Tools With No Daily Limit or Watermark",
+      title: "SmallPDF Alternative: No Daily Limit, No Watermark",
       description:
         "Want PDF tools without SmallPDF's daily task limit and signup pressure? Merge, split, rotate and compress — unlimited, no signup, and on your device.",
       excerpt:
@@ -3823,7 +3823,7 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-yorumla",
     },
     {
-      title: "PDF Form Doldurma: Yazdırmadan, Online ve Ücretsiz (Düz Formlar Dahil)",
+      title: "PDF Form Doldurma: Online, Ücretsiz ve Yazdırmadan",
       description:
         "PDF formlarını yazdırmadan bilgisayarda doldurun. Doldurulabilir alanı olmayan (düz/taranmış) formlara bile metin ekleyip imzalayın — ücretsiz ve kolay.",
       excerpt:
@@ -3896,7 +3896,7 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "Adobe Acrobat Alternatifi: Program Kurmadan, Ücretsiz PDF İşlemleri",
+      title: "Adobe Acrobat Alternatifi: Ücretsiz ve Kurulumsuz",
       description:
         "Adobe Acrobat'a ücretsiz bir alternatif mi arıyorsunuz? Birleştir, böl, dönüştür, imzala ve metin ekle — kurulum yok, çoğu iş için ücret yok, tarayıcıda.",
       excerpt:
@@ -3965,7 +3965,7 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-duzenle",
     },
     {
-      title: "Ücretsiz PDF Düzenleyici: Metin Ekleme, Silme, İmza ve Form Doldurma",
+      title: "Ücretsiz PDF Düzenleyici: Metin, İmza ve Form Doldurma",
       description:
         "PDF'i ücretsiz düzenleyin: mevcut yazıyı değiştirin/silin, yeni metin ekleyin, imzalayın, işaretleyin ve form doldurun — kurulum yok, tarayıcıda.",
       excerpt:
@@ -4028,9 +4028,9 @@ export const BLOG_POSTS = [
       tool: "/tools/crop-pdf",
     },
     {
-      title: "PDF Kırpma: Kenar Boşluklarını Kesme ve Sayfayı Daraltma (Ücretsiz)",
+      title: "PDF Kırpma: Kenar Boşluklarını Kesme (Ücretsiz)",
       description:
-        "PDF sayfalarını tarayıcınızda kırpın: kenar boşluklarını kesin, tabloya/grafiğe odaklanın ya da üst/alt bilgiyi çıkarın — dosyanız cihazınızdan çıkmadan, ücretsiz.",
+        "PDF sayfalarını tarayıcınızda kırpın: kenar boşluklarını kesin, tabloya odaklanın ya da üst/alt bilgiyi çıkarın — ücretsiz, dosyanız çıkmadan.",
       excerpt:
         "Taranmış belgelerin geniş boşlukları, tek bir tabloya odaklanma ya da üst/alt bilgiyi çıkarma... PDF'i cihazınızda nasıl kırparsınız — adım adım.",
       blocks: [
@@ -4107,7 +4107,7 @@ export const BLOG_POSTS = [
       tool: "/tools/merge-pdf",
     },
     {
-      title: "Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi (Gizlilik ve Güvenlik)",
+      title: "Ücretsiz PDF Aracı Nasıl Seçilir? 2026 Rehberi",
       description:
         "Her \"ücretsiz PDF aracı\" aynı değil. Dosya yükleme, üyelik, filigran, günlük sınır ve gizlilik — bilinçli seçim için tam kontrol listesi ve karşılaştırma.",
       excerpt:
@@ -4157,7 +4157,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Choose a Free PDF Tool in 2026 (Privacy & Security Guide)",
+      title: "How to Choose a Free PDF Tool in 2026 (Privacy Guide)",
       description:
         "Not every \"free PDF tool\" is the same. Uploading, sign-up, watermarks, daily limits and privacy — a full checklist and comparison to choose wisely.",
       excerpt:
@@ -4218,7 +4218,7 @@ export const BLOG_POSTS = [
       tool: "/tools/compress",
     },
     {
-      title: "PDF'i E-postayla veya WhatsApp'ta Gönderilecek Kadar Küçültme",
+      title: "PDF'i E-posta ve WhatsApp İçin Küçültme",
       description:
         "PDF çok büyük, e-posta veya WhatsApp kabul etmiyor mu? Dosyayı gönderim sınırlarının altına indirmek için PDF sıkıştırma — metin ve görseller net kalır.",
       excerpt:
@@ -4295,7 +4295,7 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-yorumla",
     },
     {
-      title: "Telefonda PDF Düzenleme (Uygulamasız): Metin, İmza ve İşaretleme",
+      title: "Telefonda PDF Düzenleme: Uygulama Yüklemeden",
       description:
         "Telefonda uygulama kurmadan PDF düzenle: metin/not ekle, imzala, işaretle. Tarayıcıda çalışır — Android ve iPhone'da, dosyan cihazından çıkmadan.",
       excerpt:
@@ -4329,7 +4329,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "How to Edit a PDF on Your Phone (No App): Text, Signature, Markup",
+      title: "How to Edit a PDF on Your Phone Without an App",
       description:
         "Edit a PDF on your phone without installing an app: add text, sign, and annotate. Works in the browser on Android and iPhone, without uploading your file.",
       excerpt:
@@ -4374,7 +4374,7 @@ export const BLOG_POSTS = [
       tool: "/tools/gorsel-boyutlandir",
     },
     {
-      title: "Görsel Boyutlandırma: Sosyal Medya İçin Doğru Piksel Ölçüleri (2026)",
+      title: "Görsel Boyutlandırma: Sosyal Medya Piksel Ölçüleri 2026",
       description:
         "Instagram, Facebook, X, LinkedIn ve YouTube için güncel görsel ölçüleri ve bir resmi kalitesini bozmadan istediğiniz piksel ölçüsüne getirmenin en kolay yolu.",
       excerpt:
@@ -4441,7 +4441,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Image Resizing: The Right Pixel Sizes for Social Media (2026)",
+      title: "Image Resizing: The Right Pixel Sizes for Social Media",
       description:
         "Up-to-date image sizes for Instagram, Facebook, X, LinkedIn and YouTube, plus the easiest way to resize a picture to an exact pixel size without losing quality.",
       excerpt:
@@ -4519,9 +4519,9 @@ export const BLOG_POSTS = [
       tool: "/tools/pdf-kesit-al",
     },
     {
-      title: "PDF'ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin",
+      title: "PDF'ten Kesit Alma: Tabloyu veya Grafiği Görsel Kaydetme",
       description:
-        "PDF sayfasının bir bölümünü yüksek çözünürlüklü görsel olarak kaydedin. Ekran görüntüsünün neden bulanık kaldığını ve kesit almanın nasıl çalıştığını adım adım anlatıyoruz.",
+        "PDF sayfasının bir bölümünü yüksek çözünürlüklü görsel olarak kaydedin. Ekran görüntüsü neden bulanık kalır, kesit nasıl alınır — adım adım.",
       excerpt:
         "PDF'teki bir tabloyu, grafiği ya da soruyu sunuma almak istiyor ama ekran görüntüsü bulanık mı çıkıyor? Kesit almak bambaşka bir iş — bu yazıda farkı ve en kolay yolu gösteriyoruz.",
       blocks: [
@@ -4585,7 +4585,7 @@ export const BLOG_POSTS = [
       ],
     },
     {
-      title: "Snip from a PDF: Save a Table, Chart or Question as a Sharp Image",
+      title: "Snip from a PDF: Save a Table or Chart as an Image",
       description:
         "Save part of a PDF page as a high-resolution image. We explain why screenshots come out blurry and show how snipping works, step by step.",
       excerpt:

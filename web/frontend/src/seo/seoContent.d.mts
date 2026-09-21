@@ -34,6 +34,9 @@ export const TOOL_SLUGS: string[];
 export const TOOL_SEO: Record<string, Record<SeoLang, ToolSeoCopy>>;
 export const LANDING_SEO: Record<SeoLang, PageSeoCopy>;
 export const PRICING_SEO: Record<SeoLang, PageSeoCopy>;
+export const API_SEO: Record<SeoLang, PageSeoCopy>;
+export const API_DOCS_SEO: Record<SeoLang, PageSeoCopy>;
+export const markaEkle: (title: string) => string;
 export const LEGAL_SEO: Record<
   "terms" | "privacy" | "kvkk",
   Record<SeoLang, PageSeoCopy>

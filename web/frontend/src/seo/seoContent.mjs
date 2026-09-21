@@ -77,8 +77,19 @@ export const TOOL_SLUGS = [
   "hassas-veri-gizle",
 ];
 
+/**
+ * Başlığa marka ekini YALNIZCA 60 karakterlik görünür sınıra sığdığında ekler.
+ *
+ * Google arama sonucunda başlığı ~60 karakterde keser. Marka eki 15 karakter
+ * yer kaplıyordu ve 34 araç/ticari sayfanın başlığını sınırın dışına taşırıp
+ * markayı zaten görünmez hâle getiriyordu (site geneli denetimle ölçüldü).
+ * Marka adı og:site_name, yapısal veri ve alan adında zaten görünür.
+ */
+export const markaEkle = (title) =>
+  title.length + " | ".length + BRAND.length <= 60 ? `${title} | ${BRAND}` : title;
+
 const T = (title, description, h1, intro, keywords, faq) => ({
-  title: `${title} | ${BRAND}`,
+  title: markaEkle(title),
   description,
   h1,
   intro,
@@ -120,8 +131,8 @@ export const TOOL_SEO = {
   },
   "gorsel-sikistir": {
     tr: T(
-      "Görsel Sıkıştırma — resim boyutunu küçült, online ve ücretsiz",
-      "JPG, PNG ve WebP görselleri tarayıcınızda sıkıştırın. Kalite ve boyutu ayarlayarak dosya boyutunu küçültün — görseliniz cihazınızdan çıkmadan, üyeliksiz ve ücretsiz.",
+      "Görsel Sıkıştırma — resim boyutunu küçült, ücretsiz",
+      "JPG, PNG ve WebP görselleri tarayıcınızda sıkıştırın. Kalite ve boyutu ayarlayın — görseliniz cihazınızdan çıkmaz, üyeliksiz ve ücretsiz.",
       "Görsel Sıkıştırma",
       "Fotoğraf ve görsellerinizin dosya boyutunu küçültün: kaliteyi ve en büyük kenarı ayarlayın, JPEG veya WebP olarak yeniden kodlayın; önce/sonra boyutunu ve kazancı anında görün. Sıkıştırma tamamen tarayıcınızda (cihazınızda) çalışır — görseliniz sunucuya yüklenmez. E-posta, WhatsApp ve web için ideal; üyelik ve kurulum gerekmez.",
       ["görsel sıkıştırma", "resim sıkıştırma", "fotoğraf boyutu küçültme", "jpg sıkıştırma", "png sıkıştırma", "online resim sıkıştırıcı", "resim boyutlandırma"],
@@ -150,8 +161,8 @@ export const TOOL_SEO = {
   },
   "gorsel-boyutlandir": {
     tr: T(
-      "Görsel Boyutlandırma — resmi istediğin piksel ölçüsüne getir, ücretsiz",
-      "JPG, PNG ve WebP görselleri istediğiniz piksel ölçüsüne getirin. Instagram, Facebook, X, LinkedIn ve YouTube için hazır ölçüler; Lanczos süzgeciyle net sonuç — görseliniz cihazınızdan çıkmaz.",
+      "Görsel Boyutlandırma — istediğin piksel ölçüsüne getir",
+      "JPG, PNG ve WebP görselleri istediğiniz piksel ölçüsüne getirin. Instagram, X ve LinkedIn için hazır ölçüler — görseliniz cihazınızdan çıkmaz.",
       "Görsel Boyutlandırma",
       "Bir görseli tam olarak istediğiniz piksel ölçüsüne getirin: genişlik-yükseklik yazın ya da Instagram gönderi, hikâye, Facebook kapak, X başlık, LinkedIn gönderi, YouTube küçük resmi gibi hazır ölçülerden seçin. Oranı koruyabilir, ölçüyü doldurabilir (ortadan kırpma), boşluklu sığdırabilir veya esnetebilirsiniz. Ölçekleme Lanczos (mks2013) süzgeciyle yapılır — tarayıcının kendi ölçeklemesine göre belirgin biçimde daha net sonuç verir. Tüm işlem tarayıcınızda çalışır; görseliniz sunucuya yüklenmez, üyelik ve kurulum gerekmez.",
       ["görsel boyutlandırma", "resim boyutlandırma", "fotoğraf boyutu değiştirme", "instagram görsel boyutu", "sosyal medya görsel ölçüleri", "resim yeniden boyutlandırma", "online resize"],
@@ -166,7 +177,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Resize Image — set any pixel size, online and free",
-      "Resize JPG, PNG and WebP images to any pixel size. Ready-made sizes for Instagram, Facebook, X, LinkedIn and YouTube, with sharp Lanczos scaling — your image never leaves your device.",
+      "Resize JPG, PNG and WebP images to any pixel size. Ready-made sizes for Instagram, X and LinkedIn — your image never leaves your device.",
       "Resize Image",
       "Set an image to exactly the pixel size you need: type a width and height, or pick a ready-made size such as an Instagram post or story, Facebook cover, X header, LinkedIn post or YouTube thumbnail. Keep the aspect ratio, fill the size (centre crop), fit it with padding, or stretch it. Scaling uses a Lanczos (mks2013) filter — noticeably sharper than the browser's built-in scaling. Everything runs in your browser; your image is never uploaded, and no signup or installation is needed.",
       ["resize image", "image resizer", "change image size", "instagram image size", "social media image sizes", "resize photo online", "image dimensions"],
@@ -183,7 +194,7 @@ export const TOOL_SEO = {
   "pdf-kesit-al": {
     tr: T(
       "PDF'ten Kesit Alma — sayfadan görsel kırp, ücretsiz",
-      "PDF sayfasında istediğiniz alanı seçip yüksek çözünürlüklü görsel olarak kaydedin. Tablo, grafik, soru ya da şemayı PNG/JPG olarak alın — belgeniz cihazınızdan çıkmaz.",
+      "PDF sayfasında istediğiniz alanı seçip yüksek çözünürlüklü görsel olarak kaydedin. Tablo, grafik ya da şemayı PNG/JPG alın — belgeniz çıkmaz.",
       "PDF'ten Kesit Alma",
       "Bir PDF sayfasının istediğiniz bölgesini seçip yüksek çözünürlüklü görsel olarak dışa aktarın: tablo, grafik, şema, logo ya da tek bir soru. Ekran görüntüsünden farklı olarak kesit doğrudan belgeden, seçtiğiniz çözünürlükte (1x/2x/3x) çizilir; bu yüzden çok daha nettir. Aldığınız kesitler bir sepette birikir: sırasını değiştirebilir, hepsini tek seferde ZIP olarak indirebilir ya da A4 sayfalara sırayla dizilmiş, yazdırmaya hazır tek bir çalışma kâğıdına dönüştürebilirsiniz (tek veya iki sütun). Tüm işlem tarayıcınızda çalışır; belgeniz sunucuya yüklenmez, üyelik ve kurulum gerekmez.",
       ["pdf kesit alma", "pdf'ten görsel kırpma", "pdf'ten resim kesme", "pdf tablo görsel kaydetme", "pdf ekran görüntüsü", "pdf'ten soru kırpma", "pdf alan seçip kaydetme"],
@@ -198,7 +209,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Snip PDF to Image — crop any area of a page, free",
-      "Select any area of a PDF page and save it as a high-resolution image. Grab a table, chart, question or diagram as PNG/JPG — your document never leaves your device.",
+      "Select any area of a PDF page and save it as a high-resolution image. Grab a table, chart or diagram as PNG/JPG, right on your device.",
       "Snip PDF to Image",
       "Export any region of a PDF page as a high-resolution image: a table, chart, diagram, logo or a single question. Unlike a screenshot, the snip is rendered straight from the document at the resolution you choose (1x/2x/3x), so it is far sharper. Your snips collect in a basket: reorder them, download them all as a ZIP, or turn them into a single print-ready A4 worksheet with the snips laid out in order (one or two columns). Everything runs in your browser; your document is never uploaded, and no signup or installation is needed.",
       ["snip pdf", "crop image from pdf", "extract part of pdf as image", "save pdf table as image", "pdf screenshot tool", "crop pdf region", "pdf to png region"],
@@ -602,7 +613,7 @@ export const TOOL_SEO = {
     en: T(
       "PDF to JPG — convert pages to images",
       "Convert PDF pages to high-resolution JPG/PNG images. Download each page as a separate image — free online.",
-      "PDF to Image (JPG/PNG)",
+      "PDF to JPG / PNG — Convert Pages to Images",
       "Convert PDF pages into high-quality JPG or PNG images. Each page is downloaded as a separate image — ideal for slides and web use.",
       ["pdf to jpg", "pdf to image", "pdf to png", "convert pdf to image"],
       [
@@ -633,7 +644,7 @@ export const TOOL_SEO = {
     en: T(
       "JPG to PDF — combine images into PDF",
       "Combine JPG, PNG and WebP images into a single PDF file. Turn photos and scans into PDF — free and online.",
-      "Image to PDF (JPG/PNG)",
+      "JPG / PNG to PDF — Combine Images into PDF",
       "Merge multiple JPG, PNG or WebP images into one PDF. Reorder them and turn photos, scans and screenshots into a shareable PDF.",
       ["jpg to pdf", "image to pdf", "png to pdf", "photos to pdf"],
       [
@@ -665,7 +676,7 @@ export const TOOL_SEO = {
     en: T(
       "Document Scanner — Scan to PDF with Phone",
       "Scan documents to PDF with your phone camera. Edges are detected automatically, perspective is corrected — no app, free and on your device.",
-      "Scan Documents to PDF — Free Online Scanner",
+      "Document Scanner — Scan to PDF with Your Phone",
       "Scan your document with your phone camera and turn it into a PDF in seconds. Edges are detected automatically and perspective is corrected; everything runs on your device — your document is never uploaded and there's no app to install. With multi-page scanning, shadow removal and searchable PDF (OCR).",
       ["document scanner", "scan to pdf", "scan document with phone", "pdf scanner", "free document scanner", "camera to pdf", "camscanner alternative"],
       [
@@ -992,7 +1003,7 @@ export const TOOL_SEO = {
   "pdf-ozetle": {
     tr: T(
       "PDF Özetle — Yapay Zekâ ile PDF Özeti",
-      "PDF'inizi yapay zekâ ile saniyeler içinde özetleyin. Taraflar, önemli tarihler, tutarlar ve çıkarımlarla profesyonel bir özet — ihale, sözleşme, rapor ve daha fazlası.",
+      "PDF'inizi yapay zekâ ile saniyeler içinde özetleyin. Taraflar, önemli tarihler ve tutarlarla profesyonel bir özet — ihale, sözleşme, rapor.",
       "Yapay Zekâ ile PDF Özetle",
       "Uzun raporu, sözleşmeyi ya da ihaleyi baştan sona okumadan; belgenin türünü tanıyıp taraflar, önemli tarihler, tutarlar ve sonuçlarla profesyonel bir özet çıkarın. Metin cihazınızda okunur; özet indirilebilir ve paylaşılabilir. Taranmış belgelerde OCR devreye girer.",
       ["pdf özetle", "pdf özetleme", "yapay zeka pdf özet", "ai ile pdf özeti", "belge özetleme", "sözleşme özetleme", "ihale özetleme"],
@@ -1085,8 +1096,8 @@ export const TOOL_SEO = {
   "pdf-imzala": {
     tr: T(
       "PDF İmzala — Online İmza Ekle (Üyeliksiz, Cihazda)",
-      "PDF'e elektronik imza ekleyin: imzanızı çizin, yazın ya da görsel yükleyin; istediğiniz yere yerleştirin. İmzanız cihazınızdan çıkmaz — %100 gizli, üyeliksiz, ücretsiz.",
-      "PDF'e İmza Ekle — Cihazında, Gizli",
+      "PDF'e elektronik imza ekleyin: imzanızı çizin, yazın ya da görsel yükleyin. İmzanız cihazınızdan çıkmaz — %100 gizli, üyeliksiz, ücretsiz.",
+      "PDF İmzala — Cihazında, Gizli İmza Ekle",
       "Sözleşme, form ve belgeleri saniyeler içinde imzalayın. İmzanızı fareyle/parmağınızla çizin, adınızı el yazısı fontuyla yazın veya hazır imza görselinizi yükleyin; ardından PDF sayfasında istediğiniz yere sürükleyip boyutlandırın. Tüm işlem tarayıcınızda (cihazınızda) gerçekleşir — dosyanız ve imzanız sunucuya GİTMEZ. İmzalı PDF'i indirin.",
       ["pdf imzala", "pdf imza ekle", "online pdf imzalama", "elektronik imza pdf", "pdf'e imza", "belge imzalama", "ücretsiz pdf imza", "e-imza pdf"],
       [
@@ -1099,7 +1110,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Sign PDF — Add Your Signature Online (No Sign-up, On-device)",
-      "Add an electronic signature to a PDF: draw, type or upload your signature and place it anywhere. Your signature never leaves your device — 100% private, no sign-up, free.",
+      "Add an electronic signature to a PDF: draw, type or upload it and place it anywhere. Your signature never leaves your device — free, no sign-up.",
       "Add a Signature to PDF — On Your Device, Private",
       "Sign contracts, forms and documents in seconds. Draw your signature with the mouse/finger, type your name in a handwriting font, or upload a signature image; then drag and resize it anywhere on the PDF page. Everything happens in your browser (on your device) — your file and signature are NEVER uploaded. Download the signed PDF.",
       ["sign pdf", "add signature to pdf", "online pdf signing", "electronic signature pdf", "esign pdf", "sign document online", "free pdf signature"],
@@ -1116,7 +1127,7 @@ export const TOOL_SEO = {
   "imza-iste": {
     tr: T(
       "İmza İste — Belgeyi Karşı Tarafa İmzalat (Online)",
-      "Sözleşme, teklif ve formu e-postayla imzaya gönderin. İmzalayanın hesap açmasına gerek yok; imzalı kopya, sürecin zaman damgalı kaydını taşıyan denetim sertifikasıyla gelir.",
+      "Sözleşme, teklif ve formu e-postayla imzaya gönderin. İmzalayanın hesap açmasına gerek yok; imzalı kopya denetim sertifikasıyla gelir.",
       "Belgeyi Karşı Tarafa İmzalat",
       "Sözleşmeyi yazdırıp imzalatıp taratma döngüsüne gerek yok. Belgeyi yükleyin, imzalayacak kişinin e-posta adresini yazın; o kişiye yalnızca kendisi için üretilmiş bir bağlantı gider. Karşı taraf hesap açmadan belgeyi görüntüler, adını yazar, imzasını çizer ve onay kutusunu işaretleyerek imzalar. İmza, SUNUCUDA saklanan özgün belgeye uygulanır — imzalayandan dosya kabul edilmez; böylece «imzalanan belge, gönderilen belgedir» güvencesi yapısal olarak sağlanır. İmzalı belgenin sonuna, ne zaman gönderildiği, görüntülendiği ve imzalandığı ile belgenin imzadan önceki ve sonraki parmak izlerini gösteren bir denetim sertifikası eklenir.",
       ["imza iste", "pdf imzaya gönderme", "online sözleşme imzalatma", "uzaktan imza", "e-imza isteme", "belge imzalatma", "dijital imza talebi"],
@@ -1131,7 +1142,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Request a Signature — Get Your Document Signed Online",
-      "Send a contract, quote or form out for signature by email. The signer needs no account, and the signed copy arrives with an audit certificate recording the whole process.",
+      "Send a contract, quote or form out for signature by email. The signer needs no account and the signed copy arrives with an audit certificate.",
       "Get Your Document Signed by Someone Else",
       "No more print-sign-scan loops. Upload the document, enter the signer's email address, and they receive a link generated only for them. Without creating an account they view the document, type their name, draw their signature and tick the consent box. The signature is applied to the ORIGINAL document stored on the server — no file is accepted back from the signer — so «what was signed is what was sent» holds by construction. A certificate is appended to the signed document showing when it was sent, viewed and signed, along with the document's fingerprints before and after signing.",
       ["request signature", "send pdf for signature", "sign contract online", "remote signing", "e-signature request", "get document signed", "digital signature request"],
@@ -1149,7 +1160,7 @@ export const TOOL_SEO = {
   "sayfa-duzeni": {
     tr: T(
       "PDF Sayfa Düzeni — Tek Kâğıda 2/4/8 Sayfa, Kitapçık Dizgisi",
-      "Birden çok PDF sayfasını tek kâğıda sığdırın ya da çift taraflı yazdırıp katlandığında sırayla okunan kitapçık dizin. Cihazınızda çalışır, üyeliksiz ve ücretsiz.",
+      "Birden çok PDF sayfasını tek kâğıda sığdırın ya da katlandığında sırayla okunan kitapçık dizin. Cihazınızda çalışır, üyeliksiz ve ücretsiz.",
       "Sayfaları Tek Kâğıda Sığdır ya da Kitapçık Yap",
       "Ders notu, sunum çıktısı ya da uzun bir raporu yazdırırken her sayfa için ayrı kâğıt harcamak gerekmiyor. «Yaprağa sığdır» kipi 2, 4, 6, 8, 9 ya da 16 sayfayı tek kâğıda yerleştirir; sayfaların oranı korunur, esnetilmez. «Kitapçık» kipi ise sayfaları özel bir sıraya dizer: çift taraflı yazdırıp ortadan katladığınızda elinizde baştan sona sırayla okunan bir kitapçık kalır. Tüm işlem tarayıcınızda yapılır — dosyanız SUNUCUYA GİTMEZ.",
       ["pdf tek kağıda sığdırma", "pdf 4 sayfa bir yaprağa", "pdf kitapçık yapma", "pdf 2 sayfa yan yana yazdırma", "pdf sayfa düzeni", "kağıt tasarrufu yazdırma", "pdf broşür dizgi"],
@@ -1164,7 +1175,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "PDF Page Layout — 2/4/8 Pages Per Sheet, Booklet Imposition",
-      "Fit several PDF pages onto one sheet, or impose a booklet that reads in order once printed double-sided and folded. Runs on your device, free and without sign-up.",
+      "Fit several PDF pages onto one sheet, or impose a booklet that reads in order once folded. Runs on your device, free and without sign-up.",
       "Fit Pages on One Sheet or Make a Booklet",
       "Printing lecture notes, slide handouts or a long report does not need one sheet per page. «Fit on sheet» places 2, 4, 6, 8, 9 or 16 pages on a single sheet while preserving each page's aspect ratio — nothing is stretched. «Booklet» arranges the pages in the special order printers call imposition: print double-sided, fold in the middle, and you hold a booklet that reads straight through. Everything happens in your browser — your file is NEVER uploaded.",
       ["pdf pages per sheet", "4 pages on one page pdf", "pdf booklet maker", "pdf 2 up printing", "pdf imposition", "save paper printing pdf", "pdf brochure layout"],
@@ -1182,7 +1193,7 @@ export const TOOL_SEO = {
   "pdf-to-pdfa": {
     tr: T(
       "PDF/A Dönüştürme — Arşiv Biçimi (Online, Ücretsiz)",
-      "Belgenizi kurumların istediği ISO arşiv biçimi PDF/A'ya çevirin. Yazı tipleri belgenin içine gömülür; dosya yıllar sonra da aynı görünür. PDF/A-1b, 2b ve 3b desteklenir.",
+      "Belgenizi kurumların istediği ISO arşiv biçimi PDF/A'ya çevirin. Yazı tipleri belgeye gömülür; dosya yıllar sonra da aynı görünür. 1b, 2b, 3b.",
       "PDF'i PDF/A Arşiv Biçimine Çevir",
       "Kamu ihalelerinde, e-arşiv yükümlülüklerinde, mahkeme dosyalarında ve üniversite tez tesliminde belgenin PDF/A olması istenir. PDF/A, belgenin uzun yıllar sonra da AYNI görünmesini garanti eden ISO standardıdır: kullanılan yazı tipleri dosyanın içine gömülür (o yazı tipi karşı bilgisayarda yoksa bile metin bozulmaz), renkler cihazdan bağımsız tanımlanır, dış kaynaklara bağlanma ve şifreleme kaldırılır. Belgenizi yükleyin, kurumun istediği uyumluluk düzeyini seçin (çoğu yerde PDF/A-2b yeterlidir) ve arşivlik dosyanızı indirin.",
       ["pdf/a dönüştürme", "pdfa çevirme", "pdf arşiv formatı", "pdf/a-1b", "pdf/a-2b", "ihale pdf formatı", "tez pdf/a", "e-arşiv pdf"],
@@ -1197,7 +1208,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Convert PDF to PDF/A — Archival Format (Online, Free)",
-      "Convert your document to PDF/A, the ISO archival format institutions ask for. Fonts are embedded so the file looks the same years from now. PDF/A-1b, 2b and 3b supported.",
+      "Convert your document to PDF/A, the ISO archival format institutions ask for. Fonts are embedded so the file looks the same years from now.",
       "Convert PDF to the PDF/A Archival Format",
       "Public tenders, e-archiving rules, court filings and university thesis submissions often require PDF/A. PDF/A is the ISO standard that guarantees a document still looks the SAME many years later: the fonts it uses are embedded in the file (so text stays intact even if the font is missing on the other computer), colours are defined device-independently, and external dependencies and encryption are removed. Upload your document, pick the conformance level your institution asks for (PDF/A-2b is enough in most cases) and download the archival file.",
       ["convert pdf to pdfa", "pdf/a converter", "pdf archival format", "pdf/a-1b", "pdf/a-2b", "tender pdf format", "thesis pdf/a", "long term pdf archive"],
@@ -1248,8 +1259,8 @@ export const TOOL_SEO = {
   "form-doldur": {
     tr: T(
       "PDF Form Doldurma — Online, Üyeliksiz, Cihazda",
-      "Doldurulabilir PDF formlarını tarayıcınızda doldurun. Alanlar otomatik bulunur, Türkçe karakterler bozulmaz, isterseniz kilitleyip gönderin. Dosyanız cihazınızdan çıkmaz.",
-      "PDF Formu Doldur — Cihazında, Gizli",
+      "Doldurulabilir PDF formlarını tarayıcınızda doldurun. Alanlar otomatik bulunur, Türkçe karakterler bozulmaz — dosyanız cihazınızdan çıkmaz.",
+      "PDF Form Doldurma — Cihazında, Üyeliksiz",
       "Başvuru, sözleşme, izin ve kurum formlarını bilgisayarınızda doldurun. Dosyayı seçtiğiniz anda formun alanları (metin kutuları, onay kutuları, açılır listeler) otomatik bulunur ve karşınıza gelir; doldurup indirirsiniz. «Kilitle» seçeneğiyle alanlar kalıcı içeriğe dönüşür, karşı taraf yazdıklarınızı değiştiremez. Türkçe harfler (ğ, ş, İ, ı) kaybolmadan yazılır. Tüm işlem tarayıcınızda gerçekleşir — belgeniz SUNUCUYA GİTMEZ; kimlik ve başvuru belgelerinde bu fark önemlidir.",
       ["pdf form doldurma", "pdf form doldur", "doldurulabilir pdf", "online form doldurma", "pdf form doldurma ücretsiz", "pdf başvuru formu doldurma", "acroform doldurma"],
       [
@@ -1263,7 +1274,7 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Fill PDF Form — Online, No Sign-up, On-device",
-      "Fill fillable PDF forms in your browser. Fields are detected automatically, accented characters are preserved, and you can lock the form before sending. Your file never leaves your device.",
+      "Fill fillable PDF forms in your browser. Fields are detected automatically and accented characters are preserved — your file never leaves your device.",
       "Fill a PDF Form — On Your Device, Private",
       "Fill applications, contracts, consent and agency forms on your own computer. The moment you pick a file, its fields (text boxes, checkboxes, dropdowns) are detected and listed for you; fill them in and download. With «Lock after filling», the fields become permanent content so the recipient cannot change what you wrote. Everything happens in your browser — your document is NEVER uploaded, which matters for identity and application paperwork.",
       ["fill pdf form", "pdf form filler", "fillable pdf", "fill out pdf online", "free pdf form filler", "acroform fill", "complete pdf form"],
@@ -1281,7 +1292,7 @@ export const TOOL_SEO = {
   "pdf-yorumla": {
     tr: T(
       "PDF İşaretle — Vurgu, Not, Çizim Ekle (Üyeliksiz, Cihazda)",
-      "PDF'e fosforlu kalemle vurgu, keçeli kalem çizimi, kutu, ok ve metin notu ekleyin. Yazı silinmeden üzerini işaretleyin. Her şey cihazınızda işlenir — %100 gizli, üyeliksiz, ücretsiz.",
+      "PDF'e fosforlu vurgu, çizim, kutu, ok ve metin notu ekleyin. Yazı silinmeden üzerini işaretleyin — her şey cihazınızda, üyeliksiz ve ücretsiz.",
       "PDF'e Vurgu, Not ve Çizim Ekle — Cihazında, Gizli",
       "Bir belgeyi incelerken önemli yerleri fosforlu kalemle işaretleyin, keçeli kalemle serbestçe çizin, kutu içine alın, ok çekin ve metin notu ekleyin. Fosforlu ve keçeli kalem yarı saydamdır; altındaki yazı okunmaya devam eder. Farklı renk ve kalınlık seçin, birden fazla sayfada çalışın. Tüm işlem tarayıcınızda (cihazınızda) gerçekleşir — dosyanız sunucuya GİTMEZ. İşaretli PDF'i indirin.",
       ["pdf yorumla", "pdf vurgu", "pdf işaretleme", "pdf fosforlu kalem", "pdf üzerine yazma", "pdf not ekleme", "pdf çizim", "pdf highlight türkçe"],
@@ -1295,8 +1306,8 @@ export const TOOL_SEO = {
     ),
     en: T(
       "Markup PDF — Highlight, Note, Draw (No Sign-up, On-device)",
-      "Add highlighter marks, freehand marker drawings, boxes, arrows and text notes to a PDF. Mark over text without erasing it. Everything runs on your device — 100% private, no sign-up, free.",
-      "Add Highlights, Notes and Drawings to PDF — On Your Device, Private",
+      "Add highlights, freehand drawings, boxes, arrows and text notes to a PDF. Mark over text without erasing it — on your device, free, no sign-up.",
+      "Markup PDF — Highlight, Note and Draw on Your Device",
       "While reviewing a document, highlight the important parts with a marker, draw freely with a felt pen, box things in, draw arrows and add text notes. The highlighter and marker are semi-transparent, so the text underneath stays readable. Pick different colors and thicknesses, and work across multiple pages. Everything happens in your browser (on your device) — your file is NEVER uploaded. Download the annotated PDF.",
       ["annotate pdf", "highlight pdf", "pdf marker", "draw on pdf", "pdf comments", "pdf notes", "mark up pdf", "pdf highlighter"],
       [
@@ -1358,7 +1369,7 @@ export const TOOL_SEO = {
     en: T(
       "PDF Data Extraction — Invoices & Tables (AI)",
       "Turn invoices, tenders, contracts or tables into structured data with AI: fields + line items, view as a table, export CSV.",
-      "Extract Data from PDF (AI)",
+      "Extract Data from PDF — Invoices & Tables (AI)",
       "Extract information from invoices, delivery notes, tenders or tables automatically: document type, invoice no, date, parties, tax id, subtotal, VAT, total and line items come back as structured data. View it as a table and export CSV or JSON. Text is read on your device; scanned documents are handled with OCR.",
       ["pdf data extraction", "extract data from invoice", "pdf table extraction", "pdf to excel data", "invoice parsing ai", "document data extraction"],
       [
@@ -1405,7 +1416,7 @@ export const TOOL_SEO = {
   "hassas-veri-gizle": {
     tr: T(
       "PDF'te Hassas Veri Gizleme (Redaction) — KVKK Dostu",
-      "PDF'teki kişisel/hassas verileri (TC, IBAN, telefon, e-posta, isim, adres) bulup kalıcı olarak kaldırın — örtme değil, gerçek redaction. KVKK uyumlu paylaşım için.",
+      "PDF'teki kişisel verileri (TC, IBAN, telefon, e-posta, adres) bulup kalıcı olarak kaldırın — örtme değil, gerçek redaction. KVKK uyumlu.",
       "PDF'te Hassas Veriyi Gizle (Redaction)",
       "Bir belgeyi paylaşmadan önce kişisel verileri kaldırmak KVKK açısından kritiktir. Bu araç TC kimlik, IBAN, telefon ve e-postayı cihazınızda otomatik bulur; isim ve adresleri yapay zekâ ile tespit eder. Onayladığınız bilgiler PDF'ten GERÇEKTEN silinir (üstü örtülmez), böylece PDF'in ham verisinden bile okunamaz.",
       ["pdf hassas veri gizleme", "pdf redaction", "kvkk pdf", "pdf'te tc gizleme", "pdf kişisel veri kaldırma", "pdf karartma", "belgeden bilgi silme"],
@@ -1449,7 +1460,7 @@ export const TOOL_SEO = {
       ],
     ),
     en: T(
-      "Compare PDFs — Find the Difference Between Two Documents (AI)",
+      "Compare PDFs — Find the Difference with AI",
       "Compare two PDFs (e.g. two versions of a contract) with AI; extract added, removed and changed clauses in seconds.",
       "Compare Two PDFs with AI",
       "Find the meaningful differences between two versions of a contract, proposal or report without scanning line by line. AI extracts added, removed and changed clauses — especially binding changes to amounts, dates, terms and obligations. Text is read on your device.",
@@ -1510,7 +1521,7 @@ export const LANDING_SEO = {
      * Ayrıca araç sayısı yazılıyor: sayılan üç-dört aracı okuyan kişi sitede
      * yalnızca onların olduğunu sanıyordu (kullanıcı bildirdi).
      */
-    title: `PDF Birleştirme, Word'e Çevirme ve Küçültme — 45 Araç | ${BRAND}`,
+    title: markaEkle(`PDF Birleştirme, Word'e Çevirme ve Küçültme — 45 Araç`),
     description:
       "PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.",
     h1: "PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — 45 PDF Aracı Tek Platformda",
@@ -1528,7 +1539,7 @@ export const LANDING_SEO = {
   en: {
     // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
     // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
-    title: `PDF to Word, Merge & Compress — 45 PDF Tools | ${BRAND}`,
+    title: markaEkle(`PDF to Word, Merge & Compress — 45 PDF Tools`),
     description:
       "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.",
     h1: "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
@@ -1548,20 +1559,83 @@ export const LANDING_SEO = {
 // ─── Fiyatlandırma ────────────────────────────────────────────────────────────
 export const PRICING_SEO = {
   tr: {
-    title: `PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi | ${BRAND}`,
+    title: markaEkle(`PDF Araçları Fiyatlandırma — 7 Gün İade Garantisi`),
     description:
-      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün içinde gerekçesiz iade garantisi. Ücretsiz başlayın, istediğiniz zaman iptal edin.",
-    h1: "PDF Platform Fiyatlandırma — Planlar ve Kredi Paketleri",
+      "PDF birleştirme, dönüştürme ve sıkıştırma araçları için planları inceleyin. 7 gün içinde gerekçesiz iade garantisi. Ücretsiz başlayın.",
+    h1: "PDF Araçları Fiyatlandırma — Planlar ve Kredi Paketleri",
     intro:
       "Ücretsiz plan dahil aylık abonelik ve kredi paketi seçeneklerini karşılaştırın. Tüm planlarda ilk ödemeden itibaren 7 gün içinde gerekçesiz iade; istediğiniz zaman iptal edebilirsiniz.",
+    // SSS: fiyatlandırma sayfası önceden üretilen HTML'de yalnızca başlık + giriş
+    // cümlesi içeriyordu (50 kelime). Satın alma niyetli aramaların indiği sayfa
+    // olduğu için gerçek içerik eklendi; aynı metin FAQPage şemasını da besler.
+    faq: [
+      {
+        q: "Ücretsiz plan gerçekten ücretsiz mi?",
+        a: "Evet. Ücretsiz planda kart bilgisi istenmez. Ayrıca birleştirme, bölme, döndürme, sayfa silme, sıralama ve kırpma gibi cihazınızda çalışan araçlar üyelik bile gerektirmez ve günlük sınırı yoktur.",
+      },
+      {
+        q: "Abonelik ile kredi paketi arasındaki fark nedir?",
+        a: "Abonelik aylık yenilenir ve her ay kontenjanınızı tazeler; düzenli kullanım için uygundur. Kredi paketi tek seferlik satın alınır ve abonelik başlatmadan yoğun bir işi bitirmek isteyenler içindir.",
+      },
+      {
+        q: "İstediğim zaman iptal edebilir miyim?",
+        a: "Evet. Aboneliği hesabınızdan tek adımda iptal edebilirsiniz. İptal ettiğinizde mevcut dönemin sonuna kadar planınızı kullanmaya devam edersiniz; yeni bir ücret alınmaz.",
+      },
+      {
+        q: "İade garantisi nasıl işliyor?",
+        a: "İlk ödemenizden itibaren 7 gün içinde gerekçe belirtmeden iade talep edebilirsiniz. Talebinizi destek adresimize ilettiğinizde ödeme aynı yöntemle iade edilir.",
+      },
+      {
+        q: "Ücretli planda ne açılıyor?",
+        a: "Sunucuda çalışan işlerde (Word/Excel'e dönüştürme, OCR, sıkıştırma, yapay zekâ ile özetleme, çeviri, veri çıkarma ve karşılaştırma) günlük sınırlar yükselir ya da kalkar. Cihazda çalışan araçlar her planda sınırsızdır.",
+      },
+      {
+        q: "Çıktılarda filigran var mı?",
+        a: "Hayır. İndirdiğiniz dosyada hiçbir planda görünür filigran bulunmaz. Yalnızca indirmeden önceki hızlı önizlemede işaretli bir kopya gösterilir.",
+      },
+      {
+        q: "Ödeme nasıl alınıyor, fatura kesiliyor mu?",
+        a: "Ödemeler iyzico altyapısıyla alınır; kart bilgileriniz bizde saklanmaz. Türkiye'de ikamet eden bireysel kullanıcılar için %20 KDV uygulanır, yurt dışı kullanıcılarda ihracat istisnası nedeniyle KDV uygulanmaz.",
+      },
+    ],
   },
   en: {
-    title: `PDF Tools Pricing — 7-Day Money-Back Guarantee | ${BRAND}`,
+    title: markaEkle(`PDF Tools Pricing — 7-Day Money-Back Guarantee`),
     description:
       "Explore plans for PDF merge, convert, and compress tools. 7-day money-back guarantee, cancel anytime. Start free today.",
-    h1: "PDF Platform Pricing — Plans and Credit Packs",
+    h1: "PDF Tools Pricing — Plans and Credit Packs",
     intro:
       "Compare monthly subscriptions and credit packs, including a free plan. Every plan comes with a 7-day no-questions-asked money-back guarantee, and you can cancel anytime.",
+    faq: [
+      {
+        q: "Is the free plan really free?",
+        a: "Yes. The free plan needs no card details. On top of that, tools that run on your device — merge, split, rotate, delete pages, reorder and crop — need no account at all and have no daily limit.",
+      },
+      {
+        q: "What is the difference between a subscription and a credit pack?",
+        a: "A subscription renews monthly and refreshes your allowance every month, which suits regular use. A credit pack is a one-off purchase for finishing a heavy job without starting a subscription.",
+      },
+      {
+        q: "Can I cancel anytime?",
+        a: "Yes. You can cancel from your account in one step. You keep your plan until the end of the current period and no further charge is made.",
+      },
+      {
+        q: "How does the money-back guarantee work?",
+        a: "You can ask for a refund within 7 days of your first payment without giving a reason. Once you contact support, the payment is returned through the same method.",
+      },
+      {
+        q: "What does a paid plan unlock?",
+        a: "Daily limits rise or disappear for server-side work: conversion to Word and Excel, OCR, compression, and the AI tools for summarizing, translating, extracting data and comparing documents. On-device tools are unlimited on every plan.",
+      },
+      {
+        q: "Are there watermarks on the output?",
+        a: "No. No plan puts a visible watermark on the file you download. A marked copy appears only in the quick preview shown before you download.",
+      },
+      {
+        q: "How are payments handled and is an invoice issued?",
+        a: "Payments run through iyzico and your card details are never stored by us. Individual users resident in Turkey are charged 20% VAT; users outside Turkey are exempt under the export exemption.",
+      },
+    ],
   },
 };
 
@@ -1575,9 +1649,9 @@ export const PRICING_SEO = {
  */
 export const API_DOCS_SEO = {
   tr: {
-    title: `API Dokümantasyonu — Uçlar, Kimlik Doğrulama, Hatalar | ${BRAND}`,
+    title: markaEkle(`API Dokümantasyonu — Uçlar, Kimlik Doğrulama, Hatalar`),
     description:
-      "PDF Platform REST API referansı: kimlik doğrulama, /v1 uçları, istek ve yanıt örnekleri, RFC 9457 hata biçimi, istek sınırları, tekrar güvenliği ve sürüm politikası.",
+      "PDF Platform REST API referansı: kimlik doğrulama, /v1 uçları, istek ve yanıt örnekleri, RFC 9457 hata biçimi, sınırlar ve sürüm politikası.",
     h1: "API Dokümantasyonu",
     intro:
       "PDF Platform API referansı. Anahtar bazlı kimlik doğrulama, /v1 altında sürümlenen uçlar, her uç için istek ve yanıt örneği, RFC 9457 biçiminde hatalar, IETF taslağına uygun istek sınırı başlıkları ve Idempotency-Key ile tekrar güvenliği. Makine-okur OpenAPI tanımı da yayınlanır.",
@@ -1587,12 +1661,16 @@ export const API_DOCS_SEO = {
       { q: "Hatalar hangi biçimde döner?", a: "Hatalar RFC 9457 uyarınca application/problem+json biçiminde döner; type, title, status, code, detail ve request_id alanlarını içerir." },
       { q: "İstek sınırı nedir?", a: "Anahtar başına dakikada 60 istek. Yanıtlar RateLimit başlıklarını taşır; sınır aşıldığında 429 ve Retry-After döner." },
       { q: "Bir uç kaldırılırsa ne olur?", a: "Kırıcı değişiklikler yeni sürümde yapılır. Bir uç emekliye ayrılacaksa yanıtlar RFC 9745 uyarınca Deprecation ve Sunset başlıklarını taşımaya başlar ve kapanmaya en az 6 ay kalır." },
+      { q: "İstekler nasıl gönderilir?", a: "Uçlar HTTPS üzerinden POST kabul eder. Belgeyi çok parçalı form verisi olarak ya da erişilebilir bir bağlantı ile gönderir, seçenekleri aynı istekte alan olarak iletirsiniz. Yanıt JSON döner." },
+      { q: "Aynı isteği iki kez gönderirsem ne olur?", a: "İstek başlığında bir tekrar anahtarı (idempotency key) gönderirseniz aynı anahtarla yapılan ikinci çağrı yeni bir işlem başlatmaz, ilk çağrının sonucunu döndürür. Ağ kesintilerinde çift ücretlenmeyi bu önler." },
+      { q: "Büyük dosyalarda ne olur?", a: "Dosya boyutu ve sayfa sınırları uç bazında tanımlıdır. Sınır aşıldığında istek RFC 9457 biçiminde açıklayıcı bir hata döner; dosyayı bölüp parça parça göndermek en pratik yoldur." },
+      { q: "Test ve canlı ortam ayrı mı?", a: "API anahtarları hesap bazında üretilir ve her anahtarın kullanımı ayrı izlenir. Geliştirme için ayrı bir anahtar üretip harcamayı canlı trafikten bağımsız takip edebilirsiniz." },
     ],
   },
   en: {
-    title: `API Documentation — Endpoints, Auth, Errors | ${BRAND}`,
+    title: markaEkle(`API Documentation — Endpoints, Auth, Errors`),
     description:
-      "PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 error format, rate limits, idempotency and the versioning policy.",
+      "PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 errors, rate limits and versioning.",
     h1: "API Documentation",
     intro:
       "The PDF Platform API reference. API-key authentication, endpoints versioned under /v1, a request and response example for every endpoint, RFC 9457 errors, rate-limit headers following the IETF draft, and retry-safe POSTs via Idempotency-Key. A machine-readable OpenAPI spec is published too.",
@@ -1602,16 +1680,20 @@ export const API_DOCS_SEO = {
       { q: "What format do errors use?", a: "Errors follow RFC 9457 and return as application/problem+json with type, title, status, code, detail and request_id fields." },
       { q: "What is the rate limit?", a: "60 requests per minute per key. Responses carry RateLimit headers; exceeding the limit returns 429 with Retry-After." },
       { q: "What happens if an endpoint is removed?", a: "Breaking changes ship in a new version. When an endpoint is retired, responses start carrying RFC 9745 Deprecation and Sunset headers, with at least six months before shutdown." },
+      { q: "How are requests sent?", a: "Endpoints accept POST over HTTPS. Send the document as multipart form data or as a reachable link, and pass options as fields in the same request. Responses come back as JSON." },
+      { q: "What if I send the same request twice?", a: "Include an idempotency key in the request header and a second call with the same key will not start new work; it returns the result of the first call. This prevents double billing when the network drops." },
+      { q: "What about large files?", a: "File size and page limits are defined per endpoint. When a limit is exceeded the request returns a descriptive RFC 9457 error; splitting the file and sending it in parts is the practical route." },
+      { q: "Are test and live environments separate?", a: "API keys are generated per account and usage is tracked per key. Generate a separate key for development so you can follow that spend independently of live traffic." },
     ],
   },
 };
 
 export const API_SEO = {
   tr: {
-    title: `PDF & Yapay Zekâ API — Belge İşlemeyi Yazılımınıza Gömün | ${BRAND}`,
+    title: markaEkle(`PDF & Yapay Zekâ API — Belge İşlemeyi Yazılımınıza Gömün`),
     description:
-      "PDF veri çıkarma, özetleme ve çeviriyi tek API ile kendi yazılımınıza entegre edin. Fatura okuma, sözleşme özeti, belge çevirisi — yapılandırılmış JSON, API anahtarıyla.",
-    h1: "PDF & Yapay Zekâ API — Geliştiriciler İçin",
+      "PDF veri çıkarma, özetleme ve çeviriyi tek API ile yazılımınıza gömün. Fatura okuma, sözleşme özeti — yapılandırılmış JSON, API anahtarıyla.",
+    h1: "PDF & Yapay Zekâ API — Belge İşlemeyi Yazılımınıza Gömün",
     intro:
       "PDF Platform API'siyle belge işlemeyi kendi ürününüze gömün: fatura/tablo verisi çıkarın, uzun belgeleri özetleyin, 12+ dile çevirin. API anahtarı alın, /v1 uçlarını çağırın, yapılandırılmış JSON alın. Kullanım kredi bazlıdır.",
     keywords: ["pdf api", "belge işleme api", "fatura okuma api", "pdf veri çıkarma api", "yapay zeka pdf api", "pdf özetleme api", "document ai api"],
@@ -1619,13 +1701,17 @@ export const API_SEO = {
       { q: "PDF Platform API'si ne yapar?", a: "PDF/belge metninden yapılandırılmış veri çıkarma, özetleme ve çeviriyi programatik sunar. /v1 uçlarını API anahtarınızla çağırır, JSON yanıt alırsınız." },
       { q: "Nasıl başlarım?", a: "Hesap açın, panelden bir API anahtarı üretin ve /v1/extract, /v1/summarize, /v1/translate uçlarını çağırın. Her istek AI kredinizden düşer." },
       { q: "Faturalandırma nasıl?", a: "Kullanım kredi bazlıdır: kredi paketi (top-up) alır, her API çağrısında 1 kredi harcarsınız. Fatura otomatik kesilir." },
+      { q: "Hangi işlemler API üzerinden yapılabiliyor?", a: "Faturalardan ve tablolardan yapılandırılmış veri çıkarma, uzun belgeleri özetleme, 12'den fazla dile çeviri ve iki belgeyi karşılaştırma. Hepsi tek API anahtarı ve aynı istek biçimiyle çalışır." },
+      { q: "Yanıtlar hangi biçimde geliyor?", a: "Tüm uçlar JSON döner. Veri çıkarma uçlarında alan adları sabittir, böylece yanıtı doğrudan kendi veritabanınıza ya da muhasebe yazılımınıza yazabilirsiniz; serbest metin ayrıştırmanıza gerek kalmaz." },
+      { q: "Gönderdiğim belgeler saklanıyor mu?", a: "API'ye gönderilen dosyalar işlem tamamlandıktan sonra sunucudan silinir; model eğitimi için kullanılmaz. Saklama süreleri ve veri işleme ayrıntıları gizlilik politikasında yazılıdır." },
+      { q: "Deneme yapabilir miyim?", a: "Evet. Hesabınızı açıp bir API anahtarı ürettikten sonra küçük bir kredi paketiyle uçları kendi belgelerinizle deneyebilir, ölçeklemeden önce sonuçları görebilirsiniz." },
     ],
   },
   en: {
-    title: `PDF & AI API — Embed Document Processing in Your Software | ${BRAND}`,
+    title: markaEkle(`PDF & AI API — Embed Document Processing in Your Software`),
     description:
-      "Integrate PDF data extraction, summarization and translation into your own software with one API. Invoice parsing, contract summaries, document translation — structured JSON, with an API key.",
-    h1: "PDF & AI API — For Developers",
+      "Integrate PDF data extraction, summarization and translation into your software with one API. Invoice parsing and contract summaries as structured JSON.",
+    h1: "PDF & AI API — Embed Document Processing",
     intro:
       "Embed document processing into your product with the PDF Platform API: extract invoice/table data, summarize long documents, translate to 12+ languages. Get an API key, call the /v1 endpoints, receive structured JSON. Usage is credit-based.",
     keywords: ["pdf api", "document processing api", "invoice extraction api", "pdf data extraction api", "document ai api", "pdf summarization api"],
@@ -1633,6 +1719,10 @@ export const API_SEO = {
       { q: "What does the PDF Platform API do?", a: "It offers programmatic structured-data extraction, summarization and translation from PDF/document text. Call the /v1 endpoints with your API key and get JSON responses." },
       { q: "How do I get started?", a: "Create an account, generate an API key from the dashboard, and call /v1/extract, /v1/summarize, /v1/translate. Each request uses one AI credit." },
       { q: "How is it billed?", a: "Usage is credit-based: buy a credit pack (top-up) and spend 1 credit per API call. Invoices are issued automatically." },
+      { q: "Which operations are available through the API?", a: "Structured data extraction from invoices and tables, summarization of long documents, translation into more than 12 languages, and comparison of two documents. All of them use one API key and the same request shape." },
+      { q: "What format do responses come in?", a: "Every endpoint returns JSON. Extraction endpoints use fixed field names, so you can write the response straight into your own database or accounting software without parsing free text." },
+      { q: "Are the documents I send stored?", a: "Files sent to the API are removed from the server once processing finishes and are never used to train models. Retention periods and processing details are set out in the privacy policy." },
+      { q: "Can I try it first?", a: "Yes. Create an account, generate an API key and test the endpoints against your own documents with a small credit pack before you scale up." },
     ],
   },
 };
@@ -1641,44 +1731,44 @@ export const API_SEO = {
 export const LEGAL_SEO = {
   terms: {
     tr: {
-      title: `Hizmet Şartları | ${BRAND}`,
-      description: "PDF Platform hizmet şartlarını okuyun.",
+      title: markaEkle(`Hizmet Şartları`),
+      description: "PDF Platform hizmet şartları: hizmetin kapsamı, kullanım kuralları, abonelik ve iptal koşulları, sorumluluk sınırları ve iletişim bilgileri.",
       h1: "Hizmet Şartları",
       intro: "PDF Platform hizmetlerinin kullanımına ilişkin şartlar ve koşullar.",
     },
     en: {
-      title: `Terms of Service | ${BRAND}`,
-      description: "Read the terms of service for PDF Platform.",
+      title: markaEkle(`Terms of Service`),
+      description: "PDF Platform terms of service: scope of the service, acceptable use, subscription and cancellation terms, limits of liability and contact details.",
       h1: "Terms of Service",
       intro: "Terms and conditions for using PDF Platform services.",
     },
   },
   privacy: {
     tr: {
-      title: `Gizlilik Politikası | ${BRAND}`,
-      description: "PDF Platform gizlilik politikasını okuyun.",
+      title: markaEkle(`Gizlilik Politikası`),
+      description: "PDF Platform gizlilik politikası: hangi kişisel veriler işlenir, ne kadar saklanır, kimlerle paylaşılır ve haklarınızı nasıl kullanırsınız.",
       h1: "Gizlilik Politikası",
       intro: "Kişisel verilerinizin nasıl işlendiğine ve korunduğuna dair gizlilik politikamız.",
     },
     en: {
-      title: `Privacy Policy | ${BRAND}`,
-      description: "Read the privacy policy for PDF Platform.",
-      h1: "Privacy Policy",
+      title: markaEkle(`Privacy Policy — How We Handle Your Data`),
+      description: "PDF Platform privacy policy: what personal data we process, how long we keep it, who we share it with and how you can exercise your rights.",
+      h1: "Privacy Policy — How We Handle Your Data",
       intro: "Our privacy policy on how your personal data is processed and protected.",
     },
   },
   kvkk: {
     tr: {
-      title: `KVKK Aydınlatma Metni | ${BRAND}`,
+      title: markaEkle(`KVKK Aydınlatma Metni`),
       description:
         "PDF Platform kişisel verilerin işlenmesine ilişkin KVKK aydınlatma metnini okuyun.",
       h1: "KVKK Aydınlatma Metni",
       intro: "6698 sayılı KVKK kapsamında kişisel verilerin işlenmesine ilişkin aydınlatma metni.",
     },
     en: {
-      title: `KVKK Notice | ${BRAND}`,
-      description: "Read PDF Platform's KVKK personal data processing notice.",
-      h1: "KVKK Notice",
+      title: markaEkle(`KVKK Notice — Personal Data Processing`),
+      description: "PDF Platform KVKK notice: which personal data we process, the legal grounds, retention periods, transfers and your rights under Turkish law.",
+      h1: "KVKK Notice — Personal Data Processing",
       intro: "Information notice on the processing of personal data under Turkish KVKK law (No. 6698).",
     },
   },
