@@ -279,6 +279,12 @@ export function isPublicApiPath(method: string, path: string): boolean {
   if (p === "/subscription/plans" && method === "GET") return true;
   if (p.startsWith("/public/") && method === "GET") return true;
   if (p === "/analytics/page-view" && method === "POST") return true;
+  /**
+   * Araç puanlama — puan verenlerin cogu uye DEGIL, araci kullanip cikan
+   * ziyaretci. Uyelik sarti toplanacak veriyi yok ederdi. Kotuye kullanim
+   * oy basina tekillestirme ve saatlik hiz siniriyla kisitlanir.
+   */
+  if (p.startsWith("/tool-rating")) return true;
   if (p === "/contact" && method === "POST") return true;
   // Abonelikten çıkış — token ile yetkilendirilir (JWT gerekmez; e-postadan tıklanır).
   if (p === "/email/unsubscribe") return true;

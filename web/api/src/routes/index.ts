@@ -23,6 +23,7 @@ import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout
 import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
 import { emailRouter } from "../modules/email/email.routes.js";
+import { toolRatingRouter } from "../modules/tool-rating/tool-rating.routes.js";
 import { socialRouter } from "../modules/social/social.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
@@ -90,6 +91,7 @@ apiRouter.use("/payment", paymentRouter);
 apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/license", licenseRouter);
 apiRouter.use("/subscription", subscriptionRouter);
+apiRouter.use("/tool-rating", toolRatingRouter);
 apiRouter.use("/user", userRouter);
 // İmza istekleri: /signatures oturum ister, /sign bağlantı anahtarıyla gelir.
 apiRouter.use("/signatures", signatureRouter);

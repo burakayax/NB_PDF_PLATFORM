@@ -166,6 +166,7 @@ export function PdfFormFill({
   if (sonuc) {
     return (
       <ToolResultPanel
+        ratingToolSlug="form-doldur"
         blob={sonuc.blob}
         filename={sonuc.filename}
         language={language}

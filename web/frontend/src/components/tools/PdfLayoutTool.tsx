@@ -111,6 +111,7 @@ export function PdfLayoutTool({
   if (sonuc) {
     return (
       <ToolResultPanel
+        ratingToolSlug="sayfa-duzeni"
         blob={sonuc.blob}
         filename={sonuc.filename}
         language={language}

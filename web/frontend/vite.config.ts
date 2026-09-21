@@ -217,6 +217,8 @@ export default defineConfig(({ command, mode, isPreview }) => {
     "billing",
     "ai",
     "team",
+    // Arac puanlama — misafire acik, kimlik API'sinde.
+    "tool-rating",
   ];
 
   const isProd = mode === "production";

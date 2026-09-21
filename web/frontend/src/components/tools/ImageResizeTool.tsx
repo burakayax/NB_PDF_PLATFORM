@@ -176,6 +176,7 @@ export function ImageResizeTool({ language }: { language: Language }) {
   if (result) {
     return (
       <ToolResultPanel
+        ratingToolSlug="gorsel-boyutlandir"
         blob={result.blob}
         filename={result.filename}
         language={language}
