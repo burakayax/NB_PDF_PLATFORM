@@ -1,4 +1,54 @@
 {
+  "https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit": {
+    "tr": [
+      "Karşılaştırma",
+      "PDF Araçları",
+      "Gizlilik",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Comparison",
+      "PDF Tools",
+      "Privacy",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/en/blog/sejda-alternative": {
+    "tr": [
+      "Karşılaştırma",
+      "PDF Araçları",
+      "Gizlilik",
+      "pdf birleştirme",
+      "pdf birleştir",
+      "pdf merge",
+      "kayıt olmadan pdf birleştirme",
+      "üyeliksiz pdf birleştirme",
+      "iki pdf birleştirme"
+    ],
+    "en": [
+      "Comparison",
+      "PDF Tools",
+      "Privacy",
+      "merge pdf",
+      "combine pdf",
+      "join pdf files",
+      "merge pdf without signup",
+      "merge pdf no upload",
+      "merge pdf online"
+    ],
+    "tool": "/tools/merge-pdf"
+  },
   "https://www.pdfplatform.app/blog/microsoft-lens-alternatifi": {
     "tr": [
       "Karşılaştırma",
@@ -102,6 +152,60 @@
       "merge pdf online"
     ],
     "tool": "/tools/merge-pdf"
+  },
+  "https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi": {
+    "tr": [
+      "Karşılaştırma",
+      "İmza",
+      "Sözleşme",
+      "imza iste",
+      "pdf imzaya gönderme",
+      "online sözleşme imzalatma",
+      "uzaktan imza",
+      "e-imza isteme",
+      "belge imzalatma",
+      "dijital imza talebi"
+    ],
+    "en": [
+      "Comparison",
+      "Signatures",
+      "Contracts",
+      "request signature",
+      "send pdf for signature",
+      "sign contract online",
+      "remote signing",
+      "e-signature request",
+      "get document signed",
+      "digital signature request"
+    ],
+    "tool": "/tools/imza-iste"
+  },
+  "https://www.pdfplatform.app/en/blog/docusign-alternatives": {
+    "tr": [
+      "Karşılaştırma",
+      "İmza",
+      "Sözleşme",
+      "imza iste",
+      "pdf imzaya gönderme",
+      "online sözleşme imzalatma",
+      "uzaktan imza",
+      "e-imza isteme",
+      "belge imzalatma",
+      "dijital imza talebi"
+    ],
+    "en": [
+      "Comparison",
+      "Signatures",
+      "Contracts",
+      "request signature",
+      "send pdf for signature",
+      "sign contract online",
+      "remote signing",
+      "e-signature request",
+      "get document signed",
+      "digital signature request"
+    ],
+    "tool": "/tools/imza-iste"
   },
   "https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma": {
     "tr": [
