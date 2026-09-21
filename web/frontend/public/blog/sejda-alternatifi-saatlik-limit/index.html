@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız — PDF Platform</title>
+    <meta name="description" content="Sejda&#39;nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/sejda-alternative" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız — PDF Platform" />
+    <meta property="og:description" content="Sejda&#39;nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz." />
+    <meta property="og:image" content="https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız — PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız — PDF Platform" />
+    <meta name="twitter:description" content="Sejda&#39;nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png" />
+    <meta name="twitter:image:alt" content="Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız — PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"tr-TR","description":"PDF birleştirme, Word'e çevirme, küçültme, JPG'ye çevirme, düzenleme ve 40+ araç daha. Üyeliksiz ve ücretsiz; birleştirme tarayıcınızda çalışır, kurulum yok.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Profesyonel PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme platformu — iş süreçleri için tasarlandı.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız","description":"Sejda'nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz.","datePublished":"2026-09-21","dateModified":"2026-09-21","inLanguage":"tr","mainEntityOfPage":"https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Sejda'nın ücretsiz sınırı nedir?","acceptedAnswer":{"@type":"Answer","text":"Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor."}},{"@type":"Question","name":"Saatlik sınır olmayan bir alternatif var mı?","acceptedAnswer":{"@type":"Answer","text":"Sayfa işlemleri için evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez."}},{"@type":"Question","name":"Dönüştürme ve OCR'de de sınırsız mı?","acceptedAnswer":{"@type":"Answer","text":"Hayır. Word'e çevirme, OCR ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır. Bu araçlarda biz de sınırlıyız."}},{"@type":"Question","name":"Sejda'da olup sizde olmayan ne var?","acceptedAnswer":{"@type":"Answer","text":"Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek."}},{"@type":"Question","name":"PDF metnini düzenleyebiliyor musunuz?","acceptedAnswer":{"@type":"Answer","text":"Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız</h1><p class="seo-intro">Sejda iyi bir araç — özellikle PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri. Ama ücretsiz planı saat başına ölçülüyor ve arka arkaya belge işlerken o duvara sık çarpılıyor.</p><article class="seo-article"><p class="seo-lead">Sejda&#39;yı kullananlar genellikle iyi şeyler söyler ve haklıdırlar. Ama alternatif arama sebebi neredeyse her zaman aynı: saatte 3 işlem. Tek bir belgeyle uğraşıyorsanız fark etmez. On tane faturayı sırayla işliyorsanız üçüncüde durursunuz ve saatin dolmasını beklersiniz.</p><h2>Sejda&#39;nın ücretsiz planı tam olarak nerede duruyor?</h2><ul><li>Saatte 3 işlem. Dördüncüde beklemeniz gerekir.</li><li>Araç başına sayfa sınırı: sayfa düzenlemede 50, çoğu araçta 200 sayfa.</li><li>Dosya boyutu: çoğu araçta 50 MB, sıkıştırmada 100 MB.</li><li>Üyelik gerekmiyor — bu gerçekten iyi bir taraf.</li></ul><p>Ücretli tarafta haftalık 5 dolarlık geçiş kartı, aylık 7,50 dolar, masaüstü dahil yıllık 63 dolar seçenekleri var. Ücretli planda saatlik ve sayfa sınırı kalkıyor, dosya sınırı 500 MB&#39;a çıkıyor.</p><h2>Sejda&#39;nın gerçekten iyi olduğu yerler</h2><p>Dürüst olalım, çünkü bunlar küçümsenecek şeyler değil:</p><ul><li>PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri.</li><li>Masaüstü sürümü var — çevrimdışı çalışmak isteyenler için.</li><li>Haftalık geçiş kartı: tek seferlik bir iş için abonelik başlatmadan 5 dolara bir hafta kullanabiliyorsunuz. Bu, bizde olmayan bir esneklik.</li><li>Ücretsiz kullanım üyelik istemiyor.</li></ul><p>Yılda birkaç kez yoğun bir PDF işi yapıyorsanız, haftalık kart muhtemelen en mantıklı çözümdür — aylık abonelik ödemenize gerek kalmaz.</p><h2>Saatlik sınır neden can sıkıyor?</h2><p>Çünkü iş öyle yürümüyor. Kimse saate yayarak belge işlemez; bir oturuşta yirmi dosyayı halletmek ister. Saatlik ölçüm, ihtiyacın şeklini değil ücretlendirmenin şeklini yansıtır.</p><p>Bu, Sejda&#39;ya özgü bir kusur değil — sunucuda çalışan her aracın maliyeti vardır ve bir yerden sınırlamak zorundadır. Sınır kaçınılmazdır; sorulacak soru, işlemin sunucuda yapılmasının gerekip gerekmediğidir.</p><h2>Sayfa işlemleri sunucu gerektirmez</h2><p>Birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama gibi işler tarayıcınızın kendi gücüyle yapılabilir. Yapıldığında iki şey birden değişir: dosya yüklenmediği için gizlilik sorunu ortadan kalkar, ve sunucu maliyeti olmadığı için sayacak bir şey kalmaz.</p><p>PDF Platform&#39;da bu araçlar tarayıcıda çalışır: saatlik sınır yok, günlük sınır yok, üyelik yok. Dosya başına 80 MB&#39;a kadar.</p><p>Sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir — sayılacak bir sunucu işi yok.</p><h2>Peki sunucu gereken işler?</h2><p>Burada dürüst olmak gerek: Word&#39;e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük bir hak vardır. Yani bu araçlarda biz de sınırlıyız.</p><p>Fark şurada: Sejda&#39;da saatlik sınır TÜM araçları kapsar, sayfa düzenleme dahil. Bizde sayfa işlemleri hiç sayılmaz, çünkü bize maliyeti yoktur. Ücretsiz kullanıcının en sık yaptığı işler de zaten bunlardır.</p><p><a href="/tools/merge-pdf"><strong>PDF Birleştir</strong> — Saatlik sınır yok, üyelik yok — tarayıcınızda çalışır, dosyanız yüklenmez.</a></p><h2>Hangisini seçmelisiniz?</h2><ul><li>Sayfa düzenleme yapıyorsanız (birleştir, böl, döndür, sil, sırala): tarayıcıda çalışan araç sınırsızdır ve dosyanız yüklenmez.</li><li>PDF metnini düzenlemeniz gerekiyorsa: ikisinde de var. Sejda bu işi uzun süredir yapıyor; bizde de gerçek metin düzenleme bulunuyor.</li><li>Yılda birkaç kez yoğun iş yapıyorsanız: Sejda&#39;nın haftalık 5 dolarlık kartı muhtemelen en ucuz yoldur — bizde böyle bir seçenek yok.</li><li>Masaüstü programı istiyorsanız: Sejda&#39;nın var, bizim yok.</li><li>Düzenli olarak çok belge işliyorsanız: aylık maliyetleri karşılaştırın — Sejda Web aylık 7,50 dolar, PDF Platform Plus 6,99 dolar.</li></ul><p>Kısacası bu bir «hangisi daha iyi» sorusu değil. Sejda, sunucuda çalışan güçlü bir araç takımı ve esnek ödeme seçenekleri sunuyor. Biz, sayfa işlemlerini sunucudan çıkararak o işlerdeki sınırı tamamen ortadan kaldırıyoruz. İhtiyacınız hangisiyse onu seçin.</p></article><section aria-label="Sık sorulan sorular" class="seo-faq"><h2>Sık Sorulan Sorular</h2><div class="seo-faq-item"><h3>Sejda&#39;nın ücretsiz sınırı nedir?</h3><p>Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor.</p></div><div class="seo-faq-item"><h3>Saatlik sınır olmayan bir alternatif var mı?</h3><p>Sayfa işlemleri için evet. PDF Platform&#39;da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez.</p></div><div class="seo-faq-item"><h3>Dönüştürme ve OCR&#39;de de sınırsız mı?</h3><p>Hayır. Word&#39;e çevirme, OCR ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır. Bu araçlarda biz de sınırlıyız.</p></div><div class="seo-faq-item"><h3>Sejda&#39;da olup sizde olmayan ne var?</h3><p>Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek.</p></div><div class="seo-faq-item"><h3>PDF metnini düzenleyebiliyor musunuz?</h3><p>Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır.</p></div></section></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Sat, 19 Sep 2026 20:47:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 21 Sep 2026 12:08:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,45 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız</title>
+      <link>https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit</guid>
+      <pubDate>Mon, 21 Sep 2026 12:08:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/sejda-alternative" />
+      <description><![CDATA[Sejda iyi bir araç — özellikle PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri. Ama ücretsiz planı saat başına ölçülüyor ve arka arkaya belge işlerken o duvara sık çarpılıyor.]]></description>
+      <content:encoded><![CDATA[<p>Sejda'yı kullananlar genellikle iyi şeyler söyler ve haklıdırlar. Ama alternatif arama sebebi neredeyse her zaman aynı: saatte 3 işlem. Tek bir belgeyle uğraşıyorsanız fark etmez. On tane faturayı sırayla işliyorsanız üçüncüde durursunuz ve saatin dolmasını beklersiniz.</p>
+<h2>Sejda'nın ücretsiz planı tam olarak nerede duruyor?</h2>
+<ul><li>Saatte 3 işlem. Dördüncüde beklemeniz gerekir.</li><li>Araç başına sayfa sınırı: sayfa düzenlemede 50, çoğu araçta 200 sayfa.</li><li>Dosya boyutu: çoğu araçta 50 MB, sıkıştırmada 100 MB.</li><li>Üyelik gerekmiyor — bu gerçekten iyi bir taraf.</li></ul>
+<p>Ücretli tarafta haftalık 5 dolarlık geçiş kartı, aylık 7,50 dolar, masaüstü dahil yıllık 63 dolar seçenekleri var. Ücretli planda saatlik ve sayfa sınırı kalkıyor, dosya sınırı 500 MB'a çıkıyor.</p>
+<h2>Sejda'nın gerçekten iyi olduğu yerler</h2>
+<p>Dürüst olalım, çünkü bunlar küçümsenecek şeyler değil:</p>
+<ul><li>PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri.</li><li>Masaüstü sürümü var — çevrimdışı çalışmak isteyenler için.</li><li>Haftalık geçiş kartı: tek seferlik bir iş için abonelik başlatmadan 5 dolara bir hafta kullanabiliyorsunuz. Bu, bizde olmayan bir esneklik.</li><li>Ücretsiz kullanım üyelik istemiyor.</li></ul>
+<p>Yılda birkaç kez yoğun bir PDF işi yapıyorsanız, haftalık kart muhtemelen en mantıklı çözümdür — aylık abonelik ödemenize gerek kalmaz.</p>
+<h2>Saatlik sınır neden can sıkıyor?</h2>
+<p>Çünkü iş öyle yürümüyor. Kimse saate yayarak belge işlemez; bir oturuşta yirmi dosyayı halletmek ister. Saatlik ölçüm, ihtiyacın şeklini değil ücretlendirmenin şeklini yansıtır.</p>
+<p>Bu, Sejda'ya özgü bir kusur değil — sunucuda çalışan her aracın maliyeti vardır ve bir yerden sınırlamak zorundadır. Sınır kaçınılmazdır; sorulacak soru, işlemin sunucuda yapılmasının gerekip gerekmediğidir.</p>
+<h2>Sayfa işlemleri sunucu gerektirmez</h2>
+<p>Birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama gibi işler tarayıcınızın kendi gücüyle yapılabilir. Yapıldığında iki şey birden değişir: dosya yüklenmediği için gizlilik sorunu ortadan kalkar, ve sunucu maliyeti olmadığı için sayacak bir şey kalmaz.</p>
+<p>PDF Platform'da bu araçlar tarayıcıda çalışır: saatlik sınır yok, günlük sınır yok, üyelik yok. Dosya başına 80 MB'a kadar.</p>
+<blockquote><p>Sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir — sayılacak bir sunucu işi yok.</p></blockquote>
+<h2>Peki sunucu gereken işler?</h2>
+<p>Burada dürüst olmak gerek: Word'e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük bir hak vardır. Yani bu araçlarda biz de sınırlıyız.</p>
+<p>Fark şurada: Sejda'da saatlik sınır TÜM araçları kapsar, sayfa düzenleme dahil. Bizde sayfa işlemleri hiç sayılmaz, çünkü bize maliyeti yoktur. Ücretsiz kullanıcının en sık yaptığı işler de zaten bunlardır.</p>
+<p><strong>PDF Birleştir</strong> — Saatlik sınır yok, üyelik yok — tarayıcınızda çalışır, dosyanız yüklenmez. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Hangisini seçmelisiniz?</h2>
+<ul><li>Sayfa düzenleme yapıyorsanız (birleştir, böl, döndür, sil, sırala): tarayıcıda çalışan araç sınırsızdır ve dosyanız yüklenmez.</li><li>PDF metnini düzenlemeniz gerekiyorsa: ikisinde de var. Sejda bu işi uzun süredir yapıyor; bizde de gerçek metin düzenleme bulunuyor.</li><li>Yılda birkaç kez yoğun iş yapıyorsanız: Sejda'nın haftalık 5 dolarlık kartı muhtemelen en ucuz yoldur — bizde böyle bir seçenek yok.</li><li>Masaüstü programı istiyorsanız: Sejda'nın var, bizim yok.</li><li>Düzenli olarak çok belge işliyorsanız: aylık maliyetleri karşılaştırın — Sejda Web aylık 7,50 dolar, PDF Platform Plus 6,99 dolar.</li></ul>
+<p>Kısacası bu bir «hangisi daha iyi» sorusu değil. Sejda, sunucuda çalışan güçlü bir araç takımı ve esnek ödeme seçenekleri sunuyor. Biz, sayfa işlemlerini sunucudan çıkararak o işlerdeki sınırı tamamen ortadan kaldırıyoruz. İhtiyacınız hangisiyse onu seçin.</p>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>PDF Araçları</category>
+      <category>Gizlilik</category>
+      <enclosure url="https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png" type="image/png" length="52819" />
+      <media:content url="https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/sejda-alternatifi-saatlik-limit.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/sejda-alternatifi-saatlik-limit.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/sejda-alternatifi-saatlik-limit.png" />
+    </item>
     <item>
       <title>Microsoft Lens Kapandı: Telefonla Belge Taramaya Ne Kaldı?</title>
       <link>https://www.pdfplatform.app/blog/microsoft-lens-alternatifi</link>
@@ -99,6 +138,49 @@
       <media:content url="https://www.pdfplatform.app/covers/square/pdf24-alternatifi-mac-linux.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/pdf24-alternatifi-mac-linux.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf24-alternatifi-mac-linux.png" />
+    </item>
+    <item>
+      <title>DocuSign Alternatifi: Ayda 5 Belge Sınırına Takılıyorsanız</title>
+      <link>https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi</guid>
+      <pubDate>Sat, 19 Sep 2026 11:45:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/docusign-alternatives" />
+      <description><![CDATA[DocuSign iyi bir ürün ama fiyatlandırması «zarf» üzerinden işliyor ve bireysel plan ayda 5 belgeyle sınırlı. Ayda on sözleşme gönderen küçük bir işletme için bu erken biten bir paket.]]></description>
+      <content:encoded><![CDATA[<p>Elektronik imza denince akla ilk DocuSign geliyor ve bunun sebebi var — kategoriyi o kurdu. Ama fiyatlandırması gönderdiğiniz belge sayısı üzerinden işliyor ve bireysel plan ayda 5 belgede bitiyor. Ayda on sözleşme gönderen tek kişilik bir şirket için bu, ayın ortasında biten bir paket demek.</p>
+<h2>DocuSign'ın fiyatlandırması nasıl işliyor?</h2>
+<p>DocuSign «zarf» (envelope) birimini kullanıyor: imzaya gönderdiğiniz her belge paketi bir zarf sayılıyor. Kendi fiyat sayfasındaki güncel rakamlar:</p>
+<ul><li>Personal — aylık 11 dolar (yıllık ödemede), ayda 5 zarf.</li><li>Standard — kullanıcı başına aylık 30 dolar, kullanıcı başına yılda 100 zarf.</li><li>Business Pro — kullanıcı başına aylık 45 dolar, kullanıcı başına yılda 100 zarf.</li></ul>
+<p>Dikkat edilmesi gereken yer şu: üst planlarda bile sınır yıllık 100 zarf. Yani ayda ortalama sekiz belge. Daha fazlası için kurumsal görüşme gerekiyor.</p>
+<h2>DocuSign'ın gerçekten güçlü olduğu yerler</h2>
+<p>Alternatif ararken neyi bırakacağınızı bilmeniz gerek. DocuSign'ın öne çıktığı yerler tartışmasız:</p>
+<ul><li>Salesforce, SAP, Google Workspace gibi sistemlerle hazır bütünleşmeler.</li><li>Nitelikli elektronik imza seçenekleri ve düzenlemeye tabi sektörler için sertifikasyonlar.</li><li>Toplu gönderim, şablon yönetimi, yüz yüze imzalama gibi ileri akışlar.</li><li>iOS ve Android uygulamaları, kurumsal kullanıcı yönetimi.</li></ul>
+<p>Bunlara ihtiyacınız varsa alternatif aramak yanlış yönde bir tasarruf olur. Aşağısı, ihtiyacı bunlar olmayanlar için.</p>
+<h2>Çoğu kişinin ihtiyacı aslında ne?</h2>
+<p>Pratikte en sık kurulan cümle şu: «Şu sözleşmeyi karşı tarafa göndereyim, imzalasın, imzalandığına dair elimde bir kayıt kalsın.» Serbest çalışanlar, küçük ajanslar, muhasebeciler, emlakçılar, tek kişilik şirketler. Zarf kotası, entegrasyon kataloğu ya da kurumsal kullanıcı yönetimi bu işin parçası değil.</p>
+<h2>PDF Platform'da imza isteme</h2>
+<p>Belgeyi yüklersiniz, imzalayacak kişinin e-posta adresini girersiniz, o kişiye yalnızca kendisi için üretilmiş bir bağlantı gider. Karşı taraf hesap açmadan belgeyi görür, adını yazar, imzasını çizer ve onay kutusunu işaretler.</p>
+<p>Kritik ayrıntı şurada: imza, sunucuda duran ASIL belgeye uygulanır. İmzalayandan geri dosya kabul edilmez. Yani «gönderilen belge ile imzalanan belge aynı mı» sorusu tasarım gereği çözülmüştür — sonradan denetlenecek bir şey değil.</p>
+<p>İmzalanan belgenin sonuna bir denetim sertifikası ekleniyor. İçinde şunlar yazıyor:</p>
+<ul><li>İsteğin oluşturulduğu, gönderildiği, görüntülendiği ve imzalandığı anlar.</li><li>İmzalayanın adı ve e-posta adresi, kimlik doğrulama yöntemi.</li><li>Onayın verildiği an.</li><li>Belgenin imza öncesi ve sonrası parmak izleri (SHA-256).</li></ul>
+<p>Bağlantı 14 gün geçerli. Karşı taraf imzalamayı reddedebilir — isterse gerekçe yazar, size e-postayla bildirilir ve bu da denetim kaydına işlenir.</p>
+<h2>Hukuki geçerlilik — burada dürüst olmak şart</h2>
+<p>Bu, görsel (ıslak imza görünümlü) bir elektronik imzadır ve yanında sürecin kaydı bulunur. Ticari belgelerin büyük bölümünde kullanılan yaklaşım budur.</p>
+<p>Ama nitelikli elektronik imza AYRI bir hukuki kategoridir ve yetkilendirilmiş bir hizmet sağlayıcıdan alınmış sertifika gerektirir. Bunu sunmuyoruz. Noter onayı gerektiren, resmî makama sunulacak ya da mevzuatın nitelikli imza şart koştuğu belgelerde bu araç doğru seçim değildir — DocuSign'ın nitelikli imza seçenekleri ya da yerel bir e-imza sağlayıcısı gerekir.</p>
+<h2>Maliyet karşılaştırması</h2>
+<ul><li>DocuSign Personal: aylık 11 dolar, ayda 5 belge.</li><li>PDF Platform Plus: aylık 6,99 dolar, aylık 600 işlem hakkı ve 34 aracın tamamı. İmza isteme Plus ve üzeri planlarda bulunur.</li></ul>
+<p>Rakamları karşılaştırırken elmayla elmayı karşılaştırdığınızdan emin olun: DocuSign'ın paketi imza etrafında kurulmuş bir iş akışı ürünü; buradaki paket, içinde imza isteme de bulunan bir belge araç takımı. İhtiyacınız yalnızca imzaysa ikincisi daha ucuza geliyor; ihtiyacınız kurumsal bir imza altyapısıysa ilki daha fazlasını veriyor.</p>
+<p><strong>İmza İste</strong> — Belgeyi yükleyin, e-posta adresini girin — karşı taraf hesap açmadan imzalasın, denetim sertifikası belgeye eklensin. <a href="https://www.pdfplatform.app/tools/imza-iste">Aracı aç</a></p>
+<h2>Hangisini seçmelisiniz?</h2>
+<ul><li>Ayda birkaç sözleşme gönderiyor ve süreç kaydı istiyorsanız: imza isteme akışı yeterlidir ve daha ucuzdur.</li><li>Nitelikli elektronik imza ya da sektörel sertifikasyon gerekiyorsa: DocuSign ya da yerel bir e-imza sağlayıcısı.</li><li>CRM'inizle bütünleşme, toplu gönderim ya da şablon yönetimi gerekiyorsa: DocuSign.</li><li>Sadece kendi belgenize imza atacaksanız: hiçbirine gerek yok — PDF imzalama aracı üyeliksiz ve cihazınızda çalışır.</li></ul>]]></content:encoded>
+      <category>Karşılaştırma</category>
+      <category>İmza</category>
+      <category>Sözleşme</category>
+      <enclosure url="https://www.pdfplatform.app/covers/docusign-alternatifi-imza-istegi.png" type="image/png" length="52818" />
+      <media:content url="https://www.pdfplatform.app/covers/docusign-alternatifi-imza-istegi.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/docusign-alternatifi-imza-istegi.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/docusign-alternatifi-imza-istegi.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/docusign-alternatifi-imza-istegi.png" />
     </item>
     <item>
       <title>PDF&apos;ten Kesit Alma: Sayfadaki Tabloyu, Grafiği veya Soruyu Net Şekilde Kaydedin</title>
@@ -837,63 +919,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" />
-    </item>
-    <item>
-      <title>CamScanner&apos;a Ücretsiz ve Gizli Alternatif: Tarayıcıda Belge Tarama</title>
-      <link>https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/camscanner-ucretsiz-gizli-alternatif</guid>
-      <pubDate>Mon, 13 Jul 2026 20:08:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/camscanner-alternative" />
-      <description><![CDATA[Belge tarama uygulamaları pratik ama çoğu reklam gösterir, çıktıya filigran koyar ya da dosyanızı buluta yükler. Tarayıcıda çalışan, cihazınızda işleyen ve temel özellikleri ücretsiz olan bir alternatifi tanıtıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>CamScanner gibi tarama uygulamaları işi görür; ama birçoğu üyelik ister, ücretsiz sürümde çıktıya filigran koyar, reklam gösterir ve belgelerinizi işlemek için kendi bulutlarına yükler. Hassas belgeler söz konusuysa bu son madde tek başına yeterince rahatsız edici.</p>
-<h2>Tarayıcıda + cihazda ne değişiyor?</h2>
-<p>PDF Platform'un belge tarayıcısı telefon tarayıcınızda açılır — kurulum yok. Daha önemlisi, tüm işlem cihazınızda çalışır: kamera görüntüsü, otomatik kenar bulma, perspektif düzeltme ve PDF oluşturma. Belgeniz herhangi bir sunucuya yüklenmez, çıktıya zorunlu filigran konmaz.</p>
-<h2>Dürüst karşılaştırma</h2>
-<ul><li>Kurulum: Uygulama yok — telefon tarayıcısında açılır.</li><li>Gizlilik: Tarama cihazınızda; belge buluta yüklenmez.</li><li>Filigran: Çıktıya zorunlu filigran yok.</li><li>Ücretsiz: Tarama, PDF, kaydetme ve paylaşma ücretsiz; tek taramada 3 sayfa.</li><li>Pro: Otomatik gölge temizleme, sınırsız sayfa ve aranabilir PDF (OCR).</li></ul>
-<h2>Temelde ücretsiz olan ne?</h2>
-<p>Belgeyi tarama, otomatik kenar bulma, perspektif düzeltme, Renkli/Gri/Siyah-Beyaz filtreler, PDF oluşturma, kaydetme ve paylaşma — tümü ücretsizdir ve üyelik istemez. Tek taramada 3 sayfaya kadar tarayabilirsiniz.</p>
-<h2>Pro neyi ekler?</h2>
-<p>Daha profesyonel taramalar için Pro üç şey ekler: gölgeleri temizleyip zemini beyazlatan «Otomatik» filtre, tek taramada sınırsız sayfa ve metni Ctrl+F ile aranabilir/kopyalanabilir yapan aranabilir PDF (OCR). Hepsi yine cihazınızda çalışır.</p>
-<p><strong>Görsel → PDF</strong> — Belgelerinizi ya da fotoğraflarınızı tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Hemen deneyin</a></p>
-<h2>Kimler için ideal?</h2>
-<p>Ara sıra bir belge tarayan ama telefonuna bir uygulama daha kurmak istemeyen; kimlik, sözleşme, fatura gibi belgeleri buluta yüklemeden dijitalleştirmek isteyen herkes için. Bir bağlantıdan açılır, işini görür ve belgeniz sizde kalır.</p>]]></content:encoded>
-      <category>Belge Tarama</category>
-      <category>Alternatif</category>
-      <category>Gizlilik</category>
-      <enclosure url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" type="image/png" length="56923" />
-      <media:content url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/camscanner-ucretsiz-gizli-alternatif.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/camscanner-ucretsiz-gizli-alternatif.png" />
-    </item>
-    <item>
-      <title>Telefonla Belge Tarama: Uygulamasız, Ücretsiz ve Cihazınızda (2026)</title>
-      <link>https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf</guid>
-      <pubDate>Mon, 13 Jul 2026 19:38:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/scan-documents-with-your-phone" />
-      <description><![CDATA[Bir sözleşmeyi, faturayı ya da not kağıdını hızlıca dijitalleştirmek için ayrı bir uygulama kurmanıza gerek yok. Telefonunuzun tarayıcısından belgeyi çekin; kenarları otomatik bulunsun, perspektifi düzelsin ve tek dokunuşla PDF olsun — hepsi cihazınızda.]]></description>
-      <content:encoded><![CDATA[<p>Elinizde kağıt bir belge var ve onu hızlıca PDF yapmanız gerekiyor. Çoğu kişi bunun için mağazadan bir tarayıcı uygulaması indirir; reklamlar, üyelik ekranları ve dosyalarını buluta yükleyen izinlerle uğraşır. Oysa telefonunuzun tarayıcısında, hiçbir şey kurmadan, belgeyi çekip düzgün bir PDF'e çevirebilirsiniz — üstelik dosyanız cihazınızdan hiç çıkmadan.</p>
-<h2>Neden tarayıcıda ve cihazda?</h2>
-<p>Uygulama kurmak yer kaplar, güncelleme ister ve çoğu tarama uygulaması belgenizi işlemek için sunucularına gönderir. PDF Platform'un belge tarayıcısı ise doğrudan telefon tarayıcınızda açılır ve tüm işlemi — kenar bulma, perspektif düzeltme, PDF oluşturma — cihazınızda yapar. Bu, iki büyük fark demektir: kurulum yok ve belgeniz internete yüklenmez.</p>
-<h2>Nasıl çalışır? Adım adım</h2>
-<ol><li><strong>Ana sayfada «Belge Tara»ya dokunun</strong> — Telefonunuzda pdfplatform.app'i açın; araç seçicinin üstündeki «📸 Kamerayla Belge Tara» düğmesine dokunun. Kamera izni verin.</li><li><strong>Kamerayı belgeye doğrultun</strong> — Belgenin kenarları canlı olarak yeşil çerçeveyle işaretlenir. Telefonu sabit tuttuğunuzda sistem belgeyi kendiliğinden yakalar — deklanşöre basmanıza gerek yok.</li><li><strong>Filtreyi seçin, köşeleri onaylayın</strong> — Renkli, Gri veya Siyah-Beyaz arasından seçin. Otomatik bulunan köşeler hazırdır; istersen parmakla ince ayar yapabilirsin.</li><li><strong>PDF'i oluşturun</strong> — Tek sayfa ya da birden çok sayfa ekleyin, ardından «PDF Oluştur» deyin. Sonuçta Kaydet, Paylaş veya PDF araçlarında açma seçenekleri çıkar.</li></ol>
-<blockquote><p>Kenar tespiti tamamen otomatiktir: belgeyi çerçeveye alıp sabit tutmanız yeterli. Işık iyiyse ve belge zeminden ayrıştıysa kenarlar anında bulunur; bulunamazsa köşeleri elle sürükleyerek düzeltebilirsiniz.</p></blockquote>
-<h2>Çok sayfalı belgeleri tek PDF'te toplayın</h2>
-<p>Bir sözleşmenin tüm sayfalarını ya da bir defter dolusu notu arka arkaya tarayıp tek bir PDF'te birleştirebilirsiniz. Her sayfa tarandıkça küçük bir önizleme olarak eklenir; sırasını görür, istemediğinizi silersiniz. Ücretsiz planda tek taramada 3 sayfaya kadar tarayabilir; sınırsız sayfa için Pro'ya geçebilirsiniz.</p>
-<p><strong>Görsel → PDF</strong> — Zaten çektiğiniz fotoğraflar varsa onları da saniyeler içinde tek PDF'e çevirin — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Aracı aç</a></p>
-<h2>Gizlilik: belgeniz cihazınızdan çıkmaz</h2>
-<p>Kimlik, sözleşme, fatura gibi belgeleri tararken en büyük endişe, dosyanın bir sunucuya gitmesidir. Burada böyle bir şey olmaz: kamera görüntüsü, kenar tespiti ve PDF oluşturma tamamen tarayıcınızda çalışır. Oluşan PDF yalnızca sizin kaydettiğiniz veya paylaştığınız yere gider.</p>]]></content:encoded>
-      <category>Belge Tarama</category>
-      <category>Mobil</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" type="image/png" length="58215" />
-      <media:content url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/telefonla-belge-tarama-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/telefonla-belge-tarama-pdf.png" />
     </item>
   </channel>
 </rss>

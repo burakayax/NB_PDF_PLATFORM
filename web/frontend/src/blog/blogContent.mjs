@@ -13,6 +13,139 @@ const post = (meta, tr, en) => ({ ...meta, tr, en });
 export const BLOG_POSTS = [
   post(
     {
+      slug: "sejda-alternatifi-saatlik-limit",
+      date: "2026-09-21",
+      updated: "2026-09-21",
+      readMinutes: 6,
+      tags: { tr: ["Karşılaştırma", "PDF Araçları", "Gizlilik"], en: ["Comparison", "PDF Tools", "Privacy"] },
+      accent: "amber",
+      tool: "/tools/merge-pdf",
+    },
+    {
+      title: "Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız",
+      description:
+        "Sejda'nın ücretsiz planı saatte 3 işlemle sınırlı. Arka arkaya belge işleyenler için bu duvar erken geliyor. Saatlik sınır olmayan, tarayıcıda çalışan seçenekleri dürüstçe karşılaştırıyoruz.",
+      excerpt:
+        "Sejda iyi bir araç — özellikle PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri. Ama ücretsiz planı saat başına ölçülüyor ve arka arkaya belge işlerken o duvara sık çarpılıyor.",
+      blocks: [
+        { t: "lead", x: "Sejda'yı kullananlar genellikle iyi şeyler söyler ve haklıdırlar. Ama alternatif arama sebebi neredeyse her zaman aynı: saatte 3 işlem. Tek bir belgeyle uğraşıyorsanız fark etmez. On tane faturayı sırayla işliyorsanız üçüncüde durursunuz ve saatin dolmasını beklersiniz." },
+
+        { t: "h2", x: "Sejda'nın ücretsiz planı tam olarak nerede duruyor?" },
+        { t: "ul", items: [
+          "Saatte 3 işlem. Dördüncüde beklemeniz gerekir.",
+          "Araç başına sayfa sınırı: sayfa düzenlemede 50, çoğu araçta 200 sayfa.",
+          "Dosya boyutu: çoğu araçta 50 MB, sıkıştırmada 100 MB.",
+          "Üyelik gerekmiyor — bu gerçekten iyi bir taraf.",
+        ] },
+        { t: "p", x: "Ücretli tarafta haftalık 5 dolarlık geçiş kartı, aylık 7,50 dolar, masaüstü dahil yıllık 63 dolar seçenekleri var. Ücretli planda saatlik ve sayfa sınırı kalkıyor, dosya sınırı 500 MB'a çıkıyor." },
+
+        { t: "h2", x: "Sejda'nın gerçekten iyi olduğu yerler" },
+        { t: "p", x: "Dürüst olalım, çünkü bunlar küçümsenecek şeyler değil:" },
+        { t: "ul", items: [
+          "PDF içindeki metni gerçekten düzenleyebilen az sayıda çevrimiçi araçtan biri.",
+          "Masaüstü sürümü var — çevrimdışı çalışmak isteyenler için.",
+          "Haftalık geçiş kartı: tek seferlik bir iş için abonelik başlatmadan 5 dolara bir hafta kullanabiliyorsunuz. Bu, bizde olmayan bir esneklik.",
+          "Ücretsiz kullanım üyelik istemiyor.",
+        ] },
+        { t: "p", x: "Yılda birkaç kez yoğun bir PDF işi yapıyorsanız, haftalık kart muhtemelen en mantıklı çözümdür — aylık abonelik ödemenize gerek kalmaz." },
+
+        { t: "h2", x: "Saatlik sınır neden can sıkıyor?" },
+        { t: "p", x: "Çünkü iş öyle yürümüyor. Kimse saate yayarak belge işlemez; bir oturuşta yirmi dosyayı halletmek ister. Saatlik ölçüm, ihtiyacın şeklini değil ücretlendirmenin şeklini yansıtır." },
+        { t: "p", x: "Bu, Sejda'ya özgü bir kusur değil — sunucuda çalışan her aracın maliyeti vardır ve bir yerden sınırlamak zorundadır. Sınır kaçınılmazdır; sorulacak soru, işlemin sunucuda yapılmasının gerekip gerekmediğidir." },
+
+        { t: "h2", x: "Sayfa işlemleri sunucu gerektirmez" },
+        { t: "p", x: "Birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama gibi işler tarayıcınızın kendi gücüyle yapılabilir. Yapıldığında iki şey birden değişir: dosya yüklenmediği için gizlilik sorunu ortadan kalkar, ve sunucu maliyeti olmadığı için sayacak bir şey kalmaz." },
+        { t: "p", x: "PDF Platform'da bu araçlar tarayıcıda çalışır: saatlik sınır yok, günlük sınır yok, üyelik yok. Dosya başına 80 MB'a kadar." },
+        { t: "tip", x: "Sınamak otuz saniye sürer: birleştirme aracını açın, internet bağlantınızı kesin, birleştirmeyi çalıştırın. Tamamlanıyorsa işlem cihazınızda yapılıyor demektir — sayılacak bir sunucu işi yok." },
+
+        { t: "h2", x: "Peki sunucu gereken işler?" },
+        { t: "p", x: "Burada dürüst olmak gerek: Word'e çevirme, OCR ve sıkıştırma bizde de sunucuda çalışır ve ücretsiz planda günlük bir hak vardır. Yani bu araçlarda biz de sınırlıyız." },
+        { t: "p", x: "Fark şurada: Sejda'da saatlik sınır TÜM araçları kapsar, sayfa düzenleme dahil. Bizde sayfa işlemleri hiç sayılmaz, çünkü bize maliyeti yoktur. Ücretsiz kullanıcının en sık yaptığı işler de zaten bunlardır." },
+
+        { t: "cta", title: "PDF Birleştir", x: "Saatlik sınır yok, üyelik yok — tarayıcınızda çalışır, dosyanız yüklenmez.", btn: "Aracı aç", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Hangisini seçmelisiniz?" },
+        { t: "ul", items: [
+          "Sayfa düzenleme yapıyorsanız (birleştir, böl, döndür, sil, sırala): tarayıcıda çalışan araç sınırsızdır ve dosyanız yüklenmez.",
+          "PDF metnini düzenlemeniz gerekiyorsa: ikisinde de var. Sejda bu işi uzun süredir yapıyor; bizde de gerçek metin düzenleme bulunuyor.",
+          "Yılda birkaç kez yoğun iş yapıyorsanız: Sejda'nın haftalık 5 dolarlık kartı muhtemelen en ucuz yoldur — bizde böyle bir seçenek yok.",
+          "Masaüstü programı istiyorsanız: Sejda'nın var, bizim yok.",
+          "Düzenli olarak çok belge işliyorsanız: aylık maliyetleri karşılaştırın — Sejda Web aylık 7,50 dolar, PDF Platform Plus 6,99 dolar.",
+        ] },
+        { t: "p", x: "Kısacası bu bir «hangisi daha iyi» sorusu değil. Sejda, sunucuda çalışan güçlü bir araç takımı ve esnek ödeme seçenekleri sunuyor. Biz, sayfa işlemlerini sunucudan çıkararak o işlerdeki sınırı tamamen ortadan kaldırıyoruz. İhtiyacınız hangisiyse onu seçin." },
+      ],
+      faq: [
+        { q: "Sejda'nın ücretsiz sınırı nedir?", a: "Saatte 3 işlem. Ayrıca araç başına sayfa sınırı (sayfa düzenlemede 50, çoğu araçta 200) ve dosya boyutu sınırı (çoğu araçta 50 MB, sıkıştırmada 100 MB) bulunuyor. Üyelik gerekmiyor." },
+        { q: "Saatlik sınır olmayan bir alternatif var mı?", a: "Sayfa işlemleri için evet. PDF Platform'da birleştirme, bölme, döndürme, kırpma, sayfa silme ve sıralama tarayıcınızda çalışır; saatlik ya da günlük sınır yoktur ve üyelik gerekmez." },
+        { q: "Dönüştürme ve OCR'de de sınırsız mı?", a: "Hayır. Word'e çevirme, OCR ve sıkıştırma sunucuda çalışır ve ücretsiz planda günlük bir işlem hakkı vardır. Bu araçlarda biz de sınırlıyız." },
+        { q: "Sejda'da olup sizde olmayan ne var?", a: "Masaüstü sürümü ve haftalık geçiş kartı. Tek seferlik yoğun bir iş için 5 dolarlık haftalık kart, bizde karşılığı olmayan kullanışlı bir seçenek." },
+        { q: "PDF metnini düzenleyebiliyor musunuz?", a: "Evet. PDF Düzenle aracı belgedeki mevcut metni gerçekten değiştirir ve siler; bu işlem sunucuda yapılır." },
+      ],
+    },
+    {
+      title: "A Sejda Alternative for When Three Tasks an Hour Runs Out",
+      description:
+        "Sejda's free tier is capped at three tasks per hour. If you work through documents in batches, that wall arrives early. An honest comparison with tools that have no hourly cap because they run in your browser.",
+      excerpt:
+        "Sejda is a good tool — one of the few online editors that genuinely changes the text inside a PDF. But its free tier is metered by the hour, and anyone working through a batch hits that wall fast.",
+      blocks: [
+        { t: "lead", x: "People who use Sejda generally speak well of it, and they are right to. But the reason they go looking for an alternative is almost always the same: three tasks an hour. With one document it does not matter. Working through ten invoices, you stop at the third and wait for the clock." },
+
+        { t: "h2", x: "Where exactly does Sejda's free tier stop?" },
+        { t: "ul", items: [
+          "3 tasks per hour. The fourth one waits.",
+          "Page limits per tool: 50 pages for organising pages, 200 for most other tools.",
+          "File size: 50 MB for most tools, 100 MB for compression.",
+          "No signup required — which is genuinely a point in its favour.",
+        ] },
+        { t: "p", x: "On the paid side there is a $5 week pass, $7.50 per user per month, or $63 a year including the desktop version. Paid removes the hourly and page limits and raises the file size to 500 MB." },
+
+        { t: "h2", x: "What Sejda genuinely does well" },
+        { t: "p", x: "Let us be fair, because these are not small things:" },
+        { t: "ul", items: [
+          "One of the few online tools that can really edit the text inside a PDF.",
+          "There is a desktop version, for people who want to work offline.",
+          "The week pass: for a one-off job you can pay $5 for seven days without starting a subscription. We have no equivalent.",
+          "Free use needs no account.",
+        ] },
+        { t: "p", x: "If you do a heavy PDF job a few times a year, the week pass is probably the most sensible option — you never start a monthly subscription." },
+
+        { t: "h2", x: "Why an hourly cap grates" },
+        { t: "p", x: "Because that is not how the work happens. Nobody spreads document processing across an afternoon; they want to clear twenty files in one sitting. An hourly meter reflects the shape of the billing, not the shape of the need." },
+        { t: "p", x: "This is not a flaw peculiar to Sejda. Anything that runs on a server costs money to run and has to be capped somewhere. The limit is unavoidable — the question worth asking is whether the work needed a server at all." },
+
+        { t: "h2", x: "Page operations do not need a server" },
+        { t: "p", x: "Merging, splitting, rotating, cropping, deleting and reordering pages can all be done with your browser's own power. When they are, two things change at once: nothing is uploaded, so the privacy question disappears; and nothing costs the provider anything, so there is nothing to meter." },
+        { t: "p", x: "On PDF Platform those tools run in the browser: no hourly cap, no daily cap, no account. Up to 80 MB per file." },
+        { t: "tip", x: "Checking takes thirty seconds: open the merge tool, disconnect from the internet, run the merge. If it completes, the work is happening on your machine — there is no server job to count." },
+
+        { t: "h2", x: "And the work that does need a server?" },
+        { t: "p", x: "Here honesty is required: conversion to Word, OCR and compression run on a server here too, and the free plan comes with a daily allowance. On those tools we are limited as well." },
+        { t: "p", x: "The difference is where the limit falls. Sejda's hourly cap covers every tool, page editing included. Here, page operations are never counted, because they cost us nothing — and those are exactly the things free users do most." },
+
+        { t: "cta", title: "Merge PDF", x: "No hourly cap, no account — it runs in your browser and your file is not uploaded.", btn: "Open the tool", tool: "/tools/merge-pdf" },
+
+        { t: "h2", x: "Which should you pick?" },
+        { t: "ul", items: [
+          "Doing page operations (merge, split, rotate, delete, reorder): the browser-based tool is unlimited and nothing is uploaded.",
+          "Need to edit the text inside a PDF: both can. Sejda has done it for years; we have real text editing too.",
+          "A heavy job a few times a year: Sejda's $5 week pass is probably the cheapest route — we have no such option.",
+          "Want a desktop application: Sejda has one, we do not.",
+          "Processing many documents regularly: compare the monthly cost — Sejda Web is $7.50, PDF Platform Plus is $6.99.",
+        ] },
+        { t: "p", x: "So this is not a «which is better» question. Sejda offers a strong server-side toolkit with flexible ways to pay. We take page operations off the server entirely, which removes the limit on them. Pick whichever matches what you actually do." },
+      ],
+      faq: [
+        { q: "What is Sejda's free limit?", a: "Three tasks per hour, plus per-tool page limits (50 pages for organising pages, 200 for most tools) and file size limits (50 MB for most tools, 100 MB for compression). No account is required." },
+        { q: "Is there an alternative with no hourly cap?", a: "For page operations, yes. On PDF Platform, merging, splitting, rotating, cropping, deleting and reordering pages run in your browser with no hourly or daily cap and no account." },
+        { q: "Is conversion and OCR unlimited too?", a: "No. Conversion to Word, OCR and compression run on a server and the free plan includes a daily allowance. On those tools we are limited as well." },
+        { q: "What does Sejda have that you do not?", a: "A desktop version and a week pass. For a one-off heavy job, the $5 seven-day pass is a genuinely useful option with no equivalent here." },
+        { q: "Can you edit the text inside a PDF?", a: "Yes. The Edit PDF tool really changes and deletes the existing text in the document; that work runs on a server." },
+      ],
+    },
+  ),
+  post(
+    {
       slug: "docusign-alternatifi-imza-istegi",
       date: "2026-09-19",
       updated: "2026-09-19",

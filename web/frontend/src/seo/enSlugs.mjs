@@ -40,6 +40,7 @@ export const EN_TOOL_SLUGS = {
 
 /** TR blog slug'ı → EN blog slug'ı. */
 export const EN_BLOG_SLUGS = {
+  "sejda-alternatifi-saatlik-limit": "sejda-alternative",
   "docusign-alternatifi-imza-istegi": "docusign-alternatives",
   "pdf24-alternatifi-mac-linux": "pdf24-alternative-mac-linux",
   "microsoft-lens-alternatifi": "microsoft-lens-alternative",
