@@ -337,7 +337,19 @@
 <p><strong>PDF Küçült</strong> — Dosyanı yükle, sıkıştır ve gönderime hazır hâlde indir — ücretsiz. <a href="https://www.pdfplatform.app/tools/compress">Aracı aç</a></p>
 <h2>Küçültünce kalite bozulur mu?</h2>
 <p>Dengeli düzeyde hayır — metin seçilebilir ve net kalır, görseller okunaklı olur. Metin katmanı korunduğu için sıkıştırılmış PDF'te de arama yapabilir, kopyalayabilirsin. En büyük kazanç genellikle taranmış (görsel ağırlıklı) PDF'lerde olur.</p>
-<blockquote><p>Hâlâ büyükse: gereksiz sayfaları "PDF Böl/Sil" ile çıkar ya da yalnız gereken sayfaları gönder. Birden çok belgeyi tek dosyada göndereceksen önce sıkıştır, sonra "PDF Birleştir" ile topla.</p></blockquote>]]></content:encoded>
+<blockquote><p>Hâlâ büyükse: gereksiz sayfaları "PDF Böl/Sil" ile çıkar ya da yalnız gereken sayfaları gönder. Birden çok belgeyi tek dosyada göndereceksen önce sıkıştır, sonra "PDF Birleştir" ile topla.</p></blockquote>
+<h2>Göndermeden önce sınırı doğru bilin</h2>
+<p>Bir dosyanın «çok büyük» olması gönderdiğiniz yere göre değişir ve çoğu kişi sınırı gönderdikten sonra öğrenir. Ayrıca e-posta ekleri kodlanırken yaklaşık üçte bir oranında büyür; yani 25 MB sınırı olan bir serviste 25 MB'lık bir dosya çoğu zaman geçmez. Güvenli tarafta kalmak için sınırın biraz altını hedeflemek pratik bir alışkanlıktır.</p>
+<h2>Sıkıştırma dışındaki seçenekler</h2>
+<ul><li>Gereksiz sayfaları silin — özellikle taranmış belgelerdeki boş arka yüzler.</li><li>Yalnızca ilgili sayfa aralığını gönderin; karşı tarafın işini gören kadarı yeterlidir.</li><li>Belgeyi mantıklı parçalara bölüp iki mesajda gönderin.</li><li>Çok büyük dosyalarda bir bulut bağlantısı paylaşmak, dosyayı ek olarak göndermekten daha güvenilirdir.</li></ul>
+<h2>WhatsApp'a özel durumlar</h2>
+<p>WhatsApp belgeleri sıkıştırmaz, olduğu gibi gönderir; bu iyi bir şeydir çünkü belge bozulmaz. Ancak fotoğrafı doğrudan resim olarak gönderirseniz uygulama görüntüyü küçültür ve belge okunmaz hâle gelebilir. Evrak paylaşırken fotoğrafı resim olarak değil, PDF'e çevirip belge olarak göndermek hem kaliteyi korur hem daha profesyonel görünür.</p>
+<h2>Sıkıştırmadan önce ve sonra kontrol</h2>
+<p>Sıkıştırmanın etkisi normal ekran ölçeğinde görünmez. Sonucu indirdikten sonra en küçük yazının olduğu sayfayı açıp yakınlaştırın; harfler okunuyorsa dosya kullanılabilir. Resmî bir kuruma gidecek belgelerde bu kontrolü atlamayın — okunaksız tarama, başvuruların en sık geri dönme nedenlerinden biridir.</p>
+<h2>Tekrar tekrar sıkıştırmayın</h2>
+<p>Aynı belgeyi ikinci ve üçüncü kez sıkıştırmak, her turda biraz daha kalite kaybettirir ama kayda değer bir boyut kazancı sağlamaz. Hedef boyuta tek turda ulaşmak en iyisidir. Ulaşılamıyorsa sorun sıkıştırmada değil, belgenin içeriğindedir: çok sayıda yüksek çözünürlüklü tarama varsa bölmek ya da sayfa azaltmak gerçek çözümdür.</p>
+<h2>Baştan küçük tutmak</h2>
+<ul><li>Metin belgelerini 300 DPI'da tarayın; 600 DPI gereksiz yere dosyayı büyütür.</li><li>Siyah-beyaz evrakı renkli değil, gri tonlamada tarayın.</li><li>Telefon fotoğraflarını doğrudan PDF yapmak yerine Belge Tarayıcı'dan geçirin.</li><li>Belgeyi paylaşmadan önce sayfa sayısını gözden geçirin — en kolay kazanç orada.</li></ul>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Sıkıştırma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-kucultme-eposta-whatsapp.png" type="image/png" length="49470" />
@@ -362,7 +374,18 @@
 <p><strong>Telefonda PDF İşaretle</strong> — Metin ekle, imzala, işaretle — telefonunda, uygulamasız ve ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-yorumla">Aracı aç</a></p>
 <h2>Dosyam güvende mi?</h2>
 <p>İşaretleme ve imzalama tamamen telefonunun tarayıcısında (cihazında) yapılır; PDF sunucuya yüklenmez, %100 gizlidir. Yalnızca gerçek metin silme/değiştirme sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p>
-<blockquote><p>İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin.</p></blockquote>]]></content:encoded>
+<blockquote><p>İmza için imzanı bir kez beyaz kağıda atıp fotoğrafını yükleyebilirsin; araç arka planı temizleyip belgeye yerleştirir. Formu doldurup imzaladıktan sonra e-postayla ya da WhatsApp'la doğrudan telefondan gönderebilirsin.</p></blockquote>
+<h2>Telefonda çalışırken hangi işler rahat, hangileri zor?</h2>
+<p>Küçük ekran bazı işleri kolaylaştırır, bazılarını zorlaştırır. Beklentiyi doğru kurmak, telefonla uğraşıp sonunda bilgisayara koşmayı önler.</p>
+<ul><li>Rahat: sayfa silme, sıralama, döndürme, birleştirme — büyük hedeflere dokunursunuz.</li><li>Rahat: imza atma; parmakla çizilen imza fareyle çizilenden genellikle daha iyi çıkar.</li><li>Orta: metin notu ekleme; yerleştirme için yakınlaştırmak gerekir.</li><li>Zor: çok alanlı form doldurmak ve hassas hizalama isteyen işler.</li><li>Zor: yüzlerce sayfalık taranmış belgeleri işlemek — bellek yetmeyebilir.</li></ul>
+<h2>İmzayı telefonda hazırlamak</h2>
+<p>Telefonun en iyi olduğu iş imzadır. Parmakla ya da kalemle çizilen imza, bilgisayarda fareyle çizilenden çok daha doğal görünür. İmzayı çizerken telefonu yatay tutmak ve ekranı yakınlaştırmak daha düzgün bir çizgi verir. Bir belgeyi imzalayıp geri göndermek, uygulama kurmadan birkaç dakikada tamamlanabilecek bir iştir.</p>
+<h2>Dosyayı bulmak ve sonucu göndermek</h2>
+<p>Telefonda asıl zorluk işlemin kendisi değil, dosya trafiğidir. E-postayla gelen ek çoğu zaman önce kaydedilmelidir; mesajlaşma uygulamalarından gelen belgeler kendi klasörlerine iner. İşlem bittiğinde sonuç indirilenler klasörüne düşer ve paylaş menüsüyle doğrudan e-postaya ya da mesajlaşma uygulamasına gönderilebilir. Bu akışı bir kez öğrendiğinizde sonraki belgeler birkaç dokunuş sürer.</p>
+<h2>Telefondan gelen tipik sorun: eğik fotoğraf</h2>
+<p>Telefonla çekilen evrakların çoğu hafif eğik ve gölgelidir. Bu belgeleri doğrudan PDF yapmak, karşı tarafta okunmayan bir çıktıya yol açar ve resmî başvurularda ret sebebi olabilir. Belge tarama akışı kenarları bulup perspektifi düzelttiği için sonuç tarayıcıdan geçmiş gibi görünür; aynı fotoğrafla çok daha kabul edilebilir bir belge elde edersiniz.</p>
+<h2>Ekranı korumak ve gizlilik</h2>
+<p>Telefonda çalışırken belgeler çoğu zaman toplu taşımada ya da ofiste, başkalarının görebileceği bir ekranda açılır. Hassas belgelerle çalışırken ortamı gözden geçirmek ve işiniz bittiğinde indirilenler klasöründeki ara kopyaları silmek iyi bir alışkanlıktır. Sayfa işlemleri cihazda çalıştığı için belge zaten dışarı çıkmaz; kalan risk fiziksel ortamdır.</p>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Mobil</category>
       <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-duzenleme-uygulamasiz.png" type="image/png" length="54826" />
@@ -387,7 +410,17 @@
 <p><strong>PDF Araçlarını Aç</strong> — Birleştirin, dönüştürün, imzalayın — kurulum olmadan, ücretsiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
 <h2>Peki Acrobat ne zaman gerekir?</h2>
 <p>Dürüst olalım: karmaşık form tasarımı, ileri düzey ön kontrol (prepress) veya kurumsal doküman iş akışları için Acrobat Pro hâlâ güçlü bir seçenektir. Ama çoğu kullanıcının ihtiyacı birleştirmek, dönüştürmek, imzalamak ve metin eklemek — bunlar için ücretli bir programa gerek yok.</p>
-<blockquote><p>Yalnızca bir PDF'i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Yalnızca bir PDF'i imzalamak ya da birleştirmek için Acrobat kurmayın; tarayıcıda saniyeler içinde, dosyanız cihazınızdan çıkmadan yapabilirsiniz.</p></blockquote>
+<h2>Acrobat'ın gerçekten güçlü olduğu yerler</h2>
+<p>Acrobat sektörün uzun süredir standardı ve bunun sebepleri var. Karmaşık formlar hazırlamak, baskı öncesi renk ve kesim ayarlarıyla çalışmak, sertifika tabanlı dijital imza kullanmak, erişilebilirlik etiketlerini düzenlemek ve büyük kurumsal iş akışlarına bağlanmak gibi işlerde alternatifi az. Bu işleri düzenli yapıyorsanız aboneliğin karşılığını alıyorsunuz demektir.</p>
+<h2>Peki çoğu kullanıcı bunları yapıyor mu?</h2>
+<p>Pratikte çoğu kişinin PDF ile işi çok daha sade: birkaç dosyayı birleştirmek, sayfa silmek, yan sayfayı düzeltmek, belgeyi küçültmek, bir forma imza atmak ve ara sıra Word'e çevirmek. Bu işler için tam bir masaüstü paketi kurmak ve aylık abonelik ödemek, ihtiyacın çok ötesinde bir çözümdür. Ölçüt şudur: son bir ayda Acrobat'ta yaptığınız işlerin kaçı gerçekten Acrobat gerektiriyordu?</p>
+<h2>Kurulumsuz çalışmanın pratik karşılığı</h2>
+<ul><li>Yönetici izni olmayan iş bilgisayarlarında program kurmadan çalışabilirsiniz.</li><li>Mac, Linux, Chromebook ve telefon arasında fark kalmaz.</li><li>Sürüm güncellemesi, lisans yenileme ve kurulum sorunu yoktur.</li><li>Başkasının bilgisayarında çalışırken hesabınıza dokunmadan işinizi yaparsınız.</li><li>Sayfa işlemleri cihazda çalıştığı için dosya kurum ağından dışarı çıkmaz.</li></ul>
+<h2>Ücretsiz okuyucu ile karıştırılan noktalar</h2>
+<p>Acrobat Reader ücretsizdir ama okuyucudur: belgeyi görüntüler, yorum ekler ve form doldurur. Sayfa silme, birleştirme, dönüştürme ve düzenleme ücretli sürümün işidir. Bu ayrım çoğu kullanıcıyı şaşırtır; «Acrobat'ım var ama sayfa silemiyorum» sorusunun cevabı budur. Tarayıcıda çalışan araçlar tam da bu boşluğu doldurur.</p>
+<h2>Geçiş yaparken nelere bakmalı?</h2>
+<p>Alternatife geçerken kontrol edilecek üç şey vardır: yaptığınız işlerin tamamı karşılanıyor mu, çıktı kalitesi beklediğiniz gibi mi, ve belgeleriniz nereye gidiyor? İlk ikisi birkaç dosya deneyerek anlaşılır. Üçüncüsü için sınama basittir: işlemi bağlantı kesikken deneyin; tamamlanıyorsa dosya cihazınızdan çıkmamıştır.</p>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
       <enclosure url="https://www.pdfplatform.app/covers/adobe-acrobat-alternatifi-ucretsiz.png" type="image/png" length="54269" />
@@ -412,7 +445,17 @@
 <p><strong>PDF Kırp</strong> — Kutuyu sürükleyip boyutlandırın, kırpın ve indirin — cihazınızda, ücretsiz. <a href="https://www.pdfplatform.app/tools/crop-pdf">Aracı aç</a></p>
 <h2>Kırpma içeriği siler mi?</h2>
 <p>Hayır. Kırpma, sayfanın görünür alanını (CropBox) daraltan standart bir PDF işlemidir; kalan alan net biçimde görüntülenir ve yazdırılır. İşlem tamamen tarayıcınızda çalışır, dosyanız sunucuya gitmez.</p>
-<blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>]]></content:encoded>
+<blockquote><p>Farklı sayfalarda farklı alanları kırpmak isterseniz 'Yalnız bu sayfa' seçeneğiyle sayfa sayfa uygulayın. Sayfaları önce döndürmeniz gerekiyorsa 'PDF Döndür' aracını kullanın.</p></blockquote>
+<h2>Kırpma, silmek değildir — bunun bir sonucu var</h2>
+<p>PDF'te kırpma, sayfanın görünür alanını daraltır; kesilen kısım dosyadan çıkarılmaz, yalnızca gösterilmez. Günlük kullanımda bu fark önemsizdir: belge ekranda ve baskıda istediğiniz gibi görünür. Ancak kırpmayı bir bilgiyi saklamak için kullanıyorsanız fark kritik hâle gelir; kırpılan alandaki metin dosyada durmaya devam eder ve teknik olarak geri getirilebilir. Bir bilginin gerçekten gitmesi gerekiyorsa kalıcı kaldırma yapan bir araç kullanmak gerekir.</p>
+<h2>Taranmış belgelerde en çok işe yaradığı yer</h2>
+<p>Tarayıcılar belgeyi kâğıt boyutuna göre tarar; A5 bir dekont A4 tarandığında sayfanın yarısı boş kalır. Böyle bir belgeyi okurken sürekli kaydırmak gerekir, baskıda ise küçük içerik büyük kâğıdın ortasında kalır. Kenar boşluklarını kırpmak belgeyi hem okunur hem düzgün hâle getirir; birden çok dekontu birleştirdiğinizde de sayfalar tutarlı görünür.</p>
+<h2>Kırpmadan önce sırayı doğru kurmak</h2>
+<ul><li>Yan duran sayfalar varsa önce döndürün; kırpma kutusu sayfanın yönüne göre çalışır.</li><li>Gereksiz sayfaları önce silin; kırpacak daha az sayfa kalır.</li><li>Farklı ölçüdeki sayfalar varsa aynı kırpmayı hepsine uygulamak bazılarında içerik kesebilir.</li><li>Kırpma sonrası sayfa numarası ekleyecekseniz numarayı en sona bırakın — numara yeni kenara göre yerleşir.</li></ul>
+<h2>Baskıda ne olur?</h2>
+<p>Kırpılmış bir sayfa, yazıcıya daha küçük bir sayfa olarak gider. Yazıcı bunu kâğıda sığdırmak için büyütebilir; bu, metnin daha okunaklı çıkması anlamına gelir ve çoğu zaman istenen sonuçtur. Ancak belgenin kâğıt üzerinde belirli bir ölçüde olması gerekiyorsa (örneğin resmî bir form), kırpma bu ölçüyü değiştirir. Böyle belgelerde kırpmadan önce iki kez düşünmek gerekir.</p>
+<h2>Dosya boyutu değişir mi?</h2>
+<p>Kırpma içeriği çıkarmadığı için dosya boyutu kayda değer biçimde düşmez. Boyut sorununuz varsa kırpma yerine sıkıştırma gerekir. İkisini birlikte kullanmak mantıklıdır: önce sayfayı istediğiniz alana daraltın, sonra dosyayı sıkıştırın.</p>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Kırpma</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-kirpma-kenar-boslugu-kesme.png" type="image/png" length="54434" />
@@ -437,7 +480,17 @@
 <p><strong>Word'ü PDF'e Çevir</strong> — Özgeçmişinizi yükleyin, biçimi bozulmadan PDF olarak indirin — ücretsiz. <a href="https://www.pdfplatform.app/tools/word-to-pdf">Aracı aç</a></p>
 <h2>Göndermeden önce son kontroller</h2>
 <ul><li>Dosya adı profesyonel mi? "belge1.pdf" yerine "Ad_Soyad_CV.pdf".</li><li>PDF'te yazı tipleri ve hizalama Word'deki gibi mi görünüyor?</li><li>Fotoğraf ve bağlantılar (LinkedIn, e-posta) doğru yerinde mi?</li><li>Dosya çok büyükse "PDF Küçült" ile e-posta boyutuna indirin.</li></ul>
-<blockquote><p>Birden çok belgeyi (CV + ön yazı + sertifikalar) tek dosyada göndermeniz istenirse, PDF'e çevirdikten sonra "PDF Birleştir" ile tek belgede toplayabilirsiniz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Birden çok belgeyi (CV + ön yazı + sertifikalar) tek dosyada göndermeniz istenirse, PDF'e çevirdikten sonra "PDF Birleştir" ile tek belgede toplayabilirsiniz.</p></blockquote>
+<h2>Başvuru sistemleri CV'nizi nasıl okur?</h2>
+<p>Büyük şirketlerin ve kariyer portallarının çoğunda CV'niz önce bir yazılım tarafından okunur; insan gözüne gelmesi buna bağlıdır. Bu yazılımlar belgedeki metni ayrıştırır, dolayısıyla PDF'inizin içinde gerçek metin bulunması şarttır. Tasarım programından resim olarak dışa aktarılmış ya da ekran görüntüsünden üretilmiş bir CV, sistem için boş bir sayfadır. Basit bir sınama vardır: PDF'i açın ve adınızı fareyle seçmeye çalışın; seçilemiyorsa belge resimdir.</p>
+<h2>Otomatik okumayı zorlaştıran düzenler</h2>
+<ul><li>İki sütunlu tasarımlar: okuma sırası karışabilir ve bilgiler birbirine girer.</li><li>Bilgiyi metin kutularına ya da tablolara gömmek.</li><li>İletişim bilgilerini sayfa üst bilgisine koymak — bazı sistemler üst bilgiyi hiç okumaz.</li><li>Beceri düzeylerini yalnızca grafik ya da yıldızla göstermek; metin karşılığı olmayan bilgi kaydedilmez.</li><li>Alışılmadık bölüm başlıkları; «Deneyim» yerine yaratıcı bir başlık kullanmak eşleşmeyi zorlaştırır.</li></ul>
+<h2>Word'den PDF'e geçerken yapılacak temizlik</h2>
+<p>PDF, Word belgesinin o anki hâlini dondurur. Bu yüzden dönüştürmeden önce değişiklik izlemeyi kapatmak, tüm düzeltmeleri kabul etmek ve yorumları silmek gerekir; aksi hâlde bu izler çıktıya girebilir. Belge özelliklerindeki yazar adı da gözden geçirilmelidir — şablonu başkasından aldıysanız orada başka bir isim duruyor olabilir.</p>
+<h2>Dosya adı ve gönderim</h2>
+<p>İşe alım yapan kişi günde onlarca dosya indirir; «cv_son_v3.pdf» adlı bir belge klasörde kaybolur. Ad_Soyad_CV biçiminde bir dosya adı hem bulunmayı kolaylaştırır hem özenli görünür. Ön yazı ve sertifikalar istendiğinde bunları tek bir PDF'te birleştirmek, ayrı ayrı ek göndermekten daha derli topludur; sayfa numarası eklemek de belgenin eksiksiz ulaştığını gösterir.</p>
+<h2>Göndermeden önce son bakış</h2>
+<ul><li>Yazı tipleri ve hizalama Word'deki gibi mi görünüyor?</li><li>Bağlantılar (LinkedIn, portföy) tıklanabilir mi ve doğru adrese gidiyor mu?</li><li>Dosya boyutu makul mü — fotoğraf yüzünden şişmişse sıkıştırın.</li><li>Belgede görünmesini istemediğiniz eski bir işveren adı ya da taslak notu kalmış mı?</li><li>Telefonda açıp bir kez bakın; birçok işe alımcı ilk bakışı telefonda atar.</li></ul>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Dönüştürme</category>
       <enclosure url="https://www.pdfplatform.app/covers/cv-ozgecmis-word-pdf-cevirme.png" type="image/png" length="57100" />
@@ -462,7 +515,19 @@
 <p><strong>PDF'e Metin/İşaret Ekle</strong> — Formunuzu yükleyin, boşluklara metin ekleyin ve doldurulmuş PDF'i indirin — ücretsiz. <a href="https://www.pdfplatform.app/tools/pdf-yorumla">Aracı aç</a></p>
 <h2>İmza gerekiyorsa</h2>
 <p>Form imza istiyorsa, metni ekledikten sonra imzanızı çizip/yazıp yerleştirebilirsiniz. İmzalama tamamen cihazınızda yapılır; belgeniz sunucuya gitmez.</p>
-<blockquote><p>Onay kutuları için küçük bir "X" veya "✓" metni ekleyebilirsiniz. Formu birden çok sayfaysa her sayfaya ayrı ayrı metin/işaret ekleyebilirsiniz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Onay kutuları için küçük bir "X" veya "✓" metni ekleyebilirsiniz. Formu birden çok sayfaysa her sayfaya ayrı ayrı metin/işaret ekleyebilirsiniz.</p></blockquote>
+<h2>Formunuz hangi türde? Otuz saniyede anlayın</h2>
+<p>Hangi yöntemi kullanacağınız formun türüne bağlıdır ve bunu anlamak çok kolaydır: PDF'i açın, bir boşluğa tıklayın. İmleç yanıp sönüyor ve yazabiliyorsanız form doldurulabilir bir formdur; hiçbir şey olmuyorsa düz bir formdur. Doldurulabilir formlarda alanları doğrudan doldurmak en temiz yoldur, çünkü yazı alanın içine oturur ve hizalama kendiliğinden doğru olur. Düz formlarda ise metni sayfanın üzerine yerleştirirsiniz.</p>
+<h2>Doldurulabilir formlarda Türkçe karakter sorunu</h2>
+<p>Bazı PDF formları yalnızca sınırlı bir karakter kümesiyle hazırlanmıştır; bu formlara ı, ğ, ş gibi harfler yazıldığında karakterler kaybolabilir ya da soru işaretine dönüşebilir. Bu, formu dolduran kişinin hatası değil, formu hazırlayanın yazı tipi seçimidir. Doldurduktan sonra alanları bir kez okumak, bu tür bozulmaları yakalamanın en pratik yoludur.</p>
+<h2>Formu kilitlemek ne işe yarar?</h2>
+<p>Doldurulabilir bir formu gönderdiğinizde alanlar hâlâ düzenlenebilir durumdadır; karşı taraf farkında olmadan bir alanı değiştirebilir ya da form farklı bir programda boş görünebilir. Alanları kilitlemek, yazdıklarınızı sayfanın kalıcı parçası hâline getirir ve belge her yerde aynı görünür. Resmî bir başvuruda bu adım, formun eksiksiz ve değiştirilmemiş olarak ulaşmasını sağlar.</p>
+<h2>Düz formlarda hizalama</h2>
+<ul><li>Yazı boyutunu satır yüksekliğine yakın seçin; çok büyük metin komşu satırın üstüne taşar.</li><li>Her alan için ayrı bir metin kutusu kullanın; tek uzun satır yazmak hizayı bozar.</li><li>Onay kutularına küçük bir işaret koymak yeterlidir; kutuyu taşırmayın.</li><li>Tarih alanlarında gün/ay/yıl kutucukları ayrıysa her kutuya ayrı yazın.</li><li>İndirmeden önce %100 ölçekte bakın; ekran ölçeğinde doğru görünen metin baskıda kayabilir.</li></ul>
+<h2>İmza ve gönderim</h2>
+<p>Çoğu form imza ister. Formu doldurduktan sonra imzanızı ekleyip belgeyi tek dosya hâlinde göndermek, ayrı ayrı sayfa göndermekten hem daha derli toplu hem de karşı taraf için daha kolaydır. Karşı tarafın da imzalaması gerekiyorsa, belgeyi e-postayla imzaya göndermek ve süreci kayıt altında tutmak daha güvenli bir yoldur.</p>
+<h2>Göndermeden önce son kontrol</h2>
+<p>Zorunlu alanların hepsi dolu mu, tarih biçimi istenen gibi mi, ekler istenmişse belgeye eklenmiş mi? Bu üç soru, geri dönen başvuruların büyük kısmını önler. Doldurulmuş formun bir kopyasını kendinizde saklamak da işe yarar; sonradan «ne yazmıştım?» sorusunu ortadan kaldırır.</p>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Form</category>
       <enclosure url="https://www.pdfplatform.app/covers/pdf-form-doldurma-online-ucretsiz.png" type="image/png" length="51195" />
@@ -527,7 +592,17 @@
 <h2>Hangi işler ücretsiz, hangileri hesap ister?</h2>
 <p>Dürüst ayrım: yapısal araçlar tamamen ücretsiz ve üyeliksizdir. Word/Excel dönüştürme, OCR ve yapay zekâ araçları (özet, sohbet, çeviri) sunucuda çalışır; bunlar için daha büyük dosyalar ve geçmiş kaydı hesap gerektirir ancak içerik saklanmaz.</p>
 <ul><li>Sınırsız &amp; üyeliksiz: birleştir, böl, döndür, sil, sırala, görsel → PDF, belge tara, imza, işaretleme.</li><li>Hesap/plan: Word/Excel/PowerPoint dönüştürme, OCR, sıkıştırma ve AI araçları (daha büyük dosya + geçmiş için).</li></ul>
-<blockquote><p>Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Sadece birleştir/böl/döndür gibi bir iş yapacaksanız hiç hesap açmadan, günlük sınıra takılmadan halledebilirsiniz — dosyanız da cihazınızdan çıkmaz.</p></blockquote>
+<h2>SmallPDF'in gerçekten iyi olduğu yerler</h2>
+<p>Dürüst bir karşılaştırma, rakibin güçlü yanlarını da yazar. SmallPDF uzun süredir bu işi yapıyor ve bunun karşılığı var: arayüzü sade ve öğrenmesi kolay, araç yelpazesi geniş, masaüstü ve mobil uygulamaları mevcut, ekip hesabı ve bulut entegrasyonları kurumsal kullanımda işe yarıyor. Ekip olarak ortak bir bulut akışı istiyorsanız bunlar hafife alınacak özellikler değildir.</p>
+<h2>Asıl fark nerede?</h2>
+<p>Fark özellik listesinde değil, işin nerede yapıldığında. Sunucuda çalışan her aracın maliyeti vardır ve bu maliyet bir yerden sınırlanmak zorundadır; günlük ya da saatlik sınırlar bu yüzden konur. Sayfa işlemleri ise sunucu gerektirmez. Bunlar tarayıcıda yapıldığında sayılacak bir işlem kalmaz: sınır, sunucu maliyeti ortadan kalktığı için kalkar — cömertlikten değil.</p>
+<h2>Hangi işler gerçekten sınırsız?</h2>
+<ul><li>Birleştirme, bölme, sayfa silme, sıralama, döndürme ve kırpma: cihazda çalışır, sınır ve üyelik yoktur.</li><li>Görselleri PDF yapmak, belge taramak, imza ve işaretleme: yine cihazda.</li><li>Word/Excel'e dönüştürme, OCR, sıkıştırma: sunucuda çalışır; ücretsiz planda günlük hak vardır.</li><li>Yapay zekâ araçları (özet, çeviri, veri çıkarma, karşılaştırma): sunucuda, plana bağlı.</li></ul>
+<h2>Kendi ihtiyacınızı doğru ölçün</h2>
+<p>Karar vermenin en pratik yolu, son bir ayda hangi işi kaç kez yaptığınıza bakmaktır. Çoğu kişinin yaptığı işlerin büyük bölümü sayfa düzenlemedir; bu durumda sınırsız ve üyeliksiz çalışan bir araç ihtiyacı karşılar. Düzenli olarak Word'e dönüştürme ya da OCR yapıyorsanız iki tarafta da ücretli plana bakmanız gerekir; o noktada karşılaştırılacak şey aylık maliyettir.</p>
+<h2>Sınamak otuz saniye sürer</h2>
+<p>İddiaları okumak yerine sınayın: birleştirme aracını açın, internet bağlantınızı kesin ve işlemi çalıştırın. Tamamlanıyorsa dosya cihazınızdan çıkmamıştır ve sayılacak bir sunucu işlemi yoktur. Aynı sınamayı kullandığınız diğer araçlarda da yapabilirsiniz; sonuç, her iki tarafın gizlilik metninden daha açık konuşur.</p>]]></content:encoded>
       <category>Karşılaştırma</category>
       <category>Ücretsiz</category>
       <enclosure url="https://www.pdfplatform.app/covers/smallpdf-alternatifi-sinirsiz-ucretsiz.png" type="image/png" length="56555" />
@@ -554,7 +629,18 @@
 <p>Belgeyi imzalamak için "PDF İmzala" aracıyla imzanızı çizin, yazın veya yükleyin; sayfada istediğiniz yere yerleştirin. İmzalama tamamen cihazınızda yapılır.</p>
 <h2>4) Form doldurmak</h2>
 <p>Doldurulabilir alanı olmayan (düz) formlarda metni doğrudan üzerine ekleyerek doldurabilirsiniz — ayrıntılı adımlar için form doldurma rehberimize bakın.</p>
-<blockquote><p>Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Gizli belgelerde işaretleme ve imza tamamen cihazınızda çalışır; dosyanız sunucuya gitmez. Gerçek metin silme/değiştirme ise güvenli sunucuda yapılır ve dosya işlem sonrası saklanmaz.</p></blockquote>
+<h2>Önce doğru soruyu sorun: ne düzenlemek istiyorsunuz?</h2>
+<p>«PDF düzenleme» tek bir iş değil; birbirine benzeyen ama farklı sonuçlar veren birkaç işin ortak adıdır. Yanlış aracı seçmek, işin yapılamaz görünmesine ya da beklenmedik bir sonuç çıkmasına yol açar. İhtiyacınızı şu dört soruyla ayırt edebilirsiniz:</p>
+<ul><li>Belgedeki bir yazıyı değiştirecek misiniz? — metin düzenleme gerekir.</li><li>Belgeye kendi notunuzu mu ekleyeceksiniz? — işaretleme yeterlidir.</li><li>Sayfaları mı düzenleyeceksiniz (silme, sıralama, birleştirme)? — sayfa araçları.</li><li>Bir bilgiyi kalıcı olarak kaldıracak mısınız? — kalıcı kaldırma; işaretleme ya da kırpma yetmez.</li></ul>
+<h2>Ücretsiz araçlarda nelere dikkat etmeli?</h2>
+<p>Ücretsiz sunulan bir aracın bedeli genellikle başka bir yerdedir ve kullanmadan önce bunu görmek gerekir. En sık karşılaşılanlar: çıktıya basılan filigran, günlük ya da saatlik işlem sınırı, belgenin sunucuya yüklenmesi, indirme öncesi zorunlu üyelik ve indirilen dosyanın kalitesinin düşürülmesi. Bir aracı denerken bu beş noktayı kontrol etmek, işin ortasında takılmanızı önler.</p>
+<h2>Düzenlemeye başlamadan önce</h2>
+<p>Belgenin türü, ne yapabileceğinizi büyük ölçüde belirler. Metin katmanı olan bir PDF'te yazıyı değiştirebilirsiniz; taranmış bir belgede sayfa görüntüdür ve önce metne çevrilmesi gerekir. Belge parolalıysa hiçbir araç içeriğini okuyamaz; önce parolanın kaldırılması gerekir. Bu iki kontrol, «neden çalışmıyor?» sorularının büyük kısmını baştan çözer.</p>
+<h2>Sık karşılaşılan senaryolar ve doğru sıra</h2>
+<ul><li>Taranmış sözleşmede bir maddeyi değiştirmek: önce metne çevir, sonra düzenle.</li><li>Birden çok evrakı tek dosya yapmak: önce birleştir, sonra sırala, en son numara ekle.</li><li>Belgeyi paylaşmadan önce temizlemek: gereksiz sayfaları sil, hassas veriyi kalıcı kaldır, üstveriyi temizle.</li><li>Formu doldurup göndermek: doldur, imzala, kilitle, gerekirse küçült.</li></ul>
+<h2>Düzenlemenin sınırı</h2>
+<p>PDF'te metin akışkan değildir; bir kelimeyi uzun bir kelimeyle değiştirdiğinizde satır kendiliğinden yeniden dizilmez. Küçük düzeltmeler için bu bir sorun değildir, ama paragraflar yeniden yazılacaksa belgeyi kaynağından üretmek ya da Word'e çevirip düzenlemek daha az iş çıkarır. Ölçüt basittir: değişiklik birkaç kelimeyse doğrudan düzenleyin, sayfalar yeniden yazılacaksa dönüştürün.</p>]]></content:encoded>
       <category>Nasıl Yapılır</category>
       <category>Düzenleme</category>
       <enclosure url="https://www.pdfplatform.app/covers/ucretsiz-pdf-duzenleyici-rehberi.png" type="image/png" length="54604" />
@@ -731,7 +817,17 @@
 <h2>Peki her araç cihazda mı çalışır?</h2>
 <p>Dürüst olalım: hayır. Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır (bunlar tarayıcıda pratik değildir). Yapay zekâ araçlarında ise dosyanız yüklenmez — metin cihazınızda çıkarılıp yalnızca metin işlenir. Yani hangi aracın nerede çalıştığı bellidir.</p>
 <blockquote><p>Gizliliğin en önemli olduğu belgelerde (kimlik, sözleşme, sağlık) cihazda çalışan yapısal araçları ve belge tarayıcıyı tercih edin; paylaşım öncesi gerekiyorsa hassas verileri gerçek redaction ile kaldırın.</p></blockquote>
-<p><strong>Hassas Veri Gizle</strong> — Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Redaction aracı</a></p>]]></content:encoded>
+<p><strong>Hassas Veri Gizle</strong> — Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Redaction aracı</a></p>
+<h2>Bir aracın gerçekten cihazda çalıştığını nasıl anlarsınız?</h2>
+<p>Gizlilik iddiası, sınanabilir olduğunda anlamlıdır. Bir aracın dosyanızı yükleyip yüklemediğini anlamanın en basit yolu, işlemi internet bağlantısı kesikken denemektir. İşlem tamamlanıyorsa dosya cihazınızdan çıkmamıştır; çünkü sunucuya gidecek bir şey yoktur. Otuz saniye süren bu sınama, her sitenin gizlilik metnini okumaktan daha kesin bir sonuç verir.</p>
+<h2>«Dosyalar 1 saat sonra siliniyor» ne anlama gelir?</h2>
+<p>Çoğu çevrimiçi aracın gizlilik vaadi budur ve dürüst bir vaattir; ancak dikkat edilecek yeri kaçırır. Dosya silinene kadar sunucuda durmuştur, aktarım sırasında ağdan geçmiştir ve o süre boyunca sisteme erişimi olan taraflarca görülebilir durumdadır. Cihazda çalışan bir araçta ise silinecek bir kopya hiç oluşmaz. Fark, silme politikasının kalitesinde değil, dosyanın hiç gitmemesindedir.</p>
+<h2>Hangi işler neden sunucu ister?</h2>
+<p>Her aracın cihazda çalışamaması bir tercih değil, işin doğası gereğidir. Sayfaları yeniden düzenlemek, birleştirmek, döndürmek ya da silmek belgenin yapısını değiştirir; bu, tarayıcının rahatlıkla yapabileceği bir iştir. Buna karşılık Word'e dönüştürme, OCR, sıkıştırma ve yapay zekâ işlemleri ciddi hesaplama gücü ve büyük bileşenler gerektirir; bunları her ziyaretçinin tarayıcısına indirmek ne hızlı ne de gerçekçidir.</p>
+<h2>Kendi belgeleriniz için pratik bir ayrım</h2>
+<ul><li>Kimlik, sağlık, mali ve hukuki belgeler: mümkün olan her işlemi cihazda yapın.</li><li>Kişisel veri içeren belgeleri sunucuda işlemeniz gerekiyorsa, önce gereksiz kısımları kaldırın.</li><li>Kurum içi ya da halka açık belgelerde bu ayrımın pratik önemi azdır.</li><li>Şüphedeyseniz, belgenin dışarı çıkması hâlinde sizi rahatsız edip etmeyeceğini sorun — cevap hayırsa sunucu işlemi sorun değildir.</li></ul>
+<h2>Gizliliğin tek başına yetmediği yer</h2>
+<p>Dosyanın yüklenmemesi, belgenin güvende olduğu anlamına gelmez. İşlem bittikten sonra belge sizin cihazınızda durur; paylaşılan bir bilgisayarda indirilenler klasöründe kalan bir belge, sunucudan daha büyük bir risktir. Hassas belgelerle çalıştıktan sonra ara kopyaları silmek ve belgeyi paylaşmadan önce üstverisini temizlemek, cihazda işlemenin tamamlayıcısıdır.</p>]]></content:encoded>
       <category>Gizlilik</category>
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
@@ -757,7 +853,18 @@
 <p><strong>PDF Onar</strong> — Açılmayan PDF'inizi onarıp içeriği kurtarmayı deneyin. <a href="https://www.pdfplatform.app/tools/repair-pdf">Aracı aç</a></p>
 <h2>Ne beklemeli?</h2>
 <p>Onarım her zaman %100 garanti değildir — hasarın derecesine bağlıdır. Yapısı bozulmuş ama içeriği duran dosyalarda başarı yüksektir; tamamen silinmiş/şifreli veriyi geri getiremez. Yine de denemek çoğu zaman belgeyi kurtarır.</p>
-<blockquote><p>Onarımdan sonra dosya çok büyük geldiyse, sıkıştırma aracıyla boyutu düşürebilir; taranmış ve metni gitmişse OCR ile yeniden metin katmanı ekleyebilirsiniz.</p></blockquote>]]></content:encoded>
+<blockquote><p>Onarımdan sonra dosya çok büyük geldiyse, sıkıştırma aracıyla boyutu düşürebilir; taranmış ve metni gitmişse OCR ile yeniden metin katmanı ekleyebilirsiniz.</p></blockquote>
+<h2>Önce dosyanın gerçekten bozuk olduğundan emin olun</h2>
+<p>Açılmayan her PDF bozuk değildir. Onarmaya geçmeden önce birkaç dakikalık kontrol, çoğu durumda sorunu çözer ya da en azından gerçek nedeni gösterir.</p>
+<ul><li>Dosyayı farklı bir programda açmayı deneyin: tarayıcıda açılan bir belge, eski bir masaüstü okuyucuda açılmayabilir.</li><li>Dosya boyutuna bakın: birkaç kilobayt görünüyorsa indirme yarım kalmıştır; yeniden indirmek onarımdan hızlıdır.</li><li>Uzantıyı kontrol edin: bazı sistemlerde dosya aslında .zip ya da .docx olabilir.</li><li>Parola isteniyorsa dosya bozuk değil, şifrelidir; farklı bir işlem gerekir.</li><li>Dosya bir bulut klasöründeyse tam olarak eşitlenip eşitlenmediğine bakın.</li></ul>
+<h2>Onarım gerçekte ne yapar?</h2>
+<p>Bir PDF'in sonunda, hangi nesnenin dosyanın neresinde olduğunu gösteren bir dizin bulunur. Bu dizin bozulduğunda okuyucu belgeyi açamaz, oysa sayfaların içeriği dosyada durmaya devam eder. Onarım, dosyayı baştan sona tarayıp bulabildiği nesneleri toplar ve yeni bir dizinle yeniden paketler. Bu yüzden yapısal hasarda başarı yüksek, içerik gerçekten silinmişse düşüktür.</p>
+<h2>Onarılan belgede kontrol edilecekler</h2>
+<ul><li>Sayfa sayısı: eksik sayfa var mı?</li><li>Metin seçilebiliyor mu, yoksa sayfalar görüntüye mi dönmüş?</li><li>Görseller yerinde mi, boş kutu olarak mı geliyor?</li><li>Yer imleri ve bağlantılar çalışıyor mu?</li><li>Son sayfa ve imza bölümü eksiksiz mi?</li></ul>
+<h2>Kurtarılan belgeyi kullanılabilir hâle getirmek</h2>
+<p>Onarım bazen metin katmanını kaybettirir ve sayfalar görüntüye dönüşür. Böyle bir belgede arama yapabilmek için OCR ile yeniden metin katmanı eklemek gerekir. Dosya beklenenden büyük geldiyse sıkıştırmak, bazı sayfalar boş ya da bozuk kaldıysa onları silmek belgeyi toparlar. Kurtarılan sürümü ayrı bir adla saklayın; bozuk asıl dosyayı hemen silmeyin, ileride başka bir yöntem denemek gerekebilir.</p>
+<h2>Bir daha yaşamamak için</h2>
+<p>Bozulmaların önemli bir kısmı aktarım sırasında olur. Büyük dosyaları indirirken bağlantının kesilmediğinden emin olmak, USB belleği çıkarmadan önce güvenli kaldırmayı beklemek ve önemli belgeleri tek kopya hâlinde taşınabilir bir bellekte bırakmamak, bu sorunu büyük ölçüde ortadan kaldırır. Kritik belgelerin iki ayrı yerde durması, en basit ve en etkili önlemdir.</p>]]></content:encoded>
       <category>Sorun Giderme</category>
       <category>PDF</category>
       <category>Onarma</category>
@@ -821,7 +928,17 @@
 <p>Belge Tarayıcı, telefon kameranı kullanarak belgenin köşelerini otomatik bulur, perspektifi düzeltir ve temiz bir PDF üretir — tamamen cihazında. Kimlik, sözleşme veya fatura gibi belgeleri buluta göndermeden dijitalleştirebilirsin.</p>
 <p><strong>Belge Tara</strong> — Telefon kameranla belgeyi tarayıp PDF yap — cihazında, gizli. <a href="https://www.pdfplatform.app/tools/belge-tara">Tarayıcıyı aç</a></p>
 <h2>Peki ağır işler?</h2>
-<p>Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler telefonda pratik olmadığı için sunucuda yapılır; telefonda da çalışırlar, sadece dosya yüklenir. Yapısal işlemler ise (birleştir, tara vb.) tamamen cihazında kalır.</p>]]></content:encoded>
+<p>Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler telefonda pratik olmadığı için sunucuda yapılır; telefonda da çalışırlar, sadece dosya yüklenir. Yapısal işlemler ise (birleştir, tara vb.) tamamen cihazında kalır.</p>
+<h2>Neden telefona bir PDF uygulaması kurmak istemezsiniz?</h2>
+<p>Mağazalardaki ücretsiz PDF uygulamalarının çoğu ücretsiz değildir; bedeli parayla değil başka şeylerle ödersiniz. Tipik karşılaşılan durumlar bellidir: çıktıya filigran basılması, günlük işlem sınırı, belgelerinizin uygulamanın bulut hesabına yüklenmesi, gereğinden geniş izinler ve abonelik ekranıyla karşılaşmak. Yılda birkaç kez PDF birleştirmek için bunların hiçbirini üstlenmek gerekmez.</p>
+<h2>Telefonda dosyalara ulaşmak</h2>
+<p>Telefonda en çok takılınan yer işlemin kendisi değil, dosyayı bulmaktır. E-postayla gelen bir eki önce telefona kaydetmek gerekir; WhatsApp'tan gelen belgeler ayrı bir klasöre iner. Dosya seçme ekranı açıldığında hem cihaz belleğine hem de bulut hesaplarınıza ulaşabilirsiniz. İşlem bittiğinde sonuç indirilenler klasörüne düşer; oradan paylaşmak bir dokunuş uzaktadır.</p>
+<h2>Telefonda sık yapılan işler</h2>
+<ul><li>Fotoğrafladığınız evrakları tek PDF hâline getirmek — en sık ihtiyaç budur.</li><li>Birden çok PDF'i birleştirip tek dosya olarak göndermek.</li><li>Gereksiz sayfaları silmek ve yan duran sayfaları düzeltmek.</li><li>Belgeyi e-postaya sığacak kadar küçültmek.</li><li>Bir forma imza atıp geri göndermek.</li></ul>
+<h2>Telefonla belge çekerken</h2>
+<p>Telefonla çekilen evrakın kabul edilip edilmemesi, çoğu zaman çekim anında belli olur. Belgeyi düz bir zemine koyun, ışığı karşıdan alın, dört kenarın da kadraja girdiğinden emin olun ve telefonu sayfaya paralel tutun. Gölge ve eğiklik varsa doğrudan PDF yapmak yerine belge tarama akışını kullanmak çok daha temiz bir sonuç verir; kenarlar bulunur ve perspektif düzeltilir.</p>
+<h2>Telefonun sınırları</h2>
+<p>Tarayıcıda çalışan işlemler telefonun belleğini kullanır. Birkaç yüz sayfalık taranmış bir belgeyi telefonda işlemek yavaşlayabilir ya da sekmeyi yeniden başlatabilir. Böyle dosyalarda belgeyi parçalara ayırmak ya da işi bilgisayara bırakmak daha pratiktir. Günlük belgelerde ise telefon fazlasıyla yeterlidir.</p>]]></content:encoded>
       <category>Mobil</category>
       <category>Cihazda İşleme</category>
       <category>PDF Araçları</category>
@@ -885,7 +1002,18 @@
 <h2>Ne zaman çok işe yarar?</h2>
 <ul><li>Sözleşme revizyonlarını onaylamadan önce kontrol etmek.</li><li>İhale/şartname güncellemelerinde neyin değiştiğini görmek.</li><li>Karşı tarafın gönderdiği 'küçük düzeltme'lerin gerçekte ne içerdiğini anlamak.</li></ul>
 <blockquote><p>Bir sözleşmeyi imzalamadan önce yalnızca farkı değil, tamamını da anlamak isterseniz; PDF Özetle ve PDF ile Sohbet araçlarıyla belgeye soru sorabilirsiniz.</p></blockquote>
-<p><strong>PDF ile Sohbet</strong> — Belgeye "ceza maddesi nedir?" gibi sorular sorup net cevaplar alın. <a href="https://www.pdfplatform.app/tools/pdf-sohbet">Sohbet aracı</a></p>]]></content:encoded>
+<p><strong>PDF ile Sohbet</strong> — Belgeye "ceza maddesi nedir?" gibi sorular sorup net cevaplar alın. <a href="https://www.pdfplatform.app/tools/pdf-sohbet">Sohbet aracı</a></p>
+<h2>Hangi değişiklikler gerçekten önemli?</h2>
+<p>İki sürüm arasında onlarca fark çıkabilir, ama bunların çoğu biçimseldir: bir virgül, yeniden numaralanmış bir madde, kayan bir paragraf. Riskin toplandığı yer bellidir ve önce oraya bakmak gerekir.</p>
+<ul><li>Tutarlar: rakam, para birimi ve KDV ifadeleri.</li><li>Tarihler ve süreler: teslim, ödeme, bildirim ve fesih süreleri.</li><li>Sorumluluk: üst sınır, tazminat ve cezai şart maddeleri.</li><li>Taraflar: unvan değişikliği ya da yeni bir tarafın eklenmesi.</li><li>Olumsuz ifadeler: «hariç», «dâhil değildir», «sınırlıdır» — tek kelimelik eklemeler kapsamı tamamen değiştirir.</li><li>Uygulanacak hukuk ve yetkili mahkeme.</li></ul>
+<h2>Sessiz değişiklik nasıl olur?</h2>
+<p>Müzakerede en sık karşılaşılan durum, karşı tarafın «yalnızca küçük düzeltmeler yaptık» diyerek yeni bir dosya göndermesidir. Çoğu zaman bu doğrudur; ama aynı e-postada, üzerinde durulmamış bir maddedeki tek kelimelik bir değişiklik de gelebilir. Bunu yakalamanın tek güvenilir yolu iki sürümü karşılaştırmaktır; hafızaya ya da iyi niyete güvenmek yeterli değildir.</p>
+<h2>Karşılaştırma öncesi hazırlık</h2>
+<p>Sonucun anlaşılır olması, girdilerin karşılaştırılabilir olmasına bağlıdır. Belgelerin aynı bölümlerini karşılaştırdığınızdan emin olun: bir sürümde ekler varken diğerinde yoksa, farkların çoğu bu eklerden gelir ve asıl değişiklikler kaybolur. Böyle durumlarda ekleri ayırıp ana metinleri karşılaştırmak çok daha okunur bir sonuç verir. Taranmış sürümlerde ise önce metnin çıkarılması gerekir.</p>
+<h2>Sonucu kayıt altına almak</h2>
+<p>Müzakere birkaç tura yayıldığında hangi turda neyin değiştiği kolayca unutulur. Her karşılaştırmanın sonucunu tarihiyle birlikte saklamak, sonradan «bu madde ne zaman böyle oldu?» sorusuna dakikalar içinde yanıt verir. Sürümleri ve karşılaştırma çıktılarını tek bir belgede birleştirip sayfa numarası eklemek, bu arşivi düzenli tutmanın pratik yoludur.</p>
+<h2>Karşılaştırmanın yetmediği yer</h2>
+<p>Karşılaştırma neyin değiştiğini gösterir; o değişikliğin sizin için ne anlama geldiğini söylemez. Bir sorumluluk maddesindeki üst sınırın yükselmesi teknik olarak küçük bir fark, ticari olarak büyük bir risk olabilir. Bu yüzden karşılaştırma, hukuki değerlendirmenin yerine geçmez; değerlendirilecek yerleri gösterir ve avukatınızın zamanını doğru maddelere ayırmanızı sağlar.</p>]]></content:encoded>
       <category>Yapay Zekâ</category>
       <category>Karşılaştırma</category>
       <category>Sözleşme</category>
@@ -912,7 +1040,18 @@
 <p><strong>Hassas Veri Gizle</strong> — Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Aracı aç</a></p>
 <h2>Ne zaman gerekir?</h2>
 <ul><li>Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.</li><li>Resmî başvuru, ihale veya mahkeme dosyalarında.</li><li>Örnek/şablon olarak yayınlanacak belgelerde.</li></ul>
-<p>Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir.</p>]]></content:encoded>
+<p>Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir.</p>
+<h2>Belgede gözden kaçan hassas alanlar</h2>
+<p>Kişisel veri yalnızca beklediğiniz yerde durmaz. Bir belgeyi paylaşmadan önce sayfanın ortasına bakarken kenarda kalan bilgiler çoğu zaman atlanır ve sızıntı tam oradan olur.</p>
+<ul><li>Sayfa üst ve alt bilgisindeki isim, şube ya da kullanıcı adı.</li><li>Belgeyi hazırlayan kişinin imza bloğu ve doğrudan telefon numarası.</li><li>Ekteki tablo satırlarında kalan üçüncü kişilere ait kayıtlar.</li><li>Kaşe ve imza görüntülerinin altındaki okunabilir bilgiler.</li><li>Faturada müşteri numarası, ekstrede hesap numarasının tamamı.</li></ul>
+<h2>Üstveri de belgenin parçasıdır</h2>
+<p>Sayfadaki her şeyi temizleseniz bile belge, görünmeyen bilgiler taşımaya devam edebilir: dosyayı oluşturan kişinin adı, kullanılan programın bilgisi, oluşturma ve değiştirme tarihleri, bazen belgenin ilk hâlinden kalan başlık. Bunlar belge özelliklerinde durur ve merak eden herkes birkaç tıklamayla görebilir. Dışarı gidecek belgelerde üstveriyi de temizlemek, redaction'ın tamamlayıcısıdır.</p>
+<h2>Neyi gizlemeli, neyi bırakmalı?</h2>
+<p>Aşırı gizleme, belgeyi işe yaramaz hâle getirir; eksik gizleme ise riski sürdürür. Ölçüt, belgenin gönderilme amacıdır: karşı tarafın işini görmesi için hangi bilgi gerçekten gerekli? Bir kira sözleşmesini kredi başvurusu için gönderirken kira tutarı gereklidir, ancak ev sahibinin kimlik numarası çoğu zaman değildir. Bu soruyu alan alan sormak, hem uyumlu hem kullanışlı bir belge bırakır.</p>
+<h2>Gizledikten sonra doğrulama</h2>
+<ul><li>Belgeyi yeniden açıp gizlediğiniz bilgiyi arayın; sonuç çıkıyorsa kaldırma gerçekleşmemiştir.</li><li>Metni seçip başka bir yere yapıştırın; gizlenen kısım gelmemeli.</li><li>Tüm sayfaları gözden geçirin; aynı bilgi başka sayfada tekrarlanıyor olabilir.</li><li>Belge özelliklerine bakın; üstveride isim ya da yol bilgisi kalmış olabilir.</li><li>Gizlenmiş sürümü ayrı bir adla kaydedin ve paylaşımı o dosyadan yapın.</li></ul>
+<h2>Taranmış belgelerde durum farklı</h2>
+<p>Taranmış bir belgede sayfa görüntüdür; metin katmanı yoksa kaldırılacak bir metin de yoktur ve alanın üzerinin kapatılması görüntü üzerinde kalıcı olur. Ancak belge daha önce OCR'dan geçirildiyse altında görünmez bir metin katmanı bulunur ve o katmandaki bilgi kopyalanabilir. Bu yüzden taranmış belgelerde de metin katmanının varlığını kontrol etmek gerekir.</p>]]></content:encoded>
       <category>KVKK</category>
       <category>Gizlilik</category>
       <category>Redaction</category>

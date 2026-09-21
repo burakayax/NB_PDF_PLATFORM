@@ -337,7 +337,19 @@
 <p><strong>Compress PDF</strong> — Upload your file, compress it, and download it ready to send — free. <a href="https://www.pdfplatform.app/en/tools/compress">Open the tool</a></p>
 <h2>Does compressing hurt quality?</h2>
 <p>At a balanced level, no — text stays selectable and crisp, and images stay readable. The text layer is preserved, so you can still search and copy in the compressed PDF. The biggest savings usually come from scanned, image-heavy PDFs.</p>
-<blockquote><p>Still too big? Remove unneeded pages with "Split/Delete", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with "Merge PDF".</p></blockquote>]]></content:encoded>
+<blockquote><p>Still too big? Remove unneeded pages with "Split/Delete", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with "Merge PDF".</p></blockquote>
+<h2>Know the real limit before you send</h2>
+<p>Whether a file is «too large» depends on where you are sending it, and most people learn the limit after hitting it. Email attachments also grow by roughly a third when encoded, so a 25 MB file often will not pass a 25 MB limit. Aiming a little under the limit is the practical habit.</p>
+<h2>Options besides compressing</h2>
+<ul><li>Delete unnecessary pages, especially blank reverse sides in scans.</li><li>Send only the relevant page range; enough for the recipient to do their job is enough.</li><li>Split the document into sensible parts and send two messages.</li><li>For very large files, sharing a cloud link is more reliable than attaching.</li></ul>
+<h2>Notes specific to WhatsApp</h2>
+<p>WhatsApp does not compress documents; it sends them as they are, which is good because the document is not degraded. But if you send a photo as an image, the app shrinks it and the paperwork can become unreadable. When sharing documents, converting the photo to PDF and sending it as a document preserves quality and looks more professional.</p>
+<h2>Checking before and after</h2>
+<p>The effect of compression is invisible at normal screen scale. After downloading, open the page with the smallest type and zoom in; if the letters read cleanly, the file is usable. Do not skip this on documents going to an institution — an illegible scan is one of the most common reasons applications come back.</p>
+<h2>Do not compress repeatedly</h2>
+<p>Compressing the same document a second and third time costs a little more quality each round without meaningful size gains. Reaching the target in one pass is best. If you cannot, the problem is the content rather than the compression: with many high-resolution scans, splitting or removing pages is the real solution.</p>
+<h2>Keeping it small from the start</h2>
+<ul><li>Scan text documents at 300 DPI; 600 DPI inflates the file for no benefit.</li><li>Scan black-and-white paperwork in greyscale rather than colour.</li><li>Run phone photos through the Document Scanner instead of converting straight to PDF.</li><li>Review the page count before sharing — that is where the easiest gains are.</li></ul>]]></content:encoded>
       <category>How-to</category>
       <category>Compress</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="51559" />
@@ -362,7 +374,18 @@
 <p><strong>Annotate PDF on Your Phone</strong> — Add text, sign, annotate — on your phone, no app, free. <a href="https://www.pdfplatform.app/en/tools/annotate-pdf">Open the tool</a></p>
 <h2>Is my file safe?</h2>
 <p>Annotating and signing happen entirely in your phone's browser (on your device); the PDF isn't uploaded and stays 100% private. Only true text deletion/editing runs on a server, and the file isn't stored after processing.</p>
-<blockquote><p>For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone.</p></blockquote>]]></content:encoded>
+<blockquote><p>For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone.</p></blockquote>
+<h2>What is comfortable on a phone, and what is not</h2>
+<p>A small screen makes some jobs easier and others harder. Setting expectations correctly saves you from struggling on a phone and then reaching for a computer anyway.</p>
+<ul><li>Comfortable: deleting, reordering, rotating and merging pages — you touch large targets.</li><li>Comfortable: signing; a signature drawn with a finger usually beats one drawn with a mouse.</li><li>Moderate: adding text notes, where placement needs zooming in.</li><li>Hard: filling forms with many fields and anything needing precise alignment.</li><li>Hard: processing scans of hundreds of pages, where memory can run short.</li></ul>
+<h2>Preparing a signature on a phone</h2>
+<p>Signing is what phones do best. A signature drawn with a finger or stylus looks far more natural than one drawn with a mouse. Holding the phone in landscape and zooming in gives a steadier line. Signing a document and sending it back is a job that takes a few minutes with no app to install.</p>
+<h2>Finding the file and sending the result</h2>
+<p>The real difficulty on a phone is file traffic rather than the operation. An email attachment usually has to be saved first, and documents from messaging apps land in their own folders. When the work finishes the result goes to downloads and can be sent straight to email or a messaging app from the share menu. Once you learn that flow, the next document takes a few taps.</p>
+<h2>The typical phone problem: a skewed photo</h2>
+<p>Most paperwork photographed with a phone comes out slightly skewed and shadowed. Converting those straight to PDF produces something the recipient cannot read and that official applications may reject. The document scanning flow finds the edges and corrects perspective, so the result looks like it came from a scanner — the same photo yields a far more acceptable document.</p>
+<h2>Screens and privacy</h2>
+<p>On a phone, documents often get opened on public transport or in an office where others can see the screen. With sensitive documents it is a good habit to check your surroundings and to delete intermediate copies from downloads when you are finished. Page operations run on the device so the document does not travel; the remaining risk is physical.</p>]]></content:encoded>
       <category>How-to</category>
       <category>Mobile</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="53371" />
@@ -387,7 +410,17 @@
 <p><strong>Open PDF Tools</strong> — Merge, convert, sign — with no install, free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
 <h2>So when do you actually need Acrobat?</h2>
 <p>Let's be honest: for complex form design, advanced prepress, or enterprise document workflows, Acrobat Pro is still a strong option. But most users just need to merge, convert, sign and add text — and for that you don't need a paid program.</p>
-<blockquote><p>Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device.</p></blockquote>]]></content:encoded>
+<blockquote><p>Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device.</p></blockquote>
+<h2>Where Acrobat is genuinely strong</h2>
+<p>Acrobat has been the industry standard for a long time, and there are reasons for that. For building complex forms, working with pre-press colour and trim settings, using certificate-based digital signatures, editing accessibility tags and plugging into large corporate workflows, it has few rivals. If you do that work regularly, the subscription earns its keep.</p>
+<h2>But is that what most people do?</h2>
+<p>In practice most people's PDF work is far simpler: merging a few files, deleting pages, fixing a sideways page, shrinking a document, signing a form and occasionally converting to Word. Installing a full desktop suite and paying monthly for that is well beyond the need. The test: of the things you did in Acrobat last month, how many actually required Acrobat?</p>
+<h2>What working without an install buys you</h2>
+<ul><li>You can work on locked-down work computers without admin rights.</li><li>Mac, Linux, Chromebook and phone all behave the same.</li><li>No version updates, licence renewals or installation problems.</li><li>On someone else's computer you get the job done without touching your account.</li><li>Because page operations run locally, files do not leave the corporate network.</li></ul>
+<h2>What gets confused with the free reader</h2>
+<p>Acrobat Reader is free, but it is a reader: it displays documents, adds comments and fills forms. Deleting pages, merging, converting and editing belong to the paid version. That distinction surprises many people and answers the common question of why Acrobat will not delete a page. Browser-based tools fill exactly that gap.</p>
+<h2>What to check when switching</h2>
+<p>Three things matter when moving to an alternative: does it cover everything you actually do, is the output quality what you expect, and where do your documents go? The first two become clear after trying a few files. The third has a simple test: run the operation with your connection off; if it completes, the file never left your device.</p>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="56183" />
@@ -412,7 +445,17 @@
 <p><strong>Crop PDF</strong> — Drag and resize the box, crop and download — on your device, free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf">Open the tool</a></p>
 <h2>Does cropping delete content?</h2>
 <p>No. Cropping is a standard PDF operation that narrows the page's visible area (CropBox); the remaining area displays and prints cleanly. It runs entirely in your browser, and your file is not sent to a server.</p>
-<blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>]]></content:encoded>
+<blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>
+<h2>Cropping is not deleting — and that has a consequence</h2>
+<p>Cropping narrows a page's visible area; the trimmed part is not removed from the file, only hidden. For everyday use that distinction does not matter, and the document looks as you want on screen and in print. It becomes critical if you crop in order to hide information: the text in the cropped area stays in the file and can technically be restored. When something genuinely has to go, you need a tool that removes content permanently.</p>
+<h2>Where it helps most on scans</h2>
+<p>Scanners work to the paper size, so an A5 receipt scanned on A4 leaves half the page blank. Reading such a document means constant scrolling, and in print the small content sits marooned in the middle of a large sheet. Trimming the margins makes the document both readable and tidy, and pages look consistent when you merge several receipts.</p>
+<h2>Getting the order right before cropping</h2>
+<ul><li>Rotate sideways pages first; the crop box works relative to page orientation.</li><li>Delete unwanted pages first, leaving fewer pages to crop.</li><li>With mixed page sizes, applying one crop to all of them can cut content on some.</li><li>If you will add page numbers, leave them until last — the number is placed relative to the new edge.</li></ul>
+<h2>What happens in print</h2>
+<p>A cropped page reaches the printer as a smaller page, and the printer may enlarge it to fit the sheet. That usually makes the text more legible and is often exactly what you want. But if the document must be a specific size on paper — an official form, for example — cropping changes that size. On such documents it is worth thinking twice.</p>
+<h2>Does file size change?</h2>
+<p>Because cropping does not remove content, file size does not drop meaningfully. If size is your problem, you need compression rather than cropping. Using both makes sense: narrow the page to the area you want, then compress the file.</p>]]></content:encoded>
       <category>How-to</category>
       <category>Crop</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="56208" />
@@ -437,7 +480,17 @@
 <p><strong>Convert Word to PDF</strong> — Upload your résumé and download it as a PDF without breaking the formatting — free. <a href="https://www.pdfplatform.app/en/tools/word-to-pdf">Open the tool</a></p>
 <h2>Final checks before you send</h2>
 <ul><li>Is the file name professional? Use "First_Last_CV.pdf" instead of "document1.pdf".</li><li>Do the fonts and alignment in the PDF match the Word version?</li><li>Are the photo and links (LinkedIn, email) in the right place?</li><li>If the file is too big, shrink it to email size with "Compress PDF".</li></ul>
-<blockquote><p>If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with "Merge PDF".</p></blockquote>]]></content:encoded>
+<blockquote><p>If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with "Merge PDF".</p></blockquote>
+<h2>How application systems read your CV</h2>
+<p>At most large employers and career portals your CV is read by software first, and reaching human eyes depends on that. These systems parse the text in the document, so your PDF must contain real text. A CV exported as an image from a design tool, or built from a screenshot, is a blank page to the system. There is a simple test: open the PDF and try to select your name with the cursor; if you cannot, it is an image.</p>
+<h2>Layouts that make automatic reading harder</h2>
+<ul><li>Two-column designs: reading order can scramble and details run together.</li><li>Burying information in text boxes or tables.</li><li>Putting contact details in the page header — some systems never read headers.</li><li>Showing skill levels only as bars or stars; information with no text equivalent is not recorded.</li><li>Unusual section headings; a creative title instead of «Experience» makes matching harder.</li></ul>
+<h2>Cleaning up on the way from Word to PDF</h2>
+<p>A PDF freezes the Word document as it stands, so before converting you should turn off track changes, accept all revisions and delete comments — otherwise those traces can end up in the output. Review the author name in document properties too; if you took the template from someone else, another name may still be sitting there.</p>
+<h2>File name and sending</h2>
+<p>A recruiter downloads dozens of files a day, and a document called «cv_final_v3.pdf» gets lost in the folder. A name in the form First_Last_CV is easier to find and looks considered. When a cover letter and certificates are requested, merging them into one PDF is tidier than separate attachments, and page numbers show the document arrived complete.</p>
+<h2>A last look before sending</h2>
+<ul><li>Do fonts and alignment look the same as in Word?</li><li>Are links (LinkedIn, portfolio) clickable and pointing at the right address?</li><li>Is the file size reasonable — compress it if a photo inflated it?</li><li>Is there an old employer name or a draft note left in that you did not want shown?</li><li>Open it on a phone once; many recruiters take their first look there.</li></ul>]]></content:encoded>
       <category>How-to</category>
       <category>Conversion</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="56492" />
@@ -462,7 +515,19 @@
 <p><strong>Add Text/Markup to PDF</strong> — Upload your form, add text to the blanks, and download the filled PDF — free. <a href="https://www.pdfplatform.app/en/tools/annotate-pdf">Open the tool</a></p>
 <h2>If a signature is required</h2>
 <p>If the form asks for a signature, after adding your text you can draw/type your signature and place it. Signing happens entirely on your device; your document is not sent to a server.</p>
-<blockquote><p>For checkboxes, add a small "X" or "✓" text. If the form has multiple pages, add text/marks to each page separately.</p></blockquote>]]></content:encoded>
+<blockquote><p>For checkboxes, add a small "X" or "✓" text. If the form has multiple pages, add text/marks to each page separately.</p></blockquote>
+<h2>Which kind of form do you have? Find out in thirty seconds</h2>
+<p>Which method you need depends on the form, and finding out is easy: open the PDF and click a blank. If a cursor blinks and you can type, the form is fillable; if nothing happens, it is flat. On fillable forms, filling the fields directly is the cleanest route because the text sits inside the field and aligns itself. On flat forms you place text on top of the page instead.</p>
+<h2>Accented characters in fillable forms</h2>
+<p>Some PDF forms are built with a limited character set, so letters outside it can disappear or turn into question marks when typed. That is the form author's font choice rather than a mistake by whoever fills it in. Reading the fields back once after filling is the practical way to catch this.</p>
+<h2>What locking the form does</h2>
+<p>When you send a fillable form, its fields are still editable; the recipient can change one without noticing, or the form may appear empty in a different program. Locking the fields makes what you typed a permanent part of the page, so the document looks the same everywhere. On an official application this step ensures the form arrives complete and unaltered.</p>
+<h2>Alignment on flat forms</h2>
+<ul><li>Set the text size close to the line height; oversized text spills onto the neighbouring line.</li><li>Use a separate text box for each field; one long line breaks the alignment.</li><li>A small mark is enough for a checkbox — do not overflow the box.</li><li>Where day/month/year have separate boxes, type into each one separately.</li><li>Check at 100% zoom before downloading; text that looks right at screen scale can shift in print.</li></ul>
+<h2>Signing and sending</h2>
+<p>Most forms ask for a signature. Adding yours after filling and sending the document as one file is tidier and easier for the recipient than sending separate pages. If the other side must sign too, sending the document out for signature by email and keeping a record of the process is the safer route.</p>
+<h2>A final check before sending</h2>
+<p>Are all required fields filled, is the date in the requested format, and are the requested attachments included? Those three questions prevent most applications from coming back. Keeping a copy of the completed form is also worth it, and removes the later question of what you wrote.</p>]]></content:encoded>
       <category>How-to</category>
       <category>Forms</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="51692" />
@@ -527,7 +592,17 @@
 <h2>Which tasks are free, which need an account?</h2>
 <p>The honest split: structural tools are fully free and signup-free. Word/Excel conversion, OCR and AI tools (summarize, chat, translate) run on the server; those need an account for larger files and history, but content is not stored.</p>
 <ul><li>Unlimited &amp; signup-free: merge, split, rotate, delete, reorder, image → PDF, document scan, sign, annotate.</li><li>Account/plan: Word/Excel/PowerPoint conversion, OCR, compression and AI tools (for larger files + history).</li></ul>
-<blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>]]></content:encoded>
+<blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>
+<h2>Where SmallPDF is genuinely good</h2>
+<p>An honest comparison names the other side's strengths too. SmallPDF has been doing this a long time and it shows: the interface is clean and easy to learn, the tool range is broad, there are desktop and mobile apps, and team accounts and cloud integrations help in corporate use. If you want a shared cloud workflow for a team, those are not features to dismiss.</p>
+<h2>Where the real difference lies</h2>
+<p>The difference is not in the feature list but in where the work happens. Every server-side tool costs money to run, and that cost has to be capped somewhere; daily and hourly limits exist for that reason. Page operations need no server. Done in the browser, there is nothing left to meter: the limit disappears because the server cost disappeared — not out of generosity.</p>
+<h2>Which jobs are genuinely unlimited?</h2>
+<ul><li>Merge, split, delete pages, reorder, rotate and crop: run on your device, with no limit and no account.</li><li>Images to PDF, document scanning, signing and markup: also on your device.</li><li>Word/Excel conversion, OCR and compression: run on a server, with a daily allowance on the free plan.</li><li>AI tools (summarize, translate, extract, compare): server-side and plan-dependent.</li></ul>
+<h2>Measure your own need properly</h2>
+<p>The practical way to decide is to look at what you actually did over the last month and how often. For most people the bulk of it is page editing, and a tool that runs without limits or an account covers that. If you convert to Word or run OCR regularly, you will need to look at paid plans on both sides, and at that point what you compare is the monthly cost.</p>
+<h2>Testing takes thirty seconds</h2>
+<p>Rather than reading claims, test them: open the merge tool, switch off your connection and run the operation. If it completes, the file never left your device and there is no server work to count. You can run the same test on the other tools you use, and the result speaks more clearly than either side's privacy page.</p>]]></content:encoded>
       <category>Comparison</category>
       <category>Free</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="54441" />
@@ -554,7 +629,18 @@
 <p>To sign a document, use the "Sign PDF" tool to draw, type or upload your signature and place it anywhere on the page. Signing happens entirely on your device.</p>
 <h2>4) Fill forms</h2>
 <p>For forms with no fillable fields (flat), you can fill them by adding text directly on top — see our form-filling guide for detailed steps.</p>
-<blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>]]></content:encoded>
+<blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>
+<h2>Ask the right question first: what do you want to edit?</h2>
+<p>«Editing a PDF» is not one job; it is a shared name for several similar-looking jobs with different results. Picking the wrong tool makes the task look impossible or produces an unexpected outcome. Four questions separate what you need:</p>
+<ul><li>Are you changing text in the document? — you need text editing.</li><li>Are you adding your own notes? — markup is enough.</li><li>Are you arranging pages (delete, reorder, merge)? — page tools.</li><li>Are you removing information permanently? — redaction; markup or cropping will not do.</li></ul>
+<h2>What to watch for in free tools</h2>
+<p>A tool offered free usually charges somewhere else, and it is worth seeing where before you start. The common patterns: a watermark on the output, a daily or hourly limit, your document uploaded to a server, a mandatory account before download, and reduced quality in the downloaded file. Checking those five points while trying a tool keeps you from getting stuck mid-task.</p>
+<h2>Before you start editing</h2>
+<p>The type of document largely decides what you can do. In a PDF with a text layer you can change the text; in a scan the page is an image and needs converting to text first. If the document is password-protected, no tool can read its content until the password is removed. Those two checks answer most of the «why is it not working?» questions upfront.</p>
+<h2>Common scenarios and the right order</h2>
+<ul><li>Changing a clause in a scanned contract: convert to text first, then edit.</li><li>Turning several documents into one file: merge, then reorder, then add numbers last.</li><li>Cleaning a document before sharing: delete unneeded pages, redact sensitive data, clear metadata.</li><li>Filling and returning a form: fill, sign, lock, and compress if needed.</li></ul>
+<h2>The limits of editing</h2>
+<p>Text in a PDF does not flow; replacing a word with a longer one does not reflow the line. For small corrections that is no problem, but if paragraphs will be rewritten, producing the document from its source or converting to Word is less work. The test is simple: a few words means edit directly, pages of rewriting means convert.</p>]]></content:encoded>
       <category>How-to</category>
       <category>Editing</category>
       <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="54836" />
@@ -731,7 +817,17 @@
 <h2>So does every tool run on-device?</h2>
 <p>Let's be honest: no. Heavy jobs like Word/Excel conversion, OCR and compression run on the server (they aren't practical in the browser). With AI tools, your file isn't uploaded — the text is extracted on your device and only the text is processed. So it's always clear which tool runs where.</p>
 <blockquote><p>For the most sensitive documents (IDs, contracts, health records), prefer the on-device structural tools and the document scanner; and if needed before sharing, remove sensitive data with real redaction.</p></blockquote>
-<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data before sharing. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Redaction tool</a></p>]]></content:encoded>
+<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data before sharing. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Redaction tool</a></p>
+<h2>How to tell whether a tool really runs on your device</h2>
+<p>A privacy claim means something when it can be tested. The simplest way to find out whether a tool uploads your file is to try the operation with your connection switched off. If it completes, the file never left your device, because there was nothing to send. That thirty-second test gives a more definite answer than reading any site's privacy page.</p>
+<h2>What «files are deleted after an hour» really means</h2>
+<p>That is the privacy promise of most online tools, and it is an honest one — but it misses the point of concern. Until deletion the file sat on a server, crossed the network on its way there, and was visible to anyone with access to that system during the window. With a tool that runs on your device, no copy to delete is ever created. The difference is not the quality of the deletion policy but the fact that the file never travelled.</p>
+<h2>Why some jobs need a server</h2>
+<p>That not every tool runs locally is a matter of the work's nature rather than a choice. Rearranging, merging, rotating or deleting pages changes the document's structure, which a browser handles comfortably. Word conversion, OCR, compression and AI processing need serious computing power and large components; downloading those into every visitor's browser would be neither fast nor realistic.</p>
+<h2>A practical distinction for your own documents</h2>
+<ul><li>Identity, medical, financial and legal documents: do everything you can on your device.</li><li>If a document with personal data must be processed on a server, remove what is not needed first.</li><li>For internal or already-public documents, the distinction matters little in practice.</li><li>When unsure, ask whether it would trouble you if the document got out — if not, server processing is fine.</li></ul>
+<h2>Where privacy alone is not enough</h2>
+<p>A file not being uploaded does not mean the document is safe. When the work is done, the document sits on your device, and one left in the downloads folder of a shared computer is a bigger risk than a server ever was. After working with sensitive documents, deleting intermediate copies and clearing metadata before sharing is the companion to processing locally.</p>]]></content:encoded>
       <category>Privacy</category>
       <category>On-device</category>
       <category>PDF Tools</category>
@@ -757,7 +853,18 @@
 <p><strong>Repair PDF</strong> — Try to repair your won't-open PDF and recover the content. <a href="https://www.pdfplatform.app/en/tools/repair-pdf">Open the tool</a></p>
 <h2>What to expect</h2>
 <p>Repair is not always a 100% guarantee — it depends on the degree of damage. Success is high for files whose structure is broken but whose content remains; it can't bring back fully deleted or encrypted data. Still, trying often recovers the document.</p>
-<blockquote><p>If the file is very large after repair, you can shrink it with the compress tool; if it's scanned and the text is gone, you can add a text layer again with OCR.</p></blockquote>]]></content:encoded>
+<blockquote><p>If the file is very large after repair, you can shrink it with the compress tool; if it's scanned and the text is gone, you can add a text layer again with OCR.</p></blockquote>
+<h2>First make sure the file is really broken</h2>
+<p>Not every PDF that refuses to open is corrupt. A few minutes of checking often solves the problem, or at least reveals the real cause.</p>
+<ul><li>Try a different program: a document that opens in a browser may fail in an old desktop reader.</li><li>Look at the file size: a few kilobytes means the download was cut short, and re-downloading beats repairing.</li><li>Check the extension: on some systems the file is actually a .zip or .docx.</li><li>If it asks for a password, the file is encrypted rather than broken, and needs different handling.</li><li>If it sits in a cloud folder, check whether it has finished syncing.</li></ul>
+<h2>What repair actually does</h2>
+<p>At the end of a PDF there is an index recording where each object sits in the file. When that index is damaged the reader cannot open the document, even though the page content is still in the file. Repair scans the file from start to finish, gathers the objects it can find and re-packages them with a new index. That is why success is high for structural damage and low when the content itself has truly gone.</p>
+<h2>What to check in the repaired document</h2>
+<ul><li>Page count: is anything missing?</li><li>Is the text selectable, or have pages turned into images?</li><li>Are the images in place, or showing as empty boxes?</li><li>Do bookmarks and links still work?</li><li>Are the last page and the signature section complete?</li></ul>
+<h2>Making the recovered document usable</h2>
+<p>Repair sometimes costs the text layer and leaves pages as images. To search such a document you need to add a text layer again with OCR. If the file came out larger than expected, compress it; if some pages stayed blank or broken, delete them. Save the recovered version under a new name and do not delete the damaged original immediately — you may want to try another approach later.</p>
+<h2>Avoiding it next time</h2>
+<p>A large share of corruption happens during transfer. Making sure a big download is not interrupted, waiting for safe removal before pulling out a USB drive, and not keeping the only copy of an important document on removable media largely removes the problem. Keeping critical documents in two separate places is the simplest and most effective precaution.</p>]]></content:encoded>
       <category>Troubleshooting</category>
       <category>PDF</category>
       <category>Repair</category>
@@ -821,7 +928,17 @@
 <p>The Document Scanner uses your phone camera to automatically find the document's corners, correct the perspective and produce a clean PDF — entirely on your device. You can digitize IDs, contracts or invoices without sending them to the cloud.</p>
 <p><strong>Scan Document</strong> — Scan a document with your phone camera into a PDF — on your device, private. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the scanner</a></p>
 <h2>What about heavy jobs?</h2>
-<p>Heavy jobs like Word/Excel conversion, OCR and compression aren't practical on a phone, so they run on the server; they work on mobile too, the file is just uploaded. Structural tasks (merge, scan, etc.) stay entirely on your device.</p>]]></content:encoded>
+<p>Heavy jobs like Word/Excel conversion, OCR and compression aren't practical on a phone, so they run on the server; they work on mobile too, the file is just uploaded. Structural tasks (merge, scan, etc.) stay entirely on your device.</p>
+<h2>Why you may not want to install a PDF app</h2>
+<p>Most free PDF apps in the stores are not really free; you pay in something other than money. The usual pattern is predictable: watermarks on the output, a daily operation limit, your documents uploaded to the app's cloud account, broader permissions than the job needs, and a subscription screen. None of that is worth taking on to merge a PDF a few times a year.</p>
+<h2>Getting at files on a phone</h2>
+<p>The step people get stuck on is not the operation but finding the file. An email attachment has to be saved to the phone first, and documents from messaging apps land in their own folder. Once the file picker opens you can reach both device storage and your cloud accounts. When the work is done the result lands in downloads, and sharing it from there is one tap away.</p>
+<h2>What people do most often on a phone</h2>
+<ul><li>Turning photographed paperwork into a single PDF — the most common need by far.</li><li>Merging several PDFs and sending them as one file.</li><li>Deleting unwanted pages and fixing sideways ones.</li><li>Shrinking a document to fit an email.</li><li>Signing a form and sending it back.</li></ul>
+<h2>When photographing documents</h2>
+<p>Whether photographed paperwork gets accepted is usually decided at the moment of the shot. Put the document on a flat surface, light it from the front, keep all four edges in frame and hold the phone parallel to the page. If there are shadows or skew, using the document scanning flow instead of converting directly gives a much cleaner result: the edges are found and perspective is corrected.</p>
+<h2>The limits of a phone</h2>
+<p>Work that runs in the browser uses the phone's memory. Processing a few hundred scanned pages on a phone can slow down or restart the tab. For files like that, splitting the document or leaving the job to a computer is more practical. For everyday documents a phone is more than enough.</p>]]></content:encoded>
       <category>Mobile</category>
       <category>On-device</category>
       <category>PDF Tools</category>
@@ -885,7 +1002,18 @@
 <h2>When is it most useful?</h2>
 <ul><li>Checking contract revisions before you approve them.</li><li>Seeing what changed in tender/spec updates.</li><li>Understanding what the other side's 'minor edits' actually contain.</li></ul>
 <blockquote><p>If you want to understand not just the difference but the whole document before signing, the Summarize and Chat with PDF tools let you ask questions about it.</p></blockquote>
-<p><strong>Chat with PDF</strong> — Ask the document questions like "what is the penalty clause?" and get clear answers. <a href="https://www.pdfplatform.app/en/tools/chat-with-pdf">Chat tool</a></p>]]></content:encoded>
+<p><strong>Chat with PDF</strong> — Ask the document questions like "what is the penalty clause?" and get clear answers. <a href="https://www.pdfplatform.app/en/tools/chat-with-pdf">Chat tool</a></p>
+<h2>Which changes actually matter?</h2>
+<p>Two versions can differ in dozens of places, but most of it is cosmetic: a comma, a renumbered clause, a shifted paragraph. The risk concentrates in known places, and those deserve your attention first.</p>
+<ul><li>Amounts: figures, currency and tax wording.</li><li>Dates and periods: delivery, payment, notice and termination timeframes.</li><li>Liability: caps, indemnities and penalty clauses.</li><li>Parties: a changed legal name or an added party.</li><li>Negative wording: «excluding», «not included», «limited to» — a one-word insertion can change the scope entirely.</li><li>Governing law and jurisdiction.</li></ul>
+<h2>How quiet changes happen</h2>
+<p>The most common situation in negotiation is the other side sending a new file saying they made only minor edits. Usually that is true; but the same email can carry a one-word change in a clause nobody discussed. The only reliable way to catch it is to compare the two versions — memory and goodwill are not enough.</p>
+<h2>Preparing before comparing</h2>
+<p>A readable result depends on comparable inputs. Make sure you are comparing the same parts of each document: if one version includes annexes and the other does not, most of the differences come from the annexes and the real changes get lost. Separating the annexes and comparing the main texts gives a far more readable result. Scanned versions need their text extracted first.</p>
+<h2>Keeping a record of the result</h2>
+<p>When a negotiation runs over several rounds, it is easy to forget what changed when. Keeping each comparison with its date lets you answer the question of when a clause took its current form in minutes. Merging the versions and comparison outputs into one document with page numbers is the practical way to keep that archive tidy.</p>
+<h2>Where comparison is not enough</h2>
+<p>A comparison shows what changed; it does not tell you what the change means for you. A raised liability cap is technically a small difference and commercially a large risk. Comparison therefore does not replace legal assessment — it points at what needs assessing and lets you spend your lawyer's time on the right clauses.</p>]]></content:encoded>
       <category>AI</category>
       <category>Compare</category>
       <category>Contract</category>
@@ -912,7 +1040,18 @@
 <p><strong>Redact Sensitive Data</strong> — Permanently remove personal data and share the document safely. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Open the tool</a></p>
 <h2>When do you need it?</h2>
 <ul><li>Before sharing a contract or invoice with a third party.</li><li>In official applications, tenders or court files.</li><li>For documents published as samples/templates.</li></ul>
-<p>The part of the personal data detected on your device (ID, IBAN, phone, email) is not sent anywhere as it's removed; only context-based detection (name/address) sends text to the AI.</p>]]></content:encoded>
+<p>The part of the personal data detected on your device (ID, IBAN, phone, email) is not sent anywhere as it's removed; only context-based detection (name/address) sends text to the AI.</p>
+<h2>Sensitive fields people overlook</h2>
+<p>Personal data does not sit only where you expect. While checking the middle of a page before sharing, the details around the edges get skipped — and that is exactly where leaks come from.</p>
+<ul><li>Names, branch codes or usernames in headers and footers.</li><li>The signature block and direct phone number of whoever prepared the document.</li><li>Records belonging to third parties left in annex table rows.</li><li>Readable details underneath stamp and signature images.</li><li>A customer number on an invoice, or a full account number on a statement.</li></ul>
+<h2>Metadata is part of the document too</h2>
+<p>Even with everything on the page cleaned, a document can still carry invisible information: the name of whoever created the file, the software used, creation and modification dates, and sometimes a title left from an earlier draft. These sit in the document properties and anyone curious can see them in a couple of clicks. Clearing metadata is the companion step to redaction on documents going outside.</p>
+<h2>What to hide and what to leave</h2>
+<p>Over-redacting makes the document useless; under-redacting leaves the risk in place. The test is the purpose of sending it: which information does the recipient genuinely need to do their job? Sending a lease for a loan application needs the rent figure, but usually not the landlord's identity number. Asking that question field by field leaves a document that is both compliant and usable.</p>
+<h2>Verifying after redaction</h2>
+<ul><li>Reopen the document and search for what you removed; any result means removal did not happen.</li><li>Select the text and paste it elsewhere; the redacted part should not appear.</li><li>Review every page — the same detail may repeat elsewhere.</li><li>Check document properties; a name or file path may remain in the metadata.</li><li>Save the redacted version under a new name and share from that file.</li></ul>
+<h2>Scanned documents behave differently</h2>
+<p>In a scanned document the page is an image; with no text layer there is no text to remove, and covering an area stays permanent on the image. But if the document has been through OCR, an invisible text layer sits beneath it and the information in that layer can still be copied. So with scans it is worth checking whether a text layer exists.</p>]]></content:encoded>
       <category>Privacy</category>
       <category>Redaction</category>
       <category>GDPR</category>
