@@ -38,6 +38,7 @@ import { saveScanForAccount, takeScanForAccount } from "../../lib/pendingScan";
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
 import { imagesToSearchablePdf } from "../../lib/clientPdf";
 import { ocrImagesToWords } from "../../lib/ocr";
+import { ToolRating } from "../common/ToolRating";
 import { PdfHub } from "./PdfHub";
 import {
   canvasToJpegBlob,
@@ -1775,6 +1776,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   <Sliders className="h-3.5 w-3.5" />
                   {tr ? "Yeni belge tara" : "Scan a new document"}
                 </button>
+                <ToolRating toolSlug="belge-tara" language={language} />
               </div>
             </motion.div>
           )}

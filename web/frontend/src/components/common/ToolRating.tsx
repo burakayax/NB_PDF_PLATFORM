@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, X } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { buildSaasApiUrl } from "../../api/saasHttp";
+import { ratingAlreadyAsked, rememberRating } from "../../lib/toolRatingMemory";
 
 /**
  * "Bu araç işini gördü mü?" — işlem biter bitmez sorulan tek soru.
@@ -20,6 +21,12 @@ import { buildSaasApiUrl } from "../../api/saasHttp";
  * ek bir kutu göstermek, hiçbir şey kazandırmadan sürtünme ekler.
  *
  * TEK SORU: Yanıt oranı soru sayısı arttıkça düşüyor; burada ikinci bir soru yok.
+ *
+ * ARAÇ BAŞINA BİR KEZ: Aynı soruyu her işlemde yeniden sormak oy sayısını
+ * artırmaz — sunucu aynı kişinin oyunu günceller, yenisini eklemez — ama aracı
+ * sık kullanan kişiyi yorar. Cevap veren ya da soruyu kapatan bir daha görmez.
+ * Fikrini değiştirmek isteyen, araç sayfasındaki kalıcı puan satırından
+ * (ToolScore) oyunu güncelleyebilir.
  */
 
 const L = {
@@ -32,6 +39,7 @@ const L = {
     skip: "Geç",
     failed: "Puan kaydedilemedi.",
     star: (n: number) => `${n} yıldız`,
+    dismiss: "Sorma",
   },
   en: {
     ask: "Did this tool do the job?",
@@ -42,6 +50,7 @@ const L = {
     skip: "Skip",
     failed: "Couldn't save your rating.",
     star: (n: number) => `${n} stars`,
+    dismiss: "Don't ask",
   },
 } as const;
 
@@ -50,6 +59,9 @@ const COMMENT_ASKED_BELOW = 4;
 
 export function ToolRating({ toolSlug, language }: { toolSlug: string; language: Language }) {
   const t = L[language === "tr" ? "tr" : "en"];
+  // İlk render'da karar verilir; sonradan gizlemek soruyu bir an gösterip
+  // kaybettirirdi.
+  const [asked, setAsked] = useState(() => ratingAlreadyAsked(toolSlug));
   const [hover, setHover] = useState(0);
   const [value, setValue] = useState(0);
   const [comment, setComment] = useState("");
@@ -66,6 +78,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
         body: JSON.stringify({ value: rating, comment: text }),
       });
       if (!res.ok) throw new Error(String(res.status));
+      rememberRating(toolSlug, rating);
       setState("done");
     } catch {
       // Puan verememek kullanıcının işini bölmemeli; sessizce geçilir.
@@ -79,6 +92,10 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
     if (rating >= COMMENT_ASKED_BELOW) void send(rating);
   };
 
+  if (asked) {
+    return null;
+  }
+
   if (state === "done") {
     return (
       <p className="mt-4 text-center text-[13px] text-slate-400">
@@ -90,7 +107,21 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
   const askComment = value > 0 && value < COMMENT_ASKED_BELOW && state !== "sending";
 
   return (
-    <div className="mt-4 border-t border-white/[0.06] pt-4">
+    <div className="relative mt-4 border-t border-white/[0.06] pt-4">
+      {/* Soruyu bir daha görmemenin yolu. "Araç başına bir kez" kuralının
+          karşılığı: cevap vermek istemeyen de bir kez karar verebilmeli. */}
+      <button
+        type="button"
+        aria-label={t.dismiss}
+        title={t.dismiss}
+        onClick={() => {
+          rememberRating(toolSlug, "skipped");
+          setAsked(true);
+        }}
+        className="absolute right-0 top-3 rounded-lg p-1.5 text-slate-600 transition hover:bg-white/[0.06] hover:text-slate-300"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
       <p className="text-center text-[13px] text-slate-400">{t.ask}</p>
 
       <div className="mt-2 flex items-center justify-center gap-1">

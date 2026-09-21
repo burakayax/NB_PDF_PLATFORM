@@ -40,6 +40,7 @@ import {
   type ExtractedData,
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
@@ -1048,6 +1049,28 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </div>
           )}
         </div>
+      )}
+
+      {/* Sonuç üretildiyse puanlama — her AI modunun kendi araç kimliği var. */}
+      {(mode === "summarize"
+        ? !!summary
+        : mode === "extract"
+          ? !!extracted
+          : mode === "translate"
+            ? !!translatedBlob
+            : messages.some((m) => m.role === "assistant")) && (
+        <ToolRating
+          toolSlug={
+            mode === "summarize"
+              ? "pdf-ozetle"
+              : mode === "extract"
+                ? "pdf-veri-cikar"
+                : mode === "translate"
+                  ? "pdf-ceviri"
+                  : "pdf-sohbet"
+          }
+          language={language}
+        />
       )}
 
       {error && (

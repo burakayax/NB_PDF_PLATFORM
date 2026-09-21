@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
@@ -93,6 +94,8 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [rendering, setRendering] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
+  const [applied, setApplied] = useState(false);
   const [sigModalOpen, setSigModalOpen] = useState(false);
   const [activeSig, setActiveSig] = useState<SigSource | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
@@ -357,6 +360,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-imzali.pdf`;
       await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
       setEditorOpen(false);
+      setApplied(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "İmzalama başarısız." : "Signing failed.");
     } finally {
@@ -425,6 +429,10 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
             onFiles={(files) => { void openFile(files[0]); }}
           />
         </div>
+      )}
+
+      {applied && !editorOpen && (
+        <ToolRating toolSlug="pdf-imzala" language={language} />
       )}
 
       {error && !editorOpen && (

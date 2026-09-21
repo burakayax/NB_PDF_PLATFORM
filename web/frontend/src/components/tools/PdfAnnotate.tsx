@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
@@ -165,6 +166,8 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
   const [rendering, setRendering] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
+  const [applied, setApplied] = useState(false);
   const [annos, setAnnos] = useState<Anno[]>([]);
   const [tool, setTool] = useState<Tool>("highlight");
   const [color, setColor] = useState("#fde047");
@@ -629,6 +632,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-isaretli.pdf`;
       await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
       setEditorOpen(false);
+      setApplied(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "İşlem başarısız." : "Failed.");
     } finally {
@@ -694,6 +698,10 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
             onFiles={(files) => { void openFile(files[0]); }}
           />
         </div>
+      )}
+
+      {applied && !editorOpen && (
+        <ToolRating toolSlug="pdf-yorumla" language={language} />
       )}
 
       {error && !editorOpen && (

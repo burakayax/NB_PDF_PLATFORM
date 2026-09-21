@@ -17,6 +17,7 @@ import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { aiCompare, fetchAiQuota, type AiError, type AiQuota, type CompareResult } from "../../api/ai";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
 
 type Slot = { name: string; text: string; status: "empty" | "reading" | "ready" | "error" };
@@ -211,6 +212,8 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
               </div>
             </div>
           )}
+
+          {result && <ToolRating toolSlug="pdf-karsilastir" language={language} />}
 
           <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
             <ShieldCheck className="h-3.5 w-3.5" />{tr ? "Metin cihazınızda çıkarılır; yalnız metin AI'a gider." : "Text is extracted on your device; only text is sent to the AI."}

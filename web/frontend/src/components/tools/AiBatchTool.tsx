@@ -18,6 +18,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { saveBlobToUser } from "../../api";
 import { TopUpModal } from "./TopUpModal";
+import { ToolRating } from "../common/ToolRating";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
@@ -392,6 +393,10 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                     </button>
                   )}
                 </div>
+              )}
+
+              {doneFiles.length > 0 && !running && (
+                <ToolRating toolSlug="ai-toplu-islem" language={language} />
               )}
             </>
           )}

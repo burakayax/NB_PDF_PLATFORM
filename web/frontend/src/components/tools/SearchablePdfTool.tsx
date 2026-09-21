@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Download, FileText, Loader2, Lock, Search, Share2, Sparkles, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { ToolRating } from "../common/ToolRating";
 import { ToolDropzone } from "./ToolDropzone";
 import { imagesToSearchablePdf, pdfBytesToBlob } from "../../lib/clientPdf";
 import {
@@ -187,6 +188,7 @@ export function SearchablePdfTool({
             {tr ? "Yeni belge" : "New file"}
           </button>
         </div>
+        <ToolRating toolSlug="aranabilir-pdf" language={language} />
       </div>
     );
   }

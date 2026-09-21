@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 import type { Language } from "../../i18n/landing";
 
 type ToolPublicLandingProps = {
@@ -66,6 +67,10 @@ export function ToolPublicLanding({
         <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-5xl">
           {seo.h1}
         </h1>
+        {/* Puan satırı başlığın hemen altında: hem kullanıcı oyunu buradan
+            güncelleyebilir hem de yıldızlar sayfada GÖRÜNÜR olur — arama
+            sonucunda yıldız çıkarmanın ön koşulu bu. */}
+        <ToolScore slug={slug} language={language} className="mt-4" />
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
           {seo.intro}
         </p>

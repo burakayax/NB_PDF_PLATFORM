@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Loader2, MessageSquareWarning, RefreshCw, Star } from "lucide-react";
 
 import { saasFetch } from "../../api/saasHttp";
+import { TOOL_SEO } from "../../seo/seoContent.mjs";
 
 /**
  * Araç puanları — yönetim görünümü.
@@ -14,6 +15,17 @@ import { saasFetch } from "../../api/saasHttp";
  * değil, düzeltilecek işler listesi; en iyi aracı üstte göstermenin kimseye
  * faydası yok.
  */
+
+/**
+ * Araç kimliğinin okunur karşılığı.
+ *
+ * Panel ham kimlikleri ("pdf-ozetle") gösteriyordu; düşük puan alan aracı
+ * ararken bunları çözmek gereksiz iş. Ad, sayfaların kendi başlığından gelir —
+ * ayrı bir liste tutulsaydı yeni araç eklendiğinde unutulurdu.
+ */
+function toolName(slug: string): string {
+  return TOOL_SEO[slug]?.tr?.h1 ?? slug;
+}
 
 type Distribution = Record<"1" | "2" | "3" | "4" | "5", number>;
 
@@ -209,7 +221,8 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
                   <div key={t.toolSlug} className="grid grid-cols-[minmax(0,1fr)_120px] items-center gap-4 px-5 py-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="truncate font-mono text-[13px] text-slate-200">{t.toolSlug}</span>
+                        <span className="truncate text-[13px] font-semibold text-slate-100">{toolName(t.toolSlug)}</span>
+                        <span className="truncate font-mono text-[11px] text-slate-600">{t.toolSlug}</span>
                         {t.publishable ? (
                           <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
                             yıldız yayında
@@ -252,7 +265,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
                 {data.comments.map((c, i) => (
                   <div key={`${c.toolSlug}-${c.createdAt}-${i}`} className="px-5 py-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="truncate font-mono text-[12px] text-slate-400">{c.toolSlug}</span>
+                      <span className="truncate text-[12px] font-semibold text-slate-300">{toolName(c.toolSlug)}</span>
                       <span className="flex shrink-0 items-center gap-2">
                         <Stars value={c.value} size={12} />
                         <span className="text-[11px] text-slate-600">{formatDate(c.createdAt)}</span>
