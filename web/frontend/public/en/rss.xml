@@ -694,7 +694,17 @@
 <p><strong>Extract Images from PDF</strong> — Pull embedded photos and logos out of a PDF in their original format. <a href="https://www.pdfplatform.app/en/tools/extract-images">Open the tool</a></p>
 <h2>The reverse: images to PDF</h2>
 <p>If you have several photos/images and want to combine them into one PDF, we have a separate tool for that — and it runs entirely on your device.</p>
-<p><strong>Images to PDF</strong> — Combine your photos into a single PDF — on your device. <a href="https://www.pdfplatform.app/en/tools/image-to-pdf">Images → PDF</a></p>]]></content:encoded>
+<p><strong>Images to PDF</strong> — Combine your photos into a single PDF — on your device. <a href="https://www.pdfplatform.app/en/tools/image-to-pdf">Images → PDF</a></p>
+<h2>Why resolution matters</h2>
+<p>Converting a PDF page to an image means turning a vector document into pixels, and resolution decides the quality of that result with no way back: an image produced at low resolution cannot be sharpened afterwards. Roughly, medium resolution suits on-screen sharing, high suits presentations and the web, and the highest available suits print.</p>
+<h2>Why a screenshot is not enough</h2>
+<p>Taking a screenshot looks like the fastest way to share a page, but the result is limited to your screen's resolution and usually comes out soft. It also picks up the frame, margins and the viewer's interface. Converting the PDF directly gives a clean output at the page's own resolution, with straight edges and crisp text.</p>
+<h2>Practical notes for social media and the web</h2>
+<ul><li>A portrait A4 page gets cropped in most social feeds; snipping the section you want first looks much better.</li><li>Compressing an image before putting it on a web page noticeably improves load time.</li><li>PNG works better for text-heavy pages, JPG for photo-heavy ones.</li><li>Text in a converted page is no longer text; search engines cannot read it. Write important wording on the page as well.</li></ul>
+<h2>The whole page, or part of it?</h2>
+<p>Often what you need is not the whole page but a table, chart or paragraph on it. Snipping the area directly is faster than converting the page and cropping it in an image editor, and it preserves resolution. When preparing presentations and reports, this is the method that helps most often.</p>
+<h2>One side effect of converting to an image</h2>
+<p>When a page becomes an image its text layer disappears: it can no longer be copied, searched or read by screen readers. Sometimes that is exactly what you want, if you would rather the text not be lifted easily. But where accessibility matters, or where the document will be archived, keep the PDF itself and use the image only as a sharing copy.</p>]]></content:encoded>
       <category>Convert</category>
       <category>Image</category>
       <category>JPG</category>
@@ -929,7 +939,17 @@
 <p><strong>Edit PDF</strong> — Truly delete and replace PDF text — no covering up. <a href="https://www.pdfplatform.app/en/tools/edit-pdf">Open the tool</a></p>
 <h2>When it works — and when it doesn't</h2>
 <p>This tool works on PDFs that contain a real text layer (for example, a PDF exported from Word). In scanned/photo PDFs the text is actually an image; there you first need to turn it into text with OCR.</p>
-<p><strong>OCR a scanned PDF</strong> — If your document is scanned, first turn the text into real text with OCR. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">OCR tool</a></p>]]></content:encoded>
+<p><strong>OCR a scanned PDF</strong> — If your document is scanned, first turn the text into real text with OCR. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">OCR tool</a></p>
+<h2>Why editing a PDF is not like editing a Word file</h2>
+<p>In a Word document text flows: add a sentence and everything after it moves along. In a PDF each piece of text sits at a fixed position on the page; there is no flow. So replacing a word with a longer one does not reflow the line. That is not a shortcoming of the tool but the design of the format — PDF exists to preserve a printed result.</p>
+<h2>Typical situations while editing</h2>
+<ul><li>If the new text is longer than the old, it can overflow the line; choosing a short equivalent is the practical fix.</li><li>If the typeface is not embedded, a similar one is used and a small visual difference can appear.</li><li>When changing a value in a table cell, check that the alignment still holds.</li><li>If the same wording appears many times, each occurrence has to be corrected separately.</li></ul>
+<h2>When to edit and when to rebuild</h2>
+<p>The test is the size of the change. For a date, an amount, a name or a typo, editing directly is the cleanest route and leaves the rest of the document untouched. If paragraphs will be rewritten, a section added or the layout changed, rebuilding from the source is less work. Without the source file, converting to Word, editing and producing a PDF again is a third route — though each conversion round shifts the formatting a little.</p>
+<h2>A note on official documents</h2>
+<p>Changing the text of a document may be technically possible, but it is not legitimate on every document. Altering an invoice, an official letter, a signed contract or correspondence from an institution destroys the document's standing and can have serious consequences. Editing is for fixing mistakes in documents you produced. Any change to a digitally signed document invalidates the signature — which is a sign the protection is working.</p>
+<h2>Where editing is not enough for privacy</h2>
+<p>If you want information out of a document, deleting the visible text appears to solve it, but traces can remain: metadata, document properties, or the same detail on other pages. Where personal data is involved you need a tool that removes content permanently, and you need to clear the document's metadata too. A document that looks clean can still be technically unclean.</p>]]></content:encoded>
       <category>Editing</category>
       <category>PDF</category>
       <category>Text</category>

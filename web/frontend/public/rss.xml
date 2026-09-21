@@ -694,7 +694,17 @@
 <p><strong>PDF'ten Görsel Çıkar</strong> — PDF içindeki gömülü fotoğraf ve logoları özgün formatında ayıklayın. <a href="https://www.pdfplatform.app/tools/extract-images">Aracı aç</a></p>
 <h2>Tersi: Görselleri PDF yapmak</h2>
 <p>Elinizde birden çok fotoğraf/görsel varsa ve bunları tek bir PDF'te toplamak istiyorsanız, bunun için ayrı bir aracımız var — üstelik tamamen cihazınızda çalışır.</p>
-<p><strong>Görselden PDF'e</strong> — Fotoğraflarınızı tek bir PDF'te toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Görsel → PDF</a></p>]]></content:encoded>
+<p><strong>Görselden PDF'e</strong> — Fotoğraflarınızı tek bir PDF'te toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Görsel → PDF</a></p>
+<h2>Çözünürlük seçimi neden önemli?</h2>
+<p>Bir PDF sayfasını görsele çevirmek, vektör bir belgeyi piksellere dönüştürmek demektir. Bu dönüşümde çözünürlük, sonucun kalitesini doğrudan belirler ve geri dönüşü yoktur: düşük çözünürlükte üretilmiş bir görseli sonradan netleştiremezsiniz. Kullanım amacına göre kabaca şu ölçüler işe yarar: ekranda paylaşım için orta, sunum ve web için yüksek, baskı için mümkün olan en yüksek.</p>
+<h2>Ekran görüntüsü neden yetmez?</h2>
+<p>Bir sayfayı paylaşmanın en hızlı yolu ekran görüntüsü almak gibi görünür, ama sonuç ekranınızın çözünürlüğüyle sınırlıdır ve genellikle bulanık çıkar. Üstelik çerçeve, kenar boşluğu ve görüntüleyici arayüzü de görüntüye karışır. PDF'i doğrudan görsele çevirmek, sayfanın kendi çözünürlüğünde temiz bir çıktı verir; kenarlar düzgün, yazılar keskin olur.</p>
+<h2>Sosyal medya ve web için pratik notlar</h2>
+<ul><li>Dikey bir A4 sayfası çoğu sosyal medya akışında kırpılır; paylaşacağınız bölümü önce kesit alarak ayırmak daha iyi görünür.</li><li>Web sayfasına koyacağınız görseli sıkıştırmak, sayfanın açılma süresini belirgin biçimde düşürür.</li><li>Metin ağırlıklı sayfalarda PNG, fotoğraf ağırlıklı sayfalarda JPG daha iyi sonuç verir.</li><li>Görsele çevrilen sayfadaki yazı artık metin değildir; arama motorları okuyamaz. Önemli metni sayfaya ayrıca yazın.</li></ul>
+<h2>Tüm sayfa mı, sayfanın bir bölümü mü?</h2>
+<p>Çoğu zaman ihtiyacınız sayfanın tamamı değil, üzerindeki bir tablo, grafik ya da paragraftır. Tüm sayfayı görsele çevirip sonra bir görsel düzenleyicide kırpmak yerine, doğrudan istediğiniz alanı kesit olarak almak hem daha hızlıdır hem de çözünürlüğü korur. Sunum ve rapor hazırlarken bu, en sık işe yarayan yöntemdir.</p>
+<h2>Görsele çevirmenin bir yan etkisi</h2>
+<p>Sayfa görsele döndüğünde metin katmanı kaybolur: artık kopyalanamaz, aranamaz ve ekran okuyucular tarafından okunamaz. Bu bazen istenen bir sonuçtur — belgenin metninin kolayca alınmasını istemiyorsanız. Ama erişilebilirlik gereken yerlerde ya da belgeyi arşivleyecekseniz, PDF'in kendisini saklamak gerekir; görsel yalnızca paylaşım kopyası olarak kullanılır.</p>]]></content:encoded>
       <category>Dönüştürme</category>
       <category>Görsel</category>
       <category>JPG</category>
@@ -929,7 +939,17 @@
 <p><strong>PDF Düzenle</strong> — PDF'teki yazıyı gerçekten silip değiştirin — üzerini örtmeden. <a href="https://www.pdfplatform.app/tools/pdf-duzenle">Aracı aç</a></p>
 <h2>Ne zaman iyi çalışır, ne zaman çalışmaz?</h2>
 <p>Bu araç, içinde gerçek metin katmanı olan PDF'lerde çalışır (örneğin Word'den üretilmiş bir PDF). Taranmış / fotoğraf PDF'lerde yazı aslında bir görüntüdür; bu durumda önce OCR ile metne çevirmeniz gerekir.</p>
-<p><strong>Taranmış PDF'i metne çevir</strong> — Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracı</a></p>]]></content:encoded>
+<p><strong>Taranmış PDF'i metne çevir</strong> — Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracı</a></p>
+<h2>Neden PDF düzenlemek Word düzenlemeye benzemez?</h2>
+<p>Word belgesinde metin akışkandır: bir cümle eklediğinizde sonrası kendiliğinden kayar. PDF'te ise her metin parçası sayfada belirli bir konuma yerleştirilmiştir; akış yoktur. Bu yüzden bir kelimeyi uzun bir kelimeyle değiştirdiğinizde satır kendiliğinden yeniden dizilmez. Bu, aracın eksikliği değil, biçimin tasarımıdır — PDF baskı çıktısını korumak için yapılmıştır.</p>
+<h2>Düzenleme yaparken karşılaşılan tipik durumlar</h2>
+<ul><li>Yeni metin eskisinden uzunsa satırın sonuna taşabilir; kısa ve eşdeğer bir ifade seçmek en pratik çözümdür.</li><li>Yazı tipi belgeye gömülü değilse benzeri kullanılır ve küçük bir görünüm farkı oluşabilir.</li><li>Tablo hücresindeki bir değeri değiştirirken hizanın bozulmadığını kontrol edin.</li><li>Aynı ifade belgede birçok kez geçiyorsa hepsini ayrı ayrı düzeltmeniz gerekir.</li></ul>
+<h2>Ne zaman düzenleme, ne zaman yeniden üretim?</h2>
+<p>Ölçüt değişikliğin büyüklüğüdür. Bir tarih, bir tutar, bir isim ya da bir yazım hatası için doğrudan düzenleme en temiz yoldur; belgenin geri kalanı hiç değişmez. Ama paragraflar yeniden yazılacak, bölüm eklenecek ya da düzen değişecekse, belgeyi kaynağından yeniden üretmek daha az iş çıkarır. Kaynak dosya elinizde yoksa Word'e çevirip düzenlemek ve yeniden PDF üretmek üçüncü yoldur; ancak her dönüşüm turunda biçim biraz kayar.</p>
+<h2>Resmî belgelerde dikkat</h2>
+<p>Bir belgenin metnini değiştirmek teknik olarak mümkün olsa da, her belgede meşru değildir. Fatura, resmî yazı, imzalı sözleşme ya da kurumdan gelen bir evrakın içeriğini değiştirmek, belgenin niteliğini bozar ve ciddi sonuçlar doğurabilir. Düzenleme, kendi hazırladığınız belgelerdeki hataları gidermek içindir. Dijital imza taşıyan bir belgede yapılan her değişiklik imzayı geçersiz kılar — bu, korumanın çalıştığının işaretidir.</p>
+<h2>Düzenlemenin gizlilik için yeterli olmadığı yer</h2>
+<p>Bir bilgiyi belgeden çıkarmak istiyorsanız, metni silmek görünürde çözer ama belgede başka izler kalabilir: üstveri, belge özellikleri ya da aynı bilginin geçtiği diğer sayfalar. Kişisel veri söz konusuysa kalıcı kaldırma yapan araç kullanmak ve belgenin üstverisini de temizlemek gerekir. Görsel olarak temiz görünen bir belge, teknik olarak temiz olmayabilir.</p>]]></content:encoded>
       <category>Düzenleme</category>
       <category>PDF</category>
       <category>Metin</category>
