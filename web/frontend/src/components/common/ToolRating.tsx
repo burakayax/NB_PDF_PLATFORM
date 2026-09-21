@@ -1,0 +1,151 @@
+import { useState } from "react";
+import { Star } from "lucide-react";
+import type { Language } from "../../i18n/landing";
+import { buildSaasApiUrl } from "../../api/saasHttp";
+
+/**
+ * "Bu araç işini gördü mü?" — işlem biter bitmez sorulan tek soru.
+ *
+ * NEDEN BURADA SORULUYOR: Araştırma, uygulama içinde ve işin hemen ardından
+ * sorulan mikro anketlerin, sayfada öylece duran geri bildirim bileşenlerine
+ * göre yaklaşık iki katı yanıt aldığını gösteriyor. Kullanıcı sonucu tam o an
+ * görmüştür; bir hafta sonra sorulan aynı soru hem hatırlanmaz hem cevaplanmaz.
+ *
+ * NEDEN 5 YILDIZ, BAŞPARMAK DEĞİL: Başparmak (olumlu/olumsuz) daha çok oy
+ * topluyor — Netflix'in kendi geçişi bunu gösterdi. Ama sayısal bir ortalama
+ * üretmiyor ve Google'ın arama sonuçlarındaki yıldızlar için gereken şey tam
+ * olarak o ortalama. Dereceli yoğunluk gerektiğinde 5 puanlık ölçek doğru araç.
+ *
+ * NEDEN AÇIKLAMA YALNIZ DÜŞÜK PUANDA: Teşhis değeri orada. Memnun kullanıcıya
+ * ek bir kutu göstermek, hiçbir şey kazandırmadan sürtünme ekler.
+ *
+ * TEK SORU: Yanıt oranı soru sayısı arttıkça düşüyor; burada ikinci bir soru yok.
+ */
+
+const L = {
+  tr: {
+    ask: "Bu araç işini gördü mü?",
+    thanks: "Teşekkürler.",
+    thanksLow: "Teşekkürler — neyin ters gittiğini yazarsanız düzeltiriz.",
+    placeholder: "Ne olmadı? (isteğe bağlı)",
+    send: "Gönder",
+    skip: "Geç",
+    failed: "Puan kaydedilemedi.",
+    star: (n: number) => `${n} yıldız`,
+  },
+  en: {
+    ask: "Did this tool do the job?",
+    thanks: "Thanks.",
+    thanksLow: "Thanks — tell us what went wrong and we'll fix it.",
+    placeholder: "What didn't work? (optional)",
+    send: "Send",
+    skip: "Skip",
+    failed: "Couldn't save your rating.",
+    star: (n: number) => `${n} stars`,
+  },
+} as const;
+
+/** Bu puanın altında kısa açıklama sorulur — sunucudaki eşikle aynı. */
+const COMMENT_ASKED_BELOW = 4;
+
+export function ToolRating({ toolSlug, language }: { toolSlug: string; language: Language }) {
+  const t = L[language === "tr" ? "tr" : "en"];
+  const [hover, setHover] = useState(0);
+  const [value, setValue] = useState(0);
+  const [comment, setComment] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
+
+  const send = async (rating: number, text?: string) => {
+    setState("sending");
+    try {
+      // Kimlik API'si uretimde AYRI bir adreste; duz "/api/..." yazmak PDF
+      // servisine giderdi. Proje genelinde kullanilan taban yardimcisi sart.
+      const res = await fetch(buildSaasApiUrl(`/api/tool-rating/${encodeURIComponent(toolSlug)}`), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value: rating, comment: text }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setState("done");
+    } catch {
+      // Puan verememek kullanıcının işini bölmemeli; sessizce geçilir.
+      setState("error");
+    }
+  };
+
+  const pick = (rating: number) => {
+    setValue(rating);
+    // Yüksek puanda beklemeye gerek yok: tek tıkla biter.
+    if (rating >= COMMENT_ASKED_BELOW) void send(rating);
+  };
+
+  if (state === "done") {
+    return (
+      <p className="mt-4 text-center text-[13px] text-slate-400">
+        {value < COMMENT_ASKED_BELOW ? t.thanksLow : t.thanks}
+      </p>
+    );
+  }
+
+  const askComment = value > 0 && value < COMMENT_ASKED_BELOW && state !== "sending";
+
+  return (
+    <div className="mt-4 border-t border-white/[0.06] pt-4">
+      <p className="text-center text-[13px] text-slate-400">{t.ask}</p>
+
+      <div className="mt-2 flex items-center justify-center gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button
+            key={n}
+            type="button"
+            aria-label={t.star(n)}
+            disabled={state === "sending"}
+            onMouseEnter={() => setHover(n)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => pick(n)}
+            className="rounded p-1 transition disabled:opacity-50"
+          >
+            <Star
+              className={`h-6 w-6 transition ${
+                n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-slate-600"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
+
+      {askComment ? (
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <input
+            type="text"
+            value={comment}
+            maxLength={300}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={t.placeholder}
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.1] bg-black/30 px-3 py-2 text-[13px] text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-400/40"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => void send(value, comment)}
+              className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-semibold text-white"
+            >
+              {t.send}
+            </button>
+            <button
+              type="button"
+              onClick={() => void send(value)}
+              className="rounded-lg px-3 py-2 text-[13px] text-slate-400 hover:text-white"
+            >
+              {t.skip}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {state === "error" ? (
+        <p className="mt-2 text-center text-[12px] text-slate-500">{t.failed}</p>
+      ) : null}
+    </div>
+  );
+}

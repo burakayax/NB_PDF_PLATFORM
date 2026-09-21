@@ -189,6 +189,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
     const pct = result.inBytes > 0 ? Math.round((saved / result.inBytes) * 100) : 0;
     return (
       <ToolResultPanel
+        ratingToolSlug="gorsel-sikistir"
         blob={result.blob}
         filename={result.filename}
         language={language}

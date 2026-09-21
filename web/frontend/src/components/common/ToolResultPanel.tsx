@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Check, Download, ExternalLink, Share2, X } from "lucide-react";
+import { ToolRating } from "./ToolRating";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
 
@@ -26,6 +27,13 @@ export type ToolResultPanelProps = {
   onClose: () => void;
   /** Düğmelerin altına eklenen içerik (ör. sıradaki araç önerileri, üyelik kartı). */
   children?: ReactNode;
+  /**
+   * Araç kimliği — verilirse işlem bitiminde tek soruluk puanlama gösterilir.
+   *
+   * Bu an kasıtlı seçildi: kullanıcı sonucu yeni gördü, işe yarayıp yaramadığını
+   * biliyor. Aynı soruyu sayfanın bir köşesinde sormak çok daha az yanıt alıyor.
+   */
+  ratingToolSlug?: string;
 };
 
 const L = {
@@ -91,6 +99,7 @@ export function ToolResultPanel({
   subtitle,
   onClose,
   children,
+  ratingToolSlug,
 }: ToolResultPanelProps) {
   const t = L[language] ?? L.tr;
   const isPdf = /\.pdf$/i.test(filename.trim());
@@ -204,6 +213,7 @@ export function ToolResultPanel({
           <X className="h-4 w-4" /> {t.close}
         </button>
       </div>
+      {ratingToolSlug ? <ToolRating toolSlug={ratingToolSlug} language={language} /> : null}
       {children}
     </div>
   );

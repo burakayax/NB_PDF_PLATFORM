@@ -977,3 +977,27 @@ model SignatureEvent {
   @@index([requestId, at])
   @@map("signature_events")
 }
+
+/// Araç puanı — kullanıcının işlemi bitirdikten sonra verdiği 1-5 yıldız.
+///
+/// NEDEN VAR: Arama sonuçlarındaki yıldızlar (SoftwareApplication →
+/// aggregateRating) YALNIZCA gerçek kullanıcı puanlarıyla gösterilebilir.
+/// Uydurma puan Google'da elle cezaya yol açar. Bu tablo o gerçek veriyi
+/// biriktirir; ayrıca hangi aracın işe yaramadığını da gösterir.
+model ToolRating {
+  id        String   @id @default(cuid())
+  /// Araç kimliği (TOOL_SEO anahtarı, ör. "merge-pdf").
+  toolSlug  String   @map("tool_slug")
+  /// 1-5. Uçta doğrulanır.
+  value     Int
+  /// Düşük puanda istenen kısa açıklama. Teşhis için; zorunlu değil.
+  comment   String?
+  /// Aynı kişinin aynı aracı tekrar tekrar puanlamasını engellemek için
+  /// IP + tarayıcı imzasının karması. Ham IP SAKLANMAZ.
+  voterHash String   @map("voter_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([toolSlug, voterHash])
+  @@index([toolSlug])
+  @@map("tool_ratings")
+}

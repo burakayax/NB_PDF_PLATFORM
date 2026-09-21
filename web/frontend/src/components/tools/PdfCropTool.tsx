@@ -407,6 +407,7 @@ export function PdfCropTool({ language, initialFile }: Props) {
   if (result) {
     return (
       <ToolResultPanel
+        ratingToolSlug="crop-pdf"
         blob={result.blob}
         filename={result.filename}
         language={language}

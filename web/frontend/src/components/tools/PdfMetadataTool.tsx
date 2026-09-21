@@ -158,6 +158,7 @@ export function PdfMetadataTool({
   if (sonuc) {
     return (
       <ToolResultPanel
+        ratingToolSlug="ustveri-temizle"
         blob={sonuc.blob}
         filename={sonuc.filename}
         language={language}
