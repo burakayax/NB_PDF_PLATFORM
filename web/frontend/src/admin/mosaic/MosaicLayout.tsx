@@ -1,4 +1,5 @@
 import {
+  Star,
   Activity,
   BarChart3,
   Building2,
@@ -45,6 +46,7 @@ const iconMap: Record<string, LucideIcon> = {
   media: ImageIcon,
   settings: Settings2,
   analytics: BarChart3,
+  ratings: Star,
 };
 
 function iconFor(id: string): LucideIcon {

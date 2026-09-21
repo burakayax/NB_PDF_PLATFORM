@@ -114,6 +114,7 @@ import {
   type AdminSaveStripState,
 } from "./mosaic/adminPrimitives";
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
+import { ToolRatingsTab } from "./ratings/ToolRatingsTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AdminToaster } from "./AdminToaster";
 import { readAccessToken } from "../lib/accessTokenStore";
@@ -133,6 +134,7 @@ type AdminTabId =
   | "media"
   | "settings"
   | "analytics"
+  | "ratings"
   | "audit";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
@@ -165,6 +167,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-coupons", label: "Kuponlar" },
       { id: "cmd-emails", label: "E-postalar" },
       { id: "cmd-social", label: "Sosyal medya" },
+      { id: "ratings", label: "Araç puanları" },
     ],
   },
   {
@@ -612,6 +615,7 @@ export function AdminPanel({
           <SettingsTab accessToken={accessToken} uiMode={uiMode} showSystemTOOLS={viewerRole === "ADMIN"} />
         ) : null}
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
+        {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
       <AdminToaster />

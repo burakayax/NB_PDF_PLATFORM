@@ -128,6 +128,52 @@ export async function publishableSummaries(): Promise<RatingSummary[]> {
     .sort((a, b) => a.toolSlug.localeCompare(b.toolSlug));
 }
 
+/**
+ * Yönetim panelinin tablosu: HER aracın durumu — eşiği geçmeyenler dahil.
+ *
+ * `publishableSummaries` yalnızca yayınlanabilirleri döner (işaretleme için);
+ * burada ise yönetici hepsini görür, çünkü asıl değeri olan bilgi düşük puan
+ * alan araçtır ve o genellikle az oyludur.
+ */
+export async function adminBreakdown(): Promise<
+  Array<RatingSummary & { distribution: Record<1 | 2 | 3 | 4 | 5, number>; lastAt: Date | null }>
+> {
+  const rows = await prisma.toolRating.findMany({
+    select: { toolSlug: true, value: true, createdAt: true },
+  });
+
+  const byTool = new Map<string, { values: number[]; last: Date }>();
+  for (const r of rows) {
+    const entry = byTool.get(r.toolSlug);
+    if (entry) {
+      entry.values.push(r.value);
+      if (r.createdAt > entry.last) entry.last = r.createdAt;
+    } else {
+      byTool.set(r.toolSlug, { values: [r.value], last: r.createdAt });
+    }
+  }
+
+  return [...byTool.entries()]
+    .map(([toolSlug, { values, last }]) => {
+      const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<1 | 2 | 3 | 4 | 5, number>;
+      for (const v of values) {
+        const k = Math.min(Math.max(Math.round(v), 1), 5) as 1 | 2 | 3 | 4 | 5;
+        distribution[k] += 1;
+      }
+      const sum = values.reduce((a, b) => a + b, 0);
+      return {
+        toolSlug,
+        ratingValue: Math.round((sum / values.length) * 10) / 10,
+        ratingCount: values.length,
+        publishable: values.length >= MIN_RATINGS_TO_PUBLISH,
+        distribution,
+        lastAt: last,
+      };
+    })
+    // En düşük ortalama üstte: dikkat edilmesi gereken yer orası.
+    .sort((a, b) => a.ratingValue - b.ratingValue || b.ratingCount - a.ratingCount);
+}
+
 /** Açıklama metnini temizler; boşsa null döner. */
 export function normalizeComment(raw: unknown): string | null {
   if (typeof raw !== "string") return null;
