@@ -36,6 +36,8 @@ type SEOProps = {
   hreflang?: Array<{ lang: string; href: string }>;
   /** Sosyal medya profil URL'leri — Organization sameAs. */
   sameAs?: string[];
+  /** Araç sayfasıysa aracın kimliği — yıldızlar (aggregateRating) için. */
+  toolSlug?: string;
 };
 
 // ─── head helpers ─────────────────────────────────────────────────────────────
@@ -203,6 +205,7 @@ export function SEO({
   breadcrumb,
   hreflang,
   sameAs,
+  toolSlug,
 }: SEOProps) {
   useEffect(() => {
     const canonicalUrl = toAbsoluteUrl(canonical);
@@ -262,6 +265,7 @@ export function SEO({
       includeFaq: faqSchema,
       breadcrumb,
       sameAs,
+      toolSlug,
     });
     pruneJsonLd(nodes);
     nodes.forEach((entry, index) => appendJsonLd(index, entry));
@@ -279,6 +283,7 @@ export function SEO({
     title,
     twitter,
     sameAs,
+    toolSlug,
   ]);
 
   return null;

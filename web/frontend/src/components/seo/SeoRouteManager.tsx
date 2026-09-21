@@ -1,6 +1,7 @@
 import type { Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
 import { resolveRouteSeo, toAbsoluteUrl } from "../../seo/routeSeoConfig";
+import { toolSlugForFeature } from "../../lib/toolRoutes";
 import { localizedPath } from "../../seo/enSlugs.mjs";
 import { getPublicSiteOrigin } from "../../lib/siteOrigin";
 import { landingTranslations } from "../../i18n/landing";
@@ -118,6 +119,13 @@ export function SeoRouteManager({
         image: ogImage,
       }}
       includeProductSchema={view === "landing" || view === "web"}
+      /* Yıldızlar yalnızca araç sayfalarında; ana sayfada araç kimliği
+         yok, dolayısıyla aggregateRating de basılmaz. */
+      toolSlug={
+        view === "web" && selectedFeatureId
+          ? toolSlugForFeature(selectedFeatureId)
+          : undefined
+      }
       includePricingOfferSchema={view === "pricing"}
       faqSchema={faqSchema}
       breadcrumb={breadcrumb}

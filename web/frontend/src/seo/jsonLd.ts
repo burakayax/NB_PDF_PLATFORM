@@ -1,5 +1,7 @@
 export type JsonLdNode = Record<string, unknown>;
 
+import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "./toolRatings.mjs";
+
 type SchemaInput = {
   language: "tr" | "en";
   canonicalUrl: string;
@@ -11,6 +13,11 @@ type SchemaInput = {
   breadcrumb?: Array<{ name: string; url: string }>;
   /** Sosyal medya profil URL'leri — Organization sameAs (E-E-A-T / entity). */
   sameAs?: string[];
+  /**
+   * Araç sayfasıysa aracın kimliği — yıldızlar (aggregateRating) buna göre
+   * eklenir. Araç sayfası değilse verilmez ve yıldız basılmaz.
+   */
+  toolSlug?: string;
 };
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
@@ -68,8 +75,33 @@ function buildOrganization(input: SchemaInput): JsonLdNode {
   };
 }
 
+/**
+ * Aracın yıldızları — YALNIZCA gerçek ve yeterli oy varsa.
+ *
+ * Veri derleme anında çekilir (scripts/fetch-tool-ratings.mjs) ve eşiği geçmeyen
+ * araç o dosyaya hiç girmez. Yani burada uydurma ortalama ya da varsayılan puan
+ * ÜRETİLMEZ; kayıt yoksa alan hiç eklenmez.
+ *
+ * Statik HTML ile BURASI aynı dosyayı okur. Aynı olmaları şart: uygulama
+ * açılırken yeniden basacağı türdeki hazır bloğu siliyor, dolayısıyla yıldız
+ * yalnızca statik tarafta olsaydı sayfa açılınca kaybolurdu.
+ */
+function buildAggregateRating(toolSlug: string | undefined): JsonLdNode | null {
+  if (!toolSlug) return null;
+  const r = TOOL_RATINGS[toolSlug];
+  if (!r) return null;
+  return {
+    "@type": "AggregateRating",
+    ratingValue: r.ratingValue,
+    ratingCount: r.ratingCount,
+    bestRating: RATING_BEST,
+    worstRating: RATING_WORST,
+  };
+}
+
 // ─── SoftwareApplication (replaces bare Product for software) ────────────────
 function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
+  const aggregateRating = buildAggregateRating(input.toolSlug);
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
@@ -98,6 +130,7 @@ function buildSoftwareApplication(input: SchemaInput): JsonLdNode {
       "@type": "Brand",
       name: "PDF Platform",
     },
+    ...(aggregateRating ? { aggregateRating } : {}),
     publisher: {
       "@id": `${origin(input.canonicalUrl)}/#organization`,
     },
