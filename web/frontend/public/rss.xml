@@ -580,7 +580,18 @@
 <h2>Biçim korunması için ipuçları</h2>
 <blockquote><p>Belgenizde standart yazı tipleri (Arial, Times New Roman, Calibri) kullanırsanız çıktı orijinaline en yakın olur. Çok özel/kurulu olmayan yazı tipleri bazı sistemlerde farklı görünebilir.</p></blockquote>
 <p>Ters yönde ihtiyacınız varsa — yani PDF'i tekrar düzenlenebilir Word'e çevirmek — bunun için ayrı bir aracımız var.</p>
-<p><strong>PDF'den Word'e</strong> — Elinizde düzenlenebilir hâli yoksa, PDF'i tekrar Word'e çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">PDF → Word</a></p>]]></content:encoded>
+<p><strong>PDF'den Word'e</strong> — Elinizde düzenlenebilir hâli yoksa, PDF'i tekrar Word'e çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-word">PDF → Word</a></p>
+<h2>Dönüştürmeden önce belgeyi hazırlayın</h2>
+<p>PDF, Word belgesinin o anki hâlini dondurur; belgede ne varsa çıktıya o girer. Bu yüzden dönüştürmeden önceki birkaç dakikalık hazırlık, gönderdikten sonra fark edilen sürprizleri önler.</p>
+<ul><li>Değişiklik izlemeyi kapatın ve tüm düzeltmeleri kabul edin; aksi hâlde işaretler çıktıya girebilir.</li><li>Yorumları temizleyin — özellikle iç yazışmadan kalanları.</li><li>Yazım denetimini bir kez çalıştırın; PDF'te düzeltmek çok daha zordur.</li><li>Otomatik içindekiler ve alan kodlarını güncelleyin, yoksa eski sayfa numaraları donar.</li><li>Belge özelliklerindeki yazar adı ve şirket bilgisini gözden geçirin.</li></ul>
+<h2>Yazı tipi neden kayar?</h2>
+<p>Word dosyası yazı tipini çoğu zaman içine gömmez; yalnızca adını taşır. Karşı tarafta o yazı tipi kurulu değilse program benzerini koyar ve satır uzunlukları değişir, tablolar taşar, sayfa sayısı bile farklılaşır. PDF'te ise kullanılan yazı tipleri belgenin içine gömülür. Bu, PDF'in en çok işe yarayan yanıdır ve resmî gönderimlerin neden PDF istediğini de açıklar.</p>
+<h2>CV ve başvuru belgelerinde dikkat</h2>
+<p>İş başvurularında gönderilen belgeler çoğu zaman bir sisteme yüklenir ve otomatik olarak taranır. Bu nedenle PDF'in içindeki metnin gerçek metin olması önemlidir: Word'den doğrudan PDF üreten bir belge bu koşulu sağlar, ama CV'yi ekran görüntüsü ya da tasarım programından resim olarak dışa aktarırsanız metin okunamaz. Basit bir sınama vardır: PDF'i açıp adınızı fareyle seçmeye çalışın, seçilemiyorsa belge resimdir.</p>
+<h2>Dönüştürdükten sonra kontrol listesi</h2>
+<ul><li>Sayfa sayısı beklediğiniz gibi mi, fazladan boş sayfa oluşmuş mu?</li><li>Tablolar sayfa sonunda bölünmüş mü?</li><li>Başlıklarla metin arasında istenmeyen kopma var mı?</li><li>Bağlantılar tıklanabilir kalmış mı?</li><li>Dosya boyutu göndereceğiniz kanala sığıyor mu?</li></ul>
+<h2>Sonrasında yapabilecekleriniz</h2>
+<p>PDF elinize geçtikten sonra belge üzerinde çalışmaya devam edebilirsiniz: eklerle birleştirmek, sayfa numarası eklemek, boyutu küçültmek ya da hassas bilgileri kalıcı olarak kaldırmak. Bu işlemlerin çoğu sayfa düzeyinde çalıştığı için belgenin içeriğine ve görünümüne dokunmaz.</p>]]></content:encoded>
       <category>Dönüştürme</category>
       <category>Word</category>
       <category>PDF</category>
@@ -641,7 +652,18 @@
 <blockquote><p>Çok sütunlu geniş tablolarda, çevirmeden önce Excel'de sayfa düzenini 'Yatay (Landscape)' yapmak ve yazdırma alanını ayarlamak, çıktının sığmasını ve okunaklı olmasını sağlar.</p></blockquote>
 <h2>Tersi: PDF'teki tabloyu Excel'e almak</h2>
 <p>Elinizde bir PDF var ve içindeki tabloyu Excel'de düzenlemek istiyorsanız, bunun için ayrı bir aracımız var — tabloları .xlsx'e çıkarır.</p>
-<p><strong>PDF'den Excel'e</strong> — PDF'teki tabloları düzenlenebilir Excel'e aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">PDF → Excel</a></p>]]></content:encoded>
+<p><strong>PDF'den Excel'e</strong> — PDF'teki tabloları düzenlenebilir Excel'e aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">PDF → Excel</a></p>
+<h2>Çevirmeden önce yazdırma ayarlarını yapın</h2>
+<p>Excel'den üretilen PDF'in nasıl görüneceğini belirleyen şey, dosyadaki yazdırma ayarlarıdır. Bu ayarlar yapılmadan çevrilen geniş bir tablo, sütunları farklı sayfalara dağılmış hâlde çıkar ve okunmaz olur. Birkaç dakikalık ayar, çıktının kullanılabilirliğini tamamen değiştirir.</p>
+<ul><li>Sayfa yönünü yatay yapın: sütun sayısı fazlaysa neredeyse her zaman gerekir.</li><li>Yazdırma alanını tanımlayın; boş hücrelerin sayfalara dağılmasını önler.</li><li>«Tüm sütunları tek sayfaya sığdır» seçeneğini kullanın.</li><li>Başlık satırının her sayfada tekrarlanmasını ayarlayın — çok sayfalı tablolarda okunabilirliği belirler.</li><li>Kılavuz çizgilerinin basılmasını isteyip istemediğinize karar verin.</li></ul>
+<h2>Birden çok sayfa (sekme) olan dosyalar</h2>
+<p>Bir Excel dosyasında çoğu zaman birden çok çalışma sayfası bulunur ve hepsinin paylaşılması gerekmez. Ara hesaplar, ham veri ya da eski dönem sekmeleri çıktıya girdiğinde belge hem şişer hem de paylaşılmaması gereken bilgiyi taşıyabilir. Çevirmeden önce hangi sekmelerin çıktıya gireceğine karar vermek, sonradan PDF'ten sayfa silmekten daha temizdir.</p>
+<h2>Gizli bilgi sızıntısına dikkat</h2>
+<p>Excel dosyaları göründüğünden fazlasını taşır: gizlenmiş satır ve sütunlar, filtreyle saklanan veriler, hücre notları ve formüllerin baktığı diğer sekmeler. PDF'e çevirirken gizli satırlar genellikle çıktıya girmez, ama hücre notları ve filtrelenmiş veriler beklenmedik biçimde görünebilir. Dışarı gidecek bir tabloyu çevirmeden önce gizli her şeyi bir kez gözden geçirmek iyi bir alışkanlıktır.</p>
+<h2>Fatura ve teklif tablolarında</h2>
+<p>Excel'de hazırlanan teklif ve fatura tablolarının PDF'e çevrilmesinin asıl nedeni, karşı tarafın rakamları değiştiremeyeceği sabit bir belge oluşturmaktır. Bu belgeyi gönderirken iki ek adım işe yarar: sayfa numarası eklemek, çok sayfalı tekliflerde eksiksizliği gösterir; belgeye izin parolası eklemek ise kopyalama ve düzenlemeyi kısıtlar.</p>
+<h2>Çıktıyı göndermeden önce</h2>
+<ul><li>Sayfa sonları mantıklı yerlerde mi, bir kalem ortadan bölünüyor mu?</li><li>Tutarlar ve para birimi doğru biçimde görünüyor mu?</li><li>En küçük punto okunabiliyor mu — özellikle baskı alınacaksa?</li><li>Belgede görünmesini istemediğiniz not ya da sütun kalmış mı?</li></ul>]]></content:encoded>
       <category>Dönüştürme</category>
       <category>Excel</category>
       <category>PDF</category>
@@ -750,7 +772,18 @@
 <h2>Düz dönüştürme mi, yapay zekâ mı?</h2>
 <p>PDF'te net, ızgara şeklinde tablolar varsa düz dönüştürme hızlı ve yeterlidir. Ancak fatura, irsaliye gibi her biri farklı düzende olan belgelerden alan çıkarmak istiyorsanız — fatura no, tarih, tutar, kalemler gibi — yapay zekâ ile veri çıkarma çok daha isabetlidir.</p>
 <blockquote><p>Onlarca faturayı tek bir CSV tablosunda toplamak istiyorsanız, AI Veri Çıkar ve AI Toplu İşlem araçları bu iş için tasarlandı — her satır bir belge olacak şekilde birleştirir.</p></blockquote>
-<p><strong>AI Veri Çıkar</strong> — Faturalar gibi karmaşık belgelerden alanları yapay zekâ ile çıkarın. <a href="https://www.pdfplatform.app/tools/pdf-veri-cikar">AI ile çıkar</a></p>]]></content:encoded>
+<p><strong>AI Veri Çıkar</strong> — Faturalar gibi karmaşık belgelerden alanları yapay zekâ ile çıkarın. <a href="https://www.pdfplatform.app/tools/pdf-veri-cikar">AI ile çıkar</a></p>
+<h2>Tablo neden bazen bozuk çıkar?</h2>
+<p>PDF'te tablo diye bir nesne yoktur. Gördüğünüz ızgara, çizgilerle ve hizalanmış metin parçalarıyla oluşturulmuş bir görüntüdür; arkada satır-sütun ilişkisi bulunmaz. Dönüştürme aracı bu ilişkiyi konumlardan tahmin eder. Tahminin zorlaştığı durumlar bellidir ve önceden bilmek beklentiyi doğru kurar.</p>
+<ul><li>Çizgisiz tablolar: sütunlar yalnızca boşlukla ayrılmışsa sınır belirsizleşir.</li><li>Birleştirilmiş hücreler: bir başlığın iki sütunu kapsaması hizayı bozar.</li><li>Satıra sığmayıp alta taşan uzun metinler tek satır mı iki satır mı belli olmaz.</li><li>Sayfa boyunca devam eden tablolarda başlık satırının tekrarı yeni bir tablo sanılabilir.</li><li>Taranmış belgeler: önce OCR gerekir, aksi hâlde hücreler boş gelir.</li></ul>
+<h2>Excel'de açtıktan sonra ilk düzeltmeler</h2>
+<p>Çıktı üzerinde birkaç standart düzeltme, tabloyu kullanılabilir hâle getirir. Bunları alışkanlık hâline getirmek, her seferinde sıfırdan uğraşmayı önler: sayı olarak gelmeyen sütunları biçimlendirin, binlik ayracından ötürü metne dönüşen tutarları sayıya çevirin, tarih sütununun biçimini kontrol edin, tekrar eden başlık satırlarını silin ve boş sütunları kaldırın.</p>
+<h2>Ne zaman veri çıkarma daha doğru?</h2>
+<p>Düz dönüştürme, belgedeki tabloyu olduğu gibi taşımaya çalışır. Oysa çoğu zaman istediğiniz şey tablo değil, belirli alanlardır: faturadaki tutar, tarih ve satıcı adı gibi. Her belgenin düzeni farklıysa tabloyu taşımak işe yaramaz; alanları adıyla çıkarmak gerekir. Ölçüt basittir: belgeler aynı şablondaysa ve düzgün ızgara varsa dönüştürme, belgeler birbirinden farklıysa ve belirli alanlar arıyorsanız veri çıkarma.</p>
+<h2>Büyük tablolarda pratik yol</h2>
+<p>Yüz sayfalık bir raporun yalnızca on beşinci sayfasındaki tabloya ihtiyacınız varsa, belgenin tamamını dönüştürmek gereksiz iş ve gereksiz bekleme demektir. Bölme aracıyla ilgili sayfa aralığını ayırıp yalnızca onu dönüştürmek hem hızlı hem daha temiz sonuç verir; ayıklanacak gereksiz satır kalmaz.</p>
+<h2>Sonucu kontrol etmenin hızlı yolu</h2>
+<p>Satır satır okumak yerine toplamlarla kontrol edin: tutar sütununun toplamı belgedeki genel toplamla uyuşuyor mu, satır sayısı belgedeki kalem sayısıyla aynı mı, boş hücre var mı? Bu üç kontrol, hataların büyük kısmını birkaç saniyede yakalar.</p>]]></content:encoded>
       <category>Dönüştürme</category>
       <category>Excel</category>
       <category>Tablo</category>
