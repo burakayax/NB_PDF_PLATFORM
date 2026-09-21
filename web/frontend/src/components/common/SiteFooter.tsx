@@ -2,6 +2,7 @@ import type { Language } from "../../i18n/landing";
 import { useSettings } from "../../hooks/useSettings";
 import { CrawlableLink } from "../seo/CrawlableLink";
 import { SocialIcon, socialLabelFromUrl, socialPlatformFromUrl } from "./socialIcons";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 
 /**
  * Paylaşılan, href-tabanlı site footer'ı — callback gerektirmez, her sayfada (özellikle
@@ -11,6 +12,19 @@ import { SocialIcon, socialLabelFromUrl, socialPlatformFromUrl } from "./socialI
 
 export function SiteFooter({ language }: { language: Language }) {
   const tr = language === "tr";
+  /**
+   * BAĞLANTILAR DİLE GÖRE ÇEVRİLİR.
+   *
+   * ÖLÇÜLDÜ (canlı): İngilizce sayfalardaki iç bağlantıların TAMAMI Türkçe
+   * adrese gidiyordu (/blog, /terms, /tools/merge-pdf…). İç bağlantı, arama
+   * motorunun "asıl sayfa hangisi" kararındaki en güçlü sinyallerden biridir;
+   * site kendi İngilizce sayfalarına hiç bağlanmayınca Google Türkçe sürümü
+   * asıl kabul edip İngilizcesini KOPYA sayıyordu (Search Console uyarısı).
+   *
+   * `localizedPath` hem /en önekini ekler hem de slug'ı o dile çevirir:
+   * /tools/pdf-duzenle → /en/tools/edit-pdf.
+   */
+  const yol = (p: string) => localizedPath(p, language);
   const { site } = useSettings();
   const socialLinks = site.socialLinks ?? [];
 
@@ -18,27 +32,27 @@ export function SiteFooter({ language }: { language: Language }) {
     {
       heading: tr ? "Ürün" : "Product",
       links: [
-        { label: tr ? "Tüm Araçlar" : "All Tools", href: "/" },
-        { label: tr ? "Fiyatlandırma" : "Pricing", href: "/pricing" },
-        { label: "Blog", href: "/blog" },
-        { label: tr ? "Geliştirici API" : "Developer API", href: "/pdf-api" },
+        { label: tr ? "Tüm Araçlar" : "All Tools", href: yol("/") },
+        { label: tr ? "Fiyatlandırma" : "Pricing", href: yol("/pricing") },
+        { label: "Blog", href: yol("/blog") },
+        { label: tr ? "Geliştirici API" : "Developer API", href: yol("/pdf-api") },
       ],
     },
     {
       heading: tr ? "Popüler Araçlar" : "Popular Tools",
       links: [
-        { label: tr ? "PDF Birleştir" : "Merge PDF", href: "/tools/merge-pdf" },
-        { label: tr ? "PDF → Word" : "PDF to Word", href: "/tools/pdf-to-word" },
-        { label: tr ? "PDF Sıkıştır" : "Compress PDF", href: "/tools/compress" },
-        { label: tr ? "PDF → JPG" : "PDF to JPG", href: "/tools/pdf-to-image" },
+        { label: tr ? "PDF Birleştir" : "Merge PDF", href: yol("/tools/merge-pdf") },
+        { label: tr ? "PDF → Word" : "PDF to Word", href: yol("/tools/pdf-to-word") },
+        { label: tr ? "PDF Sıkıştır" : "Compress PDF", href: yol("/tools/compress") },
+        { label: tr ? "PDF → JPG" : "PDF to JPG", href: yol("/tools/pdf-to-image") },
       ],
     },
     {
       heading: tr ? "Yasal" : "Legal",
       links: [
-        { label: tr ? "Kullanım Şartları" : "Terms", href: "/terms" },
-        { label: tr ? "Gizlilik" : "Privacy", href: "/privacy" },
-        ...(tr ? [{ label: "KVKK", href: "/kvkk" }] : []),
+        { label: tr ? "Kullanım Şartları" : "Terms", href: yol("/terms") },
+        { label: tr ? "Gizlilik" : "Privacy", href: yol("/privacy") },
+        ...(tr ? [{ label: "KVKK", href: yol("/kvkk") }] : []),
       ],
     },
   ];
@@ -49,7 +63,7 @@ export function SiteFooter({ language }: { language: Language }) {
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-12">
           {/* Brand */}
           <div className="max-w-sm">
-            <CrawlableLink href="/" className="group inline-flex items-center">
+            <CrawlableLink href={yol("/")} className="group inline-flex items-center">
               <img
                 src="/navbar-logo.png"
                 alt="PDF Platform"

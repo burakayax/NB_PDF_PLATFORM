@@ -152,6 +152,7 @@ const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
   { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
 ];
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
 import { HeroBackground } from "./HeroBackground";
@@ -354,7 +355,10 @@ function Navbar({
             ["#showcase", tr ? "Önizleme" : "Preview"],
             ["#tools", tr ? "Araçlar" : "Tools"],
             ["#pricing", tr ? "Fiyat" : "Pricing"],
-            ["/blog", "Blog"],
+            // İngilizce sayfada İngilizce adrese bağlanır; aksi hâlde site
+            // kendi İngilizce sürümüne hiç bağlanmamış oluyor ve arama motoru
+            // Türkçe sürümü asıl kabul edip diğerini kopya sayıyor (ölçüldü).
+            [localizedPath("/blog", language), "Blog"],
             ["#faq", "FAQ"],
           ].map(([href, label]) => (
             <CrawlableLink
@@ -1843,8 +1847,8 @@ function Footer({
       links: [
         { label: tr ? "Hakkımızda" : "About", action: onOpenAbout },
         { label: tr ? "İletişim" : "Contact", action: onContactClick },
-        { label: "Blog", href: "/blog" },
-        { label: tr ? "Geliştirici API" : "Developer API", href: "/pdf-api" },
+        { label: "Blog", href: localizedPath("/blog", language) },
+        { label: tr ? "Geliştirici API" : "Developer API", href: localizedPath("/pdf-api", language) },
       ],
     },
     {
