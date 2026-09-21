@@ -189,7 +189,8 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
   const post = getBlogPost(slug) as BlogPost | null;
   const c = post ? (post[tr ? "tr" : "en"] as BlogPostCopy) : null;
 
-  useEffect(() => { if (c) document.title = `${c.title} — PDF Platform`; }, [c]);
+  // Marka eki yok — üretilen statik sayfayla birebir aynı başlık (bkz. generate-seo-files.mjs).
+  useEffect(() => { if (c) document.title = c.title; }, [c]);
 
   if (!post || !c) {
     return (

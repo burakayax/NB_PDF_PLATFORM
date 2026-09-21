@@ -17,6 +17,7 @@
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { legalDocuments } from "../src/content/legalContent.mjs";
 import {
   BRAND,
   DEFAULT_OG_IMAGE,
@@ -297,7 +298,7 @@ function pageMetaForRoute(routePath, lang) {
 
   if (routePath === "/pricing") {
     const c = PRICING_SEO[lang];
-    return { ...c, kind: "pricing", index: true, follow: true, includePricing: true };
+    return { ...c, kind: "pricing", index: true, follow: true, includePricing: true, includeFaq: true };
   }
 
   if (routePath === "/pdf-api") {
@@ -331,7 +332,11 @@ function pageMetaForRoute(routePath, lang) {
     if (p && p[lang]) {
       const c = p[lang];
       return {
-        title: `${c.title} — ${BRAND}`,
+        // Blog başlığına marka eki EKLENMEZ: yazı başlıkları zaten uzun, marka
+        // eklenince 145 sayfanın başlığı Google'ın ~60 karakterlik sınırını aşıp
+        // kesiliyordu (denetimle ölçüldü). Marka adı og:site_name ve yapısal
+        // veride zaten var; arama sonucunda alan adı da görünüyor.
+        title: c.title,
         description: c.description,
         h1: c.title,
         intro: c.excerpt,
@@ -350,7 +355,8 @@ function pageMetaForRoute(routePath, lang) {
   for (const key of ["terms", "privacy", "kvkk"]) {
     if (routePath === `/${key}`) {
       const c = LEGAL_SEO[key][lang];
-      return { ...c, kind: "legal", index: true, follow: true };
+      // legalKey: gövdeyi üretirken tam metni okumak için (aşağıda renderVisibleBody)
+      return { ...c, kind: "legal", legalKey: key, index: true, follow: true };
     }
   }
 
@@ -478,7 +484,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      headline: meta.title.replace(` — ${BRAND}`, ""),
+      headline: meta.title,
       description: meta.description,
       datePublished: meta.post.date,
       dateModified: meta.post.updated,
@@ -633,6 +639,28 @@ function renderVisibleBody(baseUrl, meta, lang) {
 
   if (meta.kind === "pricing") {
     parts.push(t.pricingCta(base));
+  }
+
+  // Yasal sayfalar — TAM metin. Önceden yalnızca başlık + tek cümle üretiliyordu;
+  // arama motoru şartlar/gizlilik/KVKK sayfalarını 15-20 kelimelik boş sayfa
+  // olarak görüyordu. Metin React tarafıyla aynı kaynaktan gelir (legalContent.mjs).
+  if (meta.kind === "legal" && meta.legalKey) {
+    const belge = legalDocuments[lang] && legalDocuments[lang][meta.legalKey];
+    if (belge) {
+      const bolumler = belge.sections
+        .map(
+          (b) =>
+            `<section><h2>${escapeHtml(b.title)}</h2>${b.paragraphs
+              .map((p) => `<p>${escapeHtml(p)}</p>`)
+              .join("")}</section>`,
+        )
+        .join("");
+      parts.push(
+        `<article class="seo-legal"><p>${escapeHtml(belge.summary)}</p>` +
+          `<p><strong>${escapeHtml(belge.effectiveDateLabel)}:</strong> ${escapeHtml(belge.effectiveDate)}</p>` +
+          `${bolumler}</article>`,
+      );
+    }
   }
 
   // SSS bölümü (görünür) — FAQPage schema ile birebir aynı metin
