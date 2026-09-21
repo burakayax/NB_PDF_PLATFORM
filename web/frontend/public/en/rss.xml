@@ -101,6 +101,49 @@
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf24-alternative-mac-linux.png" />
     </item>
     <item>
+      <title>DocuSign Alternatives: When Five Documents a Month Is Not Enough</title>
+      <link>https://www.pdfplatform.app/en/blog/docusign-alternatives</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/docusign-alternatives</guid>
+      <pubDate>Sat, 19 Sep 2026 11:45:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi" />
+      <description><![CDATA[DocuSign is a good product, but it is priced per envelope and the personal plan stops at five documents a month. For a small business sending ten contracts, that is a plan that runs out mid-month.]]></description>
+      <content:encoded><![CDATA[<p>DocuSign is the first name people think of for e-signatures, and deservedly — it created the category. But it is priced by how many documents you send, and the personal plan stops at five a month. For a one-person company sending ten contracts, that is a plan that runs out halfway through the month.</p>
+<h2>How DocuSign's pricing works</h2>
+<p>DocuSign counts «envelopes»: each document package you send for signature is one envelope. The current figures from their own pricing page:</p>
+<ul><li>Personal — $11 per month (billed annually), 5 envelopes per month.</li><li>Standard — $30 per user per month, 100 envelopes per user per year.</li><li>Business Pro — $45 per user per month, 100 envelopes per user per year.</li></ul>
+<p>The part worth noticing: even the higher plans cap at 100 envelopes a year — about eight a month. Beyond that you are talking to sales.</p>
+<h2>What DocuSign genuinely does better</h2>
+<p>You should know what you would be giving up. DocuSign's strengths are not in question:</p>
+<ul><li>Ready-made integrations with Salesforce, SAP, Google Workspace and others.</li><li>Qualified electronic signature options and certifications for regulated industries.</li><li>Bulk send, template management, in-person signing and other advanced flows.</li><li>iOS and Android apps, and enterprise user management.</li></ul>
+<p>If you need those, switching would be a false economy. What follows is for people who do not.</p>
+<h2>What most people actually need</h2>
+<p>In practice the sentence is usually this: «Send this contract to the other party, let them sign it, and leave me a record that they did.» Freelancers, small agencies, accountants, estate agents, one-person companies. Envelope quotas, integration catalogues and enterprise user management are not part of that job.</p>
+<h2>How signature requests work here</h2>
+<p>You upload the document and enter the signer's email address. They receive a link generated only for them. Without creating an account they view the document, type their name, draw their signature and tick the consent box.</p>
+<p>Here is the detail that matters: the signature is applied to the original document held on the server. No file is accepted back from the signer. So «is the signed document the same one I sent?» is answered by construction, not by trusting an audit afterwards.</p>
+<p>A certificate is appended to the signed document. It records:</p>
+<ul><li>When the request was created, sent, viewed and signed.</li><li>The signer's name and email address, and the authentication method.</li><li>The moment consent was given.</li><li>The document's fingerprints (SHA-256) before and after signing.</li></ul>
+<p>The link is valid for 14 days. The signer can decline, optionally with a reason — you are notified by email and it goes into the audit record.</p>
+<h2>Legal validity — the part that has to be honest</h2>
+<p>This produces a visual (wet-ink-style) electronic signature with a record of the process attached. That is the approach used for the majority of commercial documents.</p>
+<p>But a qualified electronic signature is a separate legal category, and it requires a certificate from a qualified trust service provider. We do not offer that. For documents that need notarisation, that go to a public authority, or where the law specifically requires a qualified signature, this is the wrong tool — you need DocuSign's qualified options or a local trust service provider.</p>
+<h2>What it costs</h2>
+<ul><li>DocuSign Personal: $11 per month, 5 documents per month.</li><li>PDF Platform Plus: $6.99 per month, 600 operations per month and all 34 tools. Signature requests are on Plus and above.</li></ul>
+<p>Compare like with like, though: DocuSign's package is a workflow product built around signing; this one is a document toolkit that happens to include signature requests. If signing is all you need, the second is cheaper. If you need a signing infrastructure, the first gives you more.</p>
+<p><strong>Request a Signature</strong> — Upload the document, enter an email address — they sign without an account, and the audit certificate is attached. <a href="https://www.pdfplatform.app/en/tools/request-signature">Open the tool</a></p>
+<h2>Which should you pick?</h2>
+<ul><li>Sending a few contracts a month and want a record of the process: signature requests are enough, and cheaper.</li><li>Need a qualified electronic signature or industry certification: DocuSign, or a local trust service provider.</li><li>Need CRM integration, bulk send or template management: DocuSign.</li><li>Only signing your own document: you need neither — the PDF signing tool is free, needs no account and runs on your device.</li></ul>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Signatures</category>
+      <category>Contracts</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" type="image/png" length="54675" />
+      <media:content url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/docusign-alternatives.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/docusign-alternatives.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" />
+    </item>
+    <item>
       <title>Snip from a PDF: Save a Table, Chart or Question as a Sharp Image</title>
       <link>https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</link>
       <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</guid>
@@ -866,34 +909,6 @@
       <media:content url="https://www.pdfplatform.app/en/covers/square/camscanner-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/camscanner-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/camscanner-alternative.png" />
-    </item>
-    <item>
-      <title>Scan Documents with Your Phone: No App, Free, On Your Device (2026)</title>
-      <link>https://www.pdfplatform.app/en/blog/scan-documents-with-your-phone</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/scan-documents-with-your-phone</guid>
-      <pubDate>Mon, 13 Jul 2026 19:38:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/telefonla-belge-tarama-pdf" />
-      <description><![CDATA[You don't need a separate app to digitize a contract, invoice or note. Capture the document from your phone's browser; edges are detected, perspective is corrected and it becomes a PDF in one tap — all on your device.]]></description>
-      <content:encoded><![CDATA[<p>You have a paper document and need it as a PDF fast. Most people install a scanner app for this and deal with ads, sign-up screens and permissions that upload their files to the cloud. But you can capture and convert a document to a clean PDF right in your phone's browser, with nothing to install — and your file never leaves your device.</p>
-<h2>Why in the browser and on-device?</h2>
-<p>Installing an app takes space, needs updates, and most scanner apps send your document to their servers for processing. PDF Platform's document scanner opens right in your phone browser and does everything — edge detection, perspective correction, PDF creation — on your device. That means two big wins: no install and your document is never uploaded.</p>
-<h2>How it works, step by step</h2>
-<ol><li><strong>Tap «Scan document» on the homepage</strong> — Open pdfplatform.app on your phone and tap the «📸 Scan a document with camera» button above the tool picker. Allow camera access.</li><li><strong>Point the camera at the document</strong> — The document's edges are marked live with a green outline. Hold steady and the system captures it by itself — no shutter press needed.</li><li><strong>Pick a filter, confirm the corners</strong> — Choose Color, Gray or Black &amp; White. The auto-detected corners are ready; fine-tune them with your finger if you like.</li><li><strong>Create the PDF</strong> — Add one page or several, then tap «Create PDF». You'll get options to Save, Share or open it in the PDF tools.</li></ol>
-<blockquote><p>Edge detection is fully automatic: just frame the document and hold still. With good light and clear contrast the edges snap instantly; if not, drag the corners to adjust.</p></blockquote>
-<h2>Combine multi-page documents into one PDF</h2>
-<p>Scan every page of a contract or a notebook back-to-back and merge them into a single PDF. Each page appears as a small preview as you go; you can see the order and remove any you don't want. The free plan scans up to 3 pages per scan; upgrade to Pro for unlimited pages.</p>
-<p><strong>Image → PDF</strong> — Already have photos? Turn them into a single PDF in seconds — on your device, no sign-up. <a href="https://www.pdfplatform.app/en/tools/image-to-pdf">Open the tool</a></p>
-<h2>Privacy: your document stays on your device</h2>
-<p>The biggest worry when scanning IDs, contracts or invoices is the file going to a server. That doesn't happen here: the camera frame, edge detection and PDF creation all run in your browser. The resulting PDF only goes where you save or share it.</p>]]></content:encoded>
-      <category>Scanning</category>
-      <category>Mobile</category>
-      <category>PDF</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" type="image/png" length="58549" />
-      <media:content url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/scan-documents-with-your-phone.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/scan-documents-with-your-phone.png" />
     </item>
   </channel>
 </rss>
