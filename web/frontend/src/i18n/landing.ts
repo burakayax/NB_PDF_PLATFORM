@@ -446,7 +446,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Can I edit and erase text on a PDF?",
         answer:
-          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw — no install needed. The document opens and is edited on your device; only when you save is it processed on our secure server for real text editing, then deleted right away; highlighting and signing run entirely in your browser.",
+          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw — no install needed. Real text editing is processed on our secure server and the file is deleted as soon as it is done; highlighting and signing run entirely in your browser.",
       },
       {
         question: "Are my files uploaded to a server? Is it private?",
@@ -806,7 +806,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF üzerindeki yazıları düzenleyip silebilir miyim?",
         answer:
-          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Kurulum gerekmez. Belge cihazınızda açılır ve düzenlenir; yalnızca kaydettiğinizde, gerçek metin düzenlemesi için güvenli sunucumuzda işlenir ve işlem biter bitmez silinir; vurgulama ve imza gibi işaretlemeler ise tamamen tarayıcınızda yapılır.",
+          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Kurulum gerekmez. Gerçek metin düzenlemesi için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir; vurgulama ve imza gibi işaretlemeler ise tamamen tarayıcınızda yapılır.",
       },
       {
         question: "Dosyalarım sunucuya yükleniyor mu? Güvenli mi?",

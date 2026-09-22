@@ -36,8 +36,9 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ProductTour, type TourStep } from "../onboarding/ProductTour";
-import { analyzePdfLocal, fillPageTextColors, ocrScannedPagesLocal } from "../../lib/pdfAnalyzeClient";
+import { fillPageTextColors, ocrScannedPagesLocal } from "../../lib/pdfAnalyzeClient";
 import {
+  analyzePdf,
   editPdfTextPrepare,
   downloadEditedPdf,
   EditDailyLimitError,
@@ -238,9 +239,12 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       setFile(f);
       setLoadingMsg(tr ? "Belge analiz ediliyor…" : "Analyzing document…");
       const buf = await f.arrayBuffer();
-      // Analiz CİHAZDA (pdf.js) — dosya açılırken sunucuya yüklenmez; yalnız kaydederken gider.
-      const d = await pdfjsLib.getDocument({ data: new Uint8Array(buf), isEvalSupported: false }).promise;
-      const a = await analyzePdfLocal(d);
+      // Analiz SUNUCUDA (PyMuPDF) — renk/kalın/italik/span bölme kaynağından birebir; hafif
+      // (sayfa başına ~10-70 ms). Ağır olan OCR ise cihazda (runOcr).
+      const [d, a] = await Promise.all([
+        pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)), isEvalSupported: false }).promise,
+        analyzePdf(f, accessToken ?? null),
+      ]);
       colorDoneRef.current.clear();
       setDoc(d);
       setAnalysis(a);
@@ -312,7 +316,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
     return () => { cancelled = true; };
   }, [doc, current, editorOpen, zoom]);
 
-  // Metin renkleri cihaz analizinde yok → sayfa ilk açıldığında çizilmiş sayfadan örneklenir.
+  // OCR metninin vektör rengi yok → sayfa ilk açıldığında çizilmiş sayfadan örneklenir
+  // (sunucu analizindeki öğelerin rengi zaten var; onlara dokunulmaz).
   const colorDoneRef = useRef<Set<number>>(new Set());
   useEffect(() => {
     if (!doc || !editorOpen || !analysis) return;
@@ -890,8 +895,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
       <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-amber-400/25 bg-amber-500/[0.07] px-4 py-3 text-[13px] text-amber-200">
         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0" />
         <p>{tr
-          ? <>Dosyanız <b>cihazınızda</b> açılır ve düzenlenir. Yalnızca <b>kaydettiğinizde</b>, eski yazıyı gerçekten silip yenisini yazmak için güvenli sunucumuza gider ve işlem biter bitmez silinir. Ücretsiz kayıt hakkı: misafir günde 1, üye günde 2 — <b>Pro'da sınırsız</b>.</>
-          : <>Your file opens and is edited <b>on your device</b>. Only when you <b>save</b> is it sent to our secure server to truly remove the old text and write the new one, then deleted right away. Free saves: 1/day as a guest, 2/day with an account — <b>unlimited with Pro</b>.</>}</p>
+          ? <>Gerçek düzenleme için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir. Ücretsiz kayıt hakkı: misafir günde 1, üye günde 2 — <b>Pro'da sınırsız</b>.</>
+          : <>For real editing, your file is processed on our secure server and deleted right after. Free saves: 1/day as a guest, 2/day with an account — <b>unlimited with Pro</b>.</>}</p>
       </div>
 
       {scanned && (
