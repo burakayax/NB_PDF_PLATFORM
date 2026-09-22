@@ -35,7 +35,7 @@ export function RuntimeBootstrapSplash() {
           alt="PDF Platform"
           className="relative h-16 w-auto object-contain drop-shadow-[0_8px_28px_rgba(34,211,238,0.25)]"
         />
-        <span className="relative mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-slate-500">
+        <span className="relative mt-3 text-[11px] font-medium uppercase tracking-[0.32em] text-slate-400">
           {t.tagline}
         </span>
       </div>
@@ -45,7 +45,7 @@ export function RuntimeBootstrapSplash() {
         <span className="relative block h-[3px] w-40 overflow-hidden rounded-full bg-white/[0.06]">
           <span className="nb-splash-bar absolute inset-y-0 left-0 w-1/3 rounded-full bg-gradient-to-r from-cyan-400/30 via-cyan-300 to-cyan-400/30" />
         </span>
-        <span className="text-[11px] font-medium tracking-wide text-slate-500">
+        <span className="text-[11px] font-medium tracking-wide text-slate-400">
           {t.loading}…
         </span>
       </div>

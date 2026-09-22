@@ -54,8 +54,10 @@ const L = {
   },
 } as const;
 
-/** Bu puanın altında kısa açıklama sorulur — sunucudaki eşikle aynı. */
-const COMMENT_ASKED_BELOW = 4;
+/** Bu puanın altında kısa açıklama sorulur — sunucudaki eşikle aynı.
+ *  Kalıcı puan satırı (ToolScore) da aynı eşiği kullanır; iki yerde ayrı sayı
+ *  durmasın diye buradan paylaşılıyor. */
+export const COMMENT_ASKED_BELOW = 4;
 
 export function ToolRating({ toolSlug, language }: { toolSlug: string; language: Language }) {
   const t = L[language === "tr" ? "tr" : "en"];
@@ -138,7 +140,7 @@ export function ToolRating({ toolSlug, language }: { toolSlug: string; language:
           >
             <Star
               className={`h-6 w-6 transition ${
-                n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-slate-500"
+                n <= (hover || value) ? "fill-amber-400 text-amber-400" : "text-slate-400"
               }`}
             />
           </button>

@@ -79,7 +79,7 @@ function Stars({ value, size = 14 }: { value: number; size?: number }) {
         <Star
           key={n}
           style={{ width: size, height: size }}
-          className={n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-slate-500"}
+          className={n <= Math.round(value) ? "fill-amber-400 text-amber-400" : "text-slate-400"}
         />
       ))}
     </span>
@@ -200,7 +200,7 @@ export function ToolRatingsTab({ accessToken }: { accessToken: string }) {
 
       {empty ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.1] px-6 py-16 text-center">
-          <Star className="h-8 w-8 text-slate-500" />
+          <Star className="h-8 w-8 text-slate-400" />
           <p className="mt-3 text-sm font-semibold text-slate-300">Henüz puan yok</p>
           <p className="mt-1 max-w-md text-[13px] text-slate-300">
             Kullanıcılar araçları kullanıp sonuç ekranına ulaştıkça puanlar burada birikecek.

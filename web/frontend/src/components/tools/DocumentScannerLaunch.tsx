@@ -67,7 +67,7 @@ export function DocumentScannerLaunch({
           {tr ? "Belge Tara" : "Scan document"}
         </button>
 
-        <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-500">
+        <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-400">
           <Smartphone className="h-3.5 w-3.5" />
           {tr ? "En iyi deneyim telefonda (arka kamera)" : "Best experience on a phone (rear camera)"}
         </p>
@@ -85,7 +85,7 @@ export function DocumentScannerLaunch({
           ))}
         </div>
 
-        <p className="mt-5 text-[12px] text-slate-500">
+        <p className="mt-5 text-[12px] text-slate-400">
           {tr ? "Elinizde hazır fotoğraflar mı var? " : "Already have photos? "}
           <a href="/tools/image-to-pdf" className="font-semibold text-cyan-300 hover:text-cyan-200">
             {tr ? "Görsel → PDF aracını kullanın" : "Use the Image → PDF tool"}

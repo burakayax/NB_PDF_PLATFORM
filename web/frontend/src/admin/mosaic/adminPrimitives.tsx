@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 export const mosaicInputClass =
-  "w-full rounded-xl border border-slate-600/50 bg-slate-900/50 px-3.5 py-2.5 text-sm text-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] placeholder:text-slate-600 outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20";
+  "w-full rounded-xl border border-slate-600/50 bg-slate-900/50 px-3.5 py-2.5 text-sm text-slate-100 shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] placeholder:text-slate-400 outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/20";
 
 export const adminInputClass = mosaicInputClass;
 
@@ -39,7 +39,7 @@ export function AdminToggle({
       </button>
       <div>
         <span className="text-sm font-medium text-slate-200">{label}</span>
-        {description ? <p className="mt-0.5 text-xs text-slate-500">{description}</p> : null}
+        {description ? <p className="mt-0.5 text-xs text-slate-400">{description}</p> : null}
       </div>
     </div>
   );
@@ -76,7 +76,7 @@ export function AdminField({
           </button>
         ) : null}
       </div>
-      {description ? <p className="mt-1 text-xs text-slate-500">{description}</p> : null}
+      {description ? <p className="mt-1 text-xs text-slate-400">{description}</p> : null}
       <div className="mt-2">{children}</div>
     </div>
   );
@@ -134,7 +134,7 @@ export function AdminSection({
   return (
     <section className={`${sectionBase} ${sectionVariantClass[variant]}`}>
       <h3 className="text-sm font-semibold text-white">{title}</h3>
-      {description ? <p className="mt-1 text-xs text-slate-500">{description}</p> : null}
+      {description ? <p className="mt-1 text-xs text-slate-400">{description}</p> : null}
       <div className="mt-4 space-y-4">{children}</div>
     </section>
   );

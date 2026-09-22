@@ -242,7 +242,7 @@ export function PdfFormFill({
       <div className="mb-3 flex items-center gap-2 text-[13px] text-slate-400">
         <FileText className="h-4 w-4 shrink-0 text-cyan-300" />
         <span className="truncate">{fileName}</span>
-        <span className="shrink-0 text-slate-500">
+        <span className="shrink-0 text-slate-400">
           · {doldurulabilir.length} {t.fields}
         </span>
       </div>
@@ -253,7 +253,7 @@ export function PdfFormFill({
           const etiket = (
             <span className="mb-1.5 block text-xs font-medium text-slate-400">
               {a.ad}
-              {a.saltOkunur && <span className="ml-1.5 text-slate-500">({t.readOnly})</span>}
+              {a.saltOkunur && <span className="ml-1.5 text-slate-400">({t.readOnly})</span>}
             </span>
           );
           if (a.tip === "onay") {
@@ -330,7 +330,7 @@ export function PdfFormFill({
         />
         <span className="text-sm text-slate-200">
           {t.flatten}
-          <span className="block text-[12px] text-slate-500">{t.flattenNote}</span>
+          <span className="block text-[12px] text-slate-400">{t.flattenNote}</span>
         </span>
       </label>
 

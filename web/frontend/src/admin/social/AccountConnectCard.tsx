@@ -59,7 +59,7 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
               {state.label}
             </span>
           </div>
-          <p className="mt-0.5 truncate text-[11px] text-slate-500">
+          <p className="mt-0.5 truncate text-[11px] text-slate-400">
             {connected
               ? `${total} anahtar kayıtlı · ${spec.imageRequired ? "görsel zorunlu" : "görsel isteğe bağlı"}`
               : `${filled}/${total} anahtar girildi · ${brand.where}`}
@@ -115,10 +115,10 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
                     </span>
                   ) : null}
                 </span>
-                <span className="mt-0.5 block text-[11px] text-slate-500">{field.help}</span>
+                <span className="mt-0.5 block text-[11px] text-slate-400">{field.help}</span>
                 <span className="relative mt-1.5 block">
                   <input
-                    className="w-full rounded-xl border border-slate-700/60 bg-slate-950/60 px-3.5 py-2.5 pr-10 font-mono text-xs text-slate-100 outline-none transition placeholder:font-sans placeholder:text-slate-600 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/15"
+                    className="w-full rounded-xl border border-slate-700/60 bg-slate-950/60 px-3.5 py-2.5 pr-10 font-mono text-xs text-slate-100 outline-none transition placeholder:font-sans placeholder:text-slate-400 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/15"
                     type={show ? "text" : "password"}
                     autoComplete="off"
                     spellCheck={false}
@@ -128,7 +128,7 @@ export function AccountConnectCard({ spec, account, busy, onSave, onDisconnect, 
                   />
                   <button
                     type="button"
-                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 text-slate-500 transition hover:text-slate-200"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1.5 text-slate-400 transition hover:text-slate-200"
                     onClick={() => setVisible((v) => ({ ...v, [field.key]: !show }))}
                     aria-label={show ? "Gizle" : "Göster"}
                   >

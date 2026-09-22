@@ -118,11 +118,11 @@ function StatTile({
   } as const;
   return (
     <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 px-4 py-3">
-      <div className="flex items-center gap-2 text-[11px] text-slate-500">
+      <div className="flex items-center gap-2 text-[11px] text-slate-400">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className={`mt-1 text-2xl font-semibold tabular-nums ${value === 0 ? "text-slate-600" : tones[tone]}`}>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums ${value === 0 ? "text-slate-400" : tones[tone]}`}>
         {value}
       </p>
     </div>
@@ -141,7 +141,7 @@ function SectionCard({
   return (
     <section className="rounded-2xl border border-slate-700/50 bg-slate-800/25 p-5">
       <h3 className="text-sm font-semibold text-white">{title}</h3>
-      {description ? <p className="mt-1 text-xs leading-relaxed text-slate-500">{description}</p> : null}
+      {description ? <p className="mt-1 text-xs leading-relaxed text-slate-400">{description}</p> : null}
       <div className="mt-4 space-y-4">{children}</div>
     </section>
   );
@@ -161,10 +161,10 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700/60 bg-slate-900/20 px-6 py-14 text-center">
       <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-700/60 bg-slate-800/60">
-        <Icon className="h-5 w-5 text-slate-500" />
+        <Icon className="h-5 w-5 text-slate-400" />
       </span>
       <p className="mt-4 text-sm font-semibold text-slate-200">{title}</p>
-      <p className="mt-1 max-w-sm text-xs leading-relaxed text-slate-500">{description}</p>
+      <p className="mt-1 max-w-sm text-xs leading-relaxed text-slate-400">{description}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
@@ -304,7 +304,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 : "Açtığında site beslemendeki yeni yazı her gün seçtiğin saatte paylaşılır."}
             </p>
             {config.enabled && nextRun ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-400">
                 {config.prepareLeadMinutes === 0
                   ? "Gönderiler tam yayın anında hazırlanıyor — öncesinde inceleme şansın olmaz."
                   : prepareAhead
@@ -353,7 +353,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 }`}
               />
             </button>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-slate-400">
               Her gün {two(config.hour)}:{two(config.minute)}
             </span>
           </div>
@@ -475,7 +475,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold text-white">Yayın bekleyenler</h3>
-                <span className="text-[11px] text-slate-500">{pendingPosts.length} gönderi</span>
+                <span className="text-[11px] text-slate-400">{pendingPosts.length} gönderi</span>
               </div>
               {pendingPosts.map((post) => (
                 <PostPreviewCard
@@ -515,7 +515,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold text-white">Elle paylaşılacaklar</h3>
-                <span className="text-[11px] text-slate-500">{manualPosts.length} gönderi</span>
+                <span className="text-[11px] text-slate-400">{manualPosts.length} gönderi</span>
               </div>
               <p className="rounded-xl border border-violet-500/25 bg-violet-500/5 px-4 py-3 text-xs leading-relaxed text-violet-100/80">
                 Bu ağların hesabı bağlı değil. Metin ve görsel yine de o ağın ölçülerine göre hazırlandı: metni
@@ -684,7 +684,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                   </option>
                 ))}
               </select>
-              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-400">
                 Metin ve görsel bu süre kadar önce üretilip “Sırada” olarak ekranda belirir, yayın
                 saatini bekler. Bu aralıkta metni düzeltebilir, gönderiyi silebilir ya da erkenden
                 paylaşabilirsin. “Tam yayın anında” seçilirse inceleme şansın olmaz.
@@ -702,7 +702,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <span className="block text-sm font-medium text-slate-200">
                   Yeni yazı yoksa eski yazıları tekrar gündeme getir
                 </span>
-                <span className="mt-0.5 block text-xs text-slate-500">
+                <span className="mt-0.5 block text-xs text-slate-400">
                   Kapalıyken yeni içerik üretmediğin günlerde hesaplar sessiz kalır.
                 </span>
               </span>
@@ -719,7 +719,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <span className="block text-sm font-medium text-slate-200">
                   Etiketleri internette araştır
                 </span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
                   Açıkken yapay zekâ, etiketleri uydurmak yerine o konuda gerçekten aranan
                   terimleri doğrular. Araştırma yazı başına bir kez yapılır ve saklanır; eski
                   yazılar tekrar paylaşıldığında ücret çıkmaz. Kapalıyken yalnızca sitenin
@@ -744,7 +744,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <span className="block text-sm font-medium text-slate-200">
                   Çift dilli paylaş (üstte İngilizce, altta Türkçe)
                 </span>
-                <span className="mt-0.5 block text-xs leading-relaxed text-slate-500">
+                <span className="mt-0.5 block text-xs leading-relaxed text-slate-400">
                   Çeviri yapılmaz: her iki metin de yazının sitedeki kendi dilindeki hâlinden
                   üretilir. X&apos;te iki dil sığmadığı için tek dil kullanılır.
                 </span>
@@ -765,7 +765,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <option value="alternate">Gün aşırı</option>
                 <option value="thrice">Haftada üç (Pzt · Çar · Cum)</option>
               </select>
-              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-400">
                 Arşivde sınırlı sayıda yazı var; her gün paylaşınca döngü daha çabuk başa
                 dönüyor ve aynı yazı yeniden geliyor. Seyrek tempo hem tekrarı azaltır hem de
                 yeni bir hesap için daha doğal görünür.
@@ -782,7 +782,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 <option value="en">İngilizce</option>
                 <option value="tr">Türkçe</option>
               </select>
-              <span className="mt-1.5 block text-xs leading-relaxed text-slate-500">
+              <span className="mt-1.5 block text-xs leading-relaxed text-slate-400">
                 X&apos;te 280 karaktere iki dil sığmadığı için gönderi tek dilli paylaşılır.
                 Yalnızca X için geçerlidir; diğer ağlar çift dilli gider.
               </span>
@@ -795,7 +795,7 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
 
             {/* Anahtar kelime kaynakları — eksik ayar sessizce zayıf etiket üretir. */}
             <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 px-3.5 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                 Anahtar kelime kaynakları
               </p>
               <div className="mt-2 space-y-1.5">
@@ -812,8 +812,8 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
                 ].map((row) => (
                   <div key={row.label} className="flex items-center gap-2 text-[12px]">
                     <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${row.ok ? "bg-emerald-400" : "bg-slate-600"}`} />
-                    <span className={row.ok ? "text-slate-300" : "text-slate-500"}>{row.label}</span>
-                    {row.note ? <span className="min-w-0 truncate font-mono text-[10.5px] text-slate-600">{row.note}</span> : null}
+                    <span className={row.ok ? "text-slate-300" : "text-slate-400"}>{row.label}</span>
+                    {row.note ? <span className="min-w-0 truncate font-mono text-[10.5px] text-slate-400">{row.note}</span> : null}
                   </div>
                 ))}
               </div>
@@ -838,8 +838,8 @@ export function SocialAutomationManager({ accessToken }: { accessToken: string }
               Beslemeyi sına
             </button>
 
-            <p className="flex items-start gap-2 rounded-xl border border-slate-700/50 bg-slate-900/30 px-3.5 py-3 text-[11px] leading-relaxed text-slate-500">
-              <Send className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-600" />
+            <p className="flex items-start gap-2 rounded-xl border border-slate-700/50 bg-slate-900/30 px-3.5 py-3 text-[11px] leading-relaxed text-slate-400">
+              <Send className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
               <span>
                 Metin her zaman gönderinin yazı alanına, görsel ise ayrı bir ek olarak gider. Yazı görselin içine
                 gömülmez — bağlantı tıklanabilir kalır, metin aramalarda görünür.

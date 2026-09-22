@@ -18,7 +18,7 @@ const API = "https://api.pdfplatform.app";
 function Code({ children, label }: { children: string; label?: string }) {
   return (
     <div className="mt-3">
-      {label ? <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-slate-500">{label}</p> : null}
+      {label ? <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-slate-400">{label}</p> : null}
       <pre className="overflow-x-auto rounded-xl border border-white/[0.08] bg-black/50 p-4 text-[12.5px] leading-relaxed text-slate-200"><code>{children}</code></pre>
     </div>
   );
@@ -162,7 +162,7 @@ export function ApiDocsPage({ language, isAuthenticated, onLogin, onRegister, on
     <div className="min-h-dvh bg-[radial-gradient(125%_125%_at_50%_-10%,#16213e_0%,#0b1020_42%,#070b14_100%)] text-white">
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0b1020]/70 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3">
-          <a href="/pdf-api" className="flex items-center gap-2"><img src="/emblem.png" alt="" className="h-8 w-8 object-contain" /><span className="text-sm font-bold text-white">PDF Platform <span className="text-slate-500">/ API</span></span></a>
+          <a href="/pdf-api" className="flex items-center gap-2"><img src="/emblem.png" alt="" className="h-8 w-8 object-contain" /><span className="text-sm font-bold text-white">PDF Platform <span className="text-slate-400">/ API</span></span></a>
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <button type="button" onClick={onOpenApiKeys ?? onRegister} className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-3.5 py-1.5 text-sm font-semibold text-white">{tr ? "API anahtarlarım" : "My API keys"}</button>
@@ -182,7 +182,7 @@ export function ApiDocsPage({ language, isAuthenticated, onLogin, onRegister, on
           <nav className="sticky top-24 max-h-[calc(100dvh-7rem)] space-y-6 overflow-y-auto pr-2">
             {groups.map((g) => (
               <div key={g.title}>
-                <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{g.title}</p>
+                <p className="px-3 pb-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">{g.title}</p>
                 <div className="space-y-0.5">
                   {g.items.map(([id, label]) => (
                     <a
@@ -382,7 +382,7 @@ Retry-After: 42   (429)`}</Code>
             <li className="flex gap-2"><span className="text-cyan-400">•</span>{tr ? <span><b className="text-white">Postman:</b> Import → «Link» sekmesine <code className="text-slate-200">{`${API}/v1/openapi.json`}</code> yapıştırın; tüm uçlar hazır gelir.</span> : <span><b className="text-white">Postman:</b> Import → «Link» and paste <code className="text-slate-200">{`${API}/v1/openapi.json`}</code>; all endpoints load automatically.</span>}</li>
             <li className="flex gap-2"><span className="text-cyan-400">•</span>{tr ? <span><b className="text-white">SDK üretimi:</b> OpenAPI Generator ile Node, Python, Java, C# ve daha fazlası için istemci kütüphanesi üretin (aynı URL'den).</span> : <span><b className="text-white">SDK generation:</b> Use OpenAPI Generator to produce a client library for Node, Python, Java, C# and more (from the same URL).</span>}</li>
           </ul>
-          <p className="mt-2 text-[13px] text-slate-500">{tr ? "Resmi SDK paketlerine ihtiyaç duyarsanız bize yazın." : "Need official SDK packages? Contact us."}</p>
+          <p className="mt-2 text-[13px] text-slate-400">{tr ? "Resmi SDK paketlerine ihtiyaç duyarsanız bize yazın." : "Need official SDK packages? Contact us."}</p>
 
           <H id="lifecycle">{tr ? "Sürüm yaşam döngüsü" : "Version lifecycle"}</H>
           <P>{tr ? "Entegrasyonunuzun bir sabah habersiz bozulmaması için uyduğumuz kurallar:" : "The rules we follow so your integration does not break without warning:"}</P>
@@ -411,7 +411,7 @@ Link: <https://www.pdfplatform.app/pdf-api/docs#changelog>; rel="deprecation"; t
               <div key={entry.date} className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
                 <p className="font-mono text-[12.5px] font-bold text-cyan-300">{entry.date}</p>
                 <ul className="mt-2 space-y-1.5 text-[13.5px] text-slate-300">
-                  {entry.items.map((it) => <li key={it} className="flex gap-2"><span className="text-slate-600">—</span>{it}</li>)}
+                  {entry.items.map((it) => <li key={it} className="flex gap-2"><span className="text-slate-400">—</span>{it}</li>)}
                 </ul>
               </div>
             ))}
@@ -421,13 +421,13 @@ Link: <https://www.pdfplatform.app/pdf-api/docs#changelog>; rel="deprecation"; t
           <nav className="mt-14 grid gap-3 border-t border-white/[0.06] pt-6 sm:grid-cols-2">
             {prev ? (
               <a href={`#${prev[0]}`} className="group rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 transition hover:border-cyan-400/30 hover:bg-white/[0.04]">
-                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">{tr ? "Önceki" : "Previous"}</span>
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Önceki" : "Previous"}</span>
                 <span className="mt-0.5 block text-[14px] font-semibold text-slate-200 group-hover:text-white">← {prev[1]}</span>
               </a>
             ) : <span />}
             {next ? (
               <a href={`#${next[0]}`} className="group rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 text-right transition hover:border-cyan-400/30 hover:bg-white/[0.04] sm:col-start-2">
-                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">{tr ? "Sonraki" : "Next"}</span>
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr ? "Sonraki" : "Next"}</span>
                 <span className="mt-0.5 block text-[14px] font-semibold text-slate-200 group-hover:text-white">{next[1]} →</span>
               </a>
             ) : null}

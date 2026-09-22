@@ -132,7 +132,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
                 </span>
               )}
             </div>
-            <p className="truncate text-xs text-slate-500">{email}</p>
+            <p className="truncate text-xs text-slate-400">{email}</p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2 flex-wrap justify-end">
@@ -169,21 +169,21 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
         <div className="mt-4 grid grid-cols-3 gap-3 border-t border-white/[0.04] pt-4">
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.totalOps}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Toplam İşlem</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Toplam İşlem</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.thisMonthOps}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Bu Ay</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Bu Ay</p>
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-cyan-400">{member.stats.totalPagesProcessed}</p>
-            <p className="text-[10px] text-slate-500 uppercase tracking-wide">Toplam Sayfa</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wide">Toplam Sayfa</p>
           </div>
         </div>
       )}
 
       {member.inviteStatus === "ACCEPTED" && (
-        <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-slate-500">
+        <div className="mt-3 flex flex-wrap gap-4 text-[11px] text-slate-400">
           {lastLoginDate && (
             <span>🔑 Son giriş: <span className="text-slate-400">{lastLoginDate}</span></span>
           )}
@@ -201,7 +201,7 @@ export function TeamMemberCard({ member, accessToken, onRevoke, isOwner, onRoleC
           <button
             type="button"
             onClick={() => setShowTools((v) => !v)}
-            className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+            className="text-[11px] text-slate-400 hover:text-slate-300 transition-colors"
           >
             🔧 Araç kullanımı ({toolBreakdown.length} araç) {showTools ? "▲" : "▼"}
           </button>

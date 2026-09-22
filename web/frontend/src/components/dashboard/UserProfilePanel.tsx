@@ -327,7 +327,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               aria-label={p("fieldEmail", lang)}
               aria-readonly="true"
             />
-            <span className="mt-1.5 block text-xs text-slate-500">{p("emailReadOnly", lang)}</span>
+            <span className="mt-1.5 block text-xs text-slate-400">{p("emailReadOnly", lang)}</span>
           </label>
 
           <button
@@ -399,11 +399,11 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
             ) : null}
 
             {isPaidPlan && renewalDate !== "—" && (
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">{p("autoRenewNote", lang)}</p>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">{p("autoRenewNote", lang)}</p>
             )}
 
             {!isPaidPlan && (
-              <p className="mt-4 text-xs leading-relaxed text-slate-500">{p("upgradeNote", lang)}</p>
+              <p className="mt-4 text-xs leading-relaxed text-slate-400">{p("upgradeNote", lang)}</p>
             )}
 
             {isPaidPlan && (
@@ -470,7 +470,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 <span className="text-sm text-slate-400">{lang === "tr" ? "Bu ay kalan hak" : "Remaining this month"}</span>
                 <span className={`text-lg font-bold ${aiRemaining <= 0 ? "text-red-400" : "text-nb-text"}`}>
                   {aiRemaining}
-                  <span className="text-sm font-medium text-slate-500">/{aiLimit}</span>
+                  <span className="text-sm font-medium text-slate-400">/{aiLimit}</span>
                 </span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
@@ -479,7 +479,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                   style={{ width: `${aiUsedPct}%` }}
                 />
               </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                 <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiRemaining}/${aiLimit}` : `Used: ${aiLimit - aiRemaining}/${aiLimit}`}</span>
                 {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
               </div>
@@ -490,7 +490,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               )}
             </>
           ) : (
-            <p className="mt-4 text-sm text-slate-500">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
+            <p className="mt-4 text-sm text-slate-400">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
           )}
 
           {!aiUnlimited && (

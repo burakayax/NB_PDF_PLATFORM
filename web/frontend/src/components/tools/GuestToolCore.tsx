@@ -497,7 +497,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                   onPointerMove={onGripPointerMove}
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
-                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-500 transition hover:text-white active:cursor-grabbing"
+                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-400 transition hover:text-white active:cursor-grabbing"
                   aria-label={tr ? "Sürükleyip sırala" : "Drag to reorder"}
                   title={tr ? "Sürükleyip sırala" : "Drag to reorder"}
                 >
@@ -509,7 +509,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-500"}`}>
+                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
                   {f.status === "locked" ? (
                     <>
                       {tr ? "Şifre korumalı — " : "Password-protected — "}
@@ -526,7 +526,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                     type="button"
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
-                    className="rounded-md p-1 text-slate-500 transition hover:text-white disabled:opacity-30"
+                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
                     aria-label={tr ? "Yukarı" : "Up"}
                   >
                     <ArrowUp className="h-4 w-4" />
@@ -535,7 +535,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                     type="button"
                     onClick={() => move(i, 1)}
                     disabled={i === files.length - 1}
-                    className="rounded-md p-1 text-slate-500 transition hover:text-white disabled:opacity-30"
+                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
                     aria-label={tr ? "Aşağı" : "Down"}
                   >
                     <ArrowDown className="h-4 w-4" />
@@ -545,7 +545,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               <button
                 type="button"
                 onClick={() => remove(f.id)}
-                className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                 aria-label={tr ? "Kaldır" : "Remove"}
               >
                 <Trash2 className="h-4 w-4" />

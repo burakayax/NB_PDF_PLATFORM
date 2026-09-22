@@ -105,7 +105,7 @@ export function ApiKeysPanel({
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr ? "Anahtar adı (ör. Muhasebe entegrasyonu)" : "Key name (e.g. Accounting integration)"}
           onKeyDown={(e) => { if (e.key === "Enter") void create(); }}
           disabled={!hasApiAccess}
-          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-500 disabled:opacity-60" />
+          className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-[14px] text-white outline-none placeholder:text-slate-400 disabled:opacity-60" />
         <button type="button" onClick={() => void create()} disabled={hasApiAccess && (creating || !name.trim())}
           className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-110 disabled:opacity-50">
           {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : hasApiAccess ? <Plus className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}{tr ? "Anahtar oluştur" : "Create key"}
@@ -125,10 +125,10 @@ export function ApiKeysPanel({
               <KeyRound className="h-4 w-4 shrink-0 text-cyan-300" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-semibold text-slate-100">{k.name} {k.revokedAt && <span className="text-red-300">· {tr ? "iptal" : "revoked"}</span>}</p>
-                <p className="font-mono text-[11px] text-slate-500">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
+                <p className="font-mono text-[11px] text-slate-400">{k.prefix}••••{k.last4} · {tr ? "son kullanım" : "last used"}: {k.lastUsedAt ? new Date(k.lastUsedAt).toLocaleDateString() : "—"}</p>
               </div>
               {!k.revokedAt && (
-                <button type="button" onClick={() => void revoke(k.id)} title={tr ? "İptal et" : "Revoke"} className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
+                <button type="button" onClick={() => void revoke(k.id)} title={tr ? "İptal et" : "Revoke"} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
               )}
             </div>
           ))}

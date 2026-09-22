@@ -84,7 +84,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         type="button"
         onClick={dismiss}
         aria-label={tr ? "Kapat" : "Dismiss"}
-        className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
+        className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
       >
         <X className="h-4 w-4" />
       </button>
@@ -128,7 +128,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         <Zap className="h-4 w-4" />
         {tr ? "Ücretsiz hesap aç" : "Create free account"}
       </a>
-      <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-500">
+      <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
         <CreditCard className="h-3.5 w-3.5" />
         {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
       </p>

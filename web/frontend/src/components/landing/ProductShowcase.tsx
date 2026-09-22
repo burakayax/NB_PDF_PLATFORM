@@ -129,7 +129,7 @@ function GradientPlaceholder({ variant }: { variant: Tab }) {
             </svg>
           )}
         </div>
-        <p className="text-xs font-medium text-slate-500">
+        <p className="text-xs font-medium text-slate-400">
           {variant === "web" ? "Web app preview" : "Desktop app preview"}
         </p>
       </div>
@@ -518,7 +518,7 @@ export default function ProductShowcase({
                 className={`relative z-10 flex items-center gap-2.5 rounded-[10px] px-5 py-2.5 text-[13px] font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50 ${
                   activeTab === tab
                     ? "text-white"
-                    : "text-slate-500 hover:text-slate-300"
+                    : "text-slate-400 hover:text-slate-300"
                 }`}
               >
                 {activeTab === tab && (
@@ -674,7 +674,7 @@ export default function ProductShowcase({
 
         {/* Trust micro-line */}
         <p
-          className="mt-5 text-center text-[12px] text-slate-600"
+          className="mt-5 text-center text-[12px] text-slate-400"
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
           No credit card required &bull; Free plan available &bull; Cancel

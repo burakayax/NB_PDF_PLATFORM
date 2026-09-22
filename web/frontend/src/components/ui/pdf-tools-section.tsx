@@ -600,14 +600,14 @@ export default function PdfToolsSection({
         {/* Arama + kategori süzgeci */}
         <div className="mt-10 flex flex-col items-center gap-4">
           <div className="relative w-full max-w-md">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={tr ? "Araç ara — örn. birleştir, Word, imza" : "Search tools — e.g. merge, Word, sign"}
               aria-label={tr ? "Araç ara" : "Search tools"}
-              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-violet-400/40 focus:bg-white/[0.06]"
+              className="w-full rounded-2xl border border-white/10 bg-white/[0.04] py-3 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-violet-400/40 focus:bg-white/[0.06]"
             />
           </div>
 
@@ -632,7 +632,7 @@ export default function PdfToolsSection({
                   }`}
                 >
                   {label}
-                  <span className={`ml-1.5 text-[11px] ${active ? "text-violet-200/80" : "text-slate-600"}`}>
+                  <span className={`ml-1.5 text-[11px] ${active ? "text-violet-200/80" : "text-slate-400"}`}>
                     {count}
                   </span>
                 </button>
@@ -772,7 +772,7 @@ export default function PdfToolsSection({
 
         {/* Alt eylem */}
         <div className="mt-14 text-center">
-          <p className="text-[13px] text-slate-500">
+          <p className="text-[13px] text-slate-400">
             {tr
               ? "Aradığınızı bulamadınız mı? Sürekli yeni araçlar ekliyoruz."
               : "Can't find what you need? We're constantly adding new tools."}

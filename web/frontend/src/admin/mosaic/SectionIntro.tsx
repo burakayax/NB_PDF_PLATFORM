@@ -104,7 +104,7 @@ export function SectionIntro({ tab }: { tab: string }) {
         <p className="text-sm font-bold text-white">{info.title}</p>
         <p className="mt-0.5 text-[13px] leading-relaxed text-slate-400">{info.what}</p>
         {info.how ? (
-          <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+          <p className="mt-1.5 text-[12px] leading-relaxed text-slate-400">
             <span className="font-semibold text-slate-400">Nasıl kullanılır: </span>{info.how}
           </p>
         ) : null}
