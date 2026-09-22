@@ -291,6 +291,19 @@ export function SenderIdentityCard({ accessToken }: { accessToken: string }) {
         </p>
       ) : null}
 
+      {/* İYS hatırlatması: kimlik bilgisini doldurmak tek başına yetmiyor.
+          Bu ikisi karıştırılırsa "her şeyi yaptım" sanılır — oysa kayıt
+          olmadan gönderilen ticari e-posta yine ihlaldir. */}
+      <div className="mt-5 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
+        <p className="text-xs leading-relaxed text-slate-400">
+          <strong className="text-slate-300">Bunlar İYS kaydının yerine geçmez.</strong>{" "}
+          Ticari e-posta gönderebilmek için ayrıca İleti Yönetim Sistemi'ne (iys.org.tr)
+          kayıtlı olmanız ve verdiğiniz izinleri oraya yüklemeniz gerekir. Kayıt için
+          işletmenizin açılmış olması şart. Ayrıntılar:{" "}
+          <span className="text-slate-300">docs/legal/02-ticari-eposta-uyum.md</span>
+        </p>
+      </div>
+
       <div className="mt-5 flex items-center gap-3">
         <button
           type="button"
