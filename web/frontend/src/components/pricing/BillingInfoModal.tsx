@@ -452,7 +452,7 @@ export function BillingInfoModal({
   const inp =
     "w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/15";
   const lbl =
-    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 mb-1";
+    "block text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400 mb-1";
   const req = <span className="text-red-400 ml-0.5">*</span>;
 
   return (
@@ -481,7 +481,7 @@ export function BillingInfoModal({
           <h2 className="text-lg font-bold text-white">
             {tr ? "Fatura Bilgileri" : "Billing Information"}
           </h2>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-slate-400">
             {tr
               ? "Yasal e-arşiv fatura düzenlenebilmesi için aşağıdaki bilgiler gerekmektedir."
               : "Required to generate your legal e-invoice."}
@@ -491,7 +491,7 @@ export function BillingInfoModal({
         {/* Body */}
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5">
           {loading ? (
-            <div className="py-8 text-center text-sm text-slate-500">
+            <div className="py-8 text-center text-sm text-slate-400">
               {tr ? "Yükleniyor…" : "Loading…"}
             </div>
           ) : (
@@ -595,7 +595,7 @@ export function BillingInfoModal({
                 <div>
                   <label className={lbl}>
                     TC Kimlik No{" "}
-                    <span className="font-normal text-slate-500">
+                    <span className="font-normal text-slate-400">
                       {tr ? "(opsiyonel)" : "(optional)"}
                     </span>
                   </label>
@@ -614,7 +614,7 @@ export function BillingInfoModal({
                     placeholder={tr ? "11 haneli TC Kimlik No (boş bırakabilirsiniz)" : "11-digit national ID (optional)"}
                     autoComplete="off"
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
+                  <p className="mt-1 text-[11px] text-slate-400">
                     {tr
                       ? "İsteğe bağlıdır — boş bırakırsanız faturanız yasal olarak nihai tüketici (11111111111) adına düzenlenir. Girerseniz AES-256-GCM ile şifrelenir ve yalnızca e-arşiv fatura için kullanılır."
                       : "Optional — if left blank, your invoice is issued to a final consumer (11111111111) as permitted by law. If provided, it is encrypted with AES-256-GCM and used solely for e-invoice generation."}
@@ -747,7 +747,7 @@ export function BillingInfoModal({
               </div>
 
               {/* FIX 4: Geliştirilmiş KVKK bilgi metni */}
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-slate-500">
+              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-[11px] leading-relaxed text-slate-400">
                 {tr ? (
                   <>
                     Kişisel verileriniz,{" "}

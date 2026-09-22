@@ -452,7 +452,7 @@ export function AdminPanel({
           overview ? (
             <AdminDashboardHome overview={overview} uiMode={uiMode} />
           ) : (
-            <p className="text-slate-500">Özet yükleniyor…</p>
+            <p className="text-slate-400">Özet yükleniyor…</p>
           )
         ) : null}
         {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
@@ -484,7 +484,7 @@ export function AdminPanel({
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <h2 className="text-sm font-semibold tracking-tight text-white">E-posta otomasyonu</h2>
-                <p className="mt-1 text-xs text-slate-500">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
+                <p className="mt-1 text-xs text-slate-400">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
                 <div className="mt-5 space-y-4">
                   <AdminToggle
                     id="mkt-welcome"
@@ -582,7 +582,7 @@ export function AdminPanel({
             </div>
           </div>
         ) : tab === "cmd-mkt" ? (
-          <p className="text-slate-500">Yükleniyor…</p>
+          <p className="text-slate-400">Yükleniyor…</p>
         ) : null}
 
         {tab === "cmd-coupons" ? (
@@ -783,7 +783,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                   : "border-white/[0.08] bg-black/25"
               }`}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{p.name}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{p.name}</p>
               <p className="mt-1 text-lg font-semibold text-white">{p.displayName}</p>
               <p className="mt-2 text-xs leading-relaxed text-slate-400">{p.description}</p>
               <ul className="mt-3 space-y-1 text-[11px] text-slate-400">
@@ -1494,7 +1494,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Araçlar — bakım & istatistik</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">
             {advanced
               ? "Bir aracı geçici KAPATMA (bakım) ve her aracın kullanım istatistiği. Aşağıdaki liste TÜM araçları içerir; kullanım sayısı yalnız kullanılan araçlarda görünür."
               : "Araç kullanım istatistikleri. Araç açma/kapama Gelişmiş moddadır. (Not: günlük kota kaldırıldı — araçlar sınırsız.)"}
@@ -1518,10 +1518,10 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       {advanced ? (
       <section className="rounded-2xl border border-white/[0.08] bg-black/25 p-4">
         <h3 className="text-sm font-semibold text-white">Araç kullanım özeti (tüm araçlar)</h3>
-        <p className="mt-1 text-[12px] text-slate-500">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
+        <p className="mt-1 text-[12px] text-slate-400">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[400px] text-left text-xs">
-            <thead className="border-b border-white/[0.08] text-slate-500">
+            <thead className="border-b border-white/[0.08] text-slate-400">
               <tr>
                 <th className="px-3 py-2">Araç</th>
                 <th className="px-3 py-2 text-right">Aktif kullanıcı-gün</th>
@@ -1531,7 +1531,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
             <tbody>
               {catalog.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-3 py-4 text-slate-500">
+                  <td colSpan={3} className="px-3 py-4 text-slate-400">
                     Katalog yüklenemedi veya boş.
                   </td>
                 </tr>
@@ -1560,7 +1560,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
             {planDefinitions.map((p) => (
               <li key={p.plan} className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2">
                 <span className="font-semibold text-white">{p.plan}</span>
-                <span className="text-slate-500">
+                <span className="text-slate-400">
                   {" "}
                   · günlük limit: {p.dailyLimit === null ? "yok" : p.dailyLimit}
                 </span>
@@ -2093,7 +2093,7 @@ function ContentTab({
           </AdminField>
           <div className="space-y-5 border-t border-white/[0.06] pt-5">
             <p className="text-sm font-medium text-slate-200">Araç kartları (uygulama içi)</p>
-            <p className="text-[12px] text-slate-500">Boş bıraktığınız alanlarda varsayılan metinler kullanılır.</p>
+            <p className="text-[12px] text-slate-400">Boş bıraktığınız alanlarda varsayılan metinler kullanılır.</p>
             {WORKSPACE_TOOL_IDS.map((tid) => (
               <div key={tid} className="rounded-xl border border-white/[0.06] bg-black/25 p-4">
                 <p className="mb-3 text-xs font-semibold text-amber-100/90">{pdfToolLabelTr(tid)}</p>
@@ -2272,7 +2272,7 @@ function ContentTab({
         <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Canlı önizleme</p>
-            <p className="mt-0.5 text-[10px] text-slate-500">
+            <p className="mt-0.5 text-[10px] text-slate-400">
               {livePreview ? "Taslak — henüz kaydetmediğiniz değişiklikler" : "Sunucudaki kayıtlı sürüm"}
             </p>
           </div>
@@ -2578,7 +2578,7 @@ function SettingsTab({
       {showSystemTOOLS && advanced ? (
         <div className="space-y-3 border-t border-white/[0.08] pt-8">
           <h3 className="text-sm font-semibold text-white">Sistem kontrolü</h3>
-          <p className="text-[12px] text-slate-500">Yedek sürümler, denetim kaydı ve teknik bayraklar — yalnız tam yönetici.</p>
+          <p className="text-[12px] text-slate-400">Yedek sürümler, denetim kaydı ve teknik bayraklar — yalnız tam yönetici.</p>
           <SystemControlTab accessToken={accessToken} />
         </div>
       ) : showSystemTOOLS && !advanced ? (
@@ -2784,7 +2784,7 @@ function AnalyticsTab({
             <BosDurum metin="Huni verisi yüklenemedi." />
           )}
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
           Ücretsiz→ücretli dönüşüm sektörde genelde %2–5 arasında; sert kullanım
           sınırı olan ürünlerde %15'e kadar çıkabiliyor. Oran düşükse önce hangi
           basamakta kaybettiğimize bakılmalı — ödemeden önceki adımlar zayıfsa
@@ -2904,7 +2904,7 @@ function AnalyticsTab({
                 onChange={(e) => setFrom(e.target.value)}
                 className="rounded-xl border border-white/[0.1] bg-black/40 px-3 py-2 text-[12px] font-semibold text-slate-100"
               />
-              <span className="text-slate-500">→</span>
+              <span className="text-slate-400">→</span>
               <input
                 type="date"
                 value={to}
@@ -2921,7 +2921,7 @@ function AnalyticsTab({
                 Kullanım CSV indir
               </button>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
               Satırlar: kullanıcı başına günlük kullanım, işlem sayıları ve son kullanılan araç.
             </p>
           </Katlanir>
@@ -3023,7 +3023,7 @@ function MediaTab({
       {msg ? <p className="text-xs text-slate-400">{msg}</p> : null}
       <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
         <table className="w-full min-w-[560px] text-left text-xs">
-          <thead className="border-b border-white/[0.08] text-slate-500">
+          <thead className="border-b border-white/[0.08] text-slate-400">
             <tr>
               <th className="px-3 py-2">Önizleme</th>
               <th className="px-3 py-2">URL</th>
@@ -3041,11 +3041,11 @@ function MediaTab({
                     {isImg ? (
                       <img src={fullUrl} alt="" className="h-12 w-16 rounded object-cover" />
                     ) : (
-                      <span className="text-slate-500">PDF</span>
+                      <span className="text-slate-400">PDF</span>
                     )}
                   </td>
                   <td className="max-w-[min(280px,40vw)] truncate px-3 py-2 font-mono text-[10px] text-slate-400">{fullUrl}</td>
-                  <td className="px-3 py-2 text-slate-500">{Math.round(a.byteSize / 1024)} KB</td>
+                  <td className="px-3 py-2 text-slate-400">{Math.round(a.byteSize / 1024)} KB</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                       <button
@@ -3094,7 +3094,7 @@ function MediaTab({
             })}
           </tbody>
         </table>
-        {items.length === 0 ? <p className="p-4 text-center text-xs text-slate-500">Henüz dosya yok.</p> : null}
+        {items.length === 0 ? <p className="p-4 text-center text-xs text-slate-400">Henüz dosya yok.</p> : null}
       </div>
     </div>
   );
@@ -3150,9 +3150,9 @@ function AuditLogTab({ accessToken }: { accessToken: string }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="E-posta, işlem veya özet ara…"
-          className="flex-1 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+          className="flex-1 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
         />
-        <span className="shrink-0 text-xs text-slate-500">{filtered.length} kayıt</span>
+        <span className="shrink-0 text-xs text-slate-400">{filtered.length} kayıt</span>
       </div>
 
       {loading ? (
@@ -3160,12 +3160,12 @@ function AuditLogTab({ accessToken }: { accessToken: string }) {
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-slate-500">Kayıt bulunamadı.</p>
+        <p className="py-10 text-center text-sm text-slate-400">Kayıt bulunamadı.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/[0.07]">
           <table className="w-full min-w-[700px] text-xs">
             <thead>
-              <tr className="border-b border-white/[0.08] text-left text-slate-500">
+              <tr className="border-b border-white/[0.08] text-left text-slate-400">
                 <th className="px-4 py-2.5 font-semibold">Tarih</th>
                 <th className="px-4 py-2.5 font-semibold">Kullanıcı</th>
                 <th className="px-4 py-2.5 font-semibold">İşlem</th>

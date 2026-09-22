@@ -389,7 +389,7 @@ export function PdfHub({ file, language, isPro, lockedFeatures, onClose, onPickT
             </div>
           ))}
           {!isPro && (
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
               {tr
                 ? "Dönüştürme & bazı araçlar üyelik gerektirir — belgen korunur, giriş sonrası orada açılır."
                 : "Conversion & some tools need an account — your file is kept and opens there after sign-in."}

@@ -99,7 +99,7 @@ export function DownloadFilenameModal({ open, defaultName, language, onCancel, o
           {language === "tr" ? "İndirmeden önce dosya adını düzenleyebilirsiniz." : "You can edit the name before the download starts."}
         </p>
         <input
-          className="mt-4 w-full rounded-xl border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+          className="mt-4 w-full rounded-xl border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 focus:border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           autoFocus

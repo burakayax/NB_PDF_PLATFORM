@@ -24,7 +24,7 @@ type Editing = { id: string | null; draft: AdminCampaignInput } | null;
 function Field({ label, value, onChange, area, ph }: { label: string; value: string; onChange: (v: string) => void; area?: boolean; ph?: string }) {
   return (
     <label className="block">
-      <span className="text-xs text-slate-500">{label}</span>
+      <span className="text-xs text-slate-400">{label}</span>
       {area ? (
         <textarea className={`${adminInputClass} min-h-[90px]`} value={value} placeholder={ph} onChange={(e) => onChange(e.target.value)} />
       ) : (
@@ -111,7 +111,7 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <F label="Ad (iç etiket)" value={d.name} onChange={(v) => set("name", v)} ph="Yükseltme / AI" />
           <label className="block">
-            <span className="text-xs text-slate-500">Kayıttan kaç gün sonra</span>
+            <span className="text-xs text-slate-400">Kayıttan kaç gün sonra</span>
             <input type="number" min={0} max={365} className={adminInputClass} value={d.triggerDays}
               onChange={(e) => set("triggerDays", Math.max(0, Math.min(365, Number(e.target.value) || 0)))} />
           </label>
@@ -176,14 +176,14 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
           <Plus className="h-4 w-4" /> Yeni e-posta
         </button>
       </div>
-      <p className="text-xs text-slate-500">Kayıttan N gün sonra, izin veren ücretsiz kullanıcılara otomatik gönderilir. Test kendine gider.</p>
+      <p className="text-xs text-slate-400">Kayıttan N gün sonra, izin veren ücretsiz kullanıcılara otomatik gönderilir. Test kendine gider.</p>
       {err && <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">{err}</p>}
       {note && <p className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">{note}</p>}
 
       {items === null ? (
-        <p className="text-sm text-slate-500">Yükleniyor…</p>
+        <p className="text-sm text-slate-400">Yükleniyor…</p>
       ) : items.length === 0 ? (
-        <p className="rounded-xl border border-slate-800/60 px-4 py-6 text-center text-sm text-slate-500">Henüz e-posta yok. "Yeni e-posta" ile ekleyin.</p>
+        <p className="rounded-xl border border-slate-800/60 px-4 py-6 text-center text-sm text-slate-400">Henüz e-posta yok. "Yeni e-posta" ile ekleyin.</p>
       ) : (
         <ul className="space-y-3">
           {items.map((c) => (
@@ -196,7 +196,7 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
                     {c.couponCode && <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold text-emerald-200"><Tag className="h-3 w-3" />{c.couponCode}</span>}
                   </div>
                   <p className="mt-1 truncate text-xs text-slate-400">{c.subjectTr}</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-500"><Clock className="h-3 w-3" />Kayıttan {c.triggerDays}. gün</p>
+                  <p className="mt-1 flex items-center gap-1.5 text-[11px] text-slate-400"><Clock className="h-3 w-3" />Kayıttan {c.triggerDays}. gün</p>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                   <button type="button" onClick={() => void toggle(c)}
@@ -208,7 +208,7 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
                   <button type="button" onClick={() => startEdit(c)}
                     className="inline-flex items-center gap-1 rounded-lg border border-slate-700 px-2.5 py-1.5 text-[11px] text-slate-300 hover:bg-white/5"><Pencil className="h-3.5 w-3.5" />Düzenle</button>
                   <button type="button" onClick={() => void remove(c.id)} title="Sil"
-                    className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-500/10 hover:text-rose-400"><Trash2 className="h-4 w-4" /></button>
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400"><Trash2 className="h-4 w-4" /></button>
                 </div>
               </div>
             </li>

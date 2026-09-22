@@ -162,7 +162,7 @@ export function SplitPagePickerModal({
               </h2>
 
               <div className="flex flex-wrap items-center gap-1">
-                <span className="hidden whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-slate-500 sm:inline">
+                <span className="hidden whitespace-nowrap text-[10px] font-medium uppercase tracking-wide text-slate-400 sm:inline">
                   {effectiveModalLang === "tr" ? "Yakınlaştır" : "Zoom"}
                 </span>
                 <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-white/10 bg-black/35 p-px">

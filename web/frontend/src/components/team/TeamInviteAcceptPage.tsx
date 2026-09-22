@@ -206,7 +206,7 @@ export function TeamInviteAcceptPage() {
         <div className="rounded-xl border border-red-500/25 bg-red-500/8 p-5 text-center">
           <p className="text-2xl mb-3">❌</p>
           <p className="text-sm text-red-400">{t.noTokenMsg}</p>
-          <p className="mt-2 text-xs text-slate-500">{t.noTokenHint}</p>
+          <p className="mt-2 text-xs text-slate-400">{t.noTokenHint}</p>
         </div>
       </InvitePageWrapper>
     );

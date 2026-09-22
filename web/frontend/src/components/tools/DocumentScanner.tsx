@@ -1141,7 +1141,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     </button>
                     {isPro ? (
                       <div className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-slate-400">
-                        <Zap className={`h-4 w-4 ${autoCapture ? "text-emerald-400" : "text-slate-500"}`} />
+                        <Zap className={`h-4 w-4 ${autoCapture ? "text-emerald-400" : "text-slate-400"}`} />
                         {autoCapture ? (tr ? "Otomatik" : "Auto") : (tr ? "Manuel" : "Manual")}
                       </div>
                     ) : (
@@ -1401,7 +1401,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   {pages.length}{" "}
                   {tr ? "sayfa tarandı" : pages.length === 1 ? "page scanned" : "pages scanned"}
                   {!isPro && (
-                    <span className="ml-1.5 text-[12px] text-slate-500">
+                    <span className="ml-1.5 text-[12px] text-slate-400">
                       ({pages.length}/{FREE_PAGE_LIMIT} {tr ? "ücretsiz" : "free"})
                     </span>
                   )}
@@ -1518,12 +1518,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${format === f ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                     >
                       <span className="text-[13px] font-bold">{lbl}</span>
-                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                     </button>
                   ))}
                 </div>
                 {format !== "pdf" && pages.length > 1 && (
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 text-[11px] text-slate-400">
                     {tr ? `${pages.length} sayfa → her sayfa ayrı görsel, tek ZIP olarak.` : `${pages.length} pages → one image per page, in a single ZIP.`}
                   </p>
                 )}
@@ -1548,7 +1548,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                         className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${quality === qk ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                       >
                         <span className="text-[13px] font-bold">{lbl}</span>
-                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                       </button>
                     ))}
                   </div>
@@ -1566,9 +1566,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
                     placeholder="taranan-belge"
-                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-500 outline-none"
+                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-400 outline-none"
                   />
-                  <span className="shrink-0 text-sm text-slate-500">
+                  <span className="shrink-0 text-sm text-slate-400">
                     .{format === "pdf" ? "pdf" : pages.length > 1 ? "zip" : FORMAT_EXT[format]}
                   </span>
                 </div>

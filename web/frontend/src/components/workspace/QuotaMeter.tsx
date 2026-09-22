@@ -220,7 +220,7 @@ export function QuotaWall({
                 : "Pro has no daily cap: process documents back to back, upload larger files and convert in batches."}
           </p>
           {yenilenme && (
-            <p className="mt-1 text-[12px] text-slate-500">
+            <p className="mt-1 text-[12px] text-slate-400">
               {tr ? `Beklemek istersen hakkın ${yenilenme}.` : `If you'd rather wait, your quota ${yenilenme}.`}
             </p>
           )}

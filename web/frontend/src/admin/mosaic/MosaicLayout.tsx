@@ -149,7 +149,7 @@ export function MosaicLayout({
           </div>
           <div className={`min-w-0 flex-1 overflow-hidden transition-opacity ${expanded ? "opacity-100" : "opacity-0"}`}>
             <p className="truncate text-xs font-semibold text-white">Admin</p>
-            <p className="truncate text-[10px] text-slate-500">Mosaic</p>
+            <p className="truncate text-[10px] text-slate-400">Mosaic</p>
           </div>
           <button
             type="button"
@@ -164,7 +164,7 @@ export function MosaicLayout({
           {navGroups.map((g) => (
             <div key={g.title}>
               <p
-                className={`px-3 text-[10px] font-bold uppercase tracking-widest text-slate-600 transition-opacity ${expanded ? "opacity-100" : "opacity-0"}`}
+                className={`px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 transition-opacity ${expanded ? "opacity-100" : "opacity-0"}`}
               >
                 {g.title}
               </p>
@@ -187,7 +187,7 @@ export function MosaicLayout({
                             : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
                         }`}
                       >
-                        <Ic className={`h-[18px] w-[18px] shrink-0 ${act ? "text-cyan-300" : "text-slate-500 group-hover:text-slate-300"}`} />
+                        <Ic className={`h-[18px] w-[18px] shrink-0 ${act ? "text-cyan-300" : "text-slate-400 group-hover:text-slate-300"}`} />
                         <span
                           className={`truncate text-sm font-medium transition-opacity ${expanded ? "opacity-100" : "w-0 opacity-0"}`}
                         >
@@ -217,7 +217,7 @@ export function MosaicLayout({
             </button>
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-tight text-white md:text-xl">{pageTitle}</h1>
-              {pageSubtitle ? <p className="mt-0.5 truncate text-sm text-slate-500">{pageSubtitle}</p> : null}
+              {pageSubtitle ? <p className="mt-0.5 truncate text-sm text-slate-400">{pageSubtitle}</p> : null}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -239,11 +239,11 @@ export function MosaicLayout({
                   {initials}
                 </span>
                 <span className="hidden max-w-[140px] truncate text-sm text-slate-300 md:block">{userEmail}</span>
-                <ChevronDown className="h-4 w-4 text-slate-500" />
+                <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
               {userOpen ? (
                 <div className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-slate-700/60 bg-slate-900 py-1 shadow-xl ring-1 ring-black/20">
-                  <p className="px-3 py-2 text-xs text-slate-500">Oturum</p>
+                  <p className="px-3 py-2 text-xs text-slate-400">Oturum</p>
                   <button
                     type="button"
                     onClick={() => {

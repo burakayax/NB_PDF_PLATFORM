@@ -90,7 +90,7 @@ export function SiteForm({
     }
   }, [site]);
   if (!form) {
-    return <p className="text-slate-500">Loading…</p>;
+    return <p className="text-slate-400">Loading…</p>;
   }
   const setK =
     (k: keyof AppSettingsPayload) =>
@@ -161,7 +161,7 @@ export function SiteForm({
             acil override içindir.
           </p>
         ) : null}
-        <p className="mt-2 text-[11px] text-slate-500">
+        <p className="mt-2 text-[11px] text-slate-400">
           Değişikliği uygulamak için aşağıdaki <span className="text-slate-300">Save</span>'e basın.
         </p>
       </div>

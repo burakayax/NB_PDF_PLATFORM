@@ -115,7 +115,7 @@ export function GuestPdfTool({
                 >
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>

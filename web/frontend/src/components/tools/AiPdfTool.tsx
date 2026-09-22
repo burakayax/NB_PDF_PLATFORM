@@ -745,7 +745,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </div>
             ))}
           </div>
-          <p className="mt-6 text-[12px] text-slate-500">
+          <p className="mt-6 text-[12px] text-slate-400">
             {tr ? "Bu sırada tüm PDF araçlarımız ücretsiz ve sınırsız — yukarıdan deneyebilirsin." : "Meanwhile, all our PDF tools are free and unlimited — try them above."}
           </p>
         </div>
@@ -753,7 +753,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       ocrProgress !== null ? (
         <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-6 sm:p-8">
           <StatusStrip label={tr ? "Belge hazırlanıyor…" : "Preparing document…"} ratio={ocrProgress} />
-          <p className="mt-3 text-center text-[12px] text-slate-500">
+          <p className="mt-3 text-center text-[12px] text-slate-400">
             {tr
               ? "Belge okunuyor, birkaç saniye sürebilir."
               : "Reading the document, this may take a few seconds."}
@@ -820,7 +820,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-100">{fileName}</p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 {tr
                   ? `~${(charCount / 1000).toFixed(1)}K karakter · ~${readTime} dk okuma`
                   : `~${(charCount / 1000).toFixed(1)}K chars · ~${readTime} min read`}
@@ -939,7 +939,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                   {extracted.fields.length === 0 && extracted.tables.length === 0 && (
                     <p className="text-center text-[13px] text-slate-400">{tr ? "Bu belgeden yapılandırılmış veri bulunamadı." : "No structured data found in this document."}</p>
                   )}
-                  {extracted.note && <p className="text-[12px] italic text-slate-500">{extracted.note}</p>}
+                  {extracted.note && <p className="text-[12px] italic text-slate-400">{extracted.note}</p>}
                 </div>
               </div>
             ) : busy ? (
@@ -1040,7 +1040,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 <input value={question} onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") void sendQuestion(); }}
                   placeholder={tr ? "Belge hakkında bir soru yaz…" : "Ask about the document…"}
-                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/15" />
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-fuchsia-400/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/15" />
                 <button type="button" onClick={() => void sendQuestion()} disabled={busy || !question.trim()}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white transition hover:brightness-110 disabled:opacity-40">
                   <Send className="h-4 w-4" />

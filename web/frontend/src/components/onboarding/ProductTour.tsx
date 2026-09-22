@@ -324,7 +324,7 @@ export function ProductTour({
           type="button"
           onClick={() => dismiss(false)}
           aria-label={tr ? "Turu kapat" : "Close tour"}
-          className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
+          className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
         >
           <X className="h-4 w-4" />
         </button>

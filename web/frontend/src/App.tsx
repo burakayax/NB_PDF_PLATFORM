@@ -7473,7 +7473,7 @@ function App() {
                                   className="h-7 w-7 cursor-pointer rounded-full border border-white/20 bg-transparent p-0"
                                   style={{ padding: 0 }}
                                 />
-                                <span className="font-mono text-xs text-white/40">
+                                <span className="font-mono text-xs text-white/70">
                                   {watermarkColor}
                                 </span>
                               </div>
@@ -7496,7 +7496,7 @@ function App() {
                             <label className="field">
                               <span>
                                 {language === "tr" ? "Saydamlık" : "Opacity"}{" "}
-                                <span className="text-white/40">
+                                <span className="text-white/70">
                                   {Math.round(
                                     parseFloat(watermarkOpacity) * 100,
                                   )}
