@@ -135,6 +135,94 @@ function extractWords(d: unknown): OcrWord[] {
   return res;
 }
 
+/** OCR satırı — Tesseract'ın KENDİ satır yapısı (kelime sırası + taban çizgisi + satır ölçüleri).
+ * Koordinatlar kaynak görüntü pikselinde. */
+export type OcrLineWord = OcrWord & { by: number | null };
+export type OcrLine = {
+  words: OcrLineWord[];
+  bbox: { x0: number; y0: number; x1: number; y1: number };
+  baseline: { x0: number; y0: number; x1: number; y1: number; has_baseline: boolean } | null;
+  rowHeight: number;
+  ascenders: number;
+  descenders: number;
+};
+
+function extractLines(d: unknown): OcrLine[] {
+  const out: OcrLine[] = [];
+  type W = { text?: string; confidence?: number; bbox?: { x0: number; y0: number; x1: number; y1: number }; baseline?: { x0: number; y0: number; x1: number; y1: number; has_baseline?: boolean } };
+  type L = { words?: W[]; bbox?: OcrLine["bbox"]; baseline?: OcrLine["baseline"]; rowAttributes?: { row_height?: number; ascenders?: number; descenders?: number } };
+  const data = d as { blocks?: Array<{ paragraphs?: Array<{ lines?: L[] }> }> };
+  for (const bl of data?.blocks ?? []) {
+    for (const p of bl.paragraphs ?? []) {
+      for (const ln of p.lines ?? []) {
+        const words: OcrLineWord[] = [];
+        for (const w of ln.words ?? []) {
+          const t = (w?.text ?? "").trim();
+          if (!t || !w.bbox) continue;
+          // Düşük güvenli kelimeler ATILMAZ (sunucudaki OCR gibi): ölçümde eşik (30) formül/alt
+          // simge gibi gerçek metni düşürüyordu; eşiksiz karakter hatası 4 test belgesinin hepsinde düştü.
+          // Kelimenin KENDİ taban çizgisi (orta noktada) — iki sütunu birleştiren satırlarda doğru konum.
+          const b = w.baseline;
+          const mid = (w.bbox.x0 + w.bbox.x1) / 2;
+          const by = b && b.has_baseline !== false && Number.isFinite(b.y0)
+            ? (b.x1 !== b.x0 ? b.y0 + ((b.y1 - b.y0) * (mid - b.x0)) / (b.x1 - b.x0) : b.y0)
+            : null;
+          words.push({ text: t, x0: w.bbox.x0, y0: w.bbox.y0, x1: w.bbox.x1, y1: w.bbox.y1, by });
+        }
+        if (!words.length || !ln.bbox) continue;
+        out.push({
+          words,
+          bbox: ln.bbox,
+          baseline: ln.baseline ?? null,
+          rowHeight: Number(ln.rowAttributes?.row_height) || 0,
+          ascenders: Number(ln.rowAttributes?.ascenders) || 0,
+          descenders: Number(ln.rowAttributes?.descenders) || 0,
+        });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Görüntüleri CİHAZDA OCR'lar; her sayfa için Tesseract'ın satır yapısını döner (kelime sırası
+ * satır içinde korunur — kendi gruplamamız inen harfli kelimeleri ayrı satıra düşürüyordu).
+ */
+export async function ocrImagesToLines(
+  sources: Array<HTMLCanvasElement | Blob>,
+  onProgress?: (p: OcrProgress) => void,
+): Promise<OcrLine[][]> {
+  const totalPages = sources.length;
+  let completed = 0;
+  const worker = await createWorker("tur+eng", 1, {
+    workerPath: "/tesseract/worker.min.js",
+    corePath: "/tesseract/core",
+    langPath: "/tesseract/lang",
+    logger: (m) => {
+      if (m.status === "recognizing text" && typeof m.progress === "number") {
+        const ratio = Math.min(1, (completed + m.progress) / Math.max(1, totalPages));
+        onProgress?.({ page: completed + 1, totalPages, ratio });
+      }
+    },
+  });
+  const out: OcrLine[][] = [];
+  try {
+    for (let i = 0; i < sources.length; i++) {
+      const ret = (await worker.recognize(
+        sources[i] as Parameters<typeof worker.recognize>[0],
+        {},
+        { blocks: true },
+      )) as { data: unknown };
+      out.push(extractLines(ret.data));
+      completed = i + 1;
+      onProgress?.({ page: completed, totalPages, ratio: completed / Math.max(1, totalPages) });
+    }
+  } finally {
+    await worker.terminate();
+  }
+  return out;
+}
+
 /**
  * Görüntüleri (taranan sayfalar) CİHAZDA OCR'lar ve her sayfa için kelime+konum
  * listesi döner (Tesseract.js, Türkçe + İngilizce). Aranabilir PDF üretmek için
