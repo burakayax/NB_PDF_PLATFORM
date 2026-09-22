@@ -225,6 +225,35 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
           </section>
         )}
 
+        {/* SAYFA SONU DAVETİ — sayfayı sonuna kadar okuyan ziyaretçi (SSS'yi açan,
+            rehbere bakan) en ilgili kitledir; buraya kadar gelip hiçbir davet
+            görmeden çıkıyordu. Üst bardaki "Üye Ol" düğmesi ekranın çok yukarısında
+            kalıyor. Yalnızca misafire çıkar. */}
+        {!isAuthenticated && (
+          <section className="mt-16">
+            <div className="mx-auto max-w-2xl rounded-2xl border border-cyan-400/20 bg-gradient-to-br from-cyan-500/[0.10] via-blue-500/[0.06] to-indigo-500/[0.08] px-6 py-7 text-center">
+              <h2 className="text-[17px] font-bold text-white">
+                {tr ? "Ücretsiz hesapla daha fazlası" : "More with a free account"}
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-slate-300">
+                {tr
+                  ? "PDF sıkıştırma, şifre kaldırma, taranmış belgeyi aranabilir yapma (OCR) ve PDF'i düzenlenebilir metne çevirme ücretsiz hesapla açılır."
+                  : "Compressing PDFs, removing passwords, making scans searchable (OCR) and turning a PDF into editable text all come with a free account."}
+              </p>
+              <button
+                type="button"
+                onClick={onRegister}
+                className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(6,182,212,0.7)] ring-1 ring-white/10 transition hover:brightness-110"
+              >
+                {tr ? "Ücretsiz hesap aç" : "Create a free account"}
+              </button>
+              <p className="mt-2.5 text-[11.5px] text-slate-400">
+                {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
+              </p>
+            </div>
+          </section>
+        )}
+
         {guides.length > 0 && (
           <section className="mt-10">
             <h2 className="mb-4 text-center text-lg font-bold text-slate-200">

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Zap } from "lucide-react";
+import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Unlock, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
-import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
+import { useCurrentPlan } from "../../lib/currentPlan";
 
 /**
  * "Değer-anı" upsell kartı — kullanıcı ücretsiz bir işlemi BAŞARIYLA bitirdiğinde
@@ -11,8 +11,17 @@ import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
  *
  * Neden somut? Client-side araçlar (birleştir/böl/kırp…) misafirde tam bedava —
  * kayıt için doğal duvar yok. O yüzden pitch "daha fazlası" gibi soyut DEĞİL; kaydın
- * GERÇEKTE açtığı, tarayıcının tek başına yapamadığı araçları isimle sayar:
- * Word/Excel/PPT dönüştürme, sıkıştırma, OCR (aranabilir PDF), AI özetle/sohbet.
+ * GERÇEKTE açtığı, tarayıcının tek başına yapamadığı araçları isimle sayar.
+ *
+ * ⚠ VAAT = GERÇEK. Buradaki liste ÜCRETSİZ planın gerçekten açtığı araçlardır
+ * (kaynak: web/api/src/modules/subscription/subscription.config.ts → FREE_TOOLS,
+ * artı yalnızca giriş isteyen cihaz-içi OCR). Kart bir süre Word/Excel/PPT
+ * dönüştürme ve yapay zekâ vaat ediyordu; ikisi de ücretsiz planda YOK (Word PLUS'tan
+ * itibaren, yapay zekâ hakkı ücretsizde 0). Kaydolan kullanıcı vaadi bulamayınca
+ * güven kaybediyordu. Ücretli araçlar artık ayrı ve açıkça "Pro ile" diye geçer.
+ *
+ * Kart YALNIZCA MİSAFİRE çıkar. Giriş yapmış kullanıcıya "ücretsiz hesap aç"
+ * demek anlamsızdı; ücretsiz üyenin yükseltme daveti panelde ayrıca var.
  *
  * Nezaket: kapatılabilir; kapatınca 24 saat snooze (localStorage) → nag etmez. Sonuç
  * ekranında inline durur (popup/blocking DEĞİL). CTA gerçek link (/register) — SPA yükler.
@@ -31,6 +40,29 @@ function isSnoozed(): boolean {
   }
 }
 
+/**
+ * ÜCRETSİZ hesabın gerçekten açtığı araçlar. `feature` alanı boş bir süs değildir:
+ * `__tests__/signupPromise.test.ts` her birini ücretsiz planın araç listesine karşı
+ * doğrular, böylece kart bir daha ücretli bir aracı ücretsiz diye vaat edemez.
+ *
+ * `aranabilir-pdf` ücretsiz plan listesinde YOKTUR ve olması da gerekmez: OCR
+ * tamamen cihazda çalışır, sunucuya iş göndermez; yalnızca üye girişi ister.
+ */
+export const FREE_ACCOUNT_UNLOCKS: Array<{
+  feature: string;
+  icon: typeof FileOutput;
+  tr: string;
+  en: string;
+}> = [
+  { feature: "compress", icon: Minimize2, tr: "PDF'i sıkıştır", en: "Compress your PDF" },
+  { feature: "aranabilir-pdf", icon: ScanSearch, tr: "OCR — aranabilir PDF", en: "OCR — searchable PDF" },
+  { feature: "unlock-pdf", icon: Unlock, tr: "Şifreli PDF'in kilidini aç", en: "Unlock a password-protected PDF" },
+  { feature: "pdf-to-text", icon: FileOutput, tr: "PDF'i düzenlenebilir metne çevir", en: "Turn a PDF into editable text" },
+];
+
+/** Cihazda çalışan, ücretsiz plan listesinde aranmayacak araçlar (yalnız giriş ister). */
+export const SIGNIN_ONLY_UNLOCKS = new Set<string>(["aranabilir-pdf"]);
+
 type Props = { language: Language; source?: string };
 
 export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
@@ -38,9 +70,10 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   const planState = useCurrentPlan();
   const [hidden, setHidden] = useState(() => isSnoozed());
 
-  // Ücretli abone (ve ekip üyesi) bu daveti HİÇBİR araçta görmez — zaten üye,
-  // "bunu ücretsiz yaptın" mesajı yanlış ve rahatsız edici olur.
-  const gosterilir = !isPaidPlan(planState) && !hidden;
+  // Yalnızca MİSAFİR görür. Giriş yapmış kullanıcıda `plan` doludur (ücretsizde
+  // "FREE"); ona "ücretsiz hesap aç" demek yanlış ve rahatsız edici olur.
+  const misafir = planState.plan === null && !planState.teamMember;
+  const gosterilir = misafir && !hidden;
 
   /**
    * GÖSTERİM ÖLÇÜMÜ.
@@ -70,13 +103,6 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
     setHidden(true);
   };
 
-  // Kaydın gerçekten açtığı, tarayıcının tek başına yapamadığı araçlar.
-  const unlocks: Array<{ icon: typeof FileOutput; tr: string; en: string }> = [
-    { icon: FileOutput, tr: "Word · Excel · PPT'ye çevir", en: "Convert to Word · Excel · PPT" },
-    { icon: Minimize2, tr: "PDF'i sıkıştır", en: "Compress your PDF" },
-    { icon: ScanSearch, tr: "OCR — aranabilir PDF", en: "OCR — searchable PDF" },
-    { icon: Sparkles, tr: "AI: özetle & sohbet", en: "AI: summarize & chat" },
-  ];
 
   return (
     <div className="relative mt-6 overflow-hidden rounded-2xl border border-indigo-400/25 bg-gradient-to-br from-indigo-500/[0.12] via-violet-500/[0.08] to-fuchsia-500/[0.10] p-5 text-left">
@@ -106,11 +132,11 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
       </div>
 
       <div className="mt-3.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {unlocks.map((u) => {
+        {FREE_ACCOUNT_UNLOCKS.map((u) => {
           const Icon = u.icon;
           return (
             <div
-              key={u.en}
+              key={u.feature}
               className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2"
             >
               <Icon className="h-4 w-4 shrink-0 text-fuchsia-300" />
@@ -120,10 +146,18 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         })}
       </div>
 
+      {/* Ücretli araçlar ücretsiz vaadin İÇİNE karıştırılmaz — ayrı satırda ve
+          hangi planın açtığı yazılı. Kayıt olan kullanıcı bulamadığına kızmasın. */}
+      <p className="mt-3 text-center text-[11.5px] leading-snug text-slate-400">
+        {tr
+          ? "Word · Excel · PPT'ye çevirme ve yapay zekâ araçları ücretli planlarda."
+          : "Word · Excel · PPT conversion and the AI tools are on the paid plans."}
+      </p>
+
       <a
         href="/register"
         onClick={() => trackGAEvent("sign_up_cta_click", { source })}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(124,58,237,0.7)] ring-1 ring-white/10 transition hover:from-indigo-500 hover:to-fuchsia-500"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 py-3 text-[14px] font-bold text-white shadow-[0_14px_36px_-12px_rgba(124,58,237,0.7)] ring-1 ring-white/10 transition hover:from-indigo-500 hover:to-fuchsia-500"
       >
         <Zap className="h-4 w-4" />
         {tr ? "Ücretsiz hesap aç" : "Create free account"}
