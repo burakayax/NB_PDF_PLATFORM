@@ -226,23 +226,56 @@ export function ImageResizeTool({ language }: { language: Language }) {
             {/* Seçilen görsel */}
             <div className="field field--full" ref={settingsRef}>
               <span>{tr ? "Seçilen görsel" : "Selected image"}</span>
-              <div className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
-                {previewUrl && <img src={previewUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-                  <p className="text-[11px] text-slate-400">
-                    {srcDims ? `${srcDims.w} × ${srcDims.h} px · ` : ""}
-                    {humanSize(file.size)}
-                  </p>
+              {/* BÜYÜK ÖNİZLEME. Tırnak büyüklüğünde bir kare, vesikalık hazırlayan
+                  kullanıcıya hiçbir şey söylemiyordu: yüzün ortada olup olmadığı,
+                  fotoğrafın doğru fotoğraf olup olmadığı görülemiyordu. Önizleme
+                  seçilen hedef ORANINDA gösterilir; kullanıcı daha düğmeye basmadan
+                  çıktının biçimini görür. */}
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+                <div className="flex items-start gap-3">
+                  {previewUrl && (
+                    <div
+                      className="shrink-0 overflow-hidden rounded-lg bg-[#0b0f1a] ring-1 ring-white/10"
+                      style={{
+                        width: 112,
+                        height: Math.round((112 * Math.max(1, height)) / Math.max(1, width)),
+                        maxHeight: 190,
+                      }}
+                    >
+                      <img
+                        src={previewUrl}
+                        alt={tr ? "Seçilen görselin önizlemesi" : "Preview of the selected image"}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400">
+                      {srcDims ? `${srcDims.w} × ${srcDims.h} px · ` : ""}
+                      {humanSize(file.size)}
+                    </p>
+                    <p className="mt-2 text-[11px] text-slate-400">
+                      {tr ? "Çıkacak ölçü" : "Output size"}:{" "}
+                      <span className="font-semibold text-nb-accent">
+                        {width} × {height} px
+                      </span>
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      {tr
+                        ? "Önizleme seçtiğiniz oranda gösterilir."
+                        : "The preview is shown at the ratio you selected."}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={reset}
+                      className="mt-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      {tr ? "Kaldır" : "Remove"}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={reset}
-                  aria-label={tr ? "Kaldır" : "Remove"}
-                  className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
               </div>
             </div>
 

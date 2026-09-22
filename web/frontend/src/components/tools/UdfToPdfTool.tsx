@@ -4,6 +4,8 @@ import type { Language } from "../../i18n/landing";
 import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
+import { ProBatchNotice } from "./ProBatchNotice";
+import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
 import { zipStore } from "../../lib/zipStore";
 import { parseUdf, udfPlainText, UdfParseError, type UdfDocument } from "../../lib/udf";
 import { udfToPdf } from "../../lib/udfPdf";
@@ -69,6 +71,8 @@ function errorText(e: unknown, tr: boolean, fileName: string): string {
 
 export function UdfToPdfTool({ language }: { language: Language }) {
   const tr = language === "tr";
+  // Toplu çevirme Pro kazanımıdır; tek dosya herkese açık kalır.
+  const paid = isPaidPlan(useCurrentPlan());
   const [files, setFiles] = useState<Picked[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -156,9 +160,13 @@ export function UdfToPdfTool({ language }: { language: Language }) {
         setFonts(loaded);
       }
 
+      // Ücretsiz kullanıcıda yalnız ilk dosya işlenir. Bu, düğmeye basılmadan
+      // ÖNCE hem kartta hem düğme metninde yazar; burada sürpriz yapılmaz.
+      const islenecek = paid ? files : files.slice(0, 1);
+
       // 1) Ayrıştır — bir dosya bozuksa hangisi olduğunu söyleyebilmek için ayrı adım.
       const parsed: Parsed[] = [];
-      for (const p of files) {
+      for (const p of islenecek) {
         const bytes = new Uint8Array(await p.file.arrayBuffer());
         try {
           parsed.push({ name: p.file.name, doc: parseUdf(bytes) });
@@ -279,8 +287,12 @@ export function UdfToPdfTool({ language }: { language: Language }) {
           appendMode={files.length > 0}
           note={
             tr
-              ? "UYAP'tan indirdiğiniz .udf dosyası · en fazla 20 dosya · 40 MB"
-              : ".udf files from UYAP · up to 20 files · 40 MB"
+              ? paid
+                ? "UYAP'tan indirdiğiniz .udf dosyası · tek seferde 20 dosyaya kadar · 40 MB"
+                : "UYAP'tan indirdiğiniz .udf dosyası · tek dosya ücretsiz · toplu çevirme Pro'da"
+              : paid
+                ? ".udf files from UYAP · up to 20 files at once · 40 MB"
+                : ".udf files from UYAP · one file free · batch conversion is Pro"
           }
           onFiles={(fl) => addFiles(fl)}
         />
@@ -317,6 +329,15 @@ export function UdfToPdfTool({ language }: { language: Language }) {
           </div>
         )}
 
+        {!paid && (
+          <ProBatchNotice
+            language={language}
+            fileCount={files.length}
+            toolName={tr ? "UDF çevirme" : "UDF conversion"}
+            source="udf_to_pdf"
+          />
+        )}
+
         {error && (
           <p
             className="field--full rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300"
@@ -337,6 +358,9 @@ export function UdfToPdfTool({ language }: { language: Language }) {
               <Loader2 className="h-4 w-4 animate-spin" />
               {tr ? "Çevriliyor…" : "Converting…"}
             </span>
+          ) : !paid && files.length > 1 ? (
+            // Düğme metni ne olacağını birebir söyler — kullanıcı bilerek basar.
+            tr ? "İlk dosyayı çevir (ücretsiz)" : "Convert the first file (free)"
           ) : tr ? (
             "PDF'e çevir"
           ) : (

@@ -7617,6 +7617,13 @@ function App() {
                                   : "PDF/A-3b — allows attached files"}
                               </option>
                             </select>
+                            {/* PDF/A adı kullanıcıya hiçbir şey anlatmaz; burada
+                                ne işe yaradığı bir cümleyle söylenir. */}
+                            <span className="field-hint">
+                              {language === "tr"
+                                ? "PDF/A, belgenin yıllar sonra da aynı görünmesini sağlayan arşiv biçimidir: kullanılan yazı tipleri dosyanın içine gömülür, böylece o yazı tipi karşı bilgisayarda olmasa bile metin bozulmaz. İhale, e-arşiv, mahkeme ve tez tesliminde istenir. Hangisini seçeceğinizi bilmiyorsanız PDF/A-2b bırakın."
+                                : "PDF/A is the archival format that keeps a document looking the same years from now: the fonts it uses are embedded in the file, so text stays intact even if the font is missing on the other computer. It is asked for in tenders, e-archiving, court filings and thesis submissions. If you are unsure, leave it on PDF/A-2b."}
+                            </span>
                           </label>
                         ) : null}
 
