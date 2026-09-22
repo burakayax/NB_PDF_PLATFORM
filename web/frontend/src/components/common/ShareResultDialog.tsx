@@ -66,7 +66,7 @@ export function ShareResultDialog({
             : "Set the name of the file you'll send."}
         </p>
         <input
-          className="mt-4 w-full rounded-xl border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-50"
+          className="mt-4 w-full rounded-xl border border-white/12 bg-white/5 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-400 focus:border-cyan-500/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 disabled:opacity-50"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           disabled={busy}

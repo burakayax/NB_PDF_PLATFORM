@@ -164,7 +164,7 @@ type AuthPageProps = {
  *    altında metin de yazar).
  */
 const inputBase =
-  "w-full rounded-xl border border-white/[0.09] bg-[#070c17]/80 py-3.5 pr-4 text-[15px] leading-snug text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 ease-out placeholder:text-slate-500 hover:border-white/20 focus:border-nb-primary/60 focus:bg-[#070c17] focus:ring-4 focus:ring-nb-primary/15";
+  "w-full rounded-xl border border-white/[0.09] bg-[#070c17]/80 py-3.5 pr-4 text-[15px] leading-snug text-nb-text shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] outline-none transition duration-200 ease-out placeholder:text-slate-400 hover:border-white/20 focus:border-nb-primary/60 focus:bg-[#070c17] focus:ring-4 focus:ring-nb-primary/15";
 
 /** İkonlu alanlar için sol boşluk; ikonsuz kullanımda px-4'e düşer. */
 const inputClassName = `${inputBase} pl-11`;
@@ -174,7 +174,7 @@ const inputErrorClassName = " !border-rose-500/60 focus:!ring-rose-500/15";
 /** Alanın solundaki sabit ikon. */
 function FieldIcon({ Icon }: { Icon: LucideIcon }) {
   return (
-    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
       <Icon className="h-[17px] w-[17px]" strokeWidth={2} />
     </span>
   );
@@ -597,13 +597,13 @@ export function AuthPage({
                 <label className="block">
                   <FieldLabel>
                     {language === "tr" ? "Şehir" : "City"}{" "}
-                    <span className="font-normal text-slate-500">
+                    <span className="font-normal text-slate-400">
                       ({language === "tr" ? "isteğe bağlı" : "optional"})
                     </span>
                   </FieldLabel>
                   <span className="relative block">
                     <FieldIcon Icon={MapPin} />
-                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <select
                     value={registerCity}
                     onChange={(event) => setRegisterCity(event.target.value)}
@@ -682,7 +682,7 @@ export function AuthPage({
                       ? language === "tr" ? "Şifreyi gizle" : "Hide password"
                       : language === "tr" ? "Şifreyi göster" : "Show password"
                   }
-                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
+                  className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

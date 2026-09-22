@@ -516,7 +516,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                   value={selectedPlacement.text}
                   onChange={(e) => updateTextField(selectedPlacement.id, e.target.value)}
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
-                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
+                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
                 />
               )}
               {selectedPlacement && (
@@ -601,9 +601,9 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-500"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}
@@ -882,7 +882,7 @@ function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => v
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={tr ? "Adınız Soyadınız" : "Your name"}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-slate-500"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-slate-400"
               />
               <div className="mt-3 flex min-h-[90px] items-center justify-center rounded-xl border border-slate-300 bg-white px-4">
                 <span style={{ fontFamily: '"Segoe Script","Brush Script MT","Snell Roundhand",cursive', fontStyle: "italic", fontSize: 40, color: "#0b2447" }}>{typed || (tr ? "önizleme" : "preview")}</span>

@@ -126,7 +126,7 @@ export function ActiveSessionsPanel({ accessToken, language }: Props) {
                       </span>
                     )}
                   </p>
-                  <p className="text-[12px] text-slate-500">
+                  <p className="text-[12px] text-slate-400">
                     {tr ? "Son kullanım: " : "Last used: "}
                     {zamanMetni(o.sonKullanim, tr)}
                   </p>

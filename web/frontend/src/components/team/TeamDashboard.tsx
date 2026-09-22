@@ -285,7 +285,7 @@ export function TeamDashboard({ language: _language, accessToken, isOwner = true
             style={{ width: `${seatUsagePercent}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-400">
           {seatsUsed} koltuk kullanımda, {seatsAvailable} boş
         </p>
       </div>

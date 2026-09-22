@@ -254,7 +254,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
                             className="h-4 w-4 accent-fuchsia-500"
                           />
                           <span className="text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">{g.label}</span>
-                          <span className="text-[11px] text-slate-500">
+                          <span className="text-[11px] text-slate-400">
                             {g.items.filter((i) => i.checked).length}/{g.items.length}
                           </span>
                         </label>

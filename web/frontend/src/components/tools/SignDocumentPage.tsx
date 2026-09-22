@@ -224,7 +224,7 @@ export function SignDocumentPage({ token }: { token: string }) {
           type="application/pdf"
           className="h-[60vh] w-full rounded-2xl border border-white/[0.08] bg-white"
         >
-          <p className="p-4 text-[13px] text-slate-600">
+          <p className="p-4 text-[13px] text-slate-400">
             Belgeyi görüntülemek için{" "}
             <a href={belgeUrl} download={sayfa.filename} className="font-semibold text-cyan-700">
               indir
@@ -373,7 +373,7 @@ export function SignDocumentPage({ token }: { token: string }) {
           </div>
         )}
 
-        <p className="mt-5 flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
+        <p className="mt-5 flex items-start gap-2 text-[11px] leading-relaxed text-slate-400">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           Bu bağlantı yalnızca sizin için üretilmiştir. İmzanız, sunucuda saklanan özgün belgeye
           uygulanır ve belgeye imzalama sürecinin zaman damgalı kaydı eklenir. Ağ adresiniz açık

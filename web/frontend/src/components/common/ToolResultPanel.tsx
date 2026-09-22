@@ -248,7 +248,7 @@ export function ToolResultPanel({
       <p className="mt-1 text-sm text-slate-400">
         {subtitle ?? (processedOnDevice ? t.subDevice : t.subServer)}
       </p>
-      <p className="mt-1 truncate text-xs text-slate-500" title={filename}>
+      <p className="mt-1 truncate text-xs text-slate-400" title={filename}>
         {filename}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

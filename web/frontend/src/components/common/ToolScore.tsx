@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { buildSaasApiUrl } from "../../api/saasHttp";
 import { myRatingFor, rememberRating } from "../../lib/toolRatingMemory";
+import { COMMENT_ASKED_BELOW } from "./ToolRating";
 
 /**
  * Araç sayfasındaki KALICI puan satırı — ortalama + yıldızlar + oy sayısı.
@@ -37,6 +38,10 @@ const L = {
     change: "Puanını değiştir",
     star: (n: number) => `${n} yıldız ver`,
     saving: "Kaydediliyor…",
+    placeholder: "Ne olmadı? (isteğe bağlı)",
+    send: "Gönder",
+    skip: "Geç",
+    thanksLow: "Teşekkürler — bakacağız.",
   },
   en: {
     none: "Be the first to rate this tool",
@@ -46,6 +51,10 @@ const L = {
     change: "Change your rating",
     star: (n: number) => `Rate ${n} stars`,
     saving: "Saving…",
+    placeholder: "What didn't work? (optional)",
+    send: "Send",
+    skip: "Skip",
+    thanksLow: "Thanks — we'll look into it.",
   },
 } as const;
 
@@ -86,6 +95,18 @@ export function ToolScore({
   }));
   const [hover, setHover] = useState(0);
   const [saving, setSaving] = useState(false);
+  /**
+   * Düşük puan verildiğinde açılan açıklama kutusu — hangi puan için açıldığını
+   * tutar. Oy ZATEN kaydedilmiştir; bu kutu yalnızca sebebi ekler.
+   *
+   * NEDEN OY ÖNCE KAYDEDİLİYOR: Buraya gelen kişi çoğunlukla fikrini
+   * DEĞİŞTİRMEYE geliyor. Açıklama yazmadan vazgeçerse yeni puanı kaybolmamalı;
+   * sunucu aynı kişinin oyunu güncellediği için ikinci gönderim sadece sebebi
+   * ekler, yeni bir oy saymaz.
+   */
+  const [commentFor, setCommentFor] = useState<number | null>(null);
+  const [comment, setComment] = useState("");
+  const [commentSent, setCommentSent] = useState(false);
 
   const load = useCallback(
     async (target: string, signal?: AbortSignal) => {
@@ -126,6 +147,10 @@ export function ToolScore({
       if (!res.ok) throw new Error(String(res.status));
       const data: { summary?: Summary } = await res.json();
       rememberRating(slug, value);
+      // Açıklama yalnızca düşük puanda anlamlı; teşhis değeri orada.
+      setCommentSent(false);
+      setComment("");
+      setCommentFor(value < COMMENT_ASKED_BELOW ? value : null);
       if (data.summary) {
         setView({
           slug,
@@ -143,6 +168,32 @@ export function ToolScore({
       // Puan verememek kullanıcının işini bölmemeli; sessizce geçilir.
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** Sebebi ekler: aynı puan yeniden gönderilir, sunucu kaydı günceller. */
+  const sendComment = async () => {
+    const value = commentFor;
+    const text = comment.trim();
+    if (value === null || text === "") {
+      setCommentFor(null);
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(buildSaasApiUrl(`/api/tool-rating/${encodeURIComponent(slug)}`), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ value, comment: text }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setCommentSent(true);
+    } catch {
+      // Açıklama gidemediyse oy yine de kayıtlı; kullanıcıyı uğraştırmaya değmez.
+      setCommentSent(true);
+    } finally {
+      setSaving(false);
+      setCommentFor(null);
     }
   };
 
@@ -182,7 +233,7 @@ export function ToolScore({
           >
             <Star
               className={`h-4 w-4 transition ${
-                n <= shown ? "fill-amber-400 text-amber-400" : "text-slate-500"
+                n <= shown ? "fill-amber-400 text-amber-400" : "text-slate-400"
               }`}
             />
           </button>
@@ -204,6 +255,47 @@ export function ToolScore({
         <span className="text-[12px] font-medium text-emerald-300">
           {t.mine}: {mine}
         </span>
+      ) : null}
+
+      {/* Düşük puan verildiyse sebebini sor. `w-full` sayesinde esnek satırda
+          kendi satırına iner ve satırın hizasını (ör. ortalı) korur. */}
+      {commentFor !== null ? (
+        <div className="flex w-full flex-col gap-2 pt-1 sm:flex-row sm:items-center">
+          <input
+            type="text"
+            value={comment}
+            maxLength={300}
+            autoFocus
+            onChange={(e) => setComment(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void sendComment();
+              if (e.key === "Escape") setCommentFor(null);
+            }}
+            placeholder={t.placeholder}
+            className="min-w-0 flex-1 rounded-lg border border-white/[0.15] bg-black/30 px-3 py-2 text-[13px] text-slate-100 outline-none placeholder:text-slate-400 focus:border-cyan-400/60"
+          />
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={() => void sendComment()}
+              disabled={saving}
+              className="rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[13px] font-semibold text-white transition hover:brightness-110 disabled:opacity-50"
+            >
+              {t.send}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCommentFor(null)}
+              className="rounded-lg px-3 py-2 text-[13px] text-slate-300 transition hover:text-white"
+            >
+              {t.skip}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {commentSent ? (
+        <span className="w-full pt-0.5 text-[12px] text-slate-300">{t.thanksLow}</span>
       ) : null}
     </div>
   );

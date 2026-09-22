@@ -106,7 +106,7 @@ export function TopUpModal({ language, accessToken, isAdmin, bonus, onClose, onG
           ))}
           {msg && <p className="text-center text-[13px] font-semibold text-emerald-300">{msg}</p>}
           {paymentsDisabled && !isAdmin && (
-            <p className="pt-1 text-center text-[12px] text-slate-500">{tr ? "Ödeme sistemi çok yakında açılıyor." : "Payments are coming very soon."}</p>
+            <p className="pt-1 text-center text-[12px] text-slate-400">{tr ? "Ödeme sistemi çok yakında açılıyor." : "Payments are coming very soon."}</p>
           )}
         </div>
       </div>

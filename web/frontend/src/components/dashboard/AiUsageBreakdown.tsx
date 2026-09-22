@@ -69,7 +69,7 @@ export function AiUsageBreakdown({
       </p>
 
       {entries.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-slate-400">
           {tr ? "Bu ay henüz AI aracı kullanmadın." : "No AI usage yet this month."}
         </p>
       ) : (

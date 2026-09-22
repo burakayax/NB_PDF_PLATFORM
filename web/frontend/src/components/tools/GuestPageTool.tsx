@@ -441,7 +441,7 @@ export function GuestPageToolCore({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               {pageCount} {tr ? "sayfa" : "pages"}
               {hasSelection ? (tr ? " · düzenlendi ✓" : " · edited ✓") : ""}
             </p>
@@ -449,7 +449,7 @@ export function GuestPageToolCore({
           <button
             type="button"
             onClick={reset}
-            className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+            className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
             aria-label={tr ? "Kaldır" : "Remove"}
           >
             <Trash2 className="h-4 w-4" />
@@ -504,7 +504,7 @@ export function GuestPageToolCore({
               {tr ? "Ayrı dosyalar (ZIP)" : "Separate files (ZIP)"}
             </button>
           </div>
-          <p className="px-2 py-1.5 text-center text-[11px] text-slate-500">
+          <p className="px-2 py-1.5 text-center text-[11px] text-slate-400">
             {splitMode === "single"
               ? tr ? "Seçili sayfalar tek bir PDF'te birleşir." : "Selected pages merged into one PDF."
               : tr ? "Her seçili sayfa ayrı PDF olur, ZIP ile iner." : "Each selected page becomes a separate PDF in a ZIP."}
@@ -665,7 +665,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
                 >
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>

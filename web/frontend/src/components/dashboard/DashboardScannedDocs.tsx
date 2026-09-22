@@ -60,7 +60,7 @@ export function DashboardScannedDocs({
           <Cloud className="h-5 w-5 text-cyan-300" />
           {tr ? "Son Taratılanlar" : "Recent scans"}
           {/* limit === 0 → sunucu "sınırsız" diyor (ADMIN); kesir yerine sadece adet. */}
-          <span className="text-[12px] font-normal text-slate-500">
+          <span className="text-[12px] font-normal text-slate-400">
             {loading
               ? ""
               : limit > 0
@@ -84,9 +84,9 @@ export function DashboardScannedDocs({
         </div>
       ) : scans.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10 text-center">
-          <Cloud className="h-9 w-9 text-slate-600" />
+          <Cloud className="h-9 w-9 text-slate-400" />
           <p className="text-sm font-medium text-slate-300">{tr ? "Henüz kayıtlı tarama yok" : "No saved scans yet"}</p>
-          <p className="max-w-sm text-[13px] leading-relaxed text-slate-500">
+          <p className="max-w-sm text-[13px] leading-relaxed text-slate-400">
             {tr
               ? "Telefonda belge tara → «Hesabıma kaydet» → burada görünsün; bilgisayardan indir, paylaş ya da bir araçta aç."
               : "Scan on your phone → «Save to my account» → it appears here to download, share or open in a tool."}
@@ -263,7 +263,7 @@ function ScanCard({
           <img src={cover} alt={scan.filename} className="h-full w-full object-cover object-top transition group-hover:scale-[1.03]" />
         ) : (
           <span className="flex h-full w-full items-center justify-center">
-            {busy || !blobRef.current ? <Loader2 className="h-6 w-6 animate-spin text-slate-500" /> : <FileText className="h-8 w-8 text-slate-600" />}
+            {busy || !blobRef.current ? <Loader2 className="h-6 w-6 animate-spin text-slate-400" /> : <FileText className="h-8 w-8 text-slate-400" />}
           </span>
         )}
         <span className="absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white/90 backdrop-blur">
@@ -274,7 +274,7 @@ function ScanCard({
       {/* Bilgi */}
       <div className="min-w-0 px-2 pt-2">
         <p className="truncate text-[12px] font-semibold text-slate-100" title={scan.filename}>{scan.filename}</p>
-        <p className="text-[10px] text-slate-500">{fmtSize(scan.sizeBytes)} · {fmtDate(scan.createdAt)}</p>
+        <p className="text-[10px] text-slate-400">{fmtSize(scan.sizeBytes)} · {fmtDate(scan.createdAt)}</p>
       </div>
 
       {/* Aksiyonlar — renkli */}
@@ -377,7 +377,7 @@ function ScanPreviewModal({
           {isPdf ? (
             pages === null ? (
               <div className="flex h-full items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
               </div>
             ) : pages.length === 0 ? (
               <p className="py-16 text-center text-sm text-slate-400">{tr ? "Önizleme oluşturulamadı." : "Could not render preview."}</p>
@@ -394,7 +394,7 @@ function ScanPreviewModal({
             </div>
           ) : (
             <div className="flex h-full items-center justify-center py-16">
-              <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
             </div>
           )}
         </div>

@@ -29,7 +29,7 @@ export function AdminToolCatalog({ tools, accessToken, onUpdated, onError }: Pro
         onSearchChange={setQ}
       />
       {tools === null ? (
-        <p className="text-sm text-slate-500">Yükleniyor…</p>
+        <p className="text-sm text-slate-400">Yükleniyor…</p>
       ) : !filtered || filtered.length === 0 ? (
         <EmptyState
           title="Araç bulunamadı"
@@ -47,7 +47,7 @@ export function AdminToolCatalog({ tools, accessToken, onUpdated, onError }: Pro
               <div className="flex items-center gap-2 border-b border-slate-800/50 bg-slate-800/20 px-4 py-2.5">
                 <Wrench className="h-4 w-4 text-cyan-400/70" />
                 <span className="font-mono text-sm font-semibold text-cyan-100/90">{row.id}</span>
-                <span className="text-xs text-slate-500">· {row.strategy}</span>
+                <span className="text-xs text-slate-400">· {row.strategy}</span>
               </div>
               <table className="w-full">
                 <tbody>
