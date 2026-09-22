@@ -5,6 +5,10 @@ import { logger } from "../lib/file-log.js";
 import { env } from "../config/env.js";
 import { sendCheckoutRecoveryEmail } from "../lib/email-service.js";
 import { commercialRecipientWhere } from "../lib/commercial-email-gate.js";
+import {
+  missingSenderIdentityFields,
+  refreshSenderIdentity,
+} from "../modules/email/sender-identity.service.js";
 import type { Locale } from "../lib/email-i18n.js";
 
 /**
@@ -42,6 +46,15 @@ const PLAN_LABELS: Record<string, { tr: string; en: string }> = {
 };
 
 async function runCheckoutRecovery(): Promise<void> {
+  // Gönderen kimliği eksikse otomasyon HİÇ çalışmaz — eksik bilgiyle gönderilen
+  // tanıtım e-postası mevzuata aykırı olur.
+  await refreshSenderIdentity();
+  const missingIdentity = missingSenderIdentityFields();
+  if (missingIdentity.length > 0) {
+    logger.warn("checkout-recovery", `otomasyon atlandı — gönderen kimlik bilgileri eksik: ${missingIdentity.join(", ")}`);
+    return;
+  }
+
   const now = Date.now();
   const notBefore = new Date(now - 24 * 60 * 60 * 1000); // en fazla 24 saat önce (bayat değil)
   const notAfter = new Date(now - 2 * 60 * 60 * 1000); // en az 2 saat önce (gerçekten terk)

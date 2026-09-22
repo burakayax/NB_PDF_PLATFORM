@@ -115,6 +115,7 @@ import {
 } from "./mosaic/adminPrimitives";
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
 import { ToolRatingsTab } from "./ratings/ToolRatingsTab";
+import { ConsentLogTab } from "./compliance/ConsentLogTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AdminToaster } from "./AdminToaster";
 import { readAccessToken } from "../lib/accessTokenStore";
@@ -135,6 +136,7 @@ type AdminTabId =
   | "settings"
   | "analytics"
   | "ratings"
+  | "consents"
   | "audit";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
@@ -179,6 +181,7 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "media", label: "Medya" },
       { id: "settings", label: "Ayarlar" },
       { id: "analytics", label: "Analitik" },
+      { id: "consents", label: "Onay kayıtları" },
       { id: "audit", label: "İşlem günlüğü" },
     ],
   },
@@ -616,6 +619,7 @@ export function AdminPanel({
         ) : null}
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
         {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
+        {tab === "consents" ? <ConsentLogTab accessToken={accessToken} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
       <AdminToaster />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Mail, Plus, Send, Trash2, Pencil, Clock, Tag } from "lucide-react";
+import { SenderIdentityCard } from "../compliance/SenderIdentityCard";
 import {
   fetchAdminCampaigns,
   createAdminCampaign,
@@ -166,6 +167,10 @@ export function EmailCampaignManager({ accessToken }: { accessToken: string }) {
   // ── Liste ──
   return (
     <div className="space-y-5">
+      {/* Gönderen kimliği en üstte: zorunlu bilgiler eksikse hiçbir kampanya
+          gönderilmiyor, o yüzden kampanya listesinden ÖNCE görünmeli. */}
+      <SenderIdentityCard accessToken={accessToken} />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Mail className="h-4 w-4 text-cyan-400/80" />

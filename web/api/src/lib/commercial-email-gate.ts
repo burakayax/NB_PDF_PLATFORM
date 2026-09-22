@@ -26,6 +26,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "./prisma.js";
+import { assertSenderIdentityComplete } from "../modules/email/sender-identity.service.js";
 
 /**
  * Ticari ileti alabilecek kullanıcıyı tanımlayan Prisma koşulu.
@@ -80,12 +81,22 @@ export async function checkCommercialConsent(userId: string): Promise<Commercial
 }
 
 /**
- * İzin yoksa hata fırlatır — çağıran kodun "unuttum" deme ihtimalini kaldırır.
+ * Ticari ileti göndermenin iki koşulunu birden doğrular; biri eksikse durur.
  *
- * Gönderim döngüleri bu hatayı yakalayıp o kullanıcıyı atlamalı, işi
- * durdurmamalı: bir kişinin izni yok diye kampanyanın tamamı iptal olmaz.
+ * İKİ AYRI KOŞUL:
+ *   1. GÖNDEREN tarafı — zorunlu kimlik bilgileri (unvan/MERSİS ya da
+ *      ad-soyad/T.C., iletişim, adres) eksiksiz mi? Eksikse HİÇ KİMSEYE
+ *      gönderilemez, çünkü e-postanın kendisi mevzuata aykırı olur.
+ *   2. ALICI tarafı — bu kişinin onayı var mı, çıkmamış mı?
+ *
+ * Sıra önemli: kimlik eksikse alıcıyı sorgulamanın anlamı yok.
+ *
+ * Çağıran taraf iki hatayı AYRI ele almalı: kimlik hatası işin tamamını
+ * durdurur, izin hatası yalnızca o kişiyi atlatır.
  */
 export async function assertCommercialConsent(userId: string): Promise<void> {
+  assertSenderIdentityComplete();
+
   const decision = await checkCommercialConsent(userId);
   if (!decision.allowed) {
     throw new CommercialConsentError(userId, decision.reason);

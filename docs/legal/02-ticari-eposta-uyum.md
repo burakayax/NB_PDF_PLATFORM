@@ -45,13 +45,18 @@ hizmet özendirilemez".
 ### Tek izin kapısı
 
 Ticari e-posta göndermenin tek yolu `web/api/src/lib/commercial-email-gate.ts`
-dosyasındaki kapıdan geçmek. Kapı üç şeyi birden kontrol eder:
+dosyasındaki kapıdan geçmek. Kapı iki tarafı birden kontrol eder:
 
+**Gönderen tarafı** — zorunlu kimlik bilgileri eksiksiz mi? Eksikse hiç kimseye
+gönderilemez, çünkü e-postanın kendisi mevzuata aykırı olur.
+
+**Alıcı tarafı:**
 1. Kullanıcı pazarlama iznini vermiş mi?
 2. Listeden çıkmamış mı?
 3. E-posta adresi doğrulanmış mı?
 
-Üçü de sağlanmıyorsa gönderim yapılmaz.
+Herhangi biri sağlanmıyorsa gönderim yapılmaz. İki hata türü ayrıdır: kimlik eksikse
+işin tamamı durur, izin eksikse yalnız o kişi atlanır.
 
 **Neden tek kapı:** Kural daha önce beş ayrı yerde elle yazılmıştı. Dördü doğruydu,
 biri (yönetim panelinden toplu duyuru) unutulmuştu ve izni olmayan, hatta listeden
@@ -71,11 +76,16 @@ await assertCommercialConsent(userId);
 
 ### Onay kanıtı
 
-Her onay ve her ret `marketing_consent_logs` tablosuna yazılır: tarih, kanal,
-kullanıcıya o an gösterilen metin, bağlantı bilgileri. Mevzuat onayın ispatını
-gönderenden istiyor — "izni vardı" demek yetmiyor, gösterilebilmesi gerekiyor.
+Her onay ve her ret deftere yazılır: tarih, kanal, kullanıcıya o an gösterilen metin,
+bağlantı bilgileri. Mevzuat onayın ispatını gönderenden istiyor — "izni vardı" demek
+yetmiyor, gösterilebilmesi gerekiyor.
 
-Kayıtlar 3 yıl saklanır, sonra otomatik silinir.
+**Nereden görülüyor:** Yönetim paneli → **Onay kayıtları** sekmesi. Arama yapılabilir
+ve **"Belge olarak indir"** düğmesiyle CSV olarak indirilir; resmî bir talep geldiğinde
+doğrudan sunulabilir. Arama filtresi uygulanmışsa yalnız eşleşen kayıtlar iner.
+
+Defter elle düzenlenemez — düzenlenebilir olsa kanıt olmaktan çıkardı. Kayıtlar 3 yıl
+saklanır, sonra otomatik silinir.
 
 > **Dikkat:** Kayıt formundaki onay metnini değiştirirsen,
 > `marketing-consent.service.ts` içindeki `SIGNUP_CONSENT_TEXT` sabitini de
@@ -91,26 +101,23 @@ Ret **anında** işlenir. Mevzuat 3 iş günü sınırı koyuyor; beklemenin bir
 
 ## 3. Senin yapman gerekenler
 
-### 3.1 COMPANY_* ayarlarını doldur — ACİL
+### 3.1 Gönderen kimliğini panelden doldur — ACİL
 
 Tanıtım e-postalarının içinde şunlar **zorunlu**:
 
 - Şirketsen: **ticaret unvanı + MERSİS numarası**
 - Şahıs işletmesi/esnafsan: **ad soyad + T.C. kimlik numarası**
 - Telefon veya e-posta adresinden **en az biri**
+- Posta adresi
 
-`web/api/.env` dosyasına gir:
+**Nereden giriliyor:** Yönetim paneli → **E-postalar** sekmesi → en üstteki
+**"Gönderen kimliği"** bölümü. Kaydettiğin an e-postalara yansır; sunucuyu yeniden
+başlatmak gerekmez.
 
-```
-COMPANY_LEGAL_NAME=
-COMPANY_MERSIS_NO=      # şirketsen
-COMPANY_TCKN=           # şahıs işletmesiysen (MERSİS'i boş bırak)
-COMPANY_PHONE=
-COMPANY_CONTACT_EMAIL=
-```
-
-Eksikse sunucu açılışta uyarı verir ama gönderimi durdurmaz. Bu bilgiler olmadan
-gönderilen her tanıtım e-postası Yönetmelik md.7'ye aykırıdır.
+**Eksikse ne olur:** Tanıtım e-postaları **hiç gönderilmez** — ne otomatik seriler
+çalışır ne de elle toplu duyuru gider. Panelde sarı uyarı şeridi neyin eksik olduğunu
+söyler, toplu gönderim denemesi de aynı listeyle reddedilir. İşlem e-postaları
+(doğrulama, fatura, parola sıfırlama) etkilenmez.
 
 ### 3.2 İYS kaydı — ZORUNLU
 
@@ -180,3 +187,6 @@ Bu değişikliklerin herhangi biri geri alınmak istenirse:
   kişilere ticari e-posta gidebilir.
 - **Toplu duyurudaki izin filtresi:** Kaldırılmamalı. Bu, 22 Eylül 2026'da kapatılan
   açığın ta kendisi.
+- **Kimlik eksikken otomasyonun durması:** Otomasyon işlerinin başındaki kimlik
+  kontrolü kaldırılırsa, eksik bilgiyle her gün sessizce ihlal üretilir. Uyarı
+  yerine durmayı seçmenin sebebi bu.

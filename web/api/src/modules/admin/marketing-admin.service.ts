@@ -4,6 +4,11 @@ import {
   CommercialConsentError,
   commercialRecipientWhere,
 } from "../../lib/commercial-email-gate.js";
+import { HttpError } from "../../lib/http-error.js";
+import {
+  missingSenderIdentityFields,
+  refreshSenderIdentity,
+} from "../email/sender-identity.service.js";
 import { SITE_SETTING_KEYS } from "../../lib/site-setting-keys.js";
 import { displayNameForEmail, readEmailAutomationConfig, type EmailAutomationConfig } from "../marketing/email-automation.js";
 import { auditedPatchSetting, logAdminAudit, type AdminActor } from "./admin-audit.service.js";
@@ -44,6 +49,19 @@ export async function broadcastCampaignToAllUsers(
   batchSize: number,
   actor: AdminActor,
 ) {
+  // Kimlik eksikse tek bir e-posta bile gönderilmeden, sebebi söylenerek durur.
+  // Yöneticinin "gönder" dedikten sonra sessizce hiçbir şey olmamasındansa
+  // neyin eksik olduğunu görmesi gerekiyor.
+  await refreshSenderIdentity();
+  const missingIdentity = missingSenderIdentityFields();
+  if (missingIdentity.length > 0) {
+    throw new HttpError(
+      400,
+      `Ticari e-posta gönderilemez — gönderen kimlik bilgileri eksik: ${missingIdentity.join(", ")}. ` +
+        `E-postalar sekmesindeki "Gönderen kimliği" bölümünü doldurun.`,
+    );
+  }
+
   const batch = Math.min(80, Math.max(5, Math.floor(batchSize) || 40));
   let offset = 0;
   let sent = 0;

@@ -1,4 +1,5 @@
 import { env } from "../config/env.js";
+import { senderIdentity } from "../modules/email/sender-identity.service.js";
 
 /**
  * TİCARİ ELEKTRONİK İLETİDE ZORUNLU KİMLİK BİLGİLERİ.
@@ -9,63 +10,28 @@ import { env } from "../config/env.js";
  *   - Esnaf/şahıs işletmesiyse: ad soyad + T.C. kimlik numarası
  *   - Erişilebilir iletişim bilgilerinden EN AZ BİRİ (telefon / e-posta)
  *
- * Bunlar ortam değişkenlerinden okunur; hiçbiri koda gömülmez, çünkü işletme
- * türü değişebilir ve yanlış bilgi doğru bilgiden kötüdür.
- *
- * EKSİKSE NE OLUR: Satır gizlenir ama gönderim engellenmez — hukuki eksik,
- * e-postanın hiç gitmemesinden iyidir. Eksiklik sunucu açılışında uyarı
- * olarak log'a düşer (bkz. assertCommercialIdentityConfigured).
+ * Değerler yönetim panelinden girilir (E-postalar → Gönderen kimliği) ve
+ * veritabanında saklanır. Eksikse ticari e-posta HİÇ gönderilmez — gönderim
+ * yolları `assertSenderIdentityComplete` ile korunuyor.
  */
 function commercialIdentityLines(): string[] {
-  const legalName = (process.env.COMPANY_LEGAL_NAME ?? "").trim();
-  const mersis = (process.env.COMPANY_MERSIS_NO ?? "").trim();
-  const tckn = (process.env.COMPANY_TCKN ?? "").trim();
-  const phone = (process.env.COMPANY_PHONE ?? "").trim();
-  const contactEmail = (process.env.COMPANY_CONTACT_EMAIL ?? env.SMTP_FROM_EMAIL ?? "").trim();
-
+  const id = senderIdentity();
   const lines: string[] = [];
 
   // Kimlik satırı: şirketse unvan + MERSİS, esnafsa ad soyad + T.C. no.
-  if (legalName && mersis) {
-    lines.push(`${legalName} · MERSİS: ${mersis}`);
-  } else if (legalName && tckn) {
-    lines.push(`${legalName} · T.C. Kimlik No: ${tckn}`);
-  } else if (legalName) {
-    lines.push(legalName);
+  if (id.legalName && id.entityType === "company" && id.mersisNo) {
+    lines.push(`${id.legalName} · MERSİS: ${id.mersisNo}`);
+  } else if (id.legalName && id.entityType === "sole" && id.tckn) {
+    lines.push(`${id.legalName} · T.C. Kimlik No: ${id.tckn}`);
+  } else if (id.legalName) {
+    lines.push(id.legalName);
   }
 
   // İletişim satırı: en az biri yeterli, ikisi varsa ikisi de yazılır.
-  const contact = [phone, contactEmail].filter(Boolean).join(" · ");
+  const contact = [id.phone, id.contactEmail].filter(Boolean).join(" · ");
   if (contact) lines.push(contact);
 
   return lines;
-}
-
-/**
- * Zorunlu kimlik bilgileri eksikse uyarır — sunucu açılışında çağrılır.
- *
- * NEDEN GÖNDERİMİ DURDURMUYOR: Eksik bir footer satırı yüzünden e-posta
- * altyapısını komple durdurmak, düzeltmesi dakikalar süren bir eksik için
- * orantısız. Ama sessiz kalmak da olmaz: eksik bilgiyle gönderilen her ticari
- * e-posta bir ihlal, ve kimse fark etmezse aylarca sürer.
- *
- * Eksik olan alanların adını döndürür; boş dizi = her şey tamam.
- */
-export function missingCommercialIdentityFields(): string[] {
-  const missing: string[] = [];
-  const legalName = (process.env.COMPANY_LEGAL_NAME ?? "").trim();
-  const mersis = (process.env.COMPANY_MERSIS_NO ?? "").trim();
-  const tckn = (process.env.COMPANY_TCKN ?? "").trim();
-  const phone = (process.env.COMPANY_PHONE ?? "").trim();
-  const contactEmail = (process.env.COMPANY_CONTACT_EMAIL ?? env.SMTP_FROM_EMAIL ?? "").trim();
-
-  if (!legalName) missing.push("COMPANY_LEGAL_NAME");
-  // Şirketse MERSİS, esnafsa T.C. — biri yeterli, ikisi de yoksa eksik.
-  if (!mersis && !tckn) missing.push("COMPANY_MERSIS_NO veya COMPANY_TCKN");
-  if (!phone && !contactEmail) missing.push("COMPANY_PHONE veya COMPANY_CONTACT_EMAIL");
-  // Posta adresi kontrol edilmiyor: kodda geçerli bir varsayılanı var.
-
-  return missing;
 }
 
 /**
@@ -118,10 +84,10 @@ export function renderCorporateEmail({
     ? `<img src="${resolvedLogo}" height="36" alt="${productName}" style="display:block;height:36px;width:auto;max-width:180px;" />`
     : `<div style="width:36px;height:36px;border-radius:9px;background:#4f46e5;display:inline-block;text-align:center;line-height:36px;font-size:9px;font-weight:800;letter-spacing:0.08em;color:#ffffff;">PDF</div>`;
 
-  // Fiziksel posta adresi — CAN-SPAM (ABD) ve CASL (Kanada) tanıtım e-postalarında ZORUNLU.
-  // COMPANY_POSTAL_ADDRESS env'i ile ayarlanır; boşsa satır gizlenir.
-  const postalAddress = (process.env.COMPANY_POSTAL_ADDRESS
-    ?? "NB Global Studio · Toklu Mah. Devlet Sahil Yolu Cad. Gürpınar Sok. ParkOrman Konutları A Blok Kat:6 D:26, Ortahisar/Trabzon, Türkiye").trim();
+  // Fiziksel posta adresi — CAN-SPAM (ABD) ve CASL (Kanada) tanıtım e-postalarında
+  // ZORUNLU. Yönetim panelinden girilir; boşsa satır gizlenir (ve ticari gönderim
+  // zaten durur, çünkü eksik sayılıyor).
+  const postalAddress = senderIdentity().postalAddress;
   const addressLine = unsubscribeUrl && postalAddress
     ? `<div style="margin-top:6px;font-size:11px;line-height:1.6;color:#94a3b8;">${postalAddress}</div>`
     : "";
