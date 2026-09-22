@@ -165,6 +165,29 @@ function jokerMi(kural) {
 
 const hepsiniYakala = (k) => String(k.source) === "/*";
 
+/**
+ * Betiğin KENDİ ürettiği araç sayfası kuralı mı?
+ *
+ * Bu ayrım olmadan liste her çalıştırmada şişiyordu: önceki turda yazılan araç
+ * kuralları "korunan" sayılıp aynen tutuluyor, sonra 2. adım aynı kuralları
+ * sıfırdan yeniden üretiyordu. 46 araç × 2 dil = 92 kural listeye İKİ KEZ
+ * giriyor, 200'lük Render sınırı aşılıyor ve hiçbir şey uygulanamıyordu
+ * (ölçüldü: hedef 270 kural).
+ *
+ * Eşleşme bilerek DAR tutuldu — yalnız `/tools/<slug>` → `/tools/<slug>/index.html`
+ * biçimindeki REWRITE'lar. Aynı yolu hedefleyen 301 YÖNLENDİRMELER (ör.
+ * `/en/tools/gorsel-sikistir` → `/en/tools/compress-image`) buraya GİRMEZ ve
+ * korunur; onlar eski adreslerin indeks değerini taşıyor, silinirse kaybolur.
+ *
+ * Yan kazanç: kaldırılan bir araca ait eski kural da artık kendiliğinden düşer.
+ */
+function uretilenAracKuraliMi(kural) {
+  if (String(kural.type) !== "rewrite") return false;
+  const s = String(kural.source || "");
+  if (!/^\/(en\/)?tools\/[^/:*]+$/.test(s)) return false;
+  return String(kural.destination || "") === `${s}/index.html`;
+}
+
 async function main() {
   const uygula = process.argv.includes("--uygula");
   const geriAlIndex = process.argv.indexOf("--geri-al");
@@ -239,8 +262,16 @@ async function main() {
   // 1) Mevcut kurallardan joker ve /* dışındakiler (eski slug yönlendirmeleri,
   //    /pricing gibi düz sayfalar) OLDUĞU SIRAYLA korunur.
   const korunan = mevcutKurallar
-    .filter((k) => !jokerMi(k) && !hepsiniYakala(k))
+    .filter((k) => !jokerMi(k) && !hepsiniYakala(k) && !uretilenAracKuraliMi(k))
     .map(({ type, source, destination }) => ({ type, source, destination }));
+
+  const yinelenenAracKurali = mevcutKurallar.filter(uretilenAracKuraliMi).length;
+  if (yinelenenAracKurali) {
+    console.log(
+      `Önceki turdan kalan ${yinelenenAracKurali} araç kuralı yeniden üretilecek ` +
+        `(listeye iki kez girmesin diye korunanlardan çıkarıldı).`,
+    );
+  }
 
   // 2) Sayfa başına kurallar — YALNIZCA ARAÇ SAYFALARI.
   //
@@ -273,12 +304,27 @@ async function main() {
   ];
 
   // 4) En sonda uygulama yedeği.
-  const hedef = [
+  const ham = [
     ...korunan,
     ...sayfaKurallari,
     ...blogJoker,
     { type: "rewrite", source: "/*", destination: "/index.html" },
   ];
+
+  // EMNİYET AĞI: aynı kaynak yolu iki kez yazılmasın. Render kuralları SIRAYLA
+  // işliyor; ikinci kopya zaten hiç çalışmaz ama 200'lük kotadan yer yer. İlk
+  // görülen korunur, böylece "korunan" kuralların önceliği bozulmaz.
+  const gorulen = new Set();
+  const hedef = [];
+  for (const k of ham) {
+    const anahtarYol = `${k.type} ${k.source}`;
+    if (gorulen.has(anahtarYol)) continue;
+    gorulen.add(anahtarYol);
+    hedef.push(k);
+  }
+  if (hedef.length !== ham.length) {
+    console.log(`Yinelenen ${ham.length - hedef.length} kural ayıklandı.`);
+  }
 
   const SINIR = 200;
   if (hedef.length > SINIR) {
