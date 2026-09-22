@@ -8,7 +8,10 @@ import { unsubscribeByToken } from "./email-unsubscribe.service.js";
  */
 export async function unsubscribeController(req: Request, res: Response): Promise<void> {
   const token = String(req.query.token ?? (req.body as { token?: string } | undefined)?.token ?? "");
-  const ok = await unsubscribeByToken(token);
+  const ok = await unsubscribeByToken(token, {
+    ip: req.ip ?? null,
+    userAgent: req.get("user-agent") ?? null,
+  });
 
   if (req.method === "POST") {
     res.status(200).json({ ok });

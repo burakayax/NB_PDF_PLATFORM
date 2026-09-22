@@ -2,7 +2,8 @@ import type { EmailCampaign } from "@prisma/client";
 import { prisma } from "../../lib/prisma.js";
 import { env } from "../../config/env.js";
 import { escapeHtml } from "../../lib/email-html.js";
-import { renderCorporateEmail, ctaButton } from "../../lib/email-layout.js";
+import { renderCorporateEmail, ctaButton, commercialSubject } from "../../lib/email-layout.js";
+import { assertCommercialConsent } from "../../lib/commercial-email-gate.js";
 import { sendMail } from "../../lib/mailer.js";
 import { emailT, type Locale } from "../../lib/email-i18n.js";
 import { unsubscribeUrlFor } from "./email-unsubscribe.service.js";
@@ -78,16 +79,30 @@ export function renderCampaign(
   return { subject, html };
 }
 
-/** Tek kullanıcıya kampanya gönderir (pazarlama → tek-tık unsubscribe başlıklı). */
+/**
+ * Tek kullanıcıya kampanya gönderir (pazarlama → tek-tık unsubscribe başlıklı).
+ *
+ * İzin, çağıran işin liste sorgusunda filtrelenmiş olsa bile burada yeniden
+ * doğrulanır: liste ile gönderim arasında dakikalar geçer ve kullanıcı o
+ * aralıkta listeden çıkmış olabilir.
+ */
 export async function sendCampaignToUser(
   c: EmailCampaign,
   user: { id: string; email: string; name: string | null; firstName: string | null; preferredLanguage: string },
 ): Promise<void> {
+  await assertCommercialConsent(user.id);
+
   const locale: Locale = user.preferredLanguage === "tr" ? "tr" : "en";
   const name = (user.firstName || user.name || (locale === "tr" ? "Merhaba" : "there")).trim();
   const unsubscribeUrl = unsubscribeUrlFor(user.id);
   const { subject, html } = renderCampaign(c, locale, { name, unsubscribeUrl });
-  await sendMail({ to: user.email, subject, html, text: subject, listUnsubscribeUrl: unsubscribeUrl });
+  await sendMail({
+    to: user.email,
+    subject: commercialSubject(subject, locale),
+    html,
+    text: subject,
+    listUnsubscribeUrl: unsubscribeUrl,
+  });
 }
 
 /** Admin'e test önizlemesi gönderir. */

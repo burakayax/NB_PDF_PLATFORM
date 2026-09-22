@@ -43,6 +43,10 @@ import {
   previewSecret,
 } from "./google-oauth.console.js";
 import { createOrganizationForUser } from "../organization/organization.service.js";
+import {
+  SIGNUP_CONSENT_TEXT,
+  recordMarketingConsent,
+} from "../email/marketing-consent.service.js";
 import { REFUND_WINDOW_DAYS } from "../payment/payment.service.js";
 
 type PublicUser = {
@@ -422,7 +426,11 @@ async function ensureOrganizationForUser(user: User): Promise<void> {
 
 export async function registerUser(
   input: RegisterInput,
-  options?: { skipEmailVerification?: boolean },
+  options?: {
+    skipEmailVerification?: boolean;
+    /** Ticari ileti onayının kanıtı için bağlantı bilgisi (ispat yükümlülüğü). */
+    consentContext?: { ip?: string | null; userAgent?: string | null };
+  },
 ): Promise<RegistrationResult> {
   if (await isEmailBlocked(input.email)) {
     authLog.warn("register rejected: email blocked", { email: input.email });
@@ -482,6 +490,20 @@ export async function registerUser(
         : {}),
     },
   });
+
+  // Onayın KANITINI deftere yaz (Ticari İletişim Yönetmeliği — ispat yükü
+  // gönderendedir; "izin vardı" demek yetmez, gösterilebilmelidir).
+  if (input.marketingConsent) {
+    await recordMarketingConsent({
+      userId: user.id,
+      email: user.email,
+      granted: true,
+      source: "signup",
+      consentText: SIGNUP_CONSENT_TEXT[input.preferredLanguage === "tr" ? "tr" : "en"],
+      ip: options?.consentContext?.ip ?? null,
+      userAgent: options?.consentContext?.userAgent ?? null,
+    });
+  }
 
   // İstenen teşhis çıktıları (kayıt ve e-posta akışı)
   logger.info("auth","User created");

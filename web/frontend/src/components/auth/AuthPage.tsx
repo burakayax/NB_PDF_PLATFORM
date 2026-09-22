@@ -697,19 +697,39 @@ export function AuthPage({
             ) : null}
 
             {mode === "register" ? (
-              <label className="flex cursor-pointer items-start gap-2.5 text-left">
-                <input
-                  type="checkbox"
-                  checked={marketingConsent}
-                  onChange={(e) => setMarketingConsent(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500"
-                />
-                <span className="text-[12px] leading-relaxed text-slate-400">
-                  {language === "tr"
-                    ? "Kampanya, ipucu ve yeniliklerden e-posta ile haberdar olmak istiyorum. (İsteğe bağlı — istediğiniz zaman tek tıkla çıkabilirsiniz.)"
-                    : "I'd like to receive emails about campaigns, tips and updates. (Optional — you can unsubscribe anytime with one click.)"}
-                </span>
-              </label>
+              /* Ticari ileti onayı.
+                 Kutu varsayılan olarak KAPALI ve işaretlenmesi isteğe bağlı —
+                 önceden işaretli kutu geçerli onay sayılmaz.
+                 Bilgilendirme (aydınlatma) ayrı bir bağlantı olarak duruyor,
+                 onay cümlesinin içine gömülmüyor: KVKK Kurulu açık rıza ile
+                 aydınlatmanın ayrı ayrı sunulmasını şart koşuyor.
+                 METİN DEĞİŞİRSE: sunucudaki SIGNUP_CONSENT_TEXT de güncellenmeli,
+                 yoksa onay kanıtı kullanıcının görmediği bir metni saklar. */
+              <div className="text-left">
+                <label className="flex cursor-pointer items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={marketingConsent}
+                    onChange={(e) => setMarketingConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-white/20 bg-white/10 accent-cyan-500"
+                  />
+                  <span className="text-[12px] leading-relaxed text-slate-400">
+                    {language === "tr"
+                      ? "Kampanya, ipucu ve yeniliklerden e-posta ile haberdar olmak istiyorum. (İsteğe bağlı — istediğiniz zaman tek tıkla çıkabilirsiniz.)"
+                      : "I'd like to receive emails about campaigns, tips and updates. (Optional — you can unsubscribe anytime with one click.)"}
+                  </span>
+                </label>
+                <p className="mt-1.5 pl-[26px] text-[11px] leading-relaxed text-slate-500">
+                  {language === "tr" ? "Verilerinizin nasıl işlendiği: " : "How your data is handled: "}
+                  <button
+                    type="button"
+                    onClick={onOpenKvkk}
+                    className="underline underline-offset-2 transition hover:text-slate-300"
+                  >
+                    {language === "tr" ? "KVKK aydınlatma metni" : "KVKK disclosure"}
+                  </button>
+                </p>
+              </div>
             ) : null}
 
             <button

@@ -341,7 +341,14 @@ export async function registerController(request: Request, response: Response) {
     (request.body as Record<string, unknown>)["skipEmailVerification"] === true;
 
   try {
-    const result = await registerUser(parsed.data, { skipEmailVerification });
+    const result = await registerUser(parsed.data, {
+      skipEmailVerification,
+      // Ticari ileti onayının kanıtı — yalnız onay kutusu işaretlendiyse yazılır.
+      consentContext: {
+        ip: request.ip ?? null,
+        userAgent: request.get("user-agent") ?? null,
+      },
+    });
     authLog.info("POST /api/auth/register: created", {
       userId: result.user.id,
     });
