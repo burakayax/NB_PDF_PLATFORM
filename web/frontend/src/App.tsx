@@ -360,6 +360,9 @@ const ImageResizeTool = lazyWithRetry(() =>
 const ImageCompressTool = lazyWithRetry(() =>
   import("./components/tools/ImageCompressTool").then((m) => ({ default: m.ImageCompressTool })),
 );
+const UdfToPdfTool = lazyWithRetry(() =>
+  import("./components/tools/UdfToPdfTool").then((m) => ({ default: m.UdfToPdfTool })),
+);
 const BlogIndexPage = lazyWithRetry(() =>
   import("./components/blog/BlogPage").then((m) => ({ default: m.BlogIndexPage })),
 );
@@ -2986,6 +2989,7 @@ function App() {
         p === "/tools/hassas-veri-gizle" ||
         p === "/tools/belge-tara" ||
         p === "/tools/aranabilir-pdf" ||
+        p === "/tools/udf-to-pdf" ||
         p === "/pdf-api" ||
         p.startsWith("/pdf-api/") ||
         p === "/blog" ||
@@ -5279,6 +5283,15 @@ function App() {
         <GuestSeoToolPage slug="gorsel-sikistir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <ImageCompressTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "udf-to-pdf") {
+      return (
+        <GuestSeoToolPage slug="udf-to-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <UdfToPdfTool language={language} />
           </Suspense>
         </GuestSeoToolPage>
       );

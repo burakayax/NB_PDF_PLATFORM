@@ -10,7 +10,7 @@
     <description>PDF araçları, belge iş akışları ve yapay zekâ destekli belge okuma üzerine rehberler.</description>
     <language>tr-TR</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Mon, 21 Sep 2026 12:08:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 22 Sep 2026 20:53:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,368 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/blog</link>
     </image>
+    <item>
+      <title>UYAP Kararını Word&apos;e Aktarma: İki Adımlı Yol</title>
+      <link>https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma</guid>
+      <pubDate>Tue, 22 Sep 2026 20:53:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word" />
+      <description><![CDATA[Emsal bir kararın gerekçesini kendi dilekçenize almak istiyorsunuz. Elinizde UDF dosyası var, Word onu tanımıyor ve ekrandan bakarak yeniden yazmak saatler alıyor.]]></description>
+      <content:encoded><![CDATA[<p>Elinizde emsal bir karar var ve gerekçesindeki birkaç paragrafı kendi dilekçenize almak istiyorsunuz. Dosya UDF; Word açmıyor, kopyalayamıyorsunuz. Çoğu kişi bu noktada ekrana bakıp metni yeniden yazıyor. Gerekmiyor — iki adımda aktarılabiliyor.</p>
+<h2>Neden doğrudan olmuyor?</h2>
+<p>UDF, UYAP'ın kendi belge biçimidir ve Word'ün tanıdığı biçimlerle akrabalığı yoktur. Uzantıyı «.doc» olarak değiştirmek de işe yaramaz; bu, dosyanın içindeki yapıyı değiştirmez, yalnızca adını değiştirir.</p>
+<p>Aradaki köprü PDF'tir. UDF'yi PDF'ye çevirdiğinizde ortaya yaygın olarak desteklenen bir belge çıkar; oradan Word'e geçmek standart bir işlemdir.</p>
+<h2>Hangi yolu seçmeli?</h2>
+<p>İhtiyacınıza göre iki yol var ve seçim basit:</p>
+<ul><li>Sadece metin lazımsa: UDF aracının verdiği düz metni (.txt) alın ve Word'e yapıştırın. En hızlı yol budur; biçimlendirme gelmez, metin gelir.</li><li>Biçimlendirme de lazımsa: önce UDF'yi PDF'ye, sonra PDF'i Word'e çevirin. Paragraf düzeni, kalın yazılar ve tablolar korunur.</li></ul>
+<p>Dilekçeye alıntı yapacaksanız çoğu zaman birinci yol yeterlidir; zaten metni kendi belgenizin biçimine sokacaksınız. Kararın tablolu bir ekini ya da düzenini olduğu gibi taşımanız gerekiyorsa ikinci yolu seçin.</p>
+<h2>Adım adım: biçimlendirmeyi koruyarak aktarma</h2>
+<ol><li><strong>UDF'yi PDF'ye çevirin</strong> — Dosyayı UDF aracına bırakın. İşlem tarayıcınızda yapılır; adli evrak sunucuya yüklenmez.</li><li><strong>PDF'i indirin</strong> — Yazı tipi, kalın ve altı çizili biçimler, hizalamalar ve tablolar korunur.</li><li><strong>PDF'i Word'e çevirin</strong> — İnen PDF'i PDF → Word aracına verin; düzenlenebilir bir .docx dosyası alın.</li><li><strong>Word'de kontrol edin</strong> — Dönüştürme sonrası paragraf kırılmalarını ve varsa tabloları gözden geçirin. Uzun belgelerde küçük düzeltmeler normaldir.</li></ol>
+<p><strong>UDF'yi PDF Yap</strong> — UYAP'tan inen kararı program kurmadan PDF'ye çevirin; metni de .txt olarak alın. <a href="https://www.pdfplatform.app/tools/udf-to-pdf">Aracı aç</a></p>
+<h2>Taranmış kararlarda ek bir adım gerekir</h2>
+<p>Eski dosyalarda karar bazen UDF değil, taranmış bir görüntü olarak gelir. Böyle bir belgede yazı aslında resimdir; kopyalayamaz, arayamazsınız.</p>
+<p>Bu durumda önce belgeyi OCR'dan geçirip metni çıkarmanız gerekir. OCR, görüntüdeki yazıyı gerçek metne çevirir; ardından aynı adımlarla Word'e aktarabilirsiniz.</p>
+<p><strong>Taranmış PDF'i Metne Çevir</strong> — Taranmış kararın içindeki yazıyı gerçek metne çevirin, sonra Word'e aktarın. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">Aracı aç</a></p>
+<h2>Aktardıktan sonra mutlaka karşılaştırın</h2>
+<p>Hiçbir dönüştürme kusursuz değildir ve hukuki metinde tek bir rakamın kayması ciddi sonuç doğurur. Word'e aktardıktan sonra şunları asıl belgeyle karşılaştırın:</p>
+<ul><li>Esas ve karar numaraları.</li><li>Tarihler.</li><li>Parasal tutarlar ve faiz oranları.</li><li>Kanun madde numaraları.</li><li>Taraf isimlerinin yazımı.</li></ul>
+<blockquote><p>Alıntı yaparken kararın PDF hâlini de saklayın. Metni kendi belgenize aldıktan sonra doğruluğunu göstermeniz gerekirse, elinizde asıl belgenin okunabilir bir kopyası bulunur.</p></blockquote>
+<h2>Bir hatırlatma: PDF kopya imzalı asıl değildir</h2>
+<p>UDF dosyasındaki elektronik imza PDF'ye taşınmaz. Çevirdiğiniz dosya, çalışmak ve alıntılamak için okunabilir bir kopyadır. Resmî bir işlemde ibraz gerekiyorsa imzalı UDF aslını kullanın.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>UDF</category>
+      <category>Word</category>
+      <enclosure url="https://www.pdfplatform.app/covers/uyap-karari-word-e-aktarma.png" type="image/png" length="54951" />
+      <media:content url="https://www.pdfplatform.app/covers/uyap-karari-word-e-aktarma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/uyap-karari-word-e-aktarma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/uyap-karari-word-e-aktarma.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/uyap-karari-word-e-aktarma.png" />
+    </item>
+    <item>
+      <title>Belgedeki TC Kimlik Numarasını Gizleme Yolları</title>
+      <link>https://www.pdfplatform.app/blog/tc-kimlik-numarasi-gizleme-belge</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/tc-kimlik-numarasi-gizleme-belge</guid>
+      <pubDate>Tue, 22 Sep 2026 20:33:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/hide-id-numbers-in-documents" />
+      <description><![CDATA[Emlakçıya gönderilen ikametgâh, işverene gönderilen SGK dökümü, gruba atılan fatura... Resmî belgelerin üzerinde kimlik numaranız yazıyor ve çoğu zaman karşı tarafın ona ihtiyacı yok.]]></description>
+      <content:encoded><![CDATA[<p>Bir kiralama için emlakçı gelir belgesi istiyor. Belgenin üzerinde TC kimlik numaranız, adresiniz, doğum tarihiniz ve maaş bilginiz var. Emlakçının hepsine ihtiyacı yok ama belgeyi olduğu gibi göndermek en kolayı olduğu için çoğu kişi öyle yapıyor. Oysa bu bilgiler bir kez çıktıktan sonra geri alınamıyor.</p>
+<h2>Önce en yaygın hata: siyah kutu çizmek</h2>
+<p>İnsanların büyük çoğunluğu bu işi bir PDF görüntüleyicide bilginin üzerine siyah bir dikdörtgen çizerek yapıyor. Ekranda bilgi kayboluyor, iş bitmiş görünüyor.</p>
+<p>Ama bitmiyor. PDF'te çizdiğiniz kutu belgenin ÜSTÜNE eklenen bir şekildir; altındaki yazı olduğu yerde durmaya devam eder. Karşı taraf o alanı fareyle seçip kopyalarsa kimlik numaranız olduğu gibi çıkar. Metni seçip kopyalamak teknik bilgi bile gerektirmez.</p>
+<blockquote><p>Kendi belgenizde sınayın: üzerini kapattığınız alanı fareyle seçip kopyalayın ve bir metin kutusuna yapıştırın. Bilgi geliyorsa gizlemiş değil, yalnızca örtmüşsünüzdür.</p></blockquote>
+<p>Aynı sorun üzerine beyaz kutu koymakta, vurgu kalemiyle karartmakta ve yazıyı görselle kapatmakta da vardır. Görünmeyen ile silinmiş aynı şey değildir.</p>
+<h2>Doğru yöntem: veriyi belgeden çıkarmak</h2>
+<p>Gerçek gizleme, metni belgenin içinden kaldırır. Kapatılan alanda artık kopyalanacak bir şey kalmaz; arama da sonuç vermez. Uluslararası terimle buna «redaction» deniyor.</p>
+<ol><li><strong>Belgeyi ekleyin</strong> — PDF'i Hassas Veri Gizle aracına verin. Metin, belgede aranabilir durumdaysa doğrudan çalışır.</li><li><strong>Kaldırılacakları seçin</strong> — TC kimlik numarası, telefon, IBAN gibi kalıplar otomatik bulunur. Listeden gizlemek istediklerinizi işaretleyin.</li><li><strong>Kontrol edip indirin</strong> — Seçtikleriniz belgeden tamamen çıkarılır. İnen dosyada o alanları seçip kopyalamayı deneyin — boş gelmeli.</li></ol>
+<p><strong>Hassas Veri Gizle</strong> — Kimlik numarası, IBAN ve adresi belgeden gerçekten kaldırın — üstünü boyamakla yetinmeyin. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Aracı aç</a></p>
+<h2>Taranmış belgelerde durum farklı</h2>
+<p>Belgeniz taranmış ya da fotoğrafla oluşturulmuşsa içindeki yazı aslında bir resimdir; seçilebilir bir metin katmanı yoktur. Bu, iki yönlü bir haberdir.</p>
+<p>İyi tarafı: metin zaten kopyalanamaz. Kötü tarafı: gözle okunabilir olduğu için üzerini kapatmanız yine de gerekir, ve kapatma işleminin görselin kendisine uygulanması şarttır. Böyle bir belgede gizlediğiniz alanın gerçekten kapandığından emin olmak için indirdiğiniz dosyayı yakınlaştırarak kontrol edin.</p>
+<h2>Neyi gizlemeli, neyi gizlememeli?</h2>
+<p>Aşırı gizleme belgeyi işe yaramaz hâle getirir; az gizleme sizi korumaz. Pratik bir ölçü: karşı tarafın yapacağı iş için gerekmeyen her şey gizlenebilir.</p>
+<ul><li>Resmî kuruma verilen belgede: genellikle hiçbir şeyi gizlemeyin. Kurum kimlik doğrulaması yapacaktır ve eksik belge reddedilir.</li><li>İşverene verilen belgede: kimlik numarası genelde gereklidir; ancak aile bilgileri, adres ve sağlık verisi çoğu zaman gerekmez.</li><li>Emlakçı, satıcı, internet sitesi gibi özel taraflarda: kimlik numarası ve doğum tarihi neredeyse hiç gerekmez.</li><li>İnternette paylaşacaksanız: belgeyi hiç paylaşmayın. Gizlenmiş bir belge bile sizi tanınabilir kılacak ayrıntılar taşır.</li></ul>
+<h2>Gizlemeden önce belgeyi bölmeyi düşünün</h2>
+<p>Bazen en temiz çözüm gizlemek değil, yalnızca gereken sayfayı göndermektir. Sekiz sayfalık bir dökümün tamamını paylaşıp altı sayfasını karartmak yerine, tek ilgili sayfayı ayırıp onu göndermek hem daha güvenli hem daha nazik olur.</p>
+<p>Belgeden tek bir sayfa ayırmak saniyeler sürer ve karşı tarafın da işini kolaylaştırır.</p>]]></content:encoded>
+      <category>KVKK</category>
+      <category>Gizlilik</category>
+      <category>Resmî Evrak</category>
+      <enclosure url="https://www.pdfplatform.app/covers/tc-kimlik-numarasi-gizleme-belge.png" type="image/png" length="50218" />
+      <media:content url="https://www.pdfplatform.app/covers/tc-kimlik-numarasi-gizleme-belge.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/tc-kimlik-numarasi-gizleme-belge.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/tc-kimlik-numarasi-gizleme-belge.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/tc-kimlik-numarasi-gizleme-belge.png" />
+    </item>
+    <item>
+      <title>UYAP&apos;a Belge Yüklenmiyor: Boyut Hatasını Çözme</title>
+      <link>https://www.pdfplatform.app/blog/uyap-belge-yukleme-boyut-hatasi</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/uyap-belge-yukleme-boyut-hatasi</guid>
+      <pubDate>Tue, 22 Sep 2026 20:33:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/uyap-upload-size-error" />
+      <description><![CDATA[UYAP'ın en can sıkıcı tarafı, dosyayı neden kabul etmediğini çoğu zaman söylememesi. Ekranda genel bir hata belirir, siz de dilekçeyi tekrar tekrar yüklemeyi denersiniz. Sebep genellikle tek bir şeydir: dosya fazla büyüktür.]]></description>
+      <content:encoded><![CDATA[<p>Duruşma günü yaklaşıyor, dilekçeniz hazır, ekleri taradınız ve UYAP dosyayı kabul etmiyor. Hata mesajı da işe yaramıyor — sistem çoğu zaman sorunun boyut olduğunu açıkça söylemez. Bu yazı, hatanın gerçek sebebini nasıl bulacağınızı ve dosyayı nasıl sınırın altına indireceğinizi anlatıyor.</p>
+<h2>Önce sebebi doğru teşhis edin</h2>
+<p>Yükleme hatasının pratikte üç kaynağı olur ve çözümleri birbirinden tamamen farklıdır:</p>
+<ul><li>Dosya boyutu sınırı aşılmıştır. En sık görülen sebep budur ve genellikle taranmış eklerden kaynaklanır.</li><li>Dosya biçimi kabul edilmiyordur. Portal belirli uzantıları bekler; telefonla çektiğiniz fotoğrafı doğrudan yüklemeye çalışmak sık yapılan bir hatadır.</li><li>Dosya bozuktur ya da şifrelidir. Parola korumalı bir PDF karşı tarafta açılamaz.</li></ul>
+<blockquote><p>Hangisi olduğunu anlamanın en hızlı yolu: aynı işlemi tek sayfalık, küçük bir test PDF'iyle deneyin. O geçiyorsa sorun kesinlikle boyut ya da içerik; geçmiyorsa sorun portal tarafındadır ve beklemek gerekir.</p></blockquote>
+<h2>Boyutu asıl şişiren şey: taranmış ekler</h2>
+<p>Dilekçenin kendisi birkaç yüz kilobayttır. Dosyayı onlarca megabayta çıkaran şey neredeyse her zaman eklerdir: tarayıcıdan yüksek çözünürlükte, renkli olarak alınmış sayfalar ya da telefonla çekilip PDF'e çevrilmiş fotoğraflar. Modern bir telefon kamerası tek bir sayfayı 4–6 MB'lık bir görsel olarak kaydeder; yirmi sayfalık bir ek kolayca 100 MB'ı geçer.</p>
+<p>Bu yüzden çözüm dilekçeyi budamak değil, ekleri makul boyuta indirmektir. Metnin okunaklılığından ödün vermeden yapılabilir.</p>
+<h2>Adım adım: dosyayı sınırın altına indirme</h2>
+<ol><li><strong>Dosyayı sıkıştırın</strong> — PDF Sıkıştırma aracına dosyayı verin ve bir sıkıştırma düzeyi seçin. Taranmış, görsel ağırlıklı belgelerde kazanç en yüksektir; çoğu dosya üçte birine kadar iner.</li><li><strong>Sonucu gözle kontrol edin</strong> — İnen dosyayı açıp en küçük puntolu sayfaya bakın. Yazılar rahat okunuyorsa sorun yok. Bulanıklaştıysa bir alt sıkıştırma düzeyine geçin.</li><li><strong>Hâlâ büyükse belgeyi bölün</strong> — Tek dosya sınırı aşıyorsa dilekçeyi ve ekleri ayrı dosyalar hâlinde yükleyin. PDF Bölme ile belgeyi sayfa aralıklarına ayırabilirsiniz.</li><li><strong>Parçaları anlamlı adlandırın</strong> — «ek-1-bilirkisi-raporu.pdf» gibi. Kalem sizde olduğu sürece dosya adı, karşı tarafın işini kolaylaştıran en ucuz şeydir.</li></ol>
+<p><strong>PDF Sıkıştır</strong> — Taranmış ekleri okunaklılığı bozmadan küçültün; portal sınırının altına inin. <a href="https://www.pdfplatform.app/tools/compress">Aracı aç</a></p>
+<h2>Baştan küçük tarayın — en kolay çözüm</h2>
+<p>Sonradan sıkıştırmak yerine baştan doğru taramak her zaman daha iyi sonuç verir. Resmî evrak için pratik ayarlar:</p>
+<ul><li>Siyah-beyaz ya da gri tonlama seçin. Belgede renkli bir mühür ya da imza yoksa renge ihtiyacınız yoktur ve renk dosyayı üç katına çıkarır.</li><li>300 DPI yeterlidir. Daha yükseği okunaklılığı artırmaz, yalnızca boyutu şişirir.</li><li>Telefonla çekiyorsanız fotoğraf olarak değil, belge tarayıcı ile tarayın. Tarayıcı kenarları bulur, perspektifi düzeltir ve çok daha küçük bir dosya üretir.</li></ul>
+<blockquote><p>Telefonunuzla çektiğiniz evrakı doğrudan PDF'e çevirmek yerine Belge Tarayıcı'dan geçirin: kenarlar otomatik bulunur, sayfa düzleştirilir ve ortaya gerçekten «taranmış» görünen, küçük bir dosya çıkar.</p></blockquote>
+<h2>UDF dosyaları ayrı bir konu</h2>
+<p>UYAP'ın kendi belge biçimi olan UDF için sistem tarafında ayrı ve daha dar bir boyut sınırı uygulanır; uygulamada 10 MB üzerindeki UDF dosyalarının kabul edilmediği bildiriliyor. Üstelik sistem bunu açıkça söylemez, yalnızca genel bir hata verir.</p>
+<p>UDF dosyanız büyükse sebebi neredeyse her zaman belgeye yapıştırılmış görsellerdir. Görselleri belgeden çıkarıp ek olarak ayrı yüklemek en temiz çözümdür.</p>
+<p>Sınırlar kurumlara ve işlem türüne göre değişir ve zaman içinde güncellenir; kesin rakam için yükleme ekranındaki açıklamayı esas alın.</p>
+<h2>Yüklemeden önce son kontrol</h2>
+<ul><li>Dosya parolalı mı? Parola korumalı PDF karşı tarafta açılamaz; kilidi kaldırın.</li><li>Sayfalar doğru sırada ve doğru yönde mi? Yan yatmış bir ek, hâkimin belgeyi çevirerek okumasına sebep olur.</li><li>Kişisel veri var mı? Dosyaya konu dışı bir belge karışmışsa çıkarın.</li><li>Toplam boyut, ekrandaki sınırın altında mı?</li></ul>
+<p>Bu dört kontrol bir dakika sürer ve son gün yaşanan yükleme krizlerinin çoğunu baştan önler.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>Resmî Evrak</category>
+      <category>Sıkıştırma</category>
+      <enclosure url="https://www.pdfplatform.app/covers/uyap-belge-yukleme-boyut-hatasi.png" type="image/png" length="52570" />
+      <media:content url="https://www.pdfplatform.app/covers/uyap-belge-yukleme-boyut-hatasi.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/uyap-belge-yukleme-boyut-hatasi.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/uyap-belge-yukleme-boyut-hatasi.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/uyap-belge-yukleme-boyut-hatasi.png" />
+    </item>
+    <item>
+      <title>Vize Başvurusu İçin Evrak Dosyası Hazırlama</title>
+      <link>https://www.pdfplatform.app/blog/vize-basvurusu-evrak-hazirlama</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/vize-basvurusu-evrak-hazirlama</guid>
+      <pubDate>Tue, 22 Sep 2026 20:09:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/prepare-visa-application-documents" />
+      <description><![CDATA[Vize başvurularında reddin sebebi çoğu zaman eksik bir belge değil, düzensiz bir dosyadır. Evrakınızı okunabilir ve sıralı sunmak, konsolosluğun işini kolaylaştırdığı kadar sizin lehinize de çalışır.]]></description>
+      <content:encoded><![CDATA[<p>Vize başvurusu, hayatınızın bir dönemini belgelerle anlatmaktır: nerede çalışıyorsunuz, paranız var mı, dönecek misiniz. Konsolosluk memuru bu dosyaya dakikalar ayırır. Belgeleriniz karışıksa, okunmuyorsa ya da eksik görünüyorsa bu, başvurunuz aleyhine işler. Bu yazı evrakı dijital olarak düzgün hazırlamanın yolunu anlatıyor.</p>
+<h2>Önce listeyi çıkarın, sonra tarayın</h2>
+<p>Her ülkenin ve her vize türünün istediği belge listesi farklıdır ve listeler değişir. İlk iş, başvuru yapacağınız konsolosluğun ya da yetkili başvuru merkezinin kendi sayfasındaki güncel listeyi almaktır. İnternette bulduğunuz eski bir listeye göre hazırlanmak en sık yapılan hatadır.</p>
+<p>Listeyi elde ettikten sonra her maddeyi tek tek işaretleyerek ilerleyin. Eksik belge, düzenli bir dosyanın bile önüne geçer.</p>
+<h2>Belgeleri doğru biçimde elde edin</h2>
+<ul><li>e-Devlet'ten alınabilen belgeleri doğrudan PDF olarak indirin. Ekran görüntüsü almayın; doğrulama barkodu okunmayabilir.</li><li>Banka hesap dökümünü bankanızın uygulamasından PDF olarak alın. Ekran görüntüsü kabul edilmez.</li><li>Kâğıt üzerindeki belgeleri (imzalı izin yazısı, davetiye) telefonla fotoğraflamak yerine belge tarayıcıyla tarayın.</li><li>Pasaport sayfalarını net ve tam çerçeveli tarayın; köşeleri kesilmiş bir pasaport sayfası en sık geri dönen belgelerdendir.</li></ul>
+<blockquote><p>Telefonla çektiğiniz belgeyi doğrudan PDF yapmak yerine belge tarayıcıdan geçirin: kenarlar otomatik bulunur, sayfa düzleştirilir ve masa, parmak, gölge gibi ayrıntılar çerçeve dışında kalır. Sonuç gerçekten taranmış gibi görünür.</p></blockquote>
+<h2>Fotoğraf: en çok geri dönen madde</h2>
+<p>Biyometrik fotoğraf, başvurularda en sık reddedilen kalemdir. Türkiye'de kimlik, pasaport ve ehliyet için yaygın ölçü 50×60 mm'dir; Schengen ve pek çok vize başvurusu ise 35×45 mm ister.</p>
+<p>Dijital yükleme isteyen sistemlerde fotoğrafın hem piksel ölçüsü hem dosya boyutu tutmalıdır. Ölçüyü tutturmak için fotoğrafı yeniden boyutlandırabilir, dosya fazla büyükse ayrıca sıkıştırabilirsiniz.</p>
+<p>Şunu net söyleyelim: bir aracın fotoğrafı doğru piksel ölçüsüne getirmesi, fotoğrafın biyometrik şartları karşıladığı anlamına gelmez. Arka planın düz beyaz olması, yüzün merkezde ve belirli oranda olması, gözlerin açık ve ifadenin nötr olması gibi şartlar fotoğrafın çekimiyle ilgilidir. Ölçü aracı yalnızca ölçüyü ayarlar.</p>
+<p><strong>Görsel Boyutlandır</strong> — Fotoğrafı vize ve biyometrik başvuruların istediği piksel ölçüsüne getirin — hazır ölçülerle. <a href="https://www.pdfplatform.app/tools/gorsel-boyutlandir">Aracı aç</a></p>
+<h2>Dosyayı tek PDF olarak toplama</h2>
+<p>Bazı başvuru merkezleri her belgeyi ayrı ister, bazıları tek dosya ister. Tek dosya isteniyorsa sıralama önemlidir; belgeleri listedeki sırayla dizin.</p>
+<ol><li><strong>Belgeleri sırayla ekleyin</strong> — Başvuru formu, pasaport, fotoğraf, seyahat sağlık sigortası, uçuş ve konaklama, çalışma ve gelir belgeleri — konsolosluğun listesindeki sıra en güvenlisidir.</li><li><strong>Sırayı kontrol edin</strong> — Listede sürükleyerek düzenleyin. Yanlış sıra, memurun aradığı belgeyi bulamaması demektir.</li><li><strong>Birleştirip indirin</strong> — Tek PDF olarak iner ve dosyanız cihazınızdan çıkmaz.</li><li><strong>Boyut sınırını kontrol edin</strong> — Yükleme ekranında bir sınır varsa ve dosyanız üzerindeyse sıkıştırın; taranmış sayfalarda kazanç yüksektir.</li></ol>
+<h2>Göndermeden önce dosyayı bir de okuyucu gibi açın</h2>
+<ul><li>Her sayfa düz mü, yan yatmış sayfa var mı?</li><li>En küçük yazı rahat okunuyor mu? Yakınlaştırmadan okunamıyorsa taramayı yenileyin.</li><li>Sayfa sırası listedeki sırayla aynı mı?</li><li>Kişisel veri içeren, listede istenmeyen bir belge karışmış mı?</li><li>Dosya adı anlaşılır mı? «vize-basvurusu-ad-soyad.pdf» iyi bir isimdir.</li></ul>
+<p>Bu kontrol beş dakika sürer. Randevu almak için beklediğiniz süre düşünülürse, dosyayı bir kez daha gözden geçirmek fazlasıyla değer.</p>]]></content:encoded>
+      <category>Vize</category>
+      <category>Başvuru</category>
+      <category>Resmî Evrak</category>
+      <enclosure url="https://www.pdfplatform.app/covers/vize-basvurusu-evrak-hazirlama.png" type="image/png" length="53083" />
+      <media:content url="https://www.pdfplatform.app/covers/vize-basvurusu-evrak-hazirlama.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/vize-basvurusu-evrak-hazirlama.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/vize-basvurusu-evrak-hazirlama.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/vize-basvurusu-evrak-hazirlama.png" />
+    </item>
+    <item>
+      <title>Bordroyu Kişi Kişi Ayırma: PDF&apos;i Sayfalara Bölme</title>
+      <link>https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma</guid>
+      <pubDate>Tue, 22 Sep 2026 16:55:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/split-payslips-per-employee" />
+      <description><![CDATA[Muhasebe programı bordroyu tek bir PDF olarak veriyor; içinde kırk çalışanın maaş pusulası var. Herkese kendi sayfasını göndermek gerekiyor ve bunu elle yapmak hem uzun sürüyor hem risk taşıyor.]]></description>
+      <content:encoded><![CDATA[<p>Ayın başı geldi, muhasebe bordroyu gönderdi ve elinizde tek bir PDF var: kırk sayfa, kırk çalışan. Herkese yalnızca kendi sayfası gitmeli. Bunu elle yapmak — her sayfayı tek tek kaydedip adlandırmak — hem yarım gününüzü alır hem de bir yerde karışma riski taşır. Karışırsa sonucu ağırdır: bir çalışanın maaşı başka birine gitmiş olur.</p>
+<h2>Neden elle yapmamalı?</h2>
+<p>Burada asıl mesele zaman değil, hata. Maaş bilgisi en hassas kişisel verilerden biridir ve yanlış kişiye ulaşması geri alınamaz. Elle yapılan tekrarlı bir işte kırkıncı sayfada dikkatin dağılması olağandır.</p>
+<p>İşi tek hamlede yapan bir yöntem, hem süreyi dakikalara indirir hem de «acaba karıştı mı» sorusunu ortadan kaldırır.</p>
+<h2>Adım adım: tek PDF'i sayfalara ayırma</h2>
+<ol><li><strong>Bordro dosyasını ekleyin</strong> — PDF Bölme aracına dosyayı verin. İşlem tarayıcınızda yapılır; maaş bilgileri sunucuya yüklenmez.</li><li><strong>Sayfaları görerek seçin</strong> — Sayfalar küçük görseller hâlinde listelenir. Hangi sayfanın kime ait olduğunu buradan doğrulayabilirsiniz.</li><li><strong>Her sayfayı ayrı dosya olarak alın</strong> — Sayfalar tek tek ayrılıp bir ZIP içinde iner; her sayfa kendi dosyasıdır.</li><li><strong>Dosyaları adlandırın</strong> — Gönderim öncesi her dosyaya çalışanın adını verin. Bu adım, yanlış gönderime karşı son savunmadır.</li></ol>
+<p><strong>PDF Böl</strong> — Tek dosyadaki bordroyu sayfa sayfa ayırın — cihazınızda, dosya yüklenmeden. <a href="https://www.pdfplatform.app/tools/split-pdf">Aracı aç</a></p>
+<h2>Bir çalışanın bordrosu birden çok sayfaysa</h2>
+<p>Bazı bordrolarda tek çalışan iki ya da üç sayfa tutar. Bu durumda her sayfayı ayrı dosya yapmak işe yaramaz; sayfa aralıklarıyla çalışmanız gerekir.</p>
+<p>Bölme aracı sayfa aralığı seçmenize izin verir: 1–2 aralığı bir dosya, 3–4 aralığı başka bir dosya. Sayfa küçük görselleri sayesinde aralıkları gözle kontrol ederek ilerleyebilirsiniz — bu, kör bir numara girmekten çok daha güvenlidir.</p>
+<h2>Göndermeden önce mutlaka kontrol edin</h2>
+<p>Ayırma işlemi doğru çalışsa bile, gönderim listesindeki bir kaymayı hiçbir araç yakalayamaz. Gönderim öncesi şu iki kontrolü yapın:</p>
+<ul><li>Rastgele üç dosyayı açın ve içindeki ismin dosya adıyla aynı olduğunu doğrulayın.</li><li>Dosya sayısı çalışan sayısıyla aynı mı? Eksik ya da fazla dosya, aralıkların kaydığını gösterir.</li></ul>
+<blockquote><p>Bordroları toplu e-posta ile göndermeyin. Tek bir «tümünü yanıtla» ya da yanlış seçilmiş bir alıcı listesi, tüm şirketin maaşlarını ifşa edebilir. Her bordro kendi e-postasında, tek alıcıya gitmeli.</p></blockquote>
+<h2>Aynı yöntemin işe yaradığı diğer durumlar</h2>
+<ul><li>Tek dosyada gelen faturaların müşteri başına ayrılması.</li><li>Toplu üretilen sertifika ya da katılım belgelerinin kişi başına bölünmesi.</li><li>Çok sayfalı bir raporun ilgili bölümlerinin farklı birimlere gönderilmesi.</li><li>Uzun bir sözleşmeden yalnızca imza sayfasının ayrılması.</li></ul>]]></content:encoded>
+      <category>İnsan Kaynakları</category>
+      <category>Bölme</category>
+      <category>Gizlilik</category>
+      <enclosure url="https://www.pdfplatform.app/covers/bordro-sayfalarini-ayirma.png" type="image/png" length="54788" />
+      <media:content url="https://www.pdfplatform.app/covers/bordro-sayfalarini-ayirma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/bordro-sayfalarini-ayirma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/bordro-sayfalarini-ayirma.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/bordro-sayfalarini-ayirma.png" />
+    </item>
+    <item>
+      <title>ÖSYM Fotoğraf Boyutu: 300×400 Piksel ve 60 KB</title>
+      <link>https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu</guid>
+      <pubDate>Tue, 22 Sep 2026 16:45:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/exam-application-photo-size" />
+      <description><![CDATA[Başvuru ekranı fotoğrafı kabul etmiyor ve sebebini söylemiyor. Sorun neredeyse her zaman aynı iki şeyden biri: piksel ölçüsü ya da dosya boyutu tutmuyor.]]></description>
+      <content:encoded><![CDATA[<p>Sınav başvurusunun son günü, formu doldurdunuz ve sıra fotoğrafa geldi. Sistem fotoğrafı kabul etmiyor. Hata mesajı da genelde açıklayıcı değil. Sorun neredeyse her zaman iki şeyden birindedir: fotoğrafın piksel ölçüsü ya da dosya boyutu isteneni tutmuyordur.</p>
+<h2>İstenen ölçüler</h2>
+<p>Sınav başvurularında fotoğraf için yaygın olarak şu şartlar aranır:</p>
+<ul><li>Piksel ölçüsü: 300 × 400 (genişlik × yükseklik).</li><li>Dosya boyutu: en fazla 60 KB.</li><li>Biçim: JPG (JPEG).</li><li>İçerik: son altı ay içinde çekilmiş, beyaz arka planlı, yüzü net gösteren bir fotoğraf.</li></ul>
+<p>Bu şartlar kurumdan kuruma ve yıldan yıla değişebilir. Başvuru ekranındaki açıklama her zaman esastır; aşağıdaki yöntem hangi ölçü istenirse istensin aynı şekilde çalışır.</p>
+<h2>Piksel ölçüsü ile dosya boyutu farklı şeylerdir</h2>
+<p>Bu ayrım kafa karışıklığının asıl kaynağıdır. Piksel ölçüsü fotoğrafın eni ve boyudur — 300 × 400 gibi. Dosya boyutu ise fotoğrafın diskte kapladığı yerdir — 60 KB gibi.</p>
+<p>Bir fotoğraf tam olarak 300 × 400 piksel olabilir ama yine de 400 KB tutabilir. Tersi de mümkündür. Bu yüzden iki şartı ayrı ayrı sağlamanız gerekir: önce ölçüyü ayarlayın, boyut hâlâ yüksekse ayrıca sıkıştırın.</p>
+<h2>Adım adım çözüm</h2>
+<ol><li><strong>Fotoğrafı doğru ölçüye getirin</strong> — Görsel Boyutlandır aracında hazır ölçülerden sınav başvurusu seçeneğini seçin; genişlik ve yükseklik 300 × 400 olarak gelir. İsterseniz elle de girebilirsiniz.</li><li><strong>Dosya boyutunu kontrol edin</strong> — İnen dosyanın boyutuna bakın. 60 KB'ın altındaysa işiniz bitti.</li><li><strong>Gerekirse sıkıştırın</strong> — Hâlâ büyükse Görsel Sıkıştır aracına verin ve kaliteyi kademeli düşürün. Vesikalık boyutundaki bir fotoğrafta %70 kalite genellikle hem 60 KB'ın altına iner hem de yüz net kalır.</li><li><strong>Son kontrolü gözle yapın</strong> — Fotoğrafı tam boyutta açıp yüzün net göründüğünden emin olun. Aşırı sıkıştırma yüz hatlarını bozar ve fotoğraf geri çevrilebilir.</li></ol>
+<p><strong>Görsel Boyutlandır</strong> — Fotoğrafı sınav ve resmî başvuruların istediği piksel ölçüsüne getirin — hazır ölçülerle, cihazınızda. <a href="https://www.pdfplatform.app/tools/gorsel-boyutlandir">Aracı aç</a></p>
+<h2>Sık yapılan hatalar</h2>
+<ul><li>Telefonla çekilmiş normal bir fotoğrafı kırpmadan yüklemeye çalışmak. Kamera fotoğrafı 4:3 ya da 16:9 orandadır; vesikalık oranı 3:4'tür. Önce vesikalık oranında kırpmanız gerekir.</li><li>Ekran görüntüsü kullanmak. Ekran görüntüsü PNG olur ve genelde hem yanlış ölçüde hem gereğinden büyüktür.</li><li>Küçük bir fotoğrafı büyütmek. 150 × 200 bir fotoğrafı 300 × 400'e çıkarmak bulanık bir sonuç verir; kaybolan ayrıntı geri gelmez.</li><li>Arka planı beyaz sanmak. Duvar açık gri ya da kremse sistem ya da görevli bunu reddedebilir.</li></ul>
+<blockquote><p>Kırpmayı boyutlandırmadan ÖNCE yapın. Önce fotoğrafı 3:4 oranında, yüz merkezde olacak şekilde kırpın; sonra 300 × 400'e getirin. Ters sırada yaparsanız yüz orantısız biçimde ezilir.</p></blockquote>
+<h2>Diğer başvurular için yaygın ölçüler</h2>
+<p>Aynı yöntem tüm resmî fotoğraf ölçüleri için geçerlidir. Türkiye'de kimlik, pasaport ve ehliyet başvurularında yaygın ölçü 50 × 60 mm; Schengen ve pek çok vize başvurusunda 35 × 45 mm istenir. Milimetre cinsinden verilen ölçüler 300 DPI kabul edilerek piksele çevrilir.</p>
+<p>Şunu tekrar etmekte fayda var: bir aracın fotoğrafı doğru ölçüye getirmesi, fotoğrafın biyometrik şartları karşıladığı anlamına gelmez. Arka plan, yüzün konumu ve ifade gibi şartlar fotoğrafın çekimiyle ilgilidir.</p>]]></content:encoded>
+      <category>Başvuru</category>
+      <category>Görsel</category>
+      <category>Boyutlandırma</category>
+      <enclosure url="https://www.pdfplatform.app/covers/osym-sinav-basvurusu-fotograf-boyutu.png" type="image/png" length="53325" />
+      <media:content url="https://www.pdfplatform.app/covers/osym-sinav-basvurusu-fotograf-boyutu.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/osym-sinav-basvurusu-fotograf-boyutu.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/osym-sinav-basvurusu-fotograf-boyutu.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/osym-sinav-basvurusu-fotograf-boyutu.png" />
+    </item>
+    <item>
+      <title>İhale Dosyasını PDF Olarak Hazırlama Rehberi</title>
+      <link>https://www.pdfplatform.app/blog/ihale-dosyasi-pdf-hazirlama</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/ihale-dosyasi-pdf-hazirlama</guid>
+      <pubDate>Tue, 22 Sep 2026 15:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/prepare-a-tender-submission-as-pdf" />
+      <description><![CDATA[İhale dosyasında biçim, içerik kadar önemlidir. Teklifi değerlendiren komisyon aradığı belgeyi bulamadığında bunu sizin lehinize yorumlamaz. Dosyanın düzeni, işin ciddiyetine dair ilk izlenimdir.]]></description>
+      <content:encoded><![CDATA[<p>İhale teklif dosyası, belgeler kadar düzen işidir. Komisyon onlarca dosyayı sırayla inceler; aradığı belgeyi hızla bulabildiği dosya avantajlıdır. Üstelik idarelerin çoğu artık teklifi elektronik ortamda istiyor ve bu, dosyayı bir arada, sıralı ve okunaklı sunma sorumluluğunu tamamen size bırakıyor.</p>
+<h2>Şartname ne diyorsa o</h2>
+<p>Bu yazıdaki hiçbir öneri, idarenin şartnamesindeki talimatın önüne geçmez. Şartname belge sırasını, dosya biçimini, adlandırmayı ya da boyut sınırını belirtmişse harfi harfine uyun. Biçim şartına uymamak, teklifin değerlendirme dışı bırakılması için tek başına yeterli bir sebep olabilir.</p>
+<p>Şartnameyi indirip aramayla ilerlemek en hızlı yoldur: «dosya», «biçim», «PDF», «imza», «boyut» kelimelerini arayın ve çıkan her maddeyi not edin.</p>
+<h2>Belgeleri şartname sırasıyla dizin</h2>
+<p>İhale şartnameleri istenen belgeleri numaralı bir liste hâlinde verir. Dosyanızı tam olarak o sırayla kurun. Komisyon üyesi listeyi elinde tutarak ilerler; sizin dosyanız aynı sırayı izliyorsa inceleme akıcı olur.</p>
+<ol><li><strong>Belgeleri tek tek PDF olarak hazırlayın</strong> — e-Devlet ve resmî portallardan alınanları doğrudan PDF indirin; kâğıt belgeleri tarayın.</li><li><strong>Şartname sırasına dizin</strong> — Birleştirme aracında dosyaları sürükleyerek listedeki numaralara göre sıralayın.</li><li><strong>Tek dosyada birleştirin</strong> — İşlem tarayıcınızda yapılır; teklif dosyanız sunucuya yüklenmez.</li><li><strong>Sayfa numarası ekleyin</strong> — Numaralı bir dosyada komisyon «şu belge kaçıncı sayfada» diye sorabilir ve siz cevap verebilirsiniz.</li></ol>
+<p><strong>PDF Birleştir</strong> — Teklif belgelerini şartname sırasına dizip tek dosyada toplayın — cihazınızda, üyeliksiz. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Sayfa numarası neden işe yarar?</h2>
+<p>Yüz sayfalık bir teklif dosyasında sayfa numarası, dosyanın içindekiler listesini mümkün kılar. Başa bir içindekiler sayfası koyup her belgenin hangi sayfada başladığını yazmak, komisyonun işini ciddi biçimde kolaylaştırır.</p>
+<p>Bu küçük ayrıntı, dosyanızı özenle hazırlanmış bir iş gibi gösterir. Rakiplerin çoğu bunu yapmaz.</p>
+<p><strong>Sayfa Numarası Ekle</strong> — Teklif dosyasına sayfa numarası ekleyin; içindekiler listesi hazırlamak mümkün hâle gelsin. <a href="https://www.pdfplatform.app/tools/page-numbers">Aracı aç</a></p>
+<h2>Boyut sınırı ve tarama kalitesi dengesi</h2>
+<p>Elektronik ihale sistemlerinin dosya boyutu sınırı vardır. Aynı zamanda belgelerin okunaklı olması gerekir — okunamayan bir belge, eksik belge sayılır. Bu ikisi arasında denge kurmak gerekir.</p>
+<ul><li>Belgeleri gri tonlamada, 300 DPI tarayın. Renk gerekli değilse kullanmayın; dosyayı katlar.</li><li>Şirket kaşesi ya da renkli imza varsa yalnızca o sayfaları renkli tarayın, gerisini gri bırakın.</li><li>Sıkıştırdıktan sonra mutlaka kontrol edin: kaşe okunuyor mu, imza net mi, en küçük punto seçilebiliyor mu?</li><li>Boyut hâlâ sınırın üzerindeyse dosyayı bölmek, kaliteyi düşürmekten daha güvenlidir.</li></ul>
+<blockquote><p>Asla tüm dosyayı en yüksek sıkıştırma düzeyinde ezmeyin. İhale dosyasında okunamayan bir kaşe, kazanılmış bir işi kaybettirebilir. Önce hangi sayfaların ağır olduğuna bakın; sorun genelde birkaç sayfadadır.</p></blockquote>
+<h2>İmza konusunda dikkatli olun</h2>
+<p>Teklif dosyalarında imza kritik bir konudur ve idareler genellikle ıslak imza ya da nitelikli elektronik imza ister. PDF'e imza görseli yerleştirmek, bu şartların hiçbirini karşılamaz — bu yalnızca imzanın resmidir.</p>
+<p>Pratikte doğru yol: belgeyi yazdırıp ıslak imzalayıp taramak, ya da idarenin kabul ettiği elektronik imza altyapısını kullanmak. Görsel imza, iç yazışma ve taslak paylaşımı gibi resmî olmayan durumlar için uygundur.</p>
+<h2>Teslimden önce son kontrol</h2>
+<ul><li>Şartnamedeki belge listesinin her maddesi dosyada var mı?</li><li>Sıra şartnamedeki sırayla aynı mı?</li><li>Geçerlilik süresi olan belgeler (faaliyet belgesi, oda kaydı, borcu yoktur yazısı) güncel mi?</li><li>Tüm sayfalar düz ve okunaklı mı?</li><li>Dosya adı idarenin istediği biçimde mi?</li><li>Son teklif saatine kaç saat var? Yüklemeyi son saate bırakmayın; sistem yoğunluğu gerçek bir risktir.</li></ul>]]></content:encoded>
+      <category>İhale</category>
+      <category>Resmî Evrak</category>
+      <category>Birleştirme</category>
+      <enclosure url="https://www.pdfplatform.app/covers/ihale-dosyasi-pdf-hazirlama.png" type="image/png" length="52663" />
+      <media:content url="https://www.pdfplatform.app/covers/ihale-dosyasi-pdf-hazirlama.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/ihale-dosyasi-pdf-hazirlama.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/ihale-dosyasi-pdf-hazirlama.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/ihale-dosyasi-pdf-hazirlama.png" />
+    </item>
+    <item>
+      <title>Üniversite Kayıt Evraklarını Dijital Hazırlama</title>
+      <link>https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama</guid>
+      <pubDate>Tue, 22 Sep 2026 12:53:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/prepare-university-enrolment-documents" />
+      <description><![CDATA[Kayıt döneminde herkes aynı yere takılıyor: sistem belgeyi kabul etmiyor. Sorun genelde belgede değil, belgenin nasıl hazırlandığında.]]></description>
+      <content:encoded><![CDATA[<p>Kayıt günleri sayılı, sistem yoğun ve elinizde bir yığın belge var: lise diploması, sınav sonuç belgesi, kimlik fotokopisi, ikametgâh, sağlık raporu, fotoğraf. Çoğu artık dijital yükleniyor. Bu yazı, belgelerin ilk seferde kabul edilmesi için nasıl hazırlanacağını anlatıyor.</p>
+<h2>Telefonla fotoğraf çekmek yerine tarayın</h2>
+<p>En sık yapılan hata bu. Belgeyi masaya koyup telefonla fotoğrafını çekmek hızlıdır ama sonuç genelde kabul edilmez: masa görünür, kenarlar eğridir, ışık bir köşeye vurur, dosya gereksiz büyüktür.</p>
+<p>Belge tarayıcı ise belgenin kenarlarını bulur, perspektifi düzeltir ve kâğıdı düz bir sayfaya oturtur. Sonuç gerçekten taranmış gibi görünür ve dosya çok daha küçük olur — üstelik ek bir cihaz gerekmez, telefonunuzun kamerası yeter.</p>
+<ol><li><strong>Belgeyi düz bir zemine koyun</strong> — Koyu renk bir zemin kenarların bulunmasını kolaylaştırır. Kâğıdı mümkün olduğunca düzleştirin.</li><li><strong>Işığı yandan değil üstten alın</strong> — Kendi gölgeniz belgenin üzerine düşmesin. Pencere ışığı yeterlidir, flaş genelde parlama yapar.</li><li><strong>Tarayıcıyı çalıştırın</strong> — Kenarlar otomatik bulunur ve sayfa düzleştirilir. Gerekirse köşeleri elle düzeltebilirsiniz.</li><li><strong>PDF olarak alın</strong> — Birden fazla sayfayı tek belgede toplayabilirsiniz.</li></ol>
+<p><strong>Belge Tarayıcı</strong> — Telefonunuzla düzgün tarama yapın: kenarlar bulunur, sayfa düzleştirilir, dosya küçük kalır. <a href="https://www.pdfplatform.app/tools/belge-tara">Aracı aç</a></p>
+<h2>e-Devlet'ten alınabilenleri taramayın</h2>
+<p>Bazı belgeleri taramanıza hiç gerek yok. İkametgâh, nüfus kayıt örneği, adli sicil kaydı ve askerlik durum belgesi gibi belgeler e-Devlet'ten doğrudan PDF olarak indirilebilir.</p>
+<p>İndirilen belge zaten dijital, net ve küçüktür; üstelik üzerindeki barkodla doğrulanabilir. Yazdırıp tekrar taramak bu avantajların hepsini kaybettirir.</p>
+<blockquote><p>Ekran görüntüsü almayın, «PDF olarak indir» seçeneğini kullanın. Ekran görüntüsünde doğrulama barkodu çoğu zaman okunmaz ve belge geçersiz sayılabilir.</p></blockquote>
+<h2>Fotoğraf ölçüsü</h2>
+<p>Öğrenci kimliği için istenen fotoğrafın belirli bir piksel ölçüsü ve dosya boyutu olur. Telefonla çektiğiniz fotoğraf hem yanlış oranda hem gereğinden büyüktür; önce vesikalık oranında kırpıp sonra istenen ölçüye getirin.</p>
+<p>Ölçü tuttuğu hâlde dosya hâlâ büyükse fotoğrafı ayrıca sıkıştırın. Piksel ölçüsü ile dosya boyutu farklı şeylerdir ve çoğu sistem ikisini birden şart koşar.</p>
+<h2>Tek dosya mı, ayrı dosyalar mı?</h2>
+<p>Üniversiteler genelde her belgeyi kendi alanına ayrı yükletir. Tek dosya isteniyorsa belgeleri kayıt kılavuzundaki sırayla dizin.</p>
+<p>Belgeleriniz birden çok sayfaysa (örneğin diplomanın iki yüzü) bunları tek PDF hâlinde birleştirip öyle yükleyin; sistem çoğu zaman alan başına tek dosya kabul eder.</p>
+<h2>Yükleme sınırına takılırsanız</h2>
+<ul><li>Taranmış belgeleri sıkıştırın; en büyük kazanç oradadır.</li><li>Belgeleri renkli değil gri tonlamada tarayın. Renkli mühür ya da imza yoksa renge gerek yoktur.</li><li>Sıkıştırdıktan sonra en küçük yazıyı kontrol edin; okunmayan bir belge eksik belge sayılır.</li><li>Yüklemeyi son güne bırakmayın. Kayıt sistemleri son gün yoğun olur ve hata alma ihtimali artar.</li></ul>
+<h2>Yüklemeden önce son kontrol</h2>
+<ul><li>Her belge tam çerçevede mi, köşesi kesilmiş var mı?</li><li>Yazılar yakınlaştırmadan okunuyor mu?</li><li>Sayfalar düz mü, yan yatmış var mı?</li><li>Kılavuzdaki listenin her maddesi hazır mı?</li><li>Dosya adları anlaşılır mı? «diploma-ad-soyad.pdf» iyi bir isimdir.</li></ul>
+<p>Belgeyi yüklemeden önce kendi telefonunuzda açıp okuyun. Siz zor okuyorsanız, ekranın öbür ucundaki görevli hiç okuyamaz.</p>]]></content:encoded>
+      <category>Öğrenci</category>
+      <category>Başvuru</category>
+      <category>Belge Tarama</category>
+      <enclosure url="https://www.pdfplatform.app/covers/universite-kayit-evraklarini-hazirlama.png" type="image/png" length="49309" />
+      <media:content url="https://www.pdfplatform.app/covers/universite-kayit-evraklarini-hazirlama.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/universite-kayit-evraklarini-hazirlama.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/universite-kayit-evraklarini-hazirlama.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/universite-kayit-evraklarini-hazirlama.png" />
+    </item>
+    <item>
+      <title>UDF Dosyası Nasıl Açılır? Program Kurmadan Çözüm</title>
+      <link>https://www.pdfplatform.app/blog/udf-dosyasi-nasil-acilir</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/udf-dosyasi-nasil-acilir</guid>
+      <pubDate>Tue, 22 Sep 2026 11:35:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/how-to-open-udf-files" />
+      <description><![CDATA[UYAP'tan bir karar indirdiniz, çift tıkladınız ve Windows «bu dosyayı hangi uygulamayla açmak istersiniz?» diye sordu. UDF, Türkiye'ye özgü bir belge biçimi ve alışılmış programların hiçbiri onu tanımıyor.]]></description>
+      <content:encoded><![CDATA[<p>UYAP'tan gerekçeli kararı ya da bir müzekkereyi indirdiniz; dosyanın sonu «.udf» ile bitiyor ve bilgisayarınızdaki hiçbir program onu açmıyor. Word denemeniz işe yaramıyor, çift tıklayınca uygulama seçme penceresi çıkıyor. Sorun sizde değil: UDF, yalnızca Türkiye'de kullanılan özel bir belge biçimi.</p>
+<h2>UDF nedir?</h2>
+<p>UDF, açılımıyla UYAP Doküman Formatı, Adalet Bakanlığı'nın Ulusal Yargı Ağı Bilişim Sistemi'nde kullandığı belge biçimidir. Dilekçeler, müzekkereler, tensip zabıtları ve gerekçeli kararlar bu uzantıyla indirilir.</p>
+<p>Biçim, belgenin bütünlüğünü ve üzerindeki elektronik imzayı koruyacak şekilde tasarlanmıştır. Bu iyi bir tasarım tercihi — ama pratikte şu anlama gelir: sistemin dışına çıkan belge, karşı taraf için okunamaz bir dosyadır. Müvekkilinize gönderdiğiniz UDF, onun bilgisayarında açılmaz.</p>
+<h2>Klasik yol: UYAP Doküman Editörü</h2>
+<p>Resmî yol, Adalet Bakanlığı'nın UYAP Doküman Editörü programını kurmaktır. Program ücretsizdir ve dosyayı açıp «PDF olarak kaydet» seçeneğiyle dönüştürmenize izin verir.</p>
+<p>İşe yarar, ama her duruma uymaz:</p>
+<ul><li>Kurulum gerektirir; çalışması için bilgisayarınızda Java bulunması gerekebilir.</li><li>Belgeyi göndereceğiniz kişinin de aynı programı kurmuş olması gerekir. Müvekkilinizden bunu beklemek çoğu zaman gerçekçi değildir.</li><li>Başka birinin bilgisayarındaysanız ya da telefondan bakıyorsanız kurulum yapamazsınız.</li></ul>
+<h2>Kurulumsuz yol: dosyayı PDF'ye çevirmek</h2>
+<p>UDF dosyası aslında içinde belgenin metnini ve biçimlendirmesini taşıyan bir arşivdir. Bu yapı çözülüp yeniden çizilebilir — yani dosya, program kurmadan doğrudan tarayıcıda PDF'ye dönüştürülebilir.</p>
+<p>PDF Platform'un UDF aracı tam olarak bunu yapar ve işlemi cihazınızda gerçekleştirir. Bu ayrıntı bu araçta önemlidir: adli evrak taraf isimleri, TC kimlik numaraları ve dava konusu gibi kişisel veriler taşır. Dosya sunucuya hiç gönderilmez.</p>
+<ol><li><strong>Dosyayı bırakın</strong> — UYAP'tan indirdiğiniz .udf dosyasını alana sürükleyin. Birden fazla dosyayı aynı anda da bırakabilirsiniz.</li><li><strong>«PDF'e çevir» deyin</strong> — Belge tarayıcınızda çözülür; yazı tipi, kalın ve altı çizili biçimler, hizalamalar, tablolar ve gömülü görseller korunur.</li><li><strong>İndirin ya da metni alın</strong> — PDF olarak indirin; dilerseniz belgenin düz metnini .txt olarak alıp doğrudan Word'e yapıştırın.</li></ol>
+<p><strong>UDF'yi PDF Yap</strong> — UYAP'tan inen .udf dosyasını program kurmadan, cihazınızda PDF'ye çevirin. <a href="https://www.pdfplatform.app/tools/udf-to-pdf">Aracı aç</a></p>
+<h2>Önemli: PDF kopyası imzalı asıl değildir</h2>
+<p>Bu ayrımın altını çizmek gerekiyor. UDF dosyasındaki elektronik imza, belgenin o dosyadaki hâline aittir. PDF'ye çevirdiğinizde elinizde belgenin okunabilir bir kopyası olur — imzanın kendisi taşınmaz.</p>
+<p>Yani: okumak, arşivlemek, müvekkile göndermek, avukat arkadaşınıza danışmak için PDF kopya tamamen uygundur. Resmî bir işlemde ibraz edecekseniz imzalı UDF aslını kullanmaya devam edin.</p>
+<h2>UDF ile sık karşılaşılan diğer sorunlar</h2>
+<ul><li>Dosya bozuk görünüyor: indirme yarıda kesilmiş olabilir. UYAP'tan yeniden indirin.</li><li>Dosya çok büyük ve yüklenmiyor: sebep genellikle belgeye yapıştırılmış görsellerdir; onları ayrı ek olarak yükleyin.</li><li>Telefonda açılmıyor: UYAP'ın mobil doküman editörü uygulaması var, ama PDF'ye çevirmek her cihazda çalışan daha pratik bir yoldur.</li><li>Karşı taraf açamıyor: ona UDF değil PDF gönderin. Kural olarak sistem dışına çıkan her belge PDF olmalıdır.</li></ul>
+<h2>Kararı Word'de düzenlemek isterseniz</h2>
+<p>Bir kararın ya da dilekçenin metnini kendi belgenize almak istiyorsanız iki yolunuz var. Hızlı yol: aracın verdiği .txt metnini kopyalayıp yapıştırmak. Biçimlendirmeyi de korumak istiyorsanız önce PDF'ye çevirip sonra PDF'i Word'e dönüştürün.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>UDF</category>
+      <category>Resmî Evrak</category>
+      <enclosure url="https://www.pdfplatform.app/covers/udf-dosyasi-nasil-acilir.png" type="image/png" length="55649" />
+      <media:content url="https://www.pdfplatform.app/covers/udf-dosyasi-nasil-acilir.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/udf-dosyasi-nasil-acilir.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/udf-dosyasi-nasil-acilir.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/udf-dosyasi-nasil-acilir.png" />
+    </item>
+    <item>
+      <title>e-Devlet Belgelerini Tek PDF&apos;te Birleştirme</title>
+      <link>https://www.pdfplatform.app/blog/edevlet-belgelerini-tek-pdf-yapma</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/blog/edevlet-belgelerini-tek-pdf-yapma</guid>
+      <pubDate>Tue, 22 Sep 2026 09:15:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/combine-government-documents-into-one-pdf" />
+      <description><![CDATA[Bir başvuru için e-Devlet'ten beş ayrı belge indirdiniz ve karşı taraf «hepsini tek PDF olarak gönderin» diyor. Bu işin bir inceliği var: barkodlu belgelerin doğrulanabilirliğini bozmamak.]]></description>
+      <content:encoded><![CDATA[<p>Kurum, başvuru için ikametgâh, nüfus kayıt örneği, adli sicil kaydı ve SGK hizmet dökümü istiyor; üstelik hepsini tek dosyada. e-Devlet bunların her birini ayrı PDF olarak veriyor. Birleştirmek kolay — ama barkodlu belgelerde dikkat edilmesi gereken bir nokta var.</p>
+<h2>Önce şunu bilin: barkod belgenin kimliğidir</h2>
+<p>e-Devlet'ten aldığınız belgelerin üzerinde bir barkod ya da karekod ile bir doğrulama kodu bulunur. Belgeyi alan kurum, bu kodu okutarak ya da e-Devlet'in doğrulama sayfasına girerek belgenin gerçekten sizin adınıza üretildiğini teyit eder.</p>
+<p>Bu yüzden belgeye yapacağınız her işlemde tek bir kural geçerlidir: barkod okunabilir kalmalı. Kırpma, aşırı sıkıştırma ya da düşük çözünürlükte yeniden tarama barkodu okunamaz hâle getirebilir ve belge geçersiz sayılır.</p>
+<blockquote><p>e-Devlet belgesini asla yazdırıp tekrar taramayın. Elinizdeki PDF zaten dijital ve nettir; yazdırıp taramak hem boyutu şişirir hem barkodun okunma ihtimalini düşürür. Orijinal PDF'i olduğu gibi kullanın.</p></blockquote>
+<h2>Adım adım: belgeleri tek dosyada toplama</h2>
+<ol><li><strong>Belgeleri e-Devlet'ten PDF olarak indirin</strong> — Ekran görüntüsü almayın, «PDF olarak indir» seçeneğini kullanın. Ekran görüntüsünde barkod çoğu zaman okunmaz.</li><li><strong>Hepsini birleştirme aracına ekleyin</strong> — Dosyaları tek seferde seçebilirsiniz. Birleştirme tarayıcınızda çalışır; belgeleriniz sunucuya yüklenmez.</li><li><strong>Sırayı kurumun istediği gibi düzenleyin</strong> — Listedeki dosyaları sürükleyerek sıralayın. Kurum bir sıra belirtmişse ona uyun; belirtmemişse en önemli belge başa gelsin.</li><li><strong>Birleştirip indirin</strong> — Tek PDF olarak iner. Açıp sayfaları hızlıca kontrol edin: hepsi var mı, sıra doğru mu?</li></ol>
+<p><strong>PDF Birleştir</strong> — e-Devlet belgelerini sıraya dizip tek dosyada toplayın — üyeliksiz, cihazınızda. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
+<h2>Dosya çok büyükse</h2>
+<p>e-Devlet belgeleri genelde küçüktür; toplamı nadiren birkaç megabaytı geçer. Dosyanız beklenmedik şekilde büyükse sebep neredeyse her zaman araya karışmış taranmış bir belgedir — diploma fotokopisi, kimlik taraması gibi.</p>
+<p>Bu durumda tüm dosyayı değil, yalnızca o taranmış belgeyi küçültün ve öyle birleştirin. Böylece e-Devlet çıktılarının netliğine hiç dokunmamış olursunuz.</p>
+<h2>Kişisel veri: paylaşmadan önce düşünün</h2>
+<p>Resmî belgelerin üzerinde TC kimlik numarası, adres ve doğum tarihi gibi bilgiler bulunur. Belgeyi resmî bir kuruma veriyorsanız bunlar zaten gereklidir ve gizlenmemelidir.</p>
+<p>Ama belge bir emlakçıya, bir işverene ya da bir internet sitesine gidiyorsa durum farklıdır. O zaman kurumun gerçekten ihtiyaç duymadığı alanları kapatmak makul bir korunmadır.</p>
+<blockquote><p>Gizleme işlemini üzerine siyah kutu çizerek yapmayın. PDF'te çizilen kutu yalnızca görüntüdür; altındaki yazı kopyalanabilir durumda kalır. Veriyi gerçekten kaldıran bir araç kullanın.</p></blockquote>
+<h2>Gönderirken son kontrol</h2>
+<ul><li>Tüm belgeler dosyanın içinde mi? Sayfa sayısını tek tek indirdiklerinizle karşılaştırın.</li><li>Barkodlar net görünüyor mu? Yakınlaştırıp bakın.</li><li>Belgelerin geçerlilik süresi dolmuş mu? Adli sicil ve ikametgâh gibi belgelerde kurumlar genellikle son tarihli olmasını ister.</li><li>Dosya adı anlaşılır mı? «basvuru-evraklari-ad-soyad.pdf» karşı tarafın işini kolaylaştırır.</li></ul>]]></content:encoded>
+      <category>e-Devlet</category>
+      <category>Resmî Evrak</category>
+      <category>Birleştirme</category>
+      <enclosure url="https://www.pdfplatform.app/covers/edevlet-belgelerini-tek-pdf-yapma.png" type="image/png" length="53049" />
+      <media:content url="https://www.pdfplatform.app/covers/edevlet-belgelerini-tek-pdf-yapma.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/covers/square/edevlet-belgelerini-tek-pdf-yapma.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/covers/tall/edevlet-belgelerini-tek-pdf-yapma.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/covers/edevlet-belgelerini-tek-pdf-yapma.png" />
+    </item>
     <item>
       <title>Sejda Alternatifi: Saatte 3 İşlem Sınırına Takılıyorsanız</title>
       <link>https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit</link>
@@ -758,383 +1120,6 @@
       <media:content url="https://www.pdfplatform.app/covers/square/excel-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/covers/tall/excel-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/covers/excel-pdf-cevirme.png" />
-    </item>
-    <item>
-      <title>PDF&apos;i JPG&apos;ye / Resme Çevirme: Her Sayfa Ayrı Görsel</title>
-      <link>https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme</guid>
-      <pubDate>Tue, 21 Jul 2026 17:58:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-pdf-to-jpg" />
-      <description><![CDATA[Bir PDF sayfasını görsel olarak paylaşmak, web'e koymak veya sunuma eklemek gerektiğinde en temiz yol onu JPG/PNG'ye çevirmektir. Nasıl yapılacağını ve JPG mi PNG mi seçeceğinizi anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>PDF'i her yere gömemezsiniz — ama bir görseli gömebilirsiniz. Bir sayfayı sosyal medyada paylaşmak, bir web sayfasına koymak ya da sunuma eklemek için PDF'i JPG veya PNG'ye çevirmek en pratik yoldur.</p>
-<h2>Ne zaman işe yarar?</h2>
-<ul><li>Sosyal medyada tek bir sayfayı görsel olarak paylaşmak.</li><li>Web sitesine veya blog yazısına önizleme koymak.</li><li>Sunuma (PowerPoint/Slides) bir sayfayı resim olarak eklemek.</li><li>PDF açamayan birine sayfayı hızlıca göstermek.</li></ul>
-<h2>Adım adım dönüştürme</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — PDF'den JPG'ye aracına belgenizi ekleyin.</li><li><strong>Sayfalar görsele dönüşsün</strong> — Her sayfa yüksek çözünürlüklü ayrı bir JPG/PNG olarak işlenir.</li><li><strong>İndirin</strong> — Görselleri tek tek ya da hepsini bir ZIP olarak indirin.</li></ol>
-<p><strong>PDF'den JPG'ye</strong> — PDF sayfalarını yüksek kaliteli görsellere çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-image">Aracı aç</a></p>
-<h2>JPG mi PNG mi?</h2>
-<p>JPG dosya boyutu küçüktür ve fotoğraf/yoğun içerikli sayfalar için idealdir. PNG ise keskin kenarları ve metni daha net korur, şeffaflık destekler — logo, diyagram veya çok metinli sayfalarda tercih edin.</p>
-<h2>Sayfayı resme çevirmek mi, içindeki görselleri çıkarmak mı?</h2>
-<p>Bu araç sayfanın TAMAMINI resme çevirir. Ama amacınız yalnızca PDF içindeki bir fotoğrafı veya logoyu özgün kalitesinde kaydetmekse, sayfayı resme çevirmek yerine gömülü görselleri doğrudan çıkarmalısınız — böylece kalite kaybı olmaz.</p>
-<p><strong>PDF'ten Görsel Çıkar</strong> — PDF içindeki gömülü fotoğraf ve logoları özgün formatında ayıklayın. <a href="https://www.pdfplatform.app/tools/extract-images">Aracı aç</a></p>
-<h2>Tersi: Görselleri PDF yapmak</h2>
-<p>Elinizde birden çok fotoğraf/görsel varsa ve bunları tek bir PDF'te toplamak istiyorsanız, bunun için ayrı bir aracımız var — üstelik tamamen cihazınızda çalışır.</p>
-<p><strong>Görselden PDF'e</strong> — Fotoğraflarınızı tek bir PDF'te toplayın — cihazınızda. <a href="https://www.pdfplatform.app/tools/image-to-pdf">Görsel → PDF</a></p>
-<h2>Çözünürlük seçimi neden önemli?</h2>
-<p>Bir PDF sayfasını görsele çevirmek, vektör bir belgeyi piksellere dönüştürmek demektir. Bu dönüşümde çözünürlük, sonucun kalitesini doğrudan belirler ve geri dönüşü yoktur: düşük çözünürlükte üretilmiş bir görseli sonradan netleştiremezsiniz. Kullanım amacına göre kabaca şu ölçüler işe yarar: ekranda paylaşım için orta, sunum ve web için yüksek, baskı için mümkün olan en yüksek.</p>
-<h2>Ekran görüntüsü neden yetmez?</h2>
-<p>Bir sayfayı paylaşmanın en hızlı yolu ekran görüntüsü almak gibi görünür, ama sonuç ekranınızın çözünürlüğüyle sınırlıdır ve genellikle bulanık çıkar. Üstelik çerçeve, kenar boşluğu ve görüntüleyici arayüzü de görüntüye karışır. PDF'i doğrudan görsele çevirmek, sayfanın kendi çözünürlüğünde temiz bir çıktı verir; kenarlar düzgün, yazılar keskin olur.</p>
-<h2>Sosyal medya ve web için pratik notlar</h2>
-<ul><li>Dikey bir A4 sayfası çoğu sosyal medya akışında kırpılır; paylaşacağınız bölümü önce kesit alarak ayırmak daha iyi görünür.</li><li>Web sayfasına koyacağınız görseli sıkıştırmak, sayfanın açılma süresini belirgin biçimde düşürür.</li><li>Metin ağırlıklı sayfalarda PNG, fotoğraf ağırlıklı sayfalarda JPG daha iyi sonuç verir.</li><li>Görsele çevrilen sayfadaki yazı artık metin değildir; arama motorları okuyamaz. Önemli metni sayfaya ayrıca yazın.</li></ul>
-<h2>Tüm sayfa mı, sayfanın bir bölümü mü?</h2>
-<p>Çoğu zaman ihtiyacınız sayfanın tamamı değil, üzerindeki bir tablo, grafik ya da paragraftır. Tüm sayfayı görsele çevirip sonra bir görsel düzenleyicide kırpmak yerine, doğrudan istediğiniz alanı kesit olarak almak hem daha hızlıdır hem de çözünürlüğü korur. Sunum ve rapor hazırlarken bu, en sık işe yarayan yöntemdir.</p>
-<h2>Görsele çevirmenin bir yan etkisi</h2>
-<p>Sayfa görsele döndüğünde metin katmanı kaybolur: artık kopyalanamaz, aranamaz ve ekran okuyucular tarafından okunamaz. Bu bazen istenen bir sonuçtur — belgenin metninin kolayca alınmasını istemiyorsanız. Ama erişilebilirlik gereken yerlerde ya da belgeyi arşivleyecekseniz, PDF'in kendisini saklamak gerekir; görsel yalnızca paylaşım kopyası olarak kullanılır.</p>]]></content:encoded>
-      <category>Dönüştürme</category>
-      <category>Görsel</category>
-      <category>JPG</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" type="image/png" length="54879" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-jpg-resme-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-jpg-resme-cevirme.png" />
-    </item>
-    <item>
-      <title>Dosya Yüklemeden PDF İşleme: Neden Daha Güvenli?</title>
-      <link>https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik</guid>
-      <pubDate>Tue, 21 Jul 2026 17:56:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/process-pdf-without-uploading" />
-      <description><![CDATA[Bir PDF'i birleştirmek için onu tanımadığınız bir sunucuya yüklemek zorunda mısınız? Hayır. Yapısal PDF işlemlerinin çoğu tamamen tarayıcınızda yapılabilir — dosyanız internete hiç gönderilmeden.]]></description>
-      <content:encoded><![CDATA[<p>Çoğu online PDF aracının çalışma şekli şu: dosyanızı sunucularına yükler, orada işler, sonucu geri verir. Ama sözleşme, kimlik, fatura gibi belgeler için bu, dosyanızın tanımadığınız bir sunucuda bir kopyasının oluşması demektir. Oysa yapısal PDF işlemlerinin çoğu için buna gerek yok.</p>
-<h2>"Cihazda işleme" ne demek?</h2>
-<p>Cihazda (client-side) işleme, tüm işin tarayıcınızın içinde yapılması demektir — dosya internete hiç gönderilmez. Bu üç şey demektir: gizlilik (dosya sizde kalır), hız (yükleme/indirme beklenmez, anında sonuç) ve çevrimdışı çalışabilme.</p>
-<h2>Tarayıcınızda çalışan araçlar</h2>
-<ul><li>Birleştir, Böl, Döndür, Sayfa Sil, Sayfaları Sırala — hepsi cihazınızda.</li><li>Görselden PDF, PDF'e imza atma ve yorumlama — cihazınızda.</li><li>Belge Tarayıcı — kamera görüntüsü de dahil, tamamen cihazınızda.</li></ul>
-<p><strong>Cihazda Birleştir</strong> — PDF'lerinizi sunucuya yüklemeden, tarayıcınızda birleştirin. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
-<h2>Peki her araç cihazda mı çalışır?</h2>
-<p>Dürüst olalım: hayır. Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler sunucuda yapılır (bunlar tarayıcıda pratik değildir). Yapay zekâ araçlarında ise dosyanız yüklenmez — metin cihazınızda çıkarılıp yalnızca metin işlenir. Yani hangi aracın nerede çalıştığı bellidir.</p>
-<blockquote><p>Gizliliğin en önemli olduğu belgelerde (kimlik, sözleşme, sağlık) cihazda çalışan yapısal araçları ve belge tarayıcıyı tercih edin; paylaşım öncesi gerekiyorsa hassas verileri gerçek redaction ile kaldırın.</p></blockquote>
-<p><strong>Hassas Veri Gizle</strong> — Paylaşmadan önce kişisel verileri kalıcı olarak kaldırın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Redaction aracı</a></p>
-<h2>Bir aracın gerçekten cihazda çalıştığını nasıl anlarsınız?</h2>
-<p>Gizlilik iddiası, sınanabilir olduğunda anlamlıdır. Bir aracın dosyanızı yükleyip yüklemediğini anlamanın en basit yolu, işlemi internet bağlantısı kesikken denemektir. İşlem tamamlanıyorsa dosya cihazınızdan çıkmamıştır; çünkü sunucuya gidecek bir şey yoktur. Otuz saniye süren bu sınama, her sitenin gizlilik metnini okumaktan daha kesin bir sonuç verir.</p>
-<h2>«Dosyalar 1 saat sonra siliniyor» ne anlama gelir?</h2>
-<p>Çoğu çevrimiçi aracın gizlilik vaadi budur ve dürüst bir vaattir; ancak dikkat edilecek yeri kaçırır. Dosya silinene kadar sunucuda durmuştur, aktarım sırasında ağdan geçmiştir ve o süre boyunca sisteme erişimi olan taraflarca görülebilir durumdadır. Cihazda çalışan bir araçta ise silinecek bir kopya hiç oluşmaz. Fark, silme politikasının kalitesinde değil, dosyanın hiç gitmemesindedir.</p>
-<h2>Hangi işler neden sunucu ister?</h2>
-<p>Her aracın cihazda çalışamaması bir tercih değil, işin doğası gereğidir. Sayfaları yeniden düzenlemek, birleştirmek, döndürmek ya da silmek belgenin yapısını değiştirir; bu, tarayıcının rahatlıkla yapabileceği bir iştir. Buna karşılık Word'e dönüştürme, OCR, sıkıştırma ve yapay zekâ işlemleri ciddi hesaplama gücü ve büyük bileşenler gerektirir; bunları her ziyaretçinin tarayıcısına indirmek ne hızlı ne de gerçekçidir.</p>
-<h2>Kendi belgeleriniz için pratik bir ayrım</h2>
-<ul><li>Kimlik, sağlık, mali ve hukuki belgeler: mümkün olan her işlemi cihazda yapın.</li><li>Kişisel veri içeren belgeleri sunucuda işlemeniz gerekiyorsa, önce gereksiz kısımları kaldırın.</li><li>Kurum içi ya da halka açık belgelerde bu ayrımın pratik önemi azdır.</li><li>Şüphedeyseniz, belgenin dışarı çıkması hâlinde sizi rahatsız edip etmeyeceğini sorun — cevap hayırsa sunucu işlemi sorun değildir.</li></ul>
-<h2>Gizliliğin tek başına yetmediği yer</h2>
-<p>Dosyanın yüklenmemesi, belgenin güvende olduğu anlamına gelmez. İşlem bittikten sonra belge sizin cihazınızda durur; paylaşılan bir bilgisayarda indirilenler klasöründe kalan bir belge, sunucudan daha büyük bir risktir. Hassas belgelerle çalıştıktan sonra ara kopyaları silmek ve belgeyi paylaşmadan önce üstverisini temizlemek, cihazda işlemenin tamamlayıcısıdır.</p>]]></content:encoded>
-      <category>Gizlilik</category>
-      <category>Cihazda İşleme</category>
-      <category>PDF Araçları</category>
-      <enclosure url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" type="image/png" length="55445" />
-      <media:content url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/dosya-yuklemeden-pdf-isleme-gizlilik.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/dosya-yuklemeden-pdf-isleme-gizlilik.png" />
-    </item>
-    <item>
-      <title>Açılmayan / Bozuk PDF&apos;i Onarma: İçeriği Kurtarma Yolları</title>
-      <link>https://www.pdfplatform.app/blog/bozuk-pdf-onarma</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/bozuk-pdf-onarma</guid>
-      <pubDate>Tue, 21 Jul 2026 17:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/repair-a-corrupt-pdf" />
-      <description><![CDATA["PDF açılamıyor" ya da "dosya bozuk" hatası, önemli bir belgede can sıkıcıdır. PDF'in neden bozulduğunu ve yapıyı yeniden paketleyerek kurtarılabilen içeriği nasıl geri alacağınızı anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Önemli bir PDF'i açmaya çalışırken "dosya hasarlı" veya "açılamıyor" hatasıyla karşılaşmak sinir bozucudur. İyi haber: çoğu bozuk PDF'te içerik hâlâ oradadır, sadece dosyanın yapısı zarar görmüştür — ve bu genelde onarılabilir.</p>
-<h2>PDF neden bozulur?</h2>
-<ul><li>Yarım kalan indirme veya aktarım (bağlantı koptu).</li><li>USB/disk hatası ya da dosyanın eksik kaydedilmesi.</li><li>Uyumsuz bir programla düzenleme veya hatalı dışa aktarma.</li><li>E-posta/eklenti sıkıştırmasının dosyayı bozması.</li></ul>
-<h2>Onarmayı deneyin — adım adım</h2>
-<ol><li><strong>Bozuk PDF'i yükleyin</strong> — PDF Onarma aracına açılmayan dosyanızı ekleyin.</li><li><strong>Onarım çalışsın</strong> — Araç dosyanın yapısını yeniden paketleyip kurtarılabilen içeriği toplar.</li><li><strong>Sonucu indirin</strong> — Onarılmış PDF'i indirip açmayı deneyin. İçerik büyük ölçüde geri gelebilir.</li></ol>
-<p><strong>PDF Onar</strong> — Açılmayan PDF'inizi onarıp içeriği kurtarmayı deneyin. <a href="https://www.pdfplatform.app/tools/repair-pdf">Aracı aç</a></p>
-<h2>Ne beklemeli?</h2>
-<p>Onarım her zaman %100 garanti değildir — hasarın derecesine bağlıdır. Yapısı bozulmuş ama içeriği duran dosyalarda başarı yüksektir; tamamen silinmiş/şifreli veriyi geri getiremez. Yine de denemek çoğu zaman belgeyi kurtarır.</p>
-<blockquote><p>Onarımdan sonra dosya çok büyük geldiyse, sıkıştırma aracıyla boyutu düşürebilir; taranmış ve metni gitmişse OCR ile yeniden metin katmanı ekleyebilirsiniz.</p></blockquote>
-<h2>Önce dosyanın gerçekten bozuk olduğundan emin olun</h2>
-<p>Açılmayan her PDF bozuk değildir. Onarmaya geçmeden önce birkaç dakikalık kontrol, çoğu durumda sorunu çözer ya da en azından gerçek nedeni gösterir.</p>
-<ul><li>Dosyayı farklı bir programda açmayı deneyin: tarayıcıda açılan bir belge, eski bir masaüstü okuyucuda açılmayabilir.</li><li>Dosya boyutuna bakın: birkaç kilobayt görünüyorsa indirme yarım kalmıştır; yeniden indirmek onarımdan hızlıdır.</li><li>Uzantıyı kontrol edin: bazı sistemlerde dosya aslında .zip ya da .docx olabilir.</li><li>Parola isteniyorsa dosya bozuk değil, şifrelidir; farklı bir işlem gerekir.</li><li>Dosya bir bulut klasöründeyse tam olarak eşitlenip eşitlenmediğine bakın.</li></ul>
-<h2>Onarım gerçekte ne yapar?</h2>
-<p>Bir PDF'in sonunda, hangi nesnenin dosyanın neresinde olduğunu gösteren bir dizin bulunur. Bu dizin bozulduğunda okuyucu belgeyi açamaz, oysa sayfaların içeriği dosyada durmaya devam eder. Onarım, dosyayı baştan sona tarayıp bulabildiği nesneleri toplar ve yeni bir dizinle yeniden paketler. Bu yüzden yapısal hasarda başarı yüksek, içerik gerçekten silinmişse düşüktür.</p>
-<h2>Onarılan belgede kontrol edilecekler</h2>
-<ul><li>Sayfa sayısı: eksik sayfa var mı?</li><li>Metin seçilebiliyor mu, yoksa sayfalar görüntüye mi dönmüş?</li><li>Görseller yerinde mi, boş kutu olarak mı geliyor?</li><li>Yer imleri ve bağlantılar çalışıyor mu?</li><li>Son sayfa ve imza bölümü eksiksiz mi?</li></ul>
-<h2>Kurtarılan belgeyi kullanılabilir hâle getirmek</h2>
-<p>Onarım bazen metin katmanını kaybettirir ve sayfalar görüntüye dönüşür. Böyle bir belgede arama yapabilmek için OCR ile yeniden metin katmanı eklemek gerekir. Dosya beklenenden büyük geldiyse sıkıştırmak, bazı sayfalar boş ya da bozuk kaldıysa onları silmek belgeyi toparlar. Kurtarılan sürümü ayrı bir adla saklayın; bozuk asıl dosyayı hemen silmeyin, ileride başka bir yöntem denemek gerekebilir.</p>
-<h2>Bir daha yaşamamak için</h2>
-<p>Bozulmaların önemli bir kısmı aktarım sırasında olur. Büyük dosyaları indirirken bağlantının kesilmediğinden emin olmak, USB belleği çıkarmadan önce güvenli kaldırmayı beklemek ve önemli belgeleri tek kopya hâlinde taşınabilir bir bellekte bırakmamak, bu sorunu büyük ölçüde ortadan kaldırır. Kritik belgelerin iki ayrı yerde durması, en basit ve en etkili önlemdir.</p>]]></content:encoded>
-      <category>Sorun Giderme</category>
-      <category>PDF</category>
-      <category>Onarma</category>
-      <enclosure url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" type="image/png" length="55918" />
-      <media:content url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/bozuk-pdf-onarma.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/bozuk-pdf-onarma.png" />
-    </item>
-    <item>
-      <title>PDF&apos;i Excel&apos;e Çevirme: Tabloları .xlsx&apos;e Aktarma (2026)</title>
-      <link>https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme</guid>
-      <pubDate>Tue, 21 Jul 2026 16:59:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-pdf-to-excel" />
-      <description><![CDATA[PDF'teki bir tabloyu Excel'de düzenlemek istiyorsanız, kopyala-yapıştır çoğu zaman hizalamayı bozar. Tabloları temiz şekilde .xlsx'e aktarmanın yolunu ve ne zaman AI'nın daha iyi olduğunu anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>PDF'teki bir raporu, fiyat listesini ya da tabloyu Excel'de analiz etmek için önce veriyi hücrelere düzgün taşımanız gerekir. Kopyala-yapıştır genelde her şeyi tek sütuna yığar. İşte tabloları temizce Excel'e aktarmanın yolu.</p>
-<h2>Adım adım dönüştürme</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — PDF'den Excel'e aracına tablo içeren belgenizi ekleyin.</li><li><strong>Tablolar çıkarılsın</strong> — Sayfalardaki tablo yapısı algılanıp satır/sütunlar korunarak .xlsx'e dökülür.</li><li><strong>Excel dosyasını indirin</strong> — Sonucu indirin ve Excel'de doğrudan düzenleyin, filtreleyin, hesaplayın.</li></ol>
-<p><strong>PDF'den Excel'e</strong> — PDF tablolarını düzenlenebilir Excel dosyasına aktarın. <a href="https://www.pdfplatform.app/tools/pdf-to-excel">Aracı aç</a></p>
-<h2>Düz dönüştürme mi, yapay zekâ mı?</h2>
-<p>PDF'te net, ızgara şeklinde tablolar varsa düz dönüştürme hızlı ve yeterlidir. Ancak fatura, irsaliye gibi her biri farklı düzende olan belgelerden alan çıkarmak istiyorsanız — fatura no, tarih, tutar, kalemler gibi — yapay zekâ ile veri çıkarma çok daha isabetlidir.</p>
-<blockquote><p>Onlarca faturayı tek bir CSV tablosunda toplamak istiyorsanız, AI Veri Çıkar ve AI Toplu İşlem araçları bu iş için tasarlandı — her satır bir belge olacak şekilde birleştirir.</p></blockquote>
-<p><strong>AI Veri Çıkar</strong> — Faturalar gibi karmaşık belgelerden alanları yapay zekâ ile çıkarın. <a href="https://www.pdfplatform.app/tools/pdf-veri-cikar">AI ile çıkar</a></p>
-<h2>Tablo neden bazen bozuk çıkar?</h2>
-<p>PDF'te tablo diye bir nesne yoktur. Gördüğünüz ızgara, çizgilerle ve hizalanmış metin parçalarıyla oluşturulmuş bir görüntüdür; arkada satır-sütun ilişkisi bulunmaz. Dönüştürme aracı bu ilişkiyi konumlardan tahmin eder. Tahminin zorlaştığı durumlar bellidir ve önceden bilmek beklentiyi doğru kurar.</p>
-<ul><li>Çizgisiz tablolar: sütunlar yalnızca boşlukla ayrılmışsa sınır belirsizleşir.</li><li>Birleştirilmiş hücreler: bir başlığın iki sütunu kapsaması hizayı bozar.</li><li>Satıra sığmayıp alta taşan uzun metinler tek satır mı iki satır mı belli olmaz.</li><li>Sayfa boyunca devam eden tablolarda başlık satırının tekrarı yeni bir tablo sanılabilir.</li><li>Taranmış belgeler: önce OCR gerekir, aksi hâlde hücreler boş gelir.</li></ul>
-<h2>Excel'de açtıktan sonra ilk düzeltmeler</h2>
-<p>Çıktı üzerinde birkaç standart düzeltme, tabloyu kullanılabilir hâle getirir. Bunları alışkanlık hâline getirmek, her seferinde sıfırdan uğraşmayı önler: sayı olarak gelmeyen sütunları biçimlendirin, binlik ayracından ötürü metne dönüşen tutarları sayıya çevirin, tarih sütununun biçimini kontrol edin, tekrar eden başlık satırlarını silin ve boş sütunları kaldırın.</p>
-<h2>Ne zaman veri çıkarma daha doğru?</h2>
-<p>Düz dönüştürme, belgedeki tabloyu olduğu gibi taşımaya çalışır. Oysa çoğu zaman istediğiniz şey tablo değil, belirli alanlardır: faturadaki tutar, tarih ve satıcı adı gibi. Her belgenin düzeni farklıysa tabloyu taşımak işe yaramaz; alanları adıyla çıkarmak gerekir. Ölçüt basittir: belgeler aynı şablondaysa ve düzgün ızgara varsa dönüştürme, belgeler birbirinden farklıysa ve belirli alanlar arıyorsanız veri çıkarma.</p>
-<h2>Büyük tablolarda pratik yol</h2>
-<p>Yüz sayfalık bir raporun yalnızca on beşinci sayfasındaki tabloya ihtiyacınız varsa, belgenin tamamını dönüştürmek gereksiz iş ve gereksiz bekleme demektir. Bölme aracıyla ilgili sayfa aralığını ayırıp yalnızca onu dönüştürmek hem hızlı hem daha temiz sonuç verir; ayıklanacak gereksiz satır kalmaz.</p>
-<h2>Sonucu kontrol etmenin hızlı yolu</h2>
-<p>Satır satır okumak yerine toplamlarla kontrol edin: tutar sütununun toplamı belgedeki genel toplamla uyuşuyor mu, satır sayısı belgedeki kalem sayısıyla aynı mı, boş hücre var mı? Bu üç kontrol, hataların büyük kısmını birkaç saniyede yakalar.</p>]]></content:encoded>
-      <category>Dönüştürme</category>
-      <category>Excel</category>
-      <category>Tablo</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" type="image/png" length="55693" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-excel-tablo-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-excel-tablo-cevirme.png" />
-    </item>
-    <item>
-      <title>Telefonda PDF İşlemleri: Uygulama Yüklemeden (2026)</title>
-      <link>https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz</guid>
-      <pubDate>Tue, 21 Jul 2026 12:37:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/pdf-tools-on-your-phone-no-app" />
-      <description><![CDATA[PDF işlemek için telefonuna bir sürü uygulama yüklemene gerek yok. Birleştirme, sayfa silme, döndürme ve belge tarama gibi işler doğrudan telefon tarayıcında, dosyan cihazından çıkmadan yapılabilir.]]></description>
-      <content:encoded><![CDATA[<p>Telefonda hızlıca iki PDF'i birleştirmek ya da bir belge taramak gerektiğinde, uygulama mağazasına gidip yer kaplayan, reklamlı bir uygulama indirmek zorunda değilsin. Bu işlerin çoğu doğrudan telefon tarayıcında, cihazında çalışır.</p>
-<h2>Telefonda tarayıcıda çalışan işlemler</h2>
-<ul><li>PDF birleştirme ve sayfalara ayırma</li><li>Sayfa silme, döndürme, yeniden sıralama</li><li>Görsellerden (fotoğraf) PDF oluşturma</li><li>Kamerayla belge tarama (kenar bulma + perspektif düzeltme)</li></ul>
-<h2>Neden uygulama yüklemeden daha iyi?</h2>
-<p>Uygulama kurmak yer kaplar, güncelleme ister ve çoğu ücretsiz uygulama işlevleri kilitler ya da çıktıya zorunlu filigran ekler. Tarayıcıda ise link açılır, iş biter. Üstelik bu yapısal işlemler cihazında çalıştığı için dosyan internete gönderilmez — hız ve gizlilik bir arada.</p>
-<p><strong>Telefonda Birleştir</strong> — İki PDF'i telefonunda, uygulama yüklemeden birleştir. <a href="https://www.pdfplatform.app/tools/merge-pdf">Aracı aç</a></p>
-<h2>Belgeyi telefonla tarama</h2>
-<p>Belge Tarayıcı, telefon kameranı kullanarak belgenin köşelerini otomatik bulur, perspektifi düzeltir ve temiz bir PDF üretir — tamamen cihazında. Kimlik, sözleşme veya fatura gibi belgeleri buluta göndermeden dijitalleştirebilirsin.</p>
-<p><strong>Belge Tara</strong> — Telefon kameranla belgeyi tarayıp PDF yap — cihazında, gizli. <a href="https://www.pdfplatform.app/tools/belge-tara">Tarayıcıyı aç</a></p>
-<h2>Peki ağır işler?</h2>
-<p>Word/Excel'e dönüştürme, OCR ve sıkıştırma gibi ağır işler telefonda pratik olmadığı için sunucuda yapılır; telefonda da çalışırlar, sadece dosya yüklenir. Yapısal işlemler ise (birleştir, tara vb.) tamamen cihazında kalır.</p>
-<h2>Neden telefona bir PDF uygulaması kurmak istemezsiniz?</h2>
-<p>Mağazalardaki ücretsiz PDF uygulamalarının çoğu ücretsiz değildir; bedeli parayla değil başka şeylerle ödersiniz. Tipik karşılaşılan durumlar bellidir: çıktıya filigran basılması, günlük işlem sınırı, belgelerinizin uygulamanın bulut hesabına yüklenmesi, gereğinden geniş izinler ve abonelik ekranıyla karşılaşmak. Yılda birkaç kez PDF birleştirmek için bunların hiçbirini üstlenmek gerekmez.</p>
-<h2>Telefonda dosyalara ulaşmak</h2>
-<p>Telefonda en çok takılınan yer işlemin kendisi değil, dosyayı bulmaktır. E-postayla gelen bir eki önce telefona kaydetmek gerekir; WhatsApp'tan gelen belgeler ayrı bir klasöre iner. Dosya seçme ekranı açıldığında hem cihaz belleğine hem de bulut hesaplarınıza ulaşabilirsiniz. İşlem bittiğinde sonuç indirilenler klasörüne düşer; oradan paylaşmak bir dokunuş uzaktadır.</p>
-<h2>Telefonda sık yapılan işler</h2>
-<ul><li>Fotoğrafladığınız evrakları tek PDF hâline getirmek — en sık ihtiyaç budur.</li><li>Birden çok PDF'i birleştirip tek dosya olarak göndermek.</li><li>Gereksiz sayfaları silmek ve yan duran sayfaları düzeltmek.</li><li>Belgeyi e-postaya sığacak kadar küçültmek.</li><li>Bir forma imza atıp geri göndermek.</li></ul>
-<h2>Telefonla belge çekerken</h2>
-<p>Telefonla çekilen evrakın kabul edilip edilmemesi, çoğu zaman çekim anında belli olur. Belgeyi düz bir zemine koyun, ışığı karşıdan alın, dört kenarın da kadraja girdiğinden emin olun ve telefonu sayfaya paralel tutun. Gölge ve eğiklik varsa doğrudan PDF yapmak yerine belge tarama akışını kullanmak çok daha temiz bir sonuç verir; kenarlar bulunur ve perspektif düzeltilir.</p>
-<h2>Telefonun sınırları</h2>
-<p>Tarayıcıda çalışan işlemler telefonun belleğini kullanır. Birkaç yüz sayfalık taranmış bir belgeyi telefonda işlemek yavaşlayabilir ya da sekmeyi yeniden başlatabilir. Böyle dosyalarda belgeyi parçalara ayırmak ya da işi bilgisayara bırakmak daha pratiktir. Günlük belgelerde ise telefon fazlasıyla yeterlidir.</p>]]></content:encoded>
-      <category>Mobil</category>
-      <category>Cihazda İşleme</category>
-      <category>PDF Araçları</category>
-      <enclosure url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" type="image/png" length="55540" />
-      <media:content url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/telefonda-pdf-islemleri-uygulamasiz.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/telefonda-pdf-islemleri-uygulamasiz.png" />
-    </item>
-    <item>
-      <title>PowerPoint&apos;i PDF&apos;e Çevirme (ve PDF&apos;i PowerPoint&apos;e)</title>
-      <link>https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme</guid>
-      <pubDate>Tue, 21 Jul 2026 11:44:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/convert-powerpoint-to-pdf" />
-      <description><![CDATA[Sunumu PDF olarak paylaşmak, slaytların herkeste aynı görünmesini ve yanlışlıkla değişmemesini sağlar. PowerPoint'i PDF'e — ve gerektiğinde tersini — nasıl yapacağınızı anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir sunumu PowerPoint dosyası olarak göndermek riskli olabilir: karşı tarafta yazı tipleri kayabilir, animasyonlar bozulabilir ya da slaytlar yanlışlıkla değiştirilebilir. PDF, sunumu herkeste birebir aynı ve değiştirilemez hâle getirir.</p>
-<h2>PowerPoint'i PDF'e çevirme</h2>
-<ol><li><strong>Sunumu yükleyin</strong> — PowerPoint'ten PDF'e aracına .ppt veya .pptx dosyanızı ekleyin.</li><li><strong>Dönüştürün</strong> — Tüm slaytlar tasarımı korunarak tek bir PDF'te toplanır.</li><li><strong>İndirin</strong> — PDF'i indirin — her cihazda aynı görünen, paylaşıma hazır sunum.</li></ol>
-<p><strong>PowerPoint'ten PDF'e</strong> — Sunumunuzu tasarımı bozulmadan tek PDF'e çevirin. <a href="https://www.pdfplatform.app/tools/ppt-to-pdf">Aracı aç</a></p>
-<h2>PDF'i tekrar PowerPoint'e çevirme</h2>
-<p>Elinizde yalnızca PDF hâli olan bir sunumu düzenlemek isterseniz, PDF'i tekrar PowerPoint slaytlarına dönüştürebilirsiniz — her sayfa bir slayt olur ve içeriği yeniden kullanabilirsiniz.</p>
-<p><strong>PDF'den PowerPoint'e</strong> — PDF sunumunu düzenlenebilir .pptx slaytlarına çevirin. <a href="https://www.pdfplatform.app/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
-<h2>Hangisini ne zaman kullanmalı?</h2>
-<ul><li>Paylaşmak / sunmak / arşivlemek için: PowerPoint → PDF.</li><li>Eski bir sunumu düzenlemek / içeriği yeniden kullanmak için: PDF → PowerPoint.</li></ul>
-<h2>Dönüştürmede neler korunur, neler kaybolur?</h2>
-<p>PDF sabit bir çıktı biçimidir; slaytların görünümünü korur ama etkileşimli olan her şeyi düzleştirir. Beklentiyi baştan bilmek, sunumu gönderdikten sonraki sürprizleri önler.</p>
-<ul><li>Korunur: yerleşim, renkler, yazı tipleri, görseller, tablolar ve grafiklerin görünümü.</li><li>Korunur: slayt sırası ve sayfa oranı (16:9 ya da 4:3).</li><li>Kaybolur: geçişler ve animasyonlar — animasyonlu bir slayt, animasyonun son hâliyle tek sayfa olur.</li><li>Kaybolur: gömülü video ve ses; yerinde yalnızca kapak görüntüsü kalır.</li><li>Değişir: konuşmacı notları varsayılan olarak çıktıya girmez.</li></ul>
-<h2>Yazı tipi neden kayar, PDF bunu nasıl çözer?</h2>
-<p>PowerPoint dosyası yazı tipini çoğu zaman içine gömmez; sadece adını yazar. Karşı tarafta o yazı tipi yoksa program benzerini koyar ve satırlar kayar, kutular taşar. PDF'te ise kullanılan yazı tipleri belgenin içine gömülür; dosya kimde açılırsa açılsın aynı görünür. Sunumu bilmediğiniz bir bilgisayarda açacaksanız, PDF kopyayı da yanınızda bulundurmak en güvenli yoldur.</p>
-<h2>Baskı ve dağıtım için pratik ayarlar</h2>
-<p>Sunum çıktısını dinleyiciye dağıtacaksanız, her slaydı ayrı sayfaya basmak çoğu zaman gereksiz kâğıt harcar. PDF'e çevirdikten sonra sayfa düzeni aracıyla tek kâğıda 2 ya da 4 slayt yerleştirebilirsiniz; hem okunaklı kalır hem baskı maliyeti düşer. Uzun sunumlarda bu, on sayfalık bir çıktıyı üç sayfaya indirir.</p>
-<h2>PDF'ten PowerPoint'e dönüşte gerçekçi beklenti</h2>
-<p>Ters yöndeki dönüşüm, sunumun özgün hâlini geri getirmez; PDF'in içinde slaytların düzenlenebilir yapısı yoktur. Her sayfa bir slayda dönüşür ve metin kutuları yeniden oluşturulur. Metni yeniden kullanmak, başlıkları kopyalamak ya da eski bir sunumu güncellemek için yeterlidir; ama özgün tasarımı birebir düzenlemeyi bekliyorsanız, mümkünse kaynak dosyayı bulmak daha az iş çıkarır.</p>
-<h2>Göndermeden önceki son kontrol</h2>
-<ul><li>Animasyonla ortaya çıkan içerik doğru hâliyle görünüyor mu?</li><li>Grafik ve tablolardaki küçük yazılar okunuyor mu?</li><li>Gizli slaytlar çıktıya girmiş mi — girmesini istiyor musunuz?</li><li>Dosya boyutu paylaşacağınız kanala sığıyor mu?</li></ul>]]></content:encoded>
-      <category>Dönüştürme</category>
-      <category>PowerPoint</category>
-      <category>Sunum</category>
-      <enclosure url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" type="image/png" length="55691" />
-      <media:content url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/powerpoint-pdf-cevirme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/powerpoint-pdf-cevirme.png" />
-    </item>
-    <item>
-      <title>İki PDF&apos;i Karşılaştırma: Aradaki Farkı Bulma</title>
-      <link>https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma</guid>
-      <pubDate>Tue, 21 Jul 2026 11:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/compare-two-pdfs" />
-      <description><![CDATA[Bir sözleşmenin iki sürümünü satır satır karşılaştırmak yorucu ve risklidir; küçük bir değişiklik gözden kaçabilir. Yapay zekâ ile iki PDF arasındaki bağlayıcı farkları saniyeler içinde nasıl bulacağınızı anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>"Bu, geçen hafta gönderdikleri sürümün aynısı mı, yoksa bir madde mi değişti?" — sözleşmelerde en riskli sorulardan biri. İki PDF'i elle karşılaştırmak hem yorucu hem de tehlikeli: değişen tek bir tarih ya da tutar gözden kaçabilir. Yapay zekâ bu işi saniyelere indirir.</p>
-<h2>Elle karşılaştırmanın riski</h2>
-<p>İki uzun belgeyi yan yana okumak dikkat ister; sayfalarca metinde eklenen bir cümleyi, silinen bir istisnayı ya da değişen bir rakamı kaçırmak kolaydır. Üstelik biçim farkları (yeniden numaralanmış maddeler, kayan paragraflar) gerçek içerik değişikliğini gizleyebilir.</p>
-<h2>Yapay zekâ ile karşılaştırma — adım adım</h2>
-<ol><li><strong>İki sürümü yükleyin</strong> — A (eski) ve B (yeni) belgelerini PDF Karşılaştırma aracına ekleyin.</li><li><strong>Karşılaştırın</strong> — Yapay zekâ metni anlar ve eklenen, çıkarılan, değiştirilen maddeleri ayıklar.</li><li><strong>Farkları inceleyin</strong> — Özellikle bağlayıcı değişiklikleri görün: tutar, tarih, süre, taraf, yükümlülük ve ceza maddeleri.</li></ol>
-<p><strong>PDF Karşılaştır</strong> — Bir sözleşmenin iki sürümünü karşılaştırın — bağlayıcı farkları saniyeler içinde görün. <a href="https://www.pdfplatform.app/tools/pdf-karsilastir">Aracı aç</a></p>
-<h2>Ne zaman çok işe yarar?</h2>
-<ul><li>Sözleşme revizyonlarını onaylamadan önce kontrol etmek.</li><li>İhale/şartname güncellemelerinde neyin değiştiğini görmek.</li><li>Karşı tarafın gönderdiği 'küçük düzeltme'lerin gerçekte ne içerdiğini anlamak.</li></ul>
-<blockquote><p>Bir sözleşmeyi imzalamadan önce yalnızca farkı değil, tamamını da anlamak isterseniz; PDF Özetle ve PDF ile Sohbet araçlarıyla belgeye soru sorabilirsiniz.</p></blockquote>
-<p><strong>PDF ile Sohbet</strong> — Belgeye "ceza maddesi nedir?" gibi sorular sorup net cevaplar alın. <a href="https://www.pdfplatform.app/tools/pdf-sohbet">Sohbet aracı</a></p>
-<h2>Hangi değişiklikler gerçekten önemli?</h2>
-<p>İki sürüm arasında onlarca fark çıkabilir, ama bunların çoğu biçimseldir: bir virgül, yeniden numaralanmış bir madde, kayan bir paragraf. Riskin toplandığı yer bellidir ve önce oraya bakmak gerekir.</p>
-<ul><li>Tutarlar: rakam, para birimi ve KDV ifadeleri.</li><li>Tarihler ve süreler: teslim, ödeme, bildirim ve fesih süreleri.</li><li>Sorumluluk: üst sınır, tazminat ve cezai şart maddeleri.</li><li>Taraflar: unvan değişikliği ya da yeni bir tarafın eklenmesi.</li><li>Olumsuz ifadeler: «hariç», «dâhil değildir», «sınırlıdır» — tek kelimelik eklemeler kapsamı tamamen değiştirir.</li><li>Uygulanacak hukuk ve yetkili mahkeme.</li></ul>
-<h2>Sessiz değişiklik nasıl olur?</h2>
-<p>Müzakerede en sık karşılaşılan durum, karşı tarafın «yalnızca küçük düzeltmeler yaptık» diyerek yeni bir dosya göndermesidir. Çoğu zaman bu doğrudur; ama aynı e-postada, üzerinde durulmamış bir maddedeki tek kelimelik bir değişiklik de gelebilir. Bunu yakalamanın tek güvenilir yolu iki sürümü karşılaştırmaktır; hafızaya ya da iyi niyete güvenmek yeterli değildir.</p>
-<h2>Karşılaştırma öncesi hazırlık</h2>
-<p>Sonucun anlaşılır olması, girdilerin karşılaştırılabilir olmasına bağlıdır. Belgelerin aynı bölümlerini karşılaştırdığınızdan emin olun: bir sürümde ekler varken diğerinde yoksa, farkların çoğu bu eklerden gelir ve asıl değişiklikler kaybolur. Böyle durumlarda ekleri ayırıp ana metinleri karşılaştırmak çok daha okunur bir sonuç verir. Taranmış sürümlerde ise önce metnin çıkarılması gerekir.</p>
-<h2>Sonucu kayıt altına almak</h2>
-<p>Müzakere birkaç tura yayıldığında hangi turda neyin değiştiği kolayca unutulur. Her karşılaştırmanın sonucunu tarihiyle birlikte saklamak, sonradan «bu madde ne zaman böyle oldu?» sorusuna dakikalar içinde yanıt verir. Sürümleri ve karşılaştırma çıktılarını tek bir belgede birleştirip sayfa numarası eklemek, bu arşivi düzenli tutmanın pratik yoludur.</p>
-<h2>Karşılaştırmanın yetmediği yer</h2>
-<p>Karşılaştırma neyin değiştiğini gösterir; o değişikliğin sizin için ne anlama geldiğini söylemez. Bir sorumluluk maddesindeki üst sınırın yükselmesi teknik olarak küçük bir fark, ticari olarak büyük bir risk olabilir. Bu yüzden karşılaştırma, hukuki değerlendirmenin yerine geçmez; değerlendirilecek yerleri gösterir ve avukatınızın zamanını doğru maddelere ayırmanızı sağlar.</p>]]></content:encoded>
-      <category>Yapay Zekâ</category>
-      <category>Karşılaştırma</category>
-      <category>Sözleşme</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" type="image/png" length="53687" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-karsilastirma-farklari-bulma.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-karsilastirma-farklari-bulma.png" />
-    </item>
-    <item>
-      <title>PDF&apos;te Hassas Veri Gizleme (Redaction): KVKK Uyumlu Paylaşım</title>
-      <link>https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk</guid>
-      <pubDate>Tue, 21 Jul 2026 09:31:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/redact-sensitive-data-in-a-pdf" />
-      <description><![CDATA[Bir belgeyi paylaşmadan önce içindeki TC kimlik, IBAN veya adres gibi kişisel verileri gizlemek çoğu zaman yasal bir zorunluluktur. Ama siyah kutu koymak yetmez — veri altta durmaya devam eder. Gerçek redaction'ı anlatıyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Bir sözleşmeyi, faturayı ya da resmî belgeyi paylaşmadan önce içindeki kişisel verileri (TC kimlik, IBAN, telefon, adres) gizlemeniz gerekir — bu çoğu zaman KVKK açısından bir zorunluluktur. Ama dikkat: metnin üzerine siyah kutu koymak GERÇEK bir gizleme değildir.</p>
-<h2>Neden "siyah kutu" güvenli değil?</h2>
-<p>Çoğu araçta hassas veriyi "gizlemek" için üzerine siyah bir dikdörtgen çizersiniz. Ancak orijinal yazı belgenin içinde durmaya devam eder: PDF'i bir metin düzenleyicide açan, kutuyu kaldıran ya da metni kopyalayan biri veriyi geri okuyabilir. Bu, sızıntı ve KVKK ihlali riski demektir.</p>
-<blockquote><p>Gerçek redaction, veriyi belgenin İÇERİĞİNDEN kaldırır. Hassas Veri Gizleme aracımız PyMuPDF redaction ile veriyi tamamen siler — üzerini örtmez. Kaldırılan yerde arama, kopyalama veya kurtarma mümkün olmaz.</p></blockquote>
-<h2>Nasıl çalışır — adım adım</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — Hassas Veri Gizleme aracına belgenizi ekleyin.</li><li><strong>Hassas alanlar bulunsun</strong> — TC, IBAN, telefon ve e-posta gibi kalıplar cihazınızda; isim ve adres gibi bağlama dayalı veriler yapay zekâ ile tespit edilir.</li><li><strong>Kalıcı olarak kaldırın</strong> — Onayladığınız alanlar belgenin içeriğinden gerçekten silinir. Temizlenmiş PDF'i indirin.</li></ol>
-<p><strong>Hassas Veri Gizle</strong> — Kişisel verileri kalıcı olarak kaldırıp belgeyi KVKK uyumlu paylaşın. <a href="https://www.pdfplatform.app/tools/hassas-veri-gizle">Aracı aç</a></p>
-<h2>Ne zaman gerekir?</h2>
-<ul><li>Sözleşme veya faturayı üçüncü tarafla paylaşmadan önce.</li><li>Resmî başvuru, ihale veya mahkeme dosyalarında.</li><li>Örnek/şablon olarak yayınlanacak belgelerde.</li></ul>
-<p>Kişisel verilerin cihazda tespit edilen kısmı (TC, IBAN, telefon, e-posta) belgeden çıkarken karşıya gönderilmez; yalnızca isim/adres gibi bağlama dayalı tespitte metin yapay zekâya iletilir.</p>
-<h2>Belgede gözden kaçan hassas alanlar</h2>
-<p>Kişisel veri yalnızca beklediğiniz yerde durmaz. Bir belgeyi paylaşmadan önce sayfanın ortasına bakarken kenarda kalan bilgiler çoğu zaman atlanır ve sızıntı tam oradan olur.</p>
-<ul><li>Sayfa üst ve alt bilgisindeki isim, şube ya da kullanıcı adı.</li><li>Belgeyi hazırlayan kişinin imza bloğu ve doğrudan telefon numarası.</li><li>Ekteki tablo satırlarında kalan üçüncü kişilere ait kayıtlar.</li><li>Kaşe ve imza görüntülerinin altındaki okunabilir bilgiler.</li><li>Faturada müşteri numarası, ekstrede hesap numarasının tamamı.</li></ul>
-<h2>Üstveri de belgenin parçasıdır</h2>
-<p>Sayfadaki her şeyi temizleseniz bile belge, görünmeyen bilgiler taşımaya devam edebilir: dosyayı oluşturan kişinin adı, kullanılan programın bilgisi, oluşturma ve değiştirme tarihleri, bazen belgenin ilk hâlinden kalan başlık. Bunlar belge özelliklerinde durur ve merak eden herkes birkaç tıklamayla görebilir. Dışarı gidecek belgelerde üstveriyi de temizlemek, redaction'ın tamamlayıcısıdır.</p>
-<h2>Neyi gizlemeli, neyi bırakmalı?</h2>
-<p>Aşırı gizleme, belgeyi işe yaramaz hâle getirir; eksik gizleme ise riski sürdürür. Ölçüt, belgenin gönderilme amacıdır: karşı tarafın işini görmesi için hangi bilgi gerçekten gerekli? Bir kira sözleşmesini kredi başvurusu için gönderirken kira tutarı gereklidir, ancak ev sahibinin kimlik numarası çoğu zaman değildir. Bu soruyu alan alan sormak, hem uyumlu hem kullanışlı bir belge bırakır.</p>
-<h2>Gizledikten sonra doğrulama</h2>
-<ul><li>Belgeyi yeniden açıp gizlediğiniz bilgiyi arayın; sonuç çıkıyorsa kaldırma gerçekleşmemiştir.</li><li>Metni seçip başka bir yere yapıştırın; gizlenen kısım gelmemeli.</li><li>Tüm sayfaları gözden geçirin; aynı bilgi başka sayfada tekrarlanıyor olabilir.</li><li>Belge özelliklerine bakın; üstveride isim ya da yol bilgisi kalmış olabilir.</li><li>Gizlenmiş sürümü ayrı bir adla kaydedin ve paylaşımı o dosyadan yapın.</li></ul>
-<h2>Taranmış belgelerde durum farklı</h2>
-<p>Taranmış bir belgede sayfa görüntüdür; metin katmanı yoksa kaldırılacak bir metin de yoktur ve alanın üzerinin kapatılması görüntü üzerinde kalıcı olur. Ancak belge daha önce OCR'dan geçirildiyse altında görünmez bir metin katmanı bulunur ve o katmandaki bilgi kopyalanabilir. Bu yüzden taranmış belgelerde de metin katmanının varlığını kontrol etmek gerekir.</p>]]></content:encoded>
-      <category>KVKK</category>
-      <category>Gizlilik</category>
-      <category>Redaction</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" type="image/png" length="57262" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-hassas-veri-gizleme-kvkk.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-hassas-veri-gizleme-kvkk.png" />
-    </item>
-    <item>
-      <title>PDF Nasıl Düzenlenir: Metni Gerçekten Silip Değiştirme</title>
-      <link>https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme</guid>
-      <pubDate>Tue, 21 Jul 2026 09:24:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/edit-pdf-text" />
-      <description><![CDATA[Bir PDF'te yanlış bir tarih, fiyat veya isim mi var? Çoğu 'düzenleyici' yazının üzerini beyaz kutuyla kapatır — metin altta durmaya devam eder. Gerçek düzenleme bundan farklıdır; işte nasıl yapıldığı.]]></description>
-      <content:encoded><![CDATA[<p>PDF'te küçük bir hatayı düzeltmek — yanlış bir tarih, güncel olmayan bir fiyat, bir yazım hatası — göründüğünden zor olabilir. Çünkü çoğu online 'PDF düzenleyici' aslında metni silmez; sadece üzerine beyaz bir kutu koyar. Bu yazıda gerçek düzenlemeyi anlatıyoruz.</p>
-<h2>"Üzerini kapatma" ile "gerçek silme" farkı</h2>
-<p>Metnin üzerine kutu koyan araçlarda orijinal yazı belgenin içinde kalır: kopyala-yapıştır yapıldığında ya da metin arandığında eski içerik hâlâ görünebilir. Bu hem dağınık hem de gizlilik açısından risklidir. Gerçek düzenleme, yazıyı belgenin içinden kaldırıp yerine yenisini koyar.</p>
-<blockquote><p>PDF Düzenle aracımız PyMuPDF ile mevcut metni GERÇEKTEN kaldırır ve yerine yazdığınızı koyar — üzerini örtmez. Türkçe karakterler tam desteklenir.</p></blockquote>
-<h2>Adım adım düzenleme</h2>
-<ol><li><strong>PDF'i açın</strong> — PDF Düzenle aracına belgenizi yükleyin.</li><li><strong>Metne tıklayın</strong> — Değiştirmek istediğiniz yazıya tıklayın; mevcut metin seçilir.</li><li><strong>Silin veya yeniden yazın</strong> — Yazıyı kaldırın ya da yerine yenisini yazın. Metin ekleyebilir, düzeltebilirsiniz.</li><li><strong>İndirin</strong> — Düzenlenmiş PDF'i indirin — değişiklik belgeye işlenmiş olur.</li></ol>
-<p><strong>PDF Düzenle</strong> — PDF'teki yazıyı gerçekten silip değiştirin — üzerini örtmeden. <a href="https://www.pdfplatform.app/tools/pdf-duzenle">Aracı aç</a></p>
-<h2>Ne zaman iyi çalışır, ne zaman çalışmaz?</h2>
-<p>Bu araç, içinde gerçek metin katmanı olan PDF'lerde çalışır (örneğin Word'den üretilmiş bir PDF). Taranmış / fotoğraf PDF'lerde yazı aslında bir görüntüdür; bu durumda önce OCR ile metne çevirmeniz gerekir.</p>
-<p><strong>Taranmış PDF'i metne çevir</strong> — Belgeniz taranmışsa, önce yazıyı OCR ile gerçek metne dönüştürün. <a href="https://www.pdfplatform.app/tools/taranmis-pdf-ocr">OCR aracı</a></p>
-<h2>Neden PDF düzenlemek Word düzenlemeye benzemez?</h2>
-<p>Word belgesinde metin akışkandır: bir cümle eklediğinizde sonrası kendiliğinden kayar. PDF'te ise her metin parçası sayfada belirli bir konuma yerleştirilmiştir; akış yoktur. Bu yüzden bir kelimeyi uzun bir kelimeyle değiştirdiğinizde satır kendiliğinden yeniden dizilmez. Bu, aracın eksikliği değil, biçimin tasarımıdır — PDF baskı çıktısını korumak için yapılmıştır.</p>
-<h2>Düzenleme yaparken karşılaşılan tipik durumlar</h2>
-<ul><li>Yeni metin eskisinden uzunsa satırın sonuna taşabilir; kısa ve eşdeğer bir ifade seçmek en pratik çözümdür.</li><li>Yazı tipi belgeye gömülü değilse benzeri kullanılır ve küçük bir görünüm farkı oluşabilir.</li><li>Tablo hücresindeki bir değeri değiştirirken hizanın bozulmadığını kontrol edin.</li><li>Aynı ifade belgede birçok kez geçiyorsa hepsini ayrı ayrı düzeltmeniz gerekir.</li></ul>
-<h2>Ne zaman düzenleme, ne zaman yeniden üretim?</h2>
-<p>Ölçüt değişikliğin büyüklüğüdür. Bir tarih, bir tutar, bir isim ya da bir yazım hatası için doğrudan düzenleme en temiz yoldur; belgenin geri kalanı hiç değişmez. Ama paragraflar yeniden yazılacak, bölüm eklenecek ya da düzen değişecekse, belgeyi kaynağından yeniden üretmek daha az iş çıkarır. Kaynak dosya elinizde yoksa Word'e çevirip düzenlemek ve yeniden PDF üretmek üçüncü yoldur; ancak her dönüşüm turunda biçim biraz kayar.</p>
-<h2>Resmî belgelerde dikkat</h2>
-<p>Bir belgenin metnini değiştirmek teknik olarak mümkün olsa da, her belgede meşru değildir. Fatura, resmî yazı, imzalı sözleşme ya da kurumdan gelen bir evrakın içeriğini değiştirmek, belgenin niteliğini bozar ve ciddi sonuçlar doğurabilir. Düzenleme, kendi hazırladığınız belgelerdeki hataları gidermek içindir. Dijital imza taşıyan bir belgede yapılan her değişiklik imzayı geçersiz kılar — bu, korumanın çalıştığının işaretidir.</p>
-<h2>Düzenlemenin gizlilik için yeterli olmadığı yer</h2>
-<p>Bir bilgiyi belgeden çıkarmak istiyorsanız, metni silmek görünürde çözer ama belgede başka izler kalabilir: üstveri, belge özellikleri ya da aynı bilginin geçtiği diğer sayfalar. Kişisel veri söz konusuysa kalıcı kaldırma yapan araç kullanmak ve belgenin üstverisini de temizlemek gerekir. Görsel olarak temiz görünen bir belge, teknik olarak temiz olmayabilir.</p>]]></content:encoded>
-      <category>Düzenleme</category>
-      <category>PDF</category>
-      <category>Metin</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" type="image/png" length="55007" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-metin-duzenleme-silme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-metin-duzenleme-silme.png" />
-    </item>
-    <item>
-      <title>PDF&apos;e Sayfa Numarası Ekleme: Konum ve Biçim Seçerek</title>
-      <link>https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme</guid>
-      <pubDate>Tue, 21 Jul 2026 09:10:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/add-page-numbers-to-pdf" />
-      <description><![CDATA[Uzun bir raporu, tezi ya da sözleşmeyi düzenli hâle getirmenin en kolay yolu sayfa numarası eklemektir. Konumu ve biçimi seçerek PDF'e nasıl sayfa numarası ekleyeceğinizi gösteriyoruz.]]></description>
-      <content:encoded><![CDATA[<p>Çok sayfalı bir belgeyi paylaşırken sayfa numaraları büyük fark yaratır: okuyucu yönünü kaybetmez, baskıda sayfalar karışmaz, atıf yapmak kolaylaşır. PDF'inize dakikalar içinde numara eklemenin yolu burada.</p>
-<h2>Ne zaman gerekir?</h2>
-<ul><li>Rapor, tez ve akademik belgelerde referans kolaylığı.</li><li>Sözleşme ve resmî evrakta sayfa bütünlüğü.</li><li>Baskıya gidecek uzun belgelerde sıralamayı korumak.</li></ul>
-<h2>Adım adım</h2>
-<ol><li><strong>PDF'i yükleyin</strong> — Sayfa Numarası aracına belgenizi ekleyin.</li><li><strong>Konum ve biçimi seçin</strong> — Numaranın üstte mi altta mı olacağını ve biçimini belirleyin.</li><li><strong>İndirin</strong> — Numaralandırılmış PDF'i indirin — her sayfa profesyonelce numaralanmış olur.</li></ol>
-<p><strong>Sayfa Numarası Ekle</strong> — PDF'inize konum ve biçim seçerek sayfa numarası ekleyin. <a href="https://www.pdfplatform.app/tools/page-numbers">Aracı aç</a></p>
-<h2>İpucu</h2>
-<blockquote><p>Belgenizde kapak sayfası varsa, numaralandırmayı içerik sayfasından başlatmayı düşünün — kapakta numara görünmemesi daha profesyonel durur.</p></blockquote>
-<h2>Hangi numara biçimini seçmeli?</h2>
-<p>Biçim, belgenin türüne göre değişir. Kural koyan bir standart yok ama okuyucunun beklentisi var: resmî bir evrakta süslü bir numaralandırma dikkat dağıtır, uzun bir raporda ise yalın bir rakam yetersiz kalabilir.</p>
-<ul><li>Sade rakam (1, 2, 3): rapor, sunum çıktısı ve günlük belgelerin çoğu için en güvenli seçim.</li><li>«Sayfa 1» biçimi: okuyucunun belgeyi basılı hâlde takip edeceği durumlarda yön duygusunu güçlendirir.</li><li>«1 / 12» biçimi: sözleşme ve teklif gibi eksiksizliğin kanıtlanması gereken belgelerde tercih edilir; karşı taraf sayfa eksik mi anlar.</li><li>Roma rakamı (i, ii, iii): önsöz, içindekiler ve teşekkür gibi ön bölümlerde kullanılır; asıl metin 1'den yeniden başlar.</li></ul>
-<h2>Numaralandırma nereden başlamalı?</h2>
-<p>Kapak sayfası neredeyse hiçbir zaman numaralanmaz. Akademik çalışmalarda yaygın uygulama şudur: kapak numarasızdır, ön bölümler roma rakamıyla numaralanır, asıl metnin ilk sayfası 1 olur. Kurumsal raporlarda ise çoğu zaman kapak dışındaki her sayfa 1'den başlayarak numaralanır.</p>
-<p>Belgeyi teslim edeceğiniz kurumun bir yazım kılavuzu varsa, bu tercih size bırakılmış olmayabilir. Üniversitelerin tez yazım kılavuzları ve kamu kurumlarının evrak standartları genellikle numaranın konumunu ve biçimini açıkça yazar; eklemeden önce bir bakmak, belgeyi ikinci kez hazırlamaktan ucuzdur.</p>
-<h2>Numara eklemeden önce sayfa sırasını kesinleştirin</h2>
-<p>Sayfa numarası belgeye sabit olarak basılır. Numaraları ekledikten sonra sayfa eklemek, silmek ya da sırayı değiştirmek, numaraların içerikle uyuşmamasına yol açar; ikinci sayfada «3» yazan bir belge, hazırlayanın dikkatsizliğini anlatır.</p>
-<ul><li>Önce eksik sayfaları ekleyin, gereksizleri silin, sırayı kesinleştirin.</li><li>Birden çok dosyayı birleştirecekseniz birleştirmeyi numaralandırmadan önce yapın.</li><li>Yan dönmüş sayfa varsa döndürmeyi de önce halledin; numara sayfanın yönüne göre yerleşir.</li><li>Numaralandırmayı en son adım olarak bırakın.</li></ul>
-<h2>Numara içeriğin üstüne denk gelirse</h2>
-<p>Bazı belgelerde alt kenar boşluğu dar olur ve numara mevcut bir dipnotla ya da tablo satırıyla çakışır. İki pratik çözüm vardır: numarayı üst kenara almak ya da sayfayı numaralandırmadan önce kırpma aracıyla kenar boşluğunu düzenlemek. İkisi de belgenin metnine dokunmaz.</p>
-<h2>Sık yapılan hatalar</h2>
-<ul><li>Numaraları ekledikten sonra sayfa eklemek — numaralar içerikle kayar.</li><li>Kapağı da numaralandırmak — resmî belgelerde amatörce durur.</li><li>Belge zaten numaralıyken ikinci bir numara katmanı eklemek; önce mevcut numaraya bakın.</li><li>Çift taraflı basılacak bir belgede numarayı tek tarafa göre hizalamak.</li></ul>]]></content:encoded>
-      <category>Düzenleme</category>
-      <category>PDF</category>
-      <category>Sayfa Numarası</category>
-      <enclosure url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" type="image/png" length="55251" />
-      <media:content url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/covers/square/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/covers/tall/pdf-sayfa-numarasi-ekleme.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/covers/pdf-sayfa-numarasi-ekleme.png" />
     </item>
   </channel>
 </rss>

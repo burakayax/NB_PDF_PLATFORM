@@ -35,6 +35,7 @@ import {
   PenTool,
   Presentation,
   Repeat,
+  Scale,
   Scan,
   Scissors,
   Search,
@@ -80,6 +81,7 @@ const SEO_SLUG_TOOLS = new Set<string>([
   "gorsel-sikistir",
   "gorsel-boyutlandir",
   "pdf-kesit-al",
+  "udf-to-pdf",
 ]);
 
 type CategoryId = "ai" | "edit" | "scan" | "convert" | "security";
@@ -326,6 +328,11 @@ const TOOLS: Tool[] = [
     en: { name: "Redact PDF", desc: "Black out IDs, account numbers and names for good." },
   },
   {
+    id: "udf-to-pdf", cat: "convert", Icon: Scale,
+    tr: { name: "UDF'yi PDF Yap", desc: "UYAP'tan inen .udf belgesini program kurmadan PDF'ye çevirin." },
+    en: { name: "UDF to PDF", desc: "Turn a .udf file from UYAP into a PDF — no software needed." },
+  },
+  {
     id: "repair-pdf", cat: "edit", Icon: Wrench,
     tr: { name: "PDF Onar", desc: "Açılmayan veya bozulmuş dosyayı kurtarın." },
     en: { name: "Repair PDF", desc: "Rescue a file that won't open or looks broken." },
@@ -460,6 +467,7 @@ const TOOL_HUE: Record<string, HueId> = {
   "belge-tara": "teal",
   "html-to-pdf": "sky",
   "pdf-to-text": "violet",
+  "udf-to-pdf": "indigo",
   // Güvenlik
   encrypt: "emerald",
   "unlock-pdf": "teal",

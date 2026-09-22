@@ -10,7 +10,7 @@
     <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
     <language>en-US</language>
     <copyright>© 2026 PDF Platform</copyright>
-    <lastBuildDate>Mon, 21 Sep 2026 12:08:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 22 Sep 2026 20:53:00 GMT</lastBuildDate>
     <ttl>60</ttl>
     <generator>PDF Platform</generator>
     <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
@@ -19,6 +19,368 @@
       <title>PDF Platform Blog</title>
       <link>https://www.pdfplatform.app/en/blog</link>
     </image>
+    <item>
+      <title>Getting a Court Decision from UYAP into Word</title>
+      <link>https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/court-decision-from-uyap-into-word</guid>
+      <pubDate>Tue, 22 Sep 2026 20:53:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/uyap-karari-word-e-aktarma" />
+      <description><![CDATA[You want to bring the reasoning of a precedent decision into your own filing. You have a UDF file, Word does not recognise it, and retyping from the screen takes hours.]]></description>
+      <content:encoded><![CDATA[<p>You have a precedent decision and want a few paragraphs of its reasoning in your own filing. The file is a UDF; Word will not open it and you cannot copy from it. At this point most people retype from the screen. You do not have to — it transfers in two steps.</p>
+<h2>Why it does not work directly</h2>
+<p>UDF is UYAP's own document format and bears no relation to the formats Word recognises. Renaming the extension to «.doc» does not help either; that changes the name, not the structure inside the file.</p>
+<p>The bridge is PDF. Convert the UDF to PDF and you have a widely supported document; from there, going to Word is a standard operation.</p>
+<h2>Which route to take</h2>
+<p>There are two routes and the choice is simple:</p>
+<ul><li>If you only need the text: take the plain text (.txt) the UDF tool gives you and paste it into Word. This is the fastest route; formatting does not come, but the text does.</li><li>If you need the formatting too: convert UDF to PDF, then PDF to Word. Paragraph layout, bold text and tables are preserved.</li></ul>
+<p>For quoting in a filing the first route is usually enough, since you will reformat the text to match your own document anyway. Choose the second when you need to carry over a table or a layout as it stands.</p>
+<h2>Step by step: transferring with formatting</h2>
+<ol><li><strong>Convert the UDF to PDF</strong> — Drop the file into the UDF tool. The work happens in your browser; court documents are not uploaded.</li><li><strong>Download the PDF</strong> — Fonts, bold and underlined text, alignment and tables are preserved.</li><li><strong>Convert the PDF to Word</strong> — Feed the downloaded PDF to the PDF to Word tool and get an editable .docx.</li><li><strong>Check in Word</strong> — Review paragraph breaks and any tables after conversion. Small corrections in long documents are normal.</li></ol>
+<p><strong>UDF to PDF</strong> — Convert a decision downloaded from UYAP to PDF with nothing installed, and take the text as .txt too. <a href="https://www.pdfplatform.app/en/tools/udf-to-pdf">Open the tool</a></p>
+<h2>Scanned decisions need an extra step</h2>
+<p>In older case files a decision sometimes arrives not as a UDF but as a scanned image. In such a document the writing is really a picture; you can neither copy nor search it.</p>
+<p>Then you first need to run the document through OCR to extract the text. OCR turns the writing in the image into real text; after that the same steps get you into Word.</p>
+<p><strong>Scanned PDF to Text (OCR)</strong> — Turn the writing inside a scanned decision into real text, then take it into Word. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">Open the tool</a></p>
+<h2>Always compare afterwards</h2>
+<p>No conversion is flawless, and in a legal text a single shifted digit has serious consequences. After transferring into Word, compare these against the original:</p>
+<ul><li>Case and decision numbers.</li><li>Dates.</li><li>Monetary amounts and interest rates.</li><li>Statutory article numbers.</li><li>The spelling of party names.</li></ul>
+<blockquote><p>Keep the PDF of the decision as well. If you later need to show that your quotation is accurate, you have a readable copy of the source to hand.</p></blockquote>
+<h2>A reminder: the PDF copy is not the signed original</h2>
+<p>The electronic signature in a UDF does not carry into the PDF. The converted file is a readable copy for working and quoting. If an official filing needs the document, use the signed UDF original.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>UDF</category>
+      <category>Word</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png" type="image/png" length="54406" />
+      <media:content url="https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/court-decision-from-uyap-into-word.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/court-decision-from-uyap-into-word.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/court-decision-from-uyap-into-word.png" />
+    </item>
+    <item>
+      <title>How to Hide ID Numbers in a Document You Share</title>
+      <link>https://www.pdfplatform.app/en/blog/hide-id-numbers-in-documents</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/hide-id-numbers-in-documents</guid>
+      <pubDate>Tue, 22 Sep 2026 20:33:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/tc-kimlik-numarasi-gizleme-belge" />
+      <description><![CDATA[Proof of address sent to an estate agent, a benefits statement sent to an employer, an invoice dropped into a group chat. Official documents carry your identity number, and often the recipient does not need it.]]></description>
+      <content:encoded><![CDATA[<p>An estate agent asks for proof of income for a rental. The document carries your identity number, your address, your date of birth and your salary. The agent does not need all of that — but sending the document as it is happens to be the easiest thing to do, so most people do exactly that. Once those details are out, they cannot be pulled back.</p>
+<h2>The most common mistake: drawing a black box</h2>
+<p>Most people do this in a PDF viewer by drawing a black rectangle over the detail. On screen the information disappears and the job looks done.</p>
+<p>It is not. A box drawn on a PDF is a shape added ON TOP of the document; the text underneath stays exactly where it was. If the recipient selects that area with the mouse and copies it, your identity number comes out intact. Selecting and copying text takes no technical skill at all.</p>
+<blockquote><p>Test it on your own document: select the area you covered, copy it, and paste into a text box. If the information appears, you have not redacted it — you have merely covered it.</p></blockquote>
+<p>The same flaw applies to white boxes, highlighter strokes and images pasted over text. Invisible is not the same as deleted.</p>
+<h2>The right method: take the data out of the document</h2>
+<p>Real redaction removes the text from inside the document. Nothing remains in the covered area to copy, and searching returns nothing either.</p>
+<ol><li><strong>Add the document</strong> — Give the PDF to the redaction tool. If the text is searchable in the document, it works directly.</li><li><strong>Choose what to remove</strong> — Patterned data such as identity numbers, phone numbers and bank account numbers is found automatically. Tick the ones you want removed.</li><li><strong>Check and download</strong> — Your selections are stripped out of the document. In the downloaded file, try selecting and copying those areas — nothing should come out.</li></ol>
+<p><strong>Redact Sensitive Data</strong> — Truly remove identity numbers, bank details and addresses — do not settle for painting over them. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Open the tool</a></p>
+<h2>Scanned documents behave differently</h2>
+<p>If your document was scanned or photographed, the writing inside it is really an image; there is no selectable text layer. That is both good and bad news.</p>
+<p>The good: the text cannot be copied anyway. The bad: it is still readable by eye, so you still need to cover it, and the covering has to be applied to the image itself. With such a document, zoom into the redacted area in the downloaded file to confirm it is genuinely covered.</p>
+<h2>What to hide and what to leave</h2>
+<p>Over-redacting makes a document useless; under-redacting does not protect you. A practical rule: anything the recipient does not need for the task at hand can be hidden.</p>
+<ul><li>For a government body: usually hide nothing. They will verify your identity, and an incomplete document gets rejected.</li><li>For an employer: the identity number is often required, but family details, home address and health data usually are not.</li><li>For private parties such as agents, sellers or websites: identity number and date of birth are almost never needed.</li><li>For anything you will post publicly: do not share the document at all. Even a redacted document carries details that can identify you.</li></ul>
+<h2>Consider splitting before redacting</h2>
+<p>Sometimes the cleanest answer is not to redact but to send only the page that matters. Rather than sharing an eight-page statement with six pages blacked out, pull out the single relevant page and send that. It is both safer and more considerate.</p>
+<p>Extracting one page takes seconds, and it makes the recipient's job easier too.</p>]]></content:encoded>
+      <category>Privacy</category>
+      <category>Redaction</category>
+      <category>Official Documents</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/hide-id-numbers-in-documents.png" type="image/png" length="51210" />
+      <media:content url="https://www.pdfplatform.app/en/covers/hide-id-numbers-in-documents.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/hide-id-numbers-in-documents.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/hide-id-numbers-in-documents.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/hide-id-numbers-in-documents.png" />
+    </item>
+    <item>
+      <title>UYAP Upload Fails: Fixing File Size Errors</title>
+      <link>https://www.pdfplatform.app/en/blog/uyap-upload-size-error</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/uyap-upload-size-error</guid>
+      <pubDate>Tue, 22 Sep 2026 20:33:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/uyap-belge-yukleme-boyut-hatasi" />
+      <description><![CDATA[The most frustrating thing about UYAP is that it rarely tells you why a file was rejected. A generic error appears and you keep retrying. The cause is usually one thing: the file is too big.]]></description>
+      <content:encoded><![CDATA[<p>The hearing is close, your petition is ready, you scanned the exhibits — and the portal will not take the file. The error message does not help, because the system rarely says the problem is size. This piece explains how to find the real cause and how to get the file under the limit.</p>
+<h2>Diagnose the cause first</h2>
+<p>In practice an upload failure has three sources, and the fixes are completely different:</p>
+<ul><li>The size limit was exceeded. This is the most common cause and it almost always comes from scanned exhibits.</li><li>The format is not accepted. The portal expects specific extensions; uploading a phone photo directly is a common mistake.</li><li>The file is corrupt or password protected. An encrypted PDF cannot be opened on the other side.</li></ul>
+<blockquote><p>The fastest way to tell: try the same upload with a small, one-page test PDF. If that goes through, the problem is size or content; if it does not, the problem is on the portal's side and you have to wait.</p></blockquote>
+<h2>What actually inflates the file: scanned exhibits</h2>
+<p>The petition itself is a few hundred kilobytes. What pushes a filing into tens of megabytes is nearly always the exhibits: pages scanned in colour at high resolution, or photos taken with a phone and turned into a PDF. A modern phone camera saves a single page as a 4–6 MB image; twenty pages easily pass 100 MB.</p>
+<p>So the fix is not to trim the petition but to bring the exhibits down to a sensible size — which can be done without losing legibility.</p>
+<h2>Step by step: getting under the limit</h2>
+<ol><li><strong>Compress the file</strong> — Feed the file to the compression tool and pick a level. Scanned, image-heavy documents gain the most; most files drop to about a third.</li><li><strong>Check the result by eye</strong> — Open the downloaded file and look at the page with the smallest type. If it reads comfortably, you are fine. If it blurred, step down one compression level.</li><li><strong>Still too big? Split it</strong> — If one file exceeds the limit, upload the petition and the exhibits as separate files. Splitting lets you break a document into page ranges.</li><li><strong>Name the parts meaningfully</strong> — Something like «exhibit-1-expert-report.pdf». File names are the cheapest way to make the reader's job easier.</li></ol>
+<p><strong>Compress PDF</strong> — Shrink scanned exhibits without hurting legibility and get under the portal's limit. <a href="https://www.pdfplatform.app/en/tools/compress">Open the tool</a></p>
+<h2>Scan small in the first place</h2>
+<p>Scanning correctly beats compressing afterwards every time. Practical settings for official paperwork:</p>
+<ul><li>Choose black and white or greyscale. If there is no coloured stamp or signature, you do not need colour — and colour triples the file.</li><li>300 DPI is enough. Higher does not improve legibility, it only inflates the file.</li><li>If you are using a phone, scan the document rather than photographing it. A scanner finds the edges, corrects the perspective and produces a much smaller file.</li></ul>
+<blockquote><p>Instead of turning a phone photo straight into a PDF, run it through the document scanner: edges are detected automatically, the page is flattened, and what comes out actually looks scanned — and is far smaller.</p></blockquote>
+<h2>UDF files are a separate matter</h2>
+<p>UYAP's own document format, UDF, has its own and tighter size limit on the system side; in practice UDF files above 10 MB are reported as rejected. Worse, the system does not say so — it just shows a generic error.</p>
+<p>If your UDF is large, the cause is almost always images pasted into the document. Taking the images out and uploading them as separate exhibits is the cleanest fix.</p>
+<p>Limits differ by institution and filing type and change over time; for the exact figure, trust the note on the upload screen.</p>
+<h2>A final check before uploading</h2>
+<ul><li>Is the file password protected? An encrypted PDF cannot be opened on the other side; remove the lock.</li><li>Are the pages in the right order and the right way up? A sideways exhibit makes the reader rotate the document.</li><li>Is there personal data that does not belong in this filing? Take it out.</li><li>Is the total size below the limit shown on screen?</li></ul>
+<p>These four checks take a minute and prevent most last-day upload crises.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>Official Documents</category>
+      <category>Compression</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/uyap-upload-size-error.png" type="image/png" length="49675" />
+      <media:content url="https://www.pdfplatform.app/en/covers/uyap-upload-size-error.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/uyap-upload-size-error.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/uyap-upload-size-error.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/uyap-upload-size-error.png" />
+    </item>
+    <item>
+      <title>Preparing Your Visa Application Documents</title>
+      <link>https://www.pdfplatform.app/en/blog/prepare-visa-application-documents</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/prepare-visa-application-documents</guid>
+      <pubDate>Tue, 22 Sep 2026 20:09:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/vize-basvurusu-evrak-hazirlama" />
+      <description><![CDATA[Visa refusals often come down not to a missing document but to a disorganised file. Presenting your paperwork legibly and in order makes the officer's job easier — and works in your favour.]]></description>
+      <content:encoded><![CDATA[<p>A visa application is an account of a period of your life told through documents: where you work, whether you have funds, whether you will return. A consular officer gives that file minutes. If your documents are jumbled, unreadable or look incomplete, that works against you. This piece explains how to put the paperwork together properly.</p>
+<h2>Get the list first, then start scanning</h2>
+<p>Every country and every visa type asks for a different set of documents, and the lists change. The first job is to take the current list from the consulate's own page or the authorised application centre. Preparing from an old list found online is the most common mistake.</p>
+<p>Once you have the list, work through it item by item. A missing document outranks even a beautifully organised file.</p>
+<h2>Obtain each document in the right form</h2>
+<ul><li>Download anything available from a government portal directly as a PDF. Do not screenshot it; the verification barcode may not be readable.</li><li>Take bank statements from your bank's own app as PDFs. Screenshots are not accepted.</li><li>For paper documents such as a signed leave letter or an invitation, scan them rather than photographing them.</li><li>Scan passport pages sharply and fully in frame; a passport page with clipped corners is among the most frequently returned items.</li></ul>
+<blockquote><p>Rather than turning a phone photo straight into a PDF, run it through a document scanner: edges are detected, the page is flattened, and the desk, your fingers and shadows stay out of frame. The result actually looks scanned.</p></blockquote>
+<h2>The photo: the item most often sent back</h2>
+<p>The biometric photo is the single most frequently rejected item. In Turkey the common size for ID cards, passports and driving licences is 50×60 mm; Schengen and many other visa applications ask for 35×45 mm.</p>
+<p>Where a system wants a digital upload, both the pixel dimensions and the file size have to fit. You can resize the photo to hit the dimensions, and compress it separately if the file is too large.</p>
+<p>To be clear: a tool bringing a photo to the right pixel size does not make the photo biometrically compliant. A plain white background, the face centred and correctly proportioned, open eyes and a neutral expression are all matters of how the photo was taken. A resizing tool only sets the size.</p>
+<p><strong>Resize Image</strong> — Bring a photo to the pixel dimensions visa and biometric applications ask for, using ready-made sizes. <a href="https://www.pdfplatform.app/en/tools/resize-image">Open the tool</a></p>
+<h2>Combining into one PDF</h2>
+<p>Some application centres want each document separately, others want a single file. If a single file is wanted, order matters — arrange the documents in the order given on the list.</p>
+<ol><li><strong>Add the documents in order</strong> — Application form, passport, photo, travel insurance, flights and accommodation, employment and financial documents — the consulate's own order is the safest.</li><li><strong>Check the order</strong> — Drag to rearrange in the list. A wrong order means the officer cannot find the document they are looking for.</li><li><strong>Merge and download</strong> — You get one PDF, and your files never leave your device.</li><li><strong>Check the size limit</strong> — If the upload screen states a limit and you are over it, compress; scanned pages give the biggest gain.</li></ol>
+<h2>Before sending, open the file as a reader would</h2>
+<ul><li>Is every page upright, or is something sideways?</li><li>Does the smallest text read comfortably? If you have to zoom, rescan it.</li><li>Does the page order match the list?</li><li>Has a document carrying personal data, not asked for on the list, slipped in?</li><li>Is the file name clear? Something like «visa-application-name-surname.pdf» works well.</li></ul>
+<p>That check takes five minutes. Set against how long you waited for the appointment, going through the file once more is well worth it.</p>]]></content:encoded>
+      <category>Visa</category>
+      <category>Applications</category>
+      <category>Official Documents</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/prepare-visa-application-documents.png" type="image/png" length="54283" />
+      <media:content url="https://www.pdfplatform.app/en/covers/prepare-visa-application-documents.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/prepare-visa-application-documents.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/prepare-visa-application-documents.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/prepare-visa-application-documents.png" />
+    </item>
+    <item>
+      <title>Split Payslips into One File per Employee</title>
+      <link>https://www.pdfplatform.app/en/blog/split-payslips-per-employee</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/split-payslips-per-employee</guid>
+      <pubDate>Tue, 22 Sep 2026 16:55:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma" />
+      <description><![CDATA[The payroll system gives you one PDF holding forty payslips. Everyone needs to get only their own page, and doing that by hand is both slow and risky.]]></description>
+      <content:encoded><![CDATA[<p>It is the start of the month, payroll has sent the file, and you have a single PDF: forty pages, forty employees. Each person should receive only their own page. Doing that by hand — saving and naming each page in turn — costs you half a day and carries a risk of things getting mixed up. If they do, the consequence is serious: one employee's salary has gone to someone else.</p>
+<h2>Why not do it by hand?</h2>
+<p>The real issue here is not time but error. Salary information is among the most sensitive personal data there is, and reaching the wrong person cannot be undone. In a repetitive manual task, losing focus by the fortieth page is entirely normal.</p>
+<p>A method that does the job in one move brings the time down to minutes and removes the question of whether anything got mixed up.</p>
+<h2>Step by step: splitting one PDF into pages</h2>
+<ol><li><strong>Add the payroll file</strong> — Give the PDF to the split tool. The work happens in your browser; salary data is not uploaded.</li><li><strong>Pick pages visually</strong> — Pages are listed as thumbnails, so you can confirm which page belongs to whom.</li><li><strong>Take each page as its own file</strong> — Pages are separated individually and downloaded in a ZIP; each page is its own file.</li><li><strong>Name the files</strong> — Before sending, give each file the employee's name. This step is your last defence against a misdirected email.</li></ol>
+<p><strong>Split PDF</strong> — Break a combined payroll file page by page — on your device, with nothing uploaded. <a href="https://www.pdfplatform.app/en/tools/split-pdf">Open the tool</a></p>
+<h2>When one employee spans several pages</h2>
+<p>In some payrolls a single employee takes two or three pages. Then splitting page by page will not do; you need page ranges.</p>
+<p>The split tool lets you choose ranges: pages 1–2 as one file, 3–4 as another. Thanks to the thumbnails you can confirm each range by eye — far safer than typing numbers blind.</p>
+<h2>Always check before sending</h2>
+<p>Even when the split is correct, no tool can catch a slip in your sending list. Do these two checks first:</p>
+<ul><li>Open three files at random and confirm the name inside matches the file name.</li><li>Does the number of files match the number of employees? A file too few or too many means the ranges have slipped.</li></ul>
+<blockquote><p>Do not send payslips as a group email. A single «reply all», or a wrongly chosen recipient list, can expose the whole company's salaries. Each payslip should go in its own email, to one recipient.</p></blockquote>
+<h2>Where else the same method helps</h2>
+<ul><li>Separating combined invoice files by customer.</li><li>Splitting bulk-generated certificates into one per person.</li><li>Sending the relevant sections of a long report to different departments.</li><li>Pulling only the signature page out of a long contract.</li></ul>]]></content:encoded>
+      <category>HR</category>
+      <category>Split</category>
+      <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png" type="image/png" length="53293" />
+      <media:content url="https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/split-payslips-per-employee.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/split-payslips-per-employee.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png" />
+    </item>
+    <item>
+      <title>Exam Application Photo Size: 300×400 px, 60 KB</title>
+      <link>https://www.pdfplatform.app/en/blog/exam-application-photo-size</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/exam-application-photo-size</guid>
+      <pubDate>Tue, 22 Sep 2026 16:45:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/osym-sinav-basvurusu-fotograf-boyutu" />
+      <description><![CDATA[The application screen will not take your photo and does not say why. It is nearly always one of two things: the pixel dimensions or the file size do not match.]]></description>
+      <content:encoded><![CDATA[<p>It is the last day of applications, the form is filled in, and you have reached the photo. The system will not accept it, and the error is rarely informative. The cause is almost always one of two things: the photo's pixel dimensions or its file size do not match what was asked for.</p>
+<h2>The requirements</h2>
+<p>Turkish exam applications commonly ask for:</p>
+<ul><li>Pixel dimensions: 300 × 400 (width × height).</li><li>File size: 60 KB at most.</li><li>Format: JPG (JPEG).</li><li>Content: taken within the last six months, white background, face clearly visible.</li></ul>
+<p>These requirements differ between institutions and change from year to year. The note on the application screen always governs; the method below works whatever size is asked for.</p>
+<h2>Pixel dimensions and file size are different things</h2>
+<p>This distinction is the real source of the confusion. Pixel dimensions are the photo's width and height — 300 × 400. File size is how much room it takes on disk — 60 KB.</p>
+<p>A photo can be exactly 300 × 400 pixels and still weigh 400 KB. The reverse is possible too. So you have to satisfy the two conditions separately: set the dimensions first, then compress if the size is still high.</p>
+<h2>Step by step</h2>
+<ol><li><strong>Set the right dimensions</strong> — In the resize tool, pick the exam application entry from the ready-made sizes; width and height come in at 300 × 400. You can also type them in.</li><li><strong>Check the file size</strong> — Look at the size of the downloaded file. Under 60 KB and you are done.</li><li><strong>Compress if needed</strong> — If it is still large, put it through the image compressor and lower the quality gradually. At passport-photo dimensions, 70% quality usually drops under 60 KB while keeping the face sharp.</li><li><strong>Check by eye</strong> — Open the photo at full size and make sure the face is sharp. Over-compression distorts facial features and the photo may be rejected.</li></ol>
+<p><strong>Resize Image</strong> — Bring a photo to the pixel dimensions exam and official applications require — ready-made sizes, on your device. <a href="https://www.pdfplatform.app/en/tools/resize-image">Open the tool</a></p>
+<h2>Common mistakes</h2>
+<ul><li>Uploading an ordinary phone photo without cropping. Camera photos are 4:3 or 16:9; a passport photo is 3:4. You have to crop to that ratio first.</li><li>Using a screenshot. Screenshots come out as PNG and are usually both the wrong size and heavier than needed.</li><li>Enlarging a small photo. Taking a 150 × 200 image up to 300 × 400 gives a blurry result; lost detail does not come back.</li><li>Assuming the background is white. If the wall is light grey or cream, the system or a reviewer may reject it.</li></ul>
+<blockquote><p>Crop BEFORE you resize. First crop to a 3:4 ratio with the face centred, then set 300 × 400. Do it the other way round and the face gets squashed out of proportion.</p></blockquote>
+<h2>Common sizes for other applications</h2>
+<p>The same method applies to every official photo size. In Turkey, ID card, passport and driving licence applications commonly use 50 × 60 mm; Schengen and many other visa applications ask for 35 × 45 mm. Sizes given in millimetres convert to pixels at 300 DPI.</p>
+<p>Worth repeating: a tool bringing a photo to the right size does not make it biometrically compliant. Background, the position of the face and the expression all depend on how the photo was taken.</p>]]></content:encoded>
+      <category>Applications</category>
+      <category>Images</category>
+      <category>Resize</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/exam-application-photo-size.png" type="image/png" length="53061" />
+      <media:content url="https://www.pdfplatform.app/en/covers/exam-application-photo-size.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/exam-application-photo-size.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/exam-application-photo-size.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/exam-application-photo-size.png" />
+    </item>
+    <item>
+      <title>Preparing a Tender Submission as a PDF</title>
+      <link>https://www.pdfplatform.app/en/blog/prepare-a-tender-submission-as-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/prepare-a-tender-submission-as-pdf</guid>
+      <pubDate>Tue, 22 Sep 2026 15:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ihale-dosyasi-pdf-hazirlama" />
+      <description><![CDATA[In a tender file, form matters as much as content. When the evaluating committee cannot find a document, they do not read that in your favour. The order of your file is the first impression of how seriously you take the job.]]></description>
+      <content:encoded><![CDATA[<p>A tender bid is as much about organisation as about documents. A committee works through dozens of files in turn, and the file where they can find things quickly has the advantage. Most authorities now want the bid electronically, which leaves the job of presenting it together, in order and legibly entirely to you.</p>
+<h2>Whatever the specification says, wins</h2>
+<p>Nothing in this piece overrides the instruction in the authority's own specification. If it states the order of documents, the file format, the naming or a size limit, follow it to the letter. Failing a formal requirement can be enough on its own to have a bid excluded.</p>
+<p>The fastest approach is to download the specification and search it: look for «file», «format», «PDF», «signature» and «size», and note every clause that comes up.</p>
+<h2>Order the documents as the specification lists them</h2>
+<p>Tender specifications give the required documents as a numbered list. Build your file in exactly that order. A committee member works with the list in hand; if your file follows the same sequence, the review flows.</p>
+<ol><li><strong>Prepare each document as a PDF</strong> — Download anything from official portals directly as a PDF; scan the paper documents.</li><li><strong>Arrange in specification order</strong> — In the merge tool, drag the files to match the numbering on the list.</li><li><strong>Combine into one file</strong> — The work happens in your browser; your bid is not uploaded to a server.</li><li><strong>Add page numbers</strong> — With a numbered file, the committee can ask which page a document is on — and you can answer.</li></ol>
+<p><strong>Merge PDF</strong> — Put bid documents in specification order and combine them into one file — on your device, no signup. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Why page numbers help</h2>
+<p>In a hundred-page bid, page numbers make a table of contents possible. Putting a contents page at the front, listing where each document begins, makes the committee's job markedly easier.</p>
+<p>That small detail makes your file look like careful work. Most competitors will not bother.</p>
+<p><strong>Add Page Numbers</strong> — Number the pages of a bid so a table of contents becomes possible. <a href="https://www.pdfplatform.app/en/tools/page-numbers">Open the tool</a></p>
+<h2>Balancing size limits against scan quality</h2>
+<p>Electronic tender systems impose size limits. At the same time documents have to be legible — an unreadable document counts as a missing one. You have to balance the two.</p>
+<ul><li>Scan in greyscale at 300 DPI. If colour is not needed, do not use it; it multiplies the file.</li><li>If there is a company stamp or a coloured signature, scan only those pages in colour and leave the rest grey.</li><li>After compressing, always check: is the stamp readable, is the signature sharp, is the smallest type still legible?</li><li>If you are still over the limit, splitting the file is safer than lowering quality.</li></ul>
+<blockquote><p>Never crush the whole file at maximum compression. An unreadable stamp in a tender file can lose you work you had already won. Look at which pages are heavy first — the problem is usually in a handful of them.</p></blockquote>
+<h2>Be careful about signatures</h2>
+<p>Signatures are critical in bids, and authorities generally require a wet signature or a qualified electronic signature. Placing an image of a signature on a PDF meets neither requirement — it is only a picture of a signature.</p>
+<p>In practice the right route is to print, sign by hand and scan, or to use the electronic signature infrastructure the authority accepts. Image signatures suit informal situations such as internal correspondence and draft sharing.</p>
+<h2>A final check before submitting</h2>
+<ul><li>Is every item on the specification's list present in the file?</li><li>Does the order match the specification?</li><li>Are time-limited documents such as registration and tax-clearance certificates current?</li><li>Is every page upright and legible?</li><li>Does the file name match what the authority asked for?</li><li>How many hours are left before the deadline? Do not leave the upload to the last hour; system load is a real risk.</li></ul>]]></content:encoded>
+      <category>Tenders</category>
+      <category>Official Documents</category>
+      <category>Merge</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/prepare-a-tender-submission-as-pdf.png" type="image/png" length="52693" />
+      <media:content url="https://www.pdfplatform.app/en/covers/prepare-a-tender-submission-as-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/prepare-a-tender-submission-as-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/prepare-a-tender-submission-as-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/prepare-a-tender-submission-as-pdf.png" />
+    </item>
+    <item>
+      <title>Preparing University Enrolment Documents Digitally</title>
+      <link>https://www.pdfplatform.app/en/blog/prepare-university-enrolment-documents</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/prepare-university-enrolment-documents</guid>
+      <pubDate>Tue, 22 Sep 2026 12:53:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/universite-kayit-evraklarini-hazirlama" />
+      <description><![CDATA[During enrolment week everyone hits the same wall: the system will not accept the document. The problem is usually not the document but how it was prepared.]]></description>
+      <content:encoded><![CDATA[<p>Enrolment days are short, the system is busy, and you have a stack of documents: a school diploma, exam results, a copy of your ID, proof of address, a medical report, a photo. Most of it is uploaded digitally now. This piece explains how to prepare them so they are accepted the first time.</p>
+<h2>Scan rather than photograph</h2>
+<p>This is the most common mistake. Putting the document on a table and photographing it with a phone is quick, but the result is usually rejected: the table shows, the edges are skewed, light hits one corner and the file is needlessly large.</p>
+<p>A document scanner finds the edges, corrects the perspective and sets the paper down as a flat page. The result actually looks scanned and the file is far smaller — and no extra hardware is needed, your phone camera is enough.</p>
+<ol><li><strong>Put the document on a flat surface</strong> — A dark surface makes the edges easier to find. Flatten the paper as much as you can.</li><li><strong>Light it from above, not the side</strong> — Keep your own shadow off the document. Window light is enough; flash usually causes glare.</li><li><strong>Run the scanner</strong> — Edges are found automatically and the page is flattened. You can adjust the corners by hand if needed.</li><li><strong>Save it as a PDF</strong> — You can gather several pages into one document.</li></ol>
+<p><strong>Document Scanner</strong> — Scan properly with your phone: edges found, page flattened, file kept small. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the tool</a></p>
+<h2>Do not scan what a portal can give you</h2>
+<p>Some documents need no scanning at all. Proof of address, civil registry extracts and criminal record certificates can be downloaded straight from a government portal as PDFs.</p>
+<p>A downloaded document is already digital, sharp and small, and it can be verified by the barcode on it. Printing and rescanning throws all of that away.</p>
+<blockquote><p>Do not take screenshots — use the «download as PDF» option. Verification barcodes usually do not survive a screenshot and the document may be rejected.</p></blockquote>
+<h2>Photo dimensions</h2>
+<p>The photo for a student card has specific pixel dimensions and a file size limit. A phone photo is both the wrong ratio and larger than needed; crop to passport-photo ratio first, then set the required size.</p>
+<p>If the dimensions fit but the file is still large, compress the photo separately. Pixel dimensions and file size are different things, and most systems require both.</p>
+<h2>One file or several?</h2>
+<p>Universities usually have a separate upload field per document. If a single file is wanted, order the documents as the enrolment guide lists them.</p>
+<p>Where a document runs to several pages — both sides of a diploma, say — merge them into one PDF before uploading; systems often accept only one file per field.</p>
+<h2>If you hit the upload limit</h2>
+<ul><li>Compress the scanned documents; that is where the gain is.</li><li>Scan in greyscale rather than colour. Without a coloured stamp or signature, colour is not needed.</li><li>After compressing, check the smallest text; an unreadable document counts as a missing one.</li><li>Do not leave uploading to the last day. Enrolment systems are busiest then and errors are more likely.</li></ul>
+<h2>A final check before uploading</h2>
+<ul><li>Is each document fully in frame, with no clipped corners?</li><li>Does the text read without zooming?</li><li>Are the pages upright?</li><li>Is every item on the guide's list ready?</li><li>Are the file names clear? Something like «diploma-name-surname.pdf» works well.</li></ul>
+<p>Open the document on your own phone and read it before uploading. If you find it hard to read, the person at the other end will not manage at all.</p>]]></content:encoded>
+      <category>Students</category>
+      <category>Applications</category>
+      <category>Scanning</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/prepare-university-enrolment-documents.png" type="image/png" length="51797" />
+      <media:content url="https://www.pdfplatform.app/en/covers/prepare-university-enrolment-documents.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/prepare-university-enrolment-documents.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/prepare-university-enrolment-documents.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/prepare-university-enrolment-documents.png" />
+    </item>
+    <item>
+      <title>How to Open a UDF File Without Installing Anything</title>
+      <link>https://www.pdfplatform.app/en/blog/how-to-open-udf-files</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/how-to-open-udf-files</guid>
+      <pubDate>Tue, 22 Sep 2026 11:35:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/udf-dosyasi-nasil-acilir" />
+      <description><![CDATA[You downloaded a decision from UYAP, double-clicked it, and Windows asked which app should open it. UDF is a document format specific to Turkey, and none of the usual programs recognise it.]]></description>
+      <content:encoded><![CDATA[<p>You downloaded a reasoned decision or a writ from UYAP; the file ends in «.udf» and nothing on your computer will open it. Word does not help, and double-clicking brings up the app picker. The problem is not you: UDF is a proprietary document format used only in Turkey.</p>
+<h2>What is UDF?</h2>
+<p>UDF — UYAP Document Format — is the format used by Turkey's National Judiciary Informatics System, run by the Ministry of Justice. Petitions, writs, procedural orders and reasoned decisions are all downloaded with this extension.</p>
+<p>The format is designed to preserve the document's integrity and the electronic signature on it. That is a sound design choice, but in practice it means a document that leaves the system is unreadable to the other side. The UDF you send a client will not open on their computer.</p>
+<h2>The official route: the UYAP Document Editor</h2>
+<p>The official answer is to install the Ministry's UYAP Document Editor. It is free and lets you open the file and use «save as PDF».</p>
+<p>It works, but it does not suit every situation:</p>
+<ul><li>It requires an installation, and may need Java on your machine.</li><li>Whoever you send the document to needs the same program installed. Expecting that of a client is rarely realistic.</li><li>On someone else's computer, or on a phone, you cannot install anything.</li></ul>
+<h2>The install-free route: convert it to PDF</h2>
+<p>A UDF file is really an archive carrying the document's text and formatting. That structure can be decoded and redrawn — which means the file can be turned into a PDF right in the browser, with nothing installed.</p>
+<p>The UDF tool on PDF Platform does exactly that, and does it on your device. That detail matters here: court documents carry party names, identity numbers and case details. The file is never sent to a server.</p>
+<ol><li><strong>Drop the file in</strong> — Drag the .udf file you downloaded from UYAP onto the area. You can drop several at once.</li><li><strong>Click «Convert to PDF»</strong> — The document is decoded in your browser, keeping fonts, bold and underlined text, alignment, tables and embedded images.</li><li><strong>Download it, or take the text</strong> — Download the PDF, or grab the plain text as a .txt file and paste it straight into Word.</li></ol>
+<p><strong>UDF to PDF</strong> — Turn a .udf file from UYAP into a PDF on your own device, with nothing to install. <a href="https://www.pdfplatform.app/en/tools/udf-to-pdf">Open the tool</a></p>
+<h2>Important: the PDF copy is not the signed original</h2>
+<p>This distinction is worth underlining. The electronic signature in a UDF belongs to the document as it exists in that file. Convert it to PDF and you hold a readable copy — the signature itself does not carry over.</p>
+<p>So: for reading, archiving, sending to a client or consulting a colleague, the PDF copy is perfectly fine. For an official filing, keep using the signed UDF original.</p>
+<h2>Other common UDF problems</h2>
+<ul><li>The file looks corrupt: the download may have been cut short. Download it again from UYAP.</li><li>The file is too large to upload: usually because of images pasted into it; upload those as separate exhibits.</li><li>It will not open on a phone: UYAP has a mobile editor app, but converting to PDF works on any device.</li><li>The recipient cannot open it: send a PDF, not a UDF. As a rule, any document leaving the system should be a PDF.</li></ul>
+<h2>If you want to edit the text in Word</h2>
+<p>There are two routes. The quick one: copy the .txt text the tool gives you and paste it. To keep the formatting as well, convert to PDF first and then convert the PDF to Word.</p>]]></content:encoded>
+      <category>UYAP</category>
+      <category>UDF</category>
+      <category>Official Documents</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-open-udf-files.png" type="image/png" length="57155" />
+      <media:content url="https://www.pdfplatform.app/en/covers/how-to-open-udf-files.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/how-to-open-udf-files.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/how-to-open-udf-files.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-open-udf-files.png" />
+    </item>
+    <item>
+      <title>Combine e-Government Documents into One PDF</title>
+      <link>https://www.pdfplatform.app/en/blog/combine-government-documents-into-one-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/combine-government-documents-into-one-pdf</guid>
+      <pubDate>Tue, 22 Sep 2026 09:15:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/edevlet-belgelerini-tek-pdf-yapma" />
+      <description><![CDATA[You downloaded five separate documents for an application and the other side wants them as a single PDF. There is a subtlety here: not breaking the verifiability of barcoded documents.]]></description>
+      <content:encoded><![CDATA[<p>The institution wants proof of address, a civil registry extract, a criminal record certificate and a social security statement — all in one file. The portal gives each as a separate PDF. Merging them is easy, but barcoded documents need one piece of care.</p>
+<h2>First, know this: the barcode is the document's identity</h2>
+<p>Documents downloaded from Turkey's e-Government portal carry a barcode or QR code together with a verification code. The receiving institution scans that code, or types it into the portal's verification page, to confirm the document really was issued in your name.</p>
+<p>So one rule governs everything you do to the document: the barcode must stay readable. Cropping, heavy compression or rescanning at low resolution can render it unreadable, and then the document counts as invalid.</p>
+<blockquote><p>Never print an e-government document and scan it again. The PDF you have is already digital and sharp; printing and rescanning inflates the file and lowers the chance the barcode scans. Use the original PDF as it is.</p></blockquote>
+<h2>Step by step: gathering everything into one file</h2>
+<ol><li><strong>Download each document as a PDF</strong> — Do not take screenshots — use the «download as PDF» option. Barcodes usually do not survive a screenshot.</li><li><strong>Add them all to the merge tool</strong> — You can select the files in one go. Merging runs in your browser, so your documents are not uploaded.</li><li><strong>Put them in the order the institution asked for</strong> — Drag the files in the list to reorder. If an order was specified, follow it; if not, lead with the most important document.</li><li><strong>Merge and download</strong> — You get a single PDF. Open it and check quickly: is everything there, and in the right order?</li></ol>
+<p><strong>Merge PDF</strong> — Put official documents in order and combine them into one file — no signup, on your device. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>If the file is too large</h2>
+<p>Official portal documents are usually small; together they rarely pass a few megabytes. If your file is unexpectedly large, the cause is almost always a scanned document that slipped in — a photocopied diploma, a scan of an ID card.</p>
+<p>In that case shrink only that scanned document, then merge. That way you never touch the sharpness of the portal's own output.</p>
+<h2>Personal data: think before you share</h2>
+<p>Official documents carry identity numbers, addresses and dates of birth. If the document is going to a government body, those details are required and should not be hidden.</p>
+<p>But if it is going to an estate agent, a prospective employer or a website, the situation differs. Covering the fields the recipient does not actually need is a reasonable precaution.</p>
+<blockquote><p>Do not redact by drawing a black box over the text. A box drawn on a PDF is only a picture; the text beneath it stays selectable and copyable. Use a tool that truly removes the data.</p></blockquote>
+<h2>A final check before sending</h2>
+<ul><li>Is every document inside the file? Compare the page count against what you downloaded.</li><li>Do the barcodes look sharp? Zoom in and check.</li><li>Have any documents expired? Institutions usually want recent criminal record and address certificates.</li><li>Is the file name clear? Something like «application-documents-name-surname.pdf» helps the reader.</li></ul>]]></content:encoded>
+      <category>e-Government</category>
+      <category>Official Documents</category>
+      <category>Merge</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/combine-government-documents-into-one-pdf.png" type="image/png" length="53397" />
+      <media:content url="https://www.pdfplatform.app/en/covers/combine-government-documents-into-one-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/combine-government-documents-into-one-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/combine-government-documents-into-one-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/combine-government-documents-into-one-pdf.png" />
+    </item>
     <item>
       <title>A Sejda Alternative for When Three Tasks an Hour Runs Out</title>
       <link>https://www.pdfplatform.app/en/blog/sejda-alternative</link>
@@ -758,383 +1120,6 @@
       <media:content url="https://www.pdfplatform.app/en/covers/square/convert-excel-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
       <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-excel-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
       <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
-    </item>
-    <item>
-      <title>How to Convert PDF to JPG / Images: One Image per Page</title>
-      <link>https://www.pdfplatform.app/en/blog/convert-pdf-to-jpg</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-pdf-to-jpg</guid>
-      <pubDate>Tue, 21 Jul 2026 17:58:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme" />
-      <description><![CDATA[When you need to share a PDF page as an image, put it on the web, or drop it into a slide, the cleanest way is to convert it to JPG/PNG. Here's how — and whether to pick JPG or PNG.]]></description>
-      <content:encoded><![CDATA[<p>You can't embed a PDF everywhere — but you can embed an image. To share a page on social media, place it on a web page, or add it to a slide, converting the PDF to JPG or PNG is the most practical route.</p>
-<h2>When is it useful?</h2>
-<ul><li>Sharing a single page as an image on social media.</li><li>Adding a preview to a website or blog post.</li><li>Dropping a page into a presentation as a picture.</li><li>Quickly showing a page to someone who can't open a PDF.</li></ul>
-<h2>Step by step</h2>
-<ol><li><strong>Upload the PDF</strong> — Add your document to the PDF to JPG tool.</li><li><strong>Pages become images</strong> — Each page is processed as a separate high-resolution JPG/PNG.</li><li><strong>Download</strong> — Download the images one by one or all together as a ZIP.</li></ol>
-<p><strong>PDF to JPG</strong> — Turn PDF pages into high-quality images. <a href="https://www.pdfplatform.app/en/tools/pdf-to-image">Open the tool</a></p>
-<h2>JPG or PNG?</h2>
-<p>JPG is smaller and ideal for photo-heavy pages. PNG keeps sharp edges and text crisper and supports transparency — prefer it for logos, diagrams or text-heavy pages.</p>
-<h2>Convert the page, or extract the images inside?</h2>
-<p>This tool converts the WHOLE page into an image. But if your goal is only to save a photo or logo inside the PDF at original quality, you should extract the embedded images directly instead of rasterizing the page — that way there's no quality loss.</p>
-<p><strong>Extract Images from PDF</strong> — Pull embedded photos and logos out of a PDF in their original format. <a href="https://www.pdfplatform.app/en/tools/extract-images">Open the tool</a></p>
-<h2>The reverse: images to PDF</h2>
-<p>If you have several photos/images and want to combine them into one PDF, we have a separate tool for that — and it runs entirely on your device.</p>
-<p><strong>Images to PDF</strong> — Combine your photos into a single PDF — on your device. <a href="https://www.pdfplatform.app/en/tools/image-to-pdf">Images → PDF</a></p>
-<h2>Why resolution matters</h2>
-<p>Converting a PDF page to an image means turning a vector document into pixels, and resolution decides the quality of that result with no way back: an image produced at low resolution cannot be sharpened afterwards. Roughly, medium resolution suits on-screen sharing, high suits presentations and the web, and the highest available suits print.</p>
-<h2>Why a screenshot is not enough</h2>
-<p>Taking a screenshot looks like the fastest way to share a page, but the result is limited to your screen's resolution and usually comes out soft. It also picks up the frame, margins and the viewer's interface. Converting the PDF directly gives a clean output at the page's own resolution, with straight edges and crisp text.</p>
-<h2>Practical notes for social media and the web</h2>
-<ul><li>A portrait A4 page gets cropped in most social feeds; snipping the section you want first looks much better.</li><li>Compressing an image before putting it on a web page noticeably improves load time.</li><li>PNG works better for text-heavy pages, JPG for photo-heavy ones.</li><li>Text in a converted page is no longer text; search engines cannot read it. Write important wording on the page as well.</li></ul>
-<h2>The whole page, or part of it?</h2>
-<p>Often what you need is not the whole page but a table, chart or paragraph on it. Snipping the area directly is faster than converting the page and cropping it in an image editor, and it preserves resolution. When preparing presentations and reports, this is the method that helps most often.</p>
-<h2>One side effect of converting to an image</h2>
-<p>When a page becomes an image its text layer disappears: it can no longer be copied, searched or read by screen readers. Sometimes that is exactly what you want, if you would rather the text not be lifted easily. But where accessibility matters, or where the document will be archived, keep the PDF itself and use the image only as a sharing copy.</p>]]></content:encoded>
-      <category>Convert</category>
-      <category>Image</category>
-      <category>JPG</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="56017" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" />
-    </item>
-    <item>
-      <title>Process PDFs Without Uploading: Why On-Device Is Safer</title>
-      <link>https://www.pdfplatform.app/en/blog/process-pdf-without-uploading</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/process-pdf-without-uploading</guid>
-      <pubDate>Tue, 21 Jul 2026 17:56:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
-      <description><![CDATA[Do you have to upload a PDF to an unknown server just to merge it? No. Most structural PDF operations can run entirely in your browser — without your file ever being sent to the internet.]]></description>
-      <content:encoded><![CDATA[<p>Most online PDF tools work like this: they upload your file to their servers, process it there, and hand back the result. But for documents like contracts, IDs and invoices, that means a copy of your file ends up on a server you don't control. For most structural PDF operations, that's unnecessary.</p>
-<h2>What does "on-device" mean?</h2>
-<p>On-device (client-side) processing means the whole job happens inside your browser — the file is never sent to the internet. That means three things: privacy (the file stays with you), speed (no upload/download wait, instant result) and the ability to work offline.</p>
-<h2>Tools that run in your browser</h2>
-<ul><li>Merge, Split, Rotate, Delete Pages, Reorder Pages — all on your device.</li><li>Images to PDF, signing and annotating a PDF — on your device.</li><li>Document Scanner — including the camera image, entirely on your device.</li></ul>
-<p><strong>Merge On-Device</strong> — Merge your PDFs in your browser, without uploading to a server. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
-<h2>So does every tool run on-device?</h2>
-<p>Let's be honest: no. Heavy jobs like Word/Excel conversion, OCR and compression run on the server (they aren't practical in the browser). With AI tools, your file isn't uploaded — the text is extracted on your device and only the text is processed. So it's always clear which tool runs where.</p>
-<blockquote><p>For the most sensitive documents (IDs, contracts, health records), prefer the on-device structural tools and the document scanner; and if needed before sharing, remove sensitive data with real redaction.</p></blockquote>
-<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data before sharing. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Redaction tool</a></p>
-<h2>How to tell whether a tool really runs on your device</h2>
-<p>A privacy claim means something when it can be tested. The simplest way to find out whether a tool uploads your file is to try the operation with your connection switched off. If it completes, the file never left your device, because there was nothing to send. That thirty-second test gives a more definite answer than reading any site's privacy page.</p>
-<h2>What «files are deleted after an hour» really means</h2>
-<p>That is the privacy promise of most online tools, and it is an honest one — but it misses the point of concern. Until deletion the file sat on a server, crossed the network on its way there, and was visible to anyone with access to that system during the window. With a tool that runs on your device, no copy to delete is ever created. The difference is not the quality of the deletion policy but the fact that the file never travelled.</p>
-<h2>Why some jobs need a server</h2>
-<p>That not every tool runs locally is a matter of the work's nature rather than a choice. Rearranging, merging, rotating or deleting pages changes the document's structure, which a browser handles comfortably. Word conversion, OCR, compression and AI processing need serious computing power and large components; downloading those into every visitor's browser would be neither fast nor realistic.</p>
-<h2>A practical distinction for your own documents</h2>
-<ul><li>Identity, medical, financial and legal documents: do everything you can on your device.</li><li>If a document with personal data must be processed on a server, remove what is not needed first.</li><li>For internal or already-public documents, the distinction matters little in practice.</li><li>When unsure, ask whether it would trouble you if the document got out — if not, server processing is fine.</li></ul>
-<h2>Where privacy alone is not enough</h2>
-<p>A file not being uploaded does not mean the document is safe. When the work is done, the document sits on your device, and one left in the downloads folder of a shared computer is a bigger risk than a server ever was. After working with sensitive documents, deleting intermediate copies and clearing metadata before sharing is the companion to processing locally.</p>]]></content:encoded>
-      <category>Privacy</category>
-      <category>On-device</category>
-      <category>PDF Tools</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="56859" />
-      <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/process-pdf-without-uploading.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/process-pdf-without-uploading.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" />
-    </item>
-    <item>
-      <title>How to Repair a Corrupt PDF That Won&apos;t Open</title>
-      <link>https://www.pdfplatform.app/en/blog/repair-a-corrupt-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/repair-a-corrupt-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 17:39:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/bozuk-pdf-onarma" />
-      <description><![CDATA[A "can't open" or "file is corrupt" error on an important document is frustrating. Here's why a PDF breaks and how to recover the salvageable content by re-packaging its structure.]]></description>
-      <content:encoded><![CDATA[<p>Hitting a "file is damaged" or "can't open" error on an important PDF is maddening. The good news: in most broken PDFs the content is still there — only the file's structure is damaged — and that's often repairable.</p>
-<h2>Why do PDFs break?</h2>
-<ul><li>An interrupted download or transfer (the connection dropped).</li><li>A USB/disk error or the file not being fully saved.</li><li>Editing with an incompatible program or a faulty export.</li><li>Email/attachment compression corrupting the file.</li></ul>
-<h2>Try repairing — step by step</h2>
-<ol><li><strong>Upload the broken PDF</strong> — Add your won't-open file to the Repair PDF tool.</li><li><strong>Let the repair run</strong> — The tool re-packages the file's structure and gathers the salvageable content.</li><li><strong>Download the result</strong> — Download the repaired PDF and try opening it. Much of the content may come back.</li></ol>
-<p><strong>Repair PDF</strong> — Try to repair your won't-open PDF and recover the content. <a href="https://www.pdfplatform.app/en/tools/repair-pdf">Open the tool</a></p>
-<h2>What to expect</h2>
-<p>Repair is not always a 100% guarantee — it depends on the degree of damage. Success is high for files whose structure is broken but whose content remains; it can't bring back fully deleted or encrypted data. Still, trying often recovers the document.</p>
-<blockquote><p>If the file is very large after repair, you can shrink it with the compress tool; if it's scanned and the text is gone, you can add a text layer again with OCR.</p></blockquote>
-<h2>First make sure the file is really broken</h2>
-<p>Not every PDF that refuses to open is corrupt. A few minutes of checking often solves the problem, or at least reveals the real cause.</p>
-<ul><li>Try a different program: a document that opens in a browser may fail in an old desktop reader.</li><li>Look at the file size: a few kilobytes means the download was cut short, and re-downloading beats repairing.</li><li>Check the extension: on some systems the file is actually a .zip or .docx.</li><li>If it asks for a password, the file is encrypted rather than broken, and needs different handling.</li><li>If it sits in a cloud folder, check whether it has finished syncing.</li></ul>
-<h2>What repair actually does</h2>
-<p>At the end of a PDF there is an index recording where each object sits in the file. When that index is damaged the reader cannot open the document, even though the page content is still in the file. Repair scans the file from start to finish, gathers the objects it can find and re-packages them with a new index. That is why success is high for structural damage and low when the content itself has truly gone.</p>
-<h2>What to check in the repaired document</h2>
-<ul><li>Page count: is anything missing?</li><li>Is the text selectable, or have pages turned into images?</li><li>Are the images in place, or showing as empty boxes?</li><li>Do bookmarks and links still work?</li><li>Are the last page and the signature section complete?</li></ul>
-<h2>Making the recovered document usable</h2>
-<p>Repair sometimes costs the text layer and leaves pages as images. To search such a document you need to add a text layer again with OCR. If the file came out larger than expected, compress it; if some pages stayed blank or broken, delete them. Save the recovered version under a new name and do not delete the damaged original immediately — you may want to try another approach later.</p>
-<h2>Avoiding it next time</h2>
-<p>A large share of corruption happens during transfer. Making sure a big download is not interrupted, waiting for safe removal before pulling out a USB drive, and not keeping the only copy of an important document on removable media largely removes the problem. Keeping critical documents in two separate places is the simplest and most effective precaution.</p>]]></content:encoded>
-      <category>Troubleshooting</category>
-      <category>PDF</category>
-      <category>Repair</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="53007" />
-      <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" />
-    </item>
-    <item>
-      <title>How to Convert PDF to Excel: Export Tables to .xlsx (2026)</title>
-      <link>https://www.pdfplatform.app/en/blog/convert-pdf-to-excel</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-pdf-to-excel</guid>
-      <pubDate>Tue, 21 Jul 2026 16:59:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme" />
-      <description><![CDATA[If you want to work with a PDF table in Excel, copy-paste usually breaks the alignment. Here's how to export tables cleanly to .xlsx — and when AI is the better choice.]]></description>
-      <content:encoded><![CDATA[<p>To analyze a report, price list or table from a PDF in Excel, you first need the data to land in proper cells. Copy-paste usually dumps everything into one column. Here's how to export tables cleanly to Excel.</p>
-<h2>Step by step</h2>
-<ol><li><strong>Upload the PDF</strong> — Add your document with tables to the PDF to Excel tool.</li><li><strong>Tables get extracted</strong> — The table structure on the pages is detected and written to .xlsx with rows/columns preserved.</li><li><strong>Download the Excel file</strong> — Download the result and edit, filter and calculate directly in Excel.</li></ol>
-<p><strong>PDF to Excel</strong> — Export PDF tables into an editable Excel file. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">Open the tool</a></p>
-<h2>Plain conversion or AI?</h2>
-<p>If the PDF has clean, grid-like tables, plain conversion is fast and enough. But if you need to pull fields from documents that each have a different layout — like invoices (invoice no, date, totals, line items) — AI data extraction is far more accurate.</p>
-<blockquote><p>To gather dozens of invoices into a single CSV table, the Extract Data and Batch tools are built for exactly this — merging one row per document.</p></blockquote>
-<p><strong>Extract Data</strong> — Pull fields from complex documents like invoices with AI. <a href="https://www.pdfplatform.app/en/tools/extract-data-from-pdf">Extract with AI</a></p>
-<h2>Why tables sometimes come out wrong</h2>
-<p>There is no table object in a PDF. The grid you see is drawn with lines and aligned pieces of text; no row-and-column relationship exists underneath. The conversion infers that relationship from positions. The cases where inference is hard are predictable, and knowing them sets the right expectation.</p>
-<ul><li>Tables without rules: when columns are separated only by whitespace, the boundaries blur.</li><li>Merged cells: a heading spanning two columns breaks the alignment.</li><li>Long text wrapping to a second line makes it unclear whether it is one row or two.</li><li>On tables running across pages, a repeated header row can look like a new table.</li><li>Scanned documents need OCR first, otherwise cells come back empty.</li></ul>
-<h2>First fixes after opening in Excel</h2>
-<p>A few standard corrections make the output usable, and making them a habit avoids starting from scratch each time: format columns that did not arrive as numbers, convert amounts that became text because of thousand separators, check the date column format, delete repeated header rows and remove empty columns.</p>
-<h2>When data extraction is the better fit</h2>
-<p>Plain conversion tries to carry the table across as it is. Often, though, what you want is not the table but specific fields: the amount, date and seller on an invoice. If every document has a different layout, moving the table does not help; you need the fields by name. The test is simple: same template with a clean grid means conversion, differing documents with specific fields means extraction.</p>
-<h2>A practical route for large tables</h2>
-<p>If you only need the table on page fifteen of a hundred-page report, converting the whole document is unnecessary work and unnecessary waiting. Splitting out the relevant page range and converting only that is faster and cleaner, with no surplus rows to remove.</p>
-<h2>A quick way to check the result</h2>
-<p>Rather than reading row by row, check with totals: does the amount column sum to the document's grand total, does the row count match the number of line items, are there empty cells? Those three checks catch most errors in seconds.</p>]]></content:encoded>
-      <category>Convert</category>
-      <category>Excel</category>
-      <category>Table</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="55315" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-excel.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-excel.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" />
-    </item>
-    <item>
-      <title>PDF on Your Phone: Merge, Edit and Scan Without an App</title>
-      <link>https://www.pdfplatform.app/en/blog/pdf-tools-on-your-phone-no-app</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/pdf-tools-on-your-phone-no-app</guid>
-      <pubDate>Tue, 21 Jul 2026 12:37:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz" />
-      <description><![CDATA[You don't need to install a bunch of apps to work with PDFs on your phone. Merging, deleting pages, rotating and scanning documents can happen right in your phone's browser, without your file leaving the device.]]></description>
-      <content:encoded><![CDATA[<p>When you need to quickly merge two PDFs or scan a document on your phone, you don't have to head to the app store for a bulky, ad-filled app. Most of these tasks run right in your phone's browser, on your device.</p>
-<h2>Tasks that run in your phone's browser</h2>
-<ul><li>Merging and splitting PDFs</li><li>Deleting, rotating and reordering pages</li><li>Creating a PDF from images (photos)</li><li>Scanning documents with the camera (edge detection + perspective correction)</li></ul>
-<h2>Why is no-install better?</h2>
-<p>Installing an app takes space, needs updates, and many free apps lock features or add a forced watermark to the output. In the browser, a link opens and the job is done. And because these structural tasks run on your device, your file isn't sent to the internet — speed and privacy together.</p>
-<p><strong>Merge on Phone</strong> — Merge two PDFs on your phone, no app needed. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
-<h2>Scanning a document with your phone</h2>
-<p>The Document Scanner uses your phone camera to automatically find the document's corners, correct the perspective and produce a clean PDF — entirely on your device. You can digitize IDs, contracts or invoices without sending them to the cloud.</p>
-<p><strong>Scan Document</strong> — Scan a document with your phone camera into a PDF — on your device, private. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the scanner</a></p>
-<h2>What about heavy jobs?</h2>
-<p>Heavy jobs like Word/Excel conversion, OCR and compression aren't practical on a phone, so they run on the server; they work on mobile too, the file is just uploaded. Structural tasks (merge, scan, etc.) stay entirely on your device.</p>
-<h2>Why you may not want to install a PDF app</h2>
-<p>Most free PDF apps in the stores are not really free; you pay in something other than money. The usual pattern is predictable: watermarks on the output, a daily operation limit, your documents uploaded to the app's cloud account, broader permissions than the job needs, and a subscription screen. None of that is worth taking on to merge a PDF a few times a year.</p>
-<h2>Getting at files on a phone</h2>
-<p>The step people get stuck on is not the operation but finding the file. An email attachment has to be saved to the phone first, and documents from messaging apps land in their own folder. Once the file picker opens you can reach both device storage and your cloud accounts. When the work is done the result lands in downloads, and sharing it from there is one tap away.</p>
-<h2>What people do most often on a phone</h2>
-<ul><li>Turning photographed paperwork into a single PDF — the most common need by far.</li><li>Merging several PDFs and sending them as one file.</li><li>Deleting unwanted pages and fixing sideways ones.</li><li>Shrinking a document to fit an email.</li><li>Signing a form and sending it back.</li></ul>
-<h2>When photographing documents</h2>
-<p>Whether photographed paperwork gets accepted is usually decided at the moment of the shot. Put the document on a flat surface, light it from the front, keep all four edges in frame and hold the phone parallel to the page. If there are shadows or skew, using the document scanning flow instead of converting directly gives a much cleaner result: the edges are found and perspective is corrected.</p>
-<h2>The limits of a phone</h2>
-<p>Work that runs in the browser uses the phone's memory. Processing a few hundred scanned pages on a phone can slow down or restart the tab. For files like that, splitting the document or leaving the job to a computer is more practical. For everyday documents a phone is more than enough.</p>]]></content:encoded>
-      <category>Mobile</category>
-      <category>On-device</category>
-      <category>PDF Tools</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="55047" />
-      <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" />
-    </item>
-    <item>
-      <title>How to Convert PowerPoint to PDF (and Back)</title>
-      <link>https://www.pdfplatform.app/en/blog/convert-powerpoint-to-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-powerpoint-to-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 11:44:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme" />
-      <description><![CDATA[Sharing a deck as a PDF keeps slides looking the same for everyone and safe from accidental edits. Here's how to convert PowerPoint to PDF — and back when you need to.]]></description>
-      <content:encoded><![CDATA[<p>Sending a deck as a PowerPoint file can be risky: fonts may shift, animations may break, or slides may be changed by accident. PDF makes the deck look identical for everyone and un-editable.</p>
-<h2>PowerPoint to PDF</h2>
-<ol><li><strong>Upload the deck</strong> — Add your .ppt or .pptx file to the PowerPoint to PDF tool.</li><li><strong>Convert</strong> — All slides are combined into a single PDF with the design preserved.</li><li><strong>Download</strong> — Download the PDF — a share-ready deck that looks the same on every device.</li></ol>
-<p><strong>PowerPoint to PDF</strong> — Convert your deck into a single PDF with the design intact. <a href="https://www.pdfplatform.app/en/tools/ppt-to-pdf">Open the tool</a></p>
-<h2>PDF back to PowerPoint</h2>
-<p>If you only have the PDF version of a deck and want to edit it, you can convert the PDF back into PowerPoint slides — each page becomes a slide and you can reuse the content.</p>
-<p><strong>PDF to PowerPoint</strong> — Turn a PDF deck into editable .pptx slides. <a href="https://www.pdfplatform.app/en/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
-<h2>Which one, when?</h2>
-<ul><li>To share / present / archive: PowerPoint → PDF.</li><li>To edit an old deck / reuse content: PDF → PowerPoint.</li></ul>
-<h2>What survives the conversion, and what doesn't</h2>
-<p>PDF is a fixed output format: it preserves how slides look but flattens everything interactive. Knowing this upfront avoids surprises after you send the deck.</p>
-<ul><li>Preserved: layout, colours, fonts, images, and the appearance of tables and charts.</li><li>Preserved: slide order and aspect ratio (16:9 or 4:3).</li><li>Lost: transitions and animations — an animated slide becomes one page in its final state.</li><li>Lost: embedded video and audio; only a poster image remains in place.</li><li>Changed: speaker notes are not included in the default output.</li></ul>
-<h2>Why fonts shift, and how PDF fixes it</h2>
-<p>A PowerPoint file often does not embed the typeface; it only records its name. If the recipient does not have that font, the program substitutes something similar, lines shift and boxes overflow. In a PDF the fonts used are embedded in the document, so it looks the same wherever it is opened. If you will present from an unfamiliar computer, carrying a PDF copy is the safest route.</p>
-<h2>Practical settings for print and handouts</h2>
-<p>If you plan to hand the deck out, printing one slide per page usually wastes paper. After converting, use the page layout tool to place 2 or 4 slides on a sheet; it stays legible and costs less to print. On long decks this turns ten pages into three.</p>
-<h2>Realistic expectations going back to PowerPoint</h2>
-<p>The reverse conversion does not restore the original deck; a PDF does not contain the editable structure of slides. Each page becomes a slide and text boxes are rebuilt. That is enough to reuse text, copy headings or refresh an old deck, but if you expect to edit the original design precisely, finding the source file is far less work.</p>
-<h2>A last check before sending</h2>
-<ul><li>Does content that appeared through animation show in the right state?</li><li>Is the small type in charts and tables readable?</li><li>Did hidden slides make it into the output — and do you want them there?</li><li>Does the file size fit the channel you are sharing through?</li></ul>]]></content:encoded>
-      <category>Convert</category>
-      <category>PowerPoint</category>
-      <category>Slides</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="53674" />
-      <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" />
-    </item>
-    <item>
-      <title>How to Compare Two PDFs and Find the Differences</title>
-      <link>https://www.pdfplatform.app/en/blog/compare-two-pdfs</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/compare-two-pdfs</guid>
-      <pubDate>Tue, 21 Jul 2026 11:18:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma" />
-      <description><![CDATA[Comparing two versions of a contract line by line is tedious and risky; a small change can slip through. Here's how to find the binding differences between two PDFs in seconds with AI.]]></description>
-      <content:encoded><![CDATA[<p>"Is this the same version they sent last week, or did a clause change?" — one of the riskiest questions in contracts. Comparing two PDFs by hand is tedious and dangerous: a single changed date or amount can slip by. AI brings this down to seconds.</p>
-<h2>The risk of manual comparison</h2>
-<p>Reading two long documents side by side demands focus; across pages of text it's easy to miss an added sentence, a removed exception or a changed figure. And formatting differences (renumbered clauses, shifted paragraphs) can hide the real content changes.</p>
-<h2>Comparing with AI — step by step</h2>
-<ol><li><strong>Upload both versions</strong> — Add documents A (old) and B (new) to the Compare PDF tool.</li><li><strong>Compare</strong> — The AI understands the text and extracts added, removed and changed clauses.</li><li><strong>Review the differences</strong> — See binding changes in particular: amounts, dates, terms, parties, obligations and penalty clauses.</li></ol>
-<p><strong>Compare PDF</strong> — Compare two versions of a contract — see the binding differences in seconds. <a href="https://www.pdfplatform.app/en/tools/compare-pdf">Open the tool</a></p>
-<h2>When is it most useful?</h2>
-<ul><li>Checking contract revisions before you approve them.</li><li>Seeing what changed in tender/spec updates.</li><li>Understanding what the other side's 'minor edits' actually contain.</li></ul>
-<blockquote><p>If you want to understand not just the difference but the whole document before signing, the Summarize and Chat with PDF tools let you ask questions about it.</p></blockquote>
-<p><strong>Chat with PDF</strong> — Ask the document questions like "what is the penalty clause?" and get clear answers. <a href="https://www.pdfplatform.app/en/tools/chat-with-pdf">Chat tool</a></p>
-<h2>Which changes actually matter?</h2>
-<p>Two versions can differ in dozens of places, but most of it is cosmetic: a comma, a renumbered clause, a shifted paragraph. The risk concentrates in known places, and those deserve your attention first.</p>
-<ul><li>Amounts: figures, currency and tax wording.</li><li>Dates and periods: delivery, payment, notice and termination timeframes.</li><li>Liability: caps, indemnities and penalty clauses.</li><li>Parties: a changed legal name or an added party.</li><li>Negative wording: «excluding», «not included», «limited to» — a one-word insertion can change the scope entirely.</li><li>Governing law and jurisdiction.</li></ul>
-<h2>How quiet changes happen</h2>
-<p>The most common situation in negotiation is the other side sending a new file saying they made only minor edits. Usually that is true; but the same email can carry a one-word change in a clause nobody discussed. The only reliable way to catch it is to compare the two versions — memory and goodwill are not enough.</p>
-<h2>Preparing before comparing</h2>
-<p>A readable result depends on comparable inputs. Make sure you are comparing the same parts of each document: if one version includes annexes and the other does not, most of the differences come from the annexes and the real changes get lost. Separating the annexes and comparing the main texts gives a far more readable result. Scanned versions need their text extracted first.</p>
-<h2>Keeping a record of the result</h2>
-<p>When a negotiation runs over several rounds, it is easy to forget what changed when. Keeping each comparison with its date lets you answer the question of when a clause took its current form in minutes. Merging the versions and comparison outputs into one document with page numbers is the practical way to keep that archive tidy.</p>
-<h2>Where comparison is not enough</h2>
-<p>A comparison shows what changed; it does not tell you what the change means for you. A raised liability cap is technically a small difference and commercially a large risk. Comparison therefore does not replace legal assessment — it points at what needs assessing and lets you spend your lawyer's time on the right clauses.</p>]]></content:encoded>
-      <category>AI</category>
-      <category>Compare</category>
-      <category>Contract</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="54870" />
-      <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/compare-two-pdfs.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/compare-two-pdfs.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" />
-    </item>
-    <item>
-      <title>Redact Sensitive Data in a PDF: Share Safely (GDPR/KVKK)</title>
-      <link>https://www.pdfplatform.app/en/blog/redact-sensitive-data-in-a-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/redact-sensitive-data-in-a-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 09:31:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
-      <description><![CDATA[Before sharing a document, hiding personal data like an ID number, IBAN or address is often a legal requirement. But a black box isn't enough — the data still sits underneath. Here's real redaction.]]></description>
-      <content:encoded><![CDATA[<p>Before sharing a contract, invoice or official document, you need to hide the personal data inside it (ID numbers, IBAN, phone, address) — often a legal requirement under GDPR/KVKK. But beware: drawing a black box over text is NOT real hiding.</p>
-<h2>Why a "black box" isn't safe</h2>
-<p>In most tools you "hide" sensitive data by drawing a black rectangle over it. But the original text stays inside the document: anyone who opens the PDF in a text editor, removes the box, or copies the text can read the data back. That's a leak and a compliance risk.</p>
-<blockquote><p>Real redaction removes the data from the document's CONTENT. Our redaction tool uses PyMuPDF to delete the data entirely — it doesn't cover it. In the redacted spot, searching, copying or recovery is impossible.</p></blockquote>
-<h2>How it works — step by step</h2>
-<ol><li><strong>Upload the PDF</strong> — Add your document to the redaction tool.</li><li><strong>Sensitive fields get found</strong> — Patterns like ID, IBAN, phone and email are detected on your device; context-based data like names and addresses is detected with AI.</li><li><strong>Remove permanently</strong> — The fields you confirm are truly deleted from the document's content. Download the cleaned PDF.</li></ol>
-<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data and share the document safely. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Open the tool</a></p>
-<h2>When do you need it?</h2>
-<ul><li>Before sharing a contract or invoice with a third party.</li><li>In official applications, tenders or court files.</li><li>For documents published as samples/templates.</li></ul>
-<p>The part of the personal data detected on your device (ID, IBAN, phone, email) is not sent anywhere as it's removed; only context-based detection (name/address) sends text to the AI.</p>
-<h2>Sensitive fields people overlook</h2>
-<p>Personal data does not sit only where you expect. While checking the middle of a page before sharing, the details around the edges get skipped — and that is exactly where leaks come from.</p>
-<ul><li>Names, branch codes or usernames in headers and footers.</li><li>The signature block and direct phone number of whoever prepared the document.</li><li>Records belonging to third parties left in annex table rows.</li><li>Readable details underneath stamp and signature images.</li><li>A customer number on an invoice, or a full account number on a statement.</li></ul>
-<h2>Metadata is part of the document too</h2>
-<p>Even with everything on the page cleaned, a document can still carry invisible information: the name of whoever created the file, the software used, creation and modification dates, and sometimes a title left from an earlier draft. These sit in the document properties and anyone curious can see them in a couple of clicks. Clearing metadata is the companion step to redaction on documents going outside.</p>
-<h2>What to hide and what to leave</h2>
-<p>Over-redacting makes the document useless; under-redacting leaves the risk in place. The test is the purpose of sending it: which information does the recipient genuinely need to do their job? Sending a lease for a loan application needs the rent figure, but usually not the landlord's identity number. Asking that question field by field leaves a document that is both compliant and usable.</p>
-<h2>Verifying after redaction</h2>
-<ul><li>Reopen the document and search for what you removed; any result means removal did not happen.</li><li>Select the text and paste it elsewhere; the redacted part should not appear.</li><li>Review every page — the same detail may repeat elsewhere.</li><li>Check document properties; a name or file path may remain in the metadata.</li><li>Save the redacted version under a new name and share from that file.</li></ul>
-<h2>Scanned documents behave differently</h2>
-<p>In a scanned document the page is an image; with no text layer there is no text to remove, and covering an area stays permanent on the image. But if the document has been through OCR, an invisible text layer sits beneath it and the information in that layer can still be copied. So with scans it is worth checking whether a text layer exists.</p>]]></content:encoded>
-      <category>Privacy</category>
-      <category>Redaction</category>
-      <category>GDPR</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="57019" />
-      <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" />
-    </item>
-    <item>
-      <title>How to Edit a PDF: Actually Delete and Replace Existing Text</title>
-      <link>https://www.pdfplatform.app/en/blog/edit-pdf-text</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/edit-pdf-text</guid>
-      <pubDate>Tue, 21 Jul 2026 09:24:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
-      <description><![CDATA[Wrong date, price or name in a PDF? Most 'editors' cover the text with a white box — the text still sits underneath. Real editing is different; here's how it works.]]></description>
-      <content:encoded><![CDATA[<p>Fixing a small mistake in a PDF — a wrong date, an outdated price, a typo — can be harder than it looks. Because most online 'PDF editors' don't actually delete the text; they just place a white box over it. This post covers real editing.</p>
-<h2>"Cover up" vs "truly delete"</h2>
-<p>With tools that put a box over the text, the original text stays inside the document: it can still show up when copied or searched. That's messy and a privacy risk. Real editing removes the text from the document and puts new text in its place.</p>
-<blockquote><p>Our Edit PDF tool uses PyMuPDF to TRULY remove existing text and place your new text — it doesn't cover it up. Turkish characters are fully supported.</p></blockquote>
-<h2>Step by step</h2>
-<ol><li><strong>Open the PDF</strong> — Upload your document to the Edit PDF tool.</li><li><strong>Click the text</strong> — Click the text you want to change; the existing text is selected.</li><li><strong>Delete or rewrite</strong> — Remove the text or type a replacement. You can add and correct text.</li><li><strong>Download</strong> — Download the edited PDF — the change is baked into the document.</li></ol>
-<p><strong>Edit PDF</strong> — Truly delete and replace PDF text — no covering up. <a href="https://www.pdfplatform.app/en/tools/edit-pdf">Open the tool</a></p>
-<h2>When it works — and when it doesn't</h2>
-<p>This tool works on PDFs that contain a real text layer (for example, a PDF exported from Word). In scanned/photo PDFs the text is actually an image; there you first need to turn it into text with OCR.</p>
-<p><strong>OCR a scanned PDF</strong> — If your document is scanned, first turn the text into real text with OCR. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">OCR tool</a></p>
-<h2>Why editing a PDF is not like editing a Word file</h2>
-<p>In a Word document text flows: add a sentence and everything after it moves along. In a PDF each piece of text sits at a fixed position on the page; there is no flow. So replacing a word with a longer one does not reflow the line. That is not a shortcoming of the tool but the design of the format — PDF exists to preserve a printed result.</p>
-<h2>Typical situations while editing</h2>
-<ul><li>If the new text is longer than the old, it can overflow the line; choosing a short equivalent is the practical fix.</li><li>If the typeface is not embedded, a similar one is used and a small visual difference can appear.</li><li>When changing a value in a table cell, check that the alignment still holds.</li><li>If the same wording appears many times, each occurrence has to be corrected separately.</li></ul>
-<h2>When to edit and when to rebuild</h2>
-<p>The test is the size of the change. For a date, an amount, a name or a typo, editing directly is the cleanest route and leaves the rest of the document untouched. If paragraphs will be rewritten, a section added or the layout changed, rebuilding from the source is less work. Without the source file, converting to Word, editing and producing a PDF again is a third route — though each conversion round shifts the formatting a little.</p>
-<h2>A note on official documents</h2>
-<p>Changing the text of a document may be technically possible, but it is not legitimate on every document. Altering an invoice, an official letter, a signed contract or correspondence from an institution destroys the document's standing and can have serious consequences. Editing is for fixing mistakes in documents you produced. Any change to a digitally signed document invalidates the signature — which is a sign the protection is working.</p>
-<h2>Where editing is not enough for privacy</h2>
-<p>If you want information out of a document, deleting the visible text appears to solve it, but traces can remain: metadata, document properties, or the same detail on other pages. Where personal data is involved you need a tool that removes content permanently, and you need to clear the document's metadata too. A document that looks clean can still be technically unclean.</p>]]></content:encoded>
-      <category>Editing</category>
-      <category>PDF</category>
-      <category>Text</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="55818" />
-      <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/edit-pdf-text.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/edit-pdf-text.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" />
-    </item>
-    <item>
-      <title>How to Add Page Numbers to a PDF: Choose Position and Format</title>
-      <link>https://www.pdfplatform.app/en/blog/add-page-numbers-to-pdf</link>
-      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/add-page-numbers-to-pdf</guid>
-      <pubDate>Tue, 21 Jul 2026 09:10:00 GMT</pubDate>
-      <dc:creator>PDF Platform</dc:creator>
-      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
-      <description><![CDATA[The easiest way to make a long report, thesis or contract feel organized is to add page numbers. Here's how to add them to a PDF, choosing position and format.]]></description>
-      <content:encoded><![CDATA[<p>When sharing a multi-page document, page numbers make a big difference: readers don't lose their place, printed pages don't get mixed up, and referencing becomes easy. Here's how to add numbers to your PDF in minutes.</p>
-<h2>When do you need it?</h2>
-<ul><li>Easy referencing in reports, theses and academic documents.</li><li>Page integrity in contracts and official paperwork.</li><li>Keeping order in long documents headed for print.</li></ul>
-<h2>Step by step</h2>
-<ol><li><strong>Upload the PDF</strong> — Add your document to the Page Numbers tool.</li><li><strong>Choose position and format</strong> — Set whether the number goes at the top or bottom, and pick its format.</li><li><strong>Download</strong> — Download the numbered PDF — every page is professionally numbered.</li></ol>
-<p><strong>Add Page Numbers</strong> — Add page numbers to your PDF with your choice of position and format. <a href="https://www.pdfplatform.app/en/tools/page-numbers">Open the tool</a></p>
-<h2>Tip</h2>
-<blockquote><p>If your document has a cover page, consider starting numbering from the content page — leaving the cover without a number looks more professional.</p></blockquote>
-<h2>Which number format should you pick?</h2>
-<p>Format depends on the document. No standard forces your hand, but readers have expectations: an ornate numbering style distracts on official paperwork, while a bare digit can feel thin in a long report.</p>
-<ul><li>Plain digit (1, 2, 3): the safest choice for most reports, printed slides and everyday documents.</li><li>«Page 1» style: helps orientation when the document will be read on paper.</li><li>«1 / 12» style: preferred for contracts and quotes, where completeness matters — the other side can tell whether a page is missing.</li><li>Roman numerals (i, ii, iii): used for front matter such as preface and contents, with the main text restarting at 1.</li></ul>
-<h2>Where should numbering start?</h2>
-<p>Cover pages are almost never numbered. The common academic pattern is: no number on the cover, roman numerals through the front matter, and 1 on the first page of the main text. Corporate reports usually number every page except the cover, starting at 1.</p>
-<p>If the organization receiving the document has a style guide, the choice may not be yours. University thesis guides and public-sector document standards often state the position and format explicitly; checking first is cheaper than preparing the document twice.</p>
-<h2>Finalize page order before numbering</h2>
-<p>Page numbers are printed into the document. Adding, deleting or reordering pages afterwards leaves numbers that no longer match the content, and a second page that reads «3» tells the reader the document was put together carelessly.</p>
-<ul><li>Add missing pages, delete the unnecessary ones and settle the order first.</li><li>If you are merging several files, merge before you number.</li><li>Fix sideways pages first — the number is placed relative to page orientation.</li><li>Leave numbering as the last step.</li></ul>
-<h2>When the number lands on existing content</h2>
-<p>Some documents have narrow bottom margins, and the number collides with a footnote or a table row. Two practical fixes: move the number to the top edge, or adjust the margin with the crop tool before numbering. Neither touches the text of the document.</p>
-<h2>Common mistakes</h2>
-<ul><li>Adding pages after numbering — the numbers drift out of sync with the content.</li><li>Numbering the cover as well, which looks amateurish on official documents.</li><li>Adding a second layer of numbers to a document that already has them; check first.</li><li>Aligning numbers for single-sided pages on a document that will be printed double-sided.</li></ul>]]></content:encoded>
-      <category>Editing</category>
-      <category>PDF</category>
-      <category>Page Numbers</category>
-      <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="56646" />
-      <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
-      <media:content url="https://www.pdfplatform.app/en/covers/square/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
-      <media:content url="https://www.pdfplatform.app/en/covers/tall/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
-      <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" />
     </item>
   </channel>
 </rss>

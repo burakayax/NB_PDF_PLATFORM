@@ -75,6 +75,7 @@ export const TOOL_SLUGS = [
   "ai-toplu-islem",
   "pdf-karsilastir",
   "hassas-veri-gizle",
+  "udf-to-pdf",
 ];
 
 /**
@@ -1505,6 +1506,39 @@ export const TOOL_SEO = {
       ],
     ),
   },
+
+  "udf-to-pdf": {
+    tr: T(
+      "UDF to PDF — UDF Dosyasını PDF'ye Çevir",
+      "UYAP'tan indirdiğiniz .udf dosyasını PDF'ye çevirin. Program kurmadan, üyeliksiz ve ücretsiz — belgeniz tarayıcınızdan hiç çıkmaz.",
+      "UDF Dosyasını PDF'ye Çevir",
+      "UDF, UYAP'ın (Ulusal Yargı Ağı Bilişim Sistemi) belge biçimidir; dilekçe, müzekkere, tensip zaptı ve gerekçeli karar bu uzantıyla iner. Normalde açmak için UYAP Doküman Editörü kurmanız gerekir. Burada dosyayı sürükleyip bırakın, yazı tipi, kalın/altı çizili biçimler, tablolar ve gömülü görsellerle birlikte PDF'ye çevrilsin. Tüm işlem tarayıcınızda yapılır — adli evrakınız sunucuya YÜKLENMEZ. Belgenin düz metnini ayrıca .txt olarak da indirebilirsiniz.",
+      ["udf to pdf", "udf dosyası nasıl açılır", "udf pdf çevirme", "udf açma", "uyap udf", "udf dönüştürücü", "udf okuyucu", "udf pdf yapma"],
+      [
+        { q: "UDF dosyası nedir?", a: "UDF (UYAP Doküman Formatı), Adalet Bakanlığı'nın UYAP sisteminde kullandığı belge biçimidir. Dilekçe, müzekkere, tensip zaptı ve kararlar bu uzantıyla indirilir. Teknik olarak içinde belge metnini taşıyan bir arşiv dosyasıdır." },
+        { q: "UDF dosyasını program kurmadan nasıl açarım?", a: "Dosyayı bu sayfadaki alana bırakın; içeriği tarayıcınızda çözülür ve PDF olarak indirilir. UYAP Doküman Editörü ya da Java kurulumu gerekmez." },
+        { q: "Belgem sunucunuza yükleniyor mu?", a: "Hayır. Dönüştürme tamamen tarayıcınızda (cihazınızda) yapılır; dosya internete hiç gönderilmez. Adli evrak kişisel veri taşıdığı için bu araçta işlem bilerek cihazda tutulur." },
+        { q: "Tablolar ve biçimlendirme korunuyor mu?", a: "Evet. Paragraf hizalaması, kalın ve altı çizili yazılar, yazı boyutu, renkler, tablolar ve belgeye gömülü görseller PDF'ye aktarılır." },
+        { q: "Birden fazla UDF'yi tek seferde çevirebilir miyim?", a: "Evet. En fazla 20 dosya ekleyebilirsiniz; tek dosya PDF olarak, birden fazla dosya tek ZIP içinde iner." },
+        { q: "PDF'nin e-imzası geçerli olur mu?", a: "Hayır. Çıktı, belgenin okunabilir bir PDF kopyasıdır; UDF dosyasındaki elektronik imzayı taşımaz. Resmî işlemlerde imzalı UDF aslını kullanmaya devam edin." },
+      ],
+    ),
+    en: T(
+      "UDF to PDF — Convert UYAP Documents Free",
+      "Convert the .udf files you downloaded from UYAP into PDF. No software to install, no signup, free — your document never leaves your browser.",
+      "Convert UDF to PDF",
+      "UDF is the document format of UYAP, Turkey's national judiciary information system: petitions, writs and court decisions are downloaded with this extension. Normally you need to install the UYAP Document Editor to open one. Here you drop the file in and get a PDF, keeping fonts, bold and underlined text, tables and embedded images. Everything runs in your browser — the document is NEVER uploaded. You can also download the plain text as a .txt file.",
+      ["udf to pdf", "open udf file", "convert udf", "uyap document format", "udf converter", "udf reader", "udf file opener"],
+      [
+        { q: "What is a UDF file?", a: "UDF (UYAP Document Format) is the document format used by Turkey's national judiciary system, UYAP. Petitions, writs and court decisions are downloaded with this extension. Technically it is an archive that carries the document's text." },
+        { q: "How do I open a UDF file without installing software?", a: "Drop the file into the area on this page; its contents are decoded in your browser and downloaded as a PDF. No UYAP Document Editor or Java installation is needed." },
+        { q: "Is my document uploaded to your server?", a: "No. Conversion happens entirely in your browser (on your device); the file is never sent over the internet. Court documents carry personal data, so this tool deliberately keeps the work on your machine." },
+        { q: "Are tables and formatting preserved?", a: "Yes. Paragraph alignment, bold and underlined text, font size, colours, tables and images embedded in the document are carried into the PDF." },
+        { q: "Can I convert several UDF files at once?", a: "Yes. You can add up to 20 files; a single file downloads as a PDF, several files download together in one ZIP." },
+        { q: "Is the electronic signature valid on the PDF?", a: "No. The output is a readable PDF copy of the document; it does not carry the electronic signature held in the UDF file. Keep using the signed original UDF for official filings." },
+      ],
+    ),
+  },
 };
 
 // ─── Landing / ana sayfa ──────────────────────────────────────────────────────
@@ -1849,6 +1883,9 @@ export const RELATED_TOOLS = {
   "ai-toplu-islem": ["pdf-ozetle", "pdf-veri-cikar", "pdf-ceviri"],
   "pdf-karsilastir": ["pdf-ozetle", "pdf-sohbet", "pdf-duzenle"],
   "hassas-veri-gizle": ["pdf-duzenle", "encrypt", "watermark"],
+  // UYAP evrakıyla gelen kullanıcının bir sonraki işi neredeyse her zaman aynı:
+  // dosyayı küçültüp portala yüklemek ya da parçaları tek dosyada toplamak.
+  "udf-to-pdf": ["compress", "merge-pdf", "pdf-to-word", "hassas-veri-gizle"],
 };
 
 /** Blog yazısı slug → o işi yapan araçlar (yazı içi CTA + araç→rehber ters harita). */
@@ -1904,6 +1941,16 @@ export const BLOG_RELATED_TOOLS = {
   "aranabilir-pdf-olusturma-ocr": ["aranabilir-pdf", "taranmis-pdf-ocr", "pdf-to-text", "image-to-pdf"],
   "belge-fotografini-kaliteli-pdf-yapma": ["image-to-pdf", "compress", "pdf-to-image"],
   "camscanner-ucretsiz-gizli-alternatif": ["image-to-pdf", "taranmis-pdf-ocr", "compress"],
+  "uyap-belge-yukleme-boyut-hatasi": ["compress", "split-pdf", "belge-tara"],
+  "udf-dosyasi-nasil-acilir": ["udf-to-pdf", "pdf-to-word", "compress"],
+  "edevlet-belgelerini-tek-pdf-yapma": ["merge-pdf", "compress", "hassas-veri-gizle"],
+  "tc-kimlik-numarasi-gizleme-belge": ["hassas-veri-gizle", "split-pdf", "ustveri-temizle"],
+  "vize-basvurusu-evrak-hazirlama": ["merge-pdf", "gorsel-boyutlandir", "compress", "belge-tara"],
+  "ihale-dosyasi-pdf-hazirlama": ["merge-pdf", "page-numbers", "compress"],
+  "bordro-sayfalarini-ayirma": ["split-pdf", "merge-pdf", "hassas-veri-gizle"],
+  "osym-sinav-basvurusu-fotograf-boyutu": ["gorsel-boyutlandir", "gorsel-sikistir"],
+  "uyap-karari-word-e-aktarma": ["udf-to-pdf", "pdf-to-word", "taranmis-pdf-ocr"],
+  "universite-kayit-evraklarini-hazirlama": ["belge-tara", "merge-pdf", "compress", "gorsel-boyutlandir"],
 };
 
 /** Araç kısa etiketi — SEO title'ın "—" öncesi (ör. "PDF Birleştir"). */

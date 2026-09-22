@@ -258,8 +258,8 @@ export function ImageResizeTool({ language }: { language: Language }) {
               </select>
               <span className="field-hint">
                 {tr
-                  ? "Instagram, Facebook, X, LinkedIn ve YouTube için güncel ölçüler hazır gelir."
-                  : "Current sizes for Instagram, Facebook, X, LinkedIn and YouTube are built in."}
+                  ? "ÖSYM, biyometrik ve vize fotoğrafı ölçüleriyle Instagram, Facebook, X, LinkedIn ve YouTube ölçüleri hazır gelir. Resmî başvurularda kurumun güncel şartını teyit edin; bu araç yalnızca ölçüyü ayarlar, arka planı değiştirmez."
+                  : "Official photo sizes (Turkish exam, biometric, visa) plus Instagram, Facebook, X, LinkedIn and YouTube sizes are built in. For official applications, confirm the current requirement with the institution — this tool only sets the size, it does not change the background."}
               </span>
             </label>
 

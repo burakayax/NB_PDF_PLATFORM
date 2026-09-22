@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Split Payslips into One File per Employee</title>
+    <meta name="description" content="A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/split-payslips-per-employee" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/split-payslips-per-employee" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/bordro-sayfalarini-ayirma" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Split Payslips into One File per Employee" />
+    <meta property="og:description" content="A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Split Payslips into One File per Employee" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/split-payslips-per-employee" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Split Payslips into One File per Employee" />
+    <meta name="twitter:description" content="A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png" />
+    <meta name="twitter:image:alt" content="Split Payslips into One File per Employee" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Split Payslips into One File per Employee","item":"https://www.pdfplatform.app/en/blog/split-payslips-per-employee"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Split Payslips into One File per Employee","description":"A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person.","datePublished":"2026-09-22","dateModified":"2026-09-22","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/split-payslips-per-employee","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/split-payslips-per-employee.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Split Payslips into One File per Employee","description":"A practical way to break a single payroll PDF into one file per employee — and how to stop the wrong payslip reaching the wrong person.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Add the payroll file","text":"Give the PDF to the split tool. The work happens in your browser; salary data is not uploaded."},{"@type":"HowToStep","position":2,"name":"Pick pages visually","text":"Pages are listed as thumbnails, so you can confirm which page belongs to whom."},{"@type":"HowToStep","position":3,"name":"Take each page as its own file","text":"Pages are separated individually and downloaded in a ZIP; each page is its own file."},{"@type":"HowToStep","position":4,"name":"Name the files","text":"Before sending, give each file the employee's name. This step is your last defence against a misdirected email."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I turn every page of a PDF into its own file?","acceptedAnswer":{"@type":"Answer","text":"Yes. Pages are separated individually and downloaded in a ZIP, each page as its own file."}},{"@type":"Question","name":"What if one person's payslip is two pages?","acceptedAnswer":{"@type":"Answer","text":"Split by page range instead: 1–2 as one file, 3–4 as another. The thumbnails let you confirm each range by eye."}},{"@type":"Question","name":"Is salary data uploaded to your server?","acceptedAnswer":{"@type":"Answer","text":"No. Splitting runs in your browser (on your device); the file is never sent over the internet and no account is needed."}},{"@type":"Question","name":"How can I be sure each file belongs to the right person?","acceptedAnswer":{"@type":"Answer","text":"Before sending, open a few files at random and check the name inside matches the file name, and confirm the file count equals the employee count."}},{"@type":"Question","name":"How large a file can I split?","acceptedAnswer":{"@type":"Answer","text":"Up to 80 MB per file; there is no separate limit on the number of pages."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Split Payslips into One File per Employee</h1><p class="seo-intro">The payroll system gives you one PDF holding forty payslips. Everyone needs to get only their own page, and doing that by hand is both slow and risky.</p><figure class="seo-cover"><img src="/en/covers/split-payslips-per-employee.png" width="1200" height="630" loading="lazy" decoding="async" alt="Split Payslips into One File per Employee" /></figure><article class="seo-article"><p class="seo-lead">It is the start of the month, payroll has sent the file, and you have a single PDF: forty pages, forty employees. Each person should receive only their own page. Doing that by hand — saving and naming each page in turn — costs you half a day and carries a risk of things getting mixed up. If they do, the consequence is serious: one employee&#39;s salary has gone to someone else.</p><h2>Why not do it by hand?</h2><p>The real issue here is not time but error. Salary information is among the most sensitive personal data there is, and reaching the wrong person cannot be undone. In a repetitive manual task, losing focus by the fortieth page is entirely normal.</p><p>A method that does the job in one move brings the time down to minutes and removes the question of whether anything got mixed up.</p><h2>Step by step: splitting one PDF into pages</h2><ol><li><strong>Add the payroll file:</strong> Give the PDF to the split tool. The work happens in your browser; salary data is not uploaded.</li><li><strong>Pick pages visually:</strong> Pages are listed as thumbnails, so you can confirm which page belongs to whom.</li><li><strong>Take each page as its own file:</strong> Pages are separated individually and downloaded in a ZIP; each page is its own file.</li><li><strong>Name the files:</strong> Before sending, give each file the employee&#39;s name. This step is your last defence against a misdirected email.</li></ol><p><a href="/en/tools/split-pdf"><strong>Split PDF</strong> — Break a combined payroll file page by page — on your device, with nothing uploaded.</a></p><h2>When one employee spans several pages</h2><p>In some payrolls a single employee takes two or three pages. Then splitting page by page will not do; you need page ranges.</p><p>The split tool lets you choose ranges: pages 1–2 as one file, 3–4 as another. Thanks to the thumbnails you can confirm each range by eye — far safer than typing numbers blind.</p><h2>Always check before sending</h2><p>Even when the split is correct, no tool can catch a slip in your sending list. Do these two checks first:</p><ul><li>Open three files at random and confirm the name inside matches the file name.</li><li>Does the number of files match the number of employees? A file too few or too many means the ranges have slipped.</li></ul><p>Do not send payslips as a group email. A single «reply all», or a wrongly chosen recipient list, can expose the whole company&#39;s salaries. Each payslip should go in its own email, to one recipient.</p><h2>Where else the same method helps</h2><ul><li>Separating combined invoice files by customer.</li><li>Splitting bulk-generated certificates into one per person.</li><li>Sending the relevant sections of a long report to different departments.</li><li>Pulling only the signature page out of a long contract.</li></ul></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/split-pdf">Split PDF</a></li><li><a href="/en/tools/merge-pdf">Merge PDF files online</a></li><li><a href="/en/tools/redact-pdf">Redact Sensitive Data in PDF</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Can I turn every page of a PDF into its own file?</h3><p>Yes. Pages are separated individually and downloaded in a ZIP, each page as its own file.</p></div><div class="seo-faq-item"><h3>What if one person&#39;s payslip is two pages?</h3><p>Split by page range instead: 1–2 as one file, 3–4 as another. The thumbnails let you confirm each range by eye.</p></div><div class="seo-faq-item"><h3>Is salary data uploaded to your server?</h3><p>No. Splitting runs in your browser (on your device); the file is never sent over the internet and no account is needed.</p></div><div class="seo-faq-item"><h3>How can I be sure each file belongs to the right person?</h3><p>Before sending, open a few files at random and check the name inside matches the file name, and confirm the file count equals the employee count.</p></div><div class="seo-faq-item"><h3>How large a file can I split?</h3><p>Up to 80 MB per file; there is no separate limit on the number of pages.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
