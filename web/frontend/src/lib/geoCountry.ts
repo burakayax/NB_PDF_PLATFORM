@@ -45,7 +45,10 @@ async function fetchWithTimeout(url: string): Promise<Response> {
 // Sağlayıcı zinciri: önce ipwho.is, sonra ipapi.co. Biri 403/429 verirse diğerine düşer.
 const PROVIDERS: Array<() => Promise<string | null>> = [
   async () => {
-    const r = await fetchWithTimeout("https://ipwho.is/me");
+    // NOT: "/me" ucu KALDIRILMIS, kalici 404 donuyor (canli sitede olculdu).
+    // Kok adres ayni govdeyi (success + country_code) donduruyor. Yanlis uc
+    // yuzunden birincil saglayici hic calismiyordu ve tum yuk yedege biniyordu.
+    const r = await fetchWithTimeout("https://ipwho.is/");
     if (!r.ok) return null;
     const j = (await r.json()) as { success?: boolean; country_code?: string };
     if (j.success === false || !j.country_code) return null;
