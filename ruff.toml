@@ -1,0 +1,34 @@
+# Python kod denetimi (ruff) — hızlı ve tek araç.
+#
+# Amaç biçim tartışması değil, gerçek hata yakalamaktır: tanımsız isim,
+# kullanılmayan içe aktarma, sessizce yutulan hata, riskli varsayılan değer.
+# Uzun satır / biçim kuralları KAPALI; mevcut kod tabanını gürültüye boğmasın.
+
+target-version = "py311"
+line-length = 120
+
+exclude = [
+  ".venv",
+  "venv",
+  "Library",
+  "build",
+  "dist",
+  "**/__pycache__",
+  "web/frontend",
+]
+
+[lint]
+select = [
+  "E9",   # sözdizimi / çalışma zamanı hataları
+  "F",    # tanımsız isim, kullanılmayan içe aktarma, ölü kod
+  "B",    # sık yapılan mantık hataları (bugbear)
+  "S102", # exec kullanımı
+  "S307", # eval kullanımı
+  "S602", # kabuk üzerinden komut çalıştırma
+]
+ignore = [
+  "B008",  # FastAPI'de Depends(...) varsayılan değer olarak kullanılır — kasıtlı
+]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["F401", "F811"]

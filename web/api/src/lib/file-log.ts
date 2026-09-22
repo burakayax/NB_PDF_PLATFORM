@@ -36,7 +36,7 @@ async function pruneOldLogs(abs: string): Promise<void> {
   const stem = base.slice(0, base.length - ext.length);
   const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
-  let entries: { name: string; mtime: number; size: number }[] = [];
+  const entries: { name: string; mtime: number; size: number }[] = [];
   try {
     const dirents = await fs.readdir(dir);
     for (const name of dirents) {

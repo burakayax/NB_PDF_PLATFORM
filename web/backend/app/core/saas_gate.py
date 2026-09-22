@@ -130,6 +130,27 @@ async def _httpx_post_json_with_retry(
     raise HTTPException(status_code=502, detail="SaaS isteği tekrar denemelerine rağmen başarısız.")
 
 
+def _user_headers(token: str) -> dict[str, str]:
+    """Kullanıcı token'ı ile Node'a giden çağrılar için standart başlıklar.
+
+    ``X-Internal-Secret`` EKLENİR: bu çağrılar tarayıcıdan değil PDF API
+    sürecinden çıkar, dolayısıyla Node'un gördüğü IP tüm kullanıcılar için
+    AYNIDIR (Render çıkış adresi). IP başına dakikalık limit bu yüzden tek bir
+    kullanıcıyı değil tüm trafiği ortak sayaca koyuyor ve eşik aşılınca
+    kötüye-kullanım bloğu giriş yapmış HERKESİ kilitliyordu
+    (Sentry: "Abonelik durumu alınamadı: Çok fazla istek").
+
+    Sır ayarlı değilse başlık eklenmez → Node tarafında bypass da olmaz
+    (fail-closed). Kullanıcı bazlı kota/entitlement kontrolleri bu başlıktan
+    ETKİLENMEZ; yalnızca yanlış boyutta uygulanan IP sayacı devre dışı kalır.
+    """
+    headers = {"Authorization": f"Bearer {token}"}
+    secret = internal_service_secret()
+    if secret:
+        headers["X-Internal-Secret"] = secret
+    return headers
+
+
 def _detail_from_response(r: httpx.Response) -> str:
     try:
         data = r.json()
@@ -144,6 +165,49 @@ def _detail_from_response(r: httpx.Response) -> str:
 # ---------------------------------------------------------------------------
 # Session / identity helpers (unchanged)
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Yerel oturum çözümleme (Node'a gitmeden)
+# ---------------------------------------------------------------------------
+#
+# Oturum jetonu Node tarafında paylaşılan bir sır ile imzalanır; aynı sır bu
+# serviste de tanımlıysa jetonu BURADA doğrulayabiliriz. Böylece her PDF isteği
+# için Node'a HTTP çağrısı yapmak gerekmez.
+#
+# NEDEN ÖNEMLİ: Bu çağrılar tek bir çıkış adresinden gittiği için Node'un
+# istek sayacı tüm kullanıcıları ortak bir tavana koyuyordu ve eşik aşılınca
+# giriş yapmış herkes kilitleniyordu. Ayrıca Node yavaşladığında PDF servisinin
+# tamamı yavaşlıyordu.
+#
+# SADECE değişmeyen bilgiler yerel çözülür: jetonun geçerliliği ve kullanıcı
+# kimliği. Plan/rol gibi sonradan değişebilen bilgiler HÂLÂ Node'dan okunur —
+# aksi halde plan yükseltmesi jeton yenilenene kadar görünmezdi.
+
+
+def _local_jwt_secret() -> str:
+    return os.getenv("JWT_ACCESS_SECRET", "").strip()
+
+
+def _user_id_from_local_token(token: str) -> str | None:
+    """Jetonu yerel doğrulayıp kullanıcı kimliğini döndürür.
+
+    Sır tanımlı değilse veya jeton çözülemezse ``None`` döner → çağıran Node'a
+    sorar (davranış değişmez, yalnızca hızlanma kaybedilir).
+    """
+    secret = _local_jwt_secret()
+    if not secret:
+        return None
+    try:
+        from app.auth.jwt_utils import decode_access_token
+
+        return decode_access_token(token, secret).sub
+    except ValueError:
+        # Jeton gerçekten geçersiz/süresi dolmuş → Node da 401 verecek.
+        raise HTTPException(status_code=401, detail="Oturum süresi doldu. Lütfen tekrar giriş yapın.")
+    except Exception:
+        logger.warning("local token decode failed unexpectedly", exc_info=True)
+        return None
 
 
 async def saas_session_ok(token: str) -> None:
@@ -162,13 +226,18 @@ async def saas_session_ok(token: str) -> None:
         )
         return
 
+    # Jeton yerel doğrulanabiliyorsa Node'a gitmeye gerek yok: bu uç yalnızca
+    # "oturum geçerli mi" sorusunu yanıtlıyor.
+    if _user_id_from_local_token(token) is not None:
+        return
+
     base = saas_api_base()
     url = f"{base}/api/subscription/status"
     try:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 url,
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
     except httpx.TimeoutException as exc:
         logger.warning("saas_session_ok timeout url=%s err=%s", url, exc)
@@ -208,7 +277,7 @@ async def saas_user_identity(token: str) -> dict[str, Any]:
     url = f"{base}/api/auth/me"
     try:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
-            r = await client.get(url, headers={"Authorization": f"Bearer {token}"})
+            r = await client.get(url, headers=_user_headers(token))
     except (httpx.TimeoutException, httpx.ConnectError) as exc:
         raise HTTPException(status_code=502, detail="Kimlik API'ye ulaşılamadı.") from exc
     if r.status_code == 401:
@@ -236,13 +305,17 @@ async def saas_current_user_id(token: str) -> str:
     to enforce ownership BEFORE any credit-bearing call, so foreign callers
     never decrement another user's credit balance.
     """
+    local_id = _user_id_from_local_token(token)
+    if local_id:
+        return local_id
+
     base = saas_api_base()
     url = f"{base}/api/auth/me"
     try:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 url,
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
     except httpx.TimeoutException as exc:
         logger.warning("saas_current_user_id timeout url=%s err=%s", url, exc)
@@ -335,7 +408,7 @@ async def entitlement_check(token: str, tool_id: str, file_count: int = 1) -> di
         json_body["fileCount"] = file_count
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/check",
-        headers={"Authorization": f"Bearer {token}"},
+        headers=_user_headers(token),
         json_body=json_body,
     )
     if r.status_code == 401:
@@ -362,7 +435,7 @@ async def entitlement_consume(token: str, tool_id: str) -> dict[str, Any]:
     base = saas_api_base()
     r = await _httpx_post_json_with_retry(
         f"{base}/api/entitlement/consume",
-        headers={"Authorization": f"Bearer {token}"},
+        headers=_user_headers(token),
         json_body={"toolId": tool_id},
         attempts=1,
     )
@@ -425,7 +498,7 @@ async def get_user_file_size_limit_bytes(token: str) -> int | None:
         async with httpx.AsyncClient(timeout=_SAAS_QUICK_GET_TIMEOUT) as client:
             r = await client.get(
                 f"{base}/api/entitlement/balance",
-                headers={"Authorization": f"Bearer {token}"},
+                headers=_user_headers(token),
             )
         if r.status_code != 200:
             return None

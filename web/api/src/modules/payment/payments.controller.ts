@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
+import { PLAN_PRICES, EXTRA_SEAT_PRICE, YEARLY_BILLING_PLANS, netFromGrossTry, type PaidPlanId } from "../../lib/plan-catalogue.js";
 import { HttpError } from "../../lib/http-error.js";
 import { getClientIp } from "../../middleware/api-security.middleware.js";
 import { createPaymentCheckoutSession } from "./payment.service.js";
@@ -67,24 +68,32 @@ export async function getExitIntentOfferController(request: Request, response: R
 }
 
 /** Extra seat monthly prices (net, excluding VAT) */
-const EXTRA_SEAT_PRICE_TRY = 199; // ₺199/kişi/ay
-const EXTRA_SEAT_PRICE_USD = 5.99; // $5.99/kişi/ay
-
-/** TRY prices — decimal format ("799.00" = 799 TL). iyzico requires two-decimal strings. */
-const PLAN_PRICES_TRY: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
-  STARTER: { monthly: "49.00", yearly: "490.00" },
-  PLUS: { monthly: "149.00", yearly: "1490.00" },
-  PRO: { monthly: "299.00", yearly: "2990.00" },
-  BUSINESS: { monthly: "799.00", yearly: "7990.00" },
+/**
+ * ÖDENECEK TUTARLAR — tamamı `lib/plan-catalogue.ts`'ten okunur.
+ *
+ * TL tarafında katalog KDV DAHİL tutarı tutar; iyzico'ya KDV hariç (net) tutar
+ * gitmeli ve `buildCheckoutPricing` KDV'yi geri ekleyerek aynı brüt tutara
+ * ulaşmalıdır. Bu çevrim burada yapılır ki müşterinin gördüğü rakamla
+ * kartından inen rakam birebir aynı olsun.
+ *
+ * USD tarafında ihracat istisnası nedeniyle KDV %0'dır; net = brüt.
+ */
+const PLAN_PRICES_TRY: Record<PaidPlanId, { monthly: string; yearly: string }> = {
+  STARTER: { monthly: netFromGrossTry(PLAN_PRICES.STARTER.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.STARTER.tryGrossYearly) },
+  PLUS: { monthly: netFromGrossTry(PLAN_PRICES.PLUS.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.PLUS.tryGrossYearly) },
+  PRO: { monthly: netFromGrossTry(PLAN_PRICES.PRO.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.PRO.tryGrossYearly) },
+  BUSINESS: { monthly: netFromGrossTry(PLAN_PRICES.BUSINESS.tryGrossMonthly), yearly: netFromGrossTry(PLAN_PRICES.BUSINESS.tryGrossYearly) },
 };
 
-/** USD prices — decimal format ("250.00" = $250). */
-const PLAN_PRICES_USD: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", { monthly: string; yearly: string }> = {
-  STARTER: { monthly: "15.99", yearly: "159.00" },
-  PLUS: { monthly: "47.99", yearly: "479.90" },
-  PRO: { monthly: "97.99", yearly: "979.90" },
-  BUSINESS: { monthly: "250.00", yearly: "2500.00" },
+const PLAN_PRICES_USD: Record<PaidPlanId, { monthly: string; yearly: string }> = {
+  STARTER: { monthly: PLAN_PRICES.STARTER.usdMonthly, yearly: PLAN_PRICES.STARTER.usdYearly },
+  PLUS: { monthly: PLAN_PRICES.PLUS.usdMonthly, yearly: PLAN_PRICES.PLUS.usdYearly },
+  PRO: { monthly: PLAN_PRICES.PRO.usdMonthly, yearly: PLAN_PRICES.PRO.usdYearly },
+  BUSINESS: { monthly: PLAN_PRICES.BUSINESS.usdMonthly, yearly: PLAN_PRICES.BUSINESS.usdYearly },
 };
+
+const EXTRA_SEAT_PRICE_TRY = Number.parseFloat(netFromGrossTry(EXTRA_SEAT_PRICE.tryGrossMonthly));
+const EXTRA_SEAT_PRICE_USD = Number.parseFloat(EXTRA_SEAT_PRICE.usdMonthly);
 
 const BASKET_NAMES_TR: Record<"STARTER" | "PLUS" | "PRO" | "BUSINESS", string> = {
   STARTER: "PDF PLATFORM Başlangıç",
@@ -141,6 +150,11 @@ export async function initializePaymentsController(request: Request, response: R
   }
 
   const isYearly = billingCycle === "YEARLY";
+  // Satılmayan bir döngü için ödeme başlatılmaz: Başlangıç ve Plus yalnızca
+  // aylıktır ve ekranda yıllık seçeneği hiç gösterilmez.
+  if (isYearly && !YEARLY_BILLING_PLANS.includes(planId)) {
+    throw new HttpError(400, "Bu pakette yıllık ödeme seçeneği bulunmuyor. Lütfen aylık seçeneğiyle devam edin.");
+  }
   const priceObj = checkoutCurrency === "USD" ? PLAN_PRICES_USD[planId] : PLAN_PRICES_TRY[planId];
   const seatUnitPrice = checkoutCurrency === "USD" ? EXTRA_SEAT_PRICE_USD : EXTRA_SEAT_PRICE_TRY;
   const seatMonthlyTotal = (extraSeats ?? 0) * seatUnitPrice;

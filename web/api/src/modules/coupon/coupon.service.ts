@@ -10,6 +10,11 @@ export async function countCouponUsesByUser(couponId: string, userId: string): P
   });
 }
 
+/** Kuponun tüm kullanıcılar tarafından toplam kaç kez kullanıldığı. */
+export async function countCouponUsesTotal(couponId: string): Promise<number> {
+  return prisma.couponUse.count({ where: { couponId } });
+}
+
 export async function findActiveCouponByCode(code: string) {
   const normalized = normalizeCouponCode(code);
   return prisma.coupon.findFirst({
@@ -24,7 +29,11 @@ export async function validateCouponForUser(
   code: string,
   userId: string,
 ): Promise<
-  | { ok: true; coupon: { id: string; discountPercent: number; usageLimitPerUser: number }; uses: number }
+  | {
+      ok: true;
+      coupon: { id: string; discountPercent: number; usageLimitPerUser: number; usageLimitTotal: number | null };
+      uses: number;
+    }
   | { ok: false; reason: string }
 > {
   const coupon = await findActiveCouponByCode(code);
@@ -39,9 +48,23 @@ export async function validateCouponForUser(
   if (uses >= coupon.usageLimitPerUser) {
     return { ok: false, reason: "limit" };
   }
+  // Toplam kontenjan (varsa): kuponun tüm kullanıcılardaki toplam kullanımı.
+  // null → sınırsız. Bu kontrol kuponu PASİFLEŞTİRMEZ; sadece kontenjan
+  // dolduğunda yeni kullanımı reddeder.
+  if (coupon.usageLimitTotal !== null && coupon.usageLimitTotal !== undefined) {
+    const totalUses = await countCouponUsesTotal(coupon.id);
+    if (totalUses >= coupon.usageLimitTotal) {
+      return { ok: false, reason: "limit" };
+    }
+  }
   return {
     ok: true,
-    coupon: { id: coupon.id, discountPercent: coupon.discountPercent, usageLimitPerUser: coupon.usageLimitPerUser },
+    coupon: {
+      id: coupon.id,
+      discountPercent: coupon.discountPercent,
+      usageLimitPerUser: coupon.usageLimitPerUser,
+      usageLimitTotal: coupon.usageLimitTotal ?? null,
+    },
     uses,
   };
 }

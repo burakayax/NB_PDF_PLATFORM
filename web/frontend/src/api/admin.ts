@@ -2,12 +2,13 @@ import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
 import { getSaasApiBase } from "./saasBase";
 import { saasAuthorizedFetch } from "./subscription";
 import { emitAdminToast, readAdminErrorMessage } from "../admin/lib/adminToast";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 /** Mutasyon (kaydet/sil/oluştur) isteklerinin sonucunu panel geneli toast olarak bildirir. */
@@ -77,9 +78,17 @@ export type AdminOverview = {
   pageViewsByDay: Array<{ date: string; count: number }>;
   pageViewsTodayByHourUtc: Array<{ hour: number; count: number }>;
   conversionFunnel: {
+    totalUsers: number;
+    /** En az bir gerçek işlem yapmış kullanıcı (değeri yaşamış olan). */
+    activatedUsers: number;
     freeTierEverHitLimit: number;
     usersWithCompletedCheckout: number;
-    totalUsers: number;
+    rates: {
+      signupToActivation: number;
+      activationToWall: number;
+      wallToPaid: number;
+      signupToPaid: number;
+    };
   };
   presenceWindowMinutes: number;
   distinctSessionsActiveNow: number;
@@ -172,6 +181,8 @@ export type AdminUserDetail = {
   createdAt: string;
   credit_balance: number;
   toolUsageCounts: Record<string, number>;
+  /** Araç kullanımı — gerçek işlem kaydından, son kullanım tarihiyle. */
+  toolUsageDetails?: { toolId: string; count: number; sonKullanim: string | null }[];
   creditTransactions: {
     id: string;
     type: string;
@@ -198,6 +209,18 @@ export type AdminUserDetail = {
     createdAt: string;
     completedAt: string | null;
   }[];
+  /**
+   * Hesap paylaşımı görünürlüğü: son 30 günde kaç farklı cihaz/ağ görüldü.
+   * Yalnız BİLGİ amaçlıdır; hiçbir otomatik kısıtlama uygulanmaz.
+   */
+  paylasim?: {
+    pencereGun: number;
+    cihazSayisi: number;
+    agSayisi: number;
+    acikOturum: number;
+    risk: "normal" | "izlenmeli" | "yuksek";
+    aciklama: string;
+  } | null;
   /** Günlük kullanım hakkı özeti (efektif = (özel ?? plan) + bugünkü bonus). */
   usage?: {
     planDailyLimit: number | null;
@@ -728,6 +751,8 @@ export type AdminCouponRow = {
   discountPercent: number;
   isActive: boolean;
   usageLimitPerUser: number;
+  /** Toplam kontenjan (tüm kullanıcılar); null = sınırsız. */
+  usageLimitTotal?: number | null;
   expiresAt?: string | null;
   totalUses: number;
   createdAt: string;
@@ -743,7 +768,14 @@ export async function fetchAdminCoupons(accessToken: string): Promise<{ items: A
 
 export async function postAdminCoupon(
   accessToken: string,
-  body: { code: string; discountPercent: number; isActive?: boolean; usageLimitPerUser?: number; expiresAt?: string | null },
+  body: {
+    code: string;
+    discountPercent: number;
+    isActive?: boolean;
+    usageLimitPerUser?: number;
+    usageLimitTotal?: number | null;
+    expiresAt?: string | null;
+  },
 ): Promise<AdminCouponRow> {
   const r = await adminFetch(accessToken, "/coupons", { method: "POST", body: JSON.stringify(body) });
   if (!r.ok) {
@@ -755,7 +787,7 @@ export async function postAdminCoupon(
 export async function patchAdminCoupon(
   accessToken: string,
   id: string,
-  body: Partial<Pick<AdminCouponRow, "isActive" | "discountPercent" | "usageLimitPerUser">>,
+  body: Partial<Pick<AdminCouponRow, "isActive" | "discountPercent" | "usageLimitPerUser" | "usageLimitTotal" | "expiresAt">>,
 ): Promise<AdminCouponRow> {
   const r = await adminFetch(accessToken, `/coupons/${encodeURIComponent(id)}`, {
     method: "PATCH",
@@ -870,4 +902,194 @@ export async function adminResetUserRateLimit(
     throw new Error(err.message ?? "Failed to reset rate limit");
   }
   return r.json();
+}
+
+// ─── Sosyal medya otomasyonu ─────────────────────────────────────────────────
+
+export type SocialPlatformId = "X" | "LINKEDIN" | "FACEBOOK" | "INSTAGRAM" | "PINTEREST";
+
+export type SocialConfig = {
+  enabled: boolean;
+  hour: number;
+  minute: number;
+  timeZone: string;
+  recycleOldPosts: boolean;
+  /** Paylaşım temposu: her gün / gün aşırı / haftada üç. */
+  cadence: "daily" | "alternate" | "thrice";
+  /** Gönderiler yayın saatinden kaç dakika önce hazırlanıp panelde görünsün. */
+  prepareLeadMinutes: number;
+  /** İngilizce üstte, Türkçe altta çift dilli gönderi. */
+  bilingual: boolean;
+  /** Çift dil sığmayan ağlarda (X) kullanılacak dil. */
+  singleLang: "tr" | "en";
+  /** Etiketler için canlı internet araştırması (ücretli). */
+  researchKeywords: boolean;
+};
+
+export type SocialAccountRow = {
+  platform: SocialPlatformId;
+  label: string;
+  connected: boolean;
+  enabled: boolean;
+  displayName: string;
+  filledFields: string[];
+  tokenExpiresAt: string | null;
+  lastError: string | null;
+  updatedAt: string | null;
+};
+
+export type SocialPlatformSpec = {
+  platform: SocialPlatformId;
+  label: string;
+  maxChars: number;
+  imageRequired: boolean;
+  imageFormat: "wide" | "square" | "tall";
+  fields: { key: string; label: string; help: string }[];
+};
+
+export type SocialPostRow = {
+  id: string;
+  platform: SocialPlatformId;
+  title: string;
+  linkUrl: string;
+  body: string;
+  imageUrl: string | null;
+  status: "DRAFT" | "QUEUED" | "PUBLISHING" | "PUBLISHED" | "FAILED" | "SKIPPED" | "MANUAL";
+  scheduledAt: string;
+  publishedAt: string | null;
+  externalUrl: string | null;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SocialStats = {
+  draft: number;
+  /** Hesabı bağlı olmayan ağlar için hazırlanmış, elle paylaşılacak gönderiler. */
+  manual: number;
+  queued: number;
+  published: number;
+  failed: number;
+  lastPublishedAt: string | null;
+};
+
+export type SocialOverview = {
+  config: SocialConfig;
+  accounts: SocialAccountRow[];
+  platforms: SocialPlatformSpec[];
+  stats: SocialStats;
+  /** Bir sonraki otomatik paylaşım anı (ISO) — otomasyon kapalıysa null. */
+  nextRunAt: string | null;
+  /** Gönderilerin panelde görüneceği an (ISO) — düzeltme penceresinin başı. */
+  nextPrepareAt: string | null;
+  feedUrl: string;
+  /**
+   * Anahtar kelimelerin beslendiği kaynaklar. Eksik ayar otomasyonu DURDURMAZ,
+   * sessizce zayıflatır — bu yüzden panelde görünür olmalı.
+   */
+  keywordSources: {
+    suggest: boolean;
+    gsc: boolean;
+    /** Search Console mülk kimliği; www'lu/www'suz karışıklığı burada görülür. */
+    gscSite: string | null;
+    research: boolean;
+  };
+};
+
+export async function fetchSocialOverview(accessToken: string): Promise<SocialOverview> {
+  const r = await adminFetch(accessToken, "/social/overview");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialOverview>;
+}
+
+export async function saveSocialConfig(
+  accessToken: string,
+  patch: Partial<SocialConfig>,
+): Promise<{ config: SocialConfig }> {
+  const r = await adminFetch(accessToken, "/social/config", { method: "PUT", body: JSON.stringify(patch) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ config: SocialConfig }>;
+}
+
+export async function saveSocialAccount(
+  accessToken: string,
+  body: { platform: SocialPlatformId; displayName?: string; enabled?: boolean; secrets: Record<string, string> },
+): Promise<{ accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, "/social/accounts", { method: "PUT", body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ accounts: SocialAccountRow[] }>;
+}
+
+export async function disconnectSocialAccount(
+  accessToken: string,
+  platform: SocialPlatformId,
+): Promise<{ accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, `/social/accounts/${platform}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ accounts: SocialAccountRow[] }>;
+}
+
+/** Kayıtlı anahtarları ağa sorar — "bağlı" rozeti yalnızca alanların dolu olduğunu söyler. */
+export async function testSocialAccount(
+  accessToken: string,
+  platform: SocialPlatformId,
+): Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }> {
+  const r = await adminFetch(accessToken, `/social/accounts/${platform}/test`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ ok: boolean; message: string; accounts: SocialAccountRow[] }>;
+}
+
+export async function fetchSocialPosts(accessToken: string): Promise<{ posts: SocialPostRow[] }> {
+  const r = await adminFetch(accessToken, "/social/posts");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{ posts: SocialPostRow[] }>;
+}
+
+export async function checkSocialFeed(accessToken: string): Promise<{
+  count: number;
+  latest: { title: string; link: string; publishedAt: number; images: Record<string, string> }[];
+}> {
+  const r = await adminFetch(accessToken, "/social/feed-check");
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<{
+    count: number;
+    latest: { title: string; link: string; publishedAt: number; images: Record<string, string> }[];
+  }>;
+}
+
+export type SocialQueueResult = {
+  queued: { platform: SocialPlatformId; title: string; manual?: boolean }[];
+  /** platform null → tüm platformları ilgilendiren sebep. */
+  skipped: { platform: SocialPlatformId | null; reason: string }[];
+};
+
+export async function queueSocialPosts(accessToken: string): Promise<SocialQueueResult> {
+  const r = await adminFetch(accessToken, "/social/queue", { method: "POST", body: JSON.stringify({}) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json() as Promise<SocialQueueResult>;
+}
+
+export async function publishSocialPost(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/publish`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+/** Elle paylaşılan gönderiyi "paylaşıldı" olarak işaretler. */
+export async function markSocialPostShared(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}/shared`, { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+export async function updateSocialPostBody(accessToken: string, id: string, body: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ body }),
+  });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+export async function deleteSocialPost(accessToken: string, id: string): Promise<void> {
+  const r = await adminFetch(accessToken, `/social/posts/${encodeURIComponent(id)}`, { method: "DELETE" });
+  if (!r.ok) throw new Error(await r.text());
 }

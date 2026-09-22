@@ -19,6 +19,11 @@ export const SIDEBAR_TOOL_ORDER: FeatureKey[] = [
   "html-to-pdf",
   "pdf-to-text",
   "flatten-pdf",
+  "form-doldur",
+  "ustveri-temizle",
+  "pdf-to-pdfa",
+  "sayfa-duzeni",
+  "imza-iste",
   "extract-images",
   "unlock-pdf",
   "watermark",
@@ -57,7 +62,7 @@ export const TOOL_CATEGORY_LABELS: Record<
 export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   {
     id: "organize",
-    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf"],
+    tools: ["merge", "split", "organize-pdf", "delete-pages", "rotate-pdf", "sayfa-duzeni"],
   },
   {
     id: "convert",
@@ -73,6 +78,7 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
       "extract-images",
       "html-to-pdf",
       "pdf-to-text",
+      "pdf-to-pdfa",
     ],
   },
   {
@@ -81,11 +87,11 @@ export const TOOL_CATEGORIES: { id: ToolCategoryId; tools: FeatureKey[] }[] = [
   },
   {
     id: "annotate",
-    tools: ["watermark", "page-numbers"],
+    tools: ["watermark", "page-numbers", "form-doldur"],
   },
   {
     id: "secure",
-    tools: ["encrypt", "unlock-pdf"],
+    tools: ["encrypt", "unlock-pdf", "ustveri-temizle", "imza-iste"],
   },
 ];
 
@@ -144,6 +150,11 @@ const SB: Record<FeatureKey, { tr: string; en: string }> = {
   "html-to-pdf": { tr: "HTML → PDF", en: "HTML to PDF" },
   "pdf-to-text": { tr: "PDF → Metin", en: "PDF to Text" },
   "flatten-pdf": { tr: "PDF Düzleştir", en: "Flatten PDF" },
+  "form-doldur": { tr: "PDF Form Doldur", en: "Fill PDF Form" },
+  "ustveri-temizle": { tr: "PDF Üstveri Temizle", en: "Remove PDF Metadata" },
+  "pdf-to-pdfa": { tr: "PDF → PDF/A (Arşiv)", en: "PDF to PDF/A (Archive)" },
+  "sayfa-duzeni": { tr: "Sayfa Düzeni", en: "Page Layout" },
+  "imza-iste": { tr: "İmza İste", en: "Request Signature" },
   "extract-images": { tr: "PDF'ten Görsel", en: "Extract Images" },
 };
 
@@ -254,13 +265,24 @@ export function ws(lang: Language) {
     inspecting: tr ? "PDF kontrol ediliyor…" : "Checking PDF…",
     encryptedBadge: tr ? "Şifreli PDF" : "Encrypted PDF",
     ready: tr ? "Hazır" : "Ready",
-    compressEstimateLine: (minMB: number, maxMB: number) =>
+    compressEstimateLine: (minPct: number, maxPct: number) =>
       tr
-        ? `Tahmini boyut düşüşü: ~${minMB}–${maxMB} MB (tipik)`
-        : `Est. size reduction: ~${minMB}–${maxMB} MB (typical)`,
+        ? `Beklenen küçülme: %${minPct}–${maxPct}`
+        : `Expected reduction: ${minPct}–${maxPct}%`,
     compressEstimateTooltip: tr
-      ? "Yaklaşık tahmin; gerçek sonuç PDF içeriğine göre değişir."
-      : "Approximate; actual savings depend on PDF content.",
+      ? "Bu dosyanın içeriğine bakılarak hesaplandı; kazanç görsellerden gelir."
+      : "Calculated from this file's content; savings come from images.",
+    /** Sonuç ekranı: gerçekten ne kazanıldı. */
+    compressResultGain: (from: string, to: string, pct: number) =>
+      tr
+        ? `${from} → ${to} · %${pct} küçüldü`
+        : `${from} → ${to} · ${pct}% smaller`,
+    compressResultNoGain: tr
+      ? "Bu dosya daha fazla küçültülemedi: içeriği zaten sıkıştırılmış durumdaydı."
+      : "This file could not be reduced further: its content was already compressed.",
+    compressTextHeavyNote: tr
+      ? "Bu PDF metin ağırlıklı: içindeki metin zaten sıkıştırılmış geldiği için kazanç sınırlı olur. Kalite kademesi yalnızca görselleri etkiler."
+      : "This PDF is text-heavy: its text is already compressed, so savings are limited. The quality level only affects images.",
     notesTitle: tr ? "Web sürümü notları" : "Web edition notes",
     platform: tr ? "Platform" : "Platform",
     tesseract: tr ? "Tesseract" : "Tesseract",
@@ -606,6 +628,41 @@ export function featureCopy(
         ? "PDF içindeki metin katmanını düz metin dosyasına aktarır."
         : "Extract the text layer from a PDF as a plain text file.",
       button: tr ? "METİN ÇIK." : "EXTRACT TEXT",
+    },
+    "imza-iste": {
+      title: tr ? "İMZA İSTE" : "REQUEST SIGNATURE",
+      description: tr
+        ? "Belgeyi karşı tarafa imzalatır; imzalı kopya denetim sertifikasıyla gelir."
+        : "Sends a document out for signature; the signed copy arrives with an audit certificate.",
+      button: tr ? "İMZA İSTE" : "REQUEST",
+    },
+    "sayfa-duzeni": {
+      title: tr ? "SAYFA DÜZENİ" : "PAGE LAYOUT",
+      description: tr
+        ? "Birden çok sayfayı tek kâğıda sığdırır ya da katlanınca okunan kitapçık dizer."
+        : "Fits several pages on one sheet, or imposes a foldable booklet.",
+      button: tr ? "DÜZENLE" : "APPLY",
+    },
+    "pdf-to-pdfa": {
+      title: tr ? "PDF → PDF/A" : "PDF TO PDF/A",
+      description: tr
+        ? "Belgeyi arşiv biçimine çevirir: yazı tipleri gömülür, yıllar sonra da aynı görünür."
+        : "Converts to the archival format: fonts are embedded so it looks the same years later.",
+      button: tr ? "ARŞİVE ÇEVİR" : "CONVERT",
+    },
+    "ustveri-temizle": {
+      title: tr ? "ÜSTVERİ TEMİZLE" : "REMOVE METADATA",
+      description: tr
+        ? "Yazar adı, program bilgisi, tarihler, XMP bloğu ve fotoğraf EXIF/GPS izlerini siler."
+        : "Removes author name, software info, dates, the XMP block and photo EXIF/GPS traces.",
+      button: tr ? "TEMİZLE" : "CLEAN",
+    },
+    "form-doldur": {
+      title: tr ? "PDF FORM DOLDUR" : "FILL PDF FORM",
+      description: tr
+        ? "Doldurulabilir PDF formlarının alanlarını bulur, doldurur ve isterseniz kilitler."
+        : "Detects fillable PDF form fields, fills them in and optionally locks them.",
+      button: tr ? "FORM DOLDUR" : "FILL FORM",
     },
     "flatten-pdf": {
       title: tr ? "PDF DÜZLEŞTIR" : "FLATTEN PDF",

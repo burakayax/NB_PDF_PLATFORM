@@ -94,6 +94,22 @@ describe("rotate / delete / reorder", () => {
   it("tüm sayfalar silinince hata verir", async () => {
     await expect(deletePages(await makePdf(2), [0, 1])).rejects.toThrow();
   });
+  it("silinen sayfanın verisini dosyada bırakmaz (dosya gerçekten küçülür)", async () => {
+    // Canlı testte ölçüldü: sayfa çıkarmak dosyayı küçültmüyordu — silinen
+    // sayfaların görselleri dosyanın içinde kalıyordu (hem şişkinlik hem gizlilik
+    // sorunu). Her sayfaya ayrı bir gömülü görsel koyup küçülmeyi doğruluyoruz.
+    const doc = await PDFDocument.create();
+    const png = await doc.embedPng(pngBytes());
+    for (let i = 0; i < 6; i++) {
+      const page = doc.addPage([300, 300]);
+      // Aynı görselin farklı ölçekleri; her sayfa kendi içerik akışını taşır.
+      page.drawImage(png, { x: 0, y: 0, width: 100 + i, height: 100 + i });
+    }
+    const kaynak = await doc.save({ useObjectStreams: false });
+    const kalan = await deletePages(kaynak, [0, 1, 2]);
+    expect(await pageCount(kalan)).toBe(3);
+    expect(kalan.byteLength).toBeLessThan(kaynak.byteLength);
+  });
   it("yeniden sıralama sayfa sayısını korur", async () => {
     const out = await reorderPages(await makePdf(3), [2, 0, 1]);
     expect(await pageCount(out)).toBe(3);
@@ -105,6 +121,20 @@ describe("imagesToPdf", () => {
   it("PNG'yi tek sayfalık PDF yapar", async () => {
     const out = await imagesToPdf([{ bytes: pngBytes(), mime: "image/png" }]);
     expect(await pageCount(out)).toBe(1);
+  });
+  it("varsayılanda sayfayı A4 yapar (görselin piksel ölçüsünü sayfa ölçüsü saymaz)", async () => {
+    const out = await imagesToPdf([{ bytes: pngBytes(), mime: "image/png" }]);
+    const doc = await PDFDocument.load(out);
+    const { width, height } = doc.getPage(0).getSize();
+    // A4: 595x842 punto (kenar payı ±1).
+    expect(Math.round(width)).toBe(595);
+    expect(Math.round(height)).toBe(842);
+  });
+  it("istenirse görselin kendi ölçüsünü korur", async () => {
+    const out = await imagesToPdf([{ bytes: pngBytes(), mime: "image/png" }], "original");
+    const doc = await PDFDocument.load(out);
+    const { width } = doc.getPage(0).getSize();
+    expect(Math.round(width)).toBeLessThan(595);
   });
   it("boş girdide hata verir", async () => {
     await expect(imagesToPdf([])).rejects.toThrow();

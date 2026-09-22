@@ -1,3 +1,4 @@
+import { AI_MONTHLY_CREDITS } from "../lib/plan-catalogue.js";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
@@ -107,16 +108,32 @@ const rawEnvSchema = z
     ADMIN_EMAIL: z.string().email(),
     /** ADMIN rolü verilen tek e-posta; kaynak kodda sabit değil, env'den okunur. */
     ROLE_ADMIN_EMAIL: z.string().email(),
-    /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: nbglobalstudio@gmail.com). */
-    CONTACT_TO_EMAIL: z.string().email().default("nbglobalstudio@gmail.com"),
+    /** İletişim formu POST /api/contact bildirimlerinin alıcısı (varsayılan: info@pdfplatform.app). */
+    CONTACT_TO_EMAIL: z.string().email().default("info@pdfplatform.app"),
     /**
-     * İlk sunucu açılışında isteğe bağlı hesap (ikisi de dolu olmalı). Rol e-postaya göre (yalnızca nbglobalstudio@gmail.com → ADMIN).
+     * İlk sunucu açılışında isteğe bağlı hesap (ikisi de dolu olmalı). Rol e-postaya göre belirlenir (yalnızca ROLE_ADMIN_EMAIL ile eşleşen adres → ADMIN).
      */
     BOOTSTRAP_ADMIN_EMAIL: z.string().optional().default(""),
     BOOTSTRAP_ADMIN_PASSWORD: z.string().optional().default(""),
     /** Web "Google ile devam et" OAuth; boş bırakılırsa Google girişi devre dışı kalır. */
     GOOGLE_CLIENT_ID: z.string().optional().default(""),
     GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
+    /**
+     * Google Search Console — sosyal medya anahtar kelimelerini SİTENİN KENDİ
+     * gerçek arama verisine dayandırmak için (salt okunur).
+     *
+     * Üçü de doluysa devreye girer; biri bile boşsa otomasyon sessizce yalnızca
+     * otomatik tamamlama ve yapay zekâ araştırmasıyla çalışmaya devam eder.
+     *
+     * GSC_SITE_URL: Search Console'daki mülk kimliği. Alan adı mülkü için
+     *   "sc-domain:pdfplatform.app", adres önekli mülk için tam adres.
+     * GSC_PRIVATE_KEY: servis hesabı JSON'undaki private_key alanı. Tek satıra
+     *   sıkıştırılmış "
+" dizileri otomatik çözülür.
+     */
+    GSC_SITE_URL: z.string().optional().default(""),
+    GSC_CLIENT_EMAIL: z.string().optional().default(""),
+    GSC_PRIVATE_KEY: z.string().optional().default(""),
     /** Claude API anahtarı — AI özellikleri (PDF Özetle / PDF ile Sohbet) için.
      * Boşsa AI tamamen devre dışı (uçlar 503 döner). console.anthropic.com'dan alınır. */
     ANTHROPIC_API_KEY: z.string().optional().default(""),
@@ -124,10 +141,10 @@ const rawEnvSchema = z
     AI_MODEL: z.string().min(1).default("claude-haiku-4-5-20251001"),
     /** Aylık AI işlem kotası (adil kullanım) — plan başına. ADMIN sınırsız.
      * Ay başında sıfırlanır. Değiştirmek için env'i güncelle (ör. Render). */
-    AI_MONTHLY_LIMIT_STARTER: z.coerce.number().int().nonnegative().default(10),
-    AI_MONTHLY_LIMIT_PLUS: z.coerce.number().int().nonnegative().default(30),
-    AI_MONTHLY_LIMIT_PRO: z.coerce.number().int().nonnegative().default(100),
-    AI_MONTHLY_LIMIT_BUSINESS: z.coerce.number().int().nonnegative().default(500),
+    AI_MONTHLY_LIMIT_STARTER: z.coerce.number().int().nonnegative().default(AI_MONTHLY_CREDITS.STARTER),
+    AI_MONTHLY_LIMIT_PLUS: z.coerce.number().int().nonnegative().default(AI_MONTHLY_CREDITS.PLUS),
+    AI_MONTHLY_LIMIT_PRO: z.coerce.number().int().nonnegative().default(AI_MONTHLY_CREDITS.PRO),
+    AI_MONTHLY_LIMIT_BUSINESS: z.coerce.number().int().nonnegative().default(AI_MONTHLY_CREDITS.BUSINESS),
     /** Günlük dosyası yolu (göreli veya mutlak); üst dizin başlangıçta oluşturulur. */
     LOG_FILE_PATH: z.string().min(1).default("logs/nb-pdf-TOOLS-api.log"),
     LOG_FILE_ENABLED: z.enum(["true", "false"]).optional().default("true"),
@@ -335,6 +352,11 @@ export const env = {
   SMTP_FROM_EMAIL: smtpFromEmail,
   GOOGLE_CLIENT_ID: raw.GOOGLE_CLIENT_ID?.trim() ?? "",
   GOOGLE_CLIENT_SECRET: raw.GOOGLE_CLIENT_SECRET?.trim() ?? "",
+  GSC_SITE_URL: raw.GSC_SITE_URL?.trim() ?? "",
+  GSC_CLIENT_EMAIL: raw.GSC_CLIENT_EMAIL?.trim() ?? "",
+  // .env tek satır tutar; anahtarın gerçek satır sonları iki karakterlik
+  // kaçış dizisi olarak yazılır — burada gerçek satır sonuna çevriliyor.
+  GSC_PRIVATE_KEY: (raw.GSC_PRIVATE_KEY ?? "").replace(/\\n/g, "\n").trim(),
   LOG_FILE_ENABLED: raw.LOG_FILE_ENABLED === "true",
   BOOTSTRAP_ADMIN_EMAIL: raw.BOOTSTRAP_ADMIN_EMAIL?.trim() ?? "",
   BOOTSTRAP_ADMIN_PASSWORD: raw.BOOTSTRAP_ADMIN_PASSWORD ?? "",

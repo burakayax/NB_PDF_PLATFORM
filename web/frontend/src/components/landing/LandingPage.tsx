@@ -1,10 +1,10 @@
 /*
-  TO ADD SCREENSHOTS:
-  - Web app:     public/screenshots/web-app.png     (önerilen: 1280×800px)
-  - Desktop app: public/screenshots/desktop-app.png (önerilen: 1280×800px)
-  Dosyalar bu konuma yerleştirildiğinde sayfa otomatik olarak gösterir.
+  ÜRÜN GÖRSELLERİ: public/screenshots/app-*.png (1600×900).
+  Her ekranın Türkçesi ve İngilizcesi ayrı dosyadır; İngilizce sürüm dosya adının
+  sonuna "-en" alır ve dile göre otomatik seçilir (bkz. lib/langAsset.ts).
+  Galeri bileşeni: components/landing/ProductGallery.tsx
 */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NumberFlow from "@number-flow/react";
 import { landingTranslations, type Language } from "../../i18n/landing";
@@ -21,12 +21,38 @@ import { AiBatchTool } from "../tools/AiBatchTool";
 import { AiCompareTool } from "../tools/AiCompareTool";
 import { AiRedactTool } from "../tools/AiRedactTool";
 import { PdfEditor } from "../tools/PdfEditor";
-import { DocumentScanner } from "../tools/DocumentScanner";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
+
 import { PdfCropTool } from "../tools/PdfCropTool";
 import { ImageCompressTool } from "../tools/ImageCompressTool";
 import { saveScannedPdf } from "../../lib/pendingScan";
 import { useResponsive } from "../dashboard/hooks/useResponsive";
 import { toolAccent } from "../tools/ToolDropzone";
+import {
+  ArrowRightLeft,
+  Camera,
+  Eraser,
+  FileSearch,
+  FileType2,
+  Minimize2,
+  PenTool,
+  Highlighter,
+  ScanLine,
+  Crop,
+  Maximize2,
+  Unlock,
+  Languages,
+  Lock,
+  MessageSquareText,
+  Pencil,
+  Sparkles,
+  Table2,
+  FileStack,
+  Infinity as InfinityIcon,
+  ShieldCheck,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 
 /** Ana sayfada yerinde (login'siz) çalışabilen ücretsiz araçlar. */
 export type FreeToolId = "merge" | "image-to-pdf" | "crop-pdf" | "gorsel-sikistir" | PageToolId;
@@ -38,6 +64,84 @@ export const isFreeToolId = (id: string): id is FreeToolId =>
   id === "crop-pdf" ||
   id === "gorsel-sikistir" ||
   PAGE_TOOL_IDS.has(id);
+/**
+ * HERO ARAÇ KONSOLU — seçili aracın başlık şeridinde gösterilen kısa tanıtım.
+ * Kullanıcı aracı seçer seçmez ne yapacağını okur; boş bir yükleme kutusuyla
+ * baş başa kalmaz.
+ */
+type AiToolId =
+  | "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact";
+
+type HeroMeta = { Icon: LucideIcon; tr: string; en: string; trDesc: string; enDesc: string };
+
+const AI_TOOLS: { id: AiToolId; meta: HeroMeta }[] = [
+  { id: "summarize", meta: { Icon: Sparkles, tr: "Özetle", en: "Summarize",
+    trDesc: "Uzun belgenin ana fikrini çıkarır.", enDesc: "Pulls out the key points of a long document." } },
+  { id: "chat", meta: { Icon: MessageSquareText, tr: "Sohbet", en: "Chat",
+    trDesc: "Belgeye soru sorun, cevabı kaynağıyla alın.", enDesc: "Ask the document questions, get sourced answers." } },
+  { id: "extract", meta: { Icon: Table2, tr: "Veri Çıkar", en: "Extract",
+    trDesc: "Fatura ve formlardaki bilgileri tabloya döker.", enDesc: "Turns invoice and form fields into a table." } },
+  { id: "translate", meta: { Icon: Languages, tr: "Çeviri", en: "Translate",
+    trDesc: "Düzeni bozmadan başka dile çevirir.", enDesc: "Translates while keeping the layout." } },
+  { id: "batch", meta: { Icon: FileStack, tr: "Toplu İşlem", en: "Batch",
+    trDesc: "Onlarca belgeyi tek seferde işler.", enDesc: "Handles dozens of documents at once." } },
+  { id: "compare", meta: { Icon: ArrowRightLeft, tr: "Karşılaştır", en: "Compare",
+    trDesc: "İki sürüm arasındaki farkları gösterir.", enDesc: "Shows what changed between two versions." } },
+  { id: "redact", meta: { Icon: Eraser, tr: "Veri Gizle", en: "Redact",
+    trDesc: "Kimlik ve IBAN gibi bilgileri karartır.", enDesc: "Blacks out IDs and account numbers." } },
+];
+
+const EDITOR_META: HeroMeta = {
+  Icon: Pencil, tr: "PDF Düzenle", en: "Edit PDF",
+  trDesc: "Mevcut yazıyı silip yerine yenisini yazın.",
+  enDesc: "Delete existing text and type new text in its place.",
+};
+
+/**
+ * ÜYE OLUNCA AÇILAN ÜCRETSİZ ARAÇLAR — misafire somut bir kayıt sebebi verir.
+ * Buradaki araçların hepsi ÜCRETSİZ planda gerçekten açıktır; abartılı vaat yok.
+ * Kaynak: web/api/src/modules/subscription/subscription.config.ts → FREE_TOOLS
+ * ve cihazda çalışan OCR araçları (üye girişi ister).
+ */
+const MEMBER_TOOLS: { slug: string; Icon: LucideIcon; tr: string; en: string }[] = [
+  { slug: "compress", Icon: Minimize2, tr: "PDF Sıkıştır", en: "Compress PDF" },
+  { slug: "pdf-to-text", Icon: FileType2, tr: "PDF → Metin", en: "PDF → Text" },
+  { slug: "unlock-pdf", Icon: Unlock, tr: "Şifre Kaldır", en: "Unlock PDF" },
+  { slug: "aranabilir-pdf", Icon: FileSearch, tr: "Aranabilir PDF", en: "Searchable PDF" },
+];
+
+const FREE_TOOL_DESC: Record<FreeToolId, { tr: string; en: string }> = {
+  merge: { tr: "Birden çok dosyayı sıralayıp tek PDF yapın.", en: "Order several files into one PDF." },
+  split: { tr: "İstediğiniz sayfaları ayrı dosya olarak alın.", en: "Pull the pages you choose into a separate file." },
+  "crop-pdf": { tr: "Kenar boşluklarını kesip sayfayı daraltın.", en: "Cut the margins and tighten the page." },
+  "image-to-pdf": { tr: "Fotoğrafları sıralayıp tek PDF'te toplayın.", en: "Order photos and collect them in one PDF." },
+  "gorsel-sikistir": { tr: "Fotoğrafları kaliteyi koruyarak küçültün.", en: "Make photos smaller while keeping them sharp." },
+  "rotate-pdf": { tr: "Yan duran sayfaları düz çevirin.", en: "Turn sideways pages the right way up." },
+  "delete-pages": { tr: "İstemediğiniz sayfaları çıkarın.", en: "Remove the pages you don't want." },
+  "organize-pdf": { tr: "Sayfaların sırasını sürükleyerek değiştirin.", en: "Drag pages into the order you want." },
+};
+
+/**
+ * ÜYELİKSİZ ama hero içinde çalışan sürümü OLMAYAN araçlar.
+ *
+ * Aşağıdaki tam araç listesinde bu araçların üzerinde "Üyeliksiz" yazıyor; ama
+ * yukarıdaki hızlı kullanım alanında hiç görünmüyorlardı. Ziyaretçi aşağıda
+ * gördüğü aracı yukarıda bulamayınca rozete güvenmiyor. Bunlar da ızgarada
+ * gösterilir; tıklanınca kendi sayfalarında açılırlar (orada da üyelik istemez).
+ */
+const SAYFADA_ACILAN_MISAFIR_ARACLARI: {
+  slug: string;
+  Icon: LucideIcon;
+  tr: string;
+  en: string;
+}[] = [
+  { slug: "pdf-imzala", Icon: PenTool, tr: "İmzala", en: "Sign" },
+  { slug: "pdf-yorumla", Icon: Highlighter, tr: "İşaretle", en: "Annotate" },
+  { slug: "belge-tara", Icon: ScanLine, tr: "Belge Tara", en: "Scan" },
+  { slug: "pdf-kesit-al", Icon: Crop, tr: "Kesit Al", en: "Snip" },
+  { slug: "gorsel-boyutlandir", Icon: Maximize2, tr: "Görsel Boyutlandır", en: "Resize Image" },
+];
+
 const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "merge", tr: "Birleştir", en: "Merge" },
   { id: "split", tr: "Böl", en: "Split" },
@@ -48,10 +152,20 @@ const FREE_TOOLS: { id: FreeToolId; tr: string; en: string }[] = [
   { id: "delete-pages", tr: "Sayfa Sil", en: "Delete" },
   { id: "organize-pdf", tr: "Sayfa Sırala", en: "Reorder" },
 ];
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import { LandingIcon } from "./LandingIcon";
 import { ThreeStepDemo } from "./ThreeStepDemo";
+import { HeroBackground } from "./HeroBackground";
+import { ProductGallery } from "./ProductGallery";
 import { langAsset, langAssetFallback } from "../../lib/langAsset";
 import { usePwaInstall } from "../../pwa/usePwaInstall";
+
+// Belge tarayıcı ağır bir bileşendir (kamera + görüntü işleme). Doğrudan içe
+// aktarılırsa ana pakete girer ve açılış sayfasının ilk yüklenmesini yavaşlatır.
+// Yalnızca tarayıcı penceresi açıldığında indirilir.
+const DocumentScanner = lazyWithRetry(() =>
+  import("../tools/DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
+);
 
 /**
  * Landing navbar'da kalıcı "Uygulamayı Yükle" butonu — sm+ (tablet/masaüstü)
@@ -120,7 +234,6 @@ type LandingPageProps = {
   aiAllowed?: boolean;
 };
 
-type ShowcaseTab = "web" | "desktop";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -164,80 +277,6 @@ function useInViewOnce(ref: React.RefObject<Element | null>) {
   return inView;
 }
 
-
-// ─── Animated Background ──────────────────────────────────────────────────────
-
-function GradientBackground() {
-  return (
-    <>
-      <style>{`
-        @keyframes gb-drift-a {
-          0%,100% { transform: translate(0,0) scale(1); }
-          50%      { transform: translate(4%,6%) scale(1.06); }
-        }
-        @keyframes gb-drift-b {
-          0%,100% { transform: translate(0,0) scale(1); }
-          50%      { transform: translate(-5%,-4%) scale(1.08); }
-        }
-        @keyframes gb-drift-c {
-          0%,100% { transform: translate(0,0) scale(1); }
-          50%      { transform: translate(3%,-5%) scale(1.05); }
-        }
-        @keyframes gb-noise {
-          0%,100% { opacity: 0.035; }
-          50%      { opacity: 0.055; }
-        }
-      `}</style>
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{ zIndex: -1, overflow: "hidden", background: "#080b14" }}
-        aria-hidden="true"
-      >
-        {/* Blob A – derin mavi sol üst */}
-        <div style={{
-          position: "absolute", top: "-30%", left: "-20%",
-          width: "80vw", height: "80vw",
-          borderRadius: "50%",
-          background: "radial-gradient(circle at 40% 40%, rgba(29,78,216,0.18), transparent 60%)",
-          animation: "gb-drift-a 26s ease-in-out infinite",
-          filter: "blur(120px)",
-        }} />
-        {/* Blob B – indigo sağ */}
-        <div style={{
-          position: "absolute", top: "-10%", right: "-25%",
-          width: "65vw", height: "65vw",
-          borderRadius: "50%",
-          background: "radial-gradient(circle at 55% 40%, rgba(67,56,202,0.14), transparent 60%)",
-          animation: "gb-drift-b 34s ease-in-out infinite",
-          filter: "blur(130px)",
-        }} />
-        {/* Blob C – cyan-blue ince çizgi sol orta */}
-        <div style={{
-          position: "absolute", top: "40%", left: "-5%",
-          width: "45vw", height: "45vw",
-          borderRadius: "50%",
-          background: "radial-gradient(circle at 45% 50%, rgba(14,116,144,0.12), transparent 60%)",
-          animation: "gb-drift-c 20s ease-in-out infinite",
-          filter: "blur(100px)",
-        }} />
-        {/* Üst ince parlak şerit */}
-        <div style={{
-          position: "absolute", top: 0, left: "15%",
-          width: "70%", height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(99,102,241,0.25), transparent)",
-        }} />
-        {/* Noise doku katmanı */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")",
-          backgroundSize: "200px 200px",
-          animation: "gb-noise 8s ease-in-out infinite",
-          mixBlendMode: "overlay",
-        }} />
-      </div>
-    </>
-  );
-}
 
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 
@@ -316,7 +355,10 @@ function Navbar({
             ["#showcase", tr ? "Önizleme" : "Preview"],
             ["#tools", tr ? "Araçlar" : "Tools"],
             ["#pricing", tr ? "Fiyat" : "Pricing"],
-            ["/blog", "Blog"],
+            // İngilizce sayfada İngilizce adrese bağlanır; aksi hâlde site
+            // kendi İngilizce sürümüne hiç bağlanmamış oluyor ve arama motoru
+            // Türkçe sürümü asıl kabul edip diğerini kopya sayıyor (ölçüldü).
+            [localizedPath("/blog", language), "Blog"],
             ["#faq", "FAQ"],
           ].map(([href, label]) => (
             <CrawlableLink
@@ -428,6 +470,7 @@ function Hero({
   onScannerUpgrade,
   onScannerLogin,
   aiAllowed,
+  onOpenTool,
 }: {
   language: Language;
   onUseWebApp: () => void;
@@ -439,6 +482,7 @@ function Hero({
   onScannerLogin?: () => void;
   aiAllowed?: boolean;
   windowsDownloadUrl: string;
+  onOpenTool: (id: FeatureKey) => void;
 }) {
   const tr = language === "tr";
   const copy = landingTranslations[language];
@@ -457,7 +501,7 @@ function Hero({
   });
 
   const [freeTool, setFreeTool] = useState<FreeToolId>("merge");
-  const [aiTool, setAiTool] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
+  const [aiTool, setAiTool] = useState<AiToolId | null>(null);
   const [editorOn, setEditorOn] = useState(false);
   // Ödemeler kapalıyken AI araçları "Yakında" (fiyat kartlarıyla aynı sinyal). ANCAK
   // zaten AI'a yetkili kullanıcı (ADMIN / PRO / BUSINESS) — backend erişim veriyor —
@@ -566,88 +610,264 @@ function Hero({
           {...stagger(3)}
           className="mt-10 mx-auto w-full max-w-4xl"
         >
-          {/* Mobil: kamerayla belge tara (cihazda PDF) */}
-          {isMobileOrTablet && (
-            <button
-              type="button"
-              onClick={() => setScannerOpen(true)}
-              className="mb-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/30 bg-gradient-to-r from-cyan-500/[0.14] to-blue-500/[0.14] px-5 py-3.5 text-sm font-bold text-cyan-100 shadow-[0_10px_30px_-14px_rgba(6,182,212,0.7)] transition hover:from-cyan-500/25 hover:to-blue-500/25"
-            >
-              {tr ? "📸 Kamerayla Belge Tara" : "📸 Scan a document with camera"}
-            </button>
-          )}
-          <div className="mb-4 flex flex-wrap justify-center gap-2">
-            {FREE_TOOLS.map((t) => {
-              const A = toolAccent(t.id);
-              const Icon = A.icon;
-              const active = !aiTool && !editorOn && freeTool === t.id;
-              return (
+          {/* ARAÇ KONSOLU — tek bir yükseltilmiş panel: üstte grup seçimi ve araç
+              çipleri, ortada seçili aracın tanıtım şeridi, altında aracın kendisi.
+              Eskiden 16 çip tek bir yığın hâlinde sarılıyor, araç alanı ayrı
+              duruyordu; hepsi tek kartta toplandı. */}
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] p-2.5 shadow-[0_40px_90px_-40px_rgba(2,6,23,0.95)] backdrop-blur-xl sm:p-3.5">
+            {/* Üst şerit: grup seçimi + (mobil) kamerayla tara */}
+            <div className="flex flex-wrap items-center justify-between gap-2 px-1 pb-3">
+              <div className="inline-flex rounded-full border border-white/10 bg-black/25 p-1">
                 <button
-                  key={t.id}
                   type="button"
-                  onClick={() => {
-                    setFreeTool(t.id);
-                    setAiTool(null);
-                    setEditorOn(false);
-                  }}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                    active
-                      ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(79,70,229,0.7)]"
-                      : "border border-white/15 bg-white/[0.04] text-slate-300 hover:bg-white/[0.08]"
+                  onClick={() => setAiTool(null)}
+                  className={`rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
+                    !aiTool ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : A.text}`} />
-                  {tr ? t.tr : t.en}
+                  {tr ? "Hızlı araçlar" : "Quick tools"}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiTool("summarize");
+                    setEditorOn(false);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[13px] font-bold transition ${
+                    aiTool
+                      ? "bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-sm"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {tr ? "Yapay zekâ" : "AI"}
+                </button>
+              </div>
+
+              {isMobileOrTablet ? (
+                <button
+                  type="button"
+                  onClick={() => setScannerOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-500/10 px-4 py-1.5 text-[13px] font-bold text-cyan-200 transition hover:bg-cyan-500/20"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                  {tr ? "Kamerayla tara" : "Scan with camera"}
+                </button>
+              ) : (
+                <span className="hidden items-center gap-1.5 pr-2 text-[12px] font-semibold text-slate-400 sm:inline-flex">
+                  <Lock className="h-3.5 w-3.5" />
+                  {tr ? "Üyelik gerekmez" : "No account needed"}
+                </span>
+              )}
+            </div>
+
+            {/* Araç kutuları — her araç kendi karesinde; seçili olan renkli çerçeveyle
+                öne çıkar. Çip sırası yerine ızgara: göz tek tek araçları tarayabilir.
+                Izgarada üç tür kutu var: burada çalışanlar, kendi sayfasında
+                açılanlar ve ücretsiz üyelikle açılan kilitli olanlar. */}
+            {!accessToken && !aiTool && (
+              <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-1 text-[11.5px] font-medium">
+                <span className="flex items-center gap-1.5 text-slate-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                  {tr ? "Üyeliksiz kullan" : "Use without an account"}
+                </span>
+                <button
+                  type="button"
+                  onClick={onRegister}
+                  className="flex items-center gap-1.5 text-emerald-300 transition hover:text-emerald-200"
+                >
+                  <Lock className="h-3 w-3" />
+                  {tr ? "Ücretsiz üyelikle açılır — üye ol" : "Unlocks with a free account — sign up"}
+                </button>
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-2 px-1 sm:grid-cols-5 lg:grid-cols-6">
+              {!aiTool ? (
+                <>
+                  {FREE_TOOLS.map((t) => {
+                    const A = toolAccent(t.id);
+                    const Icon = A.icon;
+                    const active = !editorOn && freeTool === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setFreeTool(t.id);
+                          setAiTool(null);
+                          setEditorOn(false);
+                        }}
+                        className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                          active
+                            ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                            : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${A.grad} ${A.text} ring-1 ring-white/10 transition group-hover:scale-105`}
+                        >
+                          <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                          {tr ? t.tr : t.en}
+                        </span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditorOn(true);
+                      setAiTool(null);
+                    }}
+                    className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                      editorOn
+                        ? "border-white/25 bg-white/[0.1] shadow-[0_10px_30px_-16px_rgba(255,255,255,0.35)]"
+                        : "border-white/[0.07] bg-white/[0.02] hover:border-white/20 hover:bg-white/[0.05]"
+                    }`}
+                  >
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/25 text-amber-300 ring-1 ring-white/10 transition group-hover:scale-105">
+                      <Pencil className="h-[18px] w-[18px]" strokeWidth={2} />
+                    </span>
+                    <span className={`text-[12px] font-semibold leading-tight ${editorOn ? "text-white" : "text-slate-300"}`}>
+                      {tr ? EDITOR_META.tr : EDITOR_META.en}
+                    </span>
+                  </button>
+
+                  {/* Üyeliksiz ama kendi sayfasında açılan araçlar — aşağıdaki
+                      tam listede "Üyeliksiz" rozeti taşıyorlar; burada da
+                      görünmeleri gerekiyor ki rozet tutarlı olsun. */}
+                  {SAYFADA_ACILAN_MISAFIR_ARACLARI.map((m) => {
+                    const MIcon = m.Icon;
+                    return (
+                      <button
+                        key={m.slug}
+                        type="button"
+                        onClick={() => onOpenTool(m.slug as FeatureKey)}
+                        className="group flex flex-col items-center justify-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-2 py-3.5 text-center transition hover:border-white/20 hover:bg-white/[0.05]"
+                      >
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-slate-500/25 to-slate-700/25 text-slate-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                          <MIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                        </span>
+                        <span className="text-[12px] font-semibold leading-tight text-slate-300">
+                          {tr ? m.tr : m.en}
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  {/* ÜCRETSİZ ÜYELİKLE AÇILANLAR — araçların ALTINDA değil,
+                      aralarında. Blok araç alanının altındayken ekranın altında
+                      kalıyor ve kimse görmüyordu (kullanıcı bildirdi). Kilit
+                      simgesi ve yeşil çerçeve bunları ücretsiz araçlardan
+                      ayırır; tıklayınca kayıt ekranı açılır. */}
+                  {!accessToken &&
+                    MEMBER_TOOLS.map((m) => {
+                      const MemberIcon = m.Icon;
+                      return (
+                        <button
+                          key={m.slug}
+                          type="button"
+                          onClick={onRegister}
+                          title={tr ? "Ücretsiz üyelikle açılır" : "Unlocks with a free account"}
+                          className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.06] px-2 py-3.5 text-center transition hover:border-emerald-400/50 hover:bg-emerald-500/[0.12]"
+                        >
+                          <span className="absolute right-1.5 top-1.5">
+                            <Lock className="h-3 w-3 text-emerald-400/70" />
+                          </span>
+                          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500/25 to-teal-600/20 text-emerald-200 ring-1 ring-emerald-400/20 transition group-hover:scale-105">
+                            <MemberIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                          </span>
+                          <span className="text-[12px] font-semibold leading-tight text-emerald-100/90">
+                            {tr ? m.tr : m.en}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </>
+              ) : (
+                AI_TOOLS.map(({ id, meta }) => {
+                  const ChipIcon = meta.Icon;
+                  const active = aiTool === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => {
+                        setAiTool(id);
+                        setEditorOn(false);
+                      }}
+                      className={`group flex flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3.5 text-center transition ${
+                        active
+                          ? "border-violet-400/45 bg-violet-500/15 shadow-[0_10px_30px_-16px_rgba(139,92,246,0.7)]"
+                          : "border-white/[0.07] bg-white/[0.02] hover:border-violet-400/30 hover:bg-white/[0.05]"
+                      }`}
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500/30 to-violet-500/15 text-fuchsia-200 ring-1 ring-white/10 transition group-hover:scale-105">
+                        <ChipIcon className="h-[18px] w-[18px]" strokeWidth={2} />
+                      </span>
+                      <span className={`text-[12px] font-semibold leading-tight ${active ? "text-white" : "text-slate-300"}`}>
+                        {tr ? meta.tr : meta.en}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Seçili aracın tanıtım şeridi */}
+            {(() => {
+              const freeMeta = (): HeroMeta => {
+                const t = FREE_TOOLS.find((x) => x.id === freeTool) ?? FREE_TOOLS[0];
+                const A = toolAccent(t.id);
+                return {
+                  Icon: A.icon,
+                  tr: t.tr,
+                  en: t.en,
+                  trDesc: FREE_TOOL_DESC[t.id].tr,
+                  enDesc: FREE_TOOL_DESC[t.id].en,
+                };
+              };
+              const meta: HeroMeta = aiTool
+                ? (AI_TOOLS.find((a) => a.id === aiTool)?.meta ?? EDITOR_META)
+                : editorOn
+                  ? EDITOR_META
+                  : freeMeta();
+              const HeadIcon = meta.Icon;
+              const onDevice = !aiTool && !editorOn;
+              // Yapay zekâ araçları kendi başlığını çiziyor; iki başlık üst üste
+              // binmesin diye bu şeridi yalnızca hızlı araçlarda gösteriyoruz.
+              if (aiTool) return null;
+              return (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-black/20 px-4 py-3 text-left">
+                  <span
+                    className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ring-1 ${
+                      aiTool
+                        ? "bg-gradient-to-br from-fuchsia-500/30 to-violet-500/10 text-fuchsia-200 ring-fuchsia-400/25"
+                        : editorOn
+                          ? "bg-gradient-to-br from-amber-500/30 to-amber-500/5 text-amber-200 ring-amber-400/25"
+                          : "bg-gradient-to-br from-sky-500/30 to-sky-500/5 text-sky-200 ring-sky-400/25"
+                    }`}
+                  >
+                    <HeadIcon className="h-5 w-5" strokeWidth={2} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-bold text-white">{tr ? meta.tr : meta.en}</p>
+                    <p className="truncate text-[12.5px] text-slate-400">{tr ? meta.trDesc : meta.enDesc}</p>
+                  </div>
+                  {onDevice && (
+                    <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1.5 text-[11px] font-bold text-emerald-300 sm:inline-flex">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      {tr ? "Cihazında çalışır" : "Runs on your device"}
+                    </span>
+                  )}
+                </div>
               );
-            })}
-            {/* AI araçları (Pro) — yapay zekâ özet + sohbet + veri çıkarma */}
-            {(
-              [
-                ["summarize", tr ? "✨ AI Özet" : "✨ AI Summary"],
-                ["chat", tr ? "✨ AI Sohbet" : "✨ AI Chat"],
-                ["extract", tr ? "✨ AI Veri Çıkar" : "✨ AI Extract"],
-                ["translate", tr ? "✨ AI Çeviri" : "✨ AI Translate"],
-                ["batch", tr ? "✨ AI Toplu İşlem" : "✨ AI Batch"],
-                ["compare", tr ? "✨ AI Karşılaştır" : "✨ AI Compare"],
-                ["redact", tr ? "✨ AI Veri Gizle" : "✨ AI Redact"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setAiTool(id);
-                  setEditorOn(false);
-                }}
-                className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                  aiTool === id
-                    ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-[0_8px_24px_-8px_rgba(124,58,237,0.7)]"
-                    : "border border-violet-400/25 bg-violet-500/[0.06] text-violet-200 hover:bg-violet-500/[0.12]"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-            {/* PDF Düzenle — cihazda editör */}
-            <button
-              type="button"
-              onClick={() => {
-                setEditorOn(true);
-                setAiTool(null);
-              }}
-              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
-                editorOn
-                  ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-[0_8px_24px_-8px_rgba(6,182,212,0.7)]"
-                  : "border border-cyan-400/25 bg-cyan-500/[0.06] text-cyan-200 hover:bg-cyan-500/[0.12]"
-              }`}
-            >
-              {tr ? "✏️ PDF Düzenle" : "✏️ Edit PDF"}
-            </button>
-          </div>
+            })()}
+
           {/* Birleştir/Görsel→PDF: yerinde widget. Döndür/Sil/Düzenle: yerinde
               dropzone — dosya yüklenince GuestPageToolCore kendi GENİŞ POPUP'ını açar. */}
-          <div className="text-left">
+            <div className="mt-3 text-left">
             {editorOn ? (
               <PdfEditor language={language} accessToken={accessToken} initialFile={editorOn ? scannedFile : null} />
             ) : aiTool === "batch" ? (
@@ -706,8 +926,32 @@ function Hero({
                 ]}
               />
             )}
+            </div>
+
+            {/* NOT: "Ücretsiz üyelikle bunlar da açılır" bloğu buradaydı; araç
+                çalışma alanının ALTINDA kaldığı için ekranda görünmüyordu.
+                Kilitli kutular artık araç ızgarasının İÇİNDE, araçların yanında
+                duruyor — kullanıcı onları araçları tararken görüyor. */}
           </div>
-          <p className="mt-4 text-center text-[13px] text-slate-500">
+
+          {/* Güven şeridi — emoji yerine ikon; iddia araç türüne göre dürüst. */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12.5px] font-medium text-slate-400">
+            {[
+              { Icon: Lock, tr: "Üyelik gerekmez", en: "No account needed" },
+              { Icon: ShieldCheck, tr: "Filigransız, reklamsız çıktı", en: "No watermark, no ads" },
+              { Icon: Zap, tr: "Kurulum yok — tarayıcıda çalışır", en: "No install — runs in your browser" },
+            ].map((item) => {
+              const TrustIcon = item.Icon;
+              return (
+                <span key={item.en} className="inline-flex items-center gap-1.5">
+                  <TrustIcon className="h-3.5 w-3.5 text-slate-400" />
+                  {tr ? item.tr : item.en}
+                </span>
+              );
+            })}
+          </div>
+
+          <p className="mt-5 text-center text-[13px] text-slate-400">
             {tr ? "↓ Tüm araçlar için aşağı kaydır" : "↓ Scroll for all tools"}
           </p>
         </motion.div>
@@ -715,7 +959,8 @@ function Hero({
         {/* Belge Tarayıcı (mobil) — tam ekran, cihazda işlenir */}
         <AnimatePresence>
           {scannerOpen && (
-            <DocumentScanner
+            <Suspense fallback={null}>
+              <DocumentScanner
               open={scannerOpen}
               language={language}
               onClose={() => setScannerOpen(false)}
@@ -724,25 +969,15 @@ function Hero({
               onUpgrade={onScannerUpgrade ?? onUpgrade}
               accessToken={accessToken}
               onLogin={accessToken ? undefined : (onScannerLogin ?? onLogin)}
-            />
+              />
+            </Suspense>
           )}
         </AnimatePresence>
 
-        {/* Trust bar */}
-        <motion.div
-          {...stagger(4)}
-          className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500"
-        >
-          {[
-            tr ? "🔒 Dosyan cihazından çıkmaz" : "🔒 Files stay on your device",
-            tr ? "🚫 Filigran yok" : "🚫 No watermark",
-            tr ? "⚡ Anında işlem" : "⚡ Instant",
-            tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
-            tr ? "🆓 Üyelik gerekmez" : "🆓 No sign-up",
-          ].map((item) => (
-            <span key={item}>{item}</span>
-          ))}
-        </motion.div>
+        {/* NOT: Buradaki ikinci (emoji) güven şeridi kaldırıldı — araç konsolunun
+            altındaki ikonlu şerit aynı şeyleri zaten söylüyordu ve buradaki metin
+            koşulsuz "dosyan cihazından çıkmaz" diyerek yapay zekâ/PDF Düzenle
+            araçları için yanlış bir söz veriyordu. */}
 
         {/* Audience pills */}
         <motion.div
@@ -775,7 +1010,8 @@ function StatsBar({ language }: { language: Language }) {
   const inView = useInViewOnce(ref as React.RefObject<Element>);
 
   const stats = [
-    { value: 20, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
+    // Sayı araç kataloğundan gelir; elle yazılan "20+" araç eklendikçe eskiyordu.
+    { value: 45, suffix: "+", label: tr ? "PDF Aracı" : "PDF Tools" },
     {
       value: 80,
       suffix: " MB",
@@ -828,369 +1064,6 @@ function StatsBar({ language }: { language: Language }) {
         ))}
       </div>
     </div>
-  );
-}
-
-// ─── Product Showcase ─────────────────────────────────────────────────────────
-
-const SHOWCASE_PILLS = (tr: boolean) => [
-  {
-    pos: "absolute -top-4 left-[8%] sm:-top-5 sm:left-[5%]",
-    icon: "⚡",
-    label: tr ? "Anında" : "Instant",
-  },
-  {
-    pos: "absolute -top-4 right-[8%] sm:-top-5 sm:right-[5%]",
-    icon: "🔒",
-    label: tr ? "Cihazda İşlenir" : "On-device",
-  },
-  {
-    pos: "absolute -bottom-4 left-[8%] sm:-bottom-5 sm:left-[5%]",
-    icon: "🆓",
-    label: tr ? "Üyeliksiz" : "No sign-up",
-  },
-  {
-    pos: "absolute -bottom-4 right-[8%] sm:-bottom-5 sm:right-[5%]",
-    icon: "⚡",
-    label: tr ? "Anında İşlem" : "Instant Processing",
-  },
-];
-
-function BrowserChrome({ screenshot, language }: { screenshot?: boolean; language: Language }) {
-  return (
-    <div className="rounded-[16px] overflow-hidden border border-white/[0.1] bg-[#0D1117] shadow-[0_0_80px_rgba(59,130,246,0.15),0_40px_100px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.06)]">
-      {/* Chrome bar */}
-      <div className="flex items-center gap-3 bg-[#111827] border-b border-white/[0.06] px-4 py-3">
-        <div className="flex gap-1.5 shrink-0">
-          <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-          <span className="w-3 h-3 rounded-full bg-amber-400/80" />
-          <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-        </div>
-        <div className="flex-1 flex items-center gap-2 rounded-lg bg-[#0D1117] border border-white/[0.07] px-3 py-1.5">
-          <svg
-            className="w-3 h-3 text-emerald-400 shrink-0"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="text-[11px] text-gray-500 truncate">
-            pdfplatform.app
-          </span>
-        </div>
-        <div className="flex gap-1.5 shrink-0">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-5 h-5 rounded-md bg-white/[0.04] border border-white/[0.05]"
-              aria-hidden="true"
-            />
-          ))}
-        </div>
-      </div>
-      {/* Viewport — oran görsele eşitlendi ki object-cover kırpmasın, sol araç menüsü görünsün */}
-      <div className="relative aspect-[1366/657] overflow-hidden">
-        {screenshot ? (
-          <img
-            src={langAsset("/screenshots/web-app.png", language)}
-            onError={langAssetFallback("/screenshots/web-app.png")}
-            alt="PDF Platform web uygulaması"
-            className="w-full h-full object-cover object-top"
-            draggable={false}
-          />
-        ) : (
-          <ScreenshotPlaceholder variant="web" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DesktopChrome({
-  screenshot,
-  name,
-}: {
-  screenshot?: boolean;
-  name: string;
-}) {
-  return (
-    <div className="rounded-[16px] overflow-hidden border border-white/[0.1] bg-[#0D1117] shadow-[0_0_80px_rgba(139,92,246,0.12),0_40px_100px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.06)]">
-      {/* Title bar */}
-      <div className="relative flex items-center bg-[#161B27] border-b border-white/[0.06] px-4 py-3">
-        <div className="flex gap-1.5 shrink-0">
-          <span className="w-3 h-3 rounded-full bg-rose-500/80" />
-          <span className="w-3 h-3 rounded-full bg-amber-400/80" />
-          <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex items-center gap-2">
-            <svg
-              className="w-3.5 h-3.5 text-violet-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.8}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <span className="text-[12px] font-medium text-gray-400">
-              {name}
-            </span>
-          </div>
-        </div>
-        <div className="ml-auto flex gap-1 shrink-0">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-5 h-5 rounded-md bg-white/[0.04] border border-white/[0.05]"
-              aria-hidden="true"
-            />
-          ))}
-        </div>
-      </div>
-      {/* Viewport */}
-      <div className="relative aspect-video overflow-hidden">
-        {screenshot ? (
-          <img
-            src="/screenshots/desktop-app.png"
-            alt="PDF Platform masaüstü uygulaması (yakında)"
-            className="w-full h-full object-cover object-top"
-            draggable={false}
-          />
-        ) : (
-          <ScreenshotPlaceholder variant="desktop" />
-        )}
-      </div>
-    </div>
-  );
-}
-
-function ScreenshotPlaceholder({ variant }: { variant: ShowcaseTab }) {
-  return (
-    <div
-      className="w-full h-full flex flex-col items-center justify-center relative"
-      style={{
-        background:
-          variant === "web"
-            ? "linear-gradient(135deg,#0A1628 0%,#0D1F3C 50%,#091322 100%)"
-            : "linear-gradient(135deg,#0A1020 0%,#0C1829 50%,#0A1525 100%)",
-      }}
-    >
-      <div
-        className="absolute inset-0 opacity-[0.055]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle,rgba(255,255,255,0.15) 1px,transparent 1px)",
-          backgroundSize: "28px 28px",
-        }}
-      />
-      <div
-        className="absolute opacity-30 w-[350px] h-[180px] blur-[80px] rounded-full"
-        style={{
-          background:
-            variant === "web"
-              ? "radial-gradient(ellipse,rgba(59,130,246,0.6),transparent 70%)"
-              : "radial-gradient(ellipse,rgba(139,92,246,0.5),transparent 70%)",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-3">
-        <div
-          className={`w-16 h-16 rounded-2xl flex items-center justify-center ${variant === "web" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-violet-500 to-purple-700"}`}
-        >
-          <svg
-            className="w-8 h-8 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-        </div>
-        <p className="text-gray-400 text-sm font-medium">
-          Screenshot coming soon
-        </p>
-        <p className="text-gray-600 text-xs">
-          {variant === "web"
-            ? "Place web-app.png in /public/screenshots/"
-            : "Place desktop-app.png in /public/screenshots/"}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ProductShowcase({
-  language,
-  onUseWebApp,
-  organizationName,
-  windowsDownloadUrl,
-}: {
-  language: Language;
-  onUseWebApp: () => void;
-  organizationName: string;
-  windowsDownloadUrl: string;
-}) {
-  const [activeTab, setActiveTab] = useState<ShowcaseTab>("web");
-  const tr = language === "tr";
-
-  // /screenshots/web-app.png var mı? Vite'da runtime check mümkün değil.
-  // Dosyayı public/screenshots/ altına koyduk — eğer varsa img yüklenecek, yoksa onerror gizler.
-  const [webOk, setWebOk] = useState(true);
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = "/screenshots/web-app.png";
-    img.onload = () => setWebOk(true);
-    img.onerror = () => setWebOk(false);
-  }, []);
-
-  const pills = SHOWCASE_PILLS(tr);
-
-  return (
-    <section
-      id="showcase"
-      className="relative py-24 sm:py-32 px-5 sm:px-8 overflow-hidden"
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.06)_0%,transparent_65%)]" />
-      <div className="relative z-10 max-w-5xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
-          className="text-center mb-12"
-        >
-          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[11px] font-bold uppercase tracking-[0.25em] mb-6">
-            <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75 animate-ping" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            </span>
-            {tr ? "Ürün Önizlemesi" : "Product Preview"}
-          </span>
-          <h2
-            className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            {tr
-              ? "Her PDF İş Akışı,\nTek Platformda"
-              : "Every PDF Workflow,\nOne Platform"}
-          </h2>
-          <p
-            className="text-gray-400 max-w-xl mx-auto"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            {tr
-              ? "Tarayıcıdan çalışan güçlü bir PDF platformu — kurulum gerekmez."
-              : "A powerful PDF platform right in your browser — no install needed."}
-          </p>
-        </motion.div>
-
-        {/* Frame + pills */}
-        <div className="relative px-4 sm:px-8 lg:px-16">
-          {/* Floating pills */}
-          <AnimatePresence mode="popLayout">
-            {pills.map((p, i) => (
-              <motion.div
-                key={`${activeTab}-pill-${i}`}
-                className={`${p.pos} z-20 hidden sm:block`}
-                initial={{ opacity: 0, scale: 0.85, y: 10 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  transition: {
-                    delay: i * 0.08 + 0.2,
-                    duration: 0.38,
-                    ease: [0.22, 1, 0.36, 1] as const,
-                  },
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.9,
-                  y: -6,
-                  transition: { duration: 0.18 },
-                }}
-              >
-                <div className="flex items-center gap-2 rounded-xl border border-white/[0.1] bg-slate-900/85 px-3 py-2 shadow-xl backdrop-blur-md whitespace-nowrap">
-                  <span className="text-base">{p.icon}</span>
-                  <span className="text-[11px] font-semibold text-gray-200">
-                    {p.label}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {/* Screenshot frame */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 18 }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                transition: {
-                  duration: 0.35,
-                  ease: [0.22, 1, 0.36, 1] as const,
-                },
-              }}
-              exit={{ opacity: 0, y: -12, transition: { duration: 0.2 } }}
-            >
-              <BrowserChrome screenshot={webOk} language={language} />
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Glow reflection */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-10 left-1/2 -z-10 -translate-x-1/2 h-24 blur-[70px] transition-all duration-500"
-            style={{
-              width: "60%",
-              background:
-                activeTab === "web"
-                  ? "rgba(59,130,246,0.25)"
-                  : "rgba(139,92,246,0.2)",
-            }}
-          />
-        </div>
-
-        {/* CTA strip */}
-        <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <motion.button
-            onClick={onUseWebApp}
-            whileHover={{ y: -4, boxShadow: "0 20px 55px rgba(99,102,241,0.6), 0 0 0 1px rgba(99,102,241,0.35)" }}
-            whileTap={{ scale: 0.97, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 18 }}
-            className="group relative inline-flex h-12 min-w-[200px] items-center justify-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-8 font-semibold text-white shadow-[0_0_50px_-8px_rgba(99,102,241,0.7)] transition-all"
-          >
-            <div
-              className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/15 to-transparent group-hover:translate-x-full transition-transform duration-500"
-              aria-hidden="true"
-            />
-            <span className="relative">
-              {tr ? "Ücretsiz Dene" : "Start Free Trial"}
-            </span>
-          </motion.button>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -1748,10 +1621,14 @@ function Faq({ language }: { language: Language }) {
 function FinalCta({
   language,
   onUseWebApp,
+  onRegister,
+  isAuthenticated,
   windowsDownloadUrl,
 }: {
   language: Language;
   onUseWebApp: () => void;
+  onRegister: () => void;
+  isAuthenticated: boolean;
   windowsDownloadUrl: string;
 }) {
   const tr = language === "tr";
@@ -1787,20 +1664,20 @@ function FinalCta({
             >
               {copy.finalCta.primaryCta}
             </motion.button>
-            <motion.div
-              whileHover={{ y: -4 }}
-              whileTap={{ scale: 0.97, y: 0 }}
-              transition={{ type: "spring", stiffness: 380, damping: 18 }}
-            >
-              <div className="relative">
-                <span className="inline-block px-8 py-4 rounded-xl border border-white/20 bg-white/5 text-white font-semibold opacity-50 cursor-not-allowed">
-                  {copy.finalCta.secondaryCta}
-                </span>
-                <span className="absolute -top-2 -right-1 bg-amber-500 text-black text-[11px] font-bold px-2 py-1 rounded">
-                  {tr ? "Yakında" : "Coming"}
-                </span>
-              </div>
-            </motion.div>
+            {/* Ikinci dugme: eskiden tiklanamayan "Masaustu - Cok Yakinda"
+                rozetiydi. Calismayan bir dugme sayfanin sonunda guven kirar;
+                yerine gercekten ise yarayan ucretsiz kayit cagrisi kondu. */}
+            {!isAuthenticated && (
+              <motion.button
+                onClick={onRegister}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.97, y: 0 }}
+                transition={{ type: "spring", stiffness: 380, damping: 18 }}
+                className="px-8 py-4 rounded-xl border border-white/20 bg-white/[0.05] text-white font-semibold transition-colors hover:border-white/35 hover:bg-white/[0.09]"
+              >
+                {copy.finalCta.secondaryCta}
+              </motion.button>
+            )}
           </div>
         </motion.div>
       </div>
@@ -1970,8 +1847,8 @@ function Footer({
       links: [
         { label: tr ? "Hakkımızda" : "About", action: onOpenAbout },
         { label: tr ? "İletişim" : "Contact", action: onContactClick },
-        { label: "Blog", href: "/blog" },
-        { label: tr ? "Geliştirici API" : "Developer API", href: "/pdf-api" },
+        { label: "Blog", href: localizedPath("/blog", language) },
+        { label: tr ? "Geliştirici API" : "Developer API", href: localizedPath("/pdf-api", language) },
       ],
     },
     {
@@ -2129,8 +2006,10 @@ export function LandingPage({
   }, []);
 
   return (
-    <div className="min-h-screen text-white antialiased">
-      <GradientBackground />
+    <div className="relative isolate min-h-screen text-white antialiased">
+      {/* Aurora katmani sayfanin ust kismina tutturulur; isolate sayesinde -z-10
+          icerigin altinda kalir, govdenin arka planiyla oynamak gerekmez. */}
+      <HeroBackground />
       <Navbar
         language={language}
         onLanguageChange={onLanguageChange}
@@ -2154,6 +2033,7 @@ export function LandingPage({
           onScannerLogin={onScannerLogin}
           aiAllowed={aiAllowed}
           windowsDownloadUrl={windowsDownloadUrl}
+          onOpenTool={onOpenTool}
         />
         {/* TOOL-FIRST: araçlar hemen hero'nun altında — ziyaretçi siteyi açar
             açmaz ücretsiz araçlara tıklayıp (login'siz) kullanabilir. */}
@@ -2161,14 +2041,11 @@ export function LandingPage({
           language={language}
           onUseWebApp={onUseWebApp}
           onOpenTool={onOpenTool}
+          isAuthenticated={isAuthenticated}
+          onRegister={onRegister}
         />
         <StatsBar language={language} />
-        <ProductShowcase
-          language={language}
-          onUseWebApp={onUseWebApp}
-          organizationName={organizationName}
-          windowsDownloadUrl={windowsDownloadUrl}
-        />
+        <ProductGallery language={language} onUseWebApp={onUseWebApp} />
         <Features language={language} />
         <HowItWorks language={language} />
         <PricingSection
@@ -2183,6 +2060,8 @@ export function LandingPage({
         <FinalCta
           language={language}
           onUseWebApp={onUseWebApp}
+          onRegister={onRegister}
+          isAuthenticated={isAuthenticated}
           windowsDownloadUrl={windowsDownloadUrl}
         />
       </main>

@@ -168,18 +168,20 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
 
       // H1 — primary keyword "merge PDF" first; "PDF converter" second;
       // "compress PDF" and "PDF editor" follow. ≤70 chars for full display.
+      // Ölçüldü (en): pdf to word → pdf to jpg → pdf to excel → pdf editor →
+      // pdf merge. İngilizcede dönüştürme sorguları birleştirmenin önünde.
       headline:
-        "Merge PDF, Convert, Compress and Edit — All PDF Tools in One Place",
+        "PDF to Word, Merge, Compress and Edit — 45 PDF Tools in One Place",
 
       alternatives: [
         "Fast, Secure PDF Management for Business Workflows",
         "Handle Your PDFs in Seconds — Built for Professionals",
       ],
 
-      // Also used as meta description — MUST stay ≤155 characters.
-      // Current length: 151 chars ✓
+      // On-screen subheading. (The meta description does NOT come from here —
+      // it lives in seo/seoContent.mjs → LANDING_SEO.)
       description:
-        "Merge PDF files, convert documents, compress and edit PDFs from one place. No installation needed — works right in your browser. A Windows desktop app is coming soon.",
+        "PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools in one place. No install, no account — everything runs in your browser.",
 
       primaryCta: "Start Free",
       secondaryCta: "Desktop App — Coming Soon",
@@ -187,7 +189,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       highlights: [
         { label: "Built for", value: "Business-critical document handling" },
         { label: "Core value", value: "Less manual work, fewer file errors" },
-        { label: "Deployment", value: "Web browser (Windows desktop app coming soon)" },
+        { label: "Deployment", value: "Web browser — no installation" },
       ],
 
       quickStats: [
@@ -234,14 +236,14 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — target: "edit pdf", "write on pdf"
           title: "Write on, erase and edit your PDF",
           benefit:
-            "White out existing text and type new, add text, highlight or draw — right in your browser, no install.",
+            "White out existing text and type new, add text, highlight or draw — no install, nothing to learn.",
         },
         {
           icon: "secure",
           // H3 — target: "private pdf processing", "pdf without upload"
           title: "Your file is processed without leaving your device",
           benefit:
-            "Merge, split, rotate, delete, edit and OCR run in your browser — files are never uploaded. Private, instant and unlimited.",
+            "Merge, split, rotate, delete, crop, sign and OCR run in your browser — those files are never uploaded. Private, instant and unlimited.",
         },
         {
           icon: "merge",
@@ -354,7 +356,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — data privacy / GDPR signal
           title: "Zero data retention — we don't store your files",
           description:
-            "Processed document contents are not retained as part of the core workflow, minimizing exposure and data-handling risk for your team.",
+            "Processed document contents are not retained as part of the core workflow; on server-side jobs the file is deleted as soon as it finishes. Only the scans you choose to save stay in your account.",
         },
       ],
     },
@@ -368,19 +370,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     finalCta: {
-      kicker: "Start with the right PDF workflow for your team",
-      title:
-        "Start instantly in your browser — a dedicated desktop app is on the way.",
+      kicker: "The right PDF workflow for your team",
+      title: "Start right in your browser.",
       description:
-        "Open the web version for immediate PDF access. A Windows desktop app for offline, dedicated workflows is coming soon.",
-      primaryCta: "Use Web Version",
-      secondaryCta: "Desktop App — Coming Soon",
+        "No installation, no account required. Open the workspace and handle your first document in seconds.",
+      primaryCta: "Open the Workspace",
+      secondaryCta: "Create a Free Account",
     },
 
     footer: {
       description:
         "Professional PDF management software — merge, convert, compress, and sign PDFs for business workflows.",
-      availability: "Web · Windows app coming soon",
+      availability: "Runs in your browser · no install",
       security: "Secure document operations",
       contact: "Contact",
       termsLabel: "Terms of Service",
@@ -443,7 +444,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Can I edit and erase text on a PDF?",
         answer:
-          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw. It all runs in your browser with no install, and your file never leaves your device.",
+          "Yes. With the Edit PDF tool you can white out existing text and type new, add text, highlight or draw — no install needed. Real text editing is processed on our secure server and the file is deleted as soon as it is done; highlighting and signing run entirely in your browser.",
       },
       {
         question: "Are my files uploaded to a server? Is it private?",
@@ -503,20 +504,34 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       // kicker — intent/brand çerçevesi, başlık değil
       kicker: "İş Süreçleri İçin PDF Yönetimi",
 
-      // H1 — birincil keyword "PDF birleştirme" öne alındı;
-      // "PDF dönüştürme", "PDF sıkıştırma", "PDF düzenleme" takip ediyor.
+      /**
+       * H1 — sıralama ÖLÇÜLDÜ, tahmin edilmedi.
+       *
+       * Google otomatik tamamlama (tr) popülerlik sırasıyla döner; "pdf" için
+       * ilk sıralar: birleştirme → to word → küçültme → dönüştürücü → to jpg →
+       * düzenleme → to excel. Eski başlıkta "Word'e çevir" hiç geçmiyordu, oysa
+       * en çok aranan İKİNCİ ifade odur.
+       *
+       * Ayrıca araç sayısı yazılıyor: eski metni okuyan kişi sitede yalnızca
+       * sayılan dört aracın olduğunu sanıyordu (kullanıcı bildirdi).
+       */
       headline:
-        "PDF Birleştir, Dönüştür, Sıkıştır ve Düzenle — Tüm PDF Araçları Tek Platformda",
+        "PDF Birleştir, Word'e Çevir, Küçült ve Düzenle — 45 PDF Aracı Tek Platformda",
 
       alternatives: [
         "İş Süreçleri İçin Hızlı ve Güvenli PDF Yönetimi",
         "PDF İşlemlerinizi Saniyeler İçinde Tamamlayın — Profesyoneller İçin",
       ],
 
-      // meta description olarak da kullanılır — ≤155 karakter.
-      // Mevcut uzunluk: 148 karakter ✓
+      // EKRANDA görünen alt başlık. (Meta açıklama BURADAN GELMEZ; ana sayfanın
+      // meta açıklaması seo/seoContent.mjs → LANDING_SEO içindedir. Buradaki
+      // eski yorum "meta description olarak da kullanılır" diyordu, doğru değil;
+      // ikisi ayrı yerlerde ve ayrı ayrı güncellenmeli.)
+      // En çok aranan ifadeler önce; "sıkıştırma" ve "küçültme" ikisi de
+      // kullanılıyor (arama verisinde ikisi de üst sıralarda), o yüzden biri
+      // başlıkta biri burada geçiyor.
       description:
-        "PDF birleştirme, dönüştürme, sıkıştırma ve düzenleme işlemlerini tek platformda yapın. Kurulum gerekmez — tarayıcıdan çalışır. Masaüstü uygulaması çok yakında.",
+        "PDF birleştirme, Word'e çevirme, sıkıştırma, JPG'ye çevirme, düzenleme ve 40+ araç daha. Kurulum ve üyelik gerekmez — tarayıcınızda çalışır.",
 
       primaryCta: "Ücretsiz Başla",
       secondaryCta: "Masaüstü Sürümü — Çok Yakında",
@@ -532,7 +547,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         },
         {
           label: "Erişim modeli",
-          value: "Web tarayıcısı (Windows masaüstü uygulaması çok yakında)",
+          value: "Web tarayıcısı — kurulum gerekmez",
         },
       ],
 
@@ -587,7 +602,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — hedef: "gizli pdf işleme", "dosya yüklemeden pdf"
           title: "Dosyanız cihazınızdan çıkmadan işlenir",
           benefit:
-            "Birleştir, böl, döndür, sil, düzenle ve OCR işlemleri tarayıcınızda yapılır — dosyalar sunucuya yüklenmez. Gizli, anında ve sınırsız.",
+            "Birleştir, böl, döndür, sil, kırp, imzala ve OCR işlemleri tarayıcınızda yapılır — bu araçlarda dosya sunucuya yüklenmez. Gizli, anında ve sınırsız.",
         },
         {
           icon: "merge",
@@ -687,7 +702,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
         {
           // H3 — yerel işleme = gizlilik sinyali (güven + farklılaşma)
           // DÜZELTİLDİ: Önceki sürümde ASCII karakterler kullanılmıştı (cikmaz, uygulamasi)
-          title: "PDF dosyalarınız cihazınızdan çıkmaz (Windows uygulaması — çok yakında)",
+          title: "Yapısal araçlarda PDF dosyalarınız cihazınızdan çıkmaz",
           description:
             "Yakında çıkacak Windows uygulaması tüm dosyaları cihazınızda yerel olarak işleyecek; hassas iş belgeleri her zaman doğrudan sizin kontrolünüzde kalacak.",
         },
@@ -702,7 +717,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
           // H3 — veri gizliliği / GDPR / KVKK sinyali
           title: "Sıfır veri saklama — dosyalarınızı tutmuyoruz",
           description:
-            "İşlenen belge içerikleri temel iş akışı kapsamında saklanmaz; bu sayede ekibinizin veri maruziyeti ve işleme riski en aza indirilir.",
+            "İşlenen belge içerikleri iş akışının parçası olarak saklanmaz; sunucuda yapılan işlemlerde dosya işlem biter bitmez silinir. Yalnızca sizin kaydetmeyi seçtiğiniz taramalar hesabınızda tutulur.",
         },
       ],
     },
@@ -716,18 +731,18 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
     },
 
     finalCta: {
-      kicker: "Ekibiniz için doğru PDF iş akışını seçin",
-      title: "Hemen tarayıcıdan başlayın — özel masaüstü uygulaması çok yakında.",
+      kicker: "Ekibiniz için doğru PDF iş akışı",
+      title: "Hemen tarayıcıdan başlayın.",
       description:
-        "Anında PDF erişimi için web sürümünü açın. Çevrimdışı ve yüksek hacimli işlemler için Windows uygulaması çok yakında geliyor.",
-      primaryCta: "Web Sürümünü Aç",
-      secondaryCta: "Masaüstü Sürümü — Çok Yakında",
+        "Kurulum yok, üyelik zorunlu değil. Çalışma alanını açın ve ilk belgenizi saniyeler içinde işleyin.",
+      primaryCta: "Çalışma Alanını Aç",
+      secondaryCta: "Ücretsiz Üye Ol",
     },
 
     footer: {
       description:
         "Profesyonel PDF yönetim yazılımı — iş süreçleri için PDF birleştirme, dönüştürme, sıkıştırma ve imzalama.",
-      availability: "Web · Windows uygulaması çok yakında",
+      availability: "Tarayıcıdan çalışır · kurulum gerekmez",
       security: "Güvenli belge operasyonları",
       contact: "İletişim",
       termsLabel: "Hizmet Şartları",
@@ -789,12 +804,12 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "PDF üzerindeki yazıları düzenleyip silebilir miyim?",
         answer:
-          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Tümü tarayıcıda çalışır, kurulum gerekmez ve dosyanız cihazınızdan çıkmaz.",
+          "Evet. PDF Düzenle aracıyla mevcut yazının üstünü beyazla kapatıp yenisini yazabilir, metin ekleyebilir, vurgulayabilir veya çizebilirsiniz. Kurulum gerekmez. Gerçek metin düzenlemesi için dosyanız güvenli sunucumuzda işlenir ve işlem biter bitmez silinir; vurgulama ve imza gibi işaretlemeler ise tamamen tarayıcınızda yapılır.",
       },
       {
         question: "Dosyalarım sunucuya yükleniyor mu? Güvenli mi?",
         answer:
-          "Temel araçlar (birleştir, böl, döndür, sil, düzenle, OCR) tamamen tarayıcınızda çalışır — dosyalarınız sunucuya yüklenmez. Bu sayede işlemler anında, gizli ve sınırsızdır. Yalnızca yapay zekâ özellikleri, yanıt üretmek için belgenin metnini güvenli biçimde işler.",
+          "Yapısal araçlar (birleştir, böl, döndür, sayfa sil, sırala, kırp), görsel araçları, belge tarama, imza, işaretleme ve OCR tamamen tarayıcınızda çalışır — bu araçlarda dosyanız sunucuya yüklenmez, işlem anında ve sınırsızdır. Dönüştürme, sıkıştırma, şifreleme, filigran ve PDF Düzenle gibi ağır işlemler ise güvenli sunucumuzda yapılır; dosya işlem bitince silinir. Yapay zekâ araçlarında yalnızca belgenin metni gönderilir, dosyanın kendisi yüklenmez.",
       },
       {
         question: "PDF dosyaları nasıl ücretsiz birleştirilir?",
@@ -815,7 +830,7 @@ export const landingTranslations: Record<Language, LandingTranslation> = {
       {
         question: "Online PDF aracı kullanırken verilerim güvende mi?",
         answer:
-          "PDF Platform işlenen belge içeriklerini saklamaz. Yakında çıkacak Windows uygulaması dosyaları tamamen cihazınızda işleyecek; PDF'leriniz hiçbir zaman bilgisayarınızdan çıkmayacak. Web sürümü ise tüm aktarımlar için şifreli bağlantı kullanır.",
+          "PDF Platform işlenen belge içeriklerini saklamaz; sunucuda yapılan işlemlerde dosya, işlem biter bitmez silinir. Tek istisna, sizin açıkça «Hesabıma kaydet» dediğiniz taramalardır — onları siz silene kadar hesabınızda tutarız. Tüm aktarımlar şifreli bağlantı üzerinden yapılır.",
       },
       {
         question: "PDF Platform yazılım yüklemeden çalışır mı?",

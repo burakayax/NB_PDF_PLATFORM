@@ -24,10 +24,11 @@ export const STARTER_TOOL_IDS: FeatureKey[] = [
   "image-to-pdf",
   "page-numbers",
   "watermark",
+  "extract-images",
 ];
 
 /** Tüm araç kataloğundaki toplam araç sayısı (Plus ve üzeri tüm araçları içerir). */
-export const TOTAL_TOOL_COUNT = 22;
+export const TOTAL_TOOL_COUNT = 23;
 
 export interface PlanDefinition {
   id: PlanId;
@@ -66,16 +67,16 @@ export const PLANS: PlanDefinition[] = [
     monthlyOnlyBilling: true,
     featuresTr: [
       "Tüm temel PDF araçları — ücretsiz",
-      "Birleştir, böl, döndür, sıkıştır, dönüştür",
-      "Çoğu araç cihazınızda çalışır (dosya yüklenmez)",
+      "Birleştir, böl, döndür, sıkıştır, görsel→PDF",
+      "Yapısal araçlar cihazınızda çalışır (dosya yüklenmez)",
       "Filigransız, reklamsız temiz çıktı — her planda",
       "Dosya boyutu ≤ 80 MB",
       "Ağır dönüştürmelerde adil kullanım",
     ],
     featuresEn: [
       "All everyday PDF tools — free",
-      "Merge, split, rotate, compress, convert",
-      "Most tools run on your device (no upload)",
+      "Merge, split, rotate, compress, image→PDF",
+      "Structural tools run on your device (no upload)",
       "Clean output — no watermark, no ads (every plan)",
       "Files up to 80 MB",
       "Fair use on heavy conversions",
@@ -99,13 +100,13 @@ export const PLANS: PlanDefinition[] = [
       color: "green",
     },
     pricing: {
-      monthly: { TRY: 4900, USD: 399 },
-      yearly: { TRY: 49000, USD: 3990 },
+      monthly: { TRY: 9900, USD: 399 },
+      yearly: { TRY: 99000, USD: 3999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Ücretsiz'deki her şey",
-      "✨ Aylık 10 yapay zekâ işlemi (özetle, veri çıkar…)",
+      "✨ Aylık 5 yapay zekâ işlemi (özetle, veri çıkar…)",
       "Günde 25 sunucu işlemi (dönüştür/sıkıştır)",
       "Dosya boyutu ≤ 100 MB",
       "Toplu işlem — 2 dosya",
@@ -113,7 +114,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "Everything in Free",
-      "✨ 10 AI operations/month (summarize, extract…)",
+      "✨ 5 AI operations/month (summarize, extract…)",
       "25 server operations/day (convert/compress)",
       "Files up to 100 MB",
       "Batch — 2 files",
@@ -138,13 +139,13 @@ export const PLANS: PlanDefinition[] = [
       color: "blue",
     },
     pricing: {
-      monthly: { TRY: 9900, USD: 899 },
-      yearly: { TRY: 99000, USD: 8990 },
+      monthly: { TRY: 17900, USD: 699 },
+      yearly: { TRY: 179000, USD: 6999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Ücretsiz'deki her şey",
-      "✨ Aylık 30 yapay zekâ işlemi",
+      "✨ Aylık 15 yapay zekâ işlemi",
       "Sınırsız sunucu dönüştürme (günlük limit yok)",
       "Dosya boyutu ≤ 250 MB",
       "Toplu işlem — 5 dosya",
@@ -152,7 +153,7 @@ export const PLANS: PlanDefinition[] = [
     ],
     featuresEn: [
       "Everything in Free",
-      "✨ 30 AI operations/month",
+      "✨ 15 AI operations/month",
       "Unlimited server conversions (no daily cap)",
       "Files up to 250 MB",
       "Batch — 5 files",
@@ -177,24 +178,24 @@ export const PLANS: PlanDefinition[] = [
       color: "amber",
     },
     pricing: {
-      monthly: { TRY: 24900, USD: 1499 },
-      yearly: { TRY: 249000, USD: 14990 },
+      monthly: { TRY: 29900, USD: 1199 },
+      yearly: { TRY: 299000, USD: 11999 },
     },
     displayMonthlyEquivalent: true,
     featuresTr: [
       "Plus'taki her şey",
-      "✨ Aylık 100 yapay zekâ işlemi",
+      "✨ Aylık 40 yapay zekâ işlemi",
       "✨ Tüm AI araçları: Özetle, Veri Çıkar, Çeviri, Karşılaştır, Gizle, Toplu",
-      "Geliştirici API erişimi",
+      "Geliştirici API erişimi (AI uçları)",
       "Dosya boyutu ≤ 500 MB",
       "Toplu işlem — 25 dosya",
       "Öncelikli destek",
     ],
     featuresEn: [
       "Everything in Plus",
-      "✨ 100 AI operations/month",
+      "✨ 40 AI operations/month",
       "✨ All AI tools: Summarize, Extract, Translate, Compare, Redact, Batch",
-      "Developer API access",
+      "Developer API access (AI endpoints)",
       "Files up to 500 MB",
       "Batch — 25 files",
       "Priority support",
@@ -218,12 +219,12 @@ export const PLANS: PlanDefinition[] = [
       color: "violet",
     },
     pricing: {
-      monthly: { TRY: 49900, USD: 2999 },
-      yearly: { TRY: 499000, USD: 29990 },
+      monthly: { TRY: 79900, USD: 3999 },
+      yearly: { TRY: 799000, USD: 39999 },
     },
     monthlyOnlyBilling: true,
     featuresTr: [
-      "Pro'daki her şey — aylık 500 yapay zekâ işlemi",
+      "Pro'daki her şey — aylık 100 yapay zekâ işlemi",
       "Ekip yönetimi — 5+ kişi",
       "Merkezi faturalama & yönetim paneli",
       "Sınırsız dosya boyutu",
@@ -232,7 +233,7 @@ export const PLANS: PlanDefinition[] = [
       "Öncelikli destek + özel entegrasyon",
     ],
     featuresEn: [
-      "Everything in Pro — 500 AI operations/month",
+      "Everything in Pro — 100 AI operations/month",
       "Team management — 5+ seats",
       "Central billing & admin panel",
       "Unlimited file size",
@@ -249,7 +250,14 @@ export const PLANS: PlanDefinition[] = [
   },
 ];
 
-/** Prices are stored in minor units (kuruş for TRY, cents for USD). Always divide by 100. */
+/**
+ * Prices are stored in minor units (kuruş for TRY, cents for USD). Always divide by 100.
+ *
+ * TL TUTARLARI KDV DAHİLDİR — müşteri ne görüyorsa onu öder.
+ * BU DEĞERLER `web/api/src/lib/plan-catalogue.ts` İLE BİREBİR AYNI OLMAK
+ * ZORUNDADIR; `plan-catalogue.test.ts` ayrışmayı derlemede yakalar. Burada
+ * tutulmalarının tek sebebi sunucuya ulaşılamadığında ekranın boş kalmaması.
+ */
 export function formatPrice(
   plan: PlanDefinition,
   currency: Currency,

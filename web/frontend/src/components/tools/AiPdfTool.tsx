@@ -40,6 +40,7 @@ import {
   type ExtractedData,
 } from "../../api/ai";
 import { SimpleMarkdown } from "../common/SimpleMarkdown";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
 
 type AiMode = "summarize" | "chat" | "extract" | "translate";
@@ -175,6 +176,16 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
   }, [accessToken]);
 
   const charCount = docText.length;
+
+  /**
+   * Çevirinin kaç hak tüketeceği. Sunucu aynı hesabı yapar ve ASIL DENETİM
+   * ORADADIR — buradaki kopya yalnızca kullanıcıya işlem öncesi maliyeti
+   * göstermek için. Değerler değişirse ai.service.ts ile birlikte güncellenmeli.
+   */
+  const TRANSLATE_CHARS_PER_CREDIT = 20_000;
+  const MAX_TRANSLATE_CHARS = 300_000;
+  const translateCost = Math.max(1, Math.ceil(charCount / TRANSLATE_CHARS_PER_CREDIT));
+  const translateTooLong = charCount > MAX_TRANSLATE_CHARS;
   const readTime = Math.max(1, Math.round(charCount / 1000));
 
   function handleAiError(e: unknown) {
@@ -346,6 +357,36 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
           const newLine = !!(el.line && s.lastLine && el.line !== s.lastLine);
           const xgap = el.bbox[0] - s.lastX1 > (el.size ?? 12) * 0.22;
           const sep = newLine || xgap;
+
+          // TABLO HÜCRELERİ AYRI BLOK OLMALI.
+          //
+          // Bir tablo satırındaki hücreler aynı satır kimliğini paylaşıyor; hepsi
+          // tek bloğa toplanınca çevrilmiş metin İLK hücrenin kutusuna yığılıyor,
+          // sütunlar çöküyordu (canlı testte 4 sütunlu fatura tablosu tek sütuna
+          // indi). Aynı satırda geniş bir yatay boşluktan sonra gelen metin, ayrı
+          // bir hücredir: kendi kutusuyla yeni blok açılır, konumu korunur.
+          // Eşik bilerek YÜKSEK (2,5 kat): iki yana yaslanmış paragraflarda
+          // kelime araları genişleyebilir; oradaki boşluğu "sütun" sanıp
+          // paragrafı bölmemek için sütun boşluğuna yakın bir değer seçildi.
+          const buyukBosluk =
+            !newLine && el.bbox[0] - s.lastX1 > (el.size ?? 12) * 2.5;
+          if (buyukBosluk) {
+            const yeniKey = `${blockKey}#hucre:${el.bbox[0].toFixed(0)}`;
+            byBlock.set(yeniKey, blocks.length);
+            st.set(blocks.length, { lastX1: el.bbox[2], lastLine: el.line });
+            blocks.push({
+              page: pi,
+              bbox: [...el.bbox] as [number, number, number, number],
+              size: el.size ?? 12,
+              font: el.font,
+              align: "left",
+              lineIds: new Set(el.line ? [el.line] : []),
+              runs: [{ text: raw, bold, color, lead: false }],
+            });
+            // Sonraki span bu YENİ hücreye eklensin.
+            byBlock.set(blockKey, blocks.length - 1);
+            return;
+          }
           const last = b.runs[b.runs.length - 1];
           if (last.bold === bold && (last.color ?? "") === (color ?? "")) {
             last.text += sep && !last.text.endsWith(" ") && !raw.startsWith(" ") ? " " + raw : raw;
@@ -704,7 +745,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
               </div>
             ))}
           </div>
-          <p className="mt-6 text-[12px] text-slate-500">
+          <p className="mt-6 text-[12px] text-slate-400">
             {tr ? "Bu sırada tüm PDF araçlarımız ücretsiz ve sınırsız — yukarıdan deneyebilirsin." : "Meanwhile, all our PDF tools are free and unlimited — try them above."}
           </p>
         </div>
@@ -712,7 +753,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
       ocrProgress !== null ? (
         <div className="rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent p-6 sm:p-8">
           <StatusStrip label={tr ? "Belge hazırlanıyor…" : "Preparing document…"} ratio={ocrProgress} />
-          <p className="mt-3 text-center text-[12px] text-slate-500">
+          <p className="mt-3 text-center text-[12px] text-slate-400">
             {tr
               ? "Belge okunuyor, birkaç saniye sürebilir."
               : "Reading the document, this may take a few seconds."}
@@ -779,7 +820,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-slate-100">{fileName}</p>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-400">
                 {tr
                   ? `~${(charCount / 1000).toFixed(1)}K karakter · ~${readTime} dk okuma`
                   : `~${(charCount / 1000).toFixed(1)}K chars · ~${readTime} min read`}
@@ -898,7 +939,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                   {extracted.fields.length === 0 && extracted.tables.length === 0 && (
                     <p className="text-center text-[13px] text-slate-400">{tr ? "Bu belgeden yapılandırılmış veri bulunamadı." : "No structured data found in this document."}</p>
                   )}
-                  {extracted.note && <p className="text-[12px] italic text-slate-500">{extracted.note}</p>}
+                  {extracted.note && <p className="text-[12px] italic text-slate-400">{extracted.note}</p>}
                 </div>
               </div>
             ) : busy ? (
@@ -934,8 +975,21 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                     {TRANSLATE_TARGETS.map((l) => <option key={l.code} value={l.code} className="text-black">{tr ? l.tr : l.en}</option>)}
                   </select>
                 </div>
-                <button type="button" onClick={() => void runTranslate()}
-                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110">
+                {translateTooLong ? (
+                  <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-[13px] leading-relaxed text-amber-200">
+                    {tr
+                      ? `Bu belge tek seferde çevrilemeyecek kadar uzun (${Math.round(charCount / 1000)} bin karakter, üst sınır ${MAX_TRANSLATE_CHARS / 1000} bin). Belgeyi bölüp parça parça çevirin.`
+                      : `This document is too long to translate in one go (${Math.round(charCount / 1000)}k characters; limit ${MAX_TRANSLATE_CHARS / 1000}k). Split it and translate the parts.`}
+                  </p>
+                ) : (
+                  <p className="px-1 text-[12.5px] text-slate-400">
+                    {tr
+                      ? `Bu çeviri ${translateCost} yapay zekâ hakkı kullanacak (belge uzunluğuna göre).`
+                      : `This translation will use ${translateCost} AI credit${translateCost === 1 ? "" : "s"} (based on document length).`}
+                  </p>
+                )}
+                <button type="button" onClick={() => void runTranslate()} disabled={translateTooLong}
+                  className="group flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-violet-600 to-indigo-600 px-6 py-4 text-[15px] font-bold text-white shadow-[0_12px_32px_-10px_rgba(168,85,247,0.7)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">
                   <Languages className="h-5 w-5" />
                   {tr ? `${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).tr} diline çevir` : `Translate to ${(TRANSLATE_TARGETS.find((l) => l.code === targetLang) || {}).en}`}
                 </button>
@@ -986,7 +1040,7 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
                 <input value={question} onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") void sendQuestion(); }}
                   placeholder={tr ? "Belge hakkında bir soru yaz…" : "Ask about the document…"}
-                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-fuchsia-400/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/15" />
+                  className="flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-white placeholder:text-slate-400 focus:border-fuchsia-400/50 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/15" />
                 <button type="button" onClick={() => void sendQuestion()} disabled={busy || !question.trim()}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white transition hover:brightness-110 disabled:opacity-40">
                   <Send className="h-4 w-4" />
@@ -995,6 +1049,28 @@ export function AiPdfTool({ mode, language, accessToken, onLogin, onUpgrade, com
             </div>
           )}
         </div>
+      )}
+
+      {/* Sonuç üretildiyse puanlama — her AI modunun kendi araç kimliği var. */}
+      {(mode === "summarize"
+        ? !!summary
+        : mode === "extract"
+          ? !!extracted
+          : mode === "translate"
+            ? !!translatedBlob
+            : messages.some((m) => m.role === "assistant")) && (
+        <ToolRating
+          toolSlug={
+            mode === "summarize"
+              ? "pdf-ozetle"
+              : mode === "extract"
+                ? "pdf-veri-cikar"
+                : mode === "translate"
+                  ? "pdf-ceviri"
+                  : "pdf-sohbet"
+          }
+          language={language}
+        />
       )}
 
       {error && (

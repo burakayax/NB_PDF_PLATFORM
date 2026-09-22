@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
+import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
 
 // Türkçe destekli gömülü font (Roboto). Bir kez indirilir, önbelleğe alınır.
 let fontCache: { regular: ArrayBuffer; bold: ArrayBuffer } | null = null;
@@ -143,7 +144,7 @@ export async function summaryToPdf(markdown: string, docTitle = "PDF Özeti"): P
     }
   }
 
-  return pdf.save();
+  return pdf.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -265,7 +266,7 @@ export async function translationToPdf(
     pg.drawText(label, { x: (PW - w) / 2, y: margin - 26, size: 8.5, font: regular, color: muted });
   });
 
-  return pdf.save();
+  return pdf.save(PDF_SAVE_OPTIONS);
 }
 
 export function pdfBytesToBlob(bytes: Uint8Array): Blob {

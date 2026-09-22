@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Camera, Image as ImageIcon, ShieldCheck, Smartphone, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { DocumentScanner } from "./DocumentScanner";
+import { lazyWithRetry } from "../../lib/lazyWithRetry";
+
+// Tarayıcı bileşeni ağırdır; yalnızca pencere açıldığında indirilir. Doğrudan
+// içe aktarım, bu sayfanın ilk açılışını gereksiz yere yavaşlatıyordu.
+const DocumentScanner = lazyWithRetry(() =>
+  import("./DocumentScanner").then((m) => ({ default: m.DocumentScanner })),
+);
 
 /**
  * «Belge Tara» SEO araç sayfasının çalışan çekirdeği. Kamerayla belge tarayıp
@@ -44,8 +50,12 @@ export function DocumentScannerLaunch({
         </p>
         <p className="mt-1 text-[13px] leading-relaxed text-slate-400">
           {tr
-            ? "Kamerayı belgeye doğrult — kenarlar otomatik bulunur, belge sabitlenince kendiliğinden çekilir ve PDF olur."
-            : "Point the camera at the document — edges are detected automatically, it captures when steady and becomes a PDF."}
+            ? isPro
+              ? "Kamerayı belgeye doğrult — kenarlar canlı bulunur, belge sabitlenince kendiliğinden çekilir ve PDF olur."
+              : "Kamerayı belgeye doğrult, fotoğrafı çek — kenarlar otomatik bulunur, perspektif düzelir ve PDF olur. (Sabitlenince kendiliğinden çekme Pro'da.)"
+            : isPro
+              ? "Point the camera at the document — edges are tracked live, it captures when steady and becomes a PDF."
+              : "Point the camera and take the shot — edges are detected for you, perspective is fixed and you get a PDF. (Hands-free auto capture is on Pro.)"}
         </p>
 
         <button
@@ -57,7 +67,7 @@ export function DocumentScannerLaunch({
           {tr ? "Belge Tara" : "Scan document"}
         </button>
 
-        <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-500">
+        <p className="mt-3 inline-flex items-center gap-1.5 text-[12px] text-slate-400">
           <Smartphone className="h-3.5 w-3.5" />
           {tr ? "En iyi deneyim telefonda (arka kamera)" : "Best experience on a phone (rear camera)"}
         </p>
@@ -75,7 +85,7 @@ export function DocumentScannerLaunch({
           ))}
         </div>
 
-        <p className="mt-5 text-[12px] text-slate-500">
+        <p className="mt-5 text-[12px] text-slate-400">
           {tr ? "Elinizde hazır fotoğraflar mı var? " : "Already have photos? "}
           <a href="/tools/image-to-pdf" className="font-semibold text-cyan-300 hover:text-cyan-200">
             {tr ? "Görsel → PDF aracını kullanın" : "Use the Image → PDF tool"}
@@ -85,17 +95,19 @@ export function DocumentScannerLaunch({
 
       <AnimatePresence>
         {open && (
-          <DocumentScanner
-            open={open}
-            language={language}
-            onClose={() => setOpen(false)}
-            isPro={isPro}
-            isDesktop={isDesktop}
-            onUpgrade={onUpgrade}
-            onUseInTools={onUseInTools}
-            accessToken={accessToken}
-            onLogin={onLogin}
-          />
+          <Suspense fallback={null}>
+            <DocumentScanner
+              open={open}
+              language={language}
+              onClose={() => setOpen(false)}
+              isPro={isPro}
+              isDesktop={isDesktop}
+              onUpgrade={onUpgrade}
+              onUseInTools={onUseInTools}
+              accessToken={accessToken}
+              onLogin={onLogin}
+            />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>

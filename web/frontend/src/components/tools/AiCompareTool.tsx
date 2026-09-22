@@ -17,6 +17,7 @@ import type { Language } from "../../i18n/landing";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { aiCompare, fetchAiQuota, type AiError, type AiQuota, type CompareResult } from "../../api/ai";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
 
 type Slot = { name: string; text: string; status: "empty" | "reading" | "ready" | "error" };
@@ -183,7 +184,7 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
           {result && (
             <div className="mt-5 overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-b from-white/[0.03] to-transparent">
               <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] px-4 py-2.5 sm:px-6">
-                <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300"><GitCompareArrows className="h-4 w-4" />{tr ? "Karşılaştırma" : "Comparison"} <span className="text-slate-500">A <ArrowRight className="inline h-3 w-3" /> B</span></span>
+                <span className="flex items-center gap-2 text-[13px] font-semibold text-fuchsia-300"><GitCompareArrows className="h-4 w-4" />{tr ? "Karşılaştırma" : "Comparison"} <span className="text-slate-400">A <ArrowRight className="inline h-3 w-3" /> B</span></span>
                 <button type="button" onClick={copyResult} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-300 transition hover:bg-white/[0.08] hover:text-white">
                   {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}<span className="hidden sm:inline">{copied ? (tr ? "Kopyalandı" : "Copied") : tr ? "Kopyala" : "Copy"}</span>
                 </button>
@@ -212,7 +213,9 @@ export function AiCompareTool({ language, accessToken, onLogin, onUpgrade, comin
             </div>
           )}
 
-          <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-500">
+          {result && <ToolRating toolSlug="pdf-karsilastir" language={language} />}
+
+          <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] text-slate-400">
             <ShieldCheck className="h-3.5 w-3.5" />{tr ? "Metin cihazınızda çıkarılır; yalnız metin AI'a gider." : "Text is extracted on your device; only text is sent to the AI."}
           </p>
         </>

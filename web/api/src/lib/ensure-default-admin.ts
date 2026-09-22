@@ -4,7 +4,7 @@ import { hashPassword } from "./password.js";
 import { prisma } from "./prisma.js";
 import { resolveRoleFromEmail } from "./role-policy.js";
 
-// İlk kurulumda .env ile hesap oluşturur; rol yalnızca e-postaya göre (yalnızca nbglobalstudio@gmail.com → ADMIN).
+// İlk kurulumda .env ile hesap oluşturur; rol yalnızca e-postaya göre (ROLE_ADMIN_EMAIL ile eşleşen adres → ADMIN).
 // BOOTSTRAP_ADMIN_EMAIL ve BOOTSTRAP_ADMIN_PASSWORD ikisi de dolu değilse hiçbir şey yapmaz (sırlar repoda tutulmaz).
 export async function ensureDefaultAdminUser(): Promise<void> {
   const email = env.BOOTSTRAP_ADMIN_EMAIL.trim();

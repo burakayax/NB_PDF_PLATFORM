@@ -14,9 +14,10 @@
  *   EN: https://site/en/tools/merge-pdf  (canonical=kendisi)
  * İkisi de karşılıklı hreflang (tr <-> en) + x-default=TR taşır.
  */
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { legalDocuments } from "../src/content/legalContent.mjs";
 import {
   BRAND,
   DEFAULT_OG_IMAGE,
@@ -26,13 +27,18 @@ import {
   TOOL_SEO,
   LANDING_SEO,
   PRICING_SEO,
-  API_SEO,
+  API_SEO, API_DOCS_SEO,
   LEGAL_SEO,
   SOFTWARE_FEATURE_LIST,
   RELATED_TOOLS as TOOL_RELATED_TOOLS,
   BLOG_RELATED_TOOLS,
 } from "../src/seo/seoContent.mjs";
 import { BLOG_POSTS, getBlogPostsSorted } from "../src/blog/blogContent.mjs";
+import { localizedPath } from "../src/seo/enSlugs.mjs";
+import { RATING_BEST, RATING_WORST, TOOL_RATINGS } from "../src/seo/toolRatings.mjs";
+import { writeRssFeeds, rssDiscoveryLink } from "./generate-rss.mjs";
+import { writeBlogCovers } from "./generate-covers.mjs";
+import { writeSocialKeywords } from "./generate-social-keywords.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = join(__dirname, "..");
@@ -48,19 +54,24 @@ const LANGS = ["tr", "en"];
 function langPrefix(lang) {
   return lang === "en" ? "/en" : "";
 }
-/** routePath ("/", "/tools/x", ...) → o dildeki tam URL (canonical). */
+/** routePath ("/", "/tools/x", ...) → o dildeki tam URL (canonical).
+ *  EN'de yalnızca /en öneki değil, SLUG DA İngilizceye çevrilir (enSlugs.mjs). */
 function urlForRoute(baseUrl, routePath, lang) {
-  const suffix = routePath === "/" ? "" : routePath;
-  return `${baseUrl}${langPrefix(lang)}${suffix}` || baseUrl;
+  const path = localizedPath(routePath, lang);
+  return `${baseUrl}${path === "/" ? "" : path}` || baseUrl;
 }
-/** routePath → o dildeki public/ çıktı dosya yolu. */
+/** routePath → o dildeki public/ çıktı dosya yolu (EN slug'ıyla). */
 function outFileForRoute(routePath, lang) {
-  const rel = routePath === "/" ? "" : routePath.replace(/^\//, "");
-  return join(publicDir, langPrefix(lang).replace(/^\//, ""), rel, "index.html");
+  const rel = localizedPath(routePath, lang).replace(/^\//, "");
+  return join(publicDir, rel, "index.html");
 }
 /** Görünür gövde/iç link öneki (EN sayfalarda linkler /en/ altında kalsın). */
 function linkBase(lang) {
   return langPrefix(lang);
+}
+/** Gövde içi iç bağlantı: dil öneki + o dilin slug'ı. */
+function href(routePath, lang) {
+  return localizedPath(routePath, lang);
 }
 /** Dile göre OG paylaşım görseli (EN sayfalar İngilizce tagline'lı görsel kullanır). */
 function ogImageForLang(lang) {
@@ -82,6 +93,18 @@ const UI = {
     ariaBlogPosts: "Blog yazıları",
     ariaAllTools: "PDF araçları",
     ariaFaq: "Sık sorulan sorular",
+    ariaSiteNav: "Site bölümleri",
+    siteNavHeading: "Site Haritası",
+    siteNav: [
+      ["/", "Ana Sayfa — Tüm PDF Araçları"],
+      ["/blog", "Blog — PDF Rehberleri"],
+      ["/pricing", "Fiyatlandırma ve Planlar"],
+      ["/pdf-api", "PDF ve Yapay Zekâ API"],
+      ["/pdf-api/docs", "API Dokümantasyonu"],
+      ["/terms", "Hizmet Şartları"],
+      ["/privacy", "Gizlilik Politikası"],
+      ["/kvkk", "KVKK Aydınlatma Metni"],
+    ],
     pricingCta: (base) =>
       `<p><a href="${base}/register">Ücretsiz başlayın</a> veya <a href="${base || "/"}">tüm PDF araçlarını</a> inceleyin.</p>`,
     blogIndex: {
@@ -124,6 +147,18 @@ const UI = {
     ariaBlogPosts: "Blog posts",
     ariaAllTools: "PDF tools",
     ariaFaq: "Frequently asked questions",
+    ariaSiteNav: "Site sections",
+    siteNavHeading: "Site Map",
+    siteNav: [
+      ["/", "Home — All PDF Tools"],
+      ["/blog", "Blog — PDF Guides"],
+      ["/pricing", "Pricing and Plans"],
+      ["/pdf-api", "PDF & AI API"],
+      ["/pdf-api/docs", "API Documentation"],
+      ["/terms", "Terms of Service"],
+      ["/privacy", "Privacy Policy"],
+      ["/kvkk", "KVKK Notice"],
+    ],
     pricingCta: (base) =>
       `<p><a href="${base}/register">Start for free</a> or explore <a href="${base || "/"}">all PDF tools</a>.</p>`,
     blogIndex: {
@@ -288,12 +323,17 @@ function pageMetaForRoute(routePath, lang) {
 
   if (routePath === "/pricing") {
     const c = PRICING_SEO[lang];
-    return { ...c, kind: "pricing", index: true, follow: true, includePricing: true };
+    return { ...c, kind: "pricing", index: true, follow: true, includePricing: true, includeFaq: true };
   }
 
   if (routePath === "/pdf-api") {
     const c = API_SEO[lang];
     return { ...c, kind: "apilanding", index: true, follow: true, includeFaq: true };
+  }
+
+  if (routePath === "/pdf-api/docs") {
+    const c = API_DOCS_SEO[lang];
+    return { ...c, kind: "apidocs", index: true, follow: true, includeFaq: true };
   }
 
   if (routePath === "/blog") {
@@ -317,7 +357,11 @@ function pageMetaForRoute(routePath, lang) {
     if (p && p[lang]) {
       const c = p[lang];
       return {
-        title: `${c.title} — ${BRAND}`,
+        // Blog başlığına marka eki EKLENMEZ: yazı başlıkları zaten uzun, marka
+        // eklenince 145 sayfanın başlığı Google'ın ~60 karakterlik sınırını aşıp
+        // kesiliyordu (denetimle ölçüldü). Marka adı og:site_name ve yapısal
+        // veride zaten var; arama sonucunda alan adı da görünüyor.
+        title: c.title,
         description: c.description,
         h1: c.title,
         intro: c.excerpt,
@@ -336,7 +380,8 @@ function pageMetaForRoute(routePath, lang) {
   for (const key of ["terms", "privacy", "kvkk"]) {
     if (routePath === `/${key}`) {
       const c = LEGAL_SEO[key][lang];
-      return { ...c, kind: "legal", index: true, follow: true };
+      // legalKey: gövdeyi üretirken tam metni okumak için (aşağıda renderVisibleBody)
+      return { ...c, kind: "legal", legalKey: key, index: true, follow: true };
     }
   }
 
@@ -417,22 +462,37 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       brand: { "@type": "Brand", name: BRAND },
       publisher: { "@id": orgId },
       featureList: SOFTWARE_FEATURE_LIST[lang],
+      // Yıldızlar — YALNIZCA eşiği geçmiş gerçek oylar. Uydurma ortalama yok:
+      // kayıt yoksa alan hiç eklenmez. Uygulama tarafı (src/seo/jsonLd.ts) aynı
+      // dosyayı okur; ikisi ayrışırsa sayfa açılınca yıldızlar kaybolurdu.
+      ...(meta.slug && TOOL_RATINGS[meta.slug]
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: TOOL_RATINGS[meta.slug].ratingValue,
+              ratingCount: TOOL_RATINGS[meta.slug].ratingCount,
+              bestRating: RATING_BEST,
+              worstRating: RATING_WORST,
+            },
+          }
+        : {}),
     });
   }
 
-  if (meta.breadcrumb && meta.kind === "tool") {
+  // YOL İZİ — arama sonucunda çıplak adres yerine "PDF Platform > Blog > yazı"
+  // görünmesini sağlar. Önceden YALNIZCA araç sayfalarında vardı; blog yazıları,
+  // fiyatlandırma, API ve yasal sayfalar (128 sayfa) bundan yararlanmıyordu.
+  const yolIzi = breadcrumbTrail(meta, lang);
+  if (yolIzi.length > 1) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: BRAND, item: urlForRoute(baseUrl, "/", lang) },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: meta.h1,
-          item: canonicalUrl,
-        },
-      ],
+      itemListElement: yolIzi.map((adim, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: adim.name,
+        item: adim.url === null ? canonicalUrl : urlForRoute(baseUrl, adim.url, lang),
+      })),
     });
   }
 
@@ -464,7 +524,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
     nodes.push({
       "@context": "https://schema.org",
       "@type": "BlogPosting",
-      headline: meta.title.replace(` — ${BRAND}`, ""),
+      headline: meta.title,
       description: meta.description,
       datePublished: meta.post.date,
       dateModified: meta.post.updated,
@@ -472,7 +532,7 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
       mainEntityOfPage: canonicalUrl,
       author: { "@type": "Organization", name: BRAND, "@id": orgId },
       publisher: { "@id": orgId },
-      image: `${baseUrl}${ogImageForLang(lang)}`,
+      image: `${baseUrl}${shareImageForRoute(meta, lang)}`,
     });
 
     const stepsBlock = Array.isArray(meta.blocks)
@@ -519,8 +579,10 @@ function renderStructuredData(baseUrl, routePath, meta, lang) {
 function renderBlogBlocksHtml(blocks, lang) {
   // CTA hedefleri dil önekli olmalı: EN yazı TR araç sayfasına link verirse hem
   // kullanıcı yanlış dile düşer hem de Google'a "asıl sürüm TR" sinyali gider.
-  const localize = (href) =>
-    lang === PRIMARY_LANG || !String(href).startsWith("/") ? href : `/${lang}${href}`;
+  const localize = (target) =>
+    lang === PRIMARY_LANG || !String(target).startsWith("/")
+      ? target
+      : localizedPath(String(target), lang);
   return blocks
     .map((b) => {
       if (b.t === "lead") return `<p class="seo-lead">${escapeHtml(b.x)}</p>`;
@@ -542,7 +604,7 @@ function toolShortLabel(slug, lang) {
   return (t.split(/[—–|]/)[0] || "").trim() || slug.replace(/-/g, " ");
 }
 function toolLi(slug, lang) {
-  return `<li><a href="${linkBase(lang)}/tools/${slug}">${escapeHtml(toolShortLabel(slug, lang))}</a></li>`;
+  return `<li><a href="${href(`/tools/${slug}`, lang)}">${escapeHtml(toolShortLabel(slug, lang))}</a></li>`;
 }
 function blogTitleFor(slug, lang) {
   const p = BLOG_POSTS.find((x) => x.slug === slug);
@@ -554,12 +616,62 @@ function guidesForTool(toolSlug) {
   return Object.keys(BLOG_RELATED_TOOLS).filter((b) => BLOG_RELATED_TOOLS[b].includes(toolSlug));
 }
 
+/**
+ * Sayfanın yol izi adımları: [{name, url}] — son adım url:null (sayfanın kendisi).
+ * Ara adım yoksa tek adım döner ve yol izi basılmaz.
+ */
+function breadcrumbTrail(meta, lang) {
+  const t = UI[lang];
+  const kok = { name: BRAND, url: "/" };
+  const blogAdi = lang === "tr" ? "Blog" : "Blog";
+  const araclarAdi = lang === "tr" ? "PDF Araçları" : "PDF Tools";
+  const apiAdi = lang === "tr" ? "PDF ve Yapay Zekâ API" : "PDF & AI API";
+  const yasalAdi = lang === "tr" ? "Yasal" : "Legal";
+
+  switch (meta.kind) {
+    case "tool":
+      return [kok, { name: araclarAdi, url: "/" }, { name: meta.h1, url: null }];
+    case "blogpost":
+      return [kok, { name: blogAdi, url: "/blog" }, { name: meta.h1, url: null }];
+    case "blogindex":
+      return [kok, { name: blogAdi, url: null }];
+    case "pricing":
+      return [kok, { name: meta.h1, url: null }];
+    case "apilanding":
+      return [kok, { name: apiAdi, url: null }];
+    case "apidocs":
+      return [kok, { name: apiAdi, url: "/pdf-api" }, { name: meta.h1, url: null }];
+    case "legal":
+      return [kok, { name: yasalAdi, url: "/terms" }, { name: meta.h1, url: null }];
+    default:
+      return [kok];
+  }
+}
+
+/** Gezinme listesinde sayfanın kendisini gizlemek için mantıksal yolu. */
+function routePathOf(meta) {
+  return meta.routePath || "";
+}
+
 function renderVisibleBody(baseUrl, meta, lang) {
   const t = UI[lang];
   const base = linkBase(lang);
   const parts = [];
   parts.push(`<h1>${escapeHtml(meta.h1)}</h1>`);
   parts.push(`<p class="seo-intro">${escapeHtml(meta.intro)}</p>`);
+
+  // Blog yazısının KAPAK GÖRSELİ — gövdede de görünsün.
+  // Kapaklar üretiliyordu ama yalnızca paylaşım etiketinde kullanılıyordu;
+  // yazının kendi sayfasında hiç görsel yoktu. Bu, görsel aramasında hiç
+  // görünmemek ve 56 yazıda alt metin fırsatını kullanmamak demekti.
+  if (meta.kind === "blogpost" && meta.post && coverMap) {
+    const kapak = coverMap.get(`${lang}:${meta.post.slug}`);
+    if (kapak) {
+      parts.push(
+        `<figure class="seo-cover"><img src="${escapeHtml(kapak)}" width="1200" height="630" loading="lazy" decoding="async" alt="${escapeHtml(meta.h1)}" /></figure>`,
+      );
+    }
+  }
 
   // Blog yazısı — tam makale gövdesi (crawler görünür metin)
   if (meta.kind === "blogpost" && Array.isArray(meta.blocks)) {
@@ -583,7 +695,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
     const guides = guidesForTool(meta.slug).filter((s) => routeHasLang(`/blog/${s}`, lang));
     if (guides.length) {
       const gl = guides
-        .map((s) => `<li><a href="${base}/blog/${s}">${escapeHtml(blogTitleFor(s, lang))}</a></li>`)
+        .map((s) => `<li><a href="${href(`/blog/${s}`, lang)}">${escapeHtml(blogTitleFor(s, lang))}</a></li>`)
         .join("");
       parts.push(
         `<nav aria-label="${t.ariaRelatedGuides}" class="seo-related-guides"><h2>${t.relatedGuides}</h2><ul>${gl}</ul></nav>`,
@@ -597,7 +709,7 @@ function renderVisibleBody(baseUrl, meta, lang) {
       .filter((p) => routeHasLang(`/blog/${p.slug}`, lang))
       .map((p) => {
         const c = p[lang] || p[PRIMARY_LANG];
-        return `<li><a href="${base}/blog/${p.slug}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
+        return `<li><a href="${href(`/blog/${p.slug}`, lang)}"><strong>${escapeHtml(c.title)}</strong></a><span> — ${escapeHtml(c.excerpt)}</span></li>`;
       })
       .join("");
     parts.push(`<nav aria-label="${t.ariaBlogPosts}" class="seo-posts"><h2>${t.allPosts}</h2><ul>${links}</ul></nav>`);
@@ -605,10 +717,12 @@ function renderVisibleBody(baseUrl, meta, lang) {
 
   // Araç ve landing sayfalarında tüm araçlara iç bağlantı
   if (meta.kind === "tool" || meta.kind === "landing") {
-    const links = TOOL_SLUGS.map((slug) => {
+    // Sayfanın kendisi listeden çıkarılır; kendine bağlantı bir sinyal taşımaz,
+    // yalnızca listeyi uzatır ve gerçek bağlantıları seyreltir.
+    const links = TOOL_SLUGS.filter((slug) => slug !== meta.slug).map((slug) => {
       const c = TOOL_SEO[slug]?.[lang];
       const label = c ? c.h1 : slug.replace(/-/g, " ");
-      return `<li><a href="${base}/tools/${slug}">${escapeHtml(label)}</a></li>`;
+      return `<li><a href="${href(`/tools/${slug}`, lang)}">${escapeHtml(label)}</a></li>`;
     }).join("");
     parts.push(
       `<nav aria-label="${t.ariaAllTools}" class="seo-tools"><h2>${t.allTools}</h2><ul>${links}</ul></nav>`,
@@ -617,6 +731,28 @@ function renderVisibleBody(baseUrl, meta, lang) {
 
   if (meta.kind === "pricing") {
     parts.push(t.pricingCta(base));
+  }
+
+  // Yasal sayfalar — TAM metin. Önceden yalnızca başlık + tek cümle üretiliyordu;
+  // arama motoru şartlar/gizlilik/KVKK sayfalarını 15-20 kelimelik boş sayfa
+  // olarak görüyordu. Metin React tarafıyla aynı kaynaktan gelir (legalContent.mjs).
+  if (meta.kind === "legal" && meta.legalKey) {
+    const belge = legalDocuments[lang] && legalDocuments[lang][meta.legalKey];
+    if (belge) {
+      const bolumler = belge.sections
+        .map(
+          (b) =>
+            `<section><h2>${escapeHtml(b.title)}</h2>${b.paragraphs
+              .map((p) => `<p>${escapeHtml(p)}</p>`)
+              .join("")}</section>`,
+        )
+        .join("");
+      parts.push(
+        `<article class="seo-legal"><p>${escapeHtml(belge.summary)}</p>` +
+          `<p><strong>${escapeHtml(belge.effectiveDateLabel)}:</strong> ${escapeHtml(belge.effectiveDate)}</p>` +
+          `${bolumler}</article>`,
+      );
+    }
   }
 
   // SSS bölümü (görünür) — FAQPage schema ile birebir aynı metin
@@ -631,6 +767,19 @@ function renderVisibleBody(baseUrl, meta, lang) {
       `<section aria-label="${t.ariaFaq}" class="seo-faq"><h2>${t.faqHeading}</h2>${items}</section>`,
     );
   }
+
+  // SİTE GEZİNMESİ — her sayfanın altında.
+  // Altbilgi yalnızca JavaScript çalıştıktan sonra oluşuyordu; arama motorunun
+  // ilk gördüğü HTML'de blog, fiyatlandırma, API ve yasal sayfalara giden
+  // HİÇBİR bağlantı yoktu (denetimde 14 sayfa "öksüz" çıktı). İç bağlantı,
+  // "bu sayfa önemli mi" kararındaki en güçlü sinyallerden biridir.
+  const gezinme = t.siteNav
+    .filter(([p]) => p !== routePathOf(meta))
+    .map(([p, ad]) => `<li><a href="${href(p, lang)}">${escapeHtml(ad)}</a></li>`)
+    .join("");
+  parts.push(
+    `<nav aria-label="${t.ariaSiteNav}" class="seo-sitenav"><h2>${t.siteNavHeading}</h2><ul>${gezinme}</ul></nav>`,
+  );
 
   return `<div id="root"><main class="seo-prerender">${parts.join("")}</main></div>`;
 }
@@ -677,7 +826,8 @@ function renderSitemapHreflang(baseUrl, routePath) {
 // ─── Tam HTML ─────────────────────────────────────────────────────────────────
 function renderPrerenderHtml(baseUrl, routePath, lang) {
   const t = UI[lang];
-  const meta = pageMetaForRoute(routePath, lang);
+  // routePath: gövdedeki site gezinmesinin sayfanın kendisini gizlemesi için.
+  const meta = { ...pageMetaForRoute(routePath, lang), routePath };
   const canonicalUrl = urlForRoute(baseUrl, routePath, lang);
   const robots = meta.index
     ? meta.follow
@@ -686,7 +836,7 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     : "noindex, nofollow";
   const title = escapeHtml(meta.title);
   const description = escapeHtml(meta.description);
-  const ogImage = `${baseUrl}${ogImageForLang(lang)}`;
+  const ogImage = `${baseUrl}${shareImageForRoute(meta, lang)}`;
 
   return `<!doctype html>
 <html lang="${lang}">
@@ -722,6 +872,8 @@ function renderPrerenderHtml(baseUrl, routePath, lang) {
     <meta name="robots" content="${robots}" />
     <meta name="googlebot" content="${robots}" />
     <link rel="canonical" href="${canonicalUrl}" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    ${rssDiscoveryLink(baseUrl, lang)}
     <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
     ${renderHreflangLinks(baseUrl, routePath)}
     <meta property="og:type" content="website" />
@@ -791,14 +943,17 @@ const LOGICAL_ROUTES = [
   { path: "/kvkk", changefreq: "monthly", priority: "0.4" },
   ...TOOL_SLUGS.map((slug) => ({ path: `/tools/${slug}`, changefreq: "weekly", priority: "0.9" })),
   { path: "/pdf-api", changefreq: "monthly", priority: "0.7" },
+  { path: "/pdf-api/docs", changefreq: "monthly", priority: "0.7" },
   { path: "/blog", changefreq: "weekly", priority: "0.7" },
   ...BLOG_POSTS.map((p) => ({ path: `/blog/${p.slug}`, changefreq: "monthly", priority: "0.7" })),
 ];
-// Yalnızca sitemap'e giren, prerender edilmeyen ek rotalar (login/register).
-const SITEMAP_EXTRA_ROUTES = [
-  { path: "/login", changefreq: "monthly", priority: "0.5" },
-  { path: "/register", changefreq: "monthly", priority: "0.5" },
-];
+// Yalnızca sitemap'e giren, prerender edilmeyen ek rotalar.
+// BOŞ: /login ve /register buradaydı ama prerender edilmedikleri için SPA
+// fallback'e düşüyor, React de oturum durumuna göre yönlendiriyordu. Google
+// bunları "Yönlendirmeli sayfa" diye raporluyor (/en/register dahil) ve
+// sitemap'te hata olarak birikiyordu. Kimlik doğrulama sayfalarının arama
+// sonucunda işi yok — sitemap'ten çıkarıldılar.
+const SITEMAP_EXTRA_ROUTES = [];
 
 // Önceki sitemap'teki lastmod değerleri: içeriği DEĞİŞMEYEN sayfalar eski
 // tarihini korur. Her build'de tüm site "bugün güncellendi" demek Google'ın
@@ -812,6 +967,22 @@ try {
 } catch {
   /* ilk üretim — önceki sitemap yok */
 }
+/**
+ * Sayfanın OKUYUCU İÇİN anlamlı olmayan işaretlemesini karşılaştırma dışında
+ * bırakır. Yalnızca lastmod kararında kullanılır; yazılan dosya tam haliyle
+ * kaydedilir.
+ */
+function stripNonContentMarkup(html) {
+  if (html == null) return null;
+  return html
+    // Satir sonlarini esitle: dosya diskten CRLF ile okunmus olabilir, uretilen
+    // metin ise LF. Esitlenmezse HER satir farkli gorunur ve tum sayfalar
+    // "degisti" sayilir.
+    .replace(new RegExp(String.fromCharCode(13,10),"g"), String.fromCharCode(10))
+    .replace(/^\s*<!-- Blog beslemesi:[^\n]*\n/gm, "")
+    .replace(/^\s*<link rel="alternate" type="application\/rss\+xml"[^\n]*\n/gm, "");
+}
+
 /** Prerender sırasında içeriği gerçekten değişen route'lar (dil fark etmeksizin). */
 const changedRoutes = new Set();
 
@@ -826,15 +997,43 @@ const prerenderRoutes = [
   "/kvkk",
   ...TOOL_SLUGS.map((slug) => `/tools/${slug}`),
   "/pdf-api",
+  "/pdf-api/docs",
   "/blog",
   ...BLOG_POSTS.map((p) => `/blog/${p.slug}`),
 ];
 
+// ─── Blog kapak görselleri ────────────────────────────────────────────────────
+// Her yazı için markalı 1200x630 kapak. Hem beslemede duyurulur hem de yazının
+// KENDİ og:image'i olur — paylaşımda her yazı kendi görseliyle çıksın diye
+// prerender HTML'lerinden ÖNCE üretilir.
+let coverMap;
+if (blockIndexing) {
+  console.log("[seo] kapak görselleri atlandı (indeksleme kapalı ortam)");
+} else {
+  const covers = await writeBlogCovers({ frontendRoot, publicDir, baseUrl: base });
+  coverMap = covers.map;
+  console.log(
+    `[seo] kapak görselleri: ${covers.written.length} üretildi, ${covers.skipped} değişmedi`,
+  );
+}
+
+/** Bu sayfanın paylaşım görseli: blog yazısında kendi kapağı, diğerlerinde genel görsel. */
+function shareImageForRoute(meta, lang) {
+  if (meta.kind === "blogpost" && meta.post && coverMap) {
+    const rel = coverMap.get(`${lang}:${meta.post.slug}`);
+    if (rel) return rel;
+  }
+  return ogImageForLang(lang);
+}
+
 let pageCount = 0;
+/** Bu build'de üretilen prerender dosyaları — yetim temizliği için. */
+const writtenFiles = new Set();
 for (const lang of LANGS) {
   for (const routePath of prerenderRoutes) {
     if (!routeHasLang(routePath, lang)) continue;
     const outPath = outFileForRoute(routePath, lang);
+    writtenFiles.add(outPath);
     const html = renderPrerenderHtml(base, routePath, lang);
     let previousHtml = null;
     try {
@@ -842,11 +1041,43 @@ for (const lang of LANGS) {
     } catch {
       /* yeni sayfa */
     }
-    if (previousHtml !== html) changedRoutes.add(routePath);
+    // "İçerik değişti mi" karşılaştırması ÖNCE teknik satırlardan arındırılır.
+    // Aksi halde <head>'e eklenen tek bir satır (ör. besleme duyurusu) TÜM
+    // sayfaları "bugün güncellendi" yapar; sitemap'teki tarih sinyali anlamını
+    // yitirir ve Google tarama sıklığını düşürür (bkz. previousLastmod notu).
+    if (stripNonContentMarkup(previousHtml) !== stripNonContentMarkup(html)) {
+      changedRoutes.add(routePath);
+    }
     mkdirSync(dirname(outPath), { recursive: true });
     writeFileSync(outPath, html, "utf8");
     pageCount++;
   }
+}
+
+// ─── Yetim prerender dosyalarını sil ─────────────────────────────────────────
+// Bir slug değiştiğinde (ör. /en/blog/pdf-word-donusturme → /en/blog/convert-pdf-to-word)
+// eski dizin public/ içinde kalırsa Render onu GERÇEK DOSYA olarak servis eder ve
+// render.yaml'daki 301 kuralı hiç çalışmaz → Google iki kopya görür. Bu yüzden bu
+// build'de üretilmeyen her prerender index.html'i kaldırıyoruz.
+function pruneOrphanPrerenders(dir) {
+  let entries;
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      pruneOrphanPrerenders(full);
+    } else if (e.name === "index.html" && !writtenFiles.has(full)) {
+      rmSync(full);
+      console.log("[seo] yetim prerender silindi:", full.replace(publicDir, ""));
+    }
+  }
+}
+for (const sub of ["en", "blog", "tools", "pricing", "terms", "privacy", "kvkk", "pdf-api"]) {
+  pruneOrphanPrerenders(join(publicDir, sub));
 }
 
 // Sitemap EN SON üretilir: lastmod, prerender sırasında gerçekten değişen
@@ -897,6 +1128,21 @@ ${renderSitemapHreflang(base, u.routePath)}
 }
 
 writeFileSync(join(publicDir, "sitemap.xml"), sitemap, "utf8");
+
+// ─── RSS beslemeleri ──────────────────────────────────────────────────────────
+// Sitemap'ten SONRA üretilir; yetim prerender temizliği yalnızca index.html
+// dosyalarına dokunduğu için beslemeler silinmez.
+const rss = writeRssFeeds({ publicDir, baseUrl: base, blockIndexing, coverMap });
+if (rss.skipped) {
+  console.log("[seo] RSS beslemesi atlandı (indeksleme kapalı ortam)");
+} else {
+  console.log("[seo] RSS beslemeleri üretildi:", rss.written.join(", "));
+}
+
+// ─── Sosyal medya anahtar kelime bankası ──────────────────────────────────────
+// Otomasyon etiketleri buradan alır; sitenin hedef arama terimleriyle aynı.
+const social = writeSocialKeywords({ publicDir, baseUrl: base });
+console.log(`[seo] sosyal medya anahtar kelimeleri: ${social.count} yazı → ${social.path}`);
 
 console.log(
   "[seo] robots + sitemap + prerendered HTML generated:",

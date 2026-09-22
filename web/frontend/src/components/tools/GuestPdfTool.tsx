@@ -2,6 +2,8 @@ import { Lock, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { GuestToolCore, type GuestToolId } from "./GuestToolCore";
+import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 
 export type { GuestToolId };
 
@@ -69,9 +71,15 @@ export function GuestPdfTool({
               {seo.intro}
             </p>
           )}
+          {/* Puan satırı: hem oyunu değiştirmek isteyenin geri dönebileceği yer,
+              hem de yıldızların sayfada GÖRÜNÜR olması (arama sonucunda yıldız
+              çıkarmanın ön koşulu). */}
+          <ToolScore slug={slug} language={language} className="mt-5 justify-center" />
         </div>
 
-        <div className="mt-9">
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">
           <GuestToolCore tool={tool} language={language} onRegister={onRegister} />
         </div>
 
@@ -107,7 +115,7 @@ export function GuestPdfTool({
                 >
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>

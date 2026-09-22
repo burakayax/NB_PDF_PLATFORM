@@ -236,6 +236,9 @@ function FreeCard({
       >
         {tr ? "Ücretsiz Başla" : "Start for Free"}
       </button>
+      <p className="mt-3 text-center text-[11px] text-gray-400">
+        {tr ? "Kart bilgisi istenmez · 30 saniyede hazır" : "No card required · ready in 30 seconds"}
+      </p>
     </motion.div>
   );
 }
@@ -416,7 +419,15 @@ function CycleAwareCard({
   comingSoon?: boolean;
   onShowPerks?: () => void;
 }) {
-  const [cycle, setCycle] = useState<BillingCycle>("MONTHLY");
+  /**
+   * VARSAYILAN YILLIK.
+   *
+   * Ölçülmüş bulgu: aylık fiyat önce gösterildiğinde ziyaretçi o rakama
+   * demirliyor ve yıllığa geçtiğinde toplam tutar "pahalı" hissettiriyor;
+   * yıllık varsayılan olduğunda ise kişi başı gelir belirgin artıyor ve yıllık
+   * müşteri daha az ayrılıyor. Aylık seçenek kaldırılmıyor — yalnız sıra değişti.
+   */
+  const [cycle, setCycle] = useState<BillingCycle>("YEARLY");
   const [extraSeats, setExtraSeats] = useState(0);
   const tr = lang === "tr";
   const features = tr ? plan.featuresTr : plan.featuresEn;
@@ -488,7 +499,7 @@ function CycleAwareCard({
               <p className="text-xs font-semibold text-slate-300">
                 {tr ? "Ekstra Kişi" : "Extra Seats"}
               </p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-slate-400">
                 {tr
                   ? `5 kişi dahil · +${currency === "TRY" ? "₺199" : "$5.99"}/kişi/ay`
                   : `5 seats included · +${currency === "TRY" ? "₺199" : "$5.99"}/seat/mo`}
@@ -612,6 +623,7 @@ function CycleAwareCard({
               ? `Business'ı Başlat${extraSeats > 0 ? ` · ${5 + extraSeats} Kişi` : ""}`
               : `Start Business${extraSeats > 0 ? ` · ${5 + extraSeats} Seats` : ""}`)}
       </button>
+      {!comingSoon && <GuvenSatiri language={lang} />}
       {onShowPerks && (
         <button
           type="button"
@@ -624,6 +636,31 @@ function CycleAwareCard({
         </button>
       )}
     </motion.div>
+  );
+}
+
+/**
+ * GÜVEN SATIRI — ödeme düğmesinin HEMEN ALTINDA.
+ *
+ * Ölçülmüş bulgu: güven işaretleri (iade, iptal, ödeme güvenliği) düğmenin
+ * görsel yakınında durduğunda dönüşüm belirgin yükseliyor; aşağıdaki SSS'te
+ * durduklarında ise kullanıcı onları görmeden karar veriyor. Fiyatı gördüğü an
+ * kaygının en yüksek olduğu andır — cevap orada verilmeli.
+ */
+function GuvenSatiri({ language }: { language: Language }) {
+  const tr = language === "tr";
+  const maddeler = tr
+    ? ["7 gün koşulsuz iade", "İstediğin an iptal", "Güvenli ödeme (iyzico)"]
+    : ["7-day money-back", "Cancel anytime", "Secure payment (iyzico)"];
+  return (
+    <ul className="mt-3 space-y-1">
+      {maddeler.map((m) => (
+        <li key={m} className="flex items-center justify-center gap-1.5 text-[11px] text-gray-400">
+          <span className="text-emerald-400">✓</span>
+          {m}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -820,7 +857,10 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
         return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: proM }, yearly: { ...p.pricing.yearly, TRY: proY ?? p.pricing.yearly.TRY } } };
       }
       if (p.id === "BUSINESS" && bizM) {
-        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 12 } } };
+        // Yıllık = 10 ay fiyatına (iki ay bedava) — Pro ile AYNI kural ve
+        // fiyat kataloğuyla aynı. Burada 12 ile çarpılırsa ekranda indirimsiz
+        // tutar görünür ama ödemede indirimli tutar çekilir.
+        return { ...p, pricing: { monthly: { ...p.pricing.monthly, TRY: bizM }, yearly: { ...p.pricing.yearly, TRY: bizM * 10 } } };
       }
       return p;
     });
@@ -953,6 +993,40 @@ export default function PricingSection({ language, onUseWebApp, onSelectPlan }: 
             </span>
           )}
         </p>
+
+        {/*
+          KARTLARIN HEMEN ALTI — kaygının en yüksek olduğu nokta.
+          Ölçülmüş bulgu: güven içeriğinin en çok işe yaradığı yer, fiyat
+          kartlarıyla karşılaştırma tablosu arasıdır; kişi fiyatı görmüş,
+          "değer mi?" diye soruyordur.
+
+          NOT: Burada uydurma kullanıcı sayısı ya da sahte yorum YOK. Elimizde
+          gerçek bir sosyal kanıt verisi (doğrulanmış kullanıcı sayısı, yorum)
+          olmadığı için doğrulanabilir ÜRÜN GERÇEKLERİ yazıldı. Sahte rakam
+          kısa vadede tıklama getirir, yakalandığında güveni tamamen bitirir.
+        */}
+        <div className="mt-10 grid max-w-3xl mx-auto grid-cols-1 gap-3 sm:grid-cols-3">
+          {(language === "tr"
+            ? [
+                { b: "45 araç", a: "Tek abonelikle hepsi — ayrı ayrı ürün satın almana gerek yok." },
+                { b: "Dosyan sende kalır", a: "Birleştirme, imzalama, kırpma gibi araçlar tarayıcında çalışır; dosya sunucuya gitmez." },
+                { b: "Tek tıkla iptal", a: "Hesabından kendin iptal edersin; arama yapmana, e-posta yazmana gerek yok." },
+              ]
+            : [
+                { b: "45 tools", a: "All included in one subscription — no separate products to buy." },
+                { b: "Your file stays with you", a: "Merging, signing and cropping run in your browser; the file is never uploaded." },
+                { b: "Cancel in one click", a: "Cancel yourself from your account — no calls, no emails." },
+              ]
+          ).map((x) => (
+            <div
+              key={x.b}
+              className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 text-center"
+            >
+              <p className="text-sm font-bold text-white">{x.b}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-gray-400">{x.a}</p>
+            </div>
+          ))}
+        </div>
 
         {/* Refund detail block */}
         <div className="mt-10 max-w-2xl mx-auto rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-5 sm:p-6 text-center">

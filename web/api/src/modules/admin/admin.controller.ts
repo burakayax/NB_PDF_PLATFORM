@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { Express } from "express";
 import { HttpError } from "../../lib/http-error.js";
 import { prisma } from "../../lib/prisma.js";
+import { hesapPaylasimSinyali } from "../auth/session-insight.service.js";
 import { env } from "../../config/env.js";
 import { sendCampaignTest } from "../email/emailCampaign.service.js";
 import { normalizeCouponCode } from "../coupon/coupon.service.js";
@@ -245,15 +246,32 @@ export async function adminGetUserDetailController(
   if (!user) {
     throw new HttpError(404, "User not found.");
   }
-  let toolUsageCounts: Record<string, number> = {};
-  try {
-    toolUsageCounts = JSON.parse(user.toolUsageCountsJson) as Record<
-      string,
-      number
-    >;
-  } catch {
-    /* ignore */
+  /**
+   * ARAÇ KULLANIMI — kaynak: gerçek işlem kaydı (OperationLog).
+   *
+   * Önceden kullanıcı satırındaki özet alan (`toolUsageCountsJson`) okunuyordu;
+   * o alan web araçları çalıştırıldığında HİÇ güncellenmiyordu, bu yüzden panel
+   * her kullanıcıda "Araç kullanım kaydı yok" diyordu. Her işlem zaten ayrı bir
+   * kayıt olarak yazılıyor; sayım doğrudan oradan yapılınca hem doğru oluyor hem
+   * de geçmiş kullanım geriye dönük görünüyor.
+   */
+  const araclar = await prisma.operationLog.groupBy({
+    by: ["toolType"],
+    where: { userId: user.id },
+    _count: { _all: true },
+    _max: { createdAt: true },
+  });
+  const toolUsageCounts: Record<string, number> = {};
+  for (const a of araclar) {
+    toolUsageCounts[a.toolType] = a._count._all;
   }
+  const toolUsageDetails = araclar
+    .map((a) => ({
+      toolId: a.toolType,
+      count: a._count._all,
+      sonKullanim: a._max.createdAt ? a._max.createdAt.toISOString() : null,
+    }))
+    .sort((x, y) => y.count - x.count);
   // Günlük kullanım hakkı paneli için özet (efektif = (özel ?? plan) + bugünkü bonus).
   const org = user.organization;
   const base = org?.customDailyLimit ?? org?.dailyOperationLimit ?? null;
@@ -269,7 +287,9 @@ export async function adminGetUserDetailController(
     : null;
   // creditPackCheckouts: ayrı model yok (top-up'lar PaymentCheckout'ta). Frontend bu
   // alana eriştiği için boş dizi döndürülür (undefined → çökme "beklenmedik hata" idi).
-  response.json({ ...user, toolUsageCounts, usage, creditPackCheckouts: [] });
+  // Hesap paylaşımı görünürlüğü — otomatik yaptırım YOK, yalnız bilgi.
+  const paylasim = await hesapPaylasimSinyali(user.id);
+  response.json({ ...user, toolUsageCounts, toolUsageDetails, usage, creditPackCheckouts: [], paylasim });
 }
 
 export async function adminListBlockedEmailsController(
@@ -1104,6 +1124,7 @@ export async function adminListCouponsController(
       discountPercent: c.discountPercent,
       isActive: c.isActive,
       usageLimitPerUser: c.usageLimitPerUser,
+      usageLimitTotal: c.usageLimitTotal ?? null,
       expiresAt: c.expiresAt ? c.expiresAt.toISOString() : null,
       totalUses: c._count.uses,
       createdAt: c.createdAt.toISOString(),
@@ -1130,6 +1151,7 @@ export async function adminCreateCouponController(
         discountPercent: parsed.data.discountPercent,
         isActive: parsed.data.isActive ?? true,
         usageLimitPerUser: parsed.data.usageLimitPerUser ?? 1,
+        usageLimitTotal: parsed.data.usageLimitTotal ?? null,
         expiresAt: parsed.data.expiresAt ? new Date(parsed.data.expiresAt) : null,
       },
     });
@@ -1139,6 +1161,7 @@ export async function adminCreateCouponController(
       discountPercent: created.discountPercent,
       isActive: created.isActive,
       usageLimitPerUser: created.usageLimitPerUser,
+      usageLimitTotal: created.usageLimitTotal ?? null,
       expiresAt: created.expiresAt ? created.expiresAt.toISOString() : null,
       totalUses: 0,
       createdAt: created.createdAt.toISOString(),
@@ -1175,9 +1198,13 @@ export async function adminPatchCouponController(
   if (Object.keys(parsed.data).length === 0) {
     throw new HttpError(400, "No fields to update.");
   }
+  const { expiresAt, ...rest } = parsed.data;
   const updated = await prisma.coupon.update({
     where: { id },
-    data: parsed.data,
+    data: {
+      ...rest,
+      ...(expiresAt === undefined ? {} : { expiresAt: expiresAt === null ? null : new Date(expiresAt) }),
+    },
   });
   const totalUses = await prisma.couponUse.count({ where: { couponId: id } });
   response.json({
@@ -1186,6 +1213,8 @@ export async function adminPatchCouponController(
     discountPercent: updated.discountPercent,
     isActive: updated.isActive,
     usageLimitPerUser: updated.usageLimitPerUser,
+    usageLimitTotal: updated.usageLimitTotal ?? null,
+    expiresAt: updated.expiresAt ? updated.expiresAt.toISOString() : null,
     totalUses,
     createdAt: updated.createdAt.toISOString(),
   });

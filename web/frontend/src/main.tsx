@@ -8,6 +8,10 @@ import { GlobalErrorBoundary } from "./components/common/GlobalErrorBoundary";
 import { SettingsProvider } from "./contexts/SettingsContext";
 import { installProductionGuards, installChunkReloadGuard } from "./lib/productionGuards";
 import { getCountryCode } from "./lib/geoCountry";
+import { NotFoundPage } from "./components/common/NotFoundPage";
+import { SignDocumentPage } from "./components/tools/SignDocumentPage";
+import { TOOL_SLUGS } from "./seo/seoContent.mjs";
+import { toolSlugToTr } from "./seo/enSlugs.mjs";
 import "./styles/app.css";
 
 // Belge dilini kullanıcı konumu ve tercihine göre ayarlar.
@@ -53,7 +57,60 @@ if (import.meta.env.VITE_BLOCK_SEARCH_INDEXING === "true") {
   }
 }
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+/**
+ * Tanınmayan bir araç adresi mi? (ör. /tools/olmayan-sey)
+ *
+ * NEDEN BURADA, UYGULAMANIN İÇİNDE DEĞİL: Uygulama bilmediği bir araç
+ * adresinde seçili aracı varsayılana düşürüp adresi ana sayfaya taşıyor; bu
+ * yüzden uygulamanın içine konan "sayfa bulunamadı" ekranı hiç görünmüyordu
+ * (canlıda ölçüldü: kullanıcı ana sayfaya düşüyordu). Karar uygulama mount
+ * edilmeden, tek bakışta burada veriliyor.
+ */
+function taninmayanAracAdresiMi(): boolean {
+  const yol = window.location.pathname.replace(/\/+$/, "");
+  const m = /^(?:\/en)?\/tools\/([^/]+)$/.exec(yol);
+  if (!m) return false;
+  const slug = toolSlugToTr(m[1] ?? "");
+  return Boolean(slug) && !TOOL_SLUGS.includes(slug);
+}
+
+/**
+ * İmza bağlantısı (/imzala/<anahtar>) — imzalayacak kişinin hesabı YOKTUR.
+ *
+ * Uygulamanın tamamını (oturum, çalışma alanı, araç kataloğu) yüklemek yerine
+ * yalnız imza sayfası açılır: karşı taraf çoğu zaman telefonundan, tek seferlik
+ * bir iş için giriyor; onu ürün arayüzüyle karşılamak gereksiz.
+ */
+function imzaAnahtari(): string | null {
+  const m = /^\/imzala\/([A-Za-z0-9_-]{16,})\/?$/.exec(window.location.pathname);
+  return m?.[1] ?? null;
+}
+
+const kok = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+const imzaToken = imzaAnahtari();
+
+if (imzaToken) {
+  kok.render(
+    <React.StrictMode>
+      <GlobalErrorBoundary>
+        <SignDocumentPage token={imzaToken} />
+      </GlobalErrorBoundary>
+    </React.StrictMode>,
+  );
+} else if (taninmayanAracAdresiMi()) {
+  const dil = document.documentElement.lang === "en" ? "en" : "tr";
+  kok.render(
+    <React.StrictMode>
+      <NotFoundPage
+        language={dil}
+        onGoHome={() => {
+          window.location.href = "/";
+        }}
+      />
+    </React.StrictMode>,
+  );
+} else {
+  kok.render(
   <React.StrictMode>
     <GlobalErrorBoundary>
       <BrowserRouter>
@@ -65,4 +122,5 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       </BrowserRouter>
     </GlobalErrorBoundary>
   </React.StrictMode>,
-);
+  );
+}

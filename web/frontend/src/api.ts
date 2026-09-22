@@ -421,6 +421,11 @@ export type MergeJobStatus = {
   elapsed_seconds: number;
   error?: string | null;
   ready: boolean;
+  /** Dönüştürme işleri bitince çıktının kimliği (birleştirmede boştur). */
+  result_id?: string | null;
+  filename?: string | null;
+  mime?: string | null;
+  size_bytes?: number | null;
 };
 
 function extractFilename(response: Response, fallback: string) {
@@ -864,6 +869,48 @@ export function hasPendingSaveHandle(): boolean {
 }
 
 /**
+ * "Nereye kaydedilsin?" sorusu — uzun işlemlerden ÖNCE sorulması gereken tek yer.
+ *
+ * Tarayıcı bu pencereyi yalnızca kullanıcının tıklamasının hemen ardından
+ * açmaya izin verir; araya bir bekleme girerse sessizce reddeder ve dosya
+ * kullanıcıya sorulmadan indirilir. Bu yüzden tüm akışlar aynı anda ve aynı
+ * şekilde sormalı — dört ayrı yerde kopyalanmış hâldeydi.
+ *
+ * Dönüş:
+ *   "secildi"       kullanıcı yer seçti, kayıt işlemi hazır
+ *   "vazgecildi"    kullanıcı pencereyi kapattı — işlem başlatılmamalı
+ *   "desteklenmiyor" tarayıcı bu pencereyi açamıyor; klasik indirmeye düşülür
+ */
+export async function askSaveLocation(
+  suggestedName: string,
+): Promise<"secildi" | "vazgecildi" | "desteklenmiyor"> {
+  const win = window as unknown as {
+    showSaveFilePicker?: (o: {
+      suggestedName?: string;
+      types?: Array<{ description: string; accept: Record<string, string[]> }>;
+    }) => Promise<FileSystemFileHandle>;
+  };
+  if (typeof win.showSaveFilePicker !== "function") {
+    return "desteklenmiyor";
+  }
+  try {
+    const handle = await win.showSaveFilePicker({
+      suggestedName,
+      types: showSavePickerTypesFor(suggestedName),
+    });
+    setPendingSaveHandle(handle);
+    return "secildi";
+  } catch (e: unknown) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      return "vazgecildi";
+    }
+    // Güvenli bağlam değil / izin yok gibi durumlar: klasik indirme devreye girer.
+    return "desteklenmiyor";
+  }
+}
+
+
+/**
  * Delivers an in-memory blob (client-side/device-processed results) to the user.
  * Consumes a pre-acquired save handle when present (native "Save as…" dialog),
  * otherwise prompts via `showSaveFilePicker`, and finally falls back to an
@@ -978,6 +1025,16 @@ async function triggerDownloadFromResponse(
   options?: {
     retainBlob?: boolean;
     clientDownloadName?: string;
+    /**
+     * Sonucu HEMEN diske yazma (varsayılan: yazar).
+     *
+     * `false` verildiğinde dosya yalnızca bellekte hazırlanır ve çağırana
+     * döndürülür; kaydetme yeri sorusu, kullanıcı sonuç ekranındaki "İndir"e
+     * bastığında sorulur. İş bitince kullanıcıya sormadan diske yazmak
+     * şaşırtıcıydı: kişi daha sonucu görmeden bir "Farklı kaydet" penceresiyle
+     * karşılaşıyordu.
+     */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   const saasGating = parseSaasGatingFromResponse(response);
@@ -1003,6 +1060,19 @@ async function triggerDownloadFromResponse(
     ? options.clientDownloadName.trim()
     : extractFilename(response, fallbackName);
   const retain = !!options?.retainBlob;
+  if (options?.deliver === false) {
+    // Diske yazılmadı: çağıran sonucu ekranda gösterir, indirme kullanıcının
+    // "İndir" tıklamasıyla (replay) yapılır.
+    return {
+      blob,
+      filename,
+      replay: () => {
+        void deliverBlobAsDownload(blob, filename, false);
+      },
+      dispose: () => {},
+      saasGating,
+    };
+  }
   const delivered = await deliverBlobAsDownload(blob, filename, retain);
   if (!retain) {
     return { saasGating };
@@ -1081,10 +1151,16 @@ export async function inspectPdf(
         filename: string;
         encrypted: boolean;
         page_count: number | null;
+        /** Dosyanın görüntü olan oranı (0-1). Sıkıştırma beklentisi bundan çıkar. */
+        image_ratio?: number;
         inspect_error?: string | null;
         inspect_diagnostic?: Record<string, unknown>;
       };
+      // Tanılama kaydı YALNIZCA geliştirmede. Canlıda her dosya için konsola
+      // iç işleyiş dökülüyordu; kullanıcıya faydası yok, teknik bilgisi olan
+      // birine sistemin içini gösteriyordu.
       if (
+        import.meta.env.DEV &&
         typeof data.inspect_diagnostic !== "undefined" &&
         typeof console !== "undefined" &&
         typeof console.debug === "function"
@@ -1172,6 +1248,74 @@ export async function fetchMergeJob(
   return response.json() as Promise<MergeJobStatus>;
 }
 
+/**
+ * UZUN SÜREN dönüştürmeyi arka planda başlatır ve iş numarasını döndürür.
+ *
+ * NEDEN: Bu işlemler dakikalar sürebiliyor. Cevabı bekleyen tek bir istekte
+ * bağlantı koparsa (mobil ağ, ara sunucu zaman aşımı, sekmenin uykuya geçmesi)
+ * yapılan iş boşa gidiyor ve kullanıcı ilerleme çubuğunun sonunda takılı
+ * kalıyordu. Arka plan işinde istek anında yanıtlanır, işlem sunucuda sürer.
+ */
+export async function startToolJob(
+  endpoint: string,
+  formData: FormData,
+  accessToken?: string | null,
+  options?: { signal?: AbortSignal; errorMessage?: string },
+): Promise<{ job_id: string; saasGating: SaaSGating | null }> {
+  const path = endpoint.replace(/^\//, "");
+  appendSaasAccessToken(formData, accessToken);
+  // Tek deneme: yükleme tekrarlanırsa sunucuda ikinci bir iş başlar.
+  const response = await pdfFetchWithRetry(
+    `${API_BASE}/api/${path}`,
+    {
+      method: "POST",
+      body: formData,
+      headers: saasAuthHeaders(accessToken),
+      signal: options?.signal,
+    },
+    1,
+  );
+  await ensureOk(response, options?.errorMessage ?? "İşlem başlatılamadı.");
+  const raw = (await response.json()) as { job_id: string; saasGating?: unknown };
+  return { job_id: raw.job_id, saasGating: normaliseSaasGating(raw.saasGating) };
+}
+
+/**
+ * İş bitene kadar durumu sorar. Her durum değişiminde `onProgress` çağrılır ki
+ * kullanıcı GERÇEK ilerlemeyi görsün (tahmini bir çubuk değil).
+ *
+ * Sorgu aralığı bilerek 1,5 saniye: daha sık sormak sunucuya yük bindirir,
+ * daha seyrek sormak ilerlemeyi donuk gösterir.
+ */
+export async function waitForToolJob(
+  jobId: string,
+  accessToken?: string | null,
+  options?: {
+    signal?: AbortSignal;
+    onProgress?: (status: MergeJobStatus) => void;
+    intervalMs?: number;
+  },
+): Promise<MergeJobStatus> {
+  const interval = options?.intervalMs ?? 1500;
+  for (;;) {
+    if (options?.signal?.aborted) {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    const status = await fetchMergeJob(jobId, accessToken, { signal: options?.signal });
+    options?.onProgress?.(status);
+    if (status.status === "completed") {
+      return status;
+    }
+    if (status.status === "failed") {
+      throw new Error(status.error || "İşlem başarısız oldu.");
+    }
+    if (status.status === "cancelled") {
+      throw new DOMException("Aborted", "AbortError");
+    }
+    await new Promise((r) => setTimeout(r, interval));
+  }
+}
+
 /** İstemci merge işlemini bırakınca sunucu tarafında işi kooperatif iptal eder. */
 export async function requestMergeJobCancel(
   jobId: string,
@@ -1227,6 +1371,8 @@ export async function downloadMergeJob(
   options?: {
     signal?: AbortSignal;
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
@@ -1246,7 +1392,10 @@ export async function downloadMergeJob(
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
     await options?.onBeforeReadBody?.();
-    return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+    return triggerDownloadFromResponse(response, fallbackName, {
+      retainBlob: true,
+      deliver: options?.deliver,
+    });
   }
 
   if (shouldUseNativeMergeDownload(href) && !options?.signal) {
@@ -1265,7 +1414,10 @@ export async function downloadMergeJob(
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "Birleştirilmiş dosya indirilemedi.");
   await options?.onBeforeReadBody?.();
-  return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+  return triggerDownloadFromResponse(response, fallbackName, {
+    retainBlob: true,
+    deliver: options?.deliver,
+  });
 }
 
 /**
@@ -1345,6 +1497,8 @@ export async function downloadFromApi(
   options?: {
     signal?: AbortSignal;
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<ToolDownloadResult> {
   if (options?.signal?.aborted) {
@@ -1368,7 +1522,10 @@ export async function downloadFromApi(
     await throwIfEntitlementPaymentRequired(response);
     await ensureOk(response, "İşlem başarısız oldu.");
     await options?.onBeforeReadBody?.();
-    return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+    return triggerDownloadFromResponse(response, fallbackName, {
+      retainBlob: true,
+      deliver: options?.deliver,
+    });
   }
 
   if (shouldUseBrowserNativeDownload(url) && !options?.signal) {
@@ -1390,7 +1547,10 @@ export async function downloadFromApi(
   await throwIfEntitlementPaymentRequired(response);
   await ensureOk(response, "İşlem başarısız oldu.");
   await options?.onBeforeReadBody?.();
-  return triggerDownloadFromResponse(response, fallbackName, { retainBlob: true });
+  return triggerDownloadFromResponse(response, fallbackName, {
+    retainBlob: true,
+    deliver: options?.deliver,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -1461,6 +1621,17 @@ export async function postToolToResult(
 ): Promise<CompressResult> {
   const path = endpoint.replace(/^\//, "");
   appendSaasAccessToken(formData, accessToken);
+  // TEK DENEME (retries = 1). Bu istek bir dosya yükleyip sunucuda PAHALI ve
+  // TEKRARLANAMAZ bir dönüşüm başlatır: sonuç kaydı oluşturur, kotaya dokunur.
+  //
+  // Varsayılan 4 denemeyle, uzun süren bir dönüşümde bağlantı düşerse istemci
+  // sessizce dosyayı baştan yükleyip dönüşümü YENİDEN başlatıyordu. Sunucu aynı
+  // anda tek ağır işlem çalıştırdığı için denemeler birbirini bekliyor, kullanıcı
+  // ilerleme çubuğunun sonunda dört kat uzun süre takılı kalıyor ve sunucu
+  // gereksiz yere aynı işi dört kez yapıyordu.
+  //
+  // Tek denemeyle hata artık gizlenmiyor: kullanıcı net bir mesaj görüyor ve
+  // isterse kendisi tekrar deniyor.
   const response = await pdfFetchWithRetry(
     `${API_BASE}/api/${path}`,
     {
@@ -1469,8 +1640,7 @@ export async function postToolToResult(
       headers: saasAuthHeaders(accessToken),
       signal: options?.signal,
     },
-    4,
-    400,
+    1,
   );
   await ensureOk(response, options?.errorMessage ?? "İşlem başarısız oldu.");
   const data = (await response.json()) as CompressResult;
@@ -1657,6 +1827,8 @@ export async function downloadResult(
     clientDownloadName?: string;
     /** After 200 OK, before reading the response body — used to create a pending `download_logs` row at stream start. */
     onBeforeReadBody?: () => void | Promise<void>;
+    /** `false` → sonuç diske yazılmaz, yalnızca çağırana döndürülür. */
+    deliver?: boolean;
   },
 ): Promise<DownloadResultOutcome> {
   const id = encodeURIComponent(resultId);
@@ -1688,6 +1860,7 @@ export async function downloadResult(
   const download = await triggerDownloadFromResponse(response, fallbackName, {
     retainBlob: true,
     clientDownloadName: options?.clientDownloadName,
+    deliver: options?.deliver,
   });
   return { status: "ok", download };
 }

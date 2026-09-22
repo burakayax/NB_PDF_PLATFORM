@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import {
   fetchAdminAppSettings,
   fetchAdminAuditLog,
@@ -72,10 +72,34 @@ import { SiteForm } from "./command/centerParts";
 import { AdminDashboardHome } from "./dashboard/AdminDashboardHome";
 import { AdminCouponManager } from "./coupons/AdminCouponManager";
 import { EmailCampaignManager } from "./emails/EmailCampaignManager";
+import { SocialAutomationManager } from "./social/SocialAutomationManager";
 import { SectionIntro } from "./mosaic/SectionIntro";
 import { AdminUserManagement } from "./users/AdminUserManagement";
 import { AdminToolCatalog } from "./tools/AdminToolCatalog";
 import { pdfToolLabelTr } from "./lib/pdfToolLabels";
+import {
+  BolumBasligi,
+  BosDurum,
+  donemKarsilastir,
+  EgilimGrafigi,
+  gunEtiketi,
+  gunluktToplaMap,
+  Huni,
+  Katlanir,
+  KirilimGrafigi,
+  OlcuKarti,
+  seriHizala,
+} from "./analytics/AdminAnalytics";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Activity, BarChart2, CreditCard, UserPlus } from "lucide-react";
 import type { AdminUiMode } from "./adminTypes";
 export type { AdminUiMode } from "./adminTypes";
 import {
@@ -90,8 +114,10 @@ import {
   type AdminSaveStripState,
 } from "./mosaic/adminPrimitives";
 import { MosaicLayout, withNavIcon, type MosaicNavGroup } from "./mosaic/MosaicLayout";
+import { ToolRatingsTab } from "./ratings/ToolRatingsTab";
 import { SystemControlTab } from "./SystemControlTab";
 import { AdminToaster } from "./AdminToaster";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 type AdminTabId =
   | "dashboard"
@@ -101,12 +127,14 @@ type AdminTabId =
   | "cmd-mkt"
   | "cmd-coupons"
   | "cmd-emails"
+  | "cmd-social"
   | "packages"
   | "TOOLS"
   | "content"
   | "media"
   | "settings"
   | "analytics"
+  | "ratings"
   | "audit";
 
 const ADMIN_UI_MODE_STORAGE_KEY = "nb-admin-ui-mode";
@@ -138,6 +166,8 @@ const NAV_GROUPS: MosaicNavGroup[] = withNavIcon([
       { id: "cmd-mkt", label: "Pazarlama" },
       { id: "cmd-coupons", label: "Kuponlar" },
       { id: "cmd-emails", label: "E-postalar" },
+      { id: "cmd-social", label: "Sosyal medya" },
+      { id: "ratings", label: "Araç puanları" },
     ],
   },
   {
@@ -166,7 +196,7 @@ function adminTabLabel(id: AdminTabId): string {
 
 function readToken(fallback: string) {
   if (typeof window === "undefined") return fallback;
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 async function downloadUsageExport(accessToken: string, from: string, to: string) {
@@ -422,7 +452,7 @@ export function AdminPanel({
           overview ? (
             <AdminDashboardHome overview={overview} uiMode={uiMode} />
           ) : (
-            <p className="text-slate-500">Özet yükleniyor…</p>
+            <p className="text-slate-400">Özet yükleniyor…</p>
           )
         ) : null}
         {tab === "users" ? <AdminUserManagement accessToken={accessToken} uiMode={uiMode} /> : null}
@@ -454,7 +484,7 @@ export function AdminPanel({
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-800/60 bg-slate-900/40 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
                 <h2 className="text-sm font-semibold tracking-tight text-white">E-posta otomasyonu</h2>
-                <p className="mt-1 text-xs text-slate-500">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
+                <p className="mt-1 text-xs text-slate-400">Hoş geldin ve dönüşüm (lifecycle) tetikleyicileri</p>
                 <div className="mt-5 space-y-4">
                   <AdminToggle
                     id="mkt-welcome"
@@ -552,7 +582,7 @@ export function AdminPanel({
             </div>
           </div>
         ) : tab === "cmd-mkt" ? (
-          <p className="text-slate-500">Yükleniyor…</p>
+          <p className="text-slate-400">Yükleniyor…</p>
         ) : null}
 
         {tab === "cmd-coupons" ? (
@@ -567,6 +597,7 @@ export function AdminPanel({
         ) : null}
 
         {tab === "cmd-emails" ? <EmailCampaignManager accessToken={accessToken} /> : null}
+        {tab === "cmd-social" ? <SocialAutomationManager accessToken={accessToken} /> : null}
 
         {tab === "packages" ? <PackagesTab accessToken={accessToken} uiMode={uiMode} /> : null}
         {tab === "TOOLS" ? <TOOLSTab accessToken={accessToken} uiMode={uiMode} /> : null}
@@ -584,6 +615,7 @@ export function AdminPanel({
           <SettingsTab accessToken={accessToken} uiMode={uiMode} showSystemTOOLS={viewerRole === "ADMIN"} />
         ) : null}
         {tab === "analytics" ? <AnalyticsTab accessToken={accessToken} overview={overview} uiMode={uiMode} /> : null}
+        {tab === "ratings" ? <ToolRatingsTab accessToken={accessToken} /> : null}
         {tab === "audit" ? <AuditLogTab accessToken={accessToken} /> : null}
       </div>
       <AdminToaster />
@@ -608,9 +640,9 @@ type AdminPlansPayload = {
 
 function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminUiMode }) {
   const [payload, setPayload] = useState<AdminPlansPayload | null>(null);
-  const [proPrice, setProPrice] = useState("249.00");
-  const [businessPrice, setBusinessPrice] = useState("499.00");
-  const [proAnnualPrice, setProAnnualPrice] = useState("2490.00");
+  const [proPrice, setProPrice] = useState("299.00");
+  const [businessPrice, setBusinessPrice] = useState("799.00");
+  const [proAnnualPrice, setProAnnualPrice] = useState("2990.00");
   const [pricingBusy, setPricingBusy] = useState(false);
   const marketingExtraRef = useRef<Record<string, unknown>>({});
   const [cardStarterTools, setCardStarterTools] = useState<string[]>([...STARTER_TOOL_IDS]);
@@ -703,7 +735,6 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
         setMsg("Planlar yüklenemedi");
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- hist reset + token
   }, [accessToken, loadTick]);
 
   const advanced = uiMode === "advanced";
@@ -752,7 +783,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                   : "border-white/[0.08] bg-black/25"
               }`}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{p.name}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">{p.name}</p>
               <p className="mt-1 text-lg font-semibold text-white">{p.displayName}</p>
               <p className="mt-2 text-xs leading-relaxed text-slate-400">{p.description}</p>
               <ul className="mt-3 space-y-1 text-[11px] text-slate-400">
@@ -963,7 +994,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
           return (
             <>
               <div className="grid gap-4 sm:grid-cols-3">
-                <AdminField label="Pro — aylık" description="Pro aboneliğinde her ay tahsil edilen tutar.">
+                <AdminField label="Pro — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar. KDV bu tutarın içindedir.">
                   <input
                     value={proPrice}
                     onChange={(e) => setProPrice(e.target.value)}
@@ -971,7 +1002,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                     inputMode="decimal"
                   />
                 </AdminField>
-                <AdminField label="Pro — yıllık (toplam)" description="Yılda tek seferde tahsil. Boş bırakılamaz.">
+                <AdminField label="Pro — yıllık, toplam (KDV dahil)" description="Yılda tek seferde tahsil edilen, KDV dahil tutar. Boş bırakılamaz.">
                   <input
                     value={proAnnualPrice}
                     onChange={(e) => setProAnnualPrice(e.target.value)}
@@ -979,7 +1010,7 @@ function PackagesTab({ accessToken, uiMode }: { accessToken: string; uiMode: Adm
                     inputMode="decimal"
                   />
                 </AdminField>
-                <AdminField label="Business — aylık" description="Business aboneliğinde her ay tahsil edilen tutar. (Yıllık yok.)">
+                <AdminField label="Business — aylık (KDV dahil)" description="Müşterinin göreceği ve ödeyeceği tutar; KDV içindedir. (Yıllık yok.)">
                   <input
                     value={businessPrice}
                     onChange={(e) => setBusinessPrice(e.target.value)}
@@ -1463,7 +1494,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-white">Araçlar — bakım & istatistik</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl text-sm text-slate-400">
             {advanced
               ? "Bir aracı geçici KAPATMA (bakım) ve her aracın kullanım istatistiği. Aşağıdaki liste TÜM araçları içerir; kullanım sayısı yalnız kullanılan araçlarda görünür."
               : "Araç kullanım istatistikleri. Araç açma/kapama Gelişmiş moddadır. (Not: günlük kota kaldırıldı — araçlar sınırsız.)"}
@@ -1487,10 +1518,10 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
       {advanced ? (
       <section className="rounded-2xl border border-white/[0.08] bg-black/25 p-4">
         <h3 className="text-sm font-semibold text-white">Araç kullanım özeti (tüm araçlar)</h3>
-        <p className="mt-1 text-[12px] text-slate-500">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
+        <p className="mt-1 text-[12px] text-slate-400">TÜM araçlar listelenir; hiç kullanılmayan araçlar 0 gösterir. Son dönemdeki işlem ve aktif kullanıcı-gün sayısı (salt okunur).</p>
         <div className="mt-3 overflow-x-auto rounded-xl border border-white/[0.06]">
           <table className="w-full min-w-[400px] text-left text-xs">
-            <thead className="border-b border-white/[0.08] text-slate-500">
+            <thead className="border-b border-white/[0.08] text-slate-400">
               <tr>
                 <th className="px-3 py-2">Araç</th>
                 <th className="px-3 py-2 text-right">Aktif kullanıcı-gün</th>
@@ -1500,7 +1531,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
             <tbody>
               {catalog.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-3 py-4 text-slate-500">
+                  <td colSpan={3} className="px-3 py-4 text-slate-400">
                     Katalog yüklenemedi veya boş.
                   </td>
                 </tr>
@@ -1529,7 +1560,7 @@ function TOOLSTab({ accessToken, uiMode }: { accessToken: string; uiMode: AdminU
             {planDefinitions.map((p) => (
               <li key={p.plan} className="rounded-lg border border-white/[0.06] bg-black/20 px-3 py-2">
                 <span className="font-semibold text-white">{p.plan}</span>
-                <span className="text-slate-500">
+                <span className="text-slate-400">
                   {" "}
                   · günlük limit: {p.dailyLimit === null ? "yok" : p.dailyLimit}
                 </span>
@@ -2062,7 +2093,7 @@ function ContentTab({
           </AdminField>
           <div className="space-y-5 border-t border-white/[0.06] pt-5">
             <p className="text-sm font-medium text-slate-200">Araç kartları (uygulama içi)</p>
-            <p className="text-[12px] text-slate-500">Boş bıraktığınız alanlarda varsayılan metinler kullanılır.</p>
+            <p className="text-[12px] text-slate-400">Boş bıraktığınız alanlarda varsayılan metinler kullanılır.</p>
             {WORKSPACE_TOOL_IDS.map((tid) => (
               <div key={tid} className="rounded-xl border border-white/[0.06] bg-black/25 p-4">
                 <p className="mb-3 text-xs font-semibold text-amber-100/90">{pdfToolLabelTr(tid)}</p>
@@ -2241,7 +2272,7 @@ function ContentTab({
         <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-300">Canlı önizleme</p>
-            <p className="mt-0.5 text-[10px] text-slate-500">
+            <p className="mt-0.5 text-[10px] text-slate-400">
               {livePreview ? "Taslak — henüz kaydetmediğiniz değişiklikler" : "Sunucudaki kayıtlı sürüm"}
             </p>
           </div>
@@ -2547,7 +2578,7 @@ function SettingsTab({
       {showSystemTOOLS && advanced ? (
         <div className="space-y-3 border-t border-white/[0.08] pt-8">
           <h3 className="text-sm font-semibold text-white">Sistem kontrolü</h3>
-          <p className="text-[12px] text-slate-500">Yedek sürümler, denetim kaydı ve teknik bayraklar — yalnız tam yönetici.</p>
+          <p className="text-[12px] text-slate-400">Yedek sürümler, denetim kaydı ve teknik bayraklar — yalnız tam yönetici.</p>
           <SystemControlTab accessToken={accessToken} />
         </div>
       ) : showSystemTOOLS && !advanced ? (
@@ -2607,129 +2638,324 @@ function AnalyticsTab({
   const pvHour = overview?.pageViewsTodayByHourUtc ?? [];
   const funnel = overview?.conversionFunnel;
 
+  const [pencere, setPencere] = useState(14);
+  const [seciliSeri, setSeciliSeri] = useState("islem");
+
+  /**
+   * Grafik verisi tek bir tarih ekseninde birleştirilir. Kaynak diziler farklı
+   * uzunlukta gelebiliyor (hiç kayıt olmayan gün satır üretmiyor); eksik günler
+   * sıfırla doldurulmazsa grafik yanıltıcı biçimde "delikli" görünür.
+   */
+  const grafik = useMemo(() => {
+    const tarihSet = new Set<string>();
+    for (const r of overview?.usageByDay ?? []) tarihSet.add(r.date);
+    for (const r of pvDay) tarihSet.add(r.date);
+    for (const r of overview?.registrationsByDay ?? []) tarihSet.add(r.date);
+    for (const r of overview?.subscriptionSalesByDay ?? []) tarihSet.add(r.date);
+    const tarihler = [...tarihSet].sort();
+
+    const islemH = new Map((overview?.usageByDay ?? []).map((r) => [r.date, r.totalOperations]));
+    const pvH = new Map(pvDay.map((r) => [r.date, r.count]));
+    const kayitH = new Map((overview?.registrationsByDay ?? []).map((r) => [r.date, r.count]));
+    const satisH = gunluktToplaMap(
+      (overview?.subscriptionSalesByDay ?? []).map((r) => ({ date: r.date, count: r.count })),
+    );
+
+    return {
+      satirlar: tarihler.map((t) => ({
+        etiket: gunEtiketi(t),
+        islem: islemH.get(t) ?? 0,
+        goruntuleme: pvH.get(t) ?? 0,
+        kayit: kayitH.get(t) ?? 0,
+        satis: satisH.get(t) ?? 0,
+      })),
+      islemSerisi: seriHizala(tarihler, islemH),
+      pvSerisi: seriHizala(tarihler, pvH),
+      kayitSerisi: seriHizala(tarihler, kayitH),
+      satisSerisi: seriHizala(tarihler, satisH),
+    };
+  }, [overview, pvDay]);
+
+  const kIslem = donemKarsilastir(grafik.islemSerisi, 7);
+  const kPv = donemKarsilastir(grafik.pvSerisi, 7);
+  const kKayit = donemKarsilastir(grafik.kayitSerisi, 7);
+  const kSatis = donemKarsilastir(grafik.satisSerisi, 7);
+
+  const araclar = (overview?.mostUsedTOOLS ?? []).map((t) => ({
+    ad: pdfToolLabelTr(t.featureKey),
+    deger: t.operationsAttributed,
+  }));
+
   return (
-    <div className="space-y-6">
-      <AdminMutedBox>
-        Bu sekme <strong className="text-slate-200">salt okunur</strong> raporlardır. Yükseltme düğmesi ve açıklama metinlerini düzenlemek için{" "}
-        <strong className="text-slate-200">Araçlar</strong> sekmesindeki yükseltme alanlarını kullanın.
-        {!advanced ? " UTC saat grafiği, ham API serisi ve CSV dışa aktarma Gelişmiş moddadır." : null}
-      </AdminMutedBox>
-      {funnel ? (
-        <section className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Ücretsiz kota aşımı (tüm zamanlar)</p>
-            <p className="mt-1 text-2xl font-bold text-amber-200">{funnel.freeTierEverHitLimit}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Kota sınırını en az bir kez aşmış kullanıcılar</p>
-          </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Tamamlanan ödeme (benzersiz kullanıcı)</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">{funnel.usersWithCompletedCheckout}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Ödemesi tamamlanmış farklı kullanıcı sayısı</p>
-          </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-300">Kayıtlı kullanıcılar</p>
-            <p className="mt-1 text-2xl font-bold text-slate-100">{funnel.totalUsers}</p>
-            <p className="mt-1 text-[11px] text-slate-400">Huni bağlamı (özet)</p>
-          </div>
-        </section>
-      ) : null}
-      {overview ? (
-        <section>
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-200">Haftalık eğilim (günlük özet)</h3>
-          <BarTrend data={overview.usageByDay.slice(-14)} />
-        </section>
-      ) : null}
-      {pvDay.length > 0 ? (
-        <section>
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-200">Sayfa görüntülemeleri (son ~30 gün)</h3>
-          <PageViewBarTrend data={pvDay} />
-        </section>
-      ) : null}
-      {advanced && pvHour.length > 0 ? (
-        <section>
-          <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-200">Bugünkü sayfa görüntülemeleri (UTC saat)</h3>
-          <HourBarTrend data={pvHour} />
-        </section>
-      ) : null}
-      {advanced ? (
+    <div className="space-y-8">
+      {/* ── 1. KADEME: değeri kanıtlayan ölçüler ───────────────────────── */}
       <section>
-        <h3 className="mb-2 text-sm font-bold uppercase tracking-wide text-slate-200">Kullanım serisi (API)</h3>
-        <BarTrend data={series} />
+        <BolumBasligi ustBaslik="Son 7 gün" baslik="Genel durum" />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <OlcuKarti
+            etiket="İşlem"
+            deger={kIslem.simdi}
+            degisimYuzde={kIslem.degisimYuzde}
+            karsilastirmaMetni="önceki 7 güne göre"
+            egilim={grafik.islemSerisi}
+            Simge={Activity}
+            bosMetin="Son 7 günde araç kullanımı kaydedilmedi."
+          />
+          <OlcuKarti
+            etiket="Sayfa görüntüleme"
+            deger={kPv.simdi}
+            degisimYuzde={kPv.degisimYuzde}
+            karsilastirmaMetni="önceki 7 güne göre"
+            egilim={grafik.pvSerisi}
+            Simge={BarChart2}
+            bosMetin="Ziyaret kaydı henüz oluşmadı."
+          />
+          <OlcuKarti
+            etiket="Yeni kayıt"
+            deger={kKayit.simdi}
+            degisimYuzde={kKayit.degisimYuzde}
+            karsilastirmaMetni="önceki 7 güne göre"
+            egilim={grafik.kayitSerisi}
+            Simge={UserPlus}
+            bosMetin="Bu dönemde yeni üye kaydı yok."
+          />
+          <OlcuKarti
+            etiket="Tamamlanan ödeme"
+            deger={kSatis.simdi}
+            degisimYuzde={kSatis.degisimYuzde}
+            karsilastirmaMetni="önceki 7 güne göre"
+            egilim={grafik.satisSerisi}
+            Simge={CreditCard}
+            vurgu={kSatis.simdi > 0 ? "basari" : "normal"}
+            bosMetin="Bu dönemde tamamlanmış ödeme yok."
+          />
+        </div>
       </section>
-      ) : null}
-      <section className="rounded-2xl border border-white/[0.08] p-4">
-        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">İndirme kayıtları (son 1 yıl)</h3>
-        <p className="mt-1 text-[11px] text-slate-500">
-          Kanıt: SUCCESS yalnızca istemcinin indirme sonrası ACK göndermesiyle oluşur. Liste tüm yönetici modlarında yüklenir.
+
+      {/* ── 2. KADEME: seyir ve dönüşüm ─────────────────────────────────── */}
+      <section>
+        <BolumBasligi ustBaslik="Zaman içinde" baslik="Seyir ve dönüşüm" />
+        <div className="grid gap-3 lg:grid-cols-[1.6fr_1fr]">
+          <EgilimGrafigi
+            baslik="Eğilim"
+            veri={grafik.satirlar}
+            seriler={[
+              { id: "islem", etiket: "İşlem", renk: "#22d3ee" },
+              { id: "goruntuleme", etiket: "Ziyaret", renk: "#a78bfa" },
+              { id: "kayit", etiket: "Kayıt", renk: "#34d399" },
+              { id: "satis", etiket: "Ödeme", renk: "#fbbf24" },
+            ]}
+            seciliSeri={seciliSeri}
+            onSeriDegis={setSeciliSeri}
+            pencere={pencere}
+            onPencereDegis={setPencere}
+            bosMetin="Seçilen ölçü için bu aralıkta veri yok. Başka bir ölçü ya da daha geniş bir aralık seçin."
+          />
+          {funnel ? (
+            <Huni
+              toplamOran={funnel.rates?.signupToPaid ?? 0}
+              basamaklar={[
+                {
+                  ad: "Kayıtlı kullanıcı",
+                  deger: funnel.totalUsers,
+                  aciklama: "Huninin girişi",
+                },
+                {
+                  ad: "Değeri yaşadı",
+                  deger: funnel.activatedUsers,
+                  oran: funnel.rates?.signupToActivation,
+                  aciklama: "En az bir işlem yapmış — ödemenin ön koşulu",
+                },
+                {
+                  ad: "Kota duvarına çarptı",
+                  deger: funnel.freeTierEverHitLimit,
+                  oran: funnel.rates?.activationToWall,
+                  aciklama: "Ücretsiz sınırı en az bir kez aşmış",
+                },
+                {
+                  ad: "Ödeme yaptı",
+                  deger: funnel.usersWithCompletedCheckout,
+                  oran: funnel.rates?.wallToPaid,
+                  aciklama: "Ödemesi tamamlanmış kullanıcı",
+                },
+              ]}
+            />
+          ) : (
+            <BosDurum metin="Huni verisi yüklenemedi." />
+          )}
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+          Ücretsiz→ücretli dönüşüm sektörde genelde %2–5 arasında; sert kullanım
+          sınırı olan ürünlerde %15'e kadar çıkabiliyor. Oran düşükse önce hangi
+          basamakta kaybettiğimize bakılmalı — ödemeden önceki adımlar zayıfsa
+          fiyat değiştirmenin faydası olmaz.
         </p>
-        {downloadLogs.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-500">Henüz kayıt yok veya yüklenemedi.</p>
-        ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left text-[11px] text-slate-300">
-              <thead>
-                <tr className="border-b border-white/10 text-slate-500">
-                  <th className="py-1.5 pr-2 font-semibold">Oluştu (UTC)</th>
-                  <th className="py-1.5 pr-2 font-semibold">Araç</th>
-                  <th className="py-1.5 pr-2 font-semibold">E-posta</th>
-                  <th className="py-1.5 pr-2 font-semibold">Durum</th>
-                  <th className="py-1.5 font-semibold">Kanıt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {downloadLogs.map((row) => (
-                  <tr key={row.id} className="border-b border-white/[0.04]">
-                    <td className="py-1.5 pr-2 font-mono text-[10px] text-slate-400">{row.createdAt.slice(0, 19)}Z</td>
-                    <td className="py-1.5 pr-2">{row.toolId}</td>
-                    <td className="max-w-[180px] truncate py-1.5 pr-2">{row.userEmail}</td>
-                    <td className="py-1.5 pr-2">{row.status}</td>
-                    <td className="py-1.5">
-                      <button
-                        type="button"
-                        className="rounded bg-slate-700/80 px-2 py-0.5 text-[10px] font-semibold text-slate-200 hover:bg-slate-600"
-                        onClick={() => void downloadAdminDownloadLogProof(accessToken, row.id)}
-                      >
-                        Download Proof
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      </section>
+
+      {/* ── 3. KADEME: kırılımlar ──────────────────────────────────────── */}
+      <section>
+        <BolumBasligi ustBaslik="Kırılımlar" baslik="Neyi, kim kullanıyor" />
+        <div className="grid gap-3 lg:grid-cols-2">
+          <KirilimGrafigi
+            baslik={`En çok kullanılan araçlar${overview?.mostUsedTOOLSAllTimeFallback ? " (tüm zamanlar)" : " (son 30 gün)"}`}
+            veri={araclar}
+            bosMetin="Henüz araç kullanımı kaydedilmedi. Kullanıcılar araç çalıştırdıkça burası dolar."
+          />
+          <KirilimGrafigi
+            baslik="Ülkeye göre kullanıcı"
+            renk="#a78bfa"
+            veri={(overview?.geo.topCountries ?? []).map((c) => ({ ad: c.country, deger: c.count }))}
+            bosMetin="Ülke bilgisi zamanla dolar; fatura adımında kaydedilir."
+          />
+        </div>
+      </section>
+
+      {/* ── 4. KADEME: ham veri ve dışa aktarma (isteyen açar) ─────────── */}
+      <section className="space-y-3">
+        <BolumBasligi ustBaslik="Ayrıntı" baslik="Ham kayıtlar" />
+
+        <Katlanir
+          baslik="Şu an sitede"
+          aciklama={`Son ${overview?.presenceWindowMinutes ?? 5} dakikada etkin oturumlar`}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <OlcuKarti etiket="Toplam oturum" deger={overview?.distinctSessionsActiveNow ?? 0} />
+            <OlcuKarti etiket="Üye" deger={overview?.registeredUsersActiveNow ?? 0} />
+            <OlcuKarti etiket="Misafir" deger={overview?.anonymousSessionsActiveNow ?? 0} />
           </div>
+        </Katlanir>
+
+        {advanced && pvHour.length > 0 && (
+          <Katlanir baslik="Bugünkü ziyaretler (UTC saat)" aciklama="Saat bazında dağılım">
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={pvHour} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
+                  <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="hour" tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} width={40} />
+                  <Tooltip
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                    contentStyle={{ background: "#0b1220", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }}
+                  />
+                  <Bar dataKey="count" fill="#38bdf8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Katlanir>
+        )}
+
+        <Katlanir baslik="İndirme kayıtları" aciklama="Son indirme işlemleri ve kanıt dosyaları">
+          {downloadLogs.length === 0 ? (
+            <BosDurum metin="Henüz indirme kaydı yok." />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[12px]">
+                <thead>
+                  <tr className="border-b border-white/[0.08] text-[11px] uppercase tracking-wide text-slate-400">
+                    <th className="py-2 pr-3 font-semibold">Zaman</th>
+                    <th className="py-2 pr-3 font-semibold">Araç</th>
+                    <th className="py-2 pr-3 font-semibold">Kullanıcı</th>
+                    <th className="py-2 pr-3 font-semibold">Durum</th>
+                    <th className="py-2 font-semibold">Kanıt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {downloadLogs.map((row) => (
+                    <tr key={row.id} className="border-b border-white/[0.04] hover:bg-white/[0.02]">
+                      <td className="py-2 pr-3 font-mono text-[11px] text-slate-400">
+                        {row.createdAt.slice(0, 19).replace("T", " ")}
+                      </td>
+                      <td className="py-2 pr-3 text-slate-200">{pdfToolLabelTr(row.toolId)}</td>
+                      <td className="max-w-[200px] truncate py-2 pr-3 text-slate-300">{row.userEmail}</td>
+                      <td className="py-2 pr-3">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            String(row.status).toUpperCase() === "SUCCESS"
+                              ? "bg-emerald-500/15 text-emerald-300"
+                              : "bg-rose-500/15 text-rose-300"
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="py-2">
+                        <button
+                          type="button"
+                          className="rounded-lg border border-white/[0.1] px-2.5 py-1 text-[11px] font-semibold text-slate-200 transition hover:border-cyan-400/40 hover:text-cyan-200"
+                          onClick={() => void downloadAdminDownloadLogProof(accessToken, row.id)}
+                        >
+                          İndir
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Katlanir>
+
+        {advanced && (
+          <Katlanir baslik="CSV dışa aktarma" aciklama="Seçilen tarih aralığı için kullanım dökümü">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                className="rounded-xl border border-white/[0.1] bg-black/40 px-3 py-2 text-[12px] font-semibold text-slate-100"
+              />
+              <span className="text-slate-400">→</span>
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                className="rounded-xl border border-white/[0.1] bg-black/40 px-3 py-2 text-[12px] font-semibold text-slate-100"
+              />
+              <button
+                type="button"
+                onClick={async () => {
+                  await downloadUsageExport(accessToken, from, to);
+                }}
+                className="rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-[12px] font-bold text-white transition hover:from-cyan-500 hover:to-blue-500"
+              >
+                Kullanım CSV indir
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-400">
+              Satırlar: kullanıcı başına günlük kullanım, işlem sayıları ve son kullanılan araç.
+            </p>
+          </Katlanir>
+        )}
+
+        {advanced && series.length > 0 && (
+          <Katlanir baslik="Ham kullanım serisi (API)" aciklama="Son 30 gün, sunucudan gelen dizi">
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={series.map((r) => ({ etiket: gunEtiketi(r.date), v: r.totalOperations }))}
+                  margin={{ top: 8, right: 8, bottom: 0, left: -20 }}
+                >
+                  <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="etiket" tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} minTickGap={20} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} width={40} />
+                  <Tooltip
+                    cursor={{ fill: "rgba(255,255,255,0.04)" }}
+                    contentStyle={{ background: "#0b1220", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 12 }}
+                  />
+                  <Bar dataKey="v" fill="#22d3ee" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Katlanir>
         )}
       </section>
-      {advanced ? (
-      <section className="rounded-2xl border border-white/[0.08] p-4">
-        <h3 className="text-sm font-bold uppercase tracking-wide text-slate-200">CSV dışa aktarma</h3>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="rounded-lg border border-white/[0.1] bg-black/40 px-2 py-1.5 text-xs font-semibold text-slate-100"
-          />
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="rounded-lg border border-white/[0.1] bg-black/40 px-2 py-1.5 text-xs font-semibold text-slate-100"
-          />
-          <button
-            type="button"
-            onClick={async () => {
-              await downloadUsageExport(accessToken, from, to);
-            }}
-            className="rounded-lg bg-cyan-500/25 px-3 py-1.5 text-xs font-semibold"
-          >
-            Kullanım CSV indir
-          </button>
-        </div>
-        <p className="mt-2 text-[12px] leading-relaxed text-slate-400">
-          Satırlar: kullanıcı başına günlük kullanım, işlem sayıları ve son kullanılan araç. Excel’de e-posta veya tarihe göre süzebilirsiniz.
-        </p>
-      </section>
-      ) : null}
+
+      <AdminMutedBox>
+        Bu sekme <strong className="text-slate-200">salt okunur</strong> raporlardır. Yükseltme
+        düğmesi ve açıklama metinlerini düzenlemek için{" "}
+        <strong className="text-slate-200">Araçlar</strong> sekmesini kullanın.
+        {!advanced ? " Saat grafiği, ham seri ve CSV dışa aktarma Gelişmiş moddadır." : null}
+      </AdminMutedBox>
     </div>
   );
 }
@@ -2797,7 +3023,7 @@ function MediaTab({
       {msg ? <p className="text-xs text-slate-400">{msg}</p> : null}
       <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
         <table className="w-full min-w-[560px] text-left text-xs">
-          <thead className="border-b border-white/[0.08] text-slate-500">
+          <thead className="border-b border-white/[0.08] text-slate-400">
             <tr>
               <th className="px-3 py-2">Önizleme</th>
               <th className="px-3 py-2">URL</th>
@@ -2815,11 +3041,11 @@ function MediaTab({
                     {isImg ? (
                       <img src={fullUrl} alt="" className="h-12 w-16 rounded object-cover" />
                     ) : (
-                      <span className="text-slate-500">PDF</span>
+                      <span className="text-slate-400">PDF</span>
                     )}
                   </td>
                   <td className="max-w-[min(280px,40vw)] truncate px-3 py-2 font-mono text-[10px] text-slate-400">{fullUrl}</td>
-                  <td className="px-3 py-2 text-slate-500">{Math.round(a.byteSize / 1024)} KB</td>
+                  <td className="px-3 py-2 text-slate-400">{Math.round(a.byteSize / 1024)} KB</td>
                   <td className="px-3 py-2">
                     <div className="flex flex-col gap-1.5 sm:flex-row sm:flex-wrap">
                       <button
@@ -2868,7 +3094,7 @@ function MediaTab({
             })}
           </tbody>
         </table>
-        {items.length === 0 ? <p className="p-4 text-center text-xs text-slate-500">Henüz dosya yok.</p> : null}
+        {items.length === 0 ? <p className="p-4 text-center text-xs text-slate-400">Henüz dosya yok.</p> : null}
       </div>
     </div>
   );
@@ -2924,9 +3150,9 @@ function AuditLogTab({ accessToken }: { accessToken: string }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="E-posta, işlem veya özet ara…"
-          className="flex-1 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+          className="flex-1 rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
         />
-        <span className="shrink-0 text-xs text-slate-500">{filtered.length} kayıt</span>
+        <span className="shrink-0 text-xs text-slate-400">{filtered.length} kayıt</span>
       </div>
 
       {loading ? (
@@ -2934,12 +3160,12 @@ function AuditLogTab({ accessToken }: { accessToken: string }) {
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-cyan-500 border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-10 text-center text-sm text-slate-500">Kayıt bulunamadı.</p>
+        <p className="py-10 text-center text-sm text-slate-400">Kayıt bulunamadı.</p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-white/[0.07]">
           <table className="w-full min-w-[700px] text-xs">
             <thead>
-              <tr className="border-b border-white/[0.08] text-left text-slate-500">
+              <tr className="border-b border-white/[0.08] text-left text-slate-400">
                 <th className="px-4 py-2.5 font-semibold">Tarih</th>
                 <th className="px-4 py-2.5 font-semibold">Kullanıcı</th>
                 <th className="px-4 py-2.5 font-semibold">İşlem</th>

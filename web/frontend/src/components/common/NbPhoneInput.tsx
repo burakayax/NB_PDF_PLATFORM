@@ -232,7 +232,7 @@ export function NbPhoneInput({
             +{dialCode}
           </span>
           <svg
-            className={`h-3.5 w-3.5 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`h-3.5 w-3.5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -274,7 +274,7 @@ export function NbPhoneInput({
           </div>
           <ul role="listbox" className="max-h-60 overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <li className="px-3 py-3 text-center text-sm text-slate-500">
+              <li className="px-3 py-3 text-center text-sm text-slate-400">
                 {language === "tr" ? "Sonuç yok" : "No results"}
               </li>
             ) : (

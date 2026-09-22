@@ -1,0 +1,350 @@
+/**
+ * KURAL SIRASINI DÜZELT — kural eklemeden, silmeden.
+ *
+ * SORUN (denetimde ölçüldü): Render kuralları liste sırasına göre değerlendirir
+ * ve İLK eşleşende durur. "/*" kuralı her adrese uyduğu için ondan sonraki her
+ * kural ölüdür. Canlıda "/*" 100. sıradaydı ve arkasındaki 49 kural — eski
+ * adreslerin yeni adreslere yönlendirmeleri — hiç çalışmıyordu. Sonuç: eski bir
+ * bağlantıya tıklayan ziyaretçi doğru sayfaya gitmiyor, arama motoru da o
+ * adresleri yönlendirme olarak göremiyor.
+ *
+ * İKİNCİ SORUN (aynı sebep, farklı kural): Blog joker kuralı `/en/blog/:slug`
+ * de her blog adresine uyuyor ve listede eski adres yönlendirmelerinden ÖNCE
+ * geliyor. Yalnızca "/*" sona alınsaydı blog yönlendirmeleri yine çalışmazdı:
+ * joker önce eşleşir ve artık var olmayan bir dosyaya yönlendirip BOŞ SAYFA
+ * döndürür. Bu yüzden sıralama şu kurala göre yapılır:
+ *
+ *   1) SPESİFİK kurallar (adresi birebir yazılmış olanlar)
+ *   2) JOKER kurallar (`:slug` ya da `*` içerenler)
+ *   3) "/*" en sonda
+ *
+ * Her grubun KENDİ İÇİNDEKİ sırası korunur; hiçbir kural eklenmez/silinmez.
+ *
+ * NEDEN AYRI BETİK: `render-routes-sync.mjs` listeyi yeniden KURAR (araç
+ * sayfalarını yeniden üretir) ve mevcut kurallarla birlikte 200 sınırını aşar.
+ * Burada tek yapılan SIRALAMA: kuralların kendisi, sayısı ve içeriği aynı kalır,
+ * yalnız "/*" listenin sonuna taşınır.
+ *
+ * KULLANIM
+ *   1) Önce prova (hiçbir şey değişmez, ne yapacağını gösterir):
+ *        node scripts/render-routes-sirala.mjs
+ *   2) Sonuç doğruysa uygula (önce yedek dosyası yazılır):
+ *        node scripts/render-routes-sirala.mjs --uygula
+ *   3) Yeni yayınlanan araç sayfaları için eksik kuralları ekle:
+ *        node scripts/render-routes-sirala.mjs --eksikleri-ekle          (prova)
+ *        node scripts/render-routes-sirala.mjs --eksikleri-ekle --uygula
+ *   4) Geri almak için:
+ *        node scripts/render-routes-sirala.mjs --geri-al <yedek-dosyası>
+ */
+import { writeFileSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { join, dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { EN_TOOL_SLUGS, EN_BLOG_SLUGS } from "../src/seo/enSlugs.mjs";
+
+const API = "https://api.render.com/v1";
+const SERVIS_ADI = "nb-pdf-frontend";
+const frontendKok = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+
+const anahtar = process.env.RENDER_API_KEY;
+if (!anahtar) {
+  console.error('RENDER_API_KEY tanımlı değil.\n  PowerShell: $env:RENDER_API_KEY = "rnd_..."');
+  process.exit(1);
+}
+
+async function istek(yol, secenekler = {}) {
+  const r = await fetch(API + yol, {
+    ...secenekler,
+    headers: {
+      Authorization: `Bearer ${anahtar}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(secenekler.headers || {}),
+    },
+  });
+  const metin = await r.text();
+  if (!r.ok) {
+    throw new Error(`${secenekler.method || "GET"} ${yol} → HTTP ${r.status}: ${metin.slice(0, 300)}`);
+  }
+  return metin ? JSON.parse(metin) : null;
+}
+
+/**
+ * ÖNEMLİ — SIRA "priority" ALANINDADIR, DİZİ SIRASINDA DEĞİL.
+ *
+ * Render'ın API'si kuralları döndürürken dizi sırası ile ÖNCELİK SIRASI aynı
+ * değildir; her kaydın kendi `priority` sayısı vardır ve KÜÇÜK numara önce
+ * değerlendirilir. Bu ölçüldü: canlıdaki "/*" yakala-hepsini kuralı en büyük
+ * numaradaydı (159) — eğer büyük numara önce değerlendirilseydi her adres ana
+ * sayfaya düşerdi ve site hiç çalışmazdı.
+ *
+ * BU AYRIM ATLANIRSA NE OLUR: Dizi sırasına bakan bir denetim, aslında en önde
+ * olan kuralları "gölgede kalmış" sanır ve olmayan bir sorunu rapor eder
+ * (bir kez yaşandı). Bu yüzden okunan liste ÖNCE önceliğe göre sıralanır.
+ */
+function oncelikSirala(kayitlar) {
+  return [...kayitlar].sort((a, b) => {
+    const x = typeof a?.priority === "number" ? a.priority : Number.MAX_SAFE_INTEGER;
+    const y = typeof b?.priority === "number" ? b.priority : Number.MAX_SAFE_INTEGER;
+    return x - y;
+  });
+}
+
+async function tumKayitlar(yol, anahtarAd) {
+  /**
+   * SAYFALAMA — ÖLÇÜLDÜ, TAHMİN DEĞİL.
+   *
+   * Render'ın `cursor` değeri "BU KAYDIN ÖNCESİNDEKİ N kayıt" anlamına geliyor
+   * ve liste varsayılan olarak SON N kaydı (en yüksek öncelikleri) döndürüyor.
+   * Eski kod her sayfada SON kaydın cursor'ını gönderiyordu; bu yüzden pencere
+   * yalnız 1 kayıt geriye kayıyor, baştaki kayıtlara hiç ulaşılamıyordu:
+   * canlıda 159 kural varken okuma 149 döndürüyordu (ölçüldü).
+   *
+   * BUNUN BEDELİ: "hepsini değiştir" ucu OKUNAN listeyi geri yazıyor; görünmeyen
+   * kayıtlar yazılan listede olmadığı için siliniyorlardı. Yani okuma hatası
+   * sessiz kural kaybına dönüşüyordu.
+   *
+   * DOĞRUSU: bir önceki pencereye gitmek için İLK kaydın cursor'ı gönderilir ve
+   * sayfalar BAŞA eklenir (liste öncelik sırasında kalsın).
+   */
+  const sayfalar = [];
+  const gorulenKimlikler = new Set();
+  let cursor = null;
+
+  for (let tur = 0; tur < 60; tur++) {
+    const ayrac = yol.includes("?") ? "&" : "?";
+    const sayfa = await istek(
+      `${yol}${ayrac}limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+    );
+    const liste = Array.isArray(sayfa) ? sayfa : [];
+    if (liste.length === 0) break;
+
+    const bu = [];
+    let yeniEklendi = 0;
+    for (const satir of liste) {
+      const kayit = satir?.[anahtarAd] ?? satir;
+      const kimlik = kayit?.id ?? JSON.stringify(kayit);
+      if (gorulenKimlikler.has(kimlik)) continue;
+      gorulenKimlikler.add(kimlik);
+      bu.push(kayit);
+      yeniEklendi += 1;
+    }
+    if (yeniEklendi === 0) break; // aynı pencere tekrar geldi
+    sayfalar.unshift(bu);
+
+    // Bir önceki pencere: BU sayfanın İLK kaydının cursor'ı.
+    const ilk = liste[0];
+    const oncekiCursor = ilk?.cursor ?? null;
+    if (!oncekiCursor || oncekiCursor === cursor || liste.length < 100) break;
+    cursor = oncekiCursor;
+  }
+
+  return oncelikSirala(sayfalar.flat());
+}
+
+const sade = ({ type, source, destination }) => ({ type, source, destination });
+
+/** Yayınlanan klasörde gerçekten index.html'i olan alt klasörler. */
+function sayfalar(gorecel) {
+  const tam = join(frontendKok, "public", gorecel);
+  try {
+    return readdirSync(tam)
+      .filter((ad) => {
+        try {
+          return (
+            statSync(join(tam, ad)).isDirectory() &&
+            statSync(join(tam, ad, "index.html")).isFile()
+          );
+        } catch {
+          return false;
+        }
+      })
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Kuralı olmayan araç sayfaları için kural üretir.
+ *
+ * NEDEN GEREKLİ: Slash'siz adreste (/tools/x) Render gerçek bir dosya görmediği
+ * için "/*" kuralına düşer ve ARAMA MOTORUNA boş uygulama iskeletini gönderir;
+ * o sayfa için hazırlanmış SEO içeriği hiç sunulmaz. Sayfa başına kural bunu
+ * önler. Yeni bir araç yayınlandığında bu kip çalıştırılmalıdır.
+ */
+function eksikSayfaKurallari(mevcut) {
+  const kaynaklar = new Set(mevcut.map((k) => String(k.source || "")));
+  const eksik = [];
+
+  // 1) Sayfa başına kurallar — slash'siz adres SEO içeriğini sunsun.
+  const gruplar = [
+    ["/tools", "tools"],
+    ["/en/tools", "en/tools"],
+  ];
+  for (const [onek, klasor] of gruplar) {
+    for (const slug of sayfalar(klasor)) {
+      const kaynak = `${onek}/${slug}`;
+      if (!kaynaklar.has(kaynak)) {
+        eksik.push({ type: "rewrite", source: kaynak, destination: `${kaynak}/index.html` });
+      }
+    }
+  }
+
+  /**
+   * 2) ESKİ TÜRKÇE ADRESLERİN İNGİLİZCE KARŞILIĞINA YÖNLENDİRMESİ.
+   *
+   * /en/ altındaki sayfaların adresleri İngilizceye çevrildiğinde eski Türkçe
+   * adresler geçerliliğini yitirdi; onlara gelen ziyaretçi ve arama motoru
+   * yönlendirilmezse boş sayfaya düşer ve o adresin biriktirdiği değer yeni
+   * adrese geçmez. Kaynak: enSlugs.mjs (tek gerçek kaynak) — yeni bir araç ya da
+   * yazı eklendiğinde bu kural kendiliğinden üretilir.
+   */
+  for (const [onek, harita] of [
+    ["/en/tools", EN_TOOL_SLUGS],
+    ["/en/blog", EN_BLOG_SLUGS],
+  ]) {
+    for (const [tr, en] of Object.entries(harita)) {
+      const kaynak = `${onek}/${tr}`;
+      if (tr === en || kaynaklar.has(kaynak)) continue;
+      eksik.push({ type: "redirect", source: kaynak, destination: `${onek}/${en}` });
+    }
+  }
+
+  return eksik;
+}
+
+async function main() {
+  const uygula = process.argv.includes("--uygula");
+  const geriAlIndex = process.argv.indexOf("--geri-al");
+
+  const servisler = await tumKayitlar(`/services?name=${encodeURIComponent(SERVIS_ADI)}`, "service");
+  const servis = servisler.find((s) => s && s.name === SERVIS_ADI);
+  if (!servis) throw new Error(`"${SERVIS_ADI}" adlı servis bulunamadı.`);
+  console.log(`Servis: ${servis.name}`);
+
+  const mevcut = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  console.log(`Mevcut kural sayısı: ${mevcut.length}`);
+
+  if (geriAlIndex !== -1) {
+    const dosya = process.argv[geriAlIndex + 1];
+    if (!dosya) throw new Error("--geri-al <yedek-dosyası> gerekli");
+    const yedek = JSON.parse(readFileSync(dosya, "utf8")).map(sade);
+    await istek(`/services/${servis.id}/routes`, { method: "PUT", body: JSON.stringify(yedek) });
+    console.log(`Geri alındı: ${yedek.length} kural yazıldı (${dosya}).`);
+    return;
+  }
+
+  // GÜVENLİK AĞI: Okuma beklenen biçimde değilse eksik kayıtlarla yazmak TÜM
+  // kuralları bozardı. Her kaydın üç alanı da dolu olmalı.
+  const bozuk = mevcut.filter((k) => !k?.type || !k?.source || !k?.destination);
+  if (bozuk.length) {
+    throw new Error(
+      `Kural listesi beklenen biçimde değil (${bozuk.length}/${mevcut.length} kayıt eksik). Hiçbir şey yapılmadı.`,
+    );
+  }
+
+  const eksikleriEkle = process.argv.includes("--eksikleri-ekle");
+  const eklenecek = eksikleriEkle ? eksikSayfaKurallari(mevcut) : [];
+  if (eksikleriEkle) {
+    console.log(`
+Kuralı olmayan araç sayfası: ${eklenecek.length}`);
+    for (const k of eklenecek) console.log(`  + ${k.source} → ${k.destination}`);
+    if (mevcut.length + eklenecek.length > 200) {
+      throw new Error(
+        `${mevcut.length} + ${eklenecek.length} = ${mevcut.length + eklenecek.length} kural — Render sınırı 200. Hiçbir şey yapılmadı.`,
+      );
+    }
+  }
+
+  const hepsiniYakalaMi = (k) => String(k.source) === "/*";
+  /** Adresinde `:param` ya da `*` geçen kural, birçok adrese birden uyar. */
+  const jokerMi = (k) => /[:*]/.test(String(k.source || "")) && !hepsiniYakalaMi(k);
+
+  const spesifik = [...mevcut.filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k)), ...eklenecek];
+  const jokerler = mevcut.filter(jokerMi);
+  const yakala = mevcut.filter(hepsiniYakalaMi);
+
+  const hedef = [...spesifik, ...jokerler, ...yakala].map(sade);
+  if (hedef.length !== mevcut.length + eklenecek.length) {
+    throw new Error(
+      `İç tutarlılık hatası: ${mevcut.length} + ${eklenecek.length} ≠ ${hedef.length}. Hiçbir şey yapılmadı.`,
+    );
+  }
+
+  // Sırası DEĞİŞEN kurallar — yani şu an gölgede kalıp çalışmayanlar.
+  const eskiSira = mevcut.map((k) => `${k.type} ${k.source}`);
+  const yeniSira = hedef.map((k) => `${k.type} ${k.source}`);
+  const degisti = eskiSira.some((v, i) => v !== yeniSira[i]);
+  if (!degisti && eklenecek.length === 0) {
+    console.log("Sıralama doğru ve eksik kural yok — yapılacak bir şey yok.");
+    return;
+  }
+
+  // Şu an gölgede kalan kurallar: kendisinden ÖNCE gelen bir joker/"/*" varsa.
+  const ilkJokerIndex = mevcut.findIndex((k) => jokerMi(k) || hepsiniYakalaMi(k));
+  const golgede =
+    ilkJokerIndex === -1 ? [] : mevcut.slice(ilkJokerIndex + 1).filter((k) => !jokerMi(k) && !hepsiniYakalaMi(k));
+
+  console.log(`
+Şu an gölgede kalan (çalışmayan) kural sayısı: ${golgede.length}`);
+  for (const k of golgede.slice(0, 60)) console.log(`  - ${k.type} ${k.source} → ${k.destination}`);
+  if (golgede.length > 60) console.log(`  … ve ${golgede.length - 60} tane daha`);
+
+  console.log(
+    `
+Yeni sıra: ${spesifik.length} spesifik → ${jokerler.length} joker → ${yakala.length} yakala-hepsini`,
+  );
+  console.log("Joker kurallar (spesifiklerden SONRA gelecek):");
+  for (const k of jokerler) console.log(`  * ${k.type} ${k.source} → ${k.destination}`);
+
+  if (!uygula) {
+    console.log(
+      `\nPROVA — hiçbir şey değiştirilmedi. Yeni sırada ${hedef.length} kural olacak ` +
+        `(aynı kurallar, "/*" en sonda). Uygulamak için: --uygula`,
+    );
+    return;
+  }
+
+  const damga = new Date().toISOString().replace(/[:.]/g, "-");
+  const yedekDosya = join(frontendKok, `render-routes-yedek-${damga}.json`);
+  writeFileSync(yedekDosya, JSON.stringify(mevcut, null, 2), "utf8");
+  console.log(`\nYedek yazıldı: ${yedekDosya}`);
+
+  await istek(`/services/${servis.id}/routes`, { method: "PUT", body: JSON.stringify(hedef) });
+
+  // Yazma sonrası okumada Render bazen ESKİ listeyi döndürebiliyor (yayılma
+  // gecikmesi). Sayı beklenenden azsa kısa bir bekleyip bir kez daha okunur;
+  // yine tutmazsa bu AÇIKÇA bildirilir — "uygulandı" deyip geçmek, kullanıcının
+  // olmayan kuralları var sanmasına yol açar.
+  let sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  if (sonra.length !== hedef.length) {
+    await new Promise((c) => setTimeout(c, 3000));
+    sonra = await tumKayitlar(`/services/${servis.id}/routes`, "route");
+  }
+  if (sonra.length !== hedef.length) {
+    console.log(
+      `
+UYARI: ${hedef.length} kural yazıldı ama sunucu ${sonra.length} kural bildiriyor.` +
+        `
+Yeni kurallar uygulanmamış olabilir; denetimi çalıştırıp doğrula:` +
+        `
+  node scripts/render-routes-denetim.mjs`,
+    );
+  }
+  const yeniIndex = sonra.findIndex((k) => String(k.source) === "/*");
+  const ilkJoker = sonra.findIndex((k) => /[:*]/.test(String(k.source || "")));
+  const halaGolgede = sonra
+    .slice(ilkJoker + 1)
+    .filter((k) => !/[:*]/.test(String(k.source || ""))).length;
+  console.log(`Uygulandı. Kural sayısı: ${sonra.length}`);
+  console.log(
+    yeniIndex === sonra.length - 1 && halaGolgede === 0
+      ? "Sıra doğru: spesifik kurallar önde, jokerler arkada, \"/*\" en sonda. Gölgede kural kalmadı."
+      : `UYARI: hâlâ ${halaGolgede} kural gölgede. Yedekten geri al: --geri-al ${yedekDosya}`,
+  );
+}
+
+main().catch((e) => {
+  console.error(e.message);
+  process.exit(1);
+});

@@ -18,6 +18,7 @@ import {
 import type { Language } from "../../i18n/landing";
 import { saveBlobToUser } from "../../api";
 import { TopUpModal } from "./TopUpModal";
+import { ToolRating } from "../common/ToolRating";
 import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { summaryToPdf, pdfBytesToBlob } from "../../lib/summaryPdf";
@@ -217,7 +218,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
       case "done": return <span className="inline-flex items-center gap-1 text-emerald-300"><Check className="h-3.5 w-3.5" />{tr ? "tamam" : "done"}</span>;
       case "error": return <span className="text-red-300">{f.error || (tr ? "hata" : "error")}</span>;
       case "skipped": return <span className="text-amber-300">{tr ? "kota doldu — atlandı" : "quota — skipped"}</span>;
-      default: return <span className="text-slate-500">{tr ? "bekliyor" : "pending"}</span>;
+      default: return <span className="text-slate-400">{tr ? "bekliyor" : "pending"}</span>;
     }
   };
 
@@ -340,7 +341,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                         <p className="text-[11px]">{statusChip(f)}</p>
                       </div>
                       {!running && (
-                        <button type="button" onClick={() => remove(f.id)} className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"><X className="h-4 w-4" /></button>
+                        <button type="button" onClick={() => remove(f.id)} className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"><X className="h-4 w-4" /></button>
                       )}
                     </div>
                     {/* Extract sonucu — kompakt önizleme */}
@@ -350,7 +351,7 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                         {f.extract.fields.slice(0, 5).map((fl, i) => (
                           <span key={i} className="rounded-md bg-white/[0.05] px-2 py-0.5 text-[11px] text-slate-300"><b className="text-slate-400">{fl.label}:</b> {fl.value}</span>
                         ))}
-                        {f.extract.fields.length > 5 && <span className="text-[11px] text-slate-500">+{f.extract.fields.length - 5}</span>}
+                        {f.extract.fields.length > 5 && <span className="text-[11px] text-slate-400">+{f.extract.fields.length - 5}</span>}
                       </div>
                     )}
                     {/* Özet/çeviri — kısa önizleme */}
@@ -392,6 +393,10 @@ export function AiBatchTool({ language, accessToken, onLogin, onUpgrade, comingS
                     </button>
                   )}
                 </div>
+              )}
+
+              {doneFiles.length > 0 && !running && (
+                <ToolRating toolSlug="ai-toplu-islem" language={language} />
               )}
             </>
           )}

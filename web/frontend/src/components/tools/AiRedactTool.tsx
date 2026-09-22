@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Download,
@@ -15,18 +15,13 @@ import { extractPdfText } from "../../lib/pdfText";
 import { ocrPdfToText } from "../../lib/ocr";
 import { redactPdf, saveBlobToUser } from "../../api";
 import { aiDetectSensitive, fetchAiQuota, type AiError, type AiQuota } from "../../api/ai";
+import { ToolRating } from "../common/ToolRating";
 import { TopUpModal } from "./TopUpModal";
+import { detectSensitiveByRegex } from "../../lib/redactDetectors";
 
 type Item = { id: string; type: string; label: string; value: string; checked: boolean };
 const uid = () => Math.random().toString(36).slice(2, 9);
 
-// Cihazda regex tespiti — yapılandırılmış PII (AI'sız, anında).
-const DETECTORS: { type: string; tr: string; en: string; re: RegExp }[] = [
-  { type: "eposta", tr: "E-posta", en: "Email", re: /[\w.+-]+@[\w-]+\.[\w.-]+/g },
-  { type: "tc", tr: "TC Kimlik No", en: "National ID", re: /\b[1-9]\d{10}\b/g },
-  { type: "iban", tr: "IBAN", en: "IBAN", re: /\bTR\d{2}(?:[ ]?\d{4}){5}[ ]?\d{2}\b/g },
-  { type: "telefon", tr: "Telefon", en: "Phone", re: /(?:\+90|0)?[ ]?5\d{2}[ ]?\d{3}[ ]?\d{2}[ ]?\d{2}\b/g },
-];
 const AI_TYPE_LABEL: Record<string, { tr: string; en: string }> = {
   isim: { tr: "İsim", en: "Name" }, name: { tr: "İsim", en: "Name" },
   adres: { tr: "Adres", en: "Address" }, address: { tr: "Adres", en: "Address" },
@@ -35,6 +30,16 @@ const AI_TYPE_LABEL: Record<string, { tr: string; en: string }> = {
   tarih: { tr: "Tarih", en: "Date" }, date: { tr: "Tarih", en: "Date" },
   telefon: { tr: "Telefon", en: "Phone" }, phone: { tr: "Telefon", en: "Phone" },
   eposta: { tr: "E-posta", en: "Email" }, email: { tr: "E-posta", en: "Email" },
+  // Genişletilmiş kategoriler (sunucudaki istem ile birebir aynı olmalı)
+  fatura: { tr: "Fatura / Belge No", en: "Invoice / Document no." }, invoice: { tr: "Fatura / Belge No", en: "Invoice / Document no." },
+  vergi: { tr: "Vergi No", en: "Tax ID" }, tax: { tr: "Vergi No", en: "Tax ID" },
+  sirket: { tr: "Şirket / Kurum", en: "Company" }, company: { tr: "Şirket / Kurum", en: "Company" },
+  tutar: { tr: "Tutar / Maaş", en: "Amount / Salary" }, amount: { tr: "Tutar / Maaş", en: "Amount / Salary" },
+  saglik: { tr: "Sağlık Bilgisi", en: "Health info" }, health: { tr: "Sağlık Bilgisi", en: "Health info" },
+  plaka: { tr: "Plaka", en: "License plate" }, plate: { tr: "Plaka", en: "License plate" },
+  musteri: { tr: "Müşteri / Abone No", en: "Customer no." }, customer: { tr: "Müşteri / Abone No", en: "Customer no." },
+  imza: { tr: "İmza / Kaşe", en: "Signature" }, signature: { tr: "İmza / Kaşe", en: "Signature" },
+  kullanici: { tr: "Kullanıcı Adı", en: "Username" }, username: { tr: "Kullanıcı Adı", en: "Username" },
 };
 
 type Props = { language: Language; accessToken: string | null; onLogin: () => void; onUpgrade: () => void; comingSoon?: boolean; initialFile?: File | null };
@@ -65,18 +70,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
   }
 
   function regexDetect(text: string): Item[] {
-    const out: Item[] = [];
-    const seen = new Set<string>();
-    for (const d of DETECTORS) {
-      for (const m of text.matchAll(d.re)) {
-        const v = m[0].trim();
-        const key = v.toLowerCase();
-        if (v.length < 4 || seen.has(key)) continue;
-        seen.add(key);
-        out.push({ id: uid(), type: d.type, label: tr ? d.tr : d.en, value: v, checked: true });
-      }
-    }
-    return out;
+    return detectSensitiveByRegex(text, tr).map((d) => ({ ...d, id: uid(), checked: true }));
   }
 
   // Araçlar arası aktarım: dışarıdan (Taramalarım) gelen PDF'i bir kez yükle.
@@ -149,6 +143,16 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
 
   const selectedCount = items.filter((i) => i.checked).length;
   const allChecked = items.length > 0 && items.every((i) => i.checked);
+  /** Etikete göre gruplanmış öğeler — kategori bazlı toplu seçim için. */
+  const groupedItems = useMemo(() => {
+    const map = new Map<string, Item[]>();
+    for (const i of items) {
+      const list = map.get(i.label);
+      if (list) list.push(i);
+      else map.set(i.label, [i]);
+    }
+    return [...map.entries()].map(([label, list]) => ({ label, items: list }));
+  }, [items]);
 
   return (
     <div className="mx-auto w-full max-w-3xl text-left">
@@ -195,6 +199,7 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
             <button type="button" onClick={download} className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:brightness-110"><Download className="h-4 w-4" />{tr ? "İndir" : "Download"}</button>
             <button type="button" onClick={() => { setResult(null); setFile(null); setItems([]); setDocText(""); setAiDone(false); }} className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]">{tr ? "Yeni belge" : "New document"}</button>
           </div>
+          <ToolRating toolSlug="hassas-veri-gizle" language={language} />
         </div>
       ) : (
         <>
@@ -228,14 +233,41 @@ export function AiRedactTool({ language, accessToken, onLogin, onUpgrade, coming
                     <span className="text-[12px] font-semibold text-slate-300">{items.length} {tr ? "hassas öğe bulundu" : "sensitive items"} · {selectedCount} {tr ? "seçili" : "selected"}</span>
                     <button type="button" onClick={() => setItems((p) => p.map((i) => ({ ...i, checked: !allChecked })))} className="text-[12px] font-semibold text-fuchsia-300 hover:text-fuchsia-200">{allChecked ? (tr ? "Hiçbirini seçme" : "Deselect all") : (tr ? "Tümünü seç" : "Select all")}</button>
                   </div>
-                  <ul className="max-h-[40vh] space-y-1.5 overflow-y-auto">
-                    {items.map((i) => (
-                      <li key={i.id}>
-                        <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 transition hover:bg-white/[0.04]">
-                          <input type="checkbox" checked={i.checked} onChange={() => setItems((p) => p.map((x) => (x.id === i.id ? { ...x, checked: !x.checked } : x)))} className="h-4 w-4 accent-fuchsia-500" />
-                          <span className="rounded-md bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-bold text-fuchsia-200">{i.label}</span>
-                          <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-slate-200">{i.value}</span>
+                  {/* Kategoriye göre grupla: tespit kapsamı genişledikçe düz liste
+                      kullanışsız kalıyor. Başlıktaki kutu o türün TAMAMINI seçer —
+                      "adresleri gizle ama tarihleri bırak" gibi kararlar tek tıkla. */}
+                  <ul className="max-h-[40vh] space-y-3 overflow-y-auto">
+                    {groupedItems.map((g) => (
+                      <li key={g.label}>
+                        <label className="mb-1 flex cursor-pointer items-center gap-2 px-1">
+                          <input
+                            type="checkbox"
+                            checked={g.items.every((i) => i.checked)}
+                            ref={(el) => {
+                              if (el) el.indeterminate = g.items.some((i) => i.checked) && !g.items.every((i) => i.checked);
+                            }}
+                            onChange={() => {
+                              const turnOn = !g.items.every((i) => i.checked);
+                              const ids = new Set(g.items.map((i) => i.id));
+                              setItems((p) => p.map((x) => (ids.has(x.id) ? { ...x, checked: turnOn } : x)));
+                            }}
+                            className="h-4 w-4 accent-fuchsia-500"
+                          />
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-fuchsia-300">{g.label}</span>
+                          <span className="text-[11px] text-slate-400">
+                            {g.items.filter((i) => i.checked).length}/{g.items.length}
+                          </span>
                         </label>
+                        <ul className="space-y-1.5">
+                          {g.items.map((i) => (
+                            <li key={i.id}>
+                              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-3 py-2 transition hover:bg-white/[0.04]">
+                                <input type="checkbox" checked={i.checked} onChange={() => setItems((p) => p.map((x) => (x.id === i.id ? { ...x, checked: !x.checked } : x)))} className="h-4 w-4 accent-fuchsia-500" />
+                                <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-slate-200">{i.value}</span>
+                              </label>
+                            </li>
+                          ))}
+                        </ul>
                       </li>
                     ))}
                   </ul>

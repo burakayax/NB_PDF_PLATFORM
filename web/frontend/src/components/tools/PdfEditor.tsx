@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
-// eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
   AlignCenter,
@@ -28,7 +29,6 @@ import {
   Trash2,
   Type,
   Underline,
-  UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
@@ -171,7 +171,6 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
   const [ocrBusy, setOcrBusy] = useState(false);
   const [ocrTried, setOcrTried] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   // Sonuç sunucuda saklanır; blob İLK indirmede (günlük limit düşerek) alınır ve
   // önbelleğe konur → sonraki aç/paylaş tekrar limit düşmez.
@@ -217,7 +216,6 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const pageEls = analysis?.pages[current]?.elements ?? [];
@@ -904,20 +902,22 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
           {limitMsg && (
             <p className="mx-auto mt-5 max-w-md rounded-xl border border-amber-400/30 bg-amber-500/[0.08] px-4 py-3 text-[13px] text-amber-200">{limitMsg}</p>
           )}
+          <ToolRating toolSlug="pdf-duzenle" language={language} />
         </div>
       ) : !file ? (
-        <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(e) => { e.preventDefault(); setDragOver(false); void pickFile(e.dataTransfer.files[0]); }} onClick={() => inputRef.current?.click()}
-          className={`group cursor-pointer overflow-hidden rounded-3xl border-2 border-dashed p-12 text-center transition ${dragOver ? "border-cyan-400/70 bg-cyan-400/[0.07]" : "border-white/15 bg-gradient-to-b from-white/[0.03] to-transparent hover:border-cyan-400/40 hover:bg-white/[0.04]"}`}>
-          <input ref={inputRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => { void pickFile(e.target.files?.[0]); e.target.value = ""; }} />
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-white/10 transition group-hover:scale-105"><UploadCloud className="h-9 w-9" /></div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "Düzenlemek için PDF'i sürükle veya seç" : "Drag or choose a PDF to edit"}</p>
-          <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}</p>
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
+            accept="application/pdf,.pdf"
+            note={tr ? "Tam ekran editör açılır — sol sayfalar, sağ düzenleme." : "A full-screen editor opens — pages on the left, editing on the right."}
+            onFiles={(files) => { void pickFile(files[0]); }}
+          />
         </div>
       ) : (
         <div>
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/12 text-cyan-300"><FileText className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-100">{file.name}</p><p className="text-[11px] text-slate-500">{editCount > 0 ? (tr ? `${editCount} düzenleme · hazır` : `${editCount} edits · ready`) : (tr ? "Henüz düzenleme yok" : "No edits yet")}</p></div>
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-100">{file.name}</p><p className="text-[11px] text-slate-400">{editCount > 0 ? (tr ? `${editCount} düzenleme · hazır` : `${editCount} edits · ready`) : (tr ? "Henüz düzenleme yok" : "No edits yet")}</p></div>
             <button type="button" onClick={() => setEditorOpen(true)} className="shrink-0 rounded-lg border border-cyan-400/30 px-3 py-1.5 text-[12px] font-semibold text-cyan-200 transition hover:bg-cyan-500/10">{tr ? "Düzenle" : "Edit"}</button>
             <button type="button" onClick={reset} className="shrink-0 rounded-lg px-2.5 py-1.5 text-[12px] font-semibold text-slate-400 transition hover:bg-white/[0.06] hover:text-white">{tr ? "Yeni" : "New"}</button>
           </div>
@@ -1021,8 +1021,8 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
               {Array.from({ length: pageCount }).map((_, i) => (
                 <button key={i} type="button" onClick={() => { setCurrent(i); setSelected(null); }}
                   className={`mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}>
-                  {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>}
-                  <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-500"}`}>{i + 1}</span>
+                  {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
+                  <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
                 </button>
               ))}
             </div>
@@ -1186,7 +1186,7 @@ export function PdfEditor({ language, accessToken, initialFile }: { language: La
                   })}
                 </div>
               </div>
-              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele tıkla → «Sil». «Metin Ekle» / «Resim Ekle» ile yeni öğe (resmi köşeden boyutlandır, üstten döndür). Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete». «Add Text» / «Add Image» for new items (resize an image from the corner, rotate from the top). «Done» → «Prepare PDF»."}</p>
+              <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-400">{tr ? "Yazıya tıkla → değiştir; renk/boyut üstte. Görsele tıkla → «Sil». «Metin Ekle» / «Resim Ekle» ile yeni öğe (resmi köşeden boyutlandır, üstten döndür). Bitince «Tamam» → «PDF'i Hazırla»." : "Click text → edit; color/size on top. Click an image → «Delete». «Add Text» / «Add Image» for new items (resize an image from the corner, rotate from the top). «Done» → «Prepare PDF»."}</p>
               <p className="mx-auto mt-1.5 max-w-lg text-center text-[11px] text-amber-300/70">{tr ? "Not: Bir yazıyı düzenlerken beliren kapatma kutusu üst/alt çizgilere taşabilir — bu yalnızca önizlemedir; indirdiğiniz PDF'te o çizgiler korunur." : "Note: while editing a line, the cover box may overlap the lines above/below — this is preview only; those lines are kept in the downloaded PDF."}</p>
             </div>
           </div>

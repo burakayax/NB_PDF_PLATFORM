@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { getToolSeo } from "../../seo/seoContent.mjs";
+import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 import type { Language } from "../../i18n/landing";
 
 type ToolPublicLandingProps = {
@@ -65,6 +67,10 @@ export function ToolPublicLanding({
         <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-5xl">
           {seo.h1}
         </h1>
+        {/* Puan satırı başlığın hemen altında: hem kullanıcı oyunu buradan
+            güncelleyebilir hem de yıldızlar sayfada GÖRÜNÜR olur — arama
+            sonucunda yıldız çıkarmanın ön koşulu bu. */}
+        <ToolScore slug={slug} language={language} className="mt-4" />
         <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-400 sm:text-lg">
           {seo.intro}
         </p>
@@ -77,12 +83,14 @@ export function ToolPublicLanding({
           >
             {tr ? "Ücretsiz Kullan →" : "Use it free →"}
           </button>
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate-400">
             {tr
               ? "Kurulum yok · kart gerekmez"
               : "No install · no card required"}
           </span>
         </div>
+
+        <ToolHowTo slug={slug} language={language} className="mt-10" />
 
         {/* SSS — prerender ile aynı içerik */}
         {seo.faq.length > 0 && (
@@ -111,7 +119,7 @@ export function ToolPublicLanding({
                       <span className="text-sm font-semibold text-slate-200">
                         {item.q}
                       </span>
-                      <span className="shrink-0 text-slate-500">
+                      <span className="shrink-0 text-slate-400">
                         {isOpen ? "−" : "+"}
                       </span>
                     </button>

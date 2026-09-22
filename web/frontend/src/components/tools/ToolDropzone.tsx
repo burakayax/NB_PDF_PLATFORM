@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Zap,
   Lock,
+  Infinity as InfinityIcon,
   Loader2,
   UploadCloud,
   type LucideIcon,
@@ -194,14 +195,23 @@ export function ToolDropzone({
             <p className="relative mt-1.5 text-[13px] text-slate-400">
               {tr ? (hintTr ?? "ya da tıklayıp seç") : (hintEn ?? "or click to choose")}
             </p>
-            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-medium text-slate-400">
+            <div className="relative mt-6 flex flex-wrap items-center justify-center gap-2 text-[11px] font-semibold text-slate-400">
               {[
-                tr ? "⚡ Saniyeler içinde" : "⚡ In seconds",
-                tr ? "🔒 Cihazında, gizli" : "🔒 On-device, private",
-                tr ? "♾️ Sınırsız & ücretsiz" : "♾️ Unlimited & free",
-              ].map((c) => (
-                <span key={c} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{c}</span>
-              ))}
+                { Icon: Zap, tr: "Saniyeler içinde", en: "In seconds" },
+                { Icon: Lock, tr: "Cihazında, gizli", en: "On-device, private" },
+                { Icon: InfinityIcon, tr: "Sınırsız & ücretsiz", en: "Unlimited & free" },
+              ].map((c) => {
+                const ChipIcon = c.Icon;
+                return (
+                  <span
+                    key={c.en}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5"
+                  >
+                    <ChipIcon className="h-3 w-3 text-slate-400" />
+                    {tr ? c.tr : c.en}
+                  </span>
+                );
+              })}
             </div>
           </>
         )}

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, FileOutput, Minimize2, ScanSearch, CreditCard, Zap } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { trackGAEvent } from "../../lib/analytics";
+import { isPaidPlan, useCurrentPlan } from "../../lib/currentPlan";
 
 /**
  * "Değer-anı" upsell kartı — kullanıcı ücretsiz bir işlemi BAŞARIYLA bitirdiğinde
@@ -34,10 +35,33 @@ type Props = { language: Language; source?: string };
 
 export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
   const tr = language === "tr";
+  const planState = useCurrentPlan();
   const [hidden, setHidden] = useState(() => isSnoozed());
-  if (hidden) return null;
+
+  // Ücretli abone (ve ekip üyesi) bu daveti HİÇBİR araçta görmez — zaten üye,
+  // "bunu ücretsiz yaptın" mesajı yanlış ve rahatsız edici olur.
+  const gosterilir = !isPaidPlan(planState) && !hidden;
+
+  /**
+   * GÖSTERİM ÖLÇÜMÜ.
+   *
+   * Kart yalnızca TIKLAMAYI bildiriyordu. Tıklama tek başına işe yaramaz: kaç
+   * kişiye gösterildiği bilinmeden "kimse görmüyor" ile "herkes görüyor ama
+   * ilgilenmiyor" ayırt edilemez — ve bu ikisinin çözümü birbirinin zıddıdır
+   * (biri gösterim mantığını, diğeri teklifin kendisini düzeltmeyi gerektirir).
+   * Gösterim bir kez bildirilir; her yeniden çizimde değil.
+   */
+  const bildirildiRef = useRef(false);
+  useEffect(() => {
+    if (!gosterilir || bildirildiRef.current) return;
+    bildirildiRef.current = true;
+    trackGAEvent("sign_up_cta_shown", { source });
+  }, [gosterilir, source]);
+
+  if (!gosterilir) return null;
 
   const dismiss = () => {
+    trackGAEvent("sign_up_cta_dismissed", { source });
     try {
       localStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_MS));
     } catch {
@@ -60,7 +84,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         type="button"
         onClick={dismiss}
         aria-label={tr ? "Kapat" : "Dismiss"}
-        className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-500 transition hover:bg-white/[0.06] hover:text-slate-300"
+        className="absolute right-2.5 top-2.5 rounded-lg p-1 text-slate-400 transition hover:bg-white/[0.06] hover:text-slate-300"
       >
         <X className="h-4 w-4" />
       </button>
@@ -104,7 +128,7 @@ export function ValueMomentNudge({ language, source = "value_nudge" }: Props) {
         <Zap className="h-4 w-4" />
         {tr ? "Ücretsiz hesap aç" : "Create free account"}
       </a>
-      <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-500">
+      <p className="mt-2 flex items-center justify-center gap-1.5 text-[11.5px] text-slate-400">
         <CreditCard className="h-3.5 w-3.5" />
         {tr ? "Kart gerekmez · 30 saniyede · dilediğin an iptal" : "No card · 30 seconds · cancel anytime"}
       </p>

@@ -29,10 +29,9 @@ import {
   inspectPdf,
   MergeJobNotFoundError,
   postToolToResult,
+  startToolJob,
+  waitForToolJob,
   requestMergeJobCancel,
-  hasPendingSaveHandle,
-  saveBlobToUser,
-  setPendingSaveHandle,
   showSavePickerTypesFor,
   type MergeJobStatus,
 } from "./api";
@@ -42,9 +41,10 @@ import { ApiKeysPanel } from "./components/dashboard/ApiKeysPanel";
 import { CookieNotice } from "./components/common/CookieNotice";
 import { AppToast, AUTO_DISMISS_MS } from "./components/common/AppToast";
 import { ShareResultDialog } from "./components/common/ShareResultDialog";
+import { ToolResultPanel } from "./components/common/ToolResultPanel";
+import { ToolScore } from "./components/common/ToolScore";
 import {
   canShareFile,
-  isShareApiAvailable,
   shareFileWithPromo,
 } from "./lib/shareFile";
 import {
@@ -65,7 +65,6 @@ const GatedResultPreviewModal = lazyWithRetry(() =>
     default: module.GatedResultPreviewModal,
   })),
 );
-import { SaasGatedPreview } from "./components/SaasGatedPreview";
 import { SystemNotificationBanner } from "./components/common/SystemNotificationBanner";
 import type { SaaSGating } from "./lib/saasGating";
 import {
@@ -101,8 +100,6 @@ import {
 } from "./api/entitlement";
 import {
   confirmFakeCheckout,
-  PAYMENT_CHECKOUT_NOT_FOUND,
-  resolveFakePaymentRedirect,
 } from "./api/fakePayment";
 import { trackGAEvent } from "./lib/analytics";
 import { ToolPublicLanding } from "./components/tools/ToolPublicLanding";
@@ -111,18 +108,10 @@ import { GuestSeoToolPage } from "./components/tools/GuestSeoToolPage";
 import { GuestPageTool, type PageToolId } from "./components/tools/GuestPageTool";
 import { DocumentScannerLaunch } from "./components/tools/DocumentScannerLaunch";
 import { PdfHub } from "./components/tools/PdfHub";
-import { saveScannedPdf, takeScannedPdf, takeScanForAccount } from "./lib/pendingScan";
+import { clearScannedPdf, peekScannedPdf, saveScannedPdf, takeScanForAccount } from "./lib/pendingScan";
 import { uploadScanToLibrary } from "./api/scans";
 import { getToolSeo } from "./seo/seoContent.mjs";
 import {
-  mergePdfs,
-  imagesToPdf,
-  rotatePdf,
-  deletePages,
-  reorderPages,
-  splitPagesToZip,
-  pdfBytesToBlob,
-  zipBytesToBlob,
   PdfEncryptedError,
 } from "./lib/clientPdfWorker";
 import {
@@ -160,7 +149,10 @@ import { useAnalyticsTracking } from "./hooks/useAnalyticsTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import { useAuthSession } from "./hooks/useAuthSession";
 import { useSettings } from "./hooks/useSettings";
-import { friendlyOperationFailedMessage } from "./lib/userFacingErrors";
+import {
+  friendlyOperationFailedMessage,
+  toolFailureNotice,
+} from "./lib/userFacingErrors";
 import { useCookieConsent } from "./hooks/useCookieConsent";
 import { initSentry } from "./lib/sentry";
 import { useErrorLogging } from "./hooks/useErrorLogging";
@@ -169,10 +161,10 @@ import {
   stripLangPrefix,
   withLangPrefix,
 } from "./hooks/usePreferredLanguage";
-import { sanitizeDownloadBasename } from "./lib/sanitizeDownloadBasename";
 import {
   allowedExtensionsFromAccept,
   allowedExtensionsLabel,
+  fileExtension,
   partitionByAllowedExtensions,
 } from "./lib/fileTypes";
 import { isLimitsizProUnlimited } from "./lib/workspaceEntitlements";
@@ -183,6 +175,9 @@ import {
 } from "./lib/oauthRedirect";
 import { readMaintenanceHint } from "./lib/maintenanceHint";
 import { parseWorkspaceToolPath, toolSlugForFeature } from "./lib/toolRoutes";
+import { setCurrentPlan } from "./lib/currentPlan";
+import { QuotaMeter } from "./components/workspace/QuotaMeter";
+import { ToolHowTo } from "./components/common/ToolHowTo";
 import {
   persistWorkspaceTool,
   readInitialWorkspaceToolSelection,
@@ -190,28 +185,72 @@ import {
   clearPdfWorkspaceSplitDraftsFromLocalStorage,
   clearWorkspaceSessionStoragePrefixes,
 } from "./lib/workspaceToolSelection";
+import {
+  BACKGROUND_JOB_TOOLS,
+  CHAIN_SUGGESTIONS,
+  CHAIN_BY_OUTPUT_EXT,
+  fileExt,
+  CHAIN_FALLBACK,
+} from "./lib/toolChaining";
+import {
+  workspacePathForFeature,
+  MERGE_JOB_PENDING_ID,
+  MERGE_WATCHDOG_MS,
+  PDF_INSPECT_TIMEOUT_MS,
+  TOOL_PIPELINE_WATCHDOG_MS,
+  withPdfInspectTimeout,
+  getTrackedViewName,
+  getTrackedPath,
+  getInitialViewFromLocation,
+  isFullPageSeoToolPath,
+  SPECIAL_TOOL_PANELS,
+  AI_TOOL_MODES,
+  hasInAppPanelForSeoSlug,
+  currentToolSlugFromUrl,
+  savePendingTool,
+  readPendingToolAndClear,
+  clearPendingTool,
+} from "./lib/appNavigation";
+import type {
+  AppView,
+  ContentPanel,
+  LegalView,
+  NonLegalView,
+  ToastType,
+} from "./lib/appViews";
+import {
+  formatFileSize,
+  compressGainPercentRange,
+  COMPRESS_TEXT_HEAVY_RATIO,
+} from "./components/workspace/toolProgressUi";
+import {
+  createUploadItems,
+  isUserAbortError,
+  mergePointerYToIndex,
+  getReorderPreviewOffset,
+} from "./lib/workspaceHelpers";
+import {
+  EmptyState,
+} from "./components/workspace/EmptyState";
+import { GenericToolProgressBar } from "./components/workspace/GenericToolProgressBar";
+import { MergeProgressBar } from "./components/workspace/MergeProgressBar";
+import {
+  ToolSuccessBar,
+  type ToolProgressSuccessState,
+} from "./components/workspace/ToolSuccessBar";
+import { inspectUploadItems } from "./lib/uploadInspection";
+import {
+  buildToolFormData,
+  buildBatchFormData,
+} from "./lib/toolFormData";
+import { runClientPdfTool } from "./lib/clientToolRun";
+import { reportTeamActivity } from "./lib/teamActivity";
+import { checkToolSubmission } from "./lib/toolSubmissionCheck";
+import { readAccessToken } from "./lib/accessTokenStore";
 
 /** Geçici GA testi: çerez bildirimi ve consent beklemeden gtag/sunucu analitiği çalışır (bakım sayfası dahil). Doğrulama sonrası false yapın. */
 const GA_TEST_BYPASS_COOKIE_CONSENT = false;
 
-type NonLegalView =
-  | "landing"
-  | "login"
-  | "register"
-  | "forgot_password"
-  | "web"
-  | "admin"
-  | "admin_login"
-  | "team_invite"
-  | "about";
-type LegalView =
-  | "terms"
-  | "privacy"
-  | "kvkk"
-  | "on-bilgilendirme"
-  | "mesafeli-satis";
-type AppView = NonLegalView | LegalView;
-type ToastType = "success" | "error" | "loading" | "info";
 
 const AdminPanel = lazyWithRetry(() =>
   import("./admin/AdminPanel").then((module) => ({
@@ -284,6 +323,18 @@ const AiRedactTool = lazyWithRetry(() =>
 const PdfEditor = lazyWithRetry(() =>
   import("./components/tools/PdfEditor").then((m) => ({ default: m.PdfEditor })),
 );
+const PdfFormFill = lazyWithRetry(() =>
+  import("./components/tools/PdfFormFill").then((m) => ({ default: m.PdfFormFill })),
+);
+const PdfMetadataTool = lazyWithRetry(() =>
+  import("./components/tools/PdfMetadataTool").then((m) => ({ default: m.PdfMetadataTool })),
+);
+const PdfLayoutTool = lazyWithRetry(() =>
+  import("./components/tools/PdfLayoutTool").then((m) => ({ default: m.PdfLayoutTool })),
+);
+const SignatureRequestTool = lazyWithRetry(() =>
+  import("./components/tools/SignatureRequestTool").then((m) => ({ default: m.SignatureRequestTool })),
+);
 const PdfSign = lazyWithRetry(() =>
   import("./components/tools/PdfSign").then((m) => ({ default: m.PdfSign })),
 );
@@ -299,6 +350,12 @@ const DocumentScanner = lazyWithRetry(() =>
 );
 const PdfCropTool = lazyWithRetry(() =>
   import("./components/tools/PdfCropTool").then((m) => ({ default: m.PdfCropTool })),
+);
+const PdfSnipTool = lazyWithRetry(() =>
+  import("./components/tools/PdfSnipTool").then((m) => ({ default: m.PdfSnipTool })),
+);
+const ImageResizeTool = lazyWithRetry(() =>
+  import("./components/tools/ImageResizeTool").then((m) => ({ default: m.ImageResizeTool })),
 );
 const ImageCompressTool = lazyWithRetry(() =>
   import("./components/tools/ImageCompressTool").then((m) => ({ default: m.ImageCompressTool })),
@@ -316,23 +373,6 @@ const ApiDocsPage = lazyWithRetry(() =>
   import("./components/ApiDocsPage").then((m) => ({ default: m.ApiDocsPage })),
 );
 
-type ContentPanel =
-  | "tool"
-  | "subscription"
-  | "profile"
-  | "pricing"
-  | "home"
-  | "team"
-  | "ai"
-  | "editor"
-  | "sign"
-  | "annotate"
-  | "crop"
-  | "compress-image"
-  | "searchable"
-  | "scanner"
-  | "scans"
-  | "api";
 
 type ToastState = {
   /** Artan kimlik: her showToast'ta değişir → AppToast remount olup ilerleme çizgisi sıfırlanır. */
@@ -349,6 +389,8 @@ type UploadItem = {
   inspecting: boolean;
   password: string;
   pageCount: number | null;
+  /** Dosyanın görüntü olan oranı (0-1); sıkıştırma beklentisi buradan hesaplanır. */
+  imageRatio: number | null;
   /** Birleştirme: şifreli dosyada parola sunucuda doğrulandı mı */
   mergePasswordVerified: boolean;
   /** Dosya bozuk, boş veya geçerli bir PDF değil */
@@ -392,608 +434,14 @@ const pdfInspectionFeatures: FeatureId[] = [
   "pdf-to-image",
   "pdf-to-text",
   "flatten-pdf",
+  "pdf-to-pdfa",
   "extract-images",
 ];
 
-function EmptyStateIllustration() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-      />
-    </svg>
-  );
-}
 
-function EmptyState({
-  title,
-  hint,
-  compact = false,
-}: {
-  title: string;
-  hint: string;
-  compact?: boolean;
-}) {
-  return (
-    <div
-      className={`nb-empty-state${compact ? " nb-empty-state--compact" : ""}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div className="nb-empty-state__icon">
-        <EmptyStateIllustration />
-      </div>
-      <p className="nb-empty-state__title">{title}</p>
-      <p className="nb-empty-state__hint">{hint}</p>
-    </div>
-  );
-}
 
-function formatFileSize(bytes: number): string {
-  const n = Math.max(0, bytes);
-  if (n < 1024) return `${n} B`;
-  const kb = n / 1024;
-  if (kb < 1024) return `${kb < 10 ? kb.toFixed(1) : Math.round(kb)} KB`;
-  const mb = kb / 1024;
-  if (mb < 1024) return `${mb < 10 ? mb.toFixed(1) : Math.round(mb)} MB`;
-  const gb = mb / 1024;
-  return `${gb.toFixed(1)} GB`;
-}
 
-/** UI-only heuristic for typical PDF recompression bands (not a server guarantee). */
-function compressEstimateMBRange(bytes: number): {
-  min: number;
-  max: number;
-} {
-  const mb = bytes / (1024 * 1024);
-  // Tahmini sıkıştırılmış boyut aralığı (min = en agresif, max = otomatik)
-  if (bytes < 80 * 1024)
-    return { min: +(mb * 0.05).toFixed(2), max: +(mb * 0.2).toFixed(2) };
-  if (bytes < 512 * 1024)
-    return { min: +(mb * 0.1).toFixed(2), max: +(mb * 0.3).toFixed(2) };
-  if (bytes < 5 * 1024 * 1024)
-    return { min: +(mb * 0.15).toFixed(2), max: +(mb * 0.4).toFixed(2) };
-  return { min: +(mb * 0.2).toFixed(2), max: +(mb * 0.5).toFixed(2) };
-}
 
-function genericToolPhaseLabel(
-  featureId: FeatureId,
-  percent: number,
-  indeterminate: boolean,
-  W: ReturnType<typeof ws>,
-  standardLanePhase: boolean,
-): string {
-  if (standardLanePhase) {
-    if (indeterminate) {
-      return W.toolProgressPhaseQueueFree;
-    }
-    if (percent < 22) {
-      return W.toolProgressPhaseHandoff;
-    }
-  }
-  if (indeterminate) {
-    return W.toolProgressPhaseAnalyzing;
-  }
-  if (percent < 30) {
-    return W.toolProgressPhaseAnalyzing;
-  }
-  if (percent < 82) {
-    if (featureId === "compress") {
-      return W.toolProgressPhaseCompressing;
-    }
-    return W.toolProgressPhaseProcessing;
-  }
-  return W.toolProgressPhaseFinishing;
-}
-
-function UpgradeNudgeInline({
-  tier,
-  W,
-  onContinueFree,
-  onUpgrade,
-}: {
-  tier: 1 | 2 | 3;
-  W: ReturnType<typeof ws>;
-  onContinueFree: () => void;
-  onUpgrade: () => void;
-}) {
-  return (
-    <div
-      className="mt-3 rounded-xl border border-cyan-500/25 bg-gradient-to-br from-cyan-950/45 to-nb-bg-elevated/35 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-      role="region"
-      aria-label={W.upgradeNudgeAria}
-    >
-      <p className="text-[12px] font-medium leading-relaxed text-cyan-100/90">
-        {W.upgradeNudgeTierBody(tier)}
-      </p>
-      <div className="mt-2.5 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className="nb-transition rounded-lg border border-white/12 bg-white/[0.06] px-2.5 py-1.5 text-[11px] font-semibold text-nb-muted hover:border-cyan-500/35 hover:bg-cyan-500/10 hover:text-cyan-100"
-          onClick={onContinueFree}
-        >
-          {W.upgradeNudgeContinueFree}
-        </button>
-        <button
-          type="button"
-          className="nb-transition rounded-lg border border-cyan-400/40 bg-cyan-500/12 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-cyan-50 hover:bg-cyan-500/22"
-          onClick={onUpgrade}
-        >
-          {W.upgradeNudgeUpgradeInstant}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function mergeToolPhaseLabel(
-  job: MergeJobStatus,
-  indeterminate: boolean,
-  W: ReturnType<typeof ws>,
-): string {
-  if (job.status === "failed" || job.status === "cancelled") {
-    return "";
-  }
-  if (indeterminate) {
-    return W.toolProgressPhaseAnalyzing;
-  }
-  const p = job.percent;
-  if (p < 32) {
-    return W.toolProgressPhaseAnalyzing;
-  }
-  if (p < 78) {
-    return W.toolProgressPhaseMerging;
-  }
-  return W.toolProgressPhaseFinishing;
-}
-
-/**
- * Araç zincirleme — bir araç PDF çıktısı ürettiğinde önerilecek MANTIKLI sonraki
- * araçlar. Ters/gereksiz çiftler (pdf→word sonrası word→pdf gibi) ve çıktısı PDF
- * olmayan araçlar (pdf-to-word/excel/ppt/image/text) bilinçli olarak dışlanır.
- * Öneriler yalnızca PDF-girdili workspace araçlarıdır; her biri "kaydetme yeri sor"
- * dahil normal boru hattından geçer.
- */
-// Her araç için "ilgili sonraki araç" havuzu. Sıra öncelik belirtir; önce
-// yapısal (çoğu bağlamda görünür) araçlar, sonra server-side olanlar gelir ki
-// bazı araçlar gizli/kilitli olsa bile eleme sonrası 2-3 öneri kalabilsin.
-// Ters/anlamsız dönüşüm zincirleri (pdf→excel→pdf gibi) kasıtla dışarıda.
-const CHAIN_SUGGESTIONS: Partial<Record<FeatureId, FeatureId[]>> = {
-  merge: ["organize-pdf", "split", "rotate-pdf", "compress", "page-numbers", "watermark"],
-  split: ["merge", "organize-pdf", "rotate-pdf", "compress", "watermark", "page-numbers"],
-  compress: ["merge", "organize-pdf", "page-numbers", "watermark", "split", "encrypt"],
-  "rotate-pdf": ["organize-pdf", "delete-pages", "merge", "compress", "page-numbers", "watermark"],
-  "delete-pages": ["organize-pdf", "rotate-pdf", "merge", "compress", "page-numbers", "split"],
-  "organize-pdf": ["delete-pages", "rotate-pdf", "merge", "page-numbers", "compress", "watermark"],
-  watermark: ["compress", "page-numbers", "merge", "organize-pdf", "encrypt"],
-  "page-numbers": ["compress", "watermark", "merge", "organize-pdf", "encrypt"],
-  "repair-pdf": ["compress", "organize-pdf", "merge", "page-numbers", "watermark"],
-  "unlock-pdf": ["compress", "watermark", "page-numbers", "merge", "organize-pdf", "encrypt"],
-  "flatten-pdf": ["compress", "page-numbers", "watermark", "merge", "encrypt"],
-  "image-to-pdf": ["merge", "organize-pdf", "rotate-pdf", "compress", "page-numbers", "watermark"],
-  "word-to-pdf": ["compress", "merge", "watermark", "page-numbers", "encrypt"],
-  "excel-to-pdf": ["compress", "merge", "watermark", "page-numbers"],
-  "ppt-to-pdf": ["compress", "merge", "watermark", "page-numbers"],
-  "html-to-pdf": ["compress", "page-numbers", "watermark", "merge"],
-  // encrypt → çıktı şifreli (zincir parola ister) → öneri yok.
-  // pdf-to-word/excel/ppt/image/text → çıktı PDF değil → zincirleme yok.
-};
-
-// Zincirleme başlığında kullanılan "işlem sonucu" dosya adı — kullanıcı bunun
-// yüklediği orijinal değil, az önce OLUŞTURDUĞU dosya olduğunu anlasın diye.
-const CHAIN_RESULT_NOUN: Partial<Record<FeatureId, { tr: string; en: string }>> = {
-  merge: { tr: "Birleştirdiğiniz PDF", en: "merged PDF" },
-  split: { tr: "Ayırdığınız PDF", en: "split PDF" },
-  compress: { tr: "Sıkıştırdığınız PDF", en: "compressed PDF" },
-  "rotate-pdf": { tr: "Döndürdüğünüz PDF", en: "rotated PDF" },
-  "delete-pages": { tr: "Düzenlediğiniz PDF", en: "edited PDF" },
-  "organize-pdf": { tr: "Sıraladığınız PDF", en: "reordered PDF" },
-  watermark: { tr: "Filigran eklediğiniz PDF", en: "watermarked PDF" },
-  "page-numbers": { tr: "Numaralandırdığınız PDF", en: "numbered PDF" },
-  "repair-pdf": { tr: "Onardığınız PDF", en: "repaired PDF" },
-  "unlock-pdf": { tr: "Şifresini çözdüğünüz PDF", en: "unlocked PDF" },
-  "flatten-pdf": { tr: "Düzleştirdiğiniz PDF", en: "flattened PDF" },
-  "image-to-pdf": { tr: "Oluşturduğunuz PDF", en: "new PDF" },
-  "word-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
-  "excel-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
-  "ppt-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
-  "html-to-pdf": { tr: "Oluşturduğunuz PDF", en: "converted PDF" },
-};
-
-// Öneri havuzu (yukarıdaki liste) eleme sonrası 3'ün altında kalırsa buradan
-// tamamlanır. Yalnızca PDF GİRDİ alıp PDF ÇIKTI veren araçlar (popülerlik sırası)
-// — böylece "3 öneri" hedefi her bağlamda garanti altına alınır.
-const CHAIN_FALLBACK: FeatureId[] = [
-  "compress",
-  "merge",
-  "organize-pdf",
-  "rotate-pdf",
-  "page-numbers",
-  "watermark",
-  "split",
-  "delete-pages",
-  "encrypt",
-  "unlock-pdf",
-  "flatten-pdf",
-  "repair-pdf",
-];
-
-function createUploadItems(fileList: File[]) {
-  // Tarayıcı File listesini arayüz state modeline çevirir; her öğeye kararlı id ve şifre alanı ekler.
-  // Birleştirme sırası ve liste render'ı bu yapı üzerinden yürüdüğünden tutarlı şema gereklidir.
-  // Id üretimi zayıflarsa React anahtarları çakışır; sürükle-bırak ve güncelleme davranışı bozulabilir.
-  return fileList.map((file) => ({
-    id: `${file.name}-${file.size}-${Math.random().toString(36).slice(2, 8)}`,
-    file,
-    encrypted: false,
-    inspecting: false,
-    password: "",
-    pageCount: null,
-    mergePasswordVerified: false,
-    corrupt: false,
-  }));
-}
-
-function formatElapsed(seconds: number) {
-  const total = Math.max(0, seconds);
-  const minutes = Math.floor(total / 60);
-  const remainder = total % 60;
-  return `${minutes}:${String(remainder).padStart(2, "0")}`;
-}
-
-function isUserAbortError(e: unknown): boolean {
-  if (e instanceof DOMException && e.name === "AbortError") {
-    return true;
-  }
-  if (e instanceof Error && e.name === "AbortError") {
-    return true;
-  }
-  return false;
-}
-
-/** Birleştirme listesinde imleç Y konumuna göre hedef satır indeksi (yer değiştirme önizlemesi için). */
-function mergePointerYToIndex(
-  clientY: number,
-  container: HTMLElement | null,
-): number {
-  if (!container) {
-    return 0;
-  }
-  const cards = [
-    ...container.querySelectorAll("[data-merge-row-index]"),
-  ] as HTMLElement[];
-  if (cards.length === 0) {
-    return 0;
-  }
-  for (let i = 0; i < cards.length; i++) {
-    const br = cards[i].getBoundingClientRect();
-    if (clientY >= br.top && clientY <= br.bottom) {
-      return i;
-    }
-  }
-  const first = cards[0].getBoundingClientRect();
-  if (clientY < first.top) {
-    return 0;
-  }
-  const last = cards[cards.length - 1].getBoundingClientRect();
-  if (clientY > last.bottom) {
-    return cards.length - 1;
-  }
-  let best = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < cards.length; i++) {
-    const br = cards[i].getBoundingClientRect();
-    const mid = br.top + br.height / 2;
-    const d = Math.abs(clientY - mid);
-    if (d < bestDist) {
-      bestDist = d;
-      best = i;
-    }
-  }
-  return best;
-}
-
-/** Sürüklerken diğer satırların kayarak ara açılmasını sağlar (kaynak ve hedef indeks arası). */
-function getReorderPreviewOffset(
-  index: number,
-  from: number,
-  to: number,
-  slot: number,
-): number {
-  if (from < 0 || from === to || slot <= 0) {
-    return 0;
-  }
-  if (from < to) {
-    if (index > from && index <= to) {
-      return -slot;
-    }
-  } else if (from > to) {
-    if (index >= to && index < from) {
-      return slot;
-    }
-  }
-  return 0;
-}
-
-function workspacePathForFeature(featureId: FeatureKey): string {
-  return `/tools/${toolSlugForFeature(featureId)}`;
-}
-
-/** createMergeJob yanıtı gelene kadar UI'da anında gösterilen yer tutucu iş kimliği. */
-const MERGE_JOB_PENDING_ID = "__merge_pending__";
-/** Büyük birleştirmeler (10k+ sayfa) dakikalar sürebilir; 30 sn ile iptal etmeyin. */
-const MERGE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
-/** Büyük PDF'lerde /api/inspect-pdf uzun sürebilir; 30 sn ile yükleme iptali yapmayın. */
-const PDF_INSPECT_TIMEOUT_MS = 15 * 60 * 1000;
-/** Result-store (Sayfa Sil, Split, …) sunucu işi uzun sürebilir; merge watchdog ile uyumlu üst sınır. */
-const TOOL_PIPELINE_WATCHDOG_MS = 6 * 60 * 60 * 1000;
-
-function withPdfInspectTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  if (ms <= 0) {
-    return promise;
-  }
-  return new Promise((resolve, reject) => {
-    const t = window.setTimeout(() => {
-      reject(new Error("pdf_inspect_timeout"));
-    }, ms);
-    promise.then(
-      (v) => {
-        window.clearTimeout(t);
-        resolve(v);
-      },
-      (e) => {
-        window.clearTimeout(t);
-        reject(e);
-      },
-    );
-  });
-}
-
-function getTrackedViewName(view: AppView) {
-  switch (view) {
-    case "landing":
-      return "landing";
-    case "login":
-      return "auth-login";
-    case "register":
-      return "auth-register";
-    case "admin_login":
-      return "admin-login";
-    case "forgot_password":
-      return "auth-forgot-password";
-    case "terms":
-      return "legal-terms";
-    case "privacy":
-      return "legal-privacy";
-    case "kvkk":
-      return "legal-kvkk";
-    case "on-bilgilendirme":
-      return "legal-on-bilgilendirme";
-    case "mesafeli-satis":
-      return "legal-mesafeli-satis";
-    case "web":
-      return "workspace";
-    case "admin":
-      return "admin-panel";
-    default:
-      return "landing";
-  }
-}
-
-function getTrackedPath(view: AppView) {
-  switch (view) {
-    case "landing":
-      return "/";
-    case "login":
-      return "/login";
-    case "register":
-      return "/register";
-    case "forgot_password":
-      return "/forgot-password";
-    case "terms":
-      return "/terms";
-    case "privacy":
-      return "/privacy";
-    case "kvkk":
-      return "/kvkk";
-    case "on-bilgilendirme":
-      return "/legal/on-bilgilendirme";
-    case "mesafeli-satis":
-      return "/legal/mesafeli-satis";
-    case "web":
-      return "/workspace";
-    case "admin_login":
-      return "/nbadmin";
-    case "admin":
-      return "/admin";
-    case "team_invite":
-      return "/team-invite";
-    default:
-      return "/";
-  }
-}
-
-function getInitialViewFromLocation(): AppView {
-  if (typeof window === "undefined") {
-    return "landing";
-  }
-  // /en (İngilizce alt dizin) önekini soy: /en/tools/... → /tools/... olarak
-  // eşleştir. Dilin kendisi usePreferredLanguage tarafından /en'den algılanır.
-  const rawPath =
-    stripLangPrefix(window.location.pathname.replace(/\/$/, "")) || "/";
-  if (parseWorkspaceToolPath(rawPath)) {
-    return "web";
-  }
-  // Yeni SEO araç sayfaları (AI/Editör/OCR) — FeatureKey değil ama "web" görünümü
-  // (App.tsx'teki özel handler bunları tam sayfa render eder; landing'e reset olmaz).
-  if (
-    rawPath === "/tools/pdf-ozetle" ||
-    rawPath === "/tools/pdf-sohbet" ||
-    rawPath === "/tools/pdf-duzenle" ||
-    rawPath === "/tools/pdf-imzala" ||
-    rawPath === "/tools/pdf-yorumla" ||
-    rawPath === "/tools/taranmis-pdf-ocr" ||
-    rawPath === "/tools/pdf-veri-cikar" ||
-    rawPath === "/tools/pdf-ceviri" ||
-    rawPath === "/tools/ai-toplu-islem" ||
-    rawPath === "/tools/pdf-karsilastir" ||
-    rawPath === "/tools/hassas-veri-gizle" ||
-    rawPath === "/tools/belge-tara" ||
-    rawPath === "/tools/aranabilir-pdf" ||
-    rawPath === "/tools/crop-pdf" ||
-    rawPath === "/tools/gorsel-sikistir" ||
-    rawPath === "/pdf-api" ||
-    rawPath.startsWith("/pdf-api/") ||
-    rawPath === "/blog" ||
-    rawPath.startsWith("/blog/")
-  ) {
-    return "web";
-  }
-  if (rawPath === "/login-success" || rawPath === "/login-error") {
-    return "landing";
-  }
-  switch (rawPath) {
-    case "/login":
-      return "login";
-    case "/register":
-      return "register";
-    case "/forgot-password":
-      return "forgot_password";
-    case "/terms":
-      return "terms";
-    case "/privacy":
-      return "privacy";
-    case "/kvkk":
-      return "kvkk";
-    case "/legal/on-bilgilendirme":
-      return "on-bilgilendirme";
-    case "/legal/mesafeli-satis":
-      return "mesafeli-satis";
-    case "/workspace":
-      return "web";
-    case "/nbadmin":
-      return "admin_login";
-    case "/team-invite":
-      return "team_invite";
-    case "/fake-payment/success":
-      return "web";
-    case "/admin":
-    case "/admin/dashboard":
-      return "admin";
-    default:
-      break;
-  }
-  const requestedView = new URLSearchParams(window.location.search).get("view");
-  if (
-    requestedView === "login" ||
-    requestedView === "register" ||
-    requestedView === "forgot_password" ||
-    requestedView === "web" ||
-    requestedView === "admin" ||
-    requestedView === "admin_login" ||
-    requestedView === "terms" ||
-    requestedView === "privacy" ||
-    requestedView === "kvkk" ||
-    requestedView === "on-bilgilendirme" ||
-    requestedView === "mesafeli-satis"
-  ) {
-    return requestedView;
-  }
-  return "landing";
-}
-
-/**
- * TAM SAYFA render edilen özel SEO araç sayfaları (workspace FeatureKey DEĞİL; App.tsx'teki
- * `seoSlug` dalları render eder). Bu yollarda oturum açık kullanıcıda URL /workspace'e
- * YENİDEN YAZILMAMALI (aksi halde sayfa açılıp hemen ana menüye atılır) ve misafir login'e
- * atılmamalı. getInitialViewFromLocation'daki "web" listesiyle aynı olmalı.
- */
-const FULLPAGE_SEO_TOOL_PATHS: ReadonlySet<string> = new Set([
-  "/tools/pdf-ozetle", "/tools/pdf-sohbet", "/tools/pdf-duzenle", "/tools/pdf-imzala",
-  "/tools/pdf-yorumla", "/tools/taranmis-pdf-ocr", "/tools/pdf-veri-cikar", "/tools/pdf-ceviri",
-  "/tools/ai-toplu-islem", "/tools/pdf-karsilastir", "/tools/hassas-veri-gizle",
-  "/tools/belge-tara", "/tools/aranabilir-pdf", "/tools/crop-pdf", "/tools/gorsel-sikistir",
-]);
-function isFullPageSeoToolPath(p: string): boolean {
-  return FULLPAGE_SEO_TOOL_PATHS.has(p);
-}
-
-/**
- * FeatureKey olmayan SEO araç slug'ları → workspace'teki karşılık gelen panel.
- * Giriş YAPMIŞ kullanıcı bu araçlara gittiğinde (ör. Taramalarım → "Araçlarda aç")
- * harici SEO sayfası değil, panelin İÇİ açılır (sidebar + üst bar korunur).
- */
-const SPECIAL_TOOL_PANELS: Record<string, ContentPanel> = {
-  "pdf-duzenle": "editor",
-  "pdf-imzala": "sign",
-  "pdf-yorumla": "annotate",
-  "crop-pdf": "crop",
-  "gorsel-sikistir": "compress-image",
-  "aranabilir-pdf": "searchable",
-  "taranmis-pdf-ocr": "searchable",
-  "belge-tara": "scanner",
-};
-/** AI araç slug'ı → "ai" panelinin modu. */
-const AI_TOOL_MODES: Record<
-  string,
-  "summarize" | "chat" | "extract" | "translate" | "redact" | "batch" | "compare"
-> = {
-  "pdf-ozetle": "summarize",
-  "pdf-sohbet": "chat",
-  "pdf-veri-cikar": "extract",
-  "pdf-ceviri": "translate",
-  "hassas-veri-gizle": "redact",
-  "ai-toplu-islem": "batch",
-  "pdf-karsilastir": "compare",
-};
-/** Slug'ın workspace içinde açılabilir bir karşılığı var mı? */
-function hasInAppPanelForSeoSlug(slug: string): boolean {
-  return !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
-}
-
-/**
- * Giriş yapılmamış kullanıcı bir araç deep-link'ine (ör. PWA kısayolu /tools/x) gelip
- * login'e yönlendirildiğinde, giriş sonrası tam o araca dönmek için saklanan hedef.
- * sessionStorage → yalnızca mevcut oturum; tarayıcı kapanınca temizlenir.
- */
-const PENDING_TOOL_STORAGE_KEY = "nb_pending_tool";
-
-function savePendingTool(id: FeatureKey): void {
-  try {
-    sessionStorage.setItem(PENDING_TOOL_STORAGE_KEY, id);
-  } catch {
-    /* yoksay */
-  }
-}
-
-function readPendingToolAndClear(): FeatureKey | null {
-  try {
-    const v = sessionStorage.getItem(PENDING_TOOL_STORAGE_KEY);
-    if (v) {
-      sessionStorage.removeItem(PENDING_TOOL_STORAGE_KEY);
-      return v as FeatureKey;
-    }
-  } catch {
-    /* yoksay */
-  }
-  return null;
-}
-
-function clearPendingTool(): void {
-  try {
-    sessionStorage.removeItem(PENDING_TOOL_STORAGE_KEY);
-  } catch {
-    /* yoksay */
-  }
-}
 
 function App() {
   const { language, setLanguage, detectInitialLanguage } =
@@ -1132,6 +580,12 @@ function App() {
     "auto" | "low" | "medium" | "high"
   >("auto");
   const [pdfToImgFmt, setPdfToImgFmt] = useState("jpg");
+  /** PDF/A uyumluluk düzeyi — 2b çoğu kurumun istediği düzey. */
+  const [pdfaVersion, setPdfaVersion] = useState("2b");
+  // Görsel kalitesi: uzun belgelerde sunucu çözünürlüğü kendiliğinden düşürüyor;
+  // bu seçim kullanıcının baskı kalitesi isteyebilmesi (ya da hız için düşürmesi)
+  // için var.
+  const [pdfToImgQuality, setPdfToImgQuality] = useState("normal");
   const [htmlToPdfMode, setHtmlToPdfMode] = useState<"url" | "html">("url");
   const [htmlToPdfUrl, setHtmlToPdfUrl] = useState("");
   const [htmlToPdfRaw, setHtmlToPdfRaw] = useState(
@@ -1140,35 +594,16 @@ function App() {
   const [mergeJob, setMergeJob] = useState<MergeJobStatus | null>(null);
   /** Birleştirme dışı araçlarda ETA / süre göstergesi için başlangıç zamanı ve dosya boyutu. */
   const [toolRunStartedAt, setToolRunStartedAt] = useState<number | null>(null);
+  /**
+   * Son çalıştırmanın GİRDİ boyutu. İşlem bitince sonuç ekranında "şu kadardan
+   * bu kadara indi" diyebilmek için tutulur; `toolRunFileBytes` state'i işlem
+   * biter bitmez sıfırlandığı için indirme tamamlandığında elde kalmıyor.
+   */
+  const lastRunInputBytesRef = useRef(0);
   const [toolRunFileBytes, setToolRunFileBytes] = useState(0);
   const [toolRunClock, setToolRunClock] = useState(0);
-  const [toolProgressSuccess, setToolProgressSuccess] = useState<{
-    filename: string;
-    featureTitle: string;
-    replay?: () => void;
-    /**
-     * Access-gated preview (compress pilot). When present, the success
-     * banner renders a preview card (thumbnail if available) and the
-     * action button performs the gated download via
-     * `downloadResult` instead of re-triggering a blob replay.
-     */
-    gatedDownload?: {
-      /** Tool that produced this output — used for `/download-log` & balance refresh; avoids wrong id if user switched sidebar. */
-      toolId: FeatureKey;
-      /** GET `/api/pdf/result/{id}/download`. */
-      resultId?: string;
-      /** GET `/api/jobs/{id}/download` — merge workflow. */
-      mergeJobId?: string;
-      fallbackName: string;
-      thumbnailBlobUrl: string | null;
-      /**
-       * Entitlement decision from the Node entitlement engine. When present,
-       * `SaasGatedPreview` renders the blur/lock/upgrade UX; when absent, the
-       * card falls back to the legacy 402-driven flow.
-       */
-      saasGating?: SaaSGating | null;
-    };
-  } | null>(null);
+  const [toolProgressSuccess, setToolProgressSuccess] =
+    useState<ToolProgressSuccessState | null>(null);
   const toolProgressSuccessRef = useRef(toolProgressSuccess);
   /** When true, the next `selectedFeatureId` change skips `disposeToolProgressSuccess` (payment resume navigation). */
   const suppressDisposeSuccessOnFeatureChangeRef = useRef(false);
@@ -1238,6 +673,11 @@ function App() {
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const isTeamMember = Boolean(user?.isTeamMember);
+  // Plan bilgisini uygulama geneline duyur — sonuç ekranındaki üyelik daveti
+  // ücretli aboneye çıkmasın (araçların çoğu kimlik bilgisini prop almıyor).
+  useEffect(() => {
+    setCurrentPlan(user?.plan ?? null, Boolean(user?.isTeamMember));
+  }, [user?.plan, user?.isTeamMember]);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   // Yükseltme modalını hangi aracın (payment_required) açtığı — modalda o araca özgü
   // bağlam banner'ı gösterip dönüşümü artırmak için. Modal kapanınca temizlenir.
@@ -1324,7 +764,7 @@ function App() {
     } catch {
       /* yoksay */
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isRestoring, isAuthenticated, view]);
 
   // ── İlk giren kullanıcıya ürün turu (spotlight onboarding) ──────────────────
@@ -1468,8 +908,8 @@ function App() {
   const [pdfHubFile, setPdfHubFile] = useState<File | null>(null);
   // Bir araca aktarılmayı bekleyen taranan/açılan PDF (IndexedDB'den bir kez yüklenir).
   const [pendingToolFile, setPendingToolFile] = useState<File | null>(null);
-  /** takeScannedPdf yarışında (effect iki kez koşarsa) dosyayı kaybetmemek için taşıyıcı. */
-  const pendingScanCarryRef = useRef<File | null>(null);
+  /** Aynı dosyanın iki effect koşusunda birden teslim edilmesini önler. */
+  const deliveringRef = useRef(false);
   /**
    * Taramalarım/Belge Tarayıcı → araç aktarımı: dosya, kullanıcı onay penceresinde
    * "Tamam"a basana kadar burada bekler (araç açılır ama dosya yüklenmez).
@@ -1481,6 +921,12 @@ function App() {
   scanTransferRef.current = scanTransfer;
   /** Onaylanan aktarım sayacı — takeScannedPdf effect'i teslim edilmiş dosyayı silmesin. */
   const scanDeliveryCountRef = useRef(0);
+  /**
+   * Bekleyen dosyanın HANGİ araca teslim edildiği. Teslim effect'i tam sayfa
+   * yüklemede birkaç kez koşuyor; ilk koşu dosyayı verdikten sonra sıradaki koşu
+   * IndexedDB'yi boş bulup aynı dosyayı siliyordu. Aynı araçtaysak silmeyi atlıyoruz.
+   */
+  const deliveredForRef = useRef<{ slug: string; file: File } | null>(null);
   const [aiModal, setAiModal] = useState<"summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact" | null>(null);
   const [upgradeNudgeLoadingHidden, setUpgradeNudgeLoadingHidden] =
     useState(false);
@@ -1547,10 +993,16 @@ function App() {
   } | null>(null);
   const [mergeShareBusy, setMergeShareBusy] = useState(false);
   /** Post-download "Dosyan indirildi — Paylaş?" bar; holds the already-downloaded bytes. */
+  /** Arka plan işinin GERÇEK ilerlemesi (sayfa sayacı). Tahmini çubuğun yerine geçer. */
+  const [toolJobProgress, setToolJobProgress] = useState<MergeJobStatus | null>(null);
   const [mergeShareReady, setMergeShareReady] = useState<{
     blob: Blob;
     filename: string;
     toolId?: FeatureId;
+    /** Cihazda mı işlendi (sonuç panelindeki gizlilik cümlesi için). */
+    onDevice?: boolean;
+    /** İşleme giren dosyanın boyutu — sıkıştırmada kazancı göstermek için. */
+    sourceBytes?: number;
   } | null>(null);
   const prevSelectedFeatureIdRef = useRef<FeatureId | null>(null);
   const chainPendingRef = useRef<{ files: File[]; toolId: FeatureId } | null>(null);
@@ -1901,7 +1353,8 @@ function App() {
         /* yoksay */
       }
       if (pendingScanSave) {
-        url.pathname = "/tools/belge-tara";
+        // Dil önekini + o dilin slug'ını koru: EN kullanıcı /en/tools/scan-document'e döner.
+        url.pathname = withLangPrefix("/tools/belge-tara", language);
         url.searchParams.set("scan", "1");
         const scanQs = url.searchParams.toString();
         window.history.replaceState(
@@ -2157,7 +1610,11 @@ function App() {
   // Araç zincirleme: bir aracın PDF sonucunu tekrar yükleme OLMADAN başka bir araca aktarır.
   const chainToTool = useCallback(
     (targetId: FeatureId, blob: Blob, filename: string) => {
-      carryFilesToTool(targetId, [new File([blob], filename, { type: "application/pdf" })]);
+      // Tür SABİT DEĞİL: Excel/Word/görsel çıktıları da zincirlenebiliyor.
+      // Sabit "application/pdf" verilirse hedef araç dosyayı reddeder.
+      carryFilesToTool(targetId, [
+        new File([blob], filename, { type: blob.type || "application/octet-stream" }),
+      ]);
     },
     [carryFilesToTool],
   );
@@ -2596,6 +2053,9 @@ function App() {
           currentToken,
           {
             clientDownloadName: clientFileName,
+            // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+            // "İndir"e bastığında sorulur.
+            deliver: false,
             onBeforeReadBody: currentToken
               ? async () => {
                   try {
@@ -2655,6 +2115,11 @@ function App() {
             "html-to-pdf": "HTML → PDF",
             "pdf-to-text": "PDF → Metin",
             "flatten-pdf": "PDF Düzleştir",
+            "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
+            "form-doldur": "PDF Form Doldur",
+            "ustveri-temizle": "PDF Üstveri Temizle",
+            "sayfa-duzeni": "Sayfa Düzeni",
+            "imza-iste": "İmza İste",
             "extract-images": "PDF'ten Görsel Çıkar",
           };
           fetch("/api/team/activity", {
@@ -2674,20 +2139,21 @@ function App() {
           });
         }
         applyWorkspaceCleanSlateAfterDownload(toolId);
-        // Keep the already-downloaded bytes so the user can re-open/share them
-        // without a second fetch/charge — same post-download "Paylaş?" bar as
-        // merge. The bar already confirms the download (Dosyan indirildi + dosya
-        // adı), so skip the redundant timed toast; only fall back to a toast when
-        // we somehow have no bytes to back the bar.
+        // Dosya belleğe alındı ama HENÜZ diske yazılmadı: sonuç ekranı çizilir,
+        // kaydetme yeri kullanıcı "İndir"e bastığında sorulur. Aynı baytlar
+        // Aç/Paylaş için de kullanılır (ikinci istek/ücret yok).
         const shareBlob = outcome.download.blob ?? null;
         if (shareBlob) {
-          // Kullanıcı native diyalogda dosyayı yeniden adlandırmış olabilir —
-          // şeritte gerçek kaydedilen ismi göster (yoksa istenen isme düş).
-          setMergeShareReady({ blob: shareBlob, filename: outcome.download.filename ?? clientFileName, toolId });
+          setMergeShareReady({
+            blob: shareBlob,
+            filename: outcome.download.filename ?? clientFileName,
+            toolId,
+            sourceBytes: lastRunInputBytesRef.current || undefined,
+          });
         } else {
           showToast(
             "success",
-            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            language === "tr" ? "Dosyan hazır" : "Your file is ready",
             clientFileName,
           );
         }
@@ -2719,18 +2185,9 @@ function App() {
 
   const queueGatedDownload = useCallback(
     async (resultId: string, fallbackName: string, toolId: FeatureKey) => {
-      const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-      };
-      if (typeof win.showSaveFilePicker === "function") {
-        try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
-          setPendingSaveHandle(handle);
-        } catch (e: unknown) {
-          if (e instanceof DOMException && e.name === "AbortError") return;
-        }
-      }
-      void runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
+      // Kaydetme yeri burada sorulmaz: dosya getirilir, sonuç ekranı açılır ve
+      // soru oradaki "İndir" düğmesinde sorulur.
+      await runGatedDownloadWithFilename(resultId, fallbackName, fallbackName, toolId);
     },
     [runGatedDownloadWithFilename],
   );
@@ -2754,6 +2211,9 @@ function App() {
           serverFallbackName,
           accessToken,
           {
+            // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+            // "İndir"e bastığında sorulur.
+            deliver: false,
             onBeforeReadBody: accessToken
               ? async () => {
                   try {
@@ -2777,20 +2237,7 @@ function App() {
           }
         }
         if (isTeamMember && accessToken) {
-          fetch("/api/team/activity", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              toolId: "merge",
-              toolName: "PDF Birleştir",
-              status: "SUCCESS",
-            }),
-          }).catch(() => {
-            /* noop */
-          });
+          reportTeamActivity({ accessToken, toolId: "merge", language });
         }
         applyWorkspaceCleanSlateAfterDownload("merge");
         // Keep the already-downloaded bytes so the user can re-open/share them
@@ -2801,13 +2248,12 @@ function App() {
         if (dl.blob) {
           setMergeShareReady({ blob: dl.blob, filename: dl.filename ?? clientFileName, toolId: "merge" });
         }
-        // The bar already confirms the download (Dosyan indirildi + dosya adı),
-        // so skip the redundant timed toast when it will be shown. Only fall back
-        // to a toast when we somehow have no bytes to back the bar.
+        // Sonuç ekranı açılıyorsa ayrıca bildirim gösterme; açılamıyorsa
+        // (baytlar elimizde değilse) kullanıcı en azından bilgilendirilsin.
         if (!showShareBar) {
           showToast(
             "success",
-            language === "tr" ? "İndirme tamamlandı" : "Download complete",
+            language === "tr" ? "Dosyan hazır" : "Your file is ready",
             clientFileName,
           );
         }
@@ -2850,18 +2296,8 @@ function App() {
 
   const queueMergeGatedDownload = useCallback(
     async (jobId: string, fallbackName: string) => {
-      const win = window as unknown as {
-        showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-      };
-      if (typeof win.showSaveFilePicker === "function") {
-        try {
-          const handle = await win.showSaveFilePicker({ suggestedName: fallbackName, types: showSavePickerTypesFor(fallbackName) });
-          setPendingSaveHandle(handle);
-        } catch (e: unknown) {
-          if (e instanceof DOMException && e.name === "AbortError") return;
-        }
-      }
-      void runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
+      // Kaydetme yeri sorusu sonuç ekranındaki "İndir" düğmesinde sorulur.
+      await runMergeJobGatedDownloadWithFilename(jobId, fallbackName, fallbackName);
     },
     [runMergeJobGatedDownloadWithFilename],
   );
@@ -3537,6 +2973,10 @@ function App() {
         p === "/tools/pdf-sohbet" ||
         p === "/tools/pdf-duzenle" ||
         p === "/tools/pdf-imzala" ||
+        p === "/tools/form-doldur" ||
+        p === "/tools/ustveri-temizle" ||
+        p === "/tools/sayfa-duzeni" ||
+        p === "/tools/imza-iste" ||
         p === "/tools/pdf-yorumla" ||
         p === "/tools/taranmis-pdf-ocr" ||
         p === "/tools/pdf-veri-cikar" ||
@@ -3756,7 +3196,6 @@ function App() {
     const authUser = user;
 
     let cancelled = false;
-    let intervalId: number | undefined;
 
     async function loadSubscriptionBlock() {
       setSubscriptionLoading(true);
@@ -3804,15 +3243,13 @@ function App() {
     }
 
     void loadSubscriptionBlock();
-    intervalId = window.setInterval(() => {
+    const intervalId = window.setInterval(() => {
       void loadSubscriptionBlock();
     }, 60_000);
 
     return () => {
       cancelled = true;
-      if (intervalId !== undefined) {
-        window.clearInterval(intervalId);
-      }
+      window.clearInterval(intervalId);
     };
   }, [accessToken, isAuthenticated, refreshSession, user?.id]);
 
@@ -3848,6 +3285,7 @@ function App() {
     "pdf-to-image",
     "pdf-to-text",
     "flatten-pdf",
+    "pdf-to-pdfa",
     "extract-images",
   ];
   const anyUploadEncrypted =
@@ -3988,16 +3426,22 @@ function App() {
     0,
     genericToolEstimateSec - genericToolElapsedSec,
   );
-  const genericToolPercent = Math.min(
-    99,
-    Math.max(
-      2,
-      Math.round(
-        (genericToolElapsedSec / Math.max(genericToolEstimateSec, 1)) * 100,
-      ),
-    ),
-  );
+  // Arka planda çalışan araçlarda sunucu GERÇEK sayfa ilerlemesini bildirir;
+  // o varsa süre tahminine dayalı çubuk kullanılmaz. Tahmini çubuk, işlem
+  // tahminden uzun sürdüğünde %99'da donup "takıldı" izlenimi veriyordu.
+  const genericToolPercent = toolJobProgress
+    ? Math.min(99, Math.max(2, toolJobProgress.percent))
+    : Math.min(
+        99,
+        Math.max(
+          2,
+          Math.round(
+            (genericToolElapsedSec / Math.max(genericToolEstimateSec, 1)) * 100,
+          ),
+        ),
+      );
   const genericProgressIndeterminate =
+    !toolJobProgress &&
     genericToolProgressActive &&
     (premiumProcessingLane
       ? genericToolElapsedSec < 4 || genericToolPercent < 5
@@ -4045,7 +3489,6 @@ function App() {
   const chainSuggestions = useMemo<Feature[]>(() => {
     const r = mergeShareReady;
     if (!r?.toolId) return [];
-    if (!/\.pdf$/i.test(r.filename)) return []; // .zip/.docx vb. çıktılar zincirlenmez
     const byId = new Map(workspaceFeatures.map((f) => [f.id, f]));
     const out: Feature[] = [];
     const seen = new Set<FeatureId>([r.toolId]);
@@ -4057,11 +3500,41 @@ function App() {
         seen.add(id);
       }
     };
+    const ext = fileExt(r.filename);
+    if (ext !== "pdf") {
+      // PDF olmayan çıktı: yalnızca bu türü kabul eden araçlar. Genel yedek
+      // havuz KULLANILMAZ — o havuzdaki araçlar PDF bekler.
+      for (const id of CHAIN_BY_OUTPUT_EXT[ext] ?? []) tryPush(id);
+      return out;
+    }
     // Önce araca-özgü ilgili öneriler, sonra 3'e tamamlamak için genel yedek havuz.
     for (const id of CHAIN_SUGGESTIONS[r.toolId] ?? []) tryPush(id);
     if (out.length < 3) for (const id of CHAIN_FALLBACK) tryPush(id);
     return out;
   }, [mergeShareReady, workspaceFeatures]);
+  /** Sonuç paneli açık mı (paylaşım diyaloğu öndeyken gizlenir). */
+  const resultReady = mergeShareReady && !mergeShare ? mergeShareReady : null;
+  /**
+   * Sıkıştırma sonucunda GERÇEKTE ne kazanıldığı. Kullanıcı sonuç ekranında
+   * yalnızca "hazır" görüyordu; kazancı görmeden aracın işe yarayıp
+   * yaramadığını anlayamıyordu. Yalnızca sıkıştırmada ve girdi boyutu
+   * biliniyorsa gösterilir.
+   */
+  const compressResultSubtitle = useMemo(() => {
+    if (!resultReady || resultReady.toolId !== "compress") {
+      return undefined;
+    }
+    const from = resultReady.sourceBytes ?? 0;
+    const to = resultReady.blob.size;
+    if (from <= 0 || to <= 0) {
+      return undefined;
+    }
+    const pct = Math.round((1 - to / from) * 100);
+    if (pct <= 0) {
+      return W.compressResultNoGain;
+    }
+    return W.compressResultGain(formatFileSize(from), formatFileSize(to), pct);
+  }, [resultReady, W]);
   const submitDisabled =
     submitting ||
     (toolNeedsUpload && uploads.length === 0) ||
@@ -4275,6 +3748,75 @@ function App() {
     navigateToTool(toolId as FeatureId);
   }
 
+  /**
+   * Sidebar'daki ÖZEL paneller (Editör / İmza / İşaretle / Kırp) ve AI araçları
+   * `handleSidebarSelect` yolundan GEÇMEZ; kendi `onOpen*` callback'leriyle
+   * yalnızca `setContentPanel(...)` çağırıyorlardı. Bu yüzden o an açık olan PDF
+   * araca aktarılmıyor, araç boş açılıyordu ("araç açılıyor ama dosya gelmiyor").
+   * Normal araçlar aynı durumda `carryFilesToTool` ile dosyayı taşıyor.
+   *
+   * Bu paneller dosyayı `initialFile` (= `pendingToolFile`) prop'u ile alır.
+   *
+   * DOSYAYI DOĞRUDAN `setPendingToolFile` İLE VERME: `contentPanel` değişince
+   * koşan teslim effect'i IndexedDB'de bekleyen dosya bulamayınca
+   * `pendingToolFile`'ı null'lar ve tam da verdiğimiz dosyayı siler.
+   * `scanDeliveryCountRef` artırmak da İŞE YARAMAZ — effect sayacı KENDİ
+   * koşusunun başında okuyor, artış zaten olmuş oluyor, koşul hep eşit çıkıyor.
+   *
+   * Bunun yerine `handlePickFromHub`'ın kanıtlanmış yolu: dosyayı IndexedDB'ye
+   * yaz, teslimi effect'in KENDİSİ yapsın (`contentPanel !== "tool"` dalında
+   * `setPendingToolFile(f)`). Böylece silme/verme yarışı tamamen ortadan kalkar.
+   * Bu yüzden çağıranlar paneli değiştirmeden ÖNCE bunu `await` etmeli.
+   *
+   * Yalnızca form aracından (`contentPanel === "tool"`) geçişte taşır: başka bir
+   * panelden gelirken `uploads` kullanıcının GÖRMEDİĞİ eski bir dosyayı tutuyor
+   * olabilir, onu sürüklemek şaşırtıcı olurdu.
+   */
+  async function carryOpenPdfToPanel(): Promise<boolean> {
+    if (contentPanel !== "tool") return false;
+    const pdf = uploads
+      .filter((u) => !u.corrupt)
+      .map((u) => u.file)
+      .find((f) => fileExtension(f.name) === "pdf");
+    if (!pdf) return false;
+    try {
+      await saveScannedPdf(pdf);
+    } catch {
+      return false; // IndexedDB yoksa sessizce vazgeç — araç boş açılır (eski davranış)
+    }
+    const trLang = language === "tr";
+    showToast(
+      "success",
+      trLang ? "Dosya taşındı" : "File carried over",
+      trLang
+        ? `“${pdf.name}” bu araca aktarıldı — tekrar yüklemene gerek yok.`
+        : `“${pdf.name}” brought here — no need to upload again.`,
+    );
+    return true;
+  }
+
+  /** Özel panele geç — açık PDF varsa beraberinde taşı. */
+  async function openPanelWithOpenPdf(panel: ContentPanel) {
+    await carryOpenPdfToPanel();
+    // Açık "PDF hazır" ekranı geride kalmasın — forma dönünce tekrar karşılamasın.
+    setMergeShareReady(null);
+    setMergeShare(null);
+    setContentPanel(panel);
+  }
+
+  /** AI aracına geç — açık PDF varsa beraberinde taşı (batch/compare çok dosyalı, taşınmaz). */
+  async function openAiWithOpenPdf(
+    mode: "summarize" | "chat" | "extract" | "translate" | "batch" | "compare" | "redact",
+  ) {
+    if (mode !== "batch" && mode !== "compare") {
+      await carryOpenPdfToPanel();
+    }
+    setMergeShareReady(null);
+    setMergeShare(null);
+    setAiModal(mode);
+    setContentPanel("ai");
+  }
+
   // Belge Tarayıcı / Taramalarım'da "Araçlarda aç" → seçilen araca PDF'i aktar.
   // AKIŞ: önce hedef araca GİDİLİR (dosya YÜKLENMEDEN), sonra "aktarıldı" onay
   // penceresi çıkar. Dosya ancak kullanıcı "Tamam"a bastığında araca yüklenir —
@@ -4323,7 +3865,19 @@ function App() {
     }
   }
 
-  // PWA file_handlers: telefonda "PDF ile aç → PDF Platform" → launchQueue ile PDF gelir.
+  /**
+   * PWA dosya açma: "PDF ile aç → PDF Platform" seçildiğinde dosya launchQueue
+   * ile gelir.
+   *
+   * PENCERE DAVRANIŞI manifest'te belirlenir, burada değil: `launch_handler`
+   * ayarı `navigate-new` olduğu için her dosya YENİ bir pencerede açılır.
+   * Önceki değer (`navigate-existing`) açık olan pencereyi dosyanın adresine
+   * TAŞIYORDU; kullanıcı bir belge üzerinde çalışırken başka bir PDF açtığında
+   * üzerinde çalıştığı iş ekrandan siliniyordu (kullanıcı bildirdi).
+   *
+   * Birden çok dosya tek pencereye düşerse (Windows dışı) yalnızca ilki açılır;
+   * Windows'ta işletim sistemi zaten dosya başına bir pencere başlatır.
+   */
   useEffect(() => {
     const w = window as unknown as {
       launchQueue?: {
@@ -4355,23 +3909,50 @@ function App() {
 
   // Bir araç sayfası açıldığında bekleyen (taranan/açılan) PDF varsa bir kez yükle.
   useEffect(() => {
-    if (view !== "web" || !selectedFeatureId) return;
+    if (view !== "web" || !selectedFeatureId || isRestoring) return;
+    // ── Durum URL ile OTURMADAN dosyaya dokunma ────────────────────────────────
+    // Tam sayfa yüklemede (PWA "PDF ile aç" akışı dahil) `selectedFeatureId`,
+    // `contentPanel` ve `aiModal` sırayla oturuyor; bu effect ise aradaki her
+    // commit'te koşuyor. Erken koşan bir tur IndexedDB kaydını TÜKETİP dosyayı
+    // yanlış hedefe (ör. AI aracı yerine forma) verince dosya kayboluyordu.
+    // Çözüm: hedef URL'den okunur ve ilgili panel gerçekten açılana kadar BEKLENİR.
+    // Beklerken dosya IndexedDB'de durur — hiçbir koşulda kaybolmaz.
+    const urlSlug = currentToolSlugFromUrl();
+    if (urlSlug) {
+      const wantAi = AI_TOOL_MODES[urlSlug];
+      const wantPanel = SPECIAL_TOOL_PANELS[urlSlug];
+      if (wantAi) {
+        if (contentPanel !== "ai" || aiModal !== wantAi) return;
+      } else if (wantPanel) {
+        if (contentPanel !== wantPanel) return;
+      } else if (isAuthenticated) {
+        // Normal workspace form aracı: doğru araç seçili ve form paneli açık olmalı.
+        if (contentPanel !== "tool" || toolSlugForFeature(selectedFeatureId) !== urlSlug) {
+          return;
+        }
+      }
+    }
     let cancelled = false;
     const deliveryCountAtStart = scanDeliveryCountRef.current;
     (async () => {
       try {
-        // takeScannedPdf IndexedDB kaydını TÜKETİR. navigateToTool aynı anda hem
-        // selectedFeatureId hem contentPanel değiştirdiğinde bu effect iki kez
-        // koşabilir: ilk koşu dosyayı tüketip iptal edilir, ikinci koşu boş bulup
-        // pendingToolFile'ı null'lardı → dosya araca hiç düşmezdi. İptal olan koşu
-        // dosyayı ref'e geri koyar, sıradaki koşu oradan alır.
-        const f = pendingScanCarryRef.current ?? (await takeScannedPdf());
-        pendingScanCarryRef.current = null;
-        if (cancelled) {
-          pendingScanCarryRef.current = f;
-          return;
-        }
+        // ÖNCE OKU, TESLİM ET, SONRA SİL. Eskiden `takeScannedPdf` okurken
+        // siliyordu; bu effect iptal edilirse dosya ne IndexedDB'de ne araçta
+        // kalıyor, geçici bir ref'te mahsur kalıp sessizce kayboluyordu
+        // (tarayıcıda doğrulandı). Peek/clear ile kayıp penceresi yok: teslim
+        // olmadan kayıt silinmiyor, iptal olan koşudan sonra bir sonraki koşu
+        // dosyayı hâlâ IndexedDB'de buluyor.
+        const f = await peekScannedPdf();
+        if (cancelled) return;
         if (!f) {
+          // Az önce teslim ettiğimiz dosya HÂLÂ kendi aracındaysa silme. Tam sayfa
+          // yüklemede bu effect birkaç kez koşuyor (view → selectedFeatureId →
+          // contentPanel sırayla oturuyor); ilk koşu dosyayı teslim ediyor, sonraki
+          // koşu IndexedDB'yi boş bulup tam da o dosyayı siliyordu.
+          if (deliveredForRef.current?.slug === currentToolSlugFromUrl()) {
+            return;
+          }
+          deliveredForRef.current = null;
           // Onay bekleyen bir aktarım varsa (kullanıcı "Tamam"a yeni basmış olabilir)
           // yeni yüklenen dosyayı silme.
           if (
@@ -4382,12 +3963,34 @@ function App() {
           }
           return;
         }
-        if (isAuthenticated && contentPanel === "tool") {
-          // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
-          await handleNewFiles([f]);
-        } else {
-          // Misafir guest araç / editör paneli → initialFile ile yükle.
-          setPendingToolFile(f);
+        // Hedefi `contentPanel`in O ANKİ değerine göre seçmek YANLIŞ: tam sayfa
+        // yüklemede (PWA "PDF ile aç" akışı dahil) bu effect, panel henüz
+        // varsayılan "tool" iken koşuyor. `syncPanelFromSeoToolPath` paneli
+        // "ai"/"editor" yapmadan ÖNCE dosya `handleNewFiles` ile FORMA veriliyor,
+        // panel değişince de form sıfırlandığı için dosya kayboluyordu
+        // (tarayıcıda doğrulandı: IndexedDB kaydı tüketiliyor ama araç boş açılıyor).
+        // Hedefi URL'DEN belirle. `selectedFeatureId` de `contentPanel` gibi tam
+        // sayfa yüklemede henüz oturmamış olabiliyor (ikisi de varsayılan "split"/
+        // "tool" iken bu effect koşuyor) — bu yüzden state'e bakmak yetmiyordu.
+        // URL ise ilk andan itibaren doğru: /tools/hassas-veri-gizle.
+        const slug = currentToolSlugFromUrl();
+        const opensInOwnPanel = !!SPECIAL_TOOL_PANELS[slug] || !!AI_TOOL_MODES[slug];
+        // Aynı dosyayı iki koşu birden teslim etmesin (peek silmediği için mümkün).
+        if (deliveringRef.current) return;
+        deliveringRef.current = true;
+        try {
+          if (isAuthenticated && !opensInOwnPanel && contentPanel === "tool") {
+            // Giriş yapmış kullanıcı → workspace SERVER form aracı: dosyayı forma yükle.
+            await handleNewFiles([f]);
+          } else {
+            // Misafir guest araç / editör / AI paneli → initialFile ile yükle.
+            deliveredForRef.current = { slug, file: f };
+            setPendingToolFile(f);
+          }
+          // Teslim BAŞARILI → ancak şimdi sil.
+          await clearScannedPdf();
+        } finally {
+          deliveringRef.current = false;
         }
       } catch {
         /* yoksay */
@@ -4397,7 +4000,7 @@ function App() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, selectedFeatureId, isAuthenticated, contentPanel]);
+  }, [view, selectedFeatureId, isAuthenticated, contentPanel, aiModal, isRestoring]);
 
   function handleSidebarSelect(id: SidebarToolId) {
     setActiveSidebar(id);
@@ -4414,7 +4017,10 @@ function App() {
     if (contentPanel === "tool" && id !== selectedFeatureId && !lockedFeatures.has(id)) {
       const carry = uploads.filter((u) => !u.corrupt).map((u) => u.file);
       const target = workspaceFeatures.find((f) => f.id === id);
-      if (carry.length > 0 && target) {
+      // `requiresUpload: false` araçlar (html-to-pdf) dosya almaz; accept'leri de
+      // boş olduğu için filtre her şeyi "kabul" ediyor ve dosya taşınmış gibi
+      // bildirim çıkıyordu. Bu araçlara taşımayı hiç deneme.
+      if (carry.length > 0 && target && target.requiresUpload !== false) {
         const allowed = allowedExtensionsFromAccept(target.accept);
         const { rejected } = partitionByAllowedExtensions(carry, allowed);
         // Tür uyuşmuyorsa (ör. PDF → Word'den PDF'e) taşımayı dene bile deme.
@@ -4423,6 +4029,12 @@ function App() {
           return;
         }
       }
+    }
+    // "PDF hazır" ekranı açıkken başka bir araca geçilebilmeli: sonucu kapat ve
+    // hedef aracın formuyla temiz başla (kullanıcı «Kapat»a basmak zorunda kalmasın).
+    if (id !== selectedFeatureId) {
+      setMergeShareReady(null);
+      setMergeShare(null);
     }
     setContentPanel("tool");
     setSelectedFeatureId(id);
@@ -4789,153 +4401,56 @@ function App() {
     // Bu akış bölünürse kota veya dosya kontrolü atlanırsa sunucu hataları veya tutarsız UX oluşur.
     event.preventDefault();
 
-    if (selectedFeature.id === "html-to-pdf") {
-      // dosya yok
-    } else if (selectedFeature.id === "image-to-pdf" && uploads.length === 0) {
-      showToast("error", "Dosya seçilmedi", "Lütfen en az bir görüntü seçin.");
-      return;
-    } else if (selectedFeature.id !== "merge" && uploads.length === 0) {
-      showToast(
-        "error",
-        "Dosya seçilmedi",
-        "Lütfen önce işlenecek dosyayı seçin.",
-      );
-      return;
+    // TEK PAROLA, İKİ KUTU.
+    //
+    // Şifre kaldırma ekranında parola iki yerde isteniyor: üstteki "Mevcut PDF
+    // parolası" ve dosya satırının yanındaki kutu. Kullanıcı dosyanın yanındaki
+    // kutuyu doldurup gönderdiğinde işlem SESSİZCE başlamıyordu (üstteki boş
+    // olduğu için). Hangi kutu doldurulduysa o geçerli sayılır.
+    const etkinAcmaParolasi =
+      unlockOpenPassword.trim() || (uploads[0]?.password ?? "").trim();
+    if (
+      selectedFeature.id === "unlock-pdf" &&
+      !unlockOpenPassword.trim() &&
+      etkinAcmaParolasi
+    ) {
+      setUnlockOpenPassword(etkinAcmaParolasi);
     }
 
-    if (selectedFeature.id === "split") {
-      const fmt = validatePagesFormat(pagesText, language);
-      const maxP = uploads[0]?.pageCount ?? null;
-      let over = validatePagesMax(pagesText, maxP, language);
-      if (
-        !fmt &&
-        !over &&
-        Boolean(uploads[0]?.encrypted) &&
-        maxP === null &&
-        pagesText.trim()
-      ) {
-        over = W.validationPagesNeedPassword;
-      }
-      const pageValidation =
-        fmt || over || (!pagesText.trim() ? W.validationPagesRequired : "");
-      setPagesError(pageValidation);
-      if (pageValidation) {
-        showToast(
-          "error",
-          language === "tr"
-            ? "Sayfa numaraları geçersiz"
-            : "Invalid page numbers",
-          pageValidation,
-        );
-        return;
-      }
+    const check = checkToolSubmission({
+      featureId: selectedFeature.id,
+      uploads: uploads.map((u) => ({
+        pageCount: u.pageCount,
+        encrypted: u.encrypted,
+      })),
+      pagesText,
+      deletePagesText,
+      password,
+      unlockOpenPassword: etkinAcmaParolasi,
+      inputPassword,
+      outputPassword,
+      showSplitPasswordField,
+      showEncryptSourcePasswordField,
+      showUnlockPasswordField,
+      mergeHasMissingPasswords,
+      hasAccessToken: Boolean(accessToken),
+      excelConfirmed: excelConfirmRef.current,
+      language,
+    });
+    if (check.pagesError !== undefined) {
+      setPagesError(check.pagesError);
     }
-
-    if (selectedFeature.id === "delete-pages") {
-      const fmt = validatePagesFormat(deletePagesText, language);
-      const maxP = uploads[0]?.pageCount ?? null;
-      let over = validatePagesMax(deletePagesText, maxP, language);
-      if (
-        !fmt &&
-        !over &&
-        Boolean(uploads[0]?.encrypted) &&
-        maxP === null &&
-        deletePagesText.trim()
-      ) {
-        over = W.validationPagesNeedPassword;
-      }
-      const pageValidation =
-        fmt ||
-        over ||
-        (!deletePagesText.trim() ? W.validationPagesRequired : "");
-
-      let finalPageValidation = pageValidation;
-      if (!finalPageValidation && maxP && deletePagesText.trim()) {
-        const expSafe = expandPagesString(deletePagesText, maxP, language);
-        if (expSafe !== null && expSafe.length >= maxP) {
-          finalPageValidation = PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
-        }
-      }
-
-      setDeletePagesError(finalPageValidation);
-      if (finalPageValidation) {
-        const isDeleteAllViolation =
-          finalPageValidation === PDF_DELETE_LEAVE_AT_LEAST_ONE_MSG;
-        showToast(
-          "error",
-          isDeleteAllViolation
-            ? language === "tr"
-              ? "Uyarı"
-              : "Warning"
-            : language === "tr"
-              ? "Sayfa listesi geçersiz"
-              : "Invalid page list",
-          finalPageValidation,
-        );
-        return;
-      }
+    if (check.deletePagesError !== undefined) {
+      setDeletePagesError(check.deletePagesError);
     }
-
-    if (showSplitPasswordField && !password.trim()) {
-      showToast(
-        "error",
-        language === "tr"
-          ? "Kaynak PDF şifresi gerekli"
-          : "Source PDF password required",
-        language === "tr"
-          ? "Seçilen PDF şifreli olduğu için şifre alanını doldurmanız gerekiyor."
-          : "Enter the PDF password below to unlock the file.",
-      );
-      return;
-    }
-
-    if (showEncryptSourcePasswordField && !inputPassword.trim()) {
-      showToast(
-        "error",
-        "Kaynak PDF şifresi gerekli",
-        "Seçilen PDF şifreli olduğu için kaynak PDF şifresini girin.",
-      );
-      return;
-    }
-
-    if (showUnlockPasswordField && !unlockOpenPassword.trim()) {
-      showToast(
-        "error",
-        "Parola gerekli",
-        "PDF'yi açmak için mevcut parolayı girin.",
-      );
-      return;
-    }
-
-    if (selectedFeature.id === "encrypt" && !outputPassword.trim()) {
-      showToast(
-        "error",
-        "Yeni PDF şifresi gerekli",
-        "Şifreli PDF oluşturmak için yeni parola alanını doldurun.",
-      );
-      return;
-    }
-
-    if (mergeHasMissingPasswords) {
-      showToast(
-        "error",
-        language === "tr"
-          ? "Şifre doğrulaması gerekli"
-          : "Password verification required",
-        language === "tr"
-          ? "Şifreli PDF'ler için parolayı girin ve her dosyanın yanındaki «Parolayı doğrula» ile onaylayın."
-          : "For password-protected PDFs, enter the password and tap «Verify password» next to each file.",
-      );
-      return;
-    }
-
-    if (!accessToken) {
-      showToast("error", "Oturum gerekli", "İşlem için yeniden giriş yapın.");
-      return;
-    }
-
-    if (selectedFeature.id === "pdf-to-excel" && !excelConfirmRef.current) {
+    if (check.askExcelConfirm) {
       setExcelDialogOpen(true);
+      return;
+    }
+    if (!check.ok) {
+      if (check.toast) {
+        showToast("error", check.toast.title, check.toast.detail);
+      }
       return;
     }
     if (selectedFeature.id === "pdf-to-excel") {
@@ -4959,95 +4474,32 @@ function App() {
         if (totalBytes <= CLIENT_PDF_MAX_BYTES && !anyPassword) {
           try {
             setSubmitting(true);
-            let resultBytes: Uint8Array | null = null;
             const cid = selectedFeature.id;
-            // İndirme yeri sorusu, cihaz-içi işleme await'lerinden ÖNCE alınmalı
-            // (user activation hâlâ geçerliyken). Aksi halde bu araçlar sonucu
-            // doğrudan indirir ve "nereye kaydedilsin?" diyaloğu hiç görünmez.
-            {
-              const win = window as unknown as {
-                showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-              };
-              if (typeof win.showSaveFilePicker === "function") {
-                try {
-                  const suggestedName =
-                    cid === "split" && splitMode === "separate"
-                      ? "sayfalar.zip"
-                      : selectedFeature.fallbackFilename;
-                  const handle = await win.showSaveFilePicker({
-                    suggestedName,
-                    types: showSavePickerTypesFor(suggestedName),
-                  });
-                  setPendingSaveHandle(handle);
-                } catch (e: unknown) {
-                  if (e instanceof DOMException && e.name === "AbortError") {
-                    setSubmitting(false);
-                    return; // kullanıcı kaydetme diyalogunu iptal etti
-                  }
-                  // desteklenmiyor / güvenli bağlam değil — anchor fallback ile devam
-                }
-              }
-            }
-            if (cid === "merge") {
-              const buffers = await Promise.all(
-                uploads.map((u) => u.file.arrayBuffer()),
-              );
-              resultBytes = await mergePdfs(buffers);
-            } else if (cid === "image-to-pdf") {
-              const imgs = await Promise.all(
-                uploads.map(async (u) => ({
-                  bytes: await u.file.arrayBuffer(),
-                  mime: u.file.type,
-                })),
-              );
-              resultBytes = await imagesToPdf(imgs);
-            } else if (uploads[0]) {
-              // Tek-dosya sayfa araçları — seçim grid state'inden okunur (1-tabanlı
-              // → clientPdf 0-tabanlı). Seçim yoksa resultBytes null → sunucuya düşer.
-              const src = new Uint8Array(await uploads[0].file.arrayBuffer());
-              const pc = uploads[0].pageCount ?? 0;
-              if (cid === "rotate-pdf") {
-                const r0: Record<number, number> = {};
-                for (const [p1, deg] of Object.entries(rotatePageRotations)) {
-                  const d = Number(deg);
-                  if (d % 360 !== 0) r0[Number(p1) - 1] = d;
-                }
-                if (Object.keys(r0).length > 0) resultBytes = await rotatePdf(src, r0);
-              } else if (cid === "delete-pages" && pc > 0) {
-                const pages1 = expandPagesString(deletePagesText, pc, language) ?? [];
-                if (pages1.length > 0 && pages1.length < pc) {
-                  resultBytes = await deletePages(src, pages1.map((p) => p - 1));
-                }
-              } else if (cid === "organize-pdf" && organizePageOrder.length > 0) {
-                resultBytes = await reorderPages(
-                  src,
-                  organizePageOrder.map((p) => p - 1),
-                );
-              } else if (cid === "split" && pc > 0) {
-                const pages1 = expandPagesString(pagesText, pc, language) ?? [];
-                if (pages1.length > 0) {
-                  const p0 = pages1.map((p) => p - 1);
-                  const splitBlob =
-                    splitMode === "separate"
-                      ? zipBytesToBlob(await splitPagesToZip(src, p0, "sayfa"))
-                      : pdfBytesToBlob(await reorderPages(src, p0));
-                  const splitName =
-                    splitMode === "separate"
-                      ? "sayfalar.zip"
-                      : selectedFeature.fallbackFilename;
-                  const savedSplitName = await saveBlobToUser(splitBlob, splitName);
-                  setMergeShareReady({ blob: splitBlob, filename: savedSplitName, toolId: "split" });
-                  applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
-                  setSubmitting(false);
-                  return;
-                }
-              }
-            }
-            if (resultBytes) {
-              const filename = selectedFeature.fallbackFilename;
-              const blob = pdfBytesToBlob(resultBytes);
-              const savedName = await saveBlobToUser(blob, filename);
-              setMergeShareReady({ blob, filename: savedName, toolId: cid });
+            // NOT: Burada "nereye kaydedilsin?" SORULMAZ. İşlem biter bitmez
+            // kaydetme penceresi açmak, kullanıcı daha sonucu görmeden onu bir
+            // sistem diyaloguyla karşılaştırıyordu. Dosya bellekte hazırlanır,
+            // sonuç ekranı çizilir; kaydetme yeri yalnızca "İndir"e basınca
+            // sorulur (ToolResultPanel).
+            const produced = await runClientPdfTool({
+              toolId: cid,
+              files: uploads.map((u) => u.file),
+              pageCountHint: uploads[0]?.pageCount ?? null,
+              rotatePageRotations,
+              deletePagesText,
+              organizePageOrder,
+              pagesText,
+              splitMode,
+              language,
+              fallbackFilename: selectedFeature.fallbackFilename,
+              expandPages: expandPagesString,
+            });
+            if (produced) {
+              setMergeShareReady({
+                blob: produced.blob,
+                filename: produced.filename,
+                toolId: cid,
+                onDevice: true,
+              });
               applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
               setSubmitting(false);
               return;
@@ -5055,7 +4507,7 @@ function App() {
             setSubmitting(false);
           } catch (err) {
             setSubmitting(false);
-            // Şifreli/işlenemez → sessizce sunucu akışına düş (aşağıda devam eder).
+            // Şifreli/işlenemez — sessizce sunucu akışına düşülür (aşağıda devam eder).
             if (!(err instanceof PdfEncryptedError)) {
               console.warn("[clientpdf] sunucuya düşülüyor:", err);
             }
@@ -5064,46 +4516,11 @@ function App() {
       }
 
       if (selectedFeature.id === "merge") {
-        if (
-          isAuthenticated &&
-          userBalance?.plan === "FREE" &&
-          !userBalance?.isAdmin &&
-          uploads.length > 2
-        ) {
-          showToast(
-            "error",
-            language === "tr" ? "Ücretsiz plan sınırı" : "Free plan limit",
-            language === "tr"
-              ? "Ücretsiz planda en fazla 2 dosya birleştirilebilir. Daha fazlası için planınızı yükseltin."
-              : "Free plan allows merging up to 2 files. Upgrade your plan for more.",
-          );
-          return;
-        }
-
-        // User activation henüz geçerliyken handle al — createMergeJob await'inden önce olmalı.
-        {
-          const win = window as unknown as {
-            showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-          };
-          // Cihaz-içi yol zaten bir handle aldıysa (ör. şifreli/büyük dosya
-          // yüzünden sunucuya düşüldüyse) tekrar sorma.
-          if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
-            try {
-              // Kaydetme önerisi tek kaynaktan (paylaşım diyaloğu + backend ile
-              // aynı): Türkçe karakterli "birleştirilmiş.pdf". Eski sabit ASCII
-              // ad Türkçe harfleri düşürüyordu.
-              const _mergeName = selectedFeature.fallbackFilename;
-              const handle = await win.showSaveFilePicker({
-                suggestedName: _mergeName,
-                types: showSavePickerTypesFor(_mergeName),
-              });
-              setPendingSaveHandle(handle);
-            } catch (e: unknown) {
-              if (e instanceof DOMException && e.name === "AbortError") return;
-              // showSaveFilePicker desteklenmiyorsa veya güvenli bağlam değilse devam et
-            }
-          }
-        }
+        // NOT: "Ücretsiz planda en fazla 2 dosya" kuralı kaldırıldı. Birleştirme
+        // kullanıcının cihazında çalışıyor, sunucuya dosya gitmiyor ve maliyeti
+        // yok; kural pratikte hiç devreye girmiyor, yalnızca yanıltıyordu.
+        // NOT: Kaydetme yeri burada SORULMAZ; sonuç ekranındaki "İndir"e
+        // basıldığında sorulur.
 
         mergeFlowAbortRef.current?.abort();
         mergeFlowAbortRef.current = new AbortController();
@@ -5162,33 +4579,11 @@ function App() {
         return;
       }
 
-      // Pre-acquire save file handle HERE — user activation is still valid (no awaits above for non-merge tools).
-      // showSaveFilePicker requires transient user activation; after long HTTP calls it expires.
-      {
-        const win = window as unknown as {
-          showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-        };
-        // Cihaz-içi yol zaten bir handle aldıysa (sunucuya düşülen durum) tekrar sorma.
-        if (!hasPendingSaveHandle() && typeof win.showSaveFilePicker === "function") {
-          try {
-            const suggestedSaveName =
-              selectedFeature.id === "split" && splitMode === "separate"
-                ? "ayrılan-sayfalar.zip"
-                : selectedFeature.fallbackFilename;
-            const handle = await win.showSaveFilePicker({
-              suggestedName: suggestedSaveName,
-              types: showSavePickerTypesFor(suggestedSaveName),
-            });
-            setPendingSaveHandle(handle);
-          } catch (e: unknown) {
-            const eName = e instanceof DOMException ? e.name : "";
-            if (eName === "AbortError") {
-              return; // kullanıcı kaydetme diyalogunu iptal etti
-            }
-            // desteklenmiyor veya güvenli bağlam değil — devam et
-          }
-        }
-      }
+      // NOT: Kaydetme yeri burada SORULMAZ. Eskiden, uzun HTTP çağrısı kullanıcı
+      // etkileşimini "tüketmeden" önce pencere açılsın diye işin EN BAŞINDA
+      // soruluyordu; sonuç da biter bitmez diske yazılıyordu. Kullanıcı bunu
+      // beklemiyor. Artık sonuç ekranda gösterilir ve kaydetme yeri yalnızca
+      // "İndir"e basınca (taze tıklama) sorulur.
 
       toolRunAbortRef.current?.abort();
       toolRunAbortRef.current = new AbortController();
@@ -5204,6 +4599,7 @@ function App() {
             ? uploads.reduce((a, u) => a + u.file.size, 0)
             : (uploads[0]?.file.size ?? 0);
       setToolRunFileBytes(runBytes);
+      lastRunInputBytesRef.current = runBytes;
       setToolRunClock(0);
 
       genericToolStalemateTriggeredRef.current = false;
@@ -5212,123 +4608,35 @@ function App() {
         toolRunAbortRef.current?.abort();
       }, TOOL_PIPELINE_WATCHDOG_MS);
 
-      const formData = new FormData();
       const fid = selectedFeature.id;
-
-      if (fid === "html-to-pdf") {
-        if (htmlToPdfMode === "url") {
-          formData.append("source_url", htmlToPdfUrl.trim());
-        } else {
-          formData.append("html", htmlToPdfRaw);
-        }
-      } else if (fid === "image-to-pdf") {
-        for (const u of uploads) {
-          formData.append("files", u.file);
-        }
-      } else {
-        formData.append("file", uploads[0]!.file);
-        switch (fid) {
-          case "split":
-            formData.append("pages_text", pagesText.trim());
-            formData.append("mode", splitMode);
-            formData.append("password", password.trim());
-            break;
-          case "pdf-to-word":
-          case "pdf-to-excel":
-          case "compress":
-            formData.append("quality", compressQuality);
-            formData.append("password", password.trim());
-            break;
-          case "delete-pages":
-            formData.append("pages_to_delete", deletePagesText.trim());
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "rotate-pdf": {
-            const rotObj: Record<string, number> = {};
-            for (const [k, d] of Object.entries(rotatePageRotations)) {
-              if (d && d !== 0) {
-                rotObj[k] = d;
-              }
-            }
-            if (Object.keys(rotObj).length > 0) {
-              formData.append("pages_rotation_json", JSON.stringify(rotObj));
-            } else {
-              formData.append("degrees", "90");
-            }
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          }
-          case "organize-pdf": {
-            const order = organizePageOrder.join(",");
-            formData.append("page_order", order);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          }
-          case "unlock-pdf":
-            formData.append("password", unlockOpenPassword.trim());
-            break;
-          case "watermark":
-            formData.append("watermark_text", watermarkPhrase.trim());
-            formData.append("watermark_color", watermarkColor);
-            formData.append("watermark_font", watermarkFont);
-            formData.append("watermark_opacity", watermarkOpacity);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "page-numbers":
-            formData.append("start_at", pageNumStart.trim() || "1");
-            formData.append("position", pageNumPos);
-            formData.append("fmt", pageNumFmt);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "repair-pdf":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "pdf-to-ppt":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "pdf-to-image":
-            formData.append("image_format", pdfToImgFmt);
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "encrypt":
-            formData.append("input_password", inputPassword.trim());
-            formData.append("user_password", outputPassword.trim());
-            break;
-          case "pdf-to-text":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "flatten-pdf":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          case "extract-images":
-            if (password.trim()) {
-              formData.append("password", password.trim());
-            }
-            break;
-          default:
-            break;
-        }
-      }
+      // Araç ayarlarının tek paketi: hem tek dosyalık hem toplu gövde bundan üretilir.
+      const formState = {
+        files: uploads.map((u) => u.file),
+        password,
+        htmlToPdfMode,
+        htmlToPdfUrl,
+        htmlToPdfRaw,
+        pagesText,
+        splitMode,
+        compressQuality,
+        deletePagesText,
+        rotatePageRotations,
+        organizePageOrder,
+        unlockOpenPassword: etkinAcmaParolasi,
+        watermarkPhrase,
+        watermarkColor,
+        watermarkFont,
+        watermarkOpacity,
+        pageNumStart,
+        pageNumPos,
+        pageNumFmt,
+        pdfToImgFmt,
+        pdfToImgQuality,
+        pdfaVersion,
+        inputPassword,
+        outputPassword,
+      };
+      const formData = buildToolFormData(fid, formState);
 
       const batchSourceFiles =
         uploads.length > 1 && BATCHABLE_TOOLS.has(fid)
@@ -5336,31 +4644,10 @@ function App() {
           : batchFiles;
 
       if (batchSourceFiles.length > 1 && BATCHABLE_TOOLS.has(fid)) {
-        const batchForm = new FormData();
-        batchForm.append("tool_type", fid);
-        for (const bf of batchSourceFiles) {
-          batchForm.append("files", bf);
-        }
-        if (password.trim()) batchForm.append("password", password.trim());
-        if (fid === "compress") batchForm.append("quality", compressQuality);
-        if (fid === "encrypt") {
-          batchForm.append("user_password", outputPassword.trim());
-          batchForm.append("input_password", inputPassword.trim());
-        }
-        if (fid === "watermark") {
-          batchForm.append("watermark_text", watermarkPhrase.trim());
-          batchForm.append("watermark_color", watermarkColor);
-          batchForm.append("watermark_font", watermarkFont);
-          batchForm.append("watermark_opacity", watermarkOpacity);
-        }
-        if (fid === "page-numbers") {
-          batchForm.append("start_at", pageNumStart.trim() || "1");
-          batchForm.append("position", pageNumPos);
-          batchForm.append("fmt", pageNumFmt);
-        }
-        if (fid === "pdf-to-image") {
-          batchForm.append("image_format", pdfToImgFmt);
-        }
+        const batchForm = buildBatchFormData(fid, batchSourceFiles, {
+          ...formState,
+          files: batchSourceFiles,
+        });
 
         const res = await postToolToResult("batch", batchForm, accessToken, {
           signal: toolSignal,
@@ -5383,18 +4670,49 @@ function App() {
 
       if (isResultStoreTool(fid)) {
         const uploadPageCount = uploads[0]?.pageCount ?? undefined;
-        const res = await postToolToResult(
-          selectedFeature.endpoint,
-          formData,
-          accessToken,
-          {
-            signal: toolSignal,
-            errorMessage:
-              language === "tr"
-                ? "İşlem başarısız oldu."
-                : "The operation failed.",
-          },
-        );
+        // ARKA PLANDA ÇALIŞAN ARAÇLAR: dönüşüm dakikalar sürebildiği için istek
+        // cevabı beklemez. Sunucu işi sıraya alır, biz gerçek sayfa ilerlemesini
+        // okuruz. Bağlantı koparsa iş sunucuda devam eder.
+        const res = BACKGROUND_JOB_TOOLS.has(fid)
+          ? await (async () => {
+              const started = await startToolJob(
+                `${selectedFeature.endpoint}/start`,
+                formData,
+                accessToken,
+                {
+                  signal: toolSignal,
+                  errorMessage:
+                    language === "tr"
+                      ? "İşlem başlatılamadı."
+                      : "Could not start the operation.",
+                },
+              );
+              const done = await waitForToolJob(started.job_id, accessToken, {
+                signal: toolSignal,
+                onProgress: (st) => setToolJobProgress(st),
+              });
+              setToolJobProgress(null);
+              return {
+                result_id: done.result_id ?? "",
+                filename: done.filename ?? "",
+                mime: done.mime ?? "",
+                size_bytes: done.size_bytes ?? 0,
+                has_thumbnail: false,
+                saasGating: started.saasGating,
+              };
+            })()
+          : await postToolToResult(
+              selectedFeature.endpoint,
+              formData,
+              accessToken,
+              {
+                signal: toolSignal,
+                errorMessage:
+                  language === "tr"
+                    ? "İşlem başarısız oldu."
+                    : "The operation failed.",
+              },
+            );
 
         resetForm(true);
 
@@ -5418,6 +4736,9 @@ function App() {
         accessToken,
         {
           signal: toolSignal,
+          // Diske YAZMA: sonuç ekranda gösterilir, kaydetme yeri kullanıcı
+          // "İndir"e bastığında sorulur.
+          deliver: false,
           onBeforeReadBody: accessToken
             ? async () => {
                 try {
@@ -5441,60 +4762,39 @@ function App() {
         }
       }
       if (isTeamMember && accessToken) {
-        const TOOL_NAMES_TR: Record<string, string> = {
-          split: "PDF Böl",
-          merge: "PDF Birleştir",
-          compress: "PDF Sıkıştır",
-          "pdf-to-word": "PDF → Word",
-          "word-to-pdf": "Word → PDF",
-          "excel-to-pdf": "Excel → PDF",
-          "pdf-to-excel": "PDF → Excel",
-          encrypt: "PDF Şifrele",
-          "unlock-pdf": "PDF Kilidi Aç",
-          "delete-pages": "Sayfa Sil",
-          "rotate-pdf": "PDF Döndür",
-          "organize-pdf": "Sayfa Sırala",
-          watermark: "Filigran",
-          "page-numbers": "Sayfa Numarası",
-          "repair-pdf": "PDF Onar",
-          "pdf-to-ppt": "PDF → PowerPoint",
-          "ppt-to-pdf": "PowerPoint → PDF",
-          "pdf-to-image": "PDF → Görsel",
-          "image-to-pdf": "Görsel → PDF",
-          "html-to-pdf": "HTML → PDF",
-          "pdf-to-text": "PDF → Metin",
-          "flatten-pdf": "PDF Düzleştir",
-          "extract-images": "PDF'ten Görsel Çıkar",
-        };
-        const fid2 = selectedFeature.id;
-        fetch("/api/team/activity", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            toolId: fid2,
-            toolName: TOOL_NAMES_TR[fid2] ?? fid2,
-            status: "SUCCESS",
-            pageCount: directDownloadPageCount ?? null,
-          }),
-        }).catch(() => {
-          /* noop */
+        reportTeamActivity({
+          accessToken,
+          toolId: selectedFeature.id,
+          language,
+          pageCount: directDownloadPageCount ?? null,
         });
       }
-      setToolProgressSuccess({
-        filename: selectedFeature.fallbackFilename,
-        featureTitle: selectedFeature.title,
-        replay: dl.replay,
-      });
-      applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
-      showToast(
-        "success",
-        "İşlem tamamlandı",
-        "Çıktı dosyası başarıyla indirildi.",
-      );
-      dl.dispose?.();
+      // Sonuç ekranda gösterilir (ortak ToolResultPanel); dosya henüz diske
+      // yazılmadı — kullanıcı "İndir"e basınca kaydetme yeri sorulacak.
+      if (dl.blob) {
+        setMergeShareReady({
+          blob: dl.blob,
+          filename: dl.filename ?? selectedFeature.fallbackFilename,
+          toolId: selectedFeature.id,
+          sourceBytes: lastRunInputBytesRef.current || undefined,
+        });
+        applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+      } else {
+        // Blob elimizde değil (tarayıcının kendi indirme yolu kullanıldı):
+        // dosya zaten indi, eski bildirim akışı geçerli.
+        setToolProgressSuccess({
+          filename: selectedFeature.fallbackFilename,
+          featureTitle: selectedFeature.title,
+          replay: dl.replay,
+          toolId: selectedFeature.id,
+        });
+        applyWorkspaceCleanSlateAfterDownload(selectedFeature.id);
+        showToast(
+          "success",
+          "İşlem tamamlandı",
+          "Çıktı dosyası başarıyla indirildi.",
+        );
+      }
       toolProgressDisposeRef.current = null;
       offerPostRunMonetizationHintAfterSuccess(dl.saasGating ?? null);
       void refreshSubscriptionState();
@@ -5516,11 +4816,11 @@ function App() {
         setUpgradeModalOpen(true);
         return;
       }
-      showToast(
-        "error",
-        "İşlem başarısız",
-        friendlyOperationFailedMessage(language),
-      );
+      // Sunucunun söylediğini kullanıcıya aktar: "parola hatalı" gibi somut bir
+      // sebep varken "dosyanızı kontrol edin" demek kullanıcıyı yanlış yere
+      // bakmaya itiyordu.
+      const notice = toolFailureNotice(error, language);
+      showToast("error", notice.title, notice.detail);
     } finally {
       if (toolStalemateWatchdogId !== undefined) {
         window.clearTimeout(toolStalemateWatchdogId);
@@ -5631,69 +4931,11 @@ function App() {
     );
     setUploads(withLoading);
 
-    const inspectedNewItems = await Promise.all(
-      incomingItems.map(async (item) => {
-        try {
-          const result = await withPdfInspectTimeout(
-            inspectPdf(item.file, undefined, accessToken),
-            PDF_INSPECT_TIMEOUT_MS,
-          );
-          const isCorrupt = Boolean(
-            (result as { corrupt?: boolean }).corrupt ||
-            (result.page_count === 0 && !result.encrypted),
-          );
-          if (isCorrupt) {
-            return {
-              ...item,
-              encrypted: false,
-              inspecting: false,
-              pageCount: 0,
-              mergePasswordVerified: false,
-              corrupt: true,
-            };
-          }
-          return {
-            ...item,
-            encrypted: Boolean(result.encrypted),
-            inspecting: false,
-            pageCount: result.page_count ?? null,
-            mergePasswordVerified: false,
-            corrupt: false,
-          };
-        } catch (err) {
-          const L2 = ws(language);
-          if (err instanceof Error && err.message === "pdf_inspect_timeout") {
-            showToast(
-              "error",
-              language === "tr"
-                ? "PDF denetimi zaman aşımı"
-                : "PDF check timed out",
-              language === "tr"
-                ? "PDF denetimi uzun sürdü veya yanıt kesildi. Bağlantıyı kontrol edin veya dosyayı yeniden deneyin."
-                : "PDF check took too long or stalled. Check your connection or try the file again.",
-            );
-          } else {
-            // Sunucu anlamlı bir mesaj döndürdüyse (ör. "PDF çok fazla sayfa
-            // içeriyor") onu göster; yoksa genel mesaja düş.
-            const serverMsg =
-              err instanceof Error ? err.message.trim() : "";
-            showToast(
-              "error",
-              L2.inspectFailedTitle,
-              serverMsg || friendlyOperationFailedMessage(language),
-            );
-          }
-          return {
-            ...item,
-            encrypted: false,
-            inspecting: false,
-            pageCount: null,
-            mergePasswordVerified: false,
-            corrupt: false,
-          };
-        }
-      }),
-    );
+    const inspectedNewItems = await inspectUploadItems(incomingItems, {
+      accessToken,
+      language,
+      showToast,
+    });
 
     if (inspectRunRef.current !== token) {
       // Yeni bir inspection round başladı; bu round'un sonuçları geçersiz sayılır ama
@@ -5709,7 +4951,7 @@ function App() {
     }
 
     setUploads((current) => {
-      let mapped = current.map(
+      const mapped = current.map(
         (item) =>
           inspectedNewItems.find((inspected) => inspected.id === item.id) ??
           item,
@@ -6018,7 +5260,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="aranabilir-pdf" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
+            <SearchablePdfTool language={language} isSignedIn={isAuthenticated} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6041,11 +5283,65 @@ function App() {
         </GuestSeoToolPage>
       );
     }
+    if (seoSlug === "pdf-kesit-al") {
+      return (
+        <GuestSeoToolPage slug="pdf-kesit-al" wide language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfSnipTool language={language} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "gorsel-boyutlandir") {
+      return (
+        <GuestSeoToolPage slug="gorsel-boyutlandir" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <ImageResizeTool language={language} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
     if (seoSlug === "pdf-duzenle") {
       return (
         <GuestSeoToolPage slug="pdf-duzenle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
             <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "imza-iste") {
+      return (
+        <GuestSeoToolPage slug="imza-iste" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <SignatureRequestTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "sayfa-duzeni") {
+      return (
+        <GuestSeoToolPage slug="sayfa-duzeni" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "ustveri-temizle") {
+      return (
+        <GuestSeoToolPage slug="ustveri-temizle" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
+          </Suspense>
+        </GuestSeoToolPage>
+      );
+    }
+    if (seoSlug === "form-doldur") {
+      return (
+        <GuestSeoToolPage slug="form-doldur" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
+          <Suspense fallback={<PageSkeleton />}>
+            <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} onLogin={goRegister} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6101,7 +5397,7 @@ function App() {
       return (
         <GuestSeoToolPage slug="taranmis-pdf-ocr" language={language} onLogin={goLogin} onRegister={goRegister} isAuthenticated={isAuthenticated} onOpenApp={goToWorkspaceApp} userName={user?.name ?? null} overlay={scanTransferModal}>
           <Suspense fallback={<PageSkeleton />}>
-            <SearchablePdfTool language={language} isPro={aiAllowed} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
+            <SearchablePdfTool language={language} isSignedIn={isAuthenticated} onUpgrade={goRegister} onLogin={goLogin} initialFile={pendingToolFile} />
           </Suspense>
         </GuestSeoToolPage>
       );
@@ -6218,7 +5514,7 @@ function App() {
   ) {
     const tokenPending =
       typeof window !== "undefined"
-        ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY)
+        ? readAccessToken()
         : null;
     if (isRestoring && tokenPending) {
       return (
@@ -6981,173 +6277,6 @@ function App() {
           }}
         />
 
-        {mergeShareReady && !mergeShare ? (
-          <div className="merge-toast" role="status" aria-live="polite">
-            <button
-              type="button"
-              className="merge-toast__close"
-              onClick={() => setMergeShareReady(null)}
-              aria-label={language === "tr" ? "Kapat" : "Close"}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="merge-toast__head">
-              <span className="merge-toast__icon" aria-hidden="true">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </span>
-              <div className="merge-toast__texts">
-                <span className="merge-toast__title">
-                  {language === "tr" ? "Dosyan kaydedildi" : "File saved"}
-                </span>
-                <span
-                  className="merge-toast__name"
-                  title={mergeShareReady.filename}
-                >
-                  {mergeShareReady.filename}
-                </span>
-              </div>
-            </div>
-            <div className="merge-toast__actions">
-              <button
-                type="button"
-                className="merge-share-btn merge-share-btn--open"
-                onClick={() => {
-                  const url = URL.createObjectURL(mergeShareReady.blob);
-                  window.open(url, "_blank", "noopener,noreferrer");
-                  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M15 3h6v6" />
-                  <path d="M10 14 21 3" />
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                </svg>
-                {language === "tr" ? "Aç" : "Open"}
-              </button>
-              {isShareApiAvailable() ? (
-                <button
-                  type="button"
-                  className="merge-share-btn merge-share-btn--share"
-                  onClick={() => {
-                    setMergeShare({
-                      defaultName: mergeShareReady.filename,
-                      blob: mergeShareReady.blob,
-                    });
-                  }}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
-                  </svg>
-                  {language === "tr" ? "Paylaş" : "Share"}
-                </button>
-              ) : null}
-            </div>
-            {chainSuggestions.length > 0 ? (
-              <div className="merge-toast__chain">
-                <span className="merge-toast__chain-label">
-                  {(() => {
-                    const noun = mergeShareReady.toolId
-                      ? CHAIN_RESULT_NOUN[mergeShareReady.toolId]
-                      : undefined;
-                    if (language === "tr") {
-                      const n = noun?.tr ?? "Oluşturduğunuz PDF";
-                      return `${n} ile yeniden yükleme yapmadan şunları da yapabilirsiniz:`;
-                    }
-                    const n = noun?.en ?? "new PDF";
-                    return `Do more with your ${n} — no re-upload needed:`;
-                  })()}
-                </span>
-                <div className="merge-toast__chain-chips">
-                  {chainSuggestions.map((f) => {
-                    const locked = lockedFeatures.has(f.id);
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={`merge-share-chip${locked ? " merge-share-chip--locked" : ""}`}
-                        onClick={() =>
-                          chainToTool(
-                            f.id,
-                            mergeShareReady.blob,
-                            mergeShareReady.filename,
-                          )
-                        }
-                        title={
-                          locked
-                            ? language === "tr"
-                              ? `${f.title} — Pro ile aç`
-                              : `${f.title} — unlock with Pro`
-                            : language === "tr"
-                              ? `${f.title} aracına aktar`
-                              : `Send to ${f.title}`
-                        }
-                      >
-                        <span
-                          className="merge-share-chip__icon"
-                          aria-hidden="true"
-                        >
-                          {f.icon}
-                        </span>
-                        {f.title}
-                        {locked ? (
-                          <span className="merge-share-chip__lock" aria-hidden="true">
-                            🔒
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
 
         {excelDialogOpen ? (
           <div
@@ -7307,15 +6436,14 @@ function App() {
           isTeamMember={isTeamMember}
           isManagerMember={user?.teamMemberRole === "MANAGER"}
           onTeamClick={() => setContentPanel("team" as ContentPanel)}
-          onOpenAi={(mode) => {
-            setAiModal(mode);
-            setContentPanel("ai");
-          }}
-          onOpenEditor={() => setContentPanel("editor")}
-          onOpenSign={() => setContentPanel("sign")}
-          onOpenAnnotate={() => setContentPanel("annotate")}
-          onOpenCrop={() => setContentPanel("crop")}
-          onOpenCompressImage={() => setContentPanel("compress-image")}
+          onOpenAi={(mode) => { void openAiWithOpenPdf(mode); }}
+          onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
+          onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
+          onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
+          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
+          onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
+          onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
+          onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           contentPanel={contentPanel}
@@ -7340,15 +6468,14 @@ function App() {
             resolveToolLabel={resolveToolLabel}
             contentPanel={contentPanel}
             aiMode={aiModal}
-            onOpenAi={(mode) => {
-            setAiModal(mode);
-            setContentPanel("ai");
-          }}
-          onOpenEditor={() => setContentPanel("editor")}
-          onOpenSign={() => setContentPanel("sign")}
-          onOpenAnnotate={() => setContentPanel("annotate")}
-          onOpenCrop={() => setContentPanel("crop")}
-          onOpenCompressImage={() => setContentPanel("compress-image")}
+            onOpenAi={(mode) => { void openAiWithOpenPdf(mode); }}
+          onOpenEditor={() => { void openPanelWithOpenPdf("editor"); }}
+          onOpenSign={() => { void openPanelWithOpenPdf("sign"); }}
+          onOpenAnnotate={() => { void openPanelWithOpenPdf("annotate"); }}
+          onOpenCrop={() => { void openPanelWithOpenPdf("crop"); }}
+          onOpenSnip={() => { void openPanelWithOpenPdf("snip"); }}
+          onOpenCompressImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("compress-image"); }}
+          onOpenResizeImage={() => { setMergeShareReady(null); setMergeShare(null); setContentPanel("resize-image"); }}
           onOpenScan={() => setScannerOpen(true)}
           onScansClick={accessToken ? handleNavScans : undefined}
           />
@@ -7425,14 +6552,52 @@ function App() {
 
             {contentPanel === "editor" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-duzenle" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfEditor language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
               </section>
             ) : null}
 
+            {contentPanel === "signrequest" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="imza-iste" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <SignatureRequestTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "layout" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="sayfa-duzeni" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfLayoutTool language={language} accessToken={accessToken} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "metadata" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="ustveri-temizle" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfMetadataTool language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "formfill" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="form-doldur" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfFormFill language={language} accessToken={accessToken} initialFile={pendingToolFile} isSignedIn={isAuthenticated} />
+                </Suspense>
+              </section>
+            ) : null}
+
             {contentPanel === "sign" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-imzala" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfSign language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
@@ -7441,6 +6606,7 @@ function App() {
 
             {contentPanel === "annotate" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="pdf-yorumla" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfAnnotate language={language} accessToken={accessToken} initialFile={pendingToolFile} />
                 </Suspense>
@@ -7449,6 +6615,7 @@ function App() {
 
             {contentPanel === "crop" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="crop-pdf" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <PdfCropTool language={language} initialFile={pendingToolFile} />
                 </Suspense>
@@ -7457,8 +6624,27 @@ function App() {
 
             {contentPanel === "compress-image" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="gorsel-sikistir" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <ImageCompressTool language={language} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "snip" ? (
+              <section className="mx-auto w-full max-w-6xl py-2">
+                <ToolHowTo slug="pdf-kesit-al" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <PdfSnipTool language={language} initialFile={pendingToolFile} />
+                </Suspense>
+              </section>
+            ) : null}
+
+            {contentPanel === "resize-image" ? (
+              <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="gorsel-boyutlandir" language={language} className="mb-4" />
+                <Suspense fallback={<PageSkeleton />}>
+                  <ImageResizeTool language={language} />
                 </Suspense>
               </section>
             ) : null}
@@ -7466,11 +6652,12 @@ function App() {
             {/* Aranabilir PDF / Taranmış PDF → Metin (OCR) — panel içi karşılığı. */}
             {contentPanel === "searchable" ? (
               <section className="mx-auto w-full max-w-4xl py-2">
+                <ToolHowTo slug="aranabilir-pdf" language={language} className="mb-4" />
                 <Suspense fallback={<PageSkeleton />}>
                   <SearchablePdfTool
                     language={language}
-                    isPro={aiAllowed}
-                    onUpgrade={() => setUpgradeModalOpen(true)}
+                    isSignedIn={isAuthenticated}
+                    onUpgrade={() => setView("register")}
                     onLogin={() => setView("login")}
                     initialFile={pendingToolFile}
                   />
@@ -7600,17 +6787,95 @@ function App() {
 
             {contentPanel === "tool" ? (
               <>
-                <section className="workspace-card relative overflow-x-hidden">
+                {/* İŞ BİTTİ EKRANI — tüm araçlarda ortak (PDF Kırp referans).
+                    Yeni araç eklenirse sonuç için yine ToolResultPanel kullanın. */}
+                {resultReady ? (
+                  <section className="workspace-card relative overflow-x-hidden">
+                    <ToolResultPanel
+                      blob={resultReady.blob}
+                      filename={resultReady.filename}
+                      language={language}
+                      /* Puanlama, işin bittiği bu anda sorulur. Araç kimliği
+                         SEO slug'ıyla aynı olmalı (yıldızlar o sayfada çıkacak). */
+                      ratingToolSlug={
+                        resultReady.toolId ? toolSlugForFeature(resultReady.toolId) : undefined
+                      }
+                      processedOnDevice={!!resultReady.onDevice}
+                      subtitle={compressResultSubtitle}
+                      onClose={() => setMergeShareReady(null)}
+                    >
+                      {chainSuggestions.length > 0 ? (
+                        <div className="mt-7 border-t border-white/10 pt-5">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                            {language === "tr"
+                              ? "Yeniden yükleme yapmadan şunları da yapabilirsiniz"
+                              : "Do more with it — no re-upload needed"}
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                            {chainSuggestions.map((f) => {
+                              const locked = lockedFeatures.has(f.id);
+                              return (
+                                <button
+                                  key={f.id}
+                                  type="button"
+                                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/[0.08]"
+                                  onClick={() =>
+                                    chainToTool(
+                                      f.id,
+                                      resultReady.blob,
+                                      resultReady.filename,
+                                    )
+                                  }
+                                  title={
+                                    locked
+                                      ? language === "tr"
+                                        ? `${f.title} — Pro ile aç`
+                                        : `${f.title} — unlock with Pro`
+                                      : language === "tr"
+                                        ? `${f.title} aracına aktar`
+                                        : `Send to ${f.title}`
+                                  }
+                                >
+                                  <span aria-hidden="true">{f.icon}</span>
+                                  {f.title}
+                                  {locked ? <span aria-hidden="true">🔒</span> : null}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+                    </ToolResultPanel>
+                  </section>
+                ) : null}
+                <section
+                  className={`workspace-card relative overflow-x-hidden${resultReady ? " hidden" : ""}`}
+                >
                   <div className="workspace-card__header">
                     <div>
                       <h1 className="text-xl font-bold tracking-tight text-nb-text md:text-2xl">
                         {selectedFeature.title}
                       </h1>
+                      {/* Kalıcı puan satırı — işi biten kişiye bir kez sorulan
+                          soruya EK olarak, fikrini değiştirmek isteyenin geri
+                          dönebileceği yer. */}
+                      <ToolScore
+                        slug={toolSlugForFeature(selectedFeature.id)}
+                        language={language}
+                        className="mt-2.5"
+                      />
                       <h2 className="mt-2 text-base font-normal leading-relaxed text-nb-muted md:text-lg">
                         {selectedFeature.description}
                       </h2>
                     </div>
                   </div>
+
+                  {/* Nasıl çalışır? — her araçta aynı yerde, formun hemen üstünde. */}
+                  <ToolHowTo
+                    slug={toolSlugForFeature(selectedFeature.id)}
+                    language={language}
+                    className="mb-5"
+                  />
 
                   <div className="relative min-h-[180px] md:min-h-[220px] xl:min-h-[260px]">
                     <div
@@ -7620,6 +6885,21 @@ function App() {
                           : undefined
                       }
                     >
+                      {/* GÜNLÜK HAK — işe BAŞLAMADAN önce görünür.
+                          Kullanıcı hakkının bittiğini işi yarıda kesildiğinde
+                          öğreniyordu; sayaç önceden görünürse yükseltmeyi
+                          planlayabiliyor. */}
+                      {userBalance && (
+                        <QuotaMeter
+                          language={language}
+                          used={userBalance.daily?.used ?? 0}
+                          limit={userBalance.daily?.limit ?? null}
+                          resetAt={userBalance.daily?.resetAt ?? null}
+                          onUpgrade={() => setContentPanel("pricing")}
+                          className="mb-4"
+                        />
+                      )}
+
                       <form
                         key={workspaceSlateNonce}
                         id="nb-workspace-tool-form"
@@ -8193,7 +7473,7 @@ function App() {
                                   className="h-7 w-7 cursor-pointer rounded-full border border-white/20 bg-transparent p-0"
                                   style={{ padding: 0 }}
                                 />
-                                <span className="font-mono text-xs text-white/40">
+                                <span className="font-mono text-xs text-white/70">
                                   {watermarkColor}
                                 </span>
                               </div>
@@ -8216,7 +7496,7 @@ function App() {
                             <label className="field">
                               <span>
                                 {language === "tr" ? "Saydamlık" : "Opacity"}{" "}
-                                <span className="text-white/40">
+                                <span className="text-white/70">
                                   {Math.round(
                                     parseFloat(watermarkOpacity) * 100,
                                   )}
@@ -8299,6 +7579,34 @@ function App() {
                           </>
                         ) : null}
 
+                        {selectedFeature.id === "pdf-to-pdfa" ? (
+                          <label className="field">
+                            <span>
+                              {language === "tr" ? "Uyumluluk düzeyi" : "Conformance level"}
+                            </span>
+                            <select
+                              value={pdfaVersion}
+                              onChange={(e) => setPdfaVersion(e.target.value)}
+                            >
+                              <option value="2b">
+                                {language === "tr"
+                                  ? "PDF/A-2b — önerilen (çoğu kurum)"
+                                  : "PDF/A-2b — recommended (most institutions)"}
+                              </option>
+                              <option value="1b">
+                                {language === "tr"
+                                  ? "PDF/A-1b — en katı, en geniş uyum"
+                                  : "PDF/A-1b — strictest, widest support"}
+                              </option>
+                              <option value="3b">
+                                {language === "tr"
+                                  ? "PDF/A-3b — ek dosya eklenebilen"
+                                  : "PDF/A-3b — allows attached files"}
+                              </option>
+                            </select>
+                          </label>
+                        ) : null}
+
                         {selectedFeature.id === "pdf-to-image" ? (
                           <label className="field">
                             <span>
@@ -8312,6 +7620,26 @@ function App() {
                             >
                               <option value="jpg">JPG</option>
                               <option value="png">PNG</option>
+                            </select>
+                          </label>
+                        ) : null}
+
+                        {selectedFeature.id === "pdf-to-image" ? (
+                          <label className="field">
+                            <span>{language === "tr" ? "Çözünürlük" : "Resolution"}</span>
+                            <select
+                              value={pdfToImgQuality}
+                              onChange={(e) => setPdfToImgQuality(e.target.value)}
+                            >
+                              <option value="ekran">
+                                {language === "tr" ? "Ekran (hızlı, küçük dosya)" : "Screen (fast, small file)"}
+                              </option>
+                              <option value="normal">
+                                {language === "tr" ? "Normal (önerilen)" : "Normal (recommended)"}
+                              </option>
+                              <option value="baski">
+                                {language === "tr" ? "Baskı (en yüksek kalite)" : "Print (highest quality)"}
+                              </option>
                             </select>
                           </label>
                         ) : null}
@@ -8419,28 +7747,28 @@ function App() {
                               >
                                 <option value="auto">
                                   {language === "tr"
-                                    ? "Otomatik — ~%50–70 küçülme (önerilen)"
-                                    : "Auto — ~50–70% smaller (recommended)"}
+                                    ? "Otomatik — görseller ekran çözünürlüğünde (önerilen)"
+                                    : "Auto — images at screen resolution (recommended)"}
                                 </option>
                                 <option value="low">
                                   {language === "tr"
-                                    ? "Agresif — ~%65–80 küçülme"
-                                    : "Aggressive — ~65–80% smaller"}
+                                    ? "Agresif — en küçük dosya, görseller en çok küçülür"
+                                    : "Aggressive — smallest file, images shrink most"}
                                 </option>
                                 <option value="medium">
                                   {language === "tr"
-                                    ? "Dengeli — ~%40–60 küçülme"
-                                    : "Balanced — ~40–60% smaller"}
+                                    ? "Dengeli — görsellerde daha az bozulma"
+                                    : "Balanced — less loss in images"}
                                 </option>
                                 <option value="high">
                                   {userBalance?.plan === "FREE" &&
                                   !userBalance?.isAdmin
                                     ? language === "tr"
-                                      ? "Kaliteli — ~%25–45 küçülme 🔒 Plus+"
-                                      : "Quality — ~25–45% smaller 🔒 Plus+"
+                                      ? "Kaliteli — baskı çözünürlüğü korunur 🔒 Plus+"
+                                      : "Quality — keeps print resolution 🔒 Plus+"
                                     : language === "tr"
-                                      ? "Kaliteli — ~%25–45 küçülme"
-                                      : "Quality — ~25–45% smaller"}
+                                      ? "Kaliteli — baskı çözünürlüğü korunur"
+                                      : "Quality — keeps print resolution"}
                                 </option>
                               </select>
                             </label>
@@ -8572,8 +7900,15 @@ function App() {
                                   const compressEst =
                                     selectedFeature.id === "compress" &&
                                     !item.inspecting
-                                      ? compressEstimateMBRange(item.file.size)
+                                      ? compressGainPercentRange(
+                                          item.imageRatio,
+                                          compressQuality,
+                                        )
                                       : null;
+                                  const compressTextHeavy =
+                                    selectedFeature.id === "compress" &&
+                                    typeof item.imageRatio === "number" &&
+                                    item.imageRatio < COMPRESS_TEXT_HEAVY_RATIO;
                                   const dragFromIdx =
                                     mergePointerDraggingId !== null
                                       ? uploads.findIndex(
@@ -8675,6 +8010,11 @@ function App() {
                                                     compressEst.min,
                                                     compressEst.max,
                                                   )}
+                                                </span>
+                                              ) : null}
+                                              {compressTextHeavy ? (
+                                                <span className="selected-file-card__compress-note">
+                                                  {W.compressTextHeavyNote}
                                                 </span>
                                               ) : null}
                                               {item.inspecting ? (
@@ -8900,344 +8240,59 @@ function App() {
             ) : null}
           </div>
           {TOOLSuccessBarActive && toolProgressSuccess ? (
-            <div
-              className="merge-progress-fixed merge-progress-fixed--success tool-success-shell"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner tool-success-shell__card">
-                <div className="tool-success-shell__row">
-                  <div
-                    className="tool-success-shell__mark"
-                    aria-hidden="true"
-                  />
-                  <div className="tool-success-shell__text">
-                    <strong className="tool-success-shell__title">
-                      {W.toolProgressSuccessTitle}
-                    </strong>
-                    <p className="tool-success-shell__subtitle">
-                      {toolProgressSuccess.featureTitle} ·{" "}
-                      {toolProgressSuccess.filename}
-                    </p>
-                  </div>
-                  <span className="tool-success-shell__pill" aria-hidden="true">
-                    %100
-                  </span>
-                </div>
-                <div
-                  className="tool-success-shell__meter"
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={100}
-                  aria-label={W.toolProgressSuccessTitle}
-                >
-                  <span className="tool-success-shell__meter-fill" />
-                </div>
-                {toolProgressSuccess?.gatedDownload ? (
-                  <SaasGatedPreview
-                    gating={
-                      toolProgressSuccess.gatedDownload.saasGating ?? null
-                    }
-                    language={language}
-                    filename={toolProgressSuccess.filename}
-                    thumbnailUrl={
-                      toolProgressSuccess.gatedDownload.thumbnailBlobUrl
-                    }
-                    onOpenFullPreview={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) {
-                        return;
-                      }
-                      if (gd.mergeJobId) {
-                        setGatedHeroResultId(null);
-                        setGatedHeroMergeJobId(gd.mergeJobId);
-                        setGatedHeroModalOpen(true);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        setGatedHeroMergeJobId(null);
-                        setGatedHeroResultId(gd.resultId);
-                        setGatedHeroModalOpen(true);
-                      }
-                    }}
-                    onDownload={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) {
-                        return;
-                      }
-                      if (gd.mergeJobId) {
-                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        queueGatedDownload(
-                          gd.resultId,
-                          gd.fallbackName,
-                          gd.toolId,
-                        );
-                      }
-                    }}
-                    onShare={
-                      isShareApiAvailable() &&
-                      (toolProgressSuccess.gatedDownload.mergeJobId ||
-                        toolProgressSuccess.gatedDownload.resultId)
-                        ? () => {
-                            const gd = toolProgressSuccess.gatedDownload;
-                            if (!gd) return;
-                            if (gd.mergeJobId) {
-                              setMergeShare({
-                                jobId: gd.mergeJobId,
-                                defaultName: gd.fallbackName,
-                              });
-                            } else if (gd.resultId) {
-                              setMergeShare({
-                                resultId: gd.resultId,
-                                defaultName: gd.fallbackName,
-                              });
-                            }
-                          }
-                        : undefined
-                    }
-                    onUpgrade={() => openConversionUpgradeModalManual()}
-                    onInsufficientCredits={() => {
-                      setUpgradeModalOpen(true);
-                    }}
-                    onRetry={() => {
-                      const gd = toolProgressSuccess.gatedDownload;
-                      if (!gd) return;
-                      if (gd.mergeJobId) {
-                        queueMergeGatedDownload(gd.mergeJobId, gd.fallbackName);
-                        return;
-                      }
-                      if (gd.resultId) {
-                        queueGatedDownload(
-                          gd.resultId,
-                          gd.fallbackName,
-                          gd.toolId,
-                        );
-                      }
-                    }}
-                    onDismiss={dismissToolSuccessBar}
-                    dismissLabel={W.toolProgressDismiss}
-                  />
-                ) : (
-                  <div className="merge-progress-fixed__success-actions">
-                    {toolProgressSuccess.replay ? (
-                      <button
-                        type="button"
-                        className="merge-progress-fixed__download"
-                        onClick={() => toolProgressSuccess.replay?.()}
-                      >
-                        {W.toolDownloadAgain}
-                      </button>
-                    ) : (
-                      <p className="merge-progress-fixed__native-hint">
-                        {W.toolProgressNativeDownloadHint}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      className="merge-progress-fixed__dismiss"
-                      onClick={dismissToolSuccessBar}
-                    >
-                      {W.toolProgressDismiss}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+            <ToolSuccessBar
+              W={W}
+              language={language}
+              success={toolProgressSuccess}
+              onOpenFullPreview={(target) => {
+                if (target.mergeJobId) {
+                  setGatedHeroResultId(null);
+                  setGatedHeroMergeJobId(target.mergeJobId);
+                  setGatedHeroModalOpen(true);
+                  return;
+                }
+                if (target.resultId) {
+                  setGatedHeroMergeJobId(null);
+                  setGatedHeroResultId(target.resultId);
+                  setGatedHeroModalOpen(true);
+                }
+              }}
+              onDownloadResult={queueGatedDownload}
+              onDownloadMergeJob={queueMergeGatedDownload}
+              onShare={setMergeShare}
+              onUpgrade={openConversionUpgradeModalManual}
+              onInsufficientCredits={() => setUpgradeModalOpen(true)}
+              onDismiss={dismissToolSuccessBar}
+            />
           ) : null}
           {TOOLSuccessBarActive ? null : mergeProgressActive && mergeJob ? (
-            <div
-              className="merge-progress-fixed"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner">
-                <div className="merge-progress-fixed__head">
-                  <div className="merge-progress-fixed__titles">
-                    <strong className="merge-progress-fixed__title">
-                      {mergeJob.status === "failed"
-                        ? language === "tr"
-                          ? "Birleştirme başarısız"
-                          : "Merge failed"
-                        : selectedFeature.title}
-                    </strong>
-                    {mergeJob.status !== "failed" ? (
-                      <p className="merge-progress-fixed__phase">
-                        {mergeJob.id === MERGE_JOB_PENDING_ID
-                          ? premiumProcessingLane
-                            ? W.mergeProgressQueuePremium
-                            : W.mergeProgressStarting
-                          : mergeToolPhaseLabel(
-                              mergeJob,
-                              mergeProgressIndeterminate,
-                              W,
-                            )}
-                      </p>
-                    ) : null}
-                  </div>
-                  {showToolCancelButton ? (
-                    <button
-                      type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
-                      onClick={handleCancelCurrentOperation}
-                    >
-                      {W.toolRunCancel}
-                    </button>
-                  ) : null}
-                  <span className="merge-progress-fixed__pct">
-                    {mergeProgressIndeterminate ? "…" : `%${mergeJob.percent}`}
-                  </span>
-                </div>
-                <div
-                  className={`progress-bar progress-bar--merge progress-bar--gradient ${mergeProgressIndeterminate ? "progress-bar--indeterminate" : ""} ${mergeJob.status === "failed" ? "progress-bar--failed" : ""}`}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={
-                    mergeProgressIndeterminate
-                      ? undefined
-                      : mergeJob.status === "failed"
-                        ? 100
-                        : mergeJob.percent
-                  }
-                  aria-label={
-                    mergeToolPhaseLabel(
-                      mergeJob,
-                      mergeProgressIndeterminate,
-                      W,
-                    ) || selectedFeature.title
-                  }
-                >
-                  {mergeProgressIndeterminate ? (
-                    <div className="progress-bar__fill progress-bar__fill--indeterminate" />
-                  ) : (
-                    <div
-                      className="progress-bar__fill progress-bar__fill--gradient"
-                      style={{
-                        width: `${mergeJob.status === "failed" ? 100 : Math.max(mergeJob.percent, 2)}%`,
-                      }}
-                    />
-                  )}
-                </div>
-                <div className="merge-progress-fixed__meta">
-                  <span>
-                    {mergeJob.total > 1
-                      ? W.mergeFileProgress(
-                          mergeJob.current,
-                          mergeJob.total,
-                          mergeJob.where,
-                        )
-                      : `${W.mergeStatus}: ${mergeJob.current}/${mergeJob.total}${
-                          mergeJob.where ? ` · ${mergeJob.where}` : ""
-                        }`}
-                  </span>
-                  {mergeEtaSeconds !== null &&
-                  mergeJob.status === "running" &&
-                  !mergeProgressIndeterminate ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.mergeEtaLine(mergeEtaSeconds)}
-                    </span>
-                  ) : null}
-                </div>
-                {mergeJob.status === "failed" ? (
-                  <p className="merge-progress-fixed__err">
-                    {friendlyOperationFailedMessage(language)}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+            <MergeProgressBar
+              W={W}
+              language={language}
+              selectedFeature={selectedFeature}
+              mergeJob={mergeJob}
+              indeterminate={mergeProgressIndeterminate}
+              etaSeconds={mergeEtaSeconds}
+              premiumLane={premiumProcessingLane}
+              showCancel={showToolCancelButton}
+              onCancel={handleCancelCurrentOperation}
+            />
           ) : null}
           {TOOLSuccessBarActive ? null : genericToolProgressActive ? (
-            <div
-              className="merge-progress-fixed merge-progress-fixed--generic"
-              role="status"
-              aria-live="polite"
-            >
-              <div className="merge-progress-fixed__inner">
-                <div className="merge-progress-fixed__head">
-                  <div className="merge-progress-fixed__titles">
-                    <strong className="merge-progress-fixed__title">
-                      {selectedFeature.title}
-                    </strong>
-                    <p className="merge-progress-fixed__phase">
-                      {genericToolPhaseLabel(
-                        selectedFeatureId,
-                        genericToolPercent,
-                        genericProgressIndeterminate,
-                        W,
-                        false,
-                      )}
-                    </p>
-                  </div>
-                  {showToolCancelButton ? (
-                    <button
-                      type="button"
-                      className="nb-transition shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-500/70 hover:bg-red-500/20 hover:text-red-300"
-                      onClick={handleCancelCurrentOperation}
-                    >
-                      {W.toolRunCancel}
-                    </button>
-                  ) : null}
-                  <span className="merge-progress-fixed__pct">
-                    {genericProgressIndeterminate
-                      ? "…"
-                      : `%${genericToolPercent}`}
-                  </span>
-                </div>
-                <div
-                  className={`progress-bar progress-bar--merge progress-bar--gradient ${genericProgressIndeterminate ? "progress-bar--indeterminate" : ""}`}
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={
-                    genericProgressIndeterminate
-                      ? undefined
-                      : genericToolPercent
-                  }
-                  aria-label={genericToolPhaseLabel(
-                    selectedFeatureId,
-                    genericToolPercent,
-                    genericProgressIndeterminate,
-                    W,
-                    false,
-                  )}
-                >
-                  {genericProgressIndeterminate ? (
-                    <div className="progress-bar__fill progress-bar__fill--indeterminate" />
-                  ) : (
-                    <div
-                      className="progress-bar__fill progress-bar__fill--gradient"
-                      style={{ width: `${genericToolPercent}%` }}
-                    />
-                  )}
-                </div>
-                <div className="merge-progress-fixed__meta merge-progress-fixed__meta--generic">
-                  <span>
-                    {premiumProcessingLane
-                      ? W.toolProgressSubPremium
-                      : W.toolProgressSub}
-                  </span>
-                  {genericToolFileMb >= 5 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.toolProgressLargeFileHint(genericToolFileMb)}
-                    </span>
-                  ) : null}
-                  {genericToolElapsedSec >= 1 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.toolProgressElapsed(genericToolElapsedSec)}
-                    </span>
-                  ) : null}
-                  {genericToolRemainingSec > 0 && genericToolElapsedSec >= 4 ? (
-                    <span className="merge-progress-fixed__eta">
-                      {W.mergeEtaLine(genericToolRemainingSec)}
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <GenericToolProgressBar
+              W={W}
+              selectedFeature={selectedFeature}
+              selectedFeatureId={selectedFeatureId}
+              toolJobProgress={toolJobProgress}
+              percent={genericToolPercent}
+              indeterminate={genericProgressIndeterminate}
+              elapsedSec={genericToolElapsedSec}
+              remainingSec={genericToolRemainingSec}
+              fileMb={genericToolFileMb}
+              premiumLane={premiumProcessingLane}
+              showCancel={showToolCancelButton}
+              onCancel={handleCancelCurrentOperation}
+            />
           ) : null}
         </div>
 

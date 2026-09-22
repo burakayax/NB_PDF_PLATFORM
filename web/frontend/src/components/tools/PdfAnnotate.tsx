@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
-// eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
   ArrowUpRight,
@@ -18,7 +19,6 @@ import {
   Trash2,
   Type as TypeIcon,
   Undo2,
-  UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
@@ -166,6 +166,8 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
   const [rendering, setRendering] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
+  const [applied, setApplied] = useState(false);
   const [annos, setAnnos] = useState<Anno[]>([]);
   const [tool, setTool] = useState<Tool>("highlight");
   const [color, setColor] = useState("#fde047");
@@ -179,11 +181,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
   const [showHelp, setShowHelp] = useState(true); // kullanım ipucu şeridi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const drawing = useRef(false);
   const straightModeRef = useRef(false); // çizim boyunca düz-çizgi kilidi
   const draftRef = useRef<Anno | null>(null); // çizim taslağının güncel değeri (up için)
@@ -440,6 +440,30 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
     ];
   }
 
+  /**
+   * Metin kutusu yerleştirilince yazı alanına ODAKLAN.
+   *
+   * NEDEN: Araçla sayfaya tıklayınca belgeye "Metin" yer tutucusu damgalanıyor
+   * ve düzenleme kutusu araç çubuğunda açılıyordu — ama odak sayfada kalıyordu.
+   * Kullanıcı yazmaya başlıyor, hiçbir şey olmuyor; küçük kutuyu fark etmezse
+   * belgesini "Metin" yazısıyla indiriyordu (canlı testte tam olarak bu oldu).
+   * Artık kutu odaklanır ve yer tutucu seçili gelir: yazmaya başlamak onu siler.
+   */
+  const metinKutusuRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (!selected) return;
+    const secili = annos.find((a) => a.id === selected);
+    if (!secili || secili.kind !== "text") return;
+    const kutu = metinKutusuRef.current;
+    if (!kutu) return;
+    kutu.focus();
+    kutu.select();
+    // BAGIMLILIK BILEREK SADECE `selected`: `annos` da eklenirse kullanici her
+    // harf yazdiginda efekt yeniden calisir, metni bastan secer ve yazmayi
+    // imkansiz hale getirir. Burada yalnizca "secim degisti mi" onemli.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
+
   function onOverlayPointerDown(e: React.PointerEvent) {
     if (tool === "select") {
       // Boşluğa tıklama seçimi kaldırır (nesneler kendi pointerdown'ında durdurur).
@@ -608,6 +632,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-isaretli.pdf`;
       await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
       setEditorOpen(false);
+      setApplied(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "İşlem başarısız." : "Failed.");
     } finally {
@@ -665,40 +690,18 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
       </div>
 
       {!editorOpen && (
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const f = e.dataTransfer.files?.[0];
-            if (f) void openFile(f);
-          }}
-          onClick={() => fileInputRef.current?.click()}
-          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition sm:p-12 ${
-            dragOver ? "border-amber-400/70 bg-amber-400/[0.06]" : "border-white/15 hover:border-amber-400/40 hover:bg-white/[0.02]"
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
             accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void openFile(f);
-              e.target.value = "";
-            }}
+            note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
+            onFiles={(files) => { void openFile(files[0]); }}
           />
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-500/20 to-orange-600/20 text-amber-200 ring-1 ring-white/10 transition group-hover:scale-105">
-            <UploadCloud className="h-9 w-9" />
-          </div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "İşaretlenecek PDF'i sürükle veya seç" : "Drag or choose a PDF to mark up"}</p>
-          <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}</p>
         </div>
+      )}
+
+      {applied && !editorOpen && (
+        <ToolRating toolSlug="pdf-yorumla" language={language} />
       )}
 
       {error && !editorOpen && (
@@ -787,11 +790,12 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
 
               {selected && annos.find((a) => a.id === selected)?.kind === "text" && (
                 <input
+                  ref={metinKutusuRef}
                   autoFocus
                   value={(annos.find((a) => a.id === selected) as Extract<Anno, { kind: "text" }>).text}
                   onChange={(e) => updateText(selected, e.target.value)}
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
-                  className="w-36 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
+                  className="w-36 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
                 />
               )}
 
@@ -860,9 +864,9 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-amber-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-amber-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-amber-300" : "text-slate-500"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-amber-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}
@@ -1004,7 +1008,7 @@ export function PdfAnnotate({ language, initialFile }: { language: Language; acc
                     })}
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-500">
+                <p className="mx-auto mt-3 max-w-lg text-center text-[12px] text-slate-400">
                   {tool === "select"
                     ? tr ? "Bir nesneye tıklayıp sürükleyerek taşı, köşedeki tutamaktan boyutlandır; renk ve kalınlığı üstteki çubuktan değiştir." : "Click and drag an item to move it, resize from the corner handle; change color and thickness in the top bar."
                     : tr ? "Sayfada sürükleyerek çiz. Düzenlemek/taşımak için «Seç» aracına geç." : "Drag on the page to draw. Switch to «Select» to edit or move."}

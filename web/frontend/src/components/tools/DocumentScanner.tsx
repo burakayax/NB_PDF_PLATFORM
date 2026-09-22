@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Cloud,
   Copy,
+  Crop,
   Download,
   Image as ImageIcon,
   Infinity as InfinityIcon,
@@ -37,17 +38,21 @@ import { saveScanForAccount, takeScanForAccount } from "../../lib/pendingScan";
 // yüklendiği için pdf-lib ana pakete değil, bu aracın kendi chunk'ına düşer.
 import { imagesToSearchablePdf } from "../../lib/clientPdf";
 import { ocrImagesToWords } from "../../lib/ocr";
+import { ToolRating } from "../common/ToolRating";
 import { PdfHub } from "./PdfHub";
 import {
   canvasToJpegBlob,
   cropQuadFallback,
   detectDocumentQuad,
+  olcumAl,
+  isitScanner,
   fullFrameQuad,
   warpDocument,
   type EnhanceMode,
   type Pt,
   type Quad,
 } from "../../lib/documentScan";
+import { QuadTakipci } from "../../lib/quadTracker";
 
 type Phase = "camera" | "review" | "pages" | "result";
 // Kaydetme formatı: PDF (belge standardı, çok sayfa), JPG (paylaşım/küçük boyut),
@@ -135,17 +140,14 @@ type Props = {
 function sanitizeFileName(name: string): string {
   return (name.trim() || "taranan-belge").replace(/[\\/:*?"<>|]+/g, "-").slice(0, 100);
 }
+/** Kamera karesi hazır olduğunda geri çağıran tarayıcılar (Chrome/Safari). */
+type VideoWithFrameCb = HTMLVideoElement & {
+  requestVideoFrameCallback?: (cb: () => void) => number;
+};
+
 /** Ücretsiz planda tek taramada izin verilen sayfa sayısı (Pro: sınırsız). */
 const FREE_PAGE_LIMIT = 3;
 
-/** İki dörtgenin ortalama köşe kayması (kararlılık ölçümü için). */
-function quadDiff(a: Quad, b: Quad): number {
-  let s = 0;
-  for (let i = 0; i < 4; i++) s += Math.hypot(a[i].x - b[i].x, a[i].y - b[i].y);
-  return s / 4;
-}
-// Belge kaç ardışık kararlı karede otomatik yakalanır (~220ms/kare → ~1.3sn).
-const STABLE_FRAMES = 6;
 
 /**
  * BELGE TARAYICI — mobil kamerayla belge fotoğrafı çekip cihazda otomatik kenar
@@ -156,14 +158,31 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const tr = language === "tr";
   const [phase, setPhase] = useState<Phase>("camera");
   // Pro upsell paneli: hangi tetikleyiciyle açıldı (filtre / sayfa limiti / OCR).
-  const [upsell, setUpsell] = useState<null | "auto" | "pages" | "ocr">(null);
+  const [upsell, setUpsell] = useState<null | "auto" | "autoshot" | "pages" | "ocr">(null);
   // Aranabilir PDF (OCR) durumu: ilerleme (0..1) ve tamamlandı bayrağı.
   const [ocrPct, setOcrPct] = useState<number | null>(null);
   const [searchable, setSearchable] = useState(false);
   const [captured, setCaptured] = useState<HTMLCanvasElement | null>(null);
   const [capturedUrl, setCapturedUrl] = useState<string | null>(null);
   const [quad, setQuad] = useState<Quad | null>(null);
-  const [enhance, setEnhance] = useState<EnhanceMode>("color");
+  /**
+   * İyileştirme modu. PRO KULLANICIDA VARSAYILAN "Oto".
+   *
+   * NEDEN: Varsayılan "Renkli" idi, yani telefonun çektiği HAM fotoğraf —
+   * hiçbir düzeltme yok. Gerçek taramalarda sonuç mavimsi/soluk çıkıyor
+   * (kullanıcının arşivindeki taramalarda görüldü): kâğıt beyaz görünmüyor,
+   * dosya gereksiz büyüyor ve metin tanıma zorlaşıyor. Tarayıcı uygulamalarının
+   * tamamı varsayılan olarak düzeltilmiş "belge" görünümü verir. Hakkı olan
+   * kullanıcı bunu elle seçmek zorunda kalmamalı; ücretsiz kullanıcıda davranış
+   * değişmiyor (Oto zaten Pro özelliği).
+   */
+  const [enhance, setEnhance] = useState<EnhanceMode>(isPro ? "auto" : "color");
+  /** Kullanıcı modu ELLE seçti mi — seçtiyse varsayılan bir daha üzerine yazmaz. */
+  const enhanceSecildiRef = useRef(false);
+  const enhanceSec = useCallback((m: EnhanceMode) => {
+    enhanceSecildiRef.current = true;
+    setEnhance(m);
+  }, []);
   // Manuel köşe ayarında sürüklenen köşe indeksi → büyüteç (loupe) önizlemesi.
   const [activeCorner, setActiveCorner] = useState<number | null>(null);
   // "PDF Araçlarında aç" → hangi araçta açılacağını soran seçici.
@@ -184,10 +203,17 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   const [cameraError, setCameraError] = useState(false);
   const [result, setResult] = useState<{ blob: Blob; filename: string; saved?: "picker" | "download" } | null>(null);
   // Canlı (gerçek zamanlı) kenar tespiti + otomatik yakalama
+  // Otomatik yakalama PRO özelliğidir: ücretsiz planda canlı kenar tespiti hiç
+  // çalışmaz (kullanıcı deklanşöre basar, kenarlar çekimden sonra bulunur).
   const [autoCapture, setAutoCapture] = useState(true);
+  /** İncele ekranında köşeleri elle düzeltme modu. */
+  const [manualEdit, setManualEdit] = useState(false);
   const [liveQuad, setLiveQuad] = useState<Quad | null>(null);
   const [videoDims, setVideoDims] = useState<{ w: number; h: number } | null>(null);
   const [holdPct, setHoldPct] = useState(0);
+  /** Uzun süredir belge bulunamıyorsa somut ipucu göster (zemin/ışık/çerçeve). */
+  const [uzunSuredirBulunamadi, setUzunSuredirBulunamadi] = useState(false);
+  const sonBulunmaRef = useRef<number>(Date.now());
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -198,9 +224,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
   // Canlı tespit döngüsü yardımcı ref'leri
   const offscreenRef = useRef<HTMLCanvasElement | null>(null);
   const autoCaptureRef = useRef(true);
-  autoCaptureRef.current = autoCapture;
-  const stableRef = useRef(0);
-  const prevLiveRef = useRef<Quad | null>(null);
+  autoCaptureRef.current = autoCapture && !!isPro;
+  /** Kare kare tespiti sakin bir çerçeveye çeviren zamansal takipçi. */
+  const takipciRef = useRef<QuadTakipci | null>(null);
   const capturingRef = useRef(false);
   /** Misafir "Hesabıma kaydet"e bastı → giriş yapılır yapılmaz otomatik yükle. */
   const pendingAcctSaveRef = useRef(false);
@@ -211,14 +237,31 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  // Kamerayı yalnız "camera" fazında ve modal açıkken çalıştır (mobil kaynağı boşa tutma).
-  // Masaüstünde (arka kamera yok) kamerayı hiç açma → "telefonda açın" ekranı gösterilir.
+  /**
+   * Kamera açılamadıysa SEBEBİ — ekranda doğru şeyi yazabilmek için.
+   *   "izin"      → kullanıcı reddetti / tarayıcı engelledi
+   *   "arka-yok"  → kamera var ama arka kamera yok (tipik dizüstü)
+   *   "yok"       → hiç kamera yok / erişilemedi
+   */
+  const [kameraSorunu, setKameraSorunu] = useState<null | "izin" | "arka-yok" | "yok">(null);
+  /** Kullanıcı "tekrar dene" dediğinde kamerayı yeniden açmak için sayaç. */
+  const [kameraDeneme, setKameraDeneme] = useState(0);
+
+  // KAMERAYI DOĞRUDAN AÇMAYI DENE — önce "cihazda kamera var mı" diye YOKLAMA YAPMA.
+  //
+  // NEDEN: Bir ara cihaz listesi (enumerateDevices) ile ön kontrol yapılıyordu.
+  // Safari/WebKit gizlilik gereği İZİN VERİLMEDEN ÖNCE bu listeyi boş döndürüyor;
+  // kontrol "kamera yok" sonucuna varıp izin istemeden yükleme ekranına düşüyordu.
+  // Kullanıcı hiç izin sorusu görmeden "arka kamera bulunamadı" yazısıyla
+  // karşılaşıyordu. Doğrusu: kamerayı açmayı dene — izin istemi böyle çıkar,
+  // sonucu da hatanın türünden anla.
   useEffect(() => {
-    if (!open || phase !== "camera" || isDesktop) return;
+    if (!open || phase !== "camera") return;
     let cancelled = false;
     (async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
+          setKameraSorunu("yok");
           setCameraError(true);
           return;
         }
@@ -230,21 +273,43 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           stream.getTracks().forEach((t) => t.stop());
           return;
         }
+
+        // Açılan kamera ARKA kamera mı? Dizüstü bilgisayarın ön kamerasıyla belge
+        // taramak işe yaramaz (ters görüntü, kötü açı); orada yükleme akışı daha
+        // doğru. Dokunmatik olmayan cihazda ön kamera geldiyse tarama açılmaz.
+        const ayar = stream.getVideoTracks?.()?.[0]?.getSettings?.() as { facingMode?: string } | undefined;
+        const arkaKamera = ayar?.facingMode === "environment";
+        const dokunmatik = typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+        if (!arkaKamera && !dokunmatik) {
+          stream.getTracks().forEach((t) => t.stop());
+          setKameraSorunu("arka-yok");
+          setCameraError(true);
+          return;
+        }
+
+        // Sinir ağı modelini arka planda indir: kullanıcı belgeyi çerçeveye
+        // yerleştirirken hazır olsun.
+        void isitScanner();
+
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play().catch(() => {});
         }
+        setKameraSorunu(null);
         setCameraError(false);
-      } catch {
-        if (!cancelled) setCameraError(true);
+      } catch (e) {
+        if (cancelled) return;
+        const ad = (e as { name?: string } | null)?.name ?? "";
+        setKameraSorunu(ad === "NotAllowedError" || ad === "SecurityError" ? "izin" : "yok");
+        setCameraError(true);
       }
     })();
     return () => {
       cancelled = true;
       stopStream();
     };
-  }, [open, phase, stopStream, isDesktop]);
+  }, [open, phase, stopStream, kameraDeneme]);
 
   // Sayfa kaydırmasını kilitle + kapanınca her şeyi sıfırla.
   useEffect(() => {
@@ -265,7 +330,8 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setCaptured(null);
     setCapturedUrl(null);
     setQuad(null);
-    setEnhance("color");
+    setEnhance(isPro ? "auto" : "color");
+    enhanceSecildiRef.current = false;
     setPages((p) => {
       p.forEach((x) => URL.revokeObjectURL(x.url));
       return [];
@@ -288,7 +354,18 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setSavedAcct(false);
     setSavingAcct(false);
     saveHandleRef.current = null;
-  }, [stopStream]);
+  }, [stopStream, isPro]);
+
+  /**
+   * Pro kullanıcıda iyileştirme varsayılanı "Oto" olmalı. Bileşen ilk kuruluşunda
+   * plan bilgisi HENÜZ gelmemiş olabiliyor (oturum doğrulaması sürüyor); o anda
+   * "Renkli" seçiliyor ve plan gelince kimse düzeltmiyordu — kullanıcı taramayı
+   * hep renkli modda açılmış buluyordu. Kullanıcı elle bir mod seçmediyse plan
+   * bilgisi geldiğinde varsayılan güncellenir.
+   */
+  useEffect(() => {
+    if (!enhanceSecildiRef.current) setEnhance(isPro ? "auto" : "color");
+  }, [isPro, open]);
 
   // Modal kapandığında temizle.
   useEffect(() => {
@@ -367,6 +444,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       setDetecting(false);
       setLiveQuad(null);
       setHoldPct(0);
+      setManualEdit(false);
       setPhase("review");
     },
     [stopStream],
@@ -374,11 +452,11 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
 
   // ── CANLI kenar tespiti döngüsü (yalnız kamera fazında) ──
   useEffect(() => {
-    if (!open || phase !== "camera" || cameraError || isDesktop) return;
+    if (!open || phase !== "camera" || cameraError || !isPro) return;
     // Kameraya her girişte temiz başla.
     capturingRef.current = false;
-    stableRef.current = 0;
-    prevLiveRef.current = null;
+    const takipci = (takipciRef.current ??= new QuadTakipci());
+    takipci.sifirla();
     setLiveQuad(null);
     setHoldPct(0);
 
@@ -395,35 +473,37 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           const vw = v.videoWidth;
           const vh = v.videoHeight;
           const off = offscreenRef.current ?? (offscreenRef.current = document.createElement("canvas"));
-          const ow = Math.min(vw, 640);
+          // 640 → 800: kütüphanenin önerdiği işleme boyutu. Küçük karede ince
+          // kenarlar kayboluyor, belge bulunamıyordu.
+          const ow = Math.min(vw, 800);
           const oh = Math.max(1, Math.round(vh * (ow / vw)));
           off.width = ow;
           off.height = oh;
           off.getContext("2d")?.drawImage(v, 0, 0, ow, oh);
-          const q = await detectDocumentQuad(off);
+          const o = await olcumAl(off);
           if (!cancelled && !capturingRef.current) {
-            if (q) {
-              const s = vw / ow;
-              const scaled = q.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad;
-              setLiveQuad(scaled);
-              const prev = prevLiveRef.current;
-              const moved = prev ? quadDiff(prev, scaled) : Infinity;
-              stableRef.current = moved < vw * 0.03 ? stableRef.current + 1 : 0;
-              prevLiveRef.current = scaled;
+            const s = vw / ow;
+            const olcum = o ? (o.quad.map((p) => ({ x: p.x * s, y: p.y * s })) as Quad) : null;
+            // Takipçi: düzleştirme + kayıp kare koruması + sıçrama reddi.
+            const d = takipci.guncelle(olcum, vw, Date.now(), o?.guven ?? 1);
+            setLiveQuad(d.quad);
+            if (d.quad) {
+              sonBulunmaRef.current = Date.now();
+              setUzunSuredirBulunamadi(false);
               if (autoCaptureRef.current) {
-                setHoldPct(Math.min(1, stableRef.current / STABLE_FRAMES));
-                if (stableRef.current >= STABLE_FRAMES) {
+                setHoldPct(d.kararlilik);
+                if (d.cekilsin) {
                   capturingRef.current = true;
-                  autoShot(scaled);
+                  autoShot(d.quad);
                 }
               } else {
                 setHoldPct(0);
               }
             } else {
-              setLiveQuad(null);
-              stableRef.current = 0;
-              prevLiveRef.current = null;
               setHoldPct(0);
+              // 4 saniyedir hiçbir kenar bulunamadıysa kullanıcı neyi
+              // değiştireceğini bilmiyor; genel "belgeyi göster" yazısı yetmiyor.
+              if (Date.now() - sonBulunmaRef.current > 4000) setUzunSuredirBulunamadi(true);
             }
           }
         } catch {
@@ -433,7 +513,13 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           running = false;
         }
       }
-      if (!cancelled) timer = window.setTimeout(tick, 220);
+      // Tespit kare başına ~10-20 ms. Sabit bekleme yerine KAMERANIN kendi kare
+      // akışına bağlanılır (destekleyen tarayıcıda): çerçeve görüntüyle aynı anda
+      // güncellenir, gecikmeli/kopuk takip hissi kalkar.
+      if (cancelled) return;
+      const v2 = videoRef.current as VideoWithFrameCb | null;
+      if (v2?.requestVideoFrameCallback) v2.requestVideoFrameCallback(() => void tick());
+      else timer = window.setTimeout(tick, 80);
     };
     timer = window.setTimeout(tick, 500); // kamera ısınması için kısa gecikme
     return () => {
@@ -441,7 +527,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
       clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, phase, cameraError, autoShot]);
+  }, [open, phase, cameraError, autoShot, isPro]);
 
   const onPickFile = useCallback(
     (f: File | undefined) => {
@@ -569,6 +655,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
     setCapturedUrl(null);
     setQuad(null);
     setError(null);
+    setManualEdit(false);
     setPhase("camera");
   };
 
@@ -891,54 +978,57 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── KAMERA ── */}
           {phase === "camera" && (
             <motion.div key="camera" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col">
-              {isDesktop ? (
+              {cameraError ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
                   <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30">
-                    <Smartphone className="h-8 w-8" />
+                    {kameraSorunu === "arka-yok" ? <Smartphone className="h-8 w-8" /> : <Camera className="h-8 w-8" />}
                   </span>
                   <div>
                     <p className="text-lg font-bold">
-                      {tr ? "Bu araç telefonda kullanılır" : "Use this tool on your phone"}
+                      {kameraSorunu === "izin"
+                        ? tr ? "Kamera izni gerekli" : "Camera permission needed"
+                        : kameraSorunu === "arka-yok"
+                          ? tr ? "Bu araç telefonda kullanılır" : "Use this tool on your phone"
+                          : tr ? "Kamera açılamadı" : "Couldn't open the camera"}
                     </p>
                     <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-                      {tr
-                        ? "Belge Tara, telefonunuzun arka kamerasıyla belgeyi çekip cihazınızda PDF'e çevirir. Bilgisayarda kamera tarama çalışmaz — telefonunuzdan pdfplatform.app adresine girip Belge Tara'yı açın."
-                        : "Scan Document uses your phone's rear camera to capture a document and turn it into a PDF on-device. Camera scanning isn't available on desktop — open pdfplatform.app on your phone and start Scan Document."}
+                      {kameraSorunu === "izin"
+                        ? tr
+                          ? "Belgeyi taramak için kameraya erişim izni vermen gerekiyor. Tarayıcı ayarlarından bu siteye kamera iznini aç, sonra tekrar dene."
+                          : "Scanning needs camera access. Allow the camera for this site in your browser settings, then try again."
+                        : kameraSorunu === "arka-yok"
+                          ? tr
+                            ? "Belge tarama cihazın ARKA kamerasıyla çalışır; bu bilgisayarda yalnızca ön kamera var. Telefonundan pdfplatform.app adresine girip Belge Tara'yı aç — kenarlar canlı bulunur, sabitleyince kendiliğinden çeker."
+                            : "Scanning uses the REAR camera; this computer only has a front camera. Open pdfplatform.app on your phone and start Scan Document — edges are tracked live and it captures when steady."
+                          : tr
+                            ? "Kamera şu an kullanılamıyor. Başka bir uygulama kamerayı kullanıyor olabilir; kapatıp tekrar dene ya da hazır bir görsel yükle."
+                            : "The camera isn't available right now. Another app may be using it — close it and try again, or upload an image instead."}
                     </p>
                   </div>
                   <div className="mt-1 flex flex-col items-center gap-2">
+                    {kameraSorunu !== "arka-yok" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCameraError(false);
+                          setKameraSorunu(null);
+                          setKameraDeneme((n) => n + 1);
+                        }}
+                        className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3.5 text-sm font-bold text-white"
+                      >
+                        <Camera className="h-4 w-4" />
+                        {tr ? "Kamerayı tekrar dene" : "Try the camera again"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.1]"
                     >
                       <ImageIcon className="h-4 w-4" />
-                      {tr ? "Bilgisayardan görsel yükle" : "Upload an image instead"}
+                      {tr ? "Hazır görsel yükle" : "Upload an image instead"}
                     </button>
-                    <p className="inline-flex items-center gap-1.5 text-[12px] text-slate-500">
-                      <Smartphone className="h-3.5 w-3.5" />
-                      {tr ? "En iyi sonuç: telefonun arka kamerası" : "Best result: phone rear camera"}
-                    </p>
                   </div>
-                </div>
-              ) : cameraError ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.06] text-cyan-300">
-                    <Camera className="h-7 w-7" />
-                  </span>
-                  <p className="max-w-xs text-sm text-slate-300">
-                    {tr
-                      ? "Kameraya erişilemedi. Telefonun kamerasıyla fotoğraf çekmek için aşağıdaki düğmeye dokun."
-                      : "Camera unavailable. Tap below to take a photo with your phone camera."}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3.5 text-sm font-bold text-white"
-                  >
-                    <Camera className="h-4 w-4" />
-                    {tr ? "Kamerayı Aç" : "Open camera"}
-                  </button>
                 </div>
               ) : (
                 <>
@@ -977,14 +1067,23 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       <div className="pointer-events-none absolute inset-6 rounded-2xl border-2 border-dashed border-white/25" />
                     )}
                     <p className="pointer-events-none absolute inset-x-0 top-5 text-center text-[13px] font-medium text-white/85 drop-shadow">
-                      {!autoCapture
-                        ? tr ? "Hazır olunca çek" : "Tap to capture when ready"
-                        : liveQuad
-                          ? holdPct >= 1
-                            ? tr ? "Yakalanıyor…" : "Capturing…"
-                            : tr ? "Belge bulundu — sabit tut" : "Document found — hold steady"
-                          : tr ? "Belgeyi kameraya göster" : "Point at the document"}
+                      {!isPro
+                        ? tr ? "Belgeyi çerçeveye al ve çek" : "Frame the document and capture"
+                        : !autoCapture
+                          ? tr ? "Hazır olunca çek" : "Tap to capture when ready"
+                          : liveQuad
+                            ? holdPct >= 1
+                              ? tr ? "Yakalanıyor…" : "Capturing…"
+                              : tr ? "Belge bulundu — sabit tut" : "Document found — hold steady"
+                            : tr ? "Belgeyi kameraya göster" : "Point at the document"}
                     </p>
+                    {uzunSuredirBulunamadi && !liveQuad && (
+                      <p className="pointer-events-none absolute inset-x-6 top-14 rounded-xl bg-black/55 px-3 py-2 text-center text-[12px] leading-relaxed text-amber-200">
+                        {tr
+                          ? "Belge seçilemiyor: kâğıdın dört kenarı da görünsün, zemin kâğıttan koyu olsun ve gölge düşmesin."
+                          : "Can't lock on: keep all four edges in view, use a background darker than the paper, and avoid shadows."}
+                      </p>
+                    )}
                     {/* Otomatik yakalama ilerleme çubuğu */}
                     {autoCapture && holdPct > 0 && (
                       <div className="pointer-events-none absolute inset-x-10 top-12 h-1 overflow-hidden rounded-full bg-white/15">
@@ -994,19 +1093,30 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                         />
                       </div>
                     )}
-                    {/* Otomatik yakalama aç/kapa */}
-                    <button
-                      type="button"
-                      onClick={() => setAutoCapture((v) => !v)}
-                      className={`absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold backdrop-blur transition ${
-                        autoCapture
-                          ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40"
-                          : "bg-black/40 text-slate-300 ring-1 ring-white/15"
-                      }`}
-                    >
-                      <Zap className="h-3.5 w-3.5" />
-                      {tr ? "Otomatik" : "Auto"} {autoCapture ? (tr ? "Açık" : "On") : (tr ? "Kapalı" : "Off")}
-                    </button>
+                    {/* Otomatik yakalama — Pro'da aç/kapa, ücretsizde tanıtım çipi */}
+                    {isPro ? (
+                      <button
+                        type="button"
+                        onClick={() => setAutoCapture((v) => !v)}
+                        className={`absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold backdrop-blur transition ${
+                          autoCapture
+                            ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40"
+                            : "bg-black/40 text-slate-300 ring-1 ring-white/15"
+                        }`}
+                      >
+                        <Zap className="h-3.5 w-3.5" />
+                        {tr ? "Otomatik" : "Auto"} {autoCapture ? (tr ? "Açık" : "On") : (tr ? "Kapalı" : "Off")}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setUpsell("autoshot")}
+                        className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-violet-500/20 px-3 py-1.5 text-[12px] font-bold text-violet-200 ring-1 ring-violet-400/40 backdrop-blur transition hover:bg-violet-500/30"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        {tr ? "Otomatik çekim: Pro" : "Auto capture: Pro"}
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center justify-between gap-4 border-t border-white/[0.08] px-8 py-5">
                     <button
@@ -1029,10 +1139,21 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     >
                       <span className="rounded-full bg-cyan-500" style={{ height: 56, width: 56 }} />
                     </button>
-                    <div className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-slate-400">
-                      <Zap className={`h-4 w-4 ${autoCapture ? "text-emerald-400" : "text-slate-500"}`} />
-                      {autoCapture ? (tr ? "Otomatik" : "Auto") : (tr ? "Manuel" : "Manual")}
-                    </div>
+                    {isPro ? (
+                      <div className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-slate-400">
+                        <Zap className={`h-4 w-4 ${autoCapture ? "text-emerald-400" : "text-slate-400"}`} />
+                        {autoCapture ? (tr ? "Otomatik" : "Auto") : (tr ? "Manuel" : "Manual")}
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setUpsell("autoshot")}
+                        className="flex w-16 flex-col items-center gap-1 text-center text-[11px] text-violet-300 transition hover:text-violet-200"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        {tr ? "Otomatik" : "Auto"}
+                      </button>
+                    )}
                   </div>
                 </>
               )}
@@ -1087,10 +1208,18 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   <svg
                     ref={svgRef}
                     viewBox={`0 0 ${captured.width} ${captured.height}`}
-                    className="absolute inset-0 h-full w-full touch-none"
-                    onPointerMove={onMove}
-                    onPointerUp={endDrag}
-                    onPointerLeave={endDrag}
+                    /* Kaplama katmanı eskiden dokunuşun TAMAMINI yutuyordu
+                       (touch-none): kullanıcı belgenin üzerinden parmağını
+                       kaydırdığında sayfa kaymıyor, aşağıdaki düğmelere
+                       ulaşamıyordu. Artık yalnız köşe düzeltme açıkken dokunuş
+                       yakalanır; diğer zamanlarda kaplama şeffaftır ve sayfa
+                       normal biçimde kaydırılır. */
+                    className={`absolute inset-0 h-full w-full ${
+                      manualEdit ? "touch-none" : "pointer-events-none touch-pan-y"
+                    }`}
+                    onPointerMove={manualEdit ? onMove : undefined}
+                    onPointerUp={manualEdit ? endDrag : undefined}
+                    onPointerLeave={manualEdit ? endDrag : undefined}
                   >
                     <polygon
                       points={quad.map((p) => `${p.x},${p.y}`).join(" ")}
@@ -1101,9 +1230,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     {quad.map((p, i) => (
                       <g key={i} onPointerDown={(e) => startDrag(e, i)} style={{ cursor: "grab" }}>
                         {/* Geniş dokunma hedefi — parmağı tam köşeye getirmek gerekmesin */}
-                        <circle cx={p.x} cy={p.y} r={cornerR * 2.6} fill="rgba(56,189,248,0.16)" stroke="rgba(56,189,248,0.45)" strokeWidth={strokeW} />
-                        {/* Görünür tutamak */}
-                        <circle cx={p.x} cy={p.y} r={cornerR} fill="#38bdf8" stroke="#fff" strokeWidth={strokeW} />
+                        <circle cx={p.x} cy={p.y} r={cornerR * (manualEdit ? 3.2 : 2.6)} fill="rgba(56,189,248,0.16)" stroke="rgba(56,189,248,0.45)" strokeWidth={strokeW} />
+                        {/* Görünür tutamak — elle düzeltme modunda daha büyük */}
+                        <circle cx={p.x} cy={p.y} r={cornerR * (manualEdit ? 1.5 : 1)} fill="#38bdf8" stroke="#fff" strokeWidth={strokeW} />
                       </g>
                     ))}
                   </svg>
@@ -1118,13 +1247,29 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 )}
               </div>
 
+              {/* Kenar düzeltme artık İSTİSNA: otomatik tespit köşeleri zaten
+                  doğru buluyor, bu yüzden ana düğme sırasını işgal etmiyor.
+                  Nadiren gerektiğinde buradan açılır. */}
+              <button
+                type="button"
+                onClick={() => setManualEdit((v) => !v)}
+                className={`mx-auto mt-2.5 flex w-full max-w-md items-center justify-center gap-1.5 text-[12px] font-semibold transition ${
+                  manualEdit ? "text-cyan-200" : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                <Crop className="h-3.5 w-3.5" />
+                {manualEdit
+                  ? tr ? "Düzeltmeyi bitir" : "Done adjusting"
+                  : tr ? "Kenarlar yanlışsa elle düzelt" : "Edges wrong? Adjust manually"}
+              </button>
+
               {/* İyileştirme modu — "Oto" Pro (gölge temizleme + kontrast) */}
               <div className="mx-auto mt-4 flex w-full max-w-md items-center gap-2">
                 <Wand2 className="h-4 w-4 shrink-0 text-slate-400" />
                 <div className="grid flex-1 grid-cols-4 gap-1.5 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-1.5">
                   <button
                     type="button"
-                    onClick={() => (isPro ? setEnhance("auto") : setUpsell("auto"))}
+                    onClick={() => (isPro ? enhanceSec("auto") : setUpsell("auto"))}
                     className={`inline-flex items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[13px] font-semibold transition ${
                       enhance === "auto" && isPro
                         ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white"
@@ -1142,7 +1287,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     <button
                       key={m}
                       type="button"
-                      onClick={() => setEnhance(m)}
+                      onClick={() => enhanceSec(m)}
                       className={`rounded-xl px-2 py-2 text-[13px] font-semibold transition ${
                         enhance === m ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white" : "text-slate-300 hover:bg-white/[0.06]"
                       }`}
@@ -1169,24 +1314,46 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                 </p>
               )}
 
-              <div className="mx-auto mt-4 flex w-full max-w-md gap-3">
-                <button
-                  type="button"
-                  onClick={retake}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.08]"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  {tr ? "Yeniden çek" : "Retake"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void commitPage()}
-                  disabled={busy || detecting || !quad}
-                  className="flex flex-[1.4] items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
-                >
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {tr ? "Bu sayfayı kullan" : "Use this page"}
-                </button>
+              {/* Elle düzeltme açıkken ne yapılacağını yazıyoruz — kimse aramasın. */}
+              {manualEdit && (
+                <div className="mx-auto mt-3 w-full max-w-md rounded-xl border border-cyan-400/25 bg-cyan-500/[0.08] px-4 py-3 text-[12px] leading-relaxed text-cyan-100">
+                  {tr
+                    ? "Mavi yuvarlakları parmağınla (ya da fareyle) tutup belgenin dört köşesine getir. Sürüklerken büyüteç çıkar, tam yeri görürsün."
+                    : "Drag the blue circles to the four corners of the document. A magnifier appears while you drag so you can see exactly where you are."}
+                  <button
+                    type="button"
+                    onClick={() => setQuad(fullFrameQuad(captured?.width ?? 0, captured?.height ?? 0))}
+                    className="ml-1 font-semibold underline decoration-cyan-300/50 underline-offset-2 transition hover:text-white"
+                  >
+                    {tr ? "Köşeleri sıfırla" : "Reset corners"}
+                  </button>
+                </div>
+              )}
+
+              {/* İŞLEM ÇUBUĞU — ekranın altına YAPIŞIK.
+                  Önceden sayfanın en altındaydı; uzun belgelerde "Kullan" ve
+                  "Yeniden çek" görünmüyor, kullanıcı aşağı kaydırmak zorunda
+                  kalıyordu. Artık her zaman parmağın altında. */}
+              <div className="sticky bottom-0 z-10 -mx-4 mt-4 border-t border-white/[0.08] bg-[#0b1220]/85 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-md gap-2.5">
+                  <button
+                    type="button"
+                    onClick={retake}
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-4 py-3.5 text-[13px] font-semibold text-slate-200 transition hover:bg-white/[0.08]"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    {tr ? "Yeniden çek" : "Retake"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void commitPage()}
+                    disabled={busy || detecting || !quad}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-3.5 text-sm font-bold text-white transition hover:from-cyan-500 hover:to-blue-500 disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {tr ? "Kullan" : "Use this page"}
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -1194,12 +1361,47 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
           {/* ── SAYFALAR ── */}
           {phase === "pages" && (
             <motion.div key="pages" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              {/* Otomatik çekim AÇIKKEN ne yapması gerektiğini söyler.
+                  Eskiden burada "bu taramada N sayfa otomatik yakalandı"
+                  yazıyordu: sayı beğenilmeyip silinen denemeleri de sayıyordu ve
+                  kullanıcı listeye o kadar sayfa eklenmiş sanıyordu. */}
+              {isPro && autoCapture && (
+                <div className="mx-auto mb-3 flex max-w-md items-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3.5 py-2.5 text-[12px] text-emerald-100">
+                  <Zap className="h-4 w-4 shrink-0 text-emerald-300" />
+                  <span>
+                    {tr
+                      ? "Otomatik çekim açık: sıradaki sayfayı kameraya tut, çerçeve oturunca kendiliğinden çekilir."
+                      : "Auto-capture is on: hold the next page in view and it will be captured on its own."}
+                  </span>
+                </div>
+              )}
+              {/* Ücretsiz planda otomatik çekimin ne kazandıracağını göster. */}
+              {!isPro && pages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setUpsell("autoshot")}
+                  className="mx-auto mb-3 flex w-full max-w-md items-start gap-2.5 rounded-xl border border-violet-400/25 bg-violet-500/[0.08] px-3.5 py-2.5 text-left text-[12px] text-violet-100 transition hover:bg-violet-500/[0.14]"
+                >
+                  <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" />
+                  <span>
+                    <span className="block font-semibold">
+                      {tr ? "Her sayfa için deklanşöre basmasan?" : "What if you never tapped the shutter?"}
+                    </span>
+                    <span className="block text-violet-200/80">
+                      {tr
+                        ? "Pro'da telefonu belgeye tutman yeter; kenarları bulur, kendi çeker. Kalın dosyalarda sayfa başına birkaç saniye kazandırır."
+                        : "With Pro you just hold the phone over the page; it finds the edges and shoots by itself — seconds saved on every page."}
+                    </span>
+                  </span>
+                </button>
+              )}
+
               <div className="mx-auto mb-3 flex max-w-md items-center justify-between gap-2">
                 <p className="text-sm text-slate-300">
                   {pages.length}{" "}
                   {tr ? "sayfa tarandı" : pages.length === 1 ? "page scanned" : "pages scanned"}
                   {!isPro && (
-                    <span className="ml-1.5 text-[12px] text-slate-500">
+                    <span className="ml-1.5 text-[12px] text-slate-400">
                       ({pages.length}/{FREE_PAGE_LIMIT} {tr ? "ücretsiz" : "free"})
                     </span>
                   )}
@@ -1316,12 +1518,12 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                       className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${format === f ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                     >
                       <span className="text-[13px] font-bold">{lbl}</span>
-                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                      <span className={`text-[10px] ${format === f ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                     </button>
                   ))}
                 </div>
                 {format !== "pdf" && pages.length > 1 && (
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 text-[11px] text-slate-400">
                     {tr ? `${pages.length} sayfa → her sayfa ayrı görsel, tek ZIP olarak.` : `${pages.length} pages → one image per page, in a single ZIP.`}
                   </p>
                 )}
@@ -1346,7 +1548,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                         className={`flex flex-col items-center rounded-lg px-2 py-2 transition ${quality === qk ? "bg-gradient-to-br from-cyan-600 to-blue-600 text-white shadow" : "text-slate-300 hover:bg-white/[0.06]"}`}
                       >
                         <span className="text-[13px] font-bold">{lbl}</span>
-                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-500"}`}>{hint}</span>
+                        <span className={`text-[10px] ${quality === qk ? "text-white/80" : "text-slate-400"}`}>{hint}</span>
                       </button>
                     ))}
                   </div>
@@ -1364,9 +1566,9 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
                     placeholder="taranan-belge"
-                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-500 outline-none"
+                    className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-white placeholder:text-slate-400 outline-none"
                   />
-                  <span className="shrink-0 text-sm text-slate-500">
+                  <span className="shrink-0 text-sm text-slate-400">
                     .{format === "pdf" ? "pdf" : pages.length > 1 ? "zip" : FORMAT_EXT[format]}
                   </span>
                 </div>
@@ -1574,6 +1776,7 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   <Sliders className="h-3.5 w-3.5" />
                   {tr ? "Yeni belge tara" : "Scan a new document"}
                 </button>
+                <ToolRating toolSlug="belge-tara" language={language} />
               </div>
             </motion.div>
           )}
@@ -1605,15 +1808,27 @@ export function DocumentScanner({ open, language, onClose, onUseInTools, isPro, 
                   ? tr ? `Ücretsiz ${FREE_PAGE_LIMIT} sayfa doldu` : `Free ${FREE_PAGE_LIMIT}-page limit reached`
                   : upsell === "ocr"
                     ? tr ? "Aranabilir PDF (OCR) — Pro" : "Searchable PDF (OCR) — Pro"
-                    : tr ? "Otomatik İyileştirme — Pro" : "Auto Enhance — Pro"}
+                    : upsell === "autoshot"
+                      ? tr ? "Otomatik Çekim — Pro" : "Auto Capture — Pro"
+                      : tr ? "Otomatik İyileştirme — Pro" : "Auto Enhance — Pro"}
               </p>
               <p className="mt-1 text-center text-[13px] text-slate-400">
-                {tr
-                  ? "Pro ile tarama, gerçek bir tarayıcı gibi çalışır:"
-                  : "With Pro, scanning works like a real scanner:"}
+                {upsell === "autoshot"
+                  ? tr
+                    ? "Telefonu belgenin üstünde tut, gerisini o halleder. 20 sayfalık bir dosyayı deklanşöre hiç basmadan tararsın."
+                    : "Hold the phone over the document and it does the rest. Scan a 20-page file without pressing the shutter once."
+                  : tr
+                    ? "Pro ile tarama, gerçek bir tarayıcı gibi çalışır:"
+                    : "With Pro, scanning works like a real scanner:"}
               </p>
               <ul className="mt-4 space-y-2.5">
                 {[
+                  {
+                    icon: <Zap className="h-4 w-4" />,
+                    t: tr
+                      ? "Otomatik çekim — kenarları canlı bulur, sen tutarken kendi çeker"
+                      : "Auto capture — finds the edges live and shoots by itself",
+                  },
                   {
                     icon: <Sparkles className="h-4 w-4" />,
                     t: tr

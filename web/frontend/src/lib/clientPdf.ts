@@ -12,12 +12,8 @@ import { PDFDocument, degrees, rgb, LineCapStyle } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { zipSync } from "fflate";
 import { PdfEncryptedError } from "./clientPdfCore";
-import type {
-  SearchableWord,
-  SearchablePage,
-  SignatureItem,
-  AnnotationItem,
-} from "./clientPdfCore";
+import { PDF_SAVE_OPTIONS } from "./pdfSaveOptions";
+import type { SearchablePage, SignatureItem, AnnotationItem } from "./clientPdfCore";
 
 // Geriye-uyum: `./clientPdf`'ten doğrudan import eden çağıranlar (SearchablePdfTool,
 // testler, summaryPdf) bu hafif sembolleri buradan almaya devam edebilsin.
@@ -41,6 +37,27 @@ async function loadPdf(bytes: ArrayBuffer | Uint8Array): Promise<PDFDocument> {
 }
 
 /** Birden fazla PDF'i tek belgede birleştirir. Sayfalar `files` sırasına göre eklenir. */
+/**
+ * Çıktının künyesine ürünün adını yazar.
+ *
+ * NEDEN: Varsayılan hâlde üretici alanında kullandığımız açık kaynak
+ * kütüphanenin adı ("pdf-lib") yazıyordu. Çıktının künyesine bakan kurumsal
+ * kullanıcı orada bir kütüphane adı görüyor, ürünün adını hiç görmüyordu —
+ * hem amatör duruyor hem de karşı tarafa ulaşan her dosyadaki ücretsiz tanıtım
+ * kanalı boşa gidiyordu. Belgenin özgün başlığı varsa korunur.
+ */
+function markaKunyesi(doc: PDFDocument, ozgunBaslik?: string): void {
+  try {
+    doc.setProducer("PDF Platform (pdfplatform.app)");
+    doc.setCreator("PDF Platform (pdfplatform.app)");
+    const baslik = (ozgunBaslik ?? "").trim();
+    if (baslik) doc.setTitle(baslik);
+    doc.setModificationDate(new Date());
+  } catch {
+    // Künye yazılamazsa çıktı yine geçerlidir; işlemi bozmaya değmez.
+  }
+}
+
 export async function mergePdfs(
   files: Array<ArrayBuffer | Uint8Array>,
 ): Promise<Uint8Array> {
@@ -51,13 +68,106 @@ export async function mergePdfs(
     const copied = await out.copyPages(src, src.getPageIndices());
     copied.forEach((p) => out.addPage(p));
   }
-  return out.save();
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 type ImageInput = { bytes: ArrayBuffer | Uint8Array; mime: string };
 
-/** Görselleri (JPG/PNG) tek PDF'e çevirir. Her görsel kendi boyutunda bir sayfa olur. */
-export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
+/** A4 (nokta cinsinden). Çalışma kâğıdı çıktısının varsayılan sayfası. */
+const A4 = { w: 595.28, h: 841.89 };
+
+export type SheetOptions = {
+  /** Sütun sayısı: 1 (geniş içerik) veya 2 (soru/küçük kesit). */
+  columns?: 1 | 2;
+  /** Sayfa kenar boşluğu (nokta). */
+  margin?: number;
+  /** Kesitler arası dikey boşluk (nokta). */
+  gap?: number;
+};
+
+/**
+ * Görselleri A4 sayfalara SIRAYLA DİZER — her görsele ayrı sayfa açmaz.
+ *
+ * Kesit aracının asıl çıktısı budur: bir kitapçıktan alınan 12 soru, 12 ayrı
+ * sayfa değil; sırayla dizilmiş, yazdırılabilir 2-3 sayfalık bir çalışma
+ * kâğıdı olur.
+ *
+ * İki sütunda yerleşim SATIR SATIR ilerler (1 sol, 2 sağ, 3 alt sola…) —
+ * sütunu baştan sona doldurup diğerine geçmez; kullanıcı iki sütun dediğinde
+ * gördüğü şey yan yana iki kesittir. Satırın yüksekliği o satırdaki en uzun
+ * kesit kadardır; sayfaya sığmayan satır bir sonraki sayfaya iner.
+ */
+export async function imagesToSheets(
+  images: ImageInput[],
+  options: SheetOptions = {},
+): Promise<Uint8Array> {
+  if (images.length === 0) throw new Error("No images.");
+  const columns = options.columns === 2 ? 2 : 1;
+  const margin = options.margin ?? 36;
+  const gap = options.gap ?? 18;
+
+  const out = await PDFDocument.create();
+  const colWidth = (A4.w - margin * 2 - (columns - 1) * gap) / columns;
+  const contentHeight = A4.h - margin * 2;
+
+  // Önce hepsini göm ve yerleşim ölçülerini hesapla.
+  const items: Array<{ img: Awaited<ReturnType<typeof out.embedPng>>; w: number; h: number }> = [];
+  for (const img of images) {
+    const isPng = img.mime.includes("png");
+    const embedded = isPng ? await out.embedPng(img.bytes) : await out.embedJpg(img.bytes);
+    let scale = Math.min(1, colWidth / embedded.width);
+    if (embedded.height * scale > contentHeight) scale = contentHeight / embedded.height;
+    items.push({ img: embedded, w: embedded.width * scale, h: embedded.height * scale });
+  }
+
+  let page = out.addPage([A4.w, A4.h]);
+  let cursorY = A4.h - margin;
+
+  for (let i = 0; i < items.length; i += columns) {
+    const row = items.slice(i, i + columns);
+    const rowHeight = Math.max(...row.map((it) => it.h));
+    // Satır bu sayfaya sığmıyorsa yeni sayfa (sayfanın başındaysak zaten sığar).
+    if (cursorY - rowHeight < margin && cursorY < A4.h - margin) {
+      page = out.addPage([A4.w, A4.h]);
+      cursorY = A4.h - margin;
+    }
+    row.forEach((it, col) => {
+      // Hücre içinde yatayda ortala, dikeyde satırın üstüne hizala.
+      const cellX = margin + col * (colWidth + gap);
+      page.drawImage(it.img, {
+        x: cellX + (colWidth - it.w) / 2,
+        y: cursorY - it.h,
+        width: it.w,
+        height: it.h,
+      });
+    });
+    cursorY -= rowHeight + gap;
+  }
+
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
+}
+
+/** Görselden PDF'te sayfa ölçüsü: A4'e sığdır (varsayılan) ya da görselin kendi ölçüsü. */
+export type ImagePageSize = "a4" | "original";
+
+/** A4 — punto cinsinden (1 punto = 1/72 inç). */
+const A4_PT = { w: 595.28, h: 841.89 };
+
+/**
+ * Görselleri (JPG/PNG) tek PDF'e çevirir.
+ *
+ * VARSAYILAN A4: Eskiden sayfa, görselin PİKSEL ölçüsü kadar yapılıyordu;
+ * 1600x1200 piksellik sıradan bir fotoğraf 56x42 cm'lik bir sayfa üretiyordu ve
+ * yazdırmaya kalkan kullanıcı sürprizle karşılaşıyordu. Artık görsel, yönü
+ * korunarak A4'e sığdırılır; "görselle aynı" isteyen kullanıcı için eski
+ * davranış seçenek olarak durur.
+ */
+export async function imagesToPdf(
+  images: ImageInput[],
+  pageSize: ImagePageSize = "a4",
+): Promise<Uint8Array> {
   if (images.length === 0) throw new Error("No images.");
   const out = await PDFDocument.create();
   for (const img of images) {
@@ -65,15 +175,36 @@ export async function imagesToPdf(images: ImageInput[]): Promise<Uint8Array> {
     const embedded = isPng
       ? await out.embedPng(img.bytes)
       : await out.embedJpg(img.bytes);
-    const page = out.addPage([embedded.width, embedded.height]);
+
+    if (pageSize === "original") {
+      const page = out.addPage([embedded.width, embedded.height]);
+      page.drawImage(embedded, { x: 0, y: 0, width: embedded.width, height: embedded.height });
+      continue;
+    }
+
+    // Yatay görsel yatay A4'e, dikey görsel dikey A4'e gider.
+    const yatay = embedded.width > embedded.height;
+    const sayfaW = yatay ? A4_PT.h : A4_PT.w;
+    const sayfaH = yatay ? A4_PT.w : A4_PT.h;
+    const page = out.addPage([sayfaW, sayfaH]);
+
+    // Oran korunur, kenarlarda ince bir boşluk bırakılır.
+    const bosluk = 18;
+    const olcek = Math.min(
+      (sayfaW - bosluk * 2) / embedded.width,
+      (sayfaH - bosluk * 2) / embedded.height,
+    );
+    const w = embedded.width * olcek;
+    const h = embedded.height * olcek;
     page.drawImage(embedded, {
-      x: 0,
-      y: 0,
-      width: embedded.width,
-      height: embedded.height,
+      x: (sayfaW - w) / 2,
+      y: (sayfaH - h) / 2,
+      width: w,
+      height: h,
     });
   }
-  return out.save();
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -113,7 +244,8 @@ export async function imagesToSearchablePdf(
       }
     }
   }
-  return out.save();
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -162,7 +294,8 @@ export async function applySignatures(
       });
     }
   }
-  return doc.save();
+  markaKunyesi(doc);
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /**
@@ -243,7 +376,8 @@ export async function applyAnnotations(
       page.drawImage(img, { x, y, width: w, height: h });
     }
   }
-  return doc.save();
+  markaKunyesi(doc);
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /** Sayfaları döndürür. `rotations`: sayfa index → derece (0/90/180/270). */
@@ -260,7 +394,8 @@ export async function rotatePdf(
       pages[i]!.setRotation(degrees((current + deg) % 360));
     }
   }
-  return doc.save();
+  markaKunyesi(doc);
+  return doc.save(PDF_SAVE_OPTIONS);
 }
 
 /** Belirtilen (0-tabanlı) sayfaları siler. */
@@ -269,13 +404,24 @@ export async function deletePages(
   pagesToDelete: number[],
 ): Promise<Uint8Array> {
   const doc = await loadPdf(bytes);
-  // Büyükten küçüğe sil ki index'ler kaymasın.
-  const sorted = [...new Set(pagesToDelete)].sort((a, b) => b - a);
-  for (const i of sorted) {
-    if (i >= 0 && i < doc.getPageCount()) doc.removePage(i);
-  }
-  if (doc.getPageCount() === 0) throw new Error("All pages would be deleted.");
-  return doc.save();
+  const silinecek = new Set(pagesToDelete.filter((i) => i >= 0 && i < doc.getPageCount()));
+  const kalan = Array.from({ length: doc.getPageCount() }, (_, i) => i).filter(
+    (i) => !silinecek.has(i),
+  );
+  if (kalan.length === 0) throw new Error("All pages would be deleted.");
+
+  // SAYFA SİLMEK DOSYAYI GERÇEKTEN KÜÇÜLTMELİ.
+  //
+  // Sayfayı belgeden çıkarmak, o sayfanın yazı tiplerini ve görsellerini dosyanın
+  // içinde bırakıyordu: ölçümde 30 sayfalık 1.158 KB'lık bir belgeden 5 sayfa
+  // silince çıktı 1.162 KB, yani DAHA BÜYÜK oluyordu. Kullanıcı haklı olarak
+  // "sildim ama küçülmedi" diyordu. Kalan sayfaları yeni bir belgeye kopyalamak,
+  // yalnızca gerçekten kullanılan kaynakları taşır.
+  const out = await PDFDocument.create();
+  const kopyalar = await out.copyPages(doc, kalan);
+  for (const sayfa of kopyalar) out.addPage(sayfa);
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /** Sayfaları yeni sıraya göre yeniden dizer. `order`: yeni sırada eski index'ler. */
@@ -287,7 +433,8 @@ export async function reorderPages(
   const out = await PDFDocument.create();
   const copied = await out.copyPages(src, order);
   copied.forEach((p) => out.addPage(p));
-  return out.save();
+  markaKunyesi(out);
+  return out.save(PDF_SAVE_OPTIONS);
 }
 
 /** PDF sayfa sayısı (şifreliyse `PdfEncryptedError` fırlatır). Görsel seçici
@@ -312,7 +459,8 @@ export async function splitPagesToZip(
     const out = await PDFDocument.create();
     const copied = await out.copyPages(src, [i]);
     copied.forEach((p) => out.addPage(p));
-    files[`${baseName}_${i + 1}.pdf`] = await out.save();
+    markaKunyesi(out);
+    files[`${baseName}_${i + 1}.pdf`] = await out.save(PDF_SAVE_OPTIONS);
   }
   return zipSync(files);
 }
@@ -361,5 +509,6 @@ export async function cropPdf(
       if (page) setPageCrop(page, rect);
     }
   }
-  return doc.save();
+  markaKunyesi(doc);
+  return doc.save(PDF_SAVE_OPTIONS);
 }

@@ -16,6 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
+import { ToolRating } from "../common/ToolRating";
 import { ToolDropzone } from "./ToolDropzone";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import {
@@ -80,10 +81,9 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
   const [files, setFiles] = filesState ?? internalFiles;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ blob: Blob; filename: string; saved: "picker" | "download" } | null>(null);
+  const [result, setResult] = useState<{ blob: Blob; filename: string } | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
   // Son kaydetme yeri — "Tekrar indir" aynı konuma yazsın (yeni işleme dek hafızada).
-  const saveHandleRef = useRef<FileSystemFileHandle | null>(null);
 
   // Dosya eklenince listeyi görünüme kaydır — kullanıcı "bir şey olmadı" sanmasın
   // (liste dropzone'un altında kaldığı için ekran dışında kalabiliyordu).
@@ -206,7 +206,6 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
     setFiles([]);
     setResult(null);
     setError(null);
-    saveHandleRef.current = null;
     if (autoDetect) setActiveTool(tool);
   };
 
@@ -241,26 +240,10 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       );
       return;
     }
-    // Kaydetme yerini SOR (Dashboard'daki gibi) — kullanıcı aktivasyonu hâlâ
-    // geçerliyken, ağır işlemden ÖNCE. Desteklenmiyorsa indirmeye düşülür.
-    let saveHandle: FileSystemFileHandle | null = null;
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: {
-        suggestedName?: string;
-        types?: Array<{ description: string; accept: Record<string, string[]> }>;
-      }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        saveHandle = await win.showSaveFilePicker({
-          suggestedName: outName,
-          types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }],
-        });
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
-        // desteklenmiyor / güvenli bağlam değil → indirmeye düşülür
-      }
-    }
+    // NOT: Kaydetme yeri burada SORULMAZ. Kullanıcı "hazırla" dediğinde daha
+    // sonucu görmeden bir "Farklı kaydet" penceresiyle karşılaşıyordu. Dosya
+    // önce hazırlanır ve ekranda gösterilir; kaydetme yeri yalnızca "İndir"e
+    // basıldığında sorulur.
     try {
       setBusy(true);
       let bytes: Uint8Array;
@@ -273,17 +256,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
         bytes = await mergePdfs(await Promise.all(okFiles.map((f) => f.file.arrayBuffer())));
       }
       const blob = pdfBytesToBlob(bytes);
-      if (saveHandle) {
-        const w = await saveHandle.createWritable();
-        await w.write(blob);
-        await w.close();
-        saveHandleRef.current = saveHandle; // "Tekrar indir" aynı yere yazsın
-        // Bildirimde KULLANICININ girdiği gerçek isim gösterilsin.
-        setResult({ blob, filename: saveHandle.name || outName, saved: "picker" });
-      } else {
-        downloadBlob(blob, outName);
-        setResult({ blob, filename: outName, saved: "download" });
-      }
+      setResult({ blob, filename: outName });
     } catch (e) {
       setError(
         e instanceof PdfEncryptedError
@@ -311,21 +284,21 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
   }
 
   const [reSaved, setReSaved] = useState(false);
-  // "Tekrar indir": önce SON kaydetme konumuna yaz (hafızada). Konum yoksa yeniden SOR —
-  // sessizce İndirilenler'e atma.
+  const [everDownloaded, setEverDownloaded] = useState(false);
+  /**
+   * İNDİRME YALNIZ BURADA OLUR: kaydetme yeri, kullanıcı bu düğmeye bastığında
+   * sorulur. Tıklama taze bir etkileşim olduğu için pencere güvenle açılır.
+   * Kaydetme başarılıysa düğme kısa süre "İndirildi" onayı gösterir, sonra
+   * "Tekrar indir" olarak kalır — dosya zaten alındığı için yeniden "İndir"
+   * yazması yanıltıcıydı.
+   */
   async function redownload() {
     if (!result) return;
-    const h = saveHandleRef.current;
-    if (h) {
-      try {
-        const w = await h.createWritable();
-        await w.write(result.blob);
-        await w.close();
-        setReSaved(true);
-        setTimeout(() => setReSaved(false), 2500);
-        return;
-      } catch { /* izin düştü → yeniden sor */ }
-    }
+    const isaretle = () => {
+      setEverDownloaded(true);
+      setReSaved(true);
+      setTimeout(() => setReSaved(false), 3000);
+    };
     const win = window as unknown as {
       showSaveFilePicker?: (o: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
     };
@@ -333,13 +306,12 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
       try {
         const nh = await win.showSaveFilePicker({ suggestedName: result.filename, types: [{ description: "PDF", accept: { "application/pdf": [".pdf"] } }] });
         const w = await nh.createWritable(); await w.write(result.blob); await w.close();
-        saveHandleRef.current = nh;
-        setReSaved(true);
-        setTimeout(() => setReSaved(false), 2500);
+        isaretle();
         return;
       } catch (e) { if (e instanceof DOMException && e.name === "AbortError") return; }
     }
     downloadBlob(result.blob, result.filename);
+    isaretle();
   }
 
   // Sonucu yeni sekmede aç (PDF tarayıcıda görüntülenir).
@@ -382,22 +354,11 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
           <Check className="h-8 w-8" />
         </div>
         <p className="mt-4 text-xl font-bold text-white">
-          {tr
-            ? result.saved === "picker" ? "Kaydedildi! 🎉" : "İndirildi! 🎉"
-            : result.saved === "picker" ? "Saved! 🎉" : "Downloaded! 🎉"}
+          {tr ? "PDF hazır 🎉" : "Your PDF is ready 🎉"}
         </p>
-        {/* Net "indi/kaydedildi" işareti — kullanıcı tekrar indirmeye gerek olmadığını görsün */}
         <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3.5 py-2 text-[13px] font-medium text-emerald-200">
           <Check className="h-4 w-4 shrink-0" />
-          <span className="truncate">
-            {tr
-              ? result.saved === "picker"
-                ? `«${result.filename}» seçtiğin konuma kaydedildi`
-                : `«${result.filename}» İndirilenler klasörüne indirildi`
-              : result.saved === "picker"
-                ? `«${result.filename}» saved to your chosen location`
-                : `«${result.filename}» saved to your Downloads folder`}
-          </span>
+          <span className="truncate">{result.filename}</span>
         </div>
         <p className="mt-2 text-sm text-slate-400">
           {tr
@@ -416,10 +377,21 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
           <button
             type="button"
             onClick={() => void redownload()}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+            aria-live="polite"
+            className={
+              reSaved
+                ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
+                : everDownloaded
+                  ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                  : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+            }
           >
-            {reSaved ? <Check className="h-4 w-4 text-emerald-400" /> : <Download className="h-4 w-4" />}
-            {reSaved ? (tr ? "Tekrar kaydedildi ✓" : "Saved again ✓") : (tr ? "Tekrar indir" : "Download again")}
+            {reSaved ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            {reSaved
+              ? tr ? "İndirildi" : "Downloaded"
+              : everDownloaded
+                ? tr ? "Tekrar indir" : "Download again"
+                : tr ? "İndir" : "Download"}
           </button>
           {canShare && (
             <button
@@ -439,6 +411,10 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
             {tr ? "Yeni işlem" : "New task"}
           </button>
         </div>
+        <ToolRating
+          toolSlug={activeTool === "merge" ? "merge-pdf" : "image-to-pdf"}
+          language={language}
+        />
         <ValueMomentNudge language={language} source="guest_tool_success" />
       </motion.div>
     );
@@ -521,7 +497,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                   onPointerMove={onGripPointerMove}
                   onPointerUp={endDrag}
                   onPointerCancel={endDrag}
-                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-500 transition hover:text-white active:cursor-grabbing"
+                  className="shrink-0 cursor-grab touch-none rounded-md p-1 text-slate-400 transition hover:text-white active:cursor-grabbing"
                   aria-label={tr ? "Sürükleyip sırala" : "Drag to reorder"}
                   title={tr ? "Sürükleyip sırala" : "Drag to reorder"}
                 >
@@ -533,7 +509,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-500"}`}>
+                <p className={`text-[11px] ${bad ? "text-amber-300 font-medium" : "text-slate-400"}`}>
                   {f.status === "locked" ? (
                     <>
                       {tr ? "Şifre korumalı — " : "Password-protected — "}
@@ -550,7 +526,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                     type="button"
                     onClick={() => move(i, -1)}
                     disabled={i === 0}
-                    className="rounded-md p-1 text-slate-500 transition hover:text-white disabled:opacity-30"
+                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
                     aria-label={tr ? "Yukarı" : "Up"}
                   >
                     <ArrowUp className="h-4 w-4" />
@@ -559,7 +535,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
                     type="button"
                     onClick={() => move(i, 1)}
                     disabled={i === files.length - 1}
-                    className="rounded-md p-1 text-slate-500 transition hover:text-white disabled:opacity-30"
+                    className="rounded-md p-1 text-slate-400 transition hover:text-white disabled:opacity-30"
                     aria-label={tr ? "Aşağı" : "Down"}
                   >
                     <ArrowDown className="h-4 w-4" />
@@ -569,7 +545,7 @@ export function GuestToolCore({ tool, language, autoDetect, onRegister, filesSta
               <button
                 type="button"
                 onClick={() => remove(f.id)}
-                className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                 aria-label={tr ? "Kaldır" : "Remove"}
               >
                 <Trash2 className="h-4 w-4" />

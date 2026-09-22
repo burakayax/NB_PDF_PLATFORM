@@ -1,6 +1,7 @@
 import { saasAuthorizedFetch } from "./subscription";
 import { getSaasApiBase } from "./saasBase";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "./auth";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 export type PlanName = "FREE" | "STARTER" | "PLUS" | "PRO" | "BUSINESS";
 export type SubscriptionStatus =
@@ -81,7 +82,7 @@ function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 export async function fetchUserBalance(

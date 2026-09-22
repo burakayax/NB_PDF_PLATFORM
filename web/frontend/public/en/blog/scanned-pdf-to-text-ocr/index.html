@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>Convert a Scanned PDF into Editable Text (OCR)</title>
+    <meta name="description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/blog/scanned-pdf-to-text-ocr" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/blog/scanned-pdf-to-text-ocr" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/blog/taranmis-pdf-metne-cevirme-ocr" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="Convert a Scanned PDF into Editable Text (OCR)" />
+    <meta property="og:description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta property="og:image" content="https://www.pdfplatform.app/en/covers/scanned-pdf-to-text-ocr.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Convert a Scanned PDF into Editable Text (OCR)" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/blog/scanned-pdf-to-text-ocr" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="Convert a Scanned PDF into Editable Text (OCR)" />
+    <meta name="twitter:description" content="Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/en/covers/scanned-pdf-to-text-ocr.png" />
+    <meta name="twitter:image:alt" content="Convert a Scanned PDF into Editable Text (OCR)" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.pdfplatform.app/en/blog"},{"@type":"ListItem","position":3,"name":"Convert a Scanned PDF into Editable Text (OCR)","item":"https://www.pdfplatform.app/en/blog/scanned-pdf-to-text-ocr"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Convert a Scanned PDF into Editable Text (OCR)","description":"Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free.","datePublished":"2026-07-03","dateModified":"2026-07-03","inLanguage":"en","mainEntityOfPage":"https://www.pdfplatform.app/en/blog/scanned-pdf-to-text-ocr","author":{"@type":"Organization","name":"PDF Platform","@id":"https://www.pdfplatform.app/#organization"},"publisher":{"@id":"https://www.pdfplatform.app/#organization"},"image":"https://www.pdfplatform.app/en/covers/scanned-pdf-to-text-ocr.png"}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Convert a Scanned PDF into Editable Text (OCR)","description":"Turn text inside scanned or photo-based PDFs into real, searchable text with OCR — Turkish and English, in your browser and free.","inLanguage":"en","step":[{"@type":"HowToStep","position":1,"name":"Upload the scanned PDF","text":"Add your photo/scan-based PDF to the OCR tool."},{"@type":"HowToStep","position":2,"name":"Convert to text","text":"OCR turns the text in the page images into real text on your device (Turkish + English)."},{"@type":"HowToStep","position":3,"name":"Use the text","text":"Now search, copy, or feed it into summarize or translate tools."}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is handwriting recognized?","acceptedAnswer":{"@type":"Answer","text":"Not reliably. OCR is built for printed type, and handwriting can come out too inaccurate to use. Neat block capitals may partially work, but the result still needs checking."}},{"@type":"Question","name":"Does OCR change how the document looks?","acceptedAnswer":{"@type":"Answer","text":"Not in the searchable-PDF output. The page image stays the same and an invisible text layer is added beneath it. It also prints identically."}},{"@type":"Question","name":"Do tables come out correctly?","acceptedAnswer":{"@type":"Answer","text":"Table content is read, but the row-and-column structure is not always preserved. If you want the data as a table, the data extraction tool gives a better result than OCR."}},{"@type":"Question","name":"How long does it take on long documents?","acceptedAnswer":{"@type":"Answer","text":"It depends on page count and image resolution. A few pages finish in seconds; hundreds of high-resolution scanned pages take noticeably longer."}},{"@type":"Question","name":"How do I convert scanned PDF text to text?","acceptedAnswer":{"@type":"Answer","text":"Upload the PDF to the OCR tool; OCR turns the text in the page images into real text in your browser. Then you can search, copy or summarize it."}},{"@type":"Question","name":"Which languages does OCR support?","acceptedAnswer":{"@type":"Answer","text":"Turkish and English. Processing happens on your device; your document is not uploaded."}},{"@type":"Question","name":"Why can't I select text in a scanned PDF?","acceptedAnswer":{"@type":"Answer","text":"Because the text is actually an image. OCR turns it into real, selectable text."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>Convert a Scanned PDF into Editable Text (OCR)</h1><p class="seo-intro">Can&#39;t select or search text in a scanned PDF? That&#39;s because the text is actually an image. OCR turns it into real text — here&#39;s how.</p><figure class="seo-cover"><img src="/en/covers/scanned-pdf-to-text-ocr.png" width="1200" height="630" loading="lazy" decoding="async" alt="Convert a Scanned PDF into Editable Text (OCR)" /></figure><article class="seo-article"><p class="seo-lead">When you scan a document into a PDF, the text on the page is actually a photo. That&#39;s why you can&#39;t select, search or copy it. OCR (Optical Character Recognition) turns that image into real text.</p><h2>What exactly does OCR do?</h2><p>OCR recognizes the letters and words in the page image and converts them into editable, searchable text. So you can summarize, search within, or copy a scanned contract, deed or invoice.</p><h2>OCR step by step</h2><ol><li><strong>Upload the scanned PDF:</strong> Add your photo/scan-based PDF to the OCR tool.</li><li><strong>Convert to text:</strong> OCR turns the text in the page images into real text on your device (Turkish + English).</li><li><strong>Use the text:</strong> Now search, copy, or feed it into summarize or translate tools.</li></ol><p><a href="/en/tools/ocr-pdf"><strong>Scanned PDF → Text (OCR)</strong> — Turn text in a scanned document into real text.</a></p><p>Processing happens entirely on your device — your document is not uploaded. Best results come from clear, high-resolution scans.</p><h2>What determines OCR quality?</h2><p>OCR accuracy depends heavily on the input. The same engine is near-perfect on a clean scan and confuses letters on a shadowed phone photo. The main factors are:</p><ul><li>Resolution: scans around 300 DPI perform noticeably better; below 150 DPI the error rate climbs fast.</li><li>Contrast: faded ink or a grey photocopy makes letters hard to separate from the background.</li><li>Skew: even a few degrees of tilt disrupts line tracking.</li><li>Typeface: standard print faces are recognized well; handwriting and decorative fonts are not reliable.</li><li>Layout: reading order can get scrambled on multi-column pages and tables.</li></ul><h2>Accented and non-English characters</h2><p>Characters outside the basic Latin set are where OCR slips most often — Turkish dotless ı against i, or capital İ against I, is a classic case. On documents where a single character matters, such as identity papers, deeds or contracts, verify the output by eye. If you only need the text for searching later, small errors are harmless; if you will copy it into something official, checking is essential.</p><h2>Searchable PDF or plain text?</h2><p>These are two different needs that often get confused. To keep the document&#39;s appearance and search inside it, an invisible text layer is placed over the page: the document looks identical but Ctrl+F works. To move the text elsewhere, a plain-text output serves better, but the page layout is lost. For most people the searchable PDF is more useful because the document keeps its official look.</p><h2>Preparing the document before OCR</h2><p>A little preparation raises recognition noticeably. Straighten skewed pages with the rotate tool, delete blank or duplicated pages, and run phone photos through the Document Scanner first. Because the scanner finds the edges and corrects perspective, OCR receives a far cleaner page.</p><h2>What you can do after OCR</h2><ul><li>Export the document to Word and edit it.</li><li>Have AI summarize a long contract.</li><li>Pull amounts and dates from an invoice into a table.</li><li>Translate the document into another language.</li><li>Find it years later in your archive with a single keyword.</li></ul></article><nav aria-label="Related PDF tools" class="seo-related-tools"><h2>PDF Tools for This Task</h2><ul><li><a href="/en/tools/ocr-pdf">Scanned PDF to Text (OCR)</a></li><li><a href="/en/tools/pdf-to-text">PDF to Text</a></li></ul></nav><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>Is handwriting recognized?</h3><p>Not reliably. OCR is built for printed type, and handwriting can come out too inaccurate to use. Neat block capitals may partially work, but the result still needs checking.</p></div><div class="seo-faq-item"><h3>Does OCR change how the document looks?</h3><p>Not in the searchable-PDF output. The page image stays the same and an invisible text layer is added beneath it. It also prints identically.</p></div><div class="seo-faq-item"><h3>Do tables come out correctly?</h3><p>Table content is read, but the row-and-column structure is not always preserved. If you want the data as a table, the data extraction tool gives a better result than OCR.</p></div><div class="seo-faq-item"><h3>How long does it take on long documents?</h3><p>It depends on page count and image resolution. A few pages finish in seconds; hundreds of high-resolution scanned pages take noticeably longer.</p></div><div class="seo-faq-item"><h3>How do I convert scanned PDF text to text?</h3><p>Upload the PDF to the OCR tool; OCR turns the text in the page images into real text in your browser. Then you can search, copy or summarize it.</p></div><div class="seo-faq-item"><h3>Which languages does OCR support?</h3><p>Turkish and English. Processing happens on your device; your document is not uploaded.</p></div><div class="seo-faq-item"><h3>Why can&#39;t I select text in a scanned PDF?</h3><p>Because the text is actually an image. OCR turns it into real, selectable text.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/pdf-api/docs">API Documentation</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+import { PLAN_PRICES } from "../../lib/plan-catalogue.js";
 import type { Request } from "express";
 import { env } from "../../config/env.js";
 import { prisma } from "../../lib/prisma.js";
@@ -56,7 +57,7 @@ export async function getPublicSiteConfig() {
     (flags.betaFeatures as Record<string, boolean> | undefined) ??
     (site.betaFeatures as Record<string, boolean> | undefined) ??
     {};
-  let featureFlags: Record<string, boolean> = {};
+  const featureFlags: Record<string, boolean> = {};
   if (flags.featureFlags != null && typeof flags.featureFlags === "object" && !Array.isArray(flags.featureFlags)) {
     for (const [k, v] of Object.entries(flags.featureFlags as Record<string, unknown>)) {
       if (typeof v === "boolean") {
@@ -153,10 +154,15 @@ export async function getPublicPlansPayload() {
   return { plans };
 }
 
+/**
+ * Yurt dışı ziyaretçiye gösterilen USD fiyatları — fiyat kataloğundan.
+ * `basicMonthly` alan adı Business planını taşır (tarihsel ad, TL tarafındaki
+ * `businessMonthly` ile eşleşir).
+ */
 const USD_MARKETING = {
-  basicMonthly: "4.99",
-  proMonthly: "9.99",
-  proAnnual: "59.99",
+  basicMonthly: PLAN_PRICES.BUSINESS.usdMonthly,
+  proMonthly: PLAN_PRICES.PRO.usdMonthly,
+  proAnnual: PLAN_PRICES.PRO.usdYearly,
 } as const;
 
 function annualSavingsPercent(monthly: number, annualPrice: number): number {

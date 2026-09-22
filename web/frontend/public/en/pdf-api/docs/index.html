@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f172a" />
+    <!-- Pinterest site doğrulama (claim). Tüm prerender sayfalarda; Pinterest ana sayfayı okur. -->
+    <meta name="p:domain_verify" content="4d2ff89418f6e0e09f7856f276c42ad3" />
+    <script>
+      // Bakım modu ipucu (localStorage, 5dk TTL) varsa prerender içeriğini GÖRSEL gizle.
+      // React mount edip MaintenancePage gösterene kadar "landing bir an görünüp kaybolma"
+      // (flicker) olmasın. İçerik DOM'da kalır (yalnızca visibility:hidden) → SEO/crawler etkilenmez.
+      try {
+        var h = JSON.parse(localStorage.getItem("nb-maintenance-mode-hint") || "null");
+        if (h && h.active === true && typeof h.ts === "number" && Date.now() - h.ts < 300000) {
+          document.documentElement.className += " nb-maint";
+        }
+      } catch (e) {}
+    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content="PDF Platform" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PDF Platform" />
+    <meta name="msapplication-TileColor" content="#0f172a" />
+    <title>API Documentation — Endpoints, Auth, Errors | PDF Platform</title>
+    <meta name="description" content="PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 errors, rate limits and versioning." />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="googlebot" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://www.pdfplatform.app/en/pdf-api/docs" />
+    <!-- Blog beslemesi: okuyucular ve otomasyon araçları bu satırdan bulur. -->
+    <link rel="alternate" type="application/rss+xml" title="PDF Platform Blog" href="https://www.pdfplatform.app/en/rss.xml" />
+    <!-- Çok dilli: TR (öneksiz) + EN (/en/) karşılıklı hreflang; x-default = TR. -->
+    <link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/pdf-api/docs" />
+    <link rel="alternate" hreflang="en" href="https://www.pdfplatform.app/en/pdf-api/docs" />
+    <link rel="alternate" hreflang="x-default" href="https://www.pdfplatform.app/pdf-api/docs" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PDF Platform" />
+    <meta property="og:title" content="API Documentation — Endpoints, Auth, Errors | PDF Platform" />
+    <meta property="og:description" content="PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 errors, rate limits and versioning." />
+    <meta property="og:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="API Documentation — Endpoints, Auth, Errors | PDF Platform" />
+    <meta property="og:url" content="https://www.pdfplatform.app/en/pdf-api/docs" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nbglobalstudio" />
+    <meta name="twitter:creator" content="@nbglobalstudio" />
+    <meta name="twitter:title" content="API Documentation — Endpoints, Auth, Errors | PDF Platform" />
+    <meta name="twitter:description" content="PDF Platform REST API reference: authentication, /v1 endpoints, request and response examples, RFC 9457 errors, rate limits and versioning." />
+    <meta name="twitter:image" content="https://www.pdfplatform.app/og-image-en.png" />
+    <meta name="twitter:image:alt" content="API Documentation — Endpoints, Auth, Errors | PDF Platform" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+    <style>
+      /* Anlık koyu zemin: React yüklenene dek beyaz "flash" olmaz (uygulama bg ile aynı). */
+      html,body{margin:0;background:#0f172a}
+      /* Prerender içeriği YALNIZCA arama motorları / JS'siz botlar için DOM'da durur;
+         kullanıcıya görsel olarak GÖSTERİLMEZ (flash/FOUC önlenir). React hidrasyonunda
+         zaten gerçek arayüzle değiştirilir. SEO KAYBI YOK: metin DOM'da + erişilebilirlik
+         ağacında kalır; Google JS render edince gerçek sayfayı görür (sr-only/clip tekniği). */
+      .seo-prerender{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+    </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://www.pdfplatform.app/#website","name":"PDF Platform","url":"https://www.pdfplatform.app","inLanguage":"en-US","description":"PDF to Word, merge, compress, PDF to JPG, edit and 40+ more tools. Free, no sign-up; merge runs in your browser and your files never leave your device.","publisher":{"@id":"https://www.pdfplatform.app/#organization"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.pdfplatform.app/#organization","name":"PDF Platform","url":"https://www.pdfplatform.app","logo":{"@type":"ImageObject","url":"https://www.pdfplatform.app/logo.png","width":192,"height":192},"description":"Professional PDF merge, convert, compress, and edit platform — built for business document workflows.","contactPoint":{"@type":"ContactPoint","contactType":"customer support","availableLanguage":["Turkish","English"]},"sameAs":[]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"PDF Platform","item":"https://www.pdfplatform.app/en"},{"@type":"ListItem","position":2,"name":"PDF & AI API","item":"https://www.pdfplatform.app/en/pdf-api"},{"@type":"ListItem","position":3,"name":"API Documentation","item":"https://www.pdfplatform.app/en/pdf-api/docs"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I authenticate?","acceptedAnswer":{"@type":"Answer","text":"Send the key you generated in the dashboard in the Authorization: Bearer header on every request. You can verify it with GET /v1/me, which costs no credits."}},{"@type":"Question","name":"What format do errors use?","acceptedAnswer":{"@type":"Answer","text":"Errors follow RFC 9457 and return as application/problem+json with type, title, status, code, detail and request_id fields."}},{"@type":"Question","name":"What is the rate limit?","acceptedAnswer":{"@type":"Answer","text":"60 requests per minute per key. Responses carry RateLimit headers; exceeding the limit returns 429 with Retry-After."}},{"@type":"Question","name":"What happens if an endpoint is removed?","acceptedAnswer":{"@type":"Answer","text":"Breaking changes ship in a new version. When an endpoint is retired, responses start carrying RFC 9745 Deprecation and Sunset headers, with at least six months before shutdown."}},{"@type":"Question","name":"How are requests sent?","acceptedAnswer":{"@type":"Answer","text":"Endpoints accept POST over HTTPS. Send the document as multipart form data or as a reachable link, and pass options as fields in the same request. Responses come back as JSON."}},{"@type":"Question","name":"What if I send the same request twice?","acceptedAnswer":{"@type":"Answer","text":"Include an idempotency key in the request header and a second call with the same key will not start new work; it returns the result of the first call. This prevents double billing when the network drops."}},{"@type":"Question","name":"What about large files?","acceptedAnswer":{"@type":"Answer","text":"File size and page limits are defined per endpoint. When a limit is exceeded the request returns a descriptive RFC 9457 error; splitting the file and sending it in parts is the practical route."}},{"@type":"Question","name":"Are test and live environments separate?","acceptedAnswer":{"@type":"Answer","text":"API keys are generated per account and usage is tracked per key. Generate a separate key for development so you can follow that spend independently of live traffic."}}]}</script>
+  </head>
+  <body>
+    <div id="root"><main class="seo-prerender"><h1>API Documentation</h1><p class="seo-intro">The PDF Platform API reference. API-key authentication, endpoints versioned under /v1, a request and response example for every endpoint, RFC 9457 errors, rate-limit headers following the IETF draft, and retry-safe POSTs via Idempotency-Key. A machine-readable OpenAPI spec is published too.</p><section aria-label="Frequently asked questions" class="seo-faq"><h2>Frequently Asked Questions</h2><div class="seo-faq-item"><h3>How do I authenticate?</h3><p>Send the key you generated in the dashboard in the Authorization: Bearer header on every request. You can verify it with GET /v1/me, which costs no credits.</p></div><div class="seo-faq-item"><h3>What format do errors use?</h3><p>Errors follow RFC 9457 and return as application/problem+json with type, title, status, code, detail and request_id fields.</p></div><div class="seo-faq-item"><h3>What is the rate limit?</h3><p>60 requests per minute per key. Responses carry RateLimit headers; exceeding the limit returns 429 with Retry-After.</p></div><div class="seo-faq-item"><h3>What happens if an endpoint is removed?</h3><p>Breaking changes ship in a new version. When an endpoint is retired, responses start carrying RFC 9745 Deprecation and Sunset headers, with at least six months before shutdown.</p></div><div class="seo-faq-item"><h3>How are requests sent?</h3><p>Endpoints accept POST over HTTPS. Send the document as multipart form data or as a reachable link, and pass options as fields in the same request. Responses come back as JSON.</p></div><div class="seo-faq-item"><h3>What if I send the same request twice?</h3><p>Include an idempotency key in the request header and a second call with the same key will not start new work; it returns the result of the first call. This prevents double billing when the network drops.</p></div><div class="seo-faq-item"><h3>What about large files?</h3><p>File size and page limits are defined per endpoint. When a limit is exceeded the request returns a descriptive RFC 9457 error; splitting the file and sending it in parts is the practical route.</p></div><div class="seo-faq-item"><h3>Are test and live environments separate?</h3><p>API keys are generated per account and usage is tracked per key. Generate a separate key for development so you can follow that spend independently of live traffic.</p></div></section><nav aria-label="Site sections" class="seo-sitenav"><h2>Site Map</h2><ul><li><a href="/en">Home — All PDF Tools</a></li><li><a href="/en/blog">Blog — PDF Guides</a></li><li><a href="/en/pricing">Pricing and Plans</a></li><li><a href="/en/pdf-api">PDF &amp; AI API</a></li><li><a href="/en/terms">Terms of Service</a></li><li><a href="/en/privacy">Privacy Policy</a></li><li><a href="/en/kvkk">KVKK Notice</a></li></ul></nav></main></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

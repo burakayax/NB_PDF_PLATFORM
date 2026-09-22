@@ -1,0 +1,1140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:media="http://search.yahoo.com/mrss/">
+  <channel>
+    <title>PDF Platform Blog</title>
+    <link>https://www.pdfplatform.app/en/blog</link>
+    <description>Guides on PDF tools, document workflows, and AI-assisted document reading.</description>
+    <language>en-US</language>
+    <copyright>© 2026 PDF Platform</copyright>
+    <lastBuildDate>Mon, 21 Sep 2026 12:08:00 GMT</lastBuildDate>
+    <ttl>60</ttl>
+    <generator>PDF Platform</generator>
+    <atom:link href="https://www.pdfplatform.app/en/rss.xml" rel="self" type="application/rss+xml" />
+    <image>
+      <url>https://www.pdfplatform.app/og-image-en.png</url>
+      <title>PDF Platform Blog</title>
+      <link>https://www.pdfplatform.app/en/blog</link>
+    </image>
+    <item>
+      <title>A Sejda Alternative for When Three Tasks an Hour Runs Out</title>
+      <link>https://www.pdfplatform.app/en/blog/sejda-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/sejda-alternative</guid>
+      <pubDate>Mon, 21 Sep 2026 12:08:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/sejda-alternatifi-saatlik-limit" />
+      <description><![CDATA[Sejda is a good tool — one of the few online editors that genuinely changes the text inside a PDF. But its free tier is metered by the hour, and anyone working through a batch hits that wall fast.]]></description>
+      <content:encoded><![CDATA[<p>People who use Sejda generally speak well of it, and they are right to. But the reason they go looking for an alternative is almost always the same: three tasks an hour. With one document it does not matter. Working through ten invoices, you stop at the third and wait for the clock.</p>
+<h2>Where exactly does Sejda's free tier stop?</h2>
+<ul><li>3 tasks per hour. The fourth one waits.</li><li>Page limits per tool: 50 pages for organising pages, 200 for most other tools.</li><li>File size: 50 MB for most tools, 100 MB for compression.</li><li>No signup required — which is genuinely a point in its favour.</li></ul>
+<p>On the paid side there is a $5 week pass, $7.50 per user per month, or $63 a year including the desktop version. Paid removes the hourly and page limits and raises the file size to 500 MB.</p>
+<h2>What Sejda genuinely does well</h2>
+<p>Let us be fair, because these are not small things:</p>
+<ul><li>One of the few online tools that can really edit the text inside a PDF.</li><li>There is a desktop version, for people who want to work offline.</li><li>The week pass: for a one-off job you can pay $5 for seven days without starting a subscription. We have no equivalent.</li><li>Free use needs no account.</li></ul>
+<p>If you do a heavy PDF job a few times a year, the week pass is probably the most sensible option — you never start a monthly subscription.</p>
+<h2>Why an hourly cap grates</h2>
+<p>Because that is not how the work happens. Nobody spreads document processing across an afternoon; they want to clear twenty files in one sitting. An hourly meter reflects the shape of the billing, not the shape of the need.</p>
+<p>This is not a flaw peculiar to Sejda. Anything that runs on a server costs money to run and has to be capped somewhere. The limit is unavoidable — the question worth asking is whether the work needed a server at all.</p>
+<h2>Page operations do not need a server</h2>
+<p>Merging, splitting, rotating, cropping, deleting and reordering pages can all be done with your browser's own power. When they are, two things change at once: nothing is uploaded, so the privacy question disappears; and nothing costs the provider anything, so there is nothing to meter.</p>
+<p>On PDF Platform those tools run in the browser: no hourly cap, no daily cap, no account. Up to 80 MB per file.</p>
+<blockquote><p>Checking takes thirty seconds: open the merge tool, disconnect from the internet, run the merge. If it completes, the work is happening on your machine — there is no server job to count.</p></blockquote>
+<h2>And the work that does need a server?</h2>
+<p>Here honesty is required: conversion to Word, OCR and compression run on a server here too, and the free plan comes with a daily allowance. On those tools we are limited as well.</p>
+<p>The difference is where the limit falls. Sejda's hourly cap covers every tool, page editing included. Here, page operations are never counted, because they cost us nothing — and those are exactly the things free users do most.</p>
+<p><strong>Merge PDF</strong> — No hourly cap, no account — it runs in your browser and your file is not uploaded. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Which should you pick?</h2>
+<ul><li>Doing page operations (merge, split, rotate, delete, reorder): the browser-based tool is unlimited and nothing is uploaded.</li><li>Need to edit the text inside a PDF: both can. Sejda has done it for years; we have real text editing too.</li><li>A heavy job a few times a year: Sejda's $5 week pass is probably the cheapest route — we have no such option.</li><li>Want a desktop application: Sejda has one, we do not.</li><li>Processing many documents regularly: compare the monthly cost — Sejda Web is $7.50, PDF Platform Plus is $6.99.</li></ul>
+<p>So this is not a «which is better» question. Sejda offers a strong server-side toolkit with flexible ways to pay. We take page operations off the server entirely, which removes the limit on them. Pick whichever matches what you actually do.</p>]]></content:encoded>
+      <category>Comparison</category>
+      <category>PDF Tools</category>
+      <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/sejda-alternative.png" type="image/png" length="53217" />
+      <media:content url="https://www.pdfplatform.app/en/covers/sejda-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/sejda-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/sejda-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/sejda-alternative.png" />
+    </item>
+    <item>
+      <title>Microsoft Lens Is Gone: What to Use for Phone Scanning Now</title>
+      <link>https://www.pdfplatform.app/en/blog/microsoft-lens-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/microsoft-lens-alternative</guid>
+      <pubDate>Sat, 19 Sep 2026 20:47:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/microsoft-lens-alternatifi" />
+      <description><![CDATA[Microsoft Lens is retired and Microsoft points users at OneDrive — but not everyone wants their documents in someone's cloud. Here are the realistic options for scanning with your phone in 2026.]]></description>
+      <content:encoded><![CDATA[<p>Microsoft Lens — once called Office Lens — stopped creating new scans on 9 March 2026, and the app was pulled from the stores a month earlier. If it is still on your phone you can open old scans, but you cannot make new ones. A decade-old habit ended that quietly.</p>
+<h2>What actually happened</h2>
+<ul><li>9 January 2026: retirement announced, support ended.</li><li>9 February 2026: the app was removed from the App Store and Google Play.</li><li>9 March 2026: creating new scans stopped working.</li></ul>
+<p>Microsoft points people at the OneDrive app, which has a built-in scanning feature.</p>
+<h2>Why OneDrive does not suit everyone</h2>
+<p>It works, but it brings two things with it: a Microsoft account and the cloud. Whatever you scan is uploaded to OneDrive. For a receipt that is fine. For an ID, a medical report, a tenancy agreement or a client's paperwork, it is a different question.</p>
+<p>There is also a simpler objection: signing into a cloud service just to photograph a piece of paper is a bigger solution than the problem. What people liked about Lens was that it was small — open, shoot, PDF.</p>
+<h2>First, check what your phone already does</h2>
+<p>Being honest: the most practical answer is sometimes already in your pocket.</p>
+<ul><li>On iPhone, the Notes app: new note → camera icon → «Scan Documents». It detects edges, corrects perspective and runs entirely on the device.</li><li>On Android, Google Drive: the plus button → «Scan». The result is uploaded to Drive.</li><li>On many Samsung phones the camera app offers to scan on its own when you point it at a document.</li></ul>
+<blockquote><p>If you scan the odd single page, these are more than enough and you need to install nothing. You can stop reading here.</p></blockquote>
+<h2>And when that is not enough?</h2>
+<p>The built-in scanners run out of road in predictable places: joining several pages cleanly, sharing the result as a PDF, making the scanned text searchable, and doing the same job from a computer. And in some workplaces you simply cannot install apps on a phone.</p>
+<p>That is where a scanner that runs in the browser earns its place: nothing to install, no account, and the document never leaves the device.</p>
+<h2>The PDF Platform document scanner</h2>
+<p>It opens in your phone's browser. Point the camera at the document and the edges are found automatically, an angled shot is flattened, contrast is lifted and a PDF comes out. The camera frame, the edge detection and the PDF generation all run on your device — the document is not sent anywhere.</p>
+<p>What is free and what is not, up front:</p>
+<ul><li>Free: camera scanning, automatic edge detection, perspective correction, contrast improvement, 3 pages per scan, PDF download. No account needed.</li><li>Pro: unlimited pages, automatic capture (it takes the shot when you hold the phone steady), shadow removal and searchable PDF (OCR).</li></ul>
+<p><strong>Document Scanner</strong> — Open it in your phone's browser and point the camera — no install, no account. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the tool</a></p>
+<h2>How it works</h2>
+<ol><li><strong>Open it in your phone browser</strong> — Nothing to download. Open the page, tap «Scan document» and allow camera access.</li><li><strong>Point the camera at the document</strong> — Edges are found automatically. Shooting from an angle is fine — the result is flattened.</li><li><strong>Download the PDF</strong> — Several pages are joined into one PDF. You can also share it straight from the phone.</li></ol>
+<h2>What you give up</h2>
+<p>An honest comparison has to say this too. A browser-based tool does not give you everything an installed app does:</p>
+<ul><li>No sync across devices. Scans do not pile up in a cloud; you save or share the PDF yourself.</li><li>It is not a native app launched from your home screen. You can add the site to the home screen and use it like one, but it does not come from a store.</li><li>You need a connection the first time. After that the scanning itself works offline, because the work was always happening on your device.</li></ul>
+<p>If you want scans collected in a cloud, Microsoft's OneDrive suggestion is the right call. If you want the document to stay on your phone, this is.</p>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Scanning</category>
+      <category>Mobile</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" type="image/png" length="57601" />
+      <media:content url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/microsoft-lens-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/microsoft-lens-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/microsoft-lens-alternative.png" />
+    </item>
+    <item>
+      <title>A PDF24 Alternative for Mac and Linux (No Offline App)</title>
+      <link>https://www.pdfplatform.app/en/blog/pdf24-alternative-mac-linux</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/pdf24-alternative-mac-linux</guid>
+      <pubDate>Sat, 19 Sep 2026 13:59:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf24-alternatifi-mac-linux" />
+      <description><![CDATA[There is a concrete reason PDF24 users search for a Mac or Linux alternative: the offline version is Windows-only. On every other system you are left with the online tools, which upload your file.]]></description>
+      <content:encoded><![CDATA[<p>PDF24 is a good toolkit and it has been free for a long time. But it is not one product — it is two, and which one you can have depends on your operating system. That split alone explains why Mac and Linux users go looking for an alternative.</p>
+<h2>PDF24 is really two products</h2>
+<ul><li>PDF24 Tools — the online tools. They run in the browser on Windows, Mac, Linux and phones. Free, no account, no restrictions. But your files are uploaded to PDF24's servers to be processed; in their own words, "all files are completely removed from our servers after a short time".</li><li>PDF24 Creator — the installed version. It offers the same tools offline, so nothing is uploaded. It exists for Windows only.</li></ul>
+<p>PDF24's own site says it plainly: if you prefer to work offline, install the Creator. The catch is that this advice only applies to Windows users.</p>
+<h2>What happens on Mac, Linux and Android</h2>
+<p>There is no Creator on those systems. What remains is the online tools — the option where your file is uploaded. The choice a Windows user has, "keep my document on my machine", simply is not offered elsewhere.</p>
+<p>For a receipt this does not matter. For a contract, a copy of an ID, a medical report or a client's paperwork it does — and there is no good reason to accept a different level of privacy because of which laptop you bought.</p>
+<h2>What PDF24 genuinely does well</h2>
+<p>For the comparison to be worth anything: PDF24 has real strengths, and you should know what you would be giving up.</p>
+<ul><li>The online tools are completely free, need no account and impose no daily cap.</li><li>On Windows, Creator is a proper desktop application — it works offline and integrates with the system.</li><li>A mature, broad toolkit that has been around for years.</li></ul>
+<p>If you are on Windows and do not mind installing Creator, you may not need an alternative at all.</p>
+<h2>How the gap closes</h2>
+<p>PDF Platform combines Creator's privacy with Tools' platform independence: it runs in the browser, so Mac, Linux, Windows and phones are all the same; and page operations happen on your device, so nothing is uploaded.</p>
+<ul><li>On-device (nothing uploaded): merge, split, rotate, crop, delete and reorder pages, image-to-PDF, signing and annotation.</li><li>Server-side: Word/Excel/PowerPoint conversion, OCR, compression and the AI tools. These are beyond what a browser can do; each tool's page says which is which.</li></ul>
+<blockquote><p>Testing the claim takes thirty seconds: open the merge tool, disconnect from the internet, run the merge. If it completes, your file is not going anywhere.</p></blockquote>
+<h2>What is free</h2>
+<p>Let us be equally clear here, because PDF24's online tools being free without limits is a serious advantage:</p>
+<ul><li>The on-device tools are free, unlimited and need no account (up to 80 MB per file). No watermark is added to the output.</li><li>Tools that need a server (conversion, OCR) come with a small daily allowance on the free plan; more is on the paid plans.</li></ul>
+<p>So if your work is page editing, the free side is unlimited for you too. For conversion and OCR it is not — choose knowing that.</p>
+<p><strong>Merge PDF</strong> — Mac, Linux or Windows — it runs in your browser and your file is not uploaded. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Which should you pick?</h2>
+<ul><li>On Windows and happy to install software: PDF24 Creator already works offline — stay where you are.</li><li>On Mac, Linux or Android with a sensitive document: pick a browser-based tool that does not upload.</li><li>If the job is conversion or OCR: both send the file to a server. Here the choice is about whose server you trust — and if you want unlimited free use, PDF24 is strong.</li><li>On a locked-down work computer where you cannot install anything: a browser-based tool is the only option anyway.</li></ul>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Privacy</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/pdf24-alternative-mac-linux.png" type="image/png" length="55237" />
+      <media:content url="https://www.pdfplatform.app/en/covers/pdf24-alternative-mac-linux.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/pdf24-alternative-mac-linux.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/pdf24-alternative-mac-linux.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf24-alternative-mac-linux.png" />
+    </item>
+    <item>
+      <title>DocuSign Alternatives When 5 Documents a Month Runs Out</title>
+      <link>https://www.pdfplatform.app/en/blog/docusign-alternatives</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/docusign-alternatives</guid>
+      <pubDate>Sat, 19 Sep 2026 11:45:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/docusign-alternatifi-imza-istegi" />
+      <description><![CDATA[DocuSign is a good product, but it is priced per envelope and the personal plan stops at five documents a month. For a small business sending ten contracts, that is a plan that runs out mid-month.]]></description>
+      <content:encoded><![CDATA[<p>DocuSign is the first name people think of for e-signatures, and deservedly — it created the category. But it is priced by how many documents you send, and the personal plan stops at five a month. For a one-person company sending ten contracts, that is a plan that runs out halfway through the month.</p>
+<h2>How DocuSign's pricing works</h2>
+<p>DocuSign counts «envelopes»: each document package you send for signature is one envelope. The current figures from their own pricing page:</p>
+<ul><li>Personal — $11 per month (billed annually), 5 envelopes per month.</li><li>Standard — $30 per user per month, 100 envelopes per user per year.</li><li>Business Pro — $45 per user per month, 100 envelopes per user per year.</li></ul>
+<p>The part worth noticing: even the higher plans cap at 100 envelopes a year — about eight a month. Beyond that you are talking to sales.</p>
+<h2>What DocuSign genuinely does better</h2>
+<p>You should know what you would be giving up. DocuSign's strengths are not in question:</p>
+<ul><li>Ready-made integrations with Salesforce, SAP, Google Workspace and others.</li><li>Qualified electronic signature options and certifications for regulated industries.</li><li>Bulk send, template management, in-person signing and other advanced flows.</li><li>iOS and Android apps, and enterprise user management.</li></ul>
+<p>If you need those, switching would be a false economy. What follows is for people who do not.</p>
+<h2>What most people actually need</h2>
+<p>In practice the sentence is usually this: «Send this contract to the other party, let them sign it, and leave me a record that they did.» Freelancers, small agencies, accountants, estate agents, one-person companies. Envelope quotas, integration catalogues and enterprise user management are not part of that job.</p>
+<h2>How signature requests work here</h2>
+<p>You upload the document and enter the signer's email address. They receive a link generated only for them. Without creating an account they view the document, type their name, draw their signature and tick the consent box.</p>
+<p>Here is the detail that matters: the signature is applied to the original document held on the server. No file is accepted back from the signer. So «is the signed document the same one I sent?» is answered by construction, not by trusting an audit afterwards.</p>
+<p>A certificate is appended to the signed document. It records:</p>
+<ul><li>When the request was created, sent, viewed and signed.</li><li>The signer's name and email address, and the authentication method.</li><li>The moment consent was given.</li><li>The document's fingerprints (SHA-256) before and after signing.</li></ul>
+<p>The link is valid for 14 days. The signer can decline, optionally with a reason — you are notified by email and it goes into the audit record.</p>
+<h2>Legal validity — the part that has to be honest</h2>
+<p>This produces a visual (wet-ink-style) electronic signature with a record of the process attached. That is the approach used for the majority of commercial documents.</p>
+<p>But a qualified electronic signature is a separate legal category, and it requires a certificate from a qualified trust service provider. We do not offer that. For documents that need notarisation, that go to a public authority, or where the law specifically requires a qualified signature, this is the wrong tool — you need DocuSign's qualified options or a local trust service provider.</p>
+<h2>What it costs</h2>
+<ul><li>DocuSign Personal: $11 per month, 5 documents per month.</li><li>PDF Platform Plus: $6.99 per month, 600 operations per month and all 34 tools. Signature requests are on Plus and above.</li></ul>
+<p>Compare like with like, though: DocuSign's package is a workflow product built around signing; this one is a document toolkit that happens to include signature requests. If signing is all you need, the second is cheaper. If you need a signing infrastructure, the first gives you more.</p>
+<p><strong>Request a Signature</strong> — Upload the document, enter an email address — they sign without an account, and the audit certificate is attached. <a href="https://www.pdfplatform.app/en/tools/request-signature">Open the tool</a></p>
+<h2>Which should you pick?</h2>
+<ul><li>Sending a few contracts a month and want a record of the process: signature requests are enough, and cheaper.</li><li>Need a qualified electronic signature or industry certification: DocuSign, or a local trust service provider.</li><li>Need CRM integration, bulk send or template management: DocuSign.</li><li>Only signing your own document: you need neither — the PDF signing tool is free, needs no account and runs on your device.</li></ul>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Signatures</category>
+      <category>Contracts</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" type="image/png" length="54141" />
+      <media:content url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/docusign-alternatives.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/docusign-alternatives.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/docusign-alternatives.png" />
+    </item>
+    <item>
+      <title>Snip from a PDF: Save a Table or Chart as an Image</title>
+      <link>https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/snip-images-from-a-pdf</guid>
+      <pubDate>Thu, 10 Sep 2026 20:54:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-ten-kesit-alma-gorsel-kirpma" />
+      <description><![CDATA[Want to reuse a table, chart or question from a PDF but your screenshot looks blurry? Snipping is a different job entirely — here's the difference and the easiest way to do it.]]></description>
+      <content:encoded><![CDATA[<p>There's a table, chart, diagram or a single question inside a PDF and you want it in a slide, a report or a lesson. The first instinct is to take a screenshot, and the result is usually a soft, crookedly cropped image. The right way is to cut that region straight out of the document at the resolution you choose. This guide explains the difference and the practical route.</p>
+<h2>Why isn't a screenshot enough?</h2>
+<p>A screenshot copies your SCREEN. The image you get is limited to your screen's resolution, not the PDF's. So:</p>
+<ul><li>Text and thin lines go soft and fall apart when you zoom in.</li><li>The difference shows immediately on a projector or in print.</li><li>Cropping the edges by hand is fiddly — a pixel too much here, too little there.</li><li>Even zooming into the PDF first won't give you more than your screen has.</li></ul>
+<h2>What does snipping do instead?</h2>
+<p>A snip is generated from the document itself, not from your screen. You select an area on the page and the tool redraws only that region at the resolution you picked. A table that looks small on screen can still become a print-quality image.</p>
+<blockquote><p>The resolution options are 1x, 2x and 3x. 1x is for screen use, 2x is plenty for print and slides; save 3x for large output or when you need to blow up a very small detail.</p></blockquote>
+<h2>Step by step: save a region as an image</h2>
+<ol><li><strong>Add your PDF</strong> — Drop in your document. It never leaves your device.</li><li><strong>Pick the page</strong> — Use the page strip on the left to move to the page you want.</li><li><strong>Select the area</strong> — Drag a box on the page; move it around and resize it from the corners.</li><li><strong>Set resolution and format</strong> — 1x/2x/3x and PNG or JPEG. PNG suits text and graphics, JPEG suits photos.</li><li><strong>Add the snip</strong> — It drops into the basket. Take as many snips as you like, from any page.</li><li><strong>Download</strong> — Save snips one by one, grab them all as a ZIP, or turn them into a print-ready A4 worksheet.</li></ol>
+<p><strong>Snip PDF to Image</strong> — Upload a PDF — take the table, chart or question out as a sharp image. <a href="https://www.pdfplatform.app/en/tools/crop-pdf-to-image">Open the tool</a></p>
+<h2>What is the snip basket for?</h2>
+<p>One snip is rarely enough: three charts from a report, five questions from a book. Every snip you take collects in the basket, and the page strip shows a badge with how many you took from each page. When you're done, download the lot in one go instead of handling files one at a time. The worksheet option lays your snips out on A4 pages in order — one or two columns, ready to print. Reorder them in the basket and the sheet follows that order.</p>
+<h2>Where does it help?</h2>
+<ul><li>Moving a chart from a report into a slide deck.</li><li>Pulling one product shot out of a catalogue.</li><li>Collecting specific questions from lesson notes or a question bank.</li><li>Sharing a clause from a contract legibly instead of as a soft screenshot.</li><li>Lifting a logo or stamp cleanly out of an old document.</li></ul>
+<h2>Snipping, converting pages to images, or extracting embedded images?</h2>
+<p>These are three different jobs; knowing which one you want gets you the right result first time:</p>
+<ul><li>Snipping: Turns THE REGION YOU CHOOSE into an image. A table, a chart, a paragraph — you draw the boundary.</li><li>PDF to image: Converts the WHOLE page into a single image.</li><li>Extracting embedded images: Pulls out the original photo files stored inside the document; it won't capture page text or vector drawings.</li></ul>
+<p><strong>PDF to Image</strong> — Download whole pages as high-resolution JPG/PNG. <a href="https://www.pdfplatform.app/en/tools/pdf-to-image">Open the tool</a></p>
+<h2>A note on privacy</h2>
+<p>Snipping runs entirely in your browser; your PDF is never uploaded. And the whole page isn't drawn at a huge scale — only the region you selected is rendered, which keeps it fast and easy on your device's memory.</p>]]></content:encoded>
+      <category>PDF Tools</category>
+      <category>Images</category>
+      <category>Snipping</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" type="image/png" length="54415" />
+      <media:content url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/snip-images-from-a-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/snip-images-from-a-pdf.png" />
+    </item>
+    <item>
+      <title>Image Resizing: The Right Pixel Sizes for Social Media</title>
+      <link>https://www.pdfplatform.app/en/blog/resize-images-for-social-media</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/resize-images-for-social-media</guid>
+      <pubDate>Thu, 10 Sep 2026 11:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/gorsel-boyutlandirma-sosyal-medya" />
+      <description><![CDATA[Does your image get cropped or look blurry after uploading? Here are the current social media sizes and how to resize a picture to exactly the size you need without losing quality.]]></description>
+      <content:encoded><![CDATA[<p>You upload an image to a social network and it gets cropped, cut off at the edges, or looks soft. The reason is almost always the same: the pixel size of your image doesn't match what the platform expects. This guide lists the sizes each platform wants and shows how to resize a picture to fit them without losing quality.</p>
+<h2>Why does the size matter so much?</h2>
+<p>Social networks automatically crop and rescale whatever you upload to fit their frames. That automatic step is out of your hands: your text can end up outside the frame, faces can be cut off, and an oversized file can be compressed so aggressively that detail falls apart. Resize before you upload and you decide both the framing and the sharpness.</p>
+<h2>2026 social media image sizes</h2>
+<ul><li>Instagram post (square): 1080 × 1080 px</li><li>Instagram post (portrait, 4:5): 1080 × 1350 px — the tallest ratio the feed allows</li><li>Instagram story and Reels: 1080 × 1920 px (9:16)</li><li>Facebook shared image: 1200 × 630 px</li><li>Facebook cover photo: 851 × 315 px</li><li>X (Twitter) in-stream image: 1600 × 900 px — header: 1500 × 500 px</li><li>LinkedIn post (square): 1200 × 1200 px — company cover: 1128 × 191 px</li><li>YouTube thumbnail: 1280 × 720 px — channel banner: 2560 × 1440 px</li><li>Link preview image (OG image): 1200 × 630 px</li></ul>
+<blockquote><p>Publishing one image across several platforms? Start from 1080 × 1350 (4:5): it crops cleanly to both square and 9:16.</p></blockquote>
+<h2>Three ways to fit a size: Fill, Fit, Stretch</h2>
+<p>If your image's aspect ratio doesn't match the target, you have to make a choice. There are three options:</p>
+<ul><li>Fill (crop): Fills the size exactly; overflowing edges are cropped from the centre. The natural choice for photos.</li><li>Fit (add padding): The whole image stays visible and the gaps are filled with a colour you choose. Best for product shots, logos and posters where nothing may be cut.</li><li>Stretch: Pulls the image to the exact size, ignoring the ratio. Avoid it for faces and text — everything looks squashed.</li></ul>
+<h2>How is quality preserved?</h2>
+<p>Resizing is really resampling, and the filter decides the result. A browser's built-in scaling is fast but crude: thin lines get jagged and text goes soft. The PDF Platform Resize Image tool uses the mks2013 filter from the Lanczos family instead — it scales and sharpens in one pass, so fine detail survives.</p>
+<ul><li>The larger your source, the better the downscale — crop first, then resize.</li><li>Enlarging cannot create detail. Blowing a 600 px wide image up to 1920 px won't sharpen it; the tool warns you when that happens.</li><li>Use JPEG or WebP for photos, and PNG or WebP for logos that need transparency. WebP usually gives the smallest file at the same quality.</li></ul>
+<h2>Step by step: resize an image to any size</h2>
+<ol><li><strong>Add your image</strong> — Drop in a JPG, PNG or WebP file. It never leaves your device.</li><li><strong>Choose the size</strong> — Pick a ready-made social size or type a width and height yourself. With Keep aspect ratio on, one side is enough.</li><li><strong>Pick how it fits</strong> — Fill, Fit or Stretch. In Fit mode you can also choose the padding colour.</li><li><strong>Resize and download</strong> — Set the format and quality, click Resize, and the result downloads instantly.</li></ol>
+<p><strong>Resize Image</strong> — Upload an image — get it at exactly the pixel size you need, sharp. <a href="https://www.pdfplatform.app/en/tools/resize-image">Open the tool</a></p>
+<h2>Resizing or compressing?</h2>
+<p>These are two different jobs that often get mixed up. Resizing changes the pixel dimensions of an image (like 1920 × 1080); compressing keeps the dimensions and reduces the file size in MB. Getting the dimensions right usually cuts the file size a lot on its own — if it's still too big, run it through the compressor next.</p>
+<p><strong>Compress Image</strong> — Keep the dimensions, shrink the file size. <a href="https://www.pdfplatform.app/en/tools/compress-image">Open the tool</a></p>
+<h2>A note on privacy</h2>
+<p>Resizing runs entirely in your browser. Your image is never uploaded and never reaches the internet — the work happens on your computer or phone.</p>]]></content:encoded>
+      <category>Images</category>
+      <category>Social Media</category>
+      <category>Resizing</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" type="image/png" length="55946" />
+      <media:content url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/resize-images-for-social-media.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/resize-images-for-social-media.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/resize-images-for-social-media.png" />
+    </item>
+    <item>
+      <title>Extract Images from a PDF Without Quality Loss</title>
+      <link>https://www.pdfplatform.app/en/blog/extract-images-from-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/extract-images-from-pdf</guid>
+      <pubDate>Fri, 24 Jul 2026 14:05:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdften-gorsel-resim-cikarma" />
+      <description><![CDATA[Want to save the pictures inside a PDF but keep losing quality with screenshots? Converting pages to images and extracting embedded images are different things — this guide separates them and shows the easiest way.]]></description>
+      <content:encoded><![CDATA[<p>There's a useful photo, logo or graphic inside a PDF and you want it as a separate file. Taking a screenshot loses quality. The right way is to extract the actual embedded image in its original form — this post shows how.</p>
+<h2>Key difference: "PDF to image" ≠ "extract images from PDF"</h2>
+<p>These two jobs are often confused but they're different, and choosing the right tool decides the quality:</p>
+<ul><li>PDF to image: Takes a screenshot (JPG/PNG) of the entire page. Text, lines and pictures all flatten into one image.</li><li>Extract images from PDF: Doesn't rasterize the page; it pulls out the actual embedded image files (photos, logos) in their original format and resolution.</li></ul>
+<blockquote><p>Want the whole page as an image? Use "PDF to Image". Want only the photos/logos inside at original quality? Use "Extract Images".</p></blockquote>
+<h2>Method 1 — Screenshot (not recommended)</h2>
+<p>Opening the PDF and screenshotting the picture is the best-known but worst way: the result is limited to your screen resolution, cropping edges is hard, and original quality is lost.</p>
+<h2>Method 2 — Convert the page to an image</h2>
+<p>If the image fills the whole page, converting the page to a high-resolution image can work. But if the page also has text and other elements, they all blend into the image — you can't isolate just the photo.</p>
+<p><strong>PDF to Image</strong> — Download whole pages as high-resolution JPG/PNG. <a href="https://www.pdfplatform.app/en/tools/pdf-to-image">Open the tool</a></p>
+<h2>Method 3 — Extract embedded images (the cleanest)</h2>
+<p>The most accurate result is to extract the actual embedded image streams. PDF Platform's Extract Images tool does exactly that:</p>
+<ol><li><strong>Upload the PDF</strong> — Pick a document that contains photos/logos. If the PDF is encrypted, enter its password.</li><li><strong>Click "Extract Images"</strong> — The tool scans each page and pulls out every embedded image in its original format (JPG/PNG), de-duplicating images used on multiple pages.</li><li><strong>Download as ZIP</strong> — All extracted images are bundled into a single ZIP archive; download in one click.</li></ol>
+<p><strong>Extract Images from PDF</strong> — Upload a PDF — get every photo and logo inside, without quality loss. <a href="https://www.pdfplatform.app/en/tools/extract-images">Open the tool</a></p>
+<h2>What is it good for?</h2>
+<ul><li>Reusing photos from a presentation or report.</li><li>Recovering a company logo from an old PDF at original quality.</li><li>Bulk-downloading product images from a catalog/brochure.</li></ul>
+<h2>Privacy note</h2>
+<p>Image extraction runs on a server, but your file is not stored permanently; temporary data is cleared as soon as the job finishes. Most of our tools (merge, rotate, delete pages, etc.) run entirely in your browser.</p>]]></content:encoded>
+      <category>PDF Tools</category>
+      <category>Images</category>
+      <category>Extraction</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" type="image/png" length="53496" />
+      <media:content url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/extract-images-from-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/extract-images-from-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/extract-images-from-pdf.png" />
+    </item>
+    <item>
+      <title>How to Choose a Free PDF Tool in 2026 (Privacy Guide)</title>
+      <link>https://www.pdfplatform.app/en/blog/how-to-choose-a-free-pdf-tool</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/how-to-choose-a-free-pdf-tool</guid>
+      <pubDate>Thu, 23 Jul 2026 19:08:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-araci-nasil-secilir" />
+      <description><![CDATA[Does it upload your file to a server, or process it on your device? The 6 things to check before picking a free PDF tool — an honest guide.]]></description>
+      <content:encoded><![CDATA[<p>Searching for a "free online PDF tool" returns hundreds of results, but they're not the same. Some upload your file to their servers, some add a watermark, some ask you to sign up for a simple task. This guide walks through exactly what to check so you pick the right one.</p>
+<h2>The hidden side of most online PDF tools: uploading</h2>
+<p>In most online PDF tools, merging, splitting or converting uploads your file to their server, processes it there, and then deletes it. It's usually safe, but for a contract, ID or financial statement, having the file go to the internet — even briefly — leaves a question mark. The alternative: the operation runs directly in your browser, so the file never leaves your device.</p>
+<h2>6 things to look for in a free PDF tool</h2>
+<ul><li>Privacy: Is the file uploaded to a server, or processed in your browser (on your device)? On-device is safest for sensitive documents.</li><li>Forced watermark: Is a stamp added to the free output? Annoying for a professional document.</li><li>Sign-up requirement: Does a simple merge require an account?</li><li>Daily/usage limit: Are you asked to wait or pay after a set number of free tasks?</li><li>Installation: Does it run in the browser, or need a program/plugin?</li><li>Coverage: Just merging, or also split/crop/rotate/convert/sign — the tools you'll actually need?</li></ul>
+<h2>Why "on-device" processing matters</h2>
+<p>If a tool runs the operation in your browser, you gain three things: privacy (the file doesn't go online), speed (no upload/download wait, instant results), and offline use (once loaded, it works even if your connection drops). On PDF Platform, structural tools like merge, split, crop, rotate, delete pages, reorder and image→PDF run entirely on your device — your file never goes to a server.</p>
+<p><strong>Try the PDF Tools</strong> — Merge, split, crop, rotate — without your file leaving your device, no sign-up, free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Which operations run on-device, which need a server?</h2>
+<p>To be honest, not everything can run in the browser. The right tool is the one that tells you the split clearly. The general rule:</p>
+<ul><li>Can run on-device (file never leaves): merge, split, rotate, delete pages, reorder, crop, image→PDF, sign and annotate.</li><li>Needs a server: Word/Excel/PowerPoint conversion, OCR (turning scans into text), high-ratio compression and AI (summarize, chat, translate). Even here, a good tool doesn't store content and uses an encrypted connection.</li></ul>
+<h2>Quick summary: how to choose</h2>
+<ol><li><strong>Is it a sensitive document?</strong> — If yes, pick a tool that runs the operation on your device (in the browser) so the file doesn't go online.</li><li><strong>Just a simple task (merge/split/crop)?</strong> — Skip the ones that require sign-up or installation; these can be done with no account, instantly.</li><li><strong>Need conversion/OCR?</strong> — Those need a server; confirm content isn't stored and an encrypted connection is used.</li></ol>
+<blockquote><p>A quick test: open the tool, pick a file, and watch how fast it finishes. If you get instant results with no upload bar, the operation is likely running on your device — meaning your file didn't go to the internet.</p></blockquote>]]></content:encoded>
+      <category>Guide</category>
+      <category>Privacy</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" type="image/png" length="53152" />
+      <media:content url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/how-to-choose-a-free-pdf-tool.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/how-to-choose-a-free-pdf-tool.png" />
+    </item>
+    <item>
+      <title>How to Shrink a PDF to Email or Send on WhatsApp</title>
+      <link>https://www.pdfplatform.app/en/blog/shrink-a-pdf-for-email</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/shrink-a-pdf-for-email</guid>
+      <pubDate>Thu, 23 Jul 2026 14:03:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-kucultme-eposta-whatsapp" />
+      <description><![CDATA[Getting a "file too large" error? The easiest way to get a PDF under email and WhatsApp limits — step by step.]]></description>
+      <content:encoded><![CDATA[<p>You want to email a PDF but it says "file too large", or WhatsApp won't accept the document. The fix isn't splitting it — it's compressing: reduce the size while keeping the content.</p>
+<h2>Why so big? And typical limits</h2>
+<ul><li>Scanned documents and image-heavy PDFs take the most space.</li><li>Gmail attachment: ~25 MB · Outlook: ~20 MB · WhatsApp document: ~100 MB, but very large files stall in practice.</li><li>Portals and application systems often cap at 2–10 MB.</li></ul>
+<h2>Shrink a PDF — step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Drag and drop your file into the compress tool.</li><li><strong>Pick a compression level</strong> — At a balanced level there's no noticeable quality loss; a higher level reduces size further.</li><li><strong>Download and send</strong> — Download the optimized file — now under the email/WhatsApp limit.</li></ol>
+<p><strong>Compress PDF</strong> — Upload your file, compress it, and download it ready to send — free. <a href="https://www.pdfplatform.app/en/tools/compress">Open the tool</a></p>
+<h2>Does compressing hurt quality?</h2>
+<p>At a balanced level, no — text stays selectable and crisp, and images stay readable. The text layer is preserved, so you can still search and copy in the compressed PDF. The biggest savings usually come from scanned, image-heavy PDFs.</p>
+<blockquote><p>Still too big? Remove unneeded pages with "Split/Delete", or send only the pages you need. If you're sending several documents as one file, compress first, then combine with "Merge PDF".</p></blockquote>
+<h2>Know the real limit before you send</h2>
+<p>Whether a file is «too large» depends on where you are sending it, and most people learn the limit after hitting it. Email attachments also grow by roughly a third when encoded, so a 25 MB file often will not pass a 25 MB limit. Aiming a little under the limit is the practical habit.</p>
+<h2>Options besides compressing</h2>
+<ul><li>Delete unnecessary pages, especially blank reverse sides in scans.</li><li>Send only the relevant page range; enough for the recipient to do their job is enough.</li><li>Split the document into sensible parts and send two messages.</li><li>For very large files, sharing a cloud link is more reliable than attaching.</li></ul>
+<h2>Notes specific to WhatsApp</h2>
+<p>WhatsApp does not compress documents; it sends them as they are, which is good because the document is not degraded. But if you send a photo as an image, the app shrinks it and the paperwork can become unreadable. When sharing documents, converting the photo to PDF and sending it as a document preserves quality and looks more professional.</p>
+<h2>Checking before and after</h2>
+<p>The effect of compression is invisible at normal screen scale. After downloading, open the page with the smallest type and zoom in; if the letters read cleanly, the file is usable. Do not skip this on documents going to an institution — an illegible scan is one of the most common reasons applications come back.</p>
+<h2>Do not compress repeatedly</h2>
+<p>Compressing the same document a second and third time costs a little more quality each round without meaningful size gains. Reaching the target in one pass is best. If you cannot, the problem is the content rather than the compression: with many high-resolution scans, splitting or removing pages is the real solution.</p>
+<h2>Keeping it small from the start</h2>
+<ul><li>Scan text documents at 300 DPI; 600 DPI inflates the file for no benefit.</li><li>Scan black-and-white paperwork in greyscale rather than colour.</li><li>Run phone photos through the Document Scanner instead of converting straight to PDF.</li><li>Review the page count before sharing — that is where the easiest gains are.</li></ul>]]></content:encoded>
+      <category>How-to</category>
+      <category>Compress</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" type="image/png" length="51559" />
+      <media:content url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/shrink-a-pdf-for-email.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/shrink-a-pdf-for-email.png" />
+    </item>
+    <item>
+      <title>How to Edit a PDF on Your Phone Without an App</title>
+      <link>https://www.pdfplatform.app/en/blog/edit-a-pdf-on-your-phone</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/edit-a-pdf-on-your-phone</guid>
+      <pubDate>Thu, 23 Jul 2026 13:06:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/telefonda-pdf-duzenleme-uygulamasiz" />
+      <description><![CDATA[Add text, sign and annotate a PDF on your phone with no app — all in the browser. How to do it on Android and iPhone.]]></description>
+      <content:encoded><![CDATA[<p>You need to sign a document or add a note to a form on the go, but you don't want to install a PDF app on your phone. You don't have to — you can do most of this in your phone's browser, with no installation.</p>
+<h2>What can you do on your phone with no app?</h2>
+<ul><li>Add text/notes and fill in blanks → Annotate tool</li><li>Sign (draw with your finger, type, or upload a photo) → Sign tool</li><li>Highlight, boxes, drawing → Annotate tool</li><li>Actually delete and change existing text → Edit tool</li></ul>
+<h2>Step by step (Android and iPhone)</h2>
+<ol><li><strong>Open the tool in your browser</strong> — Open the tool page in your phone browser (Chrome/Safari) — no install.</li><li><strong>Upload your PDF</strong> — Pick your file; the annotate/sign tool runs right on the phone.</li><li><strong>Edit and download</strong> — Sign/mark with your finger, then save with "Apply &amp; download".</li></ol>
+<p><strong>Annotate PDF on Your Phone</strong> — Add text, sign, annotate — on your phone, no app, free. <a href="https://www.pdfplatform.app/en/tools/annotate-pdf">Open the tool</a></p>
+<h2>Is my file safe?</h2>
+<p>Annotating and signing happen entirely in your phone's browser (on your device); the PDF isn't uploaded and stays 100% private. Only true text deletion/editing runs on a server, and the file isn't stored after processing.</p>
+<blockquote><p>For a signature, sign once on white paper and upload the photo; the tool cleans the background and places it on the document. After filling and signing, you can email or WhatsApp it straight from your phone.</p></blockquote>
+<h2>What is comfortable on a phone, and what is not</h2>
+<p>A small screen makes some jobs easier and others harder. Setting expectations correctly saves you from struggling on a phone and then reaching for a computer anyway.</p>
+<ul><li>Comfortable: deleting, reordering, rotating and merging pages — you touch large targets.</li><li>Comfortable: signing; a signature drawn with a finger usually beats one drawn with a mouse.</li><li>Moderate: adding text notes, where placement needs zooming in.</li><li>Hard: filling forms with many fields and anything needing precise alignment.</li><li>Hard: processing scans of hundreds of pages, where memory can run short.</li></ul>
+<h2>Preparing a signature on a phone</h2>
+<p>Signing is what phones do best. A signature drawn with a finger or stylus looks far more natural than one drawn with a mouse. Holding the phone in landscape and zooming in gives a steadier line. Signing a document and sending it back is a job that takes a few minutes with no app to install.</p>
+<h2>Finding the file and sending the result</h2>
+<p>The real difficulty on a phone is file traffic rather than the operation. An email attachment usually has to be saved first, and documents from messaging apps land in their own folders. When the work finishes the result goes to downloads and can be sent straight to email or a messaging app from the share menu. Once you learn that flow, the next document takes a few taps.</p>
+<h2>The typical phone problem: a skewed photo</h2>
+<p>Most paperwork photographed with a phone comes out slightly skewed and shadowed. Converting those straight to PDF produces something the recipient cannot read and that official applications may reject. The document scanning flow finds the edges and corrects perspective, so the result looks like it came from a scanner — the same photo yields a far more acceptable document.</p>
+<h2>Screens and privacy</h2>
+<p>On a phone, documents often get opened on public transport or in an office where others can see the screen. With sensitive documents it is a good habit to check your surroundings and to delete intermediate copies from downloads when you are finished. Page operations run on the device so the document does not travel; the remaining risk is physical.</p>]]></content:encoded>
+      <category>How-to</category>
+      <category>Mobile</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" type="image/png" length="53371" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/edit-a-pdf-on-your-phone.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-a-pdf-on-your-phone.png" />
+    </item>
+    <item>
+      <title>Free Adobe Acrobat Alternative: PDF Tasks With No Install</title>
+      <link>https://www.pdfplatform.app/en/blog/adobe-acrobat-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/adobe-acrobat-alternative</guid>
+      <pubDate>Wed, 22 Jul 2026 19:38:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/adobe-acrobat-alternatifi-ucretsiz" />
+      <description><![CDATA[You don't need a pricey Acrobat subscription for most PDF tasks. What you can do in the browser without installing anything — and the honest limits.]]></description>
+      <content:encoded><![CDATA[<p>Adobe Acrobat is powerful, but the full version is paid and needs installation. The good news: for most everyday PDF tasks you need neither a subscription nor an install — you can do it all free in your browser.</p>
+<h2>What can you do without Acrobat?</h2>
+<ul><li>Merge, split, rotate, delete pages, reorder pages — all free and on your device.</li><li>Image-to-PDF, document scanning, page numbers and watermarks.</li><li>Adding text, annotating and signing.</li><li>Word/Excel/PowerPoint conversion, compression and OCR (on the server, content not stored).</li></ul>
+<h2>No install, no subscription hassle</h2>
+<p>PDF Platform runs entirely in the browser — no download, install or plugin. Structural tasks like merge, split and sign happen on your device; your file doesn't even go to a server. An account is only needed for larger files, history and advanced conversion.</p>
+<p><strong>Open PDF Tools</strong> — Merge, convert, sign — with no install, free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>So when do you actually need Acrobat?</h2>
+<p>Let's be honest: for complex form design, advanced prepress, or enterprise document workflows, Acrobat Pro is still a strong option. But most users just need to merge, convert, sign and add text — and for that you don't need a paid program.</p>
+<blockquote><p>Don't install Acrobat just to sign or merge one PDF; you can do it in the browser in seconds, without your file leaving your device.</p></blockquote>
+<h2>Where Acrobat is genuinely strong</h2>
+<p>Acrobat has been the industry standard for a long time, and there are reasons for that. For building complex forms, working with pre-press colour and trim settings, using certificate-based digital signatures, editing accessibility tags and plugging into large corporate workflows, it has few rivals. If you do that work regularly, the subscription earns its keep.</p>
+<h2>But is that what most people do?</h2>
+<p>In practice most people's PDF work is far simpler: merging a few files, deleting pages, fixing a sideways page, shrinking a document, signing a form and occasionally converting to Word. Installing a full desktop suite and paying monthly for that is well beyond the need. The test: of the things you did in Acrobat last month, how many actually required Acrobat?</p>
+<h2>What working without an install buys you</h2>
+<ul><li>You can work on locked-down work computers without admin rights.</li><li>Mac, Linux, Chromebook and phone all behave the same.</li><li>No version updates, licence renewals or installation problems.</li><li>On someone else's computer you get the job done without touching your account.</li><li>Because page operations run locally, files do not leave the corporate network.</li></ul>
+<h2>What gets confused with the free reader</h2>
+<p>Acrobat Reader is free, but it is a reader: it displays documents, adds comments and fills forms. Deleting pages, merging, converting and editing belong to the paid version. That distinction surprises many people and answers the common question of why Acrobat will not delete a page. Browser-based tools fill exactly that gap.</p>
+<h2>What to check when switching</h2>
+<p>Three things matter when moving to an alternative: does it cover everything you actually do, is the output quality what you expect, and where do your documents go? The first two become clear after trying a few files. The third has a simple test: run the operation with your connection off; if it completes, the file never left your device.</p>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" type="image/png" length="56183" />
+      <media:content url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/adobe-acrobat-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/adobe-acrobat-alternative.png" />
+    </item>
+    <item>
+      <title>How to Crop a PDF: Trim Margins and Focus the Page (Free)</title>
+      <link>https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/crop-a-pdf-trim-margins</guid>
+      <pubDate>Wed, 22 Jul 2026 19:20:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-kirpma-kenar-boslugu-kesme" />
+      <description><![CDATA[Wide margins on scanned documents, focusing on a single table, or removing headers/footers... how to crop a PDF on your device — step by step.]]></description>
+      <content:encoded><![CDATA[<p>Got a scanned document with huge white borders, or want to focus on a single table on a page? Cropping a PDF narrows the visible area to any rectangle you choose — and your file never leaves your device.</p>
+<h2>What is cropping a PDF good for?</h2>
+<ul><li>Trimming the wide margins on scanned documents.</li><li>Focusing on a single table, chart or section on a page.</li><li>Removing repeating header/footer areas from view.</li><li>Framing the page neatly for presentation or printing.</li></ul>
+<h2>How to crop a PDF — step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Drag and drop your PDF into the crop tool; the first page opens in the preview.</li><li><strong>Set the crop box</strong> — Drag the box to move it, and resize from the corners or edges to select the area you want to keep.</li><li><strong>Choose scope and download</strong> — Pick 'All pages' or 'This page only' and click 'Crop &amp; Download' to get the result.</li></ol>
+<p><strong>Crop PDF</strong> — Drag and resize the box, crop and download — on your device, free. <a href="https://www.pdfplatform.app/en/tools/crop-pdf">Open the tool</a></p>
+<h2>Does cropping delete content?</h2>
+<p>No. Cropping is a standard PDF operation that narrows the page's visible area (CropBox); the remaining area displays and prints cleanly. It runs entirely in your browser, and your file is not sent to a server.</p>
+<blockquote><p>To crop different areas on different pages, use 'This page only' and apply it page by page. If you need to rotate pages first, use the 'Rotate PDF' tool.</p></blockquote>
+<h2>Cropping is not deleting — and that has a consequence</h2>
+<p>Cropping narrows a page's visible area; the trimmed part is not removed from the file, only hidden. For everyday use that distinction does not matter, and the document looks as you want on screen and in print. It becomes critical if you crop in order to hide information: the text in the cropped area stays in the file and can technically be restored. When something genuinely has to go, you need a tool that removes content permanently.</p>
+<h2>Where it helps most on scans</h2>
+<p>Scanners work to the paper size, so an A5 receipt scanned on A4 leaves half the page blank. Reading such a document means constant scrolling, and in print the small content sits marooned in the middle of a large sheet. Trimming the margins makes the document both readable and tidy, and pages look consistent when you merge several receipts.</p>
+<h2>Getting the order right before cropping</h2>
+<ul><li>Rotate sideways pages first; the crop box works relative to page orientation.</li><li>Delete unwanted pages first, leaving fewer pages to crop.</li><li>With mixed page sizes, applying one crop to all of them can cut content on some.</li><li>If you will add page numbers, leave them until last — the number is placed relative to the new edge.</li></ul>
+<h2>What happens in print</h2>
+<p>A cropped page reaches the printer as a smaller page, and the printer may enlarge it to fit the sheet. That usually makes the text more legible and is often exactly what you want. But if the document must be a specific size on paper — an official form, for example — cropping changes that size. On such documents it is worth thinking twice.</p>
+<h2>Does file size change?</h2>
+<p>Because cropping does not remove content, file size does not drop meaningfully. If size is your problem, you need compression rather than cropping. Using both makes sense: narrow the page to the area you want, then compress the file.</p>]]></content:encoded>
+      <category>How-to</category>
+      <category>Crop</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" type="image/png" length="56208" />
+      <media:content url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/crop-a-pdf-trim-margins.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/crop-a-pdf-trim-margins.png" />
+    </item>
+    <item>
+      <title>How to Convert a CV (Résumé) From Word to PDF the Right Way</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-cv-from-word-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-cv-from-word-to-pdf</guid>
+      <pubDate>Wed, 22 Jul 2026 18:44:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/cv-ozgecmis-word-pdf-cevirme" />
+      <description><![CDATA[Why you should send your CV as a PDF for job applications, and how to convert it from Word without breaking the formatting — step by step.]]></description>
+      <content:encoded><![CDATA[<p>A CV is the first document an employer sees about you. A résumé built in Word can shift on different computers and its fonts can change. The fix is simple: convert it to PDF before sending.</p>
+<h2>Why should a CV be sent as a PDF?</h2>
+<ul><li>Looks the same on every device: Fonts, line spacing and layout are preserved regardless of who opens it.</li><li>Professional standard: Most employers and career portals prefer, or even require, PDF.</li><li>Won't change by accident: A Word file can shift when opened; a PDF is fixed.</li></ul>
+<h2>Convert a Word CV to PDF — step by step</h2>
+<ol><li><strong>Upload your Word file</strong> — Drag and drop your .doc or .docx résumé into the Word-to-PDF tool.</li><li><strong>Convert</strong> — Click "Convert"; the PDF is prepared instantly with fonts, tables and layout preserved.</li><li><strong>Download and name it</strong> — Download the PDF and save it with a clean name like "First_Last_CV.pdf".</li></ol>
+<p><strong>Convert Word to PDF</strong> — Upload your résumé and download it as a PDF without breaking the formatting — free. <a href="https://www.pdfplatform.app/en/tools/word-to-pdf">Open the tool</a></p>
+<h2>Final checks before you send</h2>
+<ul><li>Is the file name professional? Use "First_Last_CV.pdf" instead of "document1.pdf".</li><li>Do the fonts and alignment in the PDF match the Word version?</li><li>Are the photo and links (LinkedIn, email) in the right place?</li><li>If the file is too big, shrink it to email size with "Compress PDF".</li></ul>
+<blockquote><p>If you're asked to send several documents (CV + cover letter + certificates) as one file, convert them to PDF and then combine them with "Merge PDF".</p></blockquote>
+<h2>How application systems read your CV</h2>
+<p>At most large employers and career portals your CV is read by software first, and reaching human eyes depends on that. These systems parse the text in the document, so your PDF must contain real text. A CV exported as an image from a design tool, or built from a screenshot, is a blank page to the system. There is a simple test: open the PDF and try to select your name with the cursor; if you cannot, it is an image.</p>
+<h2>Layouts that make automatic reading harder</h2>
+<ul><li>Two-column designs: reading order can scramble and details run together.</li><li>Burying information in text boxes or tables.</li><li>Putting contact details in the page header — some systems never read headers.</li><li>Showing skill levels only as bars or stars; information with no text equivalent is not recorded.</li><li>Unusual section headings; a creative title instead of «Experience» makes matching harder.</li></ul>
+<h2>Cleaning up on the way from Word to PDF</h2>
+<p>A PDF freezes the Word document as it stands, so before converting you should turn off track changes, accept all revisions and delete comments — otherwise those traces can end up in the output. Review the author name in document properties too; if you took the template from someone else, another name may still be sitting there.</p>
+<h2>File name and sending</h2>
+<p>A recruiter downloads dozens of files a day, and a document called «cv_final_v3.pdf» gets lost in the folder. A name in the form First_Last_CV is easier to find and looks considered. When a cover letter and certificates are requested, merging them into one PDF is tidier than separate attachments, and page numbers show the document arrived complete.</p>
+<h2>A last look before sending</h2>
+<ul><li>Do fonts and alignment look the same as in Word?</li><li>Are links (LinkedIn, portfolio) clickable and pointing at the right address?</li><li>Is the file size reasonable — compress it if a photo inflated it?</li><li>Is there an old employer name or a draft note left in that you did not want shown?</li><li>Open it on a phone once; many recruiters take their first look there.</li></ul>]]></content:encoded>
+      <category>How-to</category>
+      <category>Conversion</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" type="image/png" length="56492" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-cv-from-word-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-cv-from-word-to-pdf.png" />
+    </item>
+    <item>
+      <title>How to Fill Out a PDF Form Online for Free (Flat Forms Too)</title>
+      <link>https://www.pdfplatform.app/en/blog/fill-out-a-pdf-form-online</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/fill-out-a-pdf-form-online</guid>
+      <pubDate>Wed, 22 Jul 2026 15:22:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-form-doldurma-online-ucretsiz" />
+      <description><![CDATA[No need to print and hand-fill a PDF form you received. Whether it has fillable fields or not, here's how to add text and sign a PDF — step by step.]]></description>
+      <content:encoded><![CDATA[<p>Applications, contracts, petitions... Most PDF forms are actually "flat" — they have no ready fields you can click and type into. Instead of printing and filling by hand, you can add text directly on top of the form.</p>
+<h2>There are two kinds of PDF forms</h2>
+<ul><li>Fillable (interactive) form: It has ready fields; you can click and type into them in any PDF reader.</li><li>Flat form: Most official/scanned documents are like this; there are no ready fields. Here you add text "on top" at the right spot.</li></ul>
+<h2>Filling a flat PDF form — step by step</h2>
+<ol><li><strong>Upload the form</strong> — Upload your PDF form to the annotate/text tool.</li><li><strong>Add text</strong> — With the text/note tool, click the relevant blank and type your answer; add a separate box for each field.</li><li><strong>Sign and download</strong> — If needed, add your signature and download the filled PDF with "Apply &amp; download".</li></ol>
+<p><strong>Add Text/Markup to PDF</strong> — Upload your form, add text to the blanks, and download the filled PDF — free. <a href="https://www.pdfplatform.app/en/tools/annotate-pdf">Open the tool</a></p>
+<h2>If a signature is required</h2>
+<p>If the form asks for a signature, after adding your text you can draw/type your signature and place it. Signing happens entirely on your device; your document is not sent to a server.</p>
+<blockquote><p>For checkboxes, add a small "X" or "✓" text. If the form has multiple pages, add text/marks to each page separately.</p></blockquote>
+<h2>Which kind of form do you have? Find out in thirty seconds</h2>
+<p>Which method you need depends on the form, and finding out is easy: open the PDF and click a blank. If a cursor blinks and you can type, the form is fillable; if nothing happens, it is flat. On fillable forms, filling the fields directly is the cleanest route because the text sits inside the field and aligns itself. On flat forms you place text on top of the page instead.</p>
+<h2>Accented characters in fillable forms</h2>
+<p>Some PDF forms are built with a limited character set, so letters outside it can disappear or turn into question marks when typed. That is the form author's font choice rather than a mistake by whoever fills it in. Reading the fields back once after filling is the practical way to catch this.</p>
+<h2>What locking the form does</h2>
+<p>When you send a fillable form, its fields are still editable; the recipient can change one without noticing, or the form may appear empty in a different program. Locking the fields makes what you typed a permanent part of the page, so the document looks the same everywhere. On an official application this step ensures the form arrives complete and unaltered.</p>
+<h2>Alignment on flat forms</h2>
+<ul><li>Set the text size close to the line height; oversized text spills onto the neighbouring line.</li><li>Use a separate text box for each field; one long line breaks the alignment.</li><li>A small mark is enough for a checkbox — do not overflow the box.</li><li>Where day/month/year have separate boxes, type into each one separately.</li><li>Check at 100% zoom before downloading; text that looks right at screen scale can shift in print.</li></ul>
+<h2>Signing and sending</h2>
+<p>Most forms ask for a signature. Adding yours after filling and sending the document as one file is tidier and easier for the recipient than sending separate pages. If the other side must sign too, sending the document out for signature by email and keeping a record of the process is the safer route.</p>
+<h2>A final check before sending</h2>
+<p>Are all required fields filled, is the date in the requested format, and are the requested attachments included? Those three questions prevent most applications from coming back. Keeping a copy of the completed form is also worth it, and removes the later question of what you wrote.</p>]]></content:encoded>
+      <category>How-to</category>
+      <category>Forms</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" type="image/png" length="51692" />
+      <media:content url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/fill-out-a-pdf-form-online.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/fill-out-a-pdf-form-online.png" />
+    </item>
+    <item>
+      <title>iLovePDF Alternative: Free PDF Tools, File Stays On Device</title>
+      <link>https://www.pdfplatform.app/en/blog/ilovepdf-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/ilovepdf-alternative</guid>
+      <pubDate>Wed, 22 Jul 2026 14:15:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ilovepdf-alternatifi-cihazda-ucretsiz" />
+      <description><![CDATA[The key question when looking for an iLovePDF alternative: where does my file go? An honest comparison with tools that run on-device, need no signup and add no forced watermark.]]></description>
+      <content:encoded><![CDATA[<p>iLovePDF is popular, but for most operations your file is uploaded to its servers first. When you're handling a sensitive contract, ID or financial statement, that leaves a question mark. Here's how to do the same tasks without your file ever leaving your device.</p>
+<h2>Where does your file go in iLovePDF?</h2>
+<p>In most online tools like iLovePDF, merging, splitting or converting uploads your file to a server, processes it there, and then deletes it. It's usually safe, but the file still goes to the internet for a while. For confidential documents, the safest approach is for the file to never leave your device.</p>
+<h2>What to look for in an alternative</h2>
+<ul><li>Privacy: Is the file uploaded to a server, or processed in your browser?</li><li>Forced watermark: Is a stamp added to the free output?</li><li>Signup requirement: Does a simple task require an account?</li><li>Daily/usage limits: How many operations can you do for free?</li></ul>
+<h2>The PDF Platform difference: structural tools run on-device</h2>
+<p>On PDF Platform, structural operations like merge, split, rotate, delete pages, reorder pages and image-to-PDF run entirely in your browser (on your device) — your file is never sent to the internet. No signup is required, no forced watermark is added to the free output, and it even works when your connection drops.</p>
+<p><strong>Merge PDF</strong> — Add your files, reorder and download one PDF — on your device, free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Which tools run on-device, which on the server?</h2>
+<p>To be honest, not every operation can run in the browser. Here's the clear split:</p>
+<ul><li>On-device (file never leaves): merge, split, rotate, delete pages, reorder pages, image → PDF, document scan, sign and annotate.</li><li>On the server (content not stored, encrypted connection): Word/Excel/PowerPoint conversion, OCR, compression and AI tools (summarize, chat, translate).</li></ul>
+<blockquote><p>If you only need to merge or split a confidential document, pick the on-device tools; your file never touches the internet. If conversion is needed, content is not retained after processing.</p></blockquote>
+<h2>What iLovePDF does well</h2>
+<p>A comparison is only useful if it is honest. iLovePDF has been doing this for a long time and does it well, so you should know what you would be giving up:</p>
+<ul><li>Years of track record and mature infrastructure.</li><li>Desktop and mobile apps — you are not limited to a browser.</li><li>Very broad language support and a large user base.</li><li>Developer tooling for organisations that need it.</li></ul>
+<p>If what you need is a desktop program or an enterprise-scale setup, staying where you are may well be the better call. We run in the browser and have no separate desktop app.</p>
+<h2>Which one should you pick?</h2>
+<p>There is no single right answer — it depends on what you are doing.</p>
+<ul><li>If the document is sensitive (a contract, an ID, a medical report, customer data) and the job is page-level editing: pick the on-device tool. A file that is never uploaded beats a promise to delete it later, every time.</li><li>If you want a desktop program: we run in the browser, so look elsewhere.</li><li>If you only process a few files now and then: the free plan is enough, and with no watermark you can use the result as-is.</li><li>If you work with Turkish documents: the interface, the OCR and the AI tools treat Turkish as a first language rather than a translation layer added afterwards.</li></ul>
+<h2>Test the claim yourself</h2>
+<p>You do not have to take "your file stays on your device" on trust. You can check it in thirty seconds:</p>
+<ol><li><strong>Open the merge tool</strong> — No account needed. Pick a couple of PDFs you want to merge.</li><li><strong>Disconnect from the internet</strong> — Turn off Wi-Fi or unplug the cable. Do not reload the page.</li><li><strong>Run the merge</strong> — It completes and you download your file. If it works with no connection, your file is not going anywhere.</li></ol>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Privacy</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" type="image/png" length="55604" />
+      <media:content url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/ilovepdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/ilovepdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/ilovepdf-alternative.png" />
+    </item>
+    <item>
+      <title>SmallPDF Alternative: No Daily Limit, No Watermark</title>
+      <link>https://www.pdfplatform.app/en/blog/smallpdf-alternative</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/smallpdf-alternative</guid>
+      <pubDate>Wed, 22 Jul 2026 11:15:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/smallpdf-alternatifi-sinirsiz-ucretsiz" />
+      <description><![CDATA[The usual snag when looking for a SmallPDF alternative: the daily task limit and the signup wall. A comparison with unlimited, signup-free, watermark-free tools.]]></description>
+      <content:encoded><![CDATA[<p>SmallPDF is a solid tool, but on the free tier you hit a daily task limit and frequent signup/Pro walls. Is it possible to do the same tasks with no limit and no account? Yes.</p>
+<h2>The limits of SmallPDF's free tier</h2>
+<ul><li>Daily task limit: After a set number of free tasks you're asked to wait or upgrade to Pro.</li><li>Signup/Pro pressure: Some tools or batch operations require an account.</li><li>Upload: For most operations your file goes to a server.</li></ul>
+<h2>On PDF Platform there's no limit and no signup</h2>
+<p>On PDF Platform, structural tools like merge, split, rotate, delete pages, reorder pages and image-to-PDF work with no signup, no daily limit and no forced watermark. And these operations run entirely in your browser (on your device) — your file never goes to a server.</p>
+<p><strong>Merge PDF</strong> — Add your files, reorder and download one PDF — unlimited and free. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Which tasks are free, which need an account?</h2>
+<p>The honest split: structural tools are fully free and signup-free. Word/Excel conversion, OCR and AI tools (summarize, chat, translate) run on the server; those need an account for larger files and history, but content is not stored.</p>
+<ul><li>Unlimited &amp; signup-free: merge, split, rotate, delete, reorder, image → PDF, document scan, sign, annotate.</li><li>Account/plan: Word/Excel/PowerPoint conversion, OCR, compression and AI tools (for larger files + history).</li></ul>
+<blockquote><p>If you just need to merge/split/rotate, you can do it without creating an account or hitting a daily limit — and your file never leaves your device.</p></blockquote>
+<h2>Where SmallPDF is genuinely good</h2>
+<p>An honest comparison names the other side's strengths too. SmallPDF has been doing this a long time and it shows: the interface is clean and easy to learn, the tool range is broad, there are desktop and mobile apps, and team accounts and cloud integrations help in corporate use. If you want a shared cloud workflow for a team, those are not features to dismiss.</p>
+<h2>Where the real difference lies</h2>
+<p>The difference is not in the feature list but in where the work happens. Every server-side tool costs money to run, and that cost has to be capped somewhere; daily and hourly limits exist for that reason. Page operations need no server. Done in the browser, there is nothing left to meter: the limit disappears because the server cost disappeared — not out of generosity.</p>
+<h2>Which jobs are genuinely unlimited?</h2>
+<ul><li>Merge, split, delete pages, reorder, rotate and crop: run on your device, with no limit and no account.</li><li>Images to PDF, document scanning, signing and markup: also on your device.</li><li>Word/Excel conversion, OCR and compression: run on a server, with a daily allowance on the free plan.</li><li>AI tools (summarize, translate, extract, compare): server-side and plan-dependent.</li></ul>
+<h2>Measure your own need properly</h2>
+<p>The practical way to decide is to look at what you actually did over the last month and how often. For most people the bulk of it is page editing, and a tool that runs without limits or an account covers that. If you convert to Word or run OCR regularly, you will need to look at paid plans on both sides, and at that point what you compare is the monthly cost.</p>
+<h2>Testing takes thirty seconds</h2>
+<p>Rather than reading claims, test them: open the merge tool, switch off your connection and run the operation. If it completes, the file never left your device and there is no server work to count. You can run the same test on the other tools you use, and the result speaks more clearly than either side's privacy page.</p>]]></content:encoded>
+      <category>Comparison</category>
+      <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" type="image/png" length="54441" />
+      <media:content url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/smallpdf-alternative.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/smallpdf-alternative.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/smallpdf-alternative.png" />
+    </item>
+    <item>
+      <title>Free PDF Editor: Add and Delete Text, Sign and Fill Forms</title>
+      <link>https://www.pdfplatform.app/en/blog/free-pdf-editor</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/free-pdf-editor</guid>
+      <pubDate>Wed, 22 Jul 2026 09:18:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/ucretsiz-pdf-duzenleyici-rehberi" />
+      <description><![CDATA[There's no single way to edit a PDF: changing text, adding text, signing, annotating... A guide to which tool to use for what you actually need.]]></description>
+      <content:encoded><![CDATA[<p>"Editing a PDF" means different things to different people: some want to change existing text, some to add notes on top, some to sign. Pick the right tool and it takes seconds. Here's a roadmap by need.</p>
+<h2>1) Change or delete existing text</h2>
+<p>If you want to actually remove text in a PDF and type new text, use the "Edit PDF" tool. Draw a box over the text to change, type the new text (leave empty to delete) and download.</p>
+<p><strong>Edit PDF</strong> — Truly delete and replace existing text — draw a box, type the new text, download. <a href="https://www.pdfplatform.app/en/tools/edit-pdf">Open the tool</a></p>
+<h2>2) Add text, notes or marks on top</h2>
+<p>To add text, highlights, boxes or drawings on top without touching existing text, the "Annotate PDF" tool is ideal. You can also use it to fill in blanks on forms.</p>
+<h2>3) Sign</h2>
+<p>To sign a document, use the "Sign PDF" tool to draw, type or upload your signature and place it anywhere on the page. Signing happens entirely on your device.</p>
+<h2>4) Fill forms</h2>
+<p>For forms with no fillable fields (flat), you can fill them by adding text directly on top — see our form-filling guide for detailed steps.</p>
+<blockquote><p>For confidential documents, annotating and signing run entirely on your device; your file doesn't go to a server. Real text deletion/editing is done on a secure server and the file isn't stored after processing.</p></blockquote>
+<h2>Ask the right question first: what do you want to edit?</h2>
+<p>«Editing a PDF» is not one job; it is a shared name for several similar-looking jobs with different results. Picking the wrong tool makes the task look impossible or produces an unexpected outcome. Four questions separate what you need:</p>
+<ul><li>Are you changing text in the document? — you need text editing.</li><li>Are you adding your own notes? — markup is enough.</li><li>Are you arranging pages (delete, reorder, merge)? — page tools.</li><li>Are you removing information permanently? — redaction; markup or cropping will not do.</li></ul>
+<h2>What to watch for in free tools</h2>
+<p>A tool offered free usually charges somewhere else, and it is worth seeing where before you start. The common patterns: a watermark on the output, a daily or hourly limit, your document uploaded to a server, a mandatory account before download, and reduced quality in the downloaded file. Checking those five points while trying a tool keeps you from getting stuck mid-task.</p>
+<h2>Before you start editing</h2>
+<p>The type of document largely decides what you can do. In a PDF with a text layer you can change the text; in a scan the page is an image and needs converting to text first. If the document is password-protected, no tool can read its content until the password is removed. Those two checks answer most of the «why is it not working?» questions upfront.</p>
+<h2>Common scenarios and the right order</h2>
+<ul><li>Changing a clause in a scanned contract: convert to text first, then edit.</li><li>Turning several documents into one file: merge, then reorder, then add numbers last.</li><li>Cleaning a document before sharing: delete unneeded pages, redact sensitive data, clear metadata.</li><li>Filling and returning a form: fill, sign, lock, and compress if needed.</li></ul>
+<h2>The limits of editing</h2>
+<p>Text in a PDF does not flow; replacing a word with a longer one does not reflow the line. For small corrections that is no problem, but if paragraphs will be rewritten, producing the document from its source or converting to Word is less work. The test is simple: a few words means edit directly, pages of rewriting means convert.</p>]]></content:encoded>
+      <category>How-to</category>
+      <category>Editing</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" type="image/png" length="54836" />
+      <media:content url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/free-pdf-editor.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/free-pdf-editor.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/free-pdf-editor.png" />
+    </item>
+    <item>
+      <title>Convert Word to PDF Without Breaking Formatting</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-word-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-word-to-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 20:01:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/word-pdf-cevirme" />
+      <description><![CDATA[Converting your Word file to PDF before sharing guarantees the layout looks the same for everyone. Here's the most practical way to go from Word to PDF without breaking formatting.]]></description>
+      <content:encoded><![CDATA[<p>When you send a Word document, a different Office version or a missing font on the other end can shift your layout. PDF fixes this: the document looks identical for everyone. Here's how to convert Word to PDF without breaking formatting.</p>
+<h2>Why convert Word to PDF?</h2>
+<ul><li>Locks the layout: fonts, tables and spacing look the same everywhere.</li><li>Opens on any device: phone, tablet, computer — no special software.</li><li>Can't be edited by accident: safe for proposals, contracts and CVs.</li><li>Official submissions usually require PDF.</li></ul>
+<h2>Step by step</h2>
+<ol><li><strong>Upload the document</strong> — Drag your .doc, .docx, .odt or .rtf file into the Word to PDF tool.</li><li><strong>Convert</strong> — The document is processed on the server and converted to PDF with layout, fonts and tables preserved.</li><li><strong>Preview and download</strong> — Check the result and download the PDF. The page structure matches your original document.</li></ol>
+<p><strong>Word to PDF</strong> — Convert your Word document to PDF with layout intact. <a href="https://www.pdfplatform.app/en/tools/word-to-pdf">Open the tool</a></p>
+<h2>Tips for preserving formatting</h2>
+<blockquote><p>If your document uses standard fonts (Arial, Times New Roman, Calibri), the output will be closest to the original. Very custom, non-installed fonts may render differently on some systems.</p></blockquote>
+<p>Need the other direction — turning a PDF back into an editable Word file? We have a separate tool for that.</p>
+<p><strong>PDF to Word</strong> — No editable version on hand? Convert the PDF back to Word. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">PDF → Word</a></p>
+<h2>Prepare the document before converting</h2>
+<p>A PDF freezes the Word document as it stands, so whatever is in the file ends up in the output. A few minutes of preparation prevents surprises you would otherwise notice after sending.</p>
+<ul><li>Turn off track changes and accept all revisions, or the markup can end up in the output.</li><li>Clear comments, especially leftovers from internal review.</li><li>Run the spell check once; fixing it in a PDF is far harder.</li><li>Update the automatic contents page and field codes, or old page numbers get frozen in.</li><li>Review the author and company details in document properties.</li></ul>
+<h2>Why fonts shift</h2>
+<p>A Word file usually does not embed its typefaces; it only records their names. If the font is not installed on the other end, the program substitutes something similar, line lengths change, tables overflow and even the page count differs. A PDF embeds the fonts it uses. That is PDF's most useful property, and it explains why official submissions ask for it.</p>
+<h2>A note on CVs and applications</h2>
+<p>Documents sent with job applications are often uploaded into a system and scanned automatically, so it matters that the text inside the PDF is real text. A document produced straight from Word satisfies that; a CV exported as an image from a design tool or captured as a screenshot does not. There is a simple test: open the PDF and try to select your name with the cursor. If you cannot, the document is an image.</p>
+<h2>Checklist after converting</h2>
+<ul><li>Is the page count as expected, or did an extra blank page appear?</li><li>Are tables split across a page break?</li><li>Is there an unwanted break between a heading and its text?</li><li>Did links stay clickable?</li><li>Does the file size fit the channel you are sending through?</li></ul>
+<h2>What you can do afterwards</h2>
+<p>Once you have the PDF you can keep working on it: merge it with annexes, add page numbers, reduce its size or permanently remove sensitive details. Most of these operate at page level, so they leave the content and appearance of the document untouched.</p>]]></content:encoded>
+      <category>Convert</category>
+      <category>Word</category>
+      <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" type="image/png" length="55336" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-word-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-word-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-word-to-pdf.png" />
+    </item>
+    <item>
+      <title>The Best Free Online PDF Tools (2026 Guide)</title>
+      <link>https://www.pdfplatform.app/en/blog/best-free-pdf-tools</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/best-free-pdf-tools</guid>
+      <pubDate>Tue, 21 Jul 2026 19:55:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/en-iyi-ucretsiz-pdf-araclari" />
+      <description><![CDATA[There's no single answer to "the best free PDF tool" — it depends on the job. This guide splits PDF tasks into categories and shows the right tool for each, plus what to watch for.]]></description>
+      <content:encoded><![CDATA[<p>There are hundreds of PDF tools online, but which one when? This guide splits PDF work into five categories and shows the right tool for each — and what to watch for (privacy, watermark, file size) when choosing.</p>
+<h2>1) Editing and organizing</h2>
+<p>Merging, splitting, deleting, rotating or reordering pages is the most common need. These tasks are light and, in good tools, run on your device (in the browser) — your file doesn't go to a server and you get an instant result.</p>
+<p><strong>Merge PDF</strong> — Combine multiple PDFs into one — on your device. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>2) Converting</h2>
+<p>Turning PDF into Word/Excel/PowerPoint or back; getting a PDF as JPG. These are heavy tasks usually done on the server. The key criterion when choosing a converter: how well formatting (layout, tables, fonts) is preserved.</p>
+<p><strong>PDF to Word</strong> — Convert a PDF into an editable Word document. <a href="https://www.pdfplatform.app/en/tools/pdf-to-word">Open the tool</a></p>
+<h2>3) Optimizing and securing</h2>
+<p>Reducing file size (compression), adding/removing a password, adding a watermark or page numbers. Compression to email a file and encryption before sharing are common.</p>
+<p><strong>Compress PDF</strong> — Make your PDF small enough to email. <a href="https://www.pdfplatform.app/en/tools/compress">Open the tool</a></p>
+<h2>4) PDF with AI</h2>
+<p>Summarizing long documents, asking a document questions, extracting data from invoices, or comparing two contracts. In AI tools the file itself usually isn't uploaded; text is extracted and only the text is processed.</p>
+<p><strong>Summarize PDF</strong> — Summarize a long document in seconds. <a href="https://www.pdfplatform.app/en/tools/summarize-pdf">Open the tool</a></p>
+<h2>5) What to watch for when choosing a tool</h2>
+<ul><li>Privacy: Is the file uploaded to a server, or processed on your device? For sensitive documents, prefer on-device processing.</li><li>Watermark: Does the free output get a forced watermark?</li><li>Signup: Does it force an account for a simple task?</li><li>File size/limits: Up to how many MB, how many operations a day?</li></ul>
+<blockquote><p>On PDF Platform, structural tools (merge, split, rotate, scan) run on your device, no forced watermark is added, and most tasks can be done without an account.</p></blockquote>]]></content:encoded>
+      <category>Guide</category>
+      <category>PDF Tools</category>
+      <category>Free</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" type="image/png" length="53083" />
+      <media:content url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/best-free-pdf-tools.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/best-free-pdf-tools.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/best-free-pdf-tools.png" />
+    </item>
+    <item>
+      <title>How to Convert Excel to PDF Keeping Tables and Layout (2026)</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-excel-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-excel-to-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 18:34:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/excel-pdf-cevirme" />
+      <description><![CDATA[Sending an Excel file as-is often results in shifted cells and broken page layout. Here's how to convert Excel to PDF while keeping tables intact and print-ready.]]></description>
+      <content:encoded><![CDATA[<p>Sending an Excel table often ends with shifted columns, split pages and a broken print area on the other end. PDF fixes this: the table looks identical and print-ready for everyone. Here's how to convert Excel to PDF without breaking the layout.</p>
+<h2>Why convert Excel to PDF?</h2>
+<ul><li>Locks the layout: cells, column widths and page breaks look the same everywhere.</li><li>Print-ready: print-area and fit-to-page issues disappear.</li><li>Can't be changed by accident: safe for report, quote and invoice tables.</li><li>Opens on devices without Excel installed.</li></ul>
+<h2>Step by step</h2>
+<ol><li><strong>Upload the Excel file</strong> — Add your .xls, .xlsx, .ods or .csv file to the Excel to PDF tool.</li><li><strong>Convert</strong> — The file is processed on the server and converted to PDF with tables, cells and formatting preserved.</li><li><strong>Preview and download</strong> — Check the result and download the PDF — your table is share- and print-ready.</li></ol>
+<p><strong>Excel to PDF</strong> — Convert your Excel table to PDF with layout intact. <a href="https://www.pdfplatform.app/en/tools/excel-to-pdf">Open the tool</a></p>
+<h2>Tip for wide tables</h2>
+<blockquote><p>For wide, many-column tables, setting the page orientation to Landscape and adjusting the print area in Excel before converting helps everything fit and stay readable.</p></blockquote>
+<h2>The reverse: getting a table out of a PDF</h2>
+<p>If you have a PDF and want to edit the table inside it in Excel, we have a separate tool that extracts tables to .xlsx.</p>
+<p><strong>PDF to Excel</strong> — Export tables from a PDF into editable Excel. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">PDF → Excel</a></p>
+<h2>Set the print options before converting</h2>
+<p>What the resulting PDF looks like is decided by the print settings in the file. A wide table converted without them comes out with columns scattered across pages and is unreadable. A couple of minutes of setup completely changes how usable the output is.</p>
+<ul><li>Set orientation to landscape: with many columns this is almost always needed.</li><li>Define the print area to stop empty cells spreading across pages.</li><li>Use the «fit all columns on one page» option.</li><li>Set the header row to repeat on every page — it decides readability on multi-page tables.</li><li>Decide whether gridlines should print.</li></ul>
+<h2>Files with several sheets</h2>
+<p>An Excel file usually holds several worksheets, and not all of them need sharing. When working calculations, raw data or old period tabs end up in the output, the document both bloats and can carry information that was never meant to leave. Deciding which sheets go into the output before converting is cleaner than deleting pages from the PDF afterwards.</p>
+<h2>Watch for hidden information</h2>
+<p>Excel files carry more than they show: hidden rows and columns, data concealed by filters, cell notes and other sheets that formulas point at. Hidden rows usually stay out of the PDF, but cell notes and filtered data can appear unexpectedly. Reviewing everything hidden before converting a table that is going outside is a good habit.</p>
+<h2>For invoice and quote tables</h2>
+<p>The real reason for converting quotes and invoices prepared in Excel is to create a fixed document whose figures the recipient cannot change. Two extra steps help when sending it: page numbers show completeness on multi-page quotes, and a permissions password restricts copying and editing.</p>
+<h2>Before you send the output</h2>
+<ul><li>Do page breaks fall in sensible places, or is a line item split in half?</li><li>Do amounts and currency display correctly?</li><li>Is the smallest type readable, especially if it will be printed?</li><li>Is there a note or column left in that you did not want shown?</li></ul>]]></content:encoded>
+      <category>Convert</category>
+      <category>Excel</category>
+      <category>PDF</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" type="image/png" length="56728" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-excel-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-excel-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-excel-to-pdf.png" />
+    </item>
+    <item>
+      <title>How to Convert PDF to JPG / Images: One Image per Page</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-pdf-to-jpg</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-pdf-to-jpg</guid>
+      <pubDate>Tue, 21 Jul 2026 17:58:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-jpg-resme-cevirme" />
+      <description><![CDATA[When you need to share a PDF page as an image, put it on the web, or drop it into a slide, the cleanest way is to convert it to JPG/PNG. Here's how — and whether to pick JPG or PNG.]]></description>
+      <content:encoded><![CDATA[<p>You can't embed a PDF everywhere — but you can embed an image. To share a page on social media, place it on a web page, or add it to a slide, converting the PDF to JPG or PNG is the most practical route.</p>
+<h2>When is it useful?</h2>
+<ul><li>Sharing a single page as an image on social media.</li><li>Adding a preview to a website or blog post.</li><li>Dropping a page into a presentation as a picture.</li><li>Quickly showing a page to someone who can't open a PDF.</li></ul>
+<h2>Step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Add your document to the PDF to JPG tool.</li><li><strong>Pages become images</strong> — Each page is processed as a separate high-resolution JPG/PNG.</li><li><strong>Download</strong> — Download the images one by one or all together as a ZIP.</li></ol>
+<p><strong>PDF to JPG</strong> — Turn PDF pages into high-quality images. <a href="https://www.pdfplatform.app/en/tools/pdf-to-image">Open the tool</a></p>
+<h2>JPG or PNG?</h2>
+<p>JPG is smaller and ideal for photo-heavy pages. PNG keeps sharp edges and text crisper and supports transparency — prefer it for logos, diagrams or text-heavy pages.</p>
+<h2>Convert the page, or extract the images inside?</h2>
+<p>This tool converts the WHOLE page into an image. But if your goal is only to save a photo or logo inside the PDF at original quality, you should extract the embedded images directly instead of rasterizing the page — that way there's no quality loss.</p>
+<p><strong>Extract Images from PDF</strong> — Pull embedded photos and logos out of a PDF in their original format. <a href="https://www.pdfplatform.app/en/tools/extract-images">Open the tool</a></p>
+<h2>The reverse: images to PDF</h2>
+<p>If you have several photos/images and want to combine them into one PDF, we have a separate tool for that — and it runs entirely on your device.</p>
+<p><strong>Images to PDF</strong> — Combine your photos into a single PDF — on your device. <a href="https://www.pdfplatform.app/en/tools/image-to-pdf">Images → PDF</a></p>
+<h2>Why resolution matters</h2>
+<p>Converting a PDF page to an image means turning a vector document into pixels, and resolution decides the quality of that result with no way back: an image produced at low resolution cannot be sharpened afterwards. Roughly, medium resolution suits on-screen sharing, high suits presentations and the web, and the highest available suits print.</p>
+<h2>Why a screenshot is not enough</h2>
+<p>Taking a screenshot looks like the fastest way to share a page, but the result is limited to your screen's resolution and usually comes out soft. It also picks up the frame, margins and the viewer's interface. Converting the PDF directly gives a clean output at the page's own resolution, with straight edges and crisp text.</p>
+<h2>Practical notes for social media and the web</h2>
+<ul><li>A portrait A4 page gets cropped in most social feeds; snipping the section you want first looks much better.</li><li>Compressing an image before putting it on a web page noticeably improves load time.</li><li>PNG works better for text-heavy pages, JPG for photo-heavy ones.</li><li>Text in a converted page is no longer text; search engines cannot read it. Write important wording on the page as well.</li></ul>
+<h2>The whole page, or part of it?</h2>
+<p>Often what you need is not the whole page but a table, chart or paragraph on it. Snipping the area directly is faster than converting the page and cropping it in an image editor, and it preserves resolution. When preparing presentations and reports, this is the method that helps most often.</p>
+<h2>One side effect of converting to an image</h2>
+<p>When a page becomes an image its text layer disappears: it can no longer be copied, searched or read by screen readers. Sometimes that is exactly what you want, if you would rather the text not be lifted easily. But where accessibility matters, or where the document will be archived, keep the PDF itself and use the image only as a sharing copy.</p>]]></content:encoded>
+      <category>Convert</category>
+      <category>Image</category>
+      <category>JPG</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" type="image/png" length="56017" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-jpg.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-jpg.png" />
+    </item>
+    <item>
+      <title>Process PDFs Without Uploading: Why On-Device Is Safer</title>
+      <link>https://www.pdfplatform.app/en/blog/process-pdf-without-uploading</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/process-pdf-without-uploading</guid>
+      <pubDate>Tue, 21 Jul 2026 17:56:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/dosya-yuklemeden-pdf-isleme-gizlilik" />
+      <description><![CDATA[Do you have to upload a PDF to an unknown server just to merge it? No. Most structural PDF operations can run entirely in your browser — without your file ever being sent to the internet.]]></description>
+      <content:encoded><![CDATA[<p>Most online PDF tools work like this: they upload your file to their servers, process it there, and hand back the result. But for documents like contracts, IDs and invoices, that means a copy of your file ends up on a server you don't control. For most structural PDF operations, that's unnecessary.</p>
+<h2>What does "on-device" mean?</h2>
+<p>On-device (client-side) processing means the whole job happens inside your browser — the file is never sent to the internet. That means three things: privacy (the file stays with you), speed (no upload/download wait, instant result) and the ability to work offline.</p>
+<h2>Tools that run in your browser</h2>
+<ul><li>Merge, Split, Rotate, Delete Pages, Reorder Pages — all on your device.</li><li>Images to PDF, signing and annotating a PDF — on your device.</li><li>Document Scanner — including the camera image, entirely on your device.</li></ul>
+<p><strong>Merge On-Device</strong> — Merge your PDFs in your browser, without uploading to a server. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>So does every tool run on-device?</h2>
+<p>Let's be honest: no. Heavy jobs like Word/Excel conversion, OCR and compression run on the server (they aren't practical in the browser). With AI tools, your file isn't uploaded — the text is extracted on your device and only the text is processed. So it's always clear which tool runs where.</p>
+<blockquote><p>For the most sensitive documents (IDs, contracts, health records), prefer the on-device structural tools and the document scanner; and if needed before sharing, remove sensitive data with real redaction.</p></blockquote>
+<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data before sharing. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Redaction tool</a></p>
+<h2>How to tell whether a tool really runs on your device</h2>
+<p>A privacy claim means something when it can be tested. The simplest way to find out whether a tool uploads your file is to try the operation with your connection switched off. If it completes, the file never left your device, because there was nothing to send. That thirty-second test gives a more definite answer than reading any site's privacy page.</p>
+<h2>What «files are deleted after an hour» really means</h2>
+<p>That is the privacy promise of most online tools, and it is an honest one — but it misses the point of concern. Until deletion the file sat on a server, crossed the network on its way there, and was visible to anyone with access to that system during the window. With a tool that runs on your device, no copy to delete is ever created. The difference is not the quality of the deletion policy but the fact that the file never travelled.</p>
+<h2>Why some jobs need a server</h2>
+<p>That not every tool runs locally is a matter of the work's nature rather than a choice. Rearranging, merging, rotating or deleting pages changes the document's structure, which a browser handles comfortably. Word conversion, OCR, compression and AI processing need serious computing power and large components; downloading those into every visitor's browser would be neither fast nor realistic.</p>
+<h2>A practical distinction for your own documents</h2>
+<ul><li>Identity, medical, financial and legal documents: do everything you can on your device.</li><li>If a document with personal data must be processed on a server, remove what is not needed first.</li><li>For internal or already-public documents, the distinction matters little in practice.</li><li>When unsure, ask whether it would trouble you if the document got out — if not, server processing is fine.</li></ul>
+<h2>Where privacy alone is not enough</h2>
+<p>A file not being uploaded does not mean the document is safe. When the work is done, the document sits on your device, and one left in the downloads folder of a shared computer is a bigger risk than a server ever was. After working with sensitive documents, deleting intermediate copies and clearing metadata before sharing is the companion to processing locally.</p>]]></content:encoded>
+      <category>Privacy</category>
+      <category>On-device</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" type="image/png" length="56859" />
+      <media:content url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/process-pdf-without-uploading.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/process-pdf-without-uploading.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/process-pdf-without-uploading.png" />
+    </item>
+    <item>
+      <title>How to Repair a Corrupt PDF That Won&apos;t Open</title>
+      <link>https://www.pdfplatform.app/en/blog/repair-a-corrupt-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/repair-a-corrupt-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 17:39:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/bozuk-pdf-onarma" />
+      <description><![CDATA[A "can't open" or "file is corrupt" error on an important document is frustrating. Here's why a PDF breaks and how to recover the salvageable content by re-packaging its structure.]]></description>
+      <content:encoded><![CDATA[<p>Hitting a "file is damaged" or "can't open" error on an important PDF is maddening. The good news: in most broken PDFs the content is still there — only the file's structure is damaged — and that's often repairable.</p>
+<h2>Why do PDFs break?</h2>
+<ul><li>An interrupted download or transfer (the connection dropped).</li><li>A USB/disk error or the file not being fully saved.</li><li>Editing with an incompatible program or a faulty export.</li><li>Email/attachment compression corrupting the file.</li></ul>
+<h2>Try repairing — step by step</h2>
+<ol><li><strong>Upload the broken PDF</strong> — Add your won't-open file to the Repair PDF tool.</li><li><strong>Let the repair run</strong> — The tool re-packages the file's structure and gathers the salvageable content.</li><li><strong>Download the result</strong> — Download the repaired PDF and try opening it. Much of the content may come back.</li></ol>
+<p><strong>Repair PDF</strong> — Try to repair your won't-open PDF and recover the content. <a href="https://www.pdfplatform.app/en/tools/repair-pdf">Open the tool</a></p>
+<h2>What to expect</h2>
+<p>Repair is not always a 100% guarantee — it depends on the degree of damage. Success is high for files whose structure is broken but whose content remains; it can't bring back fully deleted or encrypted data. Still, trying often recovers the document.</p>
+<blockquote><p>If the file is very large after repair, you can shrink it with the compress tool; if it's scanned and the text is gone, you can add a text layer again with OCR.</p></blockquote>
+<h2>First make sure the file is really broken</h2>
+<p>Not every PDF that refuses to open is corrupt. A few minutes of checking often solves the problem, or at least reveals the real cause.</p>
+<ul><li>Try a different program: a document that opens in a browser may fail in an old desktop reader.</li><li>Look at the file size: a few kilobytes means the download was cut short, and re-downloading beats repairing.</li><li>Check the extension: on some systems the file is actually a .zip or .docx.</li><li>If it asks for a password, the file is encrypted rather than broken, and needs different handling.</li><li>If it sits in a cloud folder, check whether it has finished syncing.</li></ul>
+<h2>What repair actually does</h2>
+<p>At the end of a PDF there is an index recording where each object sits in the file. When that index is damaged the reader cannot open the document, even though the page content is still in the file. Repair scans the file from start to finish, gathers the objects it can find and re-packages them with a new index. That is why success is high for structural damage and low when the content itself has truly gone.</p>
+<h2>What to check in the repaired document</h2>
+<ul><li>Page count: is anything missing?</li><li>Is the text selectable, or have pages turned into images?</li><li>Are the images in place, or showing as empty boxes?</li><li>Do bookmarks and links still work?</li><li>Are the last page and the signature section complete?</li></ul>
+<h2>Making the recovered document usable</h2>
+<p>Repair sometimes costs the text layer and leaves pages as images. To search such a document you need to add a text layer again with OCR. If the file came out larger than expected, compress it; if some pages stayed blank or broken, delete them. Save the recovered version under a new name and do not delete the damaged original immediately — you may want to try another approach later.</p>
+<h2>Avoiding it next time</h2>
+<p>A large share of corruption happens during transfer. Making sure a big download is not interrupted, waiting for safe removal before pulling out a USB drive, and not keeping the only copy of an important document on removable media largely removes the problem. Keeping critical documents in two separate places is the simplest and most effective precaution.</p>]]></content:encoded>
+      <category>Troubleshooting</category>
+      <category>PDF</category>
+      <category>Repair</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" type="image/png" length="53007" />
+      <media:content url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/repair-a-corrupt-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/repair-a-corrupt-pdf.png" />
+    </item>
+    <item>
+      <title>How to Convert PDF to Excel: Export Tables to .xlsx (2026)</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-pdf-to-excel</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-pdf-to-excel</guid>
+      <pubDate>Tue, 21 Jul 2026 16:59:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-excel-tablo-cevirme" />
+      <description><![CDATA[If you want to work with a PDF table in Excel, copy-paste usually breaks the alignment. Here's how to export tables cleanly to .xlsx — and when AI is the better choice.]]></description>
+      <content:encoded><![CDATA[<p>To analyze a report, price list or table from a PDF in Excel, you first need the data to land in proper cells. Copy-paste usually dumps everything into one column. Here's how to export tables cleanly to Excel.</p>
+<h2>Step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Add your document with tables to the PDF to Excel tool.</li><li><strong>Tables get extracted</strong> — The table structure on the pages is detected and written to .xlsx with rows/columns preserved.</li><li><strong>Download the Excel file</strong> — Download the result and edit, filter and calculate directly in Excel.</li></ol>
+<p><strong>PDF to Excel</strong> — Export PDF tables into an editable Excel file. <a href="https://www.pdfplatform.app/en/tools/pdf-to-excel">Open the tool</a></p>
+<h2>Plain conversion or AI?</h2>
+<p>If the PDF has clean, grid-like tables, plain conversion is fast and enough. But if you need to pull fields from documents that each have a different layout — like invoices (invoice no, date, totals, line items) — AI data extraction is far more accurate.</p>
+<blockquote><p>To gather dozens of invoices into a single CSV table, the Extract Data and Batch tools are built for exactly this — merging one row per document.</p></blockquote>
+<p><strong>Extract Data</strong> — Pull fields from complex documents like invoices with AI. <a href="https://www.pdfplatform.app/en/tools/extract-data-from-pdf">Extract with AI</a></p>
+<h2>Why tables sometimes come out wrong</h2>
+<p>There is no table object in a PDF. The grid you see is drawn with lines and aligned pieces of text; no row-and-column relationship exists underneath. The conversion infers that relationship from positions. The cases where inference is hard are predictable, and knowing them sets the right expectation.</p>
+<ul><li>Tables without rules: when columns are separated only by whitespace, the boundaries blur.</li><li>Merged cells: a heading spanning two columns breaks the alignment.</li><li>Long text wrapping to a second line makes it unclear whether it is one row or two.</li><li>On tables running across pages, a repeated header row can look like a new table.</li><li>Scanned documents need OCR first, otherwise cells come back empty.</li></ul>
+<h2>First fixes after opening in Excel</h2>
+<p>A few standard corrections make the output usable, and making them a habit avoids starting from scratch each time: format columns that did not arrive as numbers, convert amounts that became text because of thousand separators, check the date column format, delete repeated header rows and remove empty columns.</p>
+<h2>When data extraction is the better fit</h2>
+<p>Plain conversion tries to carry the table across as it is. Often, though, what you want is not the table but specific fields: the amount, date and seller on an invoice. If every document has a different layout, moving the table does not help; you need the fields by name. The test is simple: same template with a clean grid means conversion, differing documents with specific fields means extraction.</p>
+<h2>A practical route for large tables</h2>
+<p>If you only need the table on page fifteen of a hundred-page report, converting the whole document is unnecessary work and unnecessary waiting. Splitting out the relevant page range and converting only that is faster and cleaner, with no surplus rows to remove.</p>
+<h2>A quick way to check the result</h2>
+<p>Rather than reading row by row, check with totals: does the amount column sum to the document's grand total, does the row count match the number of line items, are there empty cells? Those three checks catch most errors in seconds.</p>]]></content:encoded>
+      <category>Convert</category>
+      <category>Excel</category>
+      <category>Table</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" type="image/png" length="55315" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-pdf-to-excel.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-pdf-to-excel.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-pdf-to-excel.png" />
+    </item>
+    <item>
+      <title>PDF on Your Phone: Merge, Edit and Scan Without an App</title>
+      <link>https://www.pdfplatform.app/en/blog/pdf-tools-on-your-phone-no-app</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/pdf-tools-on-your-phone-no-app</guid>
+      <pubDate>Tue, 21 Jul 2026 12:37:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/telefonda-pdf-islemleri-uygulamasiz" />
+      <description><![CDATA[You don't need to install a bunch of apps to work with PDFs on your phone. Merging, deleting pages, rotating and scanning documents can happen right in your phone's browser, without your file leaving the device.]]></description>
+      <content:encoded><![CDATA[<p>When you need to quickly merge two PDFs or scan a document on your phone, you don't have to head to the app store for a bulky, ad-filled app. Most of these tasks run right in your phone's browser, on your device.</p>
+<h2>Tasks that run in your phone's browser</h2>
+<ul><li>Merging and splitting PDFs</li><li>Deleting, rotating and reordering pages</li><li>Creating a PDF from images (photos)</li><li>Scanning documents with the camera (edge detection + perspective correction)</li></ul>
+<h2>Why is no-install better?</h2>
+<p>Installing an app takes space, needs updates, and many free apps lock features or add a forced watermark to the output. In the browser, a link opens and the job is done. And because these structural tasks run on your device, your file isn't sent to the internet — speed and privacy together.</p>
+<p><strong>Merge on Phone</strong> — Merge two PDFs on your phone, no app needed. <a href="https://www.pdfplatform.app/en/tools/merge-pdf">Open the tool</a></p>
+<h2>Scanning a document with your phone</h2>
+<p>The Document Scanner uses your phone camera to automatically find the document's corners, correct the perspective and produce a clean PDF — entirely on your device. You can digitize IDs, contracts or invoices without sending them to the cloud.</p>
+<p><strong>Scan Document</strong> — Scan a document with your phone camera into a PDF — on your device, private. <a href="https://www.pdfplatform.app/en/tools/scan-document">Open the scanner</a></p>
+<h2>What about heavy jobs?</h2>
+<p>Heavy jobs like Word/Excel conversion, OCR and compression aren't practical on a phone, so they run on the server; they work on mobile too, the file is just uploaded. Structural tasks (merge, scan, etc.) stay entirely on your device.</p>
+<h2>Why you may not want to install a PDF app</h2>
+<p>Most free PDF apps in the stores are not really free; you pay in something other than money. The usual pattern is predictable: watermarks on the output, a daily operation limit, your documents uploaded to the app's cloud account, broader permissions than the job needs, and a subscription screen. None of that is worth taking on to merge a PDF a few times a year.</p>
+<h2>Getting at files on a phone</h2>
+<p>The step people get stuck on is not the operation but finding the file. An email attachment has to be saved to the phone first, and documents from messaging apps land in their own folder. Once the file picker opens you can reach both device storage and your cloud accounts. When the work is done the result lands in downloads, and sharing it from there is one tap away.</p>
+<h2>What people do most often on a phone</h2>
+<ul><li>Turning photographed paperwork into a single PDF — the most common need by far.</li><li>Merging several PDFs and sending them as one file.</li><li>Deleting unwanted pages and fixing sideways ones.</li><li>Shrinking a document to fit an email.</li><li>Signing a form and sending it back.</li></ul>
+<h2>When photographing documents</h2>
+<p>Whether photographed paperwork gets accepted is usually decided at the moment of the shot. Put the document on a flat surface, light it from the front, keep all four edges in frame and hold the phone parallel to the page. If there are shadows or skew, using the document scanning flow instead of converting directly gives a much cleaner result: the edges are found and perspective is corrected.</p>
+<h2>The limits of a phone</h2>
+<p>Work that runs in the browser uses the phone's memory. Processing a few hundred scanned pages on a phone can slow down or restart the tab. For files like that, splitting the document or leaving the job to a computer is more practical. For everyday documents a phone is more than enough.</p>]]></content:encoded>
+      <category>Mobile</category>
+      <category>On-device</category>
+      <category>PDF Tools</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" type="image/png" length="55047" />
+      <media:content url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/pdf-tools-on-your-phone-no-app.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/pdf-tools-on-your-phone-no-app.png" />
+    </item>
+    <item>
+      <title>How to Convert PowerPoint to PDF (and Back)</title>
+      <link>https://www.pdfplatform.app/en/blog/convert-powerpoint-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/convert-powerpoint-to-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 11:44:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/powerpoint-pdf-cevirme" />
+      <description><![CDATA[Sharing a deck as a PDF keeps slides looking the same for everyone and safe from accidental edits. Here's how to convert PowerPoint to PDF — and back when you need to.]]></description>
+      <content:encoded><![CDATA[<p>Sending a deck as a PowerPoint file can be risky: fonts may shift, animations may break, or slides may be changed by accident. PDF makes the deck look identical for everyone and un-editable.</p>
+<h2>PowerPoint to PDF</h2>
+<ol><li><strong>Upload the deck</strong> — Add your .ppt or .pptx file to the PowerPoint to PDF tool.</li><li><strong>Convert</strong> — All slides are combined into a single PDF with the design preserved.</li><li><strong>Download</strong> — Download the PDF — a share-ready deck that looks the same on every device.</li></ol>
+<p><strong>PowerPoint to PDF</strong> — Convert your deck into a single PDF with the design intact. <a href="https://www.pdfplatform.app/en/tools/ppt-to-pdf">Open the tool</a></p>
+<h2>PDF back to PowerPoint</h2>
+<p>If you only have the PDF version of a deck and want to edit it, you can convert the PDF back into PowerPoint slides — each page becomes a slide and you can reuse the content.</p>
+<p><strong>PDF to PowerPoint</strong> — Turn a PDF deck into editable .pptx slides. <a href="https://www.pdfplatform.app/en/tools/pdf-to-ppt">PDF → PowerPoint</a></p>
+<h2>Which one, when?</h2>
+<ul><li>To share / present / archive: PowerPoint → PDF.</li><li>To edit an old deck / reuse content: PDF → PowerPoint.</li></ul>
+<h2>What survives the conversion, and what doesn't</h2>
+<p>PDF is a fixed output format: it preserves how slides look but flattens everything interactive. Knowing this upfront avoids surprises after you send the deck.</p>
+<ul><li>Preserved: layout, colours, fonts, images, and the appearance of tables and charts.</li><li>Preserved: slide order and aspect ratio (16:9 or 4:3).</li><li>Lost: transitions and animations — an animated slide becomes one page in its final state.</li><li>Lost: embedded video and audio; only a poster image remains in place.</li><li>Changed: speaker notes are not included in the default output.</li></ul>
+<h2>Why fonts shift, and how PDF fixes it</h2>
+<p>A PowerPoint file often does not embed the typeface; it only records its name. If the recipient does not have that font, the program substitutes something similar, lines shift and boxes overflow. In a PDF the fonts used are embedded in the document, so it looks the same wherever it is opened. If you will present from an unfamiliar computer, carrying a PDF copy is the safest route.</p>
+<h2>Practical settings for print and handouts</h2>
+<p>If you plan to hand the deck out, printing one slide per page usually wastes paper. After converting, use the page layout tool to place 2 or 4 slides on a sheet; it stays legible and costs less to print. On long decks this turns ten pages into three.</p>
+<h2>Realistic expectations going back to PowerPoint</h2>
+<p>The reverse conversion does not restore the original deck; a PDF does not contain the editable structure of slides. Each page becomes a slide and text boxes are rebuilt. That is enough to reuse text, copy headings or refresh an old deck, but if you expect to edit the original design precisely, finding the source file is far less work.</p>
+<h2>A last check before sending</h2>
+<ul><li>Does content that appeared through animation show in the right state?</li><li>Is the small type in charts and tables readable?</li><li>Did hidden slides make it into the output — and do you want them there?</li><li>Does the file size fit the channel you are sharing through?</li></ul>]]></content:encoded>
+      <category>Convert</category>
+      <category>PowerPoint</category>
+      <category>Slides</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" type="image/png" length="53674" />
+      <media:content url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/convert-powerpoint-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/convert-powerpoint-to-pdf.png" />
+    </item>
+    <item>
+      <title>How to Compare Two PDFs and Find the Differences</title>
+      <link>https://www.pdfplatform.app/en/blog/compare-two-pdfs</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/compare-two-pdfs</guid>
+      <pubDate>Tue, 21 Jul 2026 11:18:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-karsilastirma-farklari-bulma" />
+      <description><![CDATA[Comparing two versions of a contract line by line is tedious and risky; a small change can slip through. Here's how to find the binding differences between two PDFs in seconds with AI.]]></description>
+      <content:encoded><![CDATA[<p>"Is this the same version they sent last week, or did a clause change?" — one of the riskiest questions in contracts. Comparing two PDFs by hand is tedious and dangerous: a single changed date or amount can slip by. AI brings this down to seconds.</p>
+<h2>The risk of manual comparison</h2>
+<p>Reading two long documents side by side demands focus; across pages of text it's easy to miss an added sentence, a removed exception or a changed figure. And formatting differences (renumbered clauses, shifted paragraphs) can hide the real content changes.</p>
+<h2>Comparing with AI — step by step</h2>
+<ol><li><strong>Upload both versions</strong> — Add documents A (old) and B (new) to the Compare PDF tool.</li><li><strong>Compare</strong> — The AI understands the text and extracts added, removed and changed clauses.</li><li><strong>Review the differences</strong> — See binding changes in particular: amounts, dates, terms, parties, obligations and penalty clauses.</li></ol>
+<p><strong>Compare PDF</strong> — Compare two versions of a contract — see the binding differences in seconds. <a href="https://www.pdfplatform.app/en/tools/compare-pdf">Open the tool</a></p>
+<h2>When is it most useful?</h2>
+<ul><li>Checking contract revisions before you approve them.</li><li>Seeing what changed in tender/spec updates.</li><li>Understanding what the other side's 'minor edits' actually contain.</li></ul>
+<blockquote><p>If you want to understand not just the difference but the whole document before signing, the Summarize and Chat with PDF tools let you ask questions about it.</p></blockquote>
+<p><strong>Chat with PDF</strong> — Ask the document questions like "what is the penalty clause?" and get clear answers. <a href="https://www.pdfplatform.app/en/tools/chat-with-pdf">Chat tool</a></p>
+<h2>Which changes actually matter?</h2>
+<p>Two versions can differ in dozens of places, but most of it is cosmetic: a comma, a renumbered clause, a shifted paragraph. The risk concentrates in known places, and those deserve your attention first.</p>
+<ul><li>Amounts: figures, currency and tax wording.</li><li>Dates and periods: delivery, payment, notice and termination timeframes.</li><li>Liability: caps, indemnities and penalty clauses.</li><li>Parties: a changed legal name or an added party.</li><li>Negative wording: «excluding», «not included», «limited to» — a one-word insertion can change the scope entirely.</li><li>Governing law and jurisdiction.</li></ul>
+<h2>How quiet changes happen</h2>
+<p>The most common situation in negotiation is the other side sending a new file saying they made only minor edits. Usually that is true; but the same email can carry a one-word change in a clause nobody discussed. The only reliable way to catch it is to compare the two versions — memory and goodwill are not enough.</p>
+<h2>Preparing before comparing</h2>
+<p>A readable result depends on comparable inputs. Make sure you are comparing the same parts of each document: if one version includes annexes and the other does not, most of the differences come from the annexes and the real changes get lost. Separating the annexes and comparing the main texts gives a far more readable result. Scanned versions need their text extracted first.</p>
+<h2>Keeping a record of the result</h2>
+<p>When a negotiation runs over several rounds, it is easy to forget what changed when. Keeping each comparison with its date lets you answer the question of when a clause took its current form in minutes. Merging the versions and comparison outputs into one document with page numbers is the practical way to keep that archive tidy.</p>
+<h2>Where comparison is not enough</h2>
+<p>A comparison shows what changed; it does not tell you what the change means for you. A raised liability cap is technically a small difference and commercially a large risk. Comparison therefore does not replace legal assessment — it points at what needs assessing and lets you spend your lawyer's time on the right clauses.</p>]]></content:encoded>
+      <category>AI</category>
+      <category>Compare</category>
+      <category>Contract</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" type="image/png" length="54870" />
+      <media:content url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/compare-two-pdfs.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/compare-two-pdfs.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/compare-two-pdfs.png" />
+    </item>
+    <item>
+      <title>Redact Sensitive Data in a PDF: Share Safely (GDPR/KVKK)</title>
+      <link>https://www.pdfplatform.app/en/blog/redact-sensitive-data-in-a-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/redact-sensitive-data-in-a-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 09:31:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-hassas-veri-gizleme-kvkk" />
+      <description><![CDATA[Before sharing a document, hiding personal data like an ID number, IBAN or address is often a legal requirement. But a black box isn't enough — the data still sits underneath. Here's real redaction.]]></description>
+      <content:encoded><![CDATA[<p>Before sharing a contract, invoice or official document, you need to hide the personal data inside it (ID numbers, IBAN, phone, address) — often a legal requirement under GDPR/KVKK. But beware: drawing a black box over text is NOT real hiding.</p>
+<h2>Why a "black box" isn't safe</h2>
+<p>In most tools you "hide" sensitive data by drawing a black rectangle over it. But the original text stays inside the document: anyone who opens the PDF in a text editor, removes the box, or copies the text can read the data back. That's a leak and a compliance risk.</p>
+<blockquote><p>Real redaction removes the data from the document's CONTENT. Our redaction tool uses PyMuPDF to delete the data entirely — it doesn't cover it. In the redacted spot, searching, copying or recovery is impossible.</p></blockquote>
+<h2>How it works — step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Add your document to the redaction tool.</li><li><strong>Sensitive fields get found</strong> — Patterns like ID, IBAN, phone and email are detected on your device; context-based data like names and addresses is detected with AI.</li><li><strong>Remove permanently</strong> — The fields you confirm are truly deleted from the document's content. Download the cleaned PDF.</li></ol>
+<p><strong>Redact Sensitive Data</strong> — Permanently remove personal data and share the document safely. <a href="https://www.pdfplatform.app/en/tools/redact-pdf">Open the tool</a></p>
+<h2>When do you need it?</h2>
+<ul><li>Before sharing a contract or invoice with a third party.</li><li>In official applications, tenders or court files.</li><li>For documents published as samples/templates.</li></ul>
+<p>The part of the personal data detected on your device (ID, IBAN, phone, email) is not sent anywhere as it's removed; only context-based detection (name/address) sends text to the AI.</p>
+<h2>Sensitive fields people overlook</h2>
+<p>Personal data does not sit only where you expect. While checking the middle of a page before sharing, the details around the edges get skipped — and that is exactly where leaks come from.</p>
+<ul><li>Names, branch codes or usernames in headers and footers.</li><li>The signature block and direct phone number of whoever prepared the document.</li><li>Records belonging to third parties left in annex table rows.</li><li>Readable details underneath stamp and signature images.</li><li>A customer number on an invoice, or a full account number on a statement.</li></ul>
+<h2>Metadata is part of the document too</h2>
+<p>Even with everything on the page cleaned, a document can still carry invisible information: the name of whoever created the file, the software used, creation and modification dates, and sometimes a title left from an earlier draft. These sit in the document properties and anyone curious can see them in a couple of clicks. Clearing metadata is the companion step to redaction on documents going outside.</p>
+<h2>What to hide and what to leave</h2>
+<p>Over-redacting makes the document useless; under-redacting leaves the risk in place. The test is the purpose of sending it: which information does the recipient genuinely need to do their job? Sending a lease for a loan application needs the rent figure, but usually not the landlord's identity number. Asking that question field by field leaves a document that is both compliant and usable.</p>
+<h2>Verifying after redaction</h2>
+<ul><li>Reopen the document and search for what you removed; any result means removal did not happen.</li><li>Select the text and paste it elsewhere; the redacted part should not appear.</li><li>Review every page — the same detail may repeat elsewhere.</li><li>Check document properties; a name or file path may remain in the metadata.</li><li>Save the redacted version under a new name and share from that file.</li></ul>
+<h2>Scanned documents behave differently</h2>
+<p>In a scanned document the page is an image; with no text layer there is no text to remove, and covering an area stays permanent on the image. But if the document has been through OCR, an invisible text layer sits beneath it and the information in that layer can still be copied. So with scans it is worth checking whether a text layer exists.</p>]]></content:encoded>
+      <category>Privacy</category>
+      <category>Redaction</category>
+      <category>GDPR</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" type="image/png" length="57019" />
+      <media:content url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/redact-sensitive-data-in-a-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/redact-sensitive-data-in-a-pdf.png" />
+    </item>
+    <item>
+      <title>How to Edit a PDF: Actually Delete and Replace Existing Text</title>
+      <link>https://www.pdfplatform.app/en/blog/edit-pdf-text</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/edit-pdf-text</guid>
+      <pubDate>Tue, 21 Jul 2026 09:24:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-metin-duzenleme-silme" />
+      <description><![CDATA[Wrong date, price or name in a PDF? Most 'editors' cover the text with a white box — the text still sits underneath. Real editing is different; here's how it works.]]></description>
+      <content:encoded><![CDATA[<p>Fixing a small mistake in a PDF — a wrong date, an outdated price, a typo — can be harder than it looks. Because most online 'PDF editors' don't actually delete the text; they just place a white box over it. This post covers real editing.</p>
+<h2>"Cover up" vs "truly delete"</h2>
+<p>With tools that put a box over the text, the original text stays inside the document: it can still show up when copied or searched. That's messy and a privacy risk. Real editing removes the text from the document and puts new text in its place.</p>
+<blockquote><p>Our Edit PDF tool uses PyMuPDF to TRULY remove existing text and place your new text — it doesn't cover it up. Turkish characters are fully supported.</p></blockquote>
+<h2>Step by step</h2>
+<ol><li><strong>Open the PDF</strong> — Upload your document to the Edit PDF tool.</li><li><strong>Click the text</strong> — Click the text you want to change; the existing text is selected.</li><li><strong>Delete or rewrite</strong> — Remove the text or type a replacement. You can add and correct text.</li><li><strong>Download</strong> — Download the edited PDF — the change is baked into the document.</li></ol>
+<p><strong>Edit PDF</strong> — Truly delete and replace PDF text — no covering up. <a href="https://www.pdfplatform.app/en/tools/edit-pdf">Open the tool</a></p>
+<h2>When it works — and when it doesn't</h2>
+<p>This tool works on PDFs that contain a real text layer (for example, a PDF exported from Word). In scanned/photo PDFs the text is actually an image; there you first need to turn it into text with OCR.</p>
+<p><strong>OCR a scanned PDF</strong> — If your document is scanned, first turn the text into real text with OCR. <a href="https://www.pdfplatform.app/en/tools/ocr-pdf">OCR tool</a></p>
+<h2>Why editing a PDF is not like editing a Word file</h2>
+<p>In a Word document text flows: add a sentence and everything after it moves along. In a PDF each piece of text sits at a fixed position on the page; there is no flow. So replacing a word with a longer one does not reflow the line. That is not a shortcoming of the tool but the design of the format — PDF exists to preserve a printed result.</p>
+<h2>Typical situations while editing</h2>
+<ul><li>If the new text is longer than the old, it can overflow the line; choosing a short equivalent is the practical fix.</li><li>If the typeface is not embedded, a similar one is used and a small visual difference can appear.</li><li>When changing a value in a table cell, check that the alignment still holds.</li><li>If the same wording appears many times, each occurrence has to be corrected separately.</li></ul>
+<h2>When to edit and when to rebuild</h2>
+<p>The test is the size of the change. For a date, an amount, a name or a typo, editing directly is the cleanest route and leaves the rest of the document untouched. If paragraphs will be rewritten, a section added or the layout changed, rebuilding from the source is less work. Without the source file, converting to Word, editing and producing a PDF again is a third route — though each conversion round shifts the formatting a little.</p>
+<h2>A note on official documents</h2>
+<p>Changing the text of a document may be technically possible, but it is not legitimate on every document. Altering an invoice, an official letter, a signed contract or correspondence from an institution destroys the document's standing and can have serious consequences. Editing is for fixing mistakes in documents you produced. Any change to a digitally signed document invalidates the signature — which is a sign the protection is working.</p>
+<h2>Where editing is not enough for privacy</h2>
+<p>If you want information out of a document, deleting the visible text appears to solve it, but traces can remain: metadata, document properties, or the same detail on other pages. Where personal data is involved you need a tool that removes content permanently, and you need to clear the document's metadata too. A document that looks clean can still be technically unclean.</p>]]></content:encoded>
+      <category>Editing</category>
+      <category>PDF</category>
+      <category>Text</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" type="image/png" length="55818" />
+      <media:content url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/edit-pdf-text.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/edit-pdf-text.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/edit-pdf-text.png" />
+    </item>
+    <item>
+      <title>How to Add Page Numbers to a PDF: Choose Position and Format</title>
+      <link>https://www.pdfplatform.app/en/blog/add-page-numbers-to-pdf</link>
+      <guid isPermaLink="true">https://www.pdfplatform.app/en/blog/add-page-numbers-to-pdf</guid>
+      <pubDate>Tue, 21 Jul 2026 09:10:00 GMT</pubDate>
+      <dc:creator>PDF Platform</dc:creator>
+      <atom:link rel="alternate" hreflang="tr" href="https://www.pdfplatform.app/blog/pdf-sayfa-numarasi-ekleme" />
+      <description><![CDATA[The easiest way to make a long report, thesis or contract feel organized is to add page numbers. Here's how to add them to a PDF, choosing position and format.]]></description>
+      <content:encoded><![CDATA[<p>When sharing a multi-page document, page numbers make a big difference: readers don't lose their place, printed pages don't get mixed up, and referencing becomes easy. Here's how to add numbers to your PDF in minutes.</p>
+<h2>When do you need it?</h2>
+<ul><li>Easy referencing in reports, theses and academic documents.</li><li>Page integrity in contracts and official paperwork.</li><li>Keeping order in long documents headed for print.</li></ul>
+<h2>Step by step</h2>
+<ol><li><strong>Upload the PDF</strong> — Add your document to the Page Numbers tool.</li><li><strong>Choose position and format</strong> — Set whether the number goes at the top or bottom, and pick its format.</li><li><strong>Download</strong> — Download the numbered PDF — every page is professionally numbered.</li></ol>
+<p><strong>Add Page Numbers</strong> — Add page numbers to your PDF with your choice of position and format. <a href="https://www.pdfplatform.app/en/tools/page-numbers">Open the tool</a></p>
+<h2>Tip</h2>
+<blockquote><p>If your document has a cover page, consider starting numbering from the content page — leaving the cover without a number looks more professional.</p></blockquote>
+<h2>Which number format should you pick?</h2>
+<p>Format depends on the document. No standard forces your hand, but readers have expectations: an ornate numbering style distracts on official paperwork, while a bare digit can feel thin in a long report.</p>
+<ul><li>Plain digit (1, 2, 3): the safest choice for most reports, printed slides and everyday documents.</li><li>«Page 1» style: helps orientation when the document will be read on paper.</li><li>«1 / 12» style: preferred for contracts and quotes, where completeness matters — the other side can tell whether a page is missing.</li><li>Roman numerals (i, ii, iii): used for front matter such as preface and contents, with the main text restarting at 1.</li></ul>
+<h2>Where should numbering start?</h2>
+<p>Cover pages are almost never numbered. The common academic pattern is: no number on the cover, roman numerals through the front matter, and 1 on the first page of the main text. Corporate reports usually number every page except the cover, starting at 1.</p>
+<p>If the organization receiving the document has a style guide, the choice may not be yours. University thesis guides and public-sector document standards often state the position and format explicitly; checking first is cheaper than preparing the document twice.</p>
+<h2>Finalize page order before numbering</h2>
+<p>Page numbers are printed into the document. Adding, deleting or reordering pages afterwards leaves numbers that no longer match the content, and a second page that reads «3» tells the reader the document was put together carelessly.</p>
+<ul><li>Add missing pages, delete the unnecessary ones and settle the order first.</li><li>If you are merging several files, merge before you number.</li><li>Fix sideways pages first — the number is placed relative to page orientation.</li><li>Leave numbering as the last step.</li></ul>
+<h2>When the number lands on existing content</h2>
+<p>Some documents have narrow bottom margins, and the number collides with a footnote or a table row. Two practical fixes: move the number to the top edge, or adjust the margin with the crop tool before numbering. Neither touches the text of the document.</p>
+<h2>Common mistakes</h2>
+<ul><li>Adding pages after numbering — the numbers drift out of sync with the content.</li><li>Numbering the cover as well, which looks amateurish on official documents.</li><li>Adding a second layer of numbers to a document that already has them; check first.</li><li>Aligning numbers for single-sided pages on a document that will be printed double-sided.</li></ul>]]></content:encoded>
+      <category>Editing</category>
+      <category>PDF</category>
+      <category>Page Numbers</category>
+      <enclosure url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" type="image/png" length="56646" />
+      <media:content url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1200" height="630" />
+      <media:content url="https://www.pdfplatform.app/en/covers/square/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1080" height="1080" />
+      <media:content url="https://www.pdfplatform.app/en/covers/tall/add-page-numbers-to-pdf.png" medium="image" type="image/png" width="1000" height="1500" />
+      <media:thumbnail url="https://www.pdfplatform.app/en/covers/add-page-numbers-to-pdf.png" />
+    </item>
+  </channel>
+</rss>

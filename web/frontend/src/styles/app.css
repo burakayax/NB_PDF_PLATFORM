@@ -22,8 +22,13 @@ summary {
   --nb-border: rgba(148, 163, 184, 0.14);
   --nb-border-subtle: rgba(255, 255, 255, 0.06);
   --nb-text: #e2e8f0;
-  --nb-muted: #64748b;
-  --nb-heading: #ffffff;
+  /* İkincil metin. #64748b idi: gövdede 3,8:1, kartlarda 3,1:1 — WCAG'in normal
+     metin icin istedigi 4,5:1'in ALTINDA, yani "soluk" sikayetinin kaynagi.
+     #94a3b8 ayni gri ailesinde ama gövdede 7,0:1, kartlarda 5,7:1. */
+  --nb-muted: #94a3b8;
+  /* Baslik. Saf beyaz koyu zeminde "parlama" (halation) yapar ve ucuz durur;
+     kirik beyaz daha dingin ve pahali bir his verir. Kontrast yine 15,7:1. */
+  --nb-heading: #f8fafc;
   --nb-primary: #22d3ee;
   --nb-primary-mid: #67e8f9;
   --nb-primary-hover: #06b6d4;
@@ -2526,6 +2531,14 @@ textarea {
   cursor: help;
 }
 
+/* Metin ağırlıklı PDF uyarısı — beklentiyi baştan doğru kurar. */
+.selected-file-card__compress-note {
+  flex-basis: 100%;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(148, 163, 184, 0.95);
+}
+
 .selected-file-card__text {
   flex: 1;
   min-width: 0;
@@ -3081,7 +3094,7 @@ textarea {
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: var(--nb-muted);
 }
 
 .payment-summary-modal__promo-row {

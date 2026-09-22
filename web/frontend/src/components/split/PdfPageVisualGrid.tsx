@@ -14,7 +14,6 @@ import { Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, GripVertical,
 import type { Language } from "../../i18n/landing";
 import { expandPagesString, formatPageSelection, ws } from "../../i18n/workspace";
 
-// eslint-disable-next-line import/no-unresolved -- Vite resolves ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
@@ -153,6 +152,10 @@ const THUMB_REUSE_MAX_RATIO = 1.38;
 const THUMB_UPGRADE_MIN_RATIO = 1.42;
 /** Raster veya <img> hatası sonrası yeniden deneme aralığı */
 const THUMB_RETRY_DELAY_MS = 2000;
+/** Kurtarma denetimi araligi (ms): gorunur kartlarda kucuk resim eksikse yeniden istenir. */
+const THUMB_RECOVERY_INTERVAL_MS = 2500;
+/** PDF'i sifirdan okuma denemesi ust siniri (sonsuz donguye girmesin). */
+const THUMB_RECOVERY_MAX_RELOADS = 3;
 const THUMB_RETRY_MAX_ATTEMPTS = 40;
 /** pdf.js raster eşzamanlılığı — çok düşük olunca küçük resimler sırayla gelir; orta değer ana iş parçacığını korur. */
 const THUMB_MAX_PARALLEL = 6;
@@ -384,6 +387,14 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
     const W = ws(effectiveLang);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    /**
+     * Kurtarma sayaci: belge yuklendigi halde kucuk resimler uretilemiyorsa
+     * (or. dosya baska bir aracdan aktarilirken pdf.js belgesi yari yolda
+     * kapanmissa) artirilir ve PDF sifirdan okunur. Aksi halde kartlar
+     * suresiz "Yukleniyor..." durumunda kaliyordu.
+     */
+    const [reloadNonce, setReloadNonce] = useState(0);
+    const reloadAttemptsRef = useRef(0);
     const [numPages, setNumPages] = useState(0);
     const [thumbs, setThumbs] = useState<(string | null)[]>([]);
     const thumbsRef = useRef<(string | null)[]>([]);
@@ -680,7 +691,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
           if (rubberPreview.length === 0) {
             return;
           }
-          let next = new Set(selected.current);
+          const next = new Set(selected.current);
           for (const p of rubberPreview) {
             if (next.has(p)) {
               next.delete(p);
@@ -771,6 +782,11 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       }
     }, [pagesText, maxP, numPages, effectiveLang, selectionMode, mode]);
 
+    // Yeni dosya/parola -> kurtarma denemeleri sifirlanir.
+    useEffect(() => {
+      reloadAttemptsRef.current = 0;
+    }, [file, password]);
+
     useEffect(() => {
       let cancelled = false;
       /** Tam dosya için önce `arrayBuffer()` beklemek yerine blob URL ile pdf.js okumasını kullanır (büyük PDF’lerde daha az bloklar ve daha düzgün akış). */
@@ -853,7 +869,7 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
         }
       };
     // mode intentionally excluded — does not require PDF reload
-  }, [file, password]);
+  }, [file, password, reloadNonce]);
 
     const clearThumbRetryTimer = useCallback((page1: number) => {
       const existing = thumbRetryTimersRef.current.get(page1);
@@ -1253,6 +1269,52 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
       enqueueThumbRasterJob,
       scheduleThumbFlush,
     ]);
+
+    /**
+     * Kurtarma: belge acildigi halde gorunur kartlarin kucuk resmi gelmiyorsa
+     * once eksik sayfalar yeniden istenir; pdf.js belgesi hic yoksa (yarida
+     * kapanmis) PDF sinirli sayida yeniden okunur. Bu olmadan, dosya baska bir
+     * araca aktarildiginda kartlar suresiz "Yukleniyor..." kaliyordu.
+     */
+    useEffect(() => {
+      if (loading || loadError || numPages === 0) {
+        return;
+      }
+      const tick = () => {
+        const { low, high } = computeVisiblePageRange();
+        if (high < low) {
+          return;
+        }
+        let missing = false;
+        for (let p = low; p <= high; p++) {
+          if (!thumbsRef.current[p - 1]) {
+            missing = true;
+            break;
+          }
+        }
+        if (!missing) {
+          reloadAttemptsRef.current = 0;
+          return;
+        }
+        if (!docRef.current) {
+          if (reloadAttemptsRef.current < THUMB_RECOVERY_MAX_RELOADS) {
+            reloadAttemptsRef.current++;
+            pendingThumbRef.current.clear();
+            thumbFailureCountRef.current.clear();
+            setReloadNonce((n) => n + 1);
+          }
+          return;
+        }
+        const cssW = cellWidthRef.current > 0 ? cellWidthRef.current : 240;
+        for (let p = low; p <= high; p++) {
+          if (!thumbsRef.current[p - 1] && !pendingThumbRef.current.has(p)) {
+            requestSinglePageThumbRef.current(p, cssW);
+          }
+        }
+      };
+      const id = window.setInterval(tick, THUMB_RECOVERY_INTERVAL_MS);
+      return () => window.clearInterval(id);
+    }, [loading, loadError, numPages, computeVisiblePageRange]);
 
     useEffect(() => {
       onStatsChange?.({
@@ -1994,6 +2056,17 @@ export const PdfPageVisualGrid = forwardRef<PdfPageVisualGridHandle, PdfPageVisu
                                 >
                                   <ChevronRight className="h-3 w-3" />
                                 </button>
+                              </div>
+
+                              {/* ÖZGÜN SAYFA NUMARASI — sol üst.
+                                  Alt kutudaki sayı YENİ SIRAYI gösteriyor; küçük
+                                  yakınlaştırmada küçük resimler okunmadığı için
+                                  kullanıcı hangi sayfayı taşıdığını göremiyordu.
+                                  Belgedeki asıl numara burada sabit durur. */}
+                              <div className="pointer-events-none absolute left-1 top-1 z-[15]">
+                                <span className="rounded bg-slate-950/85 px-1.5 py-0.5 text-[10px] font-medium text-slate-300 ring-1 ring-white/10">
+                                  {language === "tr" ? `s.${page1}` : `p.${page1}`}
+                                </span>
                               </div>
 
                               {/* Pozisyon girişi — alt */}

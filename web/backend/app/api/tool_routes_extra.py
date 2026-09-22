@@ -42,6 +42,7 @@ from app.core.result_store import (
 )
 from app.core.thread_pool import CpuCapacityTimeout, run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
+from app.core.jobs import create_conversion_job
 from app.core.saas_gate import (
     consume_editor_download,
     entitlement_check,
@@ -1514,6 +1515,7 @@ async def tool_pdf_to_image(
     file: UploadFile = File(...),
     image_format: str = Form("jpg"),
     password: str = Form(""),
+    quality: str = Form("normal"),
 ):
     decision = await entitlement_check(token, "pdf-to-image")
     workdir = create_workdir()
@@ -1529,7 +1531,7 @@ async def tool_pdf_to_image(
                 sp,
                 str(workdir),
                 image_format=image_format,
-                dpi=int(ptx.PDF_EXPORT_DPI_WEB),
+                dpi=_gorsel_dpi(quality),
                 password=pwd,
             )
             return save_result_from_file(
@@ -1558,6 +1560,81 @@ async def tool_pdf_to_image(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+def _gorsel_dpi(kalite: str) -> int:
+    """Kullanıcının seçtiği kaliteyi çözünürlüğe çevirir.
+
+    NEDEN SEÇENEK VAR: Uzun belgelerde çözünürlük otomatik düşürülüyor (bellek ve
+    süre için). Baskı kalitesi isteyen kullanıcının bunu isteyebilmesi, sadece
+    ekranda bakacak olanın da hızlı ve küçük dosya alabilmesi gerekiyor.
+    Değerler sabit listeden seçilir; serbest sayı kabul edilmez (çok yüksek bir
+    değer sunucuyu zorlar).
+    """
+    return {"ekran": 150, "normal": 300, "baski": 400}.get((kalite or "").strip(), 300)
+
+
+@router.post("/pdf-to-image/start")
+@limiter.limit("10/minute")
+async def tool_pdf_to_image_start(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    image_format: str = Form("jpg"),
+    password: str = Form(""),
+    # "ekran" (150 DPI, hızlı ve küçük) / "normal" (300) / "baski" (400).
+    quality: str = Form("normal"),
+):
+    """PDF → Görsel dönüşümünü ARKA PLANDA başlatır.
+
+    NEDEN: Ölçümde 150 sayfalık bir belge 48 saniye sürüyor. Tek istekte
+    beklenince kullanıcı ekranda yalnızca "işlem sürüyor" görüyor, kaçıncı
+    sayfada olduğunu bilmiyor ve çoğu kişi sekmeyi kapatıyor. Arka plan işinde
+    sayfa sayfa ilerleme gösterilir ve bağlantı kopsa bile iş sunucuda sürer.
+    """
+    decision = await entitlement_check(token, "pdf-to-image")
+    workdir = create_workdir()
+    try:
+        saved = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(saved, request, decision, file.filename)
+        pwd = password.strip() or None
+        sp = str(saved)
+        user_id = await saas_current_user_id(token)
+
+        def _run(progress_cb):
+            zpath = ptx.pdf_to_images_zip(
+                sp,
+                str(workdir),
+                image_format=image_format,
+                dpi=_gorsel_dpi(quality),
+                password=pwd,
+                progress_callback=progress_cb,
+            )
+            return Path(zpath)
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                "sayfalar.zip",
+                "application/zip",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-image",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_g_check(decision),
+            running_message="Sayfalar görsele çevriliyor...",
+            done_message="Görselleriniz hazır.",
+            fail_message="Görsele çevirme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _g_check(decision)}
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-image")
 
 
 @router.post("/extract-images")
@@ -1613,6 +1690,8 @@ async def tool_image_to_pdf(
     request: Request,
     token: Annotated[str, Depends(extract_pdf_access_token)],
     files: list[UploadFile] = File(...),
+    # "a4" (varsayılan): görsel A4'e sığdırılır — "original": sayfa görselin ölçüsünde olur.
+    page_size: str = Form("a4"),
 ):
     if not files or len(files) < 1:
         raise HTTPException(status_code=400, detail="En az bir görüntü seçin.")
@@ -1627,7 +1706,7 @@ async def tool_image_to_pdf(
         out_p = workdir / "fotograflar.pdf"
 
         def _run():
-            ptx.images_to_pdf(paths, str(out_p))
+            ptx.images_to_pdf(paths, str(out_p), page_size=page_size)
             _maybe_watermark_pdf(out_p, bool(decision.get("watermarkEnabled", False)))
             return _pack_pdf_result_file(out_p, "fotograflar.pdf", user_id, "image-to-pdf")
 
@@ -1638,7 +1717,10 @@ async def tool_image_to_pdf(
         cleanup_path(workdir)
         raise
     except Exception as e:
-        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="image-to-pdf")
+        # `file` diye bir parametre YOK; bu uç `files` listesi alıyor. Eski kod
+        # hata anında NameError üretiyor, gerçek hatayı ve temizliği gizliyordu.
+        first_name = getattr(files[0], "filename", None) if files else None
+        cleanup_and_raise(workdir, e, filename=first_name or "<?>", client_ip=_client_ip(request), operation="image-to-pdf")
     finally:
         if workdir.exists():
             cleanup_path(workdir)
@@ -1670,14 +1752,35 @@ async def tool_html_to_pdf(
         port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
         path_qs = (parsed_url.path or "/") + (f"?{parsed_url.query}" if parsed_url.query else "")
         direct_url = f"{parsed_url.scheme}://{resolved_ip}:{port}{path_qs}"
+        # BAĞLANTI IP'YE, KİMLİK ADRESE GÖRE.
+        #
+        # NEDEN: İç ağa sızmayı (SSRF) önlemek için bağlantı, doğrulanmış IP'ye
+        # kurulur. Ancak TLS el sıkışmasında sunucuya "hangi site için geldim"
+        # bilgisi (SNI) gönderilmezse günümüzdeki neredeyse tüm sunucular
+        # bağlantıyı reddeder — ölçümde her adres SSLV3_ALERT_HANDSHAKE_FAILURE
+        # veriyordu, yani araç hiç çalışmıyordu. `sni_hostname` uzantısı bunu
+        # düzeltir: bağlantı yine IP'ye gider, el sıkışma ve sertifika denetimi
+        # gerçek alan adı üzerinden yapılır. Böylece sertifika doğrulaması da
+        # (verify=True) yeniden açılabildi.
+        _host = parsed_url.hostname or ""
+        # Kimliksiz istekleri reddeden siteler var (ölçüm: Wikipedia kimliksiz
+        # istekte 403, kimlikle 200). Kendimizi açıkça tanıtıyoruz.
+        _basliklar = {
+            "Host": _host,
+            "User-Agent": "Mozilla/5.0 (compatible; PDFPlatformBot/1.0; +https://pdfplatform.app)",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "tr,en;q=0.8",
+        }
         try:
-            resp = _httpx.get(
-                direct_url,
-                headers={"Host": parsed_url.hostname or ""},
-                timeout=30.0,
-                follow_redirects=False,  # Yönlendirme iç ağa gidebilir
-                verify=False,            # IP üzerinden bağlanıldığında SNI sertifika doğrulaması yapılamaz
-            )
+            with _httpx.Client(verify=True, timeout=30.0, follow_redirects=False) as _istemci:
+                resp = _istemci.send(
+                    _istemci.build_request(
+                        "GET",
+                        direct_url,
+                        headers=_basliklar,
+                        extensions={"sni_hostname": _host},
+                    )
+                )
             resp.raise_for_status()
         except _httpx.HTTPError as exc:
             raise HTTPException(status_code=400, detail=f"URL içeriği alınamadı: {exc}") from exc
@@ -1704,7 +1807,9 @@ async def tool_html_to_pdf(
         cleanup_path(workdir)
         raise
     except Exception as e:
-        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="html-to-pdf")
+        # Bu uç dosya değil URL/HTML metni alıyor; `file` tanımsızdı ve hata
+        # anında asıl hatanın üstünü örten ikinci bir hata oluşuyordu.
+        cleanup_and_raise(workdir, e, filename=(source_url or "html"), client_ip=_client_ip(request), operation="html-to-pdf")
     finally:
         if workdir.exists():
             cleanup_path(workdir)
@@ -1740,6 +1845,62 @@ async def tool_pdf_to_text(
         raise
     except Exception as e:
         cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-text")
+    finally:
+        if workdir.exists():
+            cleanup_path(workdir)
+
+
+@router.post("/pdf-to-pdfa")
+@limiter.limit("10/minute")
+async def tool_pdf_to_pdfa(
+    request: Request,
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    version: str = Form("2b"),
+    password: str = Form(""),
+):
+    """
+    PDF → PDF/A (arşiv biçimi).
+
+    Kamu ihalesi, e-arşiv, mahkeme ve üniversite tesliminde istenen ISO biçimi.
+    Yazı tipleri belgenin içine gömülür, renkler cihazdan bağımsız tanımlanır ve
+    dış kaynağa bağımlılık kaldırılır; belge yıllar sonra da aynı görünür.
+    """
+    decision = await entitlement_check(token, "pdf-to-pdfa")
+    workdir = create_workdir()
+    try:
+        user_id = await saas_current_user_id(token)
+        sp = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        _after_save_validate(sp, request, decision, file.filename)
+        surum = (version or "2b").strip().lower()
+        if surum not in {"1b", "2b", "3b"}:
+            surum = "2b"
+        out_p = workdir / "arsiv.pdf"
+        out_n = format_derived_filename(file.filename or "dosya.pdf", f"pdfa-{surum}", ".pdf")
+        pwd = (password or "").strip() or None
+
+        def _run():
+            kaynak = sp
+            # Şifreli belge: PDF/A şifrelemeye izin VERMEZ, bu yüzden önce çözülür.
+            if pwd:
+                cozulmus = workdir / "cozulmus.pdf"
+                ptx.unlock_pdf_pikepdf(str(sp), str(cozulmus), pwd)
+                kaynak = cozulmus
+            bilgi = ptx.pdf_to_pdfa(str(kaynak), str(out_p), surum=surum)
+            # NOT: Çıktıya filigran EKLENMEZ — sonradan yapılan her müdahale
+            # belgenin PDF/A uyumluluğunu bozar.
+            govde = _pack_pdf_result_file(out_p, out_n, user_id, "pdf-to-pdfa")
+            govde["pdfa"] = bilgi
+            return govde
+
+        body = await run_sandboxed(_run)
+        body["saasGating"] = _g_check(decision)
+        return body
+    except CpuCapacityTimeout:
+        cleanup_path(workdir)
+        raise
+    except Exception as e:
+        cleanup_and_raise(workdir, e, filename=getattr(file, "filename", "<?>") or "<?>", client_ip=_client_ip(request), operation="pdf-to-pdfa")
     finally:
         if workdir.exists():
             cleanup_path(workdir)

@@ -41,6 +41,7 @@ from app.core.operations import (
 from app.core.jobs import (
     cleanup_job,
     create_merge_job,
+    create_conversion_job,
     get_job_download,
     get_job_status,
     request_cancel_merge_job,
@@ -48,6 +49,7 @@ from app.core.jobs import (
 from app.core.thread_pool import run_cpu_bound
 from app.core.pdf_sandbox import run_sandboxed
 from app.core.preview_gate import (
+    generate_watermarked_preview_pdf_queued_from_path,
     generate_hero_watermarked_preview_png_queued,
     generate_hero_watermarked_preview_png_queued_from_path,
 )
@@ -196,6 +198,7 @@ async def merge_pdfs(
 
     # Merge: kota indirme onayında (frontend ack) düşülür; burada sadece limit kontrolü.
     decision = await entitlement_check(token, "merge")
+    owner_id = await saas_current_user_id(token)
 
     workdir = create_workdir()
     try:
@@ -237,6 +240,7 @@ async def merge_pdfs(
             workdir,
             output_name,
             watermark_enabled=bool(decision.get("watermarkEnabled", False)),
+            owner_id=owner_id,
         )
         return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
     except Exception as error:
@@ -245,19 +249,19 @@ async def merge_pdfs(
 
 @router.get("/jobs/{job_id}")
 @limiter.exempt
-def job_status(job_id: str, _token: Annotated[str, Depends(extract_bearer_header_only)]):
+async def job_status(job_id: str, token: Annotated[str, Depends(extract_bearer_header_only)]):
     """İstemci sık aralıklarla durum sorar; @limiter.exempt ile genel dakikalık kota merge akışını kesmez."""
-    return get_job_status(job_id)
+    return get_job_status(job_id, await saas_current_user_id(token))
 
 
 @router.post("/jobs/{job_id}/cancel")
 @limiter.exempt
 async def cancel_merge_job(
     job_id: str,
-    _token: Annotated[str, Depends(extract_bearer_header_only)],
+    token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
     """Cooperative cancel for the in-memory merge worker (sets a flag; worker stops between pages)."""
-    if not request_cancel_merge_job(job_id):
+    if not request_cancel_merge_job(job_id, await saas_current_user_id(token)):
         raise HTTPException(
             status_code=404,
             detail="İşlem bulunamadı, tamamlanmış veya iptal edilemez.",
@@ -280,7 +284,7 @@ async def download_job_output(
             status_code=402,
             content={"error": "payment_required", "saasGating": _saas_gating_from_check(decision)},
         )
-    output_path, output_name, _workdir = get_job_download(job_id)
+    output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     background_tasks.add_task(cleanup_job, job_id)
     # Content-Disposition'ı RFC 5987 helper ile elle kur (filename* + ASCII fallback).
     # Starlette'in FileResponse(filename=) varsayılanı bazı sürümlerde Türkçe adı
@@ -302,8 +306,7 @@ async def preview_merge_job_hero(
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
     """Birleştirilmiş çıktının ilk sayfası — ücretsiz filigranlı PNG (indirme kotası düşmez)."""
-    await saas_session_ok(token)
-    output_path, _output_name, _workdir = get_job_download(job_id)
+    output_path, _output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
     png = await generate_hero_watermarked_preview_png_queued_from_path(output_path)
     if not png:
         raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
@@ -316,16 +319,15 @@ async def preview_merge_job_pdf(
     job_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
-    """Tam PDF önizlemesi (inline); kota düşmez — düşüm onaylı indirmede."""
-    await saas_session_ok(token)
-    output_path, output_name, _workdir = get_job_download(job_id)
+    """Çok sayfalı önizleme (inline). FİLİGRANLI ve düşük çözünürlüklü bir kopya
+    döner — kota düşmez. Ham çıktı burada ASLA servis edilmez: tarayıcıya inen
+    dosya, indirme kapısını atlamak için kullanılabiliyordu."""
+    output_path, output_name, _workdir = get_job_download(job_id, await saas_current_user_id(token))
+    preview = await generate_watermarked_preview_pdf_queued_from_path(output_path)
+    if not preview:
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp_headers = {"Content-Disposition": content_disposition(output_name, disposition="inline")}
-    return FileResponse(
-        path=str(output_path),
-        filename=output_name,
-        media_type="application/pdf",
-        headers=disp_headers,
-    )
+    return Response(content=preview, media_type="application/pdf", headers=disp_headers)
 
 
 @router.post("/inspect-pdf")
@@ -370,6 +372,13 @@ async def inspect_pdf(
         pwd = password.strip() or None
         page_count = None
         inspect_error = None
+        # Dosyanın ne kadarı görüntü? Sıkıştırmadan gelecek kazancın tek
+        # belirleyicisi bu; arayüz gerçekçi bir beklenti gösterebilsin diye
+        # ölçülüp geri veriliyor.
+        # Ölçülemediğinde 0 DEĞİL, boş dönülür: 0 "hiç görsel yok" demektir ve
+        # arayüz buna bakıp gerçekçi olmayan bir beklenti yazardı. Şifreli veya
+        # okunamayan dosyada hiçbir şey söylememek doğrusu.
+        image_ratio: float | None = None
         if corrupt:
             inspect_error = "Dosya geçersiz veya bozuk — PDF olarak açılamıyor."
         elif encrypted and not pwd:
@@ -380,10 +389,17 @@ async def inspect_pdf(
             except Exception as exc:
                 page_count = None
                 inspect_error = str(exc)
+            try:
+                image_ratio = await run_sandboxed(
+                    engine.pdf_image_byte_ratio, p, password=pwd
+                )
+            except Exception:
+                image_ratio = None
         return {
             "filename": file.filename,
             "encrypted": encrypted,
             "page_count": page_count,
+            "image_ratio": image_ratio,
             "corrupt": corrupt,
             "inspect_error": inspect_error,
             "inspect_diagnostic": encrypt_diag,
@@ -651,6 +667,252 @@ async def pdf_to_excel(
     finally:
         if workdir.exists():
             cleanup_path(workdir)
+
+
+@router.post("/pdf-to-word/start")
+async def pdf_to_word_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Word dönüşümünü ARKA PLANDA başlatır.
+
+    Bu aracın süresi ölçüldüğünde en uzun olanıydı: karmaşık bir belgede sayfa
+    düzeni analizi dakikalar sürebiliyor. Cevabı bekleyen tek bir istekte
+    bağlantı bu süreyi kaldıramıyordu.
+    """
+    decision = await entitlement_check(token, "pdf-to-word")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        pwd = password.strip() or None
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Word", "docx")
+        output_path = workdir / output_name
+
+        def _run(progress_cb):
+            if engine.is_pdf_encrypted(sp) and not pwd:
+                raise Exception("Şifreli PDF için kaynak parolası gerekli.")
+            engine.pdf_to_word(sp, str(output_path), progress_callback=progress_cb, password=pwd)
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-word",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Word'e dönüştürülüyor...",
+            done_message="Word dosyanız hazır.",
+            fail_message="Word'e dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+
+
+@router.post("/pdf-to-ppt/start")
+async def pdf_to_ppt_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Sunum dönüşümünü ARKA PLANDA başlatır.
+
+    Her sayfa görüntüye çevrilip slayta yerleştirildiği için süre sayfa sayısıyla
+    doğrusal artıyor; ölçümde 45 sayfa ~50 saniye sürdü (sunucuda daha uzun).
+    """
+    decision = await entitlement_check(token, "pdf-to-ppt")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        pwd = password.strip() or None
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Sunum", "pptx")
+        output_path = workdir / output_name
+
+        def _run(progress_cb):
+            ptx.pdf_to_pptx(sp, str(output_path), password=pwd, progress_callback=progress_cb)
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-ppt",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Sunuma dönüştürülüyor...",
+            done_message="Sunumunuz hazır.",
+            fail_message="Sunuma dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
+
+
+@router.post("/pdf-to-excel/start")
+async def pdf_to_excel_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+):
+    """PDF -> Excel dönüşümünü ARKA PLANDA başlatır ve iş numarası döner.
+
+    NEDEN AYRI BİR UÇ: Dönüşüm, sayfa sayısına göre dakikalar sürebiliyor.
+    Eski uç (`POST /pdf-to-excel`) cevabı üretene kadar bağlantıyı açık
+    tutuyordu; bağlantı koptuğunda (mobil ağ, ara sunucu zaman aşımı, sekmenin
+    uykuya geçmesi) yapılan iş boşa gidiyor ve kullanıcı ilerleme çubuğunun
+    sonunda süresiz takılı kalıyordu.
+
+    Burada istek hemen yanıtlanır. İstemci `GET /api/jobs/{job_id}` ile gerçek
+    sayfa ilerlemesini okur; iş bitince aynı yanıtta çıktının kimliği döner ve
+    mevcut indirme akışı değişmeden çalışır.
+
+    Eski uç GERİYE DÖNÜK UYUMLULUK için duruyor; önbellekte eski sürümü olan
+    tarayıcılar çalışmaya devam etsin.
+    """
+    decision = await entitlement_check(token, "pdf-to-excel")
+    user_id = await saas_current_user_id(token)
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(
+            saved_file,
+            filename=getattr(file, "filename", None) or "<?>",
+            client_ip="<from-route>",
+        )
+        output_name = format_derived_filename(file.filename or saved_file.name, "Excel", "xlsx")
+        output_path = workdir / output_name
+        pwd = password.strip() or None
+
+        def _run(progress_cb):
+            engine.pdf_text_to_excel(
+                str(saved_file),
+                str(output_path),
+                progress_callback=progress_cb,
+                preserve_tables=True,
+                password=pwd,
+            )
+            return output_path
+
+        def _store(outp: Path):
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                user_id=user_id,
+                thumbnail_png=None,
+                tool="pdf-to-excel",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="Excel'e dönüştürülüyor...",
+            done_message="Excel dosyanız hazır.",
+            fail_message="Excel'e dönüştürme başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        # İş başlatılamadıysa geçici klasörü hemen temizle. Başlatıldıysa
+        # temizlik işin kendi sonunda yapılır (dosya hâlâ kullanılıyor).
+        cleanup_and_raise(workdir, error)
+
+
+@router.post("/compress/start")
+async def compress_pdf_start(
+    token: Annotated[str, Depends(extract_pdf_access_token)],
+    file: UploadFile = File(...),
+    password: str = Form(default=""),
+    quality: str = Form(default="auto"),
+):
+    """Sıkıştırmayı ARKA PLANDA başlatır.
+
+    NEDEN: Ölçümde 150 sayfalık bir belge 69 saniye sürüyor. Tek istekte
+    beklenirken ekranda yalnızca "işlem sürüyor" yazıyor; bir dakikayı aşan
+    sessiz bekleme kullanıcının sekmeyi kapattığı yer. Arka plan işinde ilerleme
+    gösterilir ve bağlantı kopsa bile iş sunucuda devam eder.
+    """
+    decision = await entitlement_check(token, "compress")
+    workdir = create_workdir()
+    try:
+        saved_file = await save_upload(file, workdir, max_bytes=max_bytes_from_decision(decision))
+        validate_pdf_before_processing(saved_file, filename=getattr(file, "filename", None) or "<?>", client_ip="<from-route>")
+        sp = str(saved_file)
+        output_name = format_derived_filename(file.filename or saved_file.name, "Sıkıştırılmış", "pdf")
+        output_path = workdir / output_name
+        pwd = password.strip() or None
+        user_id = await saas_current_user_id(token)
+        q = quality if quality in ("auto", "low", "medium", "high") else "auto"
+
+        def _run(progress_cb):
+            engine.compress_pdf(sp, str(output_path), progress_callback=progress_cb, password=pwd, quality=q)
+            return output_path
+
+        def _store(outp: Path):
+            _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
+            thumb = None
+            try:
+                thumb = generate_blurred_pdf_thumbnail_from_path(outp)
+            except OSError:
+                thumb = None
+            return save_result_from_file(
+                outp,
+                outp.name,
+                "application/pdf",
+                user_id=user_id,
+                thumbnail_png=thumb,
+                tool="compress",
+            )
+
+        job_id = create_conversion_job(
+            run=_run,
+            store_result=_store,
+            workdir=workdir,
+            owner_id=user_id,
+            saas_gating=_saas_gating_from_check(decision),
+            running_message="PDF sıkıştırılıyor...",
+            done_message="Sıkıştırılmış PDF hazır.",
+            fail_message="Sıkıştırma başarısız oldu.",
+        )
+        return {"job_id": job_id, "saasGating": _saas_gating_from_check(decision)}
+    except Exception as error:
+        cleanup_and_raise(workdir, error)
 
 
 @router.post("/compress")
@@ -994,9 +1256,15 @@ async def encrypt_pdf(
         def _store():
             outp = Path(str(output_path))
             _maybe_watermark_pdf(outp, bool(decision.get("watermarkEnabled", False)))
+            # ÖNİZLEME KAYNAK DOSYADAN ÜRETİLİR.
+            #
+            # Çıktı parola korumalı olduğu için açılamıyor; önizleme üreticisi
+            # onu her denediğinde hata kaydı düşüyordu (Sentry: "document closed
+            # or encrypted") ve kullanıcı da önizlemesiz kalıyordu. Şifrelenmemiş
+            # kaynak zaten aynı belge; önizleme ondan üretilir (bulanık + filigranlı).
             thumb_png = None
             try:
-                thumb_png = generate_blurred_pdf_thumbnail_from_path(outp)
+                thumb_png = generate_blurred_pdf_thumbnail_from_path(Path(sp))
             except OSError:
                 thumb_png = None
             return save_result_from_file(
@@ -1097,7 +1365,9 @@ async def preview_result_pdf(
     result_id: str,
     token: Annotated[str, Depends(extract_bearer_header_only)],
 ):
-    """Sahibine özel tam PDF önizlemesi (inline). Kota düşmez; sonucu silmez."""
+    """Sahibine özel çok sayfalı önizleme (inline). FİLİGRANLI ve düşük
+    çözünürlüklü bir kopya döner; kota düşmez, sonucu silmez. Ham çıktı burada
+    servis edilmez — aksi halde önizleme penceresi indirme kapısını atlatıyordu."""
     await saas_session_ok(token)
     user_id = await saas_current_user_id(token)
     meta = read_meta_only(result_id)
@@ -1107,13 +1377,11 @@ async def preview_result_pdf(
     read = get_result(result_id, user_id)
     if not _result_payload_looks_like_pdf(mime_meta, read.filename, read.payload_path):
         raise HTTPException(status_code=404, detail="Bu çıktı için PDF önizlemesi yok.")
+    preview = await generate_watermarked_preview_pdf_queued_from_path(read.payload_path)
+    if not preview:
+        raise HTTPException(status_code=404, detail="Önizleme oluşturulamadı.")
     disp = {"Content-Disposition": content_disposition(read.filename, disposition="inline")}
-    return FileResponse(
-        path=str(read.payload_path),
-        filename=read.filename,
-        media_type=read.mime or "application/pdf",
-        headers=disp,
-    )
+    return Response(content=preview, media_type="application/pdf", headers=disp)
 
 
 @router.get("/pdf/result/{result_id}/download")

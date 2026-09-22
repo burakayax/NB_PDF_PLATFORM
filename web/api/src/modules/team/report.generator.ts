@@ -290,5 +290,8 @@ export async function generateExcelReport(
     }
   }
 
-  return (await wb.xlsx.writeBuffer()) as Buffer;
+  // ExcelJS kendi `Buffer` arayuzunu donduruyor; calisma aninda bu ZATEN bir
+  // Node Buffer. Iki tip ortusmedigi icin TypeScript 6 dogrudan donusume
+  // izin vermiyor ve `unknown` uzerinden gecmeyi oneriyor — yapilan da bu.
+  return (await wb.xlsx.writeBuffer()) as unknown as Buffer;
 }

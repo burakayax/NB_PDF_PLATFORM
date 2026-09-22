@@ -69,6 +69,12 @@ services:
       # AYNI değeri nb-auth-api'de de gir. Boşsa yerel SQLite'a düşer (instance başına, deploy'da sıfırlanır).
       - key: INTERNAL_SERVICE_SECRET
         sync: false
+      # Oturum jetonu imzalama sırrı — nb-auth-api ile AYNI değer olmalı.
+      # Tanımlıysa jeton doğrulaması ve kullanıcı kimliği BURADA çözülür; her PDF
+      # isteği için Auth API'ye HTTP çağrısı yapılmaz (gecikme + tek noktadan
+      # kilitlenme riski ortadan kalkar). Boşsa eski davranışa düşülür.
+      - key: JWT_ACCESS_SECRET
+        sync: false
       - key: EDITOR_GUEST_DAILY_LIMIT
         value: "2"
       - key: EDITOR_FREE_DAILY_LIMIT
@@ -173,19 +179,223 @@ services:
     # SPA-only rotalar (/login /register /workspace /admin ...) bu prefix'lerde
     # OLMADIGI icin etkilenmez; en sondaki /* catch-all'a duser.
     routes:
-      # Arac + blog detay sayfalari (TR + EN) — :slug tek segment
-      - type: rewrite
-        source: "/tools/:slug"
-        destination: "/tools/:slug/index.html"
-      - type: rewrite
-        source: "/en/tools/:slug"
-        destination: "/en/tools/:slug/index.html"
-      - type: rewrite
-        source: "/blog/:slug"
-        destination: "/blog/:slug/index.html"
-      - type: rewrite
-        source: "/en/blog/:slug"
-        destination: "/en/blog/:slug/index.html"
+      # ── ESKI TURKCE /en SLUG'LARI → INGILIZCE SLUG (kalici 301) ──────────────
+      # /en altindaki sayfalar Ingilizce icerik sunuyordu ama URL segmenti Turkce
+      # kaliyordu (/en/blog/pdf-word-donusturme). Slug'lar Ingilizceye cevrildi
+      # (web/frontend/src/seo/enSlugs.mjs); eski adresler link ve indeks degeri
+      # kaybolmasin diye kalici olarak yeni adrese tasiniyor.
+      # NOT: Rewrite kurallarindan ONCE gelmeli — Render route'lari SIRAYLA isler.
+      - type: redirect
+        source: "/en/blog/pdften-gorsel-resim-cikarma"
+        destination: "/en/blog/extract-images-from-pdf"
+      - type: redirect
+        source: "/en/blog/faturadan-excele-veri-aktarma"
+        destination: "/en/blog/invoice-data-to-excel"
+      - type: redirect
+        source: "/en/blog/iki-pdf-birlestirme-ucretsiz"
+        destination: "/en/blog/merge-two-pdfs-free"
+      - type: redirect
+        source: "/en/blog/pdf-baska-dile-cevirme"
+        destination: "/en/blog/translate-pdf-online"
+      - type: redirect
+        source: "/en/blog/pdf-word-donusturme"
+        destination: "/en/blog/convert-pdf-to-word"
+      - type: redirect
+        source: "/en/blog/pdf-boyutu-kucultme-sikistirma"
+        destination: "/en/blog/reduce-pdf-file-size"
+      - type: redirect
+        source: "/en/blog/pdf-sifre-kaldirma-koyma"
+        destination: "/en/blog/remove-pdf-password"
+      - type: redirect
+        source: "/en/blog/resimleri-pdf-yapma"
+        destination: "/en/blog/images-to-pdf"
+      - type: redirect
+        source: "/en/blog/uzun-belgeleri-ai-ile-ozetleme"
+        destination: "/en/blog/summarize-long-documents-with-ai"
+      - type: redirect
+        source: "/en/blog/taranmis-pdf-metne-cevirme-ocr"
+        destination: "/en/blog/scanned-pdf-to-text-ocr"
+      - type: redirect
+        source: "/en/blog/ihale-sartnamesi-nasil-okunur"
+        destination: "/en/blog/how-to-read-a-tender-document"
+      - type: redirect
+        source: "/en/blog/kira-kontrati-dikkat-edilecek-maddeler"
+        destination: "/en/blog/lease-agreement-checklist"
+      - type: redirect
+        source: "/en/blog/banka-ekstresi-excele-aktarma"
+        destination: "/en/blog/bank-statement-to-excel"
+      - type: redirect
+        source: "/en/blog/yabanci-dildeki-sozlesmeyi-anlama"
+        destination: "/en/blog/understand-a-foreign-language-contract"
+      - type: redirect
+        source: "/en/blog/akademik-makale-ozetleme-literatur"
+        destination: "/en/blog/summarize-academic-papers"
+      - type: redirect
+        source: "/en/blog/faturalari-toplu-muhasebeye-hazirlama"
+        destination: "/en/blog/batch-invoices-for-accounting"
+      - type: redirect
+        source: "/en/blog/pdf-sayfa-silme"
+        destination: "/en/blog/delete-pages-from-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-dondurme-kaydetme"
+        destination: "/en/blog/rotate-pdf-and-save"
+      - type: redirect
+        source: "/en/blog/pdf-sayfa-sirasi-degistirme"
+        destination: "/en/blog/reorder-pdf-pages"
+      - type: redirect
+        source: "/en/blog/pdf-bolme-sayfalara-ayirma"
+        destination: "/en/blog/split-pdf-into-pages"
+      - type: redirect
+        source: "/en/blog/pdf-e-imza-atma-nasil-yapilir"
+        destination: "/en/blog/how-to-sign-a-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-filigran-ekleme"
+        destination: "/en/blog/add-watermark-to-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-uzerine-yazma-isaretleme"
+        destination: "/en/blog/write-and-mark-up-a-pdf"
+      - type: redirect
+        source: "/en/blog/telefonla-belge-tarama-pdf"
+        destination: "/en/blog/scan-documents-with-your-phone"
+      - type: redirect
+        source: "/en/blog/aranabilir-pdf-olusturma-ocr"
+        destination: "/en/blog/create-a-searchable-pdf-ocr"
+      - type: redirect
+        source: "/en/blog/belge-fotografini-kaliteli-pdf-yapma"
+        destination: "/en/blog/document-photo-to-pdf"
+      - type: redirect
+        source: "/en/blog/camscanner-ucretsiz-gizli-alternatif"
+        destination: "/en/blog/camscanner-alternative"
+      - type: redirect
+        source: "/en/blog/word-pdf-cevirme"
+        destination: "/en/blog/convert-word-to-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-jpg-resme-cevirme"
+        destination: "/en/blog/convert-pdf-to-jpg"
+      - type: redirect
+        source: "/en/blog/pdf-metin-duzenleme-silme"
+        destination: "/en/blog/edit-pdf-text"
+      - type: redirect
+        source: "/en/blog/pdf-excel-tablo-cevirme"
+        destination: "/en/blog/convert-pdf-to-excel"
+      - type: redirect
+        source: "/en/blog/excel-pdf-cevirme"
+        destination: "/en/blog/convert-excel-to-pdf"
+      - type: redirect
+        source: "/en/blog/powerpoint-pdf-cevirme"
+        destination: "/en/blog/convert-powerpoint-to-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-sayfa-numarasi-ekleme"
+        destination: "/en/blog/add-page-numbers-to-pdf"
+      - type: redirect
+        source: "/en/blog/bozuk-pdf-onarma"
+        destination: "/en/blog/repair-a-corrupt-pdf"
+      - type: redirect
+        source: "/en/blog/pdf-karsilastirma-farklari-bulma"
+        destination: "/en/blog/compare-two-pdfs"
+      - type: redirect
+        source: "/en/blog/pdf-hassas-veri-gizleme-kvkk"
+        destination: "/en/blog/redact-sensitive-data-in-a-pdf"
+      - type: redirect
+        source: "/en/blog/dosya-yuklemeden-pdf-isleme-gizlilik"
+        destination: "/en/blog/process-pdf-without-uploading"
+      - type: redirect
+        source: "/en/blog/telefonda-pdf-islemleri-uygulamasiz"
+        destination: "/en/blog/pdf-tools-on-your-phone-no-app"
+      - type: redirect
+        source: "/en/blog/en-iyi-ucretsiz-pdf-araclari"
+        destination: "/en/blog/best-free-pdf-tools"
+      - type: redirect
+        source: "/en/blog/ilovepdf-alternatifi-cihazda-ucretsiz"
+        destination: "/en/blog/ilovepdf-alternative"
+      - type: redirect
+        source: "/en/blog/cv-ozgecmis-word-pdf-cevirme"
+        destination: "/en/blog/convert-cv-from-word-to-pdf"
+      - type: redirect
+        source: "/en/blog/smallpdf-alternatifi-sinirsiz-ucretsiz"
+        destination: "/en/blog/smallpdf-alternative"
+      - type: redirect
+        source: "/en/blog/pdf-form-doldurma-online-ucretsiz"
+        destination: "/en/blog/fill-out-a-pdf-form-online"
+      - type: redirect
+        source: "/en/blog/adobe-acrobat-alternatifi-ucretsiz"
+        destination: "/en/blog/adobe-acrobat-alternative"
+      - type: redirect
+        source: "/en/blog/ucretsiz-pdf-duzenleyici-rehberi"
+        destination: "/en/blog/free-pdf-editor"
+      - type: redirect
+        source: "/en/blog/pdf-kirpma-kenar-boslugu-kesme"
+        destination: "/en/blog/crop-a-pdf-trim-margins"
+      - type: redirect
+        source: "/en/blog/ucretsiz-pdf-araci-nasil-secilir"
+        destination: "/en/blog/how-to-choose-a-free-pdf-tool"
+      - type: redirect
+        source: "/en/blog/pdf-kucultme-eposta-whatsapp"
+        destination: "/en/blog/shrink-a-pdf-for-email"
+      - type: redirect
+        source: "/en/blog/telefonda-pdf-duzenleme-uygulamasiz"
+        destination: "/en/blog/edit-a-pdf-on-your-phone"
+      - type: redirect
+        source: "/en/tools/gorsel-sikistir"
+        destination: "/en/tools/compress-image"
+      - type: redirect
+        source: "/en/tools/belge-tara"
+        destination: "/en/tools/scan-document"
+      - type: redirect
+        source: "/en/tools/aranabilir-pdf"
+        destination: "/en/tools/searchable-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-ozetle"
+        destination: "/en/tools/summarize-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-sohbet"
+        destination: "/en/tools/chat-with-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-duzenle"
+        destination: "/en/tools/edit-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-imzala"
+        destination: "/en/tools/sign-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-yorumla"
+        destination: "/en/tools/annotate-pdf"
+      - type: redirect
+        source: "/en/tools/taranmis-pdf-ocr"
+        destination: "/en/tools/ocr-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-veri-cikar"
+        destination: "/en/tools/extract-data-from-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-ceviri"
+        destination: "/en/tools/translate-pdf"
+      - type: redirect
+        source: "/en/tools/ai-toplu-islem"
+        destination: "/en/tools/batch-process-pdf"
+      - type: redirect
+        source: "/en/tools/pdf-karsilastir"
+        destination: "/en/tools/compare-pdf"
+      - type: redirect
+        source: "/en/tools/hassas-veri-gizle"
+        destination: "/en/tools/redact-pdf"
+      # ── ARAÇ VE BLOG SAYFALARININ YÖNLENDİRMELERİ BURADA DEĞİL ──────────────
+      #
+      # Bu kurallar Render API'si ile yönetiliyor:
+      #     web/frontend/scripts/render-routes-sync.mjs
+      #
+      # NEDENİ (canlıda ölçüldü):
+      #  1) Render bir serviste EN FAZLA 200 kurala izin veriyor
+      #     ("new redirect rule would exceed maximum limit of 200"). Araç + blog
+      #     için sayfa başına kural 184 ediyor; buradaki diğer kurallarla birlikte
+      #     sınır aşılıyor ve BLUEPRINT EŞİTLEMESİ KOMPLE BAŞARISIZ oluyor.
+      #  2) Blueprint kuralları mevcut kurallarla BİRLEŞİYOR, eskileri silmiyor ve
+      #     sıraya karışmıyor; bu yüzden buraya yazılan kurallar canlıda hiç
+      #     devreye girmedi. API'deki "tümünü değiştir" ucu ise listeyi olduğu gibi
+      #     yazıyor ve önceliği liste sırasına göre veriyor.
+      #
+      # Joker kural (ör. /tools/:slug) KULLANILMIYOR: hedef dosya yoksa Render
+      # isteği uygulamaya düşürmüyor, sıfır baytlık boş sayfa dönüyor; "redirect"
+      # yapılınca da sonsuz yönlendirme oluşuyor. Araç sayfalarının her biri için
+      # ayrı kural var, listede olmayan adres en sondaki /* kuralına düşüyor.
       # Duz prerender sayfalari (TR)
       - type: rewrite
         source: "/pricing"
@@ -245,7 +455,15 @@ services:
         value: strict-origin-when-cross-origin
       - path: "/*"
         name: Permissions-Policy
-        value: "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+        # KAMERA KENDİ SİTEMİZE AÇIK (self) — Belge Tara arka kamerayı kullanır.
+        #
+        # ÖNCEDEN `camera=()` idi: bu "hiçbir kaynağa, kendi sitene bile kapat"
+        # demek. Tarayıcı kamera isteğini hiç işleme almıyordu; kullanıcıya izin
+        # sorulmuyor, site ayarlarında kamera satırı bile görünmüyordu. Belge
+        # Tarayıcı bu yüzden canlıda kamerayı hiç açamıyordu (ölçüldü).
+        #
+        # Mikrofon ve konum KAPALI kalır: hiçbir aracımız kullanmıyor.
+        value: "camera=(self), microphone=(), geolocation=(), interest-cohort=()"
       - path: "/*"
         name: Strict-Transport-Security
         value: "max-age=31536000; includeSubDomains; preload"

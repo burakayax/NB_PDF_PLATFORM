@@ -1,5 +1,6 @@
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY, refreshAuthSession, type AuthUser } from "./auth";
 import { getSaasApiBase } from "./saasBase";
+import { readAccessToken } from "../lib/accessTokenStore";
 
 type SaasSessionSync = (session: { accessToken: string; user: AuthUser }) => void;
 
@@ -14,12 +15,12 @@ function readLatestAccessToken(fallback: string): string {
   if (typeof window === "undefined") {
     return fallback;
   }
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 /** Shared by subscription, admin, and entitlement API clients (401 → refresh session). */
 export async function saasAuthorizedFetch(initialToken: string, run: (token: string) => Promise<Response>): Promise<Response> {
-  let response = await run(initialToken);
+  const response = await run(initialToken);
   if (response.status !== 401 || !saasSessionSync) {
     return response;
   }
@@ -60,6 +61,11 @@ export type FeatureKey =
   | "html-to-pdf"
   | "pdf-to-text"
   | "flatten-pdf"
+  | "form-doldur"
+  | "ustveri-temizle"
+  | "pdf-to-pdfa"
+  | "sayfa-duzeni"
+  | "imza-iste"
   | "extract-images";
 
 /*

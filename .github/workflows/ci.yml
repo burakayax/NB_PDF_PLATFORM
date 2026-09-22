@@ -217,6 +217,61 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npm run build
 
+  # ─── Kod Denetimi (lint) ─────────────────────────────────────────────────
+  # BLOKLAMAZ: denetim yeni kuruldu ve mevcut kod tabanında birikmiş uyarılar var.
+  # Amaç, yeni yazılan kodda hataların görünür olması. Uyarılar kademeli olarak
+  # temizlendikçe `continue-on-error` kaldırılıp deploy koşuluna eklenmelidir.
+  lint-node:
+    name: Lint (web/api + web/frontend)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies (web/api)
+        working-directory: web/api
+        run: npm ci
+
+      - name: Lint web/api
+        working-directory: web/api
+        run: npm run lint
+
+      - name: Install dependencies (web/frontend)
+        working-directory: web/frontend
+        run: npm ci
+
+      - name: Lint web/frontend
+        working-directory: web/frontend
+        run: npm run lint
+
+  lint-python:
+    name: Lint (Python)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      # Tanimsiz isim / sozdizimi hatalari GERCEK caliśma zamani hatasidir ve
+      # bloklar; diger bulgular yalnizca raporlanir.
+      - name: Blocking checks (undefined names, syntax)
+        run: ruff check web/backend/app src --select F821,E9
+
+      - name: Full report (advisory)
+        run: ruff check web/backend/app src || true
+
   # ─── TypeScript Tip Denetimi (Auth API) ──────────────────────────────────
   api-typecheck:
     name: TypeScript Type Check (web/api)
@@ -303,16 +358,52 @@ jobs:
           VITE_DISABLE_OBFUSCATION: "true"
         run: npx tsc --noEmit
 
+  # ─── Playwright sürümü — imaj etiketi buradan gelir ──────────────────────
+  #
+  # NEDEN AYRI BİR İŞ: E2E işi, tarayıcının hazır kurulu geldiği resmi Playwright
+  # imajının içinde çalışıyor. O imajın etiketi, projenin kullandığı Playwright
+  # sürümüyle AYNI olmak zorunda; tutmazsa tarayıcı bulunamıyor ve testlerin
+  # tamamı "Executable doesn't exist" ile düşüyor.
+  #
+  # Etiket bu dosyaya ELLE yazılıydı. Sonuç: bağımlılık güncelleyen robot
+  # Playwright'ı yükseltince (1.59.1 -> 1.63.0) iş akışı dosyasına dokunamadığı
+  # için her güncelleme önerisi otomatik olarak kırmızıya düşüyordu. Kod sağlamdı,
+  # yalnızca iki sürüm birbirini tutmuyordu.
+  #
+  # Artık sürüm kilit dosyasından okunuyor: tek kaynak proje bağımlılığı, elle
+  # eşitlenecek ikinci bir yer yok.
+  playwright-version:
+    name: Playwright sürümünü belirle
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read Playwright version from lockfile
+        id: read
+        working-directory: web/frontend
+        run: |
+          version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test'].version")
+          if [ -z "$version" ]; then
+            echo "package-lock.json icinde @playwright/test surumu bulunamadi." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Playwright $version -> mcr.microsoft.com/playwright:v$version-noble"
+
   # ─── Playwright E2E Testleri (UI davranış) ───────────────────────────────
   frontend-e2e:
     name: Frontend E2E Tests (Playwright)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    needs: playwright-version
     # Resmi Playwright imajı: Chromium + tüm sistem bağımlılıkları HAZIR gelir.
     # Böylece her çalıştırmada ~170MB tarayıcı indirme/install adımı (ve onun
-    # takılması) tamamen ortadan kalkar. Tag, @playwright/test sürümüyle eşleşmeli.
+    # takılması) tamamen ortadan kalkar. Etiket artık elle yazılmıyor; yukarıdaki
+    # iş onu kilit dosyasından okuyor, yani sürüm ikilemi bir daha yaşanmaz.
     container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
+      image: mcr.microsoft.com/playwright:v${{ needs.playwright-version.outputs.version }}-noble
     steps:
       - uses: actions/checkout@v4
 

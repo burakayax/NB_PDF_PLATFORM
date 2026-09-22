@@ -67,7 +67,7 @@ export function AdminToaster() {
                 type="button"
                 aria-label="Kapat"
                 onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
-                className="ml-auto flex-shrink-0 text-lg leading-none text-white/40 hover:text-white/80"
+                className="ml-auto flex-shrink-0 text-lg leading-none text-white/70 hover:text-white/80"
               >
                 ×
               </button>

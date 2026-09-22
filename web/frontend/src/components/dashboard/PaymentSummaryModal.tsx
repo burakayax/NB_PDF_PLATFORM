@@ -10,6 +10,7 @@ import { trackGAEvent } from "../../lib/analytics";
 import { saasAuthorizedFetch } from "../../api/subscription";
 import { AUTH_ACCESS_TOKEN_STORAGE_KEY } from "../../api/auth";
 import { LegalDocumentBody } from "../legal/LegalPage";
+import { readAccessToken } from "../../lib/accessTokenStore";
 
 type IyzicoCheckoutResponse = {
   mode: "iyzico";
@@ -31,7 +32,7 @@ type PlanCheckoutResponse = IyzicoCheckoutResponse | FakeCheckoutResponse;
 
 function readToken(fallback: string): string {
   if (typeof window === "undefined") return fallback;
-  return window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? fallback;
+  return readAccessToken() ?? fallback;
 }
 
 async function initializePlanPayment(
@@ -506,23 +507,23 @@ export function PaymentSummaryModal({
                     </div>
                   ) : (
                     <div className="text-center">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
                         {tr ? "Ödenecek tutar" : "Total due today"}
                       </p>
                       <p className="mt-2 text-[3rem] font-black tabular-nums leading-none tracking-tighter text-white sm:text-[3.4rem]">
                         {promoApplied ? (
-                          <><span className="mr-2 text-[2rem] line-through text-slate-500">{planPrice}</span>
+                          <><span className="mr-2 text-[2rem] line-through text-slate-400">{planPrice}</span>
                           <span>{planPrice} <span className="text-emerald-400 text-xl">−{promoApplied.discountPercent}%</span></span></>
                         ) : planPrice}
                       </p>
                       {!isTry && (
-                        <p className="mt-1 text-[11px] text-slate-500">
+                        <p className="mt-1 text-[11px] text-slate-400">
                           {tr ? "KDV Muafiyeti: İhracat İstisnası" : "VAT Exemption: Export Exception"}
                         </p>
                       )}
                     </div>
                   )}
-                  <p className="mt-2 text-center text-xs text-slate-500">
+                  <p className="mt-2 text-center text-xs text-slate-400">
                     {billingCycle === "YEARLY"
                       ? (tr ? "/ yıl · Yıllık faturalandırılır" : "/ yr · Billed annually")
                       : (tr ? "/ ay · Aylık otomatik yenilenir" : "/ mo · Auto-renews monthly")}
@@ -531,7 +532,7 @@ export function PaymentSummaryModal({
 
                 {/* Promo code */}
                 <div className="mt-4">
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-500">
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
                     {tr ? "Promosyon kodu" : "Promo code"}
                   </label>
                   <div className="flex gap-2">
@@ -563,7 +564,7 @@ export function PaymentSummaryModal({
                 </div>
 
                 {/* Trust row */}
-                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[11px] text-slate-500">
+                <div className="mt-3 rounded-xl border border-white/[0.05] bg-white/[0.02] px-3 py-2 text-center text-[11px] text-slate-400">
                   {tr
                     ? "iyzico güvenceli ödeme — kart bilgileriniz sitemizde saklanmaz"
                     : "Secured by iyzico — your card details are never stored on our servers"}
@@ -595,7 +596,7 @@ export function PaymentSummaryModal({
                         KVKK metnini
                       </button>{" "}
                       okudum, kabul ediyorum.
-                      <span className="mt-1.5 block text-[10px] text-slate-600">
+                      <span className="mt-1.5 block text-[10px] text-slate-400">
                         Ön Bilgilendirme Formu ve cayma hakkı beyanınız bir önceki adımda kaydedilmiştir.
                       </span>
                     </>
@@ -609,7 +610,7 @@ export function PaymentSummaryModal({
                       <button type="button" className="text-nb-accent underline underline-offset-2" onClick={() => setLegalOverlay("kvkk")}>
                         KVKK disclosure
                       </button>.
-                      <span className="mt-1.5 block text-[10px] text-slate-600">
+                      <span className="mt-1.5 block text-[10px] text-slate-400">
                         Your Pre-Purchase Information Form and withdrawal waiver were recorded in the previous step.
                       </span>
                     </>

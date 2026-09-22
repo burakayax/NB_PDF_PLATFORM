@@ -2,6 +2,7 @@ import type { FeatureKey } from "../api/subscription";
 import type { Language } from "../i18n/landing";
 import { getPublicSiteOrigin } from "./siteOrigin";
 import { toolSlugForFeature } from "./toolRoutes";
+import { localizedPath } from "../seo/enSlugs.mjs";
 
 type SeoPair = { title: string; description: string };
 
@@ -230,6 +231,66 @@ const META: Record<FeatureKey, Record<Language, SeoPair>> = {
         "Extract the text layer from PDF pages as a plain text file.",
     },
   },
+  "imza-iste": {
+    tr: {
+      title: "PDF imza isteme (karşı tarafa imzalatma) | PDF Platform",
+      description:
+        "Belgeyi e-postayla imzaya gönderin; imzalı kopya denetim kaydıyla gelir.",
+    },
+    en: {
+      title: "Request a PDF signature | PDF Platform",
+      description:
+        "Send a document out for signature; the signed copy arrives with an audit record.",
+    },
+  },
+  "sayfa-duzeni": {
+    tr: {
+      title: "PDF sayfa düzeni (2-4-8'li, kitapçık) | PDF Platform",
+      description:
+        "Birden çok sayfayı tek kâğıda sığdırın ya da katlanan kitapçık dizin.",
+    },
+    en: {
+      title: "PDF page layout (2/4/8-up, booklet) | PDF Platform",
+      description:
+        "Fit several pages on one sheet or impose a foldable booklet.",
+    },
+  },
+  "pdf-to-pdfa": {
+    tr: {
+      title: "PDF/A dönüştürme (arşiv) | PDF Platform",
+      description:
+        "Belgenizi ISO arşiv biçimi PDF/A'ya çevirin; yazı tipleri gömülür.",
+    },
+    en: {
+      title: "Convert PDF to PDF/A | PDF Platform",
+      description:
+        "Convert your document to the ISO archival format PDF/A with embedded fonts.",
+    },
+  },
+  "ustveri-temizle": {
+    tr: {
+      title: "PDF üstveri temizleme | PDF Platform",
+      description:
+        "Yazar, program, tarih, XMP ve fotoğraf GPS izlerini cihazınızda silin.",
+    },
+    en: {
+      title: "Remove PDF metadata | PDF Platform",
+      description:
+        "Strip author, software, dates, XMP and photo GPS traces on your device.",
+    },
+  },
+  "form-doldur": {
+    tr: {
+      title: "PDF form doldurma | PDF Platform",
+      description:
+        "Doldurulabilir PDF formlarını cihazınızda doldurun; isterseniz kilitleyin.",
+    },
+    en: {
+      title: "Fill PDF form | PDF Platform",
+      description:
+        "Fill fillable PDF forms on your device and optionally lock them.",
+    },
+  },
   "flatten-pdf": {
     tr: {
       title: "PDF düzleştir | PDF Platform",
@@ -349,7 +410,7 @@ export function applyWorkspaceToolMeta(
 
   // TR öneksiz, EN /en/ alt dizininde (prerender + SeoRouteManager ile birebir).
   const urlTr = `${origin}${pathname}`;
-  const urlEn = `${origin}/en${pathname}`;
+  const urlEn = `${origin}${localizedPath(pathname, "en")}`;
   const canonicalUrl = language === "en" ? urlEn : urlTr;
   const headline = headlineFromWorkspaceTitle(title);
 

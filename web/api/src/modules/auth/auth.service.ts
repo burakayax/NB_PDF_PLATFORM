@@ -135,12 +135,69 @@ function toPublicUser(user: User): PublicUser {
   };
 }
 
-async function createSession(user: User, isDesktop = false) {
-  // Revoke all existing valid sessions so only one active session per user exists
-  await prisma.refreshToken.updateMany({
-    where: { userId: user.id, revokedAt: null, expiresAt: { gt: new Date() } },
-    data: { revokedAt: new Date() },
+/**
+ * Bir hesapta AYNI ANDA açık kalabilecek oturum sayısı.
+ *
+ * NEDEN 1 DEĞİL: Önceki kural "her yeni giriş öncekini kapatır" idi. Hesap
+ * paylaşımını zorlaştırıyordu ama asıl bedeli dürüst kullanıcı ödüyordu:
+ * telefonuyla bilgisayarını aynı anda kullanamıyor, biri diğerini dışarı
+ * atıyordu. Ayrıca paylaşımı da gerçekte engellemiyor — paylaşan kişiler
+ * genelde aynı anda değil, sırayla giriyor; eşzamanlılık sınırı bunu hiç
+ * görmüyor. Güvenlik kılavuzlarının önerdiği yol: makul bir sınır koy, açık
+ * oturumları kullanıcıya GÖSTER ve uzaktan kapatma imkânı ver.
+ *
+ * NEDEN SINIRSIZ DEĞİL: Sınır, tek şifreyle bir sınıfın/ekibin aynı hesabı
+ * kullanmasını pratikte imkânsız kılar ve çalınan bir oturumun sessizce
+ * yaşamasını engeller.
+ */
+const MAX_ACTIVE_SESSIONS = 4;
+
+/** Ağ adresini AÇIK saklamayız; yalnız karşılaştırılabilir özetini tutarız. */
+function ipOzeti(ip?: string | null): string | null {
+  return ip ? hashToken(ip) : null;
+}
+
+/**
+ * Cihazı temsil eden özet: tarayıcı kimliği + ağ özeti.
+ *
+ * Hesap paylaşımının gerçek işareti "aynı anda kaç oturum açık" değil, zaman
+ * içinde hesapta kaç FARKLI cihazın göründüğüdür: normal kullanıcı aylar içinde
+ * cihaz ekler, paylaşılan hesapta günler içinde çok sayıda farklı cihaz belirir.
+ * Bu alan o sayımı mümkün kılar; içinde açık kişisel veri taşımaz.
+ */
+function cihazAnahtari(userAgent?: string | null, ip?: string | null): string | null {
+  const ua = (userAgent ?? "").trim();
+  if (!ua && !ip) return null;
+  return hashToken(`${ua}|${ip ?? ""}`);
+}
+
+export type OturumBilgisi = {
+  userAgent?: string | null;
+  ip?: string | null;
+  isDesktop?: boolean;
+};
+
+/**
+ * Sınırı aşan EN ESKİ oturumları kapatır (en son kullanılana dokunmaz).
+ * Yeni oturum açılmadan ÖNCE çağrılır, bu yüzden sınır-1 kadar yer bırakır.
+ */
+async function eskiOturumlariBudaOturum(userId: string) {
+  const acik = await prisma.refreshToken.findMany({
+    where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { lastUsedAt: "desc" },
+    select: { id: true },
   });
+  const fazla = acik.slice(MAX_ACTIVE_SESSIONS - 1);
+  if (fazla.length) {
+    await prisma.refreshToken.updateMany({
+      where: { id: { in: fazla.map((t) => t.id) } },
+      data: { revokedAt: new Date() },
+    });
+  }
+}
+
+async function createSession(user: User, isDesktop = false, bilgi: OturumBilgisi = {}) {
+  await eskiOturumlariBudaOturum(user.id);
 
   const payload = {
     sub: user.id,
@@ -166,6 +223,10 @@ async function createSession(user: User, isDesktop = false) {
       tokenHash: refreshTokenHash,
       expiresAt,
       userId: user.id,
+      userAgent: bilgi.userAgent ? bilgi.userAgent.slice(0, 500) : null,
+      ipHash: ipOzeti(bilgi.ip),
+      deviceKey: cihazAnahtari(bilgi.userAgent, bilgi.ip),
+      isDesktop: Boolean(isDesktop || bilgi.isDesktop),
     },
   });
 
@@ -321,8 +382,8 @@ function deriveGoogleFirstLast(parts: {
   familyName: string | null;
   displayName: string | null;
 }): { firstName: string | null; lastName: string | null } {
-  let fn = parts.givenName?.trim() || null;
-  let ln = parts.familyName?.trim() || null;
+  const fn = parts.givenName?.trim() || null;
+  const ln = parts.familyName?.trim() || null;
   if (fn && ln) {
     return { firstName: fn, lastName: ln };
   }
@@ -510,6 +571,7 @@ export async function registerUser(
 export async function loginUser(
   input: AuthCredentialsInput,
   deviceId?: string,
+  bilgi: OturumBilgisi = {},
 ): Promise<AuthSessionResult> {
   authLog.info("login: attempt", {
     email: input.email,
@@ -576,11 +638,12 @@ export async function loginUser(
 
   user = await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   authLog.info("login: success", { userId: user.id, email: user.email });
-  return createSession(user, Boolean(deviceId));
+  return createSession(user, Boolean(deviceId), bilgi);
 }
 
 export async function refreshSession(
   refreshToken: string,
+  bilgi: OturumBilgisi = {},
 ): Promise<AuthSessionResult> {
   let payload;
   try {
@@ -595,11 +658,26 @@ export async function refreshSession(
     },
   });
 
-  if (
-    !storedToken ||
-    storedToken.revokedAt ||
-    storedToken.expiresAt < new Date()
-  ) {
+  /**
+   * ÇALINMIŞ OTURUM TESPİTİ: Her yenilemede oturum anahtarı değişir ve eskisi
+   * iptal edilir. İptal edilmiş bir anahtar YİNE kullanılıyorsa, o anahtarın
+   * bir kopyası başka birinin elinde demektir (kullanıcı ile saldırgan aynı
+   * zinciri kullanıyor). Bu durumda tek isteği reddetmek yetmez; güvenlik
+   * kılavuzlarının önerdiği davranış, o hesabın TÜM oturumlarını kapatıp
+   * yeniden giriş istemektir.
+   */
+  if (storedToken?.revokedAt) {
+    authLog.warn("refresh: iptal edilmiş oturum anahtarı yeniden kullanıldı", {
+      userId: storedToken.userId,
+    });
+    await prisma.refreshToken.updateMany({
+      where: { userId: storedToken.userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    throw new HttpError(401, "Session refresh token has expired.");
+  }
+
+  if (!storedToken || storedToken.expiresAt < new Date()) {
     throw new HttpError(401, "Session refresh token has expired.");
   }
 
@@ -622,7 +700,13 @@ export async function refreshSession(
 
   await revokeRefreshToken(refreshToken);
 
-  return createSession(user);
+  // Yenileme, oturumun DEVAMIDIR: cihaz kimliği ve masaüstü bilgisi korunur ki
+  // kullanıcının oturum listesinde aynı cihaz yeni bir satır gibi görünmesin.
+  return createSession(user, storedToken.isDesktop, {
+    userAgent: bilgi.userAgent ?? storedToken.userAgent,
+    ip: bilgi.ip,
+    isDesktop: storedToken.isDesktop,
+  });
 }
 
 export async function logoutUser(refreshToken: string | undefined) {
@@ -1078,4 +1162,101 @@ export async function verifyEmailToken(rawToken: string) {
     message: "Your email address has been verified successfully.",
     email: tokenRecord.user.email,
   };
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * AÇIK OTURUMLAR — "hesabım nerelerde açık?"
+ *
+ * Güvenlik kılavuzlarının (OWASP) kullanıcıya sunulmasını istediği üç şey:
+ * açık oturumları görebilmek, tek tek kapatabilmek ve hepsini birden
+ * kapatabilmek. Bu, hem şifresi ele geçirilen kullanıcının kendini kurtarması
+ * hem de hesabını paylaşan kişinin durumu görmesi için gerekir.
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+export type AcikOturum = {
+  id: string;
+  cihaz: string;
+  masaustu: boolean;
+  suAnki: boolean;
+  sonKullanim: string;
+  acilis: string;
+};
+
+/** Tarayıcı kimlik metnini kullanıcının anlayacağı bir cihaz adına çevirir. */
+export function cihazAdiCikar(userAgent?: string | null, masaustu = false): string {
+  if (masaustu) return "Masaüstü uygulaması";
+  const ua = userAgent ?? "";
+  if (!ua) return "Bilinmeyen cihaz";
+  const sistem = /iPhone/i.test(ua)
+    ? "iPhone"
+    : /iPad/i.test(ua)
+      ? "iPad"
+      : /Android/i.test(ua)
+        ? "Android telefon"
+        : /Windows/i.test(ua)
+          ? "Windows bilgisayar"
+          : /Macintosh|Mac OS/i.test(ua)
+            ? "Mac"
+            : /Linux/i.test(ua)
+              ? "Linux bilgisayar"
+              : "Bilinmeyen cihaz";
+  const tarayici = /Edg\//i.test(ua)
+    ? "Edge"
+    : /OPR\//i.test(ua)
+      ? "Opera"
+      : /Chrome\//i.test(ua)
+        ? "Chrome"
+        : /Firefox\//i.test(ua)
+          ? "Firefox"
+          : /Safari\//i.test(ua)
+            ? "Safari"
+            : "";
+  return tarayici ? `${sistem} · ${tarayici}` : sistem;
+}
+
+export async function listeleAcikOturumlar(
+  userId: string,
+  suAnkiRefreshToken?: string,
+): Promise<AcikOturum[]> {
+  const suAnkiHash = suAnkiRefreshToken ? hashToken(suAnkiRefreshToken) : null;
+  const kayitlar = await prisma.refreshToken.findMany({
+    where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+    orderBy: { lastUsedAt: "desc" },
+  });
+  return kayitlar.map((k) => ({
+    id: k.id,
+    cihaz: cihazAdiCikar(k.userAgent, k.isDesktop),
+    masaustu: k.isDesktop,
+    suAnki: Boolean(suAnkiHash && k.tokenHash === suAnkiHash),
+    sonKullanim: k.lastUsedAt.toISOString(),
+    acilis: k.createdAt.toISOString(),
+  }));
+}
+
+/** Tek bir oturumu kapatır (yalnız kendi oturumunu kapatabilir). */
+export async function kapatOturum(userId: string, oturumId: string): Promise<void> {
+  const sonuc = await prisma.refreshToken.updateMany({
+    where: { id: oturumId, userId, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  if (sonuc.count === 0) {
+    throw new HttpError(404, "Session could not be found.");
+  }
+}
+
+/** Şu anki hariç tüm oturumları kapatır ("diğer cihazlardan çık"). */
+export async function kapatDigerOturumlar(
+  userId: string,
+  suAnkiRefreshToken?: string,
+): Promise<number> {
+  const suAnkiHash = suAnkiRefreshToken ? hashToken(suAnkiRefreshToken) : null;
+  const sonuc = await prisma.refreshToken.updateMany({
+    where: {
+      userId,
+      revokedAt: null,
+      ...(suAnkiHash ? { tokenHash: { not: suAnkiHash } } : {}),
+    },
+    data: { revokedAt: new Date() },
+  });
+  return sonuc.count;
 }

@@ -1,6 +1,8 @@
 import type { Language } from "../../i18n/landing";
 import type { FeatureKey } from "../../api/subscription";
 import { resolveRouteSeo, toAbsoluteUrl } from "../../seo/routeSeoConfig";
+import { toolSlugForFeature } from "../../lib/toolRoutes";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import { getPublicSiteOrigin } from "../../lib/siteOrigin";
 import { landingTranslations } from "../../i18n/landing";
 import { useSettings } from "../../contexts/SettingsContext";
@@ -64,8 +66,10 @@ export function SeoRouteManager({
   // TR öneksiz, EN /en/ alt dizininde yayınlanır (prerender + sitemap ile birebir).
   // Aktif dil "en" ise canonical /en önekli olur; her iki sürüm karşılıklı
   // hreflang taşır, x-default = TR.
+  // EN sürümde yalnızca /en öneki değil, SLUG DA İngilizce (enSlugs.mjs) —
+  // /en/tools/pdf-duzenle değil /en/tools/edit-pdf.
   const barePath = seo.canonicalPath;
-  const enPath = barePath === "/" ? "/en" : `/en${barePath}`;
+  const enPath = localizedPath(barePath, "en");
   const activePath = language === "en" ? enPath : barePath;
   const trAbsolute = `${siteOrigin}${barePath === "/" ? "" : barePath}` || `${siteOrigin}/`;
   const enAbsolute = `${siteOrigin}${enPath}`;
@@ -115,6 +119,13 @@ export function SeoRouteManager({
         image: ogImage,
       }}
       includeProductSchema={view === "landing" || view === "web"}
+      /* Yıldızlar yalnızca araç sayfalarında; ana sayfada araç kimliği
+         yok, dolayısıyla aggregateRating de basılmaz. */
+      toolSlug={
+        view === "web" && selectedFeatureId
+          ? toolSlugForFeature(selectedFeatureId)
+          : undefined
+      }
       includePricingOfferSchema={view === "pricing"}
       faqSchema={faqSchema}
       breadcrumb={breadcrumb}

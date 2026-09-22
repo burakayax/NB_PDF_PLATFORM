@@ -5,6 +5,7 @@ import type { FeatureKey } from "../api/subscription";
 // Tek gerçek SEO içerik kaynağı — statik prerender (generate-seo-files.mjs) ile
 // runtime'ın aynı metni kullanmasını garanti eder.
 import { getToolSeo, LANDING_SEO } from "./seoContent.mjs";
+import { toolSlugToTr } from "./enSlugs.mjs";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type SeoRouteConfig = {
@@ -85,6 +86,19 @@ function landingSeo(
   return { title: shared.title, description: shared.description };
 }
 
+/**
+ * Adres yolundan araç slug'ı: "/tools/pdf-ozetle" → "pdf-ozetle".
+ * İngilizce sürümde yol "/en/tools/<slug>" olur; önek atılır ve slug Türkçe
+ * karşılığına çevrilir ki SEO metni tek kaynaktan gelmeye devam etsin.
+ */
+function toolSlugFromPath(pathname: string): string | null {
+  const m = /^(?:\/en)?\/tools\/([^/]+)$/.exec(pathname);
+  if (!m) return null;
+  const slug = m[1];
+  if (!slug) return null;
+  return toolSlugToTr(slug);
+}
+
 // ─── Public resolver ─────────────────────────────────────────────────────────
 export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   const pathname = normalizePath(context.pathname);
@@ -92,6 +106,30 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   const localeAlt = LOCALE_ALT[context.language];
 
   // ── Tool page ──────────────────────────────────────────────────────────────
+  //
+  // BAŞLIK ÖNCE ADRESTEN TÜRETİLİR.
+  //
+  // NEDEN: Kendi sayfası olan araçlar (PDF Özetle, Çevir, Kırp, İmzala, Kesit
+  // Al, Hassas Veri Gizle, Taranmış OCR…) çalışma alanının seçili aracını
+  // değiştirmiyor. Eskiden başlık yalnızca seçili araçtan üretildiği için bu
+  // sayfaların hepsi sekmede "PDF Ayırma" adıyla görünüyordu: sunucunun
+  // gönderdiği doğru başlık, site açılır açılmaz yanlışıyla eziliyordu.
+  // Adres yolundaki slug her zaman doğru araca işaret eder; o yüzden önce ona
+  // bakılır, yol bir araç sayfası değilse eski davranışa düşülür.
+  const yoldakiSlug = toolSlugFromPath(pathname);
+  if (yoldakiSlug) {
+    const copy = toolSeo(yoldakiSlug, context.language);
+    return {
+      ...copy,
+      canonicalPath: `/tools/${yoldakiSlug}`,
+      index: true,
+      follow: true,
+      ogImage: "/og-image.png",
+      ogLocale: locale,
+      ogLocaleAlternate: localeAlt,
+    };
+  }
+
   if (context.view === "web" && context.selectedFeatureId) {
     const slug = toolSlugForFeature(context.selectedFeatureId);
     const copy = toolSeo(slug, context.language);
@@ -206,6 +244,18 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
   }
 
   // ── Auth / admin — noindex ────────────────────────────────────────────────
+  //
+  // CANONICAL KENDİNİ GÖSTERİR, ANA SAYFAYI DEĞİL.
+  //
+  // Eskiden bu sayfalar hem "noindex" diyor hem de canonical ile ana sayfayı
+  // gösteriyordu. Bu iki sinyal BİRBİRİYLE ÇELİŞİR: canonical "asıl sayfa şu,
+  // onu dizine al" derken noindex "hiçbirini dizine alma" der. Google'ın
+  // yönlendirmesi de bu ikisinin birlikte kullanılmamasıdır; karıştırıldığında
+  // hangisinin kazanacağı belirsizdir ve Search Console tuhaf durumlar
+  // bildirir (canlıda /en/register bu yüzden "yönlendirmeli sayfa" göründü).
+  //
+  // Doğrusu tek net sinyal vermektir: sayfa noindex kalır, canonical kendini
+  // gösterir — yönetici girişinde zaten böyle yapılıyordu.
   if (
     context.view === "login" ||
     context.view === "register" ||
@@ -217,7 +267,7 @@ export function resolveRouteSeo(context: SeoRouteContext): SeoRouteConfig {
         context.language === "tr"
           ? "PDF çalışma alanınıza erişmek için giriş yapın veya hesap oluşturun."
           : "Sign in or create an account to access your PDF workspace.",
-      canonicalPath: "/",
+      canonicalPath: pathname.replace(/^\/en(?=\/|$)/, "") || "/",
       index: false,
       follow: false,
       ogLocale: locale,

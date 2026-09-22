@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { ToolDropzone } from "./ToolDropzone";
+import { ToolHowTo } from "../common/ToolHowTo";
 import { getToolSeo } from "../../seo/seoContent.mjs";
 import { expandPagesString } from "../../i18n/workspace";
 import {
@@ -30,6 +31,7 @@ import {
   zipBytesToBlob,
   PdfEncryptedError,
 } from "../../lib/clientPdfWorker";
+import { ToolRating } from "../common/ToolRating";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import type { PdfPageVisualMode } from "../split/PdfPageVisualGrid";
 
@@ -199,6 +201,19 @@ export function GuestPageToolCore({
   // "İndir": dashboard'daki gibi KAYDETME YERİNİ SORAR (File System Access).
   // İndir tıklaması kullanıcı aktivasyonudur; blob hazır olduğundan picker direkt
   // çağrılır. Desteklemeyen tarayıcıda (Firefox/Safari/mobil) İndirilenler'e iner.
+  /**
+   * Düğmenin üç hâli: "İndir" → kısa süre "İndirildi" onayı → "Tekrar indir".
+   * Onay geçtikten sonra yeniden "İndir" yazması, dosya zaten alınmışken
+   * yanıltıcı oluyordu.
+   */
+  const [downloaded, setDownloaded] = useState(false);
+  const [everDownloaded, setEverDownloaded] = useState(false);
+  function markDownloaded() {
+    setEverDownloaded(true);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 3000);
+  }
+
   async function saveResult() {
     if (!result) return;
     const win = window as unknown as {
@@ -216,6 +231,7 @@ export function GuestPageToolCore({
         const w = await handle.createWritable();
         await w.write(result.blob);
         await w.close();
+        markDownloaded();
         return;
       } catch (e) {
         if (e instanceof DOMException && e.name === "AbortError") return; // vazgeçti
@@ -223,6 +239,7 @@ export function GuestPageToolCore({
       }
     }
     downloadBlob(result.blob, result.filename);
+    markDownloaded();
   }
 
   function openResult() {
@@ -333,10 +350,21 @@ export function GuestPageToolCore({
           <button
             type="button"
             onClick={() => void saveResult()}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+            aria-live="polite"
+            className={
+              downloaded
+                ? "inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition"
+                : everDownloaded
+                  ? "inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                  : "inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-bold text-white transition hover:from-blue-500 hover:to-indigo-500"
+            }
           >
-            <Download className="h-4 w-4" />
-            {tr ? "İndir" : "Download"}
+            {downloaded ? <Check className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            {downloaded
+              ? tr ? "İndirildi" : "Downloaded"
+              : everDownloaded
+                ? tr ? "Tekrar indir" : "Download again"
+                : tr ? "İndir" : "Download"}
           </button>
           {canShare() && (
             <button
@@ -367,6 +395,7 @@ export function GuestPageToolCore({
             {tr ? "Kapat" : "Close"}
           </button>
         </div>
+        <ToolRating toolSlug={tool === "split" ? "split-pdf" : tool} language={language} />
         <ValueMomentNudge language={language} source="page_tool_success" />
       </div>
     );
@@ -412,7 +441,7 @@ export function GuestPageToolCore({
           </span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-medium text-slate-100">{file.name}</p>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               {pageCount} {tr ? "sayfa" : "pages"}
               {hasSelection ? (tr ? " · düzenlendi ✓" : " · edited ✓") : ""}
             </p>
@@ -420,7 +449,7 @@ export function GuestPageToolCore({
           <button
             type="button"
             onClick={reset}
-            className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+            className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
             aria-label={tr ? "Kaldır" : "Remove"}
           >
             <Trash2 className="h-4 w-4" />
@@ -475,7 +504,7 @@ export function GuestPageToolCore({
               {tr ? "Ayrı dosyalar (ZIP)" : "Separate files (ZIP)"}
             </button>
           </div>
-          <p className="px-2 py-1.5 text-center text-[11px] text-slate-500">
+          <p className="px-2 py-1.5 text-center text-[11px] text-slate-400">
             {splitMode === "single"
               ? tr ? "Seçili sayfalar tek bir PDF'te birleşir." : "Selected pages merged into one PDF."
               : tr ? "Her seçili sayfa ayrı PDF olur, ZIP ile iner." : "Each selected page becomes a separate PDF in a ZIP."}
@@ -601,7 +630,9 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
           </h1>
         </div>
 
-        <div className="mt-8">
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">
           <GuestPageToolCore tool={tool} language={language} initialFile={initialFile} />
         </div>
 
@@ -634,7 +665,7 @@ export function GuestPageTool({ slug, tool, language, onLogin, onRegister, initi
                 >
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>

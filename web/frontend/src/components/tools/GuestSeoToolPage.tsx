@@ -7,6 +7,8 @@ import {
   getRelatedToolLinks,
   getGuideSlugsForTool,
 } from "../../seo/seoContent.mjs";
+import { ToolHowTo } from "../common/ToolHowTo";
+import { ToolScore } from "../common/ToolScore";
 
 type Props = {
   slug: string;
@@ -14,6 +16,8 @@ type Props = {
   onLogin: () => void;
   onRegister: () => void;
   children: ReactNode;
+  /** Geniş çalışma alanı isteyen araçlar (ör. kesit alma) için daha geniş kolon. */
+  wide?: boolean;
   /** Oturum açıksa header giriş/üye-ol yerine "Panele git" gösterir (yanıltıcı olmasın). */
   isAuthenticated?: boolean;
   /** Oturum açık kullanıcıyı workspace'e (panele) götür. */
@@ -33,7 +37,7 @@ type Props = {
 // gönderir) için "cihazdan çıkmaz" iddiası yanıltıcı olur — o yüzden ayrım.
 const ON_DEVICE_SEO_TOOLS = new Set<string>(["pdf-imzala", "pdf-yorumla"]);
 
-export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, isAuthenticated, onOpenApp, userName, overlay }: Props) {
+export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children, wide, isAuthenticated, onOpenApp, userName, overlay }: Props) {
   const tr = language === "tr";
   const seo = getToolSeo(slug, language);
   const onDevice = ON_DEVICE_SEO_TOOLS.has(slug);
@@ -103,7 +107,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-5 pb-24 pt-10 sm:pt-14">
+      <main className={`mx-auto ${wide ? "max-w-6xl" : "max-w-4xl"} px-5 pb-24 pt-10 sm:pt-14`}>
         <div className="text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[12px] font-semibold text-cyan-300">
             <Sparkles className="h-3.5 w-3.5" />
@@ -119,9 +123,15 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
               {seo.intro}
             </p>
           )}
+          {/* Puan satırı: hem oyunu değiştirmek isteyenin geri dönebileceği yer,
+              hem de yıldızların sayfada GÖRÜNÜR olması (arama sonucunda yıldız
+              çıkarmanın ön koşulu). */}
+          <ToolScore slug={slug} language={language} className="mt-5 justify-center" />
         </div>
 
-        <div className="mt-9">{children}</div>
+        <ToolHowTo slug={slug} language={language} className="mt-8" />
+
+        <div className="mt-6">{children}</div>
 
         <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {(onDevice
@@ -154,7 +164,7 @@ export function GuestSeoToolPage({ slug, language, onLogin, onRegister, children
                   className="group rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
                   <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-semibold text-slate-200">
                     {item.q}
-                    <span className="text-slate-500 transition group-open:rotate-45">+</span>
+                    <span className="text-slate-400 transition group-open:rotate-45">+</span>
                   </summary>
                   <p className="mt-3 text-[13px] leading-relaxed text-slate-400">{item.a}</p>
                 </details>

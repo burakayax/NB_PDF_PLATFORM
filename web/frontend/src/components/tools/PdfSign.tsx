@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { ToolRating } from "../common/ToolRating";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
 import * as pdfjsLib from "pdfjs-dist";
-// eslint-disable-next-line import/no-unresolved -- Vite ?url
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import {
   Calendar,
@@ -13,7 +14,6 @@ import {
   Trash2,
   Type as TypeIcon,
   Upload,
-  UploadCloud,
   X,
   ZoomIn,
   ZoomOut,
@@ -94,6 +94,8 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [rendering, setRendering] = useState(false);
   const [thumbs, setThumbs] = useState<string[]>([]);
   const [editorOpen, setEditorOpen] = useState(false);
+  /** Çıktı gerçekten kaydedildi mi — puanlama yalnız o zaman sorulur. */
+  const [applied, setApplied] = useState(false);
   const [sigModalOpen, setSigModalOpen] = useState(false);
   const [activeSig, setActiveSig] = useState<SigSource | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
@@ -101,12 +103,10 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
   const [drag, setDrag] = useState<Drag>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState(false);
   const [textColor, setTextColor] = useState("#0b2447"); // metin/tarih rengi
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const clipboardRef = useRef<Placement | null>(null); // Ctrl+C ile kopyalanan imza
 
   const openFile = useCallback(async (f: File) => {
@@ -360,6 +360,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       const name = `${(file?.name || "belge").replace(/\.pdf$/i, "")}-imzali.pdf`;
       await saveBlobToUser(pdfBytesToBlob(outBytes), name).catch(() => {});
       setEditorOpen(false);
+      setApplied(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : tr ? "İmzalama başarısız." : "Signing failed.");
     } finally {
@@ -420,40 +421,18 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
       </div>
 
       {!editorOpen && (
-        <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            const f = e.dataTransfer.files?.[0];
-            if (f) void openFile(f);
-          }}
-          onClick={() => fileInputRef.current?.click()}
-          className={`group cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition sm:p-12 ${
-            dragOver ? "border-cyan-400/70 bg-cyan-400/[0.06]" : "border-white/15 hover:border-cyan-400/40 hover:bg-white/[0.02]"
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
+        <div className="tool-form">
+          <WorkspaceUploadField
+            language={language}
             accept=".pdf,application/pdf"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) void openFile(f);
-              e.target.value = "";
-            }}
+            note={tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}
+            onFiles={(files) => { void openFile(files[0]); }}
           />
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-200 ring-1 ring-white/10 transition group-hover:scale-105">
-            <UploadCloud className="h-9 w-9" />
-          </div>
-          <p className="mt-5 text-lg font-bold text-white">{tr ? "İmzalanacak PDF'i sürükle veya seç" : "Drag or choose a PDF to sign"}</p>
-          <p className="mt-1.5 text-[13px] text-slate-400">{tr ? "Dosyan cihazında işlenir, sunucuya gitmez." : "Processed on your device, never uploaded."}</p>
         </div>
+      )}
+
+      {applied && !editorOpen && (
+        <ToolRating toolSlug="pdf-imzala" language={language} />
       )}
 
       {error && !editorOpen && (
@@ -537,7 +516,7 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                   value={selectedPlacement.text}
                   onChange={(e) => updateTextField(selectedPlacement.id, e.target.value)}
                   placeholder={tr ? "Metni düzenle…" : "Edit text…"}
-                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-500"
+                  className="w-40 rounded-lg border border-cyan-400/40 bg-white/[0.06] px-2.5 py-1.5 text-[13px] text-white outline-none placeholder:text-slate-400"
                 />
               )}
               {selectedPlacement && (
@@ -622,9 +601,9 @@ export function PdfSign({ language, initialFile }: { language: Language; accessT
                       }}
                       className={`relative mb-2 block w-full overflow-hidden rounded-lg border-2 transition ${current === i ? "border-cyan-400" : "border-transparent hover:border-white/20"}`}
                     >
-                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-500">{i + 1}</div>}
+                      {thumbs[i] ? <img src={thumbs[i]} alt={`${i + 1}`} className="w-full bg-white" /> : <div className="flex h-24 w-full items-center justify-center bg-white/5 text-[10px] text-slate-400">{i + 1}</div>}
                       {has && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-black/40" />}
-                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-500"}`}>{i + 1}</span>
+                      <span className={`block py-0.5 text-center text-[10px] ${current === i ? "text-cyan-300" : "text-slate-400"}`}>{i + 1}</span>
                     </button>
                   );
                 })}
@@ -903,7 +882,7 @@ function SignatureModal({ tr, onClose, onDone }: { tr: boolean; onClose: () => v
                 value={typed}
                 onChange={(e) => setTyped(e.target.value)}
                 placeholder={tr ? "Adınız Soyadınız" : "Your name"}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-slate-500"
+                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-white outline-none placeholder:text-slate-400"
               />
               <div className="mt-3 flex min-h-[90px] items-center justify-center rounded-xl border border-slate-300 bg-white px-4">
                 <span style={{ fontFamily: '"Segoe Script","Brush Script MT","Snell Roundhand",cursive', fontStyle: "italic", fontSize: 40, color: "#0b2447" }}>{typed || (tr ? "önizleme" : "preview")}</span>

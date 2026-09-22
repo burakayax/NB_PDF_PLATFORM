@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { ArrowLeft, ArrowRight, CalendarDays, Clock, Lightbulb, Newspaper, Sparkles } from "lucide-react";
 import type { Language } from "../../i18n/landing";
 import { getBlogPost, getBlogPostsSorted } from "../../blog/blogContent.mjs";
+import { localizedPath } from "../../seo/enSlugs.mjs";
 import type { BlogBlock, BlogPost, BlogPostCopy } from "../../blog/blogContent.mjs";
 import { SiteFooter } from "../common/SiteFooter";
 
@@ -13,6 +14,9 @@ const ACCENTS: Record<string, Accent> = {
   cyan: { grad: "from-cyan-500 to-blue-600", soft: "from-cyan-500/20 to-blue-600/20", text: "text-cyan-300", ring: "border-cyan-400/30", chip: "border-cyan-400/25 bg-cyan-500/10 text-cyan-200" },
   emerald: { grad: "from-emerald-500 to-teal-600", soft: "from-emerald-500/20 to-teal-600/20", text: "text-emerald-300", ring: "border-emerald-400/30", chip: "border-emerald-400/25 bg-emerald-500/10 text-emerald-200" },
   amber: { grad: "from-amber-500 to-orange-600", soft: "from-amber-500/20 to-orange-600/20", text: "text-amber-300", ring: "border-amber-400/30", chip: "border-amber-400/25 bg-amber-500/10 text-amber-200" },
+  // "sky" üç yazıda kullanılıyordu ama bu tabloda tanımlı değildi; o yazılar
+  // sessizce fuchsia rengiyle görünüyordu.
+  sky: { grad: "from-sky-500 to-blue-600", soft: "from-sky-500/20 to-blue-600/20", text: "text-sky-300", ring: "border-sky-400/30", chip: "border-sky-400/25 bg-sky-500/10 text-sky-200" },
 };
 const accentOf = (a: string) => ACCENTS[a] ?? ACCENTS.fuchsia;
 
@@ -71,11 +75,24 @@ const Shell = ({ children }: { children: React.ReactNode }) => (
 );
 
 // ─── Blok renderer ────────────────────────────────────────────────────────────
+/**
+ * Arama motorları için sayfaya gömülen yapılandırılmış veriyi güvenli hale getirir.
+ *
+ * Metin içinde kapanış etiketi geçerse tarayıcı betiği erken kapatır ve kalan
+ * içerik sayfaya kod olarak sızabilir. Bu karakterler kaçırılarak engellenir.
+ */
+function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/[<>&]/g, (ch) =>
+    ch === "<" ? "\\u003c" : ch === ">" ? "\\u003e" : "\\u0026",
+  );
+}
+
 function Blocks({ blocks, accent, tr }: { blocks: BlogBlock[]; accent: Accent; tr: boolean }) {
   // EN yazılarda araç CTA'ları da /en/ önekli olmalı — aksi hâlde İngilizce sayfa
   // Türkçe araç sayfasına link verir (kullanıcıyı yanlış dile atar, Google'a da
   // "asıl sürüm TR" sinyali gönderir).
-  const localize = (href: string) => (tr || !href.startsWith("/") ? href : `/en${href}`);
+  const localize = (href: string) =>
+    tr || !href.startsWith("/") ? href : localizedPath(href, "en");
   return (
     <div className="space-y-5">
       {blocks.map((b, i) => {
@@ -140,7 +157,7 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
             const a = accentOf(p.accent);
             const tags = p.tags[tr ? "tr" : "en"];
             return (
-              <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
+              <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group flex flex-col overflow-hidden rounded-3xl border border-white/[0.08] bg-white/[0.02] transition hover:border-white/20 hover:bg-white/[0.04]">
                 <div className={`relative flex h-36 items-center justify-center overflow-hidden bg-gradient-to-br ${a.soft}`}>
                   <div className={`pointer-events-none absolute -top-10 left-1/2 h-32 w-32 -translate-x-1/2 rounded-full bg-gradient-to-b ${a.grad} opacity-30 blur-3xl`} />
                   <Newspaper className={`h-12 w-12 ${a.text} opacity-80`} />
@@ -151,7 +168,7 @@ export function BlogIndexPage({ language, onLogin, onRegister, isAuthenticated, 
                   </div>
                   <h2 className="text-[17px] font-extrabold leading-snug text-white transition group-hover:text-white">{c.title}</h2>
                   <p className="mt-2 line-clamp-2 flex-1 text-[13px] leading-relaxed text-slate-400">{c.excerpt}</p>
-                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-500">
+                  <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-400">
                     <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" />{fmtDate(p.date, tr)}</span>
                     <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{p.readMinutes} {tr ? "dk okuma" : "min read"}</span>
                   </div>
@@ -172,7 +189,8 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
   const post = getBlogPost(slug) as BlogPost | null;
   const c = post ? (post[tr ? "tr" : "en"] as BlogPostCopy) : null;
 
-  useEffect(() => { if (c) document.title = `${c.title} — PDF Platform`; }, [c]);
+  // Marka eki yok — üretilen statik sayfayla birebir aynı başlık (bkz. generate-seo-files.mjs).
+  useEffect(() => { if (c) document.title = c.title; }, [c]);
 
   if (!post || !c) {
     return (
@@ -202,13 +220,13 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
     publisher: { "@type": "Organization", name: "PDF Platform", logo: { "@type": "ImageObject", url: "https://www.pdfplatform.app/logo.png" } },
     // Canonical ile AYNI olmalı: EN sayfada TR URL vermek Google'a çelişkili
     // canonical sinyali verir ("Google kullanıcıdan farklı standart sayfa seçti").
-    mainEntityOfPage: `https://www.pdfplatform.app${tr ? "" : "/en"}/blog/${post.slug}`,
+    mainEntityOfPage: `https://www.pdfplatform.app${localizedPath(`/blog/${post.slug}`, tr ? "tr" : "en")}`,
   };
 
   return (
     <Shell>
       <Header language={language} isAuthenticated={isAuthenticated} onOpenApp={onOpenApp} onLogin={onLogin} onRegister={onRegister} onSwitchLanguage={onSwitchLanguage} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }} />
       <main className="mx-auto max-w-3xl px-5 pb-24 pt-8">
         <a href={tr ? "/blog" : "/en/blog"} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{tr ? "Tüm yazılar" : "All posts"}</a>
 
@@ -221,7 +239,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
           <div className="mt-4 flex flex-wrap items-center gap-4 text-[12px] text-slate-400">
             <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{fmtDate(post.date, tr)}</span>
             <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5" />{post.readMinutes} {tr ? "dk okuma" : "min read"}</span>
-            <span className="text-slate-500">PDF Platform</span>
+            <span className="text-slate-400">PDF Platform</span>
           </div>
         </div>
 
@@ -240,7 +258,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
             <div className="space-y-3">
               {c.faq.map((f, i) => (
                 <details key={i} className="group rounded-xl border border-white/[0.08] bg-white/[0.025] px-5 py-4 [&_summary::-webkit-details-marker]:hidden">
-                  <summary className="flex cursor-pointer items-center justify-between gap-4 text-[15px] font-semibold text-slate-100">{f.q}<span className="text-slate-500 transition group-open:rotate-45">+</span></summary>
+                  <summary className="flex cursor-pointer items-center justify-between gap-4 text-[15px] font-semibold text-slate-100">{f.q}<span className="text-slate-400 transition group-open:rotate-45">+</span></summary>
                   <p className="mt-3 text-[14px] leading-relaxed text-slate-400">{f.a}</p>
                 </details>
               ))}
@@ -249,7 +267,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
         )}
 
         {/* Ana araç CTA */}
-        <a href={post.tool} className={`mt-12 flex flex-col items-center gap-3 rounded-3xl border ${a.ring} bg-gradient-to-b ${a.soft} to-transparent p-8 text-center transition hover:brightness-110 sm:flex-row sm:justify-between sm:text-left`}>
+        <a href={localizedPath(post.tool, tr ? "tr" : "en")} className={`mt-12 flex flex-col items-center gap-3 rounded-3xl border ${a.ring} bg-gradient-to-b ${a.soft} to-transparent p-8 text-center transition hover:brightness-110 sm:flex-row sm:justify-between sm:text-left`}>
           <div>
             <p className="text-lg font-black text-white">{tr ? "Hemen deneyin" : "Try it now"}</p>
             <p className="mt-1 text-[14px] text-slate-300">{tr ? "Bu rehberdeki aracı açın ve saniyeler içinde sonucu alın." : "Open the tool from this guide and get results in seconds."}</p>
@@ -266,7 +284,7 @@ export function BlogPostPage({ slug, language, onLogin, onRegister, isAuthentica
                 const rc = p[tr ? "tr" : "en"] as BlogPostCopy;
                 const ra = accentOf(p.accent);
                 return (
-                  <a key={p.slug} href={`${tr ? "" : "/en"}/blog/${p.slug}`} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
+                  <a key={p.slug} href={localizedPath(`/blog/${p.slug}`, tr ? "tr" : "en")} className="group rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 transition hover:border-white/20 hover:bg-white/[0.04]">
                     <p className={`text-[11px] font-bold uppercase tracking-wide ${ra.text}`}>{p.tags[tr ? "tr" : "en"][0]}</p>
                     <p className="mt-1.5 text-[15px] font-bold leading-snug text-white">{rc.title}</p>
                     <p className="mt-1.5 line-clamp-2 text-[12px] text-slate-400">{rc.excerpt}</p>

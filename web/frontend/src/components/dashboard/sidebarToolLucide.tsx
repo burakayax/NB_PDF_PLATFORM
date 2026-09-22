@@ -5,6 +5,10 @@ import {
   Droplets,
   FileSpreadsheet,
   FileText,
+  Eraser,
+  Archive,
+  Grid2x2,
+  FileSignature,
   File as FileIcon,
   Layers2,
   Globe,
@@ -47,6 +51,11 @@ const byId: Record<FeatureKey, LucideIcon> = {
   encrypt: Lock,
   "pdf-to-text": FileText,
   "flatten-pdf": Layers2,
+  "form-doldur": FileText,
+  "ustveri-temizle": Eraser,
+  "pdf-to-pdfa": Archive,
+  "sayfa-duzeni": Grid2x2,
+  "imza-iste": FileSignature,
   "extract-images": ImageDown,
 };
 
@@ -74,6 +83,11 @@ const colorById: Record<FeatureKey, string> = {
   encrypt: "text-red-400",
   "pdf-to-text": "text-blue-400",
   "flatten-pdf": "text-purple-400",
+  "form-doldur": "text-emerald-400",
+  "ustveri-temizle": "text-rose-400",
+  "pdf-to-pdfa": "text-amber-400",
+  "sayfa-duzeni": "text-lime-400",
+  "imza-iste": "text-violet-400",
   "extract-images": "text-fuchsia-400",
 };
 

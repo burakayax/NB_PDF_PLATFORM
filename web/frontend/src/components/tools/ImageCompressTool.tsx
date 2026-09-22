@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { Check, Download, ExternalLink, Loader2, Share2, Trash2, Image as ImageIcon } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import type { Language } from "../../i18n/landing";
-import { ToolDropzone } from "./ToolDropzone";
+import { WorkspaceUploadField } from "../common/WorkspaceUploadField";
+import { ToolResultPanel } from "../common/ToolResultPanel";
 import { ValueMomentNudge } from "./ValueMomentNudge";
 import { zipStore } from "../../lib/zipStore";
+import {
+  canEncode,
+  compressImage,
+  extForFormat,
+  type CompressOutcome,
+  type OutputFormat,
+} from "../../lib/imageCompress";
 
 /**
  * GÖRSEL SIKIŞTIR — Görsel→PDF (GuestToolCore) ile AYNI akış/kabuk:
@@ -13,9 +20,19 @@ import { zipStore } from "../../lib/zipStore";
  * Tek görsel → sıkıştırılmış görsel; çok görsel → tek ZIP.
  */
 
-type Format = "image/jpeg" | "image/webp" | "image/png";
+/** "auto" = her görsel için en küçük sonucu veren biçimi kendisi seçer. */
+type Format = OutputFormat | "auto";
 type Picked = { id: string; file: File; previewUrl: string };
-type Result = { blob: Blob; filename: string; saved: "picker" | "download"; count: number };
+type Result = {
+  blob: Blob;
+  filename: string;
+  count: number;
+  /** Girdi ve çıktı toplam boyutları — kazancı göstermek için. */
+  inBytes: number;
+  outBytes: number;
+  /** Sıkıştırma kazanç sağlamadığı için orijinali korunan görsel sayısı. */
+  keptCount: number;
+};
 
 const MAX_FILES = 30;
 const MAX_BYTES = 80 * 1024 * 1024;
@@ -26,69 +43,43 @@ function humanSize(b: number): string {
   if (b < 1024 * 1024) return `${(b / 1024).toFixed(0)} KB`;
   return `${(b / 1024 / 1024).toFixed(1)} MB`;
 }
-const extFor = (f: Format) => (f === "image/webp" ? "webp" : f === "image/png" ? "png" : "jpg");
-/** Save picker'da gösterilecek zengin uzantı listesi (biçime göre). */
-function acceptFor(f: Format): Record<string, string[]> {
-  if (f === "image/png") return { "image/png": [".png"] };
-  if (f === "image/webp") return { "image/webp": [".webp"] };
-  return { "image/jpeg": [".jpg", ".jpeg"] };
-}
-
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("image load failed"));
-    };
-    img.src = url;
-  });
-}
-
-async function compress(file: File, quality: number, maxDim: number, format: Format): Promise<Blob> {
-  const img = await loadImage(file);
-  try {
-    let { width, height } = img;
-    if (maxDim > 0 && Math.max(width, height) > maxDim) {
-      const s = maxDim / Math.max(width, height);
-      width = Math.round(width * s);
-      height = Math.round(height * s);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, width);
-    canvas.height = Math.max(1, height);
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("canvas ctx yok");
-    if (format === "image/jpeg") {
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("toBlob null"))), format, quality);
-    });
-  } finally {
-    if (img.src.startsWith("blob:")) URL.revokeObjectURL(img.src);
-  }
+/**
+ * "Otomatik" biçim kararı — dosya seçme penceresi işlemden ÖNCE açıldığı için
+ * uzantının baştan bilinmesi şart; bu yüzden karar kaynağın türüne göre anında
+ * verilir. WebP en küçük sonucu verir; tarayıcı WebP kodlayamıyorsa şeffaflık
+ * taşıyabilen kaynaklar PNG, diğerleri JPEG olur.
+ */
+function resolveFormat(chosen: Format, file: File, webpOk: boolean): OutputFormat {
+  if (chosen !== "auto") return chosen;
+  if (webpOk) return "image/webp";
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/png" || t === "image/webp" || t === "image/gif") return "image/png";
+  return "image/jpeg";
 }
 
 export function ImageCompressTool({ language }: { language: Language }) {
   const tr = language === "tr";
   const [files, setFiles] = useState<Picked[]>([]);
   const [quality, setQuality] = useState(70);
-  const [format, setFormat] = useState<Format>("image/jpeg");
+  const [format, setFormat] = useState<Format>("auto");
+  /** 0 = orijinal ölçü. Uzun kenar sınırı — en büyük kazancı bu sağlar. */
+  const [maxDim, setMaxDim] = useState(0);
+  const [webpOk, setWebpOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
-  const [reSaved, setReSaved] = useState(false);
-  const saveHandleRef = useRef<FileSystemFileHandle | null>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (files.length > 0) listRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [files.length]);
+
+  // Tarayıcı WebP kodlayabiliyor mu? ("Otomatik" biçim kararı buna bakar.)
+  useEffect(() => {
+    let alive = true;
+    void canEncode("image/webp").then((ok) => { if (alive) setWebpOk(ok); });
+    return () => { alive = false; };
+  }, []);
 
   const addFiles = useCallback((incoming: FileList | File[]) => {
     setError(null);
@@ -119,19 +110,7 @@ export function ImageCompressTool({ language }: { language: Language }) {
     setFiles([]);
     setResult(null);
     setError(null);
-    saveHandleRef.current = null;
   };
-
-  function downloadBlob(blob: Blob, name: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }
 
   const totalIn = files.reduce((s, f) => s + f.file.size, 0);
 
@@ -147,58 +126,56 @@ export function ImageCompressTool({ language }: { language: Language }) {
     }
     const q = Math.min(0.95, Math.max(0.2, quality / 100));
     const multi = files.length > 1;
-    const outName = multi ? "sikistirilmis-gorseller.zip" : `${(files[0]!.file.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extFor(format)}`;
-
-    // Kaydetme yerini SOR (ağır işlemden önce, kullanıcı aktivasyonu geçerliyken).
-    let saveHandle: FileSystemFileHandle | null = null;
-    const win = window as unknown as {
-      showSaveFilePicker?: (o: {
-        suggestedName?: string;
-        types?: Array<{ description: string; accept: Record<string, string[]> }>;
-      }) => Promise<FileSystemFileHandle>;
-    };
-    if (typeof win.showSaveFilePicker === "function") {
-      try {
-        saveHandle = await win.showSaveFilePicker({
-          suggestedName: outName,
-          types: [
-            {
-              description: multi ? (tr ? "ZIP arşivi" : "ZIP archive") : (tr ? "Görsel" : "Image"),
-              accept: multi ? { "application/zip": [".zip"] } : acceptFor(format),
-            },
-          ],
-        });
-      } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-      }
-    }
+    const first = files[0]!.file;
+    const firstFormat = resolveFormat(format, first, webpOk);
+    const outName = multi
+      ? "sikistirilmis-gorseller.zip"
+      : `${(first.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${extForFormat(firstFormat)}`;
 
     try {
       setBusy(true);
-      const compressed = await Promise.all(files.map((f) => compress(f.file, q, 0, format)));
+      // Sıralı işle: aynı anda 30 büyük görseli çözmek belleği şişirir.
+      const outcomes: CompressOutcome[] = [];
+      for (const p of files) {
+        outcomes.push(
+          await compressImage(p.file, {
+            quality: q,
+            maxDim,
+            format: resolveFormat(format, p.file, webpOk),
+          }),
+        );
+      }
+      const keptCount = outcomes.filter((o) => o.kept).length;
+      const outSum = outcomes.reduce((n, o) => n + o.blob.size, 0);
+
       let outBlob: Blob;
+      let filename: string;
       if (multi) {
         const entries = await Promise.all(
-          compressed.map(async (b, i) => {
+          outcomes.map(async (o, i) => {
             const base = (files[i]!.file.name || `gorsel-${i + 1}`).replace(/\.[^.]+$/, "");
-            return { name: `${base}.${extFor(format)}`, data: new Uint8Array(await b.arrayBuffer()) };
+            return { name: `${base}.${o.ext}`, data: new Uint8Array(await o.blob.arrayBuffer()) };
           }),
         );
         outBlob = new Blob([zipStore(entries) as BlobPart], { type: "application/zip" });
+        filename = outName;
       } else {
-        outBlob = compressed[0]!;
+        const single = outcomes[0]!;
+        outBlob = single.blob;
+        // Orijinali korunduysa dosya kendi uzantısıyla inmeli.
+        filename = single.kept
+          ? first.name
+          : `${(first.name || "gorsel").replace(/\.[^.]+$/, "")}-sikistirilmis.${single.ext}`;
       }
 
-      if (saveHandle) {
-        const w = await saveHandle.createWritable();
-        await w.write(outBlob);
-        await w.close();
-        saveHandleRef.current = saveHandle;
-        setResult({ blob: outBlob, filename: saveHandle.name || outName, saved: "picker", count: files.length });
-      } else {
-        downloadBlob(outBlob, outName);
-        setResult({ blob: outBlob, filename: outName, saved: "download", count: files.length });
-      }
+      setResult({
+        blob: outBlob,
+        filename,
+        count: files.length,
+        inBytes: totalIn,
+        outBytes: multi ? outBlob.size : outSum,
+        keptCount,
+      });
     } catch {
       setError(tr ? "İşlem sırasında bir hata oluştu." : "Something went wrong.");
     } finally {
@@ -206,205 +183,168 @@ export function ImageCompressTool({ language }: { language: Language }) {
     }
   };
 
-  async function redownload() {
-    if (!result) return;
-    const h = saveHandleRef.current;
-    if (h) {
-      try {
-        const w = await h.createWritable();
-        await w.write(result.blob);
-        await w.close();
-        setReSaved(true);
-        setTimeout(() => setReSaved(false), 2500);
-        return;
-      } catch {
-        /* izin düştü → yeniden indir */
-      }
-    }
-    downloadBlob(result.blob, result.filename);
-  }
-
-  function openResult() {
-    if (!result) return;
-    const url = URL.createObjectURL(result.blob);
-    window.open(url, "_blank", "noopener,noreferrer");
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  }
-
-  const canShare =
-    typeof navigator !== "undefined" &&
-    typeof (navigator as Navigator & { canShare?: unknown }).canShare === "function";
-  async function shareResult() {
-    if (!result) return;
-    const file = new File([result.blob], result.filename, { type: result.blob.type });
-    const nav = navigator as Navigator & {
-      canShare?: (d: { files: File[] }) => boolean;
-      share?: (d: { files: File[]; title?: string }) => Promise<void>;
-    };
-    try {
-      if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({ files: [file], title: result.filename });
-      }
-    } catch {
-      /* iptal / desteklenmiyor */
-    }
-  }
-
-  // ── Sonuç ekranı — Görsel→PDF ile AYNI ──
+  // ── Sonuç — TÜM araçlarla ortak panel ─────────────────────────────────────
   if (result) {
+    const saved = result.inBytes - result.outBytes;
+    const pct = result.inBytes > 0 ? Math.round((saved / result.inBytes) * 100) : 0;
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-8 text-center"
+      <ToolResultPanel
+        ratingToolSlug="gorsel-sikistir"
+        blob={result.blob}
+        filename={result.filename}
+        language={language}
+        processedOnDevice
+        onClose={() => setResult(null)}
       >
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/30">
-          <Check className="h-8 w-8" />
-        </div>
-        <p className="mt-4 text-xl font-bold text-white">
-          {tr
-            ? result.saved === "picker" ? "Kaydedildi! 🎉" : "İndirildi! 🎉"
-            : result.saved === "picker" ? "Saved! 🎉" : "Downloaded! 🎉"}
-        </p>
-        <div className="mx-auto mt-3 inline-flex max-w-full items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/[0.08] px-3.5 py-2 text-[13px] font-medium text-emerald-200">
-          <Check className="h-4 w-4 shrink-0" />
-          <span className="truncate">
+        {saved > 0 ? (
+          <p className="mt-5 text-[13px] font-semibold text-emerald-200">
+            {humanSize(result.inBytes)} → {humanSize(result.outBytes)}{" "}
+            <span className="text-emerald-300">({tr ? `%${pct} küçüldü` : `${pct}% smaller`})</span>
+          </p>
+        ) : (
+          <p className="mt-5 text-[13px] font-semibold text-slate-300">
             {tr
-              ? result.saved === "picker"
-                ? `«${result.filename}» seçtiğin konuma kaydedildi`
-                : `«${result.filename}» İndirilenler klasörüne indirildi`
-              : result.saved === "picker"
-                ? `«${result.filename}» saved to your chosen location`
-                : `«${result.filename}» saved to your Downloads folder`}
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-slate-400">
-          {tr ? "Görselin cihazından hiç çıkmadı — tamamen gizli." : "Your image never left your device — fully private."}
-        </p>
-        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          {result.count === 1 && (
-            <button
-              type="button"
-              onClick={openResult}
-              className="inline-flex items-center gap-2 rounded-2xl border border-cyan-400/30 bg-cyan-500/[0.12] px-6 py-3 text-sm font-bold text-cyan-100 transition hover:bg-cyan-500/20"
-            >
-              <ExternalLink className="h-4 w-4" />
-              {tr ? "Aç" : "Open"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => void redownload()}
-            className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.05] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
-          >
-            {reSaved ? <Check className="h-4 w-4 text-emerald-400" /> : <Download className="h-4 w-4" />}
-            {reSaved ? (tr ? "Tekrar kaydedildi ✓" : "Saved again ✓") : (tr ? "Tekrar indir" : "Download again")}
-          </button>
-          {canShare && (
-            <button
-              type="button"
-              onClick={() => void shareResult()}
-              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-bold text-white transition hover:bg-white/[0.08]"
-            >
-              <Share2 className="h-4 w-4" />
-              {tr ? "Paylaş" : "Share"}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-          >
-            {tr ? "Yeni işlem" : "New task"}
-          </button>
-        </div>
+              ? `Görselleriniz zaten optimize — ${humanSize(result.inBytes)} olarak korundu.`
+              : `Your images were already optimized — kept at ${humanSize(result.inBytes)}.`}
+          </p>
+        )}
+        {result.keptCount > 0 && saved > 0 ? (
+          <p className="mt-1 text-[12px] text-slate-400">
+            {tr
+              ? `${result.keptCount} görsel zaten optimizeydi; orijinali korundu.`
+              : `${result.keptCount} image(s) were already optimized; the original was kept.`}
+          </p>
+        ) : null}
         <ValueMomentNudge language={language} source="guest_tool_success" />
-      </motion.div>
+      </ToolResultPanel>
     );
   }
 
   return (
     <div>
-      <ToolDropzone
-        toolId="gorsel-sikistir"
-        tr={tr}
-        accept="image/png,image/jpeg,image/jpg,image/webp"
-        multiple
-        busy={busy}
-        showBenefits={files.length === 0}
-        onFiles={(fl) => addFiles(fl)}
-        titleTr="Görselleri buraya sürükle"
-        titleEn="Drag your images here"
-        hintTr="ya da tıklayıp seç · JPG, PNG, WebP · 80 MB'a kadar"
-        hintEn="or click to choose · JPG, PNG, WebP · up to 80 MB"
-      />
+      <div className="tool-form">
+        <WorkspaceUploadField
+          language={language}
+          accept="image/png,image/jpeg,image/jpg,image/webp"
+          multiple
+          disabled={busy}
+          appendMode={files.length > 0}
+          note={tr ? "JPG, PNG, WebP · 80 MB'a kadar" : "JPG, PNG, WebP · up to 80 MB"}
+          onFiles={(fl) => addFiles(fl)}
+        />
 
-      {files.length > 0 && (
-        <>
-          {/* Ayarlar — kalite + biçim */}
-          <div className="mt-4 grid gap-4 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[12px] font-semibold text-slate-300">
-                {tr ? "Kalite" : "Quality"}: <span className="text-cyan-300">%{quality}</span>
+        {files.length > 0 && (
+          <>
+            {/* Seçilen görseller */}
+            <div className="field field--full">
+              <span>
+                {tr ? "Seçilen görseller" : "Selected images"} — {files.length} {tr ? "görsel" : "images"} · {humanSize(totalIn)}
               </span>
-              <input type="range" min={20} max={95} step={5} value={quality} onChange={(e) => setQuality(Number(e.target.value))} className="accent-cyan-500" />
-            </label>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-[12px] font-semibold text-slate-300">{tr ? "Biçim" : "Format"}</span>
-              <select value={format} onChange={(e) => setFormat(e.target.value as Format)} className="rounded-lg border border-white/12 bg-[#0b1020] px-2 py-1.5 text-[13px] text-slate-100">
-                <option value="image/jpeg">JPEG (.jpg)</option>
+              <ul ref={listRef} className="space-y-2">
+                {files.map((f) => (
+                  <li key={f.id} className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+                    <img src={f.previewUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
+                      <p className="text-[11px] text-slate-400">{humanSize(f.file.size)}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => remove(f.id)}
+                      aria-label={tr ? "Kaldır" : "Remove"}
+                      className="shrink-0 rounded-md p-1.5 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={reset}
+                className="mt-1 inline-flex w-fit items-center gap-1 rounded-lg px-2 py-1 text-[12px] font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {tr ? "Tümünü sil" : "Clear all"}
+              </button>
+            </div>
+
+            <label className="field">
+              <span>{tr ? "Biçim" : "Format"}</span>
+              <select value={format} onChange={(e) => setFormat(e.target.value as Format)}>
+                <option value="auto">{tr ? "Otomatik (en küçük)" : "Automatic (smallest)"}</option>
                 <option value="image/webp">WebP (.webp)</option>
+                <option value="image/jpeg">JPEG (.jpg)</option>
                 <option value="image/png">PNG (.png)</option>
               </select>
+              <span className="field-hint">
+                {tr
+                  ? "Sonuç orijinalden büyük çıkarsa dosyanız olduğu gibi korunur — hiçbir görsel büyümez."
+                  : "If the result would be larger than the original, your file is kept as-is — nothing ever grows."}
+              </span>
             </label>
-          </div>
 
-          {/* Dosya listesi */}
-          <div className="mt-3 mb-2 flex items-center justify-between rounded-xl border border-white/[0.06] bg-white/[0.02] px-3.5 py-2.5 text-[12px]">
-            <span className="font-bold text-white">{files.length} {tr ? "görsel" : "images"} · {humanSize(totalIn)}</span>
-            <button type="button" onClick={reset} className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300">
-              <Trash2 className="h-3.5 w-3.5" />{tr ? "Tümünü sil" : "Clear all"}
-            </button>
-          </div>
-          <ul ref={listRef} className="space-y-2">
-            {files.map((f) => (
-              <li key={f.id} className="flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
-                <img src={f.previewUrl} alt="" className="h-9 w-9 shrink-0 rounded-lg object-cover" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium text-slate-100">{f.file.name}</p>
-                  <p className="text-[11px] text-slate-500">{humanSize(f.file.size)}</p>
-                </div>
-                <button type="button" onClick={() => remove(f.id)} aria-label={tr ? "Kaldır" : "Remove"} className="shrink-0 rounded-md p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+            <label className="field">
+              <span>{tr ? "Ölçü" : "Size"}</span>
+              <select value={maxDim} onChange={(e) => setMaxDim(Number(e.target.value))}>
+                <option value={0}>{tr ? "Orijinal ölçü" : "Original size"}</option>
+                <option value={2560}>{tr ? "Uzun kenar 2560 piksel" : "Long edge 2560 px"}</option>
+                <option value={1920}>{tr ? "Uzun kenar 1920 piksel" : "Long edge 1920 px"}</option>
+                <option value={1280}>{tr ? "Uzun kenar 1280 piksel" : "Long edge 1280 px"}</option>
+                <option value={800}>{tr ? "Uzun kenar 800 piksel" : "Long edge 800 px"}</option>
+              </select>
+              <span className="field-hint">
+                {tr
+                  ? "Ölçüyü küçültmek dosya boyutunu en çok düşüren ayardır."
+                  : "Reducing the dimensions is what shrinks the file size the most."}
+              </span>
+            </label>
 
-      {error && (
-        <p className="mt-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">{error}</p>
-      )}
-
-      <button
-        type="button"
-        onClick={() => void run()}
-        disabled={busy || files.length === 0}
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-[16px] font-bold text-white shadow-[0_18px_44px_-12px_rgba(79,70,229,0.7)] ring-1 ring-white/10 transition hover:from-blue-500 hover:to-indigo-500 disabled:pointer-events-none disabled:opacity-40"
-      >
-        {busy ? (
-          <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            {tr ? "İşleniyor…" : "Processing…"}
-          </>
-        ) : (
-          <>
-            <ImageIcon className="h-5 w-5" />
-            {tr ? "Sıkıştır" : "Compress"} →
+            <label className="field field--full">
+              <span>
+                {tr ? "Kalite" : "Quality"}: <span className="text-nb-accent">%{quality}</span>
+              </span>
+              <input
+                type="range"
+                min={20}
+                max={95}
+                step={5}
+                value={quality}
+                disabled={format === "image/png"}
+                onChange={(e) => setQuality(Number(e.target.value))}
+                className="accent-cyan-500 disabled:opacity-40"
+                style={{ padding: 0, border: 0, background: "transparent" }}
+              />
+              <span className="field-hint">
+                {format === "image/png"
+                  ? tr
+                    ? "PNG kayıpsızdır — kalite ayarı işlemez. En çok kazanç için «Otomatik» veya WebP seçin."
+                    : "PNG is lossless — the quality slider has no effect. Pick «Automatic» or WebP for the biggest savings."
+                  : tr
+                    ? "%70 civarı çoğu fotoğrafta gözle fark edilmeyen kayıpla ciddi boyut düşüşü sağlar."
+                    : "Around 70% gives a big size reduction with loss that's usually invisible for photos."}
+              </span>
+            </label>
           </>
         )}
-      </button>
+
+        {error && (
+          <p className="field--full rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-2.5 text-[13px] text-red-300">
+            {error}
+          </p>
+        )}
+
+        <button type="button" className="primary-action" onClick={() => void run()} disabled={busy || files.length === 0}>
+          {busy ? (
+            <span className="inline-flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {tr ? "İşleniyor…" : "Processing…"}
+            </span>
+          ) : (
+            tr ? "Sıkıştır" : "Compress"
+          )}
+        </button>
+      </div>
     </div>
   );
 }

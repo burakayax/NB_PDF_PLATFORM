@@ -21,6 +21,11 @@ const PDF_TOOL_LABELS_TR: Record<string, string> = {
   "html-to-pdf": "HTML → PDF",
   "pdf-to-text": "PDF → Metin",
   "flatten-pdf": "PDF Düzleştir",
+  "form-doldur": "PDF Form Doldur",
+  "ustveri-temizle": "PDF Üstveri Temizle",
+  "pdf-to-pdfa": "PDF → PDF/A (Arşiv)",
+  "sayfa-duzeni": "Sayfa Düzeni",
+  "imza-iste": "İmza İste",
   "extract-images": "PDF'ten Görsel Çıkar",
 };
 

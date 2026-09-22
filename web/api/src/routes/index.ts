@@ -15,6 +15,7 @@ import { paymentsRouter } from "../modules/payment/payments.routes.js";
 import { publicRouter } from "../modules/public/public.routes.js";
 import { subscriptionRouter } from "../modules/subscription/subscription.routes.js";
 import { userRouter } from "../modules/user/user.routes.js";
+import { signatureRouter, publicSignRouter } from "../modules/signature/signature.routes.js";
 import orgRouter from "../modules/organization/organization.routes.js";
 import billingRouter from "../modules/billing/billing.routes.js";
 import teamRouter from "../modules/team/team.controller.js";
@@ -22,6 +23,9 @@ import { creditCheckoutRouter } from "../modules/credit-checkout/credit-checkout
 import { aiRouter } from "../modules/ai/ai.routes.js";
 import { apiKeysRouter } from "../modules/api-keys/api-keys.routes.js";
 import { emailRouter } from "../modules/email/email.routes.js";
+import { toolRatingAdminRouter } from "../modules/tool-rating/tool-rating.admin.routes.js";
+import { toolRatingRouter } from "../modules/tool-rating/tool-rating.routes.js";
+import { socialRouter } from "../modules/social/social.routes.js";
 import { prisma } from "../lib/prisma.js";
 import {
   abuseBlockMiddleware,
@@ -70,6 +74,10 @@ apiRouter.get("/health/db", async (_request, response) => {
 
 apiRouter.use("/public", publicRouter);
 apiRouter.use("/access", accessRouter);
+// Sosyal medya otomasyonu admin yolunun ALTINDA duruyor: hem Vite vekili
+// (/api/admin* → auth API) hem de paneldeki admin istemcisi bu önekle çalışıyor.
+apiRouter.use("/admin/tool-ratings", toolRatingAdminRouter);
+apiRouter.use("/admin/social", socialRouter);
 apiRouter.use("/admin", adminRouter);
 apiRouter.use("/analytics", analyticsRouter);
 apiRouter.use("/auth", authRouter);
@@ -85,7 +93,11 @@ apiRouter.use("/payment", paymentRouter);
 apiRouter.use("/payments", paymentsRouter);
 apiRouter.use("/license", licenseRouter);
 apiRouter.use("/subscription", subscriptionRouter);
+apiRouter.use("/tool-rating", toolRatingRouter);
 apiRouter.use("/user", userRouter);
+// İmza istekleri: /signatures oturum ister, /sign bağlantı anahtarıyla gelir.
+apiRouter.use("/signatures", signatureRouter);
+apiRouter.use("/sign", publicSignRouter);
 apiRouter.use("/org", orgRouter);
 apiRouter.use("/billing", billingRouter);
 apiRouter.use("/team", teamRouter);

@@ -339,7 +339,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       >
         <div className="space-y-2">
           {social.length === 0 ? (
-            <p className="text-xs text-slate-500">Henüz hesap eklenmedi. “Hesap ekle” ile başlayın.</p>
+            <p className="text-xs text-slate-400">Henüz hesap eklenmedi. “Hesap ekle” ile başlayın.</p>
           ) : null}
           {social.map((url, i) => (
             <div key={i} className="flex gap-2">
@@ -396,14 +396,14 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
                 />
                 <span>
                   <span className="font-semibold text-white">{f.label}</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{f.description}</span>
-                  <code className="mt-1 block text-[10px] text-slate-500">{f.key}</code>
+                  <span className="mt-0.5 block text-xs text-slate-400">{f.description}</span>
+                  <code className="mt-1 block text-[10px] text-slate-400">{f.key}</code>
                 </span>
               </label>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-slate-500">Katalog yükleniyor…</p>
+          <p className="text-sm text-slate-400">Katalog yükleniyor…</p>
         )}
       </AdminSection>
 
@@ -420,8 +420,8 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
                 />
                 <span>
                   <span className="font-semibold text-white">{f.label}</span>
-                  <span className="mt-0.5 block text-xs text-slate-500">{f.description}</span>
-                  <code className="mt-1 block text-[10px] text-slate-500">{f.key}</code>
+                  <span className="mt-0.5 block text-xs text-slate-400">{f.description}</span>
+                  <code className="mt-1 block text-[10px] text-slate-400">{f.key}</code>
                 </span>
               </label>
             ))}
@@ -441,7 +441,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
       <AdminSection title="Denetim günlüğü" description="Kim, hangi ayarı veya kullanıcıyı değiştirdi.">
         <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
           <table className="w-full min-w-[720px] text-left text-[11px]">
-            <thead className="border-b border-white/[0.08] text-slate-500">
+            <thead className="border-b border-white/[0.08] text-slate-400">
               <tr>
                 <th className="px-2 py-2">Zaman</th>
                 <th className="px-2 py-2">Yönetici</th>
@@ -484,7 +484,7 @@ export function SystemControlTab({ accessToken }: { accessToken: string }) {
         </AdminField>
         <div className="overflow-x-auto rounded-xl border border-white/[0.08]">
           <table className="w-full min-w-[560px] text-left text-[11px]">
-            <thead className="border-b border-white/[0.08] text-slate-500">
+            <thead className="border-b border-white/[0.08] text-slate-400">
               <tr>
                 <th className="px-2 py-2">Zaman</th>
                 <th className="px-2 py-2">Kim</th>

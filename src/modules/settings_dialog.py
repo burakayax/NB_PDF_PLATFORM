@@ -306,9 +306,11 @@ class SettingsDialog(ctk.CTkToplevel):
                 user = self._auth.update_profile(self._token, fn, ln)
                 self.after(0, lambda: self._on_saved_ok(user))
             except (DesktopAuthError, DesktopNetworkError) as e:
-                self.after(0, lambda: self._on_saved_fail(str(e)))
+                message = str(e)
+                self.after(0, lambda: self._on_saved_fail(message))
             except Exception as e:
-                self.after(0, lambda: self._on_saved_fail(str(e)))
+                message = str(e)
+                self.after(0, lambda: self._on_saved_fail(message))
 
         threading.Thread(target=worker, daemon=True).start()
 

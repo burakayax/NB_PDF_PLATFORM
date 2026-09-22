@@ -9,6 +9,8 @@ import { getSaasApiBase } from "../../api/saasBase";
 import { fetchAiQuota, type AiQuota } from "../../api/ai";
 import { TopUpModal } from "../tools/TopUpModal";
 import { Sparkles, Zap } from "lucide-react";
+import { readAccessToken } from "../../lib/accessTokenStore";
+import { ActiveSessionsPanel } from "./ActiveSessionsPanel";
 
 type ToastType = "success" | "error" | "loading" | "info";
 
@@ -69,7 +71,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const handleDeleteAccount = async (e: FormEvent) => {
     e.preventDefault();
     if (deleteConfirmText !== DELETE_CONFIRM_PHRASE) return;
-    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    const token = readAccessToken();
     if (!token) return;
     setDeleteSubmitting(true);
     try {
@@ -86,7 +88,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const [exporting, setExporting] = useState(false);
 
   const handleExportData = async () => {
-    const token = localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY);
+    const token = readAccessToken();
     if (!token) {
       showToast("error", lang === "tr" ? "Oturum bulunamadı" : "Session not found", lang === "tr" ? "Lütfen tekrar giriş yapın." : "Please sign in again.");
       return;
@@ -188,7 +190,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   async function handleCancelSubscription() {
     setCancelling(true);
     try {
-      const token = window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) ?? "";
+      const token = readAccessToken() ?? "";
       const res = await fetch(`${getSaasApiBase()}/api/subscription/cancel`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -248,7 +250,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
   const startedAtDate = formatDate(subscriptionStartedAt, language);
 
   // ── Yapay Zekâ kullanımı (kalan hak) — mobil kullanıcı buradan da görebilir. ──
-  const aiToken = accessToken ?? (typeof window !== "undefined" ? window.localStorage.getItem(AUTH_ACCESS_TOKEN_STORAGE_KEY) : null);
+  const aiToken = accessToken ?? (typeof window !== "undefined" ? readAccessToken() : null);
   const hasAiAccess =
     user.role === "ADMIN" || ["STARTER", "PLUS", "PRO", "BUSINESS"].includes(planName);
   const [aiQuota, setAiQuota] = useState<AiQuota | null>(null);
@@ -325,7 +327,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               aria-label={p("fieldEmail", lang)}
               aria-readonly="true"
             />
-            <span className="mt-1.5 block text-xs text-slate-500">{p("emailReadOnly", lang)}</span>
+            <span className="mt-1.5 block text-xs text-slate-400">{p("emailReadOnly", lang)}</span>
           </label>
 
           <button
@@ -397,11 +399,11 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
             ) : null}
 
             {isPaidPlan && renewalDate !== "—" && (
-              <p className="mt-3 text-xs leading-relaxed text-slate-500">{p("autoRenewNote", lang)}</p>
+              <p className="mt-3 text-xs leading-relaxed text-slate-400">{p("autoRenewNote", lang)}</p>
             )}
 
             {!isPaidPlan && (
-              <p className="mt-4 text-xs leading-relaxed text-slate-500">{p("upgradeNote", lang)}</p>
+              <p className="mt-4 text-xs leading-relaxed text-slate-400">{p("upgradeNote", lang)}</p>
             )}
 
             {isPaidPlan && (
@@ -468,7 +470,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                 <span className="text-sm text-slate-400">{lang === "tr" ? "Bu ay kalan hak" : "Remaining this month"}</span>
                 <span className={`text-lg font-bold ${aiRemaining <= 0 ? "text-red-400" : "text-nb-text"}`}>
                   {aiRemaining}
-                  <span className="text-sm font-medium text-slate-500">/{aiLimit}</span>
+                  <span className="text-sm font-medium text-slate-400">/{aiLimit}</span>
                 </span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
@@ -477,7 +479,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
                   style={{ width: `${aiUsedPct}%` }}
                 />
               </div>
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
                 <span>{lang === "tr" ? `Kullanılan: ${aiLimit - aiRemaining}/${aiLimit}` : `Used: ${aiLimit - aiRemaining}/${aiLimit}`}</span>
                 {aiQuota.resetAt && <span>{lang === "tr" ? "Yenilenme" : "Resets"}: {formatDate(aiQuota.resetAt, language)}</span>}
               </div>
@@ -488,7 +490,7 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
               )}
             </>
           ) : (
-            <p className="mt-4 text-sm text-slate-500">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
+            <p className="mt-4 text-sm text-slate-400">{lang === "tr" ? "AI kullanım bilgisi yükleniyor…" : "Loading AI usage…"}</p>
           )}
 
           {!aiUnlimited && (
@@ -675,6 +677,9 @@ export function UserProfilePanel({ user, language, updateProfile, showToast, onO
           </div>
         )}
       </section>
+
+      {/* Hesabın hangi cihazlarda açık olduğu + uzaktan çıkış */}
+      {aiToken && <ActiveSessionsPanel accessToken={aiToken} language={language} />}
 
       {topUpOpen && (
         <TopUpModal

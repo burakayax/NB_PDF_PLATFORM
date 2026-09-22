@@ -23,6 +23,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
   const [newCode, setNewCode] = useState("");
   const [newDisc, setNewDisc] = useState(10);
   const [newLimit, setNewLimit] = useState(1);
+  const [newTotal, setNewTotal] = useState(""); // boş = toplam kontenjan sınırsız
   const [newExpiry, setNewExpiry] = useState(""); // YYYY-MM-DD; boş = süresiz
 
   const filtered =
@@ -49,10 +50,12 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
           <Sparkles className="h-4 w-4 text-cyan-400/80" />
           <h2 className="text-sm font-semibold text-white">Yeni kupon</h2>
         </div>
-        <p className="mt-0.5 text-xs text-slate-500">Kod, oran, kullanıcı başına tavan</p>
+        <p className="mt-0.5 text-xs text-slate-400">
+          Kod, indirim oranı, kişi başı tavan, toplam kontenjan ve son kullanma tarihi
+        </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
           <div className="min-w-[120px] flex-1">
-            <span className="text-xs text-slate-500">Kod</span>
+            <span className="text-xs text-slate-400">Kod</span>
             <input
               className={adminInputClass}
               value={newCode}
@@ -60,7 +63,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
             />
           </div>
           <div className="w-24">
-            <span className="text-xs text-slate-500">%</span>
+            <span className="text-xs text-slate-400">%</span>
             <input
               className={adminInputClass}
               type="number"
@@ -71,7 +74,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
             />
           </div>
           <div className="w-32">
-            <span className="text-xs text-slate-500">Limit / kişi</span>
+            <span className="text-xs text-slate-400">Kişi başı hak</span>
             <input
               className={adminInputClass}
               type="number"
@@ -79,9 +82,26 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
               value={newLimit}
               onChange={(e) => setNewLimit(Math.min(1000, Math.max(1, Number(e.target.value) || 1)))}
             />
+            <p className="mt-1 text-[10px] leading-tight text-slate-400">
+              Aynı kişi kaç kez kullanabilir
+            </p>
+          </div>
+          <div className="w-36">
+            <span className="text-xs text-slate-400">Toplam kontenjan</span>
+            <input
+              className={adminInputClass}
+              type="number"
+              min={1}
+              placeholder="Sınırsız"
+              value={newTotal}
+              onChange={(e) => setNewTotal(e.target.value.replace(/[^0-9]/g, ""))}
+            />
+            <p className="mt-1 text-[10px] leading-tight text-slate-400">
+              Kaç kişi yararlanabilir · boş = sınırsız
+            </p>
           </div>
           <div className="w-40">
-            <span className="text-xs text-slate-500">Son kullanma (opsiyonel)</span>
+            <span className="text-xs text-slate-400">Son kullanma (opsiyonel)</span>
             <input
               className={adminInputClass}
               type="date"
@@ -100,11 +120,13 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
                 code: newCode.trim(),
                 discountPercent: newDisc,
                 usageLimitPerUser: newLimit,
+                usageLimitTotal: newTotal.trim() ? Math.max(1, Number(newTotal)) : null,
                 expiresAt: newExpiry ? new Date(`${newExpiry}T23:59:59`).toISOString() : null,
               })
                 .then(() => {
                   setNewCode("");
                   setNewExpiry("");
+                  setNewTotal("");
                   return fetchAdminCoupons(accessToken);
                 })
                 .then((r) => onUpdateList(r.items))
@@ -118,7 +140,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
       </div>
 
       {items === null ? (
-        <p className="text-sm text-slate-500">Yükleniyor…</p>
+        <p className="text-sm text-slate-400">Yükleniyor…</p>
       ) : filtered && filtered.length === 0 ? (
         <EmptyState
           title="Eşleşen kupon yok"
@@ -129,7 +151,9 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered?.map((c) => {
-            const usageHint = c.usageLimitPerUser > 0 ? Math.min(1, c.totalUses / (c.usageLimitPerUser * 20)) : 0;
+            const totalCap = c.usageLimitTotal ?? null;
+            const usageHint = totalCap ? Math.min(1, c.totalUses / totalCap) : 0;
+            const capExhausted = totalCap !== null && c.totalUses >= totalCap;
             return (
               <li
                 key={c.id}
@@ -142,7 +166,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
                     </div>
                     <div className="min-w-0">
                       <p className="font-mono text-sm font-bold tracking-wide text-cyan-200">{c.code}</p>
-                      <p className="text-[10px] text-slate-500">Oluşturuldu · {formatDate(c.createdAt)}</p>
+                      <p className="text-[10px] text-slate-400">Oluşturuldu · {formatDate(c.createdAt)}</p>
                     </div>
                   </div>
                   <span
@@ -158,7 +182,7 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
                 <div className="flex flex-1 flex-col gap-3 px-4 py-4">
                   <div className="flex items-end justify-between gap-2">
                     <div>
-                      <p className="text-[10px] font-medium uppercase text-slate-500">İndirim</p>
+                      <p className="text-[10px] font-medium uppercase text-slate-400">İndirim</p>
                       <p className="flex items-baseline gap-0.5 text-3xl font-bold tabular-nums text-white">
                         {c.discountPercent}
                         <span className="text-lg text-slate-400">
@@ -167,23 +191,33 @@ export function AdminCouponManager({ accessToken, items, onUpdateList, onError, 
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-slate-500">Toplam kullanım</p>
+                      <p className="text-[10px] text-slate-400">Toplam kullanım</p>
                       <p className="font-mono text-lg font-semibold text-slate-200">{c.totalUses}</p>
                     </div>
                   </div>
                   <div>
-                    <div className="mb-1 flex justify-between text-[10px] text-slate-500">
-                      <span>Kullanım yoğunluğu (göreli)</span>
-                      <span className="font-mono">{c.totalUses} kullanım</span>
+                    <div className="mb-1 flex justify-between text-[10px] text-slate-400">
+                      <span>{totalCap ? "Kontenjan doluluğu" : "Toplam kontenjan: sınırsız"}</span>
+                      <span className="font-mono">
+                        {totalCap ? `${c.totalUses} / ${totalCap}` : `${c.totalUses} kullanım`}
+                      </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-800">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-cyan-500/80 to-cyan-400/50 transition-[width]"
+                        className={`h-full rounded-full transition-[width] ${
+                          capExhausted
+                            ? "bg-gradient-to-r from-rose-500/80 to-rose-400/50"
+                            : "bg-gradient-to-r from-cyan-500/80 to-cyan-400/50"
+                        }`}
                         style={{ width: `${Math.round(usageHint * 100)}%` }}
                       />
                     </div>
+                    <p className="mt-1 text-[10px] text-slate-400">
+                      Kişi başı hak: {c.usageLimitPerUser}
+                      {capExhausted ? " · kontenjan doldu" : ""}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                     <Calendar className="h-3.5 w-3.5 shrink-0" />
                     {c.expiresAt ? (
                       new Date(c.expiresAt).getTime() < Date.now() ? (
